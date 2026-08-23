@@ -13,6 +13,10 @@ full right-to-left support.
 > ⚠️ **Demo data is clearly labelled.** All seed prices and costs are examples,
 > not real business data.
 
+**▶ New here? Read the [full screen-by-screen walkthrough](docs/USER_GUIDE_WALKTHROUGH.md)** —
+a click-by-click tutorial of every module and feature, mapped to the exact UI
+location, using the live demo. Live app: **https://sixties-gelato-cafe.vercel.app**
+
 ---
 
 ## Why this design
