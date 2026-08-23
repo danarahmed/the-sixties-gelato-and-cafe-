@@ -63,15 +63,16 @@ they read/write real records.
 
 ## Cross-cutting
 
-| Item                                   | Status | Notes                                                  |
-| -------------------------------------- | ------ | ------------------------------------------------------ |
-| Offline sale queue (IndexedDB)         | 🟡     | SW + idempotency model done; queue+replay UI remaining |
-| Supabase Auth wiring (login, MFA, PIN) | ⬜     | schema ready (`app_user.auth_user_id`, `pin_hash`)     |
-| Server APIs for protected ops          | ⬜     | RLS baseline in place; route handlers next             |
-| Talabat live adapter                   | 🔒     | needs Partner API credentials; CSV+mock first          |
-| AI provider adapters                   | ⬜     | app runs fully without any key                         |
-| Automated backups + restore drill      | 🟡     | procedure documented; schedule to be configured        |
-| E2E (Playwright)                       | ⬜     | config to add; unit/acceptance done                    |
+| Item                                          | Status | Notes                                                                                                  |
+| --------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------ |
+| Live Supabase database (provisioned + seeded) | ✅     | project `sixties-gelato-cafe`; migrations 0001–0009 + seed applied; Inventory reads it live (verified) |
+| Offline sale queue (IndexedDB)                | 🟡     | SW + idempotency model done; queue+replay UI remaining                                                 |
+| Supabase Auth wiring (login, MFA, PIN)        | ⬜     | schema ready (`app_user.auth_user_id`, `pin_hash`); DB live; login next                                |
+| Server APIs for protected ops                 | ⬜     | RLS baseline in place; route handlers next                                                             |
+| Talabat live adapter                          | 🔒     | needs Partner API credentials; CSV+mock first                                                          |
+| AI provider adapters                          | ⬜     | app runs fully without any key                                                                         |
+| Automated backups + restore drill             | 🟡     | procedure documented; schedule to be configured                                                        |
+| E2E (Playwright)                              | ⬜     | config to add; unit/acceptance done                                                                    |
 
 ## Recommended next steps (in priority order)
 
