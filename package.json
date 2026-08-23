@@ -22,10 +22,12 @@
     "verify": "npm run format:check && npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
     "decimal.js": "^10.4.3",
     "next": "^15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "server-only": "^0.0.1",
     "uuid": "^11.0.5",
     "zod": "^3.24.1"
   },
