@@ -57,18 +57,21 @@ create trigger ai_interaction_log_immutable
 -- Row-Level Security
 -- ===========================================================================
 -- Resolve the calling user's app_user row from the Supabase JWT (auth.uid()).
+-- SECURITY DEFINER is REQUIRED: these functions read app_user/user_role, which
+-- themselves carry RLS policies that call these functions. Without definer
+-- rights the policy evaluation recurses infinitely (stack depth exceeded).
 create or replace function current_app_user_id() returns uuid
-language sql stable as $$
+language sql stable security definer set search_path = public as $$
   select id from app_user where auth_user_id = auth.uid();
 $$;
 
 create or replace function current_business_id() returns uuid
-language sql stable as $$
+language sql stable security definer set search_path = public as $$
   select business_id from app_user where auth_user_id = auth.uid();
 $$;
 
 create or replace function current_has_role(target app_role) returns boolean
-language sql stable as $$
+language sql stable security definer set search_path = public as $$
   select exists (
     select 1 from user_role ur
     join app_user au on au.id = ur.app_user_id
@@ -78,7 +81,7 @@ $$;
 
 -- Sensitive data (cost/profit) is visible only to elevated roles.
 create or replace function current_can_view_costs() returns boolean
-language sql stable as $$
+language sql stable security definer set search_path = public as $$
   select exists (
     select 1 from user_role ur
     join app_user au on au.id = ur.app_user_id

@@ -3,8 +3,7 @@
  * derived from the append-only ledger, joined with item metadata). Returns null
  * when the DB is not configured so callers can fall back to demo data.
  */
-import "server-only";
-import { getAdminClient, DEMO_BUSINESS_ID } from "@/lib/supabase/admin";
+import { getSupabase, DEMO_BUSINESS_ID } from "@/lib/supabase/client";
 
 export interface DbStockRow {
   itemId: string;
@@ -19,7 +18,7 @@ export interface DbStockRow {
 }
 
 export async function fetchStockBoard(): Promise<DbStockRow[] | null> {
-  const client = getAdminClient();
+  const client = getSupabase();
   if (!client) return null;
 
   const { data, error } = await client
