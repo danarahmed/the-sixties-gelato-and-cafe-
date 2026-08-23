@@ -1,123 +1,62 @@
-"use client";
+import Link from "next/link";
+import { getT } from "@/lib/i18n/server";
+import { getProductionBatches } from "@/lib/db/read";
+import { EmptyState } from "@/components/ui";
 
-import { useMemo, useState } from "react";
-import { useT } from "@/lib/i18n/I18nProvider";
-import { runBatch, batchItemName, BATCH_RECIPE } from "@/lib/demo/production";
+export const dynamic = "force-dynamic";
 
-export default function ProductionPage() {
-  const { t } = useT();
-  const [batches, setBatches] = useState(1);
-  const [actualYield, setActualYield] = useState(4800);
-
-  const result = useMemo(() => runBatch(batches, actualYield), [batches, actualYield]);
-  const planned = Number(BATCH_RECIPE.batchYieldBase) * batches;
+export default async function ProductionPage() {
+  const t = await getT();
+  const batches = await getProductionBatches(50).catch(() => []);
 
   return (
     <div className="grid" style={{ gap: 16 }}>
-      <div className="demo-banner">⚠️ {t("common.demo")}</div>
+      <div className="badge ok" style={{ alignSelf: "start" }}>🟢 Live database</div>
       <h1 style={{ margin: 0 }}>{t("nav.production")}</h1>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        Pistachio gelato batch. Finished stock is valued at the <strong>actual</strong> cost
-        consumed ÷ the <strong>actual</strong> yield — computed by the tested engine.
+        Production batches consume raw materials and output finished goods valued at{" "}
+        <strong>actual consumed cost ÷ actual yield</strong> — the tested engine that drives this is
+        in the domain core. Batch entry (a production recipe with an output item + yield) is the next
+        increment; this screen reads the live <code>production_batch</code> table.
       </p>
 
-      <div className="card">
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "end" }}>
-          <label>
-            <div className="muted" style={{ fontSize: ".85rem" }}>
-              Batches
-            </div>
-            <input
-              type="number"
-              min={1}
-              value={batches}
-              onChange={(e) => setBatches(Math.max(1, Number(e.target.value) || 1))}
-              style={inputStyle}
-            />
-          </label>
-          <label>
-            <div className="muted" style={{ fontSize: ".85rem" }}>
-              Actual yield (g) — planned {planned.toLocaleString()} g
-            </div>
-            <input
-              type="number"
-              min={0}
-              value={actualYield}
-              onChange={(e) => setActualYield(Math.max(0, Number(e.target.value) || 0))}
-              style={inputStyle}
-            />
-          </label>
-        </div>
-      </div>
-
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px,1fr))" }}>
-        <div className="card stat">
-          <span className="label">Total consumed cost</span>
-          <span className="value mono">{result.totalConsumedValue.format()}</span>
-        </div>
-        <div className="card stat">
-          <span className="label">Finished-goods value</span>
-          <span className="value mono">{result.outputValue.format()}</span>
-        </div>
-        <div className="card stat">
-          <span className="label">Output unit cost</span>
-          <span className="value mono">
-            {result.outputUnitCost.toDecimalValue().toString()} IQD/g
-          </span>
-        </div>
-        <div className="card stat">
-          <span className="label">Yield variance</span>
-          <span
-            className="value mono"
-            style={{ color: result.yieldVarianceBase.isPositive() ? "var(--warn)" : "var(--ok)" }}
-          >
-            {result.yieldVarianceBase.isPositive() ? "−" : "+"}
-            {result.yieldVarianceBase.abs().toString()} g
-          </span>
-        </div>
-      </div>
-
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>Raw materials consumed</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Ingredient</th>
-              <th className="right">Qty (base)</th>
-              <th className="right">Cost</th>
-            </tr>
-          </thead>
-          <tbody>
-            {result.consumptions.map((c) => (
-              <tr key={c.itemId}>
-                <td>{batchItemName(c.itemId)}</td>
-                <td className="right mono">−{c.baseQuantity.toString()}</td>
-                <td className="right mono">{c.value.format()}</td>
+      {batches.length === 0 ? (
+        <EmptyState
+          title="No production batches yet"
+          hint="Meanwhile you can add finished-good stock directly on Inventory, or sell made-to-order items via a recipe on Products."
+        />
+      ) : (
+        <div className="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Recipe</th>
+                <th className="right">Batches</th>
+                <th className="right">Actual yield</th>
+                <th>Status</th>
+                <th>Produced</th>
               </tr>
-            ))}
-            <tr>
-              <td>
-                <strong>Finished output</strong>
-              </td>
-              <td className="right mono" style={{ color: "var(--ok)" }}>
-                +{result.actualOutputBase.toString()} g
-              </td>
-              <td className="right mono">{result.outputValue.format()}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {batches.map((b) => (
+                <tr key={b.id}>
+                  <td>{b.recipeName}</td>
+                  <td className="right mono">{b.batches}</td>
+                  <td className="right mono">{b.actualYield?.toLocaleString() ?? "—"}</td>
+                  <td><span className="badge">{b.status}</span></td>
+                  <td className="muted mono" style={{ fontSize: ".8rem" }}>
+                    {b.producedAt ? b.producedAt.slice(0, 16).replace("T", " ") : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <p className="muted" style={{ fontSize: ".85rem" }}>
+        See <Link href="/inventory">Inventory</Link> for live stock and <Link href="/products">Products</Link> for recipes.
+      </p>
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  minHeight: 44,
-  borderRadius: 8,
-  padding: "0 12px",
-  fontSize: "1.1rem",
-  background: "var(--surface)",
-  color: "var(--text)",
-  border: "1px solid var(--border)",
-  width: 200,
-};

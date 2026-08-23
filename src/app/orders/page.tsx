@@ -1,107 +1,84 @@
 import { getT } from "@/lib/i18n/server";
-import { ordersComputed, orderDeductions, channelLabel } from "@/lib/demo/data";
-import { Money, IQD } from "@domain/money/money.js";
+import { getSalesOrders } from "@/lib/db/read";
+import { channelLabel, fmtIQD } from "@/lib/format";
+import { EmptyState } from "@/components/ui";
+import type { SalesChannel } from "@domain/sales/recipe.js";
+
+export const dynamic = "force-dynamic";
 
 export default async function OrdersPage() {
   const t = await getT();
-  const orders = ordersComputed();
-  const totalNet = Money.sum(
-    orders.map((o) => o.net),
-    IQD,
-  ).quantize();
-  const totalMargin = Money.sum(
-    orders.map((o) => o.margin),
-    IQD,
-  ).quantize();
+  const orders = await getSalesOrders(300).catch(() => []);
+  const totalNet = orders.reduce((s, o) => s + o.net, 0);
+  const totalMargin = orders.reduce((s, o) => s + (o.net - o.cogs), 0);
 
   return (
     <div className="grid" style={{ gap: 16 }}>
-      <div className="demo-banner">⚠️ {t("common.demo")}</div>
+      <div className="badge ok" style={{ alignSelf: "start" }}>🟢 Live database</div>
       <h1 style={{ margin: 0 }}>{t("nav.orders")}</h1>
 
       <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px,1fr))" }}>
         <div className="card stat">
-          <span className="label">Orders today</span>
+          <span className="label">Orders</span>
           <span className="value">{orders.length}</span>
         </div>
         <div className="card stat">
           <span className="label">Net sales</span>
-          <span className="value mono">{totalNet.format()}</span>
+          <span className="value mono">{fmtIQD(totalNet)}</span>
         </div>
         <div className="card stat">
           <span className="label">Gross profit</span>
-          <span className="value mono" style={{ color: "var(--ok)" }}>
-            {totalMargin.format()}
-          </span>
+          <span className="value mono" style={{ color: "var(--ok)" }}>{fmtIQD(totalMargin)}</span>
         </div>
       </div>
 
-      <div className="card">
-        <table>
-          <thead>
-            <tr>
-              <th>Order</th>
-              <th>Time</th>
-              <th>Channel</th>
-              <th>Product</th>
-              <th className="right">Net</th>
-              <th className="right">COGS</th>
-              <th className="right">Margin</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((o) => (
-              <tr key={o.order.id}>
-                <td className="mono">{o.order.id}</td>
-                <td className="mono">{o.order.time}</td>
-                <td>
-                  <span className="badge">{channelLabel[o.order.channel]}</span>
-                </td>
-                <td>
-                  {o.productName} ×{o.order.qty}
-                </td>
-                <td className="right mono">{o.net.format()}</td>
-                <td className="right mono">{o.cogs.format()}</td>
-                <td className="right mono" style={{ color: "var(--ok)" }}>
-                  {o.margin.format()} ({o.marginPct}%)
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <h3 style={{ margin: "8px 0 0" }}>Drill into an order</h3>
-      <p className="muted" style={{ fontSize: ".9rem", marginTop: 0 }}>
-        Every sale is append-only. Corrections use voids/refunds, never edits. Expand an order to
-        see the exact inventory movements it posted.
-      </p>
-      {orders.map((o) => (
-        <details key={o.order.id} className="card">
-          <summary style={{ cursor: "pointer", fontWeight: 600 }}>
-            {o.order.id} — {o.productName} ×{o.order.qty} · {channelLabel[o.order.channel]} ·{" "}
-            {o.net.format()}
-          </summary>
-          <table style={{ marginTop: 10 }}>
-            <thead>
-              <tr>
-                <th>Item deducted</th>
-                <th className="right">Qty (base)</th>
-                <th className="right">Cost</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orderDeductions(o.order).map((d) => (
-                <tr key={d.itemId}>
-                  <td>{d.name}</td>
-                  <td className="right mono">−{d.qty}</td>
-                  <td className="right mono">{d.cost.format()}</td>
+      {orders.length === 0 ? (
+        <EmptyState title="No orders yet" hint="Record a sale on the POS screen — it appears here instantly." />
+      ) : (
+        <>
+          <div className="card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Time</th>
+                  <th>Channel</th>
+                  <th>Items</th>
+                  <th className="right">Net</th>
+                  <th className="right">COGS</th>
+                  <th className="right">Margin</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </details>
-      ))}
+              </thead>
+              <tbody>
+                {orders.map((o) => {
+                  const margin = o.net - o.cogs;
+                  const pct = o.net > 0 ? ((margin / o.net) * 100).toFixed(0) : "0";
+                  return (
+                    <tr key={o.id}>
+                      <td className="mono">{o.id.slice(0, 8)}</td>
+                      <td className="mono muted" style={{ fontSize: ".8rem" }}>
+                        {o.placedAt.slice(11, 16)}
+                      </td>
+                      <td>
+                        <span className="badge">{channelLabel[o.channel as SalesChannel] ?? o.channel}</span>
+                      </td>
+                      <td>{o.lines.map((l) => `${l.name} ×${l.qty}`).join(", ")}</td>
+                      <td className="right mono">{fmtIQD(o.net)}</td>
+                      <td className="right mono">{fmtIQD(o.cogs)}</td>
+                      <td className="right mono" style={{ color: margin < 0 ? "var(--err)" : "var(--ok)" }}>
+                        {fmtIQD(margin)} ({pct}%)
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="muted" style={{ fontSize: ".9rem", marginTop: 0 }}>
+            Every sale is append-only. Corrections use voids/refunds, never edits.
+          </p>
+        </>
+      )}
     </div>
   );
 }

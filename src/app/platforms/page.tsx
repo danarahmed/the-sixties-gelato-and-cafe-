@@ -1,122 +1,77 @@
 import { getT } from "@/lib/i18n/server";
-import { talabatPayout, settlementReport, TALABAT_ORDER } from "@/lib/demo/data";
+import { getSalesOrders } from "@/lib/db/read";
+import { fmtIQD } from "@/lib/format";
+import { EmptyState } from "@/components/ui";
 
-const ISSUE_LABEL: Record<string, string> = {
-  missing_payout: "Missing payout",
-  unmatched_settlement_line: "Unmatched settlement line",
-  duplicate_settlement_line: "Duplicate settlement line",
-  payout_difference: "Payout difference",
-  incorrect_commission: "Incorrect commission",
-  cancelled_still_charged: "Cancelled but charged",
-  unexplained_adjustment: "Unexplained adjustment",
-};
+export const dynamic = "force-dynamic";
 
 export default async function PlatformsPage() {
   const t = await getT();
-  const { payout, cogs, contribution } = talabatPayout();
-  const { report } = settlementReport();
-  const e = TALABAT_ORDER;
+  const orders = await getSalesOrders(500).catch(() => []);
+  const platform = orders.filter((o) => o.channel === "talabat" || o.channel === "direct_delivery");
+  const net = platform.reduce((s, o) => s + o.net, 0);
+  const margin = platform.reduce((s, o) => s + (o.net - o.cogs), 0);
 
   return (
     <div className="grid" style={{ gap: 16 }}>
-      <div className="demo-banner">⚠️ {t("common.demo")}</div>
+      <div className="badge ok" style={{ alignSelf: "start" }}>🟢 Live database</div>
       <h1 style={{ margin: 0 }}>{t("nav.platforms")}</h1>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        The customer&apos;s payment is <strong>not</strong> your revenue or your payout. Every
-        component is stored separately and the payout is computed deterministically. Talabat live
-        API needs Partner credentials; until then, CSV import + this reconciliation work today.
+        The customer&apos;s payment is <strong>not</strong> your revenue or your payout. Delivery
+        sales you record on POS show below. Full settlement reconciliation (commission, fees,
+        payout-vs-expected) activates when a Talabat statement is imported — the reconciliation engine
+        and schema are in place; the CSV import is the next increment.
       </p>
 
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>Talabat order TLB-2026-0001 — economics</h3>
-        <table>
-          <tbody>
-            <Row label="Merchant list value" v={e.merchantListValue.format()} />
-            <Row
-              label="Merchant-funded discount"
-              v={"−" + e.merchantFundedDiscount.format()}
-              muted
-            />
-            <Row
-              label="Platform-funded discount (reimbursed)"
-              v={e.platformFundedDiscount.format()}
-              muted
-            />
-            <Row label="Net merchant sales" v={payout.netMerchantSales.format()} strong />
-            <Row label="Commission" v={"−" + e.commission.format()} muted />
-            <Row label="Payment processing fee" v={"−" + e.paymentProcessingFee.format()} muted />
-            <Row label="Advertising fee" v={"−" + e.advertisingFee.format()} muted />
-            <Row label="Refunds" v={"−" + e.refunds.format()} muted />
-            <Row label="Expected merchant payout" v={payout.expectedPayout.format()} strong />
-            <Row label="Product cost (COGS)" v={"−" + cogs.format()} muted />
-            <Row label="Channel contribution profit" v={contribution.format()} strong ok />
-          </tbody>
-        </table>
-      </div>
-
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>Settlement reconciliation — statement TLB-SETTLE-2026-W32</h3>
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginBottom: 10 }}>
-          <span className="badge">Matched: {report.matchedCount}</span>
-          <span className="badge">Expected total: {report.totalExpected.format()}</span>
-          <span className="badge">Reported total: {report.totalReported.format()}</span>
-          <span className={`badge ${report.issues.length ? "err" : "ok"}`}>
-            Issues: {report.issues.length}
-          </span>
+      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px,1fr))" }}>
+        <div className="card stat">
+          <span className="label">Delivery orders</span>
+          <span className="value">{platform.length}</span>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Issue</th>
-              <th>Order</th>
-              <th>Detail</th>
-              <th className="right">Impact</th>
-            </tr>
-          </thead>
-          <tbody>
-            {report.issues.map((i, idx) => (
-              <tr key={idx}>
-                <td>
-                  <span className="badge err">{ISSUE_LABEL[i.type] ?? i.type}</span>
-                </td>
-                <td className="mono">{i.externalOrderId}</td>
-                <td className="muted" style={{ fontSize: ".9rem" }}>
-                  {i.detail}
-                </td>
-                <td className="right mono">{i.delta ? i.delta.format() : "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="card stat">
+          <span className="label">Delivery net sales</span>
+          <span className="value mono">{fmtIQD(net)}</span>
+        </div>
+        <div className="card stat">
+          <span className="label">Delivery gross profit</span>
+          <span className="value mono" style={{ color: "var(--ok)" }}>{fmtIQD(margin)}</span>
+        </div>
       </div>
-    </div>
-  );
-}
 
-function Row({
-  label,
-  v,
-  strong,
-  muted,
-  ok,
-}: {
-  label: string;
-  v: string;
-  strong?: boolean;
-  muted?: boolean;
-  ok?: boolean;
-}) {
-  return (
-    <tr>
-      <td style={{ fontWeight: strong ? 700 : 400 }} className={muted ? "muted" : ""}>
-        {label}
-      </td>
-      <td
-        className="right mono"
-        style={{ fontWeight: strong ? 700 : 400, color: ok ? "var(--ok)" : undefined }}
-      >
-        {v}
-      </td>
-    </tr>
+      {platform.length === 0 ? (
+        <EmptyState
+          title="No delivery-platform sales yet"
+          hint="Record a Talabat or direct-delivery sale on POS to populate this screen."
+        />
+      ) : (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>Delivery orders</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Channel</th>
+                <th>Items</th>
+                <th className="right">Net</th>
+                <th className="right">COGS</th>
+                <th className="right">Contribution</th>
+              </tr>
+            </thead>
+            <tbody>
+              {platform.map((o) => (
+                <tr key={o.id}>
+                  <td className="mono">{o.id.slice(0, 8)}</td>
+                  <td className="muted">{o.channel}</td>
+                  <td>{o.lines.map((l) => `${l.name} ×${l.qty}`).join(", ")}</td>
+                  <td className="right mono">{fmtIQD(o.net)}</td>
+                  <td className="right mono">{fmtIQD(o.cogs)}</td>
+                  <td className="right mono" style={{ color: "var(--ok)" }}>{fmtIQD(o.net - o.cogs)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }

@@ -38,28 +38,34 @@ are green.
 
 ## Module UI status
 
-UI column: 🟢 = functional screen on demo data (live at the Vercel deploy);
-⬜ = live-data wiring (auth + database) still to come.
+**All generated demo/seed data has been removed.** Every screen now reads (and,
+where marked, writes) the **live Supabase database** with the public anon key
+through demo-scoped RLS policies (migration `0010`). The system starts empty and
+fills only with data the user enters.
 
-| Module             | Backend/Logic                | UI  | Notes                                                                            |
-| ------------------ | ---------------------------- | --- | -------------------------------------------------------------------------------- |
-| Dashboard          | ✅                           | 🟢  | KPIs/low-stock/expiring/recon computed from demo data; wire to live queries next |
-| POS                | ✅                           | 🟢  | Cart + channel-aware checkout; live COGS/margin; shows movements it posts (demo) |
-| Orders             | ✅ (schema)                  | 🟢  | Order list + net/COGS/margin, drill-in to deductions; void/refund UI next        |
-| Products & Recipes | ✅ (schema+logic)            | 🟢  | Recipe breakdown + per-channel economics; editor/versioning UI next              |
-| Production         | ✅ (logic)                   | 🟢  | Interactive batch calculator (yield/variance/valuation); planning next           |
-| Inventory          | ✅ (ledger)                  | 🟢  | Stock board (derived), value, low-stock/expiry; ledger browser next              |
-| Stock Count        | ✅ (logic)                   | 🟢  | Blind count → variance → adjustment preview; multi-counter flow next             |
-| Purchasing         | ✅ (schema+logic)            | 🟢  | Receive → unit conversion → landed cost → WAC; PO builder next                   |
-| Delivery Platforms | ✅ (logic)                   | 🟢  | Order economics + settlement reconciliation; CSV import + mock adapter next      |
-| Accounting         | ✅ (schema)                  | 🟢  | Day P&L + balanced journal + chart; period close + exports next                  |
-| Reports            | ✅ (data captured)           | 🟢  | Product/channel margin computed live; more reports + exports next                |
-| AI Insights        | 🟡 (schema+abstraction plan) | 🟢  | Example insight cards + guardrails (no key needed); provider adapters next       |
-| Settings           | ✅ (config model)            | 🟢  | Business config + roles/permissions view; setup wizard + user admin next         |
+UI column: 🟢 = live DB read **and** write; 🔵 = live DB read (write path is the
+next increment).
 
-All UI screens above are **demo-data functional** (no login/database yet) and live
-on the Vercel deployment. The next layer is auth + the live database wiring so
-they read/write real records.
+| Module             | Backend/Logic                | UI  | Live behaviour now                                                                 |
+| ------------------ | ---------------------------- | --- | --------------------------------------------------------------------------------- |
+| Dashboard          | ✅                           | 🔵  | KPIs, low-stock, recent sales, inventory value — all from live queries            |
+| POS                | ✅                           | 🟢  | Sells live products → order + lines + tender + ledger movements + balanced journal |
+| Orders             | ✅                           | 🔵  | Live order list with items, net/COGS/margin (void/refund UI next)                 |
+| Products & Recipes | ✅                           | 🟢  | Create product + recipe (channel-gated lines) + prices; live per-channel margins  |
+| Production         | ✅ (logic)                   | 🔵  | Live batch history (batch-entry recipe builder is the next increment)             |
+| Inventory          | ✅                           | 🟢  | Live stock board (derived), add item + opening balance, adjust/waste, ledger browser |
+| Stock Count        | ✅                           | 🟢  | Blind count → variance → posts real `count_adjustment` movements                  |
+| Purchasing         | ✅                           | 🟢  | Add supplier, receive goods → unit conversion → landed cost → WAC → ledger; receipts list |
+| Delivery Platforms | ✅ (logic)                   | 🔵  | Live delivery-order economics (settlement CSV import is the next increment)        |
+| Accounting         | ✅                           | 🔵  | Live P&L from recorded sales + auto-posted balanced journals + chart of accounts   |
+| Reports            | ✅                           | 🔵  | Live product/channel margins + channel mix from recorded sales                     |
+| AI Insights        | 🟡                           | 🔵  | Live `ai_insight` reader + guardrails (provider adapters are the next increment)   |
+| Settings           | ✅                           | 🔵  | Live business config + branches + tested role/permission policy                    |
+
+Writes currently use the public anon key scoped to the single demo business by
+RLS; the append-only triggers still make the ledger and journal immutable. The
+next layer is **Supabase Auth** (per-user JWT so `tenant_isolation` replaces the
+demo policies) for real multi-user, multi-tenant access.
 
 ## Cross-cutting
 
