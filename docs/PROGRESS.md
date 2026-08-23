@@ -38,21 +38,28 @@ are green.
 
 ## Module UI status
 
-| Module             | Backend/Logic                | UI  | Notes                                                                      |
-| ------------------ | ---------------------------- | --- | -------------------------------------------------------------------------- |
-| Dashboard          | ✅                           | 🟡  | KPI cards render (demo figures); wire to live queries next                 |
-| POS                | ✅                           | 🟡  | Live cost/margin/deduction demo; cart, tender, receipt, offline queue next |
-| Orders             | ✅ (schema)                  | ⬜  | list/filter/void/refund UI                                                 |
-| Products & Recipes | ✅ (schema+logic)            | ⬜  | recipe editor, versioning UI                                               |
-| Production         | ✅ (logic)                   | ⬜  | batch entry, planning screen                                               |
-| Inventory          | ✅ (ledger)                  | ⬜  | ledger browser, alerts                                                     |
-| Stock Count        | ✅ (logic)                   | ⬜  | mobile counting flow                                                       |
-| Purchasing         | ✅ (schema+logic)            | ⬜  | PO builder, receiving                                                      |
-| Delivery Platforms | ✅ (logic)                   | ⬜  | CSV import, reconciliation workbench                                       |
-| Accounting         | ✅ (schema)                  | ⬜  | P&L, journal browser, period close                                         |
-| Reports            | 🟡 (data captured)           | ⬜  | report views + exports                                                     |
-| AI Insights        | 🟡 (schema+abstraction plan) | ⬜  | provider adapter + insight screens                                         |
-| Settings           | ✅ (config model)            | ⬜  | setup wizard, user/role admin                                              |
+UI column: 🟢 = functional screen on demo data (live at the Vercel deploy);
+⬜ = live-data wiring (auth + database) still to come.
+
+| Module             | Backend/Logic                | UI  | Notes                                                                            |
+| ------------------ | ---------------------------- | --- | -------------------------------------------------------------------------------- |
+| Dashboard          | ✅                           | 🟢  | KPIs/low-stock/expiring/recon computed from demo data; wire to live queries next |
+| POS                | ✅                           | 🟢  | Cart + channel-aware checkout; live COGS/margin; shows movements it posts (demo) |
+| Orders             | ✅ (schema)                  | 🟢  | Order list + net/COGS/margin, drill-in to deductions; void/refund UI next        |
+| Products & Recipes | ✅ (schema+logic)            | 🟢  | Recipe breakdown + per-channel economics; editor/versioning UI next              |
+| Production         | ✅ (logic)                   | 🟢  | Interactive batch calculator (yield/variance/valuation); planning next           |
+| Inventory          | ✅ (ledger)                  | 🟢  | Stock board (derived), value, low-stock/expiry; ledger browser next              |
+| Stock Count        | ✅ (logic)                   | 🟢  | Blind count → variance → adjustment preview; multi-counter flow next             |
+| Purchasing         | ✅ (schema+logic)            | 🟢  | Receive → unit conversion → landed cost → WAC; PO builder next                   |
+| Delivery Platforms | ✅ (logic)                   | 🟢  | Order economics + settlement reconciliation; CSV import + mock adapter next      |
+| Accounting         | ✅ (schema)                  | 🟢  | Day P&L + balanced journal + chart; period close + exports next                  |
+| Reports            | ✅ (data captured)           | 🟢  | Product/channel margin computed live; more reports + exports next                |
+| AI Insights        | 🟡 (schema+abstraction plan) | 🟢  | Example insight cards + guardrails (no key needed); provider adapters next       |
+| Settings           | ✅ (config model)            | 🟢  | Business config + roles/permissions view; setup wizard + user admin next         |
+
+All UI screens above are **demo-data functional** (no login/database yet) and live
+on the Vercel deployment. The next layer is auth + the live database wiring so
+they read/write real records.
 
 ## Cross-cutting
 
