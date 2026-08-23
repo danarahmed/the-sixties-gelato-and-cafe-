@@ -38,7 +38,8 @@ export async function ModulePlaceholder({
         </ul>
       </div>
       <p className="muted" style={{ fontSize: ".9rem" }}>
-        See <code>docs/ROADMAP.md</code> and <code>docs/PROGRESS.md</code> for the full status of this module.
+        See <code>docs/ROADMAP.md</code> and <code>docs/PROGRESS.md</code> for the full status of
+        this module.
       </p>
     </div>
   );

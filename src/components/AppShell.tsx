@@ -37,7 +37,10 @@ function OnlineBadge() {
     };
   }, []);
   return (
-    <span className={`badge ${online ? "ok" : "warn"}`} title={online ? t("common.online") : t("common.offline")}>
+    <span
+      className={`badge ${online ? "ok" : "warn"}`}
+      title={online ? t("common.online") : t("common.offline")}
+    >
       {online ? "🟢" : "🟠"} {online ? t("common.online") : t("common.offline")}
     </span>
   );
@@ -67,7 +70,14 @@ function Controls({ locale, theme }: { locale: Locale; theme: "light" | "dark" }
           aria-label={t("common.language")}
           value={locale}
           onChange={(e) => changeLocale(e.target.value)}
-          style={{ minHeight: 40, borderRadius: 8, padding: "0 8px", background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }}
+          style={{
+            minHeight: 40,
+            borderRadius: 8,
+            padding: "0 8px",
+            background: "var(--surface)",
+            color: "var(--text)",
+            border: "1px solid var(--border)",
+          }}
         >
           {LOCALES.map((l) => (
             <option key={l} value={l}>
@@ -114,7 +124,8 @@ export function AppShell({
       <div className="layout">
         <nav className={`sidenav ${menuOpen ? "open" : ""}`} onClick={() => setMenuOpen(false)}>
           {NAV.map((n) => {
-            const active = pathname === n.href || (n.href !== "/dashboard" && pathname?.startsWith(n.href));
+            const active =
+              pathname === n.href || (n.href !== "/dashboard" && pathname?.startsWith(n.href));
             return (
               <Link key={n.href} href={n.href} className={active ? "active" : ""}>
                 <span aria-hidden>{n.icon}</span>

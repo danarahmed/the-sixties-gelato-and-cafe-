@@ -35,9 +35,20 @@ export default function PosPage() {
     const priceVal = Money.of(product.price[channel] ?? 0, IQD);
     const marginVal = priceVal.subtract(total);
     const pct = priceVal.isPositive()
-      ? marginVal.toDecimalValue().dividedBy(priceVal.toDecimalValue()).times(100).toDecimalPlaces(1).toString()
+      ? marginVal
+          .toDecimalValue()
+          .dividedBy(priceVal.toDecimalValue())
+          .times(100)
+          .toDecimalPlaces(1)
+          .toString()
       : "0";
-    return { deductions: rows, cost: total.quantize(), price: priceVal, margin: marginVal.quantize(), marginPct: pct };
+    return {
+      deductions: rows,
+      cost: total.quantize(),
+      price: priceVal,
+      margin: marginVal.quantize(),
+      marginPct: pct,
+    };
   }, [product, channel]);
 
   return (
@@ -64,7 +75,11 @@ export default function PosPage() {
           <h3>{t("pos.channel")}</h3>
           <div className="channel-tabs">
             {CHANNELS.map((c) => (
-              <button key={c} className={c === channel ? "active" : ""} onClick={() => setChannel(c)}>
+              <button
+                key={c}
+                className={c === channel ? "active" : ""}
+                onClick={() => setChannel(c)}
+              >
                 {t(`pos.channel.${c}`)}
               </button>
             ))}
@@ -86,7 +101,10 @@ export default function PosPage() {
           </div>
           <div className="deduction-row">
             <span className="muted">{t("pos.margin")}</span>
-            <span className="mono" style={{ color: margin.isNegative() ? "var(--err)" : "var(--ok)" }}>
+            <span
+              className="mono"
+              style={{ color: margin.isNegative() ? "var(--err)" : "var(--ok)" }}
+            >
               {margin.format()} ({marginPct}%)
             </span>
           </div>

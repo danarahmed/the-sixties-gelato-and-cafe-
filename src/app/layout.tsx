@@ -7,7 +7,8 @@ import { dirFor, LOCALES, type Locale } from "@/lib/i18n/dictionaries";
 
 export const metadata: Metadata = {
   title: "The Sixty's Gelato & Café",
-  description: "Business-management system: POS, inventory, production, delivery platforms, accounting.",
+  description:
+    "Business-management system: POS, inventory, production, delivery platforms, accounting.",
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Sixty's" },
 };

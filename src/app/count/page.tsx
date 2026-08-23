@@ -5,7 +5,10 @@ export default function Page() {
     <ModulePlaceholder
       titleKey="nav.count"
       phase="Phase 1"
-      done={["stock_count schema (blind counts, save/resume, approval)","computeCountVariance() + adjustment posting (tested)"]}
+      done={[
+        "stock_count schema (blind counts, save/resume, approval)",
+        "computeCountVariance() + adjustment posting (tested)",
+      ]}
       planned={["Mobile counting flow, barcode scan, variance approval queue"]}
     />
   );

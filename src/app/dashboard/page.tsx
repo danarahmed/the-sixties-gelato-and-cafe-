@@ -22,31 +22,57 @@ export default async function DashboardPage() {
       <div className="demo-banner">⚠️ {t("common.demo")}</div>
       <h1 style={{ margin: 0 }}>{t("dash.title")}</h1>
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>
+      <div
+        className="grid"
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}
+      >
         {kpis.map((k) => (
           <div key={k.label} className="card stat">
             <span className="label">{k.label}</span>
             <span className={`value ${k.tone === "ok" ? "" : ""}`}>{k.value}</span>
-            {k.tone && <span className={`badge ${k.tone}`}>{k.tone === "warn" ? "action" : "healthy"}</span>}
+            {k.tone && (
+              <span className={`badge ${k.tone}`}>{k.tone === "warn" ? "action" : "healthy"}</span>
+            )}
           </div>
         ))}
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
+      <div
+        className="grid"
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}
+      >
         <div className="card">
           <h3 style={{ marginTop: 0 }}>{t("dash.lowStock")}</h3>
-          <div className="deduction-row"><span>Delivery bag</span><span className="badge warn mono">low</span></div>
-          <div className="deduction-row"><span>Cone sleeve</span><span className="badge warn mono">low</span></div>
+          <div className="deduction-row">
+            <span>Delivery bag</span>
+            <span className="badge warn mono">low</span>
+          </div>
+          <div className="deduction-row">
+            <span>Cone sleeve</span>
+            <span className="badge warn mono">low</span>
+          </div>
         </div>
         <div className="card">
           <h3 style={{ marginTop: 0 }}>{t("dash.expiring")}</h3>
-          <div className="deduction-row"><span>Pistachio gelato lot</span><span className="badge mono">2026-08-20</span></div>
-          <div className="deduction-row"><span>Milk</span><span className="badge mono">2026-08-25</span></div>
+          <div className="deduction-row">
+            <span>Pistachio gelato lot</span>
+            <span className="badge mono">2026-08-20</span>
+          </div>
+          <div className="deduction-row">
+            <span>Milk</span>
+            <span className="badge mono">2026-08-25</span>
+          </div>
         </div>
         <div className="card">
           <h3 style={{ marginTop: 0 }}>Talabat reconciliation</h3>
-          <div className="deduction-row"><span>Payout difference</span><span className="badge err mono">-200 IQD</span></div>
-          <div className="deduction-row"><span>Incorrect commission</span><span className="badge err mono">+200 IQD</span></div>
+          <div className="deduction-row">
+            <span>Payout difference</span>
+            <span className="badge err mono">-200 IQD</span>
+          </div>
+          <div className="deduction-row">
+            <span>Incorrect commission</span>
+            <span className="badge err mono">+200 IQD</span>
+          </div>
         </div>
       </div>
 
