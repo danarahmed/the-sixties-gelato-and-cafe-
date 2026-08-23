@@ -67,6 +67,28 @@ RLS; the append-only triggers still make the ledger and journal immutable. The
 next layer is **Supabase Auth** (per-user JWT so `tenant_isolation` replaces the
 demo policies) for real multi-user, multi-tenant access.
 
+## AI Accountant (level 2 — auto-draft, human-approved close)
+
+Live on the **Accounting** screen, running on a **mock brain** (deterministic,
+no API key) behind an `AIAccountant` interface — wiring the real Claude model is
+a one-line swap in `src/lib/ai/accountant.ts` (`getAIAccountant`).
+
+- **Auto-post** — drafts + posts balanced journals for purchases (Dr Inventory /
+  Cr A/P) and waste (Dr Waste / Cr Inventory) that aren't journaled yet. Sales
+  already auto-journal at POS.
+- **Expense capture** — the AI classifies a typed description to a GL account
+  (live preview + confidence), then posts Dr expense / Cr cash.
+- **Month-end close** — reviews the period (P&L, unposted-item and trial-balance
+  checks), and **your approval** locks the period; the `forbid_locked_period`
+  trigger then blocks further posting. Corrections are reversing entries.
+- **Audit** — every action is written to `ai_interaction_log` (provider/model/
+  action), shown on-screen. The engine builds and the DB validates every entry;
+  the AI only classifies/explains/reviews. Migration `0011` scopes the new
+  period/insight/log writes to the demo business.
+
+To go live: set `ANTHROPIC_API_KEY` (server-side) + add a Supabase service-role
+key for the AI actor; no UI or flow changes needed.
+
 ## Cross-cutting
 
 | Item                                          | Status | Notes                                                                                                  |

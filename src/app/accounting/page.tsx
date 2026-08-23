@@ -1,7 +1,9 @@
 import { getT } from "@/lib/i18n/server";
 import { getGlAccounts, getJournalEntries, getSalesOrders } from "@/lib/db/read";
+import { getAccountingOverview, getAiLog } from "@/lib/db/accounting";
 import { fmtIQD } from "@/lib/format";
 import { EmptyState } from "@/components/ui";
+import { AiAccountant } from "@/components/AiAccountant";
 
 export const dynamic = "force-dynamic";
 
@@ -15,10 +17,12 @@ const TYPE_LABEL: Record<string, string> = {
 
 export default async function AccountingPage() {
   const t = await getT();
-  const [accounts, journals, orders] = await Promise.all([
+  const [accounts, journals, orders, overview, aiLog] = await Promise.all([
     getGlAccounts().catch(() => []),
     getJournalEntries(40).catch(() => []),
     getSalesOrders(500).catch(() => []),
+    getAccountingOverview().catch(() => null),
+    getAiLog(15).catch(() => []),
   ]);
 
   const grossSales = orders.reduce((s, o) => s + o.net, 0);
@@ -34,6 +38,23 @@ export default async function AccountingPage() {
     <div className="grid" style={{ gap: 16 }}>
       <div className="badge ok" style={{ alignSelf: "start" }}>🟢 Live database</div>
       <h1 style={{ margin: 0 }}>{t("nav.accounting")}</h1>
+
+      {overview && (
+        <AiAccountant
+          overview={{
+            revenue: overview.revenue,
+            cogs: overview.cogs,
+            otherExpenses: overview.otherExpenses,
+            waste: overview.waste,
+            netProfit: overview.netProfit,
+            unpostedPurchases: overview.unpostedPurchases,
+            unpostedWaste: overview.unpostedWaste,
+            trialBalanced: overview.trialBalanced,
+            currentPeriodName: overview.currentPeriodName,
+            currentPeriodStatus: overview.currentPeriodStatus,
+          }}
+        />
+      )}
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>Profit from recorded sales</h3>
@@ -57,14 +78,15 @@ export default async function AccountingPage() {
           </table>
         )}
         <p className="muted" style={{ fontSize: ".85rem" }}>
-          Fixed overhead (rent, salaries, utilities) is not subtracted here — it is entered separately.
+          Fixed overhead (rent, salaries, utilities) is entered via the AI Accountant above and shows
+          in the full month-end close.
         </p>
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Journal entries (auto-posted from sales)</h3>
+        <h3 style={{ marginTop: 0 }}>Journal entries</h3>
         {journals.length === 0 ? (
-          <EmptyState title="No journal entries yet" hint="Each POS sale posts a balanced double-entry: Dr cash/receivable · Cr revenue; Dr COGS · Cr inventory." />
+          <EmptyState title="No journal entries yet" hint="POS sales, plus the AI Accountant’s auto-posting and expenses, write balanced double-entries here." />
         ) : (
           journals.map((j) => {
             const d = j.lines.reduce((s, l) => s + l.debit, 0);
@@ -98,6 +120,38 @@ export default async function AccountingPage() {
           })
         )}
       </div>
+
+      {aiLog.length > 0 && (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>AI audit trail</h3>
+          <p className="muted" style={{ fontSize: ".82rem", marginTop: 0 }}>
+            Every AI action is logged (provider, model, action) — so the books stay auditable when the
+            real model is wired.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>Action</th>
+                <th>Provider</th>
+                <th>Model</th>
+              </tr>
+            </thead>
+            <tbody>
+              {aiLog.map((l) => (
+                <tr key={l.id}>
+                  <td className="muted mono" style={{ fontSize: ".8rem" }}>
+                    {l.createdAt.slice(0, 16).replace("T", " ")}
+                  </td>
+                  <td>{l.action.replace(/_/g, " ")}</td>
+                  <td><span className="badge">{l.provider}</span></td>
+                  <td className="muted mono" style={{ fontSize: ".8rem" }}>{l.model}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>Chart of accounts</h3>
