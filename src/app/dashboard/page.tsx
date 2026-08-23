@@ -1,20 +1,32 @@
 import { getT } from "@/lib/i18n/server";
+import { Money, IQD } from "@domain/money/money.js";
+import { ordersComputed, stockStatus, talabatPayout, settlementReport } from "@/lib/demo/data";
 
-/**
- * Owner dashboard. The figures below are DEMONSTRATION values drawn from the
- * seed data narrative; in the connected app they are computed from the ledger
- * and sales tables. They are clearly labelled as examples.
- */
 export default async function DashboardPage() {
   const t = await getT();
+  const orders = ordersComputed();
+  const net = Money.sum(
+    orders.map((o) => o.net),
+    IQD,
+  ).quantize();
+  const grossProfit = Money.sum(
+    orders.map((o) => o.margin),
+    IQD,
+  ).quantize();
+  const avg = orders.length ? net.divide(orders.length).quantize() : Money.zero(IQD);
+  const { payout, contribution } = talabatPayout();
+  const stock = stockStatus();
+  const low = stock.filter((s) => s.low);
+  const expiring = stock.filter((s) => s.expiringSoon);
+  const issues = settlementReport().report.issues;
 
-  const kpis: { label: string; value: string; tone?: string }[] = [
-    { label: t("dash.netSales"), value: "12,500 IQD" },
-    { label: t("dash.grossProfit"), value: "8,802 IQD", tone: "ok" },
-    { label: t("dash.contribution"), value: "1,740 IQD", tone: "ok" },
-    { label: t("dash.orders"), value: "3" },
-    { label: t("dash.avgOrder"), value: "4,167 IQD" },
-    { label: t("dash.platformPayout"), value: "3,650 IQD", tone: "warn" },
+  const kpis = [
+    { label: t("dash.netSales"), value: net.format() },
+    { label: t("dash.grossProfit"), value: grossProfit.format(), tone: "ok" },
+    { label: t("dash.contribution") + " (Talabat)", value: contribution.format(), tone: "ok" },
+    { label: t("dash.orders"), value: String(orders.length) },
+    { label: t("dash.avgOrder"), value: avg.format() },
+    { label: t("dash.platformPayout"), value: payout.expectedPayout.format(), tone: "warn" },
   ];
 
   return (
@@ -29,10 +41,12 @@ export default async function DashboardPage() {
         {kpis.map((k) => (
           <div key={k.label} className="card stat">
             <span className="label">{k.label}</span>
-            <span className={`value ${k.tone === "ok" ? "" : ""}`}>{k.value}</span>
-            {k.tone && (
-              <span className={`badge ${k.tone}`}>{k.tone === "warn" ? "action" : "healthy"}</span>
-            )}
+            <span
+              className="value mono"
+              style={{ color: k.tone === "ok" ? "var(--ok)" : undefined }}
+            >
+              {k.value}
+            </span>
           </div>
         ))}
       </div>
@@ -43,42 +57,42 @@ export default async function DashboardPage() {
       >
         <div className="card">
           <h3 style={{ marginTop: 0 }}>{t("dash.lowStock")}</h3>
-          <div className="deduction-row">
-            <span>Delivery bag</span>
-            <span className="badge warn mono">low</span>
-          </div>
-          <div className="deduction-row">
-            <span>Cone sleeve</span>
-            <span className="badge warn mono">low</span>
-          </div>
+          {low.length === 0 && <span className="badge ok">All above reorder</span>}
+          {low.map((s) => (
+            <div key={s.itemId} className="deduction-row">
+              <span>{s.name}</span>
+              <span className="badge warn mono">
+                {s.onHandBase} / {s.reorderBase}
+              </span>
+            </div>
+          ))}
         </div>
         <div className="card">
           <h3 style={{ marginTop: 0 }}>{t("dash.expiring")}</h3>
-          <div className="deduction-row">
-            <span>Pistachio gelato lot</span>
-            <span className="badge mono">2026-08-20</span>
-          </div>
-          <div className="deduction-row">
-            <span>Milk</span>
-            <span className="badge mono">2026-08-25</span>
-          </div>
+          {expiring.length === 0 && <span className="badge ok">Nothing expiring ≤ 3 days</span>}
+          {expiring.map((s) => (
+            <div key={s.itemId} className="deduction-row">
+              <span>{s.name}</span>
+              <span className="badge err mono">{s.expiry}</span>
+            </div>
+          ))}
         </div>
         <div className="card">
           <h3 style={{ marginTop: 0 }}>Talabat reconciliation</h3>
-          <div className="deduction-row">
-            <span>Payout difference</span>
-            <span className="badge err mono">-200 IQD</span>
-          </div>
-          <div className="deduction-row">
-            <span>Incorrect commission</span>
-            <span className="badge err mono">+200 IQD</span>
-          </div>
+          {issues.length === 0 && <span className="badge ok">No issues</span>}
+          {issues.map((i, idx) => (
+            <div key={idx} className="deduction-row">
+              <span>{i.type.replace(/_/g, " ")}</span>
+              <span className="badge err mono">{i.delta ? i.delta.format() : "—"}</span>
+            </div>
+          ))}
         </div>
       </div>
 
       <p className="muted" style={{ fontSize: ".9rem" }}>
-        Open <strong>{t("nav.pos")}</strong> to see the live, tested calculation engine deduct
-        different packaging per channel and compute cost &amp; margin in real time.
+        Open <strong>{t("nav.pos")}</strong> to add items to a cart and complete a sale — watch cost
+        and margin change with the channel. Every other screen (Orders, Inventory, Production,
+        Purchasing, Count, Platforms, Accounting, Reports) is now live on demo data.
       </p>
     </div>
   );
