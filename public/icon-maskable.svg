@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="The Sixty's Gelato and Café">
+  <rect width="512" height="512" fill="#b8375b"/>
+  <g fill="none" stroke="#fff" stroke-width="18" stroke-linejoin="round" stroke-linecap="round" transform="translate(0,8)">
+    <path d="M196 246c0-33 27-60 60-60s60 27 60 60" fill="#f7d9e3"/>
+    <path d="M190 246h132l-54 132a12 12 0 0 1-24 0z" fill="#f2b6c9"/>
+    <circle cx="240" cy="216" r="14" fill="#2b8a7a" stroke="none"/>
+    <circle cx="284" cy="222" r="11" fill="#8a5a2b" stroke="none"/>
+  </g>
+</svg>

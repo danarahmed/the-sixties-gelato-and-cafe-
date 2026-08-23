@@ -1,0 +1,169 @@
+/**
+ * Lightweight trilingual dictionary: English (LTR), Arabic (RTL), Kurdish
+ * Sorani (RTL). Kept as plain objects so it works in server and client
+ * components without extra runtime dependencies.
+ */
+export type Locale = "en" | "ar" | "ckb";
+
+export const LOCALES: Locale[] = ["en", "ar", "ckb"];
+
+export const LOCALE_META: Record<Locale, { label: string; dir: "ltr" | "rtl" }> = {
+  en: { label: "English", dir: "ltr" },
+  ar: { label: "العربية", dir: "rtl" },
+  ckb: { label: "کوردی", dir: "rtl" },
+};
+
+export function dirFor(locale: Locale): "ltr" | "rtl" {
+  return LOCALE_META[locale].dir;
+}
+
+type Dict = Record<string, string>;
+
+const en: Dict = {
+  "app.name": "The Sixty's Gelato & Café",
+  "nav.dashboard": "Dashboard",
+  "nav.pos": "POS",
+  "nav.orders": "Orders",
+  "nav.products": "Products & Recipes",
+  "nav.production": "Production",
+  "nav.inventory": "Inventory",
+  "nav.count": "Stock Count",
+  "nav.purchasing": "Purchasing",
+  "nav.platforms": "Delivery Platforms",
+  "nav.accounting": "Accounting",
+  "nav.reports": "Reports",
+  "nav.ai": "AI Insights",
+  "nav.settings": "Settings",
+  "common.demo": "Demonstration data — example prices and costs, not real business data.",
+  "common.language": "Language",
+  "common.theme": "Theme",
+  "common.online": "Online",
+  "common.offline": "Offline — sales are queued and will sync",
+  "dash.title": "Owner Dashboard",
+  "dash.netSales": "Net sales today",
+  "dash.grossProfit": "Gross profit",
+  "dash.contribution": "Contribution profit",
+  "dash.orders": "Orders",
+  "dash.avgOrder": "Average order value",
+  "dash.lowStock": "Low-stock items",
+  "dash.expiring": "Expiring soon",
+  "dash.platformPayout": "Expected platform payout",
+  "pos.title": "Point of Sale",
+  "pos.channel": "Channel",
+  "pos.pickProduct": "Select a product",
+  "pos.channel.dine_in": "Dine-in",
+  "pos.channel.takeaway": "Takeaway",
+  "pos.channel.direct_delivery": "Direct delivery",
+  "pos.channel.talabat": "Talabat",
+  "pos.price": "Price",
+  "pos.cost": "Theoretical cost",
+  "pos.margin": "Gross margin",
+  "pos.deductions": "Inventory this sale will deduct",
+  "pos.explainChannel": "Packaging deducted changes with the channel.",
+  "pos.item": "Item",
+  "pos.qty": "Qty (base unit)",
+  "pos.lineCost": "Cost",
+};
+
+const ar: Dict = {
+  "app.name": "جيلاتو وكافيه السِتّينات",
+  "nav.dashboard": "لوحة التحكم",
+  "nav.pos": "نقطة البيع",
+  "nav.orders": "الطلبات",
+  "nav.products": "المنتجات والوصفات",
+  "nav.production": "الإنتاج",
+  "nav.inventory": "المخزون",
+  "nav.count": "جرد المخزون",
+  "nav.purchasing": "المشتريات",
+  "nav.platforms": "منصات التوصيل",
+  "nav.accounting": "المحاسبة",
+  "nav.reports": "التقارير",
+  "nav.ai": "رؤى الذكاء الاصطناعي",
+  "nav.settings": "الإعدادات",
+  "common.demo": "بيانات تجريبية — أسعار وتكاليف كأمثلة، وليست بيانات فعلية.",
+  "common.language": "اللغة",
+  "common.theme": "المظهر",
+  "common.online": "متصل",
+  "common.offline": "غير متصل — يتم حفظ المبيعات ومزامنتها لاحقًا",
+  "dash.title": "لوحة تحكم المالك",
+  "dash.netSales": "صافي مبيعات اليوم",
+  "dash.grossProfit": "إجمالي الربح",
+  "dash.contribution": "ربح المساهمة",
+  "dash.orders": "الطلبات",
+  "dash.avgOrder": "متوسط قيمة الطلب",
+  "dash.lowStock": "أصناف منخفضة المخزون",
+  "dash.expiring": "قرب انتهاء الصلاحية",
+  "dash.platformPayout": "المدفوعات المتوقعة من المنصات",
+  "pos.title": "نقطة البيع",
+  "pos.channel": "القناة",
+  "pos.pickProduct": "اختر منتجًا",
+  "pos.channel.dine_in": "تناول في المكان",
+  "pos.channel.takeaway": "سفري",
+  "pos.channel.direct_delivery": "توصيل مباشر",
+  "pos.channel.talabat": "طلبات",
+  "pos.price": "السعر",
+  "pos.cost": "التكلفة النظرية",
+  "pos.margin": "هامش الربح",
+  "pos.deductions": "المخزون الذي سيُخصم بهذا البيع",
+  "pos.explainChannel": "التغليف المخصوم يتغير حسب القناة.",
+  "pos.item": "الصنف",
+  "pos.qty": "الكمية (الوحدة الأساسية)",
+  "pos.lineCost": "التكلفة",
+};
+
+const ckb: Dict = {
+  "app.name": "جیلاتۆ و کافێی شەستەکان",
+  "nav.dashboard": "داشبۆرد",
+  "nav.pos": "خاڵی فرۆشتن",
+  "nav.orders": "داواکارییەکان",
+  "nav.products": "بەرهەم و ڕەسەتەکان",
+  "nav.production": "بەرهەمهێنان",
+  "nav.inventory": "کۆگا",
+  "nav.count": "ژماردنی کۆگا",
+  "nav.purchasing": "کڕین",
+  "nav.platforms": "پلاتفۆرمەکانی گەیاندن",
+  "nav.accounting": "ژمێریاری",
+  "nav.reports": "ڕاپۆرتەکان",
+  "nav.ai": "تێبینی زیرەکی دەستکرد",
+  "nav.settings": "ڕێکخستنەکان",
+  "common.demo": "داتای نمونە — نرخ و تێچووی نمونەیی، نەک داتای ڕاستەقینە.",
+  "common.language": "زمان",
+  "common.theme": "ڕووکار",
+  "common.online": "سەرهێڵ",
+  "common.offline": "دەرهێڵ — فرۆشتنەکان پاشەکەوت دەکرێن و دواتر هاوکات دەکرێن",
+  "dash.title": "داشبۆردی خاوەن",
+  "dash.netSales": "فرۆشی ڕەسەنی ئەمڕۆ",
+  "dash.grossProfit": "قازانجی گشتی",
+  "dash.contribution": "قازانجی بەشداری",
+  "dash.orders": "داواکارییەکان",
+  "dash.avgOrder": "ناوەندی بەهای داواکاری",
+  "dash.lowStock": "کاڵا کەم لە کۆگا",
+  "dash.expiring": "نزیک لە بەسەرچوون",
+  "dash.platformPayout": "پارەی چاوەڕوانکراو لە پلاتفۆرمەکان",
+  "pos.title": "خاڵی فرۆشتن",
+  "pos.channel": "کەناڵ",
+  "pos.pickProduct": "بەرهەمێک هەڵبژێرە",
+  "pos.channel.dine_in": "لە شوێن",
+  "pos.channel.takeaway": "بردن",
+  "pos.channel.direct_delivery": "گەیاندنی ڕاستەوخۆ",
+  "pos.channel.talabat": "تەلەبات",
+  "pos.price": "نرخ",
+  "pos.cost": "تێچووی مۆدێلی",
+  "pos.margin": "پێچی قازانج",
+  "pos.deductions": "ئەو کۆگایەی بەم فرۆشتنە کەم دەکرێت",
+  "pos.explainChannel": "پاکەتکردنی کەمکراوە بەپێی کەناڵ دەگۆڕێت.",
+  "pos.item": "کاڵا",
+  "pos.qty": "بڕ (یەکەی بنەڕەت)",
+  "pos.lineCost": "تێچوو",
+};
+
+const DICTS: Record<Locale, Dict> = { en, ar, ckb };
+
+export function getDictionary(locale: Locale): Dict {
+  return DICTS[locale] ?? en;
+}
+
+/** Translate a key for a locale, falling back to English then the key itself. */
+export function translate(locale: Locale, key: string): string {
+  return DICTS[locale]?.[key] ?? en[key] ?? key;
+}

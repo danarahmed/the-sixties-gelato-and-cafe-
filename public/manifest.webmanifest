@@ -1,0 +1,17 @@
+{
+  "name": "The Sixty's Gelato & Café",
+  "short_name": "Sixty's",
+  "description": "POS, inventory, production, delivery platforms and accounting for The Sixty's Gelato & Café.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#faf7f2",
+  "theme_color": "#b8375b",
+  "lang": "en",
+  "dir": "auto",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
