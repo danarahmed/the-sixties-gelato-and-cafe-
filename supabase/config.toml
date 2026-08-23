@@ -1,0 +1,25 @@
+# Supabase local development configuration.
+# Run `supabase start` then `supabase db reset` to apply migrations + seed.
+project_id = "sixties-gelato-cafe"
+
+[db]
+port = 54322
+major_version = 16
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[api]
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public"]
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+# Email/password auth by default; enable MFA for owner/manager in the dashboard.
+
+[studio]
+enabled = true
+port = 54323
