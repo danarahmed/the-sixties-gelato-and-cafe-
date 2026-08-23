@@ -1,5 +1,15 @@
 # The Sixty's Gelato & Café — Full Walkthrough & Feature Tutorial
 
+> **⚠️ 2026-08-23 update — the app is now LIVE and EMPTY.** All demonstration
+> data has been removed and every screen now reads and writes the real Supabase
+> database. The example numbers quoted below (9,979 straws, Iced Latte, etc.) no
+> longer exist — they illustrate what each screen _shows once you enter your own
+> data_. Start by adding stock on **Inventory**, a menu on **Products**, a
+> purchase on **Purchasing**, then sell on **POS**. "🔜 After DB wiring" notes
+> below that concern basic reads/writes are now done; remaining items (login,
+> settlement CSV import, production batch entry, exports) are noted in
+> `PROGRESS.md`.
+
 A complete, screen-by-screen tutorial of the application **as it exists today**.
 Every feature is mapped to its **exact UI location** — the sidebar label and the
 page address (URL path) — and to the specific buttons, fields, and tables on that
