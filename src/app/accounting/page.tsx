@@ -1,8 +1,7 @@
 import { getT } from "@/lib/i18n/server";
-import { getGlAccounts, getJournalEntries, getSalesOrders } from "@/lib/db/read";
-import { getAccountingOverview, getAiLog } from "@/lib/db/accounting";
+import { getBusinessConfig } from "@/lib/db/read";
+import { getAccountingOverview, getAiLog, getTrialBalance } from "@/lib/db/accounting";
 import { fmtIQD } from "@/lib/format";
-import { EmptyState } from "@/components/ui";
 import { AiAccountant } from "@/components/AiAccountant";
 
 export const dynamic = "force-dynamic";
@@ -11,33 +10,91 @@ const TYPE_LABEL: Record<string, string> = {
   asset: "Asset",
   liability: "Liability",
   equity: "Equity",
-  revenue: "Revenue",
+  revenue: "Income",
   expense: "Expense",
 };
 
 export default async function AccountingPage() {
   const t = await getT();
-  const [accounts, journals, orders, overview, aiLog] = await Promise.all([
-    getGlAccounts().catch(() => []),
-    getJournalEntries(40).catch(() => []),
-    getSalesOrders(500).catch(() => []),
+  const [overview, trial, aiLog, cfg] = await Promise.all([
     getAccountingOverview().catch(() => null),
+    getTrialBalance().catch(() => ({ rows: [], totalDebit: 0, totalCredit: 0, balanced: true })),
     getAiLog(15).catch(() => []),
+    getBusinessConfig().catch(() => null),
   ]);
 
-  const grossSales = orders.reduce((s, o) => s + o.net, 0);
-  const cogs = orders.reduce((s, o) => s + o.cogs, 0);
-  const grossProfit = grossSales - cogs;
-  const pnl = [
-    { label: "Gross sales", amount: grossSales, kind: "revenue" as const },
-    { label: "Cost of goods sold", amount: cogs, kind: "cost" as const },
-    { label: "Gross profit", amount: grossProfit, kind: "subtotal" as const },
-  ];
+  const period = overview?.currentPeriodName ?? "";
+  const locked = overview?.currentPeriodStatus === "locked";
 
   return (
-    <div className="grid" style={{ gap: 16 }}>
-      <div className="badge ok" style={{ alignSelf: "start" }}>🟢 Live database</div>
-      <h1 style={{ margin: 0 }}>{t("nav.accounting")}</h1>
+    <div className="grid" style={{ gap: 18 }}>
+      <div className="phead">
+        <h1>{t("nav.chart")}</h1>
+        <span className="sc">Ledger &amp; period control</span>
+        <div className="sp">
+          <span className={`badge ${trial.balanced ? "ok" : "err"}`}>
+            {trial.balanced ? "Trial balance agrees" : "Out of balance"}
+          </span>
+          <span className={`badge ${locked ? "err" : ""}`}>
+            {period} {locked ? "locked" : "open"}
+          </span>
+        </div>
+      </div>
+
+      <div className="masthead">
+        <div className="entity">{cfg?.name ?? "The Sixty's Gelato & Café"}</div>
+        <div className="doc">Trial Balance</div>
+        <div className="period">
+          Period {period} · expressed in {cfg?.currencyCode ?? "IQD"}
+        </div>
+        <div className="rule-band" />
+      </div>
+
+      <section className="panel">
+        <div className="panel-h">
+          <h3>Chart of Accounts &amp; Trial Balance</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            {trial.rows.length} accounts
+          </span>
+        </div>
+        <div className="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>A/C</th>
+                <th>Account</th>
+                <th>Class</th>
+                <th className="right">Debit</th>
+                <th className="right">Credit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trial.rows.map((r) => (
+                <tr key={r.code}>
+                  <td className="faint">{r.code}</td>
+                  <td>{r.name}</td>
+                  <td>
+                    <span className="ref">{TYPE_LABEL[r.type] ?? r.type}</span>
+                  </td>
+                  <td className="right money">{r.debit ? fmtIQD(r.debit) : "—"}</td>
+                  <td className="right money">{r.credit ? fmtIQD(r.credit) : "—"}</td>
+                </tr>
+              ))}
+              <tr className="grand">
+                <td />
+                <td>Totals</td>
+                <td />
+                <td className="right money">{fmtIQD(trial.totalDebit)}</td>
+                <td className="right money">{fmtIQD(trial.totalCredit)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="muted" style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}>
+          Both columns must agree. The database refuses an unbalanced entry at commit, so this can
+          only tie — if it ever did not, the posting would have been rejected before it was written.
+        </p>
+      </section>
 
       {overview && (
         <AiAccountant
@@ -56,124 +113,40 @@ export default async function AccountingPage() {
         />
       )}
 
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>Profit from recorded sales</h3>
-        {orders.length === 0 ? (
-          <p className="muted" style={{ fontSize: ".9rem" }}>No sales recorded yet — record a sale on POS.</p>
-        ) : (
-          <table>
-            <tbody>
-              {pnl.map((l) => (
-                <tr key={l.label}>
-                  <td style={{ fontWeight: l.kind === "subtotal" ? 700 : 400 }} className={l.kind === "cost" ? "muted" : ""}>
-                    {l.label}
-                  </td>
-                  <td className="right mono" style={{ fontWeight: l.kind === "subtotal" ? 700 : 400, color: l.kind === "subtotal" ? "var(--ok)" : undefined }}>
-                    {l.kind === "cost" ? "−" : ""}
-                    {fmtIQD(l.amount)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        <p className="muted" style={{ fontSize: ".85rem" }}>
-          Fixed overhead (rent, salaries, utilities) is entered via the AI Accountant above and shows
-          in the full month-end close.
-        </p>
-      </div>
-
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>Journal entries</h3>
-        {journals.length === 0 ? (
-          <EmptyState title="No journal entries yet" hint="POS sales, plus the AI Accountant’s auto-posting and expenses, write balanced double-entries here." />
-        ) : (
-          journals.map((j) => {
-            const d = j.lines.reduce((s, l) => s + l.debit, 0);
-            const c = j.lines.reduce((s, l) => s + l.credit, 0);
-            return (
-              <details key={j.id} className="card" style={{ marginBottom: 8 }}>
-                <summary style={{ cursor: "pointer", fontWeight: 600 }}>
-                  {j.description} · {j.occurredAt.slice(0, 16).replace("T", " ")}{" "}
-                  <span className={`badge ${d === c ? "ok" : "err"}`}>{d === c ? "balanced" : "unbalanced"}</span>
-                </summary>
-                <table style={{ marginTop: 8 }}>
-                  <thead>
-                    <tr>
-                      <th>Account</th>
-                      <th className="right">Debit</th>
-                      <th className="right">Credit</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {j.lines.map((l, i) => (
-                      <tr key={i}>
-                        <td className="mono">{l.account}</td>
-                        <td className="right mono">{l.debit ? fmtIQD(l.debit) : ""}</td>
-                        <td className="right mono">{l.credit ? fmtIQD(l.credit) : ""}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </details>
-            );
-          })
-        )}
-      </div>
-
       {aiLog.length > 0 && (
-        <div className="card">
-          <h3 style={{ marginTop: 0 }}>AI audit trail</h3>
-          <p className="muted" style={{ fontSize: ".82rem", marginTop: 0 }}>
-            Every AI action is logged (provider, model, action) — so the books stay auditable when the
-            real model is wired.
-          </p>
-          <table>
-            <thead>
-              <tr>
-                <th>When</th>
-                <th>Action</th>
-                <th>Provider</th>
-                <th>Model</th>
-              </tr>
-            </thead>
-            <tbody>
-              {aiLog.map((l) => (
-                <tr key={l.id}>
-                  <td className="muted mono" style={{ fontSize: ".8rem" }}>
-                    {l.createdAt.slice(0, 16).replace("T", " ")}
-                  </td>
-                  <td>{l.action.replace(/_/g, " ")}</td>
-                  <td><span className="badge">{l.provider}</span></td>
-                  <td className="muted mono" style={{ fontSize: ".8rem" }}>{l.model}</td>
+        <section className="panel">
+          <div className="panel-h">
+            <h3>Audit Trail</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              Who did what, and when
+            </span>
+          </div>
+          <div className="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Action</th>
+                  <th>By</th>
+                  <th>Method</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {aiLog.map((l) => (
+                  <tr key={l.id}>
+                    <td className="faint">{l.createdAt.slice(0, 16).replace("T", " ")}</td>
+                    <td>{l.action.replace(/_/g, " ")}</td>
+                    <td>
+                      <span className="ref auto">Assisted</span>
+                    </td>
+                    <td className="faint">{l.model}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
-
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>Chart of accounts</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Account</th>
-              <th>Type</th>
-            </tr>
-          </thead>
-          <tbody>
-            {accounts.map((a) => (
-              <tr key={a.id}>
-                <td className="mono">{a.code}</td>
-                <td>{a.name}</td>
-                <td className="muted">{TYPE_LABEL[a.type] ?? a.type}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 }

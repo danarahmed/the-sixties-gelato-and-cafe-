@@ -6,20 +6,32 @@ import Link from "next/link";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { LOCALES, LOCALE_META, type Locale } from "@/lib/i18n/dictionaries";
 
-const NAV: { href: string; key: string; icon: string }[] = [
-  { href: "/dashboard", key: "nav.dashboard", icon: "📊" },
-  { href: "/pos", key: "nav.pos", icon: "🧾" },
-  { href: "/orders", key: "nav.orders", icon: "📋" },
-  { href: "/products", key: "nav.products", icon: "🍨" },
-  { href: "/production", key: "nav.production", icon: "🏭" },
-  { href: "/inventory", key: "nav.inventory", icon: "📦" },
-  { href: "/count", key: "nav.count", icon: "🔢" },
-  { href: "/purchasing", key: "nav.purchasing", icon: "🚚" },
-  { href: "/platforms", key: "nav.platforms", icon: "🛵" },
-  { href: "/accounting", key: "nav.accounting", icon: "📒" },
-  { href: "/reports", key: "nav.reports", icon: "📈" },
-  { href: "/ai", key: "nav.ai", icon: "✨" },
-  { href: "/settings", key: "nav.settings", icon: "⚙️" },
+/**
+ * Books-first information architecture: the ledger groups come first (what a
+ * bookkeeper opens daily), operations below, then the accountant's tools.
+ */
+const NAV: { group?: string; href: string; key: string }[] = [
+  { href: "/dashboard", key: "nav.dashboard" },
+
+  { group: "nav.group.revenue", href: "/sales", key: "nav.sales" },
+  { href: "/platforms", key: "nav.platforms" },
+
+  { group: "nav.group.spending", href: "/vendors", key: "nav.vendors" },
+  { href: "/expenses", key: "nav.expenses" },
+  { href: "/purchasing", key: "nav.purchasing" },
+
+  { group: "nav.group.operations", href: "/pos", key: "nav.pos" },
+  { href: "/orders", key: "nav.orders" },
+  { href: "/products", key: "nav.products" },
+  { href: "/inventory", key: "nav.inventory" },
+  { href: "/count", key: "nav.count" },
+  { href: "/production", key: "nav.production" },
+
+  { group: "nav.group.books", href: "/journals", key: "nav.journals" },
+  { href: "/accounting", key: "nav.chart" },
+  { href: "/reports", key: "nav.reports" },
+  { href: "/ai", key: "nav.ai" },
+  { href: "/settings", key: "nav.settings" },
 ];
 
 function OnlineBadge() {
@@ -41,7 +53,7 @@ function OnlineBadge() {
       className={`badge ${online ? "ok" : "warn"}`}
       title={online ? t("common.online") : t("common.offline")}
     >
-      {online ? "🟢" : "🟠"} {online ? t("common.online") : t("common.offline")}
+      {online ? t("common.online") : t("common.offline")}
     </span>
   );
 }
@@ -117,7 +129,10 @@ export function AppShell({
         >
           ☰
         </button>
-        <span className="brand">🍨 {t("app.name")}</span>
+        <span className="brand">{t("app.name")}</span>
+        <span className="sc" style={{ marginInlineStart: 4 }}>
+          Books
+        </span>
         <span className="spacer" />
         <Controls locale={locale} theme={theme} />
       </header>
@@ -127,10 +142,12 @@ export function AppShell({
             const active =
               pathname === n.href || (n.href !== "/dashboard" && pathname?.startsWith(n.href));
             return (
-              <Link key={n.href} href={n.href} className={active ? "active" : ""}>
-                <span aria-hidden>{n.icon}</span>
-                <span>{t(n.key)}</span>
-              </Link>
+              <div key={n.href}>
+                {n.group && <div className="navgroup">{t(n.group)}</div>}
+                <Link href={n.href} className={active ? "active" : ""}>
+                  {t(n.key)}
+                </Link>
+              </div>
             );
           })}
         </nav>

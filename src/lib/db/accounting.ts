@@ -99,6 +99,55 @@ export async function getAccountingOverview(): Promise<AccountingOverview | null
   };
 }
 
+export interface TrialBalanceRow {
+  code: string;
+  name: string;
+  type: string;
+  debit: number;
+  credit: number;
+}
+
+/** Every account with its posted debits and credits — the proof the books tie. */
+export async function getTrialBalance(): Promise<{
+  rows: TrialBalanceRow[];
+  totalDebit: number;
+  totalCredit: number;
+  balanced: boolean;
+}> {
+  const db = getSupabase();
+  if (!db) return { rows: [], totalDebit: 0, totalCredit: 0, balanced: true };
+  const [accR, lineR] = await Promise.all([
+    db.from("gl_account").select("id,code,name,account_type").eq("business_id", biz).order("code"),
+    db.from("journal_line").select("account_id,debit,credit"),
+  ]);
+  const sums = new Map<string, { debit: number; credit: number }>();
+  for (const l of lineR.data ?? []) {
+    const key = String(l.account_id);
+    const cur = sums.get(key) ?? { debit: 0, credit: 0 };
+    cur.debit += Number(l.debit ?? 0);
+    cur.credit += Number(l.credit ?? 0);
+    sums.set(key, cur);
+  }
+  const rows = (accR.data ?? []).map((a) => {
+    const s = sums.get(String(a.id)) ?? { debit: 0, credit: 0 };
+    return {
+      code: String(a.code),
+      name: String(a.name),
+      type: String(a.account_type),
+      debit: s.debit,
+      credit: s.credit,
+    };
+  });
+  const totalDebit = rows.reduce((s, r) => s + r.debit, 0);
+  const totalCredit = rows.reduce((s, r) => s + r.credit, 0);
+  return {
+    rows,
+    totalDebit,
+    totalCredit,
+    balanced: Math.round(totalDebit) === Math.round(totalCredit),
+  };
+}
+
 export interface AiLogRow {
   id: string;
   provider: string;

@@ -67,6 +67,27 @@ RLS; the append-only triggers still make the ledger and journal immutable. The
 next layer is **Supabase Auth** (per-user JWT so `tenant_isolation` replaces the
 demo policies) for real multi-user, multi-tenant access.
 
+## Books rebuild (ledger design + bookkeeping IA)
+
+The app was rebuilt around a **set of books**, not a set of tools. Navigation is
+grouped **Revenue → Spending → Operations → Accountant**, and the visual language
+is a professional ledger: ruled columns, green-bar row banding, serif figures
+with tabular numerals, Dr/Cr vouchers, double-rule totals, stamps instead of
+pills. `globals.css` keeps the previous class API, so every screen inherits it.
+
+| Screen        | What it is                                                                              |
+| ------------- | --------------------------------------------------------------------------------------- |
+| **Sales**     | Daily summaries from the till (one line per day per channel) + **close the day**: count the drawer against what the POS took, difference posts to `6300 Cash over / short` |
+| **Vendors**   | Three-pane master/detail: vendor list → **Statement of Account** (running balance), bills & payments, new vendor. Bills carry **due dates**, so payables age |
+| **Expenses**  | Write it in plain words; the account is proposed, the entry is shown **as it will be written**, then posted Dr expense / Cr cash |
+| **Journals**  | Register of every entry with its source (POS / Bill / Paymt / Auto / Manual) + a manual voucher that must balance before it posts |
+| **Reports**   | Index of every report grouped six ways, plus live P&L, payable ageing, product margin and channel mix |
+| **Chart of Accounts** | Trial balance across every account with double-rule totals, period control and the audit trail |
+
+Improvements added beyond the brief: payable **ageing buckets** (current / 1–15 /
+16–30 / 30+), **cash over/short** on the day close, bills separated from payments
+so vendor statements read correctly, and source refs on every journal line.
+
 ## AI Accountant (level 2 — auto-draft, human-approved close)
 
 Live on the **Accounting** screen, running on a **mock brain** (deterministic,
