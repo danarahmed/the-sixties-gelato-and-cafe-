@@ -1,16 +1,15 @@
 "use server";
 
 /**
- * AI Accountant server actions (level 2: auto-draft routine entries, human
- * approves the close). The accountant classifies/reviews; the deterministic
- * engine builds every balanced double-entry; the database validates it at
- * commit. Every action is written to ai_interaction_log for audit — mock today,
- * real Claude when a key is wired, with no change to this code.
+ * Bookkeeping server actions: carry routine entries to the ledger, record a
+ * classified expense, and review/approve the period close. The rules propose;
+ * the deterministic engine builds every balanced double-entry; the database
+ * validates it at commit. Every automated action is written to the audit log.
  */
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabase, DEMO_BUSINESS_ID } from "@/lib/supabase/client";
-import { getAIAccountant, MockAIAccountant, type AIAccountant } from "@/lib/ai/accountant";
+import { getBookkeeper } from "@/lib/bookkeeping/rules";
 import { getAccountingOverview, currentPeriodName, currentPeriodBounds } from "@/lib/db/accounting";
 
 const biz = DEMO_BUSINESS_ID;
@@ -86,39 +85,19 @@ async function currentPeriod(c: SupabaseClient): Promise<{ id: string; status: s
   return { id: String(ins.data.id), status: String(ins.data.status) };
 }
 
-/**
- * Run a call against the active accountant. If the model is unavailable — no
- * network, a bad key, a rate limit — fall back to the deterministic stand-in so
- * the books keep working, and report which one actually served.
- */
-async function withAccountant<T>(
-  fn: (ai: AIAccountant) => Promise<T>,
-): Promise<{ result: T; provider: string; model: string }> {
-  const ai = await getAIAccountant();
-  try {
-    const result = await fn(ai);
-    return { result, provider: ai.providerName, model: ai.isMock ? "mock-rules-v1" : MODEL_NAME };
-  } catch (e) {
-    if (ai.isMock) throw e;
-    const result = await fn(new MockAIAccountant());
-    return { result, provider: "mock (fallback)", model: "mock-rules-v1" };
-  }
-}
-
-const MODEL_NAME = process.env.ANTHROPIC_MODEL || "claude-opus-5";
-
-async function logAi(
+/** Record an automated action so the books stay auditable. */
+async function logAction(
   c: SupabaseClient,
   action: string,
   payload: unknown,
   response: unknown,
-  served?: { provider: string; model: string },
 ): Promise<void> {
+  const bk = getBookkeeper();
   try {
     await c.from("ai_interaction_log").insert({
       business_id: biz,
-      provider: served?.provider ?? "mock",
-      model: served?.model ?? "mock-rules-v1",
+      provider: bk.providerName,
+      model: "rules-v1",
       prompt: { action, ...(payload as object) },
       response: response as object,
       approved: true,
@@ -132,10 +111,7 @@ async function logAi(
 // 1. Live expense-category preview (no write) — for the form as the user types.
 // ---------------------------------------------------------------------------
 export async function previewExpenseCategoryAction(description: string, amount: number) {
-  const { result, provider } = await withAccountant((ai) =>
-    ai.categorizeExpense(description, amount),
-  );
-  return { ...result, provider };
+  return getBookkeeper().categorizeExpense(description, amount);
 }
 
 // ---------------------------------------------------------------------------
@@ -152,9 +128,7 @@ export async function recordExpenseAction(input: {
     const period = await currentPeriod(c);
     if (period && period.status === "locked") return { ok: false, error: `Period ${currentPeriodName()} is locked` };
 
-    const { result: cat, provider, model } = await withAccountant((ai) =>
-      ai.categorizeExpense(input.description, amount),
-    );
+    const cat = await getBookkeeper().categorizeExpense(input.description, amount);
     const accts = await accountMap(c);
 
     // Journal first (so the expense row can carry journal_entry_id — no UPDATE needed).
@@ -177,10 +151,7 @@ export async function recordExpenseAction(input: {
     });
     if (exp.error) return { ok: false, error: exp.error.message };
 
-    await logAi(c, "categorize_expense", { description: input.description, amount }, cat, {
-      provider,
-      model,
-    });
+    await logAction(c, "categorize_expense", { description: input.description, amount }, cat);
     revalidatePath("/accounting");
     revalidatePath("/dashboard");
     return { ok: true, accountCode: cat.accountCode, accountName: cat.accountName, explanation: cat.explanation };
@@ -269,7 +240,7 @@ export async function autoPostPendingAction(): Promise<
       }
     }
 
-    await logAi(c, "auto_post", {}, { purchases, waste });
+    await logAction(c, "auto_post", {}, { purchases, waste });
     revalidatePath("/accounting");
     revalidatePath("/dashboard");
     return { ok: true, purchases, waste, details };
@@ -284,8 +255,7 @@ export async function autoPostPendingAction(): Promise<
 export async function proposeCloseAction() {
   const overview = await getAccountingOverview();
   if (!overview) return { ok: false as const, error: "Database not configured" };
-  const { result: review, provider, model } = await withAccountant((ai) =>
-    ai.reviewClose({
+  const review = await getBookkeeper().reviewClose({
     periodName: overview.currentPeriodName,
     revenue: overview.revenue,
     cogs: overview.cogs,
@@ -294,19 +264,15 @@ export async function proposeCloseAction() {
     netProfit: overview.netProfit,
     unpostedPurchases: overview.unpostedPurchases,
     unpostedWaste: overview.unpostedWaste,
-      trialBalanced: overview.trialBalanced,
-    }),
-  );
+    trialBalanced: overview.trialBalanced,
+  });
   try {
     const c = db();
-    await logAi(c, "propose_close", { period: overview.currentPeriodName }, review, {
-      provider,
-      model,
-    });
+    await logAction(c, "propose_close", { period: overview.currentPeriodName }, review);
   } catch {
     /* ignore */
   }
-  return { ok: true as const, overview, review, provider };
+  return { ok: true as const, overview, review };
 }
 
 // ---------------------------------------------------------------------------
@@ -326,7 +292,7 @@ export async function approveCloseAction(): Promise<Result & { periodName?: stri
       .eq("id", period.id);
     if (upd.error) return { ok: false, error: upd.error.message };
 
-    await logAi(c, "approve_close", { period: name }, { locked: true });
+    await logAction(c, "approve_close", { period: name }, { locked: true });
     revalidatePath("/accounting");
     return { ok: true, periodName: name };
   } catch (e) {

@@ -30,7 +30,6 @@ const NAV: { group?: string; href: string; key: string }[] = [
   { group: "nav.group.books", href: "/journals", key: "nav.journals" },
   { href: "/accounting", key: "nav.chart" },
   { href: "/reports", key: "nav.reports" },
-  { href: "/ai", key: "nav.ai" },
   { href: "/settings", key: "nav.settings" },
 ];
 

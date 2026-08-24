@@ -12,7 +12,6 @@ interface Cat {
   confidence: number;
   explanation: string;
   needsReview: boolean;
-  provider: string;
 }
 
 /**
@@ -130,9 +129,8 @@ export function ExpenseEntry() {
             {cat && (
               <span className={cat.needsReview ? "red" : ""}>
                 {cat.needsReview
-                  ? `Low confidence (${Math.round(cat.confidence * 100)}%) — confirm the account`
-                  : `Classified with confidence (${Math.round(cat.confidence * 100)}%)`}
-                {cat.provider === "anthropic" ? " · Claude" : " · house rules"}
+                  ? "No clear match — confirm the account"
+                  : `Matched to ${cat.accountCode} ${cat.accountName}`}
               </span>
             )}
           </div>

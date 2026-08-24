@@ -6,7 +6,7 @@ import { autoPostPendingAction, proposeCloseAction, approveCloseAction } from "@
 import { fmtIQD } from "@/lib/format";
 import { Notice } from "@/components/ui";
 
-export interface AiOverview {
+export interface PeriodOverview {
   revenue: number;
   cogs: number;
   otherExpenses: number;
@@ -20,15 +20,15 @@ export interface AiOverview {
 }
 
 interface CloseReport {
-  overview: AiOverview & { grossProfit: number };
+  overview: PeriodOverview & { grossProfit: number };
   review: { readyToClose: boolean; narrative: string; flags: string[] };
 }
 
 /**
- * Carrying forward and closing the period. Routine entries are drafted and
- * posted for you; closing the books is yours to approve.
+ * Carrying forward and closing the period. Routine entries are drafted from the
+ * ledger and posted for you; closing the books is yours to approve.
  */
-export function AiAccountant({ overview }: { overview: AiOverview }) {
+export function PeriodControl({ overview }: { overview: PeriodOverview }) {
   const locked = overview.currentPeriodStatus === "locked";
   const pending = overview.unpostedPurchases + overview.unpostedWaste;
 
@@ -122,7 +122,7 @@ function AutoPost({
   );
 }
 
-function PeriodClose({ overview, locked }: { overview: AiOverview; locked: boolean }) {
+function PeriodClose({ overview, locked }: { overview: PeriodOverview; locked: boolean }) {
   const router = useRouter();
   const [busy, start] = useTransition();
   const [report, setReport] = useState<CloseReport | null>(null);

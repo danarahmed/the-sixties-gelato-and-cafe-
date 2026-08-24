@@ -1,13 +1,11 @@
 /**
- * AI Accountant — the reasoning layer that sits ON TOP of the deterministic
- * accounting engine. It NEVER does arithmetic or moves money itself; it only
- * classifies, explains, and reviews. The engine builds and the database
- * validates every balanced entry.
+ * The bookkeeper's rules — the layer that sits ON TOP of the accounting engine.
+ * It classifies an expense to an account and reviews a period before closing.
  *
- * `MockAIAccountant` is a deterministic stand-in (no API key, no network) so the
- * whole auto-draft + human-approved-close flow is real and testable today.
- * Swapping in a real Claude-backed implementation is a one-file change behind
- * this same interface (see `getAIAccountant`).
+ * Everything here is deterministic and local: no external service, no API key,
+ * no per-use cost, and the same input always gives the same answer. It never
+ * does arithmetic and never moves money — the tested engine builds every
+ * balanced entry and the database validates it at commit.
  */
 
 export interface ExpenseCategorization {
@@ -43,15 +41,14 @@ export interface CloseReview {
   flags: string[];
 }
 
-export interface AIAccountant {
-  readonly providerName: string; // 'mock' | 'anthropic'
-  readonly isMock: boolean;
+export interface Bookkeeper {
+  readonly providerName: string;
   categorizeExpense(description: string, amount: number): Promise<ExpenseCategorization>;
   reviewClose(input: CloseReviewInput): Promise<CloseReview>;
 }
 
 // ---------------------------------------------------------------------------
-// Deterministic mock brain
+// Classification rules
 // ---------------------------------------------------------------------------
 
 interface Rule {
@@ -60,7 +57,7 @@ interface Rule {
   accountName: string;
 }
 
-/** Keyword → GL account rules mirroring what the real model would output. */
+/** Keyword → GL account. Extend this list as new kinds of expense appear. */
 const EXPENSE_RULES: Rule[] = [
   { keywords: ["rent", "lease", "landlord"], accountCode: "6000", accountName: "Rent" },
   {
@@ -88,9 +85,8 @@ const EXPENSE_RULES: Rule[] = [
 /** Fallback when nothing matches: operating expense, flagged for review. */
 const FALLBACK: Rule = { keywords: [], accountCode: "6200", accountName: "Utilities" };
 
-export class MockAIAccountant implements AIAccountant {
-  readonly providerName = "mock";
-  readonly isMock = true;
+export class RuleBookkeeper implements Bookkeeper {
+  readonly providerName = "house-rules";
 
   async categorizeExpense(description: string, amount: number): Promise<ExpenseCategorization> {
     const text = (description || "").toLowerCase();
@@ -141,29 +137,10 @@ export class MockAIAccountant implements AIAccountant {
   }
 }
 
-let cached: AIAccountant | null = null;
+let cached: Bookkeeper | null = null;
 
-/**
- * Returns the active accountant: Claude when `ANTHROPIC_API_KEY` is configured
- * on the server, the deterministic stand-in otherwise. The application never
- * needs to know which one it got — both honour the same contract, and the
- * engine builds and balances every entry either way.
- *
- * The Claude implementation is imported dynamically so the SDK is only ever
- * loaded on the server, and only when a key is actually present.
- */
-export async function getAIAccountant(): Promise<AIAccountant> {
-  if (cached) return cached;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (apiKey) {
-    try {
-      const { ClaudeAIAccountant } = await import("@/lib/ai/claude-accountant");
-      cached = new ClaudeAIAccountant(apiKey);
-      return cached;
-    } catch {
-      // Fall through to the stand-in rather than break bookkeeping.
-    }
-  }
-  cached = new MockAIAccountant();
+/** The active bookkeeper. Deterministic, local, and free to run. */
+export function getBookkeeper(): Bookkeeper {
+  if (!cached) cached = new RuleBookkeeper();
   return cached;
 }

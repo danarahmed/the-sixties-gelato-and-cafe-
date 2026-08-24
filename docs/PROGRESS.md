@@ -88,38 +88,30 @@ Improvements added beyond the brief: payable **ageing buckets** (current / 1–1
 16–30 / 30+), **cash over/short** on the day close, bills separated from payments
 so vendor statements read correctly, and source refs on every journal line.
 
-## AI Accountant (level 2 — auto-draft, human-approved close)
+## Assisted bookkeeping (no paid service)
 
-Live on the **Accounting** screen, running on a **mock brain** (deterministic,
-no API key) behind an `AIAccountant` interface — wiring the real Claude model is
-a one-line swap in `src/lib/ai/accountant.ts` (`getAIAccountant`).
+Live on **Expenses** and **Chart of Accounts**. Everything here is deterministic
+and local — no external API, no key, **no per-use cost**. The rules propose, the
+tested engine builds every balanced entry, and the database validates it at
+commit.
 
-- **Auto-post** — drafts + posts balanced journals for purchases (Dr Inventory /
-  Cr A/P) and waste (Dr Waste / Cr Inventory) that aren't journaled yet. Sales
-  already auto-journal at POS.
-- **Expense capture** — the AI classifies a typed description to a GL account
-  (live preview + confidence), then posts Dr expense / Cr cash.
-- **Month-end close** — reviews the period (P&L, unposted-item and trial-balance
-  checks), and **your approval** locks the period; the `forbid_locked_period`
-  trigger then blocks further posting. Corrections are reversing entries.
-- **Audit** — every action is written to `ai_interaction_log` (provider/model/
-  action), shown on-screen. The engine builds and the DB validates every entry;
-  the AI only classifies/explains/reviews. Migration `0011` scopes the new
-  period/insight/log writes to the demo business.
+- **Carry forward** — drafts and posts balanced journals for purchases
+  (Dr Inventory / Cr A/P) and waste (Dr Waste / Cr Inventory) not yet journaled.
+  Sales auto-journal at the POS.
+- **Expense classification** — a keyword rule maps the narration to a GL account
+  ("rent" → 6000, "wages" → 6100, "electricity" → 6200). Anything it cannot
+  place is flagged so a person confirms it. Extend the table in
+  `src/lib/bookkeeping/rules.ts` as new kinds of expense appear.
+- **Period close** — checks unposted items and the trial balance, writes a plain
+  summary, and **your approval** locks the period; `forbid_locked_period` then
+  blocks further posting. Corrections are reversing entries.
+- **Audit** — every automated action is recorded (`ai_interaction_log`,
+  provider `house-rules`) and shown on the Chart of Accounts screen.
 
-**Claude is now wired.** `getAIAccountant()` returns `ClaudeAIAccountant`
-(Anthropic SDK, structured outputs via `jsonSchemaOutputFormat`, adaptive
-thinking) whenever `ANTHROPIC_API_KEY` is set on the server, and the
-deterministic house rules otherwise. The SDK is imported dynamically, so it is
-only loaded server-side and only when a key exists.
-
-If a call fails — no key, bad key, rate limit, no network — `withAccountant()`
-falls back to the house rules so bookkeeping never stops, and the audit trail
-records which engine actually served (`anthropic`, `mock`, or `mock (fallback)`).
-The expense screen shows the same thing as “· Claude” or “· house rules”.
-
-Configuration lives in `.env.example`: `ANTHROPIC_API_KEY`, and an optional
-`ANTHROPIC_MODEL` (defaults to `claude-opus-5`).
+An earlier iteration wired the Anthropic API behind this same interface. It was
+**removed** to keep the system free to run; the rules cover the same ground
+without a bill. Nothing else changed — the contract, the postings, and the audit
+trail are identical.
 
 ## Cross-cutting
 

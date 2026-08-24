@@ -2,7 +2,7 @@ import { getT } from "@/lib/i18n/server";
 import { getBusinessConfig } from "@/lib/db/read";
 import { getAccountingOverview, getAiLog, getTrialBalance } from "@/lib/db/accounting";
 import { fmtIQD } from "@/lib/format";
-import { AiAccountant } from "@/components/AiAccountant";
+import { PeriodControl } from "@/components/books/PeriodControl";
 
 export const dynamic = "force-dynamic";
 
@@ -97,7 +97,7 @@ export default async function AccountingPage() {
       </section>
 
       {overview && (
-        <AiAccountant
+        <PeriodControl
           overview={{
             revenue: overview.revenue,
             cogs: overview.cogs,
@@ -137,7 +137,7 @@ export default async function AccountingPage() {
                     <td className="faint">{l.createdAt.slice(0, 16).replace("T", " ")}</td>
                     <td>{l.action.replace(/_/g, " ")}</td>
                     <td>
-                      <span className="ref auto">Assisted</span>
+                      <span className="ref auto">Automatic</span>
                     </td>
                     <td className="faint">{l.model}</td>
                   </tr>
