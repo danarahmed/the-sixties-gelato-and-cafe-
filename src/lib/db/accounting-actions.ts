@@ -10,7 +10,7 @@
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabase, DEMO_BUSINESS_ID } from "@/lib/supabase/client";
-import { getAIAccountant } from "@/lib/ai/accountant";
+import { getAIAccountant, MockAIAccountant, type AIAccountant } from "@/lib/ai/accountant";
 import { getAccountingOverview, currentPeriodName, currentPeriodBounds } from "@/lib/db/accounting";
 
 const biz = DEMO_BUSINESS_ID;
@@ -86,13 +86,39 @@ async function currentPeriod(c: SupabaseClient): Promise<{ id: string; status: s
   return { id: String(ins.data.id), status: String(ins.data.status) };
 }
 
-async function logAi(c: SupabaseClient, action: string, payload: unknown, response: unknown): Promise<void> {
-  const ai = getAIAccountant();
+/**
+ * Run a call against the active accountant. If the model is unavailable — no
+ * network, a bad key, a rate limit — fall back to the deterministic stand-in so
+ * the books keep working, and report which one actually served.
+ */
+async function withAccountant<T>(
+  fn: (ai: AIAccountant) => Promise<T>,
+): Promise<{ result: T; provider: string; model: string }> {
+  const ai = await getAIAccountant();
+  try {
+    const result = await fn(ai);
+    return { result, provider: ai.providerName, model: ai.isMock ? "mock-rules-v1" : MODEL_NAME };
+  } catch (e) {
+    if (ai.isMock) throw e;
+    const result = await fn(new MockAIAccountant());
+    return { result, provider: "mock (fallback)", model: "mock-rules-v1" };
+  }
+}
+
+const MODEL_NAME = process.env.ANTHROPIC_MODEL || "claude-opus-5";
+
+async function logAi(
+  c: SupabaseClient,
+  action: string,
+  payload: unknown,
+  response: unknown,
+  served?: { provider: string; model: string },
+): Promise<void> {
   try {
     await c.from("ai_interaction_log").insert({
       business_id: biz,
-      provider: ai.providerName,
-      model: ai.isMock ? "mock-rules-v1" : "claude",
+      provider: served?.provider ?? "mock",
+      model: served?.model ?? "mock-rules-v1",
       prompt: { action, ...(payload as object) },
       response: response as object,
       approved: true,
@@ -106,9 +132,10 @@ async function logAi(c: SupabaseClient, action: string, payload: unknown, respon
 // 1. Live expense-category preview (no write) — for the form as the user types.
 // ---------------------------------------------------------------------------
 export async function previewExpenseCategoryAction(description: string, amount: number) {
-  const ai = getAIAccountant();
-  const cat = await ai.categorizeExpense(description, amount);
-  return { ...cat, provider: ai.providerName };
+  const { result, provider } = await withAccountant((ai) =>
+    ai.categorizeExpense(description, amount),
+  );
+  return { ...result, provider };
 }
 
 // ---------------------------------------------------------------------------
@@ -125,8 +152,9 @@ export async function recordExpenseAction(input: {
     const period = await currentPeriod(c);
     if (period && period.status === "locked") return { ok: false, error: `Period ${currentPeriodName()} is locked` };
 
-    const ai = getAIAccountant();
-    const cat = await ai.categorizeExpense(input.description, amount);
+    const { result: cat, provider, model } = await withAccountant((ai) =>
+      ai.categorizeExpense(input.description, amount),
+    );
     const accts = await accountMap(c);
 
     // Journal first (so the expense row can carry journal_entry_id — no UPDATE needed).
@@ -149,7 +177,10 @@ export async function recordExpenseAction(input: {
     });
     if (exp.error) return { ok: false, error: exp.error.message };
 
-    await logAi(c, "categorize_expense", { description: input.description, amount }, cat);
+    await logAi(c, "categorize_expense", { description: input.description, amount }, cat, {
+      provider,
+      model,
+    });
     revalidatePath("/accounting");
     revalidatePath("/dashboard");
     return { ok: true, accountCode: cat.accountCode, accountName: cat.accountName, explanation: cat.explanation };
@@ -253,8 +284,8 @@ export async function autoPostPendingAction(): Promise<
 export async function proposeCloseAction() {
   const overview = await getAccountingOverview();
   if (!overview) return { ok: false as const, error: "Database not configured" };
-  const ai = getAIAccountant();
-  const review = await ai.reviewClose({
+  const { result: review, provider, model } = await withAccountant((ai) =>
+    ai.reviewClose({
     periodName: overview.currentPeriodName,
     revenue: overview.revenue,
     cogs: overview.cogs,
@@ -263,15 +294,19 @@ export async function proposeCloseAction() {
     netProfit: overview.netProfit,
     unpostedPurchases: overview.unpostedPurchases,
     unpostedWaste: overview.unpostedWaste,
-    trialBalanced: overview.trialBalanced,
-  });
+      trialBalanced: overview.trialBalanced,
+    }),
+  );
   try {
     const c = db();
-    await logAi(c, "propose_close", { period: overview.currentPeriodName }, review);
+    await logAi(c, "propose_close", { period: overview.currentPeriodName }, review, {
+      provider,
+      model,
+    });
   } catch {
     /* ignore */
   }
-  return { ok: true as const, overview, review, provider: ai.providerName };
+  return { ok: true as const, overview, review, provider };
 }
 
 // ---------------------------------------------------------------------------

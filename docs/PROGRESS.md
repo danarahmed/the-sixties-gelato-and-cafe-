@@ -107,8 +107,19 @@ a one-line swap in `src/lib/ai/accountant.ts` (`getAIAccountant`).
   the AI only classifies/explains/reviews. Migration `0011` scopes the new
   period/insight/log writes to the demo business.
 
-To go live: set `ANTHROPIC_API_KEY` (server-side) + add a Supabase service-role
-key for the AI actor; no UI or flow changes needed.
+**Claude is now wired.** `getAIAccountant()` returns `ClaudeAIAccountant`
+(Anthropic SDK, structured outputs via `jsonSchemaOutputFormat`, adaptive
+thinking) whenever `ANTHROPIC_API_KEY` is set on the server, and the
+deterministic house rules otherwise. The SDK is imported dynamically, so it is
+only loaded server-side and only when a key exists.
+
+If a call fails — no key, bad key, rate limit, no network — `withAccountant()`
+falls back to the house rules so bookkeeping never stops, and the audit trail
+records which engine actually served (`anthropic`, `mock`, or `mock (fallback)`).
+The expense screen shows the same thing as “· Claude” or “· house rules”.
+
+Configuration lives in `.env.example`: `ANTHROPIC_API_KEY`, and an optional
+`ANTHROPIC_MODEL` (defaults to `claude-opus-5`).
 
 ## Cross-cutting
 

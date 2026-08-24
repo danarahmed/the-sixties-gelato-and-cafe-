@@ -12,6 +12,7 @@ interface Cat {
   confidence: number;
   explanation: string;
   needsReview: boolean;
+  provider: string;
 }
 
 /**
@@ -128,7 +129,10 @@ export function ExpenseEntry() {
             <span>{value > 0 ? "Balanced — debits equal credits" : "Enter an amount to balance"}</span>
             {cat && (
               <span className={cat.needsReview ? "red" : ""}>
-                {cat.needsReview ? "Low confidence — confirm the account" : "Classified with confidence"}
+                {cat.needsReview
+                  ? `Low confidence (${Math.round(cat.confidence * 100)}%) — confirm the account`
+                  : `Classified with confidence (${Math.round(cat.confidence * 100)}%)`}
+                {cat.provider === "anthropic" ? " · Claude" : " · house rules"}
               </span>
             )}
           </div>
@@ -136,9 +140,9 @@ export function ExpenseEntry() {
 
         <div>
           <p className="muted" style={{ fontSize: ".78rem", marginBlockStart: 0, lineHeight: 1.7 }}>
-            Classification is assisted and always reviewable: “rent” finds 6000, “wages” finds 6100,
-            “electricity” finds 6200. Anything it cannot place is flagged for you. Nothing reaches the
-            ledger unless debits equal credits.
+            Classification is assisted and always reviewable — the account is proposed, never
+            imposed. Anything the classifier cannot place confidently is flagged for you, and
+            nothing reaches the ledger unless debits equal credits.
           </p>
           <button className="btn-primary" onClick={post} disabled={busy || !desc.trim() || value <= 0}>
             {busy ? "Posting…" : "Post expense"}

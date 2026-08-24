@@ -144,15 +144,26 @@ export class MockAIAccountant implements AIAccountant {
 let cached: AIAccountant | null = null;
 
 /**
- * Returns the active accountant. Today this is always the mock brain. When a
- * real key is present, this is the ONLY line that changes:
+ * Returns the active accountant: Claude when `ANTHROPIC_API_KEY` is configured
+ * on the server, the deterministic stand-in otherwise. The application never
+ * needs to know which one it got — both honour the same contract, and the
+ * engine builds and balances every entry either way.
  *
- *   if (process.env.ANTHROPIC_API_KEY) return new ClaudeAIAccountant();
- *
- * Everything downstream (server actions, UI, audit log) is already wired for it.
+ * The Claude implementation is imported dynamically so the SDK is only ever
+ * loaded on the server, and only when a key is actually present.
  */
-export function getAIAccountant(): AIAccountant {
+export async function getAIAccountant(): Promise<AIAccountant> {
   if (cached) return cached;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (apiKey) {
+    try {
+      const { ClaudeAIAccountant } = await import("@/lib/ai/claude-accountant");
+      cached = new ClaudeAIAccountant(apiKey);
+      return cached;
+    } catch {
+      // Fall through to the stand-in rather than break bookkeeping.
+    }
+  }
   cached = new MockAIAccountant();
   return cached;
 }
