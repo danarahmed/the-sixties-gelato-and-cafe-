@@ -11,7 +11,7 @@
 
 -- Single demo business with a fixed id so app config can point at it.
 insert into business (id, name, currency_code, currency_symbol, currency_decimals, timezone, default_locale, prevent_negative_stock)
-values ('00000000-0000-0000-0000-0000000000b1', 'The Sixty''s Gelato & Café (DEMO)', 'IQD', 'IQD', 0, 'Asia/Baghdad', 'en', false);
+values ('00000000-0000-0000-0000-0000000000b1', 'The Sixty''s Gelato & Café', 'IQD', 'IQD', 0, 'Asia/Baghdad', 'en', false);
 
 -- Locations: one branch + a central kitchen (multi-branch ready).
 insert into location (business_id, kind, name, name_ar, name_ckb) values
