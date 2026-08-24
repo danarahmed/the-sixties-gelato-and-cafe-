@@ -1,39 +1,35 @@
 import { getT } from "@/lib/i18n/server";
-import { getJournalEntries, getGlAccounts } from "@/lib/db/read";
+import { getGlAccounts, getBusinessConfig } from "@/lib/db/read";
 import { getAccountingOverview } from "@/lib/db/accounting";
+import { getJournalRegister, peekNextJournalNo, getPeople } from "@/lib/db/books";
 import { fmtIQD } from "@/lib/format";
 import { JournalEntryForm } from "@/components/books/JournalEntryForm";
+import { JournalRow } from "@/components/books/JournalRow";
 import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
-/** Where an entry came from, read off its reference type. */
-const REF_LABEL: Record<string, string> = {
-  sales_order: "POS",
-  goods_receipt: "Purch",
-  purchase_invoice: "Bill",
-  supplier_payment: "Paymt",
-  inventory_movement: "Stock",
-  expense: "Auto",
-  work_shift: "Close",
-  manual: "Manual",
-};
-
 export default async function JournalsPage() {
   const t = await getT();
-  const [entries, accounts, overview] = await Promise.all([
-    getJournalEntries(60).catch(() => []),
+  const [entries, accounts, overview, nextNo, people, cfg] = await Promise.all([
+    getJournalRegister(150).catch(() => []),
     getGlAccounts().catch(() => []),
     getAccountingOverview().catch(() => null),
+    peekNextJournalNo().catch(() => 1001),
+    getPeople().catch(() => []),
+    getBusinessConfig().catch(() => null),
   ]);
   const locked = overview?.currentPeriodStatus === "locked";
+  const drafts = entries.filter((e) => e.status === "draft").length;
+  const currency = cfg?.currencyCode ?? "IQD";
 
   return (
     <div className="grid" style={{ gap: 18 }}>
       <div className="phead">
-        <h1>{t("nav.journals")}</h1>
-        <span className="sc">Manual double entry</span>
+        <h1>All Manual Journals</h1>
+        <span className="sc">Period {overview?.currentPeriodName ?? ""}</span>
         <div className="sp">
+          {drafts > 0 && <span className="badge warn">{drafts} draft</span>}
           <span className={`badge ${overview?.trialBalanced ? "ok" : "err"}`}>
             {overview?.trialBalanced ? "Trial balance agrees" : "Out of balance"}
           </span>
@@ -45,9 +41,9 @@ export default async function JournalsPage() {
 
       <section className="panel">
         <div className="panel-h">
-          <h3>New Journal Voucher</h3>
+          <h3>New Journal</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            Debits must equal credits before it will post
+            Debits must equal credits before it can be published
           </span>
         </div>
         {locked ? (
@@ -58,7 +54,12 @@ export default async function JournalsPage() {
             </p>
           </div>
         ) : (
-          <JournalEntryForm accounts={accounts.map((a) => ({ code: a.code, name: a.name }))} />
+          <JournalEntryForm
+            accounts={accounts.map((a) => ({ code: a.code, name: a.name }))}
+            people={people}
+            nextNo={nextNo}
+            currency={currency}
+          />
         )}
       </section>
 
@@ -66,7 +67,7 @@ export default async function JournalsPage() {
         <div className="panel-h">
           <h3>Journal Register</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            {entries.length} entries · every one balanced at commit
+            {entries.length} entries
           </span>
         </div>
         {entries.length === 0 ? (
@@ -80,74 +81,54 @@ export default async function JournalsPage() {
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Particulars</th>
-                  <th>Ref</th>
+                  <th>Journal #</th>
+                  <th>Reference</th>
+                  <th>Status</th>
+                  <th>Notes</th>
                   <th className="right">Amount</th>
-                  <th className="right">Status</th>
+                  <th>Created by</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
-                {entries.map((e) => {
-                  const debit = e.lines.reduce((s, l) => s + l.debit, 0);
-                  const credit = e.lines.reduce((s, l) => s + l.credit, 0);
-                  const balanced = Math.round(debit) === Math.round(credit);
-                  return (
-                    <tr key={e.id}>
-                      <td>{e.occurredAt.slice(0, 10)}</td>
-                      <td>{e.description}</td>
-                      <td>
-                        <span className="ref auto">{REF_LABEL[e.description] ?? "Entry"}</span>
-                      </td>
-                      <td className="right money">{fmtIQD(debit)}</td>
-                      <td className="right">
-                        <span className={`ref ${balanced ? "auto" : "due"}`}>
-                          {balanced ? "Posted" : "Unbalanced"}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {entries.map((e) => (
+                  <JournalRow key={e.id} entry={e} locked={locked} />
+                ))}
               </tbody>
             </table>
           </div>
         )}
         <p className="muted" style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}>
-          No posted entry may be edited or deleted — the database refuses it. Corrections are made by
-          a reversing entry, so the history of the book stays intact.
+          A published entry can never be edited or deleted — the database refuses it. Corrections are
+          made by a reversing entry, so the history of the book stays intact. Only a draft, which has
+          not reached the books, may be discarded.
         </p>
       </section>
 
-      {entries.length > 0 && (
-        <section className="panel">
-          <div className="panel-h">
-            <h3>Entry Detail</h3>
-            <span className="muted" style={{ fontSize: ".74rem" }}>
-              Expand any entry to read its lines
-            </span>
+      <div className="cards2">
+        <div>
+          <div className="sc">Entries</div>
+          <div className="v">{entries.length}</div>
+          <div className="m">All sources</div>
+        </div>
+        <div>
+          <div className="sc">Drafts</div>
+          <div className="v" style={{ color: drafts ? "var(--warn)" : undefined }}>
+            {drafts}
           </div>
-          <div className="panel-b">
-            {entries.slice(0, 12).map((e) => (
-              <details key={e.id} style={{ borderBlockEnd: "1px solid var(--border)", padding: "7px 0" }}>
-                <summary style={{ fontWeight: 600, fontSize: ".85rem" }}>
-                  {e.description}{" "}
-                  <span className="faint" style={{ fontWeight: 400 }}>
-                    · {e.occurredAt.slice(0, 16).replace("T", " ")}
-                  </span>
-                </summary>
-                <div className="voucher" style={{ marginBlockStart: 8, maxWidth: 520 }}>
-                  {e.lines.map((l, i) => (
-                    <div key={i} className={`vline ${l.credit > 0 ? "credit" : ""}`}>
-                      <span className="dr">{l.debit > 0 ? "Dr" : "Cr"}</span>
-                      <span className="acct">{l.account}</span>
-                      <span className="amt">{fmtIQD(l.debit > 0 ? l.debit : l.credit)}</span>
-                    </div>
-                  ))}
-                </div>
-              </details>
-            ))}
-          </div>
-        </section>
-      )}
+          <div className="m">Not yet in the books</div>
+        </div>
+        <div>
+          <div className="sc">Posted this period</div>
+          <div className="v">{fmtIQD(entries.filter((e) => e.status === "published").reduce((s, e) => s + e.amount, 0))}</div>
+          <div className="m">Total debits</div>
+        </div>
+        <div>
+          <div className="sc">Next number</div>
+          <div className="v">{nextNo}</div>
+          <div className="m">Assigned on save</div>
+        </div>
+      </div>
     </div>
   );
 }

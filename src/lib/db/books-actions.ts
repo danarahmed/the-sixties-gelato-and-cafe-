@@ -297,39 +297,170 @@ export async function closeDayAction(input: {
 }
 
 // ---------------------------------------------------------------------------
-// Manual journal
+// Manual journal — many lines, saved as a draft or published to the books
 // ---------------------------------------------------------------------------
-export async function postManualJournalAction(input: {
-  description: string;
-  debitCode: string;
-  creditCode: string;
-  amount: number;
-}): Promise<Result> {
+export interface JournalLineInput {
+  accountCode: string;
+  description?: string;
+  debit: number;
+  credit: number;
+}
+
+export interface SaveJournalInput {
+  date: string;
+  referenceNo?: string;
+  notes: string;
+  postedBy?: string | null;
+  reverseOn?: string | null;
+  publish: boolean;
+  lines: JournalLineInput[];
+}
+
+export async function saveJournalAction(
+  input: SaveJournalInput,
+): Promise<Result & { journalNo?: number; status?: string }> {
   try {
     const c = db();
-    const amount = Number(input.amount);
-    if (!amount || amount <= 0) return { ok: false, error: "Enter an amount greater than zero" };
-    if (input.debitCode === input.creditCode) {
-      return { ok: false, error: "Debit and credit must be different accounts" };
+    const lines = (input.lines ?? []).filter(
+      (l) => l.accountCode && (Number(l.debit) > 0 || Number(l.credit) > 0),
+    );
+    if (lines.length === 0) return { ok: false, error: "Add at least one line with an amount" };
+    if (!input.notes?.trim()) return { ok: false, error: "Notes are required" };
+
+    const debit = lines.reduce((s2, l) => s2 + (Number(l.debit) || 0), 0);
+    const credit = lines.reduce((s2, l) => s2 + (Number(l.credit) || 0), 0);
+    if (input.publish && round(debit) !== round(credit)) {
+      return {
+        ok: false,
+        error: `Cannot publish — the difference is ${Math.abs(round(debit) - round(credit)).toLocaleString()} IQD`,
+      };
     }
+
     const period = await guardOpenPeriod(c);
     const accts = await accountMap(c);
+    for (const l of lines) {
+      if (!accts.has(l.accountCode)) return { ok: false, error: `Account ${l.accountCode} is missing` };
+    }
 
-    const je = await postJournal(c, accts, {
-      description: input.description?.trim() || "Manual journal",
-      referenceType: "manual",
-      periodId: period?.id ?? null,
-      lines: [
-        { code: input.debitCode, debit: amount, credit: 0 },
-        { code: input.creditCode, debit: 0, credit: amount },
-      ],
-    });
-    if (!je.ok) return je;
+    const occurredAt = input.date
+      ? new Date(`${input.date}T12:00:00Z`).toISOString()
+      : new Date().toISOString();
+    const journalNo = await nextJournalNo(c);
+
+    const jeR = await c
+      .from("journal_entry")
+      .insert({
+        business_id: biz,
+        journal_no: journalNo,
+        description: input.notes.trim(),
+        reference_no: input.referenceNo?.trim() || null,
+        reference_type: "manual",
+        status: input.publish ? "published" : "draft",
+        reverse_on: input.reverseOn || null,
+        period_id: period?.id ?? null,
+        posted_by: input.postedBy || null,
+        occurred_at: occurredAt,
+      })
+      .select("id")
+      .single();
+    if (jeR.error) return { ok: false, error: jeR.error.message };
+    const entryId = String(jeR.data.id);
+
+    const lnR = await c.from("journal_line").insert(
+      lines.map((l) => ({
+        journal_entry_id: entryId,
+        account_id: accts.get(l.accountCode)!,
+        debit: round(Number(l.debit) || 0),
+        credit: round(Number(l.credit) || 0),
+        memo: l.description?.trim() || null,
+      })),
+    );
+    if (lnR.error) return { ok: false, error: lnR.error.message };
+
+    // A reversal date books the mirror entry straight away, dated then.
+    if (input.publish && input.reverseOn) {
+      const revNo = await nextJournalNo(c);
+      const revR = await c
+        .from("journal_entry")
+        .insert({
+          business_id: biz,
+          journal_no: revNo,
+          description: `Reversal of ${journalNo} — ${input.notes.trim()}`,
+          reference_no: input.referenceNo?.trim() || null,
+          reference_type: "manual",
+          status: "published",
+          reverses_entry: entryId,
+          posted_by: input.postedBy || null,
+          occurred_at: new Date(`${input.reverseOn}T12:00:00Z`).toISOString(),
+        })
+        .select("id")
+        .single();
+      if (!revR.error) {
+        await c.from("journal_line").insert(
+          lines.map((l) => ({
+            journal_entry_id: String(revR.data.id),
+            account_id: accts.get(l.accountCode)!,
+            debit: round(Number(l.credit) || 0),
+            credit: round(Number(l.debit) || 0),
+            memo: l.description?.trim() || null,
+          })),
+        );
+      }
+    }
 
     revalidatePath("/journals");
     revalidatePath("/accounting");
-    return { ok: true, id: je.id };
+    return { ok: true, id: entryId, journalNo, status: input.publish ? "published" : "draft" };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }
+}
+
+/** Publish a draft. The database re-checks the balance as it commits. */
+export async function publishJournalAction(entryId: string): Promise<Result> {
+  try {
+    const c = db();
+    const { error } = await c
+      .from("journal_entry")
+      .update({ status: "published" })
+      .eq("id", entryId)
+      .eq("business_id", biz);
+    if (error) return { ok: false, error: error.message };
+    revalidatePath("/journals");
+    revalidatePath("/accounting");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
+/** Discard a draft. Only ever a draft — published entries are permanent. */
+export async function discardDraftAction(entryId: string): Promise<Result> {
+  try {
+    const c = db();
+    await c.from("journal_line").delete().eq("journal_entry_id", entryId);
+    const { error } = await c
+      .from("journal_entry")
+      .delete()
+      .eq("id", entryId)
+      .eq("business_id", biz)
+      .eq("status", "draft");
+    if (error) return { ok: false, error: error.message };
+    revalidatePath("/journals");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
+/** Next number in the register. */
+async function nextJournalNo(c: SupabaseClient): Promise<number> {
+  const { data } = await c
+    .from("journal_entry")
+    .select("journal_no")
+    .eq("business_id", biz)
+    .order("journal_no", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data?.journal_no ? Number(data.journal_no) : 1000) + 1;
 }

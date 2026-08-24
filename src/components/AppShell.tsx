@@ -129,9 +129,6 @@ export function AppShell({
           ☰
         </button>
         <span className="brand">{t("app.name")}</span>
-        <span className="sc" style={{ marginInlineStart: 4 }}>
-          Books
-        </span>
         <span className="spacer" />
         <Controls locale={locale} theme={theme} />
       </header>

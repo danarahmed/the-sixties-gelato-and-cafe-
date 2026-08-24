@@ -337,3 +337,95 @@ export async function getExpenses(limit = 100): Promise<ExpenseRow[]> {
     hasJournal: Boolean(r.journal_entry_id),
   }));
 }
+
+/* --------------------------------------------------------------- journals */
+
+export interface JournalRegisterRow {
+  id: string;
+  journalNo: number | null;
+  date: string;
+  referenceNo: string | null;
+  notes: string;
+  status: string;
+  amount: number;
+  createdBy: string;
+  lines: { account: string; description: string | null; debit: number; credit: number }[];
+}
+
+/** The manual-journal register: one row per entry, newest first. */
+export async function getJournalRegister(limit = 100): Promise<JournalRegisterRow[]> {
+  const db = getSupabase();
+  if (!db) return [];
+  const jeR = await db
+    .from("journal_entry")
+    .select("id,journal_no,description,reference_no,status,occurred_at,posted_by")
+    .eq("business_id", biz)
+    .order("occurred_at", { ascending: false })
+    .limit(limit);
+  if (jeR.error) throw new Error(jeR.error.message);
+  const entries = jeR.data ?? [];
+  if (entries.length === 0) return [];
+
+  const ids = entries.map((e) => String(e.id));
+  const [lineR, accR, userR] = await Promise.all([
+    db.from("journal_line").select("journal_entry_id,account_id,debit,credit,memo").in("journal_entry_id", ids),
+    db.from("gl_account").select("id,code,name").eq("business_id", biz),
+    db.from("app_user").select("id,full_name").eq("business_id", biz),
+  ]);
+  const acct = new Map<string, string>();
+  for (const a of accR.data ?? []) acct.set(String(a.id), `${a.code} ${a.name}`);
+  const person = new Map<string, string>();
+  for (const u of userR.data ?? []) person.set(String(u.id), String(u.full_name));
+
+  const byEntry = new Map<string, JournalRegisterRow["lines"]>();
+  const total = new Map<string, number>();
+  for (const l of lineR.data ?? []) {
+    const key = String(l.journal_entry_id);
+    const arr = byEntry.get(key) ?? [];
+    arr.push({
+      account: acct.get(String(l.account_id)) ?? "—",
+      description: l.memo ? String(l.memo) : null,
+      debit: Number(l.debit ?? 0),
+      credit: Number(l.credit ?? 0),
+    });
+    byEntry.set(key, arr);
+    total.set(key, (total.get(key) ?? 0) + Number(l.debit ?? 0));
+  }
+
+  return entries.map((e) => ({
+    id: String(e.id),
+    journalNo: e.journal_no === null ? null : Number(e.journal_no),
+    date: String(e.occurred_at).slice(0, 10),
+    referenceNo: e.reference_no ? String(e.reference_no) : null,
+    notes: String(e.description ?? ""),
+    status: String(e.status ?? "published"),
+    amount: total.get(String(e.id)) ?? 0,
+    createdBy: e.posted_by ? (person.get(String(e.posted_by)) ?? "—") : "—",
+    lines: byEntry.get(String(e.id)) ?? [],
+  }));
+}
+
+/** Next journal number, so the form can show it before saving. */
+export async function peekNextJournalNo(): Promise<number> {
+  const db = getSupabase();
+  if (!db) return 1001;
+  const { data } = await db
+    .from("journal_entry")
+    .select("journal_no")
+    .eq("business_id", biz)
+    .order("journal_no", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data?.journal_no ? Number(data.journal_no) : 1000) + 1;
+}
+
+export interface PersonOption {
+  id: string;
+  name: string;
+}
+export async function getPeople(): Promise<PersonOption[]> {
+  const db = getSupabase();
+  if (!db) return [];
+  const { data } = await db.from("app_user").select("id,full_name").eq("business_id", biz).order("full_name");
+  return (data ?? []).map((u) => ({ id: String(u.id), name: String(u.full_name) }));
+}
