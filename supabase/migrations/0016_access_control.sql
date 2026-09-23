@@ -163,8 +163,9 @@ language sql stable security definer set search_path = public as $$
   right join (select 1) one on true
 $$;
 
--- Owners and general managers add people by email and role. The login is
--- linked when that person signs in with a CONFIRMED email of that address.
+-- Owners and general managers add people by email and role. The login with
+-- that address is linked once its email is CONFIRMED, whether the person
+-- created it before or after being added.
 create or replace function invite_member(p_email text, p_name text, p_roles app_role[])
 returns uuid language plpgsql security definer set search_path = public as $$
 declare v_business uuid := require_permission('settings.manage'); v_id uuid; r app_role;
@@ -184,6 +185,12 @@ begin
   foreach r in array p_roles loop
     insert into user_role (app_user_id, role) values (v_id, r);
   end loop;
+  -- Someone who created and confirmed their login before being added is linked
+  -- now; the trigger below only sees confirmations after this.
+  update app_user a set auth_user_id = u.id
+    from auth.users u
+   where a.id = v_id and lower(u.email) = lower(trim(p_email)) and u.email_confirmed_at is not null
+     and not exists (select 1 from app_user o where o.auth_user_id = u.id);
   perform audit_event(v_business, 'member.invite', 'app_user', v_id::text, null, null,
                       jsonb_build_object('email', lower(trim(p_email)), 'roles', p_roles));
   return v_id;

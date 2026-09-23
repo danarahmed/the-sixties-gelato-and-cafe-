@@ -88,6 +88,21 @@ select test.eq((select auth_user_id from app_user where email = 'new.person@exam
   'confirming the email links the login');
 select test.act_as('new.person@example.com');
 select test.ok((my_profile() -> 'roles') ? 'cashier', 'the new cashier signs in as a cashier');
+-- Someone who signs up before being added is linked when they are added, so
+-- "ask the owner to add you, then sign in again" works. Only if confirmed.
+select test.as_admin();
+insert into auth.users (id, email) values ('a0000000-0000-0000-0000-0000000000fe', 'early@example.com');
+insert into auth.users (id, email, email_confirmed_at) values ('a0000000-0000-0000-0000-0000000000fd', 'unconfirmed@example.com', null);
+select test.act_as('owner@example.com');
+select invite_member('Early@Example.com', 'Early Signup', '{cashier}');
+select invite_member('unconfirmed@example.com', 'Unconfirmed Signup', '{cashier}');
+select test.as_admin();
+select test.eq((select auth_user_id from app_user where email = 'early@example.com'), 'a0000000-0000-0000-0000-0000000000fe'::uuid,
+  'a login confirmed before its person was added links when they are added');
+select test.eq((select auth_user_id from app_user where email = 'unconfirmed@example.com'), null,
+  'an unconfirmed one does not');
+select test.act_as('early@example.com');
+select test.ok((my_profile() -> 'roles') ? 'cashier', 'and signs in with their role');
 select test.as_admin();
 create temp table owner_id as select id from app_user where email = 'owner@example.com';
 grant select on owner_id to public;
