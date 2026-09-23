@@ -33,18 +33,26 @@ in-app or easily changed. If any is wrong, tell us and we adjust.
 
 ## Technical
 
-12. **Database:** Supabase (PostgreSQL + Auth + Storage + RLS). The cloud DB is
-    authoritative. You provide/connect the project; nothing is auto-provisioned.
-13. **Auth:** email + password (Supabase Auth); optional MFA for owner/manager;
-    optional numeric PIN for fast cashier switching on a shared POS device.
-14. **Offline:** IndexedDB queue with UUID idempotency keys + device id +
-    timestamps; exactly-once sync enforced by a DB UNIQUE constraint.
-15. **AI:** optional. With no provider key, all core features work. Anthropic is
-    the reference adapter; OpenAI or another approved provider can be selected.
+12. **Database:** Supabase (PostgreSQL + Auth + RLS). The database is
+    authoritative and does the posting: every write is one checked function in
+    one transaction (ADR 0002). You provide/connect the project; nothing is
+    auto-provisioned, and the app has no built-in address or key.
+13. **Auth:** each person signs in with their own email and password (Supabase
+    Auth). A login is linked to a member of the business only once its email is
+    confirmed; the owner adds people and their roles under Settings → People.
+    MFA is recommended for the owner. There is no shared PIN.
+14. **Offline:** selling needs a connection. Offline, the till says so and
+    refuses the sale; a sale whose confirmation was lost is retried with the
+    same idempotency key and recorded exactly once.
+15. **AI:** none. Expense classification is local, deterministic rules that
+    propose an account for a person to confirm.
 16. **Deployment:** app on Vercel (or any Node host); DB on Supabase. Nothing is
-    deployed automatically.
+    deployed automatically. See `docs/guides/deployment.md`.
 
-## Demo data
+## Data
 
 17. All seed prices and costs are **illustrative examples**, explicitly labelled,
     and must be replaced with real figures before production use.
+18. Everything recorded before the controls (migration 0014) is unverified until
+    reviewed. It is kept unchanged, marked "before controls", and corrected only
+    by new, dated entries (`docs/REMEDIATION.md`).

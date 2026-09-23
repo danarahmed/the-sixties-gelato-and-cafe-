@@ -1,20 +1,28 @@
 import { getT } from "@/lib/i18n/server";
-import { getExpenses } from "@/lib/db/books";
-import { getAccountingOverview } from "@/lib/db/accounting";
+import { has, requirePermission } from "@/lib/auth/session";
+import { getExpenses, getGlAccounts, getPeriods, periodFor } from "@/lib/db/books";
 import { fmtIQD } from "@/lib/format";
+import { businessToday } from "@/lib/dates";
 import { ExpenseEntry } from "@/components/books/ExpenseEntry";
 import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
+/** Stock costs come from their own records, never from a typed-in expense. */
+const NOT_EXPENSES = new Set(["5000", "5050", "5300", "5400"]);
+
 export default async function ExpensesPage() {
+  const profile = await requirePermission("cost.view");
   const t = await getT();
-  const [rows, overview] = await Promise.all([
-    getExpenses(100).catch(() => []),
-    getAccountingOverview().catch(() => null),
+  const today = businessToday(profile.timezone);
+  const [rows, accounts, periods] = await Promise.all([
+    getExpenses(100),
+    getGlAccounts(),
+    getPeriods(),
   ]);
+  const period = periodFor(periods, today);
+  const locked = period?.status === "locked";
   const total = rows.reduce((s, r) => s + r.amount, 0);
-  const locked = overview?.currentPeriodStatus === "locked";
 
   const byAccount = new Map<string, number>();
   for (const r of rows) byAccount.set(r.account, (byAccount.get(r.account) ?? 0) + r.amount);
@@ -25,42 +33,40 @@ export default async function ExpensesPage() {
         <h1>{t("nav.expenses")}</h1>
         <span className="sc">Rent · salaries · utilities · sundries</span>
         <div className="sp">
-          <span className={`badge ${locked ? "err" : "ok"}`}>
-            {overview?.currentPeriodName ?? ""} {locked ? "locked" : "open"}
-          </span>
+          {period && (
+            <span className={`badge ${locked ? "err" : "ok"}`}>
+              {period.name} {locked ? "locked" : "open"}
+            </span>
+          )}
         </div>
       </div>
 
-      <section className="panel">
-        <div className="panel-h">
-          <h3>Record an Expense</h3>
-          <span className="muted" style={{ fontSize: ".74rem" }}>
-            The account is proposed from the narration — reviewable before posting
-          </span>
-        </div>
-        {locked ? (
-          <div className="panel-b">
-            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-              The period is locked. Corrections must be made by a reversing entry in the next period.
-            </p>
+      {has(profile, "expense.record") && (
+        <section className="panel">
+          <div className="panel-h">
+            <h3>Record an Expense</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              The account is proposed from the narration — you confirm it before posting
+            </span>
           </div>
-        ) : (
-          <ExpenseEntry />
-        )}
-      </section>
+          <ExpenseEntry
+            accounts={accounts
+              .filter((a) => a.isActive && a.type === "expense" && !NOT_EXPENSES.has(a.code))
+              .map((a) => ({ code: a.code, name: a.name }))}
+            today={today}
+          />
+        </section>
+      )}
 
       <section className="panel">
         <div className="panel-h">
           <h3>Expense Register</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            {rows.length} recorded
+            Last {rows.length}
           </span>
         </div>
         {rows.length === 0 ? (
-          <EmptyState
-            title="No expenses recorded yet"
-            hint="Write the first one above — say what it was for and the account is proposed for you."
-          />
+          <EmptyState title="No expenses recorded yet" hint="Record the first one above." />
         ) : (
           <div className="tw">
             <table>
@@ -69,7 +75,8 @@ export default async function ExpensesPage() {
                   <th>Date</th>
                   <th>Narration</th>
                   <th>Account</th>
-                  <th>Ref</th>
+                  <th>Journal</th>
+                  <th>By</th>
                   <th className="right">Amount</th>
                 </tr>
               </thead>
@@ -79,17 +86,15 @@ export default async function ExpensesPage() {
                     <td>{r.date}</td>
                     <td>{r.description}</td>
                     <td className="muted">{r.account}</td>
-                    <td>
-                      <span className={`ref ${r.hasJournal ? "auto" : ""}`}>
-                        {r.hasJournal ? "Posted" : "Unposted"}
-                      </span>
-                    </td>
+                    <td className="mono">{r.journalNo ?? "—"}</td>
+                    <td className="muted">{r.by ?? "—"}</td>
                     <td className="right money">{fmtIQD(r.amount)}</td>
                   </tr>
                 ))}
                 <tr className="grand">
                   <td />
-                  <td>Total</td>
+                  <td>Total shown</td>
+                  <td />
                   <td />
                   <td />
                   <td className="right money">{fmtIQD(total)}</td>
@@ -105,7 +110,7 @@ export default async function ExpensesPage() {
           <div className="panel-h">
             <h3>By Account</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              Where the money went
+              The expenses above, by where they were posted
             </span>
           </div>
           <div className="panel-b">

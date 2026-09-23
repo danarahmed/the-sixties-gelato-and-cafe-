@@ -1,80 +1,107 @@
 # Security Model
 
-Aligned with current OWASP application-security guidance. Security is enforced
-in depth: the database (RLS, constraints, triggers), the server (validation,
-authorization), and the client (least-privilege UI).
+The books are protected in the database, not in the screens. The app is a
+convenience on top: hiding a button is never the control. Every read passes
+row-level security and every write goes through a function that checks the
+caller's permission itself.
 
-## Authentication
+## Signing in
 
-- Supabase Auth (email + password). Strong password handling and secure session
-  tokens are provided by Supabase; transport is HTTPS only.
-- **Optional MFA** for Owner and Manager roles (enable in the Supabase project).
-- **POS PIN:** an optional hashed numeric PIN (`app_user.pin_hash`) allows fast
-  user switching on a shared POS device without exposing full credentials. The
-  PIN is never stored in plaintext.
+- **Supabase Auth, email and password.** Each person has their own login.
+  The session is an HTTP-only cookie that no script in the page can read, and
+  the middleware verifies and refreshes it on every request
+  (`src/middleware.ts`, `src/lib/supabase/middleware.ts`).
+- **Everything needs a session.** Only `/login`, `/auth/*` (the links in sign-up
+  and reset emails) and `/setup` open without one. Signed-in pages are sent with
+  `Cache-Control: no-store`.
+- **A login is not membership.** A login is linked to a member of the business
+  only when its email is confirmed and matches an active member the owner has
+  added (`0016`, trigger on `auth.users`). A stranger who signs up sees nothing.
+- **The owner manages people** in Settings → People: add by email, set roles,
+  deactivate. Only the owner can grant owner or general manager, and the
+  business always keeps an active owner. Every change is on the audit trail.
+- **Recommended:** email confirmation on, MFA for the owner, and open sign-up
+  turned off once everyone has a login (Supabase settings; see the runbook).
+  There is no shared PIN.
 
-## Authorization (least privilege)
+## What each role may do
 
-- Roles: owner, general_manager, branch_manager, cashier, barista,
-  inventory_counter, purchasing, accountant, auditor.
-- The permission matrix lives in `src/domain/auth/permissions.ts` (tested) and is
-  the single source of truth. Examples: cashiers cannot edit recipe costs;
-  counters cannot see expected quantities unless authorized; only accountants
-  lock/reopen periods; managers approve adjustments/waste/refunds within limits.
-- **UI hiding is never the only guard.** Every protected operation is re-checked
-  server-side before it touches the database.
+- The matrix is `src/domain/auth/permissions.ts`. The database holds the same
+  matrix in `role_permission`, and `tests/permissions-sync.test.ts` fails if they
+  ever differ.
+- **Cashiers and counters never see costs.** The till's catalogue carries prices
+  only. A sale returns its cost only to someone allowed to see costs. A count
+  never sends the expected quantities to the person counting: the database takes
+  a snapshot when the count opens, and a second person reviews and approves.
+- **Separation of duties.** A count is approved by someone other than the
+  counter. Only the owner reopens a locked month, posts to a control account by
+  hand, or posts the stock the old app never journaled — always with a reason on
+  the audit trail.
 
-## Row-Level Security (RLS)
+## The database boundary
 
-- Enabled and **forced** on every business table. The baseline policy restricts
-  all rows to the caller's own `business_id` (via `current_business_id()`), which
-  also guarantees this project's data never mixes with any other tenant.
-- Helper functions (`current_has_role`, `current_can_view_costs`) drive finer
-  server-side checks (e.g. hiding cost/profit columns from cashiers).
+- **No direct writes.** `0016` revokes every table and sequence privilege from
+  the public (`anon`) and signed-in (`authenticated`) roles. Signed-in users get
+  `SELECT` only, filtered by row-level security.
+- **Only a listed set of functions** can be called by a signed-in user, and the
+  public can call none. `tests/sql/controls.test.sql` fails if a migration exposes
+  anything else.
+- **Each function checks for itself.** `require_permission()` runs first in every
+  posting function; they are `SECURITY DEFINER` with a fixed `search_path`.
+- **Tenancy.** Every table, including child tables such as journal and order
+  lines, carries `business_id`, and row-level security confines each person to
+  their own business.
 
-## Data integrity as security
+## Integrity as security
 
-- Append-only ledgers (`inventory_movement`, `audit_log`, `ai_interaction_log`)
-  block UPDATE/DELETE via triggers — tampering leaves a trace, corrections are
-  new rows.
-- Finalized `sales_order` monetary amounts are immutable; journal entries must
-  balance; locked periods reject posting. These prevent silent financial edits.
+- **Append-only records.** Stock movements, the audit log and published journals
+  refuse `UPDATE` and `DELETE`. A finished sale's amounts, cost, lines and
+  tenders are frozen. A bill is never deleted: it is cancelled, one way, with a
+  reason.
+- **Locked months refuse everything:** sales, journals, expenses, bills,
+  payments, reversals.
+- **Races are closed** with row locks and unique keys: a sale, an auto-posted
+  journal and a bill payment each happen once, however many times they are sent
+  (concurrency tests in `scripts/test-sql-concurrency.sh`).
+- **The audit log** (`audit_log`, append-only) records who, what, when and why for
+  voids, refunds, stock corrections, count approvals, reversals, cancelled
+  bills, control corrections, posting the old app's stock, period locks and
+  reopenings, and people added, activated, deactivated or given roles. Every
+  stock movement also carries the person and the reason.
 
-## Input handling
+## Input and output
 
-- Server-side validation with `zod` on all API inputs (never trust the client).
-- Parameterised queries / Supabase client — no string-built SQL — prevents
-  injection. CSP and standard security headers in production.
-- Rate limiting on authentication and write endpoints (configure at the edge /
-  route handler).
-- CSRF: same-site cookies + server-verified auth on state-changing requests.
+- Server actions validate every input with `zod` before calling the database.
+  Amounts travel as exact decimal strings, and the database validates again.
+- No SQL is built from strings: the app calls named functions with parameters.
+- CSV exports neutralise values that a spreadsheet would run as formulas.
+- The service worker caches only static files and the offline page, never
+  business data.
 
 ## Secrets
 
-- No credentials in client code. `NEXT_PUBLIC_*` are the only client-exposed
-  values (anon key only). The service-role key and provider API keys are
-  server-only, provided via environment variables (see `.env.example`).
-- AI: only the minimum non-sensitive data is sent to a provider; no secrets or
-  unnecessary PII. Every call is audited.
-
-## Audit
-
-- Immutable `audit_log` records who/what/when/device/reason with before/after
-  state for sensitive actions (voids, refunds, adjustments, approvals, price and
-  recipe changes, period locks, AI approvals).
+- **The app has no built-in database address or key.** It needs
+  `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` per environment,
+  and without them it shows "Not configured".
+- **No service-role key** is used anywhere; the app acts only as the signed-in
+  person.
+- **The previous app published the anon key in its source.** Once `0016` is
+  applied, that key can no longer read or write anything in the database; it
+  reaches only the sign-in service, as every visitor's browser must. Moving to
+  Supabase's newer publishable keys after go-live, and disabling the legacy anon
+  key, retires it altogether.
 
 ## Payments
 
-- Full payment-card details are **never** stored. If online payment is added,
-  use payment-provider tokens only.
+Full payment-card details are never stored. Card takings are recorded as an
+amount against 1010 Card clearing.
 
-## Reliability
+## If something looks wrong
 
-- Automated database backups (Supabase) with a **tested restore procedure**
-  (`docs/guides/backup-restore.md`). Data export and ownership are the business's.
-- Error monitoring and health checks to be configured at deploy time.
-
-## Reporting a concern
-
-Rotate any exposed key immediately in the Supabase/provider dashboard, then
-review `audit_log` and `ai_interaction_log` for affected records.
+1. Turn on Vercel deployment protection, and deactivate the person in Settings →
+   People.
+2. Rotate the project's keys in the Supabase dashboard if one may be exposed.
+3. Review the audit trail on **Chart of Accounts**, and the reconciliation on
+   **Reports**.
+4. Correct with new entries ([`REMEDIATION.md`](REMEDIATION.md)); nothing needs
+   to be edited or deleted.

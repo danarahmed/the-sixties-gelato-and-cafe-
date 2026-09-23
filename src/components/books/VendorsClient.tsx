@@ -2,51 +2,72 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createSupplierAction } from "@/lib/db/actions";
-import { recordBillAction, payBillAction } from "@/lib/db/books-actions";
+import {
+  cancelBillAction,
+  createSupplierAction,
+  payBillAction,
+  recordBillAction,
+} from "@/lib/actions/purchasing";
 import { fmtIQD } from "@/lib/format";
 import { Notice } from "@/components/ui";
+import type { OpenBill, VendorRow } from "@/lib/db/books";
 
-export interface VendorView {
+export interface ReceiptOption {
   id: string;
-  name: string;
-  contact: string | null;
-  phone: string | null;
-  billed: number;
-  paid: number;
-  balance: number;
-  overdue: number;
-  lines: { date: string; particulars: string; ref: string; charge: number; payment: number }[];
+  /** Null for deliveries received before the controls: the old app did not record the supplier. */
+  supplierId: string | null;
+  receiptNo: number | null;
+  value: number;
+  receivedAt: string;
+  note: string | null;
 }
-export interface BillView {
-  id: string;
-  supplierId: string;
-  invoiceNo: string;
-  invoiceDate: string;
-  dueDate: string | null;
-  total: number;
-  paid: number;
-  outstanding: number;
-  daysOverdue: number;
+export interface AccountOption {
+  code: string;
+  name: string;
 }
 
 type Tab = "statement" | "bills" | "new";
+type Msg = { ok: boolean; text: string } | null;
 
 export function VendorsClient({
   vendors,
   bills,
+  receipts,
+  accounts,
+  today,
   businessName,
+  canBill,
+  canPay,
+  canAddVendor,
 }: {
-  vendors: VendorView[];
-  bills: BillView[];
+  vendors: VendorRow[];
+  bills: OpenBill[];
+  receipts: ReceiptOption[];
+  accounts: AccountOption[];
+  today: string;
   businessName: string;
+  canBill: boolean;
+  canPay: boolean;
+  canAddVendor: boolean;
 }) {
   const router = useRouter();
   const [sel, setSel] = useState(0);
   const [tab, setTab] = useState<Tab>("statement");
   const vendor = vendors[sel];
 
-  if (vendors.length === 0) return <AddVendor onDone={() => router.refresh()} standalone />;
+  if (vendors.length === 0) {
+    return canAddVendor ? (
+      <AddVendor onDone={() => router.refresh()} standalone />
+    ) : (
+      <div className="card muted">No vendors yet.</div>
+    );
+  }
+
+  const tabs: [Tab, string][] = [
+    ["statement", "Statement"],
+    ["bills", "Bills & payments"],
+  ];
+  if (canAddVendor) tabs.push(["new", "New vendor"]);
 
   return (
     <div className="three">
@@ -72,7 +93,10 @@ export function VendorsClient({
                 {v.contact ?? "—"}
               </span>
             </span>
-            <span className="money" style={{ fontSize: ".8rem", color: v.overdue > 0 ? "var(--err)" : undefined }}>
+            <span
+              className="money"
+              style={{ fontSize: ".8rem", color: v.overdue > 0 ? "var(--err)" : undefined }}
+            >
               {fmtIQD(v.balance)}
             </span>
           </button>
@@ -87,17 +111,16 @@ export function VendorsClient({
             {vendor && vendor.overdue > 0 ? `${fmtIQD(vendor.overdue)} overdue` : "Nothing overdue"}
           </div>
           <div className="dtabs">
-            {(
-              [
-                ["statement", "Statement"],
-                ["bills", "Bills & payments"],
-                ["new", "New vendor"],
-              ] as [Tab, string][]
-            ).map(([k, label]) => (
+            {tabs.map(([k, label]) => (
               <button
                 key={k}
                 className={`dtab ${tab === k ? "on" : ""}`}
-                style={{ border: "none", background: "transparent", minHeight: 0, padding: "0 0 8px" }}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  minHeight: 0,
+                  padding: "0 0 8px",
+                }}
                 onClick={() => setTab(k)}
               >
                 {label}
@@ -107,11 +130,19 @@ export function VendorsClient({
         </div>
 
         <div className="dbody">
-          {tab === "statement" && vendor && <Statement vendor={vendor} businessName={businessName} />}
+          {tab === "statement" && vendor && (
+            <Statement vendor={vendor} businessName={businessName} />
+          )}
           {tab === "bills" && vendor && (
             <Bills
+              key={vendor.id}
               vendor={vendor}
               bills={bills.filter((b) => b.supplierId === vendor.id)}
+              receipts={receipts.filter((r) => r.supplierId === vendor.id || r.supplierId === null)}
+              accounts={accounts}
+              today={today}
+              canBill={canBill}
+              canPay={canPay}
               onDone={() => router.refresh()}
             />
           )}
@@ -122,7 +153,7 @@ export function VendorsClient({
   );
 }
 
-function Statement({ vendor, businessName }: { vendor: VendorView; businessName: string }) {
+function Statement({ vendor, businessName }: { vendor: VendorRow; businessName: string }) {
   const running = useMemo(() => {
     let bal = 0;
     return vendor.lines.map((l) => {
@@ -137,9 +168,6 @@ function Statement({ vendor, businessName }: { vendor: VendorView; businessName:
         <div>
           <div className="serif" style={{ fontSize: "1.15rem", fontWeight: 700 }}>
             {businessName}
-          </div>
-          <div className="muted" style={{ fontSize: ".76rem", marginBlockStart: 4 }}>
-            Erbil, Kurdistan Region
           </div>
         </div>
         <div className="muted" style={{ fontSize: ".76rem", textAlign: "end" }}>
@@ -220,19 +248,40 @@ function Statement({ vendor, businessName }: { vendor: VendorView; businessName:
 function Bills({
   vendor,
   bills,
+  receipts,
+  accounts,
+  today,
+  canBill,
+  canPay,
   onDone,
 }: {
-  vendor: VendorView;
-  bills: BillView[];
+  vendor: VendorRow;
+  bills: OpenBill[];
+  receipts: ReceiptOption[];
+  accounts: AccountOption[];
+  today: string;
+  canBill: boolean;
+  canPay: boolean;
   onDone: () => void;
 }) {
   const [busy, start] = useTransition();
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [msg, setMsg] = useState<Msg>(null);
+  const [kind, setKind] = useState<"receipt" | "expense">(
+    receipts.length > 0 ? "receipt" : "expense",
+  );
+  const [receiptId, setReceiptId] = useState(receipts[0]?.id ?? "");
+  const [accountCode, setAccountCode] = useState(accounts[0]?.code ?? "");
   const [inv, setInv] = useState("");
-  const [amount, setAmount] = useState("");
+  const [invDate, setInvDate] = useState(today);
+  const [amount, setAmount] = useState(receipts[0] ? String(receipts[0].value) : "");
   const [terms, setTerms] = useState("15");
   const [payFor, setPayFor] = useState("");
   const [payAmt, setPayAmt] = useState("");
+  const [method, setMethod] = useState<"cash" | "card" | "bank">("cash");
+
+  const receipt = receipts.find((r) => r.id === receiptId);
+  const amountN = Number(amount.replace(/[^0-9.]/g, "")) || 0;
+  const variance = kind === "receipt" && receipt ? amountN - receipt.value : 0;
 
   function raise() {
     setMsg(null);
@@ -240,76 +289,164 @@ function Bills({
       const r = await recordBillAction({
         supplierId: vendor.id,
         invoiceNo: inv,
-        amount: Number(amount.replace(/[^0-9.]/g, "")),
-        invoiceDate: new Date().toISOString().slice(0, 10),
+        invoiceDate: invDate,
+        amount,
         termDays: Number(terms) || 0,
+        receiptId: kind === "receipt" ? receiptId || null : null,
+        accountCode: kind === "expense" ? accountCode || null : null,
       });
       if (r.ok) {
-        setMsg({ ok: true, text: "Bill recorded — Dr Inventory / Cr Accounts payable." });
+        const pv = r.data.priceVariance;
+        setMsg({
+          ok: true,
+          text:
+            `Bill ${inv} recorded (journal ${r.data.journalNo ?? "—"})` +
+            (pv
+              ? ` — ${fmtIQD(Math.abs(pv))} ${pv > 0 ? "over" : "under"} the receipt, to 5050 Purchase price variance.`
+              : "."),
+        });
         setInv("");
         setAmount("");
         onDone();
-      } else setMsg({ ok: false, text: r.error ?? "Failed" });
+      } else setMsg({ ok: false, text: r.error });
     });
   }
 
   function pay() {
     setMsg(null);
     start(async () => {
-      const r = await payBillAction({
-        billId: payFor,
-        amount: Number(payAmt.replace(/[^0-9.]/g, "")),
-        method: "cash",
-      });
+      const r = await payBillAction({ billId: payFor, amount: payAmt, method });
       if (r.ok) {
-        setMsg({ ok: true, text: "Payment recorded — Dr Accounts payable / Cr Cash." });
+        setMsg({
+          ok: true,
+          text: `Payment recorded (journal ${r.data.journalNo ?? "—"}). ${fmtIQD(r.data.outstanding)} still outstanding on that bill.`,
+        });
         setPayAmt("");
         setPayFor("");
         onDone();
-      } else setMsg({ ok: false, text: r.error ?? "Failed" });
+      } else setMsg({ ok: false, text: r.error });
     });
   }
 
   return (
     <div className="grid" style={{ gap: 18 }}>
-      <div className="panel">
-        <div className="panel-h">
-          <h3>Record a bill</h3>
-          <span className="muted" style={{ fontSize: ".74rem" }}>
-            Raises the payable and brings the stock value in
-          </span>
-        </div>
-        <div className="panel-b">
-          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
-            <label style={{ flex: 1, minWidth: 130 }}>
-              <div className="sc">Invoice no.</div>
-              <input value={inv} onChange={(e) => setInv(e.target.value)} placeholder="INV-0012" />
-            </label>
-            <label style={{ minWidth: 130 }}>
-              <div className="sc">Amount (IQD)</div>
-              <input
-                className="amt"
-                style={{ textAlign: "end" }}
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </label>
-            <label style={{ minWidth: 110 }}>
-              <div className="sc">Terms</div>
-              <select value={terms} onChange={(e) => setTerms(e.target.value)}>
-                <option value="0">Due now</option>
-                <option value="7">Net 7 days</option>
-                <option value="15">Net 15 days</option>
-                <option value="30">Net 30 days</option>
-              </select>
-            </label>
-            <button className="btn-primary" onClick={raise} disabled={busy || !amount}>
-              {busy ? "Saving…" : "Record bill"}
-            </button>
+      {canBill && (
+        <div className="panel">
+          <div className="panel-h">
+            <h3>Record a bill</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              The supplier&apos;s invoice — raises what you owe
+            </span>
+          </div>
+          <div className="panel-b grid" style={{ gap: 12 }}>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: ".85rem" }}>
+              <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <input
+                  type="radio"
+                  checked={kind === "receipt"}
+                  onChange={() => setKind("receipt")}
+                  disabled={receipts.length === 0}
+                />
+                For goods received {receipts.length === 0 && "(no unbilled receipts)"}
+              </label>
+              <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <input
+                  type="radio"
+                  checked={kind === "expense"}
+                  onChange={() => setKind("expense")}
+                />
+                For a service or asset (rent, repairs, equipment…)
+              </label>
+            </div>
+            <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
+              {kind === "receipt" ? (
+                <label style={{ flex: 2, minWidth: 220 }}>
+                  <div className="sc">Goods receipt</div>
+                  <select
+                    value={receiptId}
+                    onChange={(e) => {
+                      setReceiptId(e.target.value);
+                      const r = receipts.find((x) => x.id === e.target.value);
+                      if (r) setAmount(String(r.value));
+                    }}
+                  >
+                    {receipts.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.supplierId === null
+                          ? `Before controls · ${r.note ?? "supplier not recorded"}`
+                          : `Receipt ${r.receiptNo ?? "—"}`}{" "}
+                        · {r.receivedAt.slice(0, 10)} · {fmtIQD(r.value)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <label style={{ flex: 2, minWidth: 220 }}>
+                  <div className="sc">Charge to account</div>
+                  <select value={accountCode} onChange={(e) => setAccountCode(e.target.value)}>
+                    {accounts.map((a) => (
+                      <option key={a.code} value={a.code}>
+                        {a.code} {a.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <label style={{ flex: 1, minWidth: 120 }}>
+                <div className="sc">Invoice no.</div>
+                <input
+                  value={inv}
+                  onChange={(e) => setInv(e.target.value)}
+                  placeholder="INV-0012"
+                />
+              </label>
+              <label style={{ minWidth: 140 }}>
+                <div className="sc">Invoice date</div>
+                <input
+                  type="date"
+                  value={invDate}
+                  max={today}
+                  onChange={(e) => setInvDate(e.target.value)}
+                />
+              </label>
+              <label style={{ minWidth: 130 }}>
+                <div className="sc">Amount (IQD)</div>
+                <input
+                  className="amt"
+                  style={{ textAlign: "end" }}
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+              </label>
+              <label style={{ minWidth: 110 }}>
+                <div className="sc">Terms</div>
+                <select value={terms} onChange={(e) => setTerms(e.target.value)}>
+                  <option value="0">Due now</option>
+                  <option value="7">Net 7 days</option>
+                  <option value="15">Net 15 days</option>
+                  <option value="30">Net 30 days</option>
+                </select>
+              </label>
+              <button
+                className="btn-primary"
+                onClick={raise}
+                disabled={
+                  busy || !amount || !inv.trim() || (kind === "receipt" ? !receiptId : !accountCode)
+                }
+              >
+                {busy ? "Saving…" : "Record bill"}
+              </button>
+            </div>
+            {kind === "receipt" && receipt && variance !== 0 && (
+              <p className="muted" style={{ fontSize: ".78rem", margin: 0 }}>
+                The bill is {fmtIQD(Math.abs(variance))} {variance > 0 ? "more" : "less"} than the
+                receipt recorded; the difference goes to 5050 Purchase price variance.
+              </p>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
       <div className="panel">
         <div className="panel-h">
@@ -328,12 +465,13 @@ function Bills({
                 <th className="right">Total</th>
                 <th className="right">Outstanding</th>
                 <th className="right">Status</th>
+                {canPay && <th />}
               </tr>
             </thead>
             <tbody>
               {bills.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="muted" style={{ fontStyle: "italic" }}>
+                  <td colSpan={canPay ? 7 : 6} className="muted" style={{ fontStyle: "italic" }}>
                     Nothing outstanding.
                   </td>
                 </tr>
@@ -350,18 +488,38 @@ function Bills({
                         {b.daysOverdue > 0 ? `${b.daysOverdue}d overdue` : "Current"}
                       </span>
                     </td>
+                    {canPay && (
+                      <td className="right">
+                        {b.paid === 0 && (
+                          <CancelBill
+                            billId={b.id}
+                            invoiceNo={b.invoiceNo}
+                            invoiceDate={b.invoiceDate}
+                            today={today}
+                            onDone={onDone}
+                          />
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
-        {bills.length > 0 && (
+        {bills.length > 0 && canPay && (
           <div className="panel-b" style={{ borderBlockStart: "1px solid var(--border)" }}>
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
               <label style={{ flex: 1, minWidth: 170 }}>
                 <div className="sc">Pay bill</div>
-                <select value={payFor} onChange={(e) => setPayFor(e.target.value)}>
+                <select
+                  value={payFor}
+                  onChange={(e) => {
+                    setPayFor(e.target.value);
+                    const b = bills.find((x) => x.id === e.target.value);
+                    if (b) setPayAmt(String(b.outstanding));
+                  }}
+                >
                   <option value="">Choose an invoice…</option>
                   {bills.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -380,6 +538,14 @@ function Bills({
                   onChange={(e) => setPayAmt(e.target.value)}
                 />
               </label>
+              <label style={{ minWidth: 120 }}>
+                <div className="sc">Paid from</div>
+                <select value={method} onChange={(e) => setMethod(e.target.value as typeof method)}>
+                  <option value="cash">1000 Cash</option>
+                  <option value="card">1010 Card</option>
+                  <option value="bank">1020 Bank</option>
+                </select>
+              </label>
               <button onClick={pay} disabled={busy || !payFor || !payAmt}>
                 {busy ? "Paying…" : "Record payment"}
               </button>
@@ -394,7 +560,7 @@ function Bills({
 
 function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: boolean }) {
   const [busy, start] = useTransition();
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [msg, setMsg] = useState<Msg>(null);
   const [f, setF] = useState({ name: "", contact: "", phone: "" });
 
   function submit() {
@@ -405,7 +571,7 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
         setMsg({ ok: true, text: `Added ${f.name}.` });
         setF({ name: "", contact: "", phone: "" });
         onDone();
-      } else setMsg({ ok: false, text: r.error ?? "Failed" });
+      } else setMsg({ ok: false, text: r.error });
     });
   }
 
@@ -420,14 +586,30 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
         </div>
       )}
       <div className={standalone ? "panel-b" : ""}>
-        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end", maxWidth: 720 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 14,
+            flexWrap: "wrap",
+            alignItems: "flex-end",
+            maxWidth: 720,
+          }}
+        >
           <label style={{ flex: 1, minWidth: 160 }}>
             <div className="sc">Vendor name</div>
-            <input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Baghdad Dairy Co." />
+            <input
+              value={f.name}
+              onChange={(e) => setF({ ...f, name: e.target.value })}
+              placeholder="Baghdad Dairy Co."
+            />
           </label>
           <label style={{ flex: 1, minWidth: 140 }}>
             <div className="sc">What they supply</div>
-            <input value={f.contact} onChange={(e) => setF({ ...f, contact: e.target.value })} placeholder="Dairy & cream" />
+            <input
+              value={f.contact}
+              onChange={(e) => setF({ ...f, contact: e.target.value })}
+              placeholder="Dairy & cream"
+            />
           </label>
           <label style={{ minWidth: 130 }}>
             <div className="sc">Phone</div>
@@ -442,5 +624,91 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
         </div>
       </div>
     </div>
+  );
+}
+
+/** Cancel a bill entered in error: it stays on record, its journal is reversed. */
+function CancelBill({
+  billId,
+  invoiceNo,
+  invoiceDate,
+  today,
+  onDone,
+}: {
+  billId: string;
+  invoiceNo: string;
+  invoiceDate: string;
+  today: string;
+  onDone: () => void;
+}) {
+  const [busy, start] = useTransition();
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [date, setDate] = useState(today);
+  const [err, setErr] = useState<string | null>(null);
+  const small = { minHeight: 26, padding: "0 8px", fontSize: ".72rem" };
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        style={small}
+        title="Entered in error — a duplicate or the wrong amount"
+      >
+        Cancel
+      </button>
+    );
+  }
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        gap: 6,
+        alignItems: "center",
+        flexWrap: "wrap",
+        justifyContent: "end",
+      }}
+    >
+      <input
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder={`Why cancel ${invoiceNo || "this bill"}?`}
+        style={{ minHeight: 26, width: 180, fontSize: ".78rem" }}
+        maxLength={300}
+        autoFocus
+      />
+      <input
+        type="date"
+        value={date}
+        min={invoiceDate}
+        max={today}
+        onChange={(e) => setDate(e.target.value)}
+        aria-label="Date of the cancellation"
+        style={{ minHeight: 26, fontSize: ".78rem" }}
+      />
+      <button
+        className="btn-primary"
+        disabled={busy || !reason.trim()}
+        style={small}
+        onClick={() =>
+          start(async () => {
+            const r = await cancelBillAction({ billId, reason, date });
+            if (r.ok) {
+              setOpen(false);
+              onDone();
+            } else setErr(r.error);
+          })
+        }
+      >
+        {busy ? "…" : "Confirm"}
+      </button>
+      <button onClick={() => setOpen(false)} disabled={busy} style={small}>
+        Keep
+      </button>
+      {err && (
+        <span className="red" style={{ fontSize: ".72rem", flexBasis: "100%", textAlign: "end" }}>
+          {err}
+        </span>
+      )}
+    </span>
   );
 }

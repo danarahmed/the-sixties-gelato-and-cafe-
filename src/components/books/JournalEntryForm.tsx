@@ -2,67 +2,85 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { saveJournalAction } from "@/lib/db/books-actions";
+import Decimal from "decimal.js";
+import { postControlCorrectionAction, saveJournalAction } from "@/lib/actions/books";
 import { fmtIQD } from "@/lib/format";
+import { normaliseNumber } from "@/lib/validation";
 import { Notice } from "@/components/ui";
 
 export interface AccountOption {
   code: string;
   name: string;
 }
-export interface PersonOption {
-  id: string;
-  name: string;
-}
 
 interface Row {
-  accountCode: string;
-  description: string;
+  code: string;
+  memo: string;
   debit: string;
   credit: string;
 }
 
-const emptyRow: Row = { accountCode: "", description: "", debit: "", credit: "" };
-const num = (v: string) => Number((v || "").replace(/[^0-9.]/g, "")) || 0;
+const emptyRow: Row = { code: "", memo: "", debit: "", credit: "" };
+const amount = (v: string) => {
+  const n = normaliseNumber(v);
+  return /^\d+(\.\d+)?$/.test(n) ? new Decimal(n) : new Decimal(0);
+};
 
 /**
- * A journal voucher as a bookkeeper writes one: any number of lines, each to an
- * account, with the running difference shown. It cannot be published until the
- * difference is nil — the database enforces the same rule at commit.
+ * A journal voucher as a bookkeeper writes one: any number of lines, each to
+ * an account, with the running difference shown. It cannot be published until
+ * the difference is nil — the database enforces the same rule as it commits,
+ * and gives the entry its number only then.
  */
 export function JournalEntryForm({
   accounts,
-  people,
+  controlAccounts = [],
+  canCorrect = false,
   nextNo,
+  today,
   currency,
 }: {
   accounts: AccountOption[];
-  people: PersonOption[];
-  nextNo: number;
+  /** Stock, payables, goods received, retained earnings: the owner's corrections only. */
+  controlAccounts?: AccountOption[];
+  canCorrect?: boolean;
+  nextNo: number | null;
+  today: string;
   currency: string;
 }) {
   const router = useRouter();
   const [busy, start] = useTransition();
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-
-  const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState(today);
   const [reverseOn, setReverseOn] = useState("");
   const [referenceNo, setReferenceNo] = useState("");
   const [notes, setNotes] = useState("");
-  const [postedBy, setPostedBy] = useState(people[0]?.id ?? "");
   const [rows, setRows] = useState<Row[]>([{ ...emptyRow }, { ...emptyRow }]);
+  const [correction, setCorrection] = useState(false);
+  const [reason, setReason] = useState("");
+  const options = correction
+    ? [...accounts, ...controlAccounts].sort((a, b) => a.code.localeCompare(b.code))
+    : accounts;
 
   const totals = useMemo(() => {
-    const debit = rows.reduce((s, r) => s + num(r.debit), 0);
-    const credit = rows.reduce((s, r) => s + num(r.credit), 0);
-    return { debit, credit, difference: Math.round(debit - credit) };
+    const debit = rows.reduce((s, r) => s.plus(amount(r.debit)), new Decimal(0));
+    const credit = rows.reduce((s, r) => s.plus(amount(r.credit)), new Decimal(0));
+    return {
+      debit: debit.toNumber(),
+      credit: credit.toNumber(),
+      difference: debit.minus(credit).toNumber(),
+    };
   }, [rows]);
 
-  const usable = rows.filter((r) => r.accountCode && (num(r.debit) > 0 || num(r.credit) > 0));
-  const canPublish = usable.length > 0 && totals.difference === 0 && notes.trim().length > 0;
+  const usable = rows.filter((r) => r.code && (amount(r.debit).gt(0) || amount(r.credit).gt(0)));
   const canDraft = usable.length > 0 && notes.trim().length > 0;
+  const canPublish =
+    canDraft &&
+    usable.length >= 2 &&
+    totals.difference === 0 &&
+    totals.debit > 0 &&
+    (!correction || reason.trim().length > 0);
 
   function setRow(i: number, patch: Partial<Row>) {
     setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
@@ -73,47 +91,76 @@ export function JournalEntryForm({
     setReferenceNo("");
     setReverseOn("");
     setDate(today);
+    setReason("");
+    setCorrection(false);
   }
 
   function save(publish: boolean) {
     setMsg(null);
+    if (correction) {
+      start(async () => {
+        const r = await postControlCorrectionAction({
+          date,
+          description: notes,
+          reason,
+          lines: usable.map((l) => ({
+            code: l.code,
+            memo: l.memo,
+            debit: l.debit || "0",
+            credit: l.credit || "0",
+          })),
+        });
+        if (r.ok) {
+          setMsg({
+            ok: true,
+            text: `Correction published as journal ${r.data.journalNo}; the reason is on the audit trail.`,
+          });
+          reset();
+          router.refresh();
+        } else setMsg({ ok: false, text: r.error });
+      });
+      return;
+    }
     start(async () => {
       const r = await saveJournalAction({
         date,
+        description: notes,
         referenceNo,
-        notes,
-        postedBy: postedBy || null,
         reverseOn: reverseOn || null,
         publish,
         lines: usable.map((l) => ({
-          accountCode: l.accountCode,
-          description: l.description,
-          debit: num(l.debit),
-          credit: num(l.credit),
+          code: l.code,
+          memo: l.memo,
+          debit: l.debit || "0",
+          credit: l.credit || "0",
         })),
       });
       if (r.ok) {
         setMsg({
           ok: true,
           text: publish
-            ? `Journal ${r.journalNo} published.`
-            : `Journal ${r.journalNo} saved as a draft.`,
+            ? `Journal ${r.data.journalNo} published${r.data.reversalNo ? `; its reversal is journal ${r.data.reversalNo}` : ""}.`
+            : "Saved as a draft. It is not in the books until it is published.",
         });
         reset();
         router.refresh();
-      } else setMsg({ ok: false, text: r.error ?? "Failed" });
+      } else setMsg({ ok: false, text: r.error });
     });
   }
 
   if (!open) {
     return (
-      <div className="panel-b" style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+      <div
+        className="panel-b"
+        style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}
+      >
         <button className="btn-primary" onClick={() => setOpen(true)}>
           New Journal
         </button>
         <span className="muted" style={{ fontSize: ".78rem" }}>
-          Next number will be {nextNo}. Anything unusual that is not a sale, a bill or an expense
-          belongs here.
+          For anything that is not a sale, a receipt, a bill, a payment or an expense. Stock,
+          payables, goods-received and retained earnings are kept by their own records and take no
+          manual journal.
         </span>
       </div>
     );
@@ -121,39 +168,81 @@ export function JournalEntryForm({
 
   return (
     <div className="panel-b">
-      {/* ---------- header fields ---------- */}
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 14 }}>
+      <div
+        className="grid"
+        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 14 }}
+      >
         <label>
           <div className="sc">Date *</div>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </label>
-        <label>
-          <div className="sc">Reverse journal date</div>
-          <input type="date" value={reverseOn} onChange={(e) => setReverseOn(e.target.value)} />
-        </label>
+        {!correction && (
+          <label>
+            <div className="sc">Reverse on (optional)</div>
+            <input
+              type="date"
+              value={reverseOn}
+              min={date}
+              onChange={(e) => setReverseOn(e.target.value)}
+            />
+          </label>
+        )}
         <label>
           <div className="sc">Journal #</div>
-          <input value={nextNo} readOnly style={{ color: "var(--faint)" }} />
+          <input
+            value={nextNo ? `${nextNo} (given on publish)` : "Given on publish"}
+            readOnly
+            style={{ color: "var(--faint)" }}
+          />
         </label>
         <label>
           <div className="sc">Reference #</div>
-          <input value={referenceNo} onChange={(e) => setReferenceNo(e.target.value)} />
-        </label>
-        <label>
-          <div className="sc">Created by</div>
-          <select value={postedBy} onChange={(e) => setPostedBy(e.target.value)}>
-            {people.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+          <input
+            value={referenceNo}
+            onChange={(e) => setReferenceNo(e.target.value)}
+            maxLength={60}
+          />
         </label>
         <label>
           <div className="sc">Currency</div>
           <input value={currency} readOnly style={{ color: "var(--faint)" }} />
         </label>
       </div>
+
+      {canCorrect && (
+        <label
+          style={{
+            display: "flex",
+            gap: 6,
+            alignItems: "center",
+            marginBlockStart: 12,
+            fontSize: ".85rem",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={correction}
+            onChange={(e) => {
+              setCorrection(e.target.checked);
+              setReverseOn("");
+            }}
+          />
+          Correction to a control account (Inventory, payables, goods received, retained earnings) —
+          owner only, with a reason on the audit trail. For repairing history recorded before the
+          controls; see docs/REMEDIATION.md.
+        </label>
+      )}
+      {correction && (
+        <label style={{ display: "block", marginBlockStart: 8 }}>
+          <div className="sc">Reason for the correction *</div>
+          <input
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="What was wrong, and how this entry puts it right"
+            maxLength={500}
+          />
+        </label>
+      )}
 
       <label style={{ display: "block", marginBlockStart: 12 }}>
         <div className="sc">Notes *</div>
@@ -167,11 +256,10 @@ export function JournalEntryForm({
 
       {reverseOn && (
         <p className="muted" style={{ fontSize: ".76rem", marginBlockEnd: 0 }}>
-          A mirror entry will be posted on {reverseOn}, reversing every line below.
+          On publishing, a mirror entry dated {reverseOn} is posted too, reversing every line below.
         </p>
       )}
 
-      {/* ---------- line grid ---------- */}
       <div className="tw" style={{ marginBlockStart: 16 }}>
         <table>
           <thead>
@@ -191,12 +279,9 @@ export function JournalEntryForm({
             {rows.map((r, i) => (
               <tr key={i}>
                 <td>
-                  <select
-                    value={r.accountCode}
-                    onChange={(e) => setRow(i, { accountCode: e.target.value })}
-                  >
+                  <select value={r.code} onChange={(e) => setRow(i, { code: e.target.value })}>
                     <option value="">Select an account</option>
-                    {accounts.map((a) => (
+                    {options.map((a) => (
                       <option key={a.code} value={a.code}>
                         {a.code} {a.name}
                       </option>
@@ -205,9 +290,10 @@ export function JournalEntryForm({
                 </td>
                 <td>
                   <input
-                    value={r.description}
-                    onChange={(e) => setRow(i, { description: e.target.value })}
+                    value={r.memo}
+                    onChange={(e) => setRow(i, { memo: e.target.value })}
                     placeholder="Description"
+                    maxLength={200}
                   />
                 </td>
                 <td>
@@ -244,17 +330,17 @@ export function JournalEntryForm({
         </table>
       </div>
 
-      <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "flex-start", marginBlockStart: 12 }}>
-        <button onClick={() => setRows((rs) => [...rs, { ...emptyRow }])}>+ Add new row</button>
-
+      <div
+        style={{
+          display: "flex",
+          gap: 18,
+          flexWrap: "wrap",
+          alignItems: "flex-start",
+          marginBlockStart: 12,
+        }}
+      >
+        <button onClick={() => setRows((rs) => [...rs, { ...emptyRow }])}>+ Add line</button>
         <div className="voucher" style={{ minWidth: 300, flex: 1, maxWidth: 420 }}>
-          <div className="st-row">
-            <span className="lbl">Sub total</span>
-            <span className="amt">
-              {fmtIQD(totals.debit)} &nbsp;/&nbsp; {fmtIQD(totals.credit)}
-            </span>
-          </div>
-          <div className="rule-single" />
           <div className="st-row total">
             <span className="lbl">Total ({currency})</span>
             <span className="amt">
@@ -262,7 +348,10 @@ export function JournalEntryForm({
             </span>
           </div>
           <div className="st-row">
-            <span className="lbl" style={{ color: totals.difference === 0 ? "var(--ok)" : "var(--err)" }}>
+            <span
+              className="lbl"
+              style={{ color: totals.difference === 0 ? "var(--ok)" : "var(--err)" }}
+            >
               Difference
             </span>
             <span className={`amt ${totals.difference === 0 ? "" : "red"}`}>
@@ -272,11 +361,19 @@ export function JournalEntryForm({
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBlockStart: 16, flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          alignItems: "center",
+          marginBlockStart: 16,
+          flexWrap: "wrap",
+        }}
+      >
         <button className="btn-primary" onClick={() => save(true)} disabled={busy || !canPublish}>
           {busy ? "Saving…" : "Save and publish"}
         </button>
-        <button onClick={() => save(false)} disabled={busy || !canDraft}>
+        <button onClick={() => save(false)} disabled={busy || !canDraft || correction}>
           Save as draft
         </button>
         <button

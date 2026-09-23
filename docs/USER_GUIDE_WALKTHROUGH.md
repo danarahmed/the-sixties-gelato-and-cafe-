@@ -1,531 +1,474 @@
-# The Sixty's Gelato & Café — Full Walkthrough & Feature Tutorial
+# The Sixty's — Screen-by-Screen Guide
 
-> **⚠️ 2026-08-23 update — the app is now LIVE and EMPTY.** All demonstration
-> data has been removed and every screen now reads and writes the real Supabase
-> database. The example numbers quoted below (9,979 straws, Iced Latte, etc.) no
-> longer exist — they illustrate what each screen _shows once you enter your own
-> data_. Start by adding stock on **Inventory**, a menu on **Products**, a
-> purchase on **Purchasing**, then sell on **POS**. "🔜 After DB wiring" notes
-> below that concern basic reads/writes are now done; remaining items (login,
-> settlement CSV import, production batch entry, exports) are noted in
-> `PROGRESS.md`.
+Every screen of the app: where it is, who sees it, what is on it, and how to do
+each job.
 
-A complete, screen-by-screen tutorial of the application **as it exists today**.
-Every feature is mapped to its **exact UI location** — the sidebar label and the
-page address (URL path) — and to the specific buttons, fields, and tables on that
-screen.
+- **Live app:** https://sixties-gelato-cafe.vercel.app. This guide describes the
+  version in this repository. Until it is deployed
+  ([`guides/deployment.md`](guides/deployment.md)), the live site runs the
+  previous app.
+- **Locations** are written as **Sidebar → _Label_** and the address, e.g.
+  `/pos`.
+- **Who sees it** depends on your roles. A screen you are not offered is not in
+  your sidebar; typing its address sends you to your own starting screen.
 
-- **Live app:** https://sixties-gelato-cafe.vercel.app
-- **Status legend used below:**
-  - ✅ **Live now** — you can click it today (runs on demonstration data).
-  - 🔜 **After DB wiring** — the screen/field is designed and the logic is tested,
-    but it becomes real once login + the database are connected.
-- Everything is labelled **Demonstration data**. All prices/costs are examples.
+## Contents
 
-> How to read a "location": **Sidebar → _Label_** is the menu item on the left;
-> **`/path`** is what you can type after the site address (e.g.
-> `https://sixties-gelato-cafe.vercel.app/pos`).
-
----
-
-## Table of contents
-
-1. [The global frame (top bar, sidebar, language, theme, offline)](#1-the-global-frame)
-2. [Core concepts you'll see everywhere](#2-core-concepts)
-3. [Dashboard](#3-dashboard) · `/dashboard`
-4. [POS (Point of Sale)](#4-pos) · `/pos`
-5. [Orders](#5-orders) · `/orders`
-6. [Products & Recipes](#6-products--recipes) · `/products`
-7. [Production](#7-production) · `/production`
-8. [Inventory](#8-inventory) · `/inventory`
-9. [Stock Count](#9-stock-count) · `/count`
-10. [Purchasing](#10-purchasing) · `/purchasing`
-11. [Delivery Platforms](#11-delivery-platforms) · `/platforms`
-12. [Accounting](#12-accounting) · `/accounting`
-13. [Reports](#13-reports) · `/reports`
-14. [AI Insights](#14-ai-insights) · `/ai`
-15. [Settings](#15-settings) · `/settings`
-16. [Feature index (every feature → where it lives)](#16-feature-index)
+1. [Signing in and your account](#1-signing-in-and-your-account)
+2. [The frame](#2-the-frame)
+3. [Ideas used everywhere](#3-ideas-used-everywhere)
+4. [Dashboard](#4-dashboard) · `/dashboard`
+5. [POS](#5-pos) · `/pos`
+6. [Orders](#6-orders) · `/orders`
+7. [Sales](#7-sales) · `/sales`
+8. [Delivery Platforms](#8-delivery-platforms) · `/platforms`
+9. [Vendors](#9-vendors) · `/vendors`
+10. [Expenses](#10-expenses) · `/expenses`
+11. [Purchasing](#11-purchasing) · `/purchasing`
+12. [Products & Recipes](#12-products--recipes) · `/products`
+13. [Inventory](#13-inventory) · `/inventory`
+14. [Stock Count](#14-stock-count) · `/count`
+15. [Production](#15-production) · `/production`
+16. [Journals](#16-journals) · `/journals`
+17. [Chart of Accounts](#17-chart-of-accounts) · `/accounting`
+18. [Reports](#18-reports) · `/reports`
+19. [Settings](#19-settings) · `/settings`
+20. [Every feature, and where it is](#20-every-feature-and-where-it-is)
 
 ---
 
-## 1. The global frame
+## 1. Signing in and your account
 
-These appear on **every** screen.
+**Location:** `/login` · **My account** at the bottom of the sidebar (`/account`)
 
-**Top bar (across the top):**
+- **Sign in** with your own email and password.
+- **First time here? Create your login.** It works only for an email the owner
+  has added under Settings → People. Confirm the email you receive, then sign
+  in. A login for an email nobody added sees nothing.
+- **Forgot password?** sends a link; it opens **My account**, where you set a new
+  password.
+- **My account** shows your name, business and roles, and **What you may do**
+  (your exact permissions). It also has **Change password** and **Sign out**. If
+  it says your login is not linked, ask the owner to add you with exactly that
+  email, then sign out and in again.
 
-- **☰ (menu icon)** — _(phones/tablets)_ opens/closes the sidebar. On a wide
-  screen the sidebar is always visible so this does nothing visible. ✅
-- **🍨 The Sixty's Gelato & Café** — the app name/brand. ✅
-- **🟢 Online / 🟠 Offline** — connection indicator. Shows Online normally; if the
-  internet drops it flips to Offline, and (once selling is wired) sales queue on
-  the device and sync when you reconnect. ✅ (indicator) / 🔜 (queue)
-- **Language dropdown** — choose **English**, **العربية** (Arabic), or **کوردی**
-  (Kurdish). Arabic and Kurdish switch the **entire layout to right-to-left**. ✅
-- **☀️ / 🌙 (theme button)** — toggle **light/dark** mode. Your choice is
-  remembered. ✅
+Where you land after signing in: owners, managers, accountants and auditors on
+the **Dashboard**; cashiers and baristas on the **POS**; counters on **Stock
+Count**; the purchasing role on **Reports**.
 
-**Sidebar (down the left, right on RTL):** the 13 modules — Dashboard, POS,
-Orders, Products & Recipes, Production, Inventory, Stock Count, Purchasing,
-Delivery Platforms, Accounting, Reports, AI Insights, Settings. The current page
-is highlighted. ✅
+## 2. The frame
 
-**Demo banner** — the yellow ⚠️ strip at the top of each page reminding you the
-numbers are examples. ✅
+- **Sidebar**, grouped the way the books are:
+  - **Dashboard**;
+  - **Revenue:** Sales, Delivery Platforms;
+  - **Spending:** Vendors, Expenses, Purchasing;
+  - **Operations:** POS, Orders, Products & Recipes, Inventory, Stock Count,
+    Production;
+  - **Accountant:** Journals, Chart of Accounts, Reports, Settings;
+  - **You:** My account.
 
----
+  You see only the screens your roles allow.
 
-## 2. Core concepts
+- **Top bar:**
+  - **☰** opens the sidebar on a phone;
+  - the **language** menu: English, العربية, کوردی (Arabic and Kurdish turn the
+    whole layout right-to-left);
+  - **☀️ / 🌙** for light or dark.
+- **Offline banner.** When the connection drops, a red banner says so. Selling and
+  saving stop until it is back: nothing is saved offline, so nothing is recorded
+  twice.
 
-Understanding these five ideas makes every screen obvious.
+## 3. Ideas used everywhere
 
-- **Channel** = _how_ an order is fulfilled: **Dine-in, Takeaway, Direct
-  delivery, Talabat**. The channel decides which packaging is used and which
-  price applies. You'll pick it on the POS.
-- **Base unit** = the smallest unit an item is tracked in (a straw in _each_,
-  milk in _ml_, coffee in _g_). You **buy** in bigger units (carton, case, kg)
-  and the system converts down to the base unit automatically.
-- **The inventory ledger is append-only.** There is no "type the new stock here"
-  box. Current stock is always the sum of every movement (receipts, sales,
-  production, waste, counts). Mistakes are fixed with a **reversal/adjustment**,
-  never an edit — so history is always intact.
-- **Profit is several numbers, not one.** You'll see _gross sales → net sales →
-  gross profit → contribution profit_. Each strips away a different cost, so you
-  see the truth after discounts and platform fees.
-- **Roles** decide who can do what (a cashier can sell but not change costs; a
-  manager approves adjustments). See Settings.
-
----
-
-## 3. Dashboard
-
-**Location:** Sidebar → **Dashboard** · `/dashboard` · ✅ Live now
-
-Your at-a-glance morning screen. What's on it:
-
-**KPI cards (top row):**
-
-- **Net sales today** — total sales value of today's orders (demo: from 5 sample
-  orders).
-- **Gross profit** — net sales minus product cost (COGS).
-- **Contribution profit (Talabat)** — profit on the Talabat order _after_ platform
-  commission and fees (the honest delivery number).
-- **Orders** — how many orders today.
-- **Average order value** — net sales ÷ orders.
-- **Expected platform payout** — what Talabat should actually pay you (not what
-  the customer paid).
-
-**Three alert cards (below):**
-
-- **Low-stock items** — anything below its reorder point, shown as
-  `on-hand / reorder` (demo: Delivery bag 420/500, Drink carrier 470/500).
-- **Expiring soon** — items within 3 days of expiry, with the date (demo:
-  Pistachio gelato 2026-08-20, Milk 2026-08-25).
-- **Talabat reconciliation** — settlement problems needing attention, with the
-  money impact.
-
-**Try it:** just read it. Then click into **POS** to create activity.
-
-**🔜 After DB wiring:** these numbers come from your real sales/stock instead of
-the sample set, and each card becomes click-through to the underlying list.
+- **Channel** is how an order is fulfilled: **Dine-in, Takeaway, Direct
+  delivery, Talabat**. It sets the price and the packaging.
+- **Base unit** is the smallest unit an item is tracked in (each, g, ml). You buy
+  in bigger units (a carton, a pack of 1,000) and the app converts.
+- **Stock is a ledger.** Nobody types a stock level: it is the sum of every
+  receipt, sale, waste, correction and count.
+- **Nothing is edited.** A sale, a published journal and a bill never change. A
+  mistake is corrected by a new, dated entry: a void, refund, reversal,
+  cancellation or count. The original stays on record.
+- **Months close in order.** A locked month refuses every posting. Only the owner
+  reopens one, with a reason.
+- **Before controls.** Entries recorded by the previous app carry this mark; see
+  [`REMEDIATION.md`](REMEDIATION.md).
 
 ---
 
-## 4. POS
+## 4. Dashboard
 
-**Location:** Sidebar → **POS** · `/pos` · ✅ Live now (the flagship demo)
+**Location:** Sidebar → **Dashboard** · `/dashboard` · **Who:** owner, general
+manager, branch manager, accountant, auditor
 
-A touch-friendly till. This is where the channel-aware engine is most visible.
+Today, from the books:
 
-**Step-by-step:**
+- **Net sales today**, **Gross profit**, **Orders**, **Average order value**;
+- **Inventory (1200)**: the value of stock in the ledger;
+- **Low-stock items**: a count, and a list of items below their reorder level or
+  negative;
+- **Recent sales**;
+- whether the **books reconcile**, with a link to the differences if they do not.
 
-1. **Pick a channel** — the tab row near the top: **Dine-in / Takeaway / Direct
-   delivery / Talabat**. This is the single most important choice — it changes
-   prices _and_ packaging.
-2. **Add products** — tap a tile under **Select a product** (demo: _Iced Latte
-   (Medium)_, _Gelato Cup — Pistachio_). Each tile shows the price **for the
-   chosen channel**. Tapping adds it to the cart.
-3. **Adjust the cart** (right panel) — use **−** / **+** to change quantities;
-   a line drops off at zero. **Clear** empties the cart.
-4. **Read the live totals** — as you change the cart or channel, these recompute
-   instantly:
-   - **Price** — what the customer pays.
-   - **Theoretical cost** — the recipe/packaging cost (COGS).
-   - **Gross margin** — Price − Cost, with the **margin %**.
-5. **Complete the sale** — **💵 Cash** or **💳 Card**. You get a **receipt block**:
-   a sale number, the tender, channel, net and margin, and an expandable
-   **"Inventory movements this sale posts"** list — the exact stock that would be
-   deducted.
-6. **Bottom table — "Inventory this sale will deduct — _channel_"** — the merged
-   list of every item + base-unit quantity + cost the current cart consumes.
+## 5. POS
 
-**The key thing to try (proves the whole system):** put one Iced Latte in the
-cart, then click through the channel tabs and watch the deduction list:
+**Location:** Sidebar → **POS** · `/pos` · **Who:** cashier, barista, managers,
+owner
 
-- **Dine-in** → ingredients only (reusable glass, no disposables).
-- **Takeaway** → adds **cup, lid, straw**.
-- **Talabat** → adds **delivery bag, napkins, sticker, tamper seal, carrier**,
-  and the **price rises to the Talabat price** — so margin % drops. That gap is
-  real business insight.
+1. **Channel.** Choose **Dine-in**, **Takeaway**, **Direct delivery** or
+   **Talabat**. Prices on the tiles change with it.
+2. **Products.** Tap a tile to add it. A tile is greyed out when the product has
+   no price on that channel.
+3. **Cart.** **−** / **+** change quantities; **Clear** empties it. The total is
+   shown.
+4. **Pay:**
+   - in the shop: **💵 Cash** or **💳 Card**;
+   - on Talabat: **🧾 Complete (paid through the platform)**.
+5. **✅ Sale recorded** confirms it, with the sale and journal numbers. The
+   cost is shown only to people allowed to see costs.
 
-**Features present here:** product favourites/tiles, channel selection, live
-COGS & margin, cash/card tenders, a receipt, and the movement preview. ✅
+**If the connection drops mid-sale,** the till freezes that cart and says it did
+not hear back:
 
-**🔜 After DB wiring:** search, sizes/modifiers/add-ons pickers, discounts/comps
-with reason + manager approval, suspended orders, refunds/voids, printed/shared
-receipts, cash-drawer open/close and shift reconciliation, and true **offline
-selling** (queue + exactly-once sync).
+- **Retry** sends it again with the same key. If the sale already went through,
+  it is shown, not recorded twice.
+- **Discard — a manager will check Orders** clears it from the till.
 
----
+A cart left frozen when the page reloads is brought back for its retry.
 
-## 5. Orders
+**What each sale posts:**
 
-**Location:** Sidebar → **Orders** · `/orders` · ✅ Live now
+- Dr Cash (1000), Card clearing (1010) or Platform receivable (1100), by tender;
+  Cr Sales (4000);
+- Dr Cost of goods sold (5000), Cr Inventory (1200), for exactly the recipe and
+  packaging used on that channel.
 
-The record of the day's sales.
+## 6. Orders
 
-- **Three stat cards:** Orders today, Net sales, Gross profit.
-- **Orders table:** each row shows **Order #, Time, Channel, Product, Net, COGS,
-  Margin (%)**.
-- **"Drill into an order"** — under the table each order is an expandable panel.
-  Click one to reveal the exact **inventory movements** it posted (item + base
-  quantity + cost). This demonstrates the append-only trail: every sale is a set
-  of permanent movements.
+**Location:** Sidebar → **Orders** · `/orders` · **Who:** anyone who sees costs
 
-**Try it:** expand `S-1045` (the Talabat order) and compare its deductions to
-`S-1044` (takeaway) — the Talabat one has the extra delivery packaging.
+Every sale: number, time, channel, items, how it was paid, status, net and
+margin.
 
-**🔜 After DB wiring:** filters (by channel/time/cashier), search, and **void /
-refund with a reason + approval** (financial rows are never edited — a void or
-refund posts a reversal).
+- **Void.** For a sale rung in error, the same day and before the day is closed.
+  Revenue, payment, cost and stock all come back exactly.
+- **Refund.** After that: the money goes back through 4200 Sales returns. Only
+  items marked returnable come back into stock; a used cup does not.
 
----
+Both ask **why**, and both go on the audit trail. You need the sale.void or
+sale.refund permission (managers and the owner).
 
-## 6. Products & Recipes
+## 7. Sales
 
-**Location:** Sidebar → **Products & Recipes** · `/products` · ✅ Live now
+**Location:** Sidebar → **Sales** · `/sales` · **Who:** anyone who sees costs;
+closing a day: managers and the owner
 
-How each product is built and priced. One card per product (demo: _Iced Latte_,
-_Gelato Cup — Pistachio_), each with two tables:
+- **Cards:**
+  - net sales over the last 30 trading days;
+  - refunds since;
+  - cost of sales and margin;
+  - **Days not yet closed**, with how many are before today.
+- **Daily Sales Summaries:** one line per day and channel (voided sales left
+  out), with orders, net, later refunds, cost, and whether the day is **Open** or
+  **Closed**.
+- **Close the Day:**
+  1. Pick the **Trading day**. Every day that sold and is not closed is listed,
+     oldest first, however old.
+  2. Enter the **Opening float** and the **Cash counted**. The screen shows what
+     the **Drawer should hold** (float + cash sales − cash refunds) and the
+     **Over / short**.
+  3. **Close the day.** Any difference posts to 6300 Cash over / short, dated on
+     that day.
 
-- **Recipe** — every component line: **Component, Qty, Applies to**. The "Applies
-  to" column is the important one — it says whether a line deducts on **all
-  channels** or only on specific ones (e.g. _Delivery bag → Direct delivery,
-  Talabat_). This is exactly how packaging differs by channel.
-- **Price & margin by channel** — a row per channel showing **Price, Cost,
-  Margin (%)**. You can see at a glance where a product makes the most/least.
+  A day closes once. A month cannot lock while one of its trading days is open.
 
-**Categories of items you'll see in recipes:** ingredients (coffee, milk, syrup,
-ice, pistachio), finished goods (pistachio gelato), packaging (cup, lid, gelato
-cup, delivery bag, carrier), and consumables (straw, spoon, napkin, sticker,
-tamper seal).
+- **Closed Days:** each day's float, expected, counted, over/short and who
+  closed it.
 
-**🔜 After DB wiring:** a recipe **editor** (add/remove lines, quantities),
-**recipe versioning** with effective dates, different recipes per size, images,
-allergens, prep instructions, and activate/deactivate without losing history.
+## 8. Delivery Platforms
 
----
+**Location:** Sidebar → **Delivery Platforms** · `/platforms` · **Who:** anyone
+who sees costs
 
-## 7. Production
+Platform orders rung on the till, with their value before commission and their
+cost, and the balance of 1100 Platform receivable.
 
-**Location:** Sidebar → **Production** · `/production` · ✅ Live now (interactive)
+Not built yet: settlement import and matching. Record each payout with a journal,
+as described in [`guides/talabat.md`](guides/talabat.md).
 
-Make a batch of a prepared item (demo: **pistachio gelato**) and see the real
-costing.
-
-**Step-by-step:**
-
-1. **Batches** — how many batches you're making (default 1).
-2. **Actual yield (g)** — how much you _actually_ got. The planned yield is shown
-   next to the field (5,000 g/batch).
-3. Watch the four cards update:
-   - **Total consumed cost** — value of the raw materials used.
-   - **Finished-goods value** — what the output is worth (= consumed cost; no
-     value invented).
-   - **Output unit cost** — consumed cost ÷ actual yield (so short yields cost
-     more per gram).
-   - **Yield variance** — planned − actual (short or over).
-4. **Raw materials consumed** table — each ingredient, base-unit quantity, and
-   cost, plus the **finished output** row.
-
-**Try it:** change _Actual yield_ from 4,800 to 4,000 and watch the **output unit
-cost rise** — that's the cost of waste made visible.
-
-**🔜 After DB wiring:** saving a batch (which atomically consumes ingredients and
-creates a traceable finished-goods lot with production/expiry dates), rejected
-quantities & quality notes, and a **production-planning** screen that recommends
-quantities from forecast demand, stock, expiry, and expected waste.
-
----
-
-## 8. Inventory
-
-**Location:** Sidebar → **Inventory** · `/inventory` · ✅ Live now
-
-Everything you hold, valued — computed from the ledger, never typed.
-
-- **Four stat cards:** Items tracked, Inventory value, Low stock (count),
-  Expiring ≤ 3 days (count).
-- **Stock table** — per item: **Item, Category, On hand, Unit, Reorder, Unit
-  cost, Value, Status**. The **Status** column badges each item: `low` (below
-  reorder), `expiring <date>`, or `ok`.
-
-**Categories (the "Category" column):** Ingredient, Packaging, Consumable,
-Finished good, Resale — every consumable is tracked down to a single straw.
-
-**Reads to notice:** _Delivery bag_ and _Drink carrier_ show **low**; _Pistachio
-gelato_ shows **expiring**. These match the Dashboard alerts.
-
-**🔜 After DB wiring:** a **movement-ledger browser** (every receipt/sale/waste/
-transfer for an item), stock by location, transfers between branches/kitchen,
-lot & expiry drill-down, and live low-stock/expiry alerts.
-
----
-
-## 9. Stock Count
-
-**Location:** Sidebar → **Stock Count** · `/count` · ✅ Live now (interactive)
-
-Count stock the honest way — **blind**, then post a correction.
-
-**Step-by-step:**
-
-1. **Item** — pick the item to count.
-2. **Counted quantity** — type what you physically counted. Note you do **not**
-   see the expected number yet (that's what "blind" means — it stops "just tick
-   the box" counting).
-3. **Submit & reveal variance (manager)** — reveals the result:
-   - **Expected (system)** vs **Counted**.
-   - **Quantity variance** = counted − expected (red if short).
-   - **Value variance** = variance × unit cost.
-   - A note showing the **`count_adjustment` movement** that would post on
-     approval — bringing the ledger to the counted figure _without_ erasing
-     history.
-4. **Re-count (hide expected)** — go again.
-
-**Try it:** pick **Straw** (expected 9,979) and enter **9,959** → you'll see a
-**−20** quantity variance and a **−400 IQD** value variance, and the exact
-adjustment it would post. (This is acceptance scenario #8.)
-
-**🔜 After DB wiring:** full/cycle/category/location counts, save & resume,
-multiple counters, recount requests, variance-threshold approvals, barcode
-scanning, and counting in packages (converted to base units).
-
----
-
-## 10. Purchasing
-
-**Location:** Sidebar → **Purchasing** · `/purchasing` · ✅ Live now (interactive)
-
-Receive goods and watch cost accounting happen.
-
-**Step-by-step (fields, left to right):**
-
-1. **Item** — what you're receiving (demo: Straw, Milk, Coffee beans).
-2. **Purchase unit** — the unit you buy in (**Carton (1,000)**, **Case (12 × 1
-   L)**, **Kilogram**, …). This is the star of the screen — you buy big, stock
-   small.
-3. **Quantity** — how many of that purchase unit.
-4. **Goods value (IQD)** — what the goods cost.
-5. **Freight (IQD)** and **Rebate (IQD)** — landed-cost adjustments.
-6. Read the **Goods receipt result** card:
-   - **Received in base units** — the conversion (e.g. 5 cartons → **5,000 each**).
-   - **Landed value** — goods + freight − rebate.
-   - **Landed unit cost** — landed value ÷ base quantity.
-   - **Avg cost before** vs **Avg cost after (WAC)** — how this receipt shifts the
-     moving weighted-average.
-   - **New on-hand** — the resulting quantity.
-
-**Try it:** with **Straw / Carton (1,000) / 5 / goods 90,000 / freight 2,000**,
-you'll see **+5,000 each**, landed value **92,000**, landed unit cost **18.4
-IQD**, and the average cost tick down accordingly. (Acceptance scenario #1 is the
-conversion; landed WAC is the costing engine.)
-
-**🔜 After DB wiring:** supplier management, purchase orders, goods receipts that
-post real movements, partial deliveries, purchase invoices, supplier balances,
-and price-change history.
-
----
-
-## 11. Delivery Platforms
-
-**Location:** Sidebar → **Delivery Platforms** · `/platforms` · ✅ Live now
-
-The truth about delivery economics — the customer's payment is **not** your
-revenue or your payout.
-
-- **"Talabat order … — economics"** table walks the full chain:
-  Merchant list value → − merchant-funded discount → (+ platform-funded discount
-  is reimbursed, so it doesn't reduce you) → **Net merchant sales** → − commission
-  → − payment processing → − advertising → − refunds → **Expected merchant
-  payout** → − product cost (COGS) → **Channel contribution profit**.
-  (Demo: 6,000 → 5,500 → **payout 3,650** → **contribution 1,740**.)
-- **"Settlement reconciliation"** — summary chips (Matched, Expected total,
-  Reported total, Issues) and a table of every discrepancy the engine found, with
-  the money impact:
-  - **Payout difference** (reported vs expected),
-  - **Incorrect commission**,
-  - **Unexplained adjustment**,
-  - **Missing payout** (a completed order absent from the statement).
-
-**Try it:** read the issues table — the demo statement underpays order 1 by 200,
-overcharges commission by 200, and **omits order 2 entirely (−4,200)**. That's
-money you'd otherwise never notice.
-
-**🔜 After DB wiring:** CSV import of orders/settlements, a **mock Talabat
-adapter** (until Partner API credentials are granted), internal↔external product
-mappings, per-platform pricing & promotions, and a reconciliation workbench to
-resolve each issue.
-
----
-
-## 12. Accounting
-
-**Location:** Sidebar → **Accounting** · `/accounting` · ✅ Live now
-
-Management accounting, shown honestly.
-
-- **"Today — profit shown honestly"** — the layered P&L: **Gross sales → − COGS →
-  Gross profit → − platform commissions & fees → Contribution profit**. A note
-  explains that fixed overhead (rent, salaries) is deliberately _not_ subtracted
-  here — that's a separate, labelled estimate.
-- **"Sample journal entry"** — a real **double-entry** example (Cash sale:
-  Dr Cash / Cr Sales; Dr COGS / Cr Inventory) with a **Totals** row and a
-  **✓ Balanced** badge. A note explains the database rejects any unbalanced entry
-  and blocks posting into a locked period; corrections are reversing entries.
-- **"Chart of accounts"** — the configurable account list (Cash, Platform
-  receivable, Inventory, Payables, Sales, COGS, Commission, Waste, Rent…).
-
-**🔜 After DB wiring:** automatic posting from sales/COGS/purchases/settlements, a
-journal browser, accounting periods with locking, supplier & platform balances,
-and CSV/Excel/PDF export for your accountant.
-
----
-
-## 13. Reports
-
-**Location:** Sidebar → **Reports** · `/reports` · ✅ Live now
-
-Analysis computed live by the costing engine.
-
-- **"Product margin by channel"** — every product × channel with **Price, Cost,
-  Margin, Margin %**. This is menu-engineering data — notice margin dropping on
-  Talabat.
-- **"Today's channel mix"** — orders, net sales, and gross profit grouped by
+## 9. Vendors
+
+**Location:** Sidebar → **Vendors** · `/vendors` · **Who:** anyone who sees costs;
+bills: purchasing, managers, accountant; payments: accountant, general manager,
+owner
+
+**At the top:** what is owed, aged: not yet due, 1–15, 16–30 and over 30 days
+late.
+
+**Left:** every vendor with their balance. **Right,** three tabs:
+
+- **Statement:** every bill and payment to date, with a running balance.
+  Cancelled bills stay on the statement, marked.
+- **Bills & payments:**
+  - **Record a bill.** Choose one of two kinds:
+    - **For goods received:** pick the delivery; the bill clears it, and any
+      difference in price posts to 5050;
+    - **For a service or asset:** pick the account.
+
+    Then enter the invoice number, date, amount and terms (due now, net 7, 15 or
+    30). The same invoice number from the same vendor is refused.
+
+  - **Open bills,** with **Pay bill**: amount, and paid from 1000 Cash, 1010 Card
+    or 1020 Bank. You cannot pay more than is outstanding.
+  - **Cancel** a bill entered in error, if nothing was paid on it. Give a reason
+    and a date. The bill stays on record and its journal is reversed.
+- **New vendor:** name, what they supply, phone.
+
+Deliveries received before these controls show as **Before controls ·
+(supplier's name)** under every vendor. The previous app did not record the
+supplier on them. Their bill is recorded against the payable already posted.
+
+## 10. Expenses
+
+**Location:** Sidebar → **Expenses** · `/expenses` · **Who:** anyone who sees
+costs; recording: managers, accountant, owner
+
+**Record an Expense:**
+
+1. Write the **Narration** in plain words ("September shop rent").
+2. Enter the **Amount**, **Date** and **Paid from** (Cash on hand, Card clearing
+   or Bank).
+3. An **Account** is proposed from the narration: rent → 6000, wages → 6100,
+   electricity → 6200, anything unclear → 6900 Other expenses. **Confirm or
+   change it.** A stock loss is sent to Inventory instead, because it is not an
+   expense.
+4. The entry is shown exactly as it will post (**Balanced — debits equal
+   credits**), then **Post expense**.
+
+Below: the **Expense Register** and totals **By Account**.
+
+## 11. Purchasing
+
+**Location:** Sidebar → **Purchasing** · `/purchasing` · **Who:** anyone who sees
+costs; receiving: purchasing, managers
+
+- **🏭 Add supplier:** name, what they supply, phone.
+- **📦 Receive stock (goods receipt):**
+  1. Choose the supplier.
+  2. Add a line for each item: the unit you bought it in and the quantity, and
+     the goods value.
+  3. Add freight, other landed costs and any rebate.
+  4. **Receive goods.**
+
+  Stock goes up in base units, and the landed cost is spread over the lines to
+  the dinar. The books post Dr Inventory, Cr Goods received not invoiced (2050),
+  until the bill arrives.
+
+- **Recent goods receipts:** each receipt's supplier, lines, goods, landed extras,
+  value into stock, and bill status: **Billed**, **Awaiting bill**, **Not
+  journaled** (from the previous app; see Reports) or **Before controls**.
+
+## 12. Products & Recipes
+
+**Location:** Sidebar → **Products & Recipes** · `/products` · **Who:** anyone who
+sees costs; creating and pricing: owner, general manager
+
+- **Add a menu product:**
+  - its name in English, Arabic and Kurdish;
+  - a **price per channel** (leave a channel empty if it is not sold there);
+  - its **recipe** for one serving: each line is an item and a quantity. Leave
+    the channels unticked for "all channels"; tick channels for lines used only
+    there, such as a takeaway cup.
+
+  The product, recipe and prices are created together, or not at all.
+
+- **Each product** shows its **Recipe** (component, quantity, applies to) and
+  **Price & margin by channel**, costed exactly as a sale would post it today.
+- **Set price:** a new price for a channel, from a date. A sale always uses the
+  price and the recipe in force on its own day.
+
+## 13. Inventory
+
+**Location:** Sidebar → **Inventory** · `/inventory` · **Who:** anyone who sees
+costs; baristas can record waste
+
+- **Cards:** items tracked, stock value (from the ledger), items below reorder
+  level, items with negative stock.
+- **➕ Add stock item:**
+  - its name, type (ingredient, packaging, consumable, finished good, resale);
+  - what it is measured in and its base unit;
+  - optional purchase units (e.g. a carton of 1,000);
+  - optional opening quantity and cost, posted as Dr Inventory, Cr Owner equity.
+- **🗑️ Record waste:** the item, what happened (waste, spoilage, expired,
+  damaged, melt, staff, complimentary, sampling), the quantity and unit, and
+  **why**. It is valued at average cost and posts to 5300. Waste above the
+  business's threshold needs a manager.
+- **✏️ Correct stock (manager):** a signed change (− to reduce), the cost per base
+  unit for additions (blank = average), and **why**. It posts to 5400.
+- **Stock on hand:** each item's quantity, unit, reorder level, average cost,
+  value and status: **low**, or **negative** (shown, never hidden).
+- **Movements:** the most recent entries in the stock ledger.
+
+## 14. Stock Count
+
+**Location:** Sidebar → **Stock Count** · `/count` · **Who:** counter (counts);
+branch manager, general manager, owner (review and approve)
+
+- **Counting.** **Start count** lists every item by name and unit. Enter what is
+  on the shelf; each entry saves as you go. Then **Submit count**. The counter
+  never sees the expected quantities.
+- **Review.** Open a submitted count with **Review**: expected (the database's
+  snapshot from when the count started), counted, variance and value. Then either
+  **Approve and post variances** (to 5400, dated when submitted) or **Reject**,
+  with a reason for the recount. The person who counted cannot approve.
+- **Counts:** every count with when it started, who counted, how many items,
+  its status, and who approved or rejected it.
+
+More in [`guides/counting-guide.md`](guides/counting-guide.md).
+
+## 15. Production
+
+**Location:** Sidebar → **Production** · `/production` · **Who:** anyone who sees
+costs
+
+Batch history only. **Recording a batch is not built yet**, and the screen says
+so. Meanwhile, give products a recipe of their ingredients so each sale takes
+them from stock.
+
+## 16. Journals
+
+**Location:** Sidebar → **Journals** · `/journals` · **Who:** anyone who sees
+costs; posting: accountant, general manager, owner
+
+- **Journal Register:** every entry, newest first: date, number, reference,
+  status, notes, amount and who posted it. Each shows its source (Sale, Refund,
+  Reversal, Receipt, Bill, Payment, Expense, Stock, Count, Day close, Manual,
+  Year end). **Manual and reversals** filters to the hand-made ones. Open a row
+  to see its lines. Entries from the previous app are marked **before
+  controls**.
+- **New Journal:**
+  - a date, an optional **Reverse on** date (for accruals), a reference and
+    notes;
+  - lines of account, description, debit and credit, with **+ Add line**.
+
+  **Save and publish** only when debits equal credits; the number is given on
+  publish. **Save as draft** parks it outside the books. A draft blocks the month
+  from closing until it is published or discarded. Inventory, payables, goods
+  received and retained earnings are not offered: they change only through their
+  own records.
+
+- **Correction to a control account (owner only).** Tick it on New Journal to
+  post to one of those four accounts, with a reason on the audit trail. It exists
+  to correct history from before these controls.
+- **Reverse:**
+  - offered on manual journals, expenses, corrections, year-end closes and
+    entries from before the controls;
+  - asks why, and for a date: not before the entry, not in the future, in an
+    open month;
+  - posts a mirror entry.
+
+  A journal written by a sale, receipt, bill, payment, stock movement, count or
+  day close is corrected through that record instead.
+
+## 17. Chart of Accounts
+
+**Location:** Sidebar → **Chart of Accounts** · `/accounting` · **Who:** anyone
+who sees costs; locking: accountant, general manager, owner; reopening: owner
+
+- **Months** across the top, 🔒 when locked. Choose one.
+- **Trial Balance** for that month: each account's opening balance, debits,
+  credits and closing balance, from published entries only, with the totals and
+  **Download CSV**.
+- **Closing the month:** the checklist, every item of which must pass:
+  - earlier months locked;
+  - no drafts;
+  - every trading day closed;
+  - no count awaiting approval;
+  - stock, unpaid bills and goods received each agree with their account;
+  - the month's journals balance.
+
+  When they pass, **Lock** (with an optional note). Locking the last month of a
+  year also posts the year-end close into 3100 Retained earnings. **Reopen** is
+  the owner's alone, and needs a reason; reopen the most recent locked month
+  first.
+
+- **Audit Trail:** the latest privileged actions: who, when, what and why.
+
+## 18. Reports
+
+**Location:** Sidebar → **Reports** · `/reports` · **Who:** anyone who sees costs;
+the P&L: owner, managers, accountant, auditor
+
+Choose **From** and **To**, or **This month**, **Last month**, **This year**.
+
+- **Do the books tie?** Each subledger against its control account, as at the
+  **To** date, with **CSV**:
+  - stock vs Inventory;
+  - unpaid bills (and deliveries the previous app posted to payables) vs
+    Accounts payable;
+  - deliveries not yet billed vs Goods received not invoiced;
+  - sales vs revenue.
+
+  ✅ means they agree. Below it, **Stock the old app never journaled** lists any
+  stock the previous app moved without a journal, each with the entry it would
+  post. The owner reviews them and posts them in one step, with a reason (see
+  [`REMEDIATION.md`](REMEDIATION.md)).
+
+- **Profit & Loss:** income, cost of sales, gross profit, operating expenses and
+  net, from published entries, with **CSV**.
+- **Sales by Channel:** orders, net sales and gross profit per channel.
+- **Payable Ageing:** each unpaid bill by vendor, due date and days late.
+- **Product Margin by Channel:** price, cost and margin of every product on every
   channel.
-- **"Available report set (scheduled)"** — lists the full report catalogue whose
-  data is already captured (menu engineering, discount/promotion profitability,
-  actual-vs-theoretical usage & food cost, waste, variance, stock ageing,
-  supplier performance, production yield, platform reconciliation, cashier/shift
-  reconciliation).
 
-**🔜 After DB wiring:** those additional reports as views, date-range filters,
-drill-through to transactions, and CSV/Excel/PDF export.
+## 19. Settings
 
----
+**Location:** Sidebar → **Settings** · `/settings` · **Who:** owner, general
+manager
 
-## 14. AI Insights
+- **People:**
+  - every member, with name, email, roles, and whether they have signed in;
+  - **Add a person** (name, email, roles), change roles, **Deactivate** /
+    **Reactivate**.
 
-**Location:** Sidebar → **AI Insights** · `/ai` · ✅ Live now (example cards)
+  Only the owner grants owner or general manager, and the business always keeps
+  an active owner. Every change is on the audit trail.
 
-How AI assistance will look — **without needing any API key**. The banner makes
-clear these are format examples until a provider is configured.
-
-- A note states the guardrails up front: **AI only explains, forecasts, and
-  recommends — it never changes money or stock.** Human approval is required
-  before creating a PO, changing a price/recipe, adjusting inventory, posting a
-  journal, publishing a promotion, or contacting a supplier; every AI call is
-  audited.
-- **Insight cards** — each shows the full anatomy of a recommendation:
-  **kind, title, recommendation, explanation, confidence %, forecast horizon,
-  data used, impact,** and an **approve** button (disabled here — needs a key +
-  human approval). Examples: a production plan, a reorder suggestion, a
-  money-losing promotion, and an unusual-void fraud watch.
-
-**🔜 After DB wiring + an AI key:** live forecasts and suggestions computed from
-your real data, natural-language questions ("How much pistachio gelato should we
-make tomorrow?"), and one-click approvals that turn into (human-approved)
-actions. The core app keeps working fully with **no** AI key.
+- **Business configuration** (shown, not edited here):
+  - name;
+  - currency and decimal places;
+  - timezone (trading days and months run midnight to midnight there);
+  - default language;
+  - the negative-stock policy;
+  - the waste value that needs a manager.
+- **Locations:** the branch and the central kitchen.
+- **Roles & what they may do:** the exact permission list of each role.
 
 ---
 
-## 15. Settings
+## 20. Every feature, and where it is
 
-**Location:** Sidebar → **Settings** · `/settings` · ✅ Live now
-
-Configuration and the security model.
-
-- **Business configuration** — name, **currency (IQD, 0 decimals — configurable)**,
-  **timezone (Asia/Baghdad, stored UTC)**, **languages (EN/AR/CKB, RTL)**, units
-  (metric), costing method (moving weighted-average; FIFO optional), and the
-  **negative-stock policy**.
-- **Locations** — Main Branch and Central Kitchen (the model is multi-branch /
-  warehouse ready from day one).
-- **Roles & permissions** — a card per role (Owner, General manager, Branch
-  manager, Cashier, Barista, Inventory counter, Purchasing, Accountant, Auditor)
-  listing exactly which permissions it holds. This is the **tested** policy that
-  drives the UI and is re-checked on the server.
-
-**🔜 After DB wiring:** a first-time **setup wizard** (business + branch details,
-users, MFA, opening balances) and user/role administration.
-
----
-
-## 16. Feature index
-
-Every headline feature → where to find it. (✅ clickable now · 🔜 after DB wiring.)
-
-| Feature                                                   | Location                | Status         |
-| --------------------------------------------------------- | ----------------------- | -------------- |
-| Switch language (EN / AR / CKB, RTL)                      | Top bar → Language      | ✅             |
-| Light/dark theme                                          | Top bar → ☀️/🌙         | ✅             |
-| Online/offline indicator                                  | Top bar                 | ✅             |
-| Owner KPIs, low-stock, expiry, recon                      | `/dashboard`            | ✅             |
-| Channel-aware selling (Dine-in/Takeaway/Delivery/Talabat) | `/pos` → channel tabs   | ✅             |
-| Cart, quantities, live COGS & margin                      | `/pos`                  | ✅             |
-| Cash / card checkout + receipt + movement preview         | `/pos`                  | ✅             |
-| Discounts/comps, refunds/voids, offline queue             | `/pos`                  | 🔜             |
-| Order list + per-order deduction drill-in                 | `/orders`               | ✅             |
-| Recipe breakdown + channel packaging rules                | `/products`             | ✅             |
-| Price & margin by channel                                 | `/products`, `/reports` | ✅             |
-| Recipe editor / versioning                                | `/products`             | 🔜             |
-| Production batch cost & yield variance                    | `/production`           | ✅             |
-| Production planning suggestions                           | `/production`           | 🔜             |
-| Stock-on-hand (derived), value, low/expiry                | `/inventory`            | ✅             |
-| Movement-ledger browser, transfers, lots                  | `/inventory`            | 🔜             |
-| Blind count → variance → adjustment                       | `/count`                | ✅             |
-| Purchase-unit → base-unit conversion                      | `/purchasing`           | ✅             |
-| Landed cost → moving weighted-average                     | `/purchasing`           | ✅             |
-| Suppliers, POs, receiving, invoices                       | `/purchasing`           | 🔜             |
-| Delivery-platform payout & contribution                   | `/platforms`            | ✅             |
-| Settlement reconciliation (issue flags)                   | `/platforms`            | ✅             |
-| CSV import / mock Talabat adapter                         | `/platforms`            | 🔜             |
-| Layered P&L (several profit numbers)                      | `/accounting`           | ✅             |
-| Double-entry journal + balance check                      | `/accounting`           | ✅             |
-| Chart of accounts                                         | `/accounting`           | ✅             |
-| Auto-posting, periods, exports                            | `/accounting`           | 🔜             |
-| Product/channel margin, channel mix                       | `/reports`              | ✅             |
-| Full report catalogue + exports                           | `/reports`              | 🔜             |
-| AI insight format + guardrails                            | `/ai`                   | ✅             |
-| Live AI forecasts / NL questions                          | `/ai`                   | 🔜 (needs key) |
-| Business config, currency, timezone, locales              | `/settings`             | ✅             |
-| Roles & permissions matrix                                | `/settings`             | ✅             |
-| Login, MFA, PIN, setup wizard                             | `/settings`             | 🔜             |
-
----
-
-### Where the numbers come from
-
-Every figure on the ✅ screens is computed by the same tested calculation engine
-(`src/domain/*`) documented in [`CALCULATIONS.md`](CALCULATIONS.md). The 12
-required business scenarios that back these features are listed and automated in
-[`TEST_PLAN.md`](TEST_PLAN.md). Current build status per module is in
-[`PROGRESS.md`](PROGRESS.md).
-
-### What "after DB wiring" unlocks
-
-Connecting login + the database turns every 🔜 into a real, saved action: real
-users with roles, sales that persist and post to the ledger, receiving that moves
-stock, counts that adjust it, journals that auto-post, and reports over your true
-history. See [`ROADMAP.md`](ROADMAP.md) for the sequence.
+| Feature                                                                                                                                               | Where                              | Who                                                                   |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------- |
+| Sign in, create a login, reset password                                                                                                               | `/login`                           | everyone                                                              |
+| Change password, see your permissions                                                                                                                 | My account `/account`              | everyone                                                              |
+| Language (EN / AR / CKB, right-to-left), light/dark                                                                                                   | top bar                            | everyone                                                              |
+| Today at a glance, low stock, books reconcile                                                                                                         | `/dashboard`                       | owner, managers, accountant, auditor                                  |
+| Sell by channel; cash, card, platform-paid                                                                                                            | `/pos`                             | cashier, barista, managers, owner                                     |
+| Retry a sale without recording it twice                                                                                                               | `/pos`                             | the same                                                              |
+| Void (same day) and refund                                                                                                                            | `/orders`                          | managers, owner                                                       |
+| Daily summaries; close the day against the drawer                                                                                                     | `/sales`                           | cost viewers; closing: managers, owner                                |
+| Platform orders; payout by journal                                                                                                                    | `/platforms`, `/journals`          | cost viewers                                                          |
+| Vendor statements, bills, payments, cancel a bill, ageing                                                                                             | `/vendors`                         | cost viewers (by permission)                                          |
+| Expenses with a proposed account                                                                                                                      | `/expenses`                        | managers, accountant, owner                                           |
+| Suppliers; receive goods with landed cost                                                                                                             | `/purchasing`                      | purchasing, managers, owner                                           |
+| Products, recipes by channel, prices from a date, margins                                                                                             | `/products`                        | cost viewers; editing: owner, general manager                         |
+| Stock board, add items, waste, corrections, movements                                                                                                 | `/inventory`                       | cost viewers; waste: baristas too                                     |
+| Blind count, second-person approval                                                                                                                   | `/count`                           | counter; reviewers                                                    |
+| Journal register, manual journals, reversal                                                                                                           | `/journals`                        | cost viewers; posting: accountant, general manager, owner             |
+| Owner's correction to a control account                                                                                                               | `/journals`                        | owner                                                                 |
+| Trial balance, closing checklist, lock / reopen, audit trail                                                                                          | `/accounting`                      | cost viewers; lock: accountant, general manager, owner; reopen: owner |
+| Reconciliation, P&L, channels, ageing, margins, CSV                                                                                                   | `/reports`                         | cost viewers                                                          |
+| Post the stock the old app never journaled                                                                                                            | `/reports`                         | owner                                                                 |
+| People and roles, business configuration                                                                                                              | `/settings`                        | owner, general manager                                                |
+| **Not built:** settlement import (M-10), production batches (M-11), offline selling, partial refunds, till discounts, balance sheet, PDF, attachments | [`LIMITATIONS.md`](LIMITATIONS.md) | —                                                                     |

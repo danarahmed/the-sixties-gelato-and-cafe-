@@ -1,6 +1,6 @@
 # Data Model
 
-Source of truth: the SQL migrations in `supabase/migrations/` (48 tables). This
+Source of truth: the SQL migrations in `supabase/migrations/` (51 tables after `0017`). This
 document explains the design; the migrations are authoritative.
 
 Conventions: every business table carries `business_id` for multi-tenant
@@ -56,9 +56,10 @@ erDiagram
 
 `business` holds configurable currency/precision, timezone, locale, and the
 negative-stock policy. `location` covers branches, warehouses, and the central
-kitchen. `app_user` links to Supabase `auth.users` and can carry a hashed POS
-PIN. `user_role` grants roles globally or per location. `audit_log` is
-append-only (who/what/when/device/reason + before/after JSON).
+kitchen. `app_user` links to Supabase `auth.users` once the login's email is
+confirmed (`0016`); its `pin_hash` column is unused. `user_role` grants roles
+globally or per location. `audit_log` is append-only
+(who/what/when/device/reason + before/after JSON).
 
 ### Catalog & recipes (`0002`)
 
@@ -86,8 +87,8 @@ adjustment movement.
 ### Sales (`0004`)
 
 `sales_order` carries channel, status, monetary fields, a COGS snapshot, and a
-**`UNIQUE(business_id, idempotency_key)`** for exactly-once offline sync; a
-trigger blocks deletes and freezes monetary amounts once finalized.
+**`UNIQUE(business_id, idempotency_key)`**, so a retried sale is recorded exactly
+once; a trigger blocks deletes and freezes monetary amounts once finalized.
 `sales_order_line`, `sales_tender`, `sale_adjustment` (discount/comp/void/refund
 with reason + approver), `work_shift` (cash session variance), and `sync_log`
 (sync auditing).
@@ -114,3 +115,31 @@ and `expense_category` for operating costs.
 impact + status/approval) and append-only `ai_interaction_log` (provider, model,
 prompt, response, approval) for a full audit trail. RLS enables tenant isolation
 on every business table plus role/cost-visibility helper functions.
+
+### Controls (`0014`–`0017`)
+
+Added after the August 2026 audit; see [ADR 0002](adr/0002-database-posting-engine.md).
+
+- **Journals.** `journal_entry` gains `status` (draft → published), a gapless
+  `journal_no` from `document_counter`, a `period_id`, `reverses_entry`, and
+  `legacy` for entries recorded before the controls. Lines can be written only
+  while their entry is a draft; a published entry never changes.
+- **Periods.** Monthly `accounting_period` rows in the business's own timezone,
+  created on demand; a locked period refuses every posting.
+- **Purchasing.** A receipt posts Dr Inventory / Cr **2050 Goods received not
+  invoiced**; its bill clears 2050 and raises Accounts payable.
+  `purchase_invoice` gains `cancelled_at`/`cancel_reason` (one-way, audited) and
+  `legacy`.
+- **Day close.** `work_shift.business_day`: one close per trading day per
+  location.
+- **Counts.** `stock_count` records who counted and who approved; the expected
+  quantities are snapshotted when the count opens and never shown to the
+  counter.
+- **Tenancy.** Child tables carry `business_id`, so row-level security isolates
+  them directly.
+- **Access.** `role_permission` mirrors `src/domain/auth/permissions.ts`.
+  Signed-in users read through row-level security and write only through the
+  functions of `0015`.
+- **Reports.** The functions of `0017` read published journal lines only:
+  trial balance, P&L, and the reconciliation of each subledger with its
+  control account.

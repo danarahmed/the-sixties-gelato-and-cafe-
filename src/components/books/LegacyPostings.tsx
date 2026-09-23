@@ -1,0 +1,131 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { postLegacyUnpostedAction } from "@/lib/actions/books";
+import { dateTimeIn } from "@/lib/dates";
+import { fmtIQD } from "@/lib/format";
+import { Notice } from "@/components/ui";
+import type { UnpostedRecord } from "@/lib/db/reports";
+
+const KIND_LABEL: Record<string, string> = {
+  opening_stock: "Opening stock",
+  goods_received: "Goods received",
+  count_variance: "Count variance",
+  waste: "Waste",
+  stock_correction: "Stock correction",
+};
+
+/**
+ * Stock the old app moved but never journaled. Each record is listed with the
+ * journal the new app writes for the same record; the owner reviews them and
+ * posts them in one step, with a reason on the audit trail. Nothing is posted
+ * without that decision (docs/REMEDIATION.md).
+ */
+export function LegacyPostings({
+  records,
+  canPost,
+  timezone,
+}: {
+  records: UnpostedRecord[];
+  canPost: boolean;
+  timezone: string;
+}) {
+  const router = useRouter();
+  const [busy, start] = useTransition();
+  const [reason, setReason] = useState("");
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const total = records.reduce((s, r) => s + r.amount, 0);
+
+  function post() {
+    setMsg(null);
+    start(async () => {
+      const r = await postLegacyUnpostedAction({ reason });
+      if (r.ok) {
+        setMsg({
+          ok: true,
+          text: `${r.data.posted} journal(s) posted, ${fmtIQD(r.data.total)} in all. They are in the Journal Register.`,
+        });
+        setReason("");
+        router.refresh();
+      } else setMsg({ ok: false, text: r.error });
+    });
+  }
+
+  if (records.length === 0) return msg ? <Notice msg={msg} /> : null;
+
+  return (
+    <div style={{ padding: "0 16px 14px" }}>
+      <h4 style={{ margin: "4px 0 6px" }}>Stock the old app never journaled</h4>
+      <p className="muted" style={{ fontSize: ".78rem", marginTop: 0, lineHeight: 1.6 }}>
+        These records moved stock before the upgrade but have no journal, so they show above as an
+        Inventory difference. Each would post the entry the new app writes for the same record,
+        dated when it happened. Post them only if the records are real.
+      </p>
+      <div className="tw">
+        <table>
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Record</th>
+              <th>Journal it would post</th>
+              <th className="right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {records.map((r) => (
+              <tr key={r.kind + r.refId}>
+                <td className="muted" style={{ whiteSpace: "nowrap" }}>
+                  {dateTimeIn(timezone, r.at)}
+                </td>
+                <td>
+                  <span className="ref auto">{KIND_LABEL[r.kind] ?? r.kind}</span> {r.description}
+                </td>
+                <td className="mono" style={{ fontSize: ".78rem" }}>
+                  {r.entry}
+                </td>
+                <td className="right money">{fmtIQD(r.amount)}</td>
+              </tr>
+            ))}
+            <tr>
+              <td colSpan={3}>
+                <strong>{records.length} record(s)</strong>
+              </td>
+              <td className="right money">
+                <strong>{fmtIQD(total)}</strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      {canPost ? (
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            flexWrap: "wrap",
+            marginTop: 10,
+            alignItems: "center",
+          }}
+        >
+          <input
+            style={{ flex: "1 1 260px" }}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Why they are being posted (for the audit trail)"
+          />
+          <button className="btn-primary" onClick={post} disabled={busy || reason.trim() === ""}>
+            {busy ? "Posting…" : `Post these ${records.length} journal(s)`}
+          </button>
+        </div>
+      ) : (
+        <p className="muted" style={{ fontSize: ".78rem" }}>
+          Only the owner can post them.
+        </p>
+      )}
+      <div style={{ marginTop: 8 }}>
+        <Notice msg={msg} />
+      </div>
+    </div>
+  );
+}

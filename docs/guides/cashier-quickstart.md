@@ -1,36 +1,60 @@
 # Cashier Quick-Start
 
-## Sign in
+## Signing in
 
-- Tap your name and enter your **PIN** (fast switching on a shared device).
+- Open the app and sign in with **your own email and password**. Never share a
+  login: every sale records who rang it up.
+- **First time?** Your manager adds your email first. Then choose **First time
+  here? Create your login**, set a password, confirm the email you receive, and
+  sign in.
+- **Forgot your password?** Choose **Forgot password?**; the email you receive
+  takes you to **My account**, where you set a new one.
+- As a cashier you see the **POS** and **My account**. That is by design.
 
-## Take an order
+## Ringing up a sale
 
-1. Choose the **channel**: Dine-in, Takeaway, or Delivery. _(This decides which
-   packaging is used — always pick the right one.)_
-2. Tap products; adjust size/flavour/add-ons.
-3. Review the order and total.
-4. Take payment: **Cash**, **Card**, or **Mixed**. For cash, enter the amount to
-   see change.
-5. Finish — print or share the receipt.
+1. **Pick the channel:** **Dine-in**, **Takeaway**, **Direct delivery** or
+   **Talabat**. The channel sets the price and the packaging taken from stock
+   (a takeaway uses a cup and lid; dine-in does not), so always pick the right
+   one.
+2. **Tap the products.** Use **−** and **+** to change quantities, **Clear** to
+   start again. A product greyed out has no price on that channel.
+3. **Take payment:**
+   - in the shop: **💵 Cash** or **💳 Card**;
+   - a Talabat order: **🧾 Complete (paid through the platform)** is the only
+     choice, because Talabat collects the money.
+4. You see **✅ Sale recorded**, with the sale number. You never see costs; that
+   is by design too.
 
-## Discounts & comps
+## If the connection drops
 
-- Apply a discount only with a **reason**. Large discounts need a manager's
-  approval — the app will prompt.
+- A red **Offline** banner appears and checkout is blocked. **Nothing is sold
+  or saved while offline.** Take payment only once the banner is gone.
+- If the connection dropped **during** a sale, the till says it did not hear
+  back and freezes that sale. Press **Retry** when you are back online. If the
+  sale went through, it is not recorded twice. **Never ring it up again.**
+- **Discard — a manager will check Orders** clears a frozen sale from your till.
+  Use it only if the customer left without paying, and tell a manager: if the
+  sale did reach the books, they will void it.
 
 ## Mistakes
 
-- You **cannot** silently edit a finished sale. Use **Void** (before handover)
-  or **Refund** (after), each with a reason. Some need manager approval.
+A finished sale cannot be edited. Tell a manager:
 
-## Offline
+- **the same day**, before the day is closed, they can **void** it: everything
+  comes back exactly;
+- **later**, they **refund** it.
 
-- If the top bar shows **Offline**, keep selling — orders are saved on the device
-  and sync automatically when the internet returns. Each order syncs **once**;
-  you will never double-charge.
+Both are done on **Orders**, with a reason.
 
-## End of shift
+## End of the day
 
-- Open **Close shift**, count the cash drawer, enter the amount. The app shows
-  expected vs counted and any variance for your manager.
+A manager counts the drawer and closes the day on **Sales**. Keep the drawer
+tidy and do not take cash out without telling them.
+
+## Settings in the top bar
+
+- **Language:** English, العربية or کوردی (Arabic and Kurdish switch the whole
+  screen right-to-left).
+- **☀️ / 🌙** switches light and dark.
+- **My account** has your name, your role and a password change.

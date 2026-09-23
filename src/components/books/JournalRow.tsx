@@ -2,54 +2,74 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { publishJournalAction, discardDraftAction } from "@/lib/db/books-actions";
+import {
+  discardJournalAction,
+  publishJournalAction,
+  reverseJournalAction,
+} from "@/lib/actions/books";
 import { fmtIQD } from "@/lib/format";
+import { dateIn } from "@/lib/dates";
+import type { JournalRegisterRow } from "@/lib/db/books";
 
-export interface RegisterEntry {
-  id: string;
-  journalNo: number | null;
-  date: string;
-  referenceNo: string | null;
-  notes: string;
-  status: string;
-  amount: number;
-  createdBy: string;
-  lines: { account: string; description: string | null; debit: number; credit: number }[];
-}
+const SOURCE: Record<string, string> = {
+  sales_order: "Sale",
+  sale_refund: "Refund",
+  reversal: "Reversal",
+  goods_receipt: "Receipt",
+  purchase_invoice: "Bill",
+  supplier_payment: "Payment",
+  expense: "Expense",
+  inventory_movement: "Stock",
+  stock_count: "Count",
+  work_shift: "Day close",
+  manual: "Manual",
+  year_end_close: "Year end",
+};
 
-/** One row of the register; expands to show the lines as they were written. */
-export function JournalRow({ entry, locked }: { entry: RegisterEntry; locked: boolean }) {
+/** One entry of the register; expands to show its lines as they were written. */
+export function JournalRow({
+  entry,
+  timezone,
+  canPost,
+  today,
+}: {
+  entry: JournalRegisterRow;
+  timezone: string;
+  canPost: boolean;
+  today: string;
+}) {
   const router = useRouter();
   const [busy, start] = useTransition();
   const [open, setOpen] = useState(false);
+  const [reversing, setReversing] = useState(false);
+  const [reason, setReason] = useState("");
+  const [revDate, setRevDate] = useState(today);
   const [err, setErr] = useState<string | null>(null);
   const isDraft = entry.status === "draft";
-
+  const entryDay = dateIn(timezone, new Date(entry.occurredAt));
   const debit = entry.lines.reduce((s, l) => s + l.debit, 0);
   const credit = entry.lines.reduce((s, l) => s + l.credit, 0);
   const difference = Math.round(debit - credit);
+  const canReverse = canPost && !isDraft && entry.reversedByNo === null && entry.reversibleByHand;
 
-  function publish() {
+  function run(fn: () => Promise<{ ok: true } | { ok: false; error: string }>) {
     setErr(null);
     start(async () => {
-      const r = await publishJournalAction(entry.id);
-      if (r.ok) router.refresh();
-      else setErr(r.error ?? "Could not publish");
+      const r = await fn();
+      if (r.ok) {
+        setReversing(false);
+        setReason("");
+        router.refresh();
+      } else setErr(r.error);
     });
   }
-  function discard() {
-    setErr(null);
-    start(async () => {
-      const r = await discardDraftAction(entry.id);
-      if (r.ok) router.refresh();
-      else setErr(r.error ?? "Could not discard");
-    });
-  }
+
+  const small = { minHeight: 26, padding: "0 8px", fontSize: ".72rem" };
 
   return (
     <>
       <tr>
-        <td>{entry.date}</td>
+        <td>{dateIn(timezone, new Date(entry.occurredAt))}</td>
         <td>
           <button
             onClick={() => setOpen((v) => !v)}
@@ -62,45 +82,135 @@ export function JournalRow({ entry, locked }: { entry: RegisterEntry; locked: bo
               fontWeight: 600,
             }}
           >
-            {entry.journalNo ?? "—"}
+            {entry.journalNo ?? "draft"}
           </button>
         </td>
-        <td className="faint">{entry.referenceNo ?? "—"}</td>
-        <td>
-          <span className={`ref ${isDraft ? "due" : "auto"}`}>{isDraft ? "Draft" : "Published"}</span>
+        <td className="faint">
+          {SOURCE[entry.referenceType ?? ""] ?? entry.referenceType ?? "—"}
+          {entry.referenceNo ? ` · ${entry.referenceNo}` : ""}
         </td>
-        <td>{entry.notes}</td>
+        <td>
+          <span className={`ref ${isDraft ? "due" : "auto"}`}>
+            {isDraft ? "Draft" : "Published"}
+          </span>
+          {entry.legacy && (
+            <span
+              className="ref"
+              title="Recorded before the ledger controls; kept as it was and reported for review"
+            >
+              {" "}
+              before controls
+            </span>
+          )}
+        </td>
+        <td>
+          {entry.notes}
+          {entry.reversesNo !== null && (
+            <span className="muted"> · reverses #{entry.reversesNo}</span>
+          )}
+          {entry.reversedByNo !== null && (
+            <span className="muted"> · reversed by #{entry.reversedByNo}</span>
+          )}
+        </td>
         <td className="right money">{fmtIQD(entry.amount)}</td>
         <td className="faint">{entry.createdBy}</td>
         <td className="right">
-          {isDraft && !locked && (
+          {canPost && isDraft && (
             <span style={{ display: "inline-flex", gap: 6 }}>
               <button
-                onClick={publish}
+                onClick={() => run(() => publishJournalAction({ entryId: entry.id }))}
                 disabled={busy || difference !== 0}
                 title={difference === 0 ? "Publish to the books" : "Does not balance"}
-                style={{ minHeight: 26, padding: "0 8px", fontSize: ".72rem" }}
+                style={small}
               >
                 Publish
               </button>
               <button
-                onClick={discard}
+                onClick={() => run(() => discardJournalAction({ entryId: entry.id }))}
                 disabled={busy}
-                style={{ minHeight: 26, padding: "0 8px", fontSize: ".72rem" }}
+                style={small}
               >
                 Discard
               </button>
             </span>
           )}
+          {canReverse && !reversing && (
+            <button onClick={() => setReversing(true)} style={small}>
+              Reverse
+            </button>
+          )}
         </td>
       </tr>
+
+      {reversing && (
+        <tr>
+          <td colSpan={8} style={{ background: "var(--surface)" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                alignItems: "center",
+                flexWrap: "wrap",
+                padding: "6px 0",
+              }}
+            >
+              <span className="muted" style={{ fontSize: ".8rem" }}>
+                Reverse journal {entry.journalNo} with a mirror entry dated
+              </span>
+              <input
+                type="date"
+                value={revDate}
+                min={entryDay}
+                max={today}
+                onChange={(e) => setRevDate(e.target.value)}
+                aria-label="Date of the reversal"
+                style={{ minHeight: 30 }}
+              />
+              <input
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Why is it being reversed?"
+                style={{ minHeight: 30, minWidth: 260 }}
+                maxLength={300}
+                autoFocus
+              />
+              <button
+                className="btn-primary"
+                disabled={busy || !reason.trim()}
+                onClick={() =>
+                  run(() => reverseJournalAction({ entryId: entry.id, reason, date: revDate }))
+                }
+                style={small}
+              >
+                {busy ? "…" : "Post reversal"}
+              </button>
+              <button onClick={() => setReversing(false)} disabled={busy} style={small}>
+                Cancel
+              </button>
+              {err && (
+                <span className="red" style={{ fontSize: ".78rem" }}>
+                  {err}
+                </span>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
 
       {open && (
         <tr>
           <td colSpan={8} style={{ background: "var(--surface)" }}>
-            <div className="voucher" style={{ maxWidth: 620, margin: "6px 0" }}>
-              <div className="sc" style={{ borderBlockEnd: "1px solid var(--rule)", paddingBlockEnd: 6, marginBlockEnd: 8 }}>
-                Journal {entry.journalNo ?? ""} · {entry.date}
+            <div className="voucher" style={{ maxWidth: 640, margin: "6px 0" }}>
+              <div
+                className="sc"
+                style={{
+                  borderBlockEnd: "1px solid var(--rule)",
+                  paddingBlockEnd: 6,
+                  marginBlockEnd: 8,
+                }}
+              >
+                Journal {entry.journalNo ?? "(draft)"} ·{" "}
+                {dateIn(timezone, new Date(entry.occurredAt))}
                 {entry.referenceNo ? ` · ref ${entry.referenceNo}` : ""}
               </div>
               {entry.lines.map((l, i) => (
@@ -108,7 +218,7 @@ export function JournalRow({ entry, locked }: { entry: RegisterEntry; locked: bo
                   <span className="dr">{l.debit > 0 ? "Dr" : "Cr"}</span>
                   <span className="acct">
                     {l.account}
-                    {l.description && <em style={{ marginInlineStart: 8 }}>{l.description}</em>}
+                    {l.memo && <em style={{ marginInlineStart: 8 }}>{l.memo}</em>}
                   </span>
                   <span className="amt">{fmtIQD(l.debit > 0 ? l.debit : l.credit)}</span>
                 </div>
@@ -122,11 +232,18 @@ export function JournalRow({ entry, locked }: { entry: RegisterEntry; locked: bo
                 </span>
               </div>
             </div>
-            {err && (
+            {err && !reversing && (
               <p className="red" style={{ fontSize: ".78rem", margin: "0 0 8px" }}>
                 {err}
               </p>
             )}
+          </td>
+        </tr>
+      )}
+      {!open && err && !reversing && (
+        <tr>
+          <td colSpan={8} className="red" style={{ fontSize: ".78rem" }}>
+            {err}
           </td>
         </tr>
       )}

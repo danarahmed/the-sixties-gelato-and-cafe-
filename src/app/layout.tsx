@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
-import { AppShell } from "@/components/AppShell";
+import { AppShell, type ShellMember } from "@/components/AppShell";
 import { dirFor, LOCALES, type Locale } from "@/lib/i18n/dictionaries";
+import { getSession } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
   title: "The Sixty's Gelato & Café",
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
     "Business-management system: POS, inventory, production, delivery platforms, accounting.",
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Sixty's" },
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {
@@ -20,23 +22,41 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+/** The member for the shell, or null (signed out, not linked, or unreadable —
+ * in the last case the page itself reports the error). */
+async function shellMember(): Promise<ShellMember | null> {
+  try {
+    const s = await getSession();
+    if (!s.profile) return null;
+    return {
+      name: s.profile.name,
+      businessName: s.profile.businessName,
+      permissions: s.profile.permissions,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const store = await cookies();
   const rawLocale = store.get("locale")?.value as Locale | undefined;
   const locale: Locale = rawLocale && LOCALES.includes(rawLocale) ? rawLocale : "en";
   const theme = (store.get("theme")?.value === "dark" ? "dark" : "light") as "light" | "dark";
   const dir = dirFor(locale);
+  const member = await shellMember();
 
   return (
     <html lang={locale} dir={dir} data-theme={theme}>
       <body>
         <I18nProvider locale={locale}>
-          <AppShell locale={locale} theme={theme}>
+          <AppShell locale={locale} theme={theme} member={member}>
             {children}
           </AppShell>
         </I18nProvider>
         <script
-          // Register the service worker for offline/PWA support.
+          // The service worker caches only the app's static files and an
+          // offline notice — never a page with business data on it.
           dangerouslySetInnerHTML={{
             __html: `if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}`,
           }}

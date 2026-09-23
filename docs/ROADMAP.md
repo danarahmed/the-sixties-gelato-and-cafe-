@@ -1,57 +1,54 @@
-# Implementation Roadmap
+# Roadmap
 
-Phased delivery. Priority order under constraint: **transaction accuracy,
-inventory integrity, backups, and usability before decorative features or AI.**
-Current status per module is in `docs/PROGRESS.md`.
+Order of work, most important first. Transaction accuracy, access control and
+the owner's ability to trust the books come before new features. Current status
+is in [`PROGRESS.md`](PROGRESS.md).
 
-## Phase 1 — Operational core
+## Done
 
-Authentication & roles · business/branch setup · products, units, ingredients,
-recipes · POS · inventory ledger · purchasing & receiving · production batches ·
-stock counting · core costing & profitability · responsive PWA + offline sales.
+Stages 0–5 of the August 2026 audit's roadmap:
 
-**Done in this delivery:** the tested calculation core for all of the above, the
-full database schema with enforced integrity, demo data, and the PWA shell with
-a live POS calculation screen.
-**Remaining:** Supabase Auth wiring; the transactional UIs (POS cart→commit,
-receiving, batch entry, counting flow, ledger browser); the IndexedDB offline
-queue + replay.
+- **Access closed.** Sign-in, roles, and a database that refuses anything else.
+- **Postings made trustworthy.** One function per operation, immutable journals,
+  and a period lock with no way around it.
+- **Books reconciled.** GRNI, a P&L and trial balance from the ledger, card
+  tenders, reports for exactly the dates asked, and a subledger reconciliation
+  on screen.
+- **Daily workflows completed.** Void and refund, exactly-once sales, business
+  timezone, blind two-person counts, negative stock enforced.
+- **Proved.** Golden accounting, controls, concurrency and upgrade tests on real
+  PostgreSQL; browser tests as every role.
 
-**Exit checks:** format + typecheck + lint + unit + integration + e2e green;
-phone/tablet/desktop verified; EN/AR/CKB verified; online + offline verified;
-`PROGRESS.md` updated.
+The one exception is H-04: offline selling was resolved by making the till
+honest, not by building a queue.
 
-## Phase 2 — Financial & platform control
+## Next
 
-Double-entry ledger auto-posting · expenses & financial statements · Talabat
-adapter architecture · CSV imports · settlement reconciliation · channel pricing
-& promotions · advanced reports.
+1. **Go live.** Deploy this version ([`guides/deployment.md`](guides/deployment.md))
+   and correct or restart the existing history ([`REMEDIATION.md`](REMEDIATION.md)).
+   Until then the live site is publicly writable.
+2. **Delivery-platform settlements (M-10).** Import a Talabat statement, match it
+   to platform orders with the tested `src/domain/platform/settlement.ts`, post
+   the payout, commission and fees, and surface every unmatched line.
+3. **Production batches (M-11).** Record a batch: consume ingredients at average
+   cost, put the output into stock at the consumed cost, post the yield variance.
+4. **Translations (L-06).** Move the remaining screen text into the dictionaries,
+   then check Arabic and Kurdish layouts on a phone.
+5. **Statements and exports (L-05).** Balance sheet and cash flow from the
+   ledger; PDF; invoice scans attached to bills and expenses.
+6. **Accounts maintenance (M-06).** Add and deactivate accounts on screen, within
+   the rules the database already enforces.
+7. **Partial refunds and till discounts,** each with a reason, an approval limit
+   and the audit trail.
+8. **Offline selling, if it is needed.** A queue with its own rules for prices
+   and stock that change while offline, and a reconciliation of what synced.
+9. **Operations.** Error monitoring, a scheduled restore drill, and staging as a
+   separate Supabase project.
 
-**Done:** the double-entry primitives + schema, the generic platform model, and
-the tested payout/reconciliation logic.
-**Remaining:** event→journal auto-posting; CSV import + mock Talabat adapter;
-reconciliation workbench; P&L and the report views with exports.
+## Every release
 
-## Phase 3 — AI & optimization
-
-Forecasting · production & reorder suggestions · anomaly detection ·
-natural-language analysis · explainability & approval workflows.
-
-**Done:** the AI insight/audit schema and the non-authoritative, human-approval
-design.
-**Remaining:** the provider adapters and the insight screens. The core must
-continue to work with no AI key configured.
-
-## End-of-phase ritual (every phase)
-
-1. `npm run verify` (format, typecheck, lint, tests) — fix all failures first.
-2. Verify phone/tablet/desktop layouts.
-3. Verify English, Arabic, Kurdish (RTL) layouts.
-4. Verify online and offline behaviour.
-5. Update `docs/PROGRESS.md` (completed / remaining / blocked).
-
-## Known constraints
-
-- Talabat live API needs Partner approval + credentials (🔒). Until then, CSV +
-  mock adapter, clearly labelled.
-- AI requires a provider key to activate; optional by design.
+1. `npm run verify`, `scripts/test-sql.sh` and `scripts/test-e2e.sh`, all green.
+2. Phone, tablet and desktop checked; English, Arabic and Kurdish checked.
+3. New migrations rehearsed on a copy of the live data before they are applied.
+4. [`PROGRESS.md`](PROGRESS.md) and [`LIMITATIONS.md`](LIMITATIONS.md) updated to
+   match what shipped.
