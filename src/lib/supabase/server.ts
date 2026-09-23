@@ -2,7 +2,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { supabaseConfig } from "./config";
+import { SESSION_COOKIE, supabaseConfig } from "./config";
 
 export class NotConfiguredError extends Error {
   constructor() {
@@ -22,6 +22,7 @@ export async function createServerSupabase(): Promise<SupabaseClient> {
   if (!cfg) throw new NotConfiguredError();
   const store = await cookies();
   return createServerClient(cfg.url, cfg.anonKey, {
+    cookieOptions: SESSION_COOKIE,
     cookies: {
       getAll: () => store.getAll(),
       setAll: (list) => {

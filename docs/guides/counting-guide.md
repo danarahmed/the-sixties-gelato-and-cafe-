@@ -1,35 +1,45 @@
-# Inventory Counting Guide
+# Stock Counting Guide
 
-Counting keeps the system honest. It is fast on a phone and never overwrites
-history — an approved count posts a single correction.
+A count is how the books learn what is really on the shelf. It is **blind**:
+the person counting never sees what the system expects. It takes **two
+people**: someone else reviews and approves the count before anything is posted.
 
-## Types of count
+## Counting (inventory counter)
 
-- **Full** — everything. **Cycle** — a rotating subset. **By category** or
-  **by location**. **High-value/high-variance** — the items worth watching.
+1. Sign in and open **Stock Count**, then choose **Start count**. Every active
+   item is listed, by name, with the unit to count in (grams, millilitres or
+   each).
+2. Count what is physically there and type it in. Each entry is **saved as you
+   go**, and the sheet shows how many items you have counted. You can stop and
+   come back; the count stays open for you.
+3. When every item has a number, choose **Submit count**. After submitting, the
+   count can no longer be changed.
 
-## Blind counting
+You never see the expected quantity, on screen or in the page's data. Count
+what you see; do not guess, and do not look it up.
 
-- By default you **do not see** the expected quantity while counting. Enter what
-  you actually see. This prevents "just tick the box" counting.
+## Reviewing (branch manager, general manager, owner)
 
-## How to count
+1. On **Stock Count**, open the submitted count with **Review**.
+2. For each item you see **expected** (a snapshot the database took when the
+   count started), **counted**, the **variance** and its **value**.
+3. Then either:
+   - **Approve and post variances.** Each difference is posted to stock, and to
+     5400 Inventory count variance in the books, dated when the count was
+     submitted. The count and its approval stay on record; or
+   - **reject it,** with a reason. Nothing is posted, and the counter counts
+     again.
 
-1. Start a count (choose type + location).
-2. For each item, enter the amount you physically have. You can count in
-   **packages** (e.g. cartons) — the app converts to base units.
-3. **Save and resume** any time; multiple people can count different sections.
-4. Submit when done.
+You cannot approve a count you counted yourself: the database refuses it.
 
-## Approval
+## Before a month closes
 
-- A manager reviews variances. Big differences (over the set threshold) need
-  approval before the correction is posted.
-- After approval, the system posts **one adjustment** (counted − expected). Your
-  count history and the reason are kept forever.
+A month cannot be locked while a count is waiting for review. Approve or reject
+it first.
 
-## What you'll see (if authorized)
+## Good habits
 
-Expected vs counted, quantity variance, value variance, theoretical vs actual
-usage, likely explanations, and this item's past variance — so repeat problems
-stand out.
+- Count at a quiet time, after deliveries are received and before trading.
+- Count the unit on the sheet: a carton of 1,000 cups is 1,000.
+- If a variance is large, reject and recount before approving. A wrong approval
+  can only be corrected by another count.

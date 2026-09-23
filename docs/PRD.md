@@ -1,5 +1,11 @@
 # Product Requirements Document
 
+> This is the original brief. What is built today, and what is not, is in
+> [`PROGRESS.md`](PROGRESS.md) and [`LIMITATIONS.md`](LIMITATIONS.md). Two
+> requirements were deliberately changed after the August 2026 audit
+> ([ADR 0002](adr/0002-database-posting-engine.md)): selling needs a connection
+> (the till refuses offline rather than queue), and there is no AI provider.
+
 ## 1. Product
 
 A single, reliable source of truth for running The Sixty's Gelato & Café:

@@ -1,6 +1,8 @@
 # ADR 0001 — Architecture & stack
 
-**Status:** Accepted · **Date:** 2026-08-23
+**Status:** Accepted · **Date:** 2026-08-23 · **Partly superseded** by
+[ADR 0002](0002-database-posting-engine.md): posting now happens in the database,
+selling needs a connection, and there is no AI provider.
 
 ## Context
 
@@ -49,11 +51,18 @@ competent developer, trilingual with RTL, and safe for a non-technical owner.
 
 ### Offline: service worker + IndexedDB queue with idempotency
 
+> Superseded by ADR 0002. No queue was built: offline, the till refuses the
+> sale; a sale whose confirmation was lost is retried with the same key, and
+> `UNIQUE(business_id, idempotency_key)` records it exactly once.
+
 - Offline sales are queued locally with UUID idempotency keys, device id, and
   timestamps, then replayed. A DB `UNIQUE(business_id, idempotency_key)`
   guarantees exactly-once application — no last-write-wins on financial data.
 
 ### AI: provider abstraction, optional, non-authoritative
+
+> Superseded by ADR 0002. The provider integration was removed; expense
+> classification is local, deterministic rules that only propose an account.
 
 - An interface lets Anthropic/OpenAI/others be selected without touching the
   app. All deterministic math stays in app code; AI only classifies, forecasts,

@@ -95,3 +95,27 @@ select test.act_as('manager@example.com');
 select test.eq((record_sale(gen_random_uuid(), 'dine_in', 'cash',
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]') ->> 'cogs')::numeric, 200::numeric,
   'a manager ringing a sale does see its cost');
+
+-- M-04 — the price and the recipe in force on the day are the ones used: a
+-- change scheduled for next week does not reach today's till, and a recipe is
+-- never changed retroactively.
+select test.act_as('owner@example.com');
+select set_price('d1000000-0000-0000-0000-000000000001', 'dine_in', 9000, current_date + 7);
+select new_recipe_version('d2000000-0000-0000-0000-000000000001',
+  '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":40,"unit_code":"g"}]', current_date + 7);
+select test.throws($$select new_recipe_version('d2000000-0000-0000-0000-000000000001',
+  '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":40,"unit_code":"g"}]', current_date - 2)$$,
+  '%cannot start in the past%', 'a recipe cannot be changed retroactively');
+select test.act_as('cashier@example.com');
+select test.eq((select (prices ->> 'dine_in')::numeric from pos_catalogue()
+                where variant_id = 'd1000000-0000-0000-0000-000000000001'),
+  2500::numeric, 'the till shows today''s price, not next week''s');
+create temp table s_dated as select record_sale(gen_random_uuid(), 'dine_in', 'cash',
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]') as r;
+select test.as_admin();
+select test.eq((select net_amount from sales_order where id = (select (r->>'order_id')::uuid from s_dated)),
+  2500::numeric, 'today''s sale is charged today''s price');
+select test.eq((select -sum(base_quantity_signed) from inventory_movement
+                where reference_id = (select (r->>'order_id')::uuid from s_dated)
+                  and item_id = 'c0000000-0000-0000-0000-000000000001'),
+  20::numeric, 'and takes the recipe in force today (20 g of beans), not next week''s (40 g)');

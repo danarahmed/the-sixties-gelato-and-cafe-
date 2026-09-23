@@ -42,6 +42,19 @@ console.log("▸ signed out");
 for (const who of ["owner", "manager", "cashier", "counter"]) {
   console.log(`▸ ${who}`);
   const { ctx, page } = await signIn(browser, who);
+  if (who === "owner") {
+    const session = (await ctx.cookies()).filter((c) => c.name.startsWith("sb-"));
+    check(
+      session.length > 0 && session.every((c) => c.httpOnly),
+      "the session cookie is HTTP-only: no script in the page can read it",
+    );
+    check(
+      (await page.evaluate(() => document.cookie))
+        .split(";")
+        .every((c) => !c.trim().startsWith("sb-")),
+      "and document.cookie does not show it",
+    );
+  }
   const menu = await page.$$eval("nav.sidenav a", (as) => as.map((a) => a.getAttribute("href")));
   console.log(`    menu: ${menu.join(" ")}`);
   const problems = [];

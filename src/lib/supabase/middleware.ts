@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { supabaseConfig } from "./config";
+import { SESSION_COOKIE, supabaseConfig } from "./config";
 import { isPublicPath } from "@/lib/auth/routes";
 
 /**
@@ -18,6 +18,7 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient(cfg.url, cfg.anonKey, {
+    cookieOptions: SESSION_COOKIE,
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (list, headers) => {

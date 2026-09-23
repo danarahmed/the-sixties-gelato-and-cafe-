@@ -22,3 +22,10 @@ export function supabaseConfig(): SupabaseConfig | null {
   if (!url || !anonKey) return null;
   return { url, anonKey };
 }
+
+/**
+ * The session cookie is read and written only on the server: the app has no
+ * browser Supabase client. HTTP-only keeps it out of reach of any script in
+ * the page.
+ */
+export const SESSION_COOKIE = { httpOnly: true, sameSite: "lax", path: "/" } as const;

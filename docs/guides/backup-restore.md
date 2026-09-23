@@ -21,17 +21,24 @@ procedure, and export for an external accountant.
    ```bash
    pg_restore --no-owner --clean --if-exists -d "$TARGET_DATABASE_URL" backup-YYYY-MM-DD.dump
    ```
-3. Point a staging copy of the app at it and confirm:
-   - `current_stock` totals look right for a few items.
-   - Recent sales and platform orders are present.
-   - Journal entries balance.
+3. Point a staging copy of the app at it (its own Vercel Preview, never the
+   live one), sign in as the owner and confirm:
+   - **Reports → Do the books tie?** shows ✅ on every line, as it did before;
+   - recent sales, bills and journals are present;
+   - a locked month is still locked.
+
+   A dump of the database carries the books and the people, but not their
+   logins: those live in Supabase Auth. For a full project restore, use
+   Supabase's own backups; people can also simply create their logins again.
+
 4. Record the drill date and result. A backup you have never restored is not a
    backup.
 
 ## Data export (for an accountant)
 
-- P&L, sales, inventory valuation, and journals export to CSV/Excel/PDF from the
-  Accounting/Reports screens (Phase 2).
+- **CSV from the app:** the trial balance (Chart of Accounts), the P&L and the
+  reconciliation (Reports), each for the dates chosen. Only people who may see
+  costs can download them. PDF export is not built yet.
 - Raw export any time:
   ```bash
   psql "$DATABASE_URL" -c "\copy (select * from sales_order) to 'sales.csv' csv header"

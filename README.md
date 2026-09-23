@@ -1,131 +1,129 @@
-# The Sixty's Gelato & Café — Business Management System
+# The Sixty's Gelato & Café — Books
 
-A production-oriented, offline-capable **Progressive Web App** for running a
-gelato café: point of sale, an append-only inventory ledger, recipe costing,
-production batches, purchasing, delivery-platform reconciliation (Talabat and
-others), double-entry management accounting, and an AI-insight layer that only
-ever _recommends_ — it never edits financial or inventory records.
+The till, the stock ledger, purchasing to payment, expenses, journals, the
+period close and the reports for a gelato café in Sulaymaniyah — kept as one set
+of books that the database posts and proves.
 
-Built for Sulaymaniyah, Iraq: **IQD** default currency (configurable
-precision), **Asia/Baghdad** timezone, and **English / Arabic / Kurdish** with
-full right-to-left support.
+- **English / العربية / کوردی**, right-to-left where it should be. **IQD**
+  (whole dinar by default) and the **Asia/Baghdad** trading day.
+- **Every person signs in** and sees only what their role allows: the till for a
+  cashier, the count for a counter, the books for the owner and accountant.
+- **Every transaction is one database function in one transaction.** A sale
+  writes its order, its stock movements and its journal together, or nothing.
+- **The books prove themselves.** Each subledger is reconciled with its control
+  account on screen, and a month locks only when every check passes.
 
-> ⚠️ **Demo data is clearly labelled.** All seed prices and costs are examples,
-> not real business data.
+Live: **https://sixties-gelato-cafe.vercel.app**. To put this version live, follow
+[`docs/guides/deployment.md`](docs/guides/deployment.md). Until then, the site
+runs the previous app.
 
-**▶ New here? Read the [full screen-by-screen walkthrough](docs/USER_GUIDE_WALKTHROUGH.md)** —
-a click-by-click tutorial of every module and feature, mapped to the exact UI
-location, using the live demo. Live app: **https://sixties-gelato-cafe.vercel.app**
+**New here?** Read the [guide to every screen](docs/USER_GUIDE_WALKTHROUGH.md).
 
 ---
 
-## Why this design
+## How it stays right
 
-Two rules drive everything:
+1. **Stock is never typed in.** It is the sum of an append-only movement
+   ledger. A mistake is corrected with a count or a correction, never an edit.
+2. **Money is exact.** Amounts travel as decimal strings and are computed in
+   PostgreSQL `NUMERIC`, never in floating point.
+3. **A published journal never changes.** Corrections are new entries: a
+   reversal, a cancelled bill, a void or refund, a count. Months close in order;
+   a locked month refuses every posting.
+4. **The app cannot bypass the rules.** Signed-in users can read (row-level
+   security decides what) and can call the posting functions their role allows.
+   They cannot write to a table directly.
+5. **A retry never records a sale twice.** Each sale carries an idempotency key;
+   offline, the till says so instead of pretending to sell.
 
-1. **Inventory is never a hand-editable number.** Current stock is _always_ the
-   signed sum of an append-only movement ledger. Mistakes are fixed with
-   reversals/adjustments, never edits. Even one straw, lid, or napkin is counted.
-2. **Money and quantities use exact decimal arithmetic** (`decimal.js`) — never
-   floating point. Historical cost snapshots mean a later price change never
-   rewrites the profit of a past sale.
+The reasoning is in [ADR 0002](docs/adr/0002-database-posting-engine.md) and the
+formulas in [`docs/CALCULATIONS.md`](docs/CALCULATIONS.md).
 
-See [`docs/CALCULATIONS.md`](docs/CALCULATIONS.md) and
-[`docs/adr/0001-architecture.md`](docs/adr/0001-architecture.md) for the reasoning.
+## Stack
 
-## Tech stack
+| Layer    | Choice                                                                                               |
+| -------- | ---------------------------------------------------------------------------------------------------- |
+| App      | Next.js 15 (App Router), React 19, TypeScript strict                                                 |
+| Sign-in  | Supabase Auth, cookie sessions via `@supabase/ssr`                                                   |
+| Database | PostgreSQL (Supabase): row-level security, posting functions, triggers                               |
+| Input    | `zod` validation; Arabic-Indic digits accepted                                                       |
+| Tests    | Vitest; SQL suites on real PostgreSQL 16 and 17; browser tests (Playwright) through a real PostgREST |
 
-| Layer            | Choice                                                          |
-| ---------------- | --------------------------------------------------------------- |
-| App              | Next.js 15 (App Router) + React 19, TypeScript **strict**       |
-| Money/quantities | `decimal.js` (exact decimal)                                    |
-| Database         | PostgreSQL via **Supabase** (Auth, Storage, Row-Level Security) |
-| Offline          | Service worker + IndexedDB queue with UUID idempotency keys     |
-| Tests            | Vitest (domain + acceptance), validated SQL migrations          |
-| i18n             | EN / AR / CKB with RTL                                          |
-
-## Repository layout
+## Repository
 
 ```
-src/domain/        Pure, tested calculation core (no DB, no framework)
-  money/           Exact-decimal Money
-  units/           Validated unit conversions
-  costing/         Moving weighted-average cost + landed cost
-  inventory/       Append-only ledger, production, counting
-  sales/           Channel-aware recipes, refunds, idempotency
-  platform/        Delivery-platform payout + settlement reconciliation
-  accounting/      Double-entry journal
-  auth/            Role-based permissions
-src/app/           Next.js App Router pages (Dashboard, POS, …)
-src/components/     Shell, nav, i18n providers
-src/lib/           i18n dictionaries, demo catalog
-supabase/
-  migrations/      PostgreSQL schema (append-only ledger, RLS, triggers)
-  seed/            Demonstration data (labelled EXAMPLE)
-tests/             Vitest suites incl. the 12 acceptance scenarios
-docs/              PRD, ADRs, data model, calc spec, security, guides
+src/app/            Screens (App Router): /pos, /sales, /vendors, /journals, …
+src/components/     Screen components (forms, tables, the shell)
+src/lib/auth/       Session, role gating, sign-in actions
+src/lib/db/         Reads (row-level security decides what comes back)
+src/lib/actions/    Writes: each calls one posting function
+src/lib/supabase/   Supabase clients; no built-in address or key
+src/domain/         The tested specification: money, units, costing, recipes, permissions
+supabase/migrations 0001–0017; 0014–0017 are the controls
+supabase/seed/      Demonstration master data (examples, not real figures)
+tests/              Vitest suites, tests/sql (SQL suites), tests/e2e (browser)
+scripts/            test-sql.sh, test-e2e.sh
+docs/               Guides, remediation, security, test plan, status
 ```
 
-## Quick start (development)
+## Configuration
 
-Prerequisites: **Node ≥ 20**, and either the **Supabase CLI** (local Postgres)
-or a Supabase cloud project.
+Two environment variables, both required (copy `.env.example` to `.env.local`):
+
+| Name                            | Where to find it                                |
+| ------------------------------- | ----------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase → Project Settings → API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon key    |
+
+There is no default. Without them the app shows **Not configured** and touches
+nothing, so a copy can never write to another business's books by accident. No
+service-role key is used; the app acts only as the signed-in person.
+
+## Running it locally
+
+Prerequisites: Node 20+, and the Supabase CLI or a Supabase project of your own
+(never the live one).
 
 ```bash
-# 1. Install dependencies
 npm install
-
-# 2. Configure environment
-cp .env.example .env.local     # fill in Supabase URL + keys (see the file)
-
-# 3. Database: local stack + migrations + demo seed
-supabase start                 # starts local Postgres, Auth, Studio
-supabase db reset              # applies supabase/migrations then supabase/seed.sql
-
-# 4. Run the app
-npm run dev                    # http://localhost:3000  → /dashboard, /pos
+supabase start && supabase db reset   # migrations + demonstration master data
+cp .env.example .env.local      # URL http://127.0.0.1:54321; anon key from `supabase status`
+npm run dev                     # http://localhost:3000 → sign in
 ```
 
-### Verify everything (run before every release)
+The seed creates four placeholder people (`owner@`, `manager@`, `cashier@`,
+`counter@example.com`) with no logins. Choose **First time here? Create your
+login** with one of those emails. The local stack does not ask for email
+confirmation by default, so you can sign in straight away; any email it sends
+appears in Inbucket at http://localhost:54324.
+
+## Checks
 
 ```bash
-npm run verify   # prettier --check + tsc strict + lint + vitest
+npm run verify           # formatting, types, lint, unit + contract tests (Vitest)
+scripts/test-sql.sh      # upgrade rehearsal + SQL suites + concurrency (PostgreSQL 15+)
+scripts/test-e2e.sh      # the real app in a browser, as every role
 ```
 
-The calculation core and all **12 acceptance scenarios** run with `npm test` and
-need **no database** — they are pure functions.
+The SQL and browser tests create and drop their own databases on the PostgreSQL
+server you point them at (`PGHOST`, `PGPORT`, `PGUSER`). They never touch a
+deployed project. See [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md).
 
-## Installing as an app
+## Documents
 
-- **Windows (Edge/Chrome):** open the site → install icon in the address bar.
-  See [`docs/guides/install-windows.md`](docs/guides/install-windows.md).
-- **iPhone/iPad (Safari):** Share → _Add to Home Screen_.
-  See [`docs/guides/install-mobile.md`](docs/guides/install-mobile.md).
-- **Android (Chrome):** menu → _Install app_. Same guide.
+- **Using it:** [walkthrough](docs/USER_GUIDE_WALKTHROUGH.md) ·
+  [owner](docs/guides/owner-guide.md) · [cashier](docs/guides/cashier-quickstart.md) ·
+  [counting](docs/guides/counting-guide.md) · [delivery platforms](docs/guides/talabat.md) ·
+  install on [Windows](docs/guides/install-windows.md) / [phones](docs/guides/install-mobile.md)
+- **Running it:** [deployment](docs/guides/deployment.md) ·
+  [correcting old history](docs/REMEDIATION.md) · [backup & restore](docs/guides/backup-restore.md) ·
+  [security](docs/SECURITY.md)
+- **Building on it:** [ADRs](docs/adr/) · [data model](docs/DATA_MODEL.md) ·
+  [calculations](docs/CALCULATIONS.md) · [test plan](docs/TEST_PLAN.md)
+- **Status:** [progress](docs/PROGRESS.md) · [limitations](docs/LIMITATIONS.md) ·
+  [roadmap](docs/ROADMAP.md)
 
-## Delivery platforms & AI
+## Ownership
 
-- **Talabat:** the schema and reconciliation are platform-agnostic. Until
-  official Partner API credentials are granted, use the **CSV import + mock
-  adapter**. See [`docs/guides/talabat.md`](docs/guides/talabat.md).
-- **AI:** entirely optional. With no key configured, POS/inventory/accounting
-  work fully. See [`docs/guides/ai-provider.md`](docs/guides/ai-provider.md).
-
-## Status
-
-This repository delivers a **verified Phase-1 foundation** — full docs, complete
-DB schema with enforced integrity, the fully-tested calculation core (all 12
-acceptance scenarios green), demo data, and a working trilingual PWA shell with
-a live POS. Module UIs are being filled in per the phased plan. The honest,
-current status of every module is in
-[`docs/PROGRESS.md`](docs/PROGRESS.md); the plan is in
-[`docs/ROADMAP.md`](docs/ROADMAP.md).
-
-Nothing here is claimed complete unless it is tested. Mock integrations are
-labelled as such with activation instructions.
-
-## License / ownership
-
-All code and data in this repository belong to the business owner. See
-[`docs/guides/backup-restore.md`](docs/guides/backup-restore.md) for data export
-and ownership.
+All code and data belong to the business owner. A `pg_dump` moves everything to
+any PostgreSQL host; see [`docs/guides/backup-restore.md`](docs/guides/backup-restore.md).

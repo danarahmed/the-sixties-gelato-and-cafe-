@@ -1,9 +1,11 @@
 # Inventory & Financial Calculation Specification
 
 This is the contract the code implements. Every formula here is realised as a
-pure function in `src/domain/*` and covered by tests. All arithmetic is exact
-decimal; rounding is banker's rounding (ROUND_HALF_EVEN) applied only at output
-boundaries.
+pure function in `src/domain/*` and covered by tests. Everything that is
+recorded is posted by the database functions of migration `0015`, which apply
+the same formulas in exact `NUMERIC` and are tested against real PostgreSQL
+(`tests/sql/`). The domain functions remain their specification. All arithmetic
+is exact decimal; rounding is applied only at output boundaries.
 
 ## 1. Money
 
@@ -120,13 +122,23 @@ to validate charges.
 ## 11. Double-entry accounting
 
 Every journal entry must balance (Σ debits = Σ credits) to currency precision or
-it is rejected (enforced in `src/domain/accounting/journal.ts` **and** by a
-deferred DB trigger). Corrections are reversing entries. Representative auto-
-postings (to be wired to events):
+it is rejected (enforced in `src/domain/accounting/journal.ts` **and** by the
+database when the entry is published). A published entry never changes;
+corrections are new entries. What each record posts (migration `0015`):
 
-- Cash sale: Dr Cash / Cr Sales; Dr COGS / Cr Inventory.
-- Platform sale: Dr Platform receivable / Cr Sales; Dr Commission+Fees / Cr
-  Platform receivable; Dr Merchant-funded discount / Cr Sales(contra).
-- Purchase receipt: Dr Inventory / Cr Accounts payable.
-- Waste: Dr Waste & spoilage / Cr Inventory.
-- Cash variance: Dr/Cr Cash short/over.
+- Sale: Dr 1000 Cash / 1010 Card clearing / 1100 Platform receivable (by
+  tender) / Cr 4000 Sales; Dr 5000 COGS / Cr 1200 Inventory.
+- Void (same day, before the close): the sale's journal reversed exactly.
+- Refund: Dr 4200 Sales returns / Cr the tender's account; stock comes back
+  only for items that are `returnable_to_stock`.
+- Goods receipt: Dr 1200 Inventory / Cr 2050 Goods received not invoiced.
+- Bill for a receipt: Dr 2050 (what the receipt raised), Dr/Cr 5050 Purchase
+  price variance (the difference) / Cr 2000 Accounts payable. A bill for
+  anything else: Dr its account / Cr 2000.
+- Payment: Dr 2000 / Cr 1000, 1010 or 1020.
+- Waste: Dr 5300 Waste & spoilage / Cr 1200. Stock correction and approved
+  count variance: 5400 Inventory count variance against 1200.
+- Opening stock: Dr 1200 / Cr 3000 Owner equity.
+- Day close: the counted drawer against opening float + cash sales − cash
+  refunds; any difference to 6300 Cash over / short.
+- Year end: revenue and expense accounts closed to 3100 Retained earnings.
