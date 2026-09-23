@@ -47,13 +47,7 @@ export function Notice({ msg }: { msg: { ok: boolean; text: string } | null }) {
   );
 }
 
-export function EmptyState({
-  title,
-  hint,
-}: {
-  title: string;
-  hint?: string;
-}) {
+export function EmptyState({ title, hint }: { title: string; hint?: string }) {
   return (
     <div
       className="card"
