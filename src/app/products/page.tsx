@@ -1,112 +1,168 @@
 import { getT } from "@/lib/i18n/server";
-import { loadCatalog } from "@/lib/db/catalog";
+import { has, requirePermission } from "@/lib/auth/session";
 import { getItems } from "@/lib/db/read";
-import { channelLabel, fmtIQD, SELLABLE_CHANNELS } from "@/lib/format";
-import { AddProductForm } from "@/components/AddProductForm";
+import {
+  getMenuCosting,
+  getMenuRecipeLines,
+  type MenuCostRow,
+  type RecipeLineRow,
+} from "@/lib/db/reports";
+import { channelLabel, fmtIQD, fmtQty } from "@/lib/format";
+import { businessToday } from "@/lib/dates";
+import { AddProductForm, PriceChange } from "@/components/AddProductForm";
 import { EmptyState } from "@/components/ui";
+import type { SalesChannel } from "@domain/sales/recipe.js";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProductsPage() {
+  const profile = await requirePermission("cost.view");
   const t = await getT();
-  const [cat, items] = await Promise.all([
-    loadCatalog().catch(() => null),
-    getItems().catch(() => []),
+  const today = businessToday(profile.timezone);
+  const canEdit = has(profile, "recipe.edit");
+  const [menu, lines, items] = await Promise.all([
+    getMenuCosting(),
+    getMenuRecipeLines(),
+    canEdit ? getItems() : Promise.resolve([]),
   ]);
-  const variants = cat?.variants ?? [];
+
+  const variants = new Map<
+    string,
+    { name: string; rows: MenuCostRow[]; recipe: RecipeLineRow[] }
+  >();
+  for (const m of menu) {
+    const v = variants.get(m.variantId) ?? {
+      name: m.variantName !== m.productName ? `${m.productName} — ${m.variantName}` : m.productName,
+      rows: [],
+      recipe: [],
+    };
+    v.rows.push(m);
+    variants.set(m.variantId, v);
+  }
+  for (const l of lines) variants.get(l.variantId)?.recipe.push(l);
 
   return (
     <div className="grid" style={{ gap: 16 }}>
-      <div className="badge ok" style={{ alignSelf: "start" }}>
-        🟢 Live database
-      </div>
       <h1 style={{ margin: 0 }}>{t("nav.products")}</h1>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        Each product has one recipe that serves every channel. Lines tagged to a channel only deduct
-        on that channel — that is how packaging differs between dine-in, takeaway, and Talabat.
+        One recipe serves every channel; lines tagged to a channel deduct only there — that is how
+        the cup and lid are used for takeaway and delivery but not at a table. Prices and recipes
+        change from a date, so every sale uses the price and recipe in force on its own day. Costs
+        shown are today&apos;s, worked out exactly as a sale posts them.
       </p>
 
-      <AddProductForm items={items.map((i) => ({ id: i.id, name: i.name, baseUnit: i.baseUnit }))} />
+      {canEdit && (
+        <AddProductForm
+          items={items.map((i) => ({
+            id: i.id,
+            name: i.name,
+            baseUnit: i.baseUnit,
+            units: i.units,
+          }))}
+        />
+      )}
 
-      {variants.length === 0 ? (
+      {variants.size === 0 ? (
         <EmptyState
-          title="No products yet"
-          hint="Use “Add menu product” above. Products need at least one stock item to build a recipe."
+          title="No products on sale"
+          hint="A product appears here once it has at least one price."
         />
       ) : (
-        variants.map((v) => {
-          const recipe = v.recipeId ? cat!.recipes.get(v.recipeId) : undefined;
-          return (
-            <div key={v.variantId} className="card">
-              <h3 style={{ marginTop: 0 }}>{v.productName}</h3>
-              <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                <div>
-                  <h4 className="muted" style={{ margin: "0 0 6px" }}>Recipe</h4>
-                  {!recipe || recipe.lines.length === 0 ? (
-                    <p className="muted" style={{ fontSize: ".85rem" }}>No recipe lines.</p>
-                  ) : (
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Component</th>
-                          <th className="right">Qty</th>
-                          <th>Applies to</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {recipe.lines.map((l, i) => (
-                          <tr key={i}>
-                            <td>{cat!.items.get(l.componentId)?.name ?? l.componentId}</td>
-                            <td className="right mono">
-                              {String(l.quantity)} {l.unitCode}
-                            </td>
-                            <td className="muted" style={{ fontSize: ".85rem" }}>
-                              {l.appliesToChannels && l.appliesToChannels.length > 0
-                                ? l.appliesToChannels.map((c) => channelLabel[c]).join(", ")
-                                : "all channels"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-                <div>
-                  <h4 className="muted" style={{ margin: "0 0 6px" }}>Price &amp; margin by channel</h4>
+        [...variants.entries()].map(([id, v]) => (
+          <div key={id} className="card">
+            <h3 style={{ marginTop: 0 }}>{v.name}</h3>
+            <div
+              className="grid"
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}
+            >
+              <div className="tw">
+                <h4 className="muted" style={{ margin: "0 0 6px" }}>
+                  Recipe in force
+                  {v.recipe[0]
+                    ? ` (version ${v.recipe[0].versionNo}, from ${v.recipe[0].effectiveFrom})`
+                    : ""}
+                </h4>
+                {v.recipe.length === 0 ? (
+                  <p className="muted" style={{ fontSize: ".85rem" }}>
+                    No recipe — sold as bought, or not yet set up.
+                  </p>
+                ) : (
                   <table>
                     <thead>
                       <tr>
-                        <th>Channel</th>
-                        <th className="right">Price</th>
-                        <th className="right">Cost</th>
-                        <th className="right">Margin</th>
+                        <th>Component</th>
+                        <th className="right">Qty</th>
+                        <th>Applies to</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {SELLABLE_CHANNELS.map((ch) => {
-                        const price = v.priceByChannel[ch];
-                        if (price == null) return null;
-                        const cost = v.cogsByChannel[ch] ?? 0;
-                        const margin = price - cost;
-                        const pct = price > 0 ? ((margin / price) * 100).toFixed(1) : "0";
-                        return (
-                          <tr key={ch}>
-                            <td>{channelLabel[ch]}</td>
-                            <td className="right mono">{fmtIQD(price)}</td>
-                            <td className="right mono">{fmtIQD(cost)}</td>
-                            <td className="right mono" style={{ color: margin < 0 ? "var(--err)" : "var(--ok)" }}>
-                              {fmtIQD(margin)} ({pct}%)
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {v.recipe.map((l, i) => (
+                        <tr key={i}>
+                          <td>{l.component}</td>
+                          <td className="right mono">
+                            {fmtQty(l.quantity)} {l.unitCode}
+                          </td>
+                          <td className="muted" style={{ fontSize: ".85rem" }}>
+                            {l.channels
+                              ? l.channels
+                                  .map((c) => channelLabel[c as SalesChannel] ?? c)
+                                  .join(", ")
+                              : "all channels"}
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
-                </div>
+                )}
+              </div>
+              <div className="tw">
+                <h4 className="muted" style={{ margin: "0 0 6px" }}>
+                  Price &amp; margin by channel
+                </h4>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Channel</th>
+                      <th className="right">Price</th>
+                      <th className="right">Cost</th>
+                      <th className="right">Margin</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {v.rows.map((m) => {
+                      const margin = m.unitCost === null ? null : m.price - m.unitCost;
+                      return (
+                        <tr key={m.channel}>
+                          <td>{channelLabel[m.channel as SalesChannel] ?? m.channel}</td>
+                          <td className="right mono">{fmtIQD(m.price)}</td>
+                          <td className="right mono">
+                            {m.unitCost === null ? "unknown" : fmtIQD(m.unitCost)}
+                          </td>
+                          <td
+                            className="right mono"
+                            style={{
+                              color:
+                                margin === null
+                                  ? undefined
+                                  : margin < 0
+                                    ? "var(--err)"
+                                    : "var(--ok)",
+                            }}
+                          >
+                            {margin === null
+                              ? "—"
+                              : `${fmtIQD(margin)} (${m.price > 0 ? ((margin / m.price) * 100).toFixed(1) : "0"}%)`}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {canEdit && <PriceChange variantId={id} today={today} />}
               </div>
             </div>
-          );
-        })
+          </div>
+        ))
       )}
     </div>
   );

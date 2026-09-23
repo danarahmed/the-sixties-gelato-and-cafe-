@@ -151,6 +151,9 @@ language sql stable security definer set search_path = public as $$
   select case when m.id is null then null else jsonb_build_object(
     'id', m.id, 'name', m.full_name, 'business_id', m.business_id,
     'business_name', (select name from business where id = m.business_id),
+    'timezone', (select timezone from business where id = m.business_id),
+    'currency', (select currency_code from business where id = m.business_id),
+    'currency_decimals', (select currency_decimals from business where id = m.business_id),
     'roles', coalesce((select jsonb_agg(role order by role) from user_role where app_user_id = m.id), '[]'),
     'permissions', coalesce((select jsonb_agg(distinct rp.permission order by rp.permission)
                                from user_role ur join role_permission rp on rp.role = ur.role

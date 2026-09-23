@@ -1,309 +1,210 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
-import { loadCatalog } from "@/lib/db/catalog";
-import { getSalesOrders } from "@/lib/db/read";
-import { getAccountingOverview } from "@/lib/db/accounting";
-import { getOpenBills, ageBills } from "@/lib/db/books";
-import { channelLabel, fmtIQD, SELLABLE_CHANNELS } from "@/lib/format";
+import { has, requirePermission } from "@/lib/auth/session";
+import { getDailySales, getVendorBook, ageBills } from "@/lib/db/books";
+import { getMenuCosting, getProfitAndLoss, getReconciliation, pnlTotals } from "@/lib/db/reports";
+import { channelLabel, fmtIQD } from "@/lib/format";
+import { addDays, businessToday, monthEnd, monthStart, parseDay, yearStart } from "@/lib/dates";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 
 export const dynamic = "force-dynamic";
 
-/** Every report the books can produce, grouped the way an accountant looks for them. */
-const GROUPS: { title: string; blurb: string; items: [string, string, string?][] }[] = [
-  {
-    title: "Business Overview",
-    blurb: "The statements and the ledger behind them",
-    items: [
-      ["Profit & Loss", "Statement", "#pnl"],
-      ["Trial Balance", "Ledger", "/accounting"],
-      ["Chart of Accounts", "Ledger", "/accounting"],
-      ["Journal Register", "Ledger", "/journals"],
-      ["Balance Sheet", "Statement"],
-      ["Cash Flow", "Statement"],
-    ],
-  },
-  {
-    title: "Sales",
-    blurb: "From the daily till summaries",
-    items: [
-      ["Daily Sales Summary", "POS", "/sales"],
-      ["Sales by Channel", "POS", "#channel"],
-      ["Product Margin", "Cost", "#margin"],
-      ["Cash Over / Short", "Control", "/sales"],
-      ["Sales by Hour", "POS"],
-      ["Discounts & Voids", "Control"],
-    ],
-  },
-  {
-    title: "Purchases & Vendors",
-    blurb: "What the shop buys and owes",
-    items: [
-      ["Payable Ageing", "Ageing", "#ageing"],
-      ["Vendor Statement", "Statement", "/vendors"],
-      ["Goods Receipts", "Spend", "/purchasing"],
-      ["Purchases by Vendor", "Spend"],
-      ["Price Change History", "Cost"],
-    ],
-  },
-  {
-    title: "Expenses",
-    blurb: "Where the money goes",
-    items: [
-      ["Expenses by Account", "Spend", "/expenses"],
-      ["Expense Detail", "Detail", "/expenses"],
-      ["Rent, Salaries & Utilities", "Fixed", "/expenses"],
-    ],
-  },
-  {
-    title: "Inventory & Cost",
-    blurb: "Stock valued from the movement ledger",
-    items: [
-      ["Stock Valuation", "Cost", "/inventory"],
-      ["Inventory Movement", "Ledger", "/inventory"],
-      ["Recipe Cost & Margin", "Cost", "/products"],
-      ["Stock Count Variance", "Control", "/count"],
-      ["Waste & Spoilage", "Loss", "/inventory"],
-    ],
-  },
-  {
-    title: "Period & Audit",
-    blurb: "Proof that the books are sound",
-    items: [
-      ["Closing Checklist", "Close", "/accounting"],
-      ["Audit Trail", "Audit", "/accounting"],
-      ["Locked Periods", "Close", "/accounting"],
-    ],
-  },
-];
-
-export default async function ReportsPage() {
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const profile = await requirePermission("cost.view");
   const t = await getT();
-  const [cat, orders, overview, bills] = await Promise.all([
-    loadCatalog().catch(() => null),
-    getSalesOrders(500).catch(() => []),
-    getAccountingOverview().catch(() => null),
-    getOpenBills().catch(() => []),
-  ]);
-  const variants = cat?.variants ?? [];
-  const ageing = ageBills(bills);
+  const sp = await searchParams;
+  const today = businessToday(profile.timezone);
+  const from = parseDay(sp.from, monthStart(today));
+  const to = parseDay(sp.to, today);
+  const seesProfit = has(profile, "profit.view");
 
-  const byChannel = new Map<string, { count: number; net: number; margin: number }>();
-  for (const o of orders) {
-    const cur = byChannel.get(o.channel) ?? { count: 0, net: 0, margin: 0 };
-    byChannel.set(o.channel, {
-      count: cur.count + 1,
-      net: cur.net + o.net,
-      margin: cur.margin + (o.net - o.cogs),
+  const [pnl, rec, sales, book, menu] = await Promise.all([
+    seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
+    getReconciliation(to),
+    getDailySales(from, to),
+    getVendorBook(today),
+    getMenuCosting(),
+  ]);
+  const totals = pnlTotals(pnl);
+  const ageing = ageBills(book.openBills);
+  const unreconciled = rec.filter((r) => r.difference !== 0);
+
+  const byChannel = new Map<string, { orders: number; net: number; cogs: number }>();
+  for (const r of sales) {
+    const cur = byChannel.get(r.channel) ?? { orders: 0, net: 0, cogs: 0 };
+    byChannel.set(r.channel, {
+      orders: cur.orders + r.orders,
+      net: cur.net + r.net,
+      cogs: cur.cogs + r.cogs,
     });
   }
 
-  const revenue = overview?.revenue ?? 0;
-  const cogs = overview?.cogs ?? 0;
-  const opex = (overview?.otherExpenses ?? 0) + (overview?.waste ?? 0);
+  const lastMonthEnd = addDays(monthStart(today), -1);
+  const ranges: [string, string, string][] = [
+    ["This month", monthStart(today), today],
+    ["Last month", monthStart(lastMonthEnd), monthEnd(lastMonthEnd)],
+    ["This year", yearStart(today), today],
+  ];
+  const section = (s: string) => pnl.filter((r) => r.section === s && r.amount !== 0);
 
   return (
     <div className="grid" style={{ gap: 18 }}>
       <div className="phead">
         <h1>{t("nav.reports")}</h1>
-        <span className="sc">Every statement in one place</span>
-        <div className="sp">
-          <span className="badge">{overview?.currentPeriodName ?? ""}</span>
-        </div>
+        <span className="sc">
+          {from} to {to} · from the ledger
+        </span>
       </div>
 
-      <div className="rgrid">
-        {GROUPS.map((g) => (
-          <div key={g.title} className="rgroup">
-            <h4>{g.title}</h4>
-            <div className="gs">{g.blurb}</div>
-            {g.items.map(([name, tag, href]) => {
-              const body = (
-                <>
-                  <span>{name}</span>
-                  <span className="ref">{href ? tag : "soon"}</span>
-                </>
-              );
-              return href ? (
-                <Link key={name} href={href} className="rlink">
-                  {body}
-                </Link>
-              ) : (
-                <div key={name} className="rlink" style={{ opacity: 0.55 }}>
-                  {body}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+      <form
+        className="card"
+        style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}
+      >
+        <label>
+          <div className="sc">From</div>
+          <input type="date" name="from" defaultValue={from} />
+        </label>
+        <label>
+          <div className="sc">To</div>
+          <input type="date" name="to" defaultValue={to} />
+        </label>
+        <button type="submit">Show</button>
+        <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {ranges.map(([label, f, tt]) => (
+            <Link key={label} className="badge" href={`/reports?from=${f}&to=${tt}`}>
+              {label}
+            </Link>
+          ))}
+        </span>
+      </form>
 
-      {/* ---- Profit & Loss ---- */}
-      <section className="panel" id="pnl">
+      {/* ---- Reconciliation ---- */}
+      <section className="panel" id="reconciliation">
         <div className="panel-h">
-          <h3>Profit &amp; Loss</h3>
+          <h3>Do the books tie?</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            {overview?.currentPeriodName} · from the ledger
-          </span>
-        </div>
-        <div className="panel-b" style={{ maxWidth: 620 }}>
-          <div className="st-row group">
-            <span className="lbl">Income</span>
-            <span className="amt" />
-          </div>
-          <div className="st-row indent">
-            <span className="lbl">Net revenue</span>
-            <span className="amt">{fmtIQD(revenue)}</span>
-          </div>
-          <div className="st-row group">
-            <span className="lbl">Cost of sales</span>
-            <span className="amt" />
-          </div>
-          <div className="st-row indent">
-            <span className="lbl">Cost of goods sold</span>
-            <span className="amt red">({fmtIQD(cogs)})</span>
-          </div>
-          <div className="rule-single" />
-          <div className="st-row total">
-            <span className="lbl">Gross profit</span>
-            <span className="amt">{fmtIQD(revenue - cogs)}</span>
-          </div>
-          <div className="st-row group">
-            <span className="lbl">Operating expenses</span>
-            <span className="amt red">({fmtIQD(opex)})</span>
-          </div>
-          <div className="st-row total" style={{ marginBlockStart: 10 }}>
-            <span className="lbl">Net {revenue - cogs - opex < 0 ? "loss" : "profit"}</span>
-            <span className={`amt ${revenue - cogs - opex < 0 ? "red" : ""}`}>
-              {fmtIQD(revenue - cogs - opex)}
-            </span>
-          </div>
-          <div className="rule-double" />
-        </div>
-      </section>
-
-      {/* ---- Payable ageing ---- */}
-      <section className="panel" id="ageing">
-        <div className="panel-h">
-          <h3>Payable Ageing</h3>
-          <span className="muted" style={{ fontSize: ".74rem" }}>
-            What to pay first
+            Each subledger against its control account, as at the end of {to} ·{" "}
+            <a href={`/reports/export?report=reconciliation&to=${to}`}>CSV</a>
           </span>
         </div>
         <div className="tw">
           <table>
             <thead>
               <tr>
-                <th>Vendor</th>
-                <th>Invoice</th>
-                <th>Due</th>
-                <th className="right">Outstanding</th>
-                <th className="right">Age</th>
+                <th>Check</th>
+                <th className="right">Subledger</th>
+                <th className="right">Ledger</th>
+                <th className="right">Difference</th>
               </tr>
             </thead>
             <tbody>
-              {bills.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="muted" style={{ fontStyle: "italic" }}>
-                    Nothing outstanding — every bill is settled.
+              {rec.map((r) => (
+                <tr key={r.key}>
+                  <td>
+                    {r.difference === 0 ? "✅ " : "⛔ "}
+                    {r.label}
+                  </td>
+                  <td className="right money">{fmtIQD(r.subledger)}</td>
+                  <td className="right money">{fmtIQD(r.ledger)}</td>
+                  <td className={`right money ${r.difference !== 0 ? "red" : ""}`}>
+                    {fmtIQD(r.difference)}
                   </td>
                 </tr>
-              ) : (
-                bills.map((b) => (
-                  <tr key={b.id}>
-                    <td>{b.supplierName}</td>
-                    <td>{b.invoiceNo || "—"}</td>
-                    <td>{b.dueDate ?? "—"}</td>
-                    <td className="right money">{fmtIQD(b.outstanding)}</td>
-                    <td className="right">
-                      <span className={`ref ${b.daysOverdue > 0 ? "due" : ""}`}>
-                        {b.daysOverdue > 0 ? `${b.daysOverdue}d over` : "Current"}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-              {bills.length > 0 && (
-                <tr className="grand">
-                  <td />
-                  <td>Total payable</td>
-                  <td />
-                  <td className="right money">{fmtIQD(ageing.total)}</td>
-                  <td />
-                </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
+        <p
+          className="muted"
+          style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
+        >
+          {unreconciled.length === 0
+            ? "Every subledger agrees with its control account."
+            : `${unreconciled.length} difference(s). A period cannot be locked while its checks fail. Differences that predate the controls are explained in docs/REMEDIATION.md and are corrected by reversing journals, never by editing history.`}
+        </p>
       </section>
 
-      {/* ---- Product margin ---- */}
-      <section className="panel" id="margin">
-        <div className="panel-h">
-          <h3>Product Margin by Channel</h3>
-          <span className="muted" style={{ fontSize: ".74rem" }}>
-            Priced from the live weighted-average cost
-          </span>
-        </div>
-        {variants.length === 0 ? (
-          <div className="panel-b">
-            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-              Add products with recipes and prices to see menu-engineering margins.
-            </p>
+      {/* ---- Profit & Loss ---- */}
+      {seesProfit && (
+        <section className="panel" id="pnl">
+          <div className="panel-h">
+            <h3>Profit &amp; Loss</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              Published journal lines, {from} to {to} ·{" "}
+              <a href={`/reports/export?report=pnl&from=${from}&to=${to}`}>CSV</a>
+            </span>
           </div>
-        ) : (
-          <div className="tw">
-            <table>
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>Channel</th>
-                  <th className="right">Price</th>
-                  <th className="right">Cost</th>
-                  <th className="right">Margin</th>
-                  <th className="right">%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {variants.flatMap((v) =>
-                  SELLABLE_CHANNELS.filter((ch) => v.priceByChannel[ch] != null).map((ch) => {
-                    const price = v.priceByChannel[ch]!;
-                    const cost = v.cogsByChannel[ch] ?? 0;
-                    const margin = price - cost;
-                    return (
-                      <tr key={v.variantId + ch}>
-                        <td>{v.productName}</td>
-                        <td>
-                          <span className="ref">{channelLabel[ch]}</span>
-                        </td>
-                        <td className="right money">{fmtIQD(price)}</td>
-                        <td className="right money">{fmtIQD(cost)}</td>
-                        <td className={`right money ${margin < 0 ? "red" : ""}`}>{fmtIQD(margin)}</td>
-                        <td className="right money">
-                          {price > 0 ? ((margin / price) * 100).toFixed(1) : "0.0"}%
-                        </td>
-                      </tr>
-                    );
-                  }),
-                )}
-              </tbody>
-            </table>
+          <div className="panel-b" style={{ maxWidth: 640 }}>
+            <div className="st-row group">
+              <span className="lbl">Income</span>
+              <span className="amt" />
+            </div>
+            {section("revenue").map((r) => (
+              <div key={r.code} className="st-row indent">
+                <span className="lbl">
+                  {r.code} {r.name}
+                </span>
+                <span className={`amt ${r.amount < 0 ? "red" : ""}`}>{fmtIQD(r.amount)}</span>
+              </div>
+            ))}
+            <div className="st-row total">
+              <span className="lbl">Net revenue</span>
+              <span className="amt">{fmtIQD(totals.revenue)}</span>
+            </div>
+            <div className="st-row group">
+              <span className="lbl">Cost of sales</span>
+              <span className="amt" />
+            </div>
+            {section("cost_of_sales").map((r) => (
+              <div key={r.code} className="st-row indent">
+                <span className="lbl">
+                  {r.code} {r.name}
+                </span>
+                <span className="amt red">({fmtIQD(r.amount)})</span>
+              </div>
+            ))}
+            <div className="rule-single" />
+            <div className="st-row total">
+              <span className="lbl">Gross profit</span>
+              <span className="amt">{fmtIQD(totals.grossProfit)}</span>
+            </div>
+            <div className="st-row group">
+              <span className="lbl">Operating expenses</span>
+              <span className="amt" />
+            </div>
+            {section("operating_expenses").map((r) => (
+              <div key={r.code} className="st-row indent">
+                <span className="lbl">
+                  {r.code} {r.name}
+                </span>
+                <span className="amt red">({fmtIQD(r.amount)})</span>
+              </div>
+            ))}
+            <div className="st-row total" style={{ marginBlockStart: 10 }}>
+              <span className="lbl">Net {totals.net < 0 ? "loss" : "profit"}</span>
+              <span className={`amt ${totals.net < 0 ? "red" : ""}`}>{fmtIQD(totals.net)}</span>
+            </div>
+            <div className="rule-double" />
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
-      {/* ---- Channel mix ---- */}
+      {/* ---- Sales by channel ---- */}
       <section className="panel" id="channel">
         <div className="panel-h">
           <h3>Sales by Channel</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            Recorded sales
+            Recorded sales, {from} to {to}, voids excluded
           </span>
         </div>
-        {orders.length === 0 ? (
+        {byChannel.size === 0 ? (
           <div className="panel-b">
             <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-              No sales recorded yet.
+              No sales in these dates.
             </p>
           </div>
         ) : (
@@ -323,9 +224,9 @@ export default async function ReportsPage() {
                     <td>
                       <span className="ref">{channelLabel[c as SalesChannel] ?? c}</span>
                     </td>
-                    <td className="right money">{v.count}</td>
+                    <td className="right money">{v.orders}</td>
                     <td className="right money">{fmtIQD(v.net)}</td>
-                    <td className="right money">{fmtIQD(v.margin)}</td>
+                    <td className="right money">{fmtIQD(v.net - v.cogs)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -333,6 +234,132 @@ export default async function ReportsPage() {
           </div>
         )}
       </section>
+
+      {/* ---- Payable ageing ---- */}
+      <section className="panel" id="ageing">
+        <div className="panel-h">
+          <h3>Payable Ageing</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            Today · what to pay first
+          </span>
+        </div>
+        <div className="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Vendor</th>
+                <th>Invoice</th>
+                <th>Due</th>
+                <th className="right">Outstanding</th>
+                <th className="right">Age</th>
+              </tr>
+            </thead>
+            <tbody>
+              {book.openBills.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="muted" style={{ fontStyle: "italic" }}>
+                    Nothing outstanding — every bill is settled.
+                  </td>
+                </tr>
+              ) : (
+                book.openBills.map((b) => (
+                  <tr key={b.id}>
+                    <td>{b.supplierName}</td>
+                    <td>{b.invoiceNo || "—"}</td>
+                    <td>{b.dueDate ?? "—"}</td>
+                    <td className="right money">{fmtIQD(b.outstanding)}</td>
+                    <td className="right">
+                      <span className={`ref ${b.daysOverdue > 0 ? "due" : ""}`}>
+                        {b.daysOverdue > 0 ? `${b.daysOverdue}d over` : "Current"}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+              {book.openBills.length > 0 && (
+                <tr className="grand">
+                  <td />
+                  <td>Total payable</td>
+                  <td />
+                  <td className="right money">{fmtIQD(ageing.total)}</td>
+                  <td />
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* ---- Product margin ---- */}
+      <section className="panel" id="margin">
+        <div className="panel-h">
+          <h3>Product Margin by Channel</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            Today&apos;s prices and today&apos;s costs, costed exactly as a sale posts them
+          </span>
+        </div>
+        {menu.length === 0 ? (
+          <div className="panel-b">
+            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+              Add products with recipes and prices to see their margins.
+            </p>
+          </div>
+        ) : (
+          <div className="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Channel</th>
+                  <th className="right">Price</th>
+                  <th className="right">Cost</th>
+                  <th className="right">Margin</th>
+                  <th className="right">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {menu.map((m) => {
+                  const margin = m.unitCost === null ? null : m.price - m.unitCost;
+                  return (
+                    <tr key={m.variantId + m.channel}>
+                      <td>
+                        {m.productName}
+                        {m.variantName !== m.productName ? ` — ${m.variantName}` : ""}
+                      </td>
+                      <td>
+                        <span className="ref">
+                          {channelLabel[m.channel as SalesChannel] ?? m.channel}
+                        </span>
+                      </td>
+                      <td className="right money">{fmtIQD(m.price)}</td>
+                      <td className="right money">
+                        {m.unitCost === null ? "unknown" : fmtIQD(m.unitCost)}
+                      </td>
+                      <td className={`right money ${margin !== null && margin < 0 ? "red" : ""}`}>
+                        {margin === null ? "—" : fmtIQD(margin)}
+                      </td>
+                      <td className="right money">
+                        {margin === null || m.price <= 0
+                          ? "—"
+                          : `${((margin / m.price) * 100).toFixed(1)}%`}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <p className="muted" style={{ fontSize: ".78rem" }}>
+        Also: <Link href="/accounting">Trial balance</Link> ·{" "}
+        <Link href="/journals">Journal register</Link> ·{" "}
+        <Link href="/sales">Daily sales &amp; cash over/short</Link> ·{" "}
+        <Link href="/vendors">Vendor statements</Link> ·{" "}
+        <Link href="/inventory">Stock valuation</Link> · <Link href="/count">Count variances</Link>.
+        Not built yet: balance sheet, cash-flow statement, sales by hour.
+      </p>
     </div>
   );
 }

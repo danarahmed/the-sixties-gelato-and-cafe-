@@ -1,19 +1,36 @@
 import { getT } from "@/lib/i18n/server";
-import { getVendors, getOpenBills, ageBills } from "@/lib/db/books";
-import { getBusinessConfig } from "@/lib/db/read";
+import { has, requirePermission } from "@/lib/auth/session";
+import { ageBills, getGlAccounts, getVendorBook } from "@/lib/db/books";
+import { getReceipts } from "@/lib/db/read";
 import { fmtIQD } from "@/lib/format";
+import { businessToday } from "@/lib/dates";
 import { VendorsClient } from "@/components/books/VendorsClient";
 
 export const dynamic = "force-dynamic";
 
+/** Accounts a non-stock bill may be charged to (the database enforces the same list). */
+const NOT_FOR_BILLS = new Set([
+  "1000",
+  "1010",
+  "1020",
+  "1100",
+  "1200",
+  "5000",
+  "5050",
+  "5300",
+  "5400",
+]);
+
 export default async function VendorsPage() {
+  const profile = await requirePermission("cost.view");
   const t = await getT();
-  const [vendors, bills, cfg] = await Promise.all([
-    getVendors().catch(() => []),
-    getOpenBills().catch(() => []),
-    getBusinessConfig().catch(() => null),
+  const today = businessToday(profile.timezone);
+  const [{ vendors, openBills }, receipts, accounts] = await Promise.all([
+    getVendorBook(today),
+    getReceipts(200),
+    getGlAccounts(),
   ]);
-  const ageing = ageBills(bills);
+  const ageing = ageBills(openBills);
 
   return (
     <div className="grid" style={{ gap: 18 }}>
@@ -21,7 +38,9 @@ export default async function VendorsPage() {
         <h1>{t("nav.vendors")}</h1>
         <span className="sc">Suppliers the shop buys from</span>
         <div className="sp">
-          <span className={`badge ${ageing.d1_15 + ageing.d16_30 + ageing.d31plus > 0 ? "err" : "ok"}`}>
+          <span
+            className={`badge ${ageing.d1_15 + ageing.d16_30 + ageing.d31plus > 0 ? "err" : "ok"}`}
+          >
             {fmtIQD(ageing.total)} payable
           </span>
         </div>
@@ -58,26 +77,37 @@ export default async function VendorsPage() {
 
       <VendorsClient
         vendors={vendors}
-        bills={bills.map((b) => ({
-          id: b.id,
-          supplierId: b.supplierId,
-          invoiceNo: b.invoiceNo,
-          invoiceDate: b.invoiceDate,
-          dueDate: b.dueDate,
-          total: b.total,
-          paid: b.paid,
-          outstanding: b.outstanding,
-          daysOverdue: b.daysOverdue,
-        }))}
-        businessName={cfg?.name ?? "The Sixty's Gelato & Café"}
+        bills={openBills}
+        receipts={receipts
+          .filter((r) => r.billable && r.supplierId)
+          .map((r) => ({
+            id: r.id,
+            supplierId: r.supplierId!,
+            receiptNo: r.receiptNo,
+            value: r.value,
+            receivedAt: r.receivedAt,
+          }))}
+        accounts={accounts
+          .filter(
+            (a) =>
+              a.isActive &&
+              (a.type === "expense" || a.type === "asset") &&
+              !NOT_FOR_BILLS.has(a.code),
+          )
+          .map((a) => ({ code: a.code, name: a.name }))}
+        today={today}
+        businessName={profile.businessName}
+        canBill={has(profile, "purchase.create") || has(profile, "accounting.post")}
+        canPay={has(profile, "accounting.post")}
+        canAddVendor={has(profile, "purchase.create")}
       />
 
-      <p className="muted" style={{ fontSize: ".76rem", lineHeight: 1.7, maxWidth: 760 }}>
-        A bill raises what you owe (<strong>Dr Inventory / Cr Accounts payable</strong>) and starts
-        the clock on its terms; a payment settles it (<strong>Dr Accounts payable / Cr Cash</strong>).
-        Ageing above tells you what to pay first. Goods received on the{" "}
-        <strong>Purchasing</strong> screen carry their landed cost into the weighted-average cost
-        every recipe is priced from.
+      <p className="muted" style={{ fontSize: ".76rem", lineHeight: 1.7, maxWidth: 780 }}>
+        A bill for goods is matched to the receipt that brought them in: it clears Goods received
+        not invoiced (2050) for what the receipt recorded, puts any price difference to 5050, and
+        raises Accounts payable (2000). A bill for a service or an asset is charged straight to its
+        account. A payment settles the payable from cash, card or the bank. The same invoice number
+        from the same vendor can only be entered once.
       </p>
     </div>
   );

@@ -1,0 +1,143 @@
+"use server";
+/**
+ * The till and its corrections. Each action is one database function: the
+ * order, its lines, the stock it used and the balanced journal are written
+ * together or not at all (audit C-04, C-06).
+ */
+import { z } from "zod";
+import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { day, id, nonNegative, positive, salesChannel, text } from "@/lib/validation";
+
+const SALE_PATHS = [
+  "/pos",
+  "/orders",
+  "/sales",
+  "/dashboard",
+  "/inventory",
+  "/reports",
+  "/journals",
+];
+
+const saleInput = z.object({
+  /** Minted by the till when the cart starts, reused on every retry (H-01). */
+  key: z.string().uuid("This sale has no idempotency key"),
+  channel: salesChannel,
+  tender: z.enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" }),
+  lines: z
+    .array(z.object({ variantId: id("a product"), qty: positive("Quantity") }))
+    .min(1, "The cart is empty"),
+});
+
+export interface SaleReceipt {
+  orderId: string;
+  net: number;
+  /** Only for people allowed to see costs. */
+  cogs?: number;
+  journalNo: number | null;
+  /** True when this key had already been recorded: the original sale is returned. */
+  replayed: boolean;
+}
+
+export async function recordSaleAction(
+  input: z.input<typeof saleInput>,
+): Promise<ActionResult<SaleReceipt>> {
+  const v = parse(saleInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("record_sale", {
+    p_idempotency_key: v.data.key,
+    p_channel: v.data.channel,
+    p_tender: v.data.tender,
+    p_lines: v.data.lines.map((l) => ({ variant_id: l.variantId, qty: l.qty })),
+  });
+  if (!r.ok) return r;
+  refresh(...SALE_PATHS);
+  const d = r.data;
+  return {
+    ok: true,
+    data: {
+      orderId: String(d.order_id),
+      net: Number(d.net ?? 0),
+      ...(d.cogs !== undefined ? { cogs: Number(d.cogs) } : {}),
+      journalNo: d.journal_no == null ? null : Number(d.journal_no),
+      replayed: Boolean(d.replayed),
+    },
+  };
+}
+
+const correction = z.object({ orderId: id("a sale"), reason: text("A reason", 300) });
+
+/** Rung in error: same trading day, before the day is closed. Everything comes back. */
+export async function voidSaleAction(
+  input: z.input<typeof correction>,
+): Promise<ActionResult<{ journalNo: number | null }>> {
+  const v = parse(correction, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("void_sale", {
+    p_order: v.data.orderId,
+    p_reason: v.data.reason,
+  });
+  if (!r.ok) return r;
+  refresh(...SALE_PATHS);
+  return {
+    ok: true,
+    data: { journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no) },
+  };
+}
+
+/** Money back to the customer, through Sales returns; returnable goods go back on the shelf. */
+export async function refundSaleAction(
+  input: z.input<typeof correction>,
+): Promise<ActionResult<{ refunded: number; journalNo: number | null }>> {
+  const v = parse(correction, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("refund_sale", {
+    p_order: v.data.orderId,
+    p_reason: v.data.reason,
+  });
+  if (!r.ok) return r;
+  refresh(...SALE_PATHS);
+  return {
+    ok: true,
+    data: {
+      refunded: Number(r.data.refunded ?? 0),
+      journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
+    },
+  };
+}
+
+const closeInput = z.object({
+  day: day("The trading day"),
+  countedCash: nonNegative("Cash counted"),
+  openingFloat: nonNegative("Opening float"),
+});
+
+export interface DayCloseResult {
+  expected: number;
+  counted: number;
+  variance: number;
+  journalNo: number | null;
+}
+
+/** Count the drawer against what the day should hold; any difference posts to 6300. */
+export async function closeDayAction(
+  input: z.input<typeof closeInput>,
+): Promise<ActionResult<DayCloseResult>> {
+  const v = parse(closeInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("close_day", {
+    p_day: v.data.day,
+    p_counted_cash: v.data.countedCash,
+    p_opening_float: v.data.openingFloat,
+  });
+  if (!r.ok) return r;
+  refresh("/sales", "/journals", "/accounting", "/reports", "/orders");
+  return {
+    ok: true,
+    data: {
+      expected: Number(r.data.expected ?? 0),
+      counted: Number(r.data.counted ?? 0),
+      variance: Number(r.data.variance ?? 0),
+      journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
+    },
+  };
+}

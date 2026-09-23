@@ -1,80 +1,107 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
-import { fetchStockBoard } from "@/lib/db/inventory";
-import { getSalesOrders } from "@/lib/db/read";
-import { channelLabel, fmtIQD } from "@/lib/format";
+import { requirePermission } from "@/lib/auth/session";
+import { getDashboard, getReconciliation } from "@/lib/db/reports";
+import { getSalesOrders, getStockBoard } from "@/lib/db/read";
+import { channelLabel, fmtIQD, fmtQty } from "@/lib/format";
+import { businessToday, dateTimeIn } from "@/lib/dates";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 
 export const dynamic = "force-dynamic";
 
+/** Today at a glance, from the books, for the people who run the business. */
 export default async function DashboardPage() {
+  const profile = await requirePermission("profit.view");
   const t = await getT();
-  const [board, orders] = await Promise.all([
-    fetchStockBoard().catch(() => []),
-    getSalesOrders(500).catch(() => []),
+  const today = businessToday(profile.timezone);
+  const [d, rec, board, recent] = await Promise.all([
+    getDashboard(today),
+    getReconciliation(today),
+    getStockBoard(),
+    getSalesOrders(6),
   ]);
-  const stock = board ?? [];
-
-  const net = orders.reduce((s, o) => s + o.net, 0);
-  const cogs = orders.reduce((s, o) => s + o.cogs, 0);
-  const grossProfit = net - cogs;
-  const avg = orders.length ? Math.round(net / orders.length) : 0;
-  const low = stock.filter((s) => s.isLow);
-  const invValue = stock.reduce((s, r) => s + r.value, 0);
+  const low = board.filter((s) => s.isLow || s.isNegative);
+  const differences = rec.filter((r) => r.difference !== 0);
 
   const kpis = [
-    { label: t("dash.netSales"), value: fmtIQD(net) },
-    { label: t("dash.grossProfit"), value: fmtIQD(grossProfit), tone: "ok" },
-    { label: t("dash.orders"), value: String(orders.length) },
-    { label: t("dash.avgOrder"), value: fmtIQD(avg) },
-    { label: "Inventory value", value: fmtIQD(invValue) },
-    { label: t("dash.lowStock"), value: String(low.length), tone: low.length ? "warn" : "ok" },
+    { label: t("dash.netSales"), value: fmtIQD(d.netRevenue) },
+    {
+      label: t("dash.grossProfit"),
+      value: fmtIQD(d.grossProfit),
+      tone: d.grossProfit < 0 ? "err" : "ok",
+    },
+    { label: t("dash.orders"), value: String(d.orders) },
+    { label: t("dash.avgOrder"), value: fmtIQD(d.averageOrder) },
+    { label: "Inventory (1200)", value: fmtIQD(d.inventoryValue) },
+    { label: t("dash.lowStock"), value: String(d.lowStock), tone: d.lowStock ? "warn" : "ok" },
   ];
 
   return (
     <div className="grid" style={{ gap: 20 }}>
-      <div className="badge ok" style={{ alignSelf: "start" }}>🟢 Live database</div>
-      <h1 style={{ margin: 0 }}>{t("dash.title")}</h1>
-
-      {orders.length === 0 && stock.length === 0 && (
-        <div className="card" style={{ padding: "20px 16px" }}>
-          <strong>Your business starts empty.</strong>
-          <p className="muted" style={{ fontSize: ".92rem", margin: "8px 0 0" }}>
-            Nothing here is demo data any more. Add stock on <Link href="/inventory">Inventory</Link>,
-            build a menu on <Link href="/products">Products</Link>, receive purchases on{" "}
-            <Link href="/purchasing">Purchasing</Link>, then sell on <Link href="/pos">POS</Link> — every
-            figure on this dashboard is computed from what you enter.
-          </p>
+      <div className="phead">
+        <h1>{t("dash.title")}</h1>
+        <span className="sc">
+          {today} · {profile.timezone}
+        </span>
+        <div className="sp">
+          <Link
+            href="/reports#reconciliation"
+            className={`badge ${differences.length ? "err" : "ok"}`}
+          >
+            {differences.length
+              ? `${differences.length} reconciliation difference(s)`
+              : "Books reconcile"}
+          </Link>
         </div>
-      )}
+      </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>
+      <div
+        className="grid"
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}
+      >
         {kpis.map((k) => (
           <div key={k.label} className="card stat">
             <span className="label">{k.label}</span>
             <span
               className="value mono"
-              style={{ color: k.tone === "ok" ? "var(--ok)" : k.tone === "warn" ? "var(--warn)" : undefined }}
+              style={{
+                color:
+                  k.tone === "ok"
+                    ? "var(--ok)"
+                    : k.tone === "warn"
+                      ? "var(--warn)"
+                      : k.tone === "err"
+                        ? "var(--err)"
+                        : undefined,
+              }}
             >
               {k.value}
             </span>
           </div>
         ))}
       </div>
+      <p className="muted" style={{ margin: 0, fontSize: ".8rem" }}>
+        Revenue and cost of sales are read from today&apos;s published journal lines — the same
+        figures the profit and loss will show.
+      </p>
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
+      <div
+        className="grid"
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}
+      >
         <div className="card">
           <h3 style={{ marginTop: 0 }}>{t("dash.lowStock")}</h3>
-          {stock.length === 0 ? (
+          {board.length === 0 ? (
             <span className="muted">No items yet.</span>
           ) : low.length === 0 ? (
-            <span className="badge ok">All above reorder</span>
+            <span className="badge ok">All above reorder level</span>
           ) : (
             low.map((s) => (
               <div key={s.itemId} className="deduction-row">
                 <span>{s.name}</span>
-                <span className="badge warn mono">
-                  {s.onHandBase.toLocaleString()} / {s.reorderBase?.toLocaleString() ?? "—"}
+                <span className={`badge mono ${s.isNegative ? "err" : "warn"}`}>
+                  {fmtQty(s.onHandBase)} / {s.reorderBase === null ? "—" : fmtQty(s.reorderBase)}{" "}
+                  {s.unit}
                 </span>
               </div>
             ))
@@ -82,14 +109,21 @@ export default async function DashboardPage() {
         </div>
         <div className="card">
           <h3 style={{ marginTop: 0 }}>Recent sales</h3>
-          {orders.length === 0 ? (
+          {recent.length === 0 ? (
             <span className="muted">No sales yet.</span>
           ) : (
-            orders.slice(0, 6).map((o) => (
+            recent.map((o) => (
               <div key={o.id} className="deduction-row">
                 <span>
-                  <span className="badge">{channelLabel[o.channel as SalesChannel] ?? o.channel}</span>{" "}
+                  <span className="badge">
+                    {channelLabel[o.channel as SalesChannel] ?? o.channel}
+                  </span>{" "}
                   {o.lines.map((l) => `${l.name} ×${l.qty}`).join(", ") || "—"}
+                  <span className="muted" style={{ fontSize: ".75rem" }}>
+                    {" "}
+                    · {dateTimeIn(profile.timezone, o.placedAt).slice(11)}
+                    {o.status !== "completed" ? ` · ${o.status}` : ""}
+                  </span>
                 </span>
                 <span className="mono">{fmtIQD(o.net)}</span>
               </div>
@@ -97,11 +131,6 @@ export default async function DashboardPage() {
           )}
         </div>
       </div>
-
-      <p className="muted" style={{ fontSize: ".9rem" }}>
-        Open <strong>{t("nav.pos")}</strong> to record a sale and watch cost, margin, stock, orders and
-        the journal update together — all from the live database.
-      </p>
     </div>
   );
 }

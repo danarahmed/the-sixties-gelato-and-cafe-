@@ -847,3 +847,34 @@ details > summary {
     transform: translateX(0);
   }
 }
+
+/* ---------------------------------------------------------------- sign-in */
+.auth-wrap {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+}
+.linklike {
+  border: none;
+  background: transparent;
+  padding: 0;
+  min-height: 0;
+  color: var(--brand);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* ---------------------------------------------------- honest offline state */
+.offline-banner {
+  background: var(--err);
+  color: #fff;
+  padding: 10px 16px;
+  font-weight: 600;
+  text-align: center;
+}

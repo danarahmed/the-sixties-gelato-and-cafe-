@@ -2,7 +2,7 @@
   "name": "The Sixty's Gelato & Café",
   "short_name": "Sixty's",
   "description": "POS, inventory, production, delivery platforms and accounting for The Sixty's Gelato & Café.",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",

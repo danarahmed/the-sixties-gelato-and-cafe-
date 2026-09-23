@@ -1,6 +1,7 @@
 /**
  * The bookkeeper's rules — the layer that sits ON TOP of the accounting engine.
- * It classifies an expense to an account and reviews a period before closing.
+ * It proposes the account an expense belongs to; a person confirms it. Whether
+ * a period may close is decided by the database's closing checklist, never here.
  *
  * Everything here is deterministic and local: no external service, no API key,
  * no per-use cost, and the same input always gives the same answer. It never
@@ -20,31 +21,9 @@ export interface ExpenseCategorization {
   needsReview: boolean;
 }
 
-export interface CloseReviewInput {
-  periodName: string;
-  revenue: number;
-  cogs: number;
-  otherExpenses: number;
-  waste: number;
-  netProfit: number;
-  unpostedPurchases: number;
-  unpostedWaste: number;
-  trialBalanced: boolean;
-}
-
-export interface CloseReview {
-  /** Whether the accountant judges the period ready to lock. */
-  readyToClose: boolean;
-  /** Human-readable narrative summarising the month. */
-  narrative: string;
-  /** Anything the human should look at before approving. */
-  flags: string[];
-}
-
 export interface Bookkeeper {
   readonly providerName: string;
   categorizeExpense(description: string, amount: number): Promise<ExpenseCategorization>;
-  reviewClose(input: CloseReviewInput): Promise<CloseReview>;
 }
 
 // ---------------------------------------------------------------------------
@@ -57,7 +36,14 @@ interface Rule {
   accountName: string;
 }
 
-/** Keyword → GL account. Extend this list as new kinds of expense appear. */
+/**
+ * Keyword → GL account. Extend this list as new kinds of expense appear.
+ *
+ * Only accounts an expense may post to belong here. Waste and stock losses
+ * are NOT expenses to type in: they are recorded on Inventory, which takes
+ * the stock out at its cost (the database refuses 5000, 5050, 5300 and 5400
+ * as expense accounts for exactly that reason).
+ */
 const EXPENSE_RULES: Rule[] = [
   { keywords: ["rent", "lease", "landlord"], accountCode: "6000", accountName: "Rent" },
   {
@@ -66,30 +52,50 @@ const EXPENSE_RULES: Rule[] = [
     accountName: "Salaries",
   },
   {
-    keywords: ["electric", "power", "water", "gas", "internet", "wifi", "phone", "utility", "utilities", "bill"],
+    keywords: [
+      "electric",
+      "power",
+      "water",
+      "gas",
+      "internet",
+      "wifi",
+      "phone",
+      "utility",
+      "utilities",
+      "generator",
+    ],
     accountCode: "6200",
     accountName: "Utilities",
   },
+  { keywords: ["commission"], accountCode: "5100", accountName: "Platform commission" },
   {
-    keywords: ["commission", "talabat fee", "platform fee"],
+    keywords: ["talabat fee", "platform fee", "delivery fee"],
     accountCode: "5200",
     accountName: "Platform fees",
   },
-  {
-    keywords: ["waste", "spoil", "spoilage", "expired", "damaged", "thrown"],
-    accountCode: "5300",
-    accountName: "Waste & spoilage",
-  },
 ];
 
-/** Fallback when nothing matches: operating expense, flagged for review. */
-const FALLBACK: Rule = { keywords: [], accountCode: "6200", accountName: "Utilities" };
+/** Fallback when nothing matches: Other expenses, flagged for the person to confirm. */
+const FALLBACK: Rule = { keywords: [], accountCode: "6900", accountName: "Other expenses" };
+
+/** Words that mean stock was lost — which belongs on Inventory, not here. */
+const STOCK_LOSS = ["waste", "spoil", "spoilage", "expired", "damaged", "thrown", "melted"];
 
 export class RuleBookkeeper implements Bookkeeper {
   readonly providerName = "house-rules";
 
   async categorizeExpense(description: string, amount: number): Promise<ExpenseCategorization> {
     const text = (description || "").toLowerCase();
+    const loss = STOCK_LOSS.find((k) => text.includes(k));
+    if (loss) {
+      return {
+        accountCode: FALLBACK.accountCode,
+        accountName: FALLBACK.accountName,
+        confidence: 0.2,
+        explanation: `“${loss}” sounds like stock that was lost. Record it on Inventory → Record waste instead, so the stock and its cost come out together. Only post it here if it really is a bought-in service.`,
+        needsReview: true,
+      };
+    }
     const hit = EXPENSE_RULES.find((r) => r.keywords.some((k) => text.includes(k)));
     if (hit) {
       const matched = hit.keywords.find((k) => text.includes(k))!;
@@ -97,7 +103,7 @@ export class RuleBookkeeper implements Bookkeeper {
         accountCode: hit.accountCode,
         accountName: hit.accountName,
         confidence: 0.92,
-        explanation: `Matched “${matched}” → ${hit.accountCode} ${hit.accountName}. Posts Dr ${hit.accountName}, Cr Cash for ${Math.round(amount).toLocaleString()} IQD.`,
+        explanation: `Matched “${matched}” → ${hit.accountCode} ${hit.accountName} for ${Math.round(amount).toLocaleString("en-US")} IQD. Change the account if this is wrong.`,
         needsReview: false,
       };
     }
@@ -105,35 +111,9 @@ export class RuleBookkeeper implements Bookkeeper {
       accountCode: FALLBACK.accountCode,
       accountName: FALLBACK.accountName,
       confidence: 0.4,
-      explanation: `No clear category keyword found; defaulted to ${FALLBACK.accountCode} ${FALLBACK.accountName}. Please confirm the account before posting.`,
+      explanation: `No clear category word found, so ${FALLBACK.accountCode} ${FALLBACK.accountName} is proposed. Please choose the right account before posting.`,
       needsReview: true,
     };
-  }
-
-  async reviewClose(input: CloseReviewInput): Promise<CloseReview> {
-    const flags: string[] = [];
-    if (input.unpostedPurchases > 0)
-      flags.push(`${input.unpostedPurchases} purchase(s) not yet journaled — run auto-post first.`);
-    if (input.unpostedWaste > 0)
-      flags.push(`${input.unpostedWaste} waste movement(s) not yet journaled — run auto-post first.`);
-    if (!input.trialBalanced) flags.push("Trial balance does not tie out (debits ≠ credits).");
-    if (input.revenue === 0) flags.push("No sales recorded this period — nothing to close.");
-    if (input.netProfit < 0)
-      flags.push(`Period shows a net loss of ${Math.abs(Math.round(input.netProfit)).toLocaleString()} IQD — review costs.`);
-
-    const readyToClose = flags.filter((f) => !f.startsWith("Period shows a net loss")).length === 0 && input.revenue > 0;
-
-    const marginPct = input.revenue > 0 ? ((input.revenue - input.cogs) / input.revenue) * 100 : 0;
-    const narrative =
-      `${input.periodName}: revenue ${Math.round(input.revenue).toLocaleString()} IQD, ` +
-      `COGS ${Math.round(input.cogs).toLocaleString()} (gross margin ${marginPct.toFixed(1)}%), ` +
-      `other expenses ${Math.round(input.otherExpenses + input.waste).toLocaleString()}, ` +
-      `net ${Math.round(input.netProfit).toLocaleString()} IQD. ` +
-      (readyToClose
-        ? "All routine entries are posted and the ledger balances. Ready for your approval to lock the period."
-        : "Resolve the flags below before locking the period.");
-
-    return { readyToClose, narrative, flags };
   }
 }
 

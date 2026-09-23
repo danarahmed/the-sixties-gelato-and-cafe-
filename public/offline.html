@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline — The Sixty's</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body {
+        font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans Arabic", sans-serif;
+        margin: 0; min-height: 100vh; display: grid; place-items: center;
+        background: #f6f7f5; color: #1b2229;
+      }
+      @media (prefers-color-scheme: dark) { body { background: #0e1319; color: #e6eae6; } }
+      main { max-width: 520px; padding: 24px; line-height: 1.6; }
+      h1 { font-size: 1.3rem; margin: 0 0 8px; }
+      p { margin: 0 0 14px; }
+      button { font: inherit; padding: 10px 18px; border-radius: 6px; border: 0; background: #b8375b; color: #fff; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>No connection</h1>
+      <p>
+        Sales cannot be recorded while the till is offline. Nothing is being saved. Take payment only
+        once the connection is back, or write the sale down and ring it up when it returns.
+      </p>
+      <p dir="rtl" lang="ar">
+        لا يوجد اتصال. لا يمكن تسجيل المبيعات أثناء انقطاع الاتصال، ولا يُحفظ أي شيء. سجّل البيع عند عودة الاتصال.
+      </p>
+      <p dir="rtl" lang="ckb">
+        پەیوەندی نییە. تا پەیوەندی نەگەڕێتەوە ناتوانرێت فرۆشتن تۆمار بکرێت و هیچ شتێک پاشەکەوت ناکرێت.
+      </p>
+      <button onclick="location.reload()">Try again</button>
+    </main>
+  </body>
+</html>
