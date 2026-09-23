@@ -55,3 +55,74 @@ begin
 end $$;
 
 grant execute on all functions in schema test to public;
+
+-- A journal, as one readable line: "1000 Dr 5000 | 4000 Cr 5000", accounts in
+-- code order. Golden tests compare against this, so an expected entry reads
+-- exactly as an accountant would write it.
+create or replace function test.lines_of(p_ref uuid) returns text
+language sql as $$
+  select string_agg(a.code || case when l.debit > 0 then ' Dr ' || l.debit::text
+                                   else ' Cr ' || l.credit::text end,
+                    ' | ' order by a.code, l.debit desc, l.credit desc)
+    from journal_entry e
+    join journal_line l on l.journal_entry_id = e.id
+    join gl_account a on a.id = l.account_id
+   where e.reference_id = p_ref and e.reverses_entry is null
+$$;
+
+-- The balance of an account for the demo business (debit-positive).
+create or replace function test.balance(p_code text) returns numeric
+language sql as $$
+  select coalesce(sum(l.debit - l.credit), 0)
+    from journal_line l join gl_account a on a.id = l.account_id
+    join journal_entry e on e.id = l.journal_entry_id
+   where a.code = p_code and a.business_id = '00000000-0000-0000-0000-0000000000b1'
+     and e.status = 'published'
+$$;
+
+-- A small, fully known catalogue for golden tests: coffee at 10 IQD/g, an
+-- espresso that uses 20 g, priced 2,500 dine-in and 3,000 on Talabat, plus a
+-- takeaway cup that only the takeaway channel consumes.
+create or replace function test.golden_catalogue() returns void
+language plpgsql as $$
+declare
+  b uuid := '00000000-0000-0000-0000-0000000000b1';
+  loc uuid;
+begin
+  perform test.as_admin();
+  select id into loc from location where business_id = b and kind = 'branch' limit 1;
+  insert into item (id, business_id, sku, name, item_type, base_unit_code, dimension, returnable_to_stock)
+  values ('c0000000-0000-0000-0000-000000000001', b, 'G-BEANS', 'Golden beans', 'ingredient', 'g', 'mass', false),
+         ('c0000000-0000-0000-0000-000000000002', b, 'G-CUP',   'Golden cup',   'packaging',  'each', 'count', false),
+         ('c0000000-0000-0000-0000-000000000003', b, 'G-WATER', 'Bottled water','resale',     'each', 'count', true);
+  insert into item_unit (item_id, code, label, dimension, factor_to_base)
+  values ('c0000000-0000-0000-0000-000000000001', 'kg', 'Kilogram', 'mass', 1000),
+         ('c0000000-0000-0000-0000-000000000002', 'sleeve_50', 'Sleeve of 50', 'count', 50);
+  insert into inventory_movement (business_id, item_id, location_id, type, base_quantity_signed, unit_cost, value, reason, occurred_at)
+  values (b, 'c0000000-0000-0000-0000-000000000001', loc, 'opening_balance', 1000, 10, 10000, 'fixture', now() - interval '1 minute'),
+         (b, 'c0000000-0000-0000-0000-000000000002', loc, 'opening_balance', 100, 50, 5000, 'fixture', now() - interval '1 minute'),
+         (b, 'c0000000-0000-0000-0000-000000000003', loc, 'opening_balance', 24, 250, 6000, 'fixture', now() - interval '1 minute');
+
+  insert into product (id, business_id, name) values ('d0000000-0000-0000-0000-000000000001', b, 'Golden espresso'),
+                                                     ('d0000000-0000-0000-0000-000000000002', b, 'Golden water');
+  insert into product_variant (id, product_id, name) values ('d1000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000001', 'Single'),
+                                                            ('d1000000-0000-0000-0000-000000000002', 'd0000000-0000-0000-0000-000000000002', 'Bottle');
+  update product_variant set resale_item_id = 'c0000000-0000-0000-0000-000000000003' where id = 'd1000000-0000-0000-0000-000000000002';
+  insert into recipe (id, business_id, name) values ('d2000000-0000-0000-0000-000000000001', b, 'Golden espresso');
+  insert into recipe_version (id, recipe_id, version_no, effective_from)
+  values ('d3000000-0000-0000-0000-000000000001', 'd2000000-0000-0000-0000-000000000001', 1, '2020-01-01');
+  insert into recipe_line (recipe_version_id, component_type, item_id, quantity, unit_code, applies_to_channels)
+  values ('d3000000-0000-0000-0000-000000000001', 'item', 'c0000000-0000-0000-0000-000000000001', 20, 'g', null),
+         ('d3000000-0000-0000-0000-000000000001', 'item', 'c0000000-0000-0000-0000-000000000002', 1, 'each', '{takeaway,talabat}');
+  insert into variant_recipe (product_variant_id, recipe_id) values ('d1000000-0000-0000-0000-000000000001', 'd2000000-0000-0000-0000-000000000001');
+  insert into channel_price (business_id, product_variant_id, channel, price, effective_from) values
+    (b, 'd1000000-0000-0000-0000-000000000001', 'dine_in', 2500, '2020-01-01'),
+    (b, 'd1000000-0000-0000-0000-000000000001', 'takeaway', 2500, '2020-01-01'),
+    (b, 'd1000000-0000-0000-0000-000000000001', 'talabat', 3000, '2020-01-01'),
+    (b, 'd1000000-0000-0000-0000-000000000002', 'dine_in', 1000, '2020-01-01');
+  -- The opening stock is in the books too, so subledger and GL start equal.
+  perform post_journal(b, now() - interval '1 minute', 'Opening stock (fixture)', 'fixture', null,
+    '[{"code":"1200","debit":21000},{"code":"3000","credit":21000}]'::jsonb);
+end $$;
+
+grant execute on all functions in schema test to public;

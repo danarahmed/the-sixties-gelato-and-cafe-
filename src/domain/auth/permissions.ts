@@ -33,8 +33,11 @@ export type Permission =
   | "waste.approve"
   | "purchase.create"
   | "purchase.receive"
+  | "expense.record"
+  | "day.close"
   | "accounting.post"
   | "accounting.period.lock"
+  | "accounting.period.unlock"
   | "platform.reconcile"
   | "ai.view"
   | "audit.view"
@@ -55,18 +58,27 @@ const ALL: Permission[] = [
   "waste.approve",
   "purchase.create",
   "purchase.receive",
+  "expense.record",
+  "day.close",
   "accounting.post",
   "accounting.period.lock",
+  "accounting.period.unlock",
   "platform.reconcile",
   "ai.view",
   "audit.view",
   "settings.manage",
 ];
 
-/** Role → granted permissions. Owner has everything. */
+/**
+ * Role → granted permissions. The owner has everything; the general manager
+ * has everything except reopening a locked period, which is the owner's alone.
+ *
+ * The database enforces the same matrix (role_permission, migration 0015).
+ * tests/permissions-sync.test.ts fails if the two ever differ.
+ */
 export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
   owner: new Set(ALL),
-  general_manager: new Set(ALL),
+  general_manager: new Set(ALL.filter((p) => p !== "accounting.period.unlock")),
   branch_manager: new Set<Permission>([
     "sale.create",
     "sale.refund",
@@ -81,6 +93,8 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "waste.approve",
     "purchase.create",
     "purchase.receive",
+    "expense.record",
+    "day.close",
     "platform.reconcile",
     "ai.view",
     "audit.view",
@@ -92,6 +106,7 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
   accountant: new Set<Permission>([
     "cost.view",
     "profit.view",
+    "expense.record",
     "accounting.post",
     "accounting.period.lock",
     "platform.reconcile",
