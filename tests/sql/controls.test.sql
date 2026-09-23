@@ -106,11 +106,13 @@ select test.eq((
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'execute')),
   'adjust_stock,approve_stock_count,close_day,create_item,create_product,create_supplier,current_app_user_id,'
-  'current_business_id,current_can_view_costs,current_has_permission,current_has_role,discard_journal,'
-  'invite_member,lock_period,my_profile,new_recipe_version,pay_bill,period_close_checklist,publish_journal,'
-  'receive_goods,record_bill,record_count,record_expense,record_sale,record_waste,refund_sale,reject_stock_count,'
-  'reverse_journal,review_stock_count,save_journal,set_member_active,set_price,start_stock_count,'
-  'submit_stock_count,unlock_period,void_sale', 'signed-in users can call exactly the intended API');
+  'current_business_id,current_can_view_costs,current_has_permission,current_has_role,dashboard_summary,'
+  'discard_journal,invite_member,lock_period,my_profile,new_recipe_version,pay_bill,period_close_checklist,'
+  'pos_catalogue,publish_journal,receive_goods,record_bill,record_count,record_expense,record_sale,record_waste,'
+  'refund_sale,reject_stock_count,report_daily_sales,report_day_totals,report_profit_and_loss,'
+  'report_reconciliation,report_trial_balance,reverse_journal,review_stock_count,save_journal,set_member_active,'
+  'set_price,start_stock_count,submit_stock_count,unlock_period,void_sale',
+  'signed-in users can call exactly the intended API');
 select test.eq((
   select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute'))::int,

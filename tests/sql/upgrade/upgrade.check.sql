@@ -53,3 +53,17 @@ select test.throws($$delete from journal_line where journal_entry_id = '11111111
                    '%published journal%', 'a legacy entry''s lines cannot be deleted');
 select test.throws($$update sales_order set cogs_amount = 1 where id = '44444444-0000-0000-0000-000000000001'$$,
                    '%immutable%', 'a legacy sale''s COGS cannot be rewritten');
+
+-- The reconciliation report makes the damaged history visible, to the dinar.
+-- Stock ledger: one receipt of 110,000. Inventory (1200) was debited 110,000
+-- by the receipt, 110,000 again by the raced duplicate, 110,000 by the bill
+-- (C-05), and credited 940 by a sale whose stock movement was never written:
+-- 329,060. Payables: two copies of INV-2207 (M-07) = 220,000 unpaid, while
+-- 2000 was credited three times = 330,000.
+select test.act_as('owner@example.com');
+create temp table rec as select * from report_reconciliation('2026-08-31');
+select test.eq((select difference from rec where check_key = 'inventory'), -219060::numeric,
+  'the legacy double count shows as a -219,060 inventory difference');
+select test.eq((select difference from rec where check_key = 'payables'), -110000::numeric,
+  'and a -110,000 payables difference');
+select test.as_admin();

@@ -117,6 +117,11 @@ for f in "${files[@]}"; do
   drop_db "$db"
 done
 
+# ----------------------------------------------------------- 3. concurrency
+if [ $# -eq 0 ]; then
+  if scripts/test-sql-concurrency.sh; then pass=$((pass + 1)); else fail=$((fail + 1)); fi
+fi
+
 echo
 echo "SQL tests: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
