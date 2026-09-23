@@ -286,6 +286,7 @@ grant execute on function
   refund_sale(uuid, text),
   receive_goods(uuid, jsonb, numeric, numeric, numeric, text, uuid),
   record_bill(uuid, text, date, numeric, int, uuid, text),
+  cancel_bill(uuid, text, date),
   pay_bill(uuid, numeric, text),
   record_expense(text, numeric, text, text, date),
   record_waste(uuid, numeric, text, movement_type, text, uuid),
@@ -306,6 +307,7 @@ grant execute on function
   publish_journal(uuid),
   discard_journal(uuid),
   reverse_journal(uuid, text, date),
+  post_control_correction(date, text, jsonb, text),
   period_close_checklist(uuid),
   lock_period(uuid, text),
   unlock_period(uuid, text)

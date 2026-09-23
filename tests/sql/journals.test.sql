@@ -58,3 +58,20 @@ select test.eq((select (max(journal_no) - min(journal_no) + 1)::int from journal
                 where business_id = '00000000-0000-0000-0000-0000000000b1' and journal_no is not null),
                (select count(*)::int from journal_entry where business_id = '00000000-0000-0000-0000-0000000000b1' and journal_no is not null),
                'published journals are numbered without gaps');
+
+-- Control accounts take a hand-posted correction only from the owner, with a
+-- reason on the audit trail (used to repair pre-control history).
+select test.act_as('manager@example.com');
+select test.throws($$select post_control_correction((select d from today), 'x', '[{"code":"1200","debit":5},{"code":"5400","credit":5}]', 'r')$$,
+  '%permission%', 'a manager cannot post to a control account');
+select test.act_as('owner@example.com');
+select test.throws($$select post_control_correction((select d from today), 'x', '[{"code":"1200","debit":5},{"code":"5400","credit":5}]', ' ')$$,
+  '%Say why%', 'the owner must give a reason');
+select test.throws($$select post_control_correction((select d from today), 'x', '[{"code":"1200","debit":5},{"code":"5400","credit":4}]', 'r')$$,
+  '%does not balance%', 'and it must balance like any entry');
+create temp table cc as select post_control_correction((select d from today), 'stock sold with no movement written',
+  '[{"code":"1200","debit":940},{"code":"5000","credit":940}]', 'legacy sale had no stock movement') as r;
+select test.ok((select (r->>'journal_no') is not null from cc), 'the owner''s correction is published and numbered');
+select test.as_admin();
+select test.eq((select reason from audit_log where action = 'journal.control_correction'), 'legacy sale had no stock movement',
+  'and the reason is on the audit trail');

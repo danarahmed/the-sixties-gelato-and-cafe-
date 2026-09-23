@@ -93,3 +93,35 @@ select test.eq((select sum(amount_total - paid_amount) from purchase_invoice whe
   -test.balance('2000'), 'unpaid bills reconcile to Accounts payable');
 select test.eq((select sum(value * sign(base_quantity_signed)) from inventory_movement where business_id = '00000000-0000-0000-0000-0000000000b1'),
   test.balance('1200'), 'stock ledger reconciles to Inventory');
+
+-- Cancelling a bill entered in error (M-07): the record stays, its journal is
+-- reversed, it stops being owed, and its number and receipt are free again.
+select test.act_as('manager@example.com');
+create temp table cancel_r3 as select receive_goods((select id from sup),
+  '[{"item_id":"c0000000-0000-0000-0000-000000000002","qty":10,"goods_value":500}]') as r;
+create temp table cancel_b3 as select record_bill((select id from sup), 'INV-777', current_date, 5000, 0,
+  (select (r->>'receipt_id')::uuid from cancel_r3)) as r;   -- typed 5,000 for a 500 delivery
+select test.throws($$select cancel_bill((select (r->>'bill_id')::uuid from cancel_b3), 'typed 5000 for 500')$$,
+  '%permission%', 'the person who buys cannot also cancel bills');
+select test.act_as('owner@example.com');
+select test.throws($$select cancel_bill((select (r->>'bill_id')::uuid from cancel_b3), '  ')$$, '%Say why%', 'a cancellation needs a reason');
+select cancel_bill((select (r->>'bill_id')::uuid from cancel_b3), 'typed 5000 for 500');
+select test.as_admin();
+select test.ok((select cancelled_at is not null and cancel_reason = 'typed 5000 for 500' from purchase_invoice
+                where id = (select (r->>'bill_id')::uuid from cancel_b3)), 'the bill is marked cancelled, with its reason — not deleted');
+select test.eq((select count(*) from journal_entry where reverses_entry =
+                 (select journal_entry_id from purchase_invoice where id = (select (r->>'bill_id')::uuid from cancel_b3)))::int,
+               1, 'its journal is reversed');
+select test.eq((select count(*) from audit_log where action = 'bill.cancel')::int, 1, 'and the cancellation is audited');
+select test.throws($$update purchase_invoice set cancelled_at = null, cancel_reason = null
+                     where id = (select (r->>'bill_id')::uuid from cancel_b3)$$, '%already cancelled%', 'a cancellation cannot be undone by hand');
+select test.act_as('owner@example.com');
+select test.throws($$select pay_bill((select (r->>'bill_id')::uuid from cancel_b3), 1, 'cash')$$, '%cancelled%', 'a cancelled bill cannot be paid');
+select test.throws($$select cancel_bill((select (r->>'bill_id')::uuid from cancel_b3), 'again')$$, '%already cancelled%', 'nor cancelled twice');
+select test.throws($$select cancel_bill((select (r->>'bill_id')::uuid from b1), 'x')$$, '%payments%', 'a bill with payments cannot be cancelled');
+create temp table cancel_b4 as select record_bill((select id from sup), 'INV-777', current_date, 500, 0,
+  (select (r->>'receipt_id')::uuid from cancel_r3)) as r;
+select test.eq(test.lines_of((select (r->>'bill_id')::uuid from cancel_b4)), '2000 Cr 500 | 2050 Dr 500',
+  'the corrected bill takes the same invoice number and the same receipt');
+select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from report_reconciliation(current_date)),
+  'grni=0,inventory=0,payables=0,sales=0', 'and the books still reconcile');

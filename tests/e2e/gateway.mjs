@@ -38,10 +38,19 @@ function verify(token) {
 const refresh = new Map(); // refresh token -> email
 function userObj(email) {
   return {
-    id: USERS[email], aud: "authenticated", role: "authenticated", email,
-    email_confirmed_at: "2026-01-01T00:00:00Z", phone: "", confirmed_at: "2026-01-01T00:00:00Z",
-    app_metadata: { provider: "email", providers: ["email"] }, user_metadata: {}, identities: [],
-    created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z", is_anonymous: false,
+    id: USERS[email],
+    aud: "authenticated",
+    role: "authenticated",
+    email,
+    email_confirmed_at: "2026-01-01T00:00:00Z",
+    phone: "",
+    confirmed_at: "2026-01-01T00:00:00Z",
+    app_metadata: { provider: "email", providers: ["email"] },
+    user_metadata: {},
+    identities: [],
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    is_anonymous: false,
   };
 }
 function session(email) {
@@ -50,11 +59,23 @@ function session(email) {
   refresh.set(rt, email);
   return {
     access_token: sign({
-      sub: USERS[email], email, role: "authenticated", aud: "authenticated", iat: now, exp: now + 3600,
-      session_id: crypto.randomUUID(), aal: "aal1", is_anonymous: false,
-      app_metadata: { provider: "email" }, user_metadata: {},
+      sub: USERS[email],
+      email,
+      role: "authenticated",
+      aud: "authenticated",
+      iat: now,
+      exp: now + 3600,
+      session_id: crypto.randomUUID(),
+      aal: "aal1",
+      is_anonymous: false,
+      app_metadata: { provider: "email" },
+      user_metadata: {},
     }),
-    token_type: "bearer", expires_in: 3600, expires_at: now + 3600, refresh_token: rt, user: userObj(email),
+    token_type: "bearer",
+    expires_in: 3600,
+    expires_at: now + 3600,
+    refresh_token: rt,
+    user: userObj(email),
   };
 }
 function send(res, code, obj) {
@@ -62,45 +83,70 @@ function send(res, code, obj) {
   res.end(obj === undefined ? "" : JSON.stringify(obj));
 }
 function body(req) {
-  return new Promise((r) => { let d = ""; req.on("data", (c) => (d += c)); req.on("end", () => r(d)); });
+  return new Promise((r) => {
+    let d = "";
+    req.on("data", (c) => (d += c));
+    req.on("end", () => r(d));
+  });
 }
 
-http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://127.0.0.1:${PORT}`);
-  if (url.pathname.startsWith("/rest/v1/")) {
-    const target = url.pathname.slice("/rest/v1".length) + url.search;
-    const headers = { ...req.headers, host: "127.0.0.1:54330" };
-    const up = http.request({ host: "127.0.0.1", port: 54330, path: target, method: req.method, headers }, (r) => {
-      res.writeHead(r.statusCode, r.headers);
-      r.pipe(res);
-    });
-    up.on("error", (e) => send(res, 502, { message: String(e) }));
-    req.pipe(up);
-    return;
-  }
-  if (url.pathname === "/auth/v1/token") {
-    const data = JSON.parse((await body(req)) || "{}");
-    const grant = url.searchParams.get("grant_type");
-    if (grant === "password") {
-      if (!USERS[data.email] || data.password !== PASSWORD)
-        return send(res, 400, { error: "invalid_grant", error_description: "Invalid login credentials", code: "invalid_credentials", msg: "Invalid login credentials" });
-      return send(res, 200, session(data.email));
+http
+  .createServer(async (req, res) => {
+    const url = new URL(req.url, `http://127.0.0.1:${PORT}`);
+    if (url.pathname.startsWith("/rest/v1/")) {
+      const target = url.pathname.slice("/rest/v1".length) + url.search;
+      const headers = { ...req.headers, host: "127.0.0.1:54330" };
+      const up = http.request(
+        { host: "127.0.0.1", port: 54330, path: target, method: req.method, headers },
+        (r) => {
+          res.writeHead(r.statusCode, r.headers);
+          r.pipe(res);
+        },
+      );
+      up.on("error", (e) => send(res, 502, { message: String(e) }));
+      req.pipe(up);
+      return;
     }
-    if (grant === "refresh_token") {
-      const email = refresh.get(data.refresh_token);
-      if (!email) return send(res, 400, { error: "invalid_grant", code: "refresh_token_not_found", msg: "Invalid Refresh Token" });
-      return send(res, 200, session(email));
+    if (url.pathname === "/auth/v1/token") {
+      const data = JSON.parse((await body(req)) || "{}");
+      const grant = url.searchParams.get("grant_type");
+      if (grant === "password") {
+        if (!USERS[data.email] || data.password !== PASSWORD)
+          return send(res, 400, {
+            error: "invalid_grant",
+            error_description: "Invalid login credentials",
+            code: "invalid_credentials",
+            msg: "Invalid login credentials",
+          });
+        return send(res, 200, session(data.email));
+      }
+      if (grant === "refresh_token") {
+        const email = refresh.get(data.refresh_token);
+        if (!email)
+          return send(res, 400, {
+            error: "invalid_grant",
+            code: "refresh_token_not_found",
+            msg: "Invalid Refresh Token",
+          });
+        return send(res, 200, session(email));
+      }
+      return send(res, 400, { msg: "unsupported grant" });
     }
-    return send(res, 400, { msg: "unsupported grant" });
-  }
-  if (url.pathname === "/auth/v1/user") {
-    const p = verify((req.headers.authorization || "").replace(/^Bearer /, ""));
-    if (!p || !p.email) return send(res, 401, { code: "bad_jwt", msg: "invalid JWT" });
-    return send(res, 200, userObj(p.email));
-  }
-  if (url.pathname === "/auth/v1/logout") return send(res, 204);
-  if (url.pathname === "/auth/v1/recover") return send(res, 200, {});
-  if (url.pathname === "/auth/v1/signup") return send(res, 200, { id: crypto.randomUUID(), email: "x", confirmation_sent_at: new Date().toISOString() });
-  if (url.pathname.startsWith("/auth/v1/.well-known/jwks.json")) return send(res, 200, { keys: [] });
-  send(res, 404, { msg: `not handled: ${url.pathname}` });
-}).listen(PORT, "127.0.0.1", () => console.log(`gateway on ${PORT}`));
+    if (url.pathname === "/auth/v1/user") {
+      const p = verify((req.headers.authorization || "").replace(/^Bearer /, ""));
+      if (!p || !p.email) return send(res, 401, { code: "bad_jwt", msg: "invalid JWT" });
+      return send(res, 200, userObj(p.email));
+    }
+    if (url.pathname === "/auth/v1/logout") return send(res, 204);
+    if (url.pathname === "/auth/v1/recover") return send(res, 200, {});
+    if (url.pathname === "/auth/v1/signup")
+      return send(res, 200, {
+        id: crypto.randomUUID(),
+        email: "x",
+        confirmation_sent_at: new Date().toISOString(),
+      });
+    if (url.pathname.startsWith("/auth/v1/.well-known/jwks.json"))
+      return send(res, 200, { keys: [] });
+    send(res, 404, { msg: `not handled: ${url.pathname}` });
+  })
+  .listen(PORT, "127.0.0.1", () => console.log(`gateway on ${PORT}`));

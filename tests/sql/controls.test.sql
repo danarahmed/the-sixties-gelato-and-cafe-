@@ -119,11 +119,11 @@ select test.eq((
   select string_agg(p.proname, ',' order by p.proname)
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'execute')),
-  'adjust_stock,approve_stock_count,close_day,create_item,create_product,create_supplier,current_app_user_id,'
+  'adjust_stock,approve_stock_count,cancel_bill,close_day,create_item,create_product,create_supplier,current_app_user_id,'
   'current_business_id,current_can_view_costs,current_has_permission,current_has_role,dashboard_summary,'
   'discard_journal,invite_member,list_members,lock_period,menu_costing,menu_recipe_lines,my_profile,'
   'new_recipe_version,pay_bill,period_close_checklist,'
-  'pos_catalogue,publish_journal,receive_goods,record_bill,record_count,record_expense,record_sale,record_waste,'
+  'pos_catalogue,post_control_correction,publish_journal,receive_goods,record_bill,record_count,record_expense,record_sale,record_waste,'
   'refund_sale,reject_stock_count,report_daily_sales,report_day_totals,report_profit_and_loss,'
   'report_reconciliation,report_trial_balance,reverse_journal,review_stock_count,save_journal,set_member_active,'
   'set_member_roles,set_price,start_stock_count,submit_stock_count,unlock_period,void_sale',

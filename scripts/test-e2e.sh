@@ -4,6 +4,8 @@
 # database built from the migrations, driven by a browser as each role.
 #
 #   PGHOST=127.0.0.1 PGPORT=5432 PGUSER=postgres scripts/test-e2e.sh
+#   scripts/test-e2e.sh flows          # one suite
+#   E2E_KEEP=1 scripts/test-e2e.sh ... # leave the servers up to investigate
 #
 # Needs: a PostgreSQL 15+ server you may create databases on (the same one
 # scripts/test-sql.sh uses), Node 20+, and Playwright with Chromium (set
@@ -25,6 +27,7 @@ PSQL=(psql -X -q -v ON_ERROR_STOP=1 --no-psqlrc)
 PIDS=()
 
 cleanup() {
+  if [ -n "${E2E_KEEP:-}" ]; then echo "(E2E_KEEP: servers left running; logs in $LOGS)"; return; fi
   for p in "${PIDS[@]}"; do kill "$p" 2>/dev/null || true; done
   "${PSQL[@]}" -d postgres -c "drop database if exists $E2E_DB with (force)" >/dev/null 2>&1 || true
 }
@@ -82,7 +85,9 @@ node_modules/.bin/next start -p 3100 >"$LOGS/next.log" 2>&1 & PIDS+=($!)
 for _ in $(seq 1 60); do curl -s -o /dev/null "$E2E_BASE/login" && break; sleep 0.5; done
 
 fail=0
-for t in pages flows retry offline; do
+suites=("$@")
+[ ${#suites[@]} -eq 0 ] && suites=(pages flows retry offline)
+for t in "${suites[@]}"; do
   node "tests/e2e/$t.e2e.mjs" || fail=1
 done
 [ "$fail" -eq 0 ] && echo "E2E: all passed" || { echo "E2E: failures (logs in $LOGS)"; exit 1; }

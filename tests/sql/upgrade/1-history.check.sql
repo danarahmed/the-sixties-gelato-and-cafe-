@@ -67,3 +67,8 @@ select test.eq((select difference from rec where check_key = 'inventory'), -2190
 select test.eq((select difference from rec where check_key = 'payables'), -110000::numeric,
   'and a -110,000 payables difference');
 select test.as_admin();
+
+-- Days the old app closed still count; a day it closed twice counts once.
+select test.eq((select count(*) from work_shift where business_day = '2026-08-10')::int, 1,
+  'the first close of 2026-08-10 carries its day; the duplicate close does not count twice');
+select test.eq((select count(*) from work_shift)::int, 2, 'and both closes stay on record');

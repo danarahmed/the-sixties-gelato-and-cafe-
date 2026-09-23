@@ -146,14 +146,18 @@ export async function getVendorBook(
     c.from("supplier").select("id,name,contact,phone").eq("is_active", true).order("name"),
     c
       .from("purchase_invoice")
-      .select("id,supplier_id,invoice_no,invoice_date,due_date,amount_total,paid_amount,legacy")
+      .select(
+        "id,supplier_id,invoice_no,invoice_date,due_date,amount_total,paid_amount,legacy,cancelled_at,cancel_reason",
+      )
       .order("invoice_date"),
     c
       .from("supplier_payment")
       .select("id,supplier_id,purchase_invoice_id,amount,paid_on,method")
       .order("paid_on"),
   ]);
-  const billRows = rows(bills, "bills");
+  const allBills = rows(bills, "bills");
+  // A cancelled bill stays on the statement for the record, but is not owed.
+  const billRows = allBills.filter((b) => !b.cancelled_at);
   const payRows = rows(payments, "payments");
   const supplierRows = rows(suppliers, "suppliers");
   const name = new Map(supplierRows.map((s) => [str(s.id), str(s.name)]));
@@ -190,6 +194,7 @@ export async function getVendorBook(
   const vendors: VendorRow[] = supplierRows.map((s) => {
     const id = str(s.id);
     const mine = billRows.filter((b) => str(b.supplier_id) === id);
+    const cancelled = allBills.filter((b) => b.cancelled_at && str(b.supplier_id) === id);
     const pays = payRows.filter((p) => str(p.supplier_id) === id);
     const lines: VendorLine[] = [
       ...mine.map((b) => ({
@@ -197,6 +202,13 @@ export async function getVendorBook(
         particulars: `Bill ${str(b.invoice_no)}`.trim() + (b.legacy ? " (before controls)" : ""),
         ref: b.due_date ? `Due ${str(b.due_date)}` : "",
         charge: num(b.amount_total),
+        payment: 0,
+      })),
+      ...cancelled.map((b) => ({
+        date: str(b.invoice_date),
+        particulars: `Bill ${str(b.invoice_no)} — cancelled: ${str(b.cancel_reason)}`,
+        ref: `was ${num(b.amount_total).toLocaleString("en-US")}`,
+        charge: 0,
         payment: 0,
       })),
       ...pays.map((p) => ({

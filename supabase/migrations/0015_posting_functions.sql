@@ -727,7 +727,7 @@ begin
   end if;
   -- Against every bill ever entered, including those before the controls (M-07).
   if exists (select 1 from purchase_invoice where business_id = v_business and supplier_id = p_supplier
-               and lower(invoice_no) = lower(trim(p_invoice_no))) then
+               and lower(invoice_no) = lower(trim(p_invoice_no)) and cancelled_at is null) then
     raise exception 'Invoice % from this supplier is already recorded', trim(p_invoice_no);
   end if;
 
@@ -738,7 +738,7 @@ begin
     if exists (select 1 from goods_receipt where id = p_receipt and supplier_id is distinct from p_supplier) then
       raise exception 'That receipt is from a different supplier';
     end if;
-    if exists (select 1 from purchase_invoice where goods_receipt_id = p_receipt) then
+    if exists (select 1 from purchase_invoice where goods_receipt_id = p_receipt and cancelled_at is null) then
       raise exception 'That receipt has already been billed';
     end if;
     v_grni := receipt_grni_value(p_receipt);
@@ -790,6 +790,7 @@ declare
 begin
   select * into b from purchase_invoice where id = p_bill and business_id = v_business for update;
   if not found then raise exception 'Bill not found'; end if;
+  if b.cancelled_at is not null then raise exception 'That bill was cancelled; it is not owed'; end if;
   if payment_account(p_method) is null then raise exception 'Pay by cash, card or bank transfer'; end if;
   v_amount := money_round(v_business, p_amount);
   if v_amount is null or v_amount <= 0 then raise exception 'Enter an amount greater than zero'; end if;
@@ -803,6 +804,40 @@ begin
   values (v_pay, v_business, b.supplier_id, b.id, v_amount, business_local_date(v_business, now()), lower(p_method), v_journal);
   return jsonb_build_object('payment_id', v_pay, 'journal_no', (select journal_no from journal_entry where id = v_journal),
     'outstanding', (select amount_total - paid_amount from purchase_invoice where id = p_bill));
+end $$;
+
+-- Cancel a bill entered in error — a duplicate, the wrong amount, the wrong
+-- supplier. Nothing is deleted: the bill stays on record with its reason, its
+-- journal is reversed as of the day the cancellation takes effect, it stops
+-- counting as owed, and its invoice number and receipt are free to be billed
+-- correctly (audit M-07). A bill with payments against it cannot be cancelled.
+create or replace function cancel_bill(p_bill uuid, p_reason text, p_date date default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_business uuid := require_permission('accounting.post');
+  b purchase_invoice; v_day date; v_at timestamptz; v_rev uuid;
+begin
+  if nullif(trim(p_reason), '') is null then raise exception 'Say why the bill is being cancelled'; end if;
+  select * into b from purchase_invoice where id = p_bill and business_id = v_business for update;
+  if not found then raise exception 'Bill not found'; end if;
+  if b.cancelled_at is not null then raise exception 'This bill is already cancelled'; end if;
+  if exists (select 1 from supplier_payment where purchase_invoice_id = p_bill) then
+    raise exception 'This bill has payments against it, so it cannot be cancelled';
+  end if;
+  v_day := coalesce(p_date, business_local_date(v_business, now()));
+  if v_day < b.invoice_date then raise exception 'A bill cannot be cancelled before its own date'; end if;
+  v_at := (v_day + time '12:00') at time zone (select timezone from business where id = v_business);
+  if b.journal_entry_id is not null
+     and exists (select 1 from journal_entry where id = b.journal_entry_id and status = 'published')
+     and not exists (select 1 from journal_entry where reverses_entry = b.journal_entry_id) then
+    v_rev := reverse_entry_internal(b.journal_entry_id, v_at,
+                                    'Cancelled bill ' || coalesce(b.invoice_no, '') || ': ' || trim(p_reason));
+  end if;
+  update purchase_invoice set cancelled_at = v_at, cancel_reason = trim(p_reason) where id = p_bill;
+  perform audit_event(v_business, 'bill.cancel', 'purchase_invoice', p_bill::text, p_reason,
+    jsonb_build_object('invoice_no', b.invoice_no, 'amount', b.amount_total, 'legacy', b.legacy),
+    jsonb_build_object('reversal', v_rev));
+  return jsonb_build_object('journal_no', (select journal_no from journal_entry where id = v_rev));
 end $$;
 
 -- =============================================================================
@@ -1345,6 +1380,29 @@ begin
   return jsonb_build_object('journal_no', (select journal_no from journal_entry where id = v_rev));
 end $$;
 
+-- The only way to post to a control account (1200, 2000, 2050, 3100) by hand:
+-- the owner alone, with a reason that goes on the audit trail. It exists to
+-- correct history recorded before the controls (docs/REMEDIATION.md); every
+-- other change to stock, payables or goods received goes through its own
+-- record, so the subledgers keep proving the ledger.
+create or replace function post_control_correction(p_date date, p_description text, p_lines jsonb, p_reason text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  v_business uuid := require_permission('accounting.period.unlock');
+  v_entry uuid;
+begin
+  if nullif(trim(p_reason), '') is null then raise exception 'Say why a control account is being corrected'; end if;
+  if nullif(trim(p_description), '') is null then raise exception 'Narrate the correction'; end if;
+  if p_lines is null or jsonb_array_length(p_lines) < 2 then raise exception 'A correction needs at least two lines'; end if;
+  v_entry := post_journal(v_business,
+    (coalesce(p_date, business_local_date(v_business, now())) + time '12:00')
+      at time zone (select timezone from business where id = v_business),
+    'Correction: ' || trim(p_description), 'correction', null, p_lines);
+  perform audit_event(v_business, 'journal.control_correction', 'journal_entry', v_entry::text, p_reason, null,
+                      jsonb_build_object('lines', p_lines));
+  return jsonb_build_object('journal_no', (select journal_no from journal_entry where id = v_entry));
+end $$;
+
 -- =============================================================================
 -- 13. Closing a period (audit H-08: the close blocks unresolved differences)
 -- =============================================================================
@@ -1403,14 +1461,16 @@ begin
   select coalesce(sum(b.amount_total), 0)
          - coalesce((select sum(sp.amount) from supplier_payment sp where sp.business_id = v_business
                       and sp.paid_on < p.ends_on + 1), 0)
-    into v from purchase_invoice b where b.business_id = v_business and b.invoice_date <= p.ends_on;
+    into v from purchase_invoice b where b.business_id = v_business and b.invoice_date <= p.ends_on
+                                    and (b.cancelled_at is null or b.cancelled_at >= v_end);
   g := -gl_balance_at(v_business, '2000', v_end);
   check_key := 'payables'; label := 'Unpaid bills agree with Accounts payable (2000)'; ok := v = g;
   detail := case when v <> g then format('unpaid bills %s, account 2000 %s, difference %s', v, g, v - g) end; return next;
 
   select coalesce(sum(receipt_grni_value(r.id)), 0) into v from goods_receipt r
    where r.business_id = v_business and r.received_at < v_end
-     and not exists (select 1 from purchase_invoice b where b.goods_receipt_id = r.id and b.invoice_date <= p.ends_on);
+     and not exists (select 1 from purchase_invoice b where b.goods_receipt_id = r.id and b.invoice_date <= p.ends_on
+                        and (b.cancelled_at is null or b.cancelled_at >= v_end));
   g := -gl_balance_at(v_business, '2050', v_end);
   check_key := 'grni'; label := 'Unbilled receipts agree with GRNI (2050)'; ok := v = g;
   detail := case when v <> g then format('unbilled receipts %s, account 2050 %s, difference %s', v, g, v - g) end; return next;

@@ -67,6 +67,10 @@ export default async function JournalsPage({
             accounts={accounts
               .filter((a) => a.isActive && !BLOCKED.has(a.code))
               .map((a) => ({ code: a.code, name: a.name }))}
+            controlAccounts={accounts
+              .filter((a) => a.isActive && BLOCKED.has(a.code))
+              .map((a) => ({ code: a.code, name: a.name }))}
+            canCorrect={has(profile, "accounting.period.unlock")}
             nextNo={nextNo}
             today={today}
             currency={profile.currency}

@@ -246,7 +246,11 @@ export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
       .eq("reference_type", "goods_receipt")
       .eq("type", "purchase_receipt")
       .in("reference_id", ids),
-    c.from("purchase_invoice").select("goods_receipt_id").in("goods_receipt_id", ids),
+    c
+      .from("purchase_invoice")
+      .select("goods_receipt_id")
+      .is("cancelled_at", null)
+      .in("goods_receipt_id", ids),
     c
       .from("journal_entry")
       .select("reference_id")

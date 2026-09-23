@@ -23,12 +23,21 @@ await page.locator(".product-tile", { hasText: "Golden espresso" }).click();
 await page.getByRole("button", { name: /Cash/ }).click();
 await page.getByRole("button", { name: "Retry" }).waitFor({ timeout: 10000 });
 check(dropped, "the answer to the first attempt was lost");
-check(Number(sql("select count(*) from sales_order")) === before + 1, "the sale did reach the database");
-check(await page.locator(".product-tile").first().isDisabled(), "the till freezes the cart until it is settled");
+check(
+  Number(sql("select count(*) from sales_order")) === before + 1,
+  "the sale did reach the database",
+);
+check(
+  await page.locator(".product-tile").first().isDisabled(),
+  "the till freezes the cart until it is settled",
+);
 
 await page.getByRole("button", { name: "Retry" }).click();
 await page.getByText("already been recorded").waitFor({ timeout: 10000 });
-check(Number(sql("select count(*) from sales_order")) === before + 1, "the retry records nothing new — one order");
+check(
+  Number(sql("select count(*) from sales_order")) === before + 1,
+  "the retry records nothing new — one order",
+);
 
 dropped = false;
 await page.locator(".product-tile", { hasText: "Golden espresso" }).click();
@@ -37,10 +46,16 @@ await page.getByRole("button", { name: "Retry" }).waitFor({ timeout: 10000 });
 await page.unroute("**/pos");
 await page.reload();
 await page.waitForLoadState("networkidle");
-check(await page.getByRole("button", { name: "Retry" }).isVisible(), "after a reload the unsettled sale still waits for its retry");
+check(
+  await page.getByRole("button", { name: "Retry" }).isVisible(),
+  "after a reload the unsettled sale still waits for its retry",
+);
 await page.getByRole("button", { name: "Retry" }).click();
 await page.getByText("already been recorded").waitFor({ timeout: 10000 });
-check(Number(sql("select count(*) from sales_order")) === before + 2, "and it too is recorded exactly once");
+check(
+  Number(sql("select count(*) from sales_order")) === before + 2,
+  "and it too is recorded exactly once",
+);
 
 await browser.close();
 done("retry");

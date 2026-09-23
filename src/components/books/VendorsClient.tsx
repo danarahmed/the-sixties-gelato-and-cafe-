@@ -2,7 +2,12 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createSupplierAction, payBillAction, recordBillAction } from "@/lib/actions/purchasing";
+import {
+  cancelBillAction,
+  createSupplierAction,
+  payBillAction,
+  recordBillAction,
+} from "@/lib/actions/purchasing";
 import { fmtIQD } from "@/lib/format";
 import { Notice } from "@/components/ui";
 import type { OpenBill, VendorRow } from "@/lib/db/books";
@@ -456,12 +461,13 @@ function Bills({
                 <th className="right">Total</th>
                 <th className="right">Outstanding</th>
                 <th className="right">Status</th>
+                {canPay && <th />}
               </tr>
             </thead>
             <tbody>
               {bills.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="muted" style={{ fontStyle: "italic" }}>
+                  <td colSpan={canPay ? 7 : 6} className="muted" style={{ fontStyle: "italic" }}>
                     Nothing outstanding.
                   </td>
                 </tr>
@@ -478,6 +484,13 @@ function Bills({
                         {b.daysOverdue > 0 ? `${b.daysOverdue}d overdue` : "Current"}
                       </span>
                     </td>
+                    {canPay && (
+                      <td className="right">
+                        {b.paid === 0 && (
+                          <CancelBill billId={b.id} invoiceNo={b.invoiceNo} onDone={onDone} />
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -601,5 +614,77 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
         </div>
       </div>
     </div>
+  );
+}
+
+/** Cancel a bill entered in error: it stays on record, its journal is reversed. */
+function CancelBill({
+  billId,
+  invoiceNo,
+  onDone,
+}: {
+  billId: string;
+  invoiceNo: string;
+  onDone: () => void;
+}) {
+  const [busy, start] = useTransition();
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const small = { minHeight: 26, padding: "0 8px", fontSize: ".72rem" };
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        style={small}
+        title="Entered in error — a duplicate or the wrong amount"
+      >
+        Cancel
+      </button>
+    );
+  }
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        gap: 6,
+        alignItems: "center",
+        flexWrap: "wrap",
+        justifyContent: "end",
+      }}
+    >
+      <input
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder={`Why cancel ${invoiceNo || "this bill"}?`}
+        style={{ minHeight: 26, width: 180, fontSize: ".78rem" }}
+        maxLength={300}
+        autoFocus
+      />
+      <button
+        className="btn-primary"
+        disabled={busy || !reason.trim()}
+        style={small}
+        onClick={() =>
+          start(async () => {
+            const r = await cancelBillAction({ billId, reason });
+            if (r.ok) {
+              setOpen(false);
+              onDone();
+            } else setErr(r.error);
+          })
+        }
+      >
+        {busy ? "…" : "Confirm"}
+      </button>
+      <button onClick={() => setOpen(false)} disabled={busy} style={small}>
+        Keep
+      </button>
+      {err && (
+        <span className="red" style={{ fontSize: ".72rem", flexBasis: "100%", textAlign: "end" }}>
+          {err}
+        </span>
+      )}
+    </span>
   );
 }

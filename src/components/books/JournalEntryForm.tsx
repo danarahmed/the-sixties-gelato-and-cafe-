@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Decimal from "decimal.js";
-import { saveJournalAction } from "@/lib/actions/books";
+import { postControlCorrectionAction, saveJournalAction } from "@/lib/actions/books";
 import { fmtIQD } from "@/lib/format";
 import { normaliseNumber } from "@/lib/validation";
 import { Notice } from "@/components/ui";
@@ -34,11 +34,16 @@ const amount = (v: string) => {
  */
 export function JournalEntryForm({
   accounts,
+  controlAccounts = [],
+  canCorrect = false,
   nextNo,
   today,
   currency,
 }: {
   accounts: AccountOption[];
+  /** Stock, payables, goods received, retained earnings: the owner's corrections only. */
+  controlAccounts?: AccountOption[];
+  canCorrect?: boolean;
   nextNo: number | null;
   today: string;
   currency: string;
@@ -52,6 +57,11 @@ export function JournalEntryForm({
   const [referenceNo, setReferenceNo] = useState("");
   const [notes, setNotes] = useState("");
   const [rows, setRows] = useState<Row[]>([{ ...emptyRow }, { ...emptyRow }]);
+  const [correction, setCorrection] = useState(false);
+  const [reason, setReason] = useState("");
+  const options = correction
+    ? [...accounts, ...controlAccounts].sort((a, b) => a.code.localeCompare(b.code))
+    : accounts;
 
   const totals = useMemo(() => {
     const debit = rows.reduce((s, r) => s.plus(amount(r.debit)), new Decimal(0));
@@ -65,7 +75,12 @@ export function JournalEntryForm({
 
   const usable = rows.filter((r) => r.code && (amount(r.debit).gt(0) || amount(r.credit).gt(0)));
   const canDraft = usable.length > 0 && notes.trim().length > 0;
-  const canPublish = canDraft && usable.length >= 2 && totals.difference === 0 && totals.debit > 0;
+  const canPublish =
+    canDraft &&
+    usable.length >= 2 &&
+    totals.difference === 0 &&
+    totals.debit > 0 &&
+    (!correction || reason.trim().length > 0);
 
   function setRow(i: number, patch: Partial<Row>) {
     setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
@@ -76,10 +91,36 @@ export function JournalEntryForm({
     setReferenceNo("");
     setReverseOn("");
     setDate(today);
+    setReason("");
+    setCorrection(false);
   }
 
   function save(publish: boolean) {
     setMsg(null);
+    if (correction) {
+      start(async () => {
+        const r = await postControlCorrectionAction({
+          date,
+          description: notes,
+          reason,
+          lines: usable.map((l) => ({
+            code: l.code,
+            memo: l.memo,
+            debit: l.debit || "0",
+            credit: l.credit || "0",
+          })),
+        });
+        if (r.ok) {
+          setMsg({
+            ok: true,
+            text: `Correction published as journal ${r.data.journalNo}; the reason is on the audit trail.`,
+          });
+          reset();
+          router.refresh();
+        } else setMsg({ ok: false, text: r.error });
+      });
+      return;
+    }
     start(async () => {
       const r = await saveJournalAction({
         date,
@@ -135,15 +176,17 @@ export function JournalEntryForm({
           <div className="sc">Date *</div>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </label>
-        <label>
-          <div className="sc">Reverse on (optional)</div>
-          <input
-            type="date"
-            value={reverseOn}
-            min={date}
-            onChange={(e) => setReverseOn(e.target.value)}
-          />
-        </label>
+        {!correction && (
+          <label>
+            <div className="sc">Reverse on (optional)</div>
+            <input
+              type="date"
+              value={reverseOn}
+              min={date}
+              onChange={(e) => setReverseOn(e.target.value)}
+            />
+          </label>
+        )}
         <label>
           <div className="sc">Journal #</div>
           <input
@@ -165,6 +208,41 @@ export function JournalEntryForm({
           <input value={currency} readOnly style={{ color: "var(--faint)" }} />
         </label>
       </div>
+
+      {canCorrect && (
+        <label
+          style={{
+            display: "flex",
+            gap: 6,
+            alignItems: "center",
+            marginBlockStart: 12,
+            fontSize: ".85rem",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={correction}
+            onChange={(e) => {
+              setCorrection(e.target.checked);
+              setReverseOn("");
+            }}
+          />
+          Correction to a control account (Inventory, payables, goods received, retained earnings) —
+          owner only, with a reason on the audit trail. For repairing history recorded before the
+          controls; see docs/REMEDIATION.md.
+        </label>
+      )}
+      {correction && (
+        <label style={{ display: "block", marginBlockStart: 8 }}>
+          <div className="sc">Reason for the correction *</div>
+          <input
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="What was wrong, and how this entry puts it right"
+            maxLength={500}
+          />
+        </label>
+      )}
 
       <label style={{ display: "block", marginBlockStart: 12 }}>
         <div className="sc">Notes *</div>
@@ -203,7 +281,7 @@ export function JournalEntryForm({
                 <td>
                   <select value={r.code} onChange={(e) => setRow(i, { code: e.target.value })}>
                     <option value="">Select an account</option>
-                    {accounts.map((a) => (
+                    {options.map((a) => (
                       <option key={a.code} value={a.code}>
                         {a.code} {a.name}
                       </option>
@@ -295,7 +373,7 @@ export function JournalEntryForm({
         <button className="btn-primary" onClick={() => save(true)} disabled={busy || !canPublish}>
           {busy ? "Saving…" : "Save and publish"}
         </button>
-        <button onClick={() => save(false)} disabled={busy || !canDraft}>
+        <button onClick={() => save(false)} disabled={busy || !canDraft || correction}>
           Save as draft
         </button>
         <button

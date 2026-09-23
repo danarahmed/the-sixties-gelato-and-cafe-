@@ -13,12 +13,22 @@ for (const locale of ["en", "ar", "ckb"]) {
   await page.locator(".product-tile").first().click();
   await ctx.setOffline(true);
   await page.waitForTimeout(300);
-  const banner = (await page.locator(".offline-banner").textContent().catch(() => "")) ?? "";
+  const banner =
+    (await page
+      .locator(".offline-banner")
+      .textContent()
+      .catch(() => "")) ?? "";
   check(banner.length > 0, `${locale}: offline banner — “${banner}”`);
-  check(await page.locator(".pos-grid button.btn-primary").first().isDisabled(), `${locale}: checkout is disabled`);
+  check(
+    await page.locator(".pos-grid button.btn-primary").first().isDisabled(),
+    `${locale}: checkout is disabled`,
+  );
   await ctx.setOffline(false);
   await page.waitForTimeout(300);
-  check((await page.locator(".offline-banner").count()) === 0, `${locale}: the banner clears when the connection returns`);
+  check(
+    (await page.locator(".offline-banner").count()) === 0,
+    `${locale}: the banner clears when the connection returns`,
+  );
   await ctx.close();
 }
 await browser.close();

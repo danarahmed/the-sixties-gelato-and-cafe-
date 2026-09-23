@@ -523,12 +523,16 @@ alter table goods_receipt add column if not exists receipt_no bigint;
 alter table purchase_invoice add column if not exists legacy boolean not null default true;
 alter table purchase_invoice alter column legacy set default false;
 alter table purchase_invoice add column if not exists expense_account_code text;
+-- A bill entered in error is cancelled, never deleted: the row stays, its
+-- journal is reversed, and it stops counting as owed (cancel_bill, 0015).
+alter table purchase_invoice add column if not exists cancelled_at timestamptz;
+alter table purchase_invoice add column if not exists cancel_reason text;
 
 create unique index if not exists purchase_invoice_unique_no
   on purchase_invoice (business_id, supplier_id, lower(invoice_no))
-  where invoice_no is not null and not legacy;
+  where invoice_no is not null and not legacy and cancelled_at is null;
 create unique index if not exists purchase_invoice_one_per_receipt
-  on purchase_invoice (goods_receipt_id) where goods_receipt_id is not null and not legacy;
+  on purchase_invoice (goods_receipt_id) where goods_receipt_id is not null and not legacy and cancelled_at is null;
 
 create or replace function trg_purchase_invoice_guard() returns trigger
 language plpgsql as $$
@@ -538,8 +542,22 @@ begin
   end if;
   if TG_OP = 'INSERT' then
     NEW.legacy := false;
-  elsif (to_jsonb(NEW) - 'paid_amount' - 'is_paid') is distinct from (to_jsonb(OLD) - 'paid_amount' - 'is_paid') then
+    NEW.cancelled_at := null;
+    NEW.cancel_reason := null;
+  elsif (to_jsonb(NEW) - 'paid_amount' - 'is_paid' - 'cancelled_at' - 'cancel_reason')
+        is distinct from (to_jsonb(OLD) - 'paid_amount' - 'is_paid' - 'cancelled_at' - 'cancel_reason') then
     raise exception 'A bill''s supplier, number, date and amount cannot change' using errcode = 'check_violation';
+  elsif (NEW.cancelled_at, NEW.cancel_reason) is distinct from (OLD.cancelled_at, OLD.cancel_reason) then
+    -- Cancelling is one-way, needs a reason, and only for a bill nothing was paid on.
+    if OLD.cancelled_at is not null then
+      raise exception 'This bill is already cancelled' using errcode = 'check_violation';
+    end if;
+    if NEW.cancelled_at is null or nullif(trim(NEW.cancel_reason), '') is null then
+      raise exception 'Cancelling a bill needs a date and a reason' using errcode = 'check_violation';
+    end if;
+    if exists (select 1 from supplier_payment where purchase_invoice_id = NEW.id) then
+      raise exception 'A bill with payments against it cannot be cancelled' using errcode = 'check_violation';
+    end if;
   end if;
   NEW.paid_amount := coalesce((select sum(amount) from supplier_payment where purchase_invoice_id = NEW.id), 0);
   NEW.is_paid := NEW.paid_amount >= NEW.amount_total;
@@ -645,6 +663,17 @@ create trigger stock_count_line_guard
 -- 8. Day close: once per trading day per location (audit C-06 day-close gap)
 -- =============================================================================
 alter table work_shift add column if not exists business_day date;
+-- Days the old app closed still count as closed. Where it closed a day twice,
+-- the first close stands; the duplicate keeps no day, so it can never count
+-- twice (and stays on record for review).
+update work_shift w set business_day = business_local_date(w.business_id, w.opened_at)
+ where w.closed_at is not null and w.business_day is null
+   and w.id = (select w2.id from work_shift w2
+                where w2.business_id = w.business_id and w2.location_id = w.location_id
+                  and w2.closed_at is not null
+                  and business_local_date(w2.business_id, w2.opened_at) = business_local_date(w.business_id, w.opened_at)
+                order by w2.closed_at, w2.id limit 1);
+set constraints all immediate;
 create unique index if not exists work_shift_one_close_per_day
   on work_shift (business_id, location_id, business_day)
   where business_day is not null and closed_at is not null;

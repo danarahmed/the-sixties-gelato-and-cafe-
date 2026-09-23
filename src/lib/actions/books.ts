@@ -194,3 +194,49 @@ export async function unlockPeriodAction(
   refresh(...BOOK_PATHS);
   return { ok: true, data: null };
 }
+
+const correctionInput = z.object({
+  date: day("The date"),
+  description: text("Notes", 500),
+  reason: text("The reason for correcting a control account", 500),
+  lines: z
+    .array(
+      z.object({
+        code: z.string().regex(/^\d{4}$/, "Choose an account on every line"),
+        memo: optionalText(200),
+        debit: nonNegative("Debit"),
+        credit: nonNegative("Credit"),
+      }),
+    )
+    .min(2, "A correction needs at least two lines"),
+});
+
+/**
+ * The owner's correction to a control account (Inventory, payables, goods
+ * received, retained earnings), with the reason on the audit trail — for
+ * repairing history recorded before the controls (docs/REMEDIATION.md).
+ */
+export async function postControlCorrectionAction(
+  input: z.input<typeof correctionInput>,
+): Promise<ActionResult<{ journalNo: number | null }>> {
+  const v = parse(correctionInput, input);
+  if (!v.ok) return v;
+  const lines = v.data.lines.filter((l) => Number(l.debit) > 0 || Number(l.credit) > 0);
+  const r = await callRpc<Record<string, unknown>>("post_control_correction", {
+    p_date: v.data.date,
+    p_description: v.data.description,
+    p_lines: lines.map((l) => ({
+      code: l.code,
+      debit: l.debit,
+      credit: l.credit,
+      memo: l.memo ?? "",
+    })),
+    p_reason: v.data.reason,
+  });
+  if (!r.ok) return r;
+  refresh(...BOOK_PATHS, "/inventory", "/vendors");
+  return {
+    ok: true,
+    data: { journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no) },
+  };
+}

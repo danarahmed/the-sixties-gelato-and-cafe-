@@ -90,7 +90,8 @@ begin
 
   check_key := 'payables'; label := 'Unpaid bills vs Accounts payable (2000)';
   select coalesce(sum(amount_total), 0) into subledger
-    from purchase_invoice where business_id = v_business and invoice_date < p_as_of + 1;
+    from purchase_invoice where business_id = v_business and invoice_date < p_as_of + 1
+                            and (cancelled_at is null or cancelled_at >= v_end);
   subledger := subledger - coalesce((select sum(amount) from supplier_payment
                                       where business_id = v_business and paid_on < p_as_of + 1), 0);
   ledger := -gl_balance_at(v_business, '2000', v_end);
@@ -100,7 +101,8 @@ begin
   select coalesce(sum(receipt_grni_value(r.id)), 0) into subledger
     from goods_receipt r
    where r.business_id = v_business and r.received_at < v_end
-     and not exists (select 1 from purchase_invoice p where p.goods_receipt_id = r.id and p.invoice_date < p_as_of + 1);
+     and not exists (select 1 from purchase_invoice p where p.goods_receipt_id = r.id and p.invoice_date < p_as_of + 1
+                        and (p.cancelled_at is null or p.cancelled_at >= v_end));
   ledger := -gl_balance_at(v_business, '2050', v_end);
   difference := subledger - ledger; return next;
 

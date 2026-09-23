@@ -20,7 +20,9 @@ export function done(what) {
 
 /** A query against the scratch database, as its superuser (ground truth). */
 export function sql(query) {
-  return execFileSync("psql", ["-X", "-At", "-d", process.env.E2E_DB || "sixties_e2e", "-c", query]).toString().trim();
+  return execFileSync("psql", ["-X", "-At", "-d", process.env.E2E_DB || "sixties_e2e", "-c", query])
+    .toString()
+    .trim();
 }
 
 /** A browser context signed in as one of the fixture people. */
@@ -31,7 +33,10 @@ export async function signIn(browser, who, options = {}) {
   await page.goto(`${BASE}/login`);
   await page.fill('input[name="email"]', `${who}@example.com`);
   await page.fill('input[name="password"]', PASSWORD);
-  await Promise.all([page.waitForURL((u) => !u.pathname.startsWith("/login")), page.click('button[type="submit"]')]);
+  await Promise.all([
+    page.waitForURL((u) => !u.pathname.startsWith("/login")),
+    page.click('button[type="submit"]'),
+  ]);
   return { ctx, page };
 }
 

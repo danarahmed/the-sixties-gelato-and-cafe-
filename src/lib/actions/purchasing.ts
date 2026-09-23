@@ -144,3 +144,24 @@ export async function payBillAction(
     },
   };
 }
+
+const cancelInput = z.object({ billId: id("a bill"), reason: text("A reason", 300) });
+
+/** A bill entered in error: kept on record, its journal reversed, no longer owed. */
+export async function cancelBillAction(
+  input: z.input<typeof cancelInput>,
+): Promise<ActionResult<{ journalNo: number | null }>> {
+  const v = parse(cancelInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("cancel_bill", {
+    p_bill: v.data.billId,
+    p_reason: v.data.reason,
+    p_date: null,
+  });
+  if (!r.ok) return r;
+  refresh(...BUY_PATHS);
+  return {
+    ok: true,
+    data: { journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no) },
+  };
+}
