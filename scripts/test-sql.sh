@@ -4,9 +4,10 @@
 #
 # Two phases:
 #
-#   1. Upgrade check. Applies migrations 0001..$PRODUCTION_HEAD (what the live
-#      database already has), loads production-shaped history written the way
-#      the old application wrote it, then applies every later migration on top
+#   1. Upgrade check. Applies the migrations the live database already has, in
+#      the order it had them (PRODUCTION_SEQUENCE), loads production-shaped
+#      history written the way the old application wrote it, then applies every
+#      later migration on top
 #      and runs tests/sql/upgrade/*.check.sql. This is the rehearsal for
 #      applying the migrations to production: it fails if they would not apply
 #      cleanly, or if they would alter or lose any existing record.
@@ -26,6 +27,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 export PGHOST="${PGHOST:-127.0.0.1}" PGPORT="${PGPORT:-5432}" PGUSER="${PGUSER:-postgres}"
 PRODUCTION_HEAD="${PRODUCTION_HEAD:-0013}"   # last migration applied to the live database
+# The live database's history, in the order it was applied (Supabase's
+# migration list): 0008 went in before 0007, and 0009 was never applied.
+PRODUCTION_SEQUENCE="${PRODUCTION_SEQUENCE:-0001 0002 0003 0004 0005 0006 0008 0007 0010 0011 0012 0013}"
 PSQL=(psql -X -q -v ON_ERROR_STOP=1 --no-psqlrc)
 
 run() { "${PSQL[@]}" -d "$1" -f "$2" 2>&1; }
@@ -56,6 +60,17 @@ apply_migrations() {
   done
 }
 
+# apply_sequence DB "0001 0002 …" — exactly these migrations, in this order.
+apply_sequence() {
+  local db=$1 n m
+  for n in $2; do
+    m=$(ls supabase/migrations/"$n"_*.sql)
+    if ! out=$(run_migration "$db" "$m"); then
+      echo "✗ migration failed: $m"; echo "$out" | grep -v NOTICE | head -20; return 1
+    fi
+  done
+}
+
 base_setup() {
   run "$1" tests/sql/harness/supabase_shim.sql >/dev/null
   run "$1" tests/sql/harness/assert.sql >/dev/null
@@ -65,10 +80,10 @@ pass=0; fail=0
 
 # --------------------------------------------------------------- 1. upgrade
 if [ $# -eq 0 ] && ls tests/sql/upgrade/*.check.sql >/dev/null 2>&1; then
-  echo "▸ upgrade rehearsal: 0001..$PRODUCTION_HEAD, production-shaped history, then the rest"
+  echo "▸ upgrade rehearsal: production's migration history, production-shaped data, then the rest"
   fresh_db sixties_upgrade
   base_setup sixties_upgrade
-  apply_migrations sixties_upgrade 0000 "$PRODUCTION_HEAD"
+  apply_sequence sixties_upgrade "$PRODUCTION_SEQUENCE"
   run sixties_upgrade supabase/seed/01_master.sql >/dev/null
   run sixties_upgrade supabase/seed/02_recipes.sql >/dev/null
   run sixties_upgrade tests/sql/harness/fixtures.sql >/dev/null
