@@ -96,7 +96,7 @@ create or replace function test.golden_catalogue() returns void
 language plpgsql as $$
 declare
   b uuid := '00000000-0000-0000-0000-0000000000b1';
-  loc uuid;
+  loc uuid; m record;
 begin
   perform test.as_admin();
   select id into loc from location where business_id = b and kind = 'branch' limit 1;
@@ -129,9 +129,15 @@ begin
     (b, 'd1000000-0000-0000-0000-000000000001', 'takeaway', 2500, '2020-01-01'),
     (b, 'd1000000-0000-0000-0000-000000000001', 'talabat', 3000, '2020-01-01'),
     (b, 'd1000000-0000-0000-0000-000000000002', 'dine_in', 1000, '2020-01-01');
-  -- The opening stock is in the books too, so subledger and GL start equal.
-  perform post_journal(b, now() - interval '1 minute', 'Opening stock (fixture)', 'fixture', null,
-    '[{"code":"1200","debit":21000},{"code":"3000","credit":21000}]'::jsonb);
+  -- The opening stock is in the books too, journaled the way the app journals
+  -- it — one entry per movement — so subledger and GL start equal and nothing
+  -- is mistaken for stock the old app never journaled.
+  for m in select id, value from inventory_movement
+            where business_id = b and type = 'opening_balance' and reason = 'fixture' loop
+    perform post_journal(b, now() - interval '1 minute', 'Opening stock (fixture)', 'inventory_movement', m.id,
+      jsonb_build_array(jsonb_build_object('code', '1200', 'debit', m.value),
+                        jsonb_build_object('code', '3000', 'credit', m.value)));
+  end loop;
 end $$;
 
 grant execute on all functions in schema test to public;

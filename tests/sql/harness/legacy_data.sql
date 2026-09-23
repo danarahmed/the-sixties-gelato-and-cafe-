@@ -8,7 +8,9 @@
 -- journal_no and no period_id, a receipt AND its bill both debiting Inventory
 -- (C-05), a card sale debited to Cash (H-03), a zero-priced sale with zero
 -- lines (the edge the new validator must not choke on), a raced duplicate
--- receipt journal (H-11), a doubled day close, and a duplicate invoice (M-07).
+-- receipt journal (H-11), a doubled day close, a duplicate invoice (M-07),
+-- stock records it never journaled, and a delivery posted straight to
+-- Accounts payable that still awaits its bill.
 -- =============================================================================
 \set biz '''00000000-0000-0000-0000-0000000000b1'''
 
@@ -104,6 +106,37 @@ insert into stock_count (id, business_id, location_id, count_type, status, is_bl
 values ('55555555-0000-0000-0000-000000000001', :biz, (select id from loc), 'cycle', 'approved', true);
 insert into stock_count_line (stock_count_id, item_id, expected_base, counted_base)
 select '55555555-0000-0000-0000-000000000001', id, 10000, 9950 from item where business_id = :biz and sku = 'MILK';
+
+-- Stock records the old app moved but never journaled: the count's variance,
+-- opening stock entered with an item, and a delivery it had not yet
+-- "carried forward" to the books.
+insert into inventory_movement (business_id, item_id, location_id, type, base_quantity_signed, unit_cost, value, reference_type, reference_id, occurred_at)
+select :biz, id, (select id from loc), 'count_adjustment', -50, 11, 550, 'stock_count', '55555555-0000-0000-0000-000000000001', '2026-08-20 18:00+03'
+from item where business_id = :biz and sku = 'MILK';
+insert into inventory_movement (business_id, item_id, location_id, type, base_quantity_signed, unit_cost, value, occurred_at)
+select :biz, id, (select id from loc), 'opening_balance', 10000, 2, 20000, '2026-08-01 08:00+03'
+from item where business_id = :biz and sku = 'SUGAR';
+insert into goods_receipt (id, business_id, location_id, note, received_at)
+values ('22222222-0000-0000-0000-000000000002', :biz, (select id from loc), 'Zagros Coffee Roasters', '2026-08-12 10:00+03');
+insert into inventory_movement (business_id, item_id, location_id, type, base_quantity_signed, unit_cost, value, reference_type, reference_id, occurred_at)
+select :biz, id, (select id from loc), 'purchase_receipt', 1000, 30, 30000, 'goods_receipt', '22222222-0000-0000-0000-000000000002', '2026-08-12 10:00+03'
+from item where business_id = :biz and sku = 'COFFEE';
+
+-- A delivery the old app did post — straight to Accounts payable, the way it
+-- did before goods-received-not-invoiced existed — whose invoice has not
+-- been entered yet. The old app kept the supplier's name in the note.
+insert into goods_receipt (id, business_id, location_id, note, received_at)
+values ('22222222-0000-0000-0000-000000000003', :biz, (select id from loc), 'Erbil Dairy Supply', '2026-08-14 10:00+03');
+insert into inventory_movement (business_id, item_id, location_id, type, base_quantity_signed, unit_cost, value, reference_type, reference_id, occurred_at)
+select :biz, id, (select id from loc), 'purchase_receipt', 25000, 2, 50000, 'goods_receipt', '22222222-0000-0000-0000-000000000003', '2026-08-14 10:00+03'
+from item where business_id = :biz and sku = 'MILK';
+insert into journal_entry (id, business_id, description, reference_type, reference_id, occurred_at)
+values ('11111111-0000-0000-0000-000000000009', :biz, 'Purchase received — Erbil Dairy Supply',
+        'goods_receipt', '22222222-0000-0000-0000-000000000003', '2026-08-14 10:05+03');
+insert into journal_line (journal_entry_id, account_id, debit, credit)
+select '11111111-0000-0000-0000-000000000009'::uuid, id,
+       case code when '1200' then 50000 else 0 end, case code when '2000' then 50000 else 0 end
+from acct where code in ('1200', '2000');
 
 -- Snapshot, so the upgrade check can prove history came through untouched.
 create table test.legacy_lines   as select journal_entry_id, account_id, debit, credit from journal_line;

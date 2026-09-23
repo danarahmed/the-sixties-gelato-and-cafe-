@@ -211,6 +211,29 @@ const correctionInput = z.object({
     .min(2, "A correction needs at least two lines"),
 });
 
+const legacyInput = z.object({ reason: text("A reason", 300) });
+
+/**
+ * Post the journals the old app never wrote for stock it moved — opening
+ * stock, deliveries, count variances, waste — exactly as the new app posts
+ * the same records. The owner's decision, once the records are reviewed.
+ */
+export async function postLegacyUnpostedAction(
+  input: z.input<typeof legacyInput>,
+): Promise<ActionResult<{ posted: number; total: number }>> {
+  const v = parse(legacyInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("post_legacy_unposted", {
+    p_reason: v.data.reason,
+  });
+  if (!r.ok) return r;
+  refresh(...BOOK_PATHS, "/inventory", "/vendors", "/purchasing");
+  return {
+    ok: true,
+    data: { posted: Number(r.data.posted ?? 0), total: Number(r.data.total ?? 0) },
+  };
+}
+
 /**
  * The owner's correction to a control account (Inventory, payables, goods
  * received, retained earnings), with the reason on the audit trail — for

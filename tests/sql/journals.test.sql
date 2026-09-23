@@ -36,6 +36,10 @@ select test.ok((select (r->>'journal_no') is not null from j1), 'a published jou
 
 -- A published journal is corrected only by reversing it — once.
 select test.throws($$select discard_journal((select (r->>'id')::uuid from j1))$$, '%Only a draft%', 'a published journal cannot be discarded');
+select test.throws($$select reverse_journal((select (r->>'id')::uuid from j1), 'too early', (select d from today) - 1)$$,
+  '%cannot be dated before the entry it reverses%', 'a reversal is never dated before its entry');
+select test.throws($$select reverse_journal((select (r->>'id')::uuid from j1), 'too late', (select d from today) + 1)$$,
+  '%has happened%', 'nor in the future');
 create temp table rv as select reverse_journal((select (r->>'id')::uuid from j1), 'Posted to the wrong period') as r;
 select test.as_admin();
 select test.eq((select string_agg(a.code || case when l.debit > 0 then ' Dr ' || l.debit else ' Cr ' || l.credit end, ' | ' order by a.code)
@@ -44,6 +48,21 @@ select test.eq((select string_agg(a.code || case when l.debit > 0 then ' Dr ' ||
   '1000 Cr 5000000 | 3000 Dr 5000000', 'the reversal mirrors the original');
 select test.act_as('owner@example.com');
 select test.throws($$select reverse_journal((select (r->>'id')::uuid from j1), 'again')$$, '%already been reversed%', 'reversed once only');
+select test.throws($$select reverse_journal((select id from journal_entry where reverses_entry = (select (r->>'id')::uuid from j1)), 'undo')$$,
+  '%reversal (post the entry again instead)%', 'a reversal is not itself reversed; the entry is posted again');
+
+-- A journal a record wrote is corrected through the record, never by
+-- reversing its journal: the sale and the ledger would disagree.
+select test.as_admin();
+select test.golden_catalogue();
+select test.act_as('cashier@example.com');
+create temp table sale as select record_sale(gen_random_uuid(), 'dine_in', 'cash',
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]') as r;
+grant select on sale to public;
+select test.act_as('owner@example.com');
+select test.throws($$select reverse_journal((select id from journal_entry where reference_type = 'sales_order'
+                                              and reference_id = (select (r->>'order_id')::uuid from sale)), 'wrong')$$,
+  '%was written by a sale (void or refund it on Orders)%', 'a sale''s journal is not reversed by hand');
 
 -- A scheduled reversal (accruals): posted now, reversed on the chosen date.
 create temp table j2 as select save_journal((select d from today), 'Accrued wages', '[{"code":"6100","debit":90000},{"code":"1000","credit":90000}]',

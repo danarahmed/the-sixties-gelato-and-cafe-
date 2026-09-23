@@ -327,6 +327,86 @@ console.log("▸ owner cancels a bill entered in error, and posts a control corr
   await ctx.close();
 }
 
+// --------------------------------------- history from before the upgrade
+console.log("▸ owner reviews and posts stock the old app never journaled, then bills the delivery");
+{
+  // Written the way the old app wrote them: stock moved, no journal, and no
+  // supplier on the receipt (the old app kept the supplier's name in the note).
+  const BIZ = "00000000-0000-0000-0000-0000000000b1";
+  const RECEIPT = "e2e00000-0000-0000-0000-000000000001";
+  sql(`
+    insert into goods_receipt (id, business_id, location_id, note, received_at)
+    select '${RECEIPT}', '${BIZ}', id, 'Old Dairy Co.', now() - interval '2 days'
+      from location where business_id = '${BIZ}' and kind = 'branch' limit 1;
+    insert into inventory_movement (business_id, item_id, location_id, type, base_quantity_signed,
+                                    unit_cost, value, reference_type, reference_id, occurred_at)
+    select '${BIZ}', i.id, r.location_id, 'purchase_receipt', 3000, 3, 9000, 'goods_receipt', r.id, r.received_at
+      from item i, goods_receipt r where i.business_id = '${BIZ}' and i.sku = 'MILK' and r.id = '${RECEIPT}';
+    insert into inventory_movement (business_id, item_id, location_id, type, base_quantity_signed,
+                                    unit_cost, value, occurred_at)
+    select '${BIZ}', i.id, r.location_id, 'opening_balance', 700, 10, 7000, r.received_at
+      from item i, goods_receipt r where i.business_id = '${BIZ}' and i.sku = 'SUGAR' and r.id = '${RECEIPT}';
+  `);
+  {
+    const { ctx, page } = await signIn(browser, "manager");
+    await open(page, "/reports");
+    const recon = await page.locator("#reconciliation").textContent();
+    check(
+      /Stock the old app never journaled/.test(recon) && /Only the owner can post them/.test(recon),
+      "a manager sees the unjournaled stock, but only the owner may post it",
+    );
+    await ctx.close();
+  }
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/reports");
+  await page
+    .getByPlaceholder("Why they are being posted (for the audit trail)")
+    .fill("e2e: real stock from before the upgrade");
+  await page.getByRole("button", { name: /Post these 2 journal/ }).click();
+  await page.getByText(/2 journal\(s\) posted/).waitFor({ timeout: 10000 });
+  check(
+    sql(
+      `select string_agg(a.code || case when l.debit > 0 then ' Dr ' || l.debit else ' Cr ' || l.credit end, ' | ' order by a.code)
+         from journal_entry e join journal_line l on l.journal_entry_id = e.id join gl_account a on a.id = l.account_id
+        where e.reference_type = 'goods_receipt' and e.reference_id = '${RECEIPT}'`,
+    ) === "1200 Dr 9000 | 2050 Cr 9000",
+    "the delivery is journaled as the new app journals one: Dr Inventory, Cr goods received not invoiced",
+  );
+  check(
+    sql("select count(*) from audit_log where action = 'legacy.post_unposted'") === "1",
+    "and the owner's decision is on the audit trail",
+  );
+  check(
+    !(await page.locator("#reconciliation").textContent()).includes(
+      "Stock the old app never journaled",
+    ),
+    "nothing is left to post",
+  );
+
+  await open(page, "/vendors");
+  await page.getByRole("button", { name: "Bills & payments" }).click();
+  const receiptSelect = page.locator("label", { hasText: "Goods receipt" }).locator("select");
+  const value = await receiptSelect
+    .locator("option", { hasText: "Before controls · Old Dairy Co." })
+    .getAttribute("value");
+  check(
+    value === RECEIPT,
+    "the old delivery, with no supplier recorded, can be billed from Vendors",
+  );
+  await receiptSelect.selectOption(RECEIPT);
+  await page.getByPlaceholder("INV-0012").fill("OLD-DAIRY-9");
+  await page.locator("label", { hasText: "Amount (IQD)" }).first().locator("input").fill("9000");
+  await page.getByRole("button", { name: "Record bill" }).click();
+  await page.getByText(/Bill OLD-DAIRY-9 recorded/).waitFor({ timeout: 10000 });
+  check(
+    sql(
+      `select count(*) from purchase_invoice where invoice_no = 'OLD-DAIRY-9' and goods_receipt_id = '${RECEIPT}'`,
+    ) === "1",
+    "and its bill clears it",
+  );
+  await ctx.close();
+}
+
 // ------------------------------------------------------- the ledger ties
 check(
   sql(

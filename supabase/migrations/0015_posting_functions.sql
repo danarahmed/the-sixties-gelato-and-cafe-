@@ -703,17 +703,37 @@ language sql stable as $$
      and je.status = 'published' and je.reverses_entry is null
 $$;
 
+-- The payable the old app credited to Accounts payable when a receipt's goods
+-- arrived, before goods-received-not-invoiced existed — net of any reversal of
+-- that journal. It is a real liability awaiting its bill: the payables check
+-- counts it until the bill is recorded against the receipt.
+create or replace function receipt_legacy_payable(p_receipt uuid, p_at timestamptz default 'infinity')
+returns numeric language sql stable as $$
+  select coalesce(sum(jl.credit - jl.debit), 0)
+    from journal_entry je
+    join journal_line jl on jl.journal_entry_id = je.id
+    join gl_account a on a.id = jl.account_id and a.code = '2000'
+   where je.status = 'published' and je.occurred_at < p_at
+     and je.id in (select o.id from journal_entry o
+                    where o.reference_type = 'goods_receipt' and o.reference_id = p_receipt and o.legacy
+                   union
+                   select r.id from journal_entry r join journal_entry o on o.id = r.reverses_entry
+                    where o.reference_type = 'goods_receipt' and o.reference_id = p_receipt and o.legacy)
+$$;
+
 -- Record a supplier's bill. Either it is for a receipt (stock): Dr GRNI for
 -- what the receipt raised, the difference to Purchase price variance, Cr A/P;
 -- or it is for something that is not stock: Dr the chosen account, Cr A/P.
--- A bill never debits Inventory on its own (audit C-05).
+-- A bill never debits Inventory on its own (audit C-05). A receipt from before
+-- the controls already credited A/P when the goods arrived: its bill records
+-- the invoice against that payable and posts only a difference in price.
 create or replace function record_bill(
   p_supplier uuid, p_invoice_no text, p_invoice_date date, p_amount numeric, p_term_days int default 0,
   p_receipt uuid default null, p_account_code text default null)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare
   v_business uuid := require_permission('purchase.create', 'accounting.post');
-  v_amount numeric; v_grni numeric; v_ppv numeric; v_bill uuid; v_journal uuid; v_lines jsonb;
+  v_amount numeric; v_grni numeric; v_legacy numeric; v_ppv numeric; v_bill uuid; v_journal uuid; v_lines jsonb;
   v_acct gl_account;
 begin
   if not exists (select 1 from supplier where id = p_supplier and business_id = v_business) then
@@ -735,21 +755,30 @@ begin
   if p_receipt is not null then
     perform 1 from goods_receipt where id = p_receipt and business_id = v_business for update;
     if not found then raise exception 'Receipt not found'; end if;
-    if exists (select 1 from goods_receipt where id = p_receipt and supplier_id is distinct from p_supplier) then
+    -- The old app did not record the supplier on a receipt; any supplier may bill those.
+    if exists (select 1 from goods_receipt where id = p_receipt and supplier_id <> p_supplier) then
       raise exception 'That receipt is from a different supplier';
     end if;
     if exists (select 1 from purchase_invoice where goods_receipt_id = p_receipt and cancelled_at is null) then
       raise exception 'That receipt has already been billed';
     end if;
     v_grni := receipt_grni_value(p_receipt);
-    if v_grni = 0 then
-      raise exception 'That receipt was recorded before goods-received-not-invoiced existed; its payable is already in Accounts payable (see docs/REMEDIATION.md)';
+    if v_grni > 0 then
+      v_ppv := v_amount - v_grni;
+      v_lines := jsonb_build_array(
+        jsonb_build_object('code', '2050', 'debit', v_grni),
+        jsonb_build_object('code', '5050', 'debit', greatest(v_ppv, 0), 'credit', greatest(-v_ppv, 0)),
+        jsonb_build_object('code', '2000', 'credit', v_amount));
+    else
+      v_legacy := receipt_legacy_payable(p_receipt);
+      if v_legacy <= 0 then
+        raise exception 'That receipt has no payable to bill against: its journal was reversed or never written (see docs/REMEDIATION.md)';
+      end if;
+      v_ppv := v_amount - v_legacy;
+      v_lines := case when v_ppv <> 0 then jsonb_build_array(
+        jsonb_build_object('code', '5050', 'debit', greatest(v_ppv, 0), 'credit', greatest(-v_ppv, 0)),
+        jsonb_build_object('code', '2000', 'debit', greatest(-v_ppv, 0), 'credit', greatest(v_ppv, 0))) end;
     end if;
-    v_ppv := v_amount - v_grni;
-    v_lines := jsonb_build_array(
-      jsonb_build_object('code', '2050', 'debit', v_grni),
-      jsonb_build_object('code', '5050', 'debit', greatest(v_ppv, 0), 'credit', greatest(-v_ppv, 0)),
-      jsonb_build_object('code', '2000', 'credit', v_amount));
   else
     select * into v_acct from gl_account where business_id = v_business and code = p_account_code and is_active;
     if not found or v_acct.account_type not in ('expense', 'asset')
@@ -761,9 +790,11 @@ begin
       jsonb_build_object('code', '2000', 'credit', v_amount));
   end if;
 
-  v_journal := post_journal(v_business, (coalesce(p_invoice_date, business_local_date(v_business, now())) + time '12:00')
-                                          at time zone (select timezone from business where id = v_business),
-    'Bill ' || trim(p_invoice_no), 'purchase_invoice', v_bill, v_lines, null, trim(p_invoice_no));
+  if v_lines is not null then
+    v_journal := post_journal(v_business, (coalesce(p_invoice_date, business_local_date(v_business, now())) + time '12:00')
+                                            at time zone (select timezone from business where id = v_business),
+      'Bill ' || trim(p_invoice_no), 'purchase_invoice', v_bill, v_lines, null, trim(p_invoice_no));
+  end if;
   insert into purchase_invoice (id, business_id, supplier_id, invoice_no, invoice_date, due_date, amount_total,
                                 goods_receipt_id, expense_account_code, journal_entry_id)
   values (v_bill, v_business, p_supplier, trim(p_invoice_no),
@@ -825,6 +856,7 @@ begin
     raise exception 'This bill has payments against it, so it cannot be cancelled';
   end if;
   v_day := coalesce(p_date, business_local_date(v_business, now()));
+  if v_day > business_local_date(v_business, now()) then raise exception 'Choose a date that has happened'; end if;
   if v_day < b.invoice_date then raise exception 'A bill cannot be cancelled before its own date'; end if;
   v_at := (v_day + time '12:00') at time zone (select timezone from business where id = v_business);
   if b.journal_entry_id is not null
@@ -1361,19 +1393,53 @@ begin
   delete from journal_entry where id = p_entry;
 end $$;
 
--- The one way to correct any published entry, including legacy ones.
+-- Entries that no record stands behind, which may be reversed by hand.
+create or replace function journal_reversible_by_hand(p_ref_type text) returns boolean
+language sql immutable as $$ select coalesce(p_ref_type, '') in ('manual', 'correction', 'expense', 'year_end_close') $$;
+
+create or replace function journal_source_hint(p_ref_type text) returns text
+language sql immutable as $$
+  select case p_ref_type
+    when 'sales_order' then 'a sale (void or refund it on Orders)'
+    when 'sale_adjustment' then 'a refund'
+    when 'goods_receipt' then 'a goods receipt'
+    when 'purchase_invoice' then 'a bill (cancel it on Vendors)'
+    when 'supplier_payment' then 'a supplier payment'
+    when 'inventory_movement' then 'a stock record (correct stock with a count or a stock correction)'
+    when 'stock_count' then 'a stock count (correct stock with a new count)'
+    when 'work_shift' then 'a day close (post a journal to 6300 Cash over/short)'
+    when 'reversal' then 'a reversal (post the entry again instead)'
+    else 'a record of type ' || coalesce(p_ref_type, 'unknown') end
+$$;
+
+-- The one way to correct a published entry by hand: manual journals,
+-- expenses, corrections, and every entry from before the controls.
 create or replace function reverse_journal(p_entry uuid, p_reason text, p_date date default null) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
   v_business uuid := require_permission('accounting.post');
-  v_rev uuid;
+  v_rev uuid; e journal_entry; v_day date;
 begin
   if nullif(trim(p_reason), '') is null then raise exception 'Say why the journal is being reversed'; end if;
-  if not exists (select 1 from journal_entry where id = p_entry and business_id = v_business) then
-    raise exception 'Journal not found';
+  select * into e from journal_entry where id = p_entry and business_id = v_business;
+  if not found then raise exception 'Journal not found'; end if;
+  -- Dated when the correction belongs — the month being corrected — but never
+  -- before the entry itself, nor in the future.
+  v_day := coalesce(p_date, business_local_date(v_business, now()));
+  if v_day > business_local_date(v_business, now()) then raise exception 'Choose a date that has happened'; end if;
+  if v_day < business_local_date(v_business, e.occurred_at) then
+    raise exception 'A reversal cannot be dated before the entry it reverses (%)', business_local_date(v_business, e.occurred_at);
+  end if;
+  -- A journal written by a record (a sale, a receipt, a bill, a payment, a
+  -- stock movement, a count, a day close) is corrected through that record, so
+  -- the record and the ledger never disagree. Entries from before the
+  -- controls may be reversed: that is how their history is corrected.
+  if not e.legacy and not journal_reversible_by_hand(e.reference_type) then
+    raise exception 'Journal % was written by %; correct it there, not by reversing the journal',
+      e.journal_no, journal_source_hint(e.reference_type);
   end if;
   v_rev := reverse_entry_internal(p_entry,
-    (coalesce(p_date, business_local_date(v_business, now())) + time '12:00') at time zone (select timezone from business where id = v_business),
+    (v_day + time '12:00') at time zone (select timezone from business where id = v_business),
     'Reversal: ' || trim(p_reason));
   perform audit_event(v_business, 'journal.reverse', 'journal_entry', p_entry::text, p_reason, null,
                       jsonb_build_object('reversal', v_rev));
@@ -1401,6 +1467,95 @@ begin
   perform audit_event(v_business, 'journal.control_correction', 'journal_entry', v_entry::text, p_reason, null,
                       jsonb_build_object('lines', p_lines));
   return jsonb_build_object('journal_no', (select journal_no from journal_entry where id = v_entry));
+end $$;
+
+-- Stock records the old app never journaled, each with the journal the new app
+-- writes for the same record: opening stock (Dr Inventory, Cr Owner equity),
+-- goods received (Dr Inventory, Cr GRNI — so the supplier's bill clears it),
+-- count variances and stock corrections (5400), and waste (5300). The new app
+-- journals every one of these in the same transaction, so a record without
+-- its journal is one the old app left. Until they are posted, the
+-- reconciliation shows them as an Inventory difference (docs/REMEDIATION.md).
+create or replace function legacy_unposted_internal(p_business uuid)
+returns table (kind text, ref_type text, ref_id uuid, at timestamptz, description text, amount numeric, lines jsonb)
+language sql stable as $$
+  select 'opening_stock', 'inventory_movement', m.id, m.occurred_at, 'Opening stock: ' || i.name, m.value,
+         jsonb_build_array(jsonb_build_object('code', '1200', 'debit', m.value),
+                           jsonb_build_object('code', '3000', 'credit', m.value))
+    from inventory_movement m join item i on i.id = m.item_id
+   where m.business_id = p_business and m.type = 'opening_balance' and m.value > 0
+     and not exists (select 1 from journal_entry j where j.reference_type = 'inventory_movement' and j.reference_id = m.id)
+  union all
+  select 'goods_received', 'goods_receipt', r.id, r.received_at,
+         'Goods received — ' || coalesce(s.name, nullif(trim(r.note), ''), 'receipt'), v.total,
+         jsonb_build_array(jsonb_build_object('code', '1200', 'debit', v.total),
+                           jsonb_build_object('code', '2050', 'credit', v.total))
+    from goods_receipt r
+    left join supplier s on s.id = r.supplier_id
+    cross join lateral (select coalesce(sum(m.value), 0) total from inventory_movement m
+                         where m.reference_type = 'goods_receipt' and m.reference_id = r.id
+                           and m.type = 'purchase_receipt') v
+   where r.business_id = p_business and v.total > 0
+     and not exists (select 1 from journal_entry j where j.reference_type = 'goods_receipt' and j.reference_id = r.id)
+  union all
+  select 'count_variance', 'stock_count', c.id, v.at, 'Stock count variance', abs(v.net),
+         case when v.net < 0
+           then jsonb_build_array(jsonb_build_object('code', '5400', 'debit', -v.net), jsonb_build_object('code', '1200', 'credit', -v.net))
+           else jsonb_build_array(jsonb_build_object('code', '1200', 'debit', v.net), jsonb_build_object('code', '5400', 'credit', v.net)) end
+    from stock_count c
+    cross join lateral (select coalesce(sum(m.value * sign(m.base_quantity_signed)), 0) net, max(m.occurred_at) at
+                          from inventory_movement m
+                         where m.reference_type = 'stock_count' and m.reference_id = c.id
+                           and m.type = 'count_adjustment') v
+   where c.business_id = p_business and v.net <> 0
+     and not exists (select 1 from journal_entry j where j.reference_type = 'stock_count' and j.reference_id = c.id)
+     and not exists (select 1 from journal_entry j join inventory_movement m on m.id = j.reference_id
+                      where j.reference_type = 'inventory_movement'
+                        and m.reference_type = 'stock_count' and m.reference_id = c.id)
+  union all
+  select case when m.type = 'manual_correction' then 'stock_correction' else 'waste' end,
+         'inventory_movement', m.id, m.occurred_at,
+         initcap(replace(m.type::text, '_', ' ')) || ': ' || i.name, m.value,
+         case when m.type <> 'manual_correction'
+             then jsonb_build_array(jsonb_build_object('code', '5300', 'debit', m.value), jsonb_build_object('code', '1200', 'credit', m.value))
+           when m.base_quantity_signed < 0
+             then jsonb_build_array(jsonb_build_object('code', '5400', 'debit', m.value), jsonb_build_object('code', '1200', 'credit', m.value))
+           else jsonb_build_array(jsonb_build_object('code', '1200', 'debit', m.value), jsonb_build_object('code', '5400', 'credit', m.value)) end
+    from inventory_movement m join item i on i.id = m.item_id
+   where m.business_id = p_business and m.value > 0
+     and m.type in ('waste', 'spoilage', 'expired', 'damaged', 'melt_evaporation', 'staff_consumption',
+                    'complimentary', 'sampling', 'manual_correction')
+     and not exists (select 1 from journal_entry j where j.reference_type = 'inventory_movement' and j.reference_id = m.id)
+$$;
+
+-- What the owner reviews before posting them.
+create or replace function legacy_unposted()
+returns table (kind text, ref_type text, ref_id uuid, at timestamptz, description text, amount numeric, lines jsonb)
+language plpgsql stable security definer set search_path = public as $$
+declare v_business uuid := require_permission('cost.view');
+begin
+  return query select u.* from legacy_unposted_internal(v_business) u order by u.at, u.description;
+end $$;
+
+-- Post them, oldest first, each dated when its record happened. The owner
+-- alone, with a reason on the audit trail: it writes to Inventory and GRNI.
+create or replace function post_legacy_unposted(p_reason text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_business uuid := require_permission('accounting.period.unlock');
+  r record; n int := 0; v_total numeric := 0;
+begin
+  if nullif(trim(p_reason), '') is null then raise exception 'Say why these records are being posted'; end if;
+  perform 1 from business where id = v_business for update;   -- one run at a time
+  for r in select * from legacy_unposted_internal(v_business) u order by u.at, u.description loop
+    perform post_journal(v_business, r.at, r.description || ' (the old app never journaled it)',
+                         r.ref_type, r.ref_id, r.lines);
+    n := n + 1; v_total := v_total + r.amount;
+  end loop;
+  if n = 0 then raise exception 'There is nothing left to post'; end if;
+  perform audit_event(v_business, 'legacy.post_unposted', 'business', v_business::text, p_reason, null,
+                      jsonb_build_object('records', n, 'total', v_total));
+  return jsonb_build_object('posted', n, 'total', v_total);
 end $$;
 
 -- =============================================================================
@@ -1463,6 +1618,11 @@ begin
                       and sp.paid_on < p.ends_on + 1), 0)
     into v from purchase_invoice b where b.business_id = v_business and b.invoice_date <= p.ends_on
                                     and (b.cancelled_at is null or b.cancelled_at >= v_end);
+  v := v + coalesce((select sum(receipt_legacy_payable(r.id, v_end)) from goods_receipt r
+                      where r.business_id = v_business and r.received_at < v_end
+                        and not exists (select 1 from purchase_invoice b where b.goods_receipt_id = r.id
+                                          and b.invoice_date <= p.ends_on
+                                          and (b.cancelled_at is null or b.cancelled_at >= v_end))), 0);
   g := -gl_balance_at(v_business, '2000', v_end);
   check_key := 'payables'; label := 'Unpaid bills agree with Accounts payable (2000)'; ok := v = g;
   detail := case when v <> g then format('unpaid bills %s, account 2000 %s, difference %s', v, g, v - g) end; return next;

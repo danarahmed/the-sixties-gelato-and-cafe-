@@ -2,7 +2,14 @@ import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getDailySales, getVendorBook, ageBills } from "@/lib/db/books";
-import { getMenuCosting, getProfitAndLoss, getReconciliation, pnlTotals } from "@/lib/db/reports";
+import {
+  getLegacyUnposted,
+  getMenuCosting,
+  getProfitAndLoss,
+  getReconciliation,
+  pnlTotals,
+} from "@/lib/db/reports";
+import { LegacyPostings } from "@/components/books/LegacyPostings";
 import { channelLabel, fmtIQD } from "@/lib/format";
 import { addDays, businessToday, monthEnd, monthStart, parseDay, yearStart } from "@/lib/dates";
 import type { SalesChannel } from "@domain/sales/recipe.js";
@@ -22,12 +29,13 @@ export default async function ReportsPage({
   const to = parseDay(sp.to, today);
   const seesProfit = has(profile, "profit.view");
 
-  const [pnl, rec, sales, book, menu] = await Promise.all([
+  const [pnl, rec, sales, book, menu, unposted] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
     getReconciliation(to),
     getDailySales(from, to),
     getVendorBook(today),
     getMenuCosting(),
+    getLegacyUnposted(),
   ]);
   const totals = pnlTotals(pnl);
   const ageing = ageBills(book.openBills);
@@ -124,8 +132,13 @@ export default async function ReportsPage({
         >
           {unreconciled.length === 0
             ? "Every subledger agrees with its control account."
-            : `${unreconciled.length} difference(s). A period cannot be locked while its checks fail. Differences that predate the controls are explained in docs/REMEDIATION.md and are corrected by reversing journals, never by editing history.`}
+            : `${unreconciled.length} difference(s). A period cannot be locked while its checks fail. Differences that predate the controls are explained in docs/REMEDIATION.md and are corrected by new, dated entries — reversals, cancelled bills, the owner's corrections — never by editing history.`}
         </p>
+        <LegacyPostings
+          records={unposted}
+          canPost={has(profile, "accounting.period.unlock")}
+          timezone={profile.timezone}
+        />
       </section>
 
       {/* ---- Profit & Loss ---- */}

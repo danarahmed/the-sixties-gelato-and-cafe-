@@ -145,7 +145,11 @@ export async function payBillAction(
   };
 }
 
-const cancelInput = z.object({ billId: id("a bill"), reason: text("A reason", 300) });
+const cancelInput = z.object({
+  billId: id("a bill"),
+  reason: text("A reason", 300),
+  date: day("The date"),
+});
 
 /** A bill entered in error: kept on record, its journal reversed, no longer owed. */
 export async function cancelBillAction(
@@ -156,7 +160,7 @@ export async function cancelBillAction(
   const r = await callRpc<Record<string, unknown>>("cancel_bill", {
     p_bill: v.data.billId,
     p_reason: v.data.reason,
-    p_date: null,
+    p_date: v.data.date,
   });
   if (!r.ok) return r;
   refresh(...BUY_PATHS);

@@ -222,8 +222,17 @@ export interface ReceiptRow {
   value: number;
   lineCount: number;
   billed: boolean;
-  /** Received through the controlled path (posted to GRNI), so it can be billed against. */
+  /**
+   * Has a journal to bill against and no bill yet: goods received not invoiced
+   * (the new app), or the payable the old app posted straight to Accounts
+   * payable when the goods arrived.
+   */
   billable: boolean;
+  /** Received before the controls. The old app kept the supplier's name in the note. */
+  legacy: boolean;
+  /** Received before the controls and never journaled: the owner posts it from Reports. */
+  unjournaled: boolean;
+  note: string | null;
 }
 
 export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
@@ -231,7 +240,9 @@ export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
   const receipts = rows(
     await c
       .from("goods_receipt")
-      .select("id,receipt_no,received_at,supplier_id,freight_total,other_landed_total,rebate_total")
+      .select(
+        "id,receipt_no,received_at,supplier_id,freight_total,other_landed_total,rebate_total,note",
+      )
       .order("received_at", { ascending: false })
       .limit(limit),
     "goods receipts",
@@ -253,13 +264,27 @@ export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
       .in("goods_receipt_id", ids),
     c
       .from("journal_entry")
-      .select("reference_id")
+      .select("id,reference_id,legacy")
       .eq("reference_type", "goods_receipt")
       .eq("status", "published")
-      .eq("legacy", false)
       .in("reference_id", ids),
     c.from("supplier").select("id,name"),
   ]);
+  const receiptJournals = rows(journals, "receipt journals");
+  const reversedIds = new Set(
+    rows(
+      receiptJournals.length === 0
+        ? { data: [], error: null }
+        : await c
+            .from("journal_entry")
+            .select("reverses_entry")
+            .in(
+              "reverses_entry",
+              receiptJournals.map((j) => str(j.id)),
+            ),
+      "reversed receipt journals",
+    ).map((r) => str(r.reverses_entry)),
+  );
   const goods = new Map<string, { value: number; count: number }>();
   for (const l of rows(lines, "receipt lines")) {
     const k = str(l.goods_receipt_id);
@@ -271,7 +296,15 @@ export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
     valued.set(str(m.reference_id), (valued.get(str(m.reference_id)) ?? 0) + num(m.value));
   }
   const billed = new Set(rows(bills, "bills").map((b) => str(b.goods_receipt_id)));
-  const controlled = new Set(rows(journals, "receipt journals").map((j) => str(j.reference_id)));
+  const controlled = new Set(
+    receiptJournals.filter((j) => !j.legacy).map((j) => str(j.reference_id)),
+  );
+  const legacyPosted = new Set(
+    receiptJournals
+      .filter((j) => j.legacy && !reversedIds.has(str(j.id)))
+      .map((j) => str(j.reference_id)),
+  );
+  const journaled = new Set(receiptJournals.map((j) => str(j.reference_id)));
   const supplierName = new Map(rows(suppliers, "suppliers").map((s) => [str(s.id), str(s.name)]));
   return receipts.map((r) => {
     const id = str(r.id);
@@ -287,7 +320,10 @@ export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
       value: valued.get(id) ?? 0,
       lineCount: g.count,
       billed: billed.has(id),
-      billable: controlled.has(id) && !billed.has(id),
+      billable: (controlled.has(id) || legacyPosted.has(id)) && !billed.has(id),
+      legacy: !controlled.has(id),
+      unjournaled: !journaled.has(id),
+      note: strOrNull(r.note),
     };
   });
 }

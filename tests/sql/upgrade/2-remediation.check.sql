@@ -15,9 +15,17 @@ select test.act_as('owner@example.com');
 
 -- Before: the damage, as the reconciliation reports it.
 select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from report_reconciliation('2026-08-31')),
-  'grni=0,inventory=-219060,payables=-110000,sales=0', 'before: the legacy damage is visible');
+  'grni=0,inventory=-169610,payables=110000,sales=0', 'before: the legacy damage is visible');
 select test.throws($$select lock_period((select id from accounting_period where name = '2026-08'))$$,
   '%cannot be locked yet%', 'before: August cannot be locked over it');
+
+-- Step 0. Stock the old app moved but never journaled: post the journals the
+-- new app writes for the same records, each dated when it happened.
+select test.eq((select (r ->> 'posted')::int from (select post_legacy_unposted('Opening stock, a delivery and a count variance the old app never journaled') r) x),
+  3, 'the three unjournaled records are posted');
+select test.throws($$select post_legacy_unposted('again')$$, '%nothing left%', 'and cannot be posted twice');
+select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from report_reconciliation('2026-08-31')),
+  'grni=0,inventory=-219060,payables=110000,sales=0', 'what remains is the damage in the ledger itself');
 
 -- Step 1. A raced duplicate journal: reverse it.
 select reverse_journal('11111111-0000-0000-0000-000000000003',
@@ -30,6 +38,19 @@ select reverse_journal('11111111-0000-0000-0000-000000000002',
 
 -- Step 3. An invoice entered twice: cancel the copy.
 select cancel_bill((select id from dup_bill), 'INV-2207 was entered twice', '2026-08-31');
+
+-- Step 3b. The invoices for two deliveries arrive. The one the old app posted
+-- straight to payables is billed against that payable: only the 2,000
+-- difference in price is posted. The one whose journal was posted in step 0
+-- is billed like any receipt, clearing its GRNI.
+create temp table legacy_bill as select record_bill((select id from supplier where business_id = '00000000-0000-0000-0000-0000000000b1' order by name limit 1),
+  'INV-3001', '2026-08-20', 52000, 0, '22222222-0000-0000-0000-000000000003', null) as r;
+select record_bill((select id from supplier where business_id = '00000000-0000-0000-0000-0000000000b1' order by name limit 1),
+  'INV-3002', '2026-08-21', 30000, 0, '22222222-0000-0000-0000-000000000002', null);
+select test.eq((select (r ->> 'price_variance')::numeric from legacy_bill), 2000::numeric,
+  'the old receipt''s bill posts only its price difference');
+select test.eq(test.lines_of((select id from purchase_invoice where invoice_no = 'INV-3001')),
+  '2000 Cr 2000 | 5050 Dr 2000', 'Dr purchase price variance, Cr payables, 2,000 — the rest was posted on receipt');
 
 -- Step 4. A sale whose cost reached the ledger but whose stock movement was
 -- never written: the owner's control correction, with the reason recorded.
@@ -62,5 +83,6 @@ select test.eq((select count(*) from test.legacy_lines l
                0, 'and not one published line recorded before the controls was changed to get here');
 select test.eq((select count(*) from purchase_invoice where invoice_no = 'INV-2207')::int, 2,
   'the duplicate invoice is still on record, marked cancelled');
-select test.eq((select count(*) from audit_log where action in ('journal.reverse', 'bill.cancel', 'journal.control_correction'))::int,
-  4, 'and every correction is on the audit trail');
+select test.eq((select count(*) from audit_log where action in ('journal.reverse', 'bill.cancel', 'journal.control_correction',
+                                                              'legacy.post_unposted'))::int,
+  5, 'and every correction is on the audit trail');

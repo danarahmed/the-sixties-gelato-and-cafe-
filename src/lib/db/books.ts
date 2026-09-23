@@ -33,6 +33,14 @@ export async function getDailySales(from: string, to: string): Promise<DailySale
   );
 }
 
+/** Trading days that sold and are not closed, oldest first, however long ago. */
+export async function getUnclosedDays(): Promise<string[]> {
+  const c = await db();
+  return rows(await c.rpc("report_unclosed_days"), "the days not yet closed").map((r) =>
+    str(r.day),
+  );
+}
+
 export interface DayTotals {
   day: string;
   orders: number;
@@ -343,12 +351,22 @@ export interface JournalRegisterRow {
   notes: string;
   status: string;
   legacy: boolean;
+  /** No record stands behind it, so it may be reversed by hand (the database's rule too). */
+  reversibleByHand: boolean;
   amount: number;
   createdBy: string;
   reversesNo: number | null;
   reversedByNo: number | null;
   lines: { account: string; memo: string | null; debit: number; credit: number }[];
 }
+
+/**
+ * Entries no record stands behind. A journal a sale, receipt, bill, payment,
+ * stock movement, count or day close wrote is corrected through that record,
+ * so the database refuses to reverse it by hand; entries from before the
+ * controls may always be reversed (migration 0015, reverse_journal).
+ */
+const REVERSIBLE_BY_HAND = new Set(["manual", "correction", "expense", "year_end_close"]);
 
 /** The register of every journal, newest first — sales, bills and manual entries alike. */
 export async function getJournalRegister(
@@ -422,6 +440,7 @@ export async function getJournalRegister(
       notes: str(e.description),
       status: str(e.status) || "published",
       legacy: Boolean(e.legacy),
+      reversibleByHand: Boolean(e.legacy) || REVERSIBLE_BY_HAND.has(str(e.reference_type)),
       amount: ls.reduce((t, l) => t + l.debit, 0),
       createdBy: e.posted_by ? (person.get(str(e.posted_by)) ?? "—") : "—",
       reversesNo: e.reverses_entry ? (numberOf.get(str(e.reverses_entry)) ?? null) : null,

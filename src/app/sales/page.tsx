@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
-import { getDailySales, getDayCloses, getDayTotals, type DayTotals } from "@/lib/db/books";
+import {
+  getDailySales,
+  getDayCloses,
+  getDayTotals,
+  getUnclosedDays,
+  type DayTotals,
+} from "@/lib/db/books";
 import { channelLabel, fmtIQD } from "@/lib/format";
 import { addDays, businessToday } from "@/lib/dates";
 import { DayClose } from "@/components/books/DayClose";
@@ -10,20 +16,29 @@ import type { SalesChannel } from "@domain/sales/recipe.js";
 
 export const dynamic = "force-dynamic";
 
+/** How many open days the close form offers at once, oldest first. */
+const MAX_DAYS_OFFERED = 31;
+
 export default async function SalesPage() {
   const profile = await requirePermission("cost.view");
   const t = await getT();
   const today = businessToday(profile.timezone);
   const from = addDays(today, -29);
-  const [rows, closes] = await Promise.all([getDailySales(from, today), getDayCloses()]);
+  const [rows, closes, unclosed] = await Promise.all([
+    getDailySales(from, today),
+    getDayCloses(),
+    getUnclosedDays(),
+  ]);
 
   const closedDays = new Set(closes.map((c) => c.day));
-  // Days that traded and are not closed yet, plus today — oldest first, so
-  // the drawer is counted in order.
-  const openDays = [...new Set([...rows.map((r) => r.day), today])]
+  // Every day that traded and is not closed, however long ago — each one
+  // blocks its period from locking — plus today; oldest first, so the drawer
+  // is counted in order.
+  const toClose = [...new Set([...unclosed, today])]
     .filter((d) => !closedDays.has(d) && d <= today)
-    .sort()
-    .slice(-10);
+    .sort();
+  const openDays = toClose.slice(0, MAX_DAYS_OFFERED);
+  const overdue = unclosed.filter((d) => d < today).length;
   const canClose = has(profile, "day.close");
   const totals: DayTotals[] = canClose
     ? await Promise.all(openDays.map((d) => getDayTotals(d)))
@@ -68,10 +83,14 @@ export default async function SalesPage() {
         </div>
         <div>
           <div className="sc">Days not yet closed</div>
-          <div className="v" style={{ color: openDays.length > 1 ? "var(--warn)" : undefined }}>
-            {openDays.length}
+          <div className="v" style={{ color: overdue > 0 ? "var(--warn)" : undefined }}>
+            {toClose.length}
           </div>
-          <div className="m">A period cannot lock with an open day</div>
+          <div className="m">
+            {overdue > 0
+              ? `${overdue} before today — a period cannot lock with an open day`
+              : "A period cannot lock with an open day"}
+          </div>
         </div>
       </div>
 
@@ -133,6 +152,9 @@ export default async function SalesPage() {
             <h3>Close the Day</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
               Count the drawer against what the till says it took in cash
+              {toClose.length > openDays.length
+                ? ` · the oldest ${openDays.length} of ${toClose.length} open days`
+                : ""}
             </span>
           </div>
           <DayClose totals={totals} />

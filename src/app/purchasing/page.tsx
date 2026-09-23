@@ -62,7 +62,9 @@ export default async function PurchasingPage() {
                   <td className="muted mono" style={{ fontSize: ".8rem" }}>
                     {dateTimeIn(profile.timezone, r.receivedAt)}
                   </td>
-                  <td>{r.supplierName ?? "—"}</td>
+                  <td>
+                    {r.supplierName ?? (r.note ? <span className="muted">{r.note}</span> : "—")}
+                  </td>
                   <td className="right mono">{r.lineCount}</td>
                   <td className="right mono">{fmtIQD(r.goodsValue)}</td>
                   <td className="right mono">{fmtIQD(r.landedExtras)}</td>
@@ -71,11 +73,27 @@ export default async function PurchasingPage() {
                     {r.billed ? (
                       <span className="badge ok">Billed</span>
                     ) : r.billable ? (
-                      <span className="badge warn">Awaiting bill</span>
+                      <span
+                        className="badge warn"
+                        title={
+                          r.legacy
+                            ? "Received before the controls, which posted its payable then; its bill is recorded against that payable"
+                            : undefined
+                        }
+                      >
+                        Awaiting bill
+                      </span>
+                    ) : r.unjournaled ? (
+                      <span
+                        className="badge err"
+                        title="Received before the controls and never journaled. The owner posts its journal from Reports → Do the books tie?"
+                      >
+                        Not journaled
+                      </span>
                     ) : (
                       <span
                         className="badge"
-                        title="Received before the controls; its payable was posted then"
+                        title="Received before the controls; its journal has been reversed"
                       >
                         Before controls
                       </span>

@@ -34,6 +34,12 @@ create temp table b1 as select record_bill((select id from sup), 'INV-001', curr
 select test.eq(test.lines_of((select (r->>'bill_id')::uuid from b1)),
   '2000 Cr 20500 | 2050 Dr 20000 | 5050 Dr 500', 'G5 bill clears GRNI, variance to PPV, payable raised once');
 
+-- A receipt is billed by the supplier who delivered it.
+select test.throws($$select record_bill((select id from supplier where business_id = '00000000-0000-0000-0000-0000000000b1'
+                                           and id <> (select id from sup) limit 1),
+                                        'OTHER-1', current_date, 100, 0, (select (r->>'receipt_id')::uuid from r2))$$,
+  '%different supplier%', 'another supplier cannot bill someone else''s delivery');
+
 -- Under-billed: the variance is a credit.
 create temp table b2 as select record_bill((select id from sup), 'INV-002', current_date, 350, 0,
   (select (r->>'receipt_id')::uuid from r2)) as r;
@@ -105,6 +111,8 @@ select test.throws($$select cancel_bill((select (r->>'bill_id')::uuid from cance
   '%permission%', 'the person who buys cannot also cancel bills');
 select test.act_as('owner@example.com');
 select test.throws($$select cancel_bill((select (r->>'bill_id')::uuid from cancel_b3), '  ')$$, '%Say why%', 'a cancellation needs a reason');
+select test.throws($$select cancel_bill((select (r->>'bill_id')::uuid from cancel_b3), 'typed 5000 for 500', current_date + 2)$$,
+  '%has happened%', 'a cancellation is not dated in the future');
 select cancel_bill((select (r->>'bill_id')::uuid from cancel_b3), 'typed 5000 for 500');
 select test.as_admin();
 select test.ok((select cancelled_at is not null and cancel_reason = 'typed 5000 for 500' from purchase_invoice
@@ -125,3 +133,6 @@ select test.eq(test.lines_of((select (r->>'bill_id')::uuid from cancel_b4)), '20
   'the corrected bill takes the same invoice number and the same receipt');
 select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from report_reconciliation(current_date)),
   'grni=0,inventory=0,payables=0,sales=0', 'and the books still reconcile');
+select test.act_as('owner@example.com');
+select test.eq((select count(*) from legacy_unposted())::int, 0,
+  'everything the app records is journaled as it happens: nothing awaits a journal');

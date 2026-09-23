@@ -94,6 +94,12 @@ begin
                             and (cancelled_at is null or cancelled_at >= v_end);
   subledger := subledger - coalesce((select sum(amount) from supplier_payment
                                       where business_id = v_business and paid_on < p_as_of + 1), 0);
+  -- Receipts the old app posted straight to A/P are owed until their bill is recorded.
+  subledger := subledger + coalesce((select sum(receipt_legacy_payable(r.id, v_end)) from goods_receipt r
+                                      where r.business_id = v_business and r.received_at < v_end
+                                        and not exists (select 1 from purchase_invoice p where p.goods_receipt_id = r.id
+                                                          and p.invoice_date < p_as_of + 1
+                                                          and (p.cancelled_at is null or p.cancelled_at >= v_end))), 0);
   ledger := -gl_balance_at(v_business, '2000', v_end);
   difference := subledger - ledger; return next;
 
@@ -149,6 +155,24 @@ begin
                              and o.status <> 'voided' and business_local_date(v_business, o.placed_at) = p_day), 0),
     'closed', exists (select 1 from work_shift where business_id = v_business and location_id = v_location
                         and business_day = p_day and closed_at is not null));
+end $$;
+
+-- Trading days that sold and have not been closed, oldest first, however long
+-- ago: the same test the period close applies, so every day that blocks a
+-- lock can be found and closed.
+create or replace function report_unclosed_days()
+returns table (day date)
+language plpgsql stable security definer set search_path = public as $$
+declare v_business uuid := require_permission('day.close', 'cost.view');
+begin
+  return query
+    select d from (
+      select distinct business_local_date(v_business, o.placed_at) d from sales_order o
+       where o.business_id = v_business and o.status <> 'voided'
+      except
+      select w.business_day from work_shift w
+       where w.business_id = v_business and w.closed_at is not null and w.business_day is not null
+    ) x order by d;
 end $$;
 
 -- The till's menu: what may be sold today, at today's prices. No costs — a
@@ -254,6 +278,7 @@ end $$;
 -- the reports. (local_day_bounds stays internal.)
 grant execute on function
   report_trial_balance(date, date), report_profit_and_loss(date, date), report_reconciliation(date),
-  report_daily_sales(date, date), report_day_totals(date, uuid), pos_catalogue(), dashboard_summary(date),
+  report_daily_sales(date, date), report_day_totals(date, uuid), report_unclosed_days(),
+  pos_catalogue(), dashboard_summary(date),
   menu_costing(), menu_recipe_lines()
 to authenticated;

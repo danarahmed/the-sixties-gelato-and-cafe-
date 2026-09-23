@@ -82,3 +82,6 @@ select test.throws($$select approve_stock_count((select id from c2))$$, '%someon
 select test.as_admin();
 select test.eq((select sum(value * sign(base_quantity_signed)) from inventory_movement where business_id = '00000000-0000-0000-0000-0000000000b1'),
   test.balance('1200'), 'every stock change is in the books: ledger reconciles to 1200');
+select test.act_as('owner@example.com');
+select test.eq((select count(*) from legacy_unposted())::int, 0,
+  'everything the app records is journaled as it happens: nothing awaits a journal');

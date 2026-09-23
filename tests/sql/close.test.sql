@@ -24,11 +24,19 @@ grant select on dr to public;
 select test.throws($$select lock_period((select id from per))$$, '%Every trading day is closed%Not closed%', 'an unclosed day blocks the close');
 select test.throws($$select lock_period((select id from per))$$, '%No draft journals%', 'a parked draft blocks the close');
 
+-- Every day that blocks the close is listed for closing, with no date window.
+select test.act_as('cashier@example.com');
+select test.throws($$select * from report_unclosed_days()$$, '%permission%', 'a cashier is not shown the days to close');
+select test.act_as('manager@example.com');
+select test.eq((select string_agg(day::text, ',') from report_unclosed_days()), (select d::text from today),
+  'the day that blocks the close is the day listed for closing');
+
 -- G9 — close the day 2,000 short: Dr Cash over/short, Cr Cash.
 select test.act_as('cashier@example.com');
 select test.throws($$select close_day((select d from today), 3000)$$, '%permission%', 'a cashier does not close their own till');
 select test.act_as('manager@example.com');
 create temp table cl as select close_day((select d from today), 3000) as r;
+select test.eq((select count(*) from report_unclosed_days())::int, 0, 'once closed, it is no longer listed');
 select test.eq((select (r->>'expected')::numeric from cl), 5000::numeric, 'expected 5,000 cash');
 select test.eq((select (r->>'variance')::numeric from cl), -2000::numeric, '2,000 short');
 select test.as_admin();

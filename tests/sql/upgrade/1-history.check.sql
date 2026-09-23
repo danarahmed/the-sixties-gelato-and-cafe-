@@ -55,17 +55,38 @@ select test.throws($$update sales_order set cogs_amount = 1 where id = '44444444
                    '%immutable%', 'a legacy sale''s COGS cannot be rewritten');
 
 -- The reconciliation report makes the damaged history visible, to the dinar.
--- Stock ledger: one receipt of 110,000. Inventory (1200) was debited 110,000
--- by the receipt, 110,000 again by the raced duplicate, 110,000 by the bill
--- (C-05), and credited 940 by a sale whose stock movement was never written:
--- 329,060. Payables: two copies of INV-2207 (M-07) = 220,000 unpaid, while
--- 2000 was credited three times = 330,000.
+-- Stock ledger: receipts of 110,000, 30,000 and 50,000, opening sugar of
+-- 20,000, less a count variance of 550: 209,450. Inventory (1200) was debited
+-- 110,000 by the first receipt, 110,000 again by its raced duplicate, 110,000
+-- by the bill (C-05) and 50,000 by the third receipt, and credited 940 by a
+-- sale whose stock movement was never written: 379,060. Of the -169,610,
+-- 49,450 is stock the old app never journaled (listed for the owner to post)
+-- and -219,060 is damage in the ledger itself.
+-- Payables: two copies of INV-2207 (M-07) = 220,000 unpaid, plus what the old
+-- app posted to 2000 for receipts still awaiting a bill — the first receipt
+-- twice, the third once = 270,000; while 2000 was credited 380,000.
 select test.act_as('owner@example.com');
 create temp table rec as select * from report_reconciliation('2026-08-31');
-select test.eq((select difference from rec where check_key = 'inventory'), -219060::numeric,
-  'the legacy double count shows as a -219,060 inventory difference');
-select test.eq((select difference from rec where check_key = 'payables'), -110000::numeric,
-  'and a -110,000 payables difference');
+select test.eq((select difference from rec where check_key = 'inventory'), -169610::numeric,
+  'the legacy damage and the unjournaled stock show as a -169,610 inventory difference');
+select test.eq((select difference from rec where check_key = 'payables'), 110000::numeric,
+  'and a +110,000 payables difference: the duplicate invoice');
+select test.eq((select difference from rec where check_key = 'grni'), 0::numeric,
+  'a receipt posted straight to payables is not mistaken for goods received not invoiced');
+
+-- The stock records the old app never journaled are listed, each with the
+-- journal the new app writes for the same record — and nothing is posted
+-- until the owner says so.
+select test.eq((select string_agg(kind || ' ' || amount || ': ' || (select string_agg(x ->> 'code' ||
+                  case when (x ->> 'debit')::numeric > 0 then ' Dr ' || (x ->> 'debit') else ' Cr ' || (x ->> 'credit') end, ' | ')
+                  from jsonb_array_elements(lines) x), ' / ' order by at) from legacy_unposted()),
+  'opening_stock 20000: 1200 Dr 20000 | 3000 Cr 20000 / goods_received 30000: 1200 Dr 30000 | 2050 Cr 30000'
+  ' / count_variance 550: 5400 Dr 550 | 1200 Cr 550',
+  'opening stock, a delivery and a count variance await their journals');
+select test.act_as('manager@example.com');
+select test.throws($$select post_legacy_unposted('tidy up')$$, '%permission%', 'only the owner may post them');
+select test.eq((select count(*) from report_unclosed_days())::int, 0,
+  'no trading day is left to close: the old app''s closes are recognised');
 select test.as_admin();
 
 -- Days the old app closed still count; a day it closed twice counts once.

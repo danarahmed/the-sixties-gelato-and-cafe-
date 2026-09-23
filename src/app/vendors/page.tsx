@@ -79,13 +79,14 @@ export default async function VendorsPage() {
         vendors={vendors}
         bills={openBills}
         receipts={receipts
-          .filter((r) => r.billable && r.supplierId)
+          .filter((r) => r.billable)
           .map((r) => ({
             id: r.id,
-            supplierId: r.supplierId!,
+            supplierId: r.supplierId,
             receiptNo: r.receiptNo,
             value: r.value,
             receivedAt: r.receivedAt,
+            note: r.note,
           }))}
         accounts={accounts
           .filter(
@@ -105,9 +106,11 @@ export default async function VendorsPage() {
       <p className="muted" style={{ fontSize: ".76rem", lineHeight: 1.7, maxWidth: 780 }}>
         A bill for goods is matched to the receipt that brought them in: it clears Goods received
         not invoiced (2050) for what the receipt recorded, puts any price difference to 5050, and
-        raises Accounts payable (2000). A bill for a service or an asset is charged straight to its
-        account. A payment settles the payable from cash, card or the bank. The same invoice number
-        from the same vendor can only be entered once.
+        raises Accounts payable (2000). A delivery received before the controls, whose payable the
+        old app posted when the goods arrived, is billed against that payable: only a difference in
+        price is posted. A bill for a service or an asset is charged straight to its account. A
+        payment settles the payable from cash, card or the bank. The same invoice number from the
+        same vendor can only be entered once.
       </p>
     </div>
   );

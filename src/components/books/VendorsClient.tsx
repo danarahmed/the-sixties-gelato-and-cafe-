@@ -14,10 +14,12 @@ import type { OpenBill, VendorRow } from "@/lib/db/books";
 
 export interface ReceiptOption {
   id: string;
-  supplierId: string;
+  /** Null for deliveries received before the controls: the old app did not record the supplier. */
+  supplierId: string | null;
   receiptNo: number | null;
   value: number;
   receivedAt: string;
+  note: string | null;
 }
 export interface AccountOption {
   code: string;
@@ -136,7 +138,7 @@ export function VendorsClient({
               key={vendor.id}
               vendor={vendor}
               bills={bills.filter((b) => b.supplierId === vendor.id)}
-              receipts={receipts.filter((r) => r.supplierId === vendor.id)}
+              receipts={receipts.filter((r) => r.supplierId === vendor.id || r.supplierId === null)}
               accounts={accounts}
               today={today}
               canBill={canBill}
@@ -370,8 +372,10 @@ function Bills({
                   >
                     {receipts.map((r) => (
                       <option key={r.id} value={r.id}>
-                        Receipt {r.receiptNo ?? "—"} · {r.receivedAt.slice(0, 10)} ·{" "}
-                        {fmtIQD(r.value)}
+                        {r.supplierId === null
+                          ? `Before controls · ${r.note ?? "supplier not recorded"}`
+                          : `Receipt ${r.receiptNo ?? "—"}`}{" "}
+                        · {r.receivedAt.slice(0, 10)} · {fmtIQD(r.value)}
                       </option>
                     ))}
                   </select>
@@ -487,7 +491,13 @@ function Bills({
                     {canPay && (
                       <td className="right">
                         {b.paid === 0 && (
-                          <CancelBill billId={b.id} invoiceNo={b.invoiceNo} onDone={onDone} />
+                          <CancelBill
+                            billId={b.id}
+                            invoiceNo={b.invoiceNo}
+                            invoiceDate={b.invoiceDate}
+                            today={today}
+                            onDone={onDone}
+                          />
                         )}
                       </td>
                     )}
@@ -621,15 +631,20 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
 function CancelBill({
   billId,
   invoiceNo,
+  invoiceDate,
+  today,
   onDone,
 }: {
   billId: string;
   invoiceNo: string;
+  invoiceDate: string;
+  today: string;
   onDone: () => void;
 }) {
   const [busy, start] = useTransition();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
+  const [date, setDate] = useState(today);
   const [err, setErr] = useState<string | null>(null);
   const small = { minHeight: 26, padding: "0 8px", fontSize: ".72rem" };
   if (!open) {
@@ -661,13 +676,22 @@ function CancelBill({
         maxLength={300}
         autoFocus
       />
+      <input
+        type="date"
+        value={date}
+        min={invoiceDate}
+        max={today}
+        onChange={(e) => setDate(e.target.value)}
+        aria-label="Date of the cancellation"
+        style={{ minHeight: 26, fontSize: ".78rem" }}
+      />
       <button
         className="btn-primary"
         disabled={busy || !reason.trim()}
         style={small}
         onClick={() =>
           start(async () => {
-            const r = await cancelBillAction({ billId, reason });
+            const r = await cancelBillAction({ billId, reason, date });
             if (r.ok) {
               setOpen(false);
               onDone();

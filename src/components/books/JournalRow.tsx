@@ -43,12 +43,14 @@ export function JournalRow({
   const [open, setOpen] = useState(false);
   const [reversing, setReversing] = useState(false);
   const [reason, setReason] = useState("");
+  const [revDate, setRevDate] = useState(today);
   const [err, setErr] = useState<string | null>(null);
   const isDraft = entry.status === "draft";
+  const entryDay = dateIn(timezone, new Date(entry.occurredAt));
   const debit = entry.lines.reduce((s, l) => s + l.debit, 0);
   const credit = entry.lines.reduce((s, l) => s + l.credit, 0);
   const difference = Math.round(debit - credit);
-  const canReverse = canPost && !isDraft && entry.reversedByNo === null;
+  const canReverse = canPost && !isDraft && entry.reversedByNo === null && entry.reversibleByHand;
 
   function run(fn: () => Promise<{ ok: true } | { ok: false; error: string }>) {
     setErr(null);
@@ -153,8 +155,17 @@ export function JournalRow({
               }}
             >
               <span className="muted" style={{ fontSize: ".8rem" }}>
-                Reverse journal {entry.journalNo} with a mirror entry dated {today}:
+                Reverse journal {entry.journalNo} with a mirror entry dated
               </span>
+              <input
+                type="date"
+                value={revDate}
+                min={entryDay}
+                max={today}
+                onChange={(e) => setRevDate(e.target.value)}
+                aria-label="Date of the reversal"
+                style={{ minHeight: 30 }}
+              />
               <input
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
@@ -167,7 +178,7 @@ export function JournalRow({
                 className="btn-primary"
                 disabled={busy || !reason.trim()}
                 onClick={() =>
-                  run(() => reverseJournalAction({ entryId: entry.id, reason, date: today }))
+                  run(() => reverseJournalAction({ entryId: entry.id, reason, date: revDate }))
                 }
                 style={small}
               >

@@ -308,6 +308,8 @@ grant execute on function
   discard_journal(uuid),
   reverse_journal(uuid, text, date),
   post_control_correction(date, text, jsonb, text),
+  legacy_unposted(),
+  post_legacy_unposted(text),
   period_close_checklist(uuid),
   lock_period(uuid, text),
   unlock_period(uuid, text)

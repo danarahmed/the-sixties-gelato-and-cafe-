@@ -90,6 +90,42 @@ export async function getReconciliation(asOf: string): Promise<ReconciliationRow
   );
 }
 
+export interface UnpostedRecord {
+  kind: string;
+  refId: string;
+  at: string;
+  description: string;
+  amount: number;
+  /** The journal it would post, as "1200 Dr 20,000 · 3000 Cr 20,000". */
+  entry: string;
+}
+
+/**
+ * Stock records the old app moved but never journaled, each with the journal
+ * the new app writes for the same record. They show as an Inventory
+ * difference until the owner reviews and posts them (docs/REMEDIATION.md).
+ */
+export async function getLegacyUnposted(): Promise<UnpostedRecord[]> {
+  const c = await db();
+  return rows(await c.rpc("legacy_unposted"), "the records awaiting their journals").map((r) => {
+    const lines = Array.isArray(r.lines) ? (r.lines as Record<string, unknown>[]) : [];
+    return {
+      kind: str(r.kind),
+      refId: str(r.ref_id),
+      at: str(r.at),
+      description: str(r.description),
+      amount: num(r.amount),
+      entry: lines
+        .map((l) =>
+          num(l.debit) > 0
+            ? `${str(l.code)} Dr ${num(l.debit).toLocaleString("en-US")}`
+            : `${str(l.code)} Cr ${num(l.credit).toLocaleString("en-US")}`,
+        )
+        .join(" · "),
+    };
+  });
+}
+
 export interface Dashboard {
   netRevenue: number;
   costOfSales: number;
