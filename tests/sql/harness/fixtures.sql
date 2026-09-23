@@ -59,8 +59,11 @@ grant execute on all functions in schema test to public;
 -- A journal, as one readable line: "1000 Dr 5000 | 4000 Cr 5000", accounts in
 -- code order. Golden tests compare against this, so an expected entry reads
 -- exactly as an accountant would write it.
+-- Inspection helpers read ground truth whoever the test is acting as, so they
+-- run as their (superuser) owner. That cashiers cannot read the ledger is
+-- asserted separately, in controls.test.sql.
 create or replace function test.lines_of(p_ref uuid) returns text
-language sql as $$
+language sql security definer as $$
   select string_agg(a.code || case when l.debit > 0 then ' Dr ' || l.debit::text
                                    else ' Cr ' || l.credit::text end,
                     ' | ' order by a.code, l.debit desc, l.credit desc)
@@ -72,7 +75,7 @@ $$;
 
 -- The balance of an account for the demo business (debit-positive).
 create or replace function test.balance(p_code text) returns numeric
-language sql as $$
+language sql security definer as $$
   select coalesce(sum(l.debit - l.credit), 0)
     from journal_line l join gl_account a on a.id = l.account_id
     join journal_entry e on e.id = l.journal_entry_id

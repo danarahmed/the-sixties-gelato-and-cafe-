@@ -99,6 +99,10 @@ do $$ declare n int; begin
 exception when others then perform pg_temp.report('C-02d', false, 'delete denied: ' || sqlerrm); end $$;
 
 -- ---------------------------------------------------------------- C-07
+-- Each probe judges the OUTCOME (where the entry ended up, how many lines it
+-- has), not merely whether an error was raised: a control that silently
+-- ignores a request is as good as one that refuses it, and "no error" alone
+-- would misreport it as a breach.
 select test.as_admin();
 do $$ declare eid uuid := gen_random_uuid(); begin
   insert into journal_entry (id, business_id, period_id, description, occurred_at)
@@ -110,30 +114,46 @@ do $$ declare eid uuid := gen_random_uuid(); begin
   perform pg_temp.report('C-07a', true, 'entry dated in LOCKED July accepted because period_id was null');
 exception when others then perform pg_temp.report('C-07a', false, 'rejected: ' || sqlerrm); end $$;
 
-do $$ declare eid uuid := gen_random_uuid(); begin
-  insert into journal_entry (id, business_id, period_id, description)
-    values (eid, '00000000-0000-0000-0000-0000000000b1', 'e0000000-0000-0000-0000-0000000000a2', 'Moved later');
+-- A posted August entry, moved into locked July afterwards.
+do $$ declare eid uuid := gen_random_uuid(); v uuid; begin
+  insert into journal_entry (id, business_id, period_id, description, status, occurred_at)
+    values (eid, '00000000-0000-0000-0000-0000000000b1', 'e0000000-0000-0000-0000-0000000000a2', 'August sale', 'draft', '2026-08-10');
   insert into journal_line (journal_entry_id, account_id, debit, credit)
     values (eid, (select id from gl_account where code='1000' and business_id='00000000-0000-0000-0000-0000000000b1'), 700, 0),
            (eid, (select id from gl_account where code='4000' and business_id='00000000-0000-0000-0000-0000000000b1'), 0, 700);
-  update journal_entry set period_id = 'e0000000-0000-0000-0000-0000000000a1' where id = eid;
+  update journal_entry set status = 'published', journal_no = 2001 where id = eid;
+  begin
+    update journal_entry set period_id = 'e0000000-0000-0000-0000-0000000000a1', occurred_at = '2026-07-15' where id = eid;
+  exception when others then null;
+  end;
   set constraints all immediate;
-  perform pg_temp.report('C-07b', true, 'entry UPDATEd into the locked period after insert');
+  select period_id into v from journal_entry where id = eid;
+  perform pg_temp.report('C-07b', v = 'e0000000-0000-0000-0000-0000000000a1',
+    case when v = 'e0000000-0000-0000-0000-0000000000a1' then 'a posted August entry was moved into LOCKED July'
+         else 'the posted entry could not be moved; it stayed in its own period' end);
 exception when others then perform pg_temp.report('C-07b', false, 'rejected: ' || sqlerrm); end $$;
 
-do $$ declare eid uuid := gen_random_uuid(); begin
-  insert into journal_entry (id, business_id, period_id, description)
-    values (eid, '00000000-0000-0000-0000-0000000000b1', 'e0000000-0000-0000-0000-0000000000a2', 'Will be locked');
+-- A posted August entry; August is then locked; more lines are attached.
+do $$ declare eid uuid := gen_random_uuid(); n int; begin
+  insert into journal_entry (id, business_id, period_id, description, status, occurred_at)
+    values (eid, '00000000-0000-0000-0000-0000000000b1', 'e0000000-0000-0000-0000-0000000000a2', 'Will be locked', 'draft', '2026-08-12');
   insert into journal_line (journal_entry_id, account_id, debit, credit)
     values (eid, (select id from gl_account where code='1000' and business_id='00000000-0000-0000-0000-0000000000b1'), 100, 0),
            (eid, (select id from gl_account where code='4000' and business_id='00000000-0000-0000-0000-0000000000b1'), 0, 100);
-  update accounting_period set status = 'locked' where name = '2026-08';
-  insert into journal_line (journal_entry_id, account_id, debit, credit)
-    values (eid, (select id from gl_account where code='1000' and business_id='00000000-0000-0000-0000-0000000000b1'), 50, 0),
-           (eid, (select id from gl_account where code='4000' and business_id='00000000-0000-0000-0000-0000000000b1'), 0, 50);
+  update journal_entry set status = 'published', journal_no = 2002 where id = eid;
+  update accounting_period set status = 'locked' where id = 'e0000000-0000-0000-0000-0000000000a2';
+  begin
+    insert into journal_line (journal_entry_id, account_id, debit, credit)
+      values (eid, (select id from gl_account where code='1000' and business_id='00000000-0000-0000-0000-0000000000b1'), 50, 0),
+             (eid, (select id from gl_account where code='4000' and business_id='00000000-0000-0000-0000-0000000000b1'), 0, 50);
+  exception when others then null;
+  end;
   set constraints all immediate;
-  perform pg_temp.report('C-07c', true, 'lines ADDED to an entry after its period was locked');
-  update accounting_period set status = 'open' where name = '2026-08';
+  select count(*) into n from journal_line where journal_entry_id = eid;
+  perform pg_temp.report('C-07c', n > 2,
+    case when n > 2 then 'lines ADDED to a posted entry after its period was locked'
+         else 'no line could be added to the locked, posted entry' end);
+  update accounting_period set status = 'open' where id = 'e0000000-0000-0000-0000-0000000000a2';
 exception when others then perform pg_temp.report('C-07c', false, 'rejected: ' || sqlerrm); end $$;
 
 -- ---------------------------------------------------------------- H-02
@@ -190,10 +210,10 @@ end $$;
 -- ---------------------------------------------------------------- L-01 / L-02 / M-07
 select test.as_admin();
 do $$ begin
-  insert into journal_entry (business_id, period_id, description)
-    values ('00000000-0000-0000-0000-0000000000b1', 'e0000000-0000-0000-0000-0000000000a2', 'An entry with no lines');
+  insert into journal_entry (business_id, period_id, description, status, journal_no, occurred_at)
+    values ('00000000-0000-0000-0000-0000000000b1', 'e0000000-0000-0000-0000-0000000000a2', 'An entry with no lines', 'published', 2003, '2026-08-20');
   set constraints all immediate;
-  perform pg_temp.report('L-01', true, 'a published journal entry with ZERO lines was accepted');
+  perform pg_temp.report('L-01', true, 'a PUBLISHED journal entry with ZERO lines was accepted');
 exception when others then perform pg_temp.report('L-01', false, 'rejected: ' || sqlerrm); end $$;
 
 do $$ declare oid uuid := gen_random_uuid(); n int; begin

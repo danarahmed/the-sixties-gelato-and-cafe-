@@ -26,7 +26,8 @@
 -- rewritten) and listed for review by docs/REMEDIATION.md.
 -- =============================================================================
 
-create extension if not exists btree_gist;
+-- Into Supabase's extensions schema, where it belongs.
+create extension if not exists btree_gist with schema extensions;
 
 -- =============================================================================
 -- 1. Helpers
@@ -695,3 +696,26 @@ select
   (cs.quantity_base < 0) as is_negative
 from current_stock cs
 join item i on i.id = cs.item_id;
+
+-- =============================================================================
+-- 10. Invariants run with full visibility, whoever triggers them
+-- =============================================================================
+-- DEFERRED triggers (the balance check) fire at COMMIT, after the posting
+-- function has returned — so they run as the committing role, e.g. a cashier
+-- who cannot read the ledger under row-level security. A validator that
+-- cannot see the entry finds nothing and would pass it unchecked. Running
+-- every trigger function as its owner means each check always sees the truth.
+-- (Trigger functions cannot be called through the API, so this exposes
+-- nothing.)
+do $$
+declare f text;
+begin
+  foreach f in array array[
+    'trg_journal_entry_guard()', 'trg_journal_line_guard()', 'assert_entry_balanced()',
+    'trg_journal_entry_validate()', 'validate_journal_entry(uuid)', 'trg_period_guard()',
+    'trg_purchase_invoice_guard()', 'trg_supplier_payment_retotal()', 'trg_stock_count_guard()',
+    'trg_stock_count_line_guard()', 'trg_work_shift_guard()', 'trg_inherit_business_id()',
+    'trg_gl_account_guard()', 'trg_business_provision()', 'forbid_financial_edit()'] loop
+    execute format('alter function %s security definer set search_path = public', f);
+  end loop;
+end $$;

@@ -18,8 +18,10 @@ select test.eq(test.lines_of((select (r->>'order_id')::uuid from s1)),
 select test.eq((record_sale('10000000-0000-0000-0000-000000000001', 'dine_in', 'cash',
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]') ->> 'replayed')::boolean,
   true, 'a retried sale is recognised as a replay');
+select test.as_admin();
 select test.eq((select count(*) from sales_order where idempotency_key = '10000000-0000-0000-0000-000000000001')::int,
   1, 'the retry created no second order');
+select test.act_as('cashier@example.com');
 
 -- G2 / H-03 — card takings debit Card clearing, never Cash.
 create temp table s2 as select record_sale(gen_random_uuid(), 'dine_in', 'card',
@@ -45,12 +47,14 @@ create temp table s5 as select record_sale(gen_random_uuid(), 'dine_in', 'cash',
 select test.eq((select (r->>'cogs')::numeric from s5), 500::numeric, 'two bottles at 250');
 
 -- Line COGS add up to the order, and the order to its movements.
+select test.as_admin();
 select test.eq((select sum(cogs_amount) from sales_order_line where sales_order_id = (select (r->>'order_id')::uuid from s3)),
                250::numeric, 'line COGS sum to the order');
 select test.eq((select sum(value) from inventory_movement where reference_id = (select (r->>'order_id')::uuid from s3)),
                250::numeric, 'movements sum to the order COGS');
 
 -- Guard rails.
+select test.act_as('cashier@example.com');
 select test.throws($$select record_sale(gen_random_uuid(), 'talabat', 'cash', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]')$$,
   '%platform-paid%', 'a Talabat order cannot be taken as cash');
 select test.throws($$select record_sale(gen_random_uuid(), 'dine_in', 'platform_paid', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]')$$,
@@ -79,8 +83,10 @@ select test.as_admin();
 update business set prevent_negative_stock = false where id = '00000000-0000-0000-0000-0000000000b1';
 select test.act_as('cashier@example.com');
 select record_sale(gen_random_uuid(), 'dine_in', 'cash', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":50}]');
+select test.as_admin();
 select test.ok((item_position('00000000-0000-0000-0000-0000000000b1', 'c0000000-0000-0000-0000-000000000001',
                 default_location('00000000-0000-0000-0000-0000000000b1'))).qty < 0, 'beans are now negative');
+select test.act_as('cashier@example.com');
 create temp table s6 as select record_sale(gen_random_uuid(), 'dine_in', 'cash',
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]') as r;
 select test.eq((select (r->>'cogs')::numeric from s6), 200::numeric, 'a sale from negative stock costs 200, not 0');

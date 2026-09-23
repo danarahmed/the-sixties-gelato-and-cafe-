@@ -32,7 +32,12 @@ run() { "${PSQL[@]}" -d "$1" -f "$2" 2>&1; }
 # Migrations run as ONE transaction per file, exactly as the Supabase CLI
 # applies them. Running them statement-by-statement would hide failures that
 # only happen inside a transaction (e.g. ALTER TABLE with pending trigger events).
-run_migration() { "${PSQL[@]}" --single-transaction -d "$1" -f "$2" 2>&1; }
+#
+# Migrations also run as sb_admin, a role shaped like Supabase's `postgres`:
+# not a superuser, but able to bypass row-level security. Seed and test data
+# are loaded by the superuser; the code under test is owned by sb_admin.
+run_migration() { PGOPTIONS="-c search_path=public,extensions" \
+  "${PSQL[@]}" --single-transaction -U sb_admin -d "$1" -f "$2" 2>&1; }
 fresh_db() {
   "${PSQL[@]}" -d postgres -c "drop database if exists $1 with (force)" >/dev/null 2>&1
   "${PSQL[@]}" -d postgres -c "create database $1 ${2:+template $2}" >/dev/null
