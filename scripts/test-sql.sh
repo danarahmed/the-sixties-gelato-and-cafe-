@@ -2,7 +2,7 @@
 # =============================================================================
 # SQL test runner — exercises the real migrations against real PostgreSQL.
 #
-# Two phases:
+# Phases:
 #
 #   1. Upgrade check. Applies the migrations the live database already has, in
 #      the order it had them (PRODUCTION_SEQUENCE), loads production-shaped
@@ -12,7 +12,13 @@
 #      applying the migrations to production: it fails if they would not apply
 #      cleanly, or if they would alter or lose any existing record.
 #
-#   2. Tests. Builds a clean template once (all migrations + master/recipe seed
+#   2. Clean start. The other path for a trial database: the same history is
+#      cleared by supabase/remediation/clean-start.sql, the upgrade follows, and
+#      tests/sql/clean-start/*.check.sql proves the owner can trade from empty
+#      books. The script must also change nothing when its own checks fail, and
+#      refuse to run once the upgrade is in.
+#
+#   3. Tests. Builds a clean template once (all migrations + master/recipe seed
 #      + fixtures) and runs each tests/sql/*.test.sql in its own fresh copy, so
 #      no test can leak state into another.
 #
@@ -42,6 +48,11 @@ run() { "${PSQL[@]}" -d "$1" -f "$2" 2>&1; }
 # are loaded by the superuser; the code under test is owned by sb_admin.
 run_migration() { PGOPTIONS="-c search_path=public,extensions" \
   "${PSQL[@]}" --single-transaction -U sb_admin -d "$1" -f "$2" 2>&1; }
+# A remediation script runs as the database owner too, but manages its own
+# transaction, as it does in Supabase's SQL editor.
+run_as_owner() { PGOPTIONS="-c search_path=public,extensions" \
+  "${PSQL[@]}" -U sb_admin -d "$1" -f "$2" 2>&1; }
+q() { "${PSQL[@]}" -At -d "$1" -c "$2"; }
 fresh_db() {
   "${PSQL[@]}" -d postgres -c "drop database if exists $1 with (force)" >/dev/null 2>&1
   "${PSQL[@]}" -d postgres -c "create database $1 ${2:+template $2}" >/dev/null
@@ -77,6 +88,7 @@ base_setup() {
 }
 
 pass=0; fail=0
+next=$(printf '%04d' $((10#$PRODUCTION_HEAD + 1)))   # first migration the live database lacks
 
 # --------------------------------------------------------------- 1. upgrade
 if [ $# -eq 0 ] && ls tests/sql/upgrade/*.check.sql >/dev/null 2>&1; then
@@ -90,7 +102,6 @@ if [ $# -eq 0 ] && ls tests/sql/upgrade/*.check.sql >/dev/null 2>&1; then
   if ! out=$(run sixties_upgrade tests/sql/harness/legacy_data.sql); then
     echo "✗ legacy data failed to load"; echo "$out" | head -10; exit 1
   fi
-  next=$(printf '%04d' $((10#$PRODUCTION_HEAD + 1)))
   if apply_migrations sixties_upgrade "$next" 9999; then
     echo "  migrations $next+ applied cleanly on top of existing history"
     for f in tests/sql/upgrade/*.check.sql; do
@@ -107,7 +118,58 @@ if [ $# -eq 0 ] && ls tests/sql/upgrade/*.check.sql >/dev/null 2>&1; then
   drop_db sixties_upgrade
 fi
 
-# ----------------------------------------------------------------- 2. tests
+# ------------------------------------------------------------ 2. clean start
+if [ $# -eq 0 ] && [ -f supabase/remediation/clean-start.sql ]; then
+  echo "▸ clean start: the same history cleared by supabase/remediation/clean-start.sql, then upgraded"
+  clean=supabase/remediation/clean-start.sql
+  fresh_db sixties_clean_src
+  base_setup sixties_clean_src
+  apply_sequence sixties_clean_src "$PRODUCTION_SEQUENCE"
+  run sixties_clean_src supabase/seed/01_master.sql >/dev/null
+  run sixties_clean_src supabase/seed/02_recipes.sql >/dev/null
+  run sixties_clean_src tests/sql/harness/legacy_data.sql >/dev/null
+  records=$(q sixties_clean_src "select count(*) from journal_entry")
+
+  # A table the script does not know about still holds a record: it must stop
+  # and change nothing.
+  fresh_db sixties_clean sixties_clean_src
+  "${PSQL[@]}" -U sb_admin -d sixties_clean -c "create table stray (x int); insert into stray values (1)" >/dev/null
+  if out=$(run_as_owner sixties_clean "$clean"); then
+    fail=$((fail + 1)); echo "  ✗ cleared the books although a table it does not know still had a record"
+  elif grep -q "stray still has 1 row" <<<"$out" && [ "$(q sixties_clean "select count(*) from journal_entry")" = "$records" ]; then
+    pass=$((pass + 1)); echo "  ✓ stops and changes nothing when a table it does not know still has records"
+  else
+    fail=$((fail + 1)); echo "  ✗ unexpected failure:"; echo "$out" | grep ERROR | head -3 | sed 's/^/      /'
+  fi
+
+  fresh_db sixties_clean sixties_clean_src
+  if ! out=$(run_as_owner sixties_clean "$clean") || ! out=$(run_as_owner sixties_clean "$clean"); then
+    fail=$((fail + 1)); echo "  ✗ clean-start.sql failed:"; echo "$out" | grep ERROR | head -3 | sed 's/^/      /'
+  elif apply_migrations sixties_clean "$next" 9999; then
+    echo "  cleared (twice, harmlessly), then migrations $next+ applied cleanly"
+    for f in tests/sql/clean-start/*.check.sql; do
+      if out=$(run sixties_clean "$f"); then
+        pass=$((pass + 1)); echo "  ✓ $(basename "$f")"
+      else
+        fail=$((fail + 1)); echo "  ✗ $(basename "$f")"
+        echo "$out" | grep -E "ASSERTION FAILED|ERROR" | head -5 | sed 's/^/      /'
+      fi
+    done
+    if out=$(run_as_owner sixties_clean "$clean"); then
+      fail=$((fail + 1)); echo "  ✗ cleared the books after the upgrade"
+    elif grep -q "migration 0014 is already applied" <<<"$out"; then
+      pass=$((pass + 1)); echo "  ✓ refuses to run once the upgrade is in"
+    else
+      fail=$((fail + 1)); echo "  ✗ unexpected failure after the upgrade:"; echo "$out" | grep ERROR | head -3 | sed 's/^/      /'
+    fi
+  else
+    fail=$((fail + 1))
+  fi
+  drop_db sixties_clean
+  drop_db sixties_clean_src
+fi
+
+# ----------------------------------------------------------------- 3. tests
 echo "▸ building clean template"
 fresh_db sixties_tpl
 base_setup sixties_tpl
@@ -132,7 +194,7 @@ for f in "${files[@]}"; do
   drop_db "$db"
 done
 
-# ----------------------------------------------------------- 3. concurrency
+# ----------------------------------------------------------- 4. concurrency
 if [ $# -eq 0 ]; then
   if scripts/test-sql-concurrency.sh; then pass=$((pass + 1)); else fail=$((fail + 1)); fi
 fi

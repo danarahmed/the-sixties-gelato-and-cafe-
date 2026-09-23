@@ -19,11 +19,13 @@ Plan a short window when the café is closed.
 - Until the steps below are done, the live site is still publicly writable. If
   you cannot do them today, turn on Vercel _Settings → Deployment Protection_
   for Production first.
-- **Decide what the existing history is**
-  ([`../REMEDIATION.md`](../REMEDIATION.md), section 4). Most of it was loaded in
-  bulk, not typed through the app. If you choose to start the books clean, the
-  trial records are cleared **before step 3**; afterwards they are read-only.
-  If you keep the history, it is corrected after step 6.
+- **The existing history: cleared.** The owner confirmed it was trial data, and
+  on 23 September 2026 it was cleared with
+  [`supabase/remediation/clean-start.sql`](../../supabase/remediation/clean-start.sql)
+  ([`../REMEDIATION.md`](../REMEDIATION.md), section 4, option A). **Run the
+  script once more immediately before step 3**, in the SQL editor, in case
+  anything was recorded through the old app since. It changes nothing if there
+  is nothing to clear, and refuses to run once step 3 is done.
 
 ## 1. Rehearse locally (optional, recommended)
 
@@ -71,10 +73,10 @@ that a file either applies completely or not at all:
 
 What they do to existing data: nothing is deleted or rewritten, and nothing is
 posted. Existing journals are marked _legacy_ ("before controls"), dated into
-periods (a **July 2026** period will be created for the entry dated then),
-numbered where the old app left them unnumbered, and made immutable. See
-[`../REMEDIATION.md`](../REMEDIATION.md) for what the reconciliation will then
-show and how to correct it.
+periods, numbered where the old app left them unnumbered, and made immutable.
+After the clean start there are none, so the books open empty. (A database that
+keeps its history: see [`../REMEDIATION.md`](../REMEDIATION.md) for what the
+reconciliation will then show and how to correct it.)
 
 Rehearsed on 23 September 2026 on an exact copy of the live rows, taken with
 read-only queries. Each table was checked against a fingerprint of the live one,
@@ -110,9 +112,9 @@ let Vercel build. Check the deployment opens `/login`.
 
 ## 6. The owner's first sign-in
 
-The database still holds the four seeded people (`owner@`, `manager@`,
-`cashier@`, `counter@example.com`) and no logins. In the SQL editor, give the
-owner's place your real email:
+Since the clean start, the database holds one person, the owner's place
+(`owner@example.com`), and no logins. In the SQL editor, give it your real
+email:
 
 ```sql
 update app_user set email = 'you@your-domain' where email = 'owner@example.com';
@@ -121,23 +123,39 @@ update app_user set email = 'you@your-domain' where email = 'owner@example.com';
 Then open the site → _First time here? Create your login_ with that email →
 confirm it from your inbox → sign in. You are the owner.
 
-In **Settings → People**: deactivate the three `@example.com` placeholders (or
-change their roles), and add your staff by email and role. Each of them creates
-their own login with that email; they see only what their role allows.
+In **Settings → People**, add your staff by email and role. Each of them creates
+their own login with that email; they see only what their role allows. The
+order does not matter: a login is linked to its person once its email is
+confirmed.
 
-## 7. Reconcile the old history, then close
+**Confirmation emails on Supabase's free plan.** Supabase's built-in email only
+sends to addresses in your Supabase organization's team, and only a few an
+hour. Your staff will not receive theirs (nor will you, if your login email is
+not on that team). Choose one:
 
-Open **Reports → Do the books tie?**. Differences there come from the period
-before these controls; on the live data they are listed, item by item, in
-[`../REMEDIATION.md`](../REMEDIATION.md) section 3. Follow its section 5:
+- **Create each login yourself (free, no email):** Supabase → _Authentication →
+  Users → Add user → Create new user_. Enter their email and a temporary
+  password, and tick **Auto Confirm User**. They sign in with it and change the
+  password under **Account**.
+- **Send real emails:** set up custom SMTP in Supabase's Authentication
+  settings, using an email provider (several have free tiers).
 
-1. post the stock the old app never journaled (the list under the
-   reconciliation);
-2. correct July and lock it;
-3. correct August and lock it.
+## 7. Opening balances
 
-The checklist on **Chart of Accounts** must pass before a period locks. The
-whole sequence was rehearsed on the copy and leaves every check at zero.
+The books start empty. Enter what the café has on the day you start:
+
+- **Inventory → Add stock item** for each item, with its opening quantity and
+  unit cost (Dr 1200 Inventory, Cr 3000 Owner equity);
+- stock not yet paid for: **Purchasing → Receive stock**, then the supplier's
+  bill on **Vendors**;
+- cash in the drawer or the bank: **Journals → New Journal**, Dr 1000 Cash or
+  1020 Bank, Cr 3000 Owner equity;
+- the menu on **Products & Recipes**, with each channel's price.
+
+**Reports → Do the books tie?** should then show ✅ on every line.
+
+A database that keeps its pre-upgrade history instead reconciles it here,
+following [`../REMEDIATION.md`](../REMEDIATION.md) section 5.
 
 ## 8. Afterwards
 

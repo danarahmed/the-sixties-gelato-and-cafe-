@@ -17,9 +17,14 @@ and records honest, and to close each month.
 
 ## Before you rely on the books
 
-The history recorded before this version is unverified. Follow
-[`../REMEDIATION.md`](../REMEDIATION.md) to correct it, or start the books clean.
-Until then, treat the reports as provisional.
+Your books start empty: the trial records were cleared on 23 September 2026,
+before the upgrade. Enter your opening balances first: each stock item with its
+opening quantity and cost, stock not yet paid for as a delivery and its bill,
+and your cash as a journal (see the [deployment runbook](deployment.md), step
+7). Then **Reports → Do the books tie?** shows ✅ on every line.
+
+A database that keeps history from before this version must treat it as
+unverified until it is corrected ([`../REMEDIATION.md`](../REMEDIATION.md)).
 
 ## People
 

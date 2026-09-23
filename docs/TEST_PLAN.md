@@ -28,7 +28,7 @@ layers before every release.
   numbers typed in Arabic-Indic digits, the Baghdad trading day, and the
   expense-account suggestions.
 
-## 2. SQL (`scripts/test-sql.sh`, about 270 assertions)
+## 2. SQL (`scripts/test-sql.sh`, about 290 assertions)
 
 Runs against real PostgreSQL, with a small shim for Supabase's `auth` schema
 and roles. Tested on 16 and 17.6 (the live version).
@@ -48,6 +48,20 @@ Then:
 - `upgrade/2-remediation.check.sql`: the procedure in
   [`REMEDIATION.md`](REMEDIATION.md), one tool at a time, ends with every check
   at zero and August locked.
+
+**Clean start.** The same history is cleared by
+[`supabase/remediation/clean-start.sql`](../supabase/remediation/clean-start.sql),
+the upgrade follows, and `clean-start/after-upgrade.check.sql` proves the result:
+
+- only the business, its locations, its chart and its owner are left, and the
+  upgrade adds no records back;
+- the owner's real address links their confirmed sign-up;
+- a first day of trading from empty books ties: opening stock, a menu item, a
+  cash and a Talabat sale, every reconciliation check at zero, the day closed,
+  journals numbered from 1001.
+
+The script is also run with a table it does not know still holding a record,
+where it must change nothing, and again after the upgrade, where it must refuse.
 
 **Suites**, each in a fresh copy of a template database:
 

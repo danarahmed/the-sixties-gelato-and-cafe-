@@ -10,6 +10,13 @@ This guide covers what the upgrade does to existing records, what the live books
 show afterwards, and how to correct them. Every correction is a **new, dated,
 audited entry**. Nothing recorded before the upgrade is edited or deleted.
 
+> **The live database took option A (section 4) on 23 September 2026.** The
+> owner confirmed its history was trial data, and it was cleared with
+> [`supabase/remediation/clean-start.sql`](../supabase/remediation/clean-start.sql)
+> before the upgrade. It has no history left to correct. Sections 3 and 5 record
+> what that history held and how it would have been corrected. They remain the
+> worked example for any database that keeps its history.
+
 ## 1. What the upgrade does to existing records
 
 - **Kept as they are.** Every journal, line, sale, receipt, bill and payment
@@ -128,19 +135,29 @@ Only a few records carry the marks of the app in use:
 
 Only you know which of these are real. Choose one of these:
 
-- **A. Start the books clean (recommended if the history is trial data).** Take
-  the backup (runbook step 0). Before applying 0014, clear the trial records,
-  keeping the business, locations, people, suppliers, items, menu and prices.
-  Then apply the migrations and enter real opening balances through the app:
+- **A. Start the books clean (for trial data).** Run
+  [`supabase/remediation/clean-start.sql`](../supabase/remediation/clean-start.sql)
+  in the SQL editor, immediately before applying 0014. It keeps the business,
+  its locations, its chart of accounts and its owner. It removes every other
+  record: sales, stock, purchases, bills, payments, expenses, journals, periods,
+  counts, the catalogue, suppliers, the other people and the logs. The audit
+  trail then opens with a line recording the clean start, and journals number
+  from 1001 again. The script runs as one transaction and checks its own result.
+  It refuses to run once 0014 is applied. `scripts/test-sql.sh` rehearses it,
+  followed by the upgrade and a first day's trading.
+
+  Then apply the migrations, and enter real opening balances through the app:
   - stock on hand, bought outright: **Inventory → Add stock item** with its
     opening quantity and cost (Dr 1200, Cr 3000 Owner equity);
   - stock still owed to a supplier: **Purchasing → Receive stock**, then that
     supplier's bill on **Vendors**;
   - cash: a manual journal, Dr 1000 or 1020, Cr 3000.
 
-  Clearing records is a one-way operation on the live database. It needs your
-  explicit go-ahead, and the script should be rehearsed on the same copy first.
-  Ask for it and it will be prepared and rehearsed.
+  **Done on the live database on 23 September 2026**, at the owner's
+  instruction. It had 32 journals, 9 sales, 52 stock movements, 9 items and
+  4 products. It now holds the business, its 2 locations, its 16 accounts and
+  the owner's place. Run the script once more immediately before 0014, in case
+  anything was recorded through the old app in between.
 
 - **B. Keep the history and correct it.** Follow section 5. Every step uses the
   app's own tools, so the history stays and every correction is on the audit

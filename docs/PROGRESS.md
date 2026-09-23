@@ -8,11 +8,16 @@ browser tests through the real app, or both.
 ## Where things stand
 
 - **Built and verified:** migrations `0014`–`0017` and the rebuilt app. The SQL
-  suites (12), the browser suites (4, every role), the unit and contract tests
+  checks (15), the browser suites (4, every role), the unit and contract tests
   (105) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
+- **Live trial data cleared.** On 23 September 2026 the owner confirmed the
+  live history was trial data, and it was cleared with
+  [`supabase/remediation/clean-start.sql`](../supabase/remediation/clean-start.sql).
+  The live database keeps the business, its locations, its chart of accounts
+  and the owner's place, and nothing else.
 - **Not yet live.** The live site still runs the previous app, and it is
   **publicly writable until this version is deployed.** See
   [`guides/deployment.md`](guides/deployment.md).
@@ -59,7 +64,7 @@ browser tests through the real app, or both.
 | L-01 | Journals with no lines                         |   ✅   | A published entry needs balanced lines                                                                                                               |
 | L-02 | A finished sale's cost can change              |   ✅   | Cost, lines and tenders frozen                                                                                                                       |
 | L-03 | Period names in UTC                            |   ✅   | Business timezone                                                                                                                                    |
-| L-04 | Demo and real data mixed                       |   🟡   | Demo transactions removed from the seed; placeholder people remain until the owner replaces them; use a separate staging project                     |
+| L-04 | Demo and real data mixed                       |   ✅   | The live trial records were cleared (`supabase/remediation/clean-start.sql`); the seed has no transactions; keep staging in a separate project       |
 | L-05 | No exports or attachments                      |   🟡   | CSV for trial balance, P&L and reconciliation. No PDF, no attachments on bills or expenses                                                           |
 | L-06 | Translations partial                           |   🟡   | Navigation, sign-in, the till and the offline messages in all three languages; most screen bodies still English                                      |
 
@@ -90,7 +95,7 @@ browser tests through the real app, or both.
 | Layer                        | What                                                                                                          | Result      |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------- |
 | Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 105 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade rehearsal on the live migration order, 9 suites, concurrency                   | 12 passing  |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, 9 suites, concurrency  | 15 passing  |
 | Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, retry, offline                             | 4 passing   |
 | Build                        | `npm run build`, types, lint, formatting                                                                      | green       |
 
