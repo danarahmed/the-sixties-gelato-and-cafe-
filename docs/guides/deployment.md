@@ -9,6 +9,17 @@ every write permission the old app relied on, so the old till stops recording
 sales the moment it is applied; the new app needs `0014`–`0017` to work at all.
 Plan a short window when the café is closed.
 
+## Where the live system stands (23 September 2026)
+
+| Step                         | Status                                                                                                                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0. The old history           | ✅ Cleared: it was trial data                                                                                                                                                  |
+| 2. The Vercel settings       | ⬜ **The owner adds them.** The Vercel connector used for the rest is not allowed to create Production variables                                                               |
+| 3. Migrations `0014`–`0017`  | ✅ Applied, then compared with the tested build object by object: functions, tables, rules, indexes, triggers and permissions are identical. The public key has no access      |
+| 4. The new app               | ✅ Merged for production ([pull request #1](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/1)). It shows "Not configured" until step 2 is done and redeployed |
+| 5. Sign-in settings          | ⬜ The owner sets them                                                                                                                                                         |
+| 6. The owner's first sign-in | ⬜ The owner's place already carries the owner's real address; the owner creates the login                                                                                     |
+
 ## 0. Before you start
 
 - **Take a backup.** Supabase dashboard → _Database → Backups_ (confirm today's
@@ -16,16 +27,16 @@ Plan a short window when the café is closed.
   [`backup-restore.md`](backup-restore.md).
 - The live project is Supabase **`sixties-gelato-cafe`** (PostgreSQL 17.6) and
   Vercel project **`sixties-gelato-cafe`**.
-- Until the steps below are done, the live site is still publicly writable. If
-  you cannot do them today, turn on Vercel _Settings → Deployment Protection_
-  for Production first.
+- Before step 3, the database accepted reads and writes from anyone holding the
+  public key. Until step 3 is done on a database, turn on Vercel _Settings →
+  Deployment Protection_ for Production.
 - **The existing history: cleared.** The owner confirmed it was trial data, and
   on 23 September 2026 it was cleared with
   [`supabase/remediation/clean-start.sql`](../../supabase/remediation/clean-start.sql)
-  ([`../REMEDIATION.md`](../REMEDIATION.md), section 4, option A). **Run the
-  script once more immediately before step 3**, in the SQL editor, in case
-  anything was recorded through the old app since. It changes nothing if there
-  is nothing to clear, and refuses to run once step 3 is done.
+  ([`../REMEDIATION.md`](../REMEDIATION.md), section 4, option A). Nothing was
+  recorded between the clean start and step 3, so it did not need running
+  again. On another database, run it immediately before step 3; it refuses to
+  run once step 3 is done.
 
 ## 1. Rehearse locally (optional, recommended)
 
@@ -40,7 +51,7 @@ PGPORT=5432 scripts/test-e2e.sh   # the real app, in a browser, as every role
 ## 2. Point the app at the database (Vercel)
 
 The app no longer carries a built-in database address. In Vercel → _Settings →
-Environment Variables_, for **Production and Preview**, set:
+Environment Variables_, for **Production**, set:
 
 | Name                            | Value                                                        |
 | ------------------------------- | ------------------------------------------------------------ |
@@ -49,7 +60,13 @@ Environment Variables_, for **Production and Preview**, set:
 
 No service-role key is needed or wanted: the app acts only as the signed-in
 person. Without these two, a deployment shows a "Not configured" page and
-touches nothing.
+touches nothing. Then open _Deployments_, and on the latest Production
+deployment choose **Redeploy**: the settings are built into the app, so a
+deployment made before they existed does not see them.
+
+Leave Preview without them. Preview deployments then cannot reach the live
+books. To try changes on real screens, point Preview at a separate staging
+project (step 8).
 
 ## 3. Apply migrations 0014 → 0017
 

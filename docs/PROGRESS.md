@@ -18,8 +18,12 @@ browser tests through the real app, or both.
   [`supabase/remediation/clean-start.sql`](../supabase/remediation/clean-start.sql).
   The live database keeps the business, its locations, its chart of accounts
   and the owner's place, and nothing else.
-- **Not yet live.** The live site still runs the previous app, and it is
-  **publicly writable until this version is deployed.** See
+- **Database upgraded on 23 September 2026.** Migrations `0014`–`0017` were
+  applied to the live project and compared with the tested build object by
+  object: identical. The public key can no longer read or write anything.
+- **App merged for production; waiting on two settings.** It shows "Not
+  configured" until the owner adds its two Vercel settings and redeploys, and
+  sign-in needs the Supabase settings. See
   [`guides/deployment.md`](guides/deployment.md).
 
 ## The August 2026 audit, finding by finding
