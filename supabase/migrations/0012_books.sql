@@ -32,12 +32,18 @@ create table if not exists supplier_payment (
 create index if not exists supplier_payment_supplier_idx on supplier_payment (business_id, supplier_id);
 
 -- --- Cash over/short account (day close) -------------------------------------
+-- Guarded on the business existing: migrations run before the seed, so on a
+-- fresh database (supabase db reset, a new staging project, a disaster-recovery
+-- rebuild) the business is not there yet and an unguarded insert fails the
+-- whole migration. Fresh databases get 6300 from the seed and from
+-- provision_chart_of_accounts() (0014).
 insert into gl_account (business_id, code, name, account_type, normal_balance)
 select '00000000-0000-0000-0000-0000000000b1', '6300', 'Cash over / short', 'expense', 'debit'
-where not exists (
-  select 1 from gl_account
-  where business_id = '00000000-0000-0000-0000-0000000000b1' and code = '6300'
-);
+where exists (select 1 from business where id = '00000000-0000-0000-0000-0000000000b1')
+  and not exists (
+    select 1 from gl_account
+    where business_id = '00000000-0000-0000-0000-0000000000b1' and code = '6300'
+  );
 
 -- --- Row-level security (demo-scoped, same pattern as 0010/0011) -------------
 alter table supplier_payment enable row level security;

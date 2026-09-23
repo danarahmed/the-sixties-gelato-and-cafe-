@@ -162,4 +162,5 @@ insert into gl_account (business_id, code, name, account_type, normal_balance) v
   ('00000000-0000-0000-0000-0000000000b1','5300','Waste & spoilage',        'expense','debit'),
   ('00000000-0000-0000-0000-0000000000b1','6000','Rent',                    'expense','debit'),
   ('00000000-0000-0000-0000-0000000000b1','6100','Salaries',                'expense','debit'),
-  ('00000000-0000-0000-0000-0000000000b1','6200','Utilities',               'expense','debit');
+  ('00000000-0000-0000-0000-0000000000b1','6200','Utilities',               'expense','debit')
+on conflict (business_id, code) do nothing;
