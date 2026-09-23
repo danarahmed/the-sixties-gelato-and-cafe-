@@ -10,7 +10,8 @@ select test.act_as('cashier@example.com');
 create temp table s1 as select record_sale('10000000-0000-0000-0000-000000000001', 'dine_in', 'cash',
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]') as r;
 select test.eq((select (r->>'net')::numeric from s1), 5000::numeric, 'G1 net');
-select test.eq((select (r->>'cogs')::numeric from s1), 400::numeric, 'G1 cogs');
+select test.eq(test.cogs_of((select (r->>'order_id')::uuid from s1)), 400::numeric, 'G1 cogs');
+select test.ok(not (select r ? 'cogs' from s1), 'the cashier is told the price, never the cost');
 select test.eq(test.lines_of((select (r->>'order_id')::uuid from s1)),
   '1000 Dr 5000 | 1200 Cr 400 | 4000 Cr 5000 | 5000 Dr 400', 'G1 journal');
 
@@ -44,7 +45,7 @@ select test.eq(test.lines_of((select (r->>'order_id')::uuid from s4)),
 -- A resale item is issued one-for-one.
 create temp table s5 as select record_sale(gen_random_uuid(), 'dine_in', 'cash',
   '[{"variant_id":"d1000000-0000-0000-0000-000000000002","qty":2}]') as r;
-select test.eq((select (r->>'cogs')::numeric from s5), 500::numeric, 'two bottles at 250');
+select test.eq(test.cogs_of((select (r->>'order_id')::uuid from s5)), 500::numeric, 'two bottles at 250');
 
 -- Line COGS add up to the order, and the order to its movements.
 select test.as_admin();
@@ -89,4 +90,8 @@ select test.ok((item_position('00000000-0000-0000-0000-0000000000b1', 'c0000000-
 select test.act_as('cashier@example.com');
 create temp table s6 as select record_sale(gen_random_uuid(), 'dine_in', 'cash',
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]') as r;
-select test.eq((select (r->>'cogs')::numeric from s6), 200::numeric, 'a sale from negative stock costs 200, not 0');
+select test.eq(test.cogs_of((select (r->>'order_id')::uuid from s6)), 200::numeric, 'a sale from negative stock costs 200, not 0');
+select test.act_as('manager@example.com');
+select test.eq((record_sale(gen_random_uuid(), 'dine_in', 'cash',
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]') ->> 'cogs')::numeric, 200::numeric,
+  'a manager ringing a sale does see its cost');

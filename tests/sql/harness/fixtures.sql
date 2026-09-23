@@ -73,6 +73,12 @@ language sql security definer as $$
    where e.reference_id = p_ref and e.reverses_entry is null
 $$;
 
+-- What a sale cost, as recorded on the order.
+create or replace function test.cogs_of(p_order uuid) returns numeric
+language sql security definer as $$
+  select cogs_amount from sales_order where id = p_order
+$$;
+
 -- The balance of an account for the demo business (debit-positive).
 create or replace function test.balance(p_code text) returns numeric
 language sql security definer as $$

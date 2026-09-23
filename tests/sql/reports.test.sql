@@ -60,3 +60,16 @@ select test.eq((select subledger from rec where check_key = 'grni'), 2500::numer
 select test.eq((dashboard_summary((select d from today)) ->> 'net_revenue')::numeric, 7500::numeric, 'dashboard revenue');
 select test.eq((dashboard_summary((select d from today)) ->> 'gross_profit')::numeric, 5900::numeric, 'dashboard gross profit');
 select test.eq((select sum(orders) from report_daily_sales((select d from today), (select d from today)))::int, 2, 'two orders today');
+
+-- The menu, costed as a sale would post it: espresso 20 g x 10 = 200; the
+-- takeaway and Talabat servings add the 50 IQD cup; water is bought in.
+create temp table menu as select * from menu_costing();
+select test.eq((select string_agg(channel || '=' || price || '/' || unit_cost, ',' order by channel)
+                  from menu where variant_id = 'd1000000-0000-0000-0000-000000000001'),
+  'dine_in=2500/200,takeaway=2500/250,talabat=3000/250', 'menu costing per channel');
+select test.eq((select unit_cost from menu where variant_id = 'd1000000-0000-0000-0000-000000000002'), 250::numeric,
+  'a resale item costs what it was bought for');
+select test.eq((select count(*) from menu_recipe_lines() where variant_id = 'd1000000-0000-0000-0000-000000000001')::int, 2,
+  'the recipe in force is listed');
+select test.act_as('cashier@example.com');
+select test.throws($$select * from menu_costing()$$, '%permission%', 'a cashier is not shown the menu''s costs');

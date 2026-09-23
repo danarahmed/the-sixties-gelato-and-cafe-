@@ -202,6 +202,51 @@ begin
                       'app_user', p_member::text);
 end $$;
 
+-- The people of the business, for whoever manages them: email, roles, and
+-- whether they have signed in yet (their login is linked).
+create or replace function list_members()
+returns table (id uuid, full_name text, email text, roles app_role[], is_active boolean, linked boolean)
+language plpgsql stable security definer set search_path = public as $$
+declare v_business uuid := require_permission('settings.manage');
+begin
+  return query
+    select m.id, m.full_name, m.email::text,
+           coalesce((select array_agg(ur.role order by ur.role) from user_role ur where ur.app_user_id = m.id),
+                    '{}'::app_role[]),
+           m.is_active, m.auth_user_id is not null
+      from app_user m
+     where m.business_id = v_business
+     order by m.is_active desc, m.full_name;
+end $$;
+
+-- Change what someone may do. Owner and general-manager roles are the owner's
+-- to give or take, and the business always keeps an active owner.
+create or replace function set_member_roles(p_member uuid, p_roles app_role[]) returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  v_business uuid := require_permission('settings.manage');
+  v_before app_role[];
+begin
+  if p_roles is null or cardinality(p_roles) = 0 then raise exception 'Give the person at least one role'; end if;
+  select coalesce(array_agg(role order by role), '{}') into v_before from user_role where app_user_id = p_member;
+  if not exists (select 1 from app_user where id = p_member and business_id = v_business) then
+    raise exception 'Member not found';
+  end if;
+  if (v_before && array['owner', 'general_manager']::app_role[] or p_roles && array['owner', 'general_manager']::app_role[])
+     and not current_has_role('owner') then
+    raise exception 'Only the owner can give or take the owner and general manager roles' using errcode = '42501';
+  end if;
+  if 'owner' = any(v_before) and not ('owner' = any(p_roles))
+     and (select count(*) from user_role ur join app_user au on au.id = ur.app_user_id
+           where au.business_id = v_business and au.is_active and ur.role = 'owner') <= 1 then
+    raise exception 'The business must keep at least one active owner';
+  end if;
+  delete from user_role where app_user_id = p_member;
+  insert into user_role (app_user_id, role) select p_member, r from unnest(p_roles) r group by r;
+  perform audit_event(v_business, 'member.roles', 'app_user', p_member::text, null,
+                      jsonb_build_object('roles', v_before), jsonb_build_object('roles', p_roles));
+end $$;
+
 -- Link a confirmed login to the invited person with that email. Confirmation
 -- matters: without it, anyone could sign up with the owner's address first.
 create or replace function link_confirmed_login() returns trigger
@@ -270,5 +315,6 @@ grant execute on function
 to authenticated;
 
 -- People.
-grant execute on function my_profile(), invite_member(text, text, app_role[]), set_member_active(uuid, boolean)
+grant execute on function my_profile(), invite_member(text, text, app_role[]), set_member_active(uuid, boolean),
+  list_members(), set_member_roles(uuid, app_role[])
   to authenticated;

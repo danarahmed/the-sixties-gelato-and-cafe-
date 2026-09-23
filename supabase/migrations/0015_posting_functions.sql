@@ -337,6 +337,13 @@ $$;
 create or replace function is_platform_channel(p_channel sales_channel) returns boolean
 language sql immutable as $$ select p_channel in ('talabat', 'careem', 'toters') $$;
 
+-- What a sale cost, for those allowed to see costs. A cashier is told the
+-- price they charged, never the margin behind it.
+create or replace function sale_cost_view(p_cogs numeric) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select case when current_has_permission('cost.view') then jsonb_build_object('cogs', p_cogs) else '{}'::jsonb end
+$$;
+
 -- Record a sale. p_idempotency_key is minted by the till when the cart is
 -- created and reused on every retry, so a retried or double-submitted sale
 -- returns the original instead of posting twice (audit H-01).
@@ -376,8 +383,8 @@ begin
   select id, net_amount, cogs_amount into v_existing
     from sales_order where business_id = v_business and idempotency_key = p_idempotency_key;
   if found then
-    return jsonb_build_object('order_id', v_existing.id, 'net', v_existing.net_amount,
-                              'cogs', v_existing.cogs_amount, 'replayed', true);
+    return jsonb_build_object('order_id', v_existing.id, 'net', v_existing.net_amount, 'replayed', true)
+           || sale_cost_view(v_existing.cogs_amount);
   end if;
 
   v_location := resolve_location(v_business, p_location);
@@ -393,8 +400,8 @@ begin
     -- A concurrent request with this key won the race; return its sale.
     select id, net_amount, cogs_amount into v_existing
       from sales_order where business_id = v_business and idempotency_key = p_idempotency_key;
-    return jsonb_build_object('order_id', v_existing.id, 'net', v_existing.net_amount,
-                              'cogs', v_existing.cogs_amount, 'replayed', true);
+    return jsonb_build_object('order_id', v_existing.id, 'net', v_existing.net_amount, 'replayed', true)
+           || sale_cost_view(v_existing.cogs_amount);
   end if;
 
   -- Lock every item this sale touches, in a stable order.
@@ -467,8 +474,9 @@ begin
       jsonb_build_object('code', '5000', 'debit', v_cogs),
       jsonb_build_object('code', '1200', 'credit', v_cogs)));
 
-  return jsonb_build_object('order_id', v_order, 'net', v_net, 'cogs', v_cogs,
-    'journal_no', (select journal_no from journal_entry where id = v_journal), 'replayed', false);
+  return jsonb_build_object('order_id', v_order, 'net', v_net,
+    'journal_no', (select journal_no from journal_entry where id = v_journal), 'replayed', false)
+    || sale_cost_view(v_cogs);
 end $$;
 
 -- Reverse a published entry line for line, dated when the reversal happens.
@@ -854,7 +862,8 @@ begin
   v_value := money_round(v_business, v_cost * v_base);
   if v_value > (select waste_approval_threshold from business where id = v_business)
      and not current_has_permission('waste.approve') then
-    raise exception 'Waste worth % needs a manager to record it', v_value using errcode = '42501';
+    -- Not saying the value: whoever lacks waste.approve may also lack cost.view.
+    raise exception 'This much waste needs a manager to record it' using errcode = '42501';
   end if;
 
   insert into inventory_movement (business_id, item_id, location_id, type, base_quantity_signed, unit_cost, value,
@@ -866,8 +875,9 @@ begin
     'inventory_movement', v_mv,
     jsonb_build_array(jsonb_build_object('code', '5300', 'debit', v_value),
                       jsonb_build_object('code', '1200', 'credit', v_value)));
-  return jsonb_build_object('movement_id', v_mv, 'value', v_value,
-    'journal_no', (select journal_no from journal_entry where id = v_journal));
+  return jsonb_build_object('movement_id', v_mv,
+    'journal_no', (select journal_no from journal_entry where id = v_journal))
+    || case when current_has_permission('cost.view') then jsonb_build_object('value', v_value) else '{}' end;
 end $$;
 
 -- A manager's stock correction outside a count. Losses at average cost; gains

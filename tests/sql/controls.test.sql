@@ -97,6 +97,20 @@ select test.act_as('owner@example.com');
 select test.throws($$select set_member_active((select id from owner_id), false)$$,
   '%cannot deactivate yourself%', 'the owner cannot lock themselves out');
 
+-- Managing people: the owner sees who is who, and who has signed in.
+select test.eq((select linked from list_members() where email = 'new.person@example.com'), true,
+  'the member list shows the new cashier has signed in');
+select test.eq((select roles::text from list_members() where email = 'new.person@example.com'), '{cashier}', 'as a cashier');
+select set_member_roles((select id from list_members() where email = 'new.person@example.com'), '{cashier,barista}');
+select test.eq((select roles::text from list_members() where email = 'new.person@example.com'), '{cashier,barista}',
+  'roles can be changed');
+select test.throws($$select set_member_roles((select id from owner_id), '{cashier}')$$,
+  '%at least one active owner%', 'the last owner cannot be demoted');
+select test.as_admin();
+select test.eq((select count(*) from audit_log where action = 'member.roles')::int, 1, 'and every role change is audited');
+select test.act_as('manager@example.com');
+select test.throws($$select * from list_members()$$, '%permission%', 'a manager cannot list staff emails');
+
 -- ------------------------------------------------------------------ structure
 -- Every function a signed-in person can execute is on this list — nothing
 -- more. A migration that exposes something by accident fails here.
@@ -107,11 +121,12 @@ select test.eq((
    where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'execute')),
   'adjust_stock,approve_stock_count,close_day,create_item,create_product,create_supplier,current_app_user_id,'
   'current_business_id,current_can_view_costs,current_has_permission,current_has_role,dashboard_summary,'
-  'discard_journal,invite_member,lock_period,my_profile,new_recipe_version,pay_bill,period_close_checklist,'
+  'discard_journal,invite_member,list_members,lock_period,menu_costing,menu_recipe_lines,my_profile,'
+  'new_recipe_version,pay_bill,period_close_checklist,'
   'pos_catalogue,publish_journal,receive_goods,record_bill,record_count,record_expense,record_sale,record_waste,'
   'refund_sale,reject_stock_count,report_daily_sales,report_day_totals,report_profit_and_loss,'
   'report_reconciliation,report_trial_balance,reverse_journal,review_stock_count,save_journal,set_member_active,'
-  'set_price,start_stock_count,submit_stock_count,unlock_period,void_sale',
+  'set_member_roles,set_price,start_stock_count,submit_stock_count,unlock_period,void_sale',
   'signed-in users can call exactly the intended API');
 select test.eq((
   select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace

@@ -27,6 +27,7 @@ select test.throws($$select record_waste('c0000000-0000-0000-0000-000000000001',
 select test.act_as('barista@example.com');
 create temp table w as select record_waste('c0000000-0000-0000-0000-000000000001', 100, 'g', 'spoilage', 'left out overnight') as r;
 select test.eq(test.lines_of((select (r->>'movement_id')::uuid from w)), '1200 Cr 1000 | 5300 Dr 1000', 'G8 waste journal');
+select test.ok(not (select r ? 'value' from w), 'a barista records waste without being shown its cost');
 select test.throws($$select record_waste('c0000000-0000-0000-0000-000000000001', 100, 'g', 'waste', '   ')$$,
   '%why%', 'waste needs a reason');
 select test.throws($$select record_waste('c0000000-0000-0000-0000-000000000001', 100, 'g', 'sale_consumption', 'x')$$,

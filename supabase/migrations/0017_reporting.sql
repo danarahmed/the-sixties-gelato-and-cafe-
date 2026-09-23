@@ -191,9 +191,67 @@ begin
     'negative_stock', (select count(*) from stock_board where business_id = v_business and is_negative));
 end $$;
 
+-- The menu as a manager sees it: today's price and today's cost of one serving
+-- on every channel it is sold on, costed by exactly the functions a sale uses
+-- (so the margin shown is the margin a sale will post). Recipes and prices in
+-- force TODAY are used; a future-dated change does not apply yet (M-04).
+create or replace function menu_costing()
+returns table (variant_id uuid, product_id uuid, product_name text, variant_name text, category text,
+               channel sales_channel, price numeric, unit_cost numeric)
+language plpgsql stable security definer set search_path = public as $$
+declare
+  v_business uuid := require_permission('cost.view');
+  v_today date; v_location uuid; r record; ch sales_channel;
+begin
+  v_today := business_local_date(v_business, now());
+  v_location := default_location(v_business);
+  for r in select pv.id as vid, p.id as pid, p.name as pname, pv.name as vname, pc.name as cname
+             from product_variant pv
+             join product p on p.id = pv.product_id
+             left join product_category pc on pc.id = p.category_id
+            where pv.business_id = v_business and pv.is_active and p.is_active
+            order by p.name, pv.name loop
+    foreach ch in array enum_range(null::sales_channel) loop
+      price := price_on(r.vid, ch, v_location, v_today);
+      continue when price is null;
+      variant_id := r.vid; product_id := r.pid; product_name := r.pname; variant_name := r.vname;
+      category := r.cname; channel := ch;
+      begin
+        select coalesce(sum(money_round(v_business, item_issue_cost(v_business, e.item_id, v_location) * e.base_qty)), 0)
+          into unit_cost
+          from expand_variant(r.vid, ch, 1, v_today) e;
+      exception when others then
+        unit_cost := null;   -- e.g. no recipe version in force today: unknown, never shown as free
+      end;
+      return next;
+    end loop;
+  end loop;
+end $$;
+
+-- The recipe in force today for every product, line by line.
+create or replace function menu_recipe_lines()
+returns table (variant_id uuid, version_no int, effective_from date, component text,
+               quantity numeric, unit_code text, channels sales_channel[])
+language plpgsql stable security definer set search_path = public as $$
+declare v_business uuid := require_permission('cost.view'); v_today date;
+begin
+  v_today := business_local_date(v_business, now());
+  return query
+    select vr.product_variant_id, rv.version_no, rv.effective_from,
+           coalesce(i.name, sr.name, '—'), rl.quantity, rl.unit_code, rl.applies_to_channels
+      from variant_recipe vr
+      join product_variant pv on pv.id = vr.product_variant_id and pv.business_id = v_business
+      join recipe_version rv on rv.id = recipe_version_on(vr.recipe_id, v_today)
+      join recipe_line rl on rl.recipe_version_id = rv.id
+      left join item i on i.id = rl.item_id
+      left join recipe sr on sr.id = rl.sub_recipe_id
+     order by vr.product_variant_id, coalesce(i.name, sr.name);
+end $$;
+
 -- 0016 reversed the defaults, so the functions above start closed; open only
 -- the reports. (local_day_bounds stays internal.)
 grant execute on function
   report_trial_balance(date, date), report_profit_and_loss(date, date), report_reconciliation(date),
-  report_daily_sales(date, date), report_day_totals(date, uuid), pos_catalogue(), dashboard_summary(date)
+  report_daily_sales(date, date), report_day_totals(date, uuid), pos_catalogue(), dashboard_summary(date),
+  menu_costing(), menu_recipe_lines()
 to authenticated;
