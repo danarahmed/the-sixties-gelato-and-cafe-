@@ -22,6 +22,8 @@ export interface BusinessConfig {
   wasteApprovalThreshold: number;
   /** A percentage discount comes to the nearest multiple of this. */
   discountRoundTo: number;
+  /** The café's own bill numbers start with this: SGC-2026-0001. */
+  billPrefix: string;
 }
 
 export async function getBusinessConfig(): Promise<BusinessConfig | null> {
@@ -30,7 +32,7 @@ export async function getBusinessConfig(): Promise<BusinessConfig | null> {
     await c
       .from("business")
       .select(
-        "id,name,currency_code,currency_decimals,timezone,default_locale,prevent_negative_stock,waste_approval_threshold,discount_round_to",
+        "id,name,currency_code,currency_decimals,timezone,default_locale,prevent_negative_stock,waste_approval_threshold,discount_round_to,bill_prefix",
       )
       .maybeSingle(),
     "the business settings",
@@ -46,6 +48,7 @@ export async function getBusinessConfig(): Promise<BusinessConfig | null> {
     preventNegativeStock: Boolean(b.prevent_negative_stock),
     wasteApprovalThreshold: num(b.waste_approval_threshold),
     discountRoundTo: num(b.discount_round_to),
+    billPrefix: str(b.bill_prefix),
   };
 }
 

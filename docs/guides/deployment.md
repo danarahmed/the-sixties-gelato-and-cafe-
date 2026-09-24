@@ -22,6 +22,7 @@ Plan a short window when the café is closed.
 | The till update (`0018`)     | ✅ Migration applied on 24 September and compared object by object with the tested build: identical. The screens were merged ([pull request #2](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/2)) and deployed (see [After `0018`](#after-0018))                                                                                                                       |
 | Discounts (`0019`)           | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens were merged ([pull request #3](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/3)) and deployed (see [After `0019`](#after-0019))                                                          |
 | Discount rounding (`0020`)   | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens were merged ([pull request #4](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/4)) and deployed. The step was then set to 250 IQD at the owner's request (see [After `0020`](#after-0020)) |
+| Bill numbers (`0021`)        | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0021`](#after-0021)). The form goes live with the pull request that carries it                                                                                                                             |
 
 ## 0. Before you start
 
@@ -276,3 +277,28 @@ owner, in a transaction that was rolled back:
 
 To round to a different step, run the same two statements with the new value.
 **Settings** shows it at once; each till follows it once it is refreshed.
+
+## After `0021`
+
+Migration `0021` gives a bill entered without the supplier's own number the
+café's number: SGC-2026-0001, -0002 … (`business.bill_prefix`, a count per
+year). It goes in before the form that fills the number in: the app deployed
+before it keeps working, because `record_bill` keeps its signature, still
+takes any number typed in, and only adds the number it used to its answer.
+
+It was applied on 24 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that
+`record_bill` was exactly the verified `0020` one and that no bill already
+carried an SGC number. It was then compared with the tested build, object by
+object: identical. Only `next_bill_number()` is new to signed-in users; the
+helpers behind it cannot be called from outside. A check as the owner, in a
+transaction that was rolled back:
+
+- the form was offered SGC-2026-0001, and a bill left with it took it, as did
+  its journal (`Bill SGC-2026-0001`);
+- the next bill, for another supplier, took SGC-2026-0002;
+- SGC-2026-0009 typed by hand was refused;
+- a supplier's own number (ERBIL-555) was kept, and used none of the café's;
+- every reconciliation check was zero.
+
+Nothing was kept: no bill, no counter, and the journal numbering is unchanged.

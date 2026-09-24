@@ -215,8 +215,11 @@ late.
       difference in price posts to 5050;
     - **For a service or asset:** pick the account.
 
-    Then enter the invoice number, date, amount and terms (due now, net 7, 15 or
-    30). The same invoice number from the same vendor is refused.
+    The **invoice number** is filled in with the café's own number
+    (SGC-2026-0001, then -0002 …), given when the bill is recorded and never to
+    another bill. If the supplier's invoice has its own number, type that
+    instead; the same supplier number from the same vendor is refused. Then
+    enter the date, amount and terms (due now, net 7, 15 or 30).
 
   - **Open bills,** with **Pay bill**: amount, and paid from 1000 Cash, 1010 Card
     or 1020 Bank. You cannot pay more than is outstanding.

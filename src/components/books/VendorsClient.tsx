@@ -37,6 +37,7 @@ export function VendorsClient({
   today,
   businessName,
   canBill,
+  nextBillNo,
   canPay,
   canAddVendor,
 }: {
@@ -47,6 +48,8 @@ export function VendorsClient({
   today: string;
   businessName: string;
   canBill: boolean;
+  /** The café's own number the next bill takes if its box is left as filled. */
+  nextBillNo: string | null;
   canPay: boolean;
   canAddVendor: boolean;
 }) {
@@ -142,6 +145,7 @@ export function VendorsClient({
               accounts={accounts}
               today={today}
               canBill={canBill}
+              nextBillNo={nextBillNo}
               canPay={canPay}
               onDone={() => router.refresh()}
             />
@@ -252,6 +256,7 @@ function Bills({
   accounts,
   today,
   canBill,
+  nextBillNo,
   canPay,
   onDone,
 }: {
@@ -261,6 +266,7 @@ function Bills({
   accounts: AccountOption[];
   today: string;
   canBill: boolean;
+  nextBillNo: string | null;
   canPay: boolean;
   onDone: () => void;
 }) {
@@ -271,7 +277,8 @@ function Bills({
   );
   const [receiptId, setReceiptId] = useState(receipts[0]?.id ?? "");
   const [accountCode, setAccountCode] = useState(accounts[0]?.code ?? "");
-  const [inv, setInv] = useState("");
+  // null: the box shows the café's next number, taken when the bill is saved.
+  const [inv, setInv] = useState<string | null>(null);
   const [invDate, setInvDate] = useState(today);
   const [amount, setAmount] = useState(receipts[0] ? String(receipts[0].value) : "");
   const [terms, setTerms] = useState("15");
@@ -282,13 +289,16 @@ function Bills({
   const receipt = receipts.find((r) => r.id === receiptId);
   const amountN = Number(amount.replace(/[^0-9.]/g, "")) || 0;
   const variance = kind === "receipt" && receipt ? amountN - receipt.value : 0;
+  const typedNo = (inv ?? "").trim();
+  // Left as filled (or emptied), the bill takes the café's own number.
+  const ownNo = typedNo === "" || typedNo === nextBillNo;
 
   function raise() {
     setMsg(null);
     start(async () => {
       const r = await recordBillAction({
         supplierId: vendor.id,
-        invoiceNo: inv,
+        invoiceNo: ownNo ? null : typedNo,
         invoiceDate: invDate,
         amount,
         termDays: Number(terms) || 0,
@@ -300,12 +310,12 @@ function Bills({
         setMsg({
           ok: true,
           text:
-            `Bill ${inv} recorded (journal ${r.data.journalNo ?? "—"})` +
+            `Bill ${r.data.invoiceNo} recorded (journal ${r.data.journalNo ?? "—"})` +
             (pv
               ? ` — ${fmtIQD(Math.abs(pv))} ${pv > 0 ? "over" : "under"} the receipt, to 5050 Purchase price variance.`
               : "."),
         });
-        setInv("");
+        setInv(null);
         setAmount("");
         onDone();
       } else setMsg({ ok: false, text: r.error });
@@ -395,9 +405,11 @@ function Bills({
               <label style={{ flex: 1, minWidth: 120 }}>
                 <div className="sc">Invoice no.</div>
                 <input
-                  value={inv}
+                  aria-label="Invoice no."
+                  value={inv ?? nextBillNo ?? ""}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setInv(e.target.value)}
-                  placeholder="INV-0012"
+                  placeholder={nextBillNo ?? "The supplier's invoice no."}
                 />
               </label>
               <label style={{ minWidth: 140 }}>
@@ -431,13 +443,18 @@ function Bills({
               <button
                 className="btn-primary"
                 onClick={raise}
-                disabled={
-                  busy || !amount || !inv.trim() || (kind === "receipt" ? !receiptId : !accountCode)
-                }
+                disabled={busy || !amount || (kind === "receipt" ? !receiptId : !accountCode)}
               >
                 {busy ? "Saving…" : "Record bill"}
               </button>
             </div>
+            {ownNo && nextBillNo && (
+              <p className="muted" style={{ fontSize: ".78rem", margin: 0 }}>
+                {nextBillNo} is the café&apos;s own number, given when the bill is recorded and
+                never to another bill. If the supplier&apos;s invoice has its own number, type that
+                instead.
+              </p>
+            )}
             {kind === "receipt" && receipt && variance !== 0 && (
               <p className="muted" style={{ fontSize: ".78rem", margin: 0 }}>
                 The bill is {fmtIQD(Math.abs(variance))} {variance > 0 ? "more" : "less"} than the

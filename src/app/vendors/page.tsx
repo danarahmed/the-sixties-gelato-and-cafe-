@@ -1,6 +1,6 @@
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
-import { ageBills, getGlAccounts, getVendorBook } from "@/lib/db/books";
+import { ageBills, getGlAccounts, getNextBillNumber, getVendorBook } from "@/lib/db/books";
 import { getReceipts } from "@/lib/db/read";
 import { fmtIQD } from "@/lib/format";
 import { businessToday } from "@/lib/dates";
@@ -25,10 +25,12 @@ export default async function VendorsPage() {
   const profile = await requirePermission("cost.view");
   const t = await getT();
   const today = businessToday(profile.timezone);
-  const [{ vendors, openBills }, receipts, accounts] = await Promise.all([
+  const canBill = has(profile, "purchase.create") || has(profile, "accounting.post");
+  const [{ vendors, openBills }, receipts, accounts, nextBillNo] = await Promise.all([
     getVendorBook(today),
     getReceipts(200),
     getGlAccounts(),
+    canBill ? getNextBillNumber() : Promise.resolve(null),
   ]);
   const ageing = ageBills(openBills);
 
@@ -98,7 +100,8 @@ export default async function VendorsPage() {
           .map((a) => ({ code: a.code, name: a.name }))}
         today={today}
         businessName={profile.businessName}
-        canBill={has(profile, "purchase.create") || has(profile, "accounting.post")}
+        canBill={canBill}
+        nextBillNo={nextBillNo}
         canPay={has(profile, "accounting.post")}
         canAddVendor={has(profile, "purchase.create")}
       />

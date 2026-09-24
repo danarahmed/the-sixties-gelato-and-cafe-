@@ -331,6 +331,16 @@ export interface AccountRow {
   isActive: boolean;
 }
 
+/**
+ * The café's own number the next bill will be given if its box is left as
+ * filled (SGC-2026-0001 …). Only a look: the number is taken when the bill is
+ * saved, so two people never get the same one.
+ */
+export async function getNextBillNumber(): Promise<string> {
+  const c = await db();
+  return str(one<string>(await c.rpc("next_bill_number"), "the next bill number"));
+}
+
 export async function getGlAccounts(): Promise<AccountRow[]> {
   const c = await db();
   return rows(

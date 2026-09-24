@@ -139,7 +139,7 @@ select test.eq((
   'current_business_id,current_can_view_costs,current_has_permission,current_has_role,dashboard_summary,'
   'discard_journal,invite_member,legacy_unposted,list_members,lock_period,mark_bill_printed,menu_costing,'
   'menu_recipe_lines,my_profile,'
-  'new_recipe_version,open_tab,pay_bill,period_close_checklist,'
+  'new_recipe_version,next_bill_number,open_tab,pay_bill,period_close_checklist,'
   'pos_catalogue,pos_open_bills,post_control_correction,post_legacy_unposted,publish_journal,receive_goods,record_bill,'
   'record_count,record_expense,'
   'record_sale,record_waste,'

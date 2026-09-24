@@ -136,3 +136,54 @@ select test.eq((select string_agg(check_key || '=' || difference, ',' order by c
 select test.act_as('owner@example.com');
 select test.eq((select count(*) from legacy_unposted())::int, 0,
   'everything the app records is journaled as it happens: nothing awaits a journal');
+
+-- ------------------------------------------------- the café's own bill numbers
+-- Left blank, a bill takes the café's own number, SGC-<year>-0001 and on: one
+-- count for every supplier, never given twice, and never typed in by hand.
+select test.as_admin();
+create temp table yr as select extract(year from test.today())::int as y;
+grant select on yr to public;
+create or replace function pg_temp.own(n int) returns text language sql as $$
+  select format('SGC-%s-%s', (select y from yr), lpad(n::text, 4, '0')) $$;
+create temp table sup2 as select id from supplier
+  where business_id = '00000000-0000-0000-0000-0000000000b1' and id <> (select id from sup) limit 1;
+grant select on sup2 to public;
+
+select test.act_as('manager@example.com');
+select test.eq(next_bill_number(), pg_temp.own(1), 'the bill form is offered the café''s first number of the year');
+select test.eq(next_bill_number(), pg_temp.own(1), 'and looking at it does not use it up');
+create temp table own1 as select record_bill((select id from sup), null, test.today(), 1000, 0, null, '6200') as r;
+select test.eq(own1.r ->> 'invoice_no', pg_temp.own(1), 'a bill with no number takes it') from own1;
+create temp table own2 as select record_bill((select id from sup2), '   ', test.today(), 2000, 0, null, '6200') as r;
+select test.eq(own2.r ->> 'invoice_no', pg_temp.own(2), 'the next, for another supplier, takes the next: one count for the café')
+  from own2;
+select test.as_admin();
+select test.eq((select description || ' | ' || reference_no from journal_entry
+                 where id = (select journal_entry_id from purchase_invoice where id = (select (r ->> 'bill_id')::uuid from own1))),
+  'Bill ' || pg_temp.own(1) || ' | ' || pg_temp.own(1), 'its journal carries the number');
+
+-- A number some bill already carries is passed over.
+update document_counter set next_no = 1 where doc_type = 'bill:' || (select y from yr);
+select test.act_as('manager@example.com');
+select test.eq(next_bill_number(), pg_temp.own(3), 'numbers already on a bill are passed over');
+create temp table own3 as select record_bill((select id from sup), null, test.today(), 500, 0, null, '6200') as r;
+select test.eq(own3.r ->> 'invoice_no', pg_temp.own(3), 'when the bill is saved too') from own3;
+
+-- A cancelled bill keeps its number; it is never given again.
+select test.act_as('owner@example.com');
+select cancel_bill((select (r ->> 'bill_id')::uuid from own3), 'entered twice');
+select test.act_as('manager@example.com');
+select test.eq(next_bill_number(), pg_temp.own(4), 'a cancelled bill''s number is not given again');
+
+-- The café's form of number cannot be typed in; a supplier's own number can.
+select test.throws(format($$select record_bill((select id from sup), %L, test.today(), 5, 0, null, '6200')$$, pg_temp.own(9)),
+  '%given automatically%', 'a number in the café''s own form cannot be typed in');
+select test.throws(format($$select record_bill((select id from sup2), %L, test.today(), 5, 0, null, '6200')$$, lower(pg_temp.own(1))),
+  '%given automatically%', 'in any case, for any supplier');
+create temp table own_sup as select record_bill((select id from sup), 'DAIRY-77', test.today(), 700, 0, null, '6200') as r;
+select test.eq(own_sup.r ->> 'invoice_no', 'DAIRY-77', 'a supplier''s own number is kept as typed') from own_sup;
+select test.eq(next_bill_number(), pg_temp.own(4), 'and uses none of the café''s numbers');
+
+select test.act_as('owner@example.com');
+select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from report_reconciliation(test.today())),
+  'grni=0,inventory=0,payables=0,sales=0', 'the books still reconcile');
