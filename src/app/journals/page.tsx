@@ -44,7 +44,7 @@ export default async function JournalsPage({
     <div className="grid" style={{ gap: 18 }}>
       <div className="phead">
         <h1>{t("nav.journals")}</h1>
-        <span className="sc">Every entry in the book, newest first</span>
+        <span className="sc">Every entry in the book, by number, newest first</span>
         <div className="sp">
           {drafts > 0 && <span className="badge warn">{drafts} draft</span>}
           {period && (
