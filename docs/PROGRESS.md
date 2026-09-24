@@ -42,7 +42,9 @@ browser tests through the real app, or both.
 - **Discounts rounded to 500 IQD (migration `0020`):** a percentage comes to the
   nearest 500 IQD, so the till never asks for a few odd dinars (47% of 8,500 is
   4,000 off, not 3,995); an amount is taken as typed. The till shows the figure
-  the books record. Built and tested.
+  the books record. Built and tested. The migration was applied to the live
+  database on 24 September 2026, matches the tested build object by object,
+  and was checked as the owner in a transaction that was rolled back.
 
 ## The August 2026 audit, finding by finding
 
