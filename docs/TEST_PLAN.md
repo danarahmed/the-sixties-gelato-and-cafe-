@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 126 tests)
+## 1. Unit (Vitest, 127 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -27,7 +27,7 @@ layers before every release.
 - `tests/app-rules.test.ts`: where each role lands and what its menu offers,
   numbers typed in Arabic-Indic digits, what a till discount comes to (the
   percentage and the amount filling each other in, a percentage rounded to the
-  nearest 500 IQD as the books round it),
+  nearest 500 IQD, and to the café's 250, as the books round it),
   the Baghdad trading day, and the expense-account suggestions.
 
 ## 2. SQL (`scripts/test-sql.sh`, about 440 assertions)
@@ -67,19 +67,19 @@ where it must change nothing, and again after the upgrade, where it must refuse.
 
 **Suites**, each in a fresh copy of a template database:
 
-| Suite        | Proves                                                                                                                                                                                                                                  |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `smoke`      | The template builds and the fixtures load                                                                                                                                                                                               |
-| `sales`      | Golden postings per tender and channel; exactly-once by key; negative stock; recipe and price dates                                                                                                                                     |
-| `refunds`    | Void same day before the close; refund after; only returnable stock comes back                                                                                                                                                          |
-| `stock`      | Waste, corrections, opening stock; blind two-person counts; every movement journaled                                                                                                                                                    |
-| `purchasing` | Receipt → GRNI → bill → payment; landed cost; duplicate invoices; cancellation; overpayment                                                                                                                                             |
-| `journals`   | Draft/publish; subledger accounts closed to manual journals; reversal rules and dates; numbering                                                                                                                                        |
-| `close`      | The trading day in Baghdad time; day close once; the closing checklist; every route into a locked month                                                                                                                                 |
-| `reports`    | Trial balance, P&L and reconciliation from published lines, for exactly the dates asked                                                                                                                                                 |
-| `discounts`  | A percentage (rounded to the business's step: to the dinar, then the café's 500) or an amount; each line's share; 4000 at full price and 4100; refunds, voids and the reconciliation; who may give one; bills, printed bills and splits |
-| `pos`        | Tables, categories, photos judged by their bytes; bills paid later post exactly like a counter sale, once; stale tills refused; printed bills and cancellations guarded; split; the day held open by an open bill                       |
-| `controls`   | Who may do what; tenant isolation; the public can call nothing; the exact list of callable functions                                                                                                                                    |
+| Suite        | Proves                                                                                                                                                                                                                          |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `smoke`      | The template builds and the fixtures load                                                                                                                                                                                       |
+| `sales`      | Golden postings per tender and channel; exactly-once by key; negative stock; recipe and price dates                                                                                                                             |
+| `refunds`    | Void same day before the close; refund after; only returnable stock comes back                                                                                                                                                  |
+| `stock`      | Waste, corrections, opening stock; blind two-person counts; every movement journaled                                                                                                                                            |
+| `purchasing` | Receipt → GRNI → bill → payment; landed cost; duplicate invoices; cancellation; overpayment                                                                                                                                     |
+| `journals`   | Draft/publish; subledger accounts closed to manual journals; reversal rules and dates; numbering                                                                                                                                |
+| `close`      | The trading day in Baghdad time; day close once; the closing checklist; every route into a locked month                                                                                                                         |
+| `reports`    | Trial balance, P&L and reconciliation from published lines, for exactly the dates asked                                                                                                                                         |
+| `discounts`  | A percentage (rounded to the business's step: to the dinar, then to 500) or an amount; each line's share; 4000 at full price and 4100; refunds, voids and the reconciliation; who may give one; bills, printed bills and splits |
+| `pos`        | Tables, categories, photos judged by their bytes; bills paid later post exactly like a counter sale, once; stale tills refused; printed bills and cancellations guarded; split; the day held open by an open bill               |
+| `controls`   | Who may do what; tenant isolation; the public can call nothing; the exact list of callable functions                                                                                                                            |
 
 **Concurrency** (`scripts/test-sql-concurrency.sh`), with real parallel
 connections:

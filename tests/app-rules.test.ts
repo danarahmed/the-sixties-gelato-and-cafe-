@@ -99,9 +99,10 @@ describe("a discount at the till: the percentage and the amount fill each other 
   const pct = (value: string): Discount => ({ kind: "percent", value });
   const amt = (value: string): Discount => ({ kind: "amount", value });
   const n = (v: number) => new Decimal(v);
-  // The café's rule: a percentage comes to the nearest 500 IQD.
-  const cafe: MoneyRules = { decimals: 0, discountStep: 500 };
-  const off = (d: Discount, subtotal: number, money = cafe) =>
+  // A new business rounds a percentage to the nearest 500 IQD; the café, to 250.
+  const to500: MoneyRules = { decimals: 0, discountStep: 500 };
+  const cafe: MoneyRules = { decimals: 0, discountStep: 250 };
+  const off = (d: Discount, subtotal: number, money = to500) =>
     discountAmount(d, n(subtotal), money).toString();
 
   it("a percentage gives the amount, rounded to the nearest 500 IQD", () => {
@@ -110,6 +111,14 @@ describe("a discount at the till: the percentage and the amount fill each other 
     expect(off(pct("7"), 5000)).toBe("500"); // 350
     expect(off(pct("5"), 5000)).toBe("500"); // 250, exactly half-way: up
     expect(off(pct("2"), 2500)).toBe("0"); // 50 is nearer nothing
+  });
+
+  it("at the café's 250, a percentage comes to the nearest 250 IQD", () => {
+    expect(off(pct("47"), 8500, cafe)).toBe("4000"); // 3,995
+    expect(off(pct("7"), 5000, cafe)).toBe("250"); // 350
+    expect(off(pct("3"), 8500, cafe)).toBe("250"); // 255
+    expect(off(pct("5"), 2500, cafe)).toBe("250"); // 125, exactly half-way: up
+    expect(off(pct("2"), 2500, cafe)).toBe("0"); // 50 is nearer nothing
   });
 
   it("an amount typed in is taken as it is: the cashier chose it", () => {
@@ -185,11 +194,11 @@ describe("a discount at the till: the percentage and the amount fill each other 
     ];
     const bill = { ...quickOrder("takeaway"), kind: "bill" as const, lines };
     bill.saved = signature(lines, null);
-    expect(orderSubtotal(bill, byId, cafe).toString()).toBe("5000");
+    expect(orderSubtotal(bill, byId, to500).toString()).toBe("5000");
     expect(isDirty(bill)).toBe(false);
 
     const discounted = { ...bill, discount: pct("10") };
-    expect(orderDue(discounted, byId, cafe).toString()).toBe("4500");
+    expect(orderDue(discounted, byId, to500).toString()).toBe("4500");
     expect(isDirty(discounted)).toBe(true);
 
     const saved = { ...discounted, saved: signature(lines, discounted.discount) };

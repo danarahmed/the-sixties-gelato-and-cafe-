@@ -172,7 +172,8 @@ through the functions in `0018`.
 - `pos_tab.discount_percent` or `pos_tab.discount_amount` (at most one): a
   bill's discount as the cashier gave it, worked out again as the bill
   changes, and applied when it is paid.
-- `business.discount_round_to` (`0020`; 500 at the café): a percentage
+- `business.discount_round_to` (`0020`; 500 for a new business, 250 at the
+  café): a percentage
   discount comes to the nearest multiple of it, exactly half-way up, and never
   more than the bill; an amount is taken as typed. `my_profile` passes it to
   the till, which shows the figure the books will record.
