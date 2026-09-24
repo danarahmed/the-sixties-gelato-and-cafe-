@@ -131,9 +131,11 @@ corrections are new entries. What each record posts (migration `0015`):
   (`0019`): Cr 4000 at the full price, Dr 4100 Merchant-funded discount for the
   discount, and the tender at what was paid.
 - Discount: a percentage of the bill, rounded to the nearest multiple of the
-  business's `discount_round_to` (`0020`; 500 IQD at the café), exactly
-  half-way rounding up: 47% of 8,500 is 3,995, given as 4,000; 5% of 5,000 is
-  250, given as 500; 2% of 2,500 is 50, given as nothing. Or a fixed amount,
+  business's `discount_round_to` (`0020`; a new business starts at 500; the
+  café has used 250 IQD since 24 September 2026), exactly half-way rounding
+  up. At 250: 47% of 8,500 is 3,995, given as 4,000; 7% of 5,000 is 350,
+  given as 250; 5% of 2,500 is 125, exactly half-way, given as 250; 2% of
+  2,500 is 50, given as nothing. Or a fixed amount,
   taken as typed. Never more than the bill. Each line carries its share in proportion to its
   value, the shares adding up to the discount exactly, so a refund returns
   what was paid.

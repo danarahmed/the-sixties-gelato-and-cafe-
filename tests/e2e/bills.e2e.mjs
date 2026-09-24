@@ -231,7 +231,7 @@ console.log("▸ cashier: Table 1 orders, is shown the bill, pays cash");
     (await page.locator(".order-total strong").textContent()) === "4,250 IQD",
     "and the total to pay is 4,250",
   );
-  // A percentage comes to the nearest 500 IQD, so the change is always in notes.
+  // The test business keeps the default step: a percentage comes to the nearest 500 IQD.
   await pct.fill("7");
   check((await amt.inputValue()) === "500", "7% of 5,000 is 350: rounded to 500");
   check(

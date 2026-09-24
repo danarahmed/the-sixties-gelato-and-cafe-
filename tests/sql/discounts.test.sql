@@ -7,7 +7,7 @@
 -- =============================================================================
 select test.golden_catalogue();
 -- Until the last section this business rounds a percentage to the dinar, so
--- every share can be seen exactly. The café's own rule (to 500) comes last.
+-- every share can be seen exactly. A step of 500, the default, comes last.
 update business set discount_round_to = 1;
 create temp table ids (k text primary key, v uuid);
 grant all on ids to public;
@@ -193,7 +193,7 @@ select test.eq((select string_agg(check_key || '=' || difference, ',' order by c
                   from report_reconciliation(test.today())),
   'grni=0,inventory=0,payables=0,sales=0', 'every subledger still reconciles');
 
--- ------------------------------------------------ the café's rule: to 500
+-- ------------------------------------------- a step of 500, the default
 -- A percentage comes to the nearest 500 IQD, so the change is always in notes:
 -- 47% of 8,500 is 3,995, given as 4,000, leaving 4,500 to pay.
 select test.as_admin();
