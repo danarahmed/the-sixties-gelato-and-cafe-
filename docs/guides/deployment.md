@@ -11,16 +11,17 @@ Plan a short window when the café is closed.
 
 ## Where the live system stands (24 September 2026)
 
-| Step                         | Status                                                                                                                                                                                                                                                                                                            |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0. The old history           | ✅ Cleared: it was trial data                                                                                                                                                                                                                                                                                     |
-| 2. The Vercel settings       | ✅ Added by the owner                                                                                                                                                                                                                                                                                             |
-| 3. Migrations `0014`–`0017`  | ✅ Applied on 23 September, then compared with the tested build object by object: functions, tables, rules, indexes, triggers and permissions are identical. The public key has no access                                                                                                                         |
-| 4. The new app               | ✅ Merged for production ([pull request #1](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/1)) and deployed                                                                                                                                                                                      |
-| 5. Sign-in settings          | ✅ Set                                                                                                                                                                                                                                                                                                            |
-| 6. The owner's first sign-in | ✅ 23 September                                                                                                                                                                                                                                                                                                   |
-| The till update (`0018`)     | ✅ Migration applied on 24 September and compared object by object with the tested build: identical. The screens were merged ([pull request #2](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/2)) and deployed (see [After `0018`](#after-0018))                                                |
-| Discounts (`0019`)           | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens go live with [pull request #3](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/3) (see [After `0019`](#after-0019)) |
+| Step                         | Status                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0. The old history           | ✅ Cleared: it was trial data                                                                                                                                                                                                                                                                                                   |
+| 2. The Vercel settings       | ✅ Added by the owner                                                                                                                                                                                                                                                                                                           |
+| 3. Migrations `0014`–`0017`  | ✅ Applied on 23 September, then compared with the tested build object by object: functions, tables, rules, indexes, triggers and permissions are identical. The public key has no access                                                                                                                                       |
+| 4. The new app               | ✅ Merged for production ([pull request #1](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/1)) and deployed                                                                                                                                                                                                    |
+| 5. Sign-in settings          | ✅ Set                                                                                                                                                                                                                                                                                                                          |
+| 6. The owner's first sign-in | ✅ 23 September                                                                                                                                                                                                                                                                                                                 |
+| The till update (`0018`)     | ✅ Migration applied on 24 September and compared object by object with the tested build: identical. The screens were merged ([pull request #2](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/2)) and deployed (see [After `0018`](#after-0018))                                                              |
+| Discounts (`0019`)           | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens were merged ([pull request #3](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/3)) and deployed (see [After `0019`](#after-0019)) |
+| Rounding to 500 (`0020`)     | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0020`](#after-0020)). The screens go live with the pull request that carries it                                                                   |
 
 ## 0. Before you start
 
@@ -227,3 +228,31 @@ Nothing was kept, and the journal numbering is unchanged.
 Nothing needs setting up. Owners, managers and cashiers can give discounts.
 To keep discounts to managers, take `discount.apply` from the cashier role
 (see the [owner's guide](owner-guide.md#setting-up-the-till)).
+
+## After `0020`
+
+Migration `0020` rounds a discount given as a percentage to the nearest
+500 IQD (`business.discount_round_to`), so the till never asks for a few odd
+dinars. It goes in before its screens: the app deployed before it keeps
+working, because every function keeps its signature and its grants. Until the
+new screens are deployed, that app shows a percentage to the dinar while the
+sale records it rounded to 500, so apply it and deploy together.
+
+It was applied on 24 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the two
+functions it replaces were exactly the verified `0019` ones. It was then
+compared with the tested build, object by object: identical. It was also
+checked as the owner in a transaction that was rolled back, on the café's own
+menu:
+
+- 47% off Espresso, Iced Latte and iced spanish latte (8,500 IQD) came to
+  4,000 off and 4,500 to pay;
+- a bill with 7% off 6,000 (420) came to 500 off and 5,500 to pay;
+- both journals posted revenue at the full price, the discount in 4100 and
+  the payment at what was paid;
+- every reconciliation check was zero.
+
+Nothing was kept, and the journal numbering is unchanged.
+
+To round to a different step, change `business.discount_round_to`; the till
+and **Settings** follow it.

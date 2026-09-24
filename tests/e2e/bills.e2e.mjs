@@ -231,12 +231,22 @@ console.log("▸ cashier: Table 1 orders, is shown the bill, pays cash");
     (await page.locator(".order-total strong").textContent()) === "4,250 IQD",
     "and the total to pay is 4,250",
   );
+  // A percentage comes to the nearest 500 IQD, so the change is always in notes.
   await pct.fill("7");
-  check((await amt.inputValue()) === "350", "7% of 5,000 is 350");
-  await amt.fill("750");
+  check((await amt.inputValue()) === "500", "7% of 5,000 is 350: rounded to 500");
+  check(
+    await page.getByText("A percentage is rounded to the nearest 500 IQD.").isVisible(),
+    "and the till says so",
+  );
+  await pct.fill("47");
+  check((await amt.inputValue()) === "2500", "47% of 5,000 is 2,350: rounded to 2,500");
+  check(
+    (await page.locator(".order-total strong").textContent()) === "2,500 IQD",
+    "and 2,500 to pay",
+  );
   await page.getByRole("button", { name: /Cash/ }).click();
   check(
-    /−750 IQD/.test((await page.locator(".pay-note").textContent()) ?? ""),
+    /47% · −2,500 IQD/.test((await page.locator(".pay-note").textContent()) ?? ""),
     "taking the money shows the discount",
   );
   await page.locator(".pay-confirm").click();
@@ -244,13 +254,13 @@ console.log("▸ cashier: Table 1 orders, is shown the bill, pays cash");
   check(
     sql(
       "select gross_amount || '/' || discount_amount || '/' || net_amount from sales_order order by created_at desc limit 1",
-    ) === "5000/750/4250",
-    "the sale records 5,000 less 750: 4,250",
+    ) === "5000/2500/2500",
+    "the sale records what the till showed: 5,000 less 2,500",
   );
   check(
     sql(
       "select string_agg(a.code || case when l.debit > 0 then ' Dr ' || l.debit else ' Cr ' || l.credit end, ' | ' order by a.code) from journal_line l join journal_entry e on e.id = l.journal_entry_id join gl_account a on a.id = l.account_id where a.code in ('1000', '4000', '4100') and e.reference_id = (select id from sales_order order by created_at desc limit 1)",
-    ) === "1000 Dr 4250 | 4000 Cr 5000 | 4100 Dr 750",
+    ) === "1000 Dr 2500 | 4000 Cr 5000 | 4100 Dr 2500",
     "revenue at full price, the discount in 4100, the cash as paid",
   );
   await ctx.close();

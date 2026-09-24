@@ -7,9 +7,9 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0019` and the rebuilt app. The SQL
+- **Built and verified:** migrations `0014`–`0020` and the rebuilt app. The SQL
   checks (17), the browser suites (5, every role), the unit and contract tests
-  (124) and a production build all pass.
+  (126) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -36,9 +36,15 @@ browser tests through the real app, or both.
   a manager changes the discount on a printed bill. Built and tested. The
   migration was applied to the live database on 24 September 2026, matches the
   tested build object by object, and was checked as the owner in a transaction
-  that was rolled back; the screens go live with
+  that was rolled back; the screens went live the same day with
   [pull request #3](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/3). See
   [`guides/cashier-quickstart.md`](guides/cashier-quickstart.md#giving-a-discount).
+- **Discounts rounded to 500 IQD (migration `0020`):** a percentage comes to the
+  nearest 500 IQD, so the till never asks for a few odd dinars (47% of 8,500 is
+  4,000 off, not 3,995); an amount is taken as typed. The till shows the figure
+  the books record. Built and tested. The migration was applied to the live
+  database on 24 September 2026, matches the tested build object by object,
+  and was checked as the owner in a transaction that was rolled back.
 
 ## The August 2026 audit, finding by finding
 
@@ -112,7 +118,7 @@ browser tests through the real app, or both.
 
 | Layer                        | What                                                                                                          | Result      |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 124 passing |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 126 passing |
 | SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, 11 suites, concurrency | 17 passing  |
 | Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, retry, offline, tables and bills           | 5 passing   |
 | Build                        | `npm run build`, types, lint, formatting                                                                      | green       |

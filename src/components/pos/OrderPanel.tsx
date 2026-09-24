@@ -22,6 +22,7 @@ import {
   savedHasItems,
   type Discount,
   type Line,
+  type MoneyRules,
   type Order,
   type Tender,
 } from "./model";
@@ -126,7 +127,7 @@ function OrderLine({
 function DiscountRow({
   discount,
   subtotal,
-  decimals,
+  money,
   locked,
   lockedReason,
   onChange,
@@ -134,15 +135,18 @@ function DiscountRow({
 }: {
   discount: Discount | null;
   subtotal: Decimal;
-  decimals: number;
+  money: MoneyRules;
   locked: boolean;
   lockedReason: string | null;
   onChange: (d: Discount | null) => void;
   onRemove: () => void;
 }) {
   const { t } = useT();
-  const amount = discountAmount(discount, subtotal, decimals);
+  const amount = discountAmount(discount, subtotal, money);
   const invalid = discountInvalid(discount);
+  // Why 47% of 8,500 shows 4,000 and not 3,995: the step is coarser than the currency's unit.
+  const rounded =
+    discount?.kind === "percent" && !invalid && money.discountStep > 10 ** -money.decimals;
   const percentShown =
     discount?.kind === "percent"
       ? discount.value
@@ -194,6 +198,11 @@ function DiscountRow({
         </button>
       </div>
       {invalid && <p className="red disc-note">{t("pos.discountInvalid")}</p>}
+      {rounded && (
+        <p className="muted disc-note">
+          {t("pos.discountRounded").replace("{step}", fmtIQD(money.discountStep))}
+        </p>
+      )}
       {lockedReason && <p className="muted disc-note">{lockedReason}</p>}
     </div>
   );
@@ -233,7 +242,7 @@ export function OrderPanel({
   onPrintReceipt,
   now,
   canDiscount,
-  decimals,
+  money,
   onDiscount,
 }: {
   order: Order;
@@ -266,8 +275,8 @@ export function OrderPanel({
   now: number;
   /** discount.apply: the discount row is offered. */
   canDiscount: boolean;
-  /** The currency's decimals: amounts round as the books round them. */
-  decimals: number;
+  /** How amounts and discounts are rounded, as the books round them. */
+  money: MoneyRules;
   onDiscount: (d: Discount | null) => void;
 }) {
   const { t } = useT();
@@ -275,8 +284,8 @@ export function OrderPanel({
   const blocked = busy !== null || pending;
   const empty = order.lines.length === 0;
   const dirty = isDirty(order);
-  const subtotal = orderSubtotal(order, byId, decimals);
-  const discount = discountAmount(order.discount, subtotal, decimals);
+  const subtotal = orderSubtotal(order, byId, money);
+  const discount = discountAmount(order.discount, subtotal, money);
   const due = subtotal.minus(discount);
   const badDiscount = discountInvalid(order.discount);
   const count = itemCount(order);
@@ -360,7 +369,7 @@ export function OrderPanel({
             <DiscountRow
               discount={order.discount}
               subtotal={subtotal}
-              decimals={decimals}
+              money={money}
               locked={blocked || discountLocked}
               lockedReason={discountLocked ? t("pos.discountLocked") : null}
               onChange={onDiscount}
