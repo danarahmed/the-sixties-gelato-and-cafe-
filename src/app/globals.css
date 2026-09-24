@@ -1636,3 +1636,206 @@ details > summary {
 .pay-note {
   font-size: 0.85rem;
 }
+
+/* ------------------------------------------------------- the product form */
+.pf {
+  display: grid;
+  gap: 22px;
+}
+.pf-step {
+  display: grid;
+  gap: 8px;
+}
+.pf-h {
+  margin: 0;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pf-n {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-size: 0.75rem;
+}
+.pf-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.pf-names {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 8px;
+}
+.pf-line,
+.pf-head {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 2fr)
+    112px 40px;
+  gap: 8px;
+  align-items: center;
+}
+.pf-head {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-block-end: -4px;
+}
+.pf-line-wrap {
+  display: grid;
+  gap: 4px;
+}
+.pf-cost {
+  text-align: end;
+  line-height: 1.25;
+  font-size: 0.9rem;
+}
+.pf-cost small {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--faint);
+}
+.pf-cost.none small {
+  color: var(--warn);
+}
+.pf-remove {
+  min-width: 36px;
+  padding: 0;
+  border-color: transparent;
+  color: var(--faint);
+}
+.pf-channels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  font-size: 0.82rem;
+}
+.pf-channels label {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+.pf-channels input {
+  width: auto;
+  min-height: 0;
+}
+.pf-total {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px 16px;
+  padding: 10px 12px;
+  border-inline-start: 3px solid var(--accent);
+  background: var(--paper);
+  font-size: 0.9rem;
+}
+.pf-total-figs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+.pf-total strong {
+  font-size: 1.05rem;
+}
+.pf-warn {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--warn);
+}
+.pf-target {
+  display: inline-block;
+  width: 52px;
+  min-height: 0;
+  padding: 0 4px;
+  text-align: end;
+  font-weight: 700;
+}
+.pf-prices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+.pf-price {
+  display: grid;
+  gap: 5px;
+  align-content: start;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.pf-price-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+.pf-price-top .mono {
+  color: var(--text-muted);
+}
+.pf-margin {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.pf-margin.ok {
+  color: var(--ok);
+}
+.pf-margin.warn {
+  color: var(--warn);
+}
+.pf-margin.err {
+  color: var(--err);
+}
+.pf-suggest {
+  justify-self: start;
+  min-height: 28px;
+  padding: 0 8px;
+  font-size: 0.78rem;
+}
+@media (max-width: 720px) {
+  .pf-names {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .pf-names > :first-child {
+    grid-column: 1 / -1;
+  }
+  .pf-head {
+    display: none;
+  }
+  .pf-line {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      "ing ing rm"
+      "qty unit cost"
+      "use use use";
+    padding-block-end: 8px;
+    border-block-end: 1px solid var(--border);
+  }
+  .pf-ing {
+    grid-area: ing;
+  }
+  .pf-qty {
+    grid-area: qty;
+  }
+  .pf-unit {
+    grid-area: unit;
+  }
+  .pf-use {
+    grid-area: use;
+  }
+  .pf-cost {
+    grid-area: cost;
+  }
+  .pf-remove {
+    grid-area: rm;
+    justify-self: end;
+  }
+}

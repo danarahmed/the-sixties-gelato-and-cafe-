@@ -3,6 +3,7 @@ import { has, requirePermission } from "@/lib/auth/session";
 import { getItems } from "@/lib/db/read";
 import { getMenuSetup, type MenuProduct } from "@/lib/db/menu";
 import {
+  getItemCosts,
   getMenuCosting,
   getMenuRecipeLines,
   type MenuCostRow,
@@ -138,10 +139,11 @@ export default async function ProductsPage() {
   const t = await getT();
   const today = businessToday(profile.timezone);
   const canEdit = has(profile, "recipe.edit");
-  const [menu, lines, items, setup] = await Promise.all([
+  const [menu, lines, items, itemCosts, setup] = await Promise.all([
     getMenuCosting(),
     getMenuRecipeLines(),
     canEdit ? getItems() : Promise.resolve([]),
+    canEdit ? getItemCosts() : Promise.resolve(new Map<string, string>()),
     getMenuSetup(),
   ]);
 
@@ -220,8 +222,10 @@ export default async function ProductsPage() {
             name: i.name,
             baseUnit: i.baseUnit,
             units: i.units,
+            unitCost: itemCosts.get(i.id) || "0",
           }))}
           categories={categories.filter((c) => c.isActive).map((c) => ({ id: c.id, name: c.name }))}
+          money={{ decimals: profile.currencyDecimals, priceStep: profile.discountRoundTo }}
         />
       )}
 

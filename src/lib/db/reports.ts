@@ -179,6 +179,16 @@ export async function getMenuCosting(): Promise<MenuCostRow[]> {
   }));
 }
 
+/** What one base unit of each stock item costs today, exact, by item id (for pricing a recipe). */
+export async function getItemCosts(): Promise<Map<string, string>> {
+  const c = await db();
+  return new Map(
+    rows(await c.rpc("item_costs"), "stock costs").map(
+      (r: Record<string, unknown>) => [str(r.item_id), str(r.unit_cost)] as const,
+    ),
+  );
+}
+
 export interface RecipeLineRow {
   variantId: string;
   versionNo: number;

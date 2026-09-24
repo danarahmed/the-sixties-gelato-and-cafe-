@@ -67,6 +67,17 @@ fast. Set it up once, on **Products** and on the till itself:
   (they get a chip of their own), and untick **On the till** for anything not
   sold now. A hidden product keeps its recipe, prices and history, and comes
   back by ticking the box again.
+- **A new product** (Products, **➕ Add menu product**): build its recipe
+  first. The form costs it as you type, at today's stock costs and exactly as a
+  sale will post it: each ingredient, then **Cost of one serving** (more for
+  takeaway and delivery, where the cup and lid are used). Then choose the
+  prices: each channel shows its cost and, as you type, the margin, in amber
+  when under your target and red for a loss. **Use 4,000 IQD** takes the
+  suggested price, the lowest in 250 IQD steps that leaves your target margin
+  (70% unless you change it; as a rule of thumb, coffee drinks leave 75–80%
+  and food 65–70%). Delivery
+  platforms take their commission from the price, so price them higher. An
+  ingredient never bought counts as 0: receive it first for a true cost.
 - **Tables** (on the till: **🪑 Tables → Edit tables**, for owners, general
   managers and branch managers): add them one by one, or twenty at once
   ("Add 20 tables named Table starting at 1"). Give them an **area** (Inside,
