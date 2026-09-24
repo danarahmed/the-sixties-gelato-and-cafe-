@@ -308,7 +308,11 @@ console.log("▸ owner cancels a bill entered in error, and posts a control corr
   await open(page, "/vendors");
   await page.getByRole("button", { name: "Bills & payments" }).click();
   await page.getByText("For a service or asset").click();
-  await page.getByPlaceholder("INV-0012").fill("E2E-DUP-1");
+  check(
+    /^SGC-\d{4}-\d{4}$/.test(await page.getByLabel("Invoice no.").inputValue()),
+    "the invoice box is filled in with the café's own number",
+  );
+  await page.getByLabel("Invoice no.").fill("E2E-DUP-1");
   await page.locator("label", { hasText: "Amount (IQD)" }).first().locator("input").fill("12345");
   await page.getByRole("button", { name: "Record bill" }).click();
   await page.getByText(/Bill E2E-DUP-1 recorded/).waitFor({ timeout: 10000 });
@@ -433,7 +437,7 @@ console.log("▸ owner reviews and posts stock the old app never journaled, then
     "the old delivery, with no supplier recorded, can be billed from Vendors",
   );
   await receiptSelect.selectOption(RECEIPT);
-  await page.getByPlaceholder("INV-0012").fill("OLD-DAIRY-9");
+  await page.getByLabel("Invoice no.").fill("OLD-DAIRY-9");
   await page.locator("label", { hasText: "Amount (IQD)" }).first().locator("input").fill("9000");
   await page.getByRole("button", { name: "Record bill" }).click();
   await page.getByText(/Bill OLD-DAIRY-9 recorded/).waitFor({ timeout: 10000 });
@@ -443,6 +447,48 @@ console.log("▸ owner reviews and posts stock the old app never journaled, then
     ) === "1",
     "and its bill clears it",
   );
+  await ctx.close();
+}
+
+// ------------------------------------------------ the café's own bill numbers
+console.log("▸ a bill without the supplier's number takes the café's own, never given twice");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/vendors");
+  await page.getByRole("button", { name: "Bills & payments" }).click();
+  await page.getByText("For a service or asset").click();
+  const box = page.getByLabel("Invoice no.");
+  const offered = await box.inputValue();
+  check(/^SGC-\d{4}-\d{4}$/.test(offered), `the form offers ${offered}`);
+  await page.locator("label", { hasText: "Amount (IQD)" }).first().locator("input").fill("4000");
+  await page.getByRole("button", { name: "Record bill" }).click();
+  await page.getByText(`Bill ${offered} recorded`, { exact: false }).waitFor({ timeout: 10000 });
+  check(
+    sql(
+      `select count(*) from purchase_invoice where invoice_no = '${offered}' and cancelled_at is null`,
+    ) === "1",
+    "the bill is recorded under it",
+  );
+  check(
+    sql(
+      `select count(*) from journal_entry where description = 'Bill ${offered}' and reference_no = '${offered}'`,
+    ) === "1",
+    "and so is its journal",
+  );
+  const [, year, n] = offered.match(/^SGC-(\d{4})-(\d{4})$/) ?? [];
+  const next = `SGC-${year}-${String(Number(n) + 1).padStart(4, "0")}`;
+  await box.waitFor();
+  await page.waitForFunction(
+    (want) => document.querySelector('input[aria-label="Invoice no."]')?.value === want,
+    next,
+    { timeout: 10000 },
+  );
+  ok(`the next bill is offered ${next}`);
+  await box.fill(offered);
+  await page.locator("label", { hasText: "Amount (IQD)" }).first().locator("input").fill("100");
+  await page.getByRole("button", { name: "Record bill" }).click();
+  await page.getByText(/given automatically/).waitFor({ timeout: 10000 });
+  ok("a number in the café's own form cannot be typed in by hand");
   await ctx.close();
 }
 

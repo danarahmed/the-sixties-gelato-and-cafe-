@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 127 tests)
+## 1. Unit (Vitest, 128 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -30,7 +30,7 @@ layers before every release.
   nearest 500 IQD, and to the café's 250, as the books round it),
   the Baghdad trading day, and the expense-account suggestions.
 
-## 2. SQL (`scripts/test-sql.sh`, about 440 assertions)
+## 2. SQL (`scripts/test-sql.sh`, about 450 assertions)
 
 Runs against real PostgreSQL, with a small shim for Supabase's `auth` schema
 and roles. Tested on 16 and 17.6 (the live version).
@@ -73,7 +73,7 @@ where it must change nothing, and again after the upgrade, where it must refuse.
 | `sales`      | Golden postings per tender and channel; exactly-once by key; negative stock; recipe and price dates                                                                                                                             |
 | `refunds`    | Void same day before the close; refund after; only returnable stock comes back                                                                                                                                                  |
 | `stock`      | Waste, corrections, opening stock; blind two-person counts; every movement journaled                                                                                                                                            |
-| `purchasing` | Receipt → GRNI → bill → payment; landed cost; duplicate invoices; cancellation; overpayment                                                                                                                                     |
+| `purchasing` | Receipt → GRNI → bill → payment; landed cost; duplicate invoices; cancellation; overpayment; the café's own bill numbers (yearly count, passed over when taken, never reused, never typed)                                      |
 | `journals`   | Draft/publish; subledger accounts closed to manual journals; reversal rules and dates; numbering                                                                                                                                |
 | `close`      | The trading day in Baghdad time; day close once; the closing checklist; every route into a locked month                                                                                                                         |
 | `reports`    | Trial balance, P&L and reconciliation from published lines, for exactly the dates asked                                                                                                                                         |
@@ -111,7 +111,10 @@ database, behind a small local stand-in for Supabase's auth service.
   - the reports and CSV;
   - adding a person, cancelling a bill, the owner's control correction;
   - posting the stock the old app never journaled, and billing that old
-    delivery.
+    delivery;
+  - a bill left with the number the form offers is recorded as SGC-…, its
+    journal carries it, the next is offered, and a used SGC number typed by
+    hand is refused.
 - `retry`: a sale whose confirmation is lost is retried and recorded once.
 - `offline`: offline, the till says so and refuses the sale, in each language.
 - `bills`: the till for a busy café:

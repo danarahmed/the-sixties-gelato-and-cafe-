@@ -117,7 +117,10 @@ counts them.
 - **Purchasing:** receive deliveries as they arrive. Stock goes up, and the
   goods wait in 2050 Goods received not invoiced for their bill.
 - **Vendors:** record each supplier's bill against its delivery, and pay bills
-  from cash, card or bank. Watch **Payable ageing** on Reports.
+  from cash, card or bank. Watch **Payable ageing** on Reports. A bill without
+  the supplier's own number takes the café's (SGC-2026-0001, -0002 …): each is
+  given once, is never reused (not even after a cancellation), and cannot be
+  typed in by hand, so it can never be mistaken for a supplier's invoice.
 - **Stock Count:** have a counter count, then review and approve it yourself (see
   the [counting guide](counting-guide.md)).
 - **Reports → Product margin by channel:** what each product earns on each

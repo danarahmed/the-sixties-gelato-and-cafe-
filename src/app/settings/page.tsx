@@ -4,6 +4,7 @@ import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
 import { getBusinessConfig, getLocations } from "@/lib/db/read";
 import { getMembers } from "@/lib/db/reports";
 import { fmtIQD, roleLabel } from "@/lib/format";
+import { businessToday } from "@/lib/dates";
 import { PeopleManager } from "@/components/PeopleManager";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,7 @@ const KIND_LABEL: Record<string, string> = {
 export default async function SettingsPage() {
   const profile = await requirePermission("settings.manage");
   const t = await getT();
+  const today = businessToday(profile.timezone);
   const [cfg, locations, members] = await Promise.all([
     getBusinessConfig(),
     getLocations(),
@@ -42,6 +44,10 @@ export default async function SettingsPage() {
         [
           "Discounts",
           `A percentage is rounded to the nearest ${fmtIQD(cfg.discountRoundTo)} (half-way rounds up); an amount is taken as typed`,
+        ],
+        [
+          "Bill numbers",
+          `${cfg.billPrefix}-${today.slice(0, 4)}-0001, -0002 … for a bill entered without the supplier's number: never given twice, never typed in by hand`,
         ],
       ]
     : [];

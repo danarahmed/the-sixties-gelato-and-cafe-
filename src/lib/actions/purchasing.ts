@@ -79,7 +79,8 @@ export async function receiveGoodsAction(
 const billInput = z
   .object({
     supplierId: id("the vendor"),
-    invoiceNo: text("The supplier's invoice number", 60),
+    // Empty: the bill takes the café's own number (SGC-2026-0001 …).
+    invoiceNo: optionalText(60),
     invoiceDate: day("The invoice date"),
     amount: positive("The amount"),
     termDays: z.coerce.number().int().min(0).max(365),
@@ -95,7 +96,7 @@ const billInput = z
 
 export async function recordBillAction(
   input: z.input<typeof billInput>,
-): Promise<ActionResult<{ journalNo: number | null; priceVariance: number }>> {
+): Promise<ActionResult<{ invoiceNo: string; journalNo: number | null; priceVariance: number }>> {
   const v = parse(billInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("record_bill", {
@@ -112,6 +113,7 @@ export async function recordBillAction(
   return {
     ok: true,
     data: {
+      invoiceNo: String(r.data.invoice_no ?? ""),
       journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
       priceVariance: Number(r.data.price_variance ?? 0),
     },

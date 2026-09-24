@@ -7,9 +7,9 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0020` and the rebuilt app. The SQL
+- **Built and verified:** migrations `0014`–`0021` and the rebuilt app. The SQL
   checks (17), the browser suites (5, every role), the unit and contract tests
-  (127) and a production build all pass.
+  (128) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -47,6 +47,11 @@ browser tests through the real app, or both.
   as the owner in a transaction that was rolled back; the screens went live the
   same day with [pull request #4](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/4). The café's step was then changed from
   500 to **250 IQD** at the owner's request (a setting, on the audit trail).
+- **The café's own bill numbers (migration `0021`):** a bill entered without
+  the supplier's number is given SGC-2026-0001, -0002 …, filled in on the form.
+  Each is given once, even to two people at the same moment, is never reused,
+  and cannot be typed by hand; a supplier's own number can still be typed.
+  Built and tested.
 
 ## The August 2026 audit, finding by finding
 
@@ -120,7 +125,7 @@ browser tests through the real app, or both.
 
 | Layer                        | What                                                                                                          | Result      |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 127 passing |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 128 passing |
 | SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, 11 suites, concurrency | 17 passing  |
 | Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, retry, offline, tables and bills           | 5 passing   |
 | Build                        | `npm run build`, types, lint, formatting                                                                      | green       |

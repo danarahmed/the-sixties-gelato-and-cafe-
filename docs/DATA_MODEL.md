@@ -177,3 +177,14 @@ through the functions in `0018`.
   discount comes to the nearest multiple of it, exactly half-way up, and never
   more than the bill; an amount is taken as typed. `my_profile` passes it to
   the till, which shows the figure the books will record.
+
+### Bill numbers (`0021`)
+
+- `business.bill_prefix` (`SGC`): a bill entered without the supplier's own
+  number takes `SGC-<year>-<nnnn>`, counted per year in `document_counter`
+  (`bill:<year>`). `record_bill` takes the number while holding the counter's
+  row lock, so two people are never given the same one; it passes over any
+  number a bill already carries (from any supplier, cancelled or not), and
+  refuses the café's form of number typed by hand. A supplier's own number
+  stays unique per supplier, as before.
+- `next_bill_number()` shows the bill form the next number without taking it.
