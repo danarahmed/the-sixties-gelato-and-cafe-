@@ -1,7 +1,8 @@
 /**
  * The small rules the screens depend on: who lands where, what the menu
  * offers each role, how numbers typed in three scripts are read, what a
- * discount at the till comes to, and when a trading day starts.
+ * discount at the till comes to, what a new recipe costs and what price that
+ * suggests, and when a trading day starts.
  */
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
@@ -24,6 +25,17 @@ import {
   type MoneyRules,
 } from "@/components/pos/model";
 import type { PosItem } from "@/lib/db/pos";
+import type { SalesChannel } from "@domain/sales/recipe.js";
+import {
+  channelsFor,
+  lineCost,
+  margin,
+  servingCost,
+  suggestedPrice,
+  type CostLine,
+  type CostedItem,
+} from "@/components/menu/recipeCost";
+import { SELLABLE_CHANNELS } from "@/lib/format";
 
 const perms = (role: Role) => [...ROLE_PERMISSIONS[role]];
 
@@ -204,6 +216,124 @@ describe("a discount at the till: the percentage and the amount fill each other 
     const saved = { ...discounted, saved: signature(lines, discounted.discount) };
     expect(isDirty({ ...saved, discount: pct("10.0") })).toBe(false);
     expect(isDirty({ ...saved, discount: amt("450") })).toBe(true);
+  });
+});
+
+describe("what a new recipe costs, worked out as it is typed", () => {
+  // The golden catalogue of the SQL tests: beans at 10 IQD a gram, cups at 50.
+  const beans: CostedItem = {
+    id: "beans",
+    baseUnit: "g",
+    units: [
+      { code: "g", factor: 1 },
+      { code: "kg", factor: 1000 },
+    ],
+    unitCost: "10",
+  };
+  const cup: CostedItem = {
+    id: "cup",
+    baseUnit: "each",
+    units: [
+      { code: "each", factor: 1 },
+      { code: "sleeve_50", factor: 50 },
+    ],
+    unitCost: "50",
+  };
+  const syrup: CostedItem = { id: "syrup", baseUnit: "ml", units: [], unitCost: "0" };
+  const at = (unitCost: string): CostedItem => ({ id: "x", baseUnit: "g", units: [], unitCost });
+  const items = new Map([beans, cup, syrup].map((i) => [i.id, i]));
+  const line = (
+    itemId: string,
+    quantity: string,
+    unit: string,
+    channels: SalesChannel[] = [],
+  ): CostLine => ({ itemId, quantity, unit, channels });
+  const serving = (lines: CostLine[], channel: "dine_in" | "takeaway" | "talabat", map = items) =>
+    servingCost(lines, map, channel, 0).toString();
+
+  it("costs the espresso as the database does: 200 at a table, 250 with the takeaway cup", () => {
+    const espresso = [
+      line("beans", "20", "g"),
+      line("cup", "1", "each", channelsFor("to_go", [], SELLABLE_CHANNELS)),
+    ];
+    expect(serving(espresso, "dine_in")).toBe("200");
+    expect(serving(espresso, "takeaway")).toBe("250");
+    expect(serving(espresso, "talabat")).toBe("250");
+  });
+
+  it("reads a quantity in any of the item's units, and in any of the three scripts", () => {
+    expect(serving([line("beans", "0.02", "kg")], "dine_in")).toBe("200");
+    expect(serving([line("beans", "٢٠", "g")], "dine_in")).toBe("200");
+    expect(lineCost(line("cup", "1", "sleeve_50"), cup, 0)?.toString()).toBe("2500");
+  });
+
+  it("adds an item's lines together before rounding it once, as a sale does", () => {
+    const x = at("0.3");
+    const twice = [line("x", "5", "g"), line("x", "5", "g")];
+    expect(lineCost(twice[0]!, x, 0)?.toString()).toBe("2"); // 1.5, to the even dinar
+    expect(serving(twice, "dine_in", new Map([["x", x]]))).toBe("3"); // 10 g × 0.3, not 2 + 2
+  });
+
+  it("rounds halves to the even dinar, and keeps every digit the database sends", () => {
+    expect(lineCost(line("x", "5", "g"), at("0.5"), 0)?.toString()).toBe("2"); // 2.5
+    expect(lineCost(line("x", "7", "g"), at("0.5"), 0)?.toString()).toBe("4"); // 3.5
+    // 2/3 of a dinar a gram: 0.75 g is 0.5000000000000000000025, just over a half.
+    expect(lineCost(line("x", "0.75", "g"), at("0.66666666666666666667"), 0)?.toString()).toBe("1");
+  });
+
+  it("counts an item never bought as nothing, and costs no line until it has a quantity", () => {
+    expect(lineCost(line("syrup", "10", "ml"), syrup, 0)?.toString()).toBe("0");
+    expect(lineCost(line("beans", "", "g"), beans, 0)).toBeNull();
+    expect(lineCost(line("beans", "abc", "g"), beans, 0)).toBeNull();
+    expect(lineCost(line("beans", "5", "lb"), beans, 0)).toBeNull();
+    expect(lineCost(line("", "5", "g"), undefined, 0)).toBeNull();
+  });
+
+  it("saves where each line is used: every order, takeaway and delivery, or a table", () => {
+    expect(channelsFor("all", [], SELLABLE_CHANNELS)).toEqual([]);
+    expect(channelsFor("to_go", [], SELLABLE_CHANNELS)).toEqual([
+      "takeaway",
+      "direct_delivery",
+      "talabat",
+      "careem",
+      "toters",
+    ]);
+    expect(channelsFor("dine_in", [], SELLABLE_CHANNELS)).toEqual(["dine_in"]);
+    expect(channelsFor("custom", ["talabat"], SELLABLE_CHANNELS)).toEqual(["talabat"]);
+    // Every channel ticked, or none, is every order.
+    expect(channelsFor("custom", [...SELLABLE_CHANNELS], SELLABLE_CHANNELS)).toEqual([]);
+    expect(channelsFor("custom", [], SELLABLE_CHANNELS)).toEqual([]);
+  });
+
+  it("shows what a price leaves over the cost", () => {
+    const m = margin(new Decimal(4000), new Decimal(1180));
+    expect(m.amount.toString()).toBe("2820");
+    expect(m.percent?.toFixed(1)).toBe("70.5");
+    expect(margin(new Decimal(1000), new Decimal(1180)).amount.toString()).toBe("-180");
+    expect(margin(new Decimal(0), new Decimal(1180)).percent).toBeNull();
+  });
+
+  it("suggests the lowest round price that leaves the target margin", () => {
+    const suggest = (cost: number, target: number, step = 250) =>
+      suggestedPrice(new Decimal(cost), new Decimal(target), step)?.toString() ?? null;
+    expect(suggest(1180, 70)).toBe("4000"); // 3,933.33 rounded up to 250
+    expect(suggest(1200, 70)).toBe("4000"); // exactly 70%
+    expect(suggest(1300, 70)).toBe("4500"); // 4,333.33
+    expect(suggest(250, 70)).toBe("1000"); // 833.33
+    expect(suggest(1180, 70, 500)).toBe("4000");
+    expect(suggest(1180, 75)).toBe("4750"); // 4,720
+    for (const [cost, target] of [
+      [1180, 70],
+      [1300, 70],
+      [777, 65],
+    ] as const) {
+      const price = new Decimal(suggest(cost, target)!);
+      expect(margin(price, new Decimal(cost)).percent!.gte(target)).toBe(true);
+      expect(margin(price.minus(250), new Decimal(cost)).percent!.lt(target)).toBe(true);
+    }
+    expect(suggest(0, 70)).toBeNull(); // nothing to go by
+    expect(suggest(1180, 100)).toBeNull();
+    expect(suggest(1180, -5)).toBeNull();
   });
 });
 

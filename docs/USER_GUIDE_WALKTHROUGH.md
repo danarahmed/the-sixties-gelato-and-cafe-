@@ -276,14 +276,26 @@ costs; receiving: purchasing, managers
 **Location:** Sidebar → **Products & Recipes** · `/products` · **Who:** anyone who
 sees costs; creating and pricing: owner, general manager
 
-- **Add a menu product:**
-  - its name in English, Arabic and Kurdish;
-  - a **price per channel** (leave a channel empty if it is not sold there);
-  - its **recipe** for one serving: each line is an item and a quantity. Leave
-    the channels unticked for "all channels"; tick channels for lines used only
-    there, such as a takeaway cup.
+- **Add a menu product**, in three steps:
+  1. **Name and category:** its name in English, Arabic and Kurdish, and its
+     category on the till.
+  2. **Recipe:** what goes into one serving, one line per item: the item, the
+     quantity and unit, and what it is **used for**: **Every order**,
+     **Takeaway & delivery** (a cup, a lid, a bag), **Dine-in only**, or **Some
+     channels…** to tick them. Beside each line is what it costs, and what the
+     item costs per unit; under the lines, **Cost of one serving**, on each
+     channel where the packaging makes it differ. Costs are today's, worked out
+     exactly as a sale will post them. An item never bought has no cost yet and
+     counts as 0; the form says so.
+  3. **Prices:** one per channel, left empty where it is not sold. Each channel
+     shows its cost, and as a price is typed, what it leaves: **margin** in
+     green, in amber when under the target margin, and **loss** in red. **Use
+     4,000 IQD** takes the suggested price: the lowest price, in steps of the
+     café's 250 IQD, that leaves the target margin (70% unless changed). A
+     delivery platform's commission is not in the cost.
 
-  The product, recipe and prices are created together, or not at all.
+  The product, recipe and prices are created together, or not at all. A line
+  with an item but no quantity (or a quantity but no item) stops the save.
 
 - **Each product** shows its **Recipe** (component, quantity, applies to) and
   **Price & margin by channel**, costed exactly as a sale would post it today.

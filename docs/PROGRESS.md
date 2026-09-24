@@ -7,9 +7,9 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0021` and the rebuilt app. The SQL
-  checks (17), the browser suites (5, every role), the unit and contract tests
-  (128) and a production build all pass.
+- **Built and verified:** migrations `0014`–`0022` and the rebuilt app. The SQL
+  checks (17), the browser suites (6, every role), the unit and contract tests
+  (137) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -53,7 +53,20 @@ browser tests through the real app, or both.
   and cannot be typed by hand; a supplier's own number can still be typed.
   Built and tested. The migration was applied to the live database on
   24 September 2026, matches the tested build object by object, and was
-  checked as the owner in a transaction that was rolled back.
+  checked as the owner in a transaction that was rolled back; the form went
+  live the same day with
+  [pull request #6](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/6).
+- **Pricing a new product (migration `0022`):** the product form asks for the
+  recipe first and costs it as it is typed, at today's stock costs and exactly
+  as a sale will post it: each ingredient, then one serving on each channel.
+  Each price then shows its margin (amber under the target, red for a loss),
+  and a suggested price leaves the target margin, rounded up to 250 IQD. Where
+  each line is used is one choice (every order, takeaway and delivery, dine-in
+  only, or some channels) instead of a row of boxes. Built and tested. The
+  migration was applied to the live database on 24 September 2026, matches
+  the tested build object by object, and was checked as the owner in a
+  transaction that was rolled back: for every price on the live menu, the
+  form's cost equals the product card's.
 
 ## The August 2026 audit, finding by finding
 
@@ -113,7 +126,7 @@ browser tests through the real app, or both.
 | Vendors             | cost viewers                                               | Statements, bills (for a receipt or an account), payments, cancel a bill, payable ageing                                                                                                                                                                      |
 | Expenses            | cost viewers (recording: managers, accountant)             | Proposed account from the narration, confirmed by the person, posted in one step                                                                                                                                                                              |
 | Purchasing          | cost viewers (purchasing, managers)                        | Suppliers; receive goods with landed costs into stock and GRNI                                                                                                                                                                                                |
-| Products & Recipes  | cost viewers                                               | Create a product with its recipe and channel prices; change a price from a date; menu costing; photos, categories, favourites, show or hide on the till                                                                                                       |
+| Products & Recipes  | cost viewers                                               | Create a product: its recipe costed as it is typed, prices with their margin and a suggested price; change a price from a date; menu costing; photos, categories, favourites, show or hide on the till                                                        |
 | Inventory           | cost viewers; waste for baristas                           | Stock board from the ledger, add items with opening stock, record waste, manager corrections, movements                                                                                                                                                       |
 | Stock Count         | counter; reviewers                                         | Blind count, submit, second-person review and approval                                                                                                                                                                                                        |
 | Delivery Platforms  | cost viewers                                               | Platform orders and their value; settlement import not built (M-10)                                                                                                                                                                                           |
@@ -127,9 +140,9 @@ browser tests through the real app, or both.
 
 | Layer                        | What                                                                                                          | Result      |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 128 passing |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 137 passing |
 | SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, 11 suites, concurrency | 17 passing  |
-| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, retry, offline, tables and bills           | 5 passing   |
+| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, retry, offline, tables and bills, pricing  | 6 passing   |
 | Build                        | `npm run build`, types, lint, formatting                                                                      | green       |
 
 What is not built, and why, is in [`LIMITATIONS.md`](LIMITATIONS.md); the order

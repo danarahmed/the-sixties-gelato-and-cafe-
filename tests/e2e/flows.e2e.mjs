@@ -419,10 +419,15 @@ console.log("▸ owner reviews and posts stock the old app never journaled, then
     sql("select count(*) from audit_log where action = 'legacy.post_unposted'") === "1",
     "and the owner's decision is on the audit trail",
   );
+  // The notice shows before the page's refreshed figures arrive: wait for them.
   check(
-    !(await page.locator("#reconciliation").textContent()).includes(
-      "Stock the old app never journaled",
-    ),
+    await page
+      .locator("#reconciliation", { hasText: "Stock the old app never journaled" })
+      .waitFor({ state: "hidden", timeout: 10000 })
+      .then(
+        () => true,
+        () => false,
+      ),
     "nothing is left to post",
   );
 

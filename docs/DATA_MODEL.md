@@ -188,3 +188,11 @@ through the functions in `0018`.
   refuses the café's form of number typed by hand. A supplier's own number
   stays unique per supplier, as before.
 - `next_bill_number()` shows the bill form the next number without taking it.
+
+### Item costs (`0022`)
+
+- `item_costs()` (needs `cost.view`): each active item's cost per base unit
+  today, `item_issue_cost` at the default location, as `menu_costing` charges a
+  serving. It is sent as text, so the product form receives every digit and
+  prices a new recipe to the dinar the product's card will show. No table
+  changes.

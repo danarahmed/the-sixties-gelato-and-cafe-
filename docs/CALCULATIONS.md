@@ -66,6 +66,23 @@ cost. WAC is the default; FIFO is a per-item/business option.
     seal, carrier → demo COGS = **1,910 IQD**.
     (`src/domain/sales/recipe.ts`)
 
+### Pricing a new recipe (the product form)
+
+- The form costs a recipe while it is typed, the way `menu_costing` costs a
+  sale: each line's quantity in its item's base unit (`quantity × factor`),
+  lines of the same item added together for the channel, times the item's cost
+  today (`item_issue_cost` at the default location, sent exactly by
+  `item_costs()`), rounded to the currency unit, halves to even, once per item,
+  then summed. The form's figure is therefore the product card's once saved.
+  (`src/components/menu/recipeCost.ts`)
+- **Margin** = price − cost of a serving on that channel; as a share of the
+  price. Before any platform commission.
+- **Suggested price** = cost ÷ (1 − target margin), rounded **up** to the
+  business's rounding step (`discount_round_to`, 250 IQD at the café): the
+  lowest round price that leaves at least the target (70% unless changed).
+  Example: a serving costing 1,180 IQD at 70% → 3,933.33 → **4,000 IQD**
+  (70.5%).
+
 ## 6. Production
 
 - Consumes recipe inputs at current average cost; outputs finished goods valued

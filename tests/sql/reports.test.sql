@@ -71,5 +71,27 @@ select test.eq((select unit_cost from menu where variant_id = 'd1000000-0000-000
   'a resale item costs what it was bought for');
 select test.eq((select count(*) from menu_recipe_lines() where variant_id = 'd1000000-0000-0000-0000-000000000001')::int, 2,
   'the recipe in force is listed');
+
+-- What each item costs today, per base unit, so the product form can price a
+-- recipe as it is typed: the cost a serving is charged, sent exactly.
+create temp table costs as select c.*, i.sku from item_costs() c join item i on i.id = c.item_id;
+select test.eq((select string_agg(sku || '=' || unit_cost, ',' order by sku) from costs where sku like 'G-%'),
+  'G-BEANS=10,G-CUP=50,G-WATER=250', 'each item''s cost per base unit today');
+-- Three more cups for 200 make the average 7,700 / 153: every digit reaches the form.
+select receive_goods((select id from sup), '[{"item_id":"c0000000-0000-0000-0000-000000000002","qty":3,"goods_value":200}]');
+select test.eq((select unit_cost from item_costs() where item_id = 'c0000000-0000-0000-0000-000000000002'),
+  trim_scale(7700::numeric / 153)::text, 'an uneven average is sent to the last digit');
+create temp table cup_cost as select unit_cost::numeric c from item_costs()
+ where item_id = 'c0000000-0000-0000-0000-000000000002';
+select test.as_admin();
+select test.eq((select c from cup_cost),
+  item_issue_cost('00000000-0000-0000-0000-0000000000b1', 'c0000000-0000-0000-0000-000000000002',
+                  default_location('00000000-0000-0000-0000-0000000000b1')),
+  'and it is the cost a sale is charged');
+select test.act_as('manager@example.com');
+select create_item('Golden syrup', 'ingredient', 'ml', 'volume');
+select test.eq((select unit_cost from item_costs() c join item i on i.id = c.item_id where i.name = 'Golden syrup'), '0',
+  'an item never bought has no cost yet');
 select test.act_as('cashier@example.com');
 select test.throws($$select * from menu_costing()$$, '%permission%', 'a cashier is not shown the menu''s costs');
+select test.throws($$select * from item_costs()$$, '%permission%', 'nor what the stock costs');

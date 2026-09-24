@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 128 tests)
+## 1. Unit (Vitest, 137 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -27,8 +27,11 @@ layers before every release.
 - `tests/app-rules.test.ts`: where each role lands and what its menu offers,
   numbers typed in Arabic-Indic digits, what a till discount comes to (the
   percentage and the amount filling each other in, a percentage rounded to the
-  nearest 500 IQD, and to the café's 250, as the books round it),
-  the Baghdad trading day, and the expense-account suggestions.
+  nearest 500 IQD, and to the café's 250, as the books round it), what a new
+  recipe costs as it is typed (units, lines of one item added before rounding,
+  halves to even, every digit of the cost kept), where each line is used, the
+  margin and the suggested price, the Baghdad trading day, and the
+  expense-account suggestions.
 
 ## 2. SQL (`scripts/test-sql.sh`, about 450 assertions)
 
@@ -76,7 +79,7 @@ where it must change nothing, and again after the upgrade, where it must refuse.
 | `purchasing` | Receipt → GRNI → bill → payment; landed cost; duplicate invoices; cancellation; overpayment; the café's own bill numbers (yearly count, passed over when taken, never reused, never typed)                                      |
 | `journals`   | Draft/publish; subledger accounts closed to manual journals; reversal rules and dates; numbering                                                                                                                                |
 | `close`      | The trading day in Baghdad time; day close once; the closing checklist; every route into a locked month                                                                                                                         |
-| `reports`    | Trial balance, P&L and reconciliation from published lines, for exactly the dates asked                                                                                                                                         |
+| `reports`    | Trial balance, P&L and reconciliation from published lines, for exactly the dates asked; menu costs; each item's cost today, to the last digit, only for those who see costs                                                    |
 | `discounts`  | A percentage (rounded to the business's step: to the dinar, then to 500) or an amount; each line's share; 4000 at full price and 4100; refunds, voids and the reconciliation; who may give one; bills, printed bills and splits |
 | `pos`        | Tables, categories, photos judged by their bytes; bills paid later post exactly like a counter sale, once; stale tills refused; printed bills and cancellations guarded; split; the day held open by an open bill               |
 | `controls`   | Who may do what; tenant isolation; the public can call nothing; the exact list of callable functions                                                                                                                            |
@@ -129,6 +132,13 @@ database, behind a small local stand-in for Supabase's auth service.
     5,000 rounds to 500 and 47% to 2,500, and the sale posts what the till
     showed: 5,000 to 4000 and 2,500 to 4100.
 - `flows` also checks that a bill still open holds the day open.
+- `menu` (run last, as the costs stand after the others): a new product built
+  on Products & Recipes shows each ingredient's cost, one serving's cost at a
+  table and with the takeaway cup, each channel's cost beside its price, the
+  margin (amber under the target, a loss in red) and a suggested price that one
+  click takes; a line without its quantity stops the save; the recipe, where
+  each line is used and the prices are saved as shown; and the saved product's
+  card shows the same costs, the ones a sale posts.
 
 ## The 12 acceptance scenarios
 
