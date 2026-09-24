@@ -23,6 +23,7 @@ Plan a short window when the café is closed.
 | Discounts (`0019`)           | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens were merged ([pull request #3](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/3)) and deployed (see [After `0019`](#after-0019))                                                          |
 | Discount rounding (`0020`)   | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens were merged ([pull request #4](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/4)) and deployed. The step was then set to 250 IQD at the owner's request (see [After `0020`](#after-0020)) |
 | Bill numbers (`0021`)        | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0021`](#after-0021)). The form was merged ([pull request #6](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/6)) and deployed                                                              |
+| Recipe costing (`0022`)      | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0022`](#after-0022)). The form goes live with the pull request that carries it                                                                                                                             |
 
 ## 0. Before you start
 
@@ -302,3 +303,25 @@ transaction that was rolled back:
 - every reconciliation check was zero.
 
 Nothing was kept: no bill, no counter, and the journal numbering is unchanged.
+
+## After `0022`
+
+Migration `0022` adds one read-only function, `item_costs()`: each item's cost
+per base unit today, as `menu_costing` charges a serving, for the product form
+to cost a recipe while it is typed. It needs `cost.view`. It goes in before the
+form that uses it; the app deployed before it does not call it.
+
+It was applied on 24 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0021` build. It was then compared
+with the tested build, object by object: identical. The one difference from
+`0021` is the new function, callable by signed-in users only, never by the
+public. A check as the owner, in a transaction that was rolled back:
+
+- all 9 live items were given their cost, each to the last digit of what a sale
+  is charged; none lacked a cost;
+- for all 19 prices on the live menu (product and channel), one serving costed
+  from those figures, the way the form costs it, came to exactly the cost the
+  product's card shows.
+
+The check only read: nothing was written, and nothing was kept.

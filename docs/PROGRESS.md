@@ -62,7 +62,11 @@ browser tests through the real app, or both.
   Each price then shows its margin (amber under the target, red for a loss),
   and a suggested price leaves the target margin, rounded up to 250 IQD. Where
   each line is used is one choice (every order, takeaway and delivery, dine-in
-  only, or some channels) instead of a row of boxes. Built and tested.
+  only, or some channels) instead of a row of boxes. Built and tested. The
+  migration was applied to the live database on 24 September 2026, matches
+  the tested build object by object, and was checked as the owner in a
+  transaction that was rolled back: for every price on the live menu, the
+  form's cost equals the product card's.
 
 ## The August 2026 audit, finding by finding
 
