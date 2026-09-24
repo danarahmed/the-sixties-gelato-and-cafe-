@@ -31,7 +31,13 @@ const noPrices = (): Record<SalesChannel, string> => ({
 });
 
 /** A product, its recipe and its prices — created in one step, or not at all. */
-export function AddProductForm({ items }: { items: ItemOpt[] }) {
+export function AddProductForm({
+  items,
+  categories = [],
+}: {
+  items: ItemOpt[];
+  categories?: { id: string; name: string }[];
+}) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -39,6 +45,7 @@ export function AddProductForm({ items }: { items: ItemOpt[] }) {
   const [name, setName] = useState("");
   const [nameAr, setNameAr] = useState("");
   const [nameCkb, setNameCkb] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [prices, setPrices] = useState(noPrices());
   const blank = (): LineDraft => ({
     itemId: items[0]?.id ?? "",
@@ -74,6 +81,7 @@ export function AddProductForm({ items }: { items: ItemOpt[] }) {
         name,
         nameAr,
         nameCkb,
+        categoryId: categoryId || null,
         prices: Object.fromEntries(
           SELLABLE_CHANNELS.filter((c) => prices[c].trim() !== "").map((c) => [c, prices[c]]),
         ),
@@ -146,6 +154,22 @@ export function AddProductForm({ items }: { items: ItemOpt[] }) {
               />
             </Field>
           </div>
+          {categories.length > 0 && (
+            <Field label="Category on the till">
+              <select
+                style={inputStyle}
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+              >
+                <option value="">— none —</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
 
           <div>
             <div className="muted" style={{ fontSize: ".85rem", marginBottom: 4 }}>

@@ -8,15 +8,9 @@ import { z } from "zod";
 import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { day, id, nonNegative, positive, salesChannel, text } from "@/lib/validation";
 
-const SALE_PATHS = [
-  "/pos",
-  "/orders",
-  "/sales",
-  "/dashboard",
-  "/inventory",
-  "/reports",
-  "/journals",
-];
+// Not /pos: the till keeps itself current from each action's answer, and
+// re-rendering it after every sale would only slow the cashier down.
+const SALE_PATHS = ["/orders", "/sales", "/dashboard", "/inventory", "/reports", "/journals"];
 
 const saleInput = z.object({
   /** Minted by the till when the cart starts, reused on every retry (H-01). */

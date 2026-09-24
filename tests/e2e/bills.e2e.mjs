@@ -1,0 +1,245 @@
+// The till for a busy café, through the real screens: a photo and a category
+// set on Products, tables laid out by a manager, a table's bill kept open,
+// printed, guarded once printed, split between two payers and paid with
+// change given; a bill kept under a customer's name; and a cancelled bill.
+// (That an open bill holds the day open is checked in flows, before its day
+// close.)
+import { chromium, BASE, check, done, open, signIn, sql } from "./lib.mjs";
+
+const browser = await chromium.launch();
+const ok = (m) => check(true, m);
+const ESPRESSO = "d0000000-0000-0000-0000-000000000001";
+// A 1×1 PNG: the browser shrinks and re-encodes it, the database checks the bytes.
+const PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+  "base64",
+);
+/** Printing is counted, not sent to a printer. */
+async function till(who) {
+  const s = await signIn(browser, who);
+  await s.ctx.addInitScript(() => {
+    window.__printed = 0;
+    window.print = () => {
+      window.__printed += 1;
+    };
+  });
+  return s;
+}
+const salesBefore = Number(sql("select count(*) from sales_order"));
+
+// ------------------------------------------------------------ the menu
+console.log("▸ owner gives the espresso a photo, a category and a ★");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/products");
+  await page.getByPlaceholder("New category, e.g. Hot drinks").fill("Golden drinks");
+  await page.getByRole("button", { name: "＋ Add" }).click();
+  await page.getByText("Saved “Golden drinks”.").waitFor({ timeout: 10000 });
+  ok("a category is added");
+  const setup = page.locator(".product-setup", {
+    has: page.locator(`input[value="Golden espresso"]`),
+  });
+  await setup.locator("select").selectOption({ label: "Golden drinks" });
+  await setup.getByText("★ Favourite (shown first)").click();
+  await setup.getByRole("button", { name: "Save" }).click();
+  await setup.getByText("Saved.").waitFor({ timeout: 10000 });
+  check(
+    sql(
+      `select c.name || ',' || p.is_favourite from product p join product_category c on c.id = p.category_id where p.id = '${ESPRESSO}'`,
+    ) === "Golden drinks,true",
+    "the espresso is in its category, as a favourite",
+  );
+  await setup
+    .locator('input[type="file"]')
+    .setInputFiles({ name: "espresso.png", mimeType: "image/png", buffer: PNG });
+  await setup.getByText("Photo saved").waitFor({ timeout: 15000 });
+  const type = sql(`select content_type from product_image where product_id = '${ESPRESSO}'`);
+  check(type === "image/webp" || type === "image/jpeg", `the photo is stored shrunk, as ${type}`);
+  const url = sql(`select image_url from product where id = '${ESPRESSO}'`);
+  const res = await page.request.get(`${BASE}${url}`);
+  check(
+    res.status() === 200 &&
+      res.headers()["content-type"] === type &&
+      /immutable/.test(res.headers()["cache-control"] ?? ""),
+    "a signed-in member gets the photo, kept by the browser",
+  );
+  check(
+    res.headers()["x-content-type-options"] === "nosniff",
+    "and it is never sniffed as anything else",
+  );
+  const anon = await browser.newContext();
+  const out = await anon.request.get(`${BASE}${url}`, { maxRedirects: 0 });
+  check(
+    out.status() !== 200 || !/image/.test(out.headers()["content-type"] ?? ""),
+    "the public gets no photo",
+  );
+  await anon.close();
+  await ctx.close();
+}
+
+// ------------------------------------------------------------ the floor
+console.log("▸ manager lays out three tables");
+{
+  const { ctx, page } = await till("manager");
+  await open(page, "/pos");
+  await page.getByRole("tab", { name: /Tables/ }).click();
+  await page.getByRole("button", { name: "Edit tables" }).click();
+  await page.getByLabel("How many").fill("3");
+  await page.locator(".bulk-add button").click();
+  await page.getByText("3 tables added").waitFor({ timeout: 15000 });
+  await page.getByRole("button", { name: "Close" }).click();
+  await page.locator(".table-tile", { hasText: "Table 3" }).waitFor({ timeout: 10000 });
+  ok("the floor shows Table 1 to Table 3");
+  await ctx.close();
+}
+check(sql("select count(*) from dining_table where is_active") === "3", "three tables in use");
+
+console.log("▸ cashier: Table 1 orders, is shown the bill, pays cash");
+{
+  const { ctx, page } = await till("cashier");
+  await open(page, "/pos");
+  check(
+    await page.locator(".table-tile", { hasText: "Table 1" }).isVisible(),
+    "with tables, the till opens on the floor",
+  );
+  await page.locator(".table-tile", { hasText: "Table 1" }).click();
+  const espresso = page.locator(".product-tile", { hasText: "Golden espresso" });
+  check(
+    (await espresso.locator("img.tile-img").count()) === 1,
+    "the espresso tile shows its photo",
+  );
+  await page.getByRole("tab", { name: /Golden drinks/ }).click();
+  check((await page.locator(".product-tile").count()) === 1, "its category shows it alone");
+  await espresso.click();
+  await espresso.click();
+  await page.getByRole("button", { name: /Save/ }).click();
+  await page.getByText("Table 1 — saved").waitFor({ timeout: 10000 });
+  check(sql("select count(*) from pos_tab where status = 'open'") === "1", "the bill is open");
+  check(
+    Number(sql("select count(*) from sales_order")) === salesBefore,
+    "and it is not a sale yet",
+  );
+  check(
+    await page.locator(".table-tile.busy", { hasText: "5,000 IQD" }).isVisible(),
+    "Table 1 shows what it owes",
+  );
+
+  await page.locator(".table-tile", { hasText: "Table 1" }).click();
+  await page.getByRole("button", { name: /Print bill/ }).click();
+  await page.waitForFunction(() => window.__printed === 1, null, { timeout: 10000 });
+  check(
+    sql("select count(*) from pos_tab where bill_printed_at is not null") === "1",
+    "printing the bill is recorded",
+  );
+
+  await page.getByRole("button", { name: /^One less/ }).click();
+  await page.getByRole("button", { name: /Save/ }).click();
+  await page
+    .getByText("Only a manager can take items off a bill that has been printed")
+    .waitFor({ timeout: 10000 });
+  check(
+    sql(
+      "select sum(l.qty) from pos_tab_line l join pos_tab t on t.id = l.tab_id where t.status = 'open'",
+    ) === "2",
+    "a cashier cannot strike an item off a printed bill",
+  );
+  await page.getByRole("button", { name: /^One more/ }).click();
+
+  await page.getByRole("button", { name: /Cash/ }).click();
+  await page.locator("#cash-received").fill("10000");
+  check(
+    (await page.locator(".pay-modal .change-amt").textContent()) === "5,000 IQD",
+    "the change is worked out: 5,000",
+  );
+  await page.locator(".pay-confirm").click();
+  await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
+  check(
+    sql(
+      "select status from pos_tab where table_id = (select id from dining_table where name = 'Table 1')",
+    ) === "paid",
+    "the bill is paid",
+  );
+  check(Number(sql("select count(*) from sales_order")) === salesBefore + 1, "one sale, posted");
+  check(
+    sql("select net_amount from sales_order order by created_at desc limit 1") === "5000",
+    "for exactly what the bill said",
+  );
+
+  // Table 2: one of them pays for the water now; the espressos wait.
+  await page.locator(".table-tile", { hasText: "Table 2" }).click();
+  await espresso.click();
+  await espresso.click();
+  await page.getByRole("tab", { name: /All/ }).click();
+  await page.locator(".product-tile", { hasText: "Golden water" }).click();
+  await page.getByRole("button", { name: /Save/ }).click();
+  await page.getByText("Table 2 — saved").waitFor({ timeout: 10000 });
+  await page.locator(".table-tile", { hasText: "Table 2" }).click();
+  check(
+    await page.getByRole("button", { name: /Cancel bill/ }).isDisabled(),
+    "a cashier cannot cancel a bill with items on it",
+  );
+  await page.getByRole("button", { name: /Split bill/ }).click();
+  await page
+    .locator(".split-line", { hasText: "Golden water" })
+    .getByRole("button", { name: "+" })
+    .click();
+  await page.getByRole("button", { name: /Move to a new bill/ }).click();
+  await page.getByText(/Split\. The new bill is on screen/).waitFor({ timeout: 10000 });
+  check(
+    (await page.locator(".order-title").textContent()) === "Table 2 · 2",
+    "the new bill is on screen as Table 2 · 2",
+  );
+  await page.getByRole("button", { name: /Card/ }).click();
+  await page.locator(".pay-confirm").click();
+  await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
+  check(
+    sql(
+      "select string_agg(status || ':' || (select sum(qty) from pos_tab_line l where l.tab_id = t.id)::text, ',' order by status) from pos_tab t where table_id = (select id from dining_table where name = 'Table 2')",
+    ) === "open:2,paid:1",
+    "the water is paid; the two espressos still wait on the table's bill",
+  );
+
+  // A takeaway customer who will pay when their order is ready.
+  await page.locator(".strip-chip", { hasText: "Quick sale" }).click();
+  await espresso.click();
+  await page.getByRole("button", { name: /Keep open, pay later/ }).click();
+  await page.getByLabel("Customer's name").fill("Sara");
+  await page.getByRole("button", { name: "Keep open", exact: true }).click();
+  await page.getByText("Sara — kept open, waiting for payment").waitFor({ timeout: 10000 });
+  await page.locator(".strip-chip", { hasText: "Sara" }).click();
+  await page.getByRole("button", { name: /Cash/ }).click();
+  await page.locator(".pay-confirm").click();
+  await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
+  check(
+    sql("select status from pos_tab where label = 'Sara'") === "paid",
+    "Sara's bill waited for her, then was paid",
+  );
+  await ctx.close();
+}
+
+// ------------------------------------------------------------ cancelling
+console.log("▸ manager cancels what is left of Table 2");
+{
+  const { ctx, page } = await till("manager");
+  await open(page, "/pos");
+  await page.locator(".table-tile", { hasText: "Table 2" }).click();
+  await page.getByRole("button", { name: /Cancel bill/ }).click();
+  await page.getByLabel("Reason").fill("Customers left without ordering more");
+  await page.getByRole("button", { name: "Cancel the bill" }).click();
+  await page.getByText("Table 2 — bill cancelled").waitFor({ timeout: 10000 });
+  check(sql("select count(*) from pos_tab where status = 'open'") === "0", "no bill is left open");
+  check(
+    sql(
+      "select count(*) from audit_log where action = 'bill.cancel' and reason = 'Customers left without ordering more'",
+    ) === "1",
+    "the cancellation is on the audit trail with its reason",
+  );
+  await ctx.close();
+}
+check(
+  Number(sql("select count(*) from sales_order")) === salesBefore + 3,
+  "three bills paid, three sales",
+);
+
+await browser.close();
+done("bills");

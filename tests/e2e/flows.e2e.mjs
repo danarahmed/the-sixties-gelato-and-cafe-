@@ -16,6 +16,7 @@ console.log("▸ cashier rings up two sales");
   for (let i = 0; i < 2; i++) {
     await page.locator(".product-tile", { hasText: "Golden espresso" }).click();
     await page.getByRole("button", { name: /Cash/ }).click();
+    await page.locator(".pay-confirm").click();
     await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
   }
   ok("two cash sales recorded through the till");
@@ -34,6 +35,7 @@ console.log("▸ cashier rings up two sales");
   );
   check(!(await page.getByRole("button", { name: /💵/ }).isVisible()), "and no cash button");
   await page.getByRole("button", { name: /platform/i }).click();
+  await page.locator(".pay-confirm").click();
   await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
   ok("a Talabat sale recorded");
   await ctx.close();
@@ -202,6 +204,43 @@ check(
 );
 
 // ------------------------------------------------------------ day close
+console.log("▸ a bill still waiting for its money holds the day open");
+{
+  const { ctx, page } = await signIn(browser, "cashier");
+  await open(page, "/pos");
+  await page.locator(".product-tile", { hasText: "Golden espresso" }).click();
+  await page.getByRole("button", { name: /Keep open, pay later/ }).click();
+  await page.getByLabel("Customer's name").fill("Late customer");
+  await page.getByRole("button", { name: "Keep open", exact: true }).click();
+  await page
+    .getByText("Late customer — kept open, waiting for payment")
+    .waitFor({ timeout: 10000 });
+  await ctx.close();
+}
+{
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/sales");
+  await page.getByText("1 bill(s) from the till are still open").waitFor({ timeout: 10000 });
+  await page.locator("label", { hasText: "Cash counted" }).locator("input").fill("2000");
+  check(
+    await page.getByRole("button", { name: "Close the day" }).isDisabled(),
+    "the day cannot close while a bill is open",
+  );
+  await open(page, "/pos");
+  await page.locator(".strip-chip", { hasText: "Late customer" }).click();
+  await page.getByRole("button", { name: /Cancel bill/ }).click();
+  await page.getByLabel("Reason").fill("Customer left before it was made");
+  await page.getByRole("button", { name: "Cancel the bill" }).click();
+  await page.getByText("Late customer — bill cancelled").waitFor({ timeout: 10000 });
+  ok("a manager cancels it, with a reason");
+  await ctx.close();
+}
+check(
+  sql("select reason from audit_log where action = 'bill.cancel'") ===
+    "Customer left before it was made",
+  "the cancellation is on the audit trail",
+);
+
 console.log("▸ manager closes the day");
 {
   const { ctx, page } = await signIn(browser, "manager");

@@ -21,6 +21,7 @@ await page.route("**/pos", async (route) => {
 await page.getByRole("button", { name: "Dine-in" }).click();
 await page.locator(".product-tile", { hasText: "Golden espresso" }).click();
 await page.getByRole("button", { name: /Cash/ }).click();
+await page.locator(".pay-confirm").click();
 await page.getByRole("button", { name: "Retry" }).waitFor({ timeout: 10000 });
 check(dropped, "the answer to the first attempt was lost");
 check(
@@ -42,6 +43,7 @@ check(
 dropped = false;
 await page.locator(".product-tile", { hasText: "Golden espresso" }).click();
 await page.getByRole("button", { name: /Cash/ }).click();
+await page.locator(".pay-confirm").click();
 await page.getByRole("button", { name: "Retry" }).waitFor({ timeout: 10000 });
 await page.unroute("**/pos");
 await page.reload();

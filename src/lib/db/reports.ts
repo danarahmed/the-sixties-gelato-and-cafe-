@@ -153,31 +153,6 @@ export async function getDashboard(day: string): Promise<Dashboard> {
   };
 }
 
-export interface PosItem {
-  variantId: string;
-  productName: string;
-  variantName: string;
-  category: string | null;
-  prices: Record<string, number>;
-}
-
-/** The till's menu at today's prices — no costs (cashiers need a price, not a margin). */
-export async function getPosCatalogue(): Promise<PosItem[]> {
-  const c = await db();
-  return rows(await c.rpc("pos_catalogue"), "the menu").map((r: Record<string, unknown>) => {
-    const prices: Record<string, number> = {};
-    for (const [k, v] of Object.entries((r.prices as Record<string, unknown>) ?? {}))
-      prices[k] = num(v);
-    return {
-      variantId: str(r.variant_id),
-      productName: str(r.product_name),
-      variantName: str(r.variant_name),
-      category: strOrNull(r.category),
-      prices,
-    };
-  });
-}
-
 export interface MenuCostRow {
   variantId: string;
   productId: string;

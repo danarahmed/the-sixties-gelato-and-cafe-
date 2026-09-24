@@ -89,6 +89,17 @@ language sql security definer as $$
      and e.status = 'published'
 $$;
 
+-- The demo business's trading day, in its own time zone. Tests date things
+-- with this, never with current_date: from 21:00 to midnight UTC, Baghdad is
+-- already on the next day, and a test dated by the server's clock would
+-- disagree with the business it is testing.
+-- (plpgsql, so it can be defined before the migration that adds the function.)
+create or replace function test.today() returns date
+language plpgsql stable security definer as $$
+begin
+  return business_local_date('00000000-0000-0000-0000-0000000000b1', now());
+end $$;
+
 -- A small, fully known catalogue for golden tests: coffee at 10 IQD/g, an
 -- espresso that uses 20 g, priced 2,500 dine-in and 3,000 on Talabat, plus a
 -- takeaway cup that only the takeaway channel consumes.

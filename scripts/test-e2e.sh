@@ -86,7 +86,7 @@ for _ in $(seq 1 60); do curl -s -o /dev/null "$E2E_BASE/login" && break; sleep 
 
 fail=0
 suites=("$@")
-[ ${#suites[@]} -eq 0 ] && suites=(pages flows retry offline)
+[ ${#suites[@]} -eq 0 ] && suites=(pages flows retry offline bills)
 for t in "${suites[@]}"; do
   node "tests/e2e/$t.e2e.mjs" || fail=1
 done

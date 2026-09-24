@@ -49,6 +49,8 @@ export interface DayTotals {
   card: number;
   platform: number;
   closed: boolean;
+  /** Bills from the till still waiting for their money: the day cannot close until they are settled. */
+  openBills: number;
 }
 
 /** What the till should hold for a day, before it is counted. */
@@ -66,6 +68,7 @@ export async function getDayTotals(day: string): Promise<DayTotals> {
     card: num(t?.card),
     platform: num(t?.platform),
     closed: Boolean(t?.closed),
+    openBills: num(t?.open_bills),
   };
 }
 

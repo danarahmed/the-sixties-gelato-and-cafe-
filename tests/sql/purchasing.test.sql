@@ -29,7 +29,7 @@ select test.eq((select string_agg(value::text, ',' order by value desc) from inv
   '134,133,133', 'the leftover unit goes to one line, by largest remainder');
 
 -- G5 — the bill for the first receipt, 500 over: the variance goes to 5050.
-create temp table b1 as select record_bill((select id from sup), 'INV-001', current_date, 20500, 15,
+create temp table b1 as select record_bill((select id from sup), 'INV-001', test.today(), 20500, 15,
   (select (r->>'receipt_id')::uuid from r1)) as r;
 select test.eq(test.lines_of((select (r->>'bill_id')::uuid from b1)),
   '2000 Cr 20500 | 2050 Dr 20000 | 5050 Dr 500', 'G5 bill clears GRNI, variance to PPV, payable raised once');
@@ -37,11 +37,11 @@ select test.eq(test.lines_of((select (r->>'bill_id')::uuid from b1)),
 -- A receipt is billed by the supplier who delivered it.
 select test.throws($$select record_bill((select id from supplier where business_id = '00000000-0000-0000-0000-0000000000b1'
                                            and id <> (select id from sup) limit 1),
-                                        'OTHER-1', current_date, 100, 0, (select (r->>'receipt_id')::uuid from r2))$$,
+                                        'OTHER-1', test.today(), 100, 0, (select (r->>'receipt_id')::uuid from r2))$$,
   '%different supplier%', 'another supplier cannot bill someone else''s delivery');
 
 -- Under-billed: the variance is a credit.
-create temp table b2 as select record_bill((select id from sup), 'INV-002', current_date, 350, 0,
+create temp table b2 as select record_bill((select id from sup), 'INV-002', test.today(), 350, 0,
   (select (r->>'receipt_id')::uuid from r2)) as r;
 select test.eq(test.lines_of((select (r->>'bill_id')::uuid from b2)),
   '2000 Cr 350 | 2050 Dr 400 | 5050 Cr 50', 'billed below receipt value credits PPV');
@@ -50,23 +50,23 @@ select test.eq(test.lines_of((select (r->>'bill_id')::uuid from b2)),
 create temp table inv_before as select test.balance('1200') b;
 grant select on inv_before to public;
 select receive_goods((select id from sup), '[{"item_id":"c0000000-0000-0000-0000-000000000003","qty":400,"goods_value":100000}]');
-select record_bill((select id from sup), 'INV-003', current_date, 100000, 0,
+select record_bill((select id from sup), 'INV-003', test.today(), 100000, 0,
   (select id from goods_receipt where business_id = '00000000-0000-0000-0000-0000000000b1' order by receipt_no desc limit 1));
 select test.eq(test.balance('1200') - (select b from inv_before), 100000::numeric,
   'a receipt plus its bill raises Inventory once');
 select test.eq(test.balance('2050'), 0::numeric, 'every receipt is billed, so GRNI is clear');
 
 -- A bill that is not for stock goes to the account chosen, never to Inventory.
-create temp table b4 as select record_bill((select id from sup), 'ELEC-8', current_date, 150000, 30, null, '6200') as r;
+create temp table b4 as select record_bill((select id from sup), 'ELEC-8', test.today(), 150000, 30, null, '6200') as r;
 select test.eq(test.lines_of((select (r->>'bill_id')::uuid from b4)), '2000 Cr 150000 | 6200 Dr 150000', 'non-stock bill');
 
-select test.throws($$select record_bill((select id from sup), 'X-1', current_date, 100, 0, null, '1200')$$,
+select test.throws($$select record_bill((select id from sup), 'X-1', test.today(), 100, 0, null, '1200')$$,
   '%cannot take a bill%', 'a bill cannot debit Inventory without a receipt');
-select test.throws($$select record_bill((select id from sup), 'X-2', current_date, 100, 0,
+select test.throws($$select record_bill((select id from sup), 'X-2', test.today(), 100, 0,
   (select (r->>'receipt_id')::uuid from r1), '6200')$$, '%choose one%', 'a bill is for a receipt or an account, not both');
-select test.throws($$select record_bill((select id from sup), 'inv-001', current_date, 5, 0, null, '6200')$$,
+select test.throws($$select record_bill((select id from sup), 'inv-001', test.today(), 5, 0, null, '6200')$$,
   '%already recorded%', 'M-07: the same invoice number (any case) is refused');
-select test.throws($$select record_bill((select id from sup), 'INV-009', current_date, 5, 0, (select (r->>'receipt_id')::uuid from r1))$$,
+select test.throws($$select record_bill((select id from sup), 'INV-009', test.today(), 5, 0, (select (r->>'receipt_id')::uuid from r1))$$,
   '%already been billed%', 'a receipt is billed once');
 
 -- G6 — payment. A manager cannot pay (separation of duties); the owner can.
@@ -105,13 +105,13 @@ select test.eq((select sum(value * sign(base_quantity_signed)) from inventory_mo
 select test.act_as('manager@example.com');
 create temp table cancel_r3 as select receive_goods((select id from sup),
   '[{"item_id":"c0000000-0000-0000-0000-000000000002","qty":10,"goods_value":500}]') as r;
-create temp table cancel_b3 as select record_bill((select id from sup), 'INV-777', current_date, 5000, 0,
+create temp table cancel_b3 as select record_bill((select id from sup), 'INV-777', test.today(), 5000, 0,
   (select (r->>'receipt_id')::uuid from cancel_r3)) as r;   -- typed 5,000 for a 500 delivery
 select test.throws($$select cancel_bill((select (r->>'bill_id')::uuid from cancel_b3), 'typed 5000 for 500')$$,
   '%permission%', 'the person who buys cannot also cancel bills');
 select test.act_as('owner@example.com');
 select test.throws($$select cancel_bill((select (r->>'bill_id')::uuid from cancel_b3), '  ')$$, '%Say why%', 'a cancellation needs a reason');
-select test.throws($$select cancel_bill((select (r->>'bill_id')::uuid from cancel_b3), 'typed 5000 for 500', current_date + 2)$$,
+select test.throws($$select cancel_bill((select (r->>'bill_id')::uuid from cancel_b3), 'typed 5000 for 500', test.today() + 2)$$,
   '%has happened%', 'a cancellation is not dated in the future');
 select cancel_bill((select (r->>'bill_id')::uuid from cancel_b3), 'typed 5000 for 500');
 select test.as_admin();
@@ -127,11 +127,11 @@ select test.act_as('owner@example.com');
 select test.throws($$select pay_bill((select (r->>'bill_id')::uuid from cancel_b3), 1, 'cash')$$, '%cancelled%', 'a cancelled bill cannot be paid');
 select test.throws($$select cancel_bill((select (r->>'bill_id')::uuid from cancel_b3), 'again')$$, '%already cancelled%', 'nor cancelled twice');
 select test.throws($$select cancel_bill((select (r->>'bill_id')::uuid from b1), 'x')$$, '%payments%', 'a bill with payments cannot be cancelled');
-create temp table cancel_b4 as select record_bill((select id from sup), 'INV-777', current_date, 500, 0,
+create temp table cancel_b4 as select record_bill((select id from sup), 'INV-777', test.today(), 500, 0,
   (select (r->>'receipt_id')::uuid from cancel_r3)) as r;
 select test.eq(test.lines_of((select (r->>'bill_id')::uuid from cancel_b4)), '2000 Cr 500 | 2050 Dr 500',
   'the corrected bill takes the same invoice number and the same receipt');
-select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from report_reconciliation(current_date)),
+select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from report_reconciliation(test.today())),
   'grni=0,inventory=0,payables=0,sales=0', 'and the books still reconcile');
 select test.act_as('owner@example.com');
 select test.eq((select count(*) from legacy_unposted())::int, 0,

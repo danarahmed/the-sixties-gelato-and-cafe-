@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Decimal from "decimal.js";
 import { closeDayAction } from "@/lib/actions/sales";
@@ -122,10 +123,20 @@ export function DayClose({ totals }: { totals: DayTotals[] }) {
             {variance === null ? "—" : `${variance > 0 ? "+" : ""}${fmtIQD(variance)}`}
           </div>
         </div>
-        <button className="btn-primary" onClick={submit} disabled={busy || counted === "" || !day}>
+        <button
+          className="btn-primary"
+          onClick={submit}
+          disabled={busy || counted === "" || !day || (t?.openBills ?? 0) > 0}
+        >
           {busy ? "Closing…" : "Close the day"}
         </button>
       </div>
+      {t && t.openBills > 0 && (
+        <p className="red" style={{ fontSize: ".85rem", marginBlockEnd: 0 }}>
+          {t.openBills} bill(s) from the till are still open. Take payment for them, or have a
+          manager cancel them, on the <Link href="/pos">till</Link> before closing this day.
+        </p>
+      )}
       {t && (
         <p className="muted" style={{ fontSize: ".78rem", marginBlockEnd: 0 }}>
           Cash sales {fmtIQD(t.cashSales)} − cash refunds {fmtIQD(t.cashRefunds)}. Card (

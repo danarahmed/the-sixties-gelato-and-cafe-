@@ -23,6 +23,7 @@ const productInput = z.object({
   name: text("Product name", 120),
   nameAr: optionalText(120),
   nameCkb: optionalText(120),
+  categoryId: id("a category").nullable().optional(),
   prices: z.record(z.enum(SALES_CHANNELS), positive("Price")),
   recipe: z.array(
     z.object({
@@ -52,6 +53,7 @@ export async function createProductAction(
     })),
     p_name_ar: v.data.nameAr,
     p_name_ckb: v.data.nameCkb,
+    p_category: v.data.categoryId ?? null,
   });
   if (!r.ok) return r;
   refresh(...MENU_PATHS);
@@ -76,6 +78,106 @@ export async function setPriceAction(
     p_price: v.data.price,
     p_effective_from: v.data.effectiveFrom,
   });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: null };
+}
+
+const categoryInput = z.object({
+  id: id("a category").nullable(),
+  name: text("The category's name", 60),
+  nameAr: optionalText(60),
+  nameCkb: optionalText(60),
+  sortOrder: z.number().int(),
+  isActive: z.boolean(),
+});
+
+/** Add or change a category: its names, its place on the till, and whether the till shows it. */
+export async function saveCategoryAction(
+  input: z.input<typeof categoryInput>,
+): Promise<ActionResult<{ id: string }>> {
+  const v = parse(categoryInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<string>("save_category", {
+    p_id: v.data.id,
+    p_name: v.data.name,
+    p_name_ar: v.data.nameAr,
+    p_name_ckb: v.data.nameCkb,
+    p_sort_order: v.data.sortOrder,
+    p_is_active: v.data.isActive,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: { id: String(r.data) } };
+}
+
+const detailsInput = z.object({
+  productId: id("a product"),
+  name: text("Product name", 120),
+  nameAr: optionalText(120),
+  nameCkb: optionalText(120),
+  categoryId: id("a category").nullable(),
+  isActive: z.boolean(),
+  isFavourite: z.boolean(),
+});
+
+/** A product's names, category, and whether the till offers it (and among the favourites). */
+export async function setProductDetailsAction(
+  input: z.input<typeof detailsInput>,
+): Promise<ActionResult<null>> {
+  const v = parse(detailsInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("set_product_details", {
+    p_product: v.data.productId,
+    p_name: v.data.name,
+    p_category: v.data.categoryId,
+    p_is_active: v.data.isActive,
+    p_is_favourite: v.data.isFavourite,
+    p_name_ar: v.data.nameAr,
+    p_name_ckb: v.data.nameCkb,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: null };
+}
+
+const imageInput = z.object({
+  productId: id("a product"),
+  contentType: z.enum(["image/png", "image/jpeg", "image/webp"], {
+    message: "Use a PNG, JPEG or WebP picture",
+  }),
+  /** The picture, already shrunk by the browser, as base64. */
+  data: z
+    .string()
+    .min(1, "Choose a picture")
+    .max(410_000, "The picture must be smaller than 300 KB")
+    .regex(/^[A-Za-z0-9+/]+={0,2}$/, "The picture could not be read"),
+});
+
+/** A product's photo, shown on its tile at the till. The database checks the bytes really are a picture. */
+export async function setProductImageAction(
+  input: z.input<typeof imageInput>,
+): Promise<ActionResult<{ imageUrl: string }>> {
+  const v = parse(imageInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<string>("set_product_image", {
+    p_product: v.data.productId,
+    p_content_type: v.data.contentType,
+    p_data: v.data.data,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: { imageUrl: String(r.data) } };
+}
+
+const productRef = z.object({ productId: id("a product") });
+
+export async function clearProductImageAction(
+  input: z.input<typeof productRef>,
+): Promise<ActionResult<null>> {
+  const v = parse(productRef, input);
+  if (!v.ok) return v;
+  const r = await callRpc("clear_product_image", { p_product: v.data.productId });
   if (!r.ok) return r;
   refresh(...MENU_PATHS);
   return { ok: true, data: null };

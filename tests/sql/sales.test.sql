@@ -100,11 +100,11 @@ select test.eq((record_sale(gen_random_uuid(), 'dine_in', 'cash',
 -- change scheduled for next week does not reach today's till, and a recipe is
 -- never changed retroactively.
 select test.act_as('owner@example.com');
-select set_price('d1000000-0000-0000-0000-000000000001', 'dine_in', 9000, current_date + 7);
+select set_price('d1000000-0000-0000-0000-000000000001', 'dine_in', 9000, test.today() + 7);
 select new_recipe_version('d2000000-0000-0000-0000-000000000001',
-  '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":40,"unit_code":"g"}]', current_date + 7);
+  '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":40,"unit_code":"g"}]', test.today() + 7);
 select test.throws($$select new_recipe_version('d2000000-0000-0000-0000-000000000001',
-  '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":40,"unit_code":"g"}]', current_date - 2)$$,
+  '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":40,"unit_code":"g"}]', test.today() - 2)$$,
   '%cannot start in the past%', 'a recipe cannot be changed retroactively');
 select test.act_as('cashier@example.com');
 select test.eq((select (prices ->> 'dine_in')::numeric from pos_catalogue()

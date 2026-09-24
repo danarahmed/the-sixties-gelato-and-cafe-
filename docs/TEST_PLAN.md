@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 105 tests)
+## 1. Unit (Vitest, 118 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -28,7 +28,7 @@ layers before every release.
   numbers typed in Arabic-Indic digits, the Baghdad trading day, and the
   expense-account suggestions.
 
-## 2. SQL (`scripts/test-sql.sh`, about 290 assertions)
+## 2. SQL (`scripts/test-sql.sh`, about 390 assertions)
 
 Runs against real PostgreSQL, with a small shim for Supabase's `auth` schema
 and roles. Tested on 16 and 17.6 (the live version).
@@ -65,17 +65,18 @@ where it must change nothing, and again after the upgrade, where it must refuse.
 
 **Suites**, each in a fresh copy of a template database:
 
-| Suite        | Proves                                                                                                  |
-| ------------ | ------------------------------------------------------------------------------------------------------- |
-| `smoke`      | The template builds and the fixtures load                                                               |
-| `sales`      | Golden postings per tender and channel; exactly-once by key; negative stock; recipe and price dates     |
-| `refunds`    | Void same day before the close; refund after; only returnable stock comes back                          |
-| `stock`      | Waste, corrections, opening stock; blind two-person counts; every movement journaled                    |
-| `purchasing` | Receipt → GRNI → bill → payment; landed cost; duplicate invoices; cancellation; overpayment             |
-| `journals`   | Draft/publish; subledger accounts closed to manual journals; reversal rules and dates; numbering        |
-| `close`      | The trading day in Baghdad time; day close once; the closing checklist; every route into a locked month |
-| `reports`    | Trial balance, P&L and reconciliation from published lines, for exactly the dates asked                 |
-| `controls`   | Who may do what; tenant isolation; the public can call nothing; the exact list of callable functions    |
+| Suite        | Proves                                                                                                                                                                                                            |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `smoke`      | The template builds and the fixtures load                                                                                                                                                                         |
+| `sales`      | Golden postings per tender and channel; exactly-once by key; negative stock; recipe and price dates                                                                                                               |
+| `refunds`    | Void same day before the close; refund after; only returnable stock comes back                                                                                                                                    |
+| `stock`      | Waste, corrections, opening stock; blind two-person counts; every movement journaled                                                                                                                              |
+| `purchasing` | Receipt → GRNI → bill → payment; landed cost; duplicate invoices; cancellation; overpayment                                                                                                                       |
+| `journals`   | Draft/publish; subledger accounts closed to manual journals; reversal rules and dates; numbering                                                                                                                  |
+| `close`      | The trading day in Baghdad time; day close once; the closing checklist; every route into a locked month                                                                                                           |
+| `reports`    | Trial balance, P&L and reconciliation from published lines, for exactly the dates asked                                                                                                                           |
+| `pos`        | Tables, categories, photos judged by their bytes; bills paid later post exactly like a counter sale, once; stale tills refused; printed bills and cancellations guarded; split; the day held open by an open bill |
+| `controls`   | Who may do what; tenant isolation; the public can call nothing; the exact list of callable functions                                                                                                              |
 
 **Concurrency** (`scripts/test-sql-concurrency.sh`), with real parallel
 connections:
@@ -83,7 +84,14 @@ connections:
 - 10 simultaneous submissions of one sale record one order and one journal;
 - 10 simultaneous full payments of one bill pay it once;
 - 10 tills racing for 5 bottles sell exactly 5;
-- 20 simultaneous journals number without gaps or collisions.
+- 20 simultaneous journals number without gaps or collisions;
+- 10 tills pressing Pay on one table's bill record one sale, and the other nine
+  are handed it;
+- 10 tills saving one bill from the same version: one change wins, nine are
+  told to reopen it.
+
+Tests date things by the business's own day (`test.today()`), never by the
+server's clock: from 21:00 to midnight UTC, Baghdad is already on the next day.
 
 ## 3. Browser (`scripts/test-e2e.sh`)
 
@@ -103,6 +111,15 @@ database, behind a small local stand-in for Supabase's auth service.
     delivery.
 - `retry`: a sale whose confirmation is lost is retried and recorded once.
 - `offline`: offline, the till says so and refuses the sale, in each language.
+- `bills`: the till for a busy café:
+  - a photo, a category and a ★ set on Products, and the photo served only to
+    signed-in members;
+  - three tables laid out by a manager;
+  - a table's bill saved, printed, refused a cashier's reduction, and paid in
+    cash with the change worked out;
+  - a table split between two payers; a bill kept under a customer's name;
+  - a bill cancelled by a manager with a reason.
+- `flows` also checks that a bill still open holds the day open.
 
 ## The 12 acceptance scenarios
 

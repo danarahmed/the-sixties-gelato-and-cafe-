@@ -36,7 +36,12 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   const signedIn = Boolean(data?.claims?.sub);
 
   // Pages carry the books: never let a shared cache or proxy keep a copy.
-  response.headers.set("Cache-Control", "private, no-store");
+  // Product photos are the one exception: private to the browser, and their
+  // address changes with every new picture, so the till need not fetch them
+  // again on every visit.
+  if (!path.startsWith("/api/product-image/")) {
+    response.headers.set("Cache-Control", "private, no-store");
+  }
 
   if (!signedIn && !isPublicPath(path)) {
     const url = request.nextUrl.clone();

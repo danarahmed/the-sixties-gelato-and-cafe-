@@ -129,9 +129,11 @@ export function AppShell({
   // Only the screens this person's roles open. The database enforces the
   // same limits on every read and write; this just keeps the menu honest.
   const nav = NAV.filter((n) => holdsAny(member.permissions, n.anyOf));
+  // The till takes the whole screen; the menu opens from the ☰ button.
+  const posMode = pathname === "/pos" || pathname?.startsWith("/pos/");
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${posMode ? " pos-mode" : ""}`}>
       <header className="topbar">
         <button
           onClick={() => setMenuOpen((v) => !v)}

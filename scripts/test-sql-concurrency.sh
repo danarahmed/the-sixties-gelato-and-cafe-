@@ -56,7 +56,7 @@ ok "$(sql "select count(*) from journal_entry where reference_id = (select id fr
 # H-11 — ten people pay the same 20,000 bill in full at once: one payment.
 sql "select test.act_as('manager@example.com');
      select receive_goods((select id from supplier limit 1), '[{\"item_id\":\"c0000000-0000-0000-0000-000000000002\",\"qty\":10,\"goods_value\":20000}]');
-     select record_bill((select id from supplier limit 1), 'RACE-1', current_date, 20000, 0,
+     select record_bill((select id from supplier limit 1), 'RACE-1', test.today(), 20000, 0,
                         (select id from goods_receipt order by receipt_no desc limit 1));" >/dev/null
 BILL=$(sql "select id from purchase_invoice where invoice_no = 'RACE-1'")
 race 10 owner@example.com "select pay_bill('$BILL', 20000, 'bank')"
@@ -78,13 +78,34 @@ ok "$(sql "select (item_position('00000000-0000-0000-0000-0000000000b1','c000000
 
 # H-02 — twenty journals published at once: twenty consecutive numbers.
 BEFORE=$(sql "select count(*) from journal_entry where journal_no is not null")
-race 20 owner@example.com "select save_journal(current_date, 'race', '[{\"code\":\"6200\",\"debit\":1},{\"code\":\"1000\",\"credit\":1}]', true)"
+race 20 owner@example.com "select save_journal(test.today(), 'race', '[{\"code\":\"6200\",\"debit\":1},{\"code\":\"1000\",\"credit\":1}]', true)"
 ok "$(sql "select count(*) - $BEFORE from journal_entry where journal_no is not null")" "20" "20 simultaneous journals all publish"
 ok "$(sql "select (max(journal_no) - min(journal_no) + 1) = count(*) from journal_entry where journal_no is not null")" "t" \
    "numbered consecutively, with no gaps and no collisions"
 
+# A table's bill: ten tills press Pay at the same moment, each with its own
+# payment key. One sale; the other nine are handed that sale.
+TAB=$(sql "select test.act_as('cashier@example.com');
+           select open_tab('dine_in', null, 'Race table') ->> 'tab_id'" | tail -1)
+sql "select test.act_as('cashier@example.com');
+     select save_tab('$TAB', 1, '[{\"variant_id\":\"d1000000-0000-0000-0000-000000000001\",\"qty\":2}]')" >/dev/null
+race 10 cashier@example.com "select settle_tab('$TAB', 2, gen_random_uuid(), 'cash')"
+ok "$(sql "select count(*) from sales_order o join pos_tab t on t.sales_order_id = o.id where t.id = '$TAB'")" "1" \
+   "10 tills paying one bill at once record exactly one sale"
+ok "$(sql "select count(*) from sales_order where created_at > now() - interval '1 minute' and net_amount = 5000")" "1" \
+   "and no stray second sale"
+ok "$(grep -l '"replayed": true' "$WORK"/*.out | wc -l | tr -d ' ')" "9" "the other nine are handed the sale already recorded"
+
+# Ten tills save changes to one bill from the same version: one wins, nine are told to reopen it.
+TAB=$(sql "select test.act_as('cashier@example.com');
+           select open_tab('dine_in', null, 'Busy table') ->> 'tab_id'" | tail -1)
+race 10 cashier@example.com "select save_tab('$TAB', 1, '[{\"variant_id\":\"d1000000-0000-0000-0000-000000000001\",\"qty\":1}]')"
+ok "$(grep -l 'changed on another till' "$WORK"/*.out | wc -l | tr -d ' ')" "9" \
+   "10 tills saving one bill at once: one change wins, nine are refused"
+ok "$(sql "select version from pos_tab where id = '$TAB'")" "2" "and the bill moved on by exactly one version"
+
 # The books still tie after all of it.
-ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(current_date)")" \
+ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(test.today())")" \
    "0,0,0,0" "every subledger still reconciles to its control account"
 
 [ "$FAILED" -eq 0 ]
