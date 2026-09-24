@@ -13,6 +13,12 @@ export interface PrintJob {
   title: string;
   channelLabel: string;
   lines: { name: string; qty: number; amount: number | null; note: string | null }[];
+  /** Before the discount. */
+  subtotal?: number;
+  discount?: number;
+  /** "10%" when the discount was a percentage. */
+  discountLabel?: string | null;
+  /** What is to be paid, or was paid. */
   total: number;
   tender?: Tender;
   received?: number | null;
@@ -112,6 +118,21 @@ export function PrintSlip({
         </div>
       ))}
       <div className="ps-rule" />
+      {job.discount != null && job.discount > 0 && (
+        <>
+          <div className="ps-row">
+            <span>{t("pos.subtotal")}</span>
+            <span className="ps-num">{money(job.subtotal ?? job.total + job.discount)}</span>
+          </div>
+          <div className="ps-row">
+            <span>
+              {t("pos.discount")}
+              {job.discountLabel ? ` ${job.discountLabel}` : ""}
+            </span>
+            <span className="ps-num">−{money(job.discount)}</span>
+          </div>
+        </>
+      )}
       <div className="ps-row ps-strong ps-big">
         <span>{t("pos.total")}</span>
         <span className="ps-num">{money(job.total)} IQD</span>

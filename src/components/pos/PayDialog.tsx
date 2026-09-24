@@ -25,6 +25,7 @@ export function suggestedCash(total: number): number[] {
 export function PayDialog({
   title,
   total,
+  note,
   tenders,
   initialTender,
   busy,
@@ -33,7 +34,10 @@ export function PayDialog({
   onClose,
 }: {
   title: string;
+  /** What the customer pays: the bill less any discount. */
   total: number;
+  /** The discount taken off, when there is one. */
+  note: string | null;
   tenders: Tender[];
   initialTender: Tender;
   busy: boolean;
@@ -80,6 +84,7 @@ export function PayDialog({
         <div className="pay-head">
           <span className="muted">{title}</span>
           <span className="pay-total mono">{fmtIQD(total)}</span>
+          {note && <span className="muted pay-note">{note}</span>}
         </div>
 
         {tenders.length > 1 && (

@@ -127,7 +127,14 @@ database when the entry is published). A published entry never changes;
 corrections are new entries. What each record posts (migration `0015`):
 
 - Sale: Dr 1000 Cash / 1010 Card clearing / 1100 Platform receivable (by
-  tender) / Cr 4000 Sales; Dr 5000 COGS / Cr 1200 Inventory.
+  tender) / Cr 4000 Sales; Dr 5000 COGS / Cr 1200 Inventory. With a discount
+  (`0019`): Cr 4000 at the full price, Dr 4100 Merchant-funded discount for the
+  discount, and the tender at what was paid.
+- Discount: a percentage of the bill, rounded like every amount (to the
+  currency unit, halves to even: 12.5% of 2,500 is 312), or a fixed amount;
+  never more than the bill. Each line carries its share in proportion to its
+  value, the shares adding up to the discount exactly, so a refund returns
+  what was paid.
 - Void (same day, before the close): the sale's journal reversed exactly.
 - Refund: Dr 4200 Sales returns / Cr the tender's account; stock comes back
   only for items that are `returnable_to_stock`.

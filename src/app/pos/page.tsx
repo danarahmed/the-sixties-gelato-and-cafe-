@@ -41,6 +41,8 @@ export default async function PosPage() {
       businessName={profile.businessName}
       cashierName={profile.name}
       timezone={profile.timezone}
+      canDiscount={has(profile, "discount.apply")}
+      currencyDecimals={profile.currencyDecimals}
     />
   );
 }

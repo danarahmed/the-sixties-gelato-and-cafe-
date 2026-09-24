@@ -7,9 +7,9 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0018` and the rebuilt app. The SQL
-  checks (16), the browser suites (5, every role), the unit and contract tests
-  (118) and a production build all pass.
+- **Built and verified:** migrations `0014`–`0019` and the rebuilt app. The SQL
+  checks (17), the browser suites (5, every role), the unit and contract tests
+  (124) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -28,9 +28,17 @@ browser tests through the real app, or both.
   their money (printed, split, moved, cancelled only by a manager), product
   photos, categories and favourites, 80 mm printing. Built and tested. The
   migration was applied to the live database on 24 September 2026 and matches
-  the tested build object by object; the screens go live when their pull
-  request is merged. See
+  the tested build object by object; the screens went live the same day with
+  [pull request #2](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/2). See
   [`guides/cashier-quickstart.md`](guides/cashier-quickstart.md).
+- **Discounts (migration `0019`):** a percentage or an amount on the till, each
+  filling in the other; revenue at full price in 4000, discounts in 4100; only
+  a manager changes the discount on a printed bill. Built and tested. The
+  migration was applied to the live database on 24 September 2026, matches the
+  tested build object by object, and was checked as the owner in a transaction
+  that was rolled back; the screens go live with
+  [pull request #3](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/3). See
+  [`guides/cashier-quickstart.md`](guides/cashier-quickstart.md#giving-a-discount).
 
 ## The August 2026 audit, finding by finding
 
@@ -104,8 +112,8 @@ browser tests through the real app, or both.
 
 | Layer                        | What                                                                                                          | Result      |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 118 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, 10 suites, concurrency | 16 passing  |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 124 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, 11 suites, concurrency | 17 passing  |
 | Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, retry, offline, tables and bills           | 5 passing   |
 | Build                        | `npm run build`, types, lint, formatting                                                                      | green       |
 

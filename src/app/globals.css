@@ -1569,3 +1569,70 @@ details > summary {
     grid-template-columns: 1fr;
   }
 }
+
+/* ------------------------------------------------------- discounts on the till */
+.order-sub {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.9rem;
+}
+.discount {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.discount-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.disc-label {
+  font-size: 0.9rem;
+  margin-inline-end: auto;
+}
+.disc-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.disc-field:focus-within {
+  border-color: var(--brand);
+}
+.disc-field input {
+  width: 48px;
+  min-height: 38px;
+  padding: 0;
+  border: none;
+  text-align: end;
+  font-size: 1rem;
+}
+.disc-field.wide input {
+  width: 80px;
+}
+.disc-field span {
+  font-size: 0.75rem;
+  color: var(--faint);
+}
+.disc-remove {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-color: transparent;
+  color: var(--faint);
+}
+.disc-note {
+  font-size: 0.78rem;
+  margin: 0;
+}
+.add-discount {
+  align-self: flex-start;
+  font-size: 0.88rem;
+}
+.pay-note {
+  font-size: 0.85rem;
+}

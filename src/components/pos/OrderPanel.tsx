@@ -6,7 +6,10 @@ import type { SaleReceipt } from "@/lib/actions/sales";
 import { fmtIQD, fmtQty } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
+import Decimal from "decimal.js";
 import {
+  discountAmount,
+  discountInvalid,
   isDirty,
   isPlatform,
   itemCount,
@@ -14,7 +17,10 @@ import {
   lineName,
   linePrice,
   minutesSince,
-  orderTotal,
+  orderSubtotal,
+  percentOf,
+  savedHasItems,
+  type Discount,
   type Line,
   type Order,
   type Tender,
@@ -113,6 +119,87 @@ function OrderLine({
 }
 
 /**
+ * A discount, typed either way: as a percentage, and the amount is worked out
+ * (rounded to the dinar, as the books round it); or as an amount, and the
+ * percentage is shown beside it.
+ */
+function DiscountRow({
+  discount,
+  subtotal,
+  decimals,
+  locked,
+  lockedReason,
+  onChange,
+  onRemove,
+}: {
+  discount: Discount | null;
+  subtotal: Decimal;
+  decimals: number;
+  locked: boolean;
+  lockedReason: string | null;
+  onChange: (d: Discount | null) => void;
+  onRemove: () => void;
+}) {
+  const { t } = useT();
+  const amount = discountAmount(discount, subtotal, decimals);
+  const invalid = discountInvalid(discount);
+  const percentShown =
+    discount?.kind === "percent"
+      ? discount.value
+      : discount && !invalid
+        ? percentOf(amount, subtotal)
+        : "";
+  const amountShown =
+    discount?.kind === "amount" ? discount.value : discount && !invalid ? amount.toString() : "";
+  const typed = (kind: Discount["kind"]) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    onChange(e.target.value.trim() === "" ? null : { kind, value: e.target.value });
+  return (
+    <div className="discount">
+      <div className="discount-row">
+        <span className="disc-label">{t("pos.discount")}</span>
+        <label className="disc-field">
+          <input
+            inputMode="decimal"
+            autoComplete="off"
+            placeholder="0"
+            value={percentShown}
+            onFocus={(e) => e.target.select()}
+            onChange={typed("percent")}
+            disabled={locked}
+            aria-label={t("pos.discountPercent")}
+          />
+          <span>%</span>
+        </label>
+        <label className="disc-field wide">
+          <input
+            inputMode="decimal"
+            autoComplete="off"
+            placeholder="0"
+            value={amountShown}
+            onFocus={(e) => e.target.select()}
+            onChange={typed("amount")}
+            disabled={locked}
+            aria-label={t("pos.discountAmount")}
+          />
+          <span>IQD</span>
+        </label>
+        <button
+          className="disc-remove"
+          onClick={onRemove}
+          disabled={locked}
+          aria-label={t("pos.removeDiscount")}
+          title={t("pos.removeDiscount")}
+        >
+          ✕
+        </button>
+      </div>
+      {invalid && <p className="red disc-note">{t("pos.discountInvalid")}</p>}
+      {lockedReason && <p className="muted disc-note">{lockedReason}</p>}
+    </div>
+  );
+}
+
+/**
  * The order on the right: what is being sold, what it comes to, and every
  * way to finish it — paid now, kept open for later, printed, split or moved.
  */
@@ -145,6 +232,9 @@ export function OrderPanel({
   onDiscard,
   onPrintReceipt,
   now,
+  canDiscount,
+  decimals,
+  onDiscount,
 }: {
   order: Order;
   title: string;
@@ -174,16 +264,29 @@ export function OrderPanel({
   onDiscard: () => void;
   onPrintReceipt: () => void;
   now: number;
+  /** discount.apply: the discount row is offered. */
+  canDiscount: boolean;
+  /** The currency's decimals: amounts round as the books round them. */
+  decimals: number;
+  onDiscount: (d: Discount | null) => void;
 }) {
   const { t } = useT();
   const isBill = order.kind === "bill";
   const blocked = busy !== null || pending;
   const empty = order.lines.length === 0;
   const dirty = isDirty(order);
-  const total = orderTotal(order, byId);
+  const subtotal = orderSubtotal(order, byId, decimals);
+  const discount = discountAmount(order.discount, subtotal, decimals);
+  const due = subtotal.minus(discount);
+  const badDiscount = discountInvalid(order.discount);
   const count = itemCount(order);
   const opened = minutesSince(order.openedAt, now);
-  const savedWithItems = order.tabId !== null && order.saved !== null && order.saved !== "[]";
+  const savedWithItems = order.tabId !== null && savedHasItems(order);
+  const [discountOpen, setDiscountOpen] = useState(false);
+  const offerDiscount = canDiscount && !isPlatform(order.channel);
+  const showDiscount = offerDiscount && (discountOpen || order.discount !== null);
+  // The customer has seen the printed total: only a manager may change what it comes to.
+  const discountLocked = isBill && order.printedAt !== null && !canVoid;
 
   return (
     <div className="card order-panel" aria-live="polite">
@@ -243,15 +346,51 @@ export function OrderPanel({
       </div>
 
       <div className="order-foot">
+        {!empty && showDiscount && (
+          <>
+            <div className="order-sub">
+              <span>
+                {t("pos.subtotal")}{" "}
+                <span className="muted">
+                  · {fmtQty(count)} {t("pos.items")}
+                </span>
+              </span>
+              <span className="mono">{fmtIQD(subtotal.toNumber())}</span>
+            </div>
+            <DiscountRow
+              discount={order.discount}
+              subtotal={subtotal}
+              decimals={decimals}
+              locked={blocked || discountLocked}
+              lockedReason={discountLocked ? t("pos.discountLocked") : null}
+              onChange={onDiscount}
+              onRemove={() => {
+                onDiscount(null);
+                setDiscountOpen(false);
+              }}
+            />
+          </>
+        )}
+        {!empty && offerDiscount && !showDiscount && (
+          <button
+            className="linklike add-discount"
+            onClick={() => setDiscountOpen(true)}
+            disabled={blocked || discountLocked}
+          >
+            ＋ {t("pos.addDiscount")}
+          </button>
+        )}
         {!empty && (
           <div className="order-total">
             <span>
               {t("pos.total")}{" "}
-              <span className="muted">
-                · {fmtQty(count)} {t("pos.items")}
-              </span>
+              {!showDiscount && (
+                <span className="muted">
+                  · {fmtQty(count)} {t("pos.items")}
+                </span>
+              )}
             </span>
-            <strong className="mono">{fmtIQD(total.toNumber())}</strong>
+            <strong className="mono">{fmtIQD(due.toNumber())}</strong>
           </div>
         )}
 
@@ -271,7 +410,7 @@ export function OrderPanel({
                 {isPlatform(order.channel) ? (
                   <button
                     className="btn-primary big"
-                    disabled={blocked || !online}
+                    disabled={blocked || !online || badDiscount}
                     onClick={() => onPay("platform_paid")}
                   >
                     🧾 {t("pos.platformPaid")}
@@ -280,14 +419,14 @@ export function OrderPanel({
                   <>
                     <button
                       className="btn-primary big"
-                      disabled={blocked || !online}
+                      disabled={blocked || !online || badDiscount}
                       onClick={() => onPay("cash")}
                     >
                       💵 {t("pos.cash")}
                     </button>
                     <button
                       className="btn-primary big"
-                      disabled={blocked || !online}
+                      disabled={blocked || !online || badDiscount}
                       onClick={() => onPay("card")}
                     >
                       💳 {t("pos.card")}
@@ -300,21 +439,25 @@ export function OrderPanel({
                   <>
                     <button
                       onClick={onSave}
-                      disabled={blocked || !online || !(dirty || order.tabId === null)}
+                      disabled={
+                        blocked || !online || badDiscount || !(dirty || order.tabId === null)
+                      }
                     >
                       💾 {t("pos.save")}
                     </button>
-                    <button onClick={onPrintBill} disabled={blocked || !online}>
+                    <button onClick={onPrintBill} disabled={blocked || !online || badDiscount}>
                       🖨 {t("pos.printBill")}
                     </button>
                     <button
                       onClick={onSplit}
-                      disabled={blocked || !online || order.tabId === null || count < 2}
+                      disabled={
+                        blocked || !online || badDiscount || order.tabId === null || count < 2
+                      }
                     >
                       ✂ {t("pos.split")}
                     </button>
                     {hasTables && (
-                      <button onClick={onMove} disabled={blocked || !online}>
+                      <button onClick={onMove} disabled={blocked || !online || badDiscount}>
                         ⇄ {t("pos.move")}
                       </button>
                     )}
@@ -331,7 +474,7 @@ export function OrderPanel({
                 ) : (
                   <>
                     {!isPlatform(order.channel) && (
-                      <button onClick={onKeepForLater} disabled={blocked || !online}>
+                      <button onClick={onKeepForLater} disabled={blocked || !online || badDiscount}>
                         🕒 {t("pos.keepForLater")}
                       </button>
                     )}
@@ -371,6 +514,7 @@ export function OrderPanel({
             </div>
             <p className="muted" style={{ fontSize: ".85rem", margin: "4px 0" }}>
               {fmtIQD(receipt.net)}
+              {receipt.discount > 0 ? ` · ${t("pos.discount")} −${fmtIQD(receipt.discount)}` : ""}
               {receipt.journalNo !== null ? ` · ${t("pos.journal")} ${receipt.journalNo}` : ""}
               {canSeeCost && receipt.cogs !== undefined
                 ? ` · ${t("pos.cost")} ${fmtIQD(receipt.cogs)}`

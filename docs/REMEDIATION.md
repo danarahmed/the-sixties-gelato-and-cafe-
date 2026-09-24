@@ -37,12 +37,12 @@ audited entry**. Nothing recorded before the upgrade is edited or deleted.
 **Reports → Do the books tie?** compares each subledger with its control
 account:
 
-| Check     | Subledger                                                                          | Control account                                |
-| --------- | ---------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Inventory | the stock ledger: every movement, at its value                                     | 1200 Inventory                                 |
-| Payables  | unpaid bills, plus deliveries the old app posted to payables that await their bill | 2000 Accounts payable                          |
-| GRNI      | deliveries received but not yet billed                                             | 2050 Goods received not invoiced               |
-| Sales     | recorded sales, less refunds                                                       | 4000 Sales revenue less 4200 Returns & refunds |
+| Check     | Subledger                                                                          | Control account                                                   |
+| --------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Inventory | the stock ledger: every movement, at its value                                     | 1200 Inventory                                                    |
+| Payables  | unpaid bills, plus deliveries the old app posted to payables that await their bill | 2000 Accounts payable                                             |
+| GRNI      | deliveries received but not yet billed                                             | 2050 Goods received not invoiced                                  |
+| Sales     | recorded sales, less refunds                                                       | 4000 Sales revenue less 4100 Discounts and 4200 Returns & refunds |
 
 **Chart of Accounts** shows the closing checklist for each period. A period
 locks only when every check passes, earlier periods are locked, every trading

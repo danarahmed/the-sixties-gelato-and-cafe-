@@ -1,7 +1,7 @@
 /**
  * The small rules the screens depend on: who lands where, what the menu
- * offers each role, how numbers typed in three scripts are read, and when a
- * trading day starts.
+ * offers each role, how numbers typed in three scripts are read, what a
+ * discount at the till comes to, and when a trading day starts.
  */
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
@@ -9,6 +9,20 @@ import { NAV, holdsAny, homeFor, isPublicPath } from "@/lib/auth/routes";
 import { addDays, dateIn, monthEnd, monthStart, parseDay } from "@/lib/dates";
 import { normaliseNumber, positive, signedNonZero } from "@/lib/validation";
 import { getBookkeeper } from "@/lib/bookkeeping/rules";
+import Decimal from "decimal.js";
+import {
+  discountAmount,
+  discountInvalid,
+  discountParams,
+  isDirty,
+  orderDue,
+  orderSubtotal,
+  percentOf,
+  quickOrder,
+  signature,
+  type Discount,
+} from "@/components/pos/model";
+import type { PosItem } from "@/lib/db/pos";
 
 const perms = (role: Role) => [...ROLE_PERMISSIONS[role]];
 
@@ -77,6 +91,92 @@ describe("numbers as staff type them", () => {
   it("takes a signed correction but never zero", () => {
     expect(signedNonZero("Change").parse("-250")).toBe("-250");
     expect(signedNonZero("Change").safeParse("0").success).toBe(false);
+  });
+});
+
+describe("a discount at the till: the percentage and the amount fill each other in", () => {
+  const pct = (value: string): Discount => ({ kind: "percent", value });
+  const amt = (value: string): Discount => ({ kind: "amount", value });
+  const n = (v: number) => new Decimal(v);
+  const off = (d: Discount, subtotal: number) => discountAmount(d, n(subtotal), 0).toString();
+
+  it("a percentage gives the amount, rounded to the dinar as the books round it", () => {
+    expect(off(pct("10"), 5000)).toBe("500");
+    expect(off(pct("7"), 5000)).toBe("350");
+    expect(off(pct("3"), 1990)).toBe("60"); // 59.7
+    expect(off(pct("12.5"), 2500)).toBe("312"); // 312.5: a half goes to the even dinar
+    expect(off(pct("15"), 4850)).toBe("728"); // 727.5
+  });
+
+  it("an amount gives the percentage, to two places", () => {
+    expect(percentOf(n(750), n(5000))).toBe("15");
+    expect(percentOf(n(333), n(5000))).toBe("6.66");
+    expect(percentOf(n(1000), n(3000))).toBe("33.33");
+    expect(percentOf(n(500), n(0))).toBe("");
+  });
+
+  it("reads what is typed in any of the three scripts", () => {
+    expect(off(amt("٧٥٠"), 5000)).toBe("750");
+    expect(off(pct("۱۰"), 5000)).toBe("500");
+    expect(off(amt("1,000"), 5000)).toBe("1000");
+    expect(discountParams(amt("٧٥٠"))).toEqual({ discountPercent: null, discountAmount: "750" });
+    expect(discountParams(pct("12.5"))).toEqual({ discountPercent: "12.5", discountAmount: null });
+  });
+
+  it("never takes off more than the bill", () => {
+    expect(off(amt("9999"), 2500)).toBe("2500");
+    expect(off(pct("100"), 2500)).toBe("2500");
+  });
+
+  it("refuses zero, more than 100% and junk, and sends none of them", () => {
+    for (const bad of [pct("0"), pct("100.5"), pct("-5"), amt("0"), amt("abc"), amt("1e3")]) {
+      expect(discountInvalid(bad), bad.value).toBe(true);
+      expect(off(bad, 5000)).toBe("0");
+      expect(discountParams(bad)).toEqual({ discountPercent: null, discountAmount: null });
+    }
+  });
+
+  it("the customer pays the bill less its discount, and a new discount is a change to save", () => {
+    const espresso: PosItem = {
+      variantId: "v-espresso",
+      productId: "p-espresso",
+      productName: "Espresso",
+      variantName: "Single",
+      nameAr: null,
+      nameCkb: null,
+      category: null,
+      categoryId: null,
+      categorySort: null,
+      categoryAr: null,
+      categoryCkb: null,
+      imageUrl: null,
+      isFavourite: false,
+      prices: { takeaway: 2500 },
+    };
+    const byId = new Map([[espresso.variantId, espresso]]);
+    const lines = [
+      {
+        key: "l1",
+        variantId: espresso.variantId,
+        qty: 2,
+        note: null,
+        lineId: null,
+        fallbackName: null,
+        fallbackPrice: null,
+      },
+    ];
+    const bill = { ...quickOrder("takeaway"), kind: "bill" as const, lines };
+    bill.saved = signature(lines, null);
+    expect(orderSubtotal(bill, byId, 0).toString()).toBe("5000");
+    expect(isDirty(bill)).toBe(false);
+
+    const discounted = { ...bill, discount: pct("10") };
+    expect(orderDue(discounted, byId, 0).toString()).toBe("4500");
+    expect(isDirty(discounted)).toBe(true);
+
+    const saved = { ...discounted, saved: signature(lines, discounted.discount) };
+    expect(isDirty({ ...saved, discount: pct("10.0") })).toBe(false);
+    expect(isDirty({ ...saved, discount: amt("450") })).toBe(true);
   });
 });
 

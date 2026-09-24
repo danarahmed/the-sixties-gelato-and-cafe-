@@ -114,6 +114,23 @@ the print window, choose that printer, **Margins: None**, and untick
 - **Discard — a manager will check Orders** clears a frozen order from your
   till. Use it only if the customer left without paying, and tell a manager.
 
+## Giving a discount
+
+Under the order, **＋ Discount** opens two boxes:
+
+- type a **percentage** (10) and the amount (500) is filled in for you,
+  rounded to the dinar;
+- or type an **amount** (750) and the percentage (15) is filled in.
+
+The **Total** is what the customer pays. The bill and the receipt show the
+full price, the discount and the total. A percentage on a table's bill follows
+the bill as more is added. **✕** takes the discount off.
+
+Only people allowed to give discounts see the box, and a delivery-platform
+order takes no discount at the till. **Once a table's bill has been printed,
+only a manager can change its discount**, just as only a manager can take
+items off it.
+
 ## Mistakes
 
 A finished sale cannot be edited. Tell a manager:
