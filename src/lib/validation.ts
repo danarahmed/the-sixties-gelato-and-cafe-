@@ -57,6 +57,26 @@ export const signedNonZero = (label: string) =>
 
 export const id = (label: string) => z.string().uuid(`Choose ${label}`);
 
+/** A discount given as a percentage: more than 0 and no more than 100, or none (null). */
+export const discountPercent = z
+  .union([z.string(), z.number(), z.null(), z.undefined()])
+  .transform((v) => (v === null || v === undefined ? "" : normaliseNumber(v)))
+  .refine(
+    (v) => v === "" || (DECIMAL.test(v) && Number(v) > 0 && Number(v) <= 100),
+    "A discount is more than 0% and no more than 100%",
+  )
+  .transform((v) => (v === "" ? null : v));
+
+/** A discount given as an amount: more than zero, or none (null). */
+export const discountAmount = z
+  .union([z.string(), z.number(), z.null(), z.undefined()])
+  .transform((v) => (v === null || v === undefined ? "" : normaliseNumber(v)))
+  .refine(
+    (v) => v === "" || (DECIMAL.test(v) && Number(v) > 0),
+    "A discount must be more than zero",
+  )
+  .transform((v) => (v === "" ? null : v));
+
 export const day = (label: string) =>
   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, `${label} must be a date`);
 

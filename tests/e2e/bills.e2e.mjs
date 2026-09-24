@@ -214,6 +214,45 @@ console.log("▸ cashier: Table 1 orders, is shown the bill, pays cash");
     sql("select status from pos_tab where label = 'Sara'") === "paid",
     "Sara's bill waited for her, then was paid",
   );
+
+  // A discount, typed either way: a percentage fills in the amount, an amount the percentage.
+  await page.locator(".strip-chip", { hasText: "Quick sale" }).click();
+  await page.getByRole("button", { name: "Takeaway" }).click();
+  await espresso.click();
+  await espresso.click();
+  await page.getByRole("button", { name: "＋ Discount" }).click();
+  const pct = page.getByLabel("Discount as a percentage");
+  const amt = page.getByLabel("Discount as an amount in IQD");
+  await pct.fill("10");
+  check((await amt.inputValue()) === "500", "10% of 5,000 fills in 500");
+  await amt.fill("750");
+  check((await pct.inputValue()) === "15", "750 off 5,000 fills in 15%");
+  check(
+    (await page.locator(".order-total strong").textContent()) === "4,250 IQD",
+    "and the total to pay is 4,250",
+  );
+  await pct.fill("7");
+  check((await amt.inputValue()) === "350", "7% of 5,000 is 350");
+  await amt.fill("750");
+  await page.getByRole("button", { name: /Cash/ }).click();
+  check(
+    /−750 IQD/.test((await page.locator(".pay-note").textContent()) ?? ""),
+    "taking the money shows the discount",
+  );
+  await page.locator(".pay-confirm").click();
+  await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
+  check(
+    sql(
+      "select gross_amount || '/' || discount_amount || '/' || net_amount from sales_order order by created_at desc limit 1",
+    ) === "5000/750/4250",
+    "the sale records 5,000 less 750: 4,250",
+  );
+  check(
+    sql(
+      "select string_agg(a.code || case when l.debit > 0 then ' Dr ' || l.debit else ' Cr ' || l.credit end, ' | ' order by a.code) from journal_line l join journal_entry e on e.id = l.journal_entry_id join gl_account a on a.id = l.account_id where a.code in ('1000', '4000', '4100') and e.reference_id = (select id from sales_order order by created_at desc limit 1)",
+    ) === "1000 Dr 4250 | 4000 Cr 5000 | 4100 Dr 750",
+    "revenue at full price, the discount in 4100, the cash as paid",
+  );
   await ctx.close();
 }
 
@@ -237,8 +276,8 @@ console.log("▸ manager cancels what is left of Table 2");
   await ctx.close();
 }
 check(
-  Number(sql("select count(*) from sales_order")) === salesBefore + 3,
-  "three bills paid, three sales",
+  Number(sql("select count(*) from sales_order")) === salesBefore + 4,
+  "three bills and one discounted sale: four sales",
 );
 
 await browser.close();

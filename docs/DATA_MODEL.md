@@ -158,8 +158,17 @@ Added after the August 2026 audit; see [ADR 0002](adr/0002-database-posting-engi
 
 All four tables are readable by the business's members only and writable only
 through the functions in `0018`.
-Signed-in users read through row-level security and write only through the
-functions of `0015`.
+
+### Discounts (`0019`)
+
+- A sale's `gross_amount`, `discount_amount` and `net_amount` now differ when a
+  discount is given, and each `sales_order_line` carries its `line_discount`.
+  The journal credits 4000 with the gross and debits 4100 with the discount.
+- `pos_tab.discount_percent` or `pos_tab.discount_amount` (at most one): a
+  bill's discount as the cashier gave it, worked out again as the bill
+  changes, and applied when it is paid.
+  Signed-in users read through row-level security and write only through the
+  functions of `0015`.
 
 - **Reports.** The functions of `0017` read published journal lines only:
   trial balance, P&L, and the reconciliation of each subledger with its

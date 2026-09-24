@@ -32,11 +32,17 @@ import {
   lineAmount,
   lineKey,
   lineName,
+  discountAmount,
+  discountParams,
   newBill,
+  orderDue,
   orderFromBill,
-  orderTotal,
+  orderSubtotal,
+  parseNumber,
   quickOrder,
+  savedHasItems,
   signature,
+  type Discount,
   type Order,
   type Tender,
 } from "./model";
@@ -57,6 +63,9 @@ interface Pending {
   title: string;
   received: number | null;
   job: PrintJob | null;
+  /** A quick sale's discount, sent again with the retry. */
+  discountPercent: string | null;
+  discountAmount: string | null;
 }
 
 const PENDING_KEY = "sixties.pos.pending";
@@ -86,6 +95,8 @@ function loadPending(): Pending | null {
       title: p.title ?? "",
       received: p.received ?? null,
       job: p.job ?? null,
+      discountPercent: p.discountPercent ?? null,
+      discountAmount: p.discountAmount ?? null,
     };
   } catch {
     return null;
@@ -127,6 +138,8 @@ export function PosClient({
   businessName,
   cashierName,
   timezone,
+  canDiscount,
+  currencyDecimals,
 }: {
   items: PosItem[];
   tables: DiningTable[];
@@ -137,6 +150,9 @@ export function PosClient({
   businessName: string;
   cashierName: string;
   timezone: string;
+  /** discount.apply */
+  canDiscount: boolean;
+  currencyDecimals: number;
 }) {
   const { t, locale } = useT();
   const online = useOnline();
@@ -277,7 +293,7 @@ export function PosClient({
               tabId: p.tabId,
               version: p.version,
               lines,
-              saved: signature(lines),
+              saved: signature(lines, null),
             },
       );
       setShowBill(true);
@@ -332,6 +348,26 @@ export function PosClient({
       note: l.note,
     }));
 
+  /** "Discount 10% · −500 IQD", under the total when taking the money. */
+  const discountNote = (o: Order): string | null => {
+    const tt = printTotals(o);
+    if (tt.discount <= 0) return null;
+    return `${t("pos.discount")}${tt.discountLabel ? ` ${tt.discountLabel}` : ""} · −${fmtIQD(tt.discount)}`;
+  };
+
+  /** Subtotal, discount and what is due, for a printed bill or receipt. */
+  const printTotals = (o: Order) => {
+    const subtotal = orderSubtotal(o, byId, currencyDecimals);
+    const discount = discountAmount(o.discount, subtotal, currencyDecimals);
+    const pct = o.discount?.kind === "percent" ? parseNumber(o.discount.value) : null;
+    return {
+      subtotal: subtotal.toNumber(),
+      discount: discount.toNumber(),
+      discountLabel: pct && discount.gt(0) ? `${pct.toString()}%` : null,
+      total: subtotal.minus(discount).toNumber(),
+    };
+  };
+
   // ------------------------------------------------------------ the order
   function patchOrder(fn: (o: Order) => Order) {
     if (showBill && billRef.current) putBill(fn(billRef.current));
@@ -356,7 +392,17 @@ export function PosClient({
   }
   function setChannel(c: SalesChannel) {
     if (pending || busy) return;
-    patchOrder((o) => (o.kind === "quick" || o.tabId === null ? { ...o, channel: c } : o));
+    // A delivery platform sets its own discounts: none goes with its orders.
+    patchOrder((o) =>
+      o.kind === "quick" || o.tabId === null
+        ? { ...o, channel: c, discount: isPlatform(c) ? null : o.discount }
+        : o,
+    );
+  }
+  function setDiscount(d: Discount | null) {
+    if (pending || busy) return;
+    setReceipt(null);
+    patchOrder((o) => ({ ...o, discount: d }));
   }
 
   /** Save the bill on screen (open it, if new) and return it as the database now has it. */
@@ -369,13 +415,19 @@ export function PosClient({
         tableId: o.tableId,
         label: o.label?.trim() || null,
         lines: o.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty), note: l.note })),
+        ...discountParams(o.discount),
       }),
     );
     if (!data) return null;
     const fresh = data.bills?.find((b) => b.tabId === data.tabId);
     const next = fresh
       ? orderFromBill(fresh)
-      : { ...o, tabId: data.tabId, version: data.version, saved: signature(o.lines) };
+      : {
+          ...o,
+          tabId: data.tabId,
+          version: data.version,
+          saved: signature(o.lines, o.discount),
+        };
     putBill(next);
     if (data.bills) applyBills(data.bills);
     return next;
@@ -456,6 +508,7 @@ export function PosClient({
         tableId: choice.tableId,
         label: choice.label,
         lines: o.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty), note: l.note })),
+        ...discountParams(o.discount),
       }),
     );
     setDialog(null);
@@ -499,7 +552,7 @@ export function PosClient({
       title: title(o),
       channelLabel: t(`pos.channel.${o.channel}`),
       lines: printLines(o),
-      total: orderTotal(o, byId).toNumber(),
+      ...printTotals(o),
       printCount: data.printCount,
       at: new Date().toISOString(),
       by: cashierName,
@@ -611,7 +664,6 @@ export function PosClient({
   async function confirmPay(tender: Tender, received: number | null) {
     if (dialog?.kind !== "pay" || busy) return;
     const o = dialog.order;
-    const total = orderTotal(o, byId).toNumber();
     await sendPayment({
       kind: o.kind,
       key: dialog.key,
@@ -622,12 +674,15 @@ export function PosClient({
       version: o.version,
       title: dialog.title,
       received,
+      ...(o.kind === "quick"
+        ? discountParams(o.discount)
+        : { discountPercent: null, discountAmount: null }),
       job: {
         kind: "receipt",
         title: dialog.title,
         channelLabel: t(`pos.channel.${o.channel}`),
         lines: printLines(o),
-        total,
+        ...printTotals(o),
         tender,
         received,
         at: new Date().toISOString(),
@@ -648,6 +703,8 @@ export function PosClient({
               channel: p.channel,
               tender: p.tender,
               lines: p.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty) })),
+              discountPercent: p.discountPercent,
+              discountAmount: p.discountAmount,
             })
           : await payBillAction({
               tabId: p.tabId!,
@@ -666,10 +723,13 @@ export function PosClient({
       const net = r.data.net;
       const change =
         p.received !== null ? Decimal.max(0, new Decimal(p.received).minus(net)).toNumber() : null;
+      // The printed receipt shows what the database recorded, discount included.
       const job: PrintJob | null = p.job
         ? {
             ...p.job,
             total: net,
+            subtotal: r.data.gross,
+            discount: r.data.discount,
             change,
             reference: r.data.orderId.slice(0, 8),
             journalNo: r.data.journalNo,
@@ -770,7 +830,7 @@ export function PosClient({
         ? billChannels
         : null;
   const blocked = pending !== null || busy !== null;
-  const total = orderTotal(order, byId);
+  const total = orderDue(order, byId, currencyDecimals);
 
   return (
     <div className="pos">
@@ -898,6 +958,9 @@ export function PosClient({
             onDiscard={discardPending}
             onPrintReceipt={() => receipt && setPrintJob(receipt.job)}
             now={now}
+            canDiscount={canDiscount}
+            decimals={currencyDecimals}
+            onDiscount={setDiscount}
           />
         </div>
       </div>
@@ -917,7 +980,8 @@ export function PosClient({
       {dialog?.kind === "pay" && (
         <PayDialog
           title={dialog.title}
-          total={orderTotal(dialog.order, byId).toNumber()}
+          total={orderDue(dialog.order, byId, currencyDecimals).toNumber()}
+          note={discountNote(dialog.order)}
           tenders={isPlatform(dialog.order.channel) ? ["platform_paid"] : ["cash", "card"]}
           initialTender={isPlatform(dialog.order.channel) ? "platform_paid" : dialog.tender}
           busy={busy === "pay"}
@@ -978,7 +1042,7 @@ export function PosClient({
       {dialog?.kind === "cancel" && bill && (
         <CancelDialog
           title={title(bill)}
-          needsReason={bill.saved !== null && bill.saved !== "[]"}
+          needsReason={savedHasItems(bill)}
           busy={busy !== null}
           error={dialog.error}
           onConfirm={confirmCancel}

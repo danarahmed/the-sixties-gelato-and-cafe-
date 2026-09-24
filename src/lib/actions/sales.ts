@@ -6,7 +6,16 @@
  */
 import { z } from "zod";
 import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
-import { day, id, nonNegative, positive, salesChannel, text } from "@/lib/validation";
+import {
+  day,
+  discountAmount,
+  discountPercent,
+  id,
+  nonNegative,
+  positive,
+  salesChannel,
+  text,
+} from "@/lib/validation";
 
 // Not /pos: the till keeps itself current from each action's answer, and
 // re-rendering it after every sale would only slow the cashier down.
@@ -20,10 +29,17 @@ const saleInput = z.object({
   lines: z
     .array(z.object({ variantId: id("a product"), qty: positive("Quantity") }))
     .min(1, "The cart is empty"),
+  /** At most one of the two: a percentage of the bill, or an amount off it. */
+  discountPercent,
+  discountAmount,
 });
 
 export interface SaleReceipt {
   orderId: string;
+  /** Before the discount. */
+  gross: number;
+  discount: number;
+  /** What the customer paid. */
   net: number;
   /** Only for people allowed to see costs. */
   cogs?: number;
@@ -37,24 +53,32 @@ export async function recordSaleAction(
 ): Promise<ActionResult<SaleReceipt>> {
   const v = parse(saleInput, input);
   if (!v.ok) return v;
+  if (v.data.discountPercent !== null && v.data.discountAmount !== null)
+    return { ok: false, error: "Give the discount as a percentage or as an amount, not both" };
   const r = await callRpc<Record<string, unknown>>("record_sale", {
     p_idempotency_key: v.data.key,
     p_channel: v.data.channel,
     p_tender: v.data.tender,
     p_lines: v.data.lines.map((l) => ({ variant_id: l.variantId, qty: l.qty })),
+    p_discount_percent: v.data.discountPercent,
+    p_discount_amount: v.data.discountAmount,
   });
   if (!r.ok) return r;
   refresh(...SALE_PATHS);
-  const d = r.data;
+  return { ok: true, data: saleReceipt(r.data) };
+}
+
+/** A recorded sale, as the database reported it. */
+function saleReceipt(d: Record<string, unknown>): SaleReceipt {
+  const net = Number(d.net ?? 0);
   return {
-    ok: true,
-    data: {
-      orderId: String(d.order_id),
-      net: Number(d.net ?? 0),
-      ...(d.cogs !== undefined ? { cogs: Number(d.cogs) } : {}),
-      journalNo: d.journal_no == null ? null : Number(d.journal_no),
-      replayed: Boolean(d.replayed),
-    },
+    orderId: String(d.order_id),
+    gross: Number(d.gross ?? net),
+    discount: Number(d.discount ?? 0),
+    net,
+    ...(d.cogs !== undefined ? { cogs: Number(d.cogs) } : {}),
+    journalNo: d.journal_no == null ? null : Number(d.journal_no),
+    replayed: Boolean(d.replayed),
   };
 }
 

@@ -12,7 +12,15 @@
 import { z } from "zod";
 import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { parseOpenBills, type OpenBill } from "@/lib/db/pos";
-import { id, optionalText, positive, salesChannel, text } from "@/lib/validation";
+import {
+  discountAmount,
+  discountPercent,
+  id,
+  optionalText,
+  positive,
+  salesChannel,
+  text,
+} from "@/lib/validation";
 import type { SaleReceipt } from "@/lib/actions/sales";
 
 /** A paid bill changes these screens; the till itself is kept current by the action's answer. */
@@ -52,6 +60,9 @@ const saveInput = z.object({
   tableId: id("a table").nullable(),
   label: optionalText(60),
   lines,
+  /** The bill's discount, as it should now stand: a percentage, an amount, or neither. */
+  discountPercent,
+  discountAmount,
 });
 
 /** Open a bill with its first order, or save what is on one already open. */
@@ -67,6 +78,8 @@ export async function saveBillAction(
     return { ok: false, error: "Add something to the bill first" };
   if (d.tabId === null && d.tableId === null && d.label === null)
     return { ok: false, error: "Give the bill a table or a name" };
+  if (d.discountPercent !== null && d.discountAmount !== null)
+    return { ok: false, error: "Give the discount as a percentage or as an amount, not both" };
   const r =
     d.tabId === null
       ? await callRpc<Record<string, unknown>>("open_tab", {
@@ -74,6 +87,8 @@ export async function saveBillAction(
           p_table: d.tableId,
           p_label: d.label,
           p_lines: toDb(d.lines),
+          p_discount_percent: d.discountPercent,
+          p_discount_amount: d.discountAmount,
         })
       : await callRpc<Record<string, unknown>>("save_tab", {
           p_tab: d.tabId,
@@ -81,6 +96,8 @@ export async function saveBillAction(
           p_lines: toDb(d.lines),
           p_label: d.label,
           p_table: d.tableId,
+          p_discount_percent: d.discountPercent,
+          p_discount_amount: d.discountAmount,
         });
   if (!r.ok) return r;
   return withBills({ tabId: String(r.data.tab_id), version: Number(r.data.version) });
@@ -123,9 +140,12 @@ export async function payBillAction(
   if (!r.ok) return r;
   refresh(...PAID_PATHS);
   const d = r.data;
+  const net = Number(d.net ?? 0);
   return withBills({
     orderId: String(d.order_id),
-    net: Number(d.net ?? 0),
+    gross: Number(d.gross ?? net),
+    discount: Number(d.discount ?? 0),
+    net,
     ...(d.cogs !== undefined ? { cogs: Number(d.cogs) } : {}),
     journalNo: d.journal_no == null ? null : Number(d.journal_no),
     replayed: Boolean(d.replayed),

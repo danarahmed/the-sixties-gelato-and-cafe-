@@ -87,6 +87,15 @@ cannot quietly disappear from a bill:
   it is logged too (**bill.split**);
 - **the day cannot be closed while a bill is still open.**
 
+**Discounts.** A cashier can give a discount as a percentage or an amount.
+The permission is "discount.apply": owners, managers and cashiers have it, and
+a barista does not. If only managers should give discounts, the cashier role
+can lose it; that is a change to the role matrix, not a setting on a screen. Every discount is on the audit trail (**sale.discount**), and once a
+bill is printed only a manager can change its discount (**bill.discount**).
+In the books, revenue is recorded at the full price and the discounts in
+**4100**, so the P&L shows how much was given away, and **Do the books tie?**
+counts them.
+
 ## Every day
 
 - **Dashboard:** today's revenue, gross profit, orders, stock value, low and

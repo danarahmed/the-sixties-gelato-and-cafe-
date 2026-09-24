@@ -98,6 +98,14 @@ export interface OpenBill {
   billPrintedAt: string | null;
   billPrintCount: number;
   lines: OpenBillLine[];
+  /** Before the discount. */
+  subtotal: number;
+  /** What the discount comes to today. */
+  discount: number;
+  /** The discount as given: a percentage or an amount (at most one). */
+  discountPercent: number | null;
+  discountAmount: number | null;
+  /** What the customer owes: the bill less its discount. */
   total: number;
 }
 
@@ -123,6 +131,10 @@ export function parseOpenBills(data: unknown): OpenBill[] {
       variantName: str(l.variant_name),
       price: numOrNull(l.price),
     })),
+    subtotal: num(r.subtotal),
+    discount: num(r.discount),
+    discountPercent: numOrNull(r.discount_percent),
+    discountAmount: numOrNull(r.discount_amount),
     total: num(r.total),
   }));
 }
