@@ -28,12 +28,17 @@ browser tests through the real app, or both.
   their money (printed, split, moved, cancelled only by a manager), product
   photos, categories and favourites, 80 mm printing. Built and tested. The
   migration was applied to the live database on 24 September 2026 and matches
-  the tested build object by object; the screens go live when their pull
-  request is merged. See
+  the tested build object by object; the screens went live the same day with
+  [pull request #2](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/2). See
   [`guides/cashier-quickstart.md`](guides/cashier-quickstart.md).
 - **Discounts (migration `0019`):** a percentage or an amount on the till, each
   filling in the other; revenue at full price in 4000, discounts in 4100; only
-  a manager changes the discount on a printed bill.
+  a manager changes the discount on a printed bill. Built and tested. The
+  migration was applied to the live database on 24 September 2026, matches the
+  tested build object by object, and was checked as the owner in a transaction
+  that was rolled back; the screens go live with
+  [pull request #3](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/3). See
+  [`guides/cashier-quickstart.md`](guides/cashier-quickstart.md#giving-a-discount).
 
 ## The August 2026 audit, finding by finding
 

@@ -11,15 +11,16 @@ Plan a short window when the café is closed.
 
 ## Where the live system stands (24 September 2026)
 
-| Step                         | Status                                                                                                                                                                                                              |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0. The old history           | ✅ Cleared: it was trial data                                                                                                                                                                                       |
-| 2. The Vercel settings       | ✅ Added by the owner                                                                                                                                                                                               |
-| 3. Migrations `0014`–`0017`  | ✅ Applied on 23 September, then compared with the tested build object by object: functions, tables, rules, indexes, triggers and permissions are identical. The public key has no access                           |
-| 4. The new app               | ✅ Merged for production ([pull request #1](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/1)) and deployed                                                                                        |
-| 5. Sign-in settings          | ✅ Set                                                                                                                                                                                                              |
-| 6. The owner's first sign-in | ✅ 23 September                                                                                                                                                                                                     |
-| The till update (`0018`)     | ✅ Migration applied on 24 September and compared object by object with the tested build: identical. The deployed app is unaffected until the new screens are merged and deployed (see [After `0018`](#after-0018)) |
+| Step                         | Status                                                                                                                                                                                                                                                                                                            |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0. The old history           | ✅ Cleared: it was trial data                                                                                                                                                                                                                                                                                     |
+| 2. The Vercel settings       | ✅ Added by the owner                                                                                                                                                                                                                                                                                             |
+| 3. Migrations `0014`–`0017`  | ✅ Applied on 23 September, then compared with the tested build object by object: functions, tables, rules, indexes, triggers and permissions are identical. The public key has no access                                                                                                                         |
+| 4. The new app               | ✅ Merged for production ([pull request #1](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/1)) and deployed                                                                                                                                                                                      |
+| 5. Sign-in settings          | ✅ Set                                                                                                                                                                                                                                                                                                            |
+| 6. The owner's first sign-in | ✅ 23 September                                                                                                                                                                                                                                                                                                   |
+| The till update (`0018`)     | ✅ Migration applied on 24 September and compared object by object with the tested build: identical. The screens were merged ([pull request #2](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/2)) and deployed (see [After `0018`](#after-0018))                                                |
+| Discounts (`0019`)           | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens go live with [pull request #3](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/3) (see [After `0019`](#after-0019)) |
 
 ## 0. Before you start
 
@@ -202,3 +203,27 @@ When the new screens are deployed:
 2. **POS → Tables → Edit tables:** add the tables.
 3. **Printers:** set the receipt printer as the till's default printer
    ([cashier quick-start](cashier-quickstart.md#printing)).
+
+## After `0019`
+
+Migration `0019` (discounts) also goes in before its screens. The app
+deployed before it keeps working: every new parameter defaults to no
+discount, and the open-bills function keeps its first thirteen columns. It
+was applied on 24 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+functions it replaces had the signatures it drops.
+
+It was then compared with the tested build, object by object: identical. It
+was also checked as the owner in a transaction that was rolled back:
+
+- 10% off a 1,000 IQD sale came to 100 off;
+- a bill with 750 IQD off 1,500, paid by card, came to 750;
+- both journals posted revenue at the full price, the discount in 4100 and
+  the payment at what was paid;
+- every reconciliation check was zero.
+
+Nothing was kept, and the journal numbering is unchanged.
+
+Nothing needs setting up. Owners, managers and cashiers can give discounts.
+To keep discounts to managers, take `discount.apply` from the cashier role
+(see the [owner's guide](owner-guide.md#setting-up-the-till)).
