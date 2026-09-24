@@ -9,16 +9,17 @@ every write permission the old app relied on, so the old till stops recording
 sales the moment it is applied; the new app needs `0014`–`0017` to work at all.
 Plan a short window when the café is closed.
 
-## Where the live system stands (23 September 2026)
+## Where the live system stands (24 September 2026)
 
-| Step                         | Status                                                                                                                                                                         |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 0. The old history           | ✅ Cleared: it was trial data                                                                                                                                                  |
-| 2. The Vercel settings       | ⬜ **The owner adds them.** The Vercel connector used for the rest is not allowed to create Production variables                                                               |
-| 3. Migrations `0014`–`0017`  | ✅ Applied, then compared with the tested build object by object: functions, tables, rules, indexes, triggers and permissions are identical. The public key has no access      |
-| 4. The new app               | ✅ Merged for production ([pull request #1](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/1)). It shows "Not configured" until step 2 is done and redeployed |
-| 5. Sign-in settings          | ⬜ The owner sets them                                                                                                                                                         |
-| 6. The owner's first sign-in | ⬜ The owner's place already carries the owner's real address; the owner creates the login                                                                                     |
+| Step                         | Status                                                                                                                                                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0. The old history           | ✅ Cleared: it was trial data                                                                                                                                                                                       |
+| 2. The Vercel settings       | ✅ Added by the owner                                                                                                                                                                                               |
+| 3. Migrations `0014`–`0017`  | ✅ Applied on 23 September, then compared with the tested build object by object: functions, tables, rules, indexes, triggers and permissions are identical. The public key has no access                           |
+| 4. The new app               | ✅ Merged for production ([pull request #1](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/1)) and deployed                                                                                        |
+| 5. Sign-in settings          | ✅ Set                                                                                                                                                                                                              |
+| 6. The owner's first sign-in | ✅ 23 September                                                                                                                                                                                                     |
+| The till update (`0018`)     | ✅ Migration applied on 24 September and compared object by object with the tested build: identical. The deployed app is unaffected until the new screens are merged and deployed (see [After `0018`](#after-0018)) |
 
 ## 0. Before you start
 
@@ -183,3 +184,21 @@ following [`../REMEDIATION.md`](../REMEDIATION.md) section 5.
 - Keep staging separate: a second Supabase project and a Preview environment
   pointed at it. There is no longer any way for a copy of the app to reach the
   live database by accident.
+
+## After `0018`
+
+Migration `0018` (tables, bills paid later, product photos, categories) only
+adds to the database, and the app deployed before it keeps working unchanged:
+its menu function returns the same five columns first, and the day close
+refuses only when a bill is open, which that app cannot create. So `0018` goes
+in first and the screens that use it follow. It was applied on 24 September
+2026 with the Supabase connector (one `apply_migration` call, one transaction),
+after a read-only check found no category names that would collide.
+
+When the new screens are deployed:
+
+1. **Products:** add the categories, then a photo, a category and a ★ for each
+   product ([owner's guide](owner-guide.md#setting-up-the-till)).
+2. **POS → Tables → Edit tables:** add the tables.
+3. **Printers:** set the receipt printer as the till's default printer
+   ([cashier quick-start](cashier-quickstart.md#printing)).

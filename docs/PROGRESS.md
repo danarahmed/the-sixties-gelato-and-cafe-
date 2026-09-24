@@ -1,6 +1,6 @@
 # Progress & Status
 
-_Last updated: 2026-09-23._ This is the one place that says what works and what
+_Last updated: 2026-09-24._ This is the one place that says what works and what
 does not. A feature is marked done only when it runs on the real database path
 and is tested. Tested means the SQL suites on real PostgreSQL 16 and 17, the
 browser tests through the real app, or both.
@@ -26,7 +26,10 @@ browser tests through the real app, or both.
   [`guides/deployment.md`](guides/deployment.md).
 - **The till for a busy café (migration `0018`):** tables, bills that wait for
   their money (printed, split, moved, cancelled only by a manager), product
-  photos, categories and favourites, 80 mm printing. Built and tested; see
+  photos, categories and favourites, 80 mm printing. Built and tested. The
+  migration was applied to the live database on 24 September 2026 and matches
+  the tested build object by object; the screens go live when their pull
+  request is merged. See
   [`guides/cashier-quickstart.md`](guides/cashier-quickstart.md).
 
 ## The August 2026 audit, finding by finding
