@@ -492,6 +492,34 @@ console.log("▸ a bill without the supplier's number takes the café's own, nev
   await ctx.close();
 }
 
+// ------------------------------------------------- the register's order
+console.log("▸ the journal register lists entries by number, newest first");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/journals");
+  const register = page.locator("section", {
+    has: page.locator("h3", { hasText: "Journal Register" }),
+  });
+  const shown = (
+    await register.locator("table tbody tr td:nth-child(2) button").allTextContents()
+  ).map((t) => t.trim());
+  const numbers = shown.filter((t) => /^\d+$/.test(t)).map(Number);
+  check(
+    numbers.length > 5 && numbers.every((n, i) => i === 0 || numbers[i - 1] > n),
+    `numbers run down from the top: ${numbers.slice(0, 5).join(", ")} …`,
+  );
+  check(
+    numbers[0] === Number(sql("select max(journal_no) from journal_entry")),
+    "and the newest journal is first",
+  );
+  const lastDraft = shown.lastIndexOf("draft");
+  check(
+    lastDraft === -1 || lastDraft < shown.findIndex((t) => /^\d+$/.test(t)),
+    "drafts, which have no number yet, come before them",
+  );
+  await ctx.close();
+}
+
 // ------------------------------------------------------- the ledger ties
 check(
   sql(

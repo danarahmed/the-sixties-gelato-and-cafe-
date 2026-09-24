@@ -381,7 +381,11 @@ export interface JournalRegisterRow {
  */
 const REVERSIBLE_BY_HAND = new Set(["manual", "correction", "expense", "year_end_close"]);
 
-/** The register of every journal, newest first — sales, bills and manual entries alike. */
+/**
+ * The register of every journal — sales, bills and manual entries alike — by
+ * journal number, newest first (1054, 1053, 1052 …). Drafts have no number
+ * until they are published, so they come first, where they wait for action.
+ */
 export async function getJournalRegister(
   limit = 150,
   onlyManual = false,
@@ -392,8 +396,8 @@ export async function getJournalRegister(
     .select(
       "id,journal_no,description,reference_no,reference_type,status,occurred_at,posted_by,legacy,reverses_entry",
     )
-    .order("occurred_at", { ascending: false })
     .order("journal_no", { ascending: false, nullsFirst: true })
+    .order("occurred_at", { ascending: false })
     .limit(limit);
   if (onlyManual) q = q.in("reference_type", ["manual", "reversal"]);
   const entries = rows(await q, "journals");

@@ -343,8 +343,9 @@ them from stock.
 **Location:** Sidebar → **Journals** · `/journals` · **Who:** anyone who sees
 costs; posting: accountant, general manager, owner
 
-- **Journal Register:** every entry, newest first: date, number, reference,
-  status, notes, amount and who posted it. Each shows its source (Sale, Refund,
+- **Journal Register:** every entry by journal number, newest first (1054,
+  1053, 1052 …; drafts, which have no number yet, above them): date, number,
+  reference, status, notes, amount and who posted it. Each shows its source (Sale, Refund,
   Reversal, Receipt, Bill, Payment, Expense, Stock, Count, Day close, Manual,
   Year end). **Manual and reversals** filters to the hand-made ones. Open a row
   to see its lines. Entries from the previous app are marked **before

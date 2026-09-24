@@ -49,6 +49,13 @@ console.log("▸ owner gives the espresso a photo, a category and a ★");
     ) === "Golden drinks,true",
     "the espresso is in its category, as a favourite",
   );
+  // Saving moves the card into its category's group, which replaces it; wait
+  // for that, as a person would (Add photo is disabled until the save is done),
+  // so the photo is not handed to the card being replaced.
+  await page
+    .locator("section", { has: page.locator("h2", { hasText: "Golden drinks" }) })
+    .locator(".product-setup", { has: page.locator(`input[value="Golden espresso"]`) })
+    .waitFor({ timeout: 10000 });
   await setup
     .locator('input[type="file"]')
     .setInputFiles({ name: "espresso.png", mimeType: "image/png", buffer: PNG });
