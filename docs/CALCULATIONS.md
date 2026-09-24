@@ -130,9 +130,11 @@ corrections are new entries. What each record posts (migration `0015`):
   tender) / Cr 4000 Sales; Dr 5000 COGS / Cr 1200 Inventory. With a discount
   (`0019`): Cr 4000 at the full price, Dr 4100 Merchant-funded discount for the
   discount, and the tender at what was paid.
-- Discount: a percentage of the bill, rounded like every amount (to the
-  currency unit, halves to even: 12.5% of 2,500 is 312), or a fixed amount;
-  never more than the bill. Each line carries its share in proportion to its
+- Discount: a percentage of the bill, rounded to the nearest multiple of the
+  business's `discount_round_to` (`0020`; 500 IQD at the café), exactly
+  half-way rounding up: 47% of 8,500 is 3,995, given as 4,000; 5% of 5,000 is
+  250, given as 500; 2% of 2,500 is 50, given as nothing. Or a fixed amount,
+  taken as typed. Never more than the bill. Each line carries its share in proportion to its
   value, the shares adding up to the discount exactly, so a refund returns
   what was paid.
 - Void (same day, before the close): the sale's journal reversed exactly.

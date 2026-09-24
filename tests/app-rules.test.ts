@@ -21,6 +21,7 @@ import {
   quickOrder,
   signature,
   type Discount,
+  type MoneyRules,
 } from "@/components/pos/model";
 import type { PosItem } from "@/lib/db/pos";
 
@@ -98,14 +99,29 @@ describe("a discount at the till: the percentage and the amount fill each other 
   const pct = (value: string): Discount => ({ kind: "percent", value });
   const amt = (value: string): Discount => ({ kind: "amount", value });
   const n = (v: number) => new Decimal(v);
-  const off = (d: Discount, subtotal: number) => discountAmount(d, n(subtotal), 0).toString();
+  // The café's rule: a percentage comes to the nearest 500 IQD.
+  const cafe: MoneyRules = { decimals: 0, discountStep: 500 };
+  const off = (d: Discount, subtotal: number, money = cafe) =>
+    discountAmount(d, n(subtotal), money).toString();
 
-  it("a percentage gives the amount, rounded to the dinar as the books round it", () => {
+  it("a percentage gives the amount, rounded to the nearest 500 IQD", () => {
+    expect(off(pct("47"), 8500)).toBe("4000"); // 3,995: the customer pays 4,500, not 4,505
     expect(off(pct("10"), 5000)).toBe("500");
-    expect(off(pct("7"), 5000)).toBe("350");
-    expect(off(pct("3"), 1990)).toBe("60"); // 59.7
-    expect(off(pct("12.5"), 2500)).toBe("312"); // 312.5: a half goes to the even dinar
-    expect(off(pct("15"), 4850)).toBe("728"); // 727.5
+    expect(off(pct("7"), 5000)).toBe("500"); // 350
+    expect(off(pct("5"), 5000)).toBe("500"); // 250, exactly half-way: up
+    expect(off(pct("2"), 2500)).toBe("0"); // 50 is nearer nothing
+  });
+
+  it("an amount typed in is taken as it is: the cashier chose it", () => {
+    expect(off(amt("3995"), 8500)).toBe("3995");
+    expect(off(amt("300"), 2500)).toBe("300");
+  });
+
+  it("with a step of one dinar, a percentage rounds to the dinar, half-way up", () => {
+    const dinar: MoneyRules = { decimals: 0, discountStep: 1 };
+    expect(off(pct("3"), 1990, dinar)).toBe("60"); // 59.7
+    expect(off(pct("12.5"), 2500, dinar)).toBe("313"); // 312.5
+    expect(off(pct("47"), 8500, dinar)).toBe("3995");
   });
 
   it("an amount gives the percentage, to two places", () => {
@@ -123,9 +139,11 @@ describe("a discount at the till: the percentage and the amount fill each other 
     expect(discountParams(pct("12.5"))).toEqual({ discountPercent: "12.5", discountAmount: null });
   });
 
-  it("never takes off more than the bill", () => {
+  it("never takes off more than the bill, rounded or not", () => {
     expect(off(amt("9999"), 2500)).toBe("2500");
     expect(off(pct("100"), 2500)).toBe("2500");
+    expect(off(pct("90"), 1000)).toBe("1000"); // 900 rounds to 1,000: the whole bill
+    expect(off(pct("100"), 1250)).toBe("1250"); // 1,250 would round to 1,500
   });
 
   it("refuses zero, more than 100% and junk, and sends none of them", () => {
@@ -167,11 +185,11 @@ describe("a discount at the till: the percentage and the amount fill each other 
     ];
     const bill = { ...quickOrder("takeaway"), kind: "bill" as const, lines };
     bill.saved = signature(lines, null);
-    expect(orderSubtotal(bill, byId, 0).toString()).toBe("5000");
+    expect(orderSubtotal(bill, byId, cafe).toString()).toBe("5000");
     expect(isDirty(bill)).toBe(false);
 
     const discounted = { ...bill, discount: pct("10") };
-    expect(orderDue(discounted, byId, 0).toString()).toBe("4500");
+    expect(orderDue(discounted, byId, cafe).toString()).toBe("4500");
     expect(isDirty(discounted)).toBe(true);
 
     const saved = { ...discounted, saved: signature(lines, discounted.discount) };

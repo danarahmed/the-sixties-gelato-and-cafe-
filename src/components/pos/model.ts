@@ -213,9 +213,22 @@ export function parseNumber(v: string): Decimal | null {
   return /^\d+(\.\d+)?$/.test(s) ? new Decimal(s) : null;
 }
 
+/** How the business rounds money, as the database does it. */
+export interface MoneyRules {
+  /** The currency's decimals (0 for IQD): every amount is rounded to this. */
+  decimals: number;
+  /** A percentage discount comes to the nearest multiple of this (500 IQD). */
+  discountStep: number;
+}
+
 /** Rounded as the database rounds money (money_round): to the currency unit, halves to even. */
 export function roundMoney(d: Decimal, decimals: number): Decimal {
   return d.toDecimalPlaces(decimals, Decimal.ROUND_HALF_EVEN);
+}
+
+/** To the nearest multiple of step, exactly half-way up, as sale_discount does it. */
+export function roundToStep(d: Decimal, step: number): Decimal {
+  return step > 0 ? d.div(step).plus(0.5).floor().times(step) : d;
 }
 
 /** True when a discount cannot be given as typed: not a number, zero, or over 100%. */
@@ -226,23 +239,25 @@ export function discountInvalid(d: Discount | null): boolean {
 }
 
 /** The bill before any discount, each line rounded as the database rounds it. */
-export function orderSubtotal(o: Order, byId: Map<string, PosItem>, decimals: number): Decimal {
+export function orderSubtotal(o: Order, byId: Map<string, PosItem>, money: MoneyRules): Decimal {
   return o.lines.reduce((sum, l) => {
     const a = lineAmount(l, byId, o.channel);
-    return a === null ? sum : sum.plus(roundMoney(a, decimals));
+    return a === null ? sum : sum.plus(roundMoney(a, money.decimals));
   }, new Decimal(0));
 }
 
 /**
  * What a discount comes to on a bill, worked out exactly as the database does
- * (sale_discount): a percentage of the bill rounded to the currency unit, or
- * an amount, and never more than the bill.
+ * (sale_discount): a percentage of the bill rounded to the business's step
+ * (47% of 8,500 is 3,995, given as 4,000), or an amount as typed, and never
+ * more than the bill.
  */
-export function discountAmount(d: Discount | null, subtotal: Decimal, decimals: number): Decimal {
+export function discountAmount(d: Discount | null, subtotal: Decimal, money: MoneyRules): Decimal {
   if (!d || discountInvalid(d)) return new Decimal(0);
   const v = parseNumber(d.value)!;
-  const raw = d.kind === "percent" ? subtotal.times(v).div(100) : v;
-  return Decimal.min(roundMoney(raw, decimals), Decimal.max(subtotal, 0));
+  const raw =
+    d.kind === "percent" ? roundToStep(subtotal.times(v).div(100), money.discountStep) : v;
+  return Decimal.min(roundMoney(raw, money.decimals), Decimal.max(subtotal, 0));
 }
 
 /** An amount as a percentage of the bill, to two places, for showing beside it. */
@@ -251,14 +266,10 @@ export function percentOf(amount: Decimal, subtotal: Decimal): string {
   return amount.div(subtotal).times(100).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toString();
 }
 
-export function orderDiscount(o: Order, byId: Map<string, PosItem>, decimals: number): Decimal {
-  return discountAmount(o.discount, orderSubtotal(o, byId, decimals), decimals);
-}
-
 /** What the customer pays: the bill less its discount. */
-export function orderDue(o: Order, byId: Map<string, PosItem>, decimals: number): Decimal {
-  const sub = orderSubtotal(o, byId, decimals);
-  return sub.minus(discountAmount(o.discount, sub, decimals));
+export function orderDue(o: Order, byId: Map<string, PosItem>, money: MoneyRules): Decimal {
+  const sub = orderSubtotal(o, byId, money);
+  return sub.minus(discountAmount(o.discount, sub, money));
 }
 
 /** The discount as the database takes it: one of the two, as a plain number. */

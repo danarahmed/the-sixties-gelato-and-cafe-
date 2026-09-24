@@ -43,6 +43,7 @@ import {
   savedHasItems,
   signature,
   type Discount,
+  type MoneyRules,
   type Order,
   type Tender,
 } from "./model";
@@ -139,7 +140,7 @@ export function PosClient({
   cashierName,
   timezone,
   canDiscount,
-  currencyDecimals,
+  money,
 }: {
   items: PosItem[];
   tables: DiningTable[];
@@ -152,7 +153,8 @@ export function PosClient({
   timezone: string;
   /** discount.apply */
   canDiscount: boolean;
-  currencyDecimals: number;
+  /** How the business rounds money and discounts, as the database does. */
+  money: MoneyRules;
 }) {
   const { t, locale } = useT();
   const online = useOnline();
@@ -357,8 +359,8 @@ export function PosClient({
 
   /** Subtotal, discount and what is due, for a printed bill or receipt. */
   const printTotals = (o: Order) => {
-    const subtotal = orderSubtotal(o, byId, currencyDecimals);
-    const discount = discountAmount(o.discount, subtotal, currencyDecimals);
+    const subtotal = orderSubtotal(o, byId, money);
+    const discount = discountAmount(o.discount, subtotal, money);
     const pct = o.discount?.kind === "percent" ? parseNumber(o.discount.value) : null;
     return {
       subtotal: subtotal.toNumber(),
@@ -830,7 +832,7 @@ export function PosClient({
         ? billChannels
         : null;
   const blocked = pending !== null || busy !== null;
-  const total = orderDue(order, byId, currencyDecimals);
+  const total = orderDue(order, byId, money);
 
   return (
     <div className="pos">
@@ -959,7 +961,7 @@ export function PosClient({
             onPrintReceipt={() => receipt && setPrintJob(receipt.job)}
             now={now}
             canDiscount={canDiscount}
-            decimals={currencyDecimals}
+            money={money}
             onDiscount={setDiscount}
           />
         </div>
@@ -980,7 +982,7 @@ export function PosClient({
       {dialog?.kind === "pay" && (
         <PayDialog
           title={dialog.title}
-          total={orderDue(dialog.order, byId, currencyDecimals).toNumber()}
+          total={orderDue(dialog.order, byId, money).toNumber()}
           note={discountNote(dialog.order)}
           tenders={isPlatform(dialog.order.channel) ? ["platform_paid"] : ["cash", "card"]}
           initialTender={isPlatform(dialog.order.channel) ? "platform_paid" : dialog.tender}

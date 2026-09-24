@@ -119,8 +119,13 @@ the print window, choose that printer, **Margins: None**, and untick
 Under the order, **＋ Discount** opens two boxes:
 
 - type a **percentage** (10) and the amount (500) is filled in for you,
-  rounded to the dinar;
-- or type an **amount** (750) and the percentage (15) is filled in.
+  **rounded to the nearest 500 IQD** so the change is always in notes: 47% of
+  8,500 is 3,995, so 4,000 comes off and the customer pays 4,500;
+- or type an **amount** (750) and the percentage (15) is filled in. An amount
+  is taken exactly as you type it.
+
+A small percentage can round to nothing (2% of 2,500 is 50): type the amount
+you want to give instead.
 
 The **Total** is what the customer pays. The bill and the receipt show the
 full price, the discount and the total. A percentage on a table's bill follows

@@ -138,6 +138,11 @@ Added after the August 2026 audit; see [ADR 0002](adr/0002-database-posting-engi
 - **Tenancy.** Child tables carry `business_id`, so row-level security isolates
   them directly.
 - **Access.** `role_permission` mirrors `src/domain/auth/permissions.ts`.
+  Signed-in users read through row-level security and write only through the
+  functions of `0015`.
+- **Reports.** The functions of `0017` read published journal lines only:
+  trial balance, P&L, and the reconciliation of each subledger with its
+  control account.
 
 ### The till (`0018`)
 
@@ -159,7 +164,7 @@ Added after the August 2026 audit; see [ADR 0002](adr/0002-database-posting-engi
 All four tables are readable by the business's members only and writable only
 through the functions in `0018`.
 
-### Discounts (`0019`)
+### Discounts (`0019`, `0020`)
 
 - A sale's `gross_amount`, `discount_amount` and `net_amount` now differ when a
   discount is given, and each `sales_order_line` carries its `line_discount`.
@@ -167,9 +172,7 @@ through the functions in `0018`.
 - `pos_tab.discount_percent` or `pos_tab.discount_amount` (at most one): a
   bill's discount as the cashier gave it, worked out again as the bill
   changes, and applied when it is paid.
-  Signed-in users read through row-level security and write only through the
-  functions of `0015`.
-
-- **Reports.** The functions of `0017` read published journal lines only:
-  trial balance, P&L, and the reconciliation of each subledger with its
-  control account.
+- `business.discount_round_to` (`0020`; 500 at the café): a percentage
+  discount comes to the nearest multiple of it, exactly half-way up, and never
+  more than the bill; an amount is taken as typed. `my_profile` passes it to
+  the till, which shows the figure the books will record.

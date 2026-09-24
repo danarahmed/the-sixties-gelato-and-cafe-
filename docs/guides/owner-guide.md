@@ -92,6 +92,8 @@ The permission is "discount.apply": owners, managers and cashiers have it, and
 a barista does not. If only managers should give discounts, the cashier role
 can lose it; that is a change to the role matrix, not a setting on a screen. Every discount is on the audit trail (**sale.discount**), and once a
 bill is printed only a manager can change its discount (**bill.discount**).
+A percentage comes to the nearest **500 IQD** (shown on **Settings**), so the
+till never asks a customer for a few odd dinars; an amount is taken as typed.
 In the books, revenue is recorded at the full price and the discounts in
 **4100**, so the P&L shows how much was given away, and **Do the books tie?**
 counts them.

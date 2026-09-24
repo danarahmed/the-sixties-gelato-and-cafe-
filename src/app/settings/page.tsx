@@ -39,6 +39,10 @@ export default async function SettingsPage() {
             : "Allowed, costed at the last purchase cost",
         ],
         ["Waste needing a manager", `Above ${fmtIQD(cfg.wasteApprovalThreshold)}`],
+        [
+          "Discounts",
+          `A percentage is rounded to the nearest ${fmtIQD(cfg.discountRoundTo)} (half-way rounds up); an amount is taken as typed`,
+        ],
       ]
     : [];
 

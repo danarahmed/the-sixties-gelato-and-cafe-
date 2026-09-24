@@ -20,6 +20,8 @@ export interface BusinessConfig {
   defaultLocale: string;
   preventNegativeStock: boolean;
   wasteApprovalThreshold: number;
+  /** A percentage discount comes to the nearest multiple of this. */
+  discountRoundTo: number;
 }
 
 export async function getBusinessConfig(): Promise<BusinessConfig | null> {
@@ -28,7 +30,7 @@ export async function getBusinessConfig(): Promise<BusinessConfig | null> {
     await c
       .from("business")
       .select(
-        "id,name,currency_code,currency_decimals,timezone,default_locale,prevent_negative_stock,waste_approval_threshold",
+        "id,name,currency_code,currency_decimals,timezone,default_locale,prevent_negative_stock,waste_approval_threshold,discount_round_to",
       )
       .maybeSingle(),
     "the business settings",
@@ -43,6 +45,7 @@ export async function getBusinessConfig(): Promise<BusinessConfig | null> {
     defaultLocale: str(b.default_locale),
     preventNegativeStock: Boolean(b.prevent_negative_stock),
     wasteApprovalThreshold: num(b.waste_approval_threshold),
+    discountRoundTo: num(b.discount_round_to),
   };
 }
 

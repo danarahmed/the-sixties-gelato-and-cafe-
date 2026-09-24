@@ -6,6 +6,9 @@
 -- Golden catalogue: espresso 2,500 dine-in (200 COGS), water 1,000 (250 COGS).
 -- =============================================================================
 select test.golden_catalogue();
+-- Until the last section this business rounds a percentage to the dinar, so
+-- every share can be seen exactly. The café's own rule (to 500) comes last.
+update business set discount_round_to = 1;
 create temp table ids (k text primary key, v uuid);
 grant all on ids to public;
 create or replace function pg_temp.id(p text) returns uuid language sql as $$ select v from ids where k = p $$;
@@ -47,12 +50,13 @@ select test.eq((select string_agg(line_discount || '+' || line_net, ',' order by
                  where sales_order_id = (pg_temp.r('two') ->> 'order_id')::uuid), '375+2125,150+850',
   'each line carries its share, and the shares add up exactly');
 
--- A percentage that does not come out even is rounded like every amount: 12.5% of 2,500 = 312.5 -> 312.
+-- A percentage that does not come out even is rounded to the business's step,
+-- half-way up: 12.5% of 2,500 = 312.5 -> 313.
 select test.act_as('cashier@example.com');
 insert into s select 'half', record_sale(gen_random_uuid(), 'dine_in', 'cash',
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, 12.5);
-select test.eq((pg_temp.r('half') ->> 'discount') || '/' || (pg_temp.r('half') ->> 'net'), '312/2188',
-  'a half dinar rounds to the even dinar');
+select test.eq((pg_temp.r('half') ->> 'discount') || '/' || (pg_temp.r('half') ->> 'net'), '313/2187',
+  'half a dinar rounds up');
 
 -- An amount: 700 off 3,500.
 insert into s select 'amt', record_sale(gen_random_uuid(), 'dine_in', 'cash',
@@ -106,11 +110,11 @@ select test.eq((select string_agg(check_key || '=' || difference, ',' order by c
                   from report_reconciliation(test.today())),
   'grni=0,inventory=0,payables=0,sales=0', 'the books tie, discounts included');
 select test.as_admin();
-select test.eq(test.balance('4100'), (500 + 525 + 312 + 2500)::numeric,
+select test.eq(test.balance('4100'), (500 + 525 + 313 + 2500)::numeric,
   'discounts given, less the voided one, sit in 4100');
 select test.act_as('owner@example.com');
 select test.eq((select amount from report_profit_and_loss(test.today(), test.today()) where code = '4100'),
-  -(500 + 525 + 312 + 2500)::numeric, 'and the P&L shows them as a deduction from revenue');
+  -(500 + 525 + 313 + 2500)::numeric, 'and the P&L shows them as a deduction from revenue');
 
 -- --------------------------------------------------------------- on a bill
 select test.act_as('cashier@example.com');
@@ -188,3 +192,60 @@ select test.act_as('owner@example.com');
 select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key)
                   from report_reconciliation(test.today())),
   'grni=0,inventory=0,payables=0,sales=0', 'every subledger still reconciles');
+
+-- ------------------------------------------------ the café's rule: to 500
+-- A percentage comes to the nearest 500 IQD, so the change is always in notes:
+-- 47% of 8,500 is 3,995, given as 4,000, leaving 4,500 to pay.
+select test.as_admin();
+update business set discount_round_to = 500;
+select test.act_as('cashier@example.com');
+insert into s select 'r47', record_sale(gen_random_uuid(), 'dine_in', 'cash',
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":3},
+    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, 47);
+select test.eq((pg_temp.r('r47') ->> 'gross') || '/' || (pg_temp.r('r47') ->> 'discount') || '/' || (pg_temp.r('r47') ->> 'net'),
+  '8500/4000/4500', '47% of 8,500 is 3,995: 4,000 off, 4,500 to pay');
+select test.eq(test.lines_of((pg_temp.r('r47') ->> 'order_id')::uuid),
+  '1000 Dr 4500 | 1200 Cr 850 | 4000 Cr 8500 | 4100 Dr 4000 | 5000 Dr 850', 'and the books record exactly that');
+select test.as_admin();
+select test.eq((select sum(line_discount) from sales_order_line where sales_order_id = (pg_temp.r('r47') ->> 'order_id')::uuid),
+  4000::numeric, 'the lines share the rounded discount, to the dinar');
+
+-- Exactly half-way rounds up; nearer nothing than 500 takes nothing off.
+select test.act_as('cashier@example.com');
+insert into s select 'r5', record_sale(gen_random_uuid(), 'dine_in', 'cash',
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', null, 5);
+select test.eq((pg_temp.r('r5') ->> 'discount') || '/' || (pg_temp.r('r5') ->> 'net'), '500/4500',
+  '5% of 5,000 is 250, half-way: rounds up to 500');
+insert into s select 'r2', record_sale(gen_random_uuid(), 'dine_in', 'cash',
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, 2);
+select test.eq((pg_temp.r('r2') ->> 'discount') || '/' || (pg_temp.r('r2') ->> 'net'), '0/2500',
+  '2% of 2,500 is 50: nearer nothing than 500, so nothing comes off');
+select test.eq(test.lines_of((pg_temp.r('r2') ->> 'order_id')::uuid),
+  '1000 Dr 2500 | 1200 Cr 200 | 4000 Cr 2500 | 5000 Dr 200', 'and no discount is posted');
+insert into s select 'r90', record_sale(gen_random_uuid(), 'dine_in', 'cash',
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, 90);
+select test.eq((pg_temp.r('r90') ->> 'discount') || '/' || (pg_temp.r('r90') ->> 'net'), '1000/0',
+  'rounding never takes off more than the bill');
+
+-- An amount typed in is the cashier's choice, taken as it is.
+insert into s select 'r300', record_sale(gen_random_uuid(), 'dine_in', 'cash',
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, null, 300);
+select test.eq((pg_temp.r('r300') ->> 'discount') || '/' || (pg_temp.r('r300') ->> 'net'), '300/2200',
+  'an amount is not rounded');
+
+-- A bill shows, and is paid at, the same rounded discount.
+insert into ids select 'b47', (open_tab('dine_in', null, 'Rounded', null,
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":3},
+    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', 47) ->> 'tab_id')::uuid;
+select test.eq((select row(subtotal, discount, total)::text from pos_open_bills() where tab_id = pg_temp.id('b47')),
+  '(8500,4000,4500)', 'the open bill owes 4,500');
+insert into s select 'b47', settle_tab(pg_temp.id('b47'), 2, gen_random_uuid(), 'cash');
+select test.eq((pg_temp.r('b47') ->> 'gross') || '/' || (pg_temp.r('b47') ->> 'discount') || '/' || (pg_temp.r('b47') ->> 'net'),
+  '8500/4000/4500', 'and is paid at 4,500');
+
+-- The till is told the step, to show what the books will record.
+select test.eq((my_profile() ->> 'discount_round_to')::numeric, 500::numeric, 'the till knows the step');
+select test.act_as('owner@example.com');
+select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key)
+                  from report_reconciliation(test.today())),
+  'grni=0,inventory=0,payables=0,sales=0', 'and the books still tie');

@@ -16,6 +16,8 @@ export interface Profile {
   timezone: string;
   currency: string;
   currencyDecimals: number;
+  /** A percentage discount comes to the nearest multiple of this (500 IQD). */
+  discountRoundTo: number;
   roles: string[];
   permissions: string[];
 }
@@ -57,6 +59,7 @@ export const getSession = cache(async (): Promise<SessionState> => {
       timezone: String(p.timezone ?? "Asia/Baghdad"),
       currency: String(p.currency ?? "IQD"),
       currencyDecimals: Number(p.currency_decimals ?? 0),
+      discountRoundTo: Number(p.discount_round_to ?? 0),
       roles: Array.isArray(p.roles) ? p.roles.map(String) : [],
       permissions: Array.isArray(p.permissions) ? p.permissions.map(String) : [],
     },
