@@ -64,8 +64,14 @@ body {
   padding: 0;
   background: var(--paper);
   color: var(--text);
-  font-family: "Libre Franklin", system-ui, -apple-system, "Segoe UI", "Noto Sans Arabic",
-    "Noto Kufi Arabic", sans-serif;
+  font-family:
+    "Libre Franklin",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    "Noto Sans Arabic",
+    "Noto Kufi Arabic",
+    sans-serif;
   font-size: 13.5px;
   line-height: 1.55;
   -webkit-text-size-adjust: 100%;
@@ -717,42 +723,622 @@ tr.grand td {
 }
 
 /* ---------------------------------------------------------------- POS */
+/* The till takes the whole screen; the menu slides in from ☰. */
+.app-shell.pos-mode .menu-toggle {
+  display: inline-flex;
+}
+.app-shell.pos-mode .sidenav {
+  position: fixed;
+  inset-block: 52px 0;
+  inset-inline-start: 0;
+  transform: translateX(-100%);
+  transition: transform 0.2s;
+  z-index: 30;
+}
+html[dir="rtl"] .app-shell.pos-mode .sidenav {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+  transform: translateX(100%);
+}
+.app-shell.pos-mode .sidenav.open {
+  transform: translateX(0);
+}
+.app-shell.pos-mode .content {
+  padding: 10px 12px 12px;
+}
+
+.pos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pos-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.bill-strip,
+.chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  min-width: 0;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+.bill-strip {
+  flex: 1;
+}
+.strip-chip,
+.chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  border-radius: 999px;
+  padding: 0 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+.strip-chip.active {
+  background: var(--brand);
+  color: var(--brand-ink);
+  border-color: var(--brand);
+}
+.strip-chip.waiting:not(.active) {
+  border-color: var(--warn);
+}
+.chip.active {
+  background: var(--text);
+  color: var(--surface);
+  border-color: var(--text);
+}
+.chip-amt {
+  opacity: 0.85;
+}
+.chip-n {
+  display: inline-block;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.74rem;
+  text-align: center;
+}
+.icon-btn {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  flex: none;
+}
+.seg {
+  display: inline-flex;
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.seg button {
+  border: none;
+  border-radius: 0;
+  border-inline-end: 1px solid var(--border);
+  min-height: 40px;
+  background: var(--surface);
+}
+.seg button:last-child {
+  border-inline-end: none;
+}
+.seg button.active {
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+
 .pos-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 12px;
+  align-items: start;
 }
 @media (min-width: 900px) {
   .pos-grid {
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: minmax(0, 1fr) 360px;
   }
+  .pos-side {
+    position: sticky;
+    top: 62px;
+  }
+}
+@media (min-width: 1400px) {
+  .pos-grid {
+    grid-template-columns: minmax(0, 1fr) 400px;
+  }
+}
+.pos-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* The menu: search, category chips, tiles with a picture. */
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.picker-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.picker-search input {
+  font-size: 1rem;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
 }
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: 9px;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 8px;
 }
 .product-tile {
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
-  padding: 11px;
-  min-height: 76px;
+  align-items: stretch;
+  gap: 4px;
+  padding: 6px 6px 8px;
   text-align: start;
-  border-radius: var(--radius);
   background: var(--surface);
   border: 1px solid var(--border);
+  border-radius: 6px;
   font-weight: 500;
+  overflow: hidden;
 }
 .product-tile:hover:not(:disabled) {
   border-color: var(--brand);
   color: inherit;
 }
+.product-tile:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.tile-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--surface-2);
+}
+.tile-initials {
+  display: grid;
+  place-items: center;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.tile-name {
+  font-size: 0.86rem;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.5em;
+}
+.tile-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 0.76rem;
+}
 .product-tile .price {
   font-family: "Source Serif 4", Georgia, serif;
   color: var(--brand);
   font-weight: 700;
+  font-size: 0.88rem;
+  margin-inline-start: auto;
+}
+.tile-count {
+  position: absolute;
+  top: 4px;
+  inset-inline-end: 4px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: 13px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  font-size: 0.82rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.tile-fav {
+  position: absolute;
+  top: 6px;
+  inset-inline-start: 9px;
+  color: #e0a100;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* The order on the right. */
+.order-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  max-height: calc(100dvh - 84px);
+}
+.order-title {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.order-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+.order-lines {
+  overflow-y: auto;
+  min-height: 60px;
+  flex: 1 1 auto;
+  border-block: 1px solid var(--border);
+}
+.order-line {
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.order-line:last-child {
+  border-bottom: none;
+}
+.ol-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ol-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ol-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.ol-sub {
+  font-size: 0.76rem;
+}
+.ol-note {
+  color: var(--warn);
+}
+.ol-amt {
+  min-width: 74px;
+  text-align: end;
+  font-size: 0.9rem;
+}
+.ol-note-btn {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-color: transparent;
+  color: var(--faint);
+}
+.ol-note-edit {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.stepper button {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  font-size: 1.1rem;
+}
+.stepper .mono {
+  min-width: 28px;
+  text-align: center;
+}
+.order-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.order-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 1rem;
+}
+.order-total strong {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 1.5rem;
+}
+.order-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.order-actions .big {
+  flex: 1;
+  min-height: 52px;
+  font-size: 1rem;
+}
+.order-actions.secondary button {
+  flex: 1 1 auto;
+  min-height: 40px;
+}
+.receipt-card {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+.change-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.change-amt {
+  font-size: 1.3rem;
+  color: var(--ok);
+}
+.autoprint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+.autoprint input,
+input.check {
+  width: auto;
+  min-height: 0;
+}
+
+/* The floor: tables, and bills kept under a customer's name. */
+.floor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.floor-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.floor-summary .spacer {
+  flex: 1;
+}
+.table-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 8px;
+}
+.table-grid.small {
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+}
+.table-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px;
+  min-height: 86px;
+  text-align: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-weight: 500;
+}
+.table-tile .table-name {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.table-tile.busy {
+  border-color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 7%, var(--surface));
+}
+.table-tile.waiting {
+  border-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 13%, var(--surface));
+}
+.table-tile.active {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+.table-meta {
+  font-size: 0.78rem;
+}
+.table-flag {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+}
+.bill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bill-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: 48px;
+  text-align: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-weight: 500;
+}
+.bill-row.active {
+  border-color: var(--brand);
+}
+
+/* Dialogs over the till. */
+.pos-modal-back {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 20, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 60;
+}
+.pos-modal {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  width: min(460px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+.pos-modal.wide {
+  width: min(820px, 100%);
+}
+.pay-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+.pay-total {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 2rem;
+  font-weight: 700;
+}
+.pay-modal .seg,
+.pos-modal .seg {
+  display: flex;
+  width: 100%;
+}
+.pos-modal .seg button {
+  flex: 1;
+  min-height: 48px;
+  font-size: 1rem;
+}
+.cash-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.cash-input {
+  font-size: 1.6rem;
+  min-height: 54px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.cash-quick {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 6px;
+}
+.cash-quick button {
+  min-height: 44px;
+}
+.pay-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+.pay-actions .btn-primary {
+  min-height: 48px;
+  flex: 1;
+  font-size: 1rem;
+}
+.variant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.variant-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 52px;
+  font-size: 1rem;
+}
+.variant-btn .price {
+  color: var(--brand);
+}
+.split-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 45vh;
+  overflow-y: auto;
+}
+.split-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bulk-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+/* On a phone the order sits below the menu; this bar jumps to it. */
+.pos-mobile-bar {
+  display: none;
+}
+@media (max-width: 899px) {
+  .pos-mobile-bar {
+    display: flex;
+    position: sticky;
+    bottom: 8px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    min-height: 52px;
+    background: var(--brand);
+    color: var(--brand-ink);
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    z-index: 10;
+  }
+  .pos-mobile-bar:hover:not(:disabled) {
+    color: var(--brand-ink);
+  }
+  .order-panel {
+    max-height: none;
+  }
 }
 .channel-tabs {
   display: flex;
@@ -877,4 +1463,109 @@ details > summary {
   padding: 10px 16px;
   font-weight: 600;
   text-align: center;
+}
+
+/* ---------------------------------------------------- bills and receipts */
+/* Printed on an 80 mm receipt printer (72 mm printable), or any printer: the
+   slip alone is printed, everything else on the page is hidden. */
+.print-slip {
+  display: none;
+}
+@media print {
+  @page {
+    margin: 3mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  body > *:not(.print-slip) {
+    display: none !important;
+  }
+  .print-slip {
+    display: block;
+    width: 72mm;
+    color: #000;
+    font:
+      12px/1.35 Arial,
+      "Noto Sans Arabic",
+      system-ui,
+      sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+  .ps-center {
+    text-align: center;
+  }
+  .ps-strong {
+    font-weight: 700;
+  }
+  .ps-big {
+    font-size: 14px;
+  }
+  .ps-rule {
+    border-top: 1px dashed #000;
+    margin: 4px 0;
+  }
+  .ps-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .ps-num {
+    white-space: nowrap;
+  }
+  .ps-note {
+    font-size: 11px;
+    padding-inline-start: 12px;
+    font-style: italic;
+  }
+  .ps-thanks {
+    margin-top: 6px;
+  }
+}
+
+/* ------------------------------------------------ products on the till */
+.product-setup {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.setup-photo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+}
+.setup-photo .tile-img {
+  width: 104px;
+  height: 104px;
+  aspect-ratio: 1;
+}
+.setup-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px 12px;
+  align-items: end;
+}
+.setup-fields label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+}
+.setup-flags {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.setup-flags label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+@media (max-width: 560px) {
+  .product-setup {
+    grid-template-columns: 1fr;
+  }
 }

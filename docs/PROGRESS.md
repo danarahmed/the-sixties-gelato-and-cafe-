@@ -7,9 +7,9 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0017` and the rebuilt app. The SQL
-  checks (15), the browser suites (4, every role), the unit and contract tests
-  (105) and a production build all pass.
+- **Built and verified:** migrations `0014`–`0018` and the rebuilt app. The SQL
+  checks (16), the browser suites (5, every role), the unit and contract tests
+  (118) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -21,10 +21,13 @@ browser tests through the real app, or both.
 - **Database upgraded on 23 September 2026.** Migrations `0014`–`0017` were
   applied to the live project and compared with the tested build object by
   object: identical. The public key can no longer read or write anything.
-- **App merged for production; waiting on two settings.** It shows "Not
-  configured" until the owner adds its two Vercel settings and redeploys, and
-  sign-in needs the Supabase settings. See
+- **Live since 23 September 2026.** The owner added the Vercel settings, the
+  app was redeployed, and the owner signs in. See
   [`guides/deployment.md`](guides/deployment.md).
+- **The till for a busy café (migration `0018`):** tables, bills that wait for
+  their money (printed, split, moved, cancelled only by a manager), product
+  photos, categories and favourites, 80 mm printing. Built and tested; see
+  [`guides/cashier-quickstart.md`](guides/cashier-quickstart.md).
 
 ## The August 2026 audit, finding by finding
 
@@ -74,33 +77,33 @@ browser tests through the real app, or both.
 
 ## Screens
 
-| Screen              | Who                                                        | What works                                                                                              |
-| ------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Sign-in, My account | everyone                                                   | Sign in, create a login for an invited email, reset and change password                                 |
-| Dashboard           | owner, managers, accountant, auditor                       | Today from the books: net revenue, gross profit, orders, stock value, low and negative stock            |
-| POS                 | cashier, barista, managers                                 | Channel-aware till, cash / card / platform-paid, exactly-once retry, honest offline                     |
-| Orders              | cost viewers                                               | Every sale; void (same day) and refund (after), with reasons                                            |
-| Sales               | cost viewers                                               | Daily summaries; close each trading day against the counted drawer                                      |
-| Vendors             | cost viewers                                               | Statements, bills (for a receipt or an account), payments, cancel a bill, payable ageing                |
-| Expenses            | cost viewers (recording: managers, accountant)             | Proposed account from the narration, confirmed by the person, posted in one step                        |
-| Purchasing          | cost viewers (purchasing, managers)                        | Suppliers; receive goods with landed costs into stock and GRNI                                          |
-| Products & Recipes  | cost viewers                                               | Create a product with its recipe and channel prices; change a price from a date; menu costing           |
-| Inventory           | cost viewers; waste for baristas                           | Stock board from the ledger, add items with opening stock, record waste, manager corrections, movements |
-| Stock Count         | counter; reviewers                                         | Blind count, submit, second-person review and approval                                                  |
-| Delivery Platforms  | cost viewers                                               | Platform orders and their value; settlement import not built (M-10)                                     |
-| Production          | cost viewers                                               | Batch history; batch entry not built (M-11)                                                             |
-| Journals            | cost viewers (posting: accountant, owner, general manager) | Register, manual journals (draft/publish), reversal, owner's control correction                         |
-| Chart of Accounts   | cost viewers                                               | Trial balance by period, closing checklist, lock and reopen, audit trail, CSV                           |
-| Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, payable ageing, product margin, CSV                         |
-| Settings            | owner, general manager                                     | People and roles, business configuration, locations, the role matrix                                    |
+| Screen              | Who                                                        | What works                                                                                                                                                                                                                                                    |
+| ------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sign-in, My account | everyone                                                   | Sign in, create a login for an invited email, reset and change password                                                                                                                                                                                       |
+| Dashboard           | owner, managers, accountant, auditor                       | Today from the books: net revenue, gross profit, orders, stock value, low and negative stock                                                                                                                                                                  |
+| POS                 | cashier, barista, managers                                 | Full-screen till: categories, search in three languages, photos, favourites; tables and bills paid later (print, split, move, cancel); cash with change, card, platform-paid; 80 mm bill and receipt printing; exactly-once payment and retry; honest offline |
+| Orders              | cost viewers                                               | Every sale; void (same day) and refund (after), with reasons                                                                                                                                                                                                  |
+| Sales               | cost viewers                                               | Daily summaries; close each trading day against the counted drawer                                                                                                                                                                                            |
+| Vendors             | cost viewers                                               | Statements, bills (for a receipt or an account), payments, cancel a bill, payable ageing                                                                                                                                                                      |
+| Expenses            | cost viewers (recording: managers, accountant)             | Proposed account from the narration, confirmed by the person, posted in one step                                                                                                                                                                              |
+| Purchasing          | cost viewers (purchasing, managers)                        | Suppliers; receive goods with landed costs into stock and GRNI                                                                                                                                                                                                |
+| Products & Recipes  | cost viewers                                               | Create a product with its recipe and channel prices; change a price from a date; menu costing; photos, categories, favourites, show or hide on the till                                                                                                       |
+| Inventory           | cost viewers; waste for baristas                           | Stock board from the ledger, add items with opening stock, record waste, manager corrections, movements                                                                                                                                                       |
+| Stock Count         | counter; reviewers                                         | Blind count, submit, second-person review and approval                                                                                                                                                                                                        |
+| Delivery Platforms  | cost viewers                                               | Platform orders and their value; settlement import not built (M-10)                                                                                                                                                                                           |
+| Production          | cost viewers                                               | Batch history; batch entry not built (M-11)                                                                                                                                                                                                                   |
+| Journals            | cost viewers (posting: accountant, owner, general manager) | Register, manual journals (draft/publish), reversal, owner's control correction                                                                                                                                                                               |
+| Chart of Accounts   | cost viewers                                               | Trial balance by period, closing checklist, lock and reopen, audit trail, CSV                                                                                                                                                                                 |
+| Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, payable ageing, product margin, CSV                                                                                                                                                                               |
+| Settings            | owner, general manager                                     | People and roles, business configuration, locations, the role matrix                                                                                                                                                                                          |
 
 ## Tests
 
 | Layer                        | What                                                                                                          | Result      |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 105 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, 9 suites, concurrency  | 15 passing  |
-| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, retry, offline                             | 4 passing   |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 118 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, 10 suites, concurrency | 16 passing  |
+| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, retry, offline, tables and bills           | 5 passing   |
 | Build                        | `npm run build`, types, lint, formatting                                                                      | green       |
 
 What is not built, and why, is in [`LIMITATIONS.md`](LIMITATIONS.md); the order

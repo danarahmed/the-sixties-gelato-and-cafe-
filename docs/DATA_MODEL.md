@@ -138,8 +138,29 @@ Added after the August 2026 audit; see [ADR 0002](adr/0002-database-posting-engi
 - **Tenancy.** Child tables carry `business_id`, so row-level security isolates
   them directly.
 - **Access.** `role_permission` mirrors `src/domain/auth/permissions.ts`.
-  Signed-in users read through row-level security and write only through the
-  functions of `0015`.
+
+### The till (`0018`)
+
+- **Tables.** `dining_table` (name unique among a location's tables in use,
+  area, seats, order, in use or not).
+- **Bills paid later.** `pos_tab` is a bill for a table or a named customer:
+  `open` → `paid` (linked to the one `sales_order` that `settle_tab` recorded
+  through `record_sale`) or `cancelled`. It carries its trading day, who
+  opened and closed it, when it was printed and how often, and a `version`
+  bumped on every change, which every change must name. `pos_tab_line` holds
+  its lines. A bill is never deleted; a paid or cancelled one never changes,
+  and neither do its lines. An open bill is not a sale: it posts nothing.
+- **Photos.** `product_image`: one PNG, JPEG or WebP per product, at most
+  300 KB, checked by its first bytes. `product.image_url` carries a version, so
+  a new photo is never hidden by a browser's copy of the old one.
+- **Categories.** A category name is unique within the business; a hidden
+  category takes its products off the till.
+
+All four tables are readable by the business's members only and writable only
+through the functions in `0018`.
+Signed-in users read through row-level security and write only through the
+functions of `0015`.
+
 - **Reports.** The functions of `0017` read published journal lines only:
   trial balance, P&L, and the reconciliation of each subledger with its
   control account.

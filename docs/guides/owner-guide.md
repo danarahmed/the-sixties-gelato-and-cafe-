@@ -51,6 +51,42 @@ unverified until it is corrected ([`../REMEDIATION.md`](../REMEDIATION.md)).
 
 The exact matrix is under **Settings → Roles & what they may do**.
 
+## Setting up the till
+
+A café with a hundred products and twenty tables needs a till that finds things
+fast. Set it up once, on **Products** and on the till itself:
+
+- **Categories** (Products, at the top): name each one in English, Arabic and
+  Kurdish, and number them in the order the till should show them. Untick **On
+  the till** to hide a whole category, a seasonal menu say, without touching its
+  products.
+- **Each product** (Products): **Add photo** takes a picture from the phone or
+  the computer. The browser shrinks it to a small file first, and only PNG, JPEG
+  and WebP pictures are accepted, judged by their contents. Choose its
+  **category**, tick **★ Favourite** for the ten or so things sold all day
+  (they get a chip of their own), and untick **On the till** for anything not
+  sold now. A hidden product keeps its recipe, prices and history, and comes
+  back by ticking the box again.
+- **Tables** (on the till: **🪑 Tables → Edit tables**, for owners, general
+  managers and branch managers): add them one by one, or twenty at once
+  ("Add 20 tables named Table starting at 1"). Give them an **area** (Inside,
+  Garden) to group them, and a number to order them. A table with an open bill
+  cannot be taken out of use.
+- **Printers:** see the [cashier quick-start](cashier-quickstart.md#printing).
+  Bills and receipts are laid out for an 80 mm receipt printer.
+
+**How bills are controlled.** A table's bill is not a sale until it is paid,
+and then it is recorded exactly like a sale at the counter. So a served drink
+cannot quietly disappear from a bill:
+
+- once the bill has been printed for the customer, **only a manager can take
+  anything off it**, and each reduction is on the audit trail (**bill.reduce**);
+- **cancelling a bill with anything on it needs a manager and a reason**
+  (**bill.cancel**);
+- splitting a bill needs no manager, because nothing leaves the table's bills;
+  it is logged too (**bill.split**);
+- **the day cannot be closed while a bill is still open.**
+
 ## Every day
 
 - **Dashboard:** today's revenue, gross profit, orders, stock value, low and
@@ -58,7 +94,8 @@ The exact matrix is under **Settings → Roles & what they may do**.
 - **Sales → Close the Day:** count the drawer, enter the opening float and the
   cash counted. Any difference posts to 6300 Cash over / short. Every trading day
   must be closed before its month can lock, and Sales lists every day still open,
-  however old.
+  however old. A day with a bill still open on the till cannot be closed: take
+  payment for it, or cancel it, first.
 - **Orders:** a sale rung in error is **voided** the same day, before the close;
   after that, it is **refunded**.
 
