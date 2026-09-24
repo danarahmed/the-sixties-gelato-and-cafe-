@@ -51,7 +51,9 @@ browser tests through the real app, or both.
   the supplier's number is given SGC-2026-0001, -0002 …, filled in on the form.
   Each is given once, even to two people at the same moment, is never reused,
   and cannot be typed by hand; a supplier's own number can still be typed.
-  Built and tested.
+  Built and tested. The migration was applied to the live database on
+  24 September 2026, matches the tested build object by object, and was
+  checked as the owner in a transaction that was rolled back.
 
 ## The August 2026 audit, finding by finding
 
