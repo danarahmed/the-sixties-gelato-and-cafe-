@@ -184,7 +184,11 @@ browser tests through the real app, or both.
   platform's tablet, once. Delivery Platforms shows what each platform owes,
   order by order; a statement pasted from the platform's report is matched
   order by order (the orders it leaves out listed), and a person who keeps the
-  books posts the payout it proposes. Built and tested.
+  books posts the payout it proposes. Built and tested. The migration was
+  applied to the live database on 25 September 2026, matches the tested build
+  object by object (permissions included), and was checked as the owner in a
+  transaction that was rolled back. The screens went live the same day with
+  [pull request #16](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/16).
 
 ## The August 2026 audit, finding by finding
 
