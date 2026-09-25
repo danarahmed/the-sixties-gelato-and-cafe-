@@ -11,6 +11,8 @@ import {
 import { channelLabel, fmtIQD } from "@/lib/format";
 import { addDays, businessToday, dateTimeIn } from "@/lib/dates";
 import { DrawerCount, MoveCash } from "@/components/books/DrawerCount";
+import { CardTakingsPanel } from "@/components/books/CardTakings";
+import { getCardTakings } from "@/lib/db/settlements";
 import { EmptyState } from "@/components/ui";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 
@@ -23,11 +25,12 @@ export default async function SalesPage() {
   const from = addDays(today, -29);
   const canCount = has(profile, "day.close");
   const canMove = canCount || has(profile, "accounting.post");
-  const [rows, counts, uncounted, drawer] = await Promise.all([
+  const [rows, counts, uncounted, drawer, card] = await Promise.all([
     getDailySales(from, today),
     getDrawerCounts(),
     getUnclosedDays(),
     canCount || canMove ? getDrawerStatus() : Promise.resolve(null),
+    getCardTakings(),
   ]);
   // A day is counted once a drawer count follows its last sale: the café
   // trades past midnight, so one night's count may cover two calendar days.
@@ -173,6 +176,20 @@ export default async function SalesPage() {
           <MoveCash isOwner={profile.roles.includes("owner")} safe={drawer.safe} />
         </section>
       )}
+
+      <section className="panel" id="card">
+        <div className="panel-h">
+          <h3>Card Takings</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            Settled against the terminal&apos;s report and what reached the bank · the fee to 6500
+          </span>
+        </div>
+        <CardTakingsPanel
+          takings={card}
+          canSettle={has(profile, "accounting.post")}
+          today={today}
+        />
+      </section>
 
       {counts.length > 0 && (
         <section className="panel">

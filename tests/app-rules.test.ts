@@ -46,6 +46,18 @@ import {
   type Alert,
 } from "@/lib/alerts";
 import { exceptionsByPerson, type ExceptionRow } from "@/lib/exceptions";
+import {
+  cancellableCard,
+  cardMath,
+  matchIssues,
+  owedByPlatform,
+  parseCardTakings,
+  parseMatch,
+  parseStatement,
+  statementAmount,
+  tillThrough,
+} from "@/lib/settlements";
+import { cleanOrderNo, platformOrderNo } from "@/lib/validation";
 import Decimal from "decimal.js";
 import {
   addLine,
@@ -989,6 +1001,11 @@ describe("the exceptions report, by person (0028)", () => {
 
 describe("the system speaks: alerts and the daily brief (0029, the audit's P1-8)", () => {
   const migration = readFileSync(join(__dirname, "../supabase/migrations/0029_alerts.sql"), "utf8");
+  // The rules as the latest migration to redefine them has them (0030).
+  const rules = readFileSync(
+    join(__dirname, "../supabase/migrations/0030_card_and_platform_money.sql"),
+    "utf8",
+  );
   const alert = (over: Partial<Alert>): Alert => ({
     id: "a",
     rule: "margin",
@@ -1054,13 +1071,11 @@ describe("the system speaks: alerts and the daily brief (0029, the audit's P1-8)
 
   it("every rule the database checks has a name on the screen", () => {
     const emitted = new Set([
-      ...[...migration.matchAll(/select '([a-z_]+)'::text, /g)].map((m) => m[1]),
-      ...[...migration.matchAll(/rule := '([a-z_]+)'/g)].map((m) => m[1]),
-      ...[...migration.matchAll(/select '(card_not_banked|platform_not_received)'/g)].map(
-        (m) => m[1],
-      ),
+      ...[...rules.matchAll(/select '([a-z_]+)'::text, /g)].map((m) => m[1]),
+      ...[...rules.matchAll(/rule := '([a-z_]+)'/g)].map((m) => m[1]),
     ]);
-    emitted.delete("waste"); // a subject, not a rule
+    // Subjects written the same way, not rules.
+    for (const subject of ["waste", "1010", "unmatched"]) emitted.delete(subject);
     expect([...emitted].sort()).toEqual(Object.keys(RULE_LABEL).sort());
   });
 
@@ -1221,6 +1236,269 @@ describe("the system speaks: alerts and the daily brief (0029, the audit's P1-8)
         "toDo",
       ])
         expect(d[`dash.${k}`], `${locale} dash.${k}`).toBeTruthy();
+    }
+  });
+});
+
+describe("card and platform money, reconciled (0030, the audit's P1-9)", () => {
+  const migration = readFileSync(
+    join(__dirname, "../supabase/migrations/0030_card_and_platform_money.sql"),
+    "utf8",
+  );
+
+  it("an order number as the tablet shows it, in any script; the database's rule, kept", () => {
+    expect(cleanOrderNo(" #١٢٣ ٤٥ ")).toBe("12345");
+    expect(cleanOrderNo("TB-99/7")).toBe("TB-99/7");
+    expect(platformOrderNo.parse("  ")).toBeNull();
+    expect(platformOrderNo.parse("#5501")).toBe("5501");
+    expect(platformOrderNo.safeParse("55:01").success).toBe(false);
+    expect(platformOrderNo.safeParse("x".repeat(41)).success).toBe(false);
+    // The same characters the database accepts, and the same length.
+    expect(migration).toContain("v_no !~ '^[A-Za-z0-9#/_.-]+$'");
+    expect(migration).toContain("length(v_no) > 40");
+  });
+
+  const takings = parseCardTakings({
+    from: "2026-09-20",
+    days: [
+      { day: "2026-09-20", amount: 4000 },
+      { day: "2026-09-21", amount: "2500" },
+      { day: "2026-09-22", amount: 1000 },
+    ],
+    balance: 7500,
+    settlements: [
+      { id: "a", covers_from: "2026-09-10", covers_to: "2026-09-14", till_total: 1, received: 1 },
+      { id: "b", covers_from: "2026-09-15", covers_to: "2026-09-19", till_total: 1, received: 1 },
+      {
+        id: "c",
+        covers_from: "2026-09-15",
+        covers_to: "2026-09-19",
+        cancelled_at: "2026-09-20T10:00:00Z",
+      },
+    ],
+  });
+
+  it("the card takings up to a day, and the settlement that can be cancelled", () => {
+    expect(takings.days.map((d) => d.amount)).toEqual([4000, 2500, 1000]);
+    expect(tillThrough(takings.days, "2026-09-21").toNumber()).toBe(6500);
+    expect(tillThrough(takings.days, "2026-09-22").toNumber()).toBe(7500);
+    expect(cancellableCard(takings.settlements)).toBe("b");
+    expect(cancellableCard([])).toBeNull();
+  });
+
+  it("a settlement's fee and difference, worked out as the database does", () => {
+    // 6,500 at the till; the terminal says 6,500; 6,370 reached the bank.
+    const same = cardMath(6500, "6,500", "٦٣٧٠");
+    expect([same.fee?.toNumber(), same.difference?.toNumber(), same.problem]).toEqual([
+      130,
+      0,
+      null,
+    ]);
+    // A card sale the terminal never took: the till is 500 over the terminal.
+    const over = cardMath(6500, "6000", "5880");
+    expect([over.fee?.toNumber(), over.difference?.toNumber()]).toEqual([120, 500]);
+    expect(cardMath(6500, "6000", "6100").problem).toBe("more_than_terminal");
+    expect(cardMath(6500, "", "100").problem).toBe("terminal");
+    expect(cardMath(6500, "100", "x").problem).toBe("received");
+    // record_card_settlement: fee = terminal − received; difference = till − terminal.
+    expect(migration).toContain("v_fee := v_terminal - v_received;");
+    expect(migration).toContain("v_diff := v_till - v_terminal;");
+  });
+
+  it("amounts as statements print them", () => {
+    expect(statementAmount("1,500")).toBe("1500");
+    expect(statementAmount("IQD 2,550.50")).toBe("2550.5");
+    expect(statementAmount("(900)")).toBe("-900");
+    expect(statementAmount("-900")).toBe("-900");
+    expect(statementAmount("٤٥٠ د.ع")).toBe("450");
+    expect(statementAmount("n/a")).toBeNull();
+    expect(statementAmount("")).toBeNull();
+  });
+
+  it("a statement pasted from a spreadsheet, read by its column names", () => {
+    const p = parseStatement(
+      [
+        "Order Date\tOrder ID\tOrder Value\tCommission (IQD)\tNet Payout",
+        "2026-09-20\t#5501\t3,000\t-450\t2,550",
+        "",
+        "2026-09-20\t5503\t3,000\t(450)\t2,400",
+        "Total\t\t6,000\t-900\t4,950",
+      ].join("\n"),
+    );
+    expect(p.problems).toEqual([]);
+    expect(p.columns).toEqual({
+      orderNo: "Order ID",
+      payout: "Net Payout",
+      commission: "Commission (IQD)",
+      fees: null,
+    });
+    expect(p.lines).toEqual([
+      { orderNo: "5501", payout: "2550", commission: "450", fees: null },
+      { orderNo: "5503", payout: "2400", commission: "450", fees: null },
+    ]);
+  });
+
+  it("a total row is left out, wherever the order column is", () => {
+    const p = parseStatement("Order,Payout\n5501,2550\nTotal,2550");
+    expect([p.lines.length, p.skipped]).toEqual([1, 1]);
+  });
+
+  it("without column names, the columns are order, payout, commission and fees", () => {
+    const p = parseStatement('5501,"2,550",450\n5503,2400,450,100\n9999,1000');
+    expect(p.problems).toEqual([]);
+    expect(p.columns).toBeNull();
+    expect(p.lines).toEqual([
+      { orderNo: "5501", payout: "2550", commission: "450", fees: null },
+      { orderNo: "5503", payout: "2400", commission: "450", fees: "100" },
+      { orderNo: "9999", payout: "1000", commission: null, fees: null },
+    ]);
+  });
+
+  it("what cannot be read is said, by the line it is on", () => {
+    expect(parseStatement("Date,Amount\n2026-09-20,3000").problems[0]).toMatch(
+      /^Line 1: the columns were not recognised/,
+    );
+    const p = parseStatement("Order;Payout\n5501;abc\n;2000\n5502;\n55 02:x;100");
+    expect(p.problems).toEqual([
+      'Line 2 (order 5501): the payout "abc" is not an amount.',
+      "Line 3 has a payout but no order number.",
+      "Line 4 (order 5502) has no payout.",
+      'Line 5: "55 02:x" is not an order number.',
+    ]);
+    expect(p.lines).toEqual([]);
+  });
+
+  const match = parseMatch({
+    platform: "talabat",
+    matched: 2,
+    lines: [
+      {
+        line: 1,
+        order_no: "5501",
+        status: "matched",
+        payout: 2550,
+        commission: 450,
+        fees: 0,
+        expected: 3000,
+        difference: 0,
+      },
+      {
+        line: 2,
+        order_no: "5503",
+        status: "matched",
+        payout: 2400,
+        commission: 450,
+        fees: 100,
+        expected: 3000,
+        difference: 50,
+      },
+      { line: 3, order_no: "5504", status: "voided", payout: 2550, commission: 450 },
+      { line: 4, order_no: "9999", status: "not_found", payout: 1000 },
+      { line: 5, order_no: "5501", status: "duplicate", payout: 2550 },
+    ],
+    missing: [{ order_no: "5502", sale_id: "s", placed_at: "2026-09-20T10:00:00Z", amount: 3000 }],
+    totals: {
+      orders: 6000,
+      payout: 4950,
+      commission: 900,
+      fees: 100,
+      difference: 50,
+      not_posted: 6100,
+    },
+    journal: [
+      { code: "1020", debit: 4950 },
+      { code: "5100", debit: 900 },
+      { code: "5200", debit: 150 },
+      { code: "1100", credit: 6000 },
+    ],
+  });
+
+  it("the database's match: each line, the orders left out, the journal it proposes", () => {
+    expect(match.lines.map((l) => l.status)).toEqual([
+      "matched",
+      "matched",
+      "voided",
+      "not_found",
+      "duplicate",
+    ]);
+    expect(matchIssues(match)).toBe(4);
+    expect(match.missing.map((m) => m.orderNo)).toEqual(["5502"]);
+    expect(match.totals.notPosted).toBe(6100);
+    const dr = match.journal.reduce((s, j) => s + j.debit, 0);
+    const cr = match.journal.reduce((s, j) => s + j.credit, 0);
+    expect([dr, cr]).toEqual([6000, 6000]);
+  });
+
+  it("what each platform owes, and since when", () => {
+    expect(
+      owedByPlatform([
+        {
+          platform: "talabat",
+          orderNo: "1",
+          saleId: "a",
+          placedAt: "2026-09-20T10:00:00Z",
+          amount: 3000,
+          days: 5,
+        },
+        {
+          platform: "careem",
+          orderNo: "2",
+          saleId: "b",
+          placedAt: "2026-09-22T10:00:00Z",
+          amount: 2000,
+          days: 3,
+        },
+        {
+          platform: "talabat",
+          orderNo: "3",
+          saleId: "c",
+          placedAt: "2026-09-18T10:00:00Z",
+          amount: 1500,
+          days: 7,
+        },
+      ]),
+    ).toEqual([
+      { platform: "careem", count: 1, amount: 2000, oldest: "2026-09-22T10:00:00Z", overDays: 3 },
+      { platform: "talabat", count: 2, amount: 4500, oldest: "2026-09-18T10:00:00Z", overDays: 7 },
+    ]);
+  });
+
+  it("the settlements have names on the audit trail", () => {
+    for (const a of [
+      "card.settlement",
+      "card.settlement_cancel",
+      "platform.settlement",
+      "platform.settlement_cancel",
+    ]) {
+      expect(migration).toContain(`'${a}'`);
+      expect(actionLabel(a)).not.toBe(a);
+    }
+    expect(AUDIT_GROUPS.find((g) => g.key === "settlements")?.prefixes).toEqual([
+      "card.",
+      "platform.",
+    ]);
+    const none = new Map<string, string>();
+    expect(
+      subjectOf("card_settlement", "x", null, { from: "2026-09-20", to: "2026-09-22" }, none),
+    ).toBe("Card takings 2026-09-20 to 2026-09-22");
+    expect(
+      subjectOf(
+        "platform_settlement",
+        "x",
+        null,
+        { platform: "Talabat", reference: "TLB-0925" },
+        none,
+      ),
+    ).toBe("Talabat statement TLB-0925");
+  });
+
+  it("the till's words for the order number are there in English, Arabic and Kurdish", () => {
+    for (const locale of LOCALES) {
+      const d = getDictionary(locale);
+      for (const k of ["pos.orderNo", "pos.orderNoHint", "pos.orderNoFormat", "print.orderNo"])
+        expect(d[k], `${locale} ${k}`).toBeTruthy();
+      expect(d["pos.orderNo"], locale).toContain("{platform}");
+      expect(d["print.orderNo"], locale).toContain("{no}");
     }
   });
 });

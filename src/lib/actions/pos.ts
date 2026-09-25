@@ -163,6 +163,8 @@ export async function payBillAction(
     ...(d.cogs !== undefined ? { cogs: Number(d.cogs) } : {}),
     journalNo: d.journal_no == null ? null : Number(d.journal_no),
     replayed: Boolean(d.replayed),
+    // A bill is never a delivery platform's: the database opens none for them.
+    platformOrderNo: null,
   });
 }
 

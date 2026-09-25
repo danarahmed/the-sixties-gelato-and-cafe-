@@ -109,7 +109,10 @@ caller's permission itself.
 ## Payments
 
 Full payment-card details are never stored. Card takings are recorded as an
-amount against 1010 Card clearing.
+amount against 1010 Card clearing, and settled against the terminal's report
+and the bank by the owner, the general manager or the accountant (`0030`).
+Platform order numbers are the platform's references for an order, not a
+customer's details.
 
 ## If something looks wrong
 

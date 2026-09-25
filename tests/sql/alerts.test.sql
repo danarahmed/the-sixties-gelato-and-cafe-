@@ -406,8 +406,8 @@ select test.as_admin();
 select test.eq(pg_temp.found('margin'),
   'red high: Alert cheap latte (Dine-in): sold below cost at 150 IQD, costing 200 | '
   'orange high: Alert thin latte (Dine-in): 60% margin at 500 IQD, costing 200 | '
-  'orange high: Alert thin latte (Takeaway): 67% margin at 600 IQD, costing 200',
-  'sold below cost: red; 60% and 67%, under the 70% target: orange; the golden espresso at 92% is fine');
+  'orange high: Alert thin latte (Takeaway): 66.6% margin at 600 IQD, costing 200',
+  'sold below cost: red; 60% and 66.6%, under the 70% target: orange; the golden espresso at 92% is fine');
 select test.act_as('owner@example.com');
 select set_alert_thresholds('{"margin_target_percent": 55}');
 select test.as_admin();
@@ -427,7 +427,7 @@ select create_product('Alert syrup soda', '{"dine_in": 300}', '[{"item_id":"c000
 select test.as_admin();
 select test.eq(pg_temp.found('margin', (select pv.id || ':dine_in' from product_variant pv join product p on p.id = pv.product_id
                                          where p.name = 'Alert syrup soda')),
-  'orange medium: Alert syrup soda (Dine-in): 17% margin at 300 IQD, costing 250',
+  'orange medium: Alert syrup soda (Dine-in): 16.6% margin at 300 IQD, costing 250',
   'none on hand: costed at the last delivery''s price, so less sure');
 
 -- A price that looks typed wrongly.
@@ -487,7 +487,7 @@ select set_alert_thresholds('{"exceptions_share_percent": null}');
 -- ---------------------------------------- card and platform money not in
 select test.act_as('cashier@example.com');
 select record_sale(gen_random_uuid(), 'dine_in', 'card', pg_temp.espressos(1));
-select record_sale(gen_random_uuid(), 'talabat', 'platform_paid', pg_temp.espressos(1));
+select record_sale(gen_random_uuid(), 'talabat', 'platform_paid', pg_temp.espressos(1), p_platform_order_no => '881002');
 select test.as_admin();
 select test.eq(pg_temp.found('card_not_banked'), null, 'today''s card takings are not due at the bank yet');
 select test.eq(pg_temp.found('card_not_banked', null, now() + interval '4 days'),
@@ -496,8 +496,9 @@ select test.eq(pg_temp.found('card_not_banked', null, now() + interval '4 days')
 select test.eq(pg_temp.found('platform_not_received', null, now() + interval '4 days'), null,
   'a delivery platform pays on a longer cycle');
 select test.eq(pg_temp.found('platform_not_received', null, now() + interval '8 days'),
-  'orange medium: 3,000 IQD of delivery-platform money is more than 7 days old and not yet received',
-  'past it, orange — less sure until sales carry the platform''s order number');
+  format('orange high: 1 Talabat order, 3,000 IQD, is more than 7 days old and not yet paid out; the oldest from %s',
+         pg_temp.day()),
+  'past it, orange, and sure: the order is named by its number (0030)');
 select test.act_as('owner@example.com');
 select save_journal(test.today(), 'Card settlement',
   '[{"code":"1020","debit":2450},{"code":"6900","debit":50},{"code":"1010","credit":2500}]', true);

@@ -38,6 +38,11 @@ export const AUDIT_GROUPS = [
     prefixes: ["sale.", "bill.", "approval."],
   },
   { key: "cash", label: "Cash & the drawer", prefixes: ["cash.", "drawer."] },
+  {
+    key: "settlements",
+    label: "Card & platform settlements",
+    prefixes: ["card.", "platform."],
+  },
   { key: "books", label: "Books & periods", prefixes: ["journal.", "period.", "legacy."] },
   { key: "alerts", label: "Alerts answered", prefixes: ["alert."] },
   {
@@ -80,6 +85,10 @@ const ACTION_LABEL: Record<string, string> = {
   "approval.refused": "Wrong PIN for an approval",
   "cash.move": "Cash moved",
   "drawer.count": "Drawer counted",
+  "card.settlement": "Card takings settled",
+  "card.settlement_cancel": "Card settlement cancelled",
+  "platform.settlement": "Platform payout recorded",
+  "platform.settlement_cancel": "Platform payout cancelled",
   "journal.reverse": "Journal reversed",
   "journal.control_correction": "Owner's correction posted",
   "legacy.post_unposted": "Old record posted",
@@ -175,6 +184,21 @@ const FIELD_LABEL: Record<string, string> = {
   rule: "Alert",
   title: "What it said",
   until: "Until",
+  from: "From",
+  to: "To",
+  till: "Taken by card at the till",
+  terminal: "The terminal's total",
+  received: "Reached the bank",
+  fee: "Card fee",
+  difference: "Difference",
+  platform: "Platform",
+  reference: "Statement",
+  order_count: "Orders paid out",
+  orders: "Their value",
+  payout: "Paid out",
+  commission: "Commission",
+  fees: "Fees",
+  not_posted: "On lines not posted",
 };
 
 /** Keys that are bookkeeping, not what anyone changed. */
@@ -322,6 +346,14 @@ export function subjectOf(
       return pick("journal_no") ? `Journal ${pick("journal_no")}` : `Journal ${short(entityId)}`;
     case "alert":
       return pick("rule") ? ruleLabel(pick("rule") as string) : "An alert";
+    case "card_settlement":
+      return pick("from") && pick("to")
+        ? `Card takings ${pick("from")} to ${pick("to")}`
+        : "Card takings";
+    case "platform_settlement":
+      return pick("reference")
+        ? `${pick("platform") ?? "Platform"} statement ${pick("reference")}`
+        : "A platform statement";
     default:
       return (
         named(entityId) ??

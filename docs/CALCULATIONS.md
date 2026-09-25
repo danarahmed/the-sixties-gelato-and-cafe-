@@ -192,13 +192,46 @@ channelContribution = expectedPayout − COGS
   fees 1,350; refunds 500 → **payout 3,650**; COGS 1,910 → **contribution
   1,740**. (`src/domain/platform/settlement.ts`)
 
-## 9. Settlement reconciliation
+## 9. Settlement reconciliation (`0030`, audit P1-9)
 
-Match our expected orders to a settlement statement and flag: `missing_payout`,
-`unmatched_settlement_line`, `duplicate_settlement_line`, `payout_difference`,
-`incorrect_commission`, `cancelled_still_charged`, `unexplained_adjustment`. A
-tolerance handles rounding (0 for IQD). Commission is re-derived from rate × base
-to validate charges.
+**Card takings.** A settlement covers the days from the first one not yet
+settled to a day that is over (the till takes cards until midnight):
+
+```
+till       = Σ 1010 lines of those days (card sales, less card refunds and voids)
+fee        = the terminal's total − what reached the bank      (never below 0)
+difference = till − the terminal's total                       (a note says why, when not 0)
+journal:     Dr 1020 received · Dr 6500 fee · Dr 6300 difference (Cr when negative) · Cr 1010 till
+```
+
+Worked example (the SQL test): yesterday the till took 4,000 by card, the
+terminal 1,500 (a sale of 2,500 rung as card was paid in cash) and 1,450
+reached the bank: fee 50, difference 2,500 — Dr 1020 1,450, Dr 6500 50, Dr
+6300 2,500, Cr 1010 4,000.
+
+**A platform's statement.** Each line (order number, payout, and commission
+and fees when the statement gives them) is matched to the platform order with
+that number, ignoring case: `matched` when it waits to be paid out;
+otherwise `not_found`, `already_paid`, `voided` (voided or refunded) or
+`duplicate` (on the statement twice), and not posted. For a matched line:
+
+```
+expected   = the sale's net value (what 1100 took for it)
+commission = expected − payout, when the line gives neither commission nor fees
+difference = expected − payout − commission − fees            (a note says why, when not 0)
+journal:     Dr 1020 Σ payout · Dr 5100 Σ commission · Dr 5200 Σ (fees + difference) · Cr 1100 Σ expected
+```
+
+The orders it leaves out are those waiting, sold no later than the latest one
+it pays. Worked example (the SQL test): 5501 and 5503, 3,000 each, paid 2,550
+and 2,400 with 450 commission each and 100 fees on 5503: Dr 1020 4,950, Dr
+5100 900, Dr 5200 150 (100 fees and 50 not explained), Cr 1100 6,000; 5502,
+sold between them, is left out.
+
+Statements are pasted from the platform's report: amounts are read as
+printed ("1,500", "IQD 2,550", "(900)"), a total row is left out, and
+commission and fees printed as deductions (−450) are read as what the
+platform kept (450).
 
 ## 10. Profit, shown separately (never one number)
 
@@ -275,7 +308,8 @@ database when the entry is published). A published entry never changes;
 corrections are new entries. What each record posts (migration `0015`):
 
 - Sale: Dr 1000 Cash in the till / 1010 Card clearing / 1100 Platform receivable (by
-  tender) / Cr 4000 Sales; Dr 5000 COGS / Cr 1200 Inventory. With a discount
+  tender) / Cr 4000 Sales; Dr 5000 COGS / Cr 1200 Inventory. A platform sale
+  carries the platform's order number (`0030`), once. With a discount
   (`0019`): Cr 4000 at the full price, Dr 4100 Merchant-funded discount for the
   discount, and the tender at what was paid.
 - The price a sale is made at (`0025`): the price in force that day, except a
@@ -303,8 +337,9 @@ corrections are new entries. What each record posts (migration `0015`):
   price variance (the difference) / Cr 2000 Accounts payable. A bill for
   anything else: Dr its account / Cr 2000.
 - Payment of a bill: Dr 2000 / Cr where the money came from (`0024`): 1000
-  the till, 1005 the safe, 1020 the bank, 1010 a card, or 3000 Owner equity
-  when the owner paid personally (capital they put in).
+  the till, 1005 the safe, 1020 the bank or a card (a card paid from 1010
+  until `0030`), or 3000 Owner equity when the owner paid personally (capital
+  they put in).
 - Expense: Dr its account / Cr where the money came from, the same five.
 - Waste: Dr 5300 Waste & spoilage / Cr 1200. Stock correction and approved
   count variance: 5400 Inventory count variance against 1200.
@@ -330,6 +365,8 @@ corrections are new entries. What each record posts (migration `0015`):
   only through sales, refunds, payments, counts and moving cash, never a
   manual journal. Neither the till nor the safe may pay out more than the
   books say it holds.
+- Card settlement and a platform's payout (`0030`): see §9. Cancelling one
+  reverses its journal exactly.
 - Year end: revenue and expense accounts closed to 3100 Retained earnings.
 
 ## 12. Alerts and the daily brief (`0029`, audit P1-8)
@@ -360,7 +397,9 @@ daily use`; it fires when that is under `lead + 1` days, the lead being the
 - **Margins:** each product on each channel it is priced on, at today's cost
   (every ingredient at what a sale would take it off the shelf at now): `cost
 = Σ round(quantity × cost a base unit)`, `margin = (price − cost) ÷ price`.
-  🔴 when the price is under the cost; 🟠 when the margin is under _70%_.
+  🔴 when the price is under the cost; 🟠 when the margin is under _70%_. The
+  margin is shown cut, not rounded, to one decimal (`0030`): 69.97% is "69.9%
+  margin", never "70%".
   Fairly sure when an ingredient has none on hand, so its cost is its last
   delivery's. A product whose ingredient has no cost yet waits: that
   ingredient is named once instead, with the products that use it (🟠 no
@@ -375,11 +414,14 @@ daily use`; it fires when that is under `lead + 1` days, the lead being the
   voids and refunds they made, the discounts they gave and the bills with
   items they cancelled — at least _10_ of them, or their amount more than _3%_
   of the person's own sales (every sale they rang, voided ones included).
-- **Card money not banked, platform money not received** (🟠): what the
-  clearing account (1010 card, 1100 platforms) holds beyond what came into it
-  in the last _3_ (card) or _7_ (platform) days — settlements are taken as
-  clearing the oldest first. Platform money is fairly sure until sales carry
-  the platform's order number (P1-9).
+- **Card money not banked** (🟠, sure; `0030`): 1010's balance less what came
+  into it in the last _3_ days — card takings older than that, not yet
+  settled.
+- **Platform money not received** (`0030`): for each platform, its orders not
+  paid out and sold more than _7_ days ago, by number, with the oldest (🟠,
+  sure); and what 1100 holds that the orders waiting do not explain, either
+  way (🟠, fairly sure) — sales from before order numbers, or a payout recorded
+  by hand.
 - **Bill due** (🟠): a supplier bill not paid in full, due within _3 days_ or
   overdue.
 - **Price typo** (🟠, fairly sure): a product's highest channel price more than

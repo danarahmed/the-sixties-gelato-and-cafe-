@@ -298,6 +298,10 @@ select {
   display: grid;
   gap: 16px;
 }
+/* A wide table scrolls in its own box (.tw) instead of widening the page. */
+.grid > * {
+  min-width: 0;
+}
 .stat {
   display: flex;
   flex-direction: column;
