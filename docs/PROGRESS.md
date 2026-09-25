@@ -198,7 +198,14 @@ browser tests through the real app, or both.
   stays) and brought back. The till, the menu, the reports and the audit trail
   read the channels from the database, and name each in the reader's
   language. Careem and Toters, never used, are listed as not in use. Built and
-  tested.
+  tested. The migration was applied to the live database on 25 September
+  2026, matches the tested build object by object (permissions included), and
+  was checked as the owner in a transaction that was rolled back: a platform
+  added (its code into the channel type), a second one of the same name
+  refused, Careem brought into use and set up like Talabat (10 packaging
+  lines, 7 prices) and sold at Talabat's price, and Talabat taken out of use
+  and refused a sale while its 2 orders waiting stayed; the books reconciled
+  to 0 before and after, and nothing was kept.
 - **Arabic and Kurdish, right to left, fixed on every screen.** A hidden label
   in the page header, placed far off to the left, made every page in Arabic
   and Kurdish about 10,000 pixels wide, so a screen could scroll sideways into
