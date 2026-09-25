@@ -141,7 +141,8 @@ browser tests through the real app, or both.
   (none do). Built and tested. The migration was applied to the live database
   on 25 September 2026, matches the tested build object by object
   (permissions included), and was checked as the owner in a transaction that
-  was rolled back.
+  was rolled back. The screens went live the same day with
+  [pull request #13](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/13).
 
 ## The August 2026 audit, finding by finding
 
