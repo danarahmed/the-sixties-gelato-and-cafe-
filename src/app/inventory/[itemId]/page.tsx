@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getMsg, getT } from "@/lib/i18n/server";
+import type { T } from "@/lib/i18n/core";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItem, getItemPriceHistory } from "@/lib/db/read";
 import { getStockCard, type StockCardKind, type StockCardRow } from "@/lib/db/reports";
@@ -9,17 +11,17 @@ import { EditItem, PackUnits } from "@/components/ItemEditor";
 
 export const dynamic = "force-dynamic";
 
-/** The card's lines, in the order a stock-taker reads them. */
-const LINES: { kind: StockCardKind; label: string }[] = [
-  { kind: "opening_stock", label: "Opening stock recorded" },
-  { kind: "received", label: "Received (less returns to suppliers)" },
-  { kind: "sold", label: "Sold (less voids and refunds back on the shelf)" },
-  { kind: "batches", label: "Used in batches" },
-  { kind: "made", label: "Made" },
-  { kind: "wasted", label: "Wasted, spoiled, given away" },
-  { kind: "counted", label: "Stock counts" },
-  { kind: "corrected", label: "Corrections" },
-  { kind: "transferred", label: "Moved between locations" },
+/** The card's lines, in the order a stock-taker reads them, in the reader's language. */
+const LINES = (t: T): { kind: StockCardKind; label: string }[] => [
+  { kind: "opening_stock", label: t("Opening stock recorded") },
+  { kind: "received", label: t("Received (less returns to suppliers)") },
+  { kind: "sold", label: t("Sold (less voids and refunds back on the shelf)") },
+  { kind: "batches", label: t("Used in batches") },
+  { kind: "made", label: t("Made") },
+  { kind: "wasted", label: t("Wasted, spoiled, given away") },
+  { kind: "counted", label: t("Stock counts") },
+  { kind: "corrected", label: t("Corrections") },
+  { kind: "transferred", label: t("Moved between locations") },
 ];
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -39,6 +41,8 @@ export default async function StockCardPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const profile = await requirePermission("cost.view");
+  const t = await getT();
+  const msg = await getMsg();
   const { itemId } = await params;
   const sp = await searchParams;
   const today = businessToday(profile.timezone);
@@ -48,9 +52,9 @@ export default async function StockCardPage({
   if (!item) {
     return (
       <div className="grid" style={{ gap: 16 }}>
-        <h1 style={{ margin: 0 }}>Stock card</h1>
-        <EmptyState title="Item not found" hint="Choose an item on Inventory." />
-        <Link href="/inventory">Back to Inventory</Link>
+        <h1 style={{ margin: 0 }}>{t("Stock card")}</h1>
+        <EmptyState title={t("Item not found")} hint={t("Choose an item on Inventory.")} />
+        <Link href="/inventory">{t("Back to Inventory")}</Link>
       </div>
     );
   }
@@ -76,13 +80,18 @@ export default async function StockCardPage({
   return (
     <div className="grid" style={{ gap: 16 }}>
       <div className="phead">
-        <h1>Stock card: {item.name}</h1>
+        <h1>{t("Stock card: {name}", { name: item.name })}</h1>
         <span className="sc">
-          {itemTypeLabel(item.itemType)} · {from} to {to} · in {unit}
+          {t("{type} · {from} to {to} · in {unit}", {
+            type: t(itemTypeLabel(item.itemType)),
+            from,
+            to,
+            unit,
+          })}
         </span>
         {!item.isActive && (
           <div className="sp">
-            <span className="badge warn">Out of use</span>
+            <span className="badge warn">{t("Out of use")}</span>
           </div>
         )}
       </div>
@@ -92,24 +101,24 @@ export default async function StockCardPage({
         style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}
       >
         <label>
-          <div className="sc">From</div>
+          <div className="sc">{t("From")}</div>
           <input type="date" name="from" defaultValue={from} />
         </label>
         <label>
-          <div className="sc">To</div>
+          <div className="sc">{t("To")}</div>
           <input type="date" name="to" defaultValue={to} />
         </label>
-        <button type="submit">Show</button>
+        <button type="submit">{t("Show")}</button>
         <Link href="/inventory" className="badge">
-          Back to Inventory
+          {t("Back to Inventory")}
         </Link>
       </form>
 
       <section className="panel" data-testid="stock-card">
         <div className="panel-h">
-          <h3>Opening to closing</h3>
+          <h3>{t("Opening to closing")}</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            Every movement of the stock ledger, at the value it was recorded with
+            {t("Every movement of the stock ledger, at the value it was recorded with")}
           </span>
         </div>
         <div className="tw">
@@ -117,25 +126,27 @@ export default async function StockCardPage({
             <thead>
               <tr>
                 <th />
-                <th className="right">Quantity ({unit})</th>
-                <th className="right">Value</th>
+                <th className="right">{t("Quantity ({unit})", { unit })}</th>
+                <th className="right">{t("Value")}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>On hand when {from} began</td>
+                <td>{t("On hand when {from} began", { from })}</td>
                 <td className="right mono">{fmtQty(opening?.qty ?? 0)}</td>
                 <td className="right money">{fmtIQD(opening?.value ?? 0)}</td>
               </tr>
-              {LINES.filter((l) => totals.has(l.kind)).map((l) => (
-                <tr key={l.kind} data-kind={l.kind}>
-                  <td>{l.label}</td>
-                  <td className="right mono">{q(totals.get(l.kind)!.qty)}</td>
-                  <td className="right money">{fmtIQD(totals.get(l.kind)!.value)}</td>
-                </tr>
-              ))}
+              {LINES(t)
+                .filter((l) => totals.has(l.kind))
+                .map((l) => (
+                  <tr key={l.kind} data-kind={l.kind}>
+                    <td>{l.label}</td>
+                    <td className="right mono">{q(totals.get(l.kind)!.qty)}</td>
+                    <td className="right money">{fmtIQD(totals.get(l.kind)!.value)}</td>
+                  </tr>
+                ))}
               <tr className="grand">
-                <td>On hand at the end of {to}</td>
+                <td>{t("On hand at the end of {to}", { to })}</td>
                 <td className="right mono">{fmtQty(last?.balanceQty ?? 0)}</td>
                 <td className="right money">{fmtIQD(last?.balanceValue ?? 0)}</td>
               </tr>
@@ -146,15 +157,15 @@ export default async function StockCardPage({
 
       <section className="panel">
         <div className="panel-h">
-          <h3>Movements</h3>
+          <h3>{t("Movements")}</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            {moves.length} in these dates
+            {t("{n} in these dates", { n: moves.length })}
           </span>
         </div>
         {moves.length === 0 ? (
           <div className="panel-b">
             <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-              Nothing moved in these dates.
+              {t("Nothing moved in these dates.")}
             </p>
           </div>
         ) : (
@@ -162,14 +173,14 @@ export default async function StockCardPage({
             <table>
               <thead>
                 <tr>
-                  <th>When</th>
-                  <th>What</th>
-                  <th className="right">Qty</th>
-                  <th className="right">Value</th>
-                  <th className="right">On hand</th>
-                  <th className="right">Worth</th>
-                  <th>Note</th>
-                  <th>By</th>
+                  <th>{t("When")}</th>
+                  <th>{t("What")}</th>
+                  <th className="right">{t("Qty")}</th>
+                  <th className="right">{t("Value")}</th>
+                  <th className="right">{t("On hand")}</th>
+                  <th className="right">{t("Worth")}</th>
+                  <th>{t("Note")}</th>
+                  <th>{t("By")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -179,7 +190,9 @@ export default async function StockCardPage({
                       {dateTimeIn(profile.timezone, m.occurredAt)}
                     </td>
                     <td>
-                      <span className="badge">{m.movement ? movementLabel(m.movement) : "—"}</span>
+                      <span className="badge">
+                        {m.movement ? t(movementLabel(m.movement)) : "—"}
+                      </span>
                     </td>
                     <td
                       className="right mono"
@@ -191,7 +204,7 @@ export default async function StockCardPage({
                     <td className="right mono">{fmtQty(m.balanceQty)}</td>
                     <td className="right mono">{fmtIQD(m.balanceValue)}</td>
                     <td className="muted" style={{ fontSize: ".85rem" }}>
-                      {m.reason ?? ""}
+                      {msg(m.reason ?? "")}
                     </td>
                     <td className="muted" style={{ fontSize: ".85rem" }}>
                       {m.by ?? ""}
@@ -206,15 +219,15 @@ export default async function StockCardPage({
 
       <section className="panel" data-testid="price-history">
         <div className="panel-h">
-          <h3>What it has cost</h3>
+          <h3>{t("What it has cost")}</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            Each delivery, newest first: the price paid, and with freight shared out
+            {t("Each delivery, newest first: the price paid, and with freight shared out")}
           </span>
         </div>
         {prices.length === 0 ? (
           <div className="panel-b">
             <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-              No deliveries of it yet.
+              {t("No deliveries of it yet.")}
             </p>
           </div>
         ) : (
@@ -222,13 +235,13 @@ export default async function StockCardPage({
             <table>
               <thead>
                 <tr>
-                  <th>Received</th>
-                  <th>Receipt</th>
-                  <th>Supplier</th>
-                  <th className="right">Quantity</th>
-                  <th className="right">Paid</th>
-                  <th className="right">A {unit}</th>
-                  <th className="right">Landed, a {unit}</th>
+                  <th>{t("Received")}</th>
+                  <th>{t("Receipt")}</th>
+                  <th>{t("Supplier")}</th>
+                  <th className="right">{t("Quantity")}</th>
+                  <th className="right">{t("Paid")}</th>
+                  <th className="right">{t("A {unit}", { unit })}</th>
+                  <th className="right">{t("Landed, a {unit}", { unit })}</th>
                 </tr>
               </thead>
               <tbody>
@@ -244,9 +257,11 @@ export default async function StockCardPage({
                     </td>
                     <td className="right money">{fmtIQD(p.goodsValue)}</td>
                     <td className="right mono">
+                      {/* i18n-ignore: a cost in IQD, the currency's code */}
                       {p.costPerBase === null ? "—" : `${fmtQty(p.costPerBase)} IQD`}
                     </td>
                     <td className="right mono">
+                      {/* i18n-ignore: a cost in IQD, the currency's code */}
                       {p.landedPerBase === null ? "—" : `${fmtQty(p.landedPerBase)} IQD`}
                     </td>
                   </tr>

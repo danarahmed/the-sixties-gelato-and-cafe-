@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getT } from "@/lib/i18n/server";
+import { getMsg, getT } from "@/lib/i18n/server";
+import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getCountSheet, getStockCounts } from "@/lib/db/read";
 import { db, num, rows, str } from "@/lib/db/client";
@@ -34,6 +35,7 @@ export default async function CountPage({
     "inventory.adjust.approve",
   );
   const t = await getT();
+  const msg = await getMsg();
   const sp = await searchParams;
   const counts = await getStockCounts();
   const canCount = has(profile, "inventory.count");
@@ -75,30 +77,43 @@ export default async function CountPage({
     <div className="grid" style={{ gap: 16, maxWidth: 900 }}>
       <h1 style={{ margin: 0 }}>{t("nav.count")}</h1>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        <strong>Blind count.</strong> Count what is on the shelf; the expected quantities are never
-        shown to the person counting. Each item is compared with the stock at the moment it is
-        counted, so the café can keep trading during a count. When the count is submitted, a manager
-        — never the counter — reviews it and approves the variances into the books.
+        <Rich
+          text={t(
+            "<b>Blind count.</b> Count what is on the shelf; the expected quantities are never shown to the person counting. Each item is compared with the stock at the moment it is counted, so the café can keep trading during a count. When the count is submitted, a manager — never the counter — reviews it and approves the variances into the books.",
+          )}
+        />
       </p>
 
       {canCount && mine && (
         <>
           <CountSheet countId={mine.id} lines={sheet} />
           <div>
-            <CancelCount countId={mine.id} label="your count" />
+            <CancelCount countId={mine.id} label={t("your count")} />
           </div>
         </>
       )}
       {othersOpen && !mine && (
         <div className="card" style={{ display: "grid", gap: 10 }}>
           <span>
-            A count is open: started {dateTimeIn(profile.timezone, othersOpen.startedAt)} by{" "}
-            {othersOpen.countedBy ?? "someone"}. Only one count is open at a time; it is finished by
-            its counter{canApprove ? ", or cancelled here" : ""}.
+            {canApprove
+              ? t(
+                  "A count is open: started {when} by {who}. Only one count is open at a time; it is finished by its counter, or cancelled here.",
+                  {
+                    when: dateTimeIn(profile.timezone, othersOpen.startedAt),
+                    who: othersOpen.countedBy ?? t("someone"),
+                  },
+                )
+              : t(
+                  "A count is open: started {when} by {who}. Only one count is open at a time; it is finished by its counter.",
+                  {
+                    when: dateTimeIn(profile.timezone, othersOpen.startedAt),
+                    who: othersOpen.countedBy ?? t("someone"),
+                  },
+                )}
           </span>
           {canApprove && (
             <div>
-              <CancelCount countId={othersOpen.id} label="the open count" />
+              <CancelCount countId={othersOpen.id} label={t("the open count")} />
             </div>
           )}
         </div>
@@ -108,17 +123,19 @@ export default async function CountPage({
       {reviewing && canReview && (
         <section className="card tw">
           <h3 style={{ marginTop: 0 }}>
-            Review — count of {dateTimeIn(profile.timezone, reviewing.startedAt)} by{" "}
-            {reviewing.countedBy ?? "—"}
+            {t("Review — count of {when} by {who}", {
+              when: dateTimeIn(profile.timezone, reviewing.startedAt),
+              who: reviewing.countedBy ?? "—",
+            })}
           </h3>
           <table>
             <thead>
               <tr>
-                <th>Item</th>
-                <th className="right">Expected</th>
-                <th className="right">Counted</th>
-                <th className="right">Variance</th>
-                <th className="right">Value</th>
+                <th>{t("Item")}</th>
+                <th className="right">{t("Expected")}</th>
+                <th className="right">{t("Counted")}</th>
+                <th className="right">{t("Variance")}</th>
+                <th className="right">{t("Value")}</th>
               </tr>
             </thead>
             <tbody>
@@ -143,10 +160,13 @@ export default async function CountPage({
             </tbody>
           </table>
           <p className="muted" style={{ fontSize: ".82rem" }}>
-            {withVariance.length} item(s) differ; net value{" "}
-            {fmtIQD(withVariance.reduce((s, r) => s + r.value, 0))}. Expected is the stock at the
-            moment each item was counted. Approving posts the differences against 5400 Inventory
-            count variance, dated when the count was submitted.
+            {t(
+              "{n} item(s) differ; net value {value}. Expected is the stock at the moment each item was counted. Approving posts the differences against 5400 Inventory count variance, dated when the count was submitted.",
+              {
+                n: withVariance.length,
+                value: fmtIQD(withVariance.reduce((s, r) => s + r.value, 0)),
+              },
+            )}
           </p>
           {reviewing.status === "submitted" && canApprove && (
             <ReviewActions
@@ -158,18 +178,18 @@ export default async function CountPage({
       )}
 
       <section className="card tw">
-        <h3 style={{ marginTop: 0 }}>Counts</h3>
+        <h3 style={{ marginTop: 0 }}>{t("Counts")}</h3>
         {counts.length === 0 ? (
-          <EmptyState title="No counts yet" hint="Start the first count above." />
+          <EmptyState title={t("No counts yet")} hint={t("Start the first count above.")} />
         ) : (
           <table>
             <thead>
               <tr>
-                <th>Started</th>
-                <th>Counter</th>
-                <th className="right">Counted</th>
-                <th>Status</th>
-                <th>Approved / rejected by</th>
+                <th>{t("Started")}</th>
+                <th>{t("Counter")}</th>
+                <th className="right">{t("Counted")}</th>
+                <th>{t("Status")}</th>
+                <th>{t("Approved / rejected by")}</th>
                 <th />
               </tr>
             </thead>
@@ -184,10 +204,10 @@ export default async function CountPage({
                     {c.counted}/{c.lines}
                   </td>
                   <td>
-                    <span className={`badge ${STATUS_BADGE[c.status] ?? ""}`}>{c.status}</span>
+                    <span className={`badge ${STATUS_BADGE[c.status] ?? ""}`}>{t(c.status)}</span>
                     {c.rejectedReason && (
                       <div className="muted" style={{ fontSize: ".75rem" }}>
-                        {c.rejectedReason}
+                        {msg(c.rejectedReason)}
                       </div>
                     )}
                   </td>
@@ -195,7 +215,7 @@ export default async function CountPage({
                   <td className="right">
                     {canReview && c.status !== "counting" && (
                       <Link href={`/count?review=${c.id}`} className="badge">
-                        Review
+                        {t("Review")}
                       </Link>
                     )}
                   </td>
