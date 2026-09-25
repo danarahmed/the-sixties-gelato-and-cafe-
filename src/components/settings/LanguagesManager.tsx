@@ -217,7 +217,11 @@ function AddLanguage({ onDone }: { onDone: (m: Msg) => void }) {
     });
 
   return (
-    <div className="grid" style={{ gap: 8, borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+    <div
+      className="grid"
+      data-testid="add-language"
+      style={{ gap: 8, borderTop: "1px solid var(--border)", paddingTop: 12 }}
+    >
       <h4 style={{ margin: 0 }}>{t("Add a language")}</h4>
       <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
         {t(
