@@ -1,7 +1,8 @@
 -- =============================================================================
 -- A day of test trading, touching every kind of record the reset clears
 -- (scripts/test-sql.sh, phase "reset"): a float, cash and card sales, a void
--- and a refund, a delivery billed and paid, a bill for a service under the
+-- approved by the owner's PIN (after a wrong one) and a refund, a delivery
+-- billed and paid, a bill for a service under the
 -- café's own number, an expense, waste, a blind count, a production batch, a
 -- drawer count with the takings to the safe, cash banked, a manual journal and
 -- its reversal, and a bill left open. Set-up made along the way (a table, a
@@ -21,8 +22,19 @@ select test.act_as('cashier@example.com');
 create temp table s as select pg_temp.sell() r union all select pg_temp.sell() union all select pg_temp.sell() union all select pg_temp.sell('card');
 grant select on s to public;
 
+-- The void approved by the owner's PIN (a wrong one first); the refund on the manager's word alone.
+select test.as_admin();
+create temp table owner_id as select id from app_user where email = 'owner@example.com';
+grant select on owner_id to public;
+select test.act_as('owner@example.com');
+select set_my_pin('2468');
 select test.act_as('manager@example.com');
-select void_sale((select (r ->> 'order_id')::uuid from s limit 1), 'rung twice');
+select request_approval('void', (select id from owner_id), '1111',
+  jsonb_build_object('order_id', (select r ->> 'order_id' from s limit 1)));
+create temp table ap as select request_approval('void', (select id from owner_id), '2468',
+  jsonb_build_object('order_id', (select r ->> 'order_id' from s limit 1))) r;
+grant select on ap to public;
+select void_sale((select (r ->> 'order_id')::uuid from s limit 1), null, 'rang_twice', (select (r ->> 'approval_id')::uuid from ap));
 select refund_sale((select (r ->> 'order_id')::uuid from s offset 1 limit 1), 'did not like it');
 
 create temp table sup as select id from supplier where business_id = '00000000-0000-0000-0000-0000000000b1' order by name limit 1;

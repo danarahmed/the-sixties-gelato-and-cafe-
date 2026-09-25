@@ -86,8 +86,10 @@ pay. On the floor, **＋ Bill for a customer** starts one directly.
 ### Cancelling a bill
 
 **✕ Cancel bill**: an empty bill can be closed by anyone. **A bill with
-anything on it needs a manager**, who gives a reason; it is kept on the audit
-trail.
+anything on it needs a manager**, who chooses the reason from a list ("Customer
+left without ordering", "Opened by mistake", "Moved to another bill", or
+"Other" with a few words); it is kept on the audit trail. Taking an item off a
+bill is on the audit trail too, printed or not.
 
 ### Two tills, one bill
 
@@ -141,6 +143,18 @@ Under the order, **＋ Discount** opens two boxes:
 A small percentage can round to nothing (2% of 2,500 is 50): type the amount
 you want to give instead.
 
+**Why?** Choose the reason from the list under the boxes: staff meal, on the
+house, regular customer, to make up for a complaint, a promotion, or "Other"
+with a few words of your own. The customer cannot pay until a reason is chosen.
+
+**Over 10%** of the bill, a manager approves it: the till says **"Over 10%: a
+manager approves it."** Tap **🔑 Ask a manager**; the manager chooses their
+name and types their PIN on your till, and the discount shows **✓ Approved by**
+their name. A wrong PIN is refused (and counted: five wrong in fifteen minutes
+stop that manager's approvals for a while). The approval is for that discount,
+once: change it and ask again. Owners and managers giving a discount
+themselves are not asked.
+
 The **Total** is what the customer pays. The bill and the receipt show the
 full price, the discount and the total. A percentage on a table's bill follows
 the bill as more is added. **✕** takes the discount off.
@@ -158,7 +172,9 @@ A finished sale cannot be edited. Tell a manager:
   exactly, and its cash leaves what the drawer should hold;
 - **after the count**, they **refund** it.
 
-Both are done on **Orders**, with a reason.
+Both are done on **Orders**, with a reason from the list. Another manager (or
+the owner) may approve it there with their name and PIN; without a second
+person it goes on the owner's review.
 
 ## Making a batch (baristas)
 

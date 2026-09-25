@@ -1644,6 +1644,38 @@ a.card.stat:focus-visible {
   font-size: 0.78rem;
   margin: 0;
 }
+/* Why the discount is given (0028), and a manager's approval over the cap. */
+.disc-why {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.disc-why select {
+  flex: 1 1 160px;
+  min-height: 36px;
+}
+.disc-why input {
+  flex: 2 1 180px;
+  min-height: 36px;
+}
+.disc-approval {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--warn);
+}
+.disc-approval button {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 0.8rem;
+}
+.pin-input {
+  letter-spacing: 0.4em;
+  font-size: 1.2rem;
+  text-align: center;
+}
 .add-discount {
   align-self: flex-start;
   font-size: 0.88rem;

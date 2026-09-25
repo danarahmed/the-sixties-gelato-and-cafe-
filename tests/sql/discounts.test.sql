@@ -9,6 +9,10 @@ select test.golden_catalogue();
 -- Until the last section this business rounds a percentage to the dinar, so
 -- every share can be seen exactly. A step of 500, the default, comes last.
 update business set discount_round_to = 1;
+-- The cap above which a manager approves a discount is 0028's
+-- (exceptions.test.sql); here anyone allowed to give a discount may give any,
+-- with its reason.
+update business set discount_cap_percent = 100;
 create temp table ids (k text primary key, v uuid);
 grant all on ids to public;
 create or replace function pg_temp.id(p text) returns uuid language sql as $$ select v from ids where k = p $$;
@@ -20,7 +24,7 @@ create or replace function pg_temp.r(p text) returns jsonb language sql as $$ se
 select test.act_as('cashier@example.com');
 -- 10% off two espressos: 5,000 less 500.
 insert into s select 'pct', record_sale('30000000-0000-0000-0000-000000000001', 'dine_in', 'cash',
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', null, 10);
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', null, 10, p_discount_reason => 'regular');
 select test.eq((pg_temp.r('pct') ->> 'gross')::numeric || '/' || (pg_temp.r('pct') ->> 'discount') || '/' || (pg_temp.r('pct') ->> 'net'),
   '5000/500/4500', 'ten percent of 5,000 is 500 off: 4,500 to pay');
 select test.eq(test.lines_of((pg_temp.r('pct') ->> 'order_id')::uuid),
@@ -37,13 +41,13 @@ select test.eq((select amount from sales_tender where sales_order_id = (pg_temp.
 -- The same key again is the same sale, discount and all.
 select test.act_as('cashier@example.com');
 select test.eq((record_sale('30000000-0000-0000-0000-000000000001', 'dine_in', 'cash',
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', null, 10) ->> 'discount')::numeric, 500::numeric,
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', null, 10, p_discount_reason => 'regular') ->> 'discount')::numeric, 500::numeric,
   'a retried discounted sale returns the discount it recorded');
 
 -- Two lines share 15% in proportion, to the dinar: 525 = 375 + 150.
 insert into s select 'two', record_sale(gen_random_uuid(), 'dine_in', 'card',
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1},
-    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, 15);
+    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, 15, p_discount_reason => 'regular');
 select test.eq(pg_temp.r('two') ->> 'net', '2975', '15% of 3,500 is 525 off');
 select test.as_admin();
 select test.eq((select string_agg(line_discount || '+' || line_net, ',' order by line_net desc) from sales_order_line
@@ -54,19 +58,19 @@ select test.eq((select string_agg(line_discount || '+' || line_net, ',' order by
 -- half-way up: 12.5% of 2,500 = 312.5 -> 313.
 select test.act_as('cashier@example.com');
 insert into s select 'half', record_sale(gen_random_uuid(), 'dine_in', 'cash',
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, 12.5);
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, 12.5, p_discount_reason => 'regular');
 select test.eq((pg_temp.r('half') ->> 'discount') || '/' || (pg_temp.r('half') ->> 'net'), '313/2187',
   'half a dinar rounds up');
 
 -- An amount: 700 off 3,500.
 insert into s select 'amt', record_sale(gen_random_uuid(), 'dine_in', 'cash',
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1},
-    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, null, 700);
+    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, null, 700, p_discount_reason => 'regular');
 select test.eq((pg_temp.r('amt') ->> 'discount') || '/' || (pg_temp.r('amt') ->> 'net'), '700/2800', 'an amount is taken off as it is');
 
 -- Never more than the bill: a free espresso posts no cash at all.
 insert into s select 'free', record_sale(gen_random_uuid(), 'dine_in', 'cash',
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, null, 9999);
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, null, 9999, p_discount_reason => 'on_the_house');
 select test.eq((pg_temp.r('free') ->> 'discount') || '/' || (pg_temp.r('free') ->> 'net'), '2500/0',
   'a discount larger than the bill is the whole bill, never more');
 select test.eq(test.lines_of((pg_temp.r('free') ->> 'order_id')::uuid),
@@ -119,7 +123,7 @@ select test.eq((select amount from report_profit_and_loss(test.today(), test.tod
 -- --------------------------------------------------------------- on a bill
 select test.act_as('cashier@example.com');
 insert into ids select 'b1', (open_tab('dine_in', null, 'Discount table', null,
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', 10) ->> 'tab_id')::uuid;
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', 10, p_discount_reason => 'regular') ->> 'tab_id')::uuid;
 select test.eq((select row(subtotal, discount, total, discount_percent)::text from pos_open_bills() where tab_id = pg_temp.id('b1')),
   '(5000,500,4500,10)', 'a bill opened with 10% off owes 4,500');
 -- A percentage follows the bill as it grows.
@@ -131,7 +135,7 @@ select test.eq((select row(subtotal, discount, total)::text from pos_open_bills(
 -- Saved without a discount, the discount is gone; saved with an amount, it is that amount.
 select save_tab(pg_temp.id('b1'), 3,
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2},
-    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, null, null, 1000);
+    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, null, null, 1000, p_discount_reason => 'regular');
 select test.eq((select row(discount, total, discount_percent, discount_amount)::text from pos_open_bills()
                  where tab_id = pg_temp.id('b1')), '(1000,5000,,1000)', 'an amount off the bill');
 
@@ -146,10 +150,15 @@ select test.succeeds(format($$select save_tab(%L, 4, '[{"variant_id":"d1000000-0
 select test.act_as('manager@example.com');
 select save_tab(pg_temp.id('b1'), 5,
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2},
-    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, null, 20);
+    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, null, 20, p_discount_reason => 'complaint');
 select test.as_admin();
-select test.eq((select count(*) from audit_log where action = 'bill.discount' and entity_id = pg_temp.id('b1')::text)::int, 1,
+select test.eq((select count(*) from audit_log a join app_user u on u.id = a.app_user_id
+                 where a.action = 'bill.discount' and a.entity_id = pg_temp.id('b1')::text
+                   and u.email = 'manager@example.com')::int, 1,
   'a manager''s change to a printed bill''s discount is on the audit trail');
+select test.eq((select string_agg(coalesce(after_state ->> 'percent', after_state ->> 'amount', 'none'), ',' order by id)
+                  from audit_log where action = 'bill.discount' and entity_id = pg_temp.id('b1')::text),
+  '1000,none,20', 'as is every change to a discount already on the bill, and taking it off (0028)');
 
 -- Paid by someone who may not give discounts: the bill's discount stands, it was given by a manager.
 delete from role_permission where role = 'cashier' and permission = 'discount.apply';
@@ -168,14 +177,14 @@ insert into role_permission (role, permission) values ('cashier', 'discount.appl
 -- Split: a percentage goes with each part; an amount stays where it was given.
 select test.act_as('cashier@example.com');
 insert into ids select 'b2', (open_tab('dine_in', null, 'Pct', null,
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', 10) ->> 'tab_id')::uuid;
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', 10, p_discount_reason => 'regular') ->> 'tab_id')::uuid;
 insert into ids select 'b2.l', (lines -> 0 ->> 'line_id')::uuid from pos_open_bills() where tab_id = pg_temp.id('b2');
 insert into ids select 'b2.new', (split_tab(pg_temp.id('b2'), 2, format('[{"line_id":"%s","qty":1}]', pg_temp.id('b2.l'))::jsonb)
   ->> 'tab_id')::uuid;
 select test.eq((select string_agg(total::text, ',' order by total) from pos_open_bills()
                  where tab_id in (pg_temp.id('b2'), pg_temp.id('b2.new'))), '2250,2250', 'each half keeps its 10%');
 insert into ids select 'b3', (open_tab('dine_in', null, 'Amt', null,
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', null, 500) ->> 'tab_id')::uuid;
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', null, 500, p_discount_reason => 'regular') ->> 'tab_id')::uuid;
 insert into ids select 'b3.l', (lines -> 0 ->> 'line_id')::uuid from pos_open_bills() where tab_id = pg_temp.id('b3');
 insert into ids select 'b3.new', (split_tab(pg_temp.id('b3'), 2, format('[{"line_id":"%s","qty":1}]', pg_temp.id('b3.l'))::jsonb)
   ->> 'tab_id')::uuid;
@@ -201,7 +210,7 @@ update business set discount_round_to = 500;
 select test.act_as('cashier@example.com');
 insert into s select 'r47', record_sale(gen_random_uuid(), 'dine_in', 'cash',
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":3},
-    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, 47);
+    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, 47, p_discount_reason => 'regular');
 select test.eq((pg_temp.r('r47') ->> 'gross') || '/' || (pg_temp.r('r47') ->> 'discount') || '/' || (pg_temp.r('r47') ->> 'net'),
   '8500/4000/4500', '47% of 8,500 is 3,995: 4,000 off, 4,500 to pay');
 select test.eq(test.lines_of((pg_temp.r('r47') ->> 'order_id')::uuid),
@@ -213,30 +222,30 @@ select test.eq((select sum(line_discount) from sales_order_line where sales_orde
 -- Exactly half-way rounds up; nearer nothing than 500 takes nothing off.
 select test.act_as('cashier@example.com');
 insert into s select 'r5', record_sale(gen_random_uuid(), 'dine_in', 'cash',
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', null, 5);
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', null, 5, p_discount_reason => 'regular');
 select test.eq((pg_temp.r('r5') ->> 'discount') || '/' || (pg_temp.r('r5') ->> 'net'), '500/4500',
   '5% of 5,000 is 250, half-way: rounds up to 500');
 insert into s select 'r2', record_sale(gen_random_uuid(), 'dine_in', 'cash',
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, 2);
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, 2, p_discount_reason => 'regular');
 select test.eq((pg_temp.r('r2') ->> 'discount') || '/' || (pg_temp.r('r2') ->> 'net'), '0/2500',
   '2% of 2,500 is 50: nearer nothing than 500, so nothing comes off');
 select test.eq(test.lines_of((pg_temp.r('r2') ->> 'order_id')::uuid),
   '1000 Dr 2500 | 1200 Cr 200 | 4000 Cr 2500 | 5000 Dr 200', 'and no discount is posted');
 insert into s select 'r90', record_sale(gen_random_uuid(), 'dine_in', 'cash',
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, 90);
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', null, 90, p_discount_reason => 'regular');
 select test.eq((pg_temp.r('r90') ->> 'discount') || '/' || (pg_temp.r('r90') ->> 'net'), '1000/0',
   'rounding never takes off more than the bill');
 
 -- An amount typed in is the cashier's choice, taken as it is.
 insert into s select 'r300', record_sale(gen_random_uuid(), 'dine_in', 'cash',
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, null, 300);
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, null, 300, p_discount_reason => 'regular');
 select test.eq((pg_temp.r('r300') ->> 'discount') || '/' || (pg_temp.r('r300') ->> 'net'), '300/2200',
   'an amount is not rounded');
 
 -- A bill shows, and is paid at, the same rounded discount.
 insert into ids select 'b47', (open_tab('dine_in', null, 'Rounded', null,
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":3},
-    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', 47) ->> 'tab_id')::uuid;
+    {"variant_id":"d1000000-0000-0000-0000-000000000002","qty":1}]', 47, p_discount_reason => 'regular') ->> 'tab_id')::uuid;
 select test.eq((select row(subtotal, discount, total)::text from pos_open_bills() where tab_id = pg_temp.id('b47')),
   '(8500,4000,4500)', 'the open bill owes 4,500');
 insert into s select 'b47', settle_tab(pg_temp.id('b47'), 2, gen_random_uuid(), 'cash');

@@ -46,6 +46,10 @@ export default async function SettingsPage() {
           `A percentage is rounded to the nearest ${fmtIQD(cfg.discountRoundTo)} (half-way rounds up); an amount is taken as typed`,
         ],
         [
+          "Discounts a manager approves",
+          `Over ${cfg.discountCapPercent}% of the bill: a manager (owner, general or branch manager) approves it on the till with their name and PIN, or gives it themselves. Every discount, void, refund and cancelled bill takes a reason from the list`,
+        ],
+        [
           "Bill numbers",
           `${cfg.billPrefix}-${today.slice(0, 4)}-0001, -0002 … for a bill entered without the supplier's number: never given twice, never typed in by hand`,
         ],

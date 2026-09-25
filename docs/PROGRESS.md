@@ -7,10 +7,10 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0027` and the rebuilt app. The SQL
-  checks (28, with the rehearsals of the upgrade, the clean start and clearing
+- **Built and verified:** migrations `0014`–`0028` and the rebuilt app. The SQL
+  checks (29, with the rehearsals of the upgrade, the clean start and clearing
   the test records), the browser suites (9, every role), the unit and contract
-  tests (191) and a production build all pass.
+  tests (204) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -141,7 +141,21 @@ browser tests through the real app, or both.
   (none do). Built and tested. The migration was applied to the live database
   on 25 September 2026, matches the tested build object by object
   (permissions included), and was checked as the owner in a transaction that
-  was rolled back.
+  was rolled back. The screens went live the same day with
+  [pull request #13](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/13).
+- **Exceptions under control (migration `0028`, the audit's P1-10):** every
+  void, refund, discount and cancelled bill takes a reason from a list, and
+  "Other" a few real words. A discount over 10% of the bill needs a manager's
+  approval on the till — their name and the PIN they set on My account; a
+  void or refund may be approved there by a second person, and without one it
+  waits for the owner's review. Each sale keeps who gave its discount, why and
+  who approved it; every line taken off a bill is on the audit trail; five
+  wrong PINs in fifteen minutes stop that manager's approvals for a while. The
+  **Exceptions** report on Reports lists all of it by person and downloads as
+  CSV. Built and tested. The migration was applied to the live database on 25
+  September 2026, matches the tested build object by object (permissions
+  included), and was checked as the owner in a transaction that was rolled
+  back.
 
 ## The August 2026 audit, finding by finding
 

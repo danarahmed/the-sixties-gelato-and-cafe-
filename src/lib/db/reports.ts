@@ -6,6 +6,7 @@ import "server-only";
  * migration 0017, which check the person's permission themselves.
  */
 import { db, num, numOrNull, rows, str, strOrNull, one } from "./client";
+import type { ExceptionKind, ExceptionRow } from "@/lib/exceptions";
 
 export interface TrialBalanceRow {
   code: string;
@@ -417,4 +418,38 @@ export async function getMembers(): Promise<MemberRow[]> {
     isActive: Boolean(r.is_active),
     linked: Boolean(r.linked),
   }));
+}
+
+/**
+ * Every exception in the dates, by person (0028, the audit's P1-10), read a
+ * page at a time (the hosted API returns at most 1,000 rows a call).
+ */
+export async function getExceptions(
+  from: string,
+  to: string,
+  max = 20_000,
+): Promise<ExceptionRow[]> {
+  const c = await db();
+  const out: ExceptionRow[] = [];
+  for (let start = 0; start < max; start += LINES_PAGE) {
+    const size = Math.min(LINES_PAGE, max - start);
+    const page = rows(
+      await c.rpc("report_exceptions", { p_from: from, p_to: to }).range(start, start + size - 1),
+      "the exceptions",
+    ).map((r: Record<string, unknown>) => ({
+      at: str(r.at),
+      kind: str(r.kind) as ExceptionKind,
+      personId: strOrNull(r.person_id),
+      person: strOrNull(r.person),
+      amount: numOrNull(r.amount),
+      reason: strOrNull(r.reason),
+      approvedBy: strOrNull(r.approved_by),
+      needsReview: Boolean(r.needs_review),
+      reference: str(r.reference),
+      detail: strOrNull(r.detail),
+    }));
+    out.push(...page);
+    if (page.length < size) break;
+  }
+  return out;
 }

@@ -3,7 +3,10 @@
 import { useState } from "react";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { DiningTable, OpenBill } from "@/lib/db/pos";
+import type { Approver } from "@/lib/actions/approvals";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { REASONS, reasonKey, reasonMissing } from "@/lib/reasons";
+import { normaliseNumber } from "@/lib/validation";
 
 function Modal({
   label,
@@ -182,7 +185,10 @@ export function MoveDialog({
   );
 }
 
-/** Cancelling a bill with anything on it is a manager's decision, with a reason on the audit trail. */
+/**
+ * Cancelling a bill with anything on it is a manager's decision, with a reason
+ * from the list on the audit trail (0028); "Other" takes a few real words.
+ */
 export function CancelDialog({
   title,
   needsReason,
@@ -195,12 +201,14 @@ export function CancelDialog({
   needsReason: boolean;
   busy: boolean;
   error: string | null;
-  onConfirm: (reason: string | null) => void;
+  onConfirm: (reason: { code: string | null; note: string | null }) => void;
   onClose: () => void;
 }) {
   const { t } = useT();
-  const [reason, setReason] = useState("");
-  const ok = !needsReason || reason.trim().length > 0;
+  const [code, setCode] = useState("");
+  const [note, setNote] = useState("");
+  const missing = needsReason ? reasonMissing(code || null, note) : null;
+  const ok = missing === null;
   return (
     <Modal label={t("pos.cancelBill")} busy={busy} onClose={onClose}>
       <h3 style={{ marginTop: 0 }}>
@@ -210,16 +218,42 @@ export function CancelDialog({
         {needsReason ? t("pos.cancelHint") : t("pos.cancelEmptyHint")}
       </p>
       {needsReason && (
-        <label className="muted" style={{ display: "block", fontSize: ".85rem" }}>
-          {t("pos.reason")}
-          <input
-            autoFocus
-            value={reason}
-            maxLength={300}
-            onChange={(e) => setReason(e.target.value)}
-            disabled={busy}
-          />
-        </label>
+        <>
+          <label className="muted" style={{ display: "block", fontSize: ".85rem" }}>
+            {t("pos.reason")}
+            <select
+              autoFocus
+              aria-label={t("pos.reason")}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              disabled={busy}
+            >
+              <option value="">{t("pos.chooseReason")}</option>
+              {REASONS.bill_cancel.map((c) => (
+                <option key={c} value={c}>
+                  {t(reasonKey("bill_cancel", c))}
+                </option>
+              ))}
+            </select>
+          </label>
+          {code === "other" && (
+            <label className="muted" style={{ display: "block", fontSize: ".85rem", marginTop: 8 }}>
+              {t("pos.reasonNote")}
+              <input
+                aria-label={t("pos.reasonNote")}
+                value={note}
+                maxLength={300}
+                onChange={(e) => setNote(e.target.value)}
+                disabled={busy}
+              />
+            </label>
+          )}
+          {missing === "say" && note.trim() !== "" && (
+            <p className="muted" style={{ fontSize: ".8rem", margin: "6px 0 0" }}>
+              {t("pos.sayWhat")}
+            </p>
+          )}
+        </>
       )}
       {error && (
         <div className="badge err" style={{ whiteSpace: "normal", marginTop: 8 }}>
@@ -233,11 +267,117 @@ export function CancelDialog({
         <button
           className="btn-primary"
           disabled={busy || !ok}
-          onClick={() => onConfirm(reason.trim() || null)}
+          onClick={() =>
+            onConfirm(
+              needsReason ? { code, note: note.trim() || null } : { code: null, note: null },
+            )
+          }
         >
           {busy ? "…" : t("pos.confirmCancel")}
         </button>
       </div>
+    </Modal>
+  );
+}
+
+/**
+ * A manager approves a discount over the cap on this till (0028): they choose
+ * their name and type their PIN. The database checks the PIN and counts a
+ * wrong one; five in fifteen minutes stop that manager's approvals for a while.
+ */
+export function ApproveDialog({
+  what,
+  approvers,
+  busy,
+  error,
+  onConfirm,
+  onClose,
+}: {
+  /** What is asked for, as the manager reads it: "20% off · −1,000 IQD · Regular customer". */
+  what: string;
+  /** Who may approve it; null while the list is on its way. */
+  approvers: Approver[] | null;
+  busy: boolean;
+  error: string | null;
+  onConfirm: (approverId: string, pin: string) => void;
+  onClose: () => void;
+}) {
+  const { t } = useT();
+  const [who, setWho] = useState("");
+  const [pin, setPin] = useState("");
+  const only = approvers?.length === 1 ? approvers[0]!.id : "";
+  const chosen = who || only;
+  const ok = chosen !== "" && /^\d{4,8}$/.test(pin);
+  return (
+    <Modal label={t("pos.approveTitle")} busy={busy} onClose={onClose}>
+      <h3 style={{ marginTop: 0 }}>{t("pos.approveTitle")}</h3>
+      <p style={{ marginTop: 0 }}>
+        <strong>{what}</strong>
+      </p>
+      <p className="muted" style={{ marginTop: 0, fontSize: ".88rem" }}>
+        {t("pos.approveHint")}
+      </p>
+      {approvers !== null && approvers.length === 0 ? (
+        <p className="muted" style={{ fontSize: ".88rem" }}>
+          {t("pos.noApprovers")}
+        </p>
+      ) : (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (ok) onConfirm(chosen, pin);
+          }}
+        >
+          <label className="muted" style={{ display: "block", fontSize: ".85rem" }}>
+            {t("pos.approver")}
+            <select
+              aria-label={t("pos.approver")}
+              value={chosen}
+              onChange={(e) => setWho(e.target.value)}
+              disabled={busy || approvers === null}
+            >
+              <option value="">{approvers === null ? "…" : t("pos.chooseApprover")}</option>
+              {(approvers ?? []).map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="muted" style={{ display: "block", fontSize: ".85rem", marginTop: 8 }}>
+            {t("pos.pin")}
+            <input
+              aria-label={t("pos.pin")}
+              className="pin-input"
+              type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={8}
+              value={pin}
+              onChange={(e) => setPin(normaliseNumber(e.target.value).replace(/\D/g, ""))}
+              disabled={busy}
+            />
+          </label>
+          {error && (
+            <div className="badge err" style={{ whiteSpace: "normal", marginTop: 8 }}>
+              ⚠️ {error}
+            </div>
+          )}
+          <div className="pay-actions">
+            <button type="button" onClick={onClose} disabled={busy}>
+              {t("pos.back")}
+            </button>
+            <button type="submit" className="btn-primary" disabled={busy || !ok}>
+              {busy ? "…" : t("pos.approve")}
+            </button>
+          </div>
+        </form>
+      )}
+      {approvers !== null && approvers.length === 0 && (
+        <div className="pay-actions">
+          <button onClick={onClose}>{t("pos.back")}</button>
+        </div>
+      )}
     </Modal>
   );
 }

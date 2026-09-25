@@ -23,6 +23,7 @@ export type Permission =
   | "sale.refund"
   | "sale.void"
   | "discount.apply"
+  | "discount.approve"
   | "recipe.edit"
   | "cost.view"
   | "profit.view"
@@ -49,6 +50,7 @@ const ALL: Permission[] = [
   "sale.refund",
   "sale.void",
   "discount.apply",
+  "discount.approve",
   "recipe.edit",
   "cost.view",
   "profit.view",
@@ -86,6 +88,7 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "sale.refund",
     "sale.void",
     "discount.apply",
+    "discount.approve",
     "cost.view",
     "profit.view",
     "inventory.count",

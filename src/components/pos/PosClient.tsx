@@ -5,6 +5,7 @@ import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { DiningTable, OpenBill, PosItem } from "@/lib/db/pos";
 import { recordSaleAction } from "@/lib/actions/sales";
+import { listApproversAction, requestApprovalAction, type Approver } from "@/lib/actions/approvals";
 import {
   cancelBillAction,
   payBillAction,
@@ -20,7 +21,7 @@ import { ChooseBill, FloorView } from "./FloorView";
 import { OrderPanel, type Receipt } from "./OrderPanel";
 import { PayDialog } from "./PayDialog";
 import { SplitDialog } from "./SplitDialog";
-import { CancelDialog, KeepDialog, MoveDialog } from "./Dialogs";
+import { ApproveDialog, CancelDialog, KeepDialog, MoveDialog } from "./Dialogs";
 import { TablesEditor } from "./TablesEditor";
 import { PrintSlip, type PrintJob } from "./PrintSlip";
 import {
@@ -33,8 +34,11 @@ import {
   lineAmount,
   lineKey,
   lineName,
+  approvalPercent,
+  approvalRefused,
   discountAmount,
   discountParams,
+  discountWhy,
   newBill,
   orderDue,
   orderFromBill,
@@ -44,10 +48,12 @@ import {
   savedHasItems,
   signature,
   type Discount,
+  type DiscountRules,
   type MoneyRules,
   type Order,
   type Tender,
 } from "./model";
+import { reasonKey } from "@/lib/reasons";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 type Msg = { ok: boolean; text: string } | null;
@@ -68,6 +74,10 @@ interface Pending {
   /** A quick sale's discount, sent again with the retry. */
   discountPercent: string | null;
   discountAmount: string | null;
+  /** Its reason and a manager's approval (0028). */
+  discountReason: string | null;
+  discountNote: string | null;
+  approvalId: string | null;
   /**
    * The total the customer was shown. The database records the payment only
    * at this total (0025); null for a payment left by an older till screen.
@@ -104,6 +114,9 @@ function loadPending(): Pending | null {
       job: p.job ?? null,
       discountPercent: p.discountPercent ?? null,
       discountAmount: p.discountAmount ?? null,
+      discountReason: p.discountReason ?? null,
+      discountNote: p.discountNote ?? null,
+      approvalId: p.approvalId ?? null,
       expectedNet: p.expectedNet ?? null,
     };
   } catch {
@@ -151,6 +164,13 @@ type Dialog =
   | { kind: "named" }
   | { kind: "move" }
   | { kind: "cancel"; error: string | null }
+  | {
+      kind: "approve";
+      what: string;
+      percent: number;
+      approvers: Approver[] | null;
+      error: string | null;
+    }
   | { kind: "choose"; table: DiningTable }
   | { kind: "tables" };
 
@@ -172,6 +192,7 @@ export function PosClient({
   cashierName,
   timezone,
   canDiscount,
+  discountRules,
   money,
 }: {
   items: PosItem[];
@@ -185,6 +206,8 @@ export function PosClient({
   timezone: string;
   /** discount.apply */
   canDiscount: boolean;
+  /** Above the cap a manager approves a discount, unless this person does (0028). */
+  discountRules: DiscountRules;
   /** How the business rounds money and discounts, as the database does. */
   money: MoneyRules;
 }) {
@@ -360,6 +383,7 @@ export function PosClient({
       const r = await fn();
       if (!r.ok) {
         setMsg({ ok: false, text: r.error });
+        if (approvalRefused(r.error)) dropApproval();
         return null;
       }
       return r.data;
@@ -437,6 +461,74 @@ export function PosClient({
     patchOrder((o) => ({ ...o, discount: d }));
   }
 
+  /** An approval the database would not take: the discount asks for a manager again. */
+  function dropApproval() {
+    patchOrder((o) =>
+      o.discount?.approval ? { ...o, discount: { ...o.discount, approval: null } } : o,
+    );
+  }
+
+  /** A manager approves the discount on screen with their name and PIN (0028). */
+  async function askApproval() {
+    const o = showBill && billRef.current ? billRef.current : quick;
+    const d = o.discount;
+    if (!d || busy) return;
+    const subtotal = orderSubtotal(o, byId, money);
+    const percent = approvalPercent(d, subtotal);
+    const what = [
+      `${percent}%`,
+      `−${fmtIQD(discountAmount(d, subtotal, money).toNumber())}`,
+      d.reason
+        ? d.reason === "other"
+          ? d.note?.trim()
+          : t(reasonKey("discount", d.reason))
+        : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    setDialog({ kind: "approve", what, percent, approvers: null, error: null });
+    const r = await listApproversAction("discount");
+    setDialog((cur) =>
+      cur?.kind === "approve"
+        ? { ...cur, approvers: r.ok ? r.data : [], error: r.ok ? null : r.error }
+        : cur,
+    );
+  }
+
+  async function confirmApproval(approverId: string, pin: string) {
+    if (dialog?.kind !== "approve") return;
+    const percent = dialog.percent;
+    setBusy("approve");
+    try {
+      const r = await requestApprovalAction({
+        kind: "discount",
+        approverId,
+        pin,
+        scope: { percent },
+      });
+      if (!r.ok) {
+        setDialog((cur) => (cur?.kind === "approve" ? { ...cur, error: r.error } : cur));
+        return;
+      }
+      patchOrder((o) =>
+        o.discount
+          ? {
+              ...o,
+              discount: {
+                ...o.discount,
+                approval: { id: r.data.approvalId, by: r.data.approver, percent },
+              },
+            }
+          : o,
+      );
+      setDialog(null);
+    } catch {
+      setDialog((cur) => (cur?.kind === "approve" ? { ...cur, error: t("pos.noAnswer") } : cur));
+    } finally {
+      setBusy(null);
+    }
+  }
+
   /** Save the bill on screen (open it, if new) and return it as the database now has it. */
   async function saveBill(o: Order): Promise<Order | null> {
     const data = await run("save", () =>
@@ -448,6 +540,7 @@ export function PosClient({
         label: o.label?.trim() || null,
         lines: o.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty), note: l.note })),
         ...discountParams(o.discount),
+        ...discountWhy(o.discount),
       }),
     );
     if (!data) return null;
@@ -541,6 +634,7 @@ export function PosClient({
         label: choice.label,
         lines: o.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty), note: l.note })),
         ...discountParams(o.discount),
+        ...discountWhy(o.discount),
       }),
     );
     setDialog(null);
@@ -645,13 +739,18 @@ export function PosClient({
     setDialog({ kind: "cancel", error: null });
   }
 
-  async function confirmCancel(reason: string | null) {
+  async function confirmCancel(reason: { code: string | null; note: string | null }) {
     const cur = billRef.current;
     if (!cur?.tabId || cur.version === null) return;
     setBusy("cancel");
     generation.current++;
     try {
-      const r = await cancelBillAction({ tabId: cur.tabId, version: cur.version, reason });
+      const r = await cancelBillAction({
+        tabId: cur.tabId,
+        version: cur.version,
+        reasonCode: reason.code,
+        note: reason.note,
+      });
       if (!r.ok) {
         setDialog({ kind: "cancel", error: r.error });
         return;
@@ -707,8 +806,14 @@ export function PosClient({
       title: dialog.title,
       received,
       ...(o.kind === "quick"
-        ? discountParams(o.discount)
-        : { discountPercent: null, discountAmount: null }),
+        ? { ...discountParams(o.discount), ...discountWhy(o.discount) }
+        : {
+            discountPercent: null,
+            discountAmount: null,
+            discountReason: null,
+            discountNote: null,
+            approvalId: null,
+          }),
       // What the dialog showed: the database takes the money only at this total.
       expectedNet: orderDue(o, byId, money).toFixed(),
       job: {
@@ -739,6 +844,9 @@ export function PosClient({
               lines: p.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty) })),
               discountPercent: p.discountPercent,
               discountAmount: p.discountAmount,
+              discountReason: p.discountReason,
+              discountNote: p.discountNote,
+              approvalId: p.approvalId,
               expectedNet: p.expectedNet,
             })
           : await payBillAction({
@@ -761,6 +869,7 @@ export function PosClient({
         // The database refused it: nothing was recorded, and the order is still here.
         setPending(null);
         savePending(null);
+        if (approvalRefused(r.error)) dropApproval();
         if (dialogRef.current?.kind === "pay") setDialog({ ...dialogRef.current, error: r.error });
         else setMsg({ ok: false, text: r.error });
         // A price, or the bill, may have changed since this till last looked.
@@ -1042,7 +1151,9 @@ export function PosClient({
             now={now}
             canDiscount={canDiscount}
             money={money}
+            discountRules={discountRules}
             onDiscount={setDiscount}
+            onAskApproval={askApproval}
           />
         </div>
       </div>
@@ -1118,6 +1229,16 @@ export function PosClient({
           currentTableId={bill.tableId}
           busy={busy !== null}
           onConfirm={moveTo}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog?.kind === "approve" && (
+        <ApproveDialog
+          what={dialog.what}
+          approvers={dialog.approvers}
+          busy={busy === "approve"}
+          error={dialog.error}
+          onConfirm={confirmApproval}
           onClose={() => setDialog(null)}
         />
       )}

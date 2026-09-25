@@ -30,12 +30,13 @@ begin
   for t in select c.relname from pg_class c join pg_namespace s on s.oid = c.relnamespace
             where s.nspname = 'public' and c.relkind in ('r', 'p')
               and c.relname not in ('business', 'location', 'gl_account', 'app_user', 'user_role', 'audit_log',
-                                    'role_permission')
+                                    'role_permission', 'reason_code')
   loop
     execute format('select count(*) from public.%I', t) into n;
     perform test.eq(n, 0::bigint, t || ' is empty');
   end loop;
 end $$;
+select test.eq((select count(*) from reason_code)::int, 20, 'the upgrade brings only the list of reasons (0028)');
 select test.eq((select string_agg(action, ',' order by id) from audit_log), 'business.clean_start',
                'the audit trail opens with the clean start');
 

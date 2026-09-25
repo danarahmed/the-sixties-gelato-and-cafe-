@@ -33,6 +33,10 @@ const saleInput = z.object({
   /** At most one of the two: a percentage of the bill, or an amount off it. */
   discountPercent,
   discountAmount,
+  /** Why (0028): a reason from the list, a note for "Other", and a manager's approval over the cap. */
+  discountReason: optionalText(40),
+  discountNote: optionalText(300),
+  approvalId: id("an approval").nullish(),
   /**
    * The total the till showed the customer. If the database would record
    * another (a price changed since the till loaded its menu), nothing is
@@ -70,6 +74,9 @@ export async function recordSaleAction(
     p_discount_percent: v.data.discountPercent,
     p_discount_amount: v.data.discountAmount,
     p_expected_net: v.data.expectedNet,
+    p_discount_reason: v.data.discountReason,
+    p_discount_note: v.data.discountNote,
+    p_approval: v.data.approvalId ?? null,
   });
   if (!r.ok) return r;
   refresh(...SALE_PATHS);
@@ -90,7 +97,14 @@ function saleReceipt(d: Record<string, unknown>): SaleReceipt {
   };
 }
 
-const correction = z.object({ orderId: id("a sale"), reason: text("A reason", 300) });
+const correction = z.object({
+  orderId: id("a sale"),
+  /** A reason from the list (0028); "other" needs the note, in a few real words. */
+  reasonCode: text("A reason", 40),
+  note: optionalText(300),
+  /** A second person's approval, by their name and PIN; without one it waits for the owner's review. */
+  approvalId: id("an approval").nullish(),
+});
 
 /** Rung in error, before the drawer holding it is counted. Everything comes back. */
 export async function voidSaleAction(
@@ -100,7 +114,9 @@ export async function voidSaleAction(
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("void_sale", {
     p_order: v.data.orderId,
-    p_reason: v.data.reason,
+    p_reason: v.data.note,
+    p_reason_code: v.data.reasonCode,
+    p_approval: v.data.approvalId ?? null,
   });
   if (!r.ok) return r;
   refresh(...SALE_PATHS);
@@ -118,7 +134,9 @@ export async function refundSaleAction(
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("refund_sale", {
     p_order: v.data.orderId,
-    p_reason: v.data.reason,
+    p_reason: v.data.note,
+    p_reason_code: v.data.reasonCode,
+    p_approval: v.data.approvalId ?? null,
   });
   if (!r.ok) return r;
   refresh(...SALE_PATHS);

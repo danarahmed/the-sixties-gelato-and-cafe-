@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import {
+  getExceptions,
   getJournalLines,
   getProfitAndLoss,
   getReconciliation,
@@ -8,6 +9,7 @@ import {
 } from "@/lib/db/reports";
 import { getAuditTrail } from "@/lib/db/books";
 import { auditGroup } from "@/lib/audit";
+import { EXCEPTION_LABEL } from "@/lib/exceptions";
 import { addDays, businessToday, dateTimeIn, dayStart, monthStart, parseDay } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
@@ -147,6 +149,38 @@ export async function GET(request: NextRequest) {
         ]),
       );
       name = `audit-trail_${from}_${to}.csv`;
+    } else if (report === "exceptions") {
+      // Voids, refunds, discounts, cancelled bills, lines taken off and wrong
+      // PINs, by person (0028); report_exceptions checks audit.view itself.
+      const rows = await getExceptions(from, to, 1_000_000);
+      const tz = s.profile.timezone;
+      body = csv(
+        [
+          "when",
+          "kind",
+          "what",
+          "person",
+          "amount",
+          "reason",
+          "approved_by",
+          "needs_review",
+          "reference",
+          "detail",
+        ],
+        rows.map((e) => [
+          dateTimeIn(tz, e.at),
+          e.kind,
+          EXCEPTION_LABEL[e.kind] ?? e.kind,
+          e.person ?? "",
+          e.amount ?? "",
+          e.reason ?? "",
+          e.approvedBy ?? "",
+          e.needsReview ? "yes" : "no",
+          e.reference,
+          e.detail ?? "",
+        ]),
+      );
+      name = `exceptions_${from}_${to}.csv`;
     } else if (report === "reconciliation") {
       const rows = await getReconciliation(to);
       body = csv(

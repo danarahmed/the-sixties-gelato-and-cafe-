@@ -371,3 +371,60 @@ contact, phone, is_active, reason)` — out of use only when owed nothing.
   ingredients before and after (`recipe_lines_json`, internal). The older
   `new_recipe_version`, which changed a recipe without the audit trail, can no
   longer be called by anyone signed in.
+
+### Exceptions: reasons, approvals and the report (`0028`)
+
+- **Reasons.** `reason_code (kind, code, label, sort_order)`: the list a void,
+  refund, discount or cancelled bill is given from (`kind` is `void`,
+  `refund`, `discount` or `bill_cancel`); read by anyone signed in, changed
+  only by a migration. `reason_text` (internal) turns a code and a note into
+  what is kept: the label, and ": note" when there is one; "Other" (or a note
+  with no code, as the screens before `0028` sent) is the note itself, which
+  needs two words or more and six letters. Nothing chosen and nothing said is
+  refused.
+- **The cap.** `business.discount_cap_percent` (10; 0 to 100). A discount
+  whose share of the bill (`discount_share`, internal: a percentage as asked,
+  an amount as the part of the bill it takes off, to two places) is above it
+  needs an approval, unless the person giving it holds the new permission
+  `discount.approve` (owner, general manager, branch manager).
+- **PINs.** `app_user.pin_hash` (bcrypt, through `extensions.crypt`), set by
+  `set_my_pin(pin)` — for those holding `discount.approve`, `sale.void` or
+  `sale.refund`; 4 to 8 digits, not one digit repeated nor a run — and
+  audited `member.pin_set`. Nobody can read it. `my_profile` says only
+  `has_pin`, and passes `discount_cap_percent` to the till.
+- **Approvals.** `approval (kind discount|void|refund, approver_id,
+requested_by, scope, expires_at, used_at, used_for)` and `pin_attempt
+(approver_id, requested_by, ok, at)`, readable by no one signed in.
+  `list_approvers(kind)` (needs `sale.create`): the names of the others who
+  may approve it, with a PIN. `request_approval(kind, approver, pin, scope)`
+  (needs `sale.create`): checks the PIN in a step of its own and keeps every
+  attempt — a wrong one answers `{ok: false}` rather than failing, is audited
+  `approval.refused`, and five in fifteen minutes lock that approver until
+  they have passed; a right one makes an approval good for ten minutes,
+  audited `approval.granted`. An approval is used once, for its kind, by the
+  person who asked (`use_approval`, internal); a discount's covers the
+  `scope.percent` asked, a void's or refund's the `scope.order_id`.
+- **Discounts.** `record_sale`, `open_tab` and `save_tab` gain
+  `p_discount_reason`, `p_discount_note` and `p_approval`. `sales_order` gains
+  `discount_percent` (as asked), `discount_by`, `discount_approved_by` and
+  `discount_reason`; `pos_tab` gains the last three, and a bill's discount,
+  checked when it was put on the bill, is carried to its sale when it is paid
+  (`post_sale` gains `p_discount`). An amount on a bill is checked again as the
+  bill changes: taking things off cannot make it more of the bill than the cap
+  or the approval allowed, except by a manager. `split_tab` carries a
+  percentage's reason and approval to the new bill. `pos_open_bills` gains
+  `discount_reason`, `discount_by` and `discount_approved_by` (names).
+- **Voids and refunds.** `void_sale` and `refund_sale` take
+  `(order, note, reason_code, approval)`; `sale_adjustment.reason_code` is
+  kept, and `approved_by` is the second person when there was one, the
+  requester otherwise.
+- **Bills.** `save_tab` audits every reduction: `bill.reduce` once printed (a
+  manager's call), `bill.line_remove` before; a change to a discount already
+  on the bill is audited `bill.discount`. `cancel_tab(tab, version, note,
+reason_code)`: a bill with items needs a manager and a reason from the list;
+  `pos_tab.cancel_reason_code` is kept.
+- **The report.** `report_exceptions(from, to)` (needs `audit.view`): every
+  void, refund, discount, cancelled bill with items, line taken off a bill and
+  wrong PIN in the dates, with the person, amount, reason, who approved it
+  and whether it waits for review (a void or refund nobody else approved, a
+  wrong PIN, a discount over the cap given before `0028`).

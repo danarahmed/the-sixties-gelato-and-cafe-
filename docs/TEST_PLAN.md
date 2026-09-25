@@ -114,6 +114,7 @@ costing the first sale, the drawer from its float.
 | `menu_changes` | `0025`: the recipe that started last is in force, whatever was changed in between; a same-day version replaces the other; scheduled prices and recipes listed and withdrawn; past prices refused; a printed bill paid at its printed prices (splits too), a stale total refused, a replay returned; uncosted sales listed and warned of                                                                                                                                                                                                                                                                                                       |
 | `drilldown`    | `0026`: sales by channel with refunds on the day made and the cost returned to stock, agreeing with the P&L; the dashboard's gross profit is the P&L's, without the year-end close; journal lines that balance, add up to the P&L and reconciliation figures and run from the trial balance's opening to its closing; the stock card's kinds, running balances and closing, a void and a cancelled batch netted; who may see them                                                                                                                                                                                                             |
 | `master_data`  | `0027`: every price set, changed or withdrawn on the audit trail with the price before and who (none for SQL); products, items, units, suppliers, settings, places and categories added, changed and deleted, only what changed, with why; a sale keeps the name it was sold under; names unique among those in use, ignoring case, spaces and punctuation; items and suppliers taken out of use only when nothing needs them; units that keep their size; batch recipes audited; deliveries at a price per unit, a price more than 25% from the cost now refused until confirmed, against the last delivery with none on hand; price history |
+| `exceptions`   | `0028`: reasons from the list for voids, refunds, discounts and cancelled bills, "Other" in real words; PINs set, checked as a hash, never readable; who may approve; a discount over the cap refused without an approval, one covering it used once, by its requester, within ten minutes; an amount judged by its share and re-checked as the bill shrinks; five wrong PINs lock a manager for fifteen minutes; voids and refunds with and without a second person; lines taken off audited; the exceptions report by person, with what waits for review                                                                                    |
 | `controls`     | Who may do what; tenant isolation; the public can call nothing; the exact list of callable functions                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 **Concurrency** (`scripts/test-sql-concurrency.sh`), with real parallel
@@ -204,6 +205,15 @@ database, behind a small local stand-in for Supabase's auth service.
   a product's recipe is changed from today and costed on its card. The script
   refuses to start if servers from an earlier `E2E_KEEP` run still hold its
   ports, so the checks never run against an old build.
+- `0028` in the suites above: in `flows`, a void with a reason from the list
+  and no second person, and a refund with "Other" in real words approved by
+  the owner's PIN after a wrong one, and Orders saying who approved each; in
+  `bills`, a manager sets their PIN on My account (a run like 1234 refused, the
+  PIN kept as a hash), a cashier's 47% discount waits for its reason and then
+  for a manager's name and PIN (a wrong one refused), and the sale keeps who
+  gave it, why and who approved it; a bill is cancelled with a reason from the
+  list; in `reports`, the owner reads the exceptions by person, the unapproved
+  void marked for review, and downloads them; a cashier cannot.
 - `masterdata` (run last, `0027`): a manager corrects an item (a name another
   item has is refused) and adds the bottle it comes in (a unit in use keeps
   its size); deliveries entered at a price per bottle show each line's total

@@ -95,6 +95,36 @@ what is behind it; each item has a stock card; journal lines download as CSV.
   September: 9 items, 4 suppliers and 7 products in use), and a duplicate can
   no longer be made, so the merge tool waits until one is needed.
 
+**P1-10** (migration `0028` and the app), as recommended, the PIN checked by
+the database itself:
+
+- Every void, refund, discount and cancelled bill takes a **reason from a
+  list** ("Rang twice", "Customer changed their mind", "Staff meal",
+  "Customer left without ordering"…). "Other" needs a few real words — two or
+  more, with at least six letters — so "hjjjhjjk" is refused.
+- A discount over **10%** of the bill (the business's cap, which the owner can
+  change) needs a **manager's approval**: the manager chooses their name on
+  the till and types their PIN, set on My account and kept only as a hash.
+  Owners and managers give larger discounts themselves. A percentage is
+  judged as it was asked, an amount by the share of the bill it takes off;
+  taking items off a bill cannot turn a fixed amount into more of the bill
+  than was allowed. Each sale keeps who gave its discount, why, and who
+  approved it.
+- A void or refund may be approved there and then by a **second person**
+  with their name and PIN; without one it is the requester's own and waits
+  for the owner's review.
+- An approval is good once, for ten minutes, for the person who asked. Every
+  PIN typed is counted; a wrong one is on the audit trail, and five in
+  fifteen minutes stop that manager's approvals for the rest of the fifteen.
+- **Every line taken off a bill**, printed or not, is on the audit trail, and
+  a cancelled bill keeps its reason.
+- The **exceptions report** on Reports lists every void, refund, discount,
+  cancelled bill, line taken off and wrong PIN, by person — who, why, who
+  approved it, and what waits for review — and downloads as CSV.
+
+Nothing recorded before `0028` changes: a discount given before it says "No
+reason kept".
+
 ## The short version
 
 - **Keep the foundation.** The database is the only thing that writes to the books.
@@ -549,7 +579,7 @@ Where people do unnecessary work, or cannot finish a job in the app:
 | Where are we losing money to waste?                                | The 5300 total, plus the last 60 movements         | Waste by item, type, person and day                                                              | P2-4       |
 | What did we buy, from whom, at what price, and how has it changed? | Lifetime vendor statements                         | Price history per item and supplier; spend by period                                             | P1-3       |
 | Where should the money be?                                         | Day close only                                     | Cash by account (till, safe, bank); card and Talabat money not yet received                      | P0-3, P1-9 |
-| Who voided, refunded, discounted, or cancelled bills?              | Reasons only, on Orders                            | An exceptions report by person                                                                   | P1-10      |
+| Who voided, refunded, discounted, or cancelled bills?              | ✅ The exceptions report, by person (`0028`)       | —                                                                                                | P1-10      |
 | When are we busy?                                                  | —                                                  | Sales by hour and weekday                                                                        | P2-16      |
 | Labour; returning customers                                        | No data                                            | Not now (P3)                                                                                     | P3         |
 | Balance sheet, cash flow                                           | Trial balance only                                 | Statements                                                                                       | P3-6       |
@@ -642,7 +672,9 @@ product form with its live costing. The gaps are elsewhere:
 - **Settings you can read but not change** (P2-8).
 - **Error messages from the database** in rare cases, such as a zero-value waste entry
   (P2-19).
-- **Manager approval means signing out the cashier** (P2-1: a manager PIN).
+- **Manager approval means signing out the cashier** (P2-1: a manager PIN) — except
+  for discounts over the cap, voids and refunds, approved with a manager's PIN on the
+  till since `0028`.
 
 ---
 
@@ -654,10 +686,10 @@ product form with its live costing. The gaps are elsewhere:
 | Cash                   | The close is not blind; the float is typed at the close and never recorded at opening; no drops; no per-cashier sessions                                                               | P2-1       |
 | Card                   | 1010 is never cleared or checked against the terminal. "Paid by card" expenses and bills also credit 1010. A cash sale rung up as card cannot be detected. Live: 19,000 sits in 1010.  | P1-9       |
 | Platforms              | No Talabat order number on the sale, and no matching of payouts. A cash sale rung up as Talabat is never expected in the drawer. Live: 5,250 unmatched in 1100 after a payout journal. | P1-9       |
-| Discounts              | Cashiers can give up to 100% with no reason, no cap and no approval before the bill is printed. The record names whoever took payment, not whoever gave the discount.                  | P1-10      |
-| Voids and refunds      | The requester is also the approver. Live: 4 of 4.                                                                                                                                      | P1-10      |
-| Bills                  | Before printing, lines can be removed and the emptied bill cancelled by anyone, without a reason, leaving no record of what was on it (`0018` `cancel_tab`)                            | P1-10      |
-| Reasons                | Any text is accepted. Live: void "hjjjhjjk", bill cancellations "dhfddsajfsa" and "sfsdfs", journal "xxxxxxxxxx".                                                                      | P1-10      |
+| Discounts              | ✅ `0028`: a reason from the list; over the cap (10%) a manager's name and PIN; the sale names who gave it and who approved it.                                                        | P1-10      |
+| Voids and refunds      | ✅ `0028`: a second person may approve with their PIN; without one it waits for the owner's review on the exceptions report.                                                           | P1-10      |
+| Bills                  | ✅ `0028`: every line taken off is audited, printed or not; a bill with items is cancelled by a manager with a reason from the list.                                                   | P1-10      |
+| Reasons                | ✅ `0028` for voids, refunds, discounts and cancelled bills: a list, and "Other" in a few real words. (A journal's narration is still free text.)                                      | P1-10      |
 | Opening stock          | Anyone who can create items (purchasing included) can create stock from owner equity, at any cost, with no reason and no audit                                                         | P1-1, P2-9 |
 | Owner-only controls    | The accountant or GM can reverse the owner's control corrections and the year-end close (`0015:1397-1398`). A GM can deactivate or reactivate an owner or another GM (`0016:199-213`). | P2-9       |
 | Seeing the ledger      | "See costs" also opens every journal, expense and the trial balance (`0016:94-100`), so the purchasing role can read salaries and profit                                               | P2-9       |

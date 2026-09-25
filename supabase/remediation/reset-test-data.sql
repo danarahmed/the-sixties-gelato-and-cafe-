@@ -6,18 +6,20 @@
 -- what the café is set up with, and clears everything it did:
 --
 --   kept     the business and its locations, the chart of accounts, the people
---            and their roles, the menu (products, variants, categories, photos,
---            prices, recipes and their versions), the stock items and their
---            units, suppliers, dining tables, platform and promotion settings,
---            expense categories, and the audit trail (which gains one line
---            saying the test records were cleared, and when)
---   cleared  sales, bills kept open, voids and refunds, drawer counts, cash
---            events and cash moved, stock movements and lots, stock counts,
---            production batches, purchase orders, deliveries, supplier bills and
---            payments, expenses, every journal and accounting period, platform
---            orders and settlements, reconciliation and sync logs, AI notes, and
---            the document numbers (journals start again at 1001, the café's own
---            bill numbers at 0001)
+--            (with their roles and approval PINs), the menu (products,
+--            variants, categories, photos, prices, recipes and their
+--            versions), the stock items and their units, suppliers, dining
+--            tables, platform and promotion settings, expense categories, the
+--            list of reasons for voids, refunds, discounts and cancelled bills,
+--            and the audit trail (which gains one line saying the test records
+--            were cleared, and when)
+--   cleared  sales, bills kept open, voids and refunds, managers' approvals
+--            and PIN attempts, drawer counts, cash events and cash moved, stock
+--            movements and lots, stock counts, production batches, purchase
+--            orders, deliveries, supplier bills and payments, expenses, every
+--            journal and accounting period, platform orders and settlements,
+--            reconciliation and sync logs, AI notes, and the document numbers
+--            (journals start again at 1001, the café's own bill numbers at 0001)
 --
 -- Afterwards no item has stock. Before the first sale, give each item its
 -- opening stock (Inventory → Opening stock): what is on the shelf, at what it
@@ -48,7 +50,7 @@ insert into reset_keep values
   ('recipe'), ('recipe_version'), ('recipe_line'), ('variant_recipe'),
   ('item'), ('item_unit'), ('supplier'), ('dining_table'), ('expense_category'),
   ('delivery_platform'), ('platform_store_map'), ('platform_product_map'), ('promotion'),
-  ('audit_log');
+  ('reason_code'), ('audit_log');
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');
@@ -85,9 +87,10 @@ end $$;
 -- triggers that keep the ledger append-only, and fails, changing nothing, if a
 -- table left out still refers to one of these.
 truncate table
-  accounting_period, ai_insight, ai_interaction_log, cash_event, cash_transfer, document_counter, expense,
-  goods_receipt, goods_receipt_line, inventory_movement, item_lot, journal_entry, journal_line,
-  platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line, production_batch,
+  accounting_period, ai_insight, ai_interaction_log, approval, cash_event, cash_transfer, document_counter,
+  expense, goods_receipt, goods_receipt_line, inventory_movement, item_lot, journal_entry, journal_line,
+  pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
+  production_batch,
   purchase_invoice, purchase_order, purchase_order_line, reconciliation_issue, sale_adjustment,
   sales_order, sales_order_line, sales_tender, stock_count, stock_count_line, supplier_payment, sync_log,
   work_shift

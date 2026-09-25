@@ -183,11 +183,42 @@ console.log("▸ owner reverses the rent; it is no longer counted as spent");
   await ctx.close();
 }
 
-console.log("▸ a cashier downloads no journal lines");
+console.log("▸ owner reads the exceptions, by person (0028)");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/reports");
+  const ex = page.getByTestId("exceptions");
+  check(
+    (await ex.locator('tr[data-kind="void"][data-review="1"]').count()) === 1 &&
+      (await ex.locator('tr[data-kind="refund"][data-review="0"]').count()) === 1,
+    "the void nobody else approved waits for review; the refund the owner approved does not",
+  );
+  check(
+    ((await ex.locator('tr[data-kind="refund"]').textContent()) ?? "").includes("Demo Owner"),
+    "and says who approved it",
+  );
+  const manager = ex.getByTestId("exceptions-by-person").locator("tr", { hasText: "Demo Manager" });
+  check((await manager.count()) === 1, "each person's exceptions are counted together");
+  const res = await page.request.get(`${BASE}/reports/export?report=exceptions`);
+  const rows = parseCsv(await res.text());
+  check(
+    res.ok() &&
+      rows[0]?.join(",") ===
+        "when,kind,what,person,amount,reason,approved_by,needs_review,reference,detail" &&
+      rows.some((r) => r[1] === "void" && r[5] === "Rang twice" && r[7] === "yes") &&
+      rows.some((r) => r[1] === "refund" && r[6] === "Demo Owner" && r[7] === "no"),
+    "and downloads them as CSV",
+  );
+  await ctx.close();
+}
+
+console.log("▸ a cashier downloads no journal lines, and no exceptions");
 {
   const { ctx, page } = await signIn(browser, "cashier");
   const res = await page.request.get(`${BASE}/reports/export?report=journal_lines`);
   check(res.status() === 403, `refused (HTTP ${res.status()})`);
+  const ex = await page.request.get(`${BASE}/reports/export?report=exceptions`);
+  check(ex.status() === 403, `the exceptions refused too (HTTP ${ex.status()})`);
   await ctx.close();
 }
 

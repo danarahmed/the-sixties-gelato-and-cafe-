@@ -52,6 +52,11 @@ each job.
   (your exact permissions). It also has **Change password** and **Sign out**. If
   it says your login is not linked, ask the owner to add you with exactly that
   email, then sign out and in again.
+- **Your approval PIN** (owners and managers): the PIN you type on a till to
+  approve a discount over the cap, or on Orders a void or refund. Four to eight
+  digits, not one digit over and over nor a run like 1234; the database keeps
+  only a hash of it. Five wrong PINs in fifteen minutes stop your approvals for
+  fifteen minutes.
 
 Where you land after signing in: owners, managers, accountants and auditors on
 the **Dashboard**; cashiers and baristas on the **POS**; counters on **Stock
@@ -148,6 +153,14 @@ them, to tell the customer before taking the money again. Tills fetch the
 prices every ten minutes and whenever their screen comes back to the front. A
 **printed bill** is always paid at the prices printed on it.
 
+**Discounts** (**＋ Discount**) take a percentage or an amount, and a **reason
+from the list** (staff meal, on the house, regular customer, a complaint, a
+promotion, or "Other" in a few words). **Over 10% of the bill** someone who does
+not approve discounts themselves taps **🔑 Ask a manager**: the manager chooses
+their name and types their PIN, and the discount shows who approved it. Until
+then the customer cannot pay. A discount already on a saved bill shows why, who
+gave it and who approved it.
+
 **What each sale posts:**
 
 - Dr Cash (1000), Card clearing (1010) or Platform receivable (1100), by tender;
@@ -171,8 +184,12 @@ a report's figures open here with them chosen.
 - **Refund.** After that: the money goes back through 4200 Sales returns. Only
   items marked returnable come back into stock; a used cup does not.
 
-Both ask **why**, and both go on the audit trail. You need the sale.void or
-sale.refund permission (managers and the owner).
+Both take a **reason from the list** ("Rang twice", "Customer changed their
+mind"…, or "Other" in a few words), and both go on the audit trail. You need the
+sale.void or sale.refund permission (managers and the owner). **Approved by**
+lets a second person — another manager or the owner — approve it there with
+their PIN; without one it waits for the owner on Reports → Exceptions. Each
+void or refund shows why, who asked and who approved it.
 
 ## 7. Sales
 
@@ -587,6 +604,11 @@ accountant's own tools.
 - **Uncosted Sales:** each sale in the dates recorded with no cost, or part of
   it missing (no recipe, or an ingredient used before it had a cost), and why.
   Their profit is overstated; the fix is for the next sales.
+- **Exceptions** (owner, managers, accountant, auditor): every void, refund,
+  discount, cancelled bill, item taken off a bill and wrong PIN in the dates,
+  counted by person, then one by one with the reason and who approved it.
+  **review** marks what waits for the owner: a void or refund nobody else
+  approved, or a wrong PIN. **CSV** downloads them.
 - **Payable Ageing:** each unpaid bill by vendor, due date and days late.
 - **Product Margin by Channel:** price, cost and margin of every product on every
   channel.
@@ -652,7 +674,10 @@ manager
 | Today at a glance, low stock, books reconcile                                                              | `/dashboard`                       | owner, managers, accountant, auditor                                  |
 | Sell by channel; cash, card, platform-paid                                                                 | `/pos`                             | cashier, barista, managers, owner                                     |
 | Retry a sale without recording it twice                                                                    | `/pos`                             | the same                                                              |
-| Void (until the drawer is counted) and refund                                                              | `/orders`                          | managers, owner                                                       |
+| Void (until the drawer is counted) and refund, with a reason; a second person's PIN                        | `/orders`                          | managers, owner                                                       |
+| Discount over the cap approved by a manager's name and PIN                                                 | `/pos`                             | cashiers ask; managers, owner approve                                 |
+| Set your approval PIN                                                                                      | My account `/account`              | managers, owner                                                       |
+| Exceptions by person: voids, refunds, discounts, cancelled bills, items taken off, wrong PINs; CSV         | `/reports`                         | owner, managers, accountant, auditor                                  |
 | Daily summaries; count the drawer; move cash between till, safe, bank and owner                            | `/sales`                           | cost viewers; counting: managers, owner                               |
 | Platform orders; payout by journal                                                                         | `/platforms`, `/journals`          | cost viewers                                                          |
 | Vendor statements, bills, payments, cancel a bill, ageing; correct a vendor, take one out of use           | `/vendors`                         | cost viewers (by permission)                                          |

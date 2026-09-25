@@ -151,6 +151,17 @@ In the books, revenue is recorded at the full price and the discounts in
 **4100**, so the P&L shows how much was given away, and **Do the books tie?**
 counts them.
 
+**Reasons and approvals** (since `0028`). Every discount, void, refund and
+cancelled bill takes a reason from a list; "Other" needs a few real words. A
+discount over **10%** of the bill needs a manager's approval on the till: the
+manager chooses their name and types their **PIN**, which each owner and
+manager sets on **My account** (four to eight digits, not a run like 1234; the
+database keeps only a hash). Owners and managers give larger discounts
+themselves. A void or refund may be approved on **Orders** by a second person
+the same way; one without goes on your review. Each sale keeps who gave its
+discount, why and who approved it. The 10% is a business setting (shown on
+**Settings**): to change it, ask for it to be changed in the database.
+
 ## Every day
 
 - **Dashboard:** today's revenue, gross profit, orders, stock value, low and
@@ -170,6 +181,10 @@ counts them.
   take money out for yourself.
 - **Orders:** a sale rung in error is **voided** until the drawer holding its
   cash is counted; after that, it is **refunded**.
+- **Reports → Exceptions:** every void, refund, discount, cancelled bill, item
+  taken off a bill and wrong PIN, by person, with the reason and who approved
+  it. Those marked **review** are yours to look at: a void or refund nobody
+  else approved, or a wrong PIN. It downloads as CSV.
 
 ## Every week
 

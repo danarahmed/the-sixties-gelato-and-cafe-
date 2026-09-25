@@ -139,7 +139,8 @@ select test.eq((
   'clear_product_image,close_day,count_drawer,create_item,create_product,'
   'create_supplier,current_app_user_id,'
   'current_business_id,current_can_view_costs,current_has_permission,current_has_role,dashboard_summary,'
-  'discard_journal,drawer_status,invite_member,item_costs,item_price_history,legacy_unposted,list_members,lock_period,'
+  'discard_journal,drawer_status,invite_member,item_costs,item_price_history,legacy_unposted,list_approvers,list_members,'
+  'lock_period,'
   'mark_bill_printed,'
   'menu_costing,menu_recipe_lines,menu_scheduled,move_cash,my_profile,'
   'next_bill_number,open_tab,pay_bill,period_close_checklist,'
@@ -147,11 +148,13 @@ select test.eq((
   'production_recipes,publish_journal,receive_goods,record_bill,'
   'record_count,record_expense,record_opening_stock,record_production,'
   'record_sale,record_waste,'
-  'refund_sale,reject_stock_count,report_daily_sales,report_day_totals,report_journal_lines,report_profit_and_loss,'
-  'report_reconciliation,report_trial_balance,report_unclosed_days,report_uncosted_sales,reverse_journal,review_stock_count,'
+  'refund_sale,reject_stock_count,report_daily_sales,report_day_totals,report_exceptions,report_journal_lines,'
+  'report_profit_and_loss,report_reconciliation,report_trial_balance,report_unclosed_days,report_uncosted_sales,'
+  'request_approval,reverse_journal,review_stock_count,'
   'save_batch_recipe,save_category,'
   'save_journal,save_tab,save_table,'
-  'set_member_active,set_member_roles,set_no_stock,set_price,set_product_details,set_product_image,settle_tab,split_tab,'
+  'set_member_active,set_member_roles,set_my_pin,set_no_stock,set_price,set_product_details,set_product_image,settle_tab,'
+  'split_tab,'
   'start_stock_count,stock_card,submit_stock_count,unlock_period,update_item,update_supplier,void_sale',
   'signed-in users can call exactly the intended API');
 select test.eq((

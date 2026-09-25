@@ -31,9 +31,10 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   stock and prices that change while the till is offline.
 - **Partial refunds.** A refund returns the whole sale. A partial refund is a
   refund of the sale followed by a new sale for what was kept.
-- **A reason or a limit on discounts.** Discounts are given at the till
-  (`0019`, `0020`), by percentage or amount, with neither a reason nor an
-  approval limit (audit P1).
+- **One cap for everyone.** Since `0028` every discount has a reason, and one
+  over the business's cap (10%) needs a manager's approval; the cap is the
+  same for every role that may give discounts, and it is changed in the
+  database, not on Settings. A journal's narration is still free text.
 - **Balance sheet and cash-flow statements.** The trial balance carries every
   balance, and the P&L is built; the formatted balance sheet and cash-flow
   statements are not.

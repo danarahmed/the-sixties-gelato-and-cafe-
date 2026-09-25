@@ -108,10 +108,10 @@ select test.throws(format('select void_sale(%L, %L)',
 -- Refunds in cash come out of the drawer, which must hold them.
 create temp table c2 as select count_drawer(27500, 1000, 'safe') as r;
 select test.eq((select (r ->> 'variance')::numeric from c2), 0::numeric, 'counted exactly');
-select test.throws(format('select refund_sale(%L, %L)', (select r ->> 'order_id' from late), 'cold'),
+select test.throws(format('select refund_sale(%L, %L, %L)', (select r ->> 'order_id' from late), 'cold', 'quality'),
   '%drawer should hold only 1000%', 'a cash refund bigger than the drawer is refused');
 select move_cash('safe', 'till', 2000, 'Change for a refund');
-select refund_sale((select (r ->> 'order_id')::uuid from late), 'cold');
+select refund_sale((select (r ->> 'order_id')::uuid from late), 'cold', 'quality');
 select test.eq(pg_temp.expected(), 500::numeric, 'the cash put in, less the refund paid out');
 
 -- Moving cash: only the owner takes money for themselves; the safe cannot go
