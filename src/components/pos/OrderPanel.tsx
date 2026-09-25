@@ -6,10 +6,12 @@ import type { SaleReceipt } from "@/lib/actions/sales";
 import { fmtIQD, fmtQty } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
+import { REASONS, reasonKey } from "@/lib/reasons";
 import Decimal from "decimal.js";
 import {
   discountAmount,
   discountInvalid,
+  discountNeeds,
   isDirty,
   isPlatform,
   itemCount,
@@ -21,6 +23,7 @@ import {
   percentOf,
   savedHasItems,
   type Discount,
+  type DiscountRules,
   type Line,
   type MoneyRules,
   type Order,
@@ -122,28 +125,35 @@ function OrderLine({
 /**
  * A discount, typed either way: as a percentage, and the amount is worked out
  * (rounded to the dinar, as the books round it); or as an amount, and the
- * percentage is shown beside it.
+ * percentage is shown beside it. It is given with a reason from the list, and
+ * over the cap with a manager's approval (0028); one already on the bill says
+ * why, who gave it and who approved it.
  */
 function DiscountRow({
   discount,
   subtotal,
   money,
+  rules,
   locked,
   lockedReason,
   onChange,
   onRemove,
+  onAskApproval,
 }: {
   discount: Discount | null;
   subtotal: Decimal;
   money: MoneyRules;
+  rules: DiscountRules;
   locked: boolean;
   lockedReason: string | null;
   onChange: (d: Discount | null) => void;
   onRemove: () => void;
+  onAskApproval: () => void;
 }) {
   const { t } = useT();
   const amount = discountAmount(discount, subtotal, money);
   const invalid = discountInvalid(discount);
+  const needs = discountNeeds(discount, subtotal, rules);
   // Why 47% of 8,500 shows 4,000 and not 3,995: the step is coarser than the currency's unit.
   const rounded =
     discount?.kind === "percent" && !invalid && money.discountStep > 10 ** -money.decimals;
@@ -155,8 +165,14 @@ function DiscountRow({
         : "";
   const amountShown =
     discount?.kind === "amount" ? discount.value : discount && !invalid ? amount.toString() : "";
+  // A new value is a new discount: asked about again, keeping the reason chosen.
   const typed = (kind: Discount["kind"]) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    onChange(e.target.value.trim() === "" ? null : { kind, value: e.target.value });
+    onChange(
+      e.target.value.trim() === ""
+        ? null
+        : { ...discount, kind, value: e.target.value, kept: null },
+    );
+  const kept = discount?.kept ?? null;
   return (
     <div className="discount">
       <div className="discount-row">
@@ -203,6 +219,58 @@ function DiscountRow({
           {t("pos.discountRounded").replace("{step}", fmtIQD(money.discountStep))}
         </p>
       )}
+      {discount && !invalid && kept && (kept.reason || kept.by || kept.approvedBy) && (
+        <p className="muted disc-note" data-testid="discount-kept">
+          {[
+            kept.reason,
+            kept.by ? t("pos.givenBy").replace("{name}", kept.by) : null,
+            kept.approvedBy ? t("pos.approvedBy").replace("{name}", kept.approvedBy) : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      )}
+      {discount && !invalid && !kept && (
+        <div className="disc-why">
+          <select
+            aria-label={t("pos.discountReason")}
+            value={discount.reason ?? ""}
+            onChange={(e) => onChange({ ...discount, reason: e.target.value || null })}
+            disabled={locked}
+          >
+            <option value="">{t("pos.chooseReason")}</option>
+            {REASONS.discount.map((code) => (
+              <option key={code} value={code}>
+                {t(reasonKey("discount", code))}
+              </option>
+            ))}
+          </select>
+          {discount.reason === "other" && (
+            <input
+              aria-label={t("pos.reasonNote")}
+              placeholder={t("pos.reasonNote")}
+              value={discount.note ?? ""}
+              maxLength={300}
+              onChange={(e) => onChange({ ...discount, note: e.target.value })}
+              disabled={locked}
+            />
+          )}
+        </div>
+      )}
+      {needs === "note" && <p className="muted disc-note">{t("pos.sayWhat")}</p>}
+      {needs === "approval" && (
+        <p className="disc-note disc-approval" data-testid="discount-needs-approval">
+          <span>{t("pos.overCap").replace("{cap}", String(rules.cap))}</span>
+          <button onClick={onAskApproval} disabled={locked}>
+            🔑 {t("pos.askManager")}
+          </button>
+        </p>
+      )}
+      {discount?.approval && !kept && needs === null && (
+        <p className="muted disc-note" data-testid="discount-approved">
+          ✓ {t("pos.approvedBy").replace("{name}", discount.approval.by)}
+        </p>
+      )}
       {lockedReason && <p className="muted disc-note">{lockedReason}</p>}
     </div>
   );
@@ -243,7 +311,9 @@ export function OrderPanel({
   now,
   canDiscount,
   money,
+  discountRules,
   onDiscount,
+  onAskApproval,
 }: {
   order: Order;
   title: string;
@@ -277,7 +347,10 @@ export function OrderPanel({
   canDiscount: boolean;
   /** How amounts and discounts are rounded, as the books round them. */
   money: MoneyRules;
+  /** The cap above which a manager approves a discount, and whether this person does (0028). */
+  discountRules: DiscountRules;
   onDiscount: (d: Discount | null) => void;
+  onAskApproval: () => void;
 }) {
   const { t } = useT();
   const isBill = order.kind === "bill";
@@ -287,7 +360,10 @@ export function OrderPanel({
   const subtotal = orderSubtotal(order, byId, money);
   const discount = discountAmount(order.discount, subtotal, money);
   const due = subtotal.minus(discount);
-  const badDiscount = discountInvalid(order.discount);
+  // Not given until it has its reason and, over the cap, a manager's approval (0028).
+  const badDiscount =
+    discountInvalid(order.discount) ||
+    discountNeeds(order.discount, subtotal, discountRules) !== null;
   const count = itemCount(order);
   const opened = minutesSince(order.openedAt, now);
   const savedWithItems = order.tabId !== null && savedHasItems(order);
@@ -370,6 +446,7 @@ export function OrderPanel({
               discount={order.discount}
               subtotal={subtotal}
               money={money}
+              rules={discountRules}
               locked={blocked || discountLocked}
               lockedReason={discountLocked ? t("pos.discountLocked") : null}
               onChange={onDiscount}
@@ -377,6 +454,7 @@ export function OrderPanel({
                 onDiscount(null);
                 setDiscountOpen(false);
               }}
+              onAskApproval={onAskApproval}
             />
           </>
         )}

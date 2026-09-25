@@ -64,6 +64,10 @@ const saveInput = z.object({
   /** The bill's discount, as it should now stand: a percentage, an amount, or neither. */
   discountPercent,
   discountAmount,
+  /** Why a new discount is given (0028), and a manager's approval over the cap. */
+  discountReason: optionalText(40),
+  discountNote: optionalText(300),
+  approvalId: id("an approval").nullish(),
 });
 
 /** Open a bill with its first order, or save what is on one already open. */
@@ -90,6 +94,9 @@ export async function saveBillAction(
           p_lines: toDb(d.lines),
           p_discount_percent: d.discountPercent,
           p_discount_amount: d.discountAmount,
+          p_discount_reason: d.discountReason,
+          p_discount_note: d.discountNote,
+          p_approval: d.approvalId ?? null,
         })
       : await callRpc<Record<string, unknown>>("save_tab", {
           p_tab: d.tabId,
@@ -99,6 +106,9 @@ export async function saveBillAction(
           p_table: d.tableId,
           p_discount_percent: d.discountPercent,
           p_discount_amount: d.discountAmount,
+          p_discount_reason: d.discountReason,
+          p_discount_note: d.discountNote,
+          p_approval: d.approvalId ?? null,
         });
   if (!r.ok) return r;
   return withBills({ tabId: String(r.data.tab_id), version: Number(r.data.version) });
@@ -179,7 +189,11 @@ export async function splitBillAction(
   return withBills({ tabId: String(r.data.tab_id) });
 }
 
-const cancelInput = tabRef.extend({ reason: optionalText(300) });
+const cancelInput = tabRef.extend({
+  /** A reason from the list (0028), and a note: what "Other" needs. */
+  reasonCode: optionalText(40),
+  note: optionalText(300),
+});
 
 /** An empty bill can be cancelled by anyone; one with items on it needs a manager and a reason. */
 export async function cancelBillAction(
@@ -190,7 +204,8 @@ export async function cancelBillAction(
   const r = await callRpc("cancel_tab", {
     p_tab: v.data.tabId,
     p_version: v.data.version,
-    p_reason: v.data.reason,
+    p_reason: v.data.note,
+    p_reason_code: v.data.reasonCode,
   });
   if (!r.ok) return r;
   return withBills({});

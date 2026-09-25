@@ -102,6 +102,29 @@ console.log("▸ manager lays out three tables");
 }
 check(sql("select count(*) from dining_table where is_active") === "3", "three tables in use");
 
+console.log("▸ manager sets the PIN they approve discounts with, on My account");
+{
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/account");
+  const form = page.getByTestId("pin-form");
+  await form.getByLabel("New PIN").fill("1234");
+  await form.getByLabel("The same PIN again").fill("1234");
+  await form.getByRole("button", { name: "Save the PIN" }).click();
+  await form.getByText("Choose a PIN that is harder to guess").waitFor({ timeout: 10000 });
+  ok("a run like 1234 is refused");
+  await form.getByLabel("New PIN").fill("2580");
+  await form.getByLabel("The same PIN again").fill("2580");
+  await form.getByRole("button", { name: "Save the PIN" }).click();
+  await form.getByText("Your PIN is saved.").waitFor({ timeout: 10000 });
+  check(
+    sql(
+      "select pin_hash like '$2%' and pin_hash not like '%2580%' from app_user where email = 'manager@example.com'",
+    ) === "t",
+    "the PIN is kept only as a hash",
+  );
+  await ctx.close();
+}
+
 console.log("▸ cashier: Table 1 orders, is shown the bill, pays cash");
 {
   const { ctx, page } = await till("cashier");
@@ -252,7 +275,37 @@ console.log("▸ cashier: Table 1 orders, is shown the bill, pays cash");
     (await page.locator(".order-total strong").textContent()) === "2,500 IQD",
     "and 2,500 to pay",
   );
-  await page.getByRole("button", { name: /Cash/ }).click();
+  // Every discount has its reason; over the cap a manager approves it (0028).
+  const cash = page.getByRole("button", { name: /Cash/ });
+  check(await cash.isDisabled(), "no discount is given without its reason");
+  await page.getByLabel("Why?").selectOption("regular");
+  await page.getByTestId("discount-needs-approval").waitFor({ timeout: 10000 });
+  check(
+    (await cash.isDisabled()) &&
+      (await page.getByText("Over 10%: a manager approves it.").isVisible()),
+    "47% is over the cap: not without a manager",
+  );
+  await page.getByRole("button", { name: /Ask a manager/ }).click();
+  const approve = page.getByRole("dialog", { name: "A manager approves the discount" });
+  check(
+    ((await approve.textContent()) ?? "").includes("47% · −2,500 IQD · Regular customer"),
+    "the manager sees what they are approving",
+  );
+  await approve.getByLabel("Manager", { exact: true }).selectOption({ label: "Demo Manager" });
+  await approve.getByLabel("PIN").fill("1111");
+  await approve.getByRole("button", { name: "Approve" }).click();
+  await approve.getByText("That PIN is not right").waitFor({ timeout: 10000 });
+  ok("a wrong PIN is refused");
+  await approve.getByLabel("PIN").fill("2580");
+  await approve.getByRole("button", { name: "Approve" }).click();
+  await page.getByTestId("discount-approved").waitFor({ timeout: 10000 });
+  check(
+    ((await page.getByTestId("discount-approved").textContent()) ?? "").includes(
+      "Approved by Demo Manager",
+    ),
+    "the manager's name and PIN approve it",
+  );
+  await cash.click();
   check(
     /47% · −2,500 IQD/.test((await page.locator(".pay-note").textContent()) ?? ""),
     "taking the money shows the discount",
@@ -264,6 +317,12 @@ console.log("▸ cashier: Table 1 orders, is shown the bill, pays cash");
       "select gross_amount || '/' || discount_amount || '/' || net_amount from sales_order order by created_at desc limit 1",
     ) === "5000/2500/2500",
     "the sale records what the till showed: 5,000 less 2,500",
+  );
+  check(
+    sql(
+      "select o.discount_percent || ' ' || o.discount_reason || ' by ' || g.full_name || ', approved by ' || a.full_name from sales_order o join app_user g on g.id = o.discount_by join app_user a on a.id = o.discount_approved_by order by o.created_at desc limit 1",
+    ) === "47 Regular customer by Demo Cashier, approved by Demo Manager",
+    "and why, who gave it, and who approved it",
   );
   check(
     sql(
@@ -281,14 +340,21 @@ console.log("▸ manager cancels what is left of Table 2");
   await open(page, "/pos");
   await page.locator(".table-tile", { hasText: "Table 2" }).click();
   await page.getByRole("button", { name: /Cancel bill/ }).click();
-  await page.getByLabel("Reason").fill("Customers left without ordering more");
+  check(
+    await page.getByRole("button", { name: "Cancel the bill" }).isDisabled(),
+    "a bill with items is cancelled with a reason from the list",
+  );
+  await page.getByLabel("Reason").selectOption("customer_left");
   await page.getByRole("button", { name: "Cancel the bill" }).click();
   await page.getByText("Table 2 — bill cancelled").waitFor({ timeout: 10000 });
   check(sql("select count(*) from pos_tab where status = 'open'") === "0", "no bill is left open");
   check(
     sql(
-      "select count(*) from audit_log where action = 'bill.cancel' and reason = 'Customers left without ordering more'",
-    ) === "1",
+      "select count(*) from audit_log where action = 'bill.cancel' and reason = 'Customer left without ordering'",
+    ) === "1" &&
+      sql(
+        "select cancel_reason_code from pos_tab where status = 'cancelled' order by closed_at desc limit 1",
+      ) === "customer_left",
     "the cancellation is on the audit trail with its reason",
   );
   await ctx.close();

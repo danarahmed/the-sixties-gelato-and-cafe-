@@ -6,6 +6,8 @@
  * drawer count shows before it is posted, and when a failed call is a refusal
  * and when it is an unknown.
  */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
 import { NAV, holdsAny, homeFor, isPublicPath } from "@/lib/auth/routes";
@@ -24,13 +26,21 @@ import {
   subjectOf,
 } from "@/lib/audit";
 import { deliveryLineCost, needsPriceConfirmation, priceGap } from "@/lib/receiving";
+import { REASONS, noteIsEnough, reasonKey, reasonMissing, type ReasonKind } from "@/lib/reasons";
+import { LOCALES, getDictionary } from "@/lib/i18n/dictionaries";
+import { exceptionsByPerson, type ExceptionRow } from "@/lib/exceptions";
 import Decimal from "decimal.js";
 import {
   addLine,
+  approvalPercent,
+  approvalRefused,
   billChanged,
   discountAmount,
   discountInvalid,
+  discountNeeds,
   discountParams,
+  discountShare,
+  discountWhy,
   isDirty,
   orderDue,
   orderFromBill,
@@ -759,5 +769,203 @@ describe("a delivery at a price per unit (0027, the audit's P1-3)", () => {
   it("knows the database asking for a price to be confirmed", () => {
     expect(needsPriceConfirmation("Check the price: Cups at 2.5 each is 95% below")).toBe(true);
     expect(needsPriceConfirmation("Choose an active supplier")).toBe(false);
+  });
+});
+
+describe("reasons from a list (0028, the audit's P1-10)", () => {
+  // The rows 0028 inserts into reason_code: kind, code, English label.
+  const sql = readFileSync(join(__dirname, "../supabase/migrations/0028_exceptions.sql"), "utf8");
+  const block = sql.slice(
+    sql.indexOf("insert into reason_code"),
+    sql.indexOf("on conflict (kind, code)"),
+  );
+  const rows = [...block.matchAll(/\('([a-z_]+)', '([a-z_]+)', '((?:[^']|'')+)', (\d+)\)/g)].map(
+    ([, kind, code, label, order]) => ({
+      kind: kind!,
+      code: code!,
+      label: label!,
+      order: Number(order),
+    }),
+  );
+
+  it("the screens offer exactly the database's reasons, in its order", () => {
+    expect(rows.length).toBe(20);
+    for (const kind of Object.keys(REASONS) as ReasonKind[]) {
+      const db = rows.filter((r) => r.kind === kind).sort((a, b) => a.order - b.order);
+      expect(
+        db.map((r) => r.code),
+        kind,
+      ).toEqual([...REASONS[kind]]);
+    }
+  });
+
+  it("each reads in English as the database keeps it, and in Arabic and Kurdish too", () => {
+    const en = getDictionary("en");
+    for (const r of rows) expect(en[reasonKey(r.kind as ReasonKind, r.code)], r.code).toBe(r.label);
+    for (const locale of LOCALES) {
+      const d = getDictionary(locale);
+      for (const r of rows)
+        expect(d[reasonKey(r.kind as ReasonKind, r.code)], `${locale} ${r.code}`).toBeTruthy();
+    }
+  });
+
+  it('"Other" takes a few real words, as the database checks them', () => {
+    expect(noteIsEnough("hjjjhjjk")).toBe(false); // one word
+    expect(noteIsEnough("x y")).toBe(false); // two words, two letters
+    expect(noteIsEnough("12 34 56 !!")).toBe(false); // no letters at all
+    expect(noteIsEnough("cold coffee")).toBe(true);
+    expect(noteIsEnough("قهوة باردة")).toBe(true);
+    expect(reasonMissing(null, "")).toBe("choose");
+    expect(reasonMissing("other", "no")).toBe("say");
+    expect(reasonMissing("regular", "")).toBeNull();
+  });
+});
+
+describe("a discount over the cap is approved by a manager (0028)", () => {
+  const n = (v: number) => new Decimal(v);
+  const cashier = { cap: 10, canApprove: false };
+  const manager = { cap: 10, canApprove: true };
+  const d = (
+    kind: "percent" | "amount",
+    value: string,
+    extra: Partial<Discount> = {},
+  ): Discount => ({
+    kind,
+    value,
+    ...extra,
+  });
+
+  it("judges a percentage as asked, and an amount by the share of the bill it takes off", () => {
+    expect(discountShare(d("percent", "12.5"), n(2500)).toString()).toBe("12.5");
+    expect(discountShare(d("amount", "300"), n(2500)).toString()).toBe("12");
+    expect(discountShare(d("amount", "1000"), n(6000)).toString()).toBe("16.67");
+    expect(discountShare(d("amount", "9999"), n(2500)).toString()).toBe("100"); // never more than the bill
+    expect(discountShare(d("amount", "500"), n(0)).toString()).toBe("0");
+  });
+
+  it("asks for a reason first, the words Other needs, then — over the cap — a manager", () => {
+    expect(discountNeeds(d("percent", "10"), n(5000), cashier)).toBe("reason");
+    expect(
+      discountNeeds(d("percent", "10", { reason: "other", note: "x" }), n(5000), cashier),
+    ).toBe("note");
+    expect(discountNeeds(d("percent", "10", { reason: "regular" }), n(5000), cashier)).toBeNull();
+    expect(discountNeeds(d("amount", "250", { reason: "regular" }), n(2500), cashier)).toBeNull();
+    expect(discountNeeds(d("amount", "300", { reason: "regular" }), n(2500), cashier)).toBe(
+      "approval",
+    );
+    expect(
+      discountNeeds(d("percent", "50", { reason: "staff_meal" }), n(5000), manager),
+    ).toBeNull();
+  });
+
+  it("an approval covers the share the manager was asked for, and no more", () => {
+    const approved = { id: "a1", by: "Demo Manager", percent: 20 };
+    const twenty = d("percent", "20", { reason: "complaint", approval: approved });
+    expect(discountNeeds(twenty, n(5000), cashier)).toBeNull();
+    expect(discountNeeds({ ...twenty, value: "25" }, n(5000), cashier)).toBe("approval");
+    // An amount grows as a share when the bill shrinks.
+    const amount = d("amount", "1000", { reason: "regular", approval: approved });
+    expect(discountNeeds(amount, n(5000), cashier)).toBeNull(); // 20%
+    expect(discountNeeds(amount, n(4000), cashier)).toBe("approval"); // 25%
+    expect(approvalPercent(d("amount", "1000"), n(6000))).toBe(17); // 16.67, asked as 17
+  });
+
+  it("an approval the database would not take is dropped, and a manager asked again", () => {
+    for (const e of [
+      "That approval has been used: ask again",
+      "That approval has run out: ask again",
+      "That approval was given to someone else",
+      "That approval is not for this",
+      "The manager approved up to 20%: ask again for this one",
+    ])
+      expect(approvalRefused(e), e).toBe(true);
+    expect(approvalRefused("A discount over 10% needs a manager's approval")).toBe(false);
+    expect(approvalRefused("Choose a reason from the list")).toBe(false);
+  });
+
+  it("a discount already on the bill is not asked about again, nor sent again", () => {
+    const kept = d("percent", "30", {
+      kept: { reason: "Regular customer", by: "Demo Cashier", approvedBy: null },
+    });
+    expect(discountNeeds(kept, n(5000), cashier)).toBeNull();
+    expect(discountWhy(kept)).toEqual({
+      discountReason: null,
+      discountNote: null,
+      approvalId: null,
+    });
+    const fresh = d("percent", "30", {
+      reason: "other",
+      note: "  birthday cake  ",
+      approval: { id: "a2", by: "Demo Manager", percent: 30 },
+    });
+    expect(discountWhy(fresh)).toEqual({
+      discountReason: "other",
+      discountNote: "birthday cake",
+      approvalId: "a2",
+    });
+  });
+
+  it("a saved bill's discount comes back with why, who gave it and who approved it", () => {
+    const bill: OpenBill = {
+      tabId: "t9",
+      version: 2,
+      tableId: null,
+      tableName: null,
+      label: "Window",
+      channel: "dine_in",
+      businessDay: "2026-09-25",
+      openedAt: "2026-09-25T18:00:00Z",
+      openedBy: "Demo Cashier",
+      billPrintedAt: null,
+      billPrintCount: 0,
+      lines: [],
+      subtotal: 0,
+      discount: 0,
+      discountPercent: 30,
+      discountAmount: null,
+      discountReason: "To make up for a complaint",
+      discountBy: "Demo Cashier",
+      discountApprovedBy: "Demo Manager",
+      total: 0,
+    };
+    expect(orderFromBill(bill).discount?.kept).toEqual({
+      reason: "To make up for a complaint",
+      by: "Demo Cashier",
+      approvedBy: "Demo Manager",
+    });
+  });
+});
+
+describe("the exceptions report, by person (0028)", () => {
+  const row = (
+    kind: ExceptionRow["kind"],
+    person: string,
+    amount: number | null,
+    review: boolean,
+  ): ExceptionRow => ({
+    at: "2026-09-25T10:00:00Z",
+    kind,
+    personId: null,
+    person,
+    amount,
+    reason: null,
+    approvedBy: null,
+    needsReview: review,
+    reference: "Sale 1234abcd",
+    detail: null,
+  });
+
+  it("counts each person's exceptions by kind, the money involved, and what waits for review", () => {
+    const people = exceptionsByPerson([
+      row("void", "Demo Manager", 2500, true),
+      row("void", "Demo Manager", 2500, false),
+      row("discount", "Demo Cashier", 500, false),
+      row("wrong_pin", "Demo Cashier", null, true),
+      row("refund", "Demo Manager", 3500, true),
+    ]);
+    expect(people.map((p) => [p.person, p.counts, p.amount, p.review])).toEqual([
+      ["Demo Manager", { void: 2, refund: 1 }, 8500, 2],
+      ["Demo Cashier", { discount: 1, wrong_pin: 1 }, 500, 1],
+    ]);
   });
 });

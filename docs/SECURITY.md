@@ -22,7 +22,13 @@ caller's permission itself.
   business always keeps an active owner. Every change is on the audit trail.
 - **Recommended:** email confirmation on, MFA for the owner, and open sign-up
   turned off once everyone has a login (Supabase settings; see the runbook).
-  There is no shared PIN.
+  There is no shared PIN. Owners and managers each set their own **approval
+  PIN** (`0028`) for discounts over the cap, voids and refunds on a till
+  someone else is signed in to: 4 to 8 digits, no runs or repeats, kept only
+  as a bcrypt hash nobody can read; checked by the database, which counts
+  every attempt and locks that person's approvals for fifteen minutes after
+  five wrong PINs. An approval is good once, for ten minutes, for whoever
+  asked for it, and never lets someone approve their own.
 
 ## What each role may do
 

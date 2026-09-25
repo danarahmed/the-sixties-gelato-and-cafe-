@@ -105,6 +105,10 @@ export interface OpenBill {
   /** The discount as given: a percentage or an amount (at most one). */
   discountPercent: number | null;
   discountAmount: number | null;
+  /** Why it was given, who gave it and who approved it (0028); unknown for one given before. */
+  discountReason?: string | null;
+  discountBy?: string | null;
+  discountApprovedBy?: string | null;
   /** What the customer owes: the bill less its discount. */
   total: number;
 }
@@ -135,6 +139,9 @@ export function parseOpenBills(data: unknown): OpenBill[] {
     discount: num(r.discount),
     discountPercent: numOrNull(r.discount_percent),
     discountAmount: numOrNull(r.discount_amount),
+    discountReason: strOrNull(r.discount_reason),
+    discountBy: strOrNull(r.discount_by),
+    discountApprovedBy: strOrNull(r.discount_approved_by),
     total: num(r.total),
   }));
 }

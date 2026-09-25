@@ -4,6 +4,7 @@ import { getT } from "@/lib/i18n/server";
 import { roleLabel } from "@/lib/format";
 import { signOutAction } from "@/lib/auth/actions";
 import { PasswordForm } from "./PasswordForm";
+import { PinForm } from "./PinForm";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,19 @@ export default async function AccountPage() {
           </details>
         </div>
       )}
+
+      {s.profile &&
+        ["discount.approve", "sale.void", "sale.refund"].some((p) =>
+          s.profile!.permissions.includes(p),
+        ) && (
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>{t("account.pinTitle")}</h3>
+            <p className="muted" style={{ marginTop: 0, fontSize: ".88rem" }}>
+              {t("account.pinHint")}
+            </p>
+            <PinForm hasPin={s.profile.hasPin} />
+          </div>
+        )}
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>{t("account.changePassword")}</h3>

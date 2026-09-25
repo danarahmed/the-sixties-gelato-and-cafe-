@@ -233,6 +233,23 @@ sales margin 1,800.
    allocation (rent/salaries/utilities). This is an estimate; the allocation
    method is a business choice.
 
+### A discount's share, and the cap (`0028`, audit P1-10)
+
+- A discount's **share of the bill** is what is judged against the cap
+  (10%): a **percentage as it was asked** — rounding it to the business's
+  step is the business's doing, not the cashier's, so 10% of 2,500 (250,
+  given as 500 at a step of 500) is still 10% — and an **amount as the part
+  of the bill it takes off**, never more than the bill, to two places.
+- Above the cap, someone without `discount.approve` needs a manager's approval
+  of at least that share; the till asks for the share rounded up to a whole
+  percent (1,000 off 6,000 is 16.67%, asked as 17%).
+- Worked examples (the SQL test): 300 off 2,500 is 12%, over the cap; 250 off
+  2,500 is exactly 10%, within it; an approval of 20% does not cover 25%.
+- An amount stays as it was given while a bill changes. Taken down from four
+  espressos (10,000) to one (2,500), 1,000 off would be 40% of the bill:
+  refused for a cashier, who takes the discount off or makes it fit (750 off
+  three espressos, 10%).
+
 ### Sales costed at nothing (`0025`)
 
 A sale's cost is what its recipe's ingredients cost when it was made. It is

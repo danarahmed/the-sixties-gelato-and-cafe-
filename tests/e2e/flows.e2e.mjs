@@ -56,29 +56,62 @@ check(
 );
 
 // ------------------------------------------------------- void and refund
-console.log("▸ manager voids one sale and refunds another");
+console.log("▸ manager voids one sale and refunds another, the refund approved by the owner's PIN");
+// The owner's approval PIN (0028); the till's own form is tested in bills.
+sql(`select test.act_as('owner@example.com'); select set_my_pin('13579');`);
 {
   const { ctx, page } = await signIn(browser, "manager");
   await open(page, "/orders");
   const rows = page.locator("tbody tr", { has: page.getByRole("button", { name: "Void" }) });
   check((await rows.count()) === 3, "the three sales can be voided or refunded");
   await rows.first().getByRole("button", { name: "Void" }).click();
-  await page.getByPlaceholder("Why void it?").fill("rung twice by mistake");
-  await page.getByRole("button", { name: "Confirm void" }).click();
+  const fix = page.getByTestId("order-correction");
+  check(
+    await fix.getByRole("button", { name: "Confirm void" }).isDisabled(),
+    "a void takes a reason from the list",
+  );
+  await fix.getByLabel("Why void it?").selectOption("rang_twice");
+  await fix.getByRole("button", { name: "Confirm void" }).click();
   await page.getByText(/^Voided/).waitFor({ timeout: 10000 });
-  ok("voided");
+  ok("voided, with no second person");
   await open(page, "/orders");
   await page
     .locator("tbody tr", { has: page.getByRole("button", { name: "Refund" }) })
     .first()
     .getByRole("button", { name: "Refund" })
     .click();
-  await page.getByPlaceholder("Why refund it?").fill("customer did not like it");
-  await page.getByRole("button", { name: "Confirm refund" }).click();
+  await fix.getByLabel("Why refund it?").selectOption("other");
+  await fix.getByLabel("In a few words").fill("hjjjhjjk");
+  check(
+    await fix.getByRole("button", { name: "Confirm refund" }).isDisabled(),
+    '"Other" takes a few real words, not a key held down',
+  );
+  await fix.getByLabel("In a few words").fill("customer did not like it");
+  await fix.getByLabel("Approved by").selectOption({ label: "Approved by Demo Owner" });
+  await fix.getByLabel("Their PIN").fill("97531");
+  await fix.getByRole("button", { name: "Confirm refund" }).click();
+  await fix.getByText("That PIN is not right").waitFor({ timeout: 10000 });
+  ok("a wrong PIN is refused, and nothing is refunded");
+  await fix.getByLabel("Their PIN").fill("13579");
+  await fix.getByRole("button", { name: "Confirm refund" }).click();
   await page.getByText(/^Refunded/).waitFor({ timeout: 10000 });
-  ok("refunded");
+  ok("refunded, approved by the owner");
+  await open(page, "/orders");
+  check(
+    (await page.getByText("Rang twice · Demo Manager, no second person").count()) === 1 &&
+      (await page
+        .getByText("customer did not like it · Demo Manager, approved by Demo Owner")
+        .count()) === 1,
+    "Orders says why, who asked, and who approved each",
+  );
   await ctx.close();
 }
+check(
+  sql(
+    "select string_agg(kind || ':' || reason_code || ':' || (approved_by = requested_by), ',' order by created_at) from sale_adjustment",
+  ) === "void:rang_twice:true,refund:other:false",
+  "the void is the manager's own; the refund has a second person",
+);
 check(
   sql("select string_agg(status::text, ',' order by status::text) from sales_order") ===
     "completed,refunded,voided",
@@ -314,7 +347,8 @@ console.log("▸ a bill still waiting for its money holds the drawer count");
   await open(page, "/pos");
   await page.locator(".strip-chip", { hasText: "Late customer" }).click();
   await page.getByRole("button", { name: /Cancel bill/ }).click();
-  await page.getByLabel("Reason").fill("Customer left before it was made");
+  await page.getByLabel("Reason").selectOption("other");
+  await page.getByLabel("In a few words").fill("Customer left before it was made");
   await page.getByRole("button", { name: "Cancel the bill" }).click();
   await page.getByText("Late customer — bill cancelled").waitFor({ timeout: 10000 });
   ok("a manager cancels it, with a reason");

@@ -56,8 +56,9 @@ export default async function OrdersPage({
         A sale is never edited. A sale rung in error is <strong>voided</strong> until the drawer
         holding it is counted — revenue, payment, cost and stock all come back exactly. After that,
         money goes back to the customer by a <strong>refund</strong>, through Sales returns (4200);
-        only goods that can go back on the shelf return to stock. Both need a reason and are on the
-        audit trail.
+        only goods that can go back on the shelf return to stock. Both take a reason from the list
+        and are on the audit trail; one approved by a second person (their name and PIN) is marked
+        so, and one without waits for the owner on the exceptions report.
       </p>
 
       <form
@@ -162,6 +163,15 @@ export default async function OrdersPage({
                       {adj && (
                         <div className="muted" style={{ fontSize: ".75rem" }}>
                           {adj.reason}
+                          {adj.by && (
+                            <>
+                              {" "}
+                              · {adj.by}
+                              {adj.approvedBy
+                                ? `, approved by ${adj.approvedBy}`
+                                : ", no second person"}
+                            </>
+                          )}
                         </div>
                       )}
                     </td>

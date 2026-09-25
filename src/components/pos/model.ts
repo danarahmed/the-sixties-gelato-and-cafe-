@@ -10,6 +10,7 @@ import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { Locale } from "@/lib/i18n/dictionaries";
 import type { DiningTable, OpenBill, PosItem } from "@/lib/db/pos";
 import { PLATFORM_CHANNELS } from "@/lib/format";
+import { reasonMissing } from "@/lib/reasons";
 import { normaliseNumber } from "@/lib/validation";
 
 export type Tender = "cash" | "card" | "platform_paid";
@@ -37,6 +38,30 @@ export interface Discount {
   kind: "percent" | "amount";
   /** As typed; Arabic and Kurdish digits are read too. */
   value: string;
+  /** Why it is given (0028): a reason from the list; none until one is chosen. */
+  reason?: string | null;
+  /** In the cashier's own words: what "Other" needs. */
+  note?: string;
+  /** A manager's approval of a discount over the cap. */
+  approval?: Approval | null;
+  /**
+   * The discount as the saved bill has it: why, who gave it and who approved
+   * it. Already checked, it is not asked about again until it is changed.
+   */
+  kept?: KeptDiscount | null;
+}
+
+/** A manager's name and PIN, given on the till: good for one discount up to a share of the bill. */
+export interface Approval {
+  id: string;
+  by: string;
+  percent: number;
+}
+
+export interface KeptDiscount {
+  reason: string | null;
+  by: string | null;
+  approvedBy: string | null;
 }
 
 export interface Order {
@@ -121,11 +146,16 @@ export function orderFromBill(b: OpenBill): Order {
         : l.productName,
     billPrice: l.price,
   }));
+  const kept: KeptDiscount = {
+    reason: b.discountReason ?? null,
+    by: b.discountBy ?? null,
+    approvedBy: b.discountApprovedBy ?? null,
+  };
   const discount: Discount | null =
     b.discountPercent !== null
-      ? { kind: "percent", value: String(b.discountPercent) }
+      ? { kind: "percent", value: String(b.discountPercent), kept }
       : b.discountAmount !== null
-        ? { kind: "amount", value: String(b.discountAmount) }
+        ? { kind: "amount", value: String(b.discountAmount), kept }
         : null;
   return {
     kind: "bill",
@@ -309,6 +339,81 @@ export function discountParams(d: Discount | null): {
   return d.kind === "percent"
     ? { discountPercent: v, discountAmount: null }
     : { discountPercent: null, discountAmount: v };
+}
+
+/**
+ * The share of the bill a discount comes to, as the database judges it
+ * against the cap (discount_share, 0028): a percentage as it was asked —
+ * rounding it to the step is the business's doing, not the cashier's — and an
+ * amount as the part of the bill it takes off. To two places.
+ */
+export function discountShare(d: Discount | null, subtotal: Decimal): Decimal {
+  if (!d || discountInvalid(d)) return new Decimal(0);
+  const v = parseNumber(d.value)!;
+  const share =
+    d.kind === "percent"
+      ? v
+      : subtotal.gt(0)
+        ? Decimal.min(v, subtotal).div(subtotal).times(100)
+        : new Decimal(0);
+  return share.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+}
+
+/** Who may give what on their own (0028). */
+export interface DiscountRules {
+  /** Above this share of the bill, a discount needs a manager's approval… */
+  cap: number;
+  /** …unless whoever gives it approves discounts themselves. */
+  canApprove: boolean;
+}
+
+/**
+ * What a discount still needs before it can be given: a reason from the
+ * list, the words "Other" needs, or — over the cap — a manager's approval
+ * that covers it. Null when nothing (a discount already on the bill included).
+ */
+export function discountNeeds(
+  d: Discount | null,
+  subtotal: Decimal,
+  rules: DiscountRules,
+): "reason" | "note" | "approval" | null {
+  if (!d || discountInvalid(d) || d.kept) return null;
+  const missing = reasonMissing(d.reason ?? null, d.note ?? "");
+  if (missing) return missing === "choose" ? "reason" : "note";
+  const share = discountShare(d, subtotal);
+  if (rules.canApprove || share.lte(rules.cap)) return null;
+  return d.approval && share.lte(d.approval.percent) ? null : "approval";
+}
+
+/** The share a manager is asked to approve: the discount's, up to the next whole percent. */
+export function approvalPercent(d: Discount | null, subtotal: Decimal): number {
+  return discountShare(d, subtotal).ceil().toNumber();
+}
+
+/**
+ * The database refused the approval sent with a discount: used already, run
+ * out, given to someone else, or for less than the discount. The till drops it
+ * and asks again.
+ */
+export function approvalRefused(error: string): boolean {
+  return /That approval (has been used|has run out|was given to someone else|is not for this)|The manager approved up to/.test(
+    error,
+  );
+}
+
+/** Why the discount is given, as the database takes it; nothing again for one already on the bill. */
+export function discountWhy(d: Discount | null): {
+  discountReason: string | null;
+  discountNote: string | null;
+  approvalId: string | null;
+} {
+  if (!d || discountInvalid(d) || d.kept)
+    return { discountReason: null, discountNote: null, approvalId: null };
+  return {
+    discountReason: d.reason ?? null,
+    discountNote: d.note?.trim() || null,
+    approvalId: d.approval?.id ?? null,
+  };
 }
 
 export function itemCount(o: Order): number {

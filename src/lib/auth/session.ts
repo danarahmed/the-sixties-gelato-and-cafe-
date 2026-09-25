@@ -18,6 +18,10 @@ export interface Profile {
   currencyDecimals: number;
   /** A percentage discount comes to the nearest multiple of this (500 IQD). */
   discountRoundTo: number;
+  /** Above this share of the bill a discount needs a manager's approval (0028). */
+  discountCap: number;
+  /** Whether they have set the PIN they approve with. */
+  hasPin: boolean;
   roles: string[];
   permissions: string[];
 }
@@ -60,6 +64,9 @@ export const getSession = cache(async (): Promise<SessionState> => {
       currency: String(p.currency ?? "IQD"),
       currencyDecimals: Number(p.currency_decimals ?? 0),
       discountRoundTo: Number(p.discount_round_to ?? 0),
+      // Before 0028 there was no cap: every discount was the cashier's own.
+      discountCap: p.discount_cap_percent == null ? 100 : Number(p.discount_cap_percent),
+      hasPin: Boolean(p.has_pin),
       roles: Array.isArray(p.roles) ? p.roles.map(String) : [],
       permissions: Array.isArray(p.permissions) ? p.permissions.map(String) : [],
     },

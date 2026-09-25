@@ -24,12 +24,16 @@ select test.ok(exists (select 1 from user_role r join app_user u on u.id = r.app
                         where u.email = 'owner@example.com' and r.role = 'owner'), 'with their roles');
 select test.eq((select count(*) from gl_account where business_id = '00000000-0000-0000-0000-0000000000b1'
                                                   and code in ('1000', '1005', '6300'))::int, 3, 'the chart of accounts is kept');
+select test.ok((select pin_hash is not null from app_user where email = 'owner@example.com'), 'and the PIN the owner approves with');
+select test.eq((select count(*) from reason_code)::int, 20, 'the list of reasons is kept');
 
 -- The records of trading are gone, and the audit trail says so.
 select test.eq((select count(*) from sales_order) + (select count(*) from journal_entry) + (select count(*) from inventory_movement)
                + (select count(*) from cash_event) + (select count(*) from pos_tab) + (select count(*) from work_shift)
                + (select count(*) from accounting_period) + (select count(*) from document_counter), 0::bigint,
   'no sale, journal, stock movement, cash event, open bill, drawer count, period or number is left');
+select test.eq((select count(*) from approval) + (select count(*) from pin_attempt), 0::bigint,
+  'nor any approval, or PIN typed, while testing');
 select test.ok(exists (select 1 from audit_log where action = 'business.reset_test_data' and (after_state ->> 'sales_order')::int = 4),
   'the audit trail records what was cleared');
 select test.ok(exists (select 1 from audit_log where action = 'drawer.count'), 'and still holds what happened before it');

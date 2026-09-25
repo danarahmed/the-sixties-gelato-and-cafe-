@@ -3,6 +3,7 @@ import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getDailySales, getVendorBook, ageBills, salesTotals } from "@/lib/db/books";
 import {
+  getExceptions,
   getLegacyUnposted,
   getMenuCosting,
   getProfitAndLoss,
@@ -11,6 +12,7 @@ import {
   pnlTotals,
 } from "@/lib/db/reports";
 import { LegacyPostings } from "@/components/books/LegacyPostings";
+import { EXCEPTION_LABEL, exceptionsByPerson, type ExceptionKind } from "@/lib/exceptions";
 import { channelLabel, fmtIQD } from "@/lib/format";
 import {
   addDays,
@@ -37,8 +39,9 @@ export default async function ReportsPage({
   const from = parseDay(sp.from, monthStart(today));
   const to = parseDay(sp.to, today);
   const seesProfit = has(profile, "profit.view");
+  const seesExceptions = has(profile, "audit.view");
 
-  const [pnl, rec, sales, book, menu, unposted, uncosted] = await Promise.all([
+  const [pnl, rec, sales, book, menu, unposted, uncosted, exceptions] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
     getReconciliation(to),
     getDailySales(from, to),
@@ -46,7 +49,11 @@ export default async function ReportsPage({
     getMenuCosting(),
     getLegacyUnposted(),
     getUncostedSales(from, to),
+    seesExceptions ? getExceptions(from, to) : Promise.resolve([]),
   ]);
+  const byPerson = exceptionsByPerson(exceptions);
+  const toReview = exceptions.filter((e) => e.needsReview).length;
+  const kinds = Object.keys(EXCEPTION_LABEL) as ExceptionKind[];
   const uncostedNet = uncosted.reduce((sum, u) => sum + u.net, 0);
   const totals = pnlTotals(pnl);
   const ageing = ageBills(book.openBills);
@@ -385,6 +392,117 @@ export default async function ReportsPage({
           </>
         )}
       </section>
+
+      {/* ---- Exceptions, by person (0028) ---- */}
+      {seesExceptions && (
+        <section className="panel" id="exceptions" data-testid="exceptions">
+          <div className="panel-h">
+            <h3>Exceptions</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              Voids, refunds, discounts, cancelled bills, items taken off bills and wrong PINs,{" "}
+              {from} to {to} ·{" "}
+              <a href={`/reports/export?report=exceptions&from=${from}&to=${to}`}>CSV</a>
+            </span>
+          </div>
+          {exceptions.length === 0 ? (
+            <div className="panel-b">
+              <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+                ✅ Nothing was voided, refunded, discounted, cancelled or taken off a bill in these
+                dates.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="tw">
+                <table data-testid="exceptions-by-person">
+                  <thead>
+                    <tr>
+                      <th>Person</th>
+                      {kinds.map((k) => (
+                        <th key={k} className="right">
+                          {EXCEPTION_LABEL[k]}
+                        </th>
+                      ))}
+                      <th className="right">Money involved</th>
+                      <th className="right">For review</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {byPerson.map((p) => (
+                      <tr key={p.person}>
+                        <td>{p.person}</td>
+                        {kinds.map((k) => (
+                          <td key={k} className="right mono">
+                            {p.counts[k] ?? "—"}
+                          </td>
+                        ))}
+                        <td className="right money">{fmtIQD(p.amount)}</td>
+                        <td
+                          className="right mono"
+                          style={{ color: p.review > 0 ? "var(--warn)" : undefined }}
+                        >
+                          {p.review || "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="tw">
+                <table data-testid="exceptions-list">
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>What</th>
+                      <th>Who</th>
+                      <th className="right">Amount</th>
+                      <th>Why</th>
+                      <th>Approved by</th>
+                      <th>About</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {exceptions.map((e, i) => (
+                      <tr key={i} data-kind={e.kind} data-review={e.needsReview ? "1" : "0"}>
+                        <td className="mono" style={{ whiteSpace: "nowrap" }}>
+                          {dateTimeIn(profile.timezone, e.at)}
+                        </td>
+                        <td>
+                          {EXCEPTION_LABEL[e.kind] ?? e.kind}
+                          {e.needsReview && (
+                            <span className="badge warn" style={{ marginInlineStart: 6 }}>
+                              review
+                            </span>
+                          )}
+                        </td>
+                        <td>{e.person ?? "—"}</td>
+                        <td className="right money">
+                          {e.amount === null ? "—" : fmtIQD(e.amount)}
+                        </td>
+                        <td style={{ fontSize: ".82rem" }}>{e.reason ?? "—"}</td>
+                        <td>{e.approvedBy ?? "—"}</td>
+                        <td className="muted" style={{ fontSize: ".78rem" }}>
+                          {e.reference}
+                          {e.detail ? ` · ${e.detail}` : ""}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p
+                className="muted"
+                style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
+              >
+                {toReview > 0 ? `⚠️ ${toReview} wait for your review: ` : ""}a void or refund nobody
+                else approved, a wrong PIN, or a discount over the cap given before discounts were
+                checked. Discounts over the cap need a manager&apos;s approval on the till; a void
+                or refund may be approved there by a second person with their name and PIN.
+              </p>
+            </>
+          )}
+        </section>
+      )}
 
       {/* ---- Payable ageing ---- */}
       <section className="panel" id="ageing">

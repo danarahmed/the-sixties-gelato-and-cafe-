@@ -275,7 +275,7 @@ select save_tab(pg_temp.id('b4'), 1, '[{"variant_id":"d1000000-0000-0000-0000-00
 select test.act_as('manager@example.com');
 select test.throws(format('select save_table(%L, %L, null, 2, 3, false)', pg_temp.id('t3'), 'Table 3'),
   '%has an open bill%', 'a table with an open bill cannot be taken out of use');
-select test.throws(format('select cancel_tab(%L, 2, %L)', pg_temp.id('b4'), ' '), '%Say why%',
+select test.throws(format('select cancel_tab(%L, 2, %L)', pg_temp.id('b4'), ' '), '%Choose a reason%',
   'cancelling a bill with items needs a reason');
 select cancel_tab(pg_temp.id('b4'), 2, 'Customer left before it was made');
 select cancel_tab(pg_temp.id('b5'), 2, 'Opened on the wrong table');
