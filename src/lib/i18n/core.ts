@@ -76,6 +76,7 @@ const SHORT_DATE = /^(\d{1,2}) ([A-Z][a-z]{2})((?: \d{2}:\d{2})?)$/;
  * A whole message is matched only by a phrase whose own words pin it down: six
  * letters or more, or a start of four ("Waste {1}."). A shorter one ("{1}
  * days") is for the values inside a message, where it cannot swallow another.
+ * Messages the database joins with "; " are translated one by one.
  */
 export function messenger(words: Words): Msg {
   type Pattern = { re: RegExp; slots: number[]; to: string; fixed: number; whole: boolean };
@@ -86,7 +87,8 @@ export function messenger(words: Words): Msg {
       .map(([k, to]) => {
         const parts = k.split(/\{\d+\}/);
         return {
-          re: new RegExp(`^${parts.map(escapeRe).join("(.+?)")}$`, "s"),
+          // A value never spans a "; ": that is where a list of messages is joined.
+          re: new RegExp(`^${parts.map(escapeRe).join("([^;]+?)")}$`),
           slots: [...k.matchAll(/\{(\d+)\}/g)].map((m) => Number(m[1])),
           to,
           fixed: parts.join("").length,
@@ -111,6 +113,11 @@ export function messenger(words: Words): Msg {
       const values: Record<string, string> = {};
       p.slots.forEach((slot, i) => (values[slot] = translate(m[i + 1] ?? "", depth + 1)));
       return p.to.replace(/\{(\d+)\}/g, (whole, n: string) => values[n] ?? whole);
+    }
+    // Messages joined into a list: each one on its own.
+    if (text.includes("; ")) {
+      const parts = text.split("; ");
+      return parts.map((part) => translate(part, depth)).join(words["; "] ?? "; ");
     }
     return text;
   };

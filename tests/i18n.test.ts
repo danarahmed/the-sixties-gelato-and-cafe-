@@ -16,6 +16,7 @@ import { getDictionary, builtInWords } from "@/lib/i18n/dictionaries";
 import { fill, messenger, translator } from "@/lib/i18n/core";
 import { parseRich, plain } from "@/lib/i18n/Rich";
 import { LABELS } from "@/lib/format";
+import { briefCalculations, briefFacts, briefToDo, type DailyBrief } from "@/lib/alerts";
 // @ts-expect-error: a plain script, shared with the command line
 import { scan, screens } from "../scripts/i18n-scan.mjs";
 // @ts-expect-error: a plain script, shared with the command line
@@ -136,6 +137,158 @@ describe("the translator", () => {
     expect(JSON.stringify(parseRich("a </b> b").children)).toBe(
       JSON.stringify(["a ", "</b>", " b"]),
     );
+  });
+});
+
+describe("what the café is told without asking", () => {
+  // Alerts as the database writes them (tests/sql/alerts.test.sql and
+  // settlements.test.sql), each with the names in it that stay as they are.
+  const SAID: [string, string[]][] = [
+    ["Bank is -10,000 IQD: below zero", []],
+    ["The drawer at Main Branch has not been counted for 05 Sep", ["Main Branch"]],
+    ["The drawer at Main Branch has not been counted for 2 days, since 05 Sep", ["Main Branch"]],
+    ["A stock count has been open since 05 Sep 14:30", []],
+    ["Alert milk runs out in under a day: 500 ml left, using about 1100 a day", ["Alert milk"]],
+    ["Alert milk runs out in 1.5 days: 1500 ml left, using about 1000 a day", ["Alert milk"]],
+    ["Milk runs out in no time: 0 ml left, using about 50 a day", ["Milk"]],
+    ["Order about 3500 ml (a week of use).", []],
+    ["Alert straws: 0 each on hand, below its reorder level of 50", ["Alert straws"]],
+    [
+      "Golden cup at 250 each is 400% above its cost now (50 each) — confirmed by Demo Manager",
+      ["Golden cup", "Demo Manager"],
+    ],
+    [
+      "Milk at 1500 a L is 30% below its cost now (2150 a L); Cups at 90 each is 50% above its cost now (60 each) — confirmed by Demo Manager",
+      ["Milk", "Cups", "Demo Manager"],
+    ],
+    ["Alert tea is sold with no recipe: its sales are costed at nothing", ["Alert tea"]],
+    ["Alert tea cannot be sold: its recipe has no version in force today", ["Alert tea"]],
+    [
+      "Golden espresso — Single (بلي): sold below cost at 200 IQD, costing 250",
+      ["Golden espresso — Single"],
+    ],
+    ["Alert thin latte (Dine-in): 60% margin at 500 IQD, costing 200", ["Alert thin latte"]],
+    ["Under the 70% target, the price no longer covers what the recipe costs now.", []],
+    [
+      "Alert vanilla has no cost yet, and 1 product uses it: Alert vanilla latte",
+      ["Alert vanilla latte", "Alert vanilla"],
+    ],
+    [
+      "Alert vanilla has no cost yet, and 5 products use it: Alert vanilla cone, Alert vanilla cup, Alert vanilla latte, Alert vanilla shake and 1 more",
+      [
+        "Alert vanilla cone",
+        "Alert vanilla cup",
+        "Alert vanilla latte",
+        "Alert vanilla shake",
+        "Alert vanilla",
+      ],
+    ],
+    ["Waste of 25,000 IQD in the last 7 days, against about 3,231 in a usual week", []],
+    [
+      "Demo Manager: 3 void(s), refund(s), discount(s) or cancelled bill(s) in 7 days, 5,900 IQD (59% of their sales)",
+      ["Demo Manager"],
+    ],
+    [
+      "Demo Manager: 3 void(s), refund(s), discount(s) or cancelled bill(s) in 7 days, 5,900 IQD",
+      ["Demo Manager"],
+    ],
+    ["2,500 IQD of card money is more than 3 days old and not yet recorded as settled", []],
+    [
+      "1 Talabat order, 3,000 IQD, is more than 7 days old and not yet paid out; the oldest from 05 Sep",
+      ["Talabat"],
+    ],
+    [
+      "2 Talabat orders, 6,000 IQD, are more than 7 days old and not yet paid out; the oldest from 05 Sep",
+      ["Talabat"],
+    ],
+    ["4,000 IQD in platform receivable is matched to no order", []],
+    ["Platform receivable is 2,000 IQD short of the orders waiting to be paid out", []],
+    ["Sulaymaniyah Dairy Co.: 20,000 IQD overdue by 1 day(s)", ["Sulaymaniyah Dairy Co."]],
+    ["Sulaymaniyah Dairy Co.: 20,000 IQD due today", ["Sulaymaniyah Dairy Co."]],
+    ["A supplier: 20,000 IQD due on 05 Sep", []],
+    ["Alert water is 5,000 IQD on Dine-in but 500 on Takeaway", ["Alert water"]],
+    [
+      "Golden espresso — Single is 3,000 IQD on Talabat but 200 on بلي",
+      ["Golden espresso — Single", "Talabat"],
+    ],
+    ["Possible duplicate: Rent 15,000 IQD in journal 12 (05 Sep) and journal 14 (06 Sep)", []],
+    [
+      "Costed at nothing: Alert vanilla, Alert cream; Used before it had a cost: Alert milk",
+      ["Alert vanilla", "Alert cream", "Alert milk"],
+    ],
+    ["Margin target (%): enter a number from 0 to 95", []],
+  ];
+  // What stays the same in every language: the currency and the units.
+  const SAME = /\b(IQD|ml|kg|g|L)\b/g;
+
+  for (const locale of ["ar", "ckb"] as const) {
+    it(`gives every alert in ${locale === "ar" ? "Arabic" : "Kurdish"}, names and all`, () => {
+      const msg = messenger(builtInWords(locale));
+      const left = SAID.flatMap(([en, names]) => {
+        let out = msg(en);
+        for (const n of names) out = out.split(n).join("");
+        return /[A-Za-z]{2,}/.test(out.replace(SAME, "")) ? [`${en} → ${msg(en)}`] : [];
+      });
+      expect(left).toEqual([]);
+    });
+  }
+
+  it("writes the daily brief in the reader's language, and the same English as before", () => {
+    const brief: DailyBrief = {
+      day: "2026-09-21",
+      facts: {
+        sales: 12,
+        netSales: 150000,
+        voids: 1,
+        voided: 3000,
+        refunds: 2,
+        refunded: 4000,
+        discounts: 1,
+        discounted: 1000,
+        waste: 2500,
+        drawerCounts: 1,
+        drawerDifference: -500,
+        uncostedSales: 1,
+      },
+      calculations: {
+        costOfGoods: 50000,
+        costOfGoodsPercent: 33.3,
+        grossProfit: 95000,
+        grossMarginPercent: 63.3,
+        sameDayLastWeek: 140000,
+        changeFromLastWeekPercent: 7.1,
+        usualForTheWeekday: 130000,
+      },
+      alerts: [{ urgency: "orange", title: "x", action: null, link: null, acknowledged: false }],
+      red: 0,
+      orange: 1,
+      recommendations: [],
+    };
+    expect(briefFacts(brief)).toEqual([
+      "Net sales 150,000 IQD over 12 sales.",
+      "1 void (3,000 IQD).",
+      "2 refunds (4,000 IQD).",
+      "1 discount (1,000 IQD).",
+      "Waste 2,500 IQD.",
+      "The drawer was counted 500 IQD short.",
+      "1 sale with something costed at nothing (Reports → Uncosted sales).",
+    ]);
+    expect(briefCalculations(brief, "Monday")).toEqual([
+      "Cost of goods 50,000 IQD, 33.3% of sales.",
+      "Gross profit 95,000 IQD (63.3%), after waste and every other cost of sales.",
+      "Last Monday: 140,000 IQD (+7.1% since).",
+      "A usual Monday (the four before): 130,000 IQD.",
+    ]);
+    expect(briefToDo(brief)).toEqual(["Nothing urgent. 1 orange alert waits for a quiet moment."]);
+    for (const locale of ["ar", "ckb"] as const) {
+      const t = translator(builtInWords(locale));
+      const lines = [
+        ...briefFacts(brief, t),
+        ...briefCalculations(brief, "Monday", t),
+        ...briefToDo(brief, t),
+      ];
+      expect(lines.filter((l) => /[A-Za-z]{2,}/.test(l.replace(/\bIQD\b/g, "")))).toEqual([]);
+    }
   });
 });
 
