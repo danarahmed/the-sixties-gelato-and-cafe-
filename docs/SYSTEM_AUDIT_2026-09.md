@@ -37,6 +37,25 @@ a tool that clears the test records when the owner says so
 ([`guides/deployment.md`](guides/deployment.md)). The doc lines of Appendix B
 that these touch are corrected; the rest wait for the P1 work.
 
+**The first P1s** (migration `0025` and the app):
+
+- **P1-5** as recommended: the recipe in force is the one that started last,
+  a new version ends the day before one already scheduled, and scheduled
+  prices and recipes are listed on the product and can be withdrawn, with a
+  reason, until they start. A price dated in the past is refused, and every
+  price set is audited.
+- **P1-6** without a flag column: the sales costed at nothing are found from
+  what each sale already records (a line with no cost, or an ingredient
+  consumed at no value before it had any cost), so the sales before `0025`
+  are listed too. Reports lists them; the month-end checklist warns of them
+  without stopping the lock, since a sale keeps its cost. A new product needs
+  a recipe, or a reason it uses no stock; product cards show a red badge.
+- **P1-7** as recommended, and more strictly than "refresh when the day
+  changes": printing a bill freezes its prices; every payment carries the
+  total the till showed, and the database refuses one it would record at
+  another total. After a refusal the till fetches today's prices; it also
+  does so every ten minutes and when its screen comes back to the front.
+
 ## The short version
 
 - **Keep the foundation.** The database is the only thing that writes to the books.

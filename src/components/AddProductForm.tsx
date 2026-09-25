@@ -59,6 +59,8 @@ export function AddProductForm({
   const [prices, setPrices] = useState(noPrices());
   const [target, setTarget] = useState("70");
   const [lines, setLines] = useState<LineDraft[]>(() => [newLine()]);
+  /** With no ingredients: why it uses no stock (a service charge, say). */
+  const [noStock, setNoStock] = useState("");
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
 
   // What one serving of the recipe, as it will be saved, costs on each channel.
@@ -77,6 +79,14 @@ export function AddProductForm({
       });
       return;
     }
+    const noRecipe = filledLines(lines).length === 0;
+    if (noRecipe && !noStock.trim()) {
+      setMsg({
+        ok: false,
+        text: "List what one serving uses, or say why it uses no stock (a service charge, say).",
+      });
+      return;
+    }
     start(async () => {
       const r = await createProductAction({
         name,
@@ -87,6 +97,7 @@ export function AddProductForm({
           SELLABLE_CHANNELS.filter((c) => prices[c].trim() !== "").map((c) => [c, prices[c]]),
         ),
         recipe: filledLines(lines),
+        noStockReason: noRecipe ? noStock : null,
       });
       if (r.ok) {
         setMsg({ ok: true, text: `Created “${name}”.` });
@@ -95,6 +106,7 @@ export function AddProductForm({
         setNameCkb("");
         setPrices(noPrices());
         setLines([newLine()]);
+        setNoStock("");
         router.refresh();
       } else setMsg({ ok: false, text: r.error });
     });
@@ -187,6 +199,21 @@ export function AddProductForm({
             />
             <ServingCost lines={lines} items={items} decimals={rules.decimals} />
             <NoCostYet lines={lines} items={items} />
+            {filledLines(lines).length === 0 && (
+              <label style={{ display: "block", marginBlockStart: 8 }}>
+                <div className="pf-hint" style={{ marginBlockEnd: 4 }}>
+                  No ingredients? Then it sells at no cost: say why it uses no stock.
+                </div>
+                <input
+                  aria-label="Why it uses no stock"
+                  value={noStock}
+                  onChange={(e) => setNoStock(e.target.value)}
+                  placeholder="A service charge"
+                  maxLength={200}
+                  style={{ width: "100%", maxWidth: 360 }}
+                />
+              </label>
+            )}
           </section>
 
           <section className="pf-step">

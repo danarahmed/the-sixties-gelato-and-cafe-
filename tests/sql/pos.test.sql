@@ -45,7 +45,7 @@ select set_product_details('d0000000-0000-0000-0000-000000000002', 'Golden water
 select test.throws($$select set_product_details('d0000000-0000-0000-0000-000000000001', 'X', gen_random_uuid())$$,
   '%Unknown category%', 'a product cannot be put in a category that does not exist');
 -- A product made on the Products screen has one variant of the same name; renaming the product renames it too.
-insert into ids select 'latte', (create_product('Latte', '{"dine_in": 3000}') ->> 'product_id')::uuid;
+insert into ids select 'latte', (create_product('Latte', '{"dine_in": 3000}', p_no_stock_reason => 'a test product') ->> 'product_id')::uuid;
 select set_product_details(pg_temp.id('latte'), 'Caffè latte', pg_temp.id('hot'));
 select test.eq((select string_agg(name, ',') from product_variant where product_id = pg_temp.id('latte')), 'Caffè latte',
   'renaming a single-variant product renames what the till sells');

@@ -22,9 +22,14 @@ export interface Line {
   note: string | null;
   /** The saved line on the bill, which a split moves; null until saved. */
   lineId: string | null;
-  /** Name and price from the bill, for a product no longer on the menu. */
+  /** Name from the bill, for a product no longer on the menu. */
   fallbackName: string | null;
-  fallbackPrice: number | null;
+  /**
+   * The price the saved bill carries for this product: frozen when the bill
+   * was printed (the customer holds it), today's otherwise; null when the
+   * saved bill does not have it.
+   */
+  billPrice: number | null;
 }
 
 /** A discount as the cashier gave it: a percentage of the bill, or an amount off it. */
@@ -114,7 +119,7 @@ export function orderFromBill(b: OpenBill): Order {
       l.variantName && l.variantName !== l.productName
         ? `${l.productName} — ${l.variantName}`
         : l.productName,
-    fallbackPrice: l.price,
+    billPrice: l.price,
   }));
   const discount: Discount | null =
     b.discountPercent !== null
@@ -139,7 +144,11 @@ export function orderFromBill(b: OpenBill): Order {
   };
 }
 
-/** Add one of a product: onto a matching line without a note, or as a new line. */
+/**
+ * Add one of a product: onto a matching line without a note, or as a new line
+ * at the price the bill already has for it (a printed bill keeps its price
+ * for more of the same, as the database does).
+ */
 export function addLine(lines: Line[], variantId: string): Line[] {
   let i = lines.length - 1;
   while (i >= 0 && !(lines[i]!.variantId === variantId && !lines[i]!.note)) i--;
@@ -153,9 +162,25 @@ export function addLine(lines: Line[], variantId: string): Line[] {
       note: null,
       lineId: null,
       fallbackName: null,
-      fallbackPrice: null,
+      billPrice:
+        lines.find((l) => l.variantId === variantId && l.billPrice !== null)?.billPrice ?? null,
     },
   ];
+}
+
+/**
+ * The saved bill on screen is not the one the database now has: another
+ * till changed it, it was printed, or a price on it changed (a new price
+ * started at midnight, say).
+ */
+export function billChanged(o: Order, b: OpenBill): boolean {
+  return (
+    b.version !== o.version ||
+    b.billPrintedAt !== o.printedAt ||
+    b.billPrintCount !== o.printCount ||
+    b.lines.length !== o.lines.length ||
+    b.lines.some((l, i) => l.lineId !== o.lines[i]!.lineId || l.price !== o.lines[i]!.billPrice)
+  );
 }
 
 // ------------------------------------------------------------------ names
@@ -188,13 +213,15 @@ export function lineName(l: Line, byId: Map<string, PosItem>, locale: Locale): s
   return i ? itemName(i, locale) : (l.fallbackName ?? "—");
 }
 
+/** A saved bill's line at the bill's price (the printed one, once printed); otherwise the menu's. */
 export function linePrice(
   l: Line,
   byId: Map<string, PosItem>,
   channel: SalesChannel,
 ): number | null {
+  if (l.billPrice !== null) return l.billPrice;
   const p = byId.get(l.variantId)?.prices[channel];
-  return p === undefined ? l.fallbackPrice : p;
+  return p === undefined ? null : p;
 }
 
 export function lineAmount(

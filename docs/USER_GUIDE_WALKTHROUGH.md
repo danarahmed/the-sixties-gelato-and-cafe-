@@ -136,6 +136,13 @@ not hear back:
 
 A cart left frozen when the page reloads is brought back for its retry.
 
+**If a price changed since the till loaded its menu,** the database refuses a
+payment at the old total and nothing is recorded: the till says **“The total
+is … now, not the … shown”**, fetches today's prices and shows the order at
+them, to tell the customer before taking the money again. Tills fetch the
+prices every ten minutes and whenever their screen comes back to the front. A
+**printed bill** is always paid at the prices printed on it.
+
 **What each sale posts:**
 
 - Dr Cash (1000), Card clearing (1010) or Platform receivable (1100), by tender;
@@ -315,7 +322,9 @@ sees costs; creating and pricing: owner, general manager
      delivery platform's commission is not in the cost.
 
   The product, recipe and prices are created together, or not at all. A line
-  with an item but no quantity (or a quantity but no item) stops the save.
+  with an item but no quantity (or a quantity but no item) stops the save. A
+  product with no recipe needs **Why it uses no stock** (a service charge):
+  without one it is not created.
 
 - **Each product** shows its **Recipe** (component, quantity, applies to) and
   **Price & margin by channel**, costed exactly as a sale would post it today.
@@ -323,8 +332,15 @@ sees costs; creating and pricing: owner, general manager
   change it, in force from a date (today or later). Sales before that date keep
   the old recipe. Use it to switch a product to something made on Production
   (a cup of gelato: 120 g of the gelato made, a cup, a spoon).
-- **Set price:** a new price for a channel, from a date. A sale always uses the
-  price and the recipe in force on its own day.
+- **Change a price…:** a new price for a channel, from today or a later date
+  (never an earlier one). A sale always uses the price and the recipe in force
+  on its own day; a printed bill, the prices printed on it.
+- **Scheduled:** prices and recipes set for a later date, each with
+  **Withdraw…** (with a reason) until it starts. A recipe changed today does
+  not cancel one scheduled for later: each takes over on its own date.
+- **Costed at nothing** (a red badge): no recipe, or an ingredient with no cost
+  yet, so its sales show full profit. A product that truly uses no stock says
+  why (**Uses no stock**), and is not flagged.
 
 ## 13. Inventory
 
@@ -469,7 +485,9 @@ who sees costs; locking: accountant, general manager, owner; reopening: owner
   - every trading day's cash counted;
   - no count awaiting approval;
   - stock, unpaid bills and goods received each agree with their account;
-  - the month's journals balance.
+  - the month's journals balance;
+  - ⚠️ no sale costed at nothing: a warning only, which does not stop the lock
+    (see **Uncosted Sales** on Reports).
 
   When they pass, **Lock** (with an optional note). Locking the last month of a
   year also posts the year-end close into 3100 Retained earnings. **Reopen** is
@@ -501,6 +519,9 @@ Choose **From** and **To**, or **This month**, **Last month**, **This year**.
 - **Profit & Loss:** income, cost of sales, gross profit, operating expenses and
   net, from published entries, with **CSV**.
 - **Sales by Channel:** orders, net sales and gross profit per channel.
+- **Uncosted Sales:** each sale in the dates recorded with no cost, or part of
+  it missing (no recipe, or an ingredient used before it had a cost), and why.
+  Their profit is overstated; the fix is for the next sales.
 - **Payable Ageing:** each unpaid bill by vendor, due date and days late.
 - **Product Margin by Channel:** price, cost and margin of every product on every
   channel.

@@ -267,3 +267,36 @@ through the functions in `0018`.
 - **Opening stock.** `record_opening_stock` (as `create_item`): an item with no
   stock history at a location is given its opening stock at the cost typed,
   Dr 1200 / Cr 3000, audited `inventory.opening`.
+
+### The recipe and price in force, printed bills, uncosted sales (`0025`)
+
+- **Recipes and prices.** `recipe_version_on(recipe, day)` is the version that
+  started last on or before the day (`effective_from` desc, then `version_no`
+  desc). `start_recipe_version` ends a new version the day before the next
+  version already scheduled, and gives one starting the same day an empty
+  range (`effective_to = effective_from − 1`), so it is kept but never used.
+  `set_price` refuses a date before today and audits `price.set` (the price it
+  replaces, and the new one). `menu_scheduled()` lists the prices and product
+  recipes not yet in force; `cancel_scheduled_price` and
+  `cancel_scheduled_recipe` (need `recipe.edit`, with a reason) delete one
+  before it starts, audited `price.cancel` / `recipe.cancel` with what was
+  deleted.
+- **Printed bills.** `pos_tab_line` gains `unit_price`: set by
+  `mark_bill_printed` from the price in force (for lines without one), kept by
+  `save_tab` for the same product and by `split_tab` for a moved line.
+  `pos_open_bills` shows a line at its `unit_price` when it has one.
+  `post_sale` takes a bill's prices only from `settle_tab`
+  (`p_trust_line_prices`); a sale at the counter is always at the price in
+  force. `record_sale` and `settle_tab` take `p_expected_net`, the total the
+  till showed: `assert_sale_total` refuses a new sale recorded at another
+  total (a replay returns the original, unchecked).
+- **Uncosted sales.** `product_variant` gains `no_stock_reason`: a product
+  that uses no stock says why. `create_product` requires a recipe or the
+  reason; `change_product_recipe` clears it; `set_no_stock` (needs
+  `recipe.edit`) sets or clears it, audited `product.no_stock`.
+  `uncosted_sales(business, from, to)` finds the sales costed at nothing, in
+  whole or in part (a line with no cost and no reason, or an ingredient used
+  at no value before it had any cost); `report_uncosted_sales` (needs
+  `cost.view`) is the Reports list. `period_close_checklist` gains `blocks`:
+  its new `uncosted` row is a warning (`blocks = false`), and `lock_period`
+  refuses only on the rows that block.

@@ -25,7 +25,8 @@ Plan a short window when the café is closed.
 | Bill numbers (`0021`)          | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0021`](#after-0021)). The form was merged ([pull request #6](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/6)) and deployed                                                              |
 | Recipe costing (`0022`)        | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0022`](#after-0022)). The form was merged ([pull request #8](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/8)) and deployed                                                              |
 | Production (`0023`)            | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0023`](#after-0023)). The screens were merged ([pull request #9](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/9)) and deployed                                    |
-| Counts and the drawer (`0024`) | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0024`](#after-0024)). The screens go live with the pull request that carries them                                                                                                    |
+| Counts and the drawer (`0024`) | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0024`](#after-0024)). The screens were merged ([pull request #10](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/10)) and deployed                                  |
+| Prices, bills, costs (`0025`)  | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0025`](#after-0025)). The screens follow by pull request                                                                                                                             |
 
 ## 0. Before you start
 
@@ -424,6 +425,64 @@ owner, in a transaction that was rolled back:
 Nothing was kept. The till's account (1000) on the test records stands at
 −220,000, from test expenses paid "from cash" before `0024`; clearing the test
 records clears it.
+
+## After `0025`
+
+Migration `0025` is the September 2026 audit's first P1s
+([`../SYSTEM_AUDIT_2026-09.md`](../SYSTEM_AUDIT_2026-09.md), P1-5 to P1-7):
+
+- **The recipe and price in force.** The recipe that started last is used, so
+  a change made today no longer hides one scheduled for later. Scheduled
+  prices and recipes are listed on each product and can be withdrawn with a
+  reason. A price cannot be dated in the past; each one set is audited.
+- **Printed bills.** Printing a bill fixes its prices, and it is paid at them.
+  Every payment carries the total the till showed, and the database refuses
+  one it would record at another total; the till then fetches today's prices
+  (as it also does every ten minutes and when its screen comes back to the
+  front).
+- **Sales costed at nothing** are listed on Reports and warned of on the
+  month-end checklist, without stopping the lock. A new product needs a
+  recipe, or a reason it uses no stock.
+
+It adds two columns (`pos_tab_line.unit_price`, `product_variant.no_stock_reason`)
+and five functions signed-in users may call (`menu_scheduled`,
+`cancel_scheduled_price`, `cancel_scheduled_recipe`, `set_no_stock`,
+`report_uncosted_sales`); it redefines the recipe-version and price rules,
+printing, saving, splitting and listing bills, the sale and bill payment
+functions (which take the till's total, optionally), creating a product,
+changing its recipe, and the period checklist and lock. Nothing recorded before
+it changes. It goes in before the screens, as before: the app deployed before
+it keeps working (the total is optional), except that creating a product with
+no recipe is refused until the new form, which asks why, follows within
+minutes.
+
+It was applied on 25 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0024` build, with no bill open,
+nothing sold since 00:27, nothing scheduled, and every live recipe (seven, one
+version each) in force under the new rule exactly as under the old. It was
+then compared with the tested build, object by object, the role permissions
+and column grants included: identical. A check as the owner, in a transaction
+that was rolled back:
+
+- the Americano's dine-in price (3,000) dated yesterday was refused; set for
+  next week, it was listed as scheduled while 3,000 stayed in force, then
+  withdrawn with a reason, on the audit trail;
+- a bill of two printed at 3,000, then the price put up to 3,500 from today:
+  the bill still showed 3,000 a cup, 6,000 in all; paying it at 7,000 was
+  refused, at 6,000 it was paid;
+- a quick sale from a till still showing 3,000 was refused ("The total is 3500
+  now, not the 3000 shown"); at 3,500 it was recorded;
+- a product with no recipe and no reason was refused; with "A service charge"
+  it was created;
+- the live records have no sale costed at nothing; the month's checklist shows
+  that line as a warning that does not block; every reconciliation check
+  stayed at zero.
+
+Nothing was kept. The security advisor's only new lines are the five new
+functions signed-in users may call (each checks its permission, as every one
+does) and an internal helper (`assert_sale_total`) that sets no search path;
+no one can call it directly.
 
 ## Clearing the test records
 

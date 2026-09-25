@@ -215,6 +215,59 @@ export async function getMenuRecipeLines(): Promise<RecipeLineRow[]> {
   }));
 }
 
+/** A price or a product recipe set to start on a later date (0025). */
+export interface ScheduledChange {
+  kind: "price" | "recipe";
+  id: string;
+  variantId: string;
+  channel: string | null;
+  price: number | null;
+  effectiveFrom: string;
+  versionNo: number | null;
+}
+
+export async function getMenuScheduled(): Promise<ScheduledChange[]> {
+  const c = await db();
+  return rows(await c.rpc("menu_scheduled"), "scheduled changes").map(
+    (r: Record<string, unknown>) => ({
+      kind: str(r.kind) === "recipe" ? "recipe" : "price",
+      id: str(r.id),
+      variantId: str(r.variant_id),
+      channel: strOrNull(r.channel),
+      price: numOrNull(r.price),
+      effectiveFrom: str(r.effective_from),
+      versionNo: r.version_no == null ? null : num(r.version_no),
+    }),
+  );
+}
+
+/** A sale whose cost is understated (0025): costed at nothing, or partly at nothing. */
+export interface UncostedSale {
+  orderId: string;
+  placedAt: string;
+  channel: string;
+  products: string;
+  net: number;
+  cogs: number;
+  reasons: string;
+}
+
+export async function getUncostedSales(from: string, to: string): Promise<UncostedSale[]> {
+  const c = await db();
+  return rows(
+    await c.rpc("report_uncosted_sales", { p_from: from, p_to: to }),
+    "uncosted sales",
+  ).map((r: Record<string, unknown>) => ({
+    orderId: str(r.order_id),
+    placedAt: str(r.placed_at),
+    channel: str(r.channel),
+    products: str(r.products),
+    net: num(r.net),
+    cogs: num(r.cogs),
+    reasons: str(r.reasons),
+  }));
+}
+
 export interface MemberRow {
   id: string;
   name: string;

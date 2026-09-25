@@ -87,7 +87,26 @@ fast. Set it up once, on **Products** and on the till itself:
   (70% unless you change it; as a rule of thumb, coffee drinks leave 75–80%
   and food 65–70%). Delivery
   platforms take their commission from the price, so price them higher. An
-  ingredient never bought counts as 0: receive it first for a true cost.
+  ingredient never bought counts as 0: receive it first, or give it its
+  opening stock on Inventory, for a true cost. A product with no ingredients
+  (a service charge, say) needs a reason for using no stock; without a recipe
+  or a reason it is not created, since every sale of it would show full
+  profit.
+- **Changing a price or a recipe** (Products, open **Recipe, prices and
+  margin**): **Change a price…** starts today or on a later date, never an
+  earlier one, so every sale keeps the price it was made at; each change is on
+  the audit trail (**price.set**). A change for a later date is listed under
+  **Scheduled** on the product, and can be withdrawn with a reason until it
+  starts. A recipe changed today does not cancel one scheduled for later: each
+  takes over on its own date. A new price reaches every till within ten
+  minutes, or at once when its screen comes back to the front; a till that has
+  not caught up yet is stopped at payment and fetches it then. A bill already
+  printed is paid at the prices printed on it.
+- **Costed at nothing:** a product flagged this way on Products has no recipe,
+  or uses an ingredient with no cost yet, so its sales show full profit. Give
+  it its recipe (or say why it uses no stock), or give the ingredient its cost.
+  **Reports → Uncosted Sales** lists the sales it has affected; they keep the
+  cost they were recorded with.
 - **What you make** (Production): set up each thing made in batches once, with
   what one batch makes (roughly; weighing is optional) and what goes in. Make a
   base first and flavour it, or make each flavour from scratch: both work, since
@@ -110,6 +129,7 @@ cannot quietly disappear from a bill:
 
 - once the bill has been printed for the customer, **only a manager can take
   anything off it**, and each reduction is on the audit trail (**bill.reduce**);
+  and it is paid at the prices printed on it, whatever the menu says by then;
 - **cancelling a bill with anything on it needs a manager and a reason**
   (**bill.cancel**);
 - splitting a bill needs no manager, because nothing leaves the table's bills;
@@ -171,7 +191,9 @@ counts them.
    should show ✅.
 3. **Chart of Accounts:** choose the month and read its checklist. When every
    check passes, **Lock** it. The last month of the year also closes the year
-   into 3100 Retained earnings.
+   into 3100 Retained earnings. A ⚠️ line (sales costed at nothing) is a
+   warning, not a lock: those sales' profit is overstated, and **Reports →
+   Uncosted Sales** lists them and what to fix.
 4. A locked month refuses every posting. Only you can reopen it, with a reason
    on the audit trail. Reopen the most recent locked month first.
 

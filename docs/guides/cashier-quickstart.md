@@ -66,6 +66,10 @@ Nothing reaches the books until the bill is paid.
 A manager can, and it is recorded. Ask a manager if a customer returns
 something from a printed bill.
 
+**The customer pays the prices on the printed bill**, even if a price goes up
+after it was printed. One more of something already on it is at the printed
+price too.
+
 ### Paying separately
 
 - **✂ Split bill:** choose what one person is paying for (use **+**, or
@@ -90,6 +94,16 @@ trail.
 Every till shows the same bills and refreshes every few seconds. If two people
 change one bill at the same moment, the second is told **“This bill was changed
 on another till. Open it again to see the latest”**. Nothing is overwritten.
+
+### When a price has just changed
+
+The till checks the total with the database before it records a payment. If a
+price changed after the till loaded the menu, the payment is **not** taken, and
+the till says **“The total is 3000 now, not the 2500 shown: a price has
+changed…”**. The till fetches the new prices by itself and shows the order at
+them: tell the customer the new total, then take the payment again. (Tills pick
+up new prices every ten minutes, and whenever the till screen comes back to the
+front.)
 
 ## Printing
 

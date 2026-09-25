@@ -33,6 +33,8 @@ const productInput = z.object({
       channels: z.array(salesChannel),
     }),
   ),
+  /** With no recipe: why it uses no stock (0025). */
+  noStockReason: optionalText(200),
 });
 
 export async function createProductAction(
@@ -54,10 +56,63 @@ export async function createProductAction(
     p_name_ar: v.data.nameAr,
     p_name_ckb: v.data.nameCkb,
     p_category: v.data.categoryId ?? null,
+    p_no_stock_reason: v.data.recipe.length === 0 ? v.data.noStockReason : null,
   });
   if (!r.ok) return r;
   refresh(...MENU_PATHS);
   return { ok: true, data: { productId: String(r.data.product_id) } };
+}
+
+const cancelInput = z.object({
+  id: id("a change"),
+  reason: text("Why the change is withdrawn", 300),
+});
+
+/** A price set for a later date, withdrawn before it starts (0025). */
+export async function cancelScheduledPriceAction(
+  input: z.input<typeof cancelInput>,
+): Promise<ActionResult<null>> {
+  const v = parse(cancelInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("cancel_scheduled_price", {
+    p_price: v.data.id,
+    p_reason: v.data.reason,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: null };
+}
+
+/** A recipe set for a later date, withdrawn before it starts (0025). */
+export async function cancelScheduledRecipeAction(
+  input: z.input<typeof cancelInput>,
+): Promise<ActionResult<null>> {
+  const v = parse(cancelInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("cancel_scheduled_recipe", {
+    p_version: v.data.id,
+    p_reason: v.data.reason,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: null };
+}
+
+const noStockInput = z.object({
+  variantId: id("a product"),
+  reason: optionalText(200),
+});
+
+/** A product with no recipe says why it uses no stock (or, with no reason, takes that back). */
+export async function setNoStockAction(
+  input: z.input<typeof noStockInput>,
+): Promise<ActionResult<null>> {
+  const v = parse(noStockInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("set_no_stock", { p_variant: v.data.variantId, p_reason: v.data.reason });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: null };
 }
 
 const priceInput = z.object({
