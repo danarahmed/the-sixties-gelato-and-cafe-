@@ -12,8 +12,9 @@ import menu from "./menu";
 import platforms from "./platforms";
 import settings from "./settings";
 import db from "./db";
+import alerts from "./alerts";
 
-/** The areas' phrase books; "db" holds the database's messages, alerts and brief. */
+/** The areas' phrase books; "db" holds what the database refuses with, "alerts" what it tells unasked. */
 export const BOOKS: Record<string, PhraseBook> = {
   common,
   books,
@@ -24,6 +25,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   platforms,
   settings,
   db,
+  alerts,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

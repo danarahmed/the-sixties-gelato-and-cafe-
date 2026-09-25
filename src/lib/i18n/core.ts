@@ -61,36 +61,51 @@ export type Msg = (text: string) => string;
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+const letters = (s: string) => (s.match(/[A-Za-z]/g) ?? []).length;
+
+/** "05 Sep" or "05 Sep 14:30", as the database writes a date in a message. */
+const SHORT_DATE = /^(\d{1,2}) ([A-Z][a-z]{2})((?: \d{2}:\d{2})?)$/;
+
 /**
  * The translator for messages: an error from a form or from the database, an
  * alert, the daily brief. A message is a phrase, or one of the database's
  * with values put in: its English is kept with {1}, {2}… where they go ("{1} is
- * no longer in use…"), and each value is itself translated when it is a phrase.
+ * no longer in use…"), and each value is itself translated when it is a phrase
+ * ("under a day"), a phrase with values ("{1} days"), or a date ("05 Sep").
+ *
+ * A whole message is matched only by a phrase whose own words pin it down: six
+ * letters or more, or a start of four ("Waste {1}."). A shorter one ("{1}
+ * days") is for the values inside a message, where it cannot swallow another.
  */
 export function messenger(words: Words): Msg {
-  let patterns: { re: RegExp; slots: number[]; to: string }[] | null = null;
-  const compile = () =>
+  type Pattern = { re: RegExp; slots: number[]; to: string; fixed: number; whole: boolean };
+  let patterns: Pattern[] | null = null;
+  const compile = (): Pattern[] =>
     Object.entries(words)
       .filter(([k]) => /\{\d+\}/.test(k))
-      .map(([k, to]) => ({
-        re: new RegExp(
-          `^${k
-            .split(/\{\d+\}/)
-            .map(escapeRe)
-            .join("(.+?)")}$`,
-          "s",
-        ),
-        slots: [...k.matchAll(/\{(\d+)\}/g)].map((m) => Number(m[1])),
-        to,
-        fixed: k.replace(/\{\d+\}/g, "").length,
-      }))
+      .map(([k, to]) => {
+        const parts = k.split(/\{\d+\}/);
+        return {
+          re: new RegExp(`^${parts.map(escapeRe).join("(.+?)")}$`, "s"),
+          slots: [...k.matchAll(/\{(\d+)\}/g)].map((m) => Number(m[1])),
+          to,
+          fixed: parts.join("").length,
+          whole: letters(parts.join("")) >= 6 || letters(parts[0] ?? "") >= 4,
+        };
+      })
       .sort((a, b) => b.fixed - a.fixed);
   const translate = (text: string, depth: number): string => {
     const exact = words[text];
     if (exact !== undefined) return exact;
-    if (depth > 1) return text;
+    if (depth > 0) {
+      const d = SHORT_DATE.exec(text);
+      const month = d ? words[d[2]!] : undefined;
+      if (d && month !== undefined) return `${d[1]} ${month}${d[3]}`;
+    }
+    if (depth > 2) return text;
     patterns ??= compile();
     for (const p of patterns) {
+      if (depth === 0 && !p.whole) continue;
       const m = p.re.exec(text);
       if (!m) continue;
       const values: Record<string, string> = {};

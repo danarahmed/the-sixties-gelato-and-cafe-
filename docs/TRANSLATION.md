@@ -80,8 +80,15 @@ would match other messages.
   Purchasing), `reports` (Reports, Orders, the audit trail, the dashboard),
   `menu` (Products & Recipes, Production), `platforms` (Delivery Platforms,
   statements, settlements), `settings` (Settings, people, signing in, the
-  till's messages, approvals), `db` (the database's messages, alerts and the
-  daily brief).
+  till's messages, approvals), `db` (what the database refuses with, as
+  `node scripts/db-messages.mjs` lists it), `alerts` (the dashboard's alerts,
+  the daily brief, and the words the database writes into the books itself:
+  the chart of accounts it sets up, its journals' narrations, the period-close
+  checks).
+- A short phrase with a value ("{1} days", "under a day") translates a value
+  inside a message; only a phrase with six letters of its own, or a start of
+  four ("Waste {1}."), is matched against a whole message. A date the database
+  writes as "05 Sep" is shown with the month in the reader's language.
 - Each phrase has its Arabic and its Kurdish, with every `{placeholder}` and
   `<tag>` of the English; a phrase repeated in two books is translated the same.
 

@@ -13,11 +13,13 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { BOOKS } from "@/lib/i18n/phrases";
 import { getDictionary, builtInWords } from "@/lib/i18n/dictionaries";
-import { fill, translator } from "@/lib/i18n/core";
+import { fill, messenger, translator } from "@/lib/i18n/core";
 import { parseRich, plain } from "@/lib/i18n/Rich";
 import { LABELS } from "@/lib/format";
 // @ts-expect-error: a plain script, shared with the command line
 import { scan, screens } from "../scripts/i18n-scan.mjs";
+// @ts-expect-error: a plain script, shared with the command line
+import { raiseMessages } from "../scripts/db-messages.mjs";
 
 const ROOT = join(__dirname, "..");
 const placeholders = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
@@ -73,16 +75,6 @@ describe("the phrase books", () => {
     expect(LABELS.filter((l) => !common[l])).toEqual([]);
   });
 
-  it("match a message with values only by words of its own", () => {
-    // A message the database sends with values in it is matched by its words
-    // around {1}, {2}…; too few, and it would swallow other messages.
-    const loose = all
-      .filter((p) => /\{\d+\}/.test(p.en))
-      .filter((p) => (p.en.replace(/\{\d+\}/g, "").match(/[A-Za-z]/g) ?? []).length < 6)
-      .map((p) => p.en);
-    expect(loose).toEqual([]);
-  });
-
   it("reach the screens: a page in Arabic or Kurdish is given them", () => {
     for (const p of all.slice(0, 50)) {
       expect(builtInWords("ar")[p.en]).toBe(p.t.ar);
@@ -100,6 +92,29 @@ describe("the translator", () => {
     const t = translator({ "Hello {name}": "مرحبا {name}" });
     expect(t("Hello {name}", { name: "Dana" })).toBe("مرحبا Dana");
     expect(t("Not translated {x}", { x: 1 })).toBe("Not translated 1");
+  });
+
+  it("translates a message with its values, each value translated too", () => {
+    const msg = messenger({
+      "{1} runs out in {2}: {3} left": "{1} ينفد خلال {2}: بقي {3}",
+      "under a day": "أقل من يوم",
+      "{1} days": "{1} أيام",
+      "Waste {1}.": "هدر {1}.",
+      Sep: "أيلول",
+      "Card takings {1} to {2} settled": "تمت تسوية مقبوضات البطاقات من {1} إلى {2}",
+    });
+    expect(msg("Milk runs out in under a day: 2 L left")).toBe(
+      "Milk ينفد خلال أقل من يوم: بقي 2 L",
+    );
+    expect(msg("Milk runs out in 3.5 days: 9 L left")).toBe("Milk ينفد خلال 3.5 أيام: بقي 9 L");
+    expect(msg("Waste 12,000 IQD.")).toBe("هدر 12,000 IQD.");
+    expect(msg("Card takings 01 Sep to 05 Sep settled")).toBe(
+      "تمت تسوية مقبوضات البطاقات من 01 أيلول إلى 05 أيلول",
+    );
+    // A short phrase is for values: it never takes a whole message.
+    expect(msg("The count took 3 days")).toBe("The count took 3 days");
+    // What has no translation stays as it is.
+    expect(msg("Something new")).toBe("Something new");
   });
 
   it("marks words in a sentence without splitting it", () => {
@@ -227,6 +242,11 @@ describe("the code", () => {
         } else if (ts.isNewExpression(n) && n.arguments?.length) check(file, said(n.arguments[0]));
       });
     expect(unknown).toEqual([]);
+  });
+
+  it("has every message the database refuses with", () => {
+    const said = new Set((raiseMessages() as { en: string }[]).map((m) => m.en));
+    expect([...said].filter((en) => !known.has(en))).toEqual([]);
   });
 
   it("shows no English written straight into a screen", () => {

@@ -1,8 +1,9 @@
 import type { PhraseBook } from "./types";
 
 /**
- * The database's messages, its alerts and the daily brief, by their English
- * text with {1}, {2}… where the database puts a value in. Read by dbText().
+ * What the database refuses with, by its English, with {1}, {2}… where it puts
+ * a value (scripts/db-messages.mjs lists them; tests/i18n.test.ts checks that
+ * each is here).
  */
 const phrases: PhraseBook = {};
 
