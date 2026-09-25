@@ -29,6 +29,7 @@ Plan a short window when the café is closed.
 | Prices, bills, costs (`0025`)  | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0025`](#after-0025)). The screens were merged ([pull request #11](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/11)) and deployed                                  |
 | Reports that agree (`0026`)    | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner against the live records (see [After `0026`](#after-0026)). The screens were merged ([pull request #12](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/12)) and deployed                                               |
 | Master data (`0027`)           | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0027`](#after-0027)). The screens were merged ([pull request #13](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/13)) and deployed                                  |
+| Exceptions (`0028`)            | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0028`](#after-0028)). The screens follow in the next pull request                                                                                                                    |
 
 ## 0. Before you start
 
@@ -556,6 +557,55 @@ records, in a transaction that was rolled back:
 
 Nothing was kept. The security advisor's only new lines are the four new
 functions signed-in users may call (each checks its permission); every new
+function sets its search path.
+
+## After `0028`
+
+Migration `0028` is the audit's P1-10: every void, refund, discount and
+cancelled bill takes a reason from a list; a discount over 10% of the bill
+needs a manager's approval — their name and PIN, typed on the till; a void or
+refund may be approved by a second person, and without one waits for the
+owner's review; every line taken off a bill is recorded; and the exceptions
+report lists it all by person. Owners and managers each set their PIN on **My
+account** once the new screens are live: until one has, nobody can approve a
+cashier's discount over 10% (managers and the owner still give any discount
+themselves). Nothing recorded changes: a discount given before it says "No
+reason kept". Until the new screens follow, minutes later, the till deployed
+before it cannot give a discount (it sends no reason); voids, refunds and
+cancelled bills from the older screens still work, their reason taken as
+"Other", which needs a few real words.
+
+It was applied on 25 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0027` build, that bcrypt hashing
+works where the migration expects it (`extensions.crypt`), and that no bill
+was open. Compared with the tested build object by object, permissions
+included: identical. A check as the owner against the live records, in a
+transaction that was rolled back (in which, alone, a barista was allowed to
+give discounts, so the cap could be tried by someone who does not approve
+them):
+
+- the owner's PIN "1234" was refused as too easy to guess; another was kept,
+  as a hash;
+- the barista's 10% discount without a reason was refused, and given with
+  "Regular customer", approved by no one;
+- 20% was refused ("A discount over 10% needs a manager's approval"); the
+  owner was the only one listed to approve it; a wrong PIN was refused, the
+  right one approved it, and the sale recorded the barista as giving it and
+  the owner as approving it; the same approval used again was refused;
+- a bill with 10% off showed its reason and who gave it, and an item taken
+  off it before printing was recorded;
+- "hjjjhjjk" was refused as a reason; the owner's void ("Rang twice") and
+  refund ("Something was wrong with it: too sweet for them") were kept with
+  their codes, and the bill was cancelled as "Customer left without ordering";
+- the exceptions report listed the void, the refund and the wrong PIN for
+  review, the two discounts, the cancelled bill and the line taken off; every
+  reconciliation check stayed at zero.
+
+Nothing was kept (no approvals, PIN attempts, PINs or test rows remained).
+The security advisor's only new lines are the four new functions signed-in
+users may call (each checks its permission) and the two approval tables,
+which no one signed in may read: only the functions use them. Every new
 function sets its search path.
 
 ## Clearing the test records
