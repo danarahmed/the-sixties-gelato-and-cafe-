@@ -66,7 +66,8 @@ browser tests through the real app, or both.
   migration was applied to the live database on 24 September 2026, matches
   the tested build object by object, and was checked as the owner in a
   transaction that was rolled back: for every price on the live menu, the
-  form's cost equals the product card's.
+  form's cost equals the product card's. The form went live the same day with
+  [pull request #8](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/8).
 - **Production (migration `0023`):** batches of what the café makes (gelato, a
   base, syrup, dough), set up either way: a base made first and then flavoured,
   or each flavour from scratch. Recording a batch takes the ingredients out at
@@ -74,7 +75,9 @@ browser tests through the real app, or both.
   counted in pans or pieces, or as the recipe says; baristas record batches and
   are shown no cost; a manager cancels one with a reason. A product's recipe can
   now be changed from a date on Products & Recipes, to use what was made. Built
-  and tested.
+  and tested. The migration was applied to the live database on 25 September
+  2026, matches the tested build object by object (permissions included), and
+  was checked as the owner in a transaction that was rolled back.
 
 ## The August 2026 audit, finding by finding
 
