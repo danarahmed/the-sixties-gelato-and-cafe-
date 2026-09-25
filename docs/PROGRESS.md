@@ -7,10 +7,10 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0025` and the rebuilt app. The SQL
-  checks (26, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (7, every role), the unit and contract
-  tests (171) and a production build all pass.
+- **Built and verified:** migrations `0014`–`0026` and the rebuilt app. The SQL
+  checks (27, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (8, every role), the unit and contract
+  tests (175) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -111,6 +111,19 @@ browser tests through the real app, or both.
   and tested. The migration was applied to the live database on 25 September
   2026, matches the tested build object by object (permissions included), and
   was checked as the owner in a transaction that was rolled back.
+  The screens went live the same day with
+  [pull request #11](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/11).
+- **Reports that agree, and numbers that open (migration `0026`, the audit's
+  P1-2):** a refund counts on the day it is made, so net sales on Sales by
+  Channel and Sales are the P&L's net revenue; the two profits are named for
+  what they are (gross profit after waste & fees, and the sales margin); the
+  dashboard no longer counts a year-end close as trading; a reversed expense is
+  no longer counted as spent. Every dashboard figure, P&L and trial-balance
+  line and reconciliation figure opens the records or journal lines behind it;
+  every item has a stock card; every journal line downloads as CSV. Built and
+  tested. The migration was applied to the live database on 25 September
+  2026, matches the tested build object by object (permissions included), and
+  its reports were checked as the owner against the live records.
 
 ## The August 2026 audit, finding by finding
 

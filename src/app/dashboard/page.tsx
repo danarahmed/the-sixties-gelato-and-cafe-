@@ -23,17 +23,25 @@ export default async function DashboardPage() {
   const low = board.filter((s) => s.isLow || s.isNegative);
   const differences = rec.filter((r) => r.difference !== 0);
 
+  // Each figure opens what is behind it (audit P1-2).
+  const day = `from=${today}&to=${today}`;
   const kpis = [
-    { label: t("dash.netSales"), value: fmtIQD(d.netRevenue) },
+    { label: t("dash.netSales"), value: fmtIQD(d.netRevenue), href: `/reports?${day}#channel` },
     {
       label: t("dash.grossProfit"),
       value: fmtIQD(d.grossProfit),
       tone: d.grossProfit < 0 ? "err" : "ok",
+      href: `/reports?${day}#pnl`,
     },
-    { label: t("dash.orders"), value: String(d.orders) },
-    { label: t("dash.avgOrder"), value: fmtIQD(d.averageOrder) },
-    { label: "Inventory (1200)", value: fmtIQD(d.inventoryValue) },
-    { label: t("dash.lowStock"), value: String(d.lowStock), tone: d.lowStock ? "warn" : "ok" },
+    { label: t("dash.orders"), value: String(d.orders), href: `/orders?${day}` },
+    { label: t("dash.avgOrder"), value: fmtIQD(d.averageOrder), href: `/orders?${day}` },
+    { label: "Inventory (1200)", value: fmtIQD(d.inventoryValue), href: "/inventory" },
+    {
+      label: t("dash.lowStock"),
+      value: String(d.lowStock),
+      tone: d.lowStock ? "warn" : "ok",
+      href: "/inventory",
+    },
   ];
 
   return (
@@ -60,7 +68,7 @@ export default async function DashboardPage() {
         style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}
       >
         {kpis.map((k) => (
-          <div key={k.label} className="card stat">
+          <Link key={k.label} href={k.href} className="card stat" style={{ color: "inherit" }}>
             <span className="label">{k.label}</span>
             <span
               className="value mono"
@@ -77,12 +85,14 @@ export default async function DashboardPage() {
             >
               {k.value}
             </span>
-          </div>
+          </Link>
         ))}
       </div>
       <p className="muted" style={{ margin: 0, fontSize: ".8rem" }}>
         Revenue and cost of sales are read from today&apos;s published journal lines — the same
-        figures the profit and loss will show.
+        figures the profit and loss will show. Gross profit here is after everything in cost of
+        sales: waste, count differences, purchase price differences and platform fees. Open a figure
+        to see what is behind it.
       </p>
 
       <div

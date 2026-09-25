@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems, getMovements, getStockBoard } from "@/lib/db/read";
@@ -92,6 +93,10 @@ export default async function InventoryPage() {
         ) : (
           <div className="card tw">
             <h3 style={{ marginTop: 0 }}>Stock on hand</h3>
+            <p className="muted" style={{ marginTop: 0, fontSize: ".82rem" }}>
+              Open an item for its stock card: what it opened with, what came in and went out, and
+              what is left.
+            </p>
             <table>
               <thead>
                 <tr>
@@ -108,7 +113,15 @@ export default async function InventoryPage() {
               <tbody>
                 {board.map((r) => (
                   <tr key={r.itemId}>
-                    <td>{r.name}</td>
+                    <td>
+                      <Link
+                        className="drill"
+                        href={`/inventory/${r.itemId}`}
+                        title="Its stock card"
+                      >
+                        {r.name}
+                      </Link>
+                    </td>
                     <td className="muted">{itemTypeLabel(r.itemType)}</td>
                     <td
                       className="right mono"

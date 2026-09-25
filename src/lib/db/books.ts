@@ -12,11 +12,20 @@ import { db, num, numOrNull, one, rows, str, strOrNull } from "./client";
 export interface DailySalesRow {
   day: string;
   channel: string;
+  /** Sales that day (voids excluded), and what they took and cost. */
   orders: number;
   net: number;
   cogs: number;
-  refunded: number;
+  /**
+   * Refunds made that day against the channel's sales, whenever the sale was,
+   * and the cost of what went back on the shelf (0026): the ledger's basis,
+   * so net sales here are the P&L's net revenue.
+   */
+  refunds: number;
+  returnedCost: number;
 }
+
+export { salesTotals } from "./salesTotals";
 
 /** One row per trading day and channel, in the business's own timezone (H-09). */
 export async function getDailySales(from: string, to: string): Promise<DailySalesRow[]> {
@@ -28,7 +37,8 @@ export async function getDailySales(from: string, to: string): Promise<DailySale
       orders: num(r.orders),
       net: num(r.net),
       cogs: num(r.cogs),
-      refunded: num(r.refunded),
+      refunds: num(r.refunds),
+      returnedCost: num(r.returned_cost),
     }),
   );
 }
@@ -316,6 +326,8 @@ export interface ExpenseRow {
   account: string;
   journalNo: number | null;
   by: string | null;
+  /** The journal that reversed it: a reversed expense is no longer spent (audit P1-2). */
+  reversedBy: number | null;
 }
 
 export async function getExpenses(limit = 100): Promise<ExpenseRow[]> {
@@ -333,7 +345,7 @@ export async function getExpenses(limit = 100): Promise<ExpenseRow[]> {
     .map((e) => e.journal_entry_id)
     .filter(Boolean)
     .map(String);
-  const [lines, entries, accounts, people] = await Promise.all([
+  const [lines, entries, accounts, people, reversals] = await Promise.all([
     c
       .from("journal_line")
       .select("journal_entry_id,account_id,debit")
@@ -341,7 +353,15 @@ export async function getExpenses(limit = 100): Promise<ExpenseRow[]> {
     c.from("journal_entry").select("id,journal_no").in("id", entryIds),
     c.from("gl_account").select("id,code,name"),
     c.from("app_user").select("id,full_name"),
+    c
+      .from("journal_entry")
+      .select("reverses_entry,journal_no")
+      .eq("status", "published")
+      .in("reverses_entry", entryIds),
   ]);
+  const reversedBy = new Map(
+    rows(reversals, "reversals").map((r) => [str(r.reverses_entry), numOrNull(r.journal_no)]),
+  );
   const label = new Map(
     rows(accounts, "accounts").map((a) => [str(a.id), `${str(a.code)} ${str(a.name)}`]),
   );
@@ -361,6 +381,7 @@ export async function getExpenses(limit = 100): Promise<ExpenseRow[]> {
     account: e.journal_entry_id ? (debited.get(str(e.journal_entry_id)) ?? "—") : "—",
     journalNo: e.journal_entry_id ? (journalNo.get(str(e.journal_entry_id)) ?? null) : null,
     by: e.created_by ? (person.get(str(e.created_by)) ?? null) : null,
+    reversedBy: e.journal_entry_id ? (reversedBy.get(str(e.journal_entry_id)) ?? null) : null,
   }));
 }
 

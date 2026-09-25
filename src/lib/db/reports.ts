@@ -268,6 +268,136 @@ export async function getUncostedSales(from: string, to: string): Promise<Uncost
   }));
 }
 
+/** One journal line, as the ledger has it (0026). */
+export interface JournalLineRow {
+  entryId: string;
+  journalNo: number | null;
+  occurredAt: string;
+  day: string;
+  description: string;
+  referenceType: string | null;
+  referenceNo: string | null;
+  accountCode: string;
+  accountName: string;
+  memo: string | null;
+  debit: number;
+  credit: number;
+  postedBy: string | null;
+  reversesJournalNo: number | null;
+}
+
+/** A page of lines: the hosted API returns at most 1,000 rows a call. */
+const LINES_PAGE = 1000;
+
+/**
+ * The published journal lines in the dates, of some accounts or all of them,
+ * in the ledger's order; the P&L's leave out the year-end close. Read a page
+ * at a time, up to `max` lines.
+ */
+export async function getJournalLines(
+  from: string,
+  to: string,
+  opts: { accounts?: string[] | null; excludeYearEnd?: boolean; max?: number } = {},
+): Promise<{ lines: JournalLineRow[]; more: boolean }> {
+  const c = await db();
+  const max = opts.max ?? 100_000;
+  const lines: JournalLineRow[] = [];
+  for (let start = 0; start < max; start += LINES_PAGE) {
+    const size = Math.min(LINES_PAGE, max - start);
+    const page = rows(
+      await c
+        .rpc("report_journal_lines", {
+          p_from: from,
+          p_to: to,
+          p_accounts: opts.accounts && opts.accounts.length > 0 ? opts.accounts : null,
+          p_exclude_year_end: opts.excludeYearEnd ?? false,
+        })
+        .range(start, start + size - 1),
+      "the journal lines",
+    ).map((r: Record<string, unknown>) => ({
+      entryId: str(r.journal_entry_id),
+      journalNo: numOrNull(r.journal_no),
+      occurredAt: str(r.occurred_at),
+      day: str(r.day),
+      description: str(r.description),
+      referenceType: strOrNull(r.reference_type),
+      referenceNo: strOrNull(r.reference_no),
+      accountCode: str(r.account_code),
+      accountName: str(r.account_name),
+      memo: strOrNull(r.memo),
+      debit: num(r.debit),
+      credit: num(r.credit),
+      postedBy: strOrNull(r.posted_by),
+      reversesJournalNo: numOrNull(r.reverses_journal_no),
+    }));
+    lines.push(...page);
+    if (page.length < size) return { lines, more: false };
+  }
+  return { lines, more: true };
+}
+
+/** One line of an item's stock card (0026); the first (seq 0) is what it opened with. */
+export interface StockCardRow {
+  seq: number;
+  occurredAt: string;
+  day: string;
+  kind: StockCardKind;
+  movement: string | null;
+  qty: number;
+  value: number;
+  balanceQty: number;
+  balanceValue: number;
+  reason: string | null;
+  referenceType: string | null;
+  by: string | null;
+  location: string | null;
+}
+
+export type StockCardKind =
+  | "opening"
+  | "opening_stock"
+  | "received"
+  | "sold"
+  | "batches"
+  | "made"
+  | "wasted"
+  | "counted"
+  | "corrected"
+  | "transferred";
+
+export async function getStockCard(
+  itemId: string,
+  from: string,
+  to: string,
+): Promise<StockCardRow[]> {
+  const c = await db();
+  const out: StockCardRow[] = [];
+  for (let start = 0; ; start += LINES_PAGE) {
+    const page = rows(
+      await c
+        .rpc("stock_card", { p_item: itemId, p_from: from, p_to: to })
+        .range(start, start + LINES_PAGE - 1),
+      "the stock card",
+    ).map((r: Record<string, unknown>) => ({
+      seq: num(r.seq),
+      occurredAt: str(r.occurred_at),
+      day: str(r.day),
+      kind: str(r.kind) as StockCardKind,
+      movement: strOrNull(r.movement),
+      qty: num(r.qty),
+      value: num(r.value),
+      balanceQty: num(r.balance_qty),
+      balanceValue: num(r.balance_value),
+      reason: strOrNull(r.reason),
+      referenceType: strOrNull(r.reference_type),
+      by: strOrNull(r.by_name),
+      location: strOrNull(r.location),
+    }));
+    out.push(...page);
+    if (page.length < LINES_PAGE) return out;
+  }
+}
+
 export interface MemberRow {
   id: string;
   name: string;

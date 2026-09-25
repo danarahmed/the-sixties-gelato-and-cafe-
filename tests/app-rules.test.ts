@@ -9,11 +9,12 @@
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
 import { NAV, holdsAny, homeFor, isPublicPath } from "@/lib/auth/routes";
-import { addDays, dateIn, monthEnd, monthStart, parseDay } from "@/lib/dates";
+import { addDays, dateIn, dayStart, monthEnd, monthStart, parseDay } from "@/lib/dates";
 import { normaliseNumber, positive, signedNonZero } from "@/lib/validation";
 import { getBookkeeper } from "@/lib/bookkeeping/rules";
 import { isUncertainFailure } from "@/lib/db/rpcOutcome";
 import { drawerPreview } from "@/components/books/drawerMath";
+import { salesTotals } from "@/lib/db/salesTotals";
 import Decimal from "decimal.js";
 import {
   addLine,
@@ -533,6 +534,26 @@ describe("the business's own calendar (audit H-09)", () => {
     expect(monthEnd("2024-02-10")).toBe("2024-02-29");
     expect(parseDay("2026-13-99", "2026-01-01")).toBe("2026-01-01");
     expect(parseDay("not a date", "2026-01-01")).toBe("2026-01-01");
+  });
+
+  it("a trading day starts at midnight in Erbil: 21:00 UTC the day before", () => {
+    expect(dayStart("2026-09-25", "Asia/Baghdad")).toBe("2026-09-24T21:00:00.000Z");
+    expect(dayStart("2026-01-01", "UTC")).toBe("2026-01-01T00:00:00.000Z");
+    // Across a change of clocks, still local midnight.
+    expect(dayStart("2026-03-29", "Europe/London")).toBe("2026-03-29T00:00:00.000Z");
+    expect(dayStart("2026-03-30", "Europe/London")).toBe("2026-03-29T23:00:00.000Z");
+  });
+});
+
+describe("sales by channel, net of refunds (audit P1-2)", () => {
+  it("refunds come off sales, and the cost of what went back on the shelf off the cost", () => {
+    // Two takeaway espressos refunded (made drinks do not go back), and a
+    // bottle of water refunded to the shelf: the SQL test's day.
+    const t = salesTotals([
+      { net: 5000, cogs: 500, refunds: 5000, returnedCost: 0 },
+      { net: 3500, cogs: 450, refunds: 1000, returnedCost: 250 },
+    ]);
+    expect(t).toEqual({ sold: 8500, refunds: 6000, net: 2500, cost: 700, margin: 1800 });
   });
 });
 

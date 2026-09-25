@@ -1,7 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSession } from "@/lib/auth/session";
-import { getProfitAndLoss, getReconciliation, getTrialBalance } from "@/lib/db/reports";
-import { businessToday, monthStart, parseDay } from "@/lib/dates";
+import {
+  getJournalLines,
+  getProfitAndLoss,
+  getReconciliation,
+  getTrialBalance,
+} from "@/lib/db/reports";
+import { businessToday, dateTimeIn, monthStart, parseDay } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +51,47 @@ export async function GET(request: NextRequest) {
         rows.map((r) => [r.code, r.name, r.section, r.amount]),
       );
       name = `profit-and-loss_${from}_${to}.csv`;
+    } else if (report === "journal_lines") {
+      // Every published line in the dates, or an account's (0026): the whole
+      // ledger for the accountant's own tools.
+      const accounts = (q.get("account") ?? "").split(",").filter((c) => /^\d{4}$/.test(c));
+      const { lines } = await getJournalLines(from, to, {
+        accounts,
+        excludeYearEnd: q.get("pnl") === "1",
+      });
+      body = csv(
+        [
+          "journal_no",
+          "when",
+          "day",
+          "account",
+          "account_name",
+          "debit",
+          "credit",
+          "narration",
+          "memo",
+          "source",
+          "reference",
+          "posted_by",
+          "reverses_journal_no",
+        ],
+        lines.map((l) => [
+          l.journalNo ?? "",
+          dateTimeIn(s.profile!.timezone, l.occurredAt),
+          l.day,
+          l.accountCode,
+          l.accountName,
+          l.debit,
+          l.credit,
+          l.description,
+          l.memo ?? "",
+          l.referenceType ?? "",
+          l.referenceNo ?? "",
+          l.postedBy ?? "",
+          l.reversesJournalNo ?? "",
+        ]),
+      );
+      name = `journal-lines_${from}_${to}${accounts.length ? `_${accounts.join("-")}` : ""}.csv`;
     } else if (report === "reconciliation") {
       const rows = await getReconciliation(to);
       body = csv(

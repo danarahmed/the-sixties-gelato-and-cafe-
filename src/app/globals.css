@@ -1445,6 +1445,21 @@ details > summary {
   width: 100%;
   max-width: 420px;
 }
+/* A figure that opens the records behind it (audit P1-2). */
+a.drill {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--faint);
+}
+a.drill:hover,
+a.drill:focus-visible {
+  color: var(--brand);
+  text-decoration-color: currentColor;
+}
+a.card.stat:hover,
+a.card.stat:focus-visible {
+  border-color: var(--brand);
+}
 .linklike {
   border: none;
   background: transparent;

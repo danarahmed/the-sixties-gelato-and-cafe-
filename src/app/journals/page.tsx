@@ -8,8 +8,10 @@ import {
   getPeriods,
   periodFor,
 } from "@/lib/db/books";
+import { getJournalLines, getTrialBalance } from "@/lib/db/reports";
 import { fmtIQD } from "@/lib/format";
-import { businessToday } from "@/lib/dates";
+import { businessToday, monthStart, parseDay } from "@/lib/dates";
+import { AccountLedger } from "@/components/books/AccountLedger";
 import { JournalEntryForm } from "@/components/books/JournalEntryForm";
 import { JournalRow } from "@/components/books/JournalRow";
 import { EmptyState } from "@/components/ui";
@@ -33,6 +35,42 @@ export default async function JournalsPage({
   const sp = await searchParams;
   const manualOnly = sp.show === "manual";
   const today = businessToday(profile.timezone);
+
+  // Opened from a figure: the lines of an account (or a few) behind it (0026).
+  const ledgerOf =
+    typeof sp.account === "string" ? sp.account.split(",").filter((c) => /^\d{4}$/.test(c)) : [];
+  if (ledgerOf.length > 0) {
+    const to = parseDay(sp.to, today);
+    const from = parseDay(sp.from, monthStart(to));
+    const pnl = sp.pnl === "1";
+    const [{ lines, more }, tb] = await Promise.all([
+      getJournalLines(from, to, { accounts: ledgerOf, excludeYearEnd: pnl, max: 1000 }),
+      getTrialBalance(from, to),
+    ]);
+    const chosen = tb.filter((r) => ledgerOf.includes(r.code));
+    const name = chosen.map((r) => `${r.code} ${r.name}`).join(" + ") || ledgerOf.join(" + ");
+    return (
+      <div className="grid" style={{ gap: 18 }}>
+        <div className="phead">
+          <h1>{t("nav.journals")}</h1>
+          <span className="sc">The lines behind the figure</span>
+        </div>
+        <AccountLedger
+          title={name}
+          accounts={ledgerOf}
+          from={from}
+          to={to}
+          lines={lines}
+          more={more}
+          opening={pnl ? null : chosen.reduce((s, r) => s + r.opening, 0)}
+          closing={pnl ? null : chosen.reduce((s, r) => s + r.closing, 0)}
+          pnl={pnl}
+          revenue={chosen.length > 0 && chosen.every((r) => r.type === "revenue")}
+          timezone={profile.timezone}
+        />
+      </div>
+    );
+  }
   const canPost = has(profile, "accounting.post");
   const [entries, accounts, periods, nextNo] = await Promise.all([
     getJournalRegister(200, manualOnly),

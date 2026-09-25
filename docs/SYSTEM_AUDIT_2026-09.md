@@ -56,6 +56,15 @@ that these touch are corrected; the rest wait for the P1 work.
   another total. After a refusal the till fetches today's prices; it also
   does so every ten minutes and when its screen comes back to the front.
 
+**P1-2** (migration `0026` and the app), as recommended. Of its report bugs,
+the count valued at today's cost was already put right in `0024`; Sales by
+Channel now counts refunds on the day they are made (the ledger's basis, so it
+agrees with the P&L); the two profits are named "gross profit after waste &
+fees" and "sales margin"; a reversed expense is marked and left out of the
+totals; the dashboard no longer counts a year-end close as trading. Every
+dashboard figure, P&L and trial-balance line and reconciliation figure opens
+what is behind it; each item has a stock card; journal lines download as CSV.
+
 ## The short version
 
 - **Keep the foundation.** The database is the only thing that writes to the books.
