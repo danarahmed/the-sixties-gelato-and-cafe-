@@ -92,7 +92,10 @@ browser tests through the real app, or both.
   The till treats a lost answer from the database as "may have been saved"
   (P0-4). And [`supabase/remediation/reset-test-data.sql`](../supabase/remediation/reset-test-data.sql)
   clears the test records, keeping the set-up, when the owner says so. Built
-  and tested.
+  and tested. The migration was applied to the live database on 25 September
+  2026, matches the tested build object by object (permissions included), and
+  was checked as the owner in a transaction that was rolled back. The test
+  records have not been cleared: that waits for the owner's word.
 
 ## The August 2026 audit, finding by finding
 
