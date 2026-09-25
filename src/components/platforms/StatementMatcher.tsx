@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { matchStatementAction, postStatementAction } from "@/lib/actions/settlements";
 import { fmtIQD } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
+import { useT } from "@/lib/i18n/I18nProvider";
+import { Rich } from "@/lib/i18n/Rich";
 import { Notice } from "@/components/ui";
 import {
   matchIssues,
@@ -15,6 +17,7 @@ import {
 
 type Msg = { ok: boolean; text: string } | null;
 
+// Phrases of the platforms book: shown through t(), in the reader's language.
 export const LINE_STATUS: Record<LineStatus, string> = {
   matched: "Matched",
   not_found: "No sale has this order number",
@@ -54,6 +57,7 @@ export function StatementMatcher({
   today: string;
   timezone: string;
 }) {
+  const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [platform, setPlatform] = useState(initialPlatform ?? platforms[0]?.code ?? "talabat");
@@ -103,13 +107,16 @@ export function StatementMatcher({
         setMsg({ ok: false, text: r.error });
         return;
       }
+      const posted = { journal: r.data.journalNo ?? "—", n: r.data.orders, platform: name };
       setMsg({
         ok: true,
         text:
-          `Posted (journal ${r.data.journalNo ?? "—"}): ${r.data.orders} ${name} order(s) paid out` +
-          (r.data.issues > 0
-            ? `; ${r.data.issues} line(s) not a clean match, kept with the statement to follow up.`
-            : "."),
+          r.data.issues > 0
+            ? t(
+                "Posted (journal {journal}): {n} {platform} order(s) paid out; {issues} line(s) not a clean match, kept with the statement to follow up.",
+                { ...posted, issues: r.data.issues },
+              )
+            : t("Posted (journal {journal}): {n} {platform} order(s) paid out.", posted),
       });
       setText("");
       setMatch(null);
@@ -124,9 +131,9 @@ export function StatementMatcher({
       <div className="grid" style={{ gap: 10, maxWidth: 820 }}>
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
           <label>
-            <div className="sc">Platform</div>
+            <div className="sc">{t("Platform")}</div>
             <select
-              aria-label="Platform"
+              aria-label={t("Platform")}
               value={platform}
               onChange={(e) => {
                 setPlatform(e.target.value);
@@ -141,21 +148,23 @@ export function StatementMatcher({
             </select>
           </label>
           <span className="muted" style={{ fontSize: ".8rem", flex: 1, minWidth: 260 }}>
-            Copy the statement&apos;s rows from the platform&apos;s report (a spreadsheet or CSV)
-            with their column names: <strong>Order</strong>, <strong>Payout</strong>, and{" "}
-            <strong>Commission</strong> and <strong>Fees</strong> if it gives them. Without the
-            names, the columns are read in that order.
+            <Rich
+              text={t(
+                "Copy the statement's rows from the platform's report (a spreadsheet or CSV) with their column names: <b>Order</b>, <b>Payout</b>, and <b>Commission</b> and <b>Fees</b> if it gives them. Without the names, the columns are read in that order.",
+              )}
+            />
           </span>
         </div>
         <label>
-          <div className="sc">The statement</div>
+          <div className="sc">{t("The statement")}</div>
           <textarea
-            aria-label="The statement"
+            aria-label={t("The statement")}
             rows={8}
             spellCheck={false}
             className="mono"
             style={{ width: "100%", fontSize: ".82rem" }}
             value={text}
+            // i18n-ignore: an example of the platform's report, with column names the reading knows
             placeholder={"Order ID\tPayout\tCommission\n12345\t8500\t1500"}
             onChange={(e) => {
               setText(e.target.value);
@@ -165,24 +174,28 @@ export function StatementMatcher({
         </label>
         {text.trim() !== "" && (
           <div className="muted" style={{ fontSize: ".82rem" }} data-testid="statement-read">
-            {parsed.lines.length} line(s) read
+            {t("{n} line(s) read", { n: parsed.lines.length })}
             {parsed.columns
-              ? ` · columns: ${[parsed.columns.orderNo, parsed.columns.payout, parsed.columns.commission, parsed.columns.fees].filter(Boolean).join(", ")}`
+              ? ` · ${t("columns: {columns}", { columns: [parsed.columns.orderNo, parsed.columns.payout, parsed.columns.commission, parsed.columns.fees].filter(Boolean).join(", ") })}`
               : ""}
-            {parsed.skipped > 0 ? ` · ${parsed.skipped} total row(s) left out` : ""}
+            {parsed.skipped > 0
+              ? ` · ${t("{n} total row(s) left out", { n: parsed.skipped })}`
+              : ""}
           </div>
         )}
         {parsed.problems.length > 0 && (
           <ul className="red" style={{ margin: 0, fontSize: ".85rem" }}>
             {parsed.problems.slice(0, 8).map((p) => (
-              <li key={p}>{p}</li>
+              <li key={p}>{say(p)}</li>
             ))}
-            {parsed.problems.length > 8 && <li>…and {parsed.problems.length - 8} more</li>}
+            {parsed.problems.length > 8 && (
+              <li>{t("…and {n} more", { n: parsed.problems.length - 8 })}</li>
+            )}
           </ul>
         )}
         <div>
           <button onClick={runMatch} disabled={!canMatch}>
-            {busy && !match ? "…" : "Match to the orders waiting"}
+            {busy && !match ? "…" : t("Match to the orders waiting")}
           </button>
         </div>
       </div>
@@ -191,19 +204,24 @@ export function StatementMatcher({
         <div className="grid" style={{ gap: 12, marginBlockStart: 16 }} data-testid="match-result">
           <div className="cards2">
             <div>
-              <div className="sc">Orders matched</div>
+              <div className="sc">{t("Orders matched")}</div>
               <div className="v">{match.matched}</div>
-              <div className="m">worth {fmtIQD(match.totals.orders)} at the till</div>
-            </div>
-            <div>
-              <div className="sc">Paid for them</div>
-              <div className="v">{fmtIQD(match.totals.payout)}</div>
               <div className="m">
-                commission {fmtIQD(match.totals.commission)} · fees {fmtIQD(match.totals.fees)}
+                {t("worth {amount} at the till", { amount: fmtIQD(match.totals.orders) })}
               </div>
             </div>
             <div>
-              <div className="sc">Not explained</div>
+              <div className="sc">{t("Paid for them")}</div>
+              <div className="v">{fmtIQD(match.totals.payout)}</div>
+              <div className="m">
+                {t("commission {commission} · fees {fees}", {
+                  commission: fmtIQD(match.totals.commission),
+                  fees: fmtIQD(match.totals.fees),
+                })}
+              </div>
+            </div>
+            <div>
+              <div className="sc">{t("Not explained")}</div>
               <div
                 className="v"
                 style={{ color: match.totals.difference !== 0 ? "var(--warn)" : undefined }}
@@ -211,17 +229,17 @@ export function StatementMatcher({
               >
                 {fmtIQD(match.totals.difference)}
               </div>
-              <div className="m">the orders&apos; value less what was paid, kept and charged</div>
+              <div className="m">{t("the orders' value less what was paid, kept and charged")}</div>
             </div>
             <div>
-              <div className="sc">On lines not posted</div>
+              <div className="sc">{t("On lines not posted")}</div>
               <div
                 className="v"
                 style={{ color: match.totals.notPosted !== 0 ? "var(--warn)" : undefined }}
               >
                 {fmtIQD(match.totals.notPosted)}
               </div>
-              <div className="m">{issues} line(s) need a word in the note</div>
+              <div className="m">{t("{n} line(s) need a word in the note", { n: issues })}</div>
             </div>
           </div>
 
@@ -229,14 +247,14 @@ export function StatementMatcher({
             <table>
               <thead>
                 <tr>
-                  <th>Line</th>
-                  <th>Order</th>
-                  <th>What it is</th>
-                  <th className="right">Sold for</th>
-                  <th className="right">Paid</th>
-                  <th className="right">Commission</th>
-                  <th className="right">Fees</th>
-                  <th className="right">Not explained</th>
+                  <th>{t("Line")}</th>
+                  <th>{t("Order")}</th>
+                  <th>{t("What it is")}</th>
+                  <th className="right">{t("Sold for")}</th>
+                  <th className="right">{t("Paid")}</th>
+                  <th className="right">{t("Commission")}</th>
+                  <th className="right">{t("Fees")}</th>
+                  <th className="right">{t("Not explained")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -246,12 +264,14 @@ export function StatementMatcher({
                     <td className="mono">{l.orderNo}</td>
                     <td>
                       <span className={`ref ${l.status === "matched" ? "auto" : "due"}`}>
-                        {LINE_STATUS[l.status]}
+                        {t(LINE_STATUS[l.status])}
                       </span>
-                      {l.paidBy && <span className="muted"> by statement {l.paidBy}</span>}
+                      {l.paidBy && (
+                        <span className="muted"> {t("by statement {ref}", { ref: l.paidBy })}</span>
+                      )}
                       {l.placedAt && (
                         <div className="muted" style={{ fontSize: ".78rem" }}>
-                          sold {dateTimeIn(timezone, l.placedAt)}
+                          {t("sold {when}", { when: dateTimeIn(timezone, l.placedAt) })}
                         </div>
                       )}
                     </td>
@@ -281,11 +301,15 @@ export function StatementMatcher({
               data-testid="match-missing"
             >
               <strong>
-                {match.missing.length} {name} order(s) waiting, from between those it pays, are not
-                on this statement.
+                {t(
+                  "{n} {platform} order(s) waiting, from between those it pays, are not on this statement.",
+                  { n: match.missing.length, platform: name },
+                )}
               </strong>{" "}
               <span className="muted" style={{ fontSize: ".85rem" }}>
-                Ask {name} about them; they stay waiting until a statement pays them.
+                {t("Ask {platform} about them; they stay waiting until a statement pays them.", {
+                  platform: name,
+                })}
               </span>
               <ul style={{ margin: "6px 0 0", fontSize: ".85rem" }}>
                 {match.missing.map((o) => (
@@ -300,12 +324,12 @@ export function StatementMatcher({
 
           {match.journal.length > 0 && (
             <div className="grid" style={{ gap: 4, maxWidth: 560 }} data-testid="match-journal">
-              <div className="sc">The journal it would post</div>
+              <div className="sc">{t("The journal it would post")}</div>
               {match.journal.map((j) => (
                 <div className="deduction-row" key={j.code}>
                   <span>
-                    <span className="muted">{j.debit ? "Dr" : "Cr"}</span>{" "}
-                    {ACCOUNT[j.code] ?? j.code}
+                    <span className="muted">{j.debit ? t("Dr") : t("Cr")}</span>{" "}
+                    {t(ACCOUNT[j.code] ?? j.code)}
                   </span>
                   <span className="mono">{fmtIQD(j.debit || j.credit)}</span>
                 </div>
@@ -316,18 +340,18 @@ export function StatementMatcher({
           {canPost && match.matched > 0 && (
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
               <label style={{ minWidth: 200 }}>
-                <div className="sc">Statement number or date</div>
+                <div className="sc">{t("Statement number or date")}</div>
                 <input
-                  aria-label="Statement number or date"
+                  aria-label={t("Statement number or date")}
                   value={reference}
                   maxLength={80}
                   onChange={(e) => setReference(e.target.value)}
                 />
               </label>
               <label>
-                <div className="sc">The payout arrived on</div>
+                <div className="sc">{t("The payout arrived on")}</div>
                 <input
-                  aria-label="The payout arrived on"
+                  aria-label={t("The payout arrived on")}
                   type="date"
                   value={receivedOn}
                   max={today}
@@ -336,23 +360,25 @@ export function StatementMatcher({
               </label>
               <label style={{ flex: 1, minWidth: 260 }}>
                 <div className="sc">
-                  Note{issues > 0 ? ": say what the lines that do not match are" : " (optional)"}
+                  {issues > 0
+                    ? t("Note: say what the lines that do not match are")
+                    : t("Note (optional)")}
                 </div>
                 <input
-                  aria-label="Note"
+                  aria-label={t("Note")}
                   value={note}
                   maxLength={500}
                   onChange={(e) => setNote(e.target.value)}
                 />
               </label>
               <button className="btn-primary" onClick={post} disabled={!canSubmit}>
-                {busy ? "…" : "Post the payout"}
+                {busy ? "…" : t("Post the payout")}
               </button>
             </div>
           )}
           {!canPost && (
             <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-              The owner or the accountant posts the payout.
+              {t("The owner or the accountant posts the payout.")}
             </p>
           )}
         </div>

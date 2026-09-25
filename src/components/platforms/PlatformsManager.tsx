@@ -313,7 +313,7 @@ function PlatformRow({
 }
 
 function AddPlatform({ onDone }: { onDone: (m: Msg) => void }) {
-  const { t } = useT();
+  const { t, msg: say } = useT();
   const { set, name: channelName } = useChannels();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -331,7 +331,7 @@ function AddPlatform({ onDone }: { onDone: (m: Msg) => void }) {
       if (!r.ok) return onDone({ ok: false, text: r.error });
       const d = r.data;
       const parts = [t("plat.added").replace("{name}", d.name)];
-      if (d.setupError) parts.push(t("plat.setupFailed").replace("{error}", d.setupError));
+      if (d.setupError) parts.push(t("plat.setupFailed").replace("{error}", say(d.setupError)));
       else if (like)
         parts.push(
           t("plat.copied")

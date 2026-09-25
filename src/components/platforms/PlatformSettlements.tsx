@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { cancelPlatformSettlementAction } from "@/lib/actions/settlements";
 import { fmtIQD } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import type { PlatformSettlement } from "@/lib/settlements";
 
@@ -23,6 +24,7 @@ export function PlatformSettlements({
   canCancel: boolean;
   timezone: string;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [cancelling, setCancelling] = useState<string | null>(null);
@@ -37,7 +39,10 @@ export function PlatformSettlements({
         setMsg({ ok: false, text: r.error });
         return;
       }
-      setMsg({ ok: true, text: "Cancelled: its journal is reversed, and its orders wait again." });
+      setMsg({
+        ok: true,
+        text: t("Cancelled: its journal is reversed, and its orders wait again."),
+      });
       setCancelling(null);
       setReason("");
       router.refresh();
@@ -51,12 +56,12 @@ export function PlatformSettlements({
         <table>
           <thead>
             <tr>
-              <th>Statement</th>
-              <th>Arrived</th>
-              <th className="right">Orders paid</th>
-              <th className="right">Paid for them</th>
-              <th>Journal</th>
-              <th>By</th>
+              <th>{t("Statement")}</th>
+              <th>{t("Arrived")}</th>
+              <th className="right">{t("Orders paid")}</th>
+              <th className="right">{t("Paid for them")}</th>
+              <th>{t("Journal")}</th>
+              <th>{t("By")}</th>
               <th></th>
             </tr>
           </thead>
@@ -72,10 +77,12 @@ export function PlatformSettlements({
                   <span className="mono">{s.reference}</span>
                   {s.periodStart && (
                     <div className="muted" style={{ fontSize: ".78rem" }}>
-                      orders of{" "}
-                      {s.periodStart === s.periodEnd
-                        ? s.periodStart
-                        : `${s.periodStart} – ${s.periodEnd}`}
+                      {t("orders of {period}", {
+                        period:
+                          s.periodStart === s.periodEnd
+                            ? s.periodStart
+                            : `${s.periodStart} – ${s.periodEnd}`,
+                      })}
                     </div>
                   )}
                   {s.note && (
@@ -89,7 +96,9 @@ export function PlatformSettlements({
                 </td>
                 <td className="right money">
                   {s.orders}
-                  {s.lines > s.orders && <span className="muted"> of {s.lines} lines</span>}
+                  {s.lines > s.orders && (
+                    <span className="muted"> {t("of {n} lines", { n: s.lines })}</span>
+                  )}
                 </td>
                 <td className="right money">{fmtIQD(s.payout)}</td>
                 <td className="mono">{s.journalNo ?? "—"}</td>
@@ -100,14 +109,14 @@ export function PlatformSettlements({
                 <td>
                   {s.cancelledAt ? (
                     <span className="ref due" title={s.cancelReason ?? undefined}>
-                      Cancelled
+                      {t("Cancelled")}
                     </span>
                   ) : canCancel && s.journalNo !== null ? (
                     cancelling === s.id ? (
                       <span style={{ display: "inline-flex", gap: 6, flexWrap: "wrap" }}>
                         <input
-                          aria-label="Why it is cancelled"
-                          placeholder="Why it is cancelled"
+                          aria-label={t("Why it is cancelled")}
+                          placeholder={t("Why it is cancelled")}
                           value={reason}
                           maxLength={300}
                           onChange={(e) => setReason(e.target.value)}
@@ -116,15 +125,15 @@ export function PlatformSettlements({
                           onClick={() => cancel(s.id)}
                           disabled={busy || reason.trim().length < 3}
                         >
-                          Cancel it
+                          {t("Cancel it")}
                         </button>
                         <button onClick={() => setCancelling(null)} disabled={busy}>
-                          Keep
+                          {t("Keep")}
                         </button>
                       </span>
                     ) : (
                       <button onClick={() => setCancelling(s.id)} disabled={busy}>
-                        Cancel…
+                        {t("Cancel…")}
                       </button>
                     )
                   ) : null}
