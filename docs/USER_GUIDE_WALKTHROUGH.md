@@ -103,10 +103,14 @@ manager, branch manager, accountant, auditor
 
 Today, from the books:
 
-- **Net sales today**, **Gross profit**, **Orders**, **Average order value**;
+- **Net sales today**, **Gross profit after waste & fees**, **Orders**,
+  **Average order value**;
 - **Inventory (1200)**: the value of stock in the ledger;
 - **Low-stock items**: a count, and a list of items below their reorder level or
   negative;
+- each figure opens what is behind it: net sales the Sales by Channel report,
+  gross profit the P&L, orders today's orders, inventory and low stock the
+  Inventory page;
 - **Recent sales**;
 - whether the **books reconcile**, with a link to the differences if they do not.
 
@@ -155,7 +159,9 @@ prices every ten minutes and whenever their screen comes back to the front. A
 **Location:** Sidebar → **Orders** · `/orders` · **Who:** anyone who sees costs
 
 Every sale: number, time, channel, items, how it was paid, status, net and
-margin.
+margin (the sale's price less the recipe cost of what it used). Choose **From**,
+**To** and a **Channel** to see the sales of those days; a report's figures open
+here with them chosen.
 
 - **Void.** For a sale rung in error, until the drawer holding its cash is
   counted (after midnight too: the count, not the date, decides).
@@ -173,14 +179,16 @@ counting the drawer: managers and the owner; moving cash: managers, the
 accountant and the owner
 
 - **Cards:**
-  - net sales over the last 30 trading days;
-  - refunds since;
-  - cost of sales and margin;
+  - net sales, after refunds, over the last 30 trading days;
+  - refunds made in those days (on the day each was made);
+  - the cost of what was sold (less what refunds put back on the shelf) and
+    the sales margin;
   - **Days whose cash is not counted**, with how many are before today, and
     when the drawer was last counted.
 - **Daily Sales Summaries:** one line per day and channel (voided sales left
-  out), with orders, net, later refunds, cost, and whether the day's cash is
-  **Counted** or **Not counted**.
+  out), with orders (opening that day's sales), sales, refunds made that day,
+  net sales, cost, and whether the day's cash is **Counted** or **Not
+  counted**.
 - **Count the Drawer** — at the end of a shift or of the night, whatever the
   time. The café trades past midnight, so a count covers **everything since
   the last count**, not one calendar day; a sale rung after the count is in the
@@ -275,7 +283,9 @@ costs; recording: managers, accountant, owner
 4. The entry is shown exactly as it will post (**Balanced — debits equal
    credits**), then **Post expense**.
 
-Below: the **Expense Register** and totals **By Account**.
+Below: the **Expense Register** and totals **By Account**. An expense whose
+journal has been reversed stays listed, marked **reversed by #…** and struck
+through, and is left out of the totals: it is no longer spent.
 
 ## 11. Purchasing
 
@@ -367,7 +377,12 @@ costs; baristas can record waste
 - **✏️ Correct stock (manager):** a signed change (− to reduce), the cost per base
   unit for additions (blank = average), and **why**. It posts to 5400.
 - **Stock on hand:** each item's quantity, unit, reorder level, average cost,
-  value and status: **low**, or **negative** (shown, never hidden).
+  value and status: **low**, or **negative** (shown, never hidden). Open an
+  item for its **stock card**: for the dates chosen (this month unless
+  changed), what was on hand when the first day began; what was received,
+  sold, used in batches, made, wasted, counted and corrected; and what was on
+  hand at the end, which is what Stock on hand shows. Below, every movement,
+  with the quantity and value on hand after it.
 - **Movements:** the most recent entries in the stock ledger.
 
 ## 14. Stock Count
@@ -470,6 +485,12 @@ costs; posting: accountant, general manager, owner
   drawer count or cash moved is corrected through that record instead (cash
   moved: move it back).
 
+- **An account's lines.** A trial-balance line, a P&L line or a
+  reconciliation figure opens the journal lines behind it here: date, journal
+  number, narration, where it came from, debit, credit and the balance after
+  each, from the opening balance to the closing one (from the P&L: adding up to
+  the P&L's figure, the year-end close left out). **CSV** downloads them.
+
 ## 17. Chart of Accounts
 
 **Location:** Sidebar → **Chart of Accounts** · `/accounting` · **Who:** anyone
@@ -478,7 +499,7 @@ who sees costs; locking: accountant, general manager, owner; reopening: owner
 - **Months** across the top, 🔒 when locked. Choose one.
 - **Trial Balance** for that month: each account's opening balance, debits,
   credits and closing balance, from published entries only, with the totals and
-  **Download CSV**.
+  **Download CSV**. Open an account for its journal lines.
 - **Closing the month:** the checklist, every item of which must pass:
   - earlier months locked;
   - no drafts;
@@ -502,6 +523,8 @@ who sees costs; locking: accountant, general manager, owner; reopening: owner
 the P&L: owner, managers, accountant, auditor
 
 Choose **From** and **To**, or **This month**, **Last month**, **This year**.
+**Every journal line (CSV)** downloads the whole ledger for those dates, for the
+accountant's own tools.
 
 - **Do the books tie?** Each subledger against its control account, as at the
   **To** date, with **CSV**:
@@ -511,14 +534,20 @@ Choose **From** and **To**, or **This month**, **Last month**, **This year**.
   - deliveries not yet billed vs Goods received not invoiced;
   - sales vs revenue.
 
-  ✅ means they agree. Below it, **Stock the old app never journaled** lists any
+  ✅ means they agree. Each side opens what is behind it: the records (stock,
+  unpaid bills, deliveries, orders) and the account's journal lines. Below it,
+  **Stock the old app never journaled** lists any
   stock the previous app moved without a journal, each with the entry it would
   post. The owner reviews them and posts them in one step, with a reason (see
   [`REMEDIATION.md`](REMEDIATION.md)).
 
-- **Profit & Loss:** income, cost of sales, gross profit, operating expenses and
-  net, from published entries, with **CSV**.
-- **Sales by Channel:** orders, net sales and gross profit per channel.
+- **Profit & Loss:** income, cost of sales, **gross profit after waste & fees**,
+  operating expenses and net, from published entries, with **CSV**. Each line
+  opens its journal lines, which add up to it.
+- **Sales by Channel:** per channel and in all, the orders (opening them),
+  sales, refunds made in the dates, **net sales** (the P&L's net revenue) and
+  the **sales margin** (net sales less the recipe cost of what was sold, before
+  waste and fees).
 - **Uncosted Sales:** each sale in the dates recorded with no cost, or part of
   it missing (no recipe, or an ingredient used before it had a cost), and why.
   Their profit is overstated; the fix is for the next sales.

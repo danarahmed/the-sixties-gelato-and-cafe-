@@ -38,6 +38,23 @@ export function dateTimeIn(timezone: string, iso: string): string {
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`;
 }
 
+/**
+ * The instant a business day begins — midnight in `timezone` — as an ISO
+ * string, for reading records by the business's own days.
+ */
+export function dayStart(day: string, timezone: string): string {
+  const midnightUtc = Date.parse(`${day}T00:00:00Z`);
+  let t = midnightUtc;
+  // Twice: the zone's offset can differ either side of a change of clocks.
+  for (let i = 0; i < 2; i++) {
+    const local = Date.parse(
+      `${dateTimeIn(timezone, new Date(t).toISOString()).replace(" ", "T")}:00Z`,
+    );
+    t -= local - midnightUtc;
+  }
+  return new Date(t).toISOString();
+}
+
 /** Calendar arithmetic on YYYY-MM-DD strings (no timezone involved). */
 export function addDays(day: string, n: number): string {
   const d = new Date(`${day}T00:00:00Z`);

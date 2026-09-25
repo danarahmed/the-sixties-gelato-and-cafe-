@@ -146,12 +146,12 @@ select test.eq((
   'production_recipes,publish_journal,receive_goods,record_bill,'
   'record_count,record_expense,record_opening_stock,record_production,'
   'record_sale,record_waste,'
-  'refund_sale,reject_stock_count,report_daily_sales,report_day_totals,report_profit_and_loss,'
+  'refund_sale,reject_stock_count,report_daily_sales,report_day_totals,report_journal_lines,report_profit_and_loss,'
   'report_reconciliation,report_trial_balance,report_unclosed_days,report_uncosted_sales,reverse_journal,review_stock_count,'
   'save_batch_recipe,save_category,'
   'save_journal,save_tab,save_table,'
   'set_member_active,set_member_roles,set_no_stock,set_price,set_product_details,set_product_image,settle_tab,split_tab,'
-  'start_stock_count,submit_stock_count,unlock_period,void_sale',
+  'start_stock_count,stock_card,submit_stock_count,unlock_period,void_sale',
   'signed-in users can call exactly the intended API');
 select test.eq((
   select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace

@@ -300,3 +300,19 @@ through the functions in `0018`.
   `cost.view`) is the Reports list. `period_close_checklist` gains `blocks`:
   its new `uncosted` row is a warning (`blocks = false`), and `lock_period`
   refuses only on the rows that block.
+
+### Reports that agree, and numbers that open (`0026`)
+
+No table changes.
+
+- `report_daily_sales` returns `refunds` (made that day against the channel's
+  sales, whenever the sale) and `returned_cost` (what those refunds put back
+  on the shelf) in place of `refunded`, so net sales are the P&L's.
+- `dashboard_summary` leaves out the year-end close, as the P&L does.
+- `report_journal_lines(from, to, accounts, exclude_year_end)` (needs
+  `cost.view`, like the trial balance): the published lines, with the journal
+  number, narration, source, account and who posted it, in a stable order the
+  app reads in pages of 1,000.
+- `stock_card(item, from, to)` (needs `cost.view`): an opening line (seq 0)
+  then each movement, its kind (`stock_card_kind`, internal) and the quantity
+  and value on hand after it.

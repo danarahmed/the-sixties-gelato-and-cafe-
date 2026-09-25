@@ -22,10 +22,13 @@ export default async function ExpensesPage() {
   ]);
   const period = periodFor(periods, today);
   const locked = period?.status === "locked";
-  const total = rows.reduce((s, r) => s + r.amount, 0);
+  // A reversed expense stays listed, marked, but is no longer spent (audit P1-2).
+  const live = rows.filter((r) => r.reversedBy === null);
+  const total = live.reduce((s, r) => s + r.amount, 0);
+  const reversed = rows.length - live.length;
 
   const byAccount = new Map<string, number>();
-  for (const r of rows) byAccount.set(r.account, (byAccount.get(r.account) ?? 0) + r.amount);
+  for (const r of live) byAccount.set(r.account, (byAccount.get(r.account) ?? 0) + r.amount);
 
   return (
     <div className="grid" style={{ gap: 18 }}>
@@ -82,18 +85,35 @@ export default async function ExpensesPage() {
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.id}>
+                  <tr key={r.id} className={r.reversedBy !== null ? "muted" : undefined}>
                     <td>{r.date}</td>
-                    <td>{r.description}</td>
+                    <td>
+                      {r.description}
+                      {r.reversedBy !== null && (
+                        <span className="badge warn" style={{ marginInlineStart: 6 }}>
+                          reversed by #{r.reversedBy}
+                        </span>
+                      )}
+                    </td>
                     <td className="muted">{r.account}</td>
                     <td className="mono">{r.journalNo ?? "—"}</td>
                     <td className="muted">{r.by ?? "—"}</td>
-                    <td className="right money">{fmtIQD(r.amount)}</td>
+                    <td
+                      className="right money"
+                      style={{
+                        textDecoration: r.reversedBy !== null ? "line-through" : undefined,
+                      }}
+                    >
+                      {fmtIQD(r.amount)}
+                    </td>
                   </tr>
                 ))}
                 <tr className="grand">
                   <td />
-                  <td>Total shown</td>
+                  <td>
+                    Total shown
+                    {reversed > 0 ? `, less ${reversed} reversed` : ""}
+                  </td>
                   <td />
                   <td />
                   <td />

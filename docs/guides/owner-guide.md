@@ -197,6 +197,18 @@ counts them.
 4. A locked month refuses every posting. Only you can reopen it, with a reason
    on the audit trail. Reopen the most recent locked month first.
 
+## Why is a number what it is?
+
+Open it. Every figure on the Dashboard, every line of the P&L and of the trial
+balance, and each side of **Do the books tie?** opens the records or the
+journal lines behind it; an item on Inventory opens its **stock card** (what it
+opened with, what came in and went out, and what is left); a day on Sales opens
+its orders. Two profits are shown, each named for what it is: **gross profit
+after waste & fees** (Dashboard, P&L) and the **sales margin** (price less the
+recipe cost, on Sales by Channel, Sales and Orders). A refund counts on the day
+it is made, so net sales are the same on every report. **Reports → every journal
+line (CSV)** gives your accountant the whole ledger.
+
 ## Correcting a mistake
 
 | The mistake                                                              | Correct it with                                                                                                                |

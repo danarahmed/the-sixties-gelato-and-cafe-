@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
-import { getDailySales, getDrawerCounts, getDrawerStatus, getUnclosedDays } from "@/lib/db/books";
+import {
+  getDailySales,
+  getDrawerCounts,
+  getDrawerStatus,
+  getUnclosedDays,
+  salesTotals,
+} from "@/lib/db/books";
 import { channelLabel, fmtIQD } from "@/lib/format";
 import { addDays, businessToday, dateTimeIn } from "@/lib/dates";
 import { DrawerCount, MoveCash } from "@/components/books/DrawerCount";
@@ -29,10 +35,8 @@ export default async function SalesPage() {
   const overdue = uncounted.filter((d) => d < today).length;
   const at = (ts: string | null) => (ts ? dateTimeIn(profile.timezone, ts) : null);
 
-  const net = rows.reduce((s, r) => s + r.net, 0);
-  const cogs = rows.reduce((s, r) => s + r.cogs, 0);
-  const refunded = rows.reduce((s, r) => s + r.refunded, 0);
-  const days = new Set(rows.map((r) => r.day)).size;
+  const totals = salesTotals(rows);
+  const days = new Set(rows.filter((r) => r.orders > 0).map((r) => r.day)).size;
 
   return (
     <div className="grid" style={{ gap: 18 }}>
@@ -50,20 +54,25 @@ export default async function SalesPage() {
 
       <div className="cards2">
         <div>
-          <div className="sc">Net sales</div>
-          <div className="v">{fmtIQD(net)}</div>
-          <div className="m">Across {days} trading day(s)</div>
-        </div>
-        <div>
-          <div className="sc">Refunded since</div>
-          <div className="v red">({fmtIQD(refunded)})</div>
-          <div className="m">Through 4200 Sales returns</div>
-        </div>
-        <div>
-          <div className="sc">Cost of sales</div>
-          <div className="v">{fmtIQD(cogs)}</div>
+          <div className="sc">Net sales, after refunds</div>
+          <div className="v">{fmtIQD(totals.net)}</div>
           <div className="m">
-            Margin {net > 0 ? (((net - cogs) / net) * 100).toFixed(1) : "0.0"}%
+            <Link className="drill" href={`/orders?from=${from}&to=${today}`}>
+              Across {days} trading day(s)
+            </Link>
+          </div>
+        </div>
+        <div>
+          <div className="sc">Refunds made</div>
+          <div className="v red">({fmtIQD(totals.refunds)})</div>
+          <div className="m">On the day they were made, through 4200 Sales returns</div>
+        </div>
+        <div>
+          <div className="sc">Cost of what was sold</div>
+          <div className="v">{fmtIQD(totals.cost)}</div>
+          <div className="m">
+            Sales margin {totals.net > 0 ? ((totals.margin / totals.net) * 100).toFixed(1) : "0.0"}%
+            · before waste and fees
           </div>
         </div>
         <div>
@@ -84,7 +93,7 @@ export default async function SalesPage() {
         <div className="panel-h">
           <h3>Daily Sales Summaries</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            One line per day per channel · voided sales excluded
+            One line per day per channel · voided sales excluded · a refund on the day it was made
           </span>
         </div>
         {rows.length === 0 ? (
@@ -100,9 +109,10 @@ export default async function SalesPage() {
                   <th>Date</th>
                   <th>Channel</th>
                   <th className="right">Orders</th>
-                  <th className="right">Net</th>
-                  <th className="right">Later refunded</th>
-                  <th className="right">COGS</th>
+                  <th className="right">Sales</th>
+                  <th className="right">Refunds</th>
+                  <th className="right">Net sales</th>
+                  <th className="right">Cost</th>
                   <th className="right">Cash</th>
                 </tr>
               </thead>
@@ -115,10 +125,18 @@ export default async function SalesPage() {
                         {channelLabel[r.channel as SalesChannel] ?? r.channel}
                       </span>
                     </td>
-                    <td className="right money">{r.orders}</td>
+                    <td className="right money">
+                      <Link
+                        className="drill"
+                        href={`/orders?from=${r.day}&to=${r.day}&channel=${encodeURIComponent(r.channel)}`}
+                      >
+                        {r.orders}
+                      </Link>
+                    </td>
                     <td className="right money">{fmtIQD(r.net)}</td>
-                    <td className="right money">{r.refunded ? `(${fmtIQD(r.refunded)})` : "—"}</td>
-                    <td className="right money">{fmtIQD(r.cogs)}</td>
+                    <td className="right money">{r.refunds ? `(${fmtIQD(r.refunds)})` : "—"}</td>
+                    <td className="right money">{fmtIQD(r.net - r.refunds)}</td>
+                    <td className="right money">{fmtIQD(r.cogs - r.returnedCost)}</td>
                     <td className="right">
                       <span className={`ref ${notCounted.has(r.day) ? "due" : "auto"}`}>
                         {notCounted.has(r.day) ? "Not counted" : "Counted"}

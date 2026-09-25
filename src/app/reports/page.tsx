@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
-import { getDailySales, getVendorBook, ageBills } from "@/lib/db/books";
+import { getDailySales, getVendorBook, ageBills, salesTotals } from "@/lib/db/books";
 import {
   getLegacyUnposted,
   getMenuCosting,
@@ -52,15 +52,18 @@ export default async function ReportsPage({
   const ageing = ageBills(book.openBills);
   const unreconciled = rec.filter((r) => r.difference !== 0);
 
-  const byChannel = new Map<string, { orders: number; net: number; cogs: number }>();
-  for (const r of sales) {
-    const cur = byChannel.get(r.channel) ?? { orders: 0, net: 0, cogs: 0 };
-    byChannel.set(r.channel, {
-      orders: cur.orders + r.orders,
-      net: cur.net + r.net,
-      cogs: cur.cogs + r.cogs,
-    });
-  }
+  const byChannel = new Map<string, typeof sales>();
+  for (const r of sales) byChannel.set(r.channel, [...(byChannel.get(r.channel) ?? []), r]);
+  const allChannels = salesTotals(sales);
+  // Each reconciliation line opens its two sides: the records, and the ledger.
+  const recLinks: Record<string, { records: string; accounts: string }> = {
+    inventory: { records: "/inventory", accounts: "1200" },
+    payables: { records: "/vendors", accounts: "2000" },
+    grni: { records: "/purchasing", accounts: "2050" },
+    sales: { records: `/orders?from=${monthStart(to)}&to=${to}`, accounts: "4000,4100,4200" },
+  };
+  const ledger = (accounts: string, f: string, tt: string, pnl = false) =>
+    `/journals?account=${accounts}&from=${f}&to=${tt}${pnl ? "&pnl=1" : ""}`;
 
   const lastMonthEnd = addDays(monthStart(today), -1);
   const ranges: [string, string, string][] = [
@@ -75,7 +78,10 @@ export default async function ReportsPage({
       <div className="phead">
         <h1>{t("nav.reports")}</h1>
         <span className="sc">
-          {from} to {to} · from the ledger
+          {from} to {to} · from the ledger ·{" "}
+          <a href={`/reports/export?report=journal_lines&from=${from}&to=${to}`}>
+            every journal line (CSV)
+          </a>
         </span>
       </div>
 
@@ -127,8 +133,27 @@ export default async function ReportsPage({
                     {r.difference === 0 ? "✅ " : "⛔ "}
                     {r.label}
                   </td>
-                  <td className="right money">{fmtIQD(r.subledger)}</td>
-                  <td className="right money">{fmtIQD(r.ledger)}</td>
+                  <td className="right money">
+                    {recLinks[r.key] ? (
+                      <Link className="drill" href={recLinks[r.key]!.records}>
+                        {fmtIQD(r.subledger)}
+                      </Link>
+                    ) : (
+                      fmtIQD(r.subledger)
+                    )}
+                  </td>
+                  <td className="right money">
+                    {recLinks[r.key] ? (
+                      <Link
+                        className="drill"
+                        href={ledger(recLinks[r.key]!.accounts, monthStart(to), to)}
+                      >
+                        {fmtIQD(r.ledger)}
+                      </Link>
+                    ) : (
+                      fmtIQD(r.ledger)
+                    )}
+                  </td>
                   <td className={`right money ${r.difference !== 0 ? "red" : ""}`}>
                     {fmtIQD(r.difference)}
                   </td>
@@ -170,7 +195,9 @@ export default async function ReportsPage({
             {section("revenue").map((r) => (
               <div key={r.code} className="st-row indent">
                 <span className="lbl">
-                  {r.code} {r.name}
+                  <Link className="drill" href={ledger(r.code, from, to, true)}>
+                    {r.code} {r.name}
+                  </Link>
                 </span>
                 <span className={`amt ${r.amount < 0 ? "red" : ""}`}>{fmtIQD(r.amount)}</span>
               </div>
@@ -186,14 +213,16 @@ export default async function ReportsPage({
             {section("cost_of_sales").map((r) => (
               <div key={r.code} className="st-row indent">
                 <span className="lbl">
-                  {r.code} {r.name}
+                  <Link className="drill" href={ledger(r.code, from, to, true)}>
+                    {r.code} {r.name}
+                  </Link>
                 </span>
                 <span className="amt red">({fmtIQD(r.amount)})</span>
               </div>
             ))}
             <div className="rule-single" />
             <div className="st-row total">
-              <span className="lbl">Gross profit</span>
+              <span className="lbl">Gross profit after waste &amp; fees</span>
               <span className="amt">{fmtIQD(totals.grossProfit)}</span>
             </div>
             <div className="st-row group">
@@ -203,7 +232,9 @@ export default async function ReportsPage({
             {section("operating_expenses").map((r) => (
               <div key={r.code} className="st-row indent">
                 <span className="lbl">
-                  {r.code} {r.name}
+                  <Link className="drill" href={ledger(r.code, from, to, true)}>
+                    {r.code} {r.name}
+                  </Link>
                 </span>
                 <span className="amt red">({fmtIQD(r.amount)})</span>
               </div>
@@ -222,7 +253,7 @@ export default async function ReportsPage({
         <div className="panel-h">
           <h3>Sales by Channel</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            Recorded sales, {from} to {to}, voids excluded
+            Sales {from} to {to}, voids excluded; refunds on the day they were made
           </span>
         </div>
         {byChannel.size === 0 ? (
@@ -238,23 +269,56 @@ export default async function ReportsPage({
                 <tr>
                   <th>Channel</th>
                   <th className="right">Orders</th>
+                  <th className="right">Sales</th>
+                  <th className="right">Refunds</th>
                   <th className="right">Net sales</th>
-                  <th className="right">Gross profit</th>
+                  <th className="right">Sales margin</th>
                 </tr>
               </thead>
               <tbody>
-                {[...byChannel.entries()].map(([c, v]) => (
-                  <tr key={c}>
-                    <td>
-                      <span className="ref">{channelLabel[c as SalesChannel] ?? c}</span>
-                    </td>
-                    <td className="right money">{v.orders}</td>
-                    <td className="right money">{fmtIQD(v.net)}</td>
-                    <td className="right money">{fmtIQD(v.net - v.cogs)}</td>
-                  </tr>
-                ))}
+                {[...byChannel.entries()].map(([c, list]) => {
+                  const v = salesTotals(list);
+                  return (
+                    <tr key={c}>
+                      <td>
+                        <span className="ref">{channelLabel[c as SalesChannel] ?? c}</span>
+                      </td>
+                      <td className="right money">
+                        <Link
+                          className="drill"
+                          href={`/orders?from=${from}&to=${to}&channel=${encodeURIComponent(c)}`}
+                        >
+                          {list.reduce((s, r) => s + r.orders, 0)}
+                        </Link>
+                      </td>
+                      <td className="right money">{fmtIQD(v.sold)}</td>
+                      <td className="right money">{v.refunds ? `(${fmtIQD(v.refunds)})` : "—"}</td>
+                      <td className="right money">{fmtIQD(v.net)}</td>
+                      <td className="right money">{fmtIQD(v.margin)}</td>
+                    </tr>
+                  );
+                })}
+                <tr className="grand">
+                  <td>All channels</td>
+                  <td className="right money">{sales.reduce((s, r) => s + r.orders, 0)}</td>
+                  <td className="right money">{fmtIQD(allChannels.sold)}</td>
+                  <td className="right money">
+                    {allChannels.refunds ? `(${fmtIQD(allChannels.refunds)})` : "—"}
+                  </td>
+                  <td className="right money">{fmtIQD(allChannels.net)}</td>
+                  <td className="right money">{fmtIQD(allChannels.margin)}</td>
+                </tr>
               </tbody>
             </table>
+            <p
+              className="muted"
+              style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
+            >
+              Net sales are what the P&amp;L shows as net revenue for the same dates (4000 less 4100
+              and 4200). The sales margin is net sales less the recipe cost of what was sold; the
+              P&amp;L&apos;s gross profit also takes off waste, count differences, purchase price
+              differences and platform fees.
+            </p>
           </div>
         )}
       </section>

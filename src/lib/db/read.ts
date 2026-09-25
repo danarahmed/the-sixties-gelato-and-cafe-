@@ -89,6 +89,18 @@ export interface ItemRow {
   units: UnitOption[];
 }
 
+/** One item by id, in use or not: its name and base unit (for its stock card). */
+export async function getItem(
+  id: string,
+): Promise<{ id: string; name: string; baseUnit: string } | null> {
+  const c = await db();
+  const r = rows(
+    await c.from("item").select("id,name,base_unit_code").eq("id", id).limit(1),
+    "the item",
+  )[0];
+  return r ? { id: str(r.id), name: str(r.name), baseUnit: str(r.base_unit_code) } : null;
+}
+
 export async function getItems(): Promise<ItemRow[]> {
   const c = await db();
   const [items, units] = await Promise.all([
@@ -347,18 +359,23 @@ export interface OrderRow {
   adjustments: { kind: string; amount: number; reason: string | null; at: string }[];
 }
 
-/** Recent sales with their lines, tenders and any void or refund (needs cost.view). */
-export async function getSalesOrders(limit = 200): Promise<OrderRow[]> {
+/**
+ * Recent sales with their lines, tenders and any void or refund (needs
+ * cost.view); or those placed between two instants, on one channel.
+ */
+export async function getSalesOrders(
+  limit = 200,
+  filter: { fromTs?: string; toTs?: string; channel?: string } = {},
+): Promise<OrderRow[]> {
   const c = await db();
-  const orders = rows(
-    await c
-      .from("sales_order")
-      .select("id,channel,status,net_amount,cogs_amount,placed_at,cashier_id")
-      .neq("status", "open")
-      .order("placed_at", { ascending: false })
-      .limit(limit),
-    "sales",
-  );
+  let q = c
+    .from("sales_order")
+    .select("id,channel,status,net_amount,cogs_amount,placed_at,cashier_id")
+    .neq("status", "open");
+  if (filter.fromTs) q = q.gte("placed_at", filter.fromTs);
+  if (filter.toTs) q = q.lt("placed_at", filter.toTs);
+  if (filter.channel) q = q.eq("channel", filter.channel);
+  const orders = rows(await q.order("placed_at", { ascending: false }).limit(limit), "sales");
   if (orders.length === 0) return [];
   const ids = orders.map((o) => str(o.id));
   const [lines, tenders, adjustments, variants, products, people] = await Promise.all([

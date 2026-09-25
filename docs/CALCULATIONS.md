@@ -124,6 +124,18 @@ cost. WAC is the default; FIFO is a per-item/business option.
   `src/components/production/batchMath.ts`; the domain rule,
   `src/domain/inventory/production.ts`, is the same)
 
+### The stock card (`0026`)
+
+For any item and dates: **on hand when the first day began + each kind of
+movement = on hand at the end of the last day**, which is what the stock board
+shows. The kinds: opening stock recorded; received (less returns to
+suppliers); sold (less voids, and refunds back on the shelf); used in batches;
+made; wasted (waste, spoilage, melting, staff, complimentary, samples, damage,
+expiry); counted; corrected; moved between locations. A void nets in "sold",
+and a cancelled batch in "used in batches" or "made", so each line is what
+really happened. Every movement is listed with the quantity and value on hand
+after it.
+
 ## 7. Counting & variance
 
 - `quantityVariance = counted − expected` (negative = shrinkage);
@@ -164,6 +176,27 @@ tolerance handles rounding (0 for IQD). Commission is re-derived from rate × ba
 to validate charges.
 
 ## 10. Profit, shown separately (never one number)
+
+Two figures carry a profit name, and each is labelled for what it is
+(`0026`, audit P1-2):
+
+- **Gross profit after waste & fees** (Dashboard, P&L): net revenue (4000 less
+  4100 and 4200) less everything in cost of sales, 5000–5400: the cost of
+  goods sold, purchase price differences, platform commission and fees, waste
+  and count differences. The dashboard leaves out a year-end close posted that
+  day, as the P&L always has.
+- **Sales margin** (Sales by channel, Sales, Orders): net sales less the
+  recipe cost of what was sold. Before waste, counts and fees.
+
+**Net sales** are sales less refunds, a refund counted **on the day it is
+made**, against the channel of the sale it refunds, and the cost of whatever
+went back on the shelf taken off the cost: the ledger's own basis (4200 and
+5000 on the day of the refund). So for any dates, Sales by channel's net sales
+are the P&L's net revenue. Worked example (the SQL test): two takeaway
+espressos (5,000, cost 500) and a bottle of water (1,000, cost 250) refunded
+the same day, and a card espresso kept (2,500, cost 200): sales 8,500, refunds
+6,000, net sales 2,500; cost 950 less the 250 bottle back on the shelf, 700;
+sales margin 1,800.
 
 1. **Gross sales** — before discounts.
 2. **Net sales** — after merchant-funded discounts and refunds.

@@ -1,18 +1,48 @@
+import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getSalesOrders } from "@/lib/db/read";
-import { channelLabel, fmtIQD, orderStatusLabel, tenderLabel } from "@/lib/format";
-import { dateTimeIn } from "@/lib/dates";
+import {
+  channelLabel,
+  fmtIQD,
+  orderStatusLabel,
+  SELLABLE_CHANNELS,
+  tenderLabel,
+} from "@/lib/format";
+import { addDays, businessToday, dateTimeIn, dayStart, parseDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui";
 import { OrderActions } from "@/components/OrderActions";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 
 export const dynamic = "force-dynamic";
 
-export default async function OrdersPage() {
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const profile = await requirePermission("cost.view");
   const t = await getT();
-  const orders = await getSalesOrders(300);
+  const sp = await searchParams;
+  // Opened from a report: the sales of those days (and that channel).
+  const today = businessToday(profile.timezone);
+  const filtered = typeof sp.from === "string" || typeof sp.channel === "string";
+  const from = parseDay(sp.from, today);
+  const to = parseDay(sp.to, from);
+  const channel =
+    typeof sp.channel === "string" && (SELLABLE_CHANNELS as readonly string[]).includes(sp.channel)
+      ? sp.channel
+      : "";
+  const orders = await getSalesOrders(
+    filtered ? 1000 : 300,
+    filtered
+      ? {
+          fromTs: dayStart(from, profile.timezone),
+          toTs: dayStart(addDays(to, 1), profile.timezone),
+          channel: channel || undefined,
+        }
+      : {},
+  );
   const live = orders.filter((o) => o.status === "completed");
   const totalNet = live.reduce((s, o) => s + o.net, 0);
   const totalMargin = live.reduce((s, o) => s + (o.net - o.cogs), 0);
@@ -30,9 +60,44 @@ export default async function OrdersPage() {
         audit trail.
       </p>
 
+      <form
+        className="card"
+        style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}
+      >
+        <label>
+          <div className="sc">From</div>
+          <input type="date" name="from" defaultValue={filtered ? from : ""} />
+        </label>
+        <label>
+          <div className="sc">To</div>
+          <input type="date" name="to" defaultValue={filtered ? to : ""} />
+        </label>
+        <label>
+          <div className="sc">Channel</div>
+          <select name="channel" defaultValue={channel}>
+            <option value="">Every channel</option>
+            {SELLABLE_CHANNELS.map((c) => (
+              <option key={c} value={c}>
+                {channelLabel[c]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="submit">Show</button>
+        {filtered && (
+          <Link className="badge" href="/orders">
+            The latest 300
+          </Link>
+        )}
+      </form>
+
       <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px,1fr))" }}>
         <div className="card stat">
-          <span className="label">Completed sales shown</span>
+          <span className="label">
+            {filtered
+              ? `Completed sales ${from === to ? `on ${from}` : `${from} to ${to}`}${channel ? `, ${channelLabel[channel as SalesChannel]}` : ""}`
+              : "Completed sales shown"}
+          </span>
           <span className="value">{live.length}</span>
         </div>
         <div className="card stat">
@@ -40,7 +105,7 @@ export default async function OrdersPage() {
           <span className="value mono">{fmtIQD(totalNet)}</span>
         </div>
         <div className="card stat">
-          <span className="label">Their gross profit</span>
+          <span className="label">Their sales margin (price less recipe cost)</span>
           <span className="value mono" style={{ color: "var(--ok)" }}>
             {fmtIQD(totalMargin)}
           </span>

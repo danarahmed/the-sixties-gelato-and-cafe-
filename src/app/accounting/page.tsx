@@ -125,7 +125,15 @@ export default async function AccountingPage({
                 active.map((r) => (
                   <tr key={r.code}>
                     <td className="faint">{r.code}</td>
-                    <td>{r.name}</td>
+                    <td>
+                      <Link
+                        className="drill"
+                        href={`/journals?account=${r.code}&from=${from}&to=${to}`}
+                        title="The lines behind it"
+                      >
+                        {r.name}
+                      </Link>
+                    </td>
                     <td>
                       <span className="ref">{TYPE_LABEL[r.type] ?? r.type}</span>
                     </td>
@@ -152,11 +160,12 @@ export default async function AccountingPage({
           className="muted"
           style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
         >
-          Opening and closing balances are debit-positive (a credit balance shows in brackets).
-          Drafts are excluded; so is anything outside the dates shown. That the debits equal the
-          credits is guaranteed by the database for every published entry — whether the books are{" "}
-          <em>right</em> is shown by the reconciliation on <Link href="/reports">Reports</Link>,
-          which compares each subledger with its control account.
+          Open an account for the journal lines behind it. Opening and closing balances are
+          debit-positive (a credit balance shows in brackets). Drafts are excluded; so is anything
+          outside the dates shown. That the debits equal the credits is guaranteed by the database
+          for every published entry — whether the books are <em>right</em> is shown by the
+          reconciliation on <Link href="/reports">Reports</Link>, which compares each subledger with
+          its control account.
         </p>
       </section>
 
