@@ -16,6 +16,7 @@ import { getDictionary, builtInWords } from "@/lib/i18n/dictionaries";
 import { fill, messenger, translator } from "@/lib/i18n/core";
 import { parseRich, plain } from "@/lib/i18n/Rich";
 import { LABELS } from "@/lib/format";
+import { parseCsv, toCsv } from "@/lib/csv";
 import { briefCalculations, briefFacts, briefToDo, type DailyBrief } from "@/lib/alerts";
 // @ts-expect-error: a plain script, shared with the command line
 import { scan, screens } from "../scripts/i18n-scan.mjs";
@@ -137,6 +138,24 @@ describe("the translator", () => {
     expect(JSON.stringify(parseRich("a </b> b").children)).toBe(
       JSON.stringify(["a ", "</b>", " b"]),
     );
+  });
+});
+
+describe("a language's words in a file, for a translator", () => {
+  it("come back from the file as they went out", () => {
+    const rows = [
+      ["Save", "Save", "حفظ", "Kaydet"],
+      ['Say "yes", then go', "", "", "Evet de, sonra git\nyeni satır"],
+      ["=SUM(A1)", "", "", "-1"],
+    ];
+    const file = toCsv(["key", "english", "built_in", "words"], rows);
+    expect(file.startsWith("\uFEFF")).toBe(true);
+    expect(parseCsv(file)).toEqual([["key", "english", "built_in", "words"], ...rows]);
+    // As a spreadsheet saves it: line breaks as \r\n, no mark at the start.
+    expect(parseCsv('key,words\r\n"a, b","x ""y"""\r\n')).toEqual([
+      ["key", "words"],
+      ["a, b", 'x "y"'],
+    ]);
   });
 });
 

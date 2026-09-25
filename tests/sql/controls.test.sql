@@ -134,13 +134,13 @@ select test.eq((
   select string_agg(p.proname, ',' order by p.proname)
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'execute')),
-  'acknowledge_alert,add_delivery_platform,add_item_unit,adjust_stock,alert_thresholds,approve_stock_count,cancel_bill,cancel_card_settlement,'
+  'acknowledge_alert,add_delivery_platform,add_item_unit,adjust_stock,alert_thresholds,app_words,approve_stock_count,cancel_bill,cancel_card_settlement,'
   'cancel_platform_settlement,cancel_production,cancel_scheduled_price,cancel_scheduled_recipe,'
   'cancel_stock_count,cancel_tab,card_takings,change_product_recipe,'
   'clear_product_image,close_day,copy_platform_setup,count_drawer,create_item,create_product,'
   'create_supplier,current_alerts,current_app_user_id,'
   'current_business_id,current_can_view_costs,current_has_permission,current_has_role,daily_brief,dashboard_summary,'
-  'discard_journal,drawer_status,invite_member,item_costs,item_price_history,legacy_unposted,list_approvers,list_members,'
+  'discard_journal,drawer_status,invite_member,item_costs,item_price_history,language_settings,legacy_unposted,list_approvers,list_members,'
   'lock_period,'
   'mark_bill_printed,match_platform_statement,'
   'menu_costing,menu_recipe_lines,menu_scheduled,move_cash,my_profile,'
@@ -153,7 +153,7 @@ select test.eq((
   'report_profit_and_loss,report_reconciliation,report_trial_balance,report_unclosed_days,report_uncosted_sales,'
   'request_approval,reverse_journal,review_stock_count,sales_channels,'
   'save_batch_recipe,save_category,'
-  'save_journal,save_tab,save_table,'
+  'save_journal,save_language,save_phrases,save_tab,save_table,'
   'set_alert_thresholds,set_member_active,set_member_roles,set_my_pin,set_no_stock,set_price,set_product_details,set_product_image,settle_tab,'
   'snooze_alert,split_tab,'
   'start_stock_count,stock_card,submit_stock_count,unlock_period,update_delivery_platform,update_item,update_supplier,void_sale',

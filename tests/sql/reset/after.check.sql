@@ -26,6 +26,9 @@ select test.eq((select count(*) from gl_account where business_id = '00000000-00
                                                   and code in ('1000', '1005', '6300'))::int, 3, 'the chart of accounts is kept');
 select test.ok((select pin_hash is not null from app_user where email = 'owner@example.com'), 'and the PIN the owner approves with');
 select test.eq((select count(*) from reason_code)::int, 20, 'the list of reasons is kept');
+select test.eq((select string_agg(code || ' ' || name, ', ') from app_language), 'tr Türkçe', 'the languages the café added are kept');
+select test.eq((select string_agg(locale || ' ' || words, ', ' order by locale) from app_phrase), 'ar احفظ, tr Kaydet',
+  'and its own words for phrases');
 
 -- The records of trading are gone, and the audit trail says so.
 select test.eq((select count(*) from sales_order) + (select count(*) from journal_entry) + (select count(*) from inventory_movement)
