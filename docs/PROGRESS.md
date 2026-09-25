@@ -169,7 +169,10 @@ browser tests through the real app, or both.
   with a note or snoozed with a reason (both audited), and resolves itself
   when the condition clears. Below it, yesterday's brief: facts, calculations
   and what to do, apart. The owner sets the thresholds on Settings; each
-  vendor says how many days a delivery takes. Built and tested.
+  vendor says how many days a delivery takes. Built and tested. The migration
+  was applied to the live database on 25 September 2026, matches the tested
+  build object by object (permissions included), and was checked as the owner
+  in a transaction that was rolled back.
 
 ## The August 2026 audit, finding by finding
 
