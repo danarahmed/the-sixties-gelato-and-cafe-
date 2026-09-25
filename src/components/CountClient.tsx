@@ -11,11 +11,13 @@ import {
   submitCountAction,
 } from "@/lib/actions/stock";
 import { fmtIQD } from "@/lib/format";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice, inputStyle } from "@/components/ui";
 
 type Msg = { ok: boolean; text: string } | null;
 
 export function StartCount() {
+  const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -25,9 +27,11 @@ export function StartCount() {
       style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}
     >
       <div style={{ flex: 1, minWidth: 220 }}>
-        <strong>Start a full count</strong>
+        <strong>{t("Start a full count")}</strong>
         <div className="muted" style={{ fontSize: ".85rem" }}>
-          Every active item is listed. Count them in any order; your entries are saved as you go.
+          {t(
+            "Every active item is listed. Count them in any order; your entries are saved as you go.",
+          )}
         </div>
       </div>
       <button
@@ -41,7 +45,7 @@ export function StartCount() {
           })
         }
       >
-        {busy ? "Opening…" : "Start count"}
+        {busy ? t("Opening…") : t("Start count")}
       </button>
       <Notice msg={msg} />
     </div>
@@ -57,6 +61,7 @@ interface SheetLine {
 
 /** The counter's sheet: names and their own entries — never what the ledger expects. */
 export function CountSheet({ countId, lines }: { countId: string; lines: SheetLine[] }) {
+  const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [values, setValues] = useState<Record<string, string>>(
@@ -87,7 +92,7 @@ export function CountSheet({ countId, lines }: { countId: string; lines: SheetLi
     start(async () => {
       const r = await submitCountAction({ countId });
       if (r.ok) {
-        setMsg({ ok: true, text: "Count submitted for a manager to review." });
+        setMsg({ ok: true, text: t("Count submitted for a manager to review.") });
         router.refresh();
       } else setMsg({ ok: false, text: r.error });
     });
@@ -104,16 +109,16 @@ export function CountSheet({ countId, lines }: { countId: string; lines: SheetLi
           flexWrap: "wrap",
         }}
       >
-        <h3 style={{ margin: 0 }}>Your count</h3>
+        <h3 style={{ margin: 0 }}>{t("Your count")}</h3>
         <span className="muted" style={{ fontSize: ".85rem" }}>
-          {done} of {lines.length} counted
+          {t("{done} of {total} counted", { done, total: lines.length })}
         </span>
       </div>
       <table style={{ marginTop: 10 }}>
         <thead>
           <tr>
-            <th>Item</th>
-            <th className="right">Counted</th>
+            <th>{t("Item")}</th>
+            <th className="right">{t("Counted")}</th>
             <th />
           </tr>
         </thead>
@@ -124,7 +129,7 @@ export function CountSheet({ countId, lines }: { countId: string; lines: SheetLi
                 {l.name} <span className="muted">({l.unit})</span>
                 {errors[l.itemId] && (
                   <div className="red" style={{ fontSize: ".75rem" }}>
-                    {errors[l.itemId]}
+                    {say(errors[l.itemId] ?? "")}
                   </div>
                 )}
               </td>
@@ -139,7 +144,7 @@ export function CountSheet({ countId, lines }: { countId: string; lines: SheetLi
                   onBlur={() => void save(l.itemId)}
                   inputMode="decimal"
                   placeholder="—"
-                  aria-label={`Counted ${l.name}`}
+                  aria-label={t("Counted {name}", { name: l.name })}
                 />
               </td>
               <td style={{ width: 30 }}>{saved[l.itemId] ? "✓" : ""}</td>
@@ -151,11 +156,11 @@ export function CountSheet({ countId, lines }: { countId: string; lines: SheetLi
         style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 12, flexWrap: "wrap" }}
       >
         <button className="btn-primary" onClick={submit} disabled={busy || done < lines.length}>
-          {busy ? "Submitting…" : "Submit count"}
+          {busy ? t("Submitting…") : t("Submit count")}
         </button>
         {done < lines.length && (
           <span className="muted" style={{ fontSize: ".8rem" }}>
-            Count every item before submitting — enter 0 for anything not there.
+            {t("Count every item before submitting — enter 0 for anything not there.")}
           </span>
         )}
         <Notice msg={msg} />
@@ -166,6 +171,7 @@ export function CountSheet({ countId, lines }: { countId: string; lines: SheetLi
 
 /** Approve or reject a submitted count — by someone other than the counter. */
 export function ReviewActions({ countId, countedByMe }: { countId: string; countedByMe: boolean }) {
+  const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [reason, setReason] = useState("");
@@ -174,7 +180,7 @@ export function ReviewActions({ countId, countedByMe }: { countId: string; count
   if (countedByMe) {
     return (
       <p className="muted" style={{ fontSize: ".85rem" }}>
-        You counted this one, so someone else must approve it.
+        {t("You counted this one, so someone else must approve it.")}
       </p>
     );
   }
@@ -189,19 +195,28 @@ export function ReviewActions({ countId, countedByMe }: { countId: string; count
             if (r.ok) {
               setMsg({
                 ok: true,
-                text: `Approved — loss ${fmtIQD(r.data.loss)}, gain ${fmtIQD(r.data.gain)}${r.data.journalNo ? ` (journal ${r.data.journalNo})` : ""}.`,
+                text: r.data.journalNo
+                  ? t("Approved — loss {loss}, gain {gain} (journal {journal}).", {
+                      loss: fmtIQD(r.data.loss),
+                      gain: fmtIQD(r.data.gain),
+                      journal: r.data.journalNo,
+                    })
+                  : t("Approved — loss {loss}, gain {gain}.", {
+                      loss: fmtIQD(r.data.loss),
+                      gain: fmtIQD(r.data.gain),
+                    }),
               });
               router.refresh();
             } else setMsg({ ok: false, text: r.error });
           })
         }
       >
-        Approve and post variances
+        {t("Approve and post variances")}
       </button>
       <input
         value={reason}
         onChange={(e) => setReason(e.target.value)}
-        placeholder="Reason to reject (recount)"
+        placeholder={t("Reason to reject (recount)")}
         style={{ minHeight: 36, minWidth: 200 }}
         maxLength={300}
       />
@@ -211,13 +226,13 @@ export function ReviewActions({ countId, countedByMe }: { countId: string; count
           start(async () => {
             const r = await rejectCountAction({ countId, reason });
             if (r.ok) {
-              setMsg({ ok: true, text: "Rejected — nothing was posted." });
+              setMsg({ ok: true, text: t("Rejected — nothing was posted.") });
               router.refresh();
             } else setMsg({ ok: false, text: r.error });
           })
         }
       >
-        Reject
+        {t("Reject")}
       </button>
       <Notice msg={msg} />
     </div>
@@ -226,6 +241,7 @@ export function ReviewActions({ countId, countedByMe }: { countId: string; count
 
 /** An open count cancelled, with the reason, by its counter or a manager. Nothing was posted. */
 export function CancelCount({ countId, label }: { countId: string; label: string }) {
+  const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [open, setOpen] = useState(false);
@@ -233,19 +249,19 @@ export function CancelCount({ countId, label }: { countId: string; label: string
   const [msg, setMsg] = useState<Msg>(null);
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} aria-label={`Cancel ${label}`}>
-        Cancel this count…
+      <button onClick={() => setOpen(true)} aria-label={t("Cancel {count}", { count: label })}>
+        {t("Cancel this count…")}
       </button>
     );
   }
   return (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
       <input
-        aria-label="Why the count is cancelled"
+        aria-label={t("Why the count is cancelled")}
         style={{ ...inputStyle, minWidth: 220 }}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
-        placeholder="Why? e.g. started by mistake"
+        placeholder={t("Why? e.g. started by mistake")}
       />
       <button
         className="btn-primary"
@@ -260,10 +276,10 @@ export function CancelCount({ countId, label }: { countId: string; label: string
           })
         }
       >
-        {busy ? "…" : "Cancel the count"}
+        {busy ? "…" : t("Cancel the count")}
       </button>
       <button onClick={() => setOpen(false)} disabled={busy}>
-        Keep it
+        {t("Keep it")}
       </button>
       <Notice msg={msg} />
     </div>

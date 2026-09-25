@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addItemUnitAction, updateItemAction } from "@/lib/actions/stock";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 
 type Msg = { ok: boolean; text: string } | null;
@@ -36,6 +37,7 @@ const TYPES: [ItemType, string][] = [
  * of use while it has stock or a recipe, the till or a batch needs it.
  */
 export function EditItem({ item }: { item: EditableItem }) {
+  const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -67,7 +69,7 @@ export function EditItem({ item }: { item: EditableItem }) {
         reason,
       });
       if (r.ok) {
-        setMsg({ ok: true, text: "Saved, and on the audit trail." });
+        setMsg({ ok: true, text: t("Saved, and on the audit trail.") });
         setReason("");
         router.refresh();
       } else setMsg({ ok: false, text: r.error });
@@ -77,21 +79,21 @@ export function EditItem({ item }: { item: EditableItem }) {
   return (
     <section className="panel" data-testid="edit-item">
       <div className="panel-h">
-        <h3>Correct this item</h3>
+        <h3>{t("Correct this item")}</h3>
         <span className="muted" style={{ fontSize: ".74rem" }}>
-          Every change goes on the audit trail, with its values before and after
+          {t("Every change goes on the audit trail, with its values before and after")}
         </span>
       </div>
       <div className="panel-b grid" style={{ gap: 10 }}>
         <div className="grid" style={{ gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-          <Field label="Name (English)">
+          <Field label={t("Name (English)")}>
             <input
               style={inputStyle}
               value={f.name}
               onChange={(e) => setF({ ...f, name: e.target.value })}
             />
           </Field>
-          <Field label="الاسم (Arabic)">
+          <Field label={t("الاسم (Arabic)")}>
             <input
               style={inputStyle}
               value={f.nameAr}
@@ -99,7 +101,7 @@ export function EditItem({ item }: { item: EditableItem }) {
               onChange={(e) => setF({ ...f, nameAr: e.target.value })}
             />
           </Field>
-          <Field label="ناو (Kurdish)">
+          <Field label={t("ناو (Kurdish)")}>
             <input
               style={inputStyle}
               value={f.nameCkb}
@@ -109,20 +111,20 @@ export function EditItem({ item }: { item: EditableItem }) {
           </Field>
         </div>
         <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-          <Field label="Type">
+          <Field label={t("Type")}>
             <select
               style={inputStyle}
               value={f.itemType}
               onChange={(e) => setF({ ...f, itemType: e.target.value as ItemType })}
             >
-              {TYPES.map(([t, label]) => (
-                <option key={t} value={t}>
-                  {label}
+              {TYPES.map(([type, label]) => (
+                <option key={type} value={type}>
+                  {t(label)}
                 </option>
               ))}
             </select>
           </Field>
-          <Field label={`Reorder level (${item.baseUnit})`}>
+          <Field label={t("Reorder level ({unit})", { unit: item.baseUnit })}>
             <input
               style={inputStyle}
               value={f.minLevel}
@@ -130,7 +132,7 @@ export function EditItem({ item }: { item: EditableItem }) {
               onChange={(e) => setF({ ...f, minLevel: e.target.value })}
             />
           </Field>
-          <Field label={`Par level (${item.baseUnit})`}>
+          <Field label={t("Par level ({unit})", { unit: item.baseUnit })}>
             <input
               style={inputStyle}
               value={f.parLevel}
@@ -145,23 +147,24 @@ export function EditItem({ item }: { item: EditableItem }) {
             checked={f.isActive}
             onChange={(e) => setF({ ...f, isActive: e.target.checked })}
           />
-          In use: offered on deliveries, counts, recipes and the till
+          {t("In use: offered on deliveries, counts, recipes and the till")}
         </label>
-        <Field label="Why (on the audit trail)">
+        <Field label={t("Why (on the audit trail)")}>
           <input
             style={inputStyle}
             value={reason}
             maxLength={300}
             placeholder={
-              f.isActive ? "e.g. the supplier's name for it" : "e.g. we stopped using it"
+              f.isActive ? t("e.g. the supplier's name for it") : t("e.g. we stopped using it")
             }
             onChange={(e) => setReason(e.target.value)}
           />
         </Field>
         <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
-          It stays counted in {item.baseUnit}: its whole history is. No two items in use share a
-          name, whatever the capitals, spaces or punctuation. An item is taken out of use only when
-          it has no stock and no recipe, product or batch needs it.
+          {t(
+            "It stays counted in {unit}: its whole history is. No two items in use share a name, whatever the capitals, spaces or punctuation. An item is taken out of use only when it has no stock and no recipe, product or batch needs it.",
+            { unit: item.baseUnit },
+          )}
         </p>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button
@@ -169,7 +172,7 @@ export function EditItem({ item }: { item: EditableItem }) {
             onClick={save}
             disabled={pending || !changed || !f.name.trim()}
           >
-            {pending ? "Saving…" : "Save changes"}
+            {pending ? t("Saving…") : t("Save changes")}
           </button>
           <Notice msg={msg} />
         </div>
@@ -184,6 +187,7 @@ export function EditItem({ item }: { item: EditableItem }) {
  * that size: a different size is a new unit, under its own name.
  */
 export function PackUnits({ item, canAdd }: { item: EditableItem; canAdd: boolean }) {
+  const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -194,7 +198,7 @@ export function PackUnits({ item, canAdd }: { item: EditableItem; canAdd: boolea
     start(async () => {
       const r = await addItemUnitAction({ itemId: item.id, ...f });
       if (r.ok) {
-        setMsg({ ok: true, text: `Added ${f.label || f.code}.` });
+        setMsg({ ok: true, text: t("Added {name}.", { name: f.label || f.code }) });
         setF({ code: "", label: "", factor: "" });
         router.refresh();
       } else setMsg({ ok: false, text: r.error });
@@ -204,18 +208,18 @@ export function PackUnits({ item, canAdd }: { item: EditableItem; canAdd: boolea
   return (
     <section className="panel" data-testid="pack-units">
       <div className="panel-h">
-        <h3>Units</h3>
+        <h3>{t("Units")}</h3>
         <span className="muted" style={{ fontSize: ".74rem" }}>
-          What it is delivered and counted in
+          {t("What it is delivered and counted in")}
         </span>
       </div>
       <div className="tw">
         <table>
           <thead>
             <tr>
-              <th>Unit</th>
-              <th>Label</th>
-              <th className="right">Holds</th>
+              <th>{t("Unit")}</th>
+              <th>{t("Label")}</th>
+              <th className="right">{t("Holds")}</th>
             </tr>
           </thead>
           <tbody>
@@ -225,7 +229,7 @@ export function PackUnits({ item, canAdd }: { item: EditableItem; canAdd: boolea
                 <td>{u.label}</td>
                 <td className="right mono">
                   {u.factor === 1 && u.code === item.baseUnit
-                    ? "base unit"
+                    ? t("base unit")
                     : `${u.factor.toLocaleString("en-US")} ${item.baseUnit}`}
                 </td>
               </tr>
@@ -236,23 +240,23 @@ export function PackUnits({ item, canAdd }: { item: EditableItem; canAdd: boolea
       {canAdd && (
         <div className="panel-b grid" style={{ gap: 10 }}>
           <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-            <Field label="New unit">
+            <Field label={t("New unit")}>
               <input
                 style={inputStyle}
                 value={f.code}
-                placeholder="case_24"
+                placeholder="case_24" // i18n-ignore: an example code
                 onChange={(e) => setF({ ...f, code: e.target.value })}
               />
             </Field>
-            <Field label="Label">
+            <Field label={t("Label")}>
               <input
                 style={inputStyle}
                 value={f.label}
-                placeholder="Case of 24"
+                placeholder={t("Case of 24")}
                 onChange={(e) => setF({ ...f, label: e.target.value })}
               />
             </Field>
-            <Field label={`Holds (${item.baseUnit})`}>
+            <Field label={t("Holds ({unit})", { unit: item.baseUnit })}>
               <input
                 style={inputStyle}
                 value={f.factor}
@@ -262,8 +266,9 @@ export function PackUnits({ item, canAdd }: { item: EditableItem; canAdd: boolea
             </Field>
           </div>
           <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
-            A unit keeps its size for good: every delivery and count in it was taken at that size. A
-            different size is a new unit (case_12, not case_24 changed).
+            {t(
+              "A unit keeps its size for good: every delivery and count in it was taken at that size. A different size is a new unit (case_12, not case_24 changed).",
+            )}
           </p>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <button
@@ -271,7 +276,7 @@ export function PackUnits({ item, canAdd }: { item: EditableItem; canAdd: boolea
               onClick={add}
               disabled={pending || !f.code.trim() || !f.factor.trim()}
             >
-              {pending ? "Adding…" : "Add unit"}
+              {pending ? t("Adding…") : t("Add unit")}
             </button>
             <Notice msg={msg} />
           </div>
