@@ -14,7 +14,60 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const MIGRATIONS = join(ROOT, "supabase", "migrations");
 
-/** Each function's body, as its latest migration defines it; dropped ones left out. */
+const TYPE_ALIAS = {
+  int: "integer",
+  int4: "integer",
+  int8: "bigint",
+  bool: "boolean",
+  float8: "double precision",
+  "timestamp with time zone": "timestamptz",
+  "timestamp without time zone": "timestamp",
+};
+
+/** The text between the parenthesis at `open` and the one that closes it. */
+function inParens(sql, open) {
+  let depth = 0;
+  for (let i = open; i < sql.length; i++) {
+    if (sql[i] === "(") depth++;
+    else if (sql[i] === ")" && --depth === 0) return sql.slice(open + 1, i);
+  }
+  return "";
+}
+
+/** A function's argument types, "uuid,sales_channel", from its list of arguments. */
+function argTypes(list, named) {
+  const args = [];
+  let depth = 0;
+  let cur = "";
+  for (const c of list) {
+    if (c === "(") depth++;
+    if (c === ")") depth--;
+    if (c === "," && depth === 0) {
+      args.push(cur);
+      cur = "";
+    } else cur += c;
+  }
+  if (cur.trim()) args.push(cur);
+  return args
+    .map((a) => {
+      const words = a
+        .replace(/\s+(default|=)\s[\s\S]*$/i, "")
+        .replace(/^\s*(in|out|inout|variadic)\s+/i, "")
+        .trim()
+        .toLowerCase()
+        .split(/\s+/);
+      const type = (named && words.length > 1 ? words.slice(1) : words)
+        .join(" ")
+        .replace(/^public\./, "");
+      return TYPE_ALIAS[type] ?? type;
+    })
+    .join(",");
+}
+
+/**
+ * Each function's body, as its latest migration defines it, by its name and
+ * argument types; those dropped since are left out.
+ */
 export function functionBodies() {
   const bodies = new Map();
   const files = readdirSync(MIGRATIONS)
@@ -25,19 +78,27 @@ export function functionBodies() {
     const events = [];
     const def = /create\s+(?:or\s+replace\s+)?function\s+(?:public\.)?"?(\w+)"?\s*\(/gi;
     for (let m = def.exec(sql); m; m = def.exec(sql)) {
+      const args = inParens(sql, m.index + m[0].length - 1);
       const open = sql.indexOf("$$", m.index);
       const close = open < 0 ? -1 : sql.indexOf("$$", open + 2);
       if (close < 0) continue;
-      events.push({ at: m.index, name: m[1].toLowerCase(), body: sql.slice(open + 2, close) });
+      const key = `${m[1].toLowerCase()}(${argTypes(args, true)})`;
+      events.push({ at: m.index, key, body: sql.slice(open + 2, close) });
       def.lastIndex = close + 2;
     }
-    const drop = /drop\s+function\s+(?:if\s+exists\s+)?(?:public\.)?"?(\w+)"?/gi;
-    for (let m = drop.exec(sql); m; m = drop.exec(sql))
-      events.push({ at: m.index, name: m[1].toLowerCase(), body: null });
+    const drop = /drop\s+function\s+(?:if\s+exists\s+)?(?:public\.)?"?(\w+)"?\s*\(/gi;
+    for (let m = drop.exec(sql); m; m = drop.exec(sql)) {
+      const args = inParens(sql, m.index + m[0].length - 1);
+      events.push({
+        at: m.index,
+        key: `${m[1].toLowerCase()}(${argTypes(args, false)})`,
+        body: null,
+      });
+    }
     events.sort((a, b) => a.at - b.at);
     for (const e of events) {
-      if (e.body === null) bodies.delete(e.name);
-      else bodies.set(e.name, e.body);
+      if (e.body === null) bodies.delete(e.key);
+      else bodies.set(e.key, e.body);
     }
   }
   return bodies;
@@ -94,7 +155,8 @@ export function formatPattern(text) {
 /** Every message the database refuses with: { fn, en }, en the phrase to translate. */
 export function raiseMessages() {
   const out = [];
-  for (const [fn, body] of functionBodies()) {
+  for (const [key, body] of functionBodies()) {
+    const fn = key.slice(0, key.indexOf("("));
     const { code, strings } = tokens(body);
     const raise = /raise\s+exception\s+'#(\d+)'\s*(,\s*format\s*\(\s*'#(\d+)')?/gi;
     for (let m = raise.exec(code); m; m = raise.exec(code)) {
