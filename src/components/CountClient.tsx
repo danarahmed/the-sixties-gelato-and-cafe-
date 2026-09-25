@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   approveCountAction,
+  cancelCountAction,
   recordCountAction,
   rejectCountAction,
   startCountAction,
@@ -217,6 +218,52 @@ export function ReviewActions({ countId, countedByMe }: { countId: string; count
         }
       >
         Reject
+      </button>
+      <Notice msg={msg} />
+    </div>
+  );
+}
+
+/** An open count cancelled, with the reason, by its counter or a manager. Nothing was posted. */
+export function CancelCount({ countId, label }: { countId: string; label: string }) {
+  const router = useRouter();
+  const [busy, start] = useTransition();
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [msg, setMsg] = useState<Msg>(null);
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} aria-label={`Cancel ${label}`}>
+        Cancel this count…
+      </button>
+    );
+  }
+  return (
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+      <input
+        aria-label="Why the count is cancelled"
+        style={{ ...inputStyle, minWidth: 220 }}
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="Why? e.g. started by mistake"
+      />
+      <button
+        className="btn-primary"
+        disabled={busy || !reason.trim()}
+        onClick={() =>
+          start(async () => {
+            const r = await cancelCountAction({ countId, reason });
+            if (r.ok) {
+              setOpen(false);
+              router.refresh();
+            } else setMsg({ ok: false, text: r.error });
+          })
+        }
+      >
+        {busy ? "…" : "Cancel the count"}
+      </button>
+      <button onClick={() => setOpen(false)} disabled={busy}>
+        Keep it
       </button>
       <Notice msg={msg} />
     </div>

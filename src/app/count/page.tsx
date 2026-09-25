@@ -5,7 +5,7 @@ import { getCountSheet, getStockCounts } from "@/lib/db/read";
 import { db, num, rows, str } from "@/lib/db/client";
 import { dateTimeIn } from "@/lib/dates";
 import { fmtIQD, fmtQty } from "@/lib/format";
-import { CountSheet, ReviewActions, StartCount } from "@/components/CountClient";
+import { CancelCount, CountSheet, ReviewActions, StartCount } from "@/components/CountClient";
 import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +41,8 @@ export default async function CountPage({
   const canApprove = has(profile, "inventory.adjust.approve");
 
   const mine = counts.find((c) => c.status === "counting" && c.countedById === profile.id);
+  // One count at a time: two open counts would each post the same difference.
+  const othersOpen = counts.find((c) => c.status === "counting" && c.countedById !== profile.id);
   const sheet = mine ? await getCountSheet(mine.id) : [];
 
   const reviewId = typeof sp.review === "string" ? sp.review : null;
@@ -74,11 +76,34 @@ export default async function CountPage({
       <h1 style={{ margin: 0 }}>{t("nav.count")}</h1>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
         <strong>Blind count.</strong> Count what is on the shelf; the expected quantities are never
-        shown to the person counting. When the count is submitted, a manager — never the counter —
-        reviews it and approves the variances into the books.
+        shown to the person counting. Each item is compared with the stock at the moment it is
+        counted, so the café can keep trading during a count. When the count is submitted, a manager
+        — never the counter — reviews it and approves the variances into the books.
       </p>
 
-      {canCount && (mine ? <CountSheet countId={mine.id} lines={sheet} /> : <StartCount />)}
+      {canCount && mine && (
+        <>
+          <CountSheet countId={mine.id} lines={sheet} />
+          <div>
+            <CancelCount countId={mine.id} label="your count" />
+          </div>
+        </>
+      )}
+      {othersOpen && !mine && (
+        <div className="card" style={{ display: "grid", gap: 10 }}>
+          <span>
+            A count is open: started {dateTimeIn(profile.timezone, othersOpen.startedAt)} by{" "}
+            {othersOpen.countedBy ?? "someone"}. Only one count is open at a time; it is finished by
+            its counter{canApprove ? ", or cancelled here" : ""}.
+          </span>
+          {canApprove && (
+            <div>
+              <CancelCount countId={othersOpen.id} label="the open count" />
+            </div>
+          )}
+        </div>
+      )}
+      {canCount && !mine && !othersOpen && <StartCount />}
 
       {reviewing && canReview && (
         <section className="card tw">
@@ -119,8 +144,9 @@ export default async function CountPage({
           </table>
           <p className="muted" style={{ fontSize: ".82rem" }}>
             {withVariance.length} item(s) differ; net value{" "}
-            {fmtIQD(withVariance.reduce((s, r) => s + r.value, 0))}. Approving posts them against
-            5400 Inventory count variance, dated when the count was submitted.
+            {fmtIQD(withVariance.reduce((s, r) => s + r.value, 0))}. Expected is the stock at the
+            moment each item was counted. Approving posts the differences against 5400 Inventory
+            count variance, dated when the count was submitted.
           </p>
           {reviewing.status === "submitted" && canApprove && (
             <ReviewActions

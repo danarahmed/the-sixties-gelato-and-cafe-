@@ -18,6 +18,9 @@ export default async function InventoryPage() {
     seesCost ? getMovements(60) : Promise.resolve([]),
   ]);
 
+  // An item with no movement at all is not on the board: it has no stock yet.
+  const stocked = new Set(board.map((r) => r.itemId));
+  const unstocked = seesCost ? items.filter((i) => !stocked.has(i.id)) : [];
   const totalValue = board.reduce((s, r) => s + r.value, 0);
   const low = board.filter((r) => r.isLow).length;
   const negative = board.filter((r) => r.isNegative).length;
@@ -61,6 +64,12 @@ export default async function InventoryPage() {
 
       <InventoryForms
         items={items.map((i) => ({ id: i.id, name: i.name, baseUnit: i.baseUnit, units: i.units }))}
+        unstocked={unstocked.map((i) => ({
+          id: i.id,
+          name: i.name,
+          baseUnit: i.baseUnit,
+          units: i.units,
+        }))}
         canAddItem={
           has(profile, "settings.manage") ||
           has(profile, "purchase.create") ||
@@ -73,8 +82,12 @@ export default async function InventoryPage() {
       {seesCost &&
         (board.length === 0 ? (
           <EmptyState
-            title="No stock items yet"
-            hint="Add the first item above, with its opening stock."
+            title={items.length > 0 ? "No stock recorded yet" : "No stock items yet"}
+            hint={
+              items.length > 0
+                ? "Give each item its opening stock above: what is on the shelf, at what it cost."
+                : "Add the first item above, with its opening stock."
+            }
           />
         ) : (
           <div className="card tw">

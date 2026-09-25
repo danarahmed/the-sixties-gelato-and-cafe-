@@ -21,6 +21,10 @@ const USERS = {
   "barista@example.com": "a0000000-0000-0000-0000-00000000000e",
 };
 const PASSWORD = "password123";
+// For the retry suite: the next call to this database function is carried out,
+// and its answer is lost on the way back to the app's server — the connection
+// is cut, as when the network drops between the server and the database.
+let loseNextAnswer = null;
 
 const b64u = (b) => Buffer.from(b).toString("base64url");
 export function sign(payload) {
@@ -96,12 +100,27 @@ function body(req) {
 http
   .createServer(async (req, res) => {
     const url = new URL(req.url, `http://127.0.0.1:${PORT}`);
+    if (url.pathname === "/__e2e/lose-next-answer" && req.method === "POST") {
+      loseNextAnswer = url.searchParams.get("fn");
+      return send(res, 204);
+    }
     if (url.pathname.startsWith("/rest/v1/")) {
       const target = url.pathname.slice("/rest/v1".length) + url.search;
       const headers = { ...req.headers, host: "127.0.0.1:54330" };
+      const lose =
+        loseNextAnswer !== null &&
+        req.method === "POST" &&
+        url.pathname === `/rest/v1/rpc/${loseNextAnswer}`;
+      if (lose) loseNextAnswer = null;
       const up = http.request(
         { host: "127.0.0.1", port: 54330, path: target, method: req.method, headers },
         (r) => {
+          if (lose) {
+            // The database has answered (and committed); the app never hears it.
+            r.resume();
+            r.on("end", () => req.socket.destroy());
+            return;
+          }
           res.writeHead(r.statusCode, r.headers);
           r.pipe(res);
         },

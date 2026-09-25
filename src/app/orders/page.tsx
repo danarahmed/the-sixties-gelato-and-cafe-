@@ -23,8 +23,8 @@ export default async function OrdersPage() {
     <div className="grid" style={{ gap: 16 }}>
       <h1 style={{ margin: 0 }}>{t("nav.orders")}</h1>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        A sale is never edited. A sale rung in error is <strong>voided</strong> the same day, before
-        the day is closed — revenue, payment, cost and stock all come back exactly. After that,
+        A sale is never edited. A sale rung in error is <strong>voided</strong> until the drawer
+        holding it is counted — revenue, payment, cost and stock all come back exactly. After that,
         money goes back to the customer by a <strong>refund</strong>, through Sales returns (4200);
         only goods that can go back on the shelf return to stock. Both need a reason and are on the
         audit trail.

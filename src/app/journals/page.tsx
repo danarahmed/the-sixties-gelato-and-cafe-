@@ -16,8 +16,12 @@ import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
-/** Accounts with a subledger behind them take no manual journal (the database refuses them too). */
-const BLOCKED = new Set(["1200", "2000", "2050", "3100"]);
+/**
+ * Accounts with a subledger behind them take no manual journal (the database
+ * refuses them too): the till's cash (every movement of it is a drawer event,
+ * 0024), stock, payables, goods received and retained earnings.
+ */
+const BLOCKED = new Set(["1000", "1200", "2000", "2050", "3100"]);
 
 export default async function JournalsPage({
   searchParams,
@@ -94,7 +98,7 @@ export default async function JournalsPage({
         {entries.length === 0 ? (
           <EmptyState
             title="No journal entries yet"
-            hint="Sales, receipts, bills, payments, expenses and day closes all write here, as do journals posted by hand."
+            hint="Sales, receipts, bills, payments, expenses, drawer counts and cash moved all write here, as do journals posted by hand."
           />
         ) : (
           <div className="tw">

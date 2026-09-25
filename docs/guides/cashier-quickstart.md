@@ -140,9 +140,9 @@ items off it.
 
 A finished sale cannot be edited. Tell a manager:
 
-- **the same day**, before the day is closed, they can **void** it: everything
-  comes back exactly;
-- **later**, they **refund** it.
+- **until the drawer is counted**, they can **void** it: everything comes back
+  exactly, and its cash leaves what the drawer should hold;
+- **after the count**, they **refund** it.
 
 Both are done on **Orders**, with a reason.
 

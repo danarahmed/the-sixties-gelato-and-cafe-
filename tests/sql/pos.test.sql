@@ -296,17 +296,17 @@ select test.throws(format('insert into pos_tab_line (tab_id, business_id, produc
 select test.throws($$update product_image set content_type = 'image/png'$$, '%permission denied%', 'nor to photos');
 
 -- ------------------------------------------------------------------ the day
--- Table 2 still owes 5,000: the day cannot close until it is paid or cancelled.
+-- Table 2 still owes 5,000: the drawer is not counted until it is paid or cancelled.
 select test.as_admin();
 create temp table today as select business_local_date('00000000-0000-0000-0000-0000000000b1', now()) as d;
 grant all on today to public;
 select test.act_as('manager@example.com');
-select test.eq((report_day_totals((select d from today)) ->> 'open_bills')::int, 1, 'the day''s totals count the open bills');
-select test.throws(format('select close_day(%L, 0)', (select d from today)),
-  '%1 bill(s) are still open%', 'the day cannot close with a bill still open');
+select test.eq((drawer_status() ->> 'open_bills')::int, 1, 'the drawer shows the open bills');
+select test.throws('select count_drawer(0)',
+  '%1 bill(s) are still open%', 'the drawer is not counted with a bill still open');
 select settle_tab(pg_temp.id('b2'), 3, gen_random_uuid(), 'cash');
-select test.succeeds(format('select close_day(%L, %s)', (select d from today),
-  (report_day_totals((select d from today)) ->> 'cash_sales')), 'once every bill is settled, the day closes');
+select test.succeeds(format('select count_drawer(%s)', drawer_status() ->> 'expected'),
+  'once every bill is settled, the drawer is counted');
 select test.as_admin();
 select test.eq((select count(*) from sales_order)::int, 5, 'four bills and one counter sale: five sales');
 select test.eq(test.balance('4000'), -(3500 + 1000 + 2500 + 4500 + 5000)::numeric,

@@ -14,7 +14,7 @@ select test.act_as('cashier@example.com');
 select record_sale(gen_random_uuid(), 'dine_in', 'cash', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]');
 select record_sale(gen_random_uuid(), 'dine_in', 'card', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]');
 select test.act_as('manager@example.com');
-select record_expense('August rent', 400000, '6000');
+select record_expense('August rent', 400000, '6000', 'bank');
 select record_waste('c0000000-0000-0000-0000-000000000001', 100, 'g', 'spoilage', 'left out');
 select receive_goods((select id from sup), '[{"item_id":"c0000000-0000-0000-0000-000000000002","qty":50,"goods_value":2500}]');
 select receive_goods((select id from sup), '[{"item_id":"c0000000-0000-0000-0000-000000000003","qty":10,"goods_value":2500}]');
@@ -22,7 +22,7 @@ select record_bill((select id from sup), 'R-1', (select d from today), 2500, 0,
   (select id from goods_receipt order by receipt_no limit 1));
 -- A draft that must not count (M-02).
 select test.act_as('owner@example.com');
-select save_journal((select d from today), 'Parked', '[{"code":"6200","debit":99999},{"code":"1000","credit":1}]', false);
+select save_journal((select d from today), 'Parked', '[{"code":"6200","debit":99999},{"code":"1020","credit":1}]', false);
 
 -- A cashier sees no statements.
 select test.act_as('cashier@example.com');

@@ -109,7 +109,9 @@ recorded.
   reclassify, post a manual journal: Dr 6900 Other expenses, Cr 6200.
 - **Cash on hand is −515,000.** More expenses were recorded as paid from the till
   than cash ever came in. If some were paid from a bank account, move them
-  (Dr 1000, Cr 1020) and record how the bank was funded.
+  (Dr 1000, Cr 1020) and record how the bank was funded. (Since `0024`, 1000
+  takes no manual journal: that move is the owner's **Correction to a control
+  account**, with its reason.)
 - **Two items are called "Milk".** The second was created on 24 Aug; the 22 Sep
   delivery went to it. Stock for milk is split across both until counted.
 
@@ -151,7 +153,9 @@ Only you know which of these are real. Choose one of these:
     opening quantity and cost (Dr 1200, Cr 3000 Owner equity);
   - stock still owed to a supplier: **Purchasing → Receive stock**, then that
     supplier's bill on **Vendors**;
-  - cash: a manual journal, Dr 1000 or 1020, Cr 3000.
+  - cash: a manual journal, Dr 1000 or 1020, Cr 3000 (since `0024`: cash in
+    the till or the safe with **Sales → Move Cash** from the owner; money in
+    the bank, a journal Dr 1020, Cr 3000).
 
   **Done on the live database on 23 September 2026**, at the owner's
   instruction. It had 32 journals, 9 sales, 52 stock movements, 9 items and

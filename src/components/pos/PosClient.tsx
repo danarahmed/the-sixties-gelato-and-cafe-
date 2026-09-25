@@ -714,6 +714,15 @@ export function PosClient({
               key: p.key,
               tender: p.tender,
             });
+      if (!r.ok && r.uncertain) {
+        // No answer from the database: it may have been recorded. Freeze, and
+        // retry with the SAME key, which cannot record it twice.
+        setPending(p);
+        savePending(p);
+        setDialog(null);
+        setMsg({ ok: false, text: t("pos.uncertain") });
+        return;
+      }
       if (!r.ok) {
         // The database refused it: nothing was recorded, and the order is still here.
         setPending(null);

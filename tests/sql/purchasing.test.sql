@@ -78,7 +78,7 @@ select test.eq(test.lines_of((select (r->>'payment_id')::uuid from p1)), '1020 C
 select test.eq((select (r->>'outstanding')::numeric from p1), 500::numeric, 'partial payment leaves 500');
 select test.throws($$select pay_bill((select (r->>'bill_id')::uuid from b1), 501, 'cash')$$,
   '%more than the 500 outstanding%', 'cannot pay more than is owed');
-select pay_bill((select (r->>'bill_id')::uuid from b1), 500, 'cash');
+select pay_bill((select (r->>'bill_id')::uuid from b1), 500, 'bank');
 select test.eq((select is_paid from purchase_invoice where id = (select (r->>'bill_id')::uuid from b1)), true, 'the bill is settled');
 
 -- The database itself refuses overpayment, whatever path is used (H-11).

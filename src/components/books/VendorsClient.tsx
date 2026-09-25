@@ -8,6 +8,7 @@ import {
   payBillAction,
   recordBillAction,
 } from "@/lib/actions/purchasing";
+import type { PaymentSource } from "@/lib/validation";
 import { fmtIQD } from "@/lib/format";
 import { Notice } from "@/components/ui";
 import type { OpenBill, VendorRow } from "@/lib/db/books";
@@ -284,7 +285,7 @@ function Bills({
   const [terms, setTerms] = useState("15");
   const [payFor, setPayFor] = useState("");
   const [payAmt, setPayAmt] = useState("");
-  const [method, setMethod] = useState<"cash" | "card" | "bank">("cash");
+  const [method, setMethod] = useState<PaymentSource | "">("");
 
   const receipt = receipts.find((r) => r.id === receiptId);
   const amountN = Number(amount.replace(/[^0-9.]/g, "")) || 0;
@@ -325,6 +326,7 @@ function Bills({
   function pay() {
     setMsg(null);
     start(async () => {
+      if (!method) return;
       const r = await payBillAction({ billId: payFor, amount: payAmt, method });
       if (r.ok) {
         setMsg({
@@ -557,13 +559,20 @@ function Bills({
               </label>
               <label style={{ minWidth: 120 }}>
                 <div className="sc">Paid from</div>
-                <select value={method} onChange={(e) => setMethod(e.target.value as typeof method)}>
-                  <option value="cash">1000 Cash</option>
-                  <option value="card">1010 Card</option>
-                  <option value="bank">1020 Bank</option>
+                <select
+                  aria-label="Paid from"
+                  value={method}
+                  onChange={(e) => setMethod(e.target.value as PaymentSource | "")}
+                >
+                  <option value="">Choose…</option>
+                  <option value="till">The till (today&apos;s drawer)</option>
+                  <option value="safe">The safe</option>
+                  <option value="bank">The bank</option>
+                  <option value="card">A card</option>
+                  <option value="owner">The owner, personally</option>
                 </select>
               </label>
-              <button onClick={pay} disabled={busy || !payFor || !payAmt}>
+              <button onClick={pay} disabled={busy || !payFor || !payAmt || !method}>
                 {busy ? "Paying…" : "Record payment"}
               </button>
             </div>

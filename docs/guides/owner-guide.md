@@ -18,10 +18,20 @@ and records honest, and to close each month.
 ## Before you rely on the books
 
 Your books start empty: the trial records were cleared on 23 September 2026,
-before the upgrade. Enter your opening balances first: each stock item with its
-opening quantity and cost, stock not yet paid for as a delivery and its bill,
-and your cash as a journal (see the [deployment runbook](deployment.md), step
-7). Then **Reports → Do the books tie?** shows ✅ on every line.
+before the upgrade. Everything recorded since is a test too, and is cleared
+once more when you say so, keeping the menu, the stock items, suppliers,
+tables and people ([deployment runbook](deployment.md), "Clearing the test
+records"). Then enter your opening balances before the first sale:
+
+- **Inventory → Opening stock:** each item — what is on the shelf, and what
+  one unit cost. Until an item has it, its sales are costed at nothing.
+- Stock not yet paid for: as a delivery and its bill (**Purchasing**,
+  **Vendors**).
+- **Sales → Move Cash:** the float you put in the till, and any cash in the
+  safe, from the owner. Money already in the bank: a journal, Dr 1020 Bank,
+  Cr 3000 Owner equity.
+
+Then **Reports → Do the books tie?** shows ✅ on every line.
 
 A database that keeps history from before this version must treat it as
 unverified until it is corrected ([`../REMEDIATION.md`](../REMEDIATION.md)).
@@ -37,17 +47,17 @@ unverified until it is corrected ([`../REMEDIATION.md`](../REMEDIATION.md)).
 - Only you can make someone an owner or general manager, and the business always
   keeps at least one active owner.
 
-| Role              | Typically does                                                                             |
-| ----------------- | ------------------------------------------------------------------------------------------ |
-| Owner             | Everything, including reopening a locked month and control corrections                     |
-| General manager   | Everything except reopening a locked month                                                 |
-| Branch manager    | Sells, voids and refunds, closes the day, receives stock, reviews counts, records expenses |
-| Cashier           | Sells                                                                                      |
-| Barista           | Sells and records waste                                                                    |
-| Inventory counter | Counts stock, blind                                                                        |
-| Purchasing        | Adds suppliers, receives goods, records bills                                              |
-| Accountant        | Expenses, journals, locking months, the reports                                            |
-| Auditor           | Reads everything with a cost on it; changes nothing                                        |
+| Role              | Typically does                                                                                |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| Owner             | Everything, including reopening a locked month and control corrections                        |
+| General manager   | Everything except reopening a locked month                                                    |
+| Branch manager    | Sells, voids and refunds, counts the drawer, receives stock, reviews counts, records expenses |
+| Cashier           | Sells                                                                                         |
+| Barista           | Sells and records waste                                                                       |
+| Inventory counter | Counts stock, blind                                                                           |
+| Purchasing        | Adds suppliers, receives goods, records bills                                                 |
+| Accountant        | Expenses, journals, locking months, the reports                                               |
+| Auditor           | Reads everything with a cost on it; changes nothing                                           |
 
 The exact matrix is under **Settings → Roles & what they may do**.
 
@@ -123,20 +133,28 @@ counts them.
 
 - **Dashboard:** today's revenue, gross profit, orders, stock value, low and
   negative stock, and whether the books reconcile.
-- **Sales → Close the Day:** count the drawer, enter the opening float and the
-  cash counted. Any difference posts to 6300 Cash over / short. Every trading day
-  must be closed before its month can lock, and Sales lists every day still open,
-  however old. A day with a bill still open on the till cannot be closed: take
-  payment for it, or cancel it, first.
-- **Orders:** a sale rung in error is **voided** the same day, before the close;
-  after that, it is **refunded**.
+- **Sales → Count the Drawer**, when the till closes — after midnight too: a
+  count covers everything since the last one, whatever the date, so one
+  night's count takes in both calendar days. Enter the cash counted and how
+  much stays in the drawer for next time; the rest goes to the safe or the
+  bank. Any difference posts to 6300 Cash over / short. Every bill kept open on
+  the till must be paid or cancelled first. Sales shows every day whose cash
+  is not yet counted, however old; a month cannot lock until each is.
+- **Paying for something:** always say where the money came from — the till,
+  the safe, the bank, a card, or you personally. From the till it comes out of
+  what the drawer should hold, and neither the till nor the safe can pay out
+  more than the books say it holds. Put money into the till (a float), take
+  takings to the safe, or bank them with **Sales → Move Cash**; only you can
+  take money out for yourself.
+- **Orders:** a sale rung in error is **voided** until the drawer holding its
+  cash is counted; after that, it is **refunded**.
 
 ## Every week
 
 - **Purchasing:** receive deliveries as they arrive. Stock goes up, and the
   goods wait in 2050 Goods received not invoiced for their bill.
 - **Vendors:** record each supplier's bill against its delivery, and pay bills
-  from cash, card or bank. Watch **Payable ageing** on Reports. A bill without
+  from the till, the safe, the bank, a card or your own pocket. Watch **Payable ageing** on Reports. A bill without
   the supplier's own number takes the café's (SGC-2026-0001, -0002 …): each is
   given once, is never reused (not even after a cancellation), and cannot be
   typed in by hand, so it can never be mistaken for a supplier's invoice.
@@ -147,8 +165,8 @@ counts them.
 
 ## Every month
 
-1. Close every trading day, approve or reject any pending count, and publish or
-   discard any draft journal.
+1. Count the cash of every trading day, approve or reject any pending count,
+   and publish or discard any draft journal.
 2. **Reports → Do the books tie?**, as at the last day of the month: every line
    should show ✅.
 3. **Chart of Accounts:** choose the month and read its checklist. When every
@@ -159,13 +177,13 @@ counts them.
 
 ## Correcting a mistake
 
-| The mistake                                             | Correct it with                                                                                                                |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| A sale rung wrongly                                     | **Orders → Void** (same day) or **Refund**                                                                                     |
-| A bill entered twice or wrongly                         | **Vendors → Cancel** (only if nothing was paid on it), then enter it correctly                                                 |
-| Stock that is wrong                                     | a **count**, or **Inventory → Correct stock** (manager), with the reason                                                       |
-| A manual journal or an expense                          | **Journals → Reverse**, dated in the month it corrects                                                                         |
-| A control account (Inventory, payables, goods received) | your **Correction to a control account** on Journals — owner only, with a reason. Meant for history from before these controls |
+| The mistake                                                              | Correct it with                                                                                                                |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| A sale rung wrongly                                                      | **Orders → Void** (until the drawer is counted) or **Refund**                                                                  |
+| A bill entered twice or wrongly                                          | **Vendors → Cancel** (only if nothing was paid on it), then enter it correctly                                                 |
+| Stock that is wrong                                                      | a **count**, or **Inventory → Correct stock** (manager), with the reason                                                       |
+| A manual journal or an expense                                           | **Journals → Reverse**, dated in the month it corrects                                                                         |
+| A control account (the till's cash, Inventory, payables, goods received) | your **Correction to a control account** on Journals — owner only, with a reason. Meant for history from before these controls |
 
 ## Golden rules
 

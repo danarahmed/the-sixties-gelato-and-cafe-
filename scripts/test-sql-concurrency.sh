@@ -78,7 +78,7 @@ ok "$(sql "select (item_position('00000000-0000-0000-0000-0000000000b1','c000000
 
 # H-02 — twenty journals published at once: twenty consecutive numbers.
 BEFORE=$(sql "select count(*) from journal_entry where journal_no is not null")
-race 20 owner@example.com "select save_journal(test.today(), 'race', '[{\"code\":\"6200\",\"debit\":1},{\"code\":\"1000\",\"credit\":1}]', true)"
+race 20 owner@example.com "select save_journal(test.today(), 'race', '[{\"code\":\"6200\",\"debit\":1},{\"code\":\"1020\",\"credit\":1}]', true)"
 ok "$(sql "select count(*) - $BEFORE from journal_entry where journal_no is not null")" "20" "20 simultaneous journals all publish"
 ok "$(sql "select (max(journal_no) - min(journal_no) + 1) = count(*) from journal_entry where journal_no is not null")" "t" \
    "numbered consecutively, with no gaps and no collisions"
@@ -103,6 +103,31 @@ race 10 cashier@example.com "select save_tab('$TAB', 1, '[{\"variant_id\":\"d100
 ok "$(grep -l 'changed on another till' "$WORK"/*.out | wc -l | tr -d ' ')" "9" \
    "10 tills saving one bill at once: one change wins, nine are refused"
 ok "$(sql "select version from pos_tab where id = '$TAB'")" "2" "and the bill moved on by exactly one version"
+
+# 0024 — ten cash sales racing a drawer count: each is counted once, in this
+# count or the next; none falls between two counts, and nothing deadlocks.
+sql "select test.act_as('manager@example.com'); select cancel_tab('$TAB', 2, 'Party left')" >/dev/null
+SOLD=$(sql "select count(*) from sales_order where status = 'completed'")
+rm -f "$WORK"/*.out
+"${PSQL[@]}" -d "$DB" -c "select pg_advisory_lock(424242), pg_sleep(1.5)" >/dev/null &
+sleep 0.4
+for i in $(seq 1 10); do
+  ( "${PSQL[@]}" -d "$DB" -c "select test.act_as('cashier@example.com')" -c "select pg_advisory_lock_shared(424242)" \
+      -c "select record_sale(gen_random_uuid(),'dine_in','cash','[{\"variant_id\":\"d1000000-0000-0000-0000-000000000001\",\"qty\":1}]')" \
+      >"$WORK/$i.out" 2>&1 || true ) &
+done
+( "${PSQL[@]}" -d "$DB" -c "select test.act_as('manager@example.com')" -c "select pg_advisory_lock_shared(424242)" \
+    -c "select count_drawer(0) ->> 'shift_id'" >"$WORK/count.out" 2>&1 || true ) &
+wait
+ok "$(sql "select count(*) - $SOLD from sales_order where status = 'completed'")" "10" \
+   "ten cash sales race a drawer count, and all ten are recorded"
+ok "$(grep -c 'ERROR' "$WORK/count.out" || true)" "0" "the count goes through beside them"
+sql "select test.act_as('manager@example.com'); select count_drawer((drawer_status() ->> 'expected')::numeric)" >/dev/null
+ok "$(sql "select count(*) from cash_event where work_shift_id is null")" "0" \
+   "after the next count every sale's cash has been counted"
+ok "$(sql "select (select sum(amount) from cash_event where kind = 'sale')
+               = (select sum(t.amount) from sales_tender t where t.tender_type = 'cash')")" "t" \
+   "exactly once: the counted cash equals the cash taken"
 
 # The books still tie after all of it.
 ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(test.today())")" \

@@ -1,48 +1,33 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
-import {
-  getDailySales,
-  getDayCloses,
-  getDayTotals,
-  getUnclosedDays,
-  type DayTotals,
-} from "@/lib/db/books";
+import { getDailySales, getDrawerCounts, getDrawerStatus, getUnclosedDays } from "@/lib/db/books";
 import { channelLabel, fmtIQD } from "@/lib/format";
-import { addDays, businessToday } from "@/lib/dates";
-import { DayClose } from "@/components/books/DayClose";
+import { addDays, businessToday, dateTimeIn } from "@/lib/dates";
+import { DrawerCount, MoveCash } from "@/components/books/DrawerCount";
 import { EmptyState } from "@/components/ui";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 
 export const dynamic = "force-dynamic";
-
-/** How many open days the close form offers at once, oldest first. */
-const MAX_DAYS_OFFERED = 31;
 
 export default async function SalesPage() {
   const profile = await requirePermission("cost.view");
   const t = await getT();
   const today = businessToday(profile.timezone);
   const from = addDays(today, -29);
-  const [rows, closes, unclosed] = await Promise.all([
+  const canCount = has(profile, "day.close");
+  const canMove = canCount || has(profile, "accounting.post");
+  const [rows, counts, uncounted, drawer] = await Promise.all([
     getDailySales(from, today),
-    getDayCloses(),
+    getDrawerCounts(),
     getUnclosedDays(),
+    canCount || canMove ? getDrawerStatus() : Promise.resolve(null),
   ]);
-
-  const closedDays = new Set(closes.map((c) => c.day));
-  // Every day that traded and is not closed, however long ago — each one
-  // blocks its period from locking — plus today; oldest first, so the drawer
-  // is counted in order.
-  const toClose = [...new Set([...unclosed, today])]
-    .filter((d) => !closedDays.has(d) && d <= today)
-    .sort();
-  const openDays = toClose.slice(0, MAX_DAYS_OFFERED);
-  const overdue = unclosed.filter((d) => d < today).length;
-  const canClose = has(profile, "day.close");
-  const totals: DayTotals[] = canClose
-    ? await Promise.all(openDays.map((d) => getDayTotals(d)))
-    : [];
+  // A day is counted once a drawer count follows its last sale: the café
+  // trades past midnight, so one night's count may cover two calendar days.
+  const notCounted = new Set(uncounted);
+  const overdue = uncounted.filter((d) => d < today).length;
+  const at = (ts: string | null) => (ts ? dateTimeIn(profile.timezone, ts) : null);
 
   const net = rows.reduce((s, r) => s + r.net, 0);
   const cogs = rows.reduce((s, r) => s + r.cogs, 0);
@@ -82,14 +67,15 @@ export default async function SalesPage() {
           </div>
         </div>
         <div>
-          <div className="sc">Days not yet closed</div>
+          <div className="sc">Days whose cash is not counted</div>
           <div className="v" style={{ color: overdue > 0 ? "var(--warn)" : undefined }}>
-            {toClose.length}
+            {uncounted.length}
           </div>
           <div className="m">
-            {overdue > 0
-              ? `${overdue} before today — a period cannot lock with an open day`
-              : "A period cannot lock with an open day"}
+            {counts[0]
+              ? `Drawer last counted ${at(counts[0].at)}`
+              : "The drawer has not been counted yet"}
+            {overdue > 0 ? ` · ${overdue} before today` : ""}
           </div>
         </div>
       </div>
@@ -117,7 +103,7 @@ export default async function SalesPage() {
                   <th className="right">Net</th>
                   <th className="right">Later refunded</th>
                   <th className="right">COGS</th>
-                  <th className="right">Day</th>
+                  <th className="right">Cash</th>
                 </tr>
               </thead>
               <tbody>
@@ -134,8 +120,8 @@ export default async function SalesPage() {
                     <td className="right money">{r.refunded ? `(${fmtIQD(r.refunded)})` : "—"}</td>
                     <td className="right money">{fmtIQD(r.cogs)}</td>
                     <td className="right">
-                      <span className={`ref ${closedDays.has(r.day) ? "auto" : "due"}`}>
-                        {closedDays.has(r.day) ? "Closed" : "Open"}
+                      <span className={`ref ${notCounted.has(r.day) ? "due" : "auto"}`}>
+                        {notCounted.has(r.day) ? "Not counted" : "Counted"}
                       </span>
                     </td>
                   </tr>
@@ -146,48 +132,62 @@ export default async function SalesPage() {
         )}
       </section>
 
-      {canClose && (
+      {canCount && drawer && (
         <section className="panel">
           <div className="panel-h">
-            <h3>Close the Day</h3>
+            <h3>Count the Drawer</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              Count the drawer against what the till says it took in cash
-              {toClose.length > openDays.length
-                ? ` · the oldest ${openDays.length} of ${toClose.length} open days`
-                : ""}
+              Everything since the last count, whatever the day
             </span>
           </div>
-          <DayClose totals={totals} />
+          <DrawerCount status={drawer} since={at(drawer.since)} />
         </section>
       )}
 
-      {closes.length > 0 && (
+      {canMove && drawer && (
         <section className="panel">
           <div className="panel-h">
-            <h3>Closed Days</h3>
+            <h3>Move Cash</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              Cash over / short history
+              Between the till, the safe, the bank and the owner
+            </span>
+          </div>
+          <MoveCash isOwner={profile.roles.includes("owner")} safe={drawer.safe} />
+        </section>
+      )}
+
+      {counts.length > 0 && (
+        <section className="panel">
+          <div className="panel-h">
+            <h3>Drawer Counts</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              Each covers the cash since the one before · over / short history
             </span>
           </div>
           <div className="tw">
             <table>
               <thead>
                 <tr>
-                  <th>Day</th>
-                  <th className="right">Float</th>
-                  <th className="right">Till expected</th>
+                  <th>Counted</th>
+                  <th className="right">Started with</th>
+                  <th className="right">Should hold</th>
                   <th className="right">Counted</th>
                   <th className="right">Over / short</th>
+                  <th className="right">Stayed</th>
+                  <th className="right">Taken out</th>
                   <th>By</th>
                 </tr>
               </thead>
               <tbody>
-                {closes.map((c) => (
+                {counts.map((c) => (
                   <tr key={c.id}>
-                    <td>{c.day}</td>
-                    <td className="right money">{fmtIQD(c.openingFloat)}</td>
-                    <td className="right money">{fmtIQD(c.expectedCash)}</td>
-                    <td className="right money">{fmtIQD(c.countedCash)}</td>
+                    <td className="mono" style={{ fontSize: ".8rem" }}>
+                      {c.byDay ? `${c.day} (by day)` : at(c.at)}
+                      {!c.byDay && c.from && <div className="muted">since {at(c.from)}</div>}
+                    </td>
+                    <td className="right money">{fmtIQD(c.start)}</td>
+                    <td className="right money">{fmtIQD(c.expected)}</td>
+                    <td className="right money">{fmtIQD(c.counted)}</td>
                     <td
                       className="right money"
                       style={{ color: c.variance === 0 ? "var(--ok)" : "var(--err)" }}
@@ -195,7 +195,11 @@ export default async function SalesPage() {
                       {c.variance > 0 ? "+" : ""}
                       {fmtIQD(c.variance)}
                     </td>
-                    <td className="muted">{c.closedBy ?? "—"}</td>
+                    <td className="right money">{c.left === null ? "—" : fmtIQD(c.left)}</td>
+                    <td className="right money">
+                      {c.taken ? `${fmtIQD(c.taken)} → ${c.takenTo}` : "—"}
+                    </td>
+                    <td className="muted">{c.by ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

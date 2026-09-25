@@ -85,3 +85,87 @@ select test.eq((select sum(value * sign(base_quantity_signed)) from inventory_mo
 select test.act_as('owner@example.com');
 select test.eq((select count(*) from legacy_unposted())::int, 0,
   'everything the app records is journaled as it happens: nothing awaits a journal');
+
+-- 0024 (audit P0-1) — trading during a count is not counted twice. The count
+-- opens with beans at 700 g; an espresso (20 g) is sold and 1,000 g received
+-- before the counter weighs them at 1,680 g, the true shelf: nothing is missing.
+select test.act_as('owner@example.com');
+select reject_stock_count((select id from c2), 'Counted by the manager alone; count again');
+select test.act_as('counter@example.com');
+create temp table c3 as select start_stock_count(array['c0000000-0000-0000-0000-000000000001'::uuid]) as id;
+grant select on c3 to public;
+select test.throws($$select start_stock_count(array['c0000000-0000-0000-0000-000000000002'::uuid])$$,
+  '%already open here%', 'one count at a time: a second would post the same difference twice');
+select test.act_as('cashier@example.com');
+select record_sale(gen_random_uuid(), 'dine_in', 'cash', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]');
+select test.act_as('manager@example.com');
+select receive_goods((select id from supplier where business_id = '00000000-0000-0000-0000-0000000000b1' limit 1),
+  '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":1000,"goods_value":10000}]');
+select test.act_as('counter@example.com');
+select record_count((select id from c3), 'c0000000-0000-0000-0000-000000000001', 1680);
+select submit_stock_count((select id from c3));
+select test.act_as('manager@example.com');
+select test.eq((select expected::text || '/' || counted::text || '/' || variance::text from review_stock_count((select id from c3))),
+  '1680/1680/0', 'the reviewer sees the stock when it was counted: no difference');
+create temp table ap3 as select approve_stock_count((select id from c3)) as r;
+select test.eq((select (r->>'loss')::numeric + (r->>'gain')::numeric from ap3), 0::numeric, 'and nothing is posted');
+select test.as_admin();
+select test.eq((item_position('00000000-0000-0000-0000-0000000000b1', 'c0000000-0000-0000-0000-000000000001', (select id from loc))).qty,
+  1680::numeric, 'the ledger still says 1,680 g, what is on the shelf');
+select test.eq((select count(*) from stock_count_line where stock_count_id = (select id from c3) and expected_at_count is not null)::int, 1,
+  'the stock at the moment of counting is recorded with the line');
+
+-- An open count can be cancelled, with a reason, by its counter or a manager.
+select test.act_as('counter@example.com');
+create temp table c4 as select start_stock_count(array['c0000000-0000-0000-0000-000000000002'::uuid]) as id;
+grant select on c4 to public;
+select test.throws($$select cancel_stock_count((select id from c4), ' ')$$, '%Say why%', 'cancelling needs a reason');
+select test.act_as('cashier@example.com');
+select test.throws($$select cancel_stock_count((select id from c4), 'x')$$, '%permission%', 'a cashier cannot cancel a count');
+select test.act_as('counter@example.com');
+select cancel_stock_count((select id from c4), 'Started by mistake');
+select test.as_admin();
+select test.eq((select status::text || ': ' || rejected_reason from stock_count where id = (select id from c4)),
+  'rejected: Cancelled: Started by mistake', 'the count stays on record, cancelled, with the reason');
+select test.ok(exists (select 1 from audit_log where action = 'inventory.count.cancel'), 'and the cancelling is on the audit trail');
+select test.act_as('counter@example.com');
+select test.succeeds($$select start_stock_count()$$, 'a new count can then be opened');
+select test.as_admin();
+select test.eq((select sum(value * sign(base_quantity_signed)) from inventory_movement where business_id = '00000000-0000-0000-0000-0000000000b1'),
+  test.balance('1200'), 'the stock ledger still reconciles to 1200');
+
+-- Opening stock for an item with no stock history, at what it cost (0024):
+-- as a new item's opening stock, Dr Inventory / Cr Owner equity. Once the
+-- item's stock has moved, only a count or a correction changes it.
+select test.act_as('manager@example.com');
+create temp table milk as
+  select (create_item('Fresh milk', 'ingredient', 'ml', 'volume',
+                      p_units => '[{"code":"l","label":"Litre","factor":1000}]'::jsonb) ->> 'item_id')::uuid as id;
+grant select on milk to public;
+select test.act_as('cashier@example.com');
+select test.throws($$select record_opening_stock((select id from milk), 12, 'l', 1500)$$, '%permission%',
+  'a cashier cannot give stock an opening balance');
+select test.act_as('manager@example.com');
+select test.throws($$select record_opening_stock((select id from milk), 0, 'l', 1500)$$, '%quantity on the shelf%',
+  'the quantity must be more than zero');
+select test.throws($$select record_opening_stock((select id from milk), 12, 'l', 0)$$, '%Enter what one l of Fresh milk cost%',
+  'and it needs its cost: stock at no cost would be sold at no cost');
+select test.throws($$select record_opening_stock((select id from milk), 12, 'crate', 1500)$$, '%not defined for this item%',
+  'only in a unit the item has');
+create temp table op as select record_opening_stock((select id from milk), 12.5, 'l', 1500) as r;
+select test.eq((select (r->>'qty')::numeric || ' ml worth ' || (r->>'value')::numeric from op), '12500 ml worth 18750',
+  '12.5 litres at 1,500 a litre is 12,500 ml worth 18,750');
+select test.as_admin();
+select test.eq(test.lines_of((select (r->>'movement_id')::uuid from op)), '1200 Dr 18750 | 3000 Cr 18750',
+  'journaled as a new item''s opening stock: Dr Inventory, Cr Owner equity');
+select test.eq(item_issue_cost('00000000-0000-0000-0000-0000000000b1', (select id from milk), (select id from loc)), 1.5::numeric,
+  'the milk is now issued at 1.5 a millilitre, not at nothing');
+select test.ok(exists (select 1 from audit_log where action = 'inventory.opening'), 'the opening balance is on the audit trail');
+select test.act_as('manager@example.com');
+select test.throws($$select record_opening_stock((select id from milk), 1, 'l', 1500)$$, '%already has stock recorded here%',
+  'a second opening balance is refused');
+select test.throws($$select record_opening_stock('c0000000-0000-0000-0000-000000000001', 1, 'kg', 10000)$$,
+  '%Golden beans already has stock recorded here%', 'as is one for an item whose stock has moved');
+select test.as_admin();
+select test.eq((select sum(value * sign(base_quantity_signed)) from inventory_movement where business_id = '00000000-0000-0000-0000-0000000000b1'),
+  test.balance('1200'), 'the stock ledger still reconciles to 1200');

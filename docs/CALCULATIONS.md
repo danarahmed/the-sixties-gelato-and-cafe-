@@ -112,6 +112,13 @@ cost. WAC is the default; FIFO is a per-item/business option.
   `valueVariance = average_unit_cost × quantityVariance`. After approval a single
   signed `count_adjustment` movement is posted. Blind counts hide `expected`.
   (`src/domain/inventory/counting.ts`)
+- `expected` is the stock **at the moment the item is counted** (`0024`,
+  `stock_count_line.expected_at_count`, read under the item's lock when the
+  line is recorded), not when the count opened. The café keeps trading while
+  it counts: a sale, a delivery or a batch made before or after the item is
+  counted is already in the ledger and is not posted again as a variance.
+  Only one count is open at a location at a time; a count still being counted
+  can be cancelled, with a reason, by its counter or a manager.
 
 ## 8. Delivery-platform economics
 
@@ -157,7 +164,7 @@ it is rejected (enforced in `src/domain/accounting/journal.ts` **and** by the
 database when the entry is published). A published entry never changes;
 corrections are new entries. What each record posts (migration `0015`):
 
-- Sale: Dr 1000 Cash / 1010 Card clearing / 1100 Platform receivable (by
+- Sale: Dr 1000 Cash in the till / 1010 Card clearing / 1100 Platform receivable (by
   tender) / Cr 4000 Sales; Dr 5000 COGS / Cr 1200 Inventory. With a discount
   (`0019`): Cr 4000 at the full price, Dr 4100 Merchant-funded discount for the
   discount, and the tender at what was paid.
@@ -170,17 +177,39 @@ corrections are new entries. What each record posts (migration `0015`):
   taken as typed. Never more than the bill. Each line carries its share in proportion to its
   value, the shares adding up to the discount exactly, so a refund returns
   what was paid.
-- Void (same day, before the close): the sale's journal reversed exactly.
+- Void (before the drawer holding its cash is counted, `0024`): the sale's journal reversed exactly.
 - Refund: Dr 4200 Sales returns / Cr the tender's account; stock comes back
   only for items that are `returnable_to_stock`.
 - Goods receipt: Dr 1200 Inventory / Cr 2050 Goods received not invoiced.
 - Bill for a receipt: Dr 2050 (what the receipt raised), Dr/Cr 5050 Purchase
   price variance (the difference) / Cr 2000 Accounts payable. A bill for
   anything else: Dr its account / Cr 2000.
-- Payment: Dr 2000 / Cr 1000, 1010 or 1020.
+- Payment of a bill: Dr 2000 / Cr where the money came from (`0024`): 1000
+  the till, 1005 the safe, 1020 the bank, 1010 a card, or 3000 Owner equity
+  when the owner paid personally (capital they put in).
+- Expense: Dr its account / Cr where the money came from, the same five.
 - Waste: Dr 5300 Waste & spoilage / Cr 1200. Stock correction and approved
   count variance: 5400 Inventory count variance against 1200.
-- Opening stock: Dr 1200 / Cr 3000 Owner equity.
-- Day close: the counted drawer against opening float + cash sales − cash
-  refunds; any difference to 6300 Cash over / short.
+- Opening stock: Dr 1200 / Cr 3000 Owner equity — for a new item, or (`0024`)
+  for an item with no stock history yet, at the cost typed; once an item's
+  stock has moved it changes only through its own records.
+- Drawer count (`0024`, replacing the day close): a count covers every
+  movement of cash at the location since the last count, whatever the date —
+  the café trades past midnight, so one night's count covers two calendar
+  days. `expected = start + Σ cash events`, where `start` is what the last
+  count left in the drawer (for the first count after days closed the old
+  way, the cash typed in — the cash taken since the last such close was
+  carried in as events when `0024` went in) and the events are: cash sales +, cash refunds −,
+  voids of cash sales −, paid out of the till −, cash put into the till +,
+  cash taken out −. `variance = counted − expected`, posted Dr 6300 Cash over
+  / short / Cr 1000 when short, the reverse when over. What does not stay in
+  the drawer goes to the safe (Dr 1005) or the bank (Dr 1020), Cr 1000. A
+  sale recorded after the count is in the next one.
+- Moving cash between the till, the safe (1005), the bank (1020) and the
+  owner: Dr where it goes / Cr where it came from; money the owner takes for
+  themselves is Dr 3200 Owner drawings, and only the owner may take it.
+- The till's account 1000 always equals what the drawer should hold; it moves
+  only through sales, refunds, payments, counts and moving cash, never a
+  manual journal. Neither the till nor the safe may pay out more than the
+  books say it holds.
 - Year end: revenue and expense accounts closed to 3100 Retained earnings.

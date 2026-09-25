@@ -58,9 +58,11 @@ select post_control_correction('2026-08-31', 'Sale 44444444: cost credited to In
   '[{"code":"1200","debit":940},{"code":"5000","credit":940}]',
   'The old till wrote the journal but not the movement; the next count takes the stock out');
 
--- Step 5. Card takings the old till debited to Cash: reclassify.
-select save_journal('2026-08-31', 'Card takings of sale 44444444, posted to Cash by the old till',
-  '[{"code":"1010","debit":4000},{"code":"1000","credit":4000}]', true);
+-- Step 5. Card takings the old till debited to Cash: reclassify. The till's
+-- cash takes no manual journal (0024); the owner corrects it, with a reason.
+select post_control_correction('2026-08-31', 'Card takings of sale 44444444, posted to Cash by the old till',
+  '[{"code":"1010","debit":4000},{"code":"1000","credit":4000}]',
+  'The old till posted a card sale to cash');
 
 -- Step 6. A draft left parked: publish it or discard it.
 select discard_journal('11111111-0000-0000-0000-000000000007');
@@ -85,4 +87,15 @@ select test.eq((select count(*) from purchase_invoice where invoice_no = 'INV-22
   'the duplicate invoice is still on record, marked cancelled');
 select test.eq((select count(*) from audit_log where action in ('journal.reverse', 'bill.cancel', 'journal.control_correction',
                                                               'legacy.post_unposted'))::int,
-  5, 'and every correction is on the audit trail');
+  6, 'and every correction is on the audit trail');
+
+-- Drawer counts begin (0024). The old app counted by day, so the first drawer
+-- count is told what the drawer held when it began; from then on each count
+-- starts from what the last one left.
+select test.act_as('manager@example.com');
+select test.eq((drawer_status() ->> 'needs_start')::boolean, true, 'after days closed the old way, the drawer''s start is not known');
+select test.throws($$select count_drawer(10000)$$, '%Enter the cash that was in the drawer%', 'so the first count asks for it');
+create temp table first_count as select count_drawer(10000, null, null, 10000) as r;
+select test.eq((select (r ->> 'variance')::numeric from first_count), 0::numeric, 'and counts against what it began with');
+select test.eq((drawer_status() ->> 'needs_start')::boolean, false, 'from then on, each count starts from the last');
+select test.eq((drawer_status() ->> 'expected')::numeric, 10000::numeric, 'with what it left in the drawer');

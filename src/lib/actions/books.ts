@@ -8,7 +8,15 @@
 import { z } from "zod";
 import { getBookkeeper, type ExpenseCategorization } from "@/lib/bookkeeping/rules";
 import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
-import { day, id, nonNegative, optionalText, positive, text } from "@/lib/validation";
+import {
+  day,
+  id,
+  nonNegative,
+  optionalText,
+  paymentSource,
+  positive,
+  text,
+} from "@/lib/validation";
 
 const BOOK_PATHS = ["/journals", "/accounting", "/reports", "/dashboard"];
 
@@ -27,7 +35,7 @@ const expenseInput = z.object({
   description: text("What the expense was for", 300),
   amount: positive("The amount"),
   accountCode: z.string().regex(/^\d{4}$/, "Choose the account"),
-  paidFrom: z.enum(["cash", "card", "bank"], { message: "Choose how it was paid" }),
+  paidFrom: paymentSource,
   date: day("The date"),
 });
 
@@ -45,7 +53,7 @@ export async function recordExpenseAction(
     p_date: v.data.date,
   });
   if (!r.ok) return r;
-  refresh("/expenses", ...BOOK_PATHS);
+  refresh("/expenses", "/sales", ...BOOK_PATHS);
   return {
     ok: true,
     data: { journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no) },

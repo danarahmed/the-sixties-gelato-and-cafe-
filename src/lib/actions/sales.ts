@@ -7,11 +7,12 @@
 import { z } from "zod";
 import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import {
-  day,
   discountAmount,
   discountPercent,
   id,
   nonNegative,
+  optionalNonNegative,
+  optionalText,
   positive,
   salesChannel,
   text,
@@ -22,7 +23,7 @@ import {
 const SALE_PATHS = ["/orders", "/sales", "/dashboard", "/inventory", "/reports", "/journals"];
 
 const saleInput = z.object({
-  /** Minted by the till when the cart starts, reused on every retry (H-01). */
+  /** Minted by the till when payment starts, reused on every retry (H-01, P0-4). */
   key: z.string().uuid("This sale has no idempotency key"),
   channel: salesChannel,
   tender: z.enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" }),
@@ -84,7 +85,7 @@ function saleReceipt(d: Record<string, unknown>): SaleReceipt {
 
 const correction = z.object({ orderId: id("a sale"), reason: text("A reason", 300) });
 
-/** Rung in error: same trading day, before the day is closed. Everything comes back. */
+/** Rung in error, before the drawer holding it is counted. Everything comes back. */
 export async function voidSaleAction(
   input: z.input<typeof correction>,
 ): Promise<ActionResult<{ journalNo: number | null }>> {
@@ -123,39 +124,81 @@ export async function refundSaleAction(
   };
 }
 
-const closeInput = z.object({
-  day: day("The trading day"),
-  countedCash: nonNegative("Cash counted"),
-  openingFloat: nonNegative("Opening float"),
+const countInput = z.object({
+  counted: nonNegative("Cash counted"),
+  /** What stays in the drawer for the next session; empty keeps it all. */
+  left: optionalNonNegative("What stays in the drawer"),
+  takeTo: z.enum(["safe", "bank"]).nullable(),
+  /** Only for the first count after days closed the old way. */
+  startCash: optionalNonNegative("Cash when trading began"),
 });
 
-export interface DayCloseResult {
+export interface DrawerCountResult {
   expected: number;
   counted: number;
   variance: number;
+  left: number;
+  taken: number;
+  takenTo: string | null;
   journalNo: number | null;
 }
 
-/** Count the drawer against what the day should hold; any difference posts to 6300. */
-export async function closeDayAction(
-  input: z.input<typeof closeInput>,
-): Promise<ActionResult<DayCloseResult>> {
-  const v = parse(closeInput, input);
+/**
+ * Count the drawer: everything since the last count, whatever the day. The
+ * difference posts to 6300; what does not stay in the drawer goes to the safe
+ * or the bank (0024).
+ */
+export async function countDrawerAction(
+  input: z.input<typeof countInput>,
+): Promise<ActionResult<DrawerCountResult>> {
+  const v = parse(countInput, input);
   if (!v.ok) return v;
-  const r = await callRpc<Record<string, unknown>>("close_day", {
-    p_day: v.data.day,
-    p_counted_cash: v.data.countedCash,
-    p_opening_float: v.data.openingFloat,
+  const r = await callRpc<Record<string, unknown>>("count_drawer", {
+    p_counted: v.data.counted,
+    p_left_in_drawer: v.data.left,
+    p_take_to: v.data.takeTo,
+    p_start_cash: v.data.startCash,
   });
   if (!r.ok) return r;
-  refresh("/sales", "/journals", "/accounting", "/reports", "/orders");
+  refresh("/sales", "/journals", "/accounting", "/reports", "/orders", "/dashboard");
   return {
     ok: true,
     data: {
       expected: Number(r.data.expected ?? 0),
       counted: Number(r.data.counted ?? 0),
       variance: Number(r.data.variance ?? 0),
+      left: Number(r.data.left ?? 0),
+      taken: Number(r.data.taken ?? 0),
+      takenTo: r.data.taken_to == null ? null : String(r.data.taken_to),
       journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
     },
+  };
+}
+
+const PLACES = ["till", "safe", "bank", "owner"] as const;
+const moveInput = z.object({
+  from: z.enum(PLACES, { message: "Choose where the cash comes from" }),
+  to: z.enum(PLACES, { message: "Choose where the cash goes" }),
+  amount: positive("Amount"),
+  note: optionalText(200),
+});
+
+/** Cash moved between the till, the safe, the bank and the owner. */
+export async function moveCashAction(
+  input: z.input<typeof moveInput>,
+): Promise<ActionResult<{ journalNo: number | null }>> {
+  const v = parse(moveInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("move_cash", {
+    p_from: v.data.from,
+    p_to: v.data.to,
+    p_amount: v.data.amount,
+    p_note: v.data.note,
+  });
+  if (!r.ok) return r;
+  refresh("/sales", "/journals", "/accounting", "/reports", "/dashboard");
+  return {
+    ok: true,
+    data: { journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no) },
   };
 }

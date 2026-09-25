@@ -3,11 +3,20 @@
  * Purchase to pay: receipt → bill → payment (audit C-05). A receipt brings
  * stock in against Goods received not invoiced (2050); the supplier's bill
  * clears GRNI and raises the payable, with any price difference to 5050; a
- * payment settles the payable from cash, card or bank.
+ * payment settles the payable from the till, the safe, the bank, a card or
+ * the owner personally.
  */
 import { z } from "zod";
 import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
-import { day, id, nonNegative, optionalText, positive, text } from "@/lib/validation";
+import {
+  day,
+  id,
+  nonNegative,
+  optionalText,
+  paymentSource,
+  positive,
+  text,
+} from "@/lib/validation";
 
 const BUY_PATHS = ["/purchasing", "/vendors", "/inventory", "/reports", "/journals", "/dashboard"];
 
@@ -123,7 +132,7 @@ export async function recordBillAction(
 const payInput = z.object({
   billId: id("a bill"),
   amount: positive("The amount"),
-  method: z.enum(["cash", "card", "bank"], { message: "Choose how it was paid" }),
+  method: paymentSource,
 });
 
 export async function payBillAction(
@@ -137,7 +146,7 @@ export async function payBillAction(
     p_method: v.data.method,
   });
   if (!r.ok) return r;
-  refresh(...BUY_PATHS);
+  refresh("/sales", ...BUY_PATHS);
   return {
     ok: true,
     data: {
