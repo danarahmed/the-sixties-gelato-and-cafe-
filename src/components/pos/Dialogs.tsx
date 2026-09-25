@@ -5,6 +5,7 @@ import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { DiningTable, OpenBill } from "@/lib/db/pos";
 import type { Approver } from "@/lib/actions/approvals";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { useChannels } from "@/components/ChannelsProvider";
 import { REASONS, reasonKey, reasonMissing } from "@/lib/reasons";
 import { normaliseNumber } from "@/lib/validation";
 
@@ -65,6 +66,7 @@ export function KeepDialog({
   onClose: () => void;
 }) {
   const { t } = useT();
+  const { name: channelName } = useChannels();
   const [name, setName] = useState("");
   const [channel, setChannel] = useState<SalesChannel>(initialChannel);
   const ok = name.trim().length > 0;
@@ -97,7 +99,7 @@ export function KeepDialog({
                 onClick={() => setChannel(c)}
                 disabled={busy}
               >
-                {t(`pos.channel.${c}`)}
+                {channelName(c)}
               </button>
             ))}
           </div>

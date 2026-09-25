@@ -68,7 +68,7 @@ function Controls({ locale, theme }: { locale: Locale; theme: "light" | "dark" }
         {online ? t("common.online") : t("common.offlineShort")}
       </span>
       <label className="muted" style={{ fontSize: ".85rem" }}>
-        <span style={{ position: "absolute", left: -9999 }}>{t("common.language")}</span>
+        <span className="sr-only">{t("common.language")}</span>
         <select
           aria-label={t("common.language")}
           value={locale}

@@ -56,7 +56,13 @@ layers before every release.
   them), total rows left out, and what cannot be read said by its line; the
   match's lines, the orders it leaves out and its balanced journal; what each
   platform owes; the settlements named on the audit trail; the till's words
-  for the order number in all three languages (`0030`).
+  for the order number in all three languages (`0030`); a delivery platform
+  told from the shop's own three by its code; the channels in use, and "to go"
+  as every one of them but a table (a platform the café added included, one
+  out of use not); a recipe line's channels out of use kept when it is
+  reopened; each channel named in the reader's language (a platform as the
+  café named it there); the platform events named on the audit trail, with
+  the settings; the platforms screen's words in all three languages (`0031`).
 
 ## 2. SQL (`scripts/test-sql.sh`, about 800 assertions)
 
@@ -130,6 +136,7 @@ costing the first sale, the drawer from its float.
 | `exceptions`   | `0028`: reasons from the list for voids, refunds, discounts and cancelled bills, "Other" in real words; PINs set, checked as a hash, never readable; who may approve; a discount over the cap refused without an approval, one covering it used once, by its requester, within ten minutes; an amount judged by its share and re-checked as the bill shrinks; five wrong PINs lock a manager for fifteen minutes; voids and refunds with and without a second person; lines taken off audited; the exceptions report by person, with what waits for review                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `alerts`       | `0029`: on a new café, only its uncosted ingredients; the brief of a day — its facts, calculations and what to do — to the dinar, and nobody below a manager given it; each rule raised, as red or orange, with how sure it is, and cleared by what fixes it: the bank below zero, a drawer not counted for one day and for two, a count left open, running out (quiet with under a week of history and on a delivery's day, a supplier's own delivery time), below the reorder level (items never stocked too), a delivery price confirmed, no recipe, no cost (once, with its products), margins below cost and under the target (less sure on a last delivery's cost), a price typo, a waste spike, one person's exceptions, card and platform money not in, bills due and overdue, a payment made twice; one alert per condition however often it is read; answered with a note, snoozed with a reason, both audited; an orange alert that turns red asks again; nobody answers an alert about themselves; thresholds within their limits, back to the default when emptied, audited; the dashboard lists exactly what the rules find                                                                                                      |
 | `settlements`  | `0030`: a card payment out of the bank; each day's card takings not yet settled, and nobody below a manager shown them; a settlement only of days that are over, in order, from the day after the last; the fee (never negative) to 6500, a difference between the till and the terminal to 6300 with a note; the money arriving after the takings; cancelled only the latest, with a reason, its days waiting again; a platform sale needs its order number, as the tablet shows it, once per platform (a replay is not asked again), and a dine-in sale has none; what each platform owes by order, the voided one nothing; a statement matched line by line (voided, not found, on it twice), the order it leaves out, its totals and proposed journal, with nothing written; posted only by a person who keeps the books, named, once, with a note for the lines that do not match; the orders paid no longer wait, each keeping what it paid; every line that did not match kept with the statement; cancelled, the orders wait again and the statement can be posted rightly; each on the audit trail; the alerts for orders past the cycle and 1100 that no order explains; the settlements closed to direct reads; the books still tie |
+| `platforms`    | `0031`: a platform added by the owner (not a manager nor a cashier), with its names in other languages, its code made from its name (or platform_N for one in Arabic letters); once only, whatever the capitals; not one of the shop's own; refused, nothing kept; the channels in order, those out of use marked; set up like Talabat: every packaging line a Talabat order takes and every price on Talabat, from today, once; selling on it by its order number, once; what it owes and its statement matched and posted; renamed, taken out of use (no sale but a replay, no margin or price alerts, what it owes kept) and brought back; each on the audit trail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `controls`     | Who may do what; tenant isolation; the public can call nothing; the exact list of callable functions                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 **Concurrency** (`scripts/test-sql-concurrency.sh`), with real parallel
@@ -160,7 +167,12 @@ database, behind a small local stand-in for Supabase's auth service.
   manager, cashier and counter, every screen a role is offered renders, and every
   other one sends it home. The session cookie is HTTP-only. On a 390px phone,
   no screen reaches past the edge or is cut off: wide tables, the till's
-  category chips and a vendor's tabs scroll inside their own box.
+  category chips and a vendor's tabs scroll inside their own box. Right to
+  left too: every screen, header and menu included, fits in English and
+  Arabic at 1280px and in Kurdish at 390px (nothing past the left edge, where
+  a right-to-left page would scroll to it); and the menu that slides in from
+  ☰, on a phone and on the till, is out of sight until opened and then wholly
+  in view, in English, Arabic and Kurdish.
 - `flows`: the day's work through the screens:
   - cash and platform-paid sales, a void and a refund; a Talabat sale waits
     for its order number (a colon refused), prints it, and the same number is
@@ -265,6 +277,14 @@ database, behind a small local stand-in for Supabase's auth service.
   out, the journal it would post, and no Post button; the owner posts it with
   a note, the orders paid leave the list, and cancels it; each on the audit
   trail.
+- `platforms` (after `settlements`, `0031`): a branch manager sees Talabat in
+  use and Careem and Toters not, and can add, rename or retire none; the owner
+  adds Lezzoo with its Arabic and Kurdish names, set up like Talabat (its
+  prices and packaging copied, counted in the message), and cannot add it
+  twice; the cashier sells an espresso on its tab by the number from its
+  tablet, at its Lezzoo price, taking the cup; in Arabic its tab reads ليزو;
+  renamed; taken out of use it leaves the till while what it owes stays;
+  brought back it is on the till again; each on the audit trail.
 
 ## The 12 acceptance scenarios
 

@@ -125,5 +125,65 @@ console.log("▸ on a phone");
   await ctx.close();
 }
 
+console.log("▸ right to left, in Arabic and Kurdish");
+{
+  // The whole page, its header and menu too, within the screen: in a
+  // right-to-left page anything past the left edge widens the page, and the
+  // screen scrolls sideways into nothing.
+  for (const [locale, width] of [
+    ["en", 1280],
+    ["ar", 1280],
+    ["ckb", 390],
+  ]) {
+    const { ctx, page } = await signIn(browser, "owner", { viewport: { width, height: 900 } });
+    await ctx.addCookies([{ name: "locale", value: locale, url: BASE }]);
+    const wide = [];
+    for (const p of PAGES) {
+      await open(page, p);
+      const over = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      if (over > 1) wide.push(`${p} by ${over}px`);
+    }
+    check(
+      wide.length === 0,
+      `every screen fits, in ${locale} at ${width}px${wide.length ? ` (not: ${wide.join(", ")})` : ""}`,
+    );
+    await ctx.close();
+  }
+
+  // The menu that slides in from ☰ (on a phone, and on the till at any
+  // width): out of sight until asked for, then wholly in view, from the side
+  // the reading starts.
+  const menu = (page) =>
+    page.evaluate(() => {
+      const r = document.querySelector(".sidenav").getBoundingClientRect();
+      const w = document.documentElement.clientWidth;
+      return { hidden: r.right <= 0 || r.left >= w, shown: r.left >= -1 && r.right <= w + 1, r };
+    });
+  for (const [locale, width, path] of [
+    ["en", 390, "/dashboard"],
+    ["ckb", 390, "/dashboard"],
+    ["ar", 1280, "/pos"],
+    ["en", 1280, "/pos"],
+  ]) {
+    const { ctx, page } = await signIn(browser, "owner", { viewport: { width, height: 900 } });
+    await ctx.addCookies([{ name: "locale", value: locale, url: BASE }]);
+    await open(page, path);
+    const closed = await menu(page);
+    await page.locator(".menu-toggle").click();
+    await page.waitForTimeout(400); // the slide takes 0.2s
+    const opened = await menu(page);
+    check(
+      closed.hidden && opened.shown,
+      `the menu on ${path} in ${locale} at ${width}px: hidden, then in view when opened` +
+        (closed.hidden && opened.shown
+          ? ""
+          : ` (closed ${JSON.stringify(closed.r)}, open ${JSON.stringify(opened.r)})`),
+    );
+    await ctx.close();
+  }
+}
+
 await browser.close();
 done("pages");

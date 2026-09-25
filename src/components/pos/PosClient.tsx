@@ -13,9 +13,10 @@ import {
   saveBillAction,
   splitBillAction,
 } from "@/lib/actions/pos";
-import { fmtIQD, SELLABLE_CHANNELS } from "@/lib/format";
+import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { useOnline } from "@/components/AppShell";
+import { useChannels } from "@/components/ChannelsProvider";
 import { ProductPicker } from "./ProductPicker";
 import { ChooseBill, FloorView } from "./FloorView";
 import { OrderPanel, type Receipt } from "./OrderPanel";
@@ -215,13 +216,15 @@ export function PosClient({
   money: MoneyRules;
 }) {
   const { t, locale } = useT();
+  const { set: channelSet, name: channelName } = useChannels();
   const online = useOnline();
   // The menu as the page loaded it, then as fetched again while the till stays open.
   const [items, setItems] = useState<PosItem[]>(initialItems);
   const byId = useMemo(() => new Map(items.map((i) => [i.variantId, i])), [items]);
+  // The channels in use that sell something: a platform the café added is one more tab.
   const channels = useMemo(
-    () => SELLABLE_CHANNELS.filter((c) => items.some((i) => i.prices[c] !== undefined)),
-    [items],
+    () => channelSet.inUse.filter((c) => items.some((i) => i.prices[c] !== undefined)),
+    [items, channelSet],
   );
   const billChannels = channels.filter((c) => !isPlatform(c));
   const tableChannel: SalesChannel = billChannels.includes("dine_in")
@@ -679,7 +682,7 @@ export function PosClient({
     setPrintJob({
       kind: "bill",
       title: title(o),
-      channelLabel: t(`pos.channel.${o.channel}`),
+      channelLabel: channelName(o.channel),
       lines: printLines(o),
       ...printTotals(o),
       printCount: data.printCount,
@@ -823,7 +826,7 @@ export function PosClient({
       job: {
         kind: "receipt",
         title: dialog.title,
-        channelLabel: t(`pos.channel.${o.channel}`),
+        channelLabel: channelName(o.channel),
         lines: printLines(o),
         ...printTotals(o),
         tender,
@@ -971,7 +974,7 @@ export function PosClient({
   const emptyJob = (p: Pending, orderId: string, net: number): PrintJob => ({
     kind: "receipt",
     title: p.title,
-    channelLabel: t(`pos.channel.${p.channel}`),
+    channelLabel: channelName(p.channel),
     lines: [],
     total: net,
     tender: p.tender,
@@ -1111,7 +1114,7 @@ export function PosClient({
                       onClick={() => setChannel(c)}
                       disabled={blocked && c !== order.channel}
                     >
-                      {t(`pos.channel.${c}`)}
+                      {channelName(c)}
                     </button>
                   ))}
                 </div>
@@ -1185,9 +1188,7 @@ export function PosClient({
           note={discountNote(dialog.order)}
           tenders={isPlatform(dialog.order.channel) ? ["platform_paid"] : ["cash", "card"]}
           initialTender={isPlatform(dialog.order.channel) ? "platform_paid" : dialog.tender}
-          platform={
-            isPlatform(dialog.order.channel) ? t(`pos.channel.${dialog.order.channel}`) : null
-          }
+          platform={isPlatform(dialog.order.channel) ? channelName(dialog.order.channel) : null}
           busy={busy === "pay"}
           error={dialog.error}
           onConfirm={confirmPay}

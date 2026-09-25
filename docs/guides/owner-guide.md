@@ -231,6 +231,12 @@ discount, why and who approved it. The 10% is a business setting (shown on
   Platforms → Match a Statement**, check what matched, what did not and which
   orders it left out, and post the payout (see the [Talabat guide](talabat.md)).
   The dashboard names the orders a platform has not paid after 7 days.
+- **A new delivery platform:** add it on **Delivery Platforms → Your Delivery
+  Platforms**, with its name in Arabic and Kurdish, and copy the packaging and
+  prices of the channel it works like (usually Talabat). It is then a button on
+  the till, with its own prices, order numbers and statements. Rename one, or
+  take one out of use, on the same list (see
+  [Adding a platform](talabat.md#adding-a-platform)).
 - **Stock Count:** have a counter count, then review and approve it yourself (see
   the [counting guide](counting-guide.md)).
 - **Audit trail:** read who changed what — prices, products, items, suppliers,

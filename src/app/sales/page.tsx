@@ -8,13 +8,13 @@ import {
   getUnclosedDays,
   salesTotals,
 } from "@/lib/db/books";
-import { channelLabel, fmtIQD } from "@/lib/format";
+import { fmtIQD } from "@/lib/format";
+import { getChannelNames } from "@/lib/db/channels";
 import { addDays, businessToday, dateTimeIn } from "@/lib/dates";
 import { DrawerCount, MoveCash } from "@/components/books/DrawerCount";
 import { CardTakingsPanel } from "@/components/books/CardTakings";
 import { getCardTakings } from "@/lib/db/settlements";
 import { EmptyState } from "@/components/ui";
-import type { SalesChannel } from "@domain/sales/recipe.js";
 
 export const dynamic = "force-dynamic";
 
@@ -25,12 +25,13 @@ export default async function SalesPage() {
   const from = addDays(today, -29);
   const canCount = has(profile, "day.close");
   const canMove = canCount || has(profile, "accounting.post");
-  const [rows, counts, uncounted, drawer, card] = await Promise.all([
+  const [rows, counts, uncounted, drawer, card, channels] = await Promise.all([
     getDailySales(from, today),
     getDrawerCounts(),
     getUnclosedDays(),
     canCount || canMove ? getDrawerStatus() : Promise.resolve(null),
     getCardTakings(),
+    getChannelNames(),
   ]);
   // A day is counted once a drawer count follows its last sale: the café
   // trades past midnight, so one night's count may cover two calendar days.
@@ -124,9 +125,7 @@ export default async function SalesPage() {
                   <tr key={r.day + r.channel}>
                     <td>{r.day}</td>
                     <td>
-                      <span className="ref auto">
-                        {channelLabel[r.channel as SalesChannel] ?? r.channel}
-                      </span>
+                      <span className="ref auto">{channels.name(r.channel)}</span>
                     </td>
                     <td className="right money">
                       <Link

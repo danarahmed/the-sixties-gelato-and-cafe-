@@ -2,17 +2,11 @@ import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getSalesOrders } from "@/lib/db/read";
-import {
-  channelLabel,
-  fmtIQD,
-  orderStatusLabel,
-  SELLABLE_CHANNELS,
-  tenderLabel,
-} from "@/lib/format";
+import { fmtIQD, orderStatusLabel, tenderLabel } from "@/lib/format";
+import { getChannelNames } from "@/lib/db/channels";
 import { addDays, businessToday, dateTimeIn, dayStart, parseDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui";
 import { OrderActions } from "@/components/OrderActions";
-import type { SalesChannel } from "@domain/sales/recipe.js";
 
 export const dynamic = "force-dynamic";
 
@@ -22,15 +16,15 @@ export default async function OrdersPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const profile = await requirePermission("cost.view");
-  const t = await getT();
-  const sp = await searchParams;
+  const [t, sp, channels] = await Promise.all([getT(), searchParams, getChannelNames()]);
   // Opened from a report: the sales of those days (and that channel).
   const today = businessToday(profile.timezone);
   const filtered = typeof sp.from === "string" || typeof sp.channel === "string";
   const from = parseDay(sp.from, today);
   const to = parseDay(sp.to, from);
+  // Every channel, a platform out of use too: its sales are still there to see.
   const channel =
-    typeof sp.channel === "string" && (SELLABLE_CHANNELS as readonly string[]).includes(sp.channel)
+    typeof sp.channel === "string" && channels.channels.some((c) => c.code === sp.channel)
       ? sp.channel
       : "";
   const orders = await getSalesOrders(
@@ -77,9 +71,9 @@ export default async function OrdersPage({
           <div className="sc">Channel</div>
           <select name="channel" defaultValue={channel}>
             <option value="">Every channel</option>
-            {SELLABLE_CHANNELS.map((c) => (
-              <option key={c} value={c}>
-                {channelLabel[c]}
+            {channels.channels.map((c) => (
+              <option key={c.code} value={c.code}>
+                {channels.name(c.code)}
               </option>
             ))}
           </select>
@@ -96,7 +90,7 @@ export default async function OrdersPage({
         <div className="card stat">
           <span className="label">
             {filtered
-              ? `Completed sales ${from === to ? `on ${from}` : `${from} to ${to}`}${channel ? `, ${channelLabel[channel as SalesChannel]}` : ""}`
+              ? `Completed sales ${from === to ? `on ${from}` : `${from} to ${to}`}${channel ? `, ${channels.name(channel)}` : ""}`
               : "Completed sales shown"}
           </span>
           <span className="value">{live.length}</span>
@@ -143,9 +137,7 @@ export default async function OrdersPage({
                       {dateTimeIn(profile.timezone, o.placedAt)}
                     </td>
                     <td>
-                      <span className="badge">
-                        {channelLabel[o.channel as SalesChannel] ?? o.channel}
-                      </span>
+                      <span className="badge">{channels.name(o.channel)}</span>
                     </td>
                     <td>
                       {o.lines.map((l) => `${l.name} ×${l.qty}`).join(", ")}

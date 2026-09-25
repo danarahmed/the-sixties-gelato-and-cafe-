@@ -11,7 +11,9 @@ import {
   type RecipeLineRow,
   type ScheduledChange,
 } from "@/lib/db/reports";
-import { channelLabel, fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty } from "@/lib/format";
+import { getChannelNames } from "@/lib/db/channels";
+import { ChannelsProvider } from "@/components/ChannelsProvider";
 import { businessToday } from "@/lib/dates";
 import { AddProductForm, PriceChange } from "@/components/AddProductForm";
 import { ChangeRecipe } from "@/components/menu/ChangeRecipe";
@@ -20,7 +22,6 @@ import { CategoriesManager } from "@/components/menu/CategoriesManager";
 import { CostWarning, ScheduledChanges } from "@/components/menu/MenuChanges";
 import { ProductSetup } from "@/components/menu/ProductSetup";
 import { EmptyState } from "@/components/ui";
-import type { SalesChannel } from "@domain/sales/recipe.js";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,8 @@ function RecipeAndPrices({
   noStockReason,
   itemCosts,
   scheduled,
+  channelName,
+  inUse,
 }: {
   name: string | null;
   costing: Costing | undefined;
@@ -53,9 +56,14 @@ function RecipeAndPrices({
   /** Each item's cost per base unit today, by id ("0" when it has none). */
   itemCosts: Map<string, string>;
   scheduled: ScheduledChange[];
+  /** A channel's name in the reader's language. */
+  channelName: (code: string) => string;
+  /** The channels in use. */
+  inUse: ReadonlySet<string>;
 }) {
   const recipe = costing?.recipe ?? [];
-  const rows = costing?.rows ?? [];
+  // Priced where it sells today: a platform out of use sells nothing.
+  const rows = (costing?.rows ?? []).filter((m) => inUse.has(m.channel));
   const zeroCostItems = recipe
     .filter((l) => l.itemId !== null && Number(itemCosts.get(l.itemId) ?? "0") === 0)
     .map((l) => l.component);
@@ -101,9 +109,7 @@ function RecipeAndPrices({
                       {fmtQty(l.quantity)} {l.unitCode}
                     </td>
                     <td className="muted" style={{ fontSize: ".85rem" }}>
-                      {l.channels
-                        ? l.channels.map((c) => channelLabel[c as SalesChannel] ?? c).join(", ")
-                        : "all channels"}
+                      {l.channels ? l.channels.map(channelName).join(", ") : "all channels"}
                     </td>
                   </tr>
                 ))}
@@ -134,7 +140,7 @@ function RecipeAndPrices({
                   const margin = m.unitCost === null ? null : m.price - m.unitCost;
                   return (
                     <tr key={m.channel}>
-                      <td>{channelLabel[m.channel as SalesChannel] ?? m.channel}</td>
+                      <td>{channelName(m.channel)}</td>
                       <td className="right mono">{fmtIQD(m.price)}</td>
                       <td className="right mono">
                         {m.unitCost === null ? "unknown" : fmtIQD(m.unitCost)}
@@ -183,15 +189,17 @@ export default async function ProductsPage() {
   const t = await getT();
   const today = businessToday(profile.timezone);
   const canEdit = has(profile, "recipe.edit");
-  const [menu, lines, items, itemCosts, setup, scheduled] = await Promise.all([
+  const [menu, lines, items, itemCosts, setup, scheduled, channels] = await Promise.all([
     getMenuCosting(),
     getMenuRecipeLines(),
     canEdit ? getItems() : Promise.resolve([]),
     getItemCosts(),
     getMenuSetup(),
     getMenuScheduled(),
+    getChannelNames(),
   ]);
 
+  const inUse = new Set(channels.channels.filter((c) => c.active).map((c) => c.code));
   const costing = new Map<string, Costing>();
   for (const m of menu) {
     const c = costing.get(m.variantId) ?? { rows: [], recipe: [] };
@@ -256,6 +264,8 @@ export default async function ProductsPage() {
                 noStockReason={v.noStockReason}
                 itemCosts={itemCosts}
                 scheduled={scheduled.filter((s) => s.variantId === v.id)}
+                channelName={channels.name}
+                inUse={inUse}
               />
             ))}
         </details>
@@ -264,51 +274,55 @@ export default async function ProductsPage() {
   );
 
   return (
-    <div className="grid" style={{ gap: 16 }}>
-      <h1 style={{ margin: 0 }}>{t("nav.products")}</h1>
-      <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        One recipe serves every channel; lines tagged to a channel deduct only there — that is how
-        the cup and lid are used for takeaway and delivery but not at a table. Prices and recipes
-        change from a date, so every sale uses the price and recipe in force on its own day. Costs
-        shown are today&apos;s, worked out exactly as a sale posts them. A photo, a category and a ★
-        make a product quick to find on the till.
-      </p>
+    <ChannelsProvider channels={channels.channels}>
+      <div className="grid" style={{ gap: 16 }}>
+        <h1 style={{ margin: 0 }}>{t("nav.products")}</h1>
+        <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
+          One recipe serves every channel; lines tagged to a channel deduct only there — that is how
+          the cup and lid are used for takeaway and delivery but not at a table. Prices and recipes
+          change from a date, so every sale uses the price and recipe in force on its own day. Costs
+          shown are today&apos;s, worked out exactly as a sale posts them. A photo, a category and a
+          ★ make a product quick to find on the till.
+        </p>
 
-      {canEdit && (
-        <AddProductForm
-          items={itemOpts}
-          categories={categories.filter((c) => c.isActive).map((c) => ({ id: c.id, name: c.name }))}
-          money={{ decimals: profile.currencyDecimals, priceStep: profile.discountRoundTo }}
-        />
-      )}
+        {canEdit && (
+          <AddProductForm
+            items={itemOpts}
+            categories={categories
+              .filter((c) => c.isActive)
+              .map((c) => ({ id: c.id, name: c.name }))}
+            money={{ decimals: profile.currencyDecimals, priceStep: profile.discountRoundTo }}
+          />
+        )}
 
-      <CategoriesManager categories={categories} counts={counts} canEdit={canEdit} />
+        <CategoriesManager categories={categories} counts={counts} canEdit={canEdit} />
 
-      {products.length === 0 ? (
-        <EmptyState title="No products yet" hint="Add the first one above." />
-      ) : (
-        <>
-          {groups.map((g) => (
-            <section key={g.key} className="grid" style={{ gap: 10 }}>
-              <h2 style={{ margin: "8px 0 0" }}>
-                {g.title}{" "}
-                {g.hidden && <span className="badge warn">category hidden from the till</span>}
-              </h2>
-              {g.products.map(card)}
-            </section>
-          ))}
-          {hidden.length > 0 && (
-            <section className="grid" style={{ gap: 10 }}>
-              <h2 style={{ margin: "8px 0 0" }}>Hidden from the till</h2>
-              <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-                Not offered on the till. Their recipes, prices and sales history are kept; tick “On
-                the till” to sell one again.
-              </p>
-              {hidden.map(card)}
-            </section>
-          )}
-        </>
-      )}
-    </div>
+        {products.length === 0 ? (
+          <EmptyState title="No products yet" hint="Add the first one above." />
+        ) : (
+          <>
+            {groups.map((g) => (
+              <section key={g.key} className="grid" style={{ gap: 10 }}>
+                <h2 style={{ margin: "8px 0 0" }}>
+                  {g.title}{" "}
+                  {g.hidden && <span className="badge warn">category hidden from the till</span>}
+                </h2>
+                {g.products.map(card)}
+              </section>
+            ))}
+            {hidden.length > 0 && (
+              <section className="grid" style={{ gap: 10 }}>
+                <h2 style={{ margin: "8px 0 0" }}>Hidden from the till</h2>
+                <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+                  Not offered on the till. Their recipes, prices and sales history are kept; tick
+                  “On the till” to sell one again.
+                </p>
+                {hidden.map(card)}
+              </section>
+            )}
+          </>
+        )}
+      </div>
+    </ChannelsProvider>
   );
 }

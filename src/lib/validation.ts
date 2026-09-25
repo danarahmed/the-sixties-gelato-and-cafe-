@@ -7,6 +7,7 @@
  * Arabic-Indic digits and separators are accepted and normalised.
  */
 import { z } from "zod";
+import { CHANNEL_CODE } from "@/lib/channels";
 
 const ARABIC_INDIC = /[٠-٩]/g; // ٠١٢٣٤٥٦٧٨٩
 const EASTERN_ARABIC_INDIC = /[۰-۹]/g; // ۰۱۲۳۴۵۶۷۸۹ (Kurdish, Persian)
@@ -104,15 +105,8 @@ export const paymentSource = z.enum(PAYMENT_SOURCES, {
   message: "Choose where the money came from",
 });
 
-export const SALES_CHANNELS = [
-  "dine_in",
-  "takeaway",
-  "direct_delivery",
-  "talabat",
-  "careem",
-  "toters",
-] as const;
-export const salesChannel = z.enum(SALES_CHANNELS, { message: "Choose a channel" });
+/** A channel's code: one of the shop's three, or a delivery platform's (0031). The database knows which exist. */
+export const salesChannel = z.string().regex(CHANNEL_CODE, "Choose a channel");
 
 /**
  * A delivery platform's order number, as its tablet shows it (0030): letters,

@@ -121,9 +121,9 @@ console.log("▸ owner prices a new drink from what its recipe costs");
                         join recipe_line rl on rl.recipe_version_id = rv.id
                         join item i on i.id = rl.item_id
                        where p.name = 'Golden cortado'`);
+  // "Takeaway & delivery" is every channel in use but a table: Careem and Toters are not in use.
   check(
-    recipe ===
-      "Golden beans 18 g all; Golden cup 1 each {takeaway,direct_delivery,talabat,careem,toters}",
+    recipe === "Golden beans 18 g all; Golden cup 1 each {takeaway,direct_delivery,talabat}",
     "the recipe is saved: the beans on every order, the cup for takeaway and delivery",
   );
   const prices = sql(`select string_agg(channel || '=' || price, ',' order by channel)

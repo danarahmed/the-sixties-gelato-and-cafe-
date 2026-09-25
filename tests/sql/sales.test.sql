@@ -61,8 +61,10 @@ select test.throws($$select record_sale(gen_random_uuid(), 'talabat', 'cash', '[
 select test.throws($$select record_sale(gen_random_uuid(), 'dine_in', 'platform_paid', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]')$$,
   '%platform-paid%', 'a dine-in order cannot be platform-paid');
 select test.throws($$select record_sale(gen_random_uuid(), 'dine_in', 'cash', '[]')$$, '%cart is empty%', 'an empty cart is refused');
+select test.throws($$select record_sale(gen_random_uuid(), 'direct_delivery', 'cash', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]')$$,
+  '%No direct_delivery price%', 'a channel with no price is refused, not sold at zero');
 select test.throws($$select record_sale(gen_random_uuid(), 'careem', 'platform_paid', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]')$$,
-  '%No careem price%', 'a channel with no price is refused, not sold at zero');
+  'Careem is no longer in use%', 'a platform out of use is refused before anything else (0031)');
 
 select test.act_as('counter@example.com');
 select test.throws($$select record_sale(gen_random_uuid(), 'dine_in', 'cash', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]')$$,

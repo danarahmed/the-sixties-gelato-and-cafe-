@@ -7,7 +7,7 @@
  */
 import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
-import { SALES_CHANNELS } from "@/lib/validation";
+import type { ChannelSet } from "@/lib/channels";
 import { parseNumber, roundMoney } from "@/components/pos/model";
 
 /**
@@ -38,21 +38,16 @@ export interface CostLine {
 /** Where a recipe line is used, as the form offers it. */
 export type LineUse = "all" | "to_go" | "dine_in" | "custom";
 
-/** Every channel but a table: where the cup, lid and bag are used. */
-export const TO_GO: SalesChannel[] = SALES_CHANNELS.filter((c) => c !== "dine_in");
-
 /**
- * The channels a line is saved with. Every channel ticked is every channel,
+ * The channels a line is saved with. "Takeaway & delivery" is every channel
+ * in use but a table (a platform added later takes the packaging of the
+ * channel it is set up like). Every channel in use ticked is every channel,
  * and so is none: the database reads an empty list as "all".
  */
-export function channelsFor(
-  use: LineUse,
-  ticked: SalesChannel[],
-  sellable: SalesChannel[],
-): SalesChannel[] {
-  if (use === "to_go") return TO_GO;
+export function channelsFor(use: LineUse, ticked: SalesChannel[], set: ChannelSet): SalesChannel[] {
+  if (use === "to_go") return set.toGo;
   if (use === "dine_in") return ["dine_in"];
-  if (use === "custom" && !sellable.every((c) => ticked.includes(c))) return ticked;
+  if (use === "custom" && !set.inUse.every((c) => ticked.includes(c))) return ticked;
   return [];
 }
 

@@ -514,7 +514,8 @@ reference, note)`** (needs `accounting.post`): the days from `from` to
   waiting again; audited `card.settlement_cancel`.
 - **Platform order numbers.** `delivery_platform` has Talabat, Careem and
   Toters for every business (`platform_id_for(business, channel)`, internal,
-  adds a platform the first time it is sold through). `record_sale` takes
+  added a platform the first time it was sold through; dropped by `0031`, where
+  a sale is refused unless the café has the platform). `record_sale` takes
   `p_platform_order_no`: a platform sale needs it — letters, digits and
   `# / _ . -`, at most 40 — and it is refused if that platform already has
   the number (ignoring case). The sale writes its `platform_order`
@@ -562,3 +563,54 @@ note)`** (needs `accounting.post`; one at a time per business): matches
 - **Clearing the test records.** `reset-test-data.sql` clears
   `card_settlement` with the platform orders and settlements; the delivery
   platforms, with the business, are kept.
+
+### Delivery platforms the café adds (`0031`)
+
+- **`delivery_platform`** gains `names` (jsonb, its name in other languages by
+  code: `{"ar": "…", "ckb": "…"}`), `sort_order` and `created_at`, and checks
+  that `code` is small Latin letters, digits and `_` starting with a letter
+  (`delivery_platform_code_format`) and that `names` is an object. The
+  migration names Talabat, Careem and Toters in Arabic and Kurdish, and takes
+  Careem and Toters out of use where they were never priced or sold through
+  (the till offered Talabat only).
+- **Every channel but `dine_in`, `takeaway` and `direct_delivery` is a
+  platform** (`is_platform_channel`). A platform's code is a value of
+  `sales_channel`: `add_delivery_platform` adds it to the type, so every
+  table that keeps a channel (`channel_price`, `recipe_line`, `sales_order`,
+  `pos_tab`) takes it unchanged. A value added to a type can be used once the
+  transaction adding it is over, so a platform is set up by a second call.
+- **`sales_channels()`** (any member): `code`, `name`, `names`, `kind`
+  (`dine_in`, `takeaway`, `delivery`, `platform`), `is_active` and
+  `sort_order`, the shop's three first, then the café's platforms by
+  `sort_order` and name. The till, the menu, the reports and the audit trail
+  read their channels, and each channel's name in the reader's language, from
+  it.
+- **`add_delivery_platform(name, code, names)`** (needs `settings.manage`; one
+  at a time per business): a name used once, ignoring case, up to 60 letters;
+  the code, if not given, made from a name in Latin letters, else
+  `platform_1`, `platform_2`…; not one of the shop's three nor a code the café
+  has. Adds the code to `sales_channel`, the platform last in order, in use;
+  audited `platform.create`.
+- **`copy_platform_setup(platform, like, prices)`** (needs
+  `settings.manage`; a platform in use): every recipe line gated to the
+  channel it works like is gated to the platform too, in every version of
+  every recipe (no recorded sale changes: none was on the platform); with
+  `prices`, each active product priced on that channel today, and not on the
+  platform, is priced the same there from today (`audit.reason` "Priced as on
+  … when … was added"). Returns `{lines, prices}`; audited `platform.setup`
+  when it copied anything.
+- **`update_delivery_platform(platform, name, names, active)`** (needs
+  `settings.manage`): renamed, named in other languages, taken out of use or
+  brought back; audited `platform.update` with what it was and is, when
+  anything changed.
+- **A platform out of use** sells nothing more: `record_sale` refuses it ("…
+  is no longer in use: bring it back on Delivery Platforms to sell through
+  it"), except a replay of a sale it already recorded. It raises no margin or
+  price alerts (`channel_in_use`, internal), and the till offers it no more.
+  What it owes and its statements stay: `platform_money()` lists every
+  platform, with `names`, `active`, `waiting` (its orders waiting) and
+  `priced` (products on the menu with a price on it today).
+- **The alerts** name a platform as the café named it
+  (`alert_channel(business, channel)`, internal; the one-argument version is
+  dropped). A price that looks mistyped names the dearest channel, and the
+  first in order when two charge the same.

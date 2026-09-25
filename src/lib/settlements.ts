@@ -495,8 +495,21 @@ export interface PlatformSettlement {
   cancelReason: string | null;
 }
 
+/** A delivery platform of the café's (0031), in use or not. */
+export interface PlatformInfo {
+  code: string;
+  name: string;
+  /** Its name in other languages, by language code. */
+  names: Record<string, string>;
+  active: boolean;
+  /** Orders waiting to be paid out. */
+  waiting: number;
+  /** Products on the menu with a price on it today. */
+  priced: number;
+}
+
 export interface PlatformMoney {
-  platforms: { code: string; name: string }[];
+  platforms: PlatformInfo[];
   orders: OrderOwed[];
   /** The orders' value, waiting to be paid out. */
   waiting: number;
@@ -510,7 +523,21 @@ export interface PlatformMoney {
 export function parsePlatformMoney(raw: unknown): PlatformMoney {
   const o = (raw ?? {}) as Record<string, unknown>;
   return {
-    platforms: list(o.platforms).map((p) => ({ code: String(p.code), name: String(p.name) })),
+    platforms: list(o.platforms).map((p) => ({
+      code: String(p.code),
+      name: String(p.name),
+      names:
+        p.names && typeof p.names === "object" && !Array.isArray(p.names)
+          ? Object.fromEntries(
+              Object.entries(p.names as Record<string, unknown>).filter(
+                (e): e is [string, string] => typeof e[1] === "string" && e[1].trim() !== "",
+              ),
+            )
+          : {},
+      active: p.active !== false,
+      waiting: numOf(p.waiting),
+      priced: numOf(p.priced),
+    })),
     orders: list(o.orders).map((x) => ({
       platform: String(x.platform),
       orderNo: String(x.order_no ?? ""),

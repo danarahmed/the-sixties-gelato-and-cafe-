@@ -16,9 +16,12 @@ import { Quantity, type UnitSystem } from "../units/units.js";
 import { Money, type Currency } from "../money/money.js";
 import { averageUnitCost, type WacState } from "../costing/wac.js";
 
-/** Sales channel / order type that drives packaging selection. */
-export type SalesChannel =
-  "dine_in" | "takeaway" | "direct_delivery" | "talabat" | "careem" | "toters";
+/**
+ * Sales channel / order type that drives packaging selection: dine_in,
+ * takeaway, direct_delivery, or a delivery platform's code (talabat, or one
+ * the café added itself, 0031).
+ */
+export type SalesChannel = string;
 
 export type ComponentType = "item" | "sub_recipe";
 

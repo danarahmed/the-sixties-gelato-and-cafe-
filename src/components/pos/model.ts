@@ -9,7 +9,7 @@ import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { Locale } from "@/lib/i18n/dictionaries";
 import type { DiningTable, OpenBill, PosItem } from "@/lib/db/pos";
-import { PLATFORM_CHANNELS } from "@/lib/format";
+import { isPlatformChannel } from "@/lib/channels";
 import { reasonMissing } from "@/lib/reasons";
 import { normaliseNumber } from "@/lib/validation";
 
@@ -81,7 +81,8 @@ export interface Order {
   openedBy: string | null;
 }
 
-export const isPlatform = (c: SalesChannel) => PLATFORM_CHANNELS.includes(c);
+/** A delivery platform's order: paid through the platform, with the number from its tablet. */
+export const isPlatform = (c: SalesChannel) => isPlatformChannel(c);
 
 export function signature(lines: Line[], discount: Discount | null): string {
   const d = discount ? parseNumber(discount.value) : null;

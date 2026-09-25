@@ -7,10 +7,10 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0030` and the rebuilt app. The SQL
-  checks (31, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (11, every role), the unit and contract
-  tests (242) and a production build all pass.
+- **Built and verified:** migrations `0014`–`0031` and the rebuilt app. The SQL
+  checks (32, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (12, every role), the unit and contract
+  tests (254) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -189,6 +189,30 @@ browser tests through the real app, or both.
   object by object (permissions included), and was checked as the owner in a
   transaction that was rolled back. The screens went live the same day with
   [pull request #16](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/16).
+- **Delivery platforms the owner adds (migration `0031`, asked for by the
+  owner):** on Delivery Platforms the owner or the general manager adds a
+  platform, with its name in Arabic and Kurdish, and copies the packaging and
+  prices of the channel it works like; it is then a button on the till with
+  its own prices, order numbers and statements. A platform can be renamed,
+  taken out of use (it leaves the till and sells nothing more; what it owes
+  stays) and brought back. The till, the menu, the reports and the audit trail
+  read the channels from the database, and name each in the reader's
+  language. Careem and Toters, never used, are listed as not in use. Built and
+  tested. The migration was applied to the live database on 25 September
+  2026, matches the tested build object by object (permissions included), and
+  was checked as the owner in a transaction that was rolled back: a platform
+  added (its code into the channel type), a second one of the same name
+  refused, Careem brought into use and set up like Talabat (10 packaging
+  lines, 7 prices) and sold at Talabat's price, and Talabat taken out of use
+  and refused a sale while its 2 orders waiting stayed; the books reconciled
+  to 0 before and after, and nothing was kept.
+- **Arabic and Kurdish, right to left, fixed on every screen.** A hidden label
+  in the page header, placed far off to the left, made every page in Arabic
+  and Kurdish about 10,000 pixels wide, so a screen could scroll sideways into
+  nothing; and the menu that slides in from ☰ (on a phone, and on the till at
+  any width) sat over part of the page instead of sliding away, and would not
+  open. Both are fixed, and the browser checks now read every screen in
+  Arabic and Kurdish.
 
 ## The August 2026 audit, finding by finding
 

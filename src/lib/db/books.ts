@@ -13,7 +13,9 @@ import {
   type Json,
 } from "@/lib/audit";
 import { daysBetween } from "@/lib/dates";
+import { channelName } from "@/lib/channels";
 import { db, num, numOrNull, one, rows, str, strOrNull } from "./client";
+import { getChannels } from "./channels";
 
 /* ------------------------------------------------------------------ sales */
 
@@ -652,21 +654,34 @@ const AUDIT_PAGE = 1000;
 
 /**
  * The names the trail refers to: stock items, products and what the till
- * sells, suppliers, categories, places, recipes and people.
+ * sells, suppliers, categories, places, recipes, delivery platforms and
+ * people; and each channel's, under "channel:" and its code.
  */
 async function auditNames(): Promise<{ names: Map<string, string>; people: Map<string, string> }> {
   const c = await db();
-  const [items, products, variants, suppliers, categories, locations, recipes, people] =
-    await Promise.all([
-      c.from("item").select("id,name"),
-      c.from("product").select("id,name"),
-      c.from("product_variant").select("id,product_id,name"),
-      c.from("supplier").select("id,name"),
-      c.from("product_category").select("id,name"),
-      c.from("location").select("id,name"),
-      c.from("recipe").select("id,name"),
-      c.from("app_user").select("id,full_name"),
-    ]);
+  const [
+    items,
+    products,
+    variants,
+    suppliers,
+    categories,
+    locations,
+    recipes,
+    platforms,
+    people,
+    channels,
+  ] = await Promise.all([
+    c.from("item").select("id,name"),
+    c.from("product").select("id,name"),
+    c.from("product_variant").select("id,product_id,name"),
+    c.from("supplier").select("id,name"),
+    c.from("product_category").select("id,name"),
+    c.from("location").select("id,name"),
+    c.from("recipe").select("id,name"),
+    c.from("delivery_platform").select("id,name"),
+    c.from("app_user").select("id,full_name"),
+    getChannels(),
+  ]);
   const names = new Map<string, string>();
   for (const [res, what] of [
     [items, "items"],
@@ -675,9 +690,11 @@ async function auditNames(): Promise<{ names: Map<string, string>; people: Map<s
     [categories, "categories"],
     [locations, "locations"],
     [recipes, "recipes"],
+    [platforms, "delivery platforms"],
   ] as const) {
     for (const r of rows(res, what)) names.set(str(r.id), str(r.name));
   }
+  for (const ch of channels) names.set(`channel:${ch.code}`, channelName(channels, ch.code));
   const productName = new Map(rows(products, "products").map((p) => [str(p.id), str(p.name)]));
   for (const v of rows(variants, "product variants")) {
     const pn = productName.get(str(v.product_id)) ?? "";

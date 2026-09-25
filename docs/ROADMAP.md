@@ -40,13 +40,20 @@ honest, not by building a queue.
    ([`guides/deployment.md`](guides/deployment.md)).
 2. **Platform statements, further.** Matching a statement to the orders by
    number and posting its payout are built (`0030`, M-10); a statement is
-   pasted from the platform's report. Next: read the statement file itself,
-   and, with an approved partner account, Talabat's own feed.
+   pasted from the platform's report. The owner adds, renames and retires
+   delivery platforms, each with its names in Arabic and Kurdish, its own till
+   button, prices and packaging (`0031`). Next: read the statement file
+   itself, and, with an approved partner account, Talabat's own feed.
 3. **Production, further (M-11).** Planned batches, lots and expiry dates, and
    stock moved between the central kitchen and the branch. (Recording batches,
    made items and their costs are built.)
-4. **Translations (L-06).** Move the remaining screen text into the dictionaries,
-   then check Arabic and Kurdish layouts on a phone.
+4. **Every screen in Arabic and Kurdish, and languages the owner adds (L-06),
+   next.** The owner asked for the whole system, every detail, in Arabic and
+   Kurdish, and for more languages to be added. The navigation, the till, the
+   platforms screen and each platform's name already are; next, every screen's
+   text, the database's messages, the alerts and the daily brief, checked
+   right-to-left on a phone; a Languages page on Settings to correct any
+   phrase and add a language; and product names in each language.
 5. **Statements and exports (L-05).** Balance sheet and cash flow from the
    ledger; PDF; invoice scans attached to bills and expenses.
 6. **Accounts maintenance (M-06).** Add and deactivate accounts on screen, within

@@ -13,7 +13,8 @@ import {
 } from "@/lib/db/reports";
 import { LegacyPostings } from "@/components/books/LegacyPostings";
 import { EXCEPTION_LABEL, exceptionsByPerson, type ExceptionKind } from "@/lib/exceptions";
-import { channelLabel, fmtIQD } from "@/lib/format";
+import { fmtIQD } from "@/lib/format";
+import { getChannelNames } from "@/lib/db/channels";
 import {
   addDays,
   businessToday,
@@ -23,7 +24,6 @@ import {
   parseDay,
   yearStart,
 } from "@/lib/dates";
-import type { SalesChannel } from "@domain/sales/recipe.js";
 
 export const dynamic = "force-dynamic";
 
@@ -41,16 +41,22 @@ export default async function ReportsPage({
   const seesProfit = has(profile, "profit.view");
   const seesExceptions = has(profile, "audit.view");
 
-  const [pnl, rec, sales, book, menu, unposted, uncosted, exceptions] = await Promise.all([
-    seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
-    getReconciliation(to),
-    getDailySales(from, to),
-    getVendorBook(today),
-    getMenuCosting(),
-    getLegacyUnposted(),
-    getUncostedSales(from, to),
-    seesExceptions ? getExceptions(from, to) : Promise.resolve([]),
-  ]);
+  const [pnl, rec, sales, book, allMenu, unposted, uncosted, exceptions, channels] =
+    await Promise.all([
+      seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
+      getReconciliation(to),
+      getDailySales(from, to),
+      getVendorBook(today),
+      getMenuCosting(),
+      getLegacyUnposted(),
+      getUncostedSales(from, to),
+      seesExceptions ? getExceptions(from, to) : Promise.resolve([]),
+      getChannelNames(),
+    ]);
+  // The menu as it sells today: a platform out of use sells nothing.
+  const menu = allMenu.filter((m) =>
+    channels.channels.some((c) => c.code === m.channel && c.active),
+  );
   const byPerson = exceptionsByPerson(exceptions);
   const toReview = exceptions.filter((e) => e.needsReview).length;
   const kinds = Object.keys(EXCEPTION_LABEL) as ExceptionKind[];
@@ -288,7 +294,7 @@ export default async function ReportsPage({
                   return (
                     <tr key={c}>
                       <td>
-                        <span className="ref">{channelLabel[c as SalesChannel] ?? c}</span>
+                        <span className="ref">{channels.name(c)}</span>
                       </td>
                       <td className="right money">
                         <Link
@@ -366,9 +372,7 @@ export default async function ReportsPage({
                       </td>
                       <td>{u.products}</td>
                       <td>
-                        <span className="ref">
-                          {channelLabel[u.channel as SalesChannel] ?? u.channel}
-                        </span>
+                        <span className="ref">{channels.name(u.channel)}</span>
                       </td>
                       <td className="right money">{fmtIQD(u.net)}</td>
                       <td className="right money">{fmtIQD(u.cogs)}</td>
@@ -596,9 +600,7 @@ export default async function ReportsPage({
                         {m.variantName !== m.productName ? ` — ${m.variantName}` : ""}
                       </td>
                       <td>
-                        <span className="ref">
-                          {channelLabel[m.channel as SalesChannel] ?? m.channel}
-                        </span>
+                        <span className="ref">{channels.name(m.channel)}</span>
                       </td>
                       <td className="right money">{fmtIQD(m.price)}</td>
                       <td className="right money">

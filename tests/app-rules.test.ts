@@ -91,7 +91,13 @@ import {
   type CostLine,
   type CostedItem,
 } from "@/components/menu/recipeCost";
-import { SELLABLE_CHANNELS } from "@/lib/format";
+import {
+  channelName,
+  channelSet,
+  isPlatformChannel,
+  parseChannels,
+  type Channel,
+} from "@/lib/channels";
 import {
   batchCost,
   batchesOf,
@@ -102,6 +108,23 @@ import {
 import { filledLines, halfFilled, linesFrom, newLine } from "@/components/menu/RecipeLines";
 
 const perms = (role: Role) => [...ROLE_PERMISSIONS[role]];
+
+/** The café's channels as the live one has them, with a platform it added itself (0031). */
+const CHANNELS: Channel[] = [
+  { code: "dine_in", name: "Dine-in", names: {}, kind: "dine_in", active: true },
+  { code: "takeaway", name: "Takeaway", names: {}, kind: "takeaway", active: true },
+  { code: "direct_delivery", name: "Direct delivery", names: {}, kind: "delivery", active: true },
+  { code: "talabat", name: "Talabat", names: { ar: "طلبات" }, kind: "platform", active: true },
+  { code: "careem", name: "Careem", names: {}, kind: "platform", active: false },
+  {
+    code: "lezzoo",
+    name: "Lezzoo",
+    names: { ar: "ليزو", ckb: "لێزۆ" },
+    kind: "platform",
+    active: true,
+  },
+];
+const SET = channelSet(CHANNELS);
 
 describe("where each role lands", () => {
   const roles = Object.keys(ROLE_PERMISSIONS) as Role[];
@@ -403,7 +426,7 @@ describe("what a new recipe costs, worked out as it is typed", () => {
   it("costs the espresso as the database does: 200 at a table, 250 with the takeaway cup", () => {
     const espresso = [
       line("beans", "20", "g"),
-      line("cup", "1", "each", channelsFor("to_go", [], SELLABLE_CHANNELS)),
+      line("cup", "1", "each", channelsFor("to_go", [], SET)),
     ];
     expect(serving(espresso, "dine_in")).toBe("200");
     expect(serving(espresso, "takeaway")).toBe("250");
@@ -439,19 +462,19 @@ describe("what a new recipe costs, worked out as it is typed", () => {
   });
 
   it("saves where each line is used: every order, takeaway and delivery, or a table", () => {
-    expect(channelsFor("all", [], SELLABLE_CHANNELS)).toEqual([]);
-    expect(channelsFor("to_go", [], SELLABLE_CHANNELS)).toEqual([
+    expect(channelsFor("all", [], SET)).toEqual([]);
+    // Every channel in use but a table: a platform the café added too, not one out of use.
+    expect(channelsFor("to_go", [], SET)).toEqual([
       "takeaway",
       "direct_delivery",
       "talabat",
-      "careem",
-      "toters",
+      "lezzoo",
     ]);
-    expect(channelsFor("dine_in", [], SELLABLE_CHANNELS)).toEqual(["dine_in"]);
-    expect(channelsFor("custom", ["talabat"], SELLABLE_CHANNELS)).toEqual(["talabat"]);
-    // Every channel ticked, or none, is every order.
-    expect(channelsFor("custom", [...SELLABLE_CHANNELS], SELLABLE_CHANNELS)).toEqual([]);
-    expect(channelsFor("custom", [], SELLABLE_CHANNELS)).toEqual([]);
+    expect(channelsFor("dine_in", [], SET)).toEqual(["dine_in"]);
+    expect(channelsFor("custom", ["talabat"], SET)).toEqual(["talabat"]);
+    // Every channel in use ticked, or none, is every order.
+    expect(channelsFor("custom", [...SET.inUse], SET)).toEqual([]);
+    expect(channelsFor("custom", [], SET)).toEqual([]);
   });
 
   it("shows what a price leaves over the cost", () => {
@@ -546,22 +569,29 @@ describe("a batch, as the production form shows it before it is recorded", () =>
 
 describe("a recipe, reopened to change it", () => {
   it("reads each line's channels back as the choice they came from", () => {
-    const lines = linesFrom([
-      { itemId: "beans", quantity: 18, unitCode: "g", channels: null },
-      {
-        itemId: "cup",
-        quantity: 1,
-        unitCode: "each",
-        channels: ["takeaway", "direct_delivery", "talabat", "careem", "toters"],
-      },
-      { itemId: "saucer", quantity: 1, unitCode: "each", channels: ["dine_in"] },
-      { itemId: "lid", quantity: 1, unitCode: "each", channels: ["takeaway", "talabat"] },
-      { itemId: "milk", quantity: 1000, unitCode: "ml" },
-    ]);
-    expect(lines.map((l) => l.use)).toEqual(["all", "to_go", "dine_in", "custom", "all"]);
+    const lines = linesFrom(
+      [
+        { itemId: "beans", quantity: 18, unitCode: "g", channels: null },
+        {
+          itemId: "cup",
+          quantity: 1,
+          unitCode: "each",
+          channels: ["takeaway", "direct_delivery", "lezzoo", "talabat"],
+        },
+        { itemId: "saucer", quantity: 1, unitCode: "each", channels: ["dine_in"] },
+        { itemId: "lid", quantity: 1, unitCode: "each", channels: ["takeaway", "talabat"] },
+        { itemId: "milk", quantity: 1000, unitCode: "ml" },
+        { itemId: "bag", quantity: 1, unitCode: "each", channels: ["talabat", "careem"] },
+      ],
+      SET,
+    );
+    expect(lines.map((l) => l.use)).toEqual(["all", "to_go", "dine_in", "custom", "all", "custom"]);
     expect(lines[3]!.ticked).toEqual(["takeaway", "talabat"]);
     expect(lines[4]!.quantity).toBe("1000"); // no thousands separator in a box to edit
-    expect(new Set(lines.map((l) => l.key)).size).toBe(5);
+    expect(new Set(lines.map((l) => l.key)).size).toBe(6);
+    // A platform out of use stays ticked: the line is saved as it was.
+    expect(lines[5]!.ticked).toEqual(["talabat", "careem"]);
+    expect(filledLines(lines, SET)[5]!.channels).toEqual(["talabat", "careem"]);
   });
 
   it("stops at a half-filled line and sends only whole ones", () => {
@@ -570,9 +600,56 @@ describe("a recipe, reopened to change it", () => {
     const whole = { ...newLine(), itemId: "cup", quantity: "1", unit: "each" };
     expect(halfFilled([whole, blank])).toBe(-1);
     expect(halfFilled([whole, half])).toBe(1);
-    expect(filledLines([whole, blank])).toEqual([
+    expect(filledLines([whole, blank], SET)).toEqual([
       { itemId: "cup", qty: "1", unitCode: "each", channels: [] },
     ]);
+  });
+});
+
+describe("the café's channels (0031)", () => {
+  it("tells a delivery platform from the shop's own three by its code", () => {
+    expect(["dine_in", "takeaway", "direct_delivery"].map(isPlatformChannel)).toEqual([
+      false,
+      false,
+      false,
+    ]);
+    expect(["talabat", "lezzoo", "platform_1"].every(isPlatformChannel)).toBe(true);
+  });
+
+  it("sells through the channels in use: a platform out of use is kept, not offered", () => {
+    expect(SET.all).toEqual(CHANNELS.map((c) => c.code));
+    expect(SET.inUse).toEqual(["dine_in", "takeaway", "direct_delivery", "talabat", "lezzoo"]);
+  });
+
+  it("names each in the reader's language: a platform as the café named it there", () => {
+    expect(channelName(CHANNELS, "dine_in", "ar")).toBe("تناول في المكان");
+    expect(channelName(CHANNELS, "takeaway", "ckb")).toBe("بردن");
+    expect(channelName(CHANNELS, "talabat", "ar")).toBe("طلبات");
+    expect(channelName(CHANNELS, "talabat", "ckb")).toBe("Talabat"); // no Kurdish name given
+    expect(channelName(CHANNELS, "lezzoo", "ckb")).toBe("لێزۆ");
+    expect(channelName(CHANNELS, "lezzoo", "en")).toBe("Lezzoo");
+    expect(channelName(CHANNELS, "careem", "ar")).toBe("Careem");
+    // One the list does not have (an old sale's): its code, readable.
+    expect(channelName(CHANNELS, "old_platform", "en")).toBe("Old platform");
+  });
+
+  it("reads the database's list, and nothing it does not understand as in use", () => {
+    expect(
+      parseChannels([
+        { code: "dine_in", name: "Dine-in", names: {}, kind: "dine_in", is_active: true },
+        {
+          code: "lezzoo",
+          name: "Lezzoo",
+          names: { ar: "ليزو", ckb: " " },
+          kind: "platform",
+          is_active: false,
+        },
+      ]),
+    ).toEqual([
+      { code: "dine_in", name: "Dine-in", names: {}, kind: "dine_in", active: true },
+      { code: "lezzoo", name: "Lezzoo", names: { ar: "ليزو" }, kind: "platform", active: false },
+    ]);
+    expect(parseChannels(null)).toEqual([]);
   });
 });
 
@@ -1475,7 +1552,8 @@ describe("card and platform money, reconciled (0030, the audit's P1-9)", () => {
     }
     expect(AUDIT_GROUPS.find((g) => g.key === "settlements")?.prefixes).toEqual([
       "card.",
-      "platform.",
+      "platform.settlement",
+      "platform.settlement_cancel",
     ]);
     const none = new Map<string, string>();
     expect(
@@ -1500,5 +1578,72 @@ describe("card and platform money, reconciled (0030, the audit's P1-9)", () => {
       expect(d["pos.orderNo"], locale).toContain("{platform}");
       expect(d["print.orderNo"], locale).toContain("{no}");
     }
+  });
+});
+
+describe("delivery platforms the café adds itself (0031)", () => {
+  const migration = readFileSync(
+    join(__dirname, "../supabase/migrations/0031_delivery_platforms.sql"),
+    "utf8",
+  );
+
+  it("each change to a platform is on the audit trail, in words, with the settings", () => {
+    for (const a of ["platform.create", "platform.setup", "platform.update"]) {
+      expect(migration).toContain(`'${a}'`);
+      expect(actionLabel(a)).not.toBe(a);
+      expect(AUDIT_GROUPS.find((g) => g.key === "settings")?.prefixes).toContain(a);
+      expect(AUDIT_GROUPS.find((g) => g.key === "settlements")?.prefixes).not.toContain(a);
+    }
+    expect(
+      describeChanges(
+        { platform_code: "lezzoo", name: "Lezzoo", names: {}, is_active: true },
+        {
+          platform_code: "lezzoo",
+          name: "Lezzoo Express",
+          names: { ar: "ليزو" },
+          is_active: false,
+        },
+        new Map(),
+      ),
+    ).toEqual([
+      { field: "Name", before: "Lezzoo", after: "Lezzoo Express" },
+      { field: "In other languages", before: "—", after: "ar ليزو" },
+      { field: "In use", before: "yes", after: "no" },
+    ]);
+    // A price on it names the platform as the café does; one the trail cannot name, readably.
+    const names = new Map([["channel:lezzoo", "Lezzoo Express"]]);
+    expect(showValue("lezzoo", "channel", names)).toBe("Lezzoo Express");
+    expect(showValue("dine_in", "channel", new Map())).toBe("Dine-in");
+    expect(showValue("baly_food", "channel", new Map())).toBe("Baly food");
+  });
+
+  it("the platforms screen speaks English, Arabic and Kurdish", () => {
+    const keys = Object.keys(getDictionary("en")).filter((k) => k.startsWith("plat."));
+    expect(keys.length).toBeGreaterThan(30);
+    const placeholders: [string, string][] = [
+      ["plat.retire.confirm", "{name}"],
+      ["plat.retired", "{name}"],
+      ["plat.restored", "{name}"],
+      ["plat.added", "{name}"],
+      ["plat.copied", "{prices}"],
+      ["plat.copied", "{lines}"],
+      ["plat.setupFailed", "{error}"],
+      ["plat.form.nameIn", "{language}"],
+    ];
+    for (const locale of LOCALES) {
+      const d = getDictionary(locale);
+      for (const k of keys) expect(d[k], `${locale} ${k}`).toBeTruthy();
+      for (const [k, p] of placeholders) expect(d[k], `${locale} ${k}`).toContain(p);
+    }
+  });
+
+  it("names a platform from the database, not the dictionary", () => {
+    for (const locale of LOCALES) {
+      const d = getDictionary(locale);
+      for (const c of ["talabat", "careem", "toters"])
+        expect(d[`pos.channel.${c}`], `${locale} ${c}`).toBeUndefined();
+    }
+    // The three 0030 set up are named in Arabic and Kurdish by the migration.
+    expect(migration).toContain(`'{"ar": "طلبات", "ckb": "تەلەبات"}'`);
   });
 });
