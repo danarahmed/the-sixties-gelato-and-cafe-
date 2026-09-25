@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 export const inputStyle: React.CSSProperties = {
   minHeight: 44,
@@ -33,8 +34,12 @@ export function Field({
   );
 }
 
-/** Small inline success/error banner for form actions. */
+/**
+ * Small inline success/error banner for form actions. What it says comes from
+ * the server or the database in English, and is shown in the reader's language.
+ */
 export function Notice({ msg }: { msg: { ok: boolean; text: string } | null }) {
+  const { msg: say } = useT();
   if (!msg) return null;
   return (
     <div
@@ -42,7 +47,7 @@ export function Notice({ msg }: { msg: { ok: boolean; text: string } | null }) {
       style={{ alignSelf: "start", whiteSpace: "normal" }}
     >
       {msg.ok ? "✅ " : "⚠️ "}
-      {msg.text}
+      {say(msg.text)}
     </div>
   );
 }

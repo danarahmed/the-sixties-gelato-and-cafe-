@@ -3,15 +3,16 @@ import { cookies } from "next/headers";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import { AppShell, type ShellMember } from "@/components/AppShell";
-import { dirFor, LOCALES, type Locale } from "@/lib/i18n/dictionaries";
+import { getDir, getLanguages, getLocale, getWords } from "@/lib/i18n/server";
 import { getSession } from "@/lib/auth/session";
 
+// The café's name, the same in every language. i18n-ignore
 export const metadata: Metadata = {
-  title: "The Sixty's Gelato & Café",
+  title: "The Sixty's Gelato & Café", // i18n-ignore
   description:
     "Business-management system: POS, inventory, production, delivery platforms, accounting.",
   manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "Sixty's" },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Sixty's" }, // i18n-ignore
   robots: { index: false, follow: false },
 };
 
@@ -40,16 +41,19 @@ async function shellMember(): Promise<ShellMember | null> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const store = await cookies();
-  const rawLocale = store.get("locale")?.value as Locale | undefined;
-  const locale: Locale = rawLocale && LOCALES.includes(rawLocale) ? rawLocale : "en";
   const theme = (store.get("theme")?.value === "dark" ? "dark" : "light") as "light" | "dark";
-  const dir = dirFor(locale);
-  const member = await shellMember();
+  const [locale, dir, languages, words, member] = await Promise.all([
+    getLocale(),
+    getDir(),
+    getLanguages(),
+    getWords(),
+    shellMember(),
+  ]);
 
   return (
     <html lang={locale} dir={dir} data-theme={theme}>
       <body>
-        <I18nProvider locale={locale}>
+        <I18nProvider locale={locale} dir={dir} languages={languages} words={words}>
           <AppShell locale={locale} theme={theme} member={member}>
             {children}
           </AppShell>

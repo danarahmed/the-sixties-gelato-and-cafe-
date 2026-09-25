@@ -1,6 +1,9 @@
 /**
  * Shared, framework-neutral display labels and formatters (no demo data). The
  * channels, and their names, come from the database: see @/lib/channels.
+ *
+ * A label is English, and a phrase of src/lib/i18n/phrases/common.ts: a screen
+ * shows it through t(), as t(tenderLabel(x)).
  */
 
 const TENDER_LABEL: Record<string, string> = {
@@ -89,6 +92,15 @@ const ORDER_STATUS_LABEL: Record<string, string> = {
 export function orderStatusLabel(s: string): string {
   return ORDER_STATUS_LABEL[s] ?? s;
 }
+
+/** Every label above, for the check that each is a phrase in every language. */
+export const LABELS: readonly string[] = [
+  ...Object.values(TENDER_LABEL),
+  ...Object.values(ROLE_LABEL),
+  ...Object.values(ITEM_TYPE_LABEL),
+  ...Object.values(MOVEMENT_LABEL),
+  ...Object.values(ORDER_STATUS_LABEL),
+];
 
 /** Whole-IQD formatter, e.g. 12345 → "12,345 IQD". Display only: the database does the arithmetic. */
 export function fmtIQD(n: number): string {

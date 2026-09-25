@@ -27,7 +27,8 @@ import {
 } from "@/lib/audit";
 import { deliveryLineCost, needsPriceConfirmation, priceGap } from "@/lib/receiving";
 import { REASONS, noteIsEnough, reasonKey, reasonMissing, type ReasonKind } from "@/lib/reasons";
-import { LOCALES, getDictionary } from "@/lib/i18n/dictionaries";
+import { LOCALES, builtInWords, getDictionary } from "@/lib/i18n/dictionaries";
+import { translator } from "@/lib/i18n/core";
 import {
   RULE_LABEL,
   THRESHOLD_LABEL,
@@ -622,13 +623,17 @@ describe("the café's channels (0031)", () => {
   });
 
   it("names each in the reader's language: a platform as the café named it there", () => {
-    expect(channelName(CHANNELS, "dine_in", "ar")).toBe("تناول في المكان");
-    expect(channelName(CHANNELS, "takeaway", "ckb")).toBe("بردن");
-    expect(channelName(CHANNELS, "talabat", "ar")).toBe("طلبات");
-    expect(channelName(CHANNELS, "talabat", "ckb")).toBe("Talabat"); // no Kurdish name given
-    expect(channelName(CHANNELS, "lezzoo", "ckb")).toBe("لێزۆ");
+    const ar = translator(builtInWords("ar"));
+    const ckb = translator(builtInWords("ckb"));
+    expect(channelName(CHANNELS, "dine_in", "ar", ar)).toBe("تناول في المكان");
+    expect(channelName(CHANNELS, "takeaway", "ckb", ckb)).toBe("بردن");
+    expect(channelName(CHANNELS, "talabat", "ar", ar)).toBe("طلبات");
+    expect(channelName(CHANNELS, "talabat", "ckb", ckb)).toBe("Talabat"); // no Kurdish name given
+    expect(channelName(CHANNELS, "lezzoo", "ckb", ckb)).toBe("لێزۆ");
     expect(channelName(CHANNELS, "lezzoo", "en")).toBe("Lezzoo");
-    expect(channelName(CHANNELS, "careem", "ar")).toBe("Careem");
+    expect(channelName(CHANNELS, "careem", "ar", ar)).toBe("Careem");
+    // With no translator (a CSV): the shop's own in English.
+    expect(channelName(CHANNELS, "dine_in", "en")).toBe("Dine-in");
     // One the list does not have (an old sale's): its code, readable.
     expect(channelName(CHANNELS, "old_platform", "en")).toBe("Old platform");
   });

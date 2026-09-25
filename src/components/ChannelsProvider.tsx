@@ -28,13 +28,13 @@ export interface Channels {
 
 export function useChannels(): Channels {
   const channels = useContext(ChannelsContext);
-  const { locale } = useT();
+  const { locale, t } = useT();
   return useMemo(
     () => ({
       channels,
       set: channelSet(channels),
-      name: (code: string) => channelName(channels, code, locale),
+      name: (code: string) => channelName(channels, code, locale, t),
     }),
-    [channels, locale],
+    [channels, locale, t],
   );
 }
