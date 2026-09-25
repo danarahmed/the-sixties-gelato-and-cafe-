@@ -108,7 +108,9 @@ browser tests through the real app, or both.
   (it also does every ten minutes). Sales costed at nothing (no recipe, or an
   ingredient used before it had a cost) are listed on Reports and warned of at
   month end; a new product needs a recipe or a reason it uses no stock. Built
-  and tested.
+  and tested. The migration was applied to the live database on 25 September
+  2026, matches the tested build object by object (permissions included), and
+  was checked as the owner in a transaction that was rolled back.
 
 ## The August 2026 audit, finding by finding
 

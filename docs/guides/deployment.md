@@ -26,6 +26,7 @@ Plan a short window when the café is closed.
 | Recipe costing (`0022`)        | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0022`](#after-0022)). The form was merged ([pull request #8](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/8)) and deployed                                                              |
 | Production (`0023`)            | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0023`](#after-0023)). The screens were merged ([pull request #9](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/9)) and deployed                                    |
 | Counts and the drawer (`0024`) | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0024`](#after-0024)). The screens were merged ([pull request #10](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/10)) and deployed                                  |
+| Prices, bills, costs (`0025`)  | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0025`](#after-0025)). The screens follow by pull request                                                                                                                             |
 
 ## 0. Before you start
 
@@ -454,6 +455,34 @@ it changes. It goes in before the screens, as before: the app deployed before
 it keeps working (the total is optional), except that creating a product with
 no recipe is refused until the new form, which asks why, follows within
 minutes.
+
+It was applied on 25 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0024` build, with no bill open,
+nothing sold since 00:27, nothing scheduled, and every live recipe (seven, one
+version each) in force under the new rule exactly as under the old. It was
+then compared with the tested build, object by object, the role permissions
+and column grants included: identical. A check as the owner, in a transaction
+that was rolled back:
+
+- the Americano's dine-in price (3,000) dated yesterday was refused; set for
+  next week, it was listed as scheduled while 3,000 stayed in force, then
+  withdrawn with a reason, on the audit trail;
+- a bill of two printed at 3,000, then the price put up to 3,500 from today:
+  the bill still showed 3,000 a cup, 6,000 in all; paying it at 7,000 was
+  refused, at 6,000 it was paid;
+- a quick sale from a till still showing 3,000 was refused ("The total is 3500
+  now, not the 3000 shown"); at 3,500 it was recorded;
+- a product with no recipe and no reason was refused; with "A service charge"
+  it was created;
+- the live records have no sale costed at nothing; the month's checklist shows
+  that line as a warning that does not block; every reconciliation check
+  stayed at zero.
+
+Nothing was kept. The security advisor's only new lines are the five new
+functions signed-in users may call (each checks its permission, as every one
+does) and an internal helper (`assert_sale_total`) that sets no search path;
+no one can call it directly.
 
 ## Clearing the test records
 
