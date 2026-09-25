@@ -84,7 +84,9 @@ console.log("▸ the owner settles yesterday's against the terminal and the bank
     lines("card_settlement") === "1010 Cr 10000 | 1020 Dr 7450 | 6300 Dr 2500 | 6500 Dr 50",
     "the bank's money in, the fee to 6500, the difference to 6300, the till's takings out of 1010",
   );
-  await open(page, "/sales#card");
+  // Opened afresh after each change: "/sales#card" again would only jump to
+  // the anchor, without reloading the page.
+  await open(page, "/sales");
   check(
     (await panel.getByTestId("card-day").count()) === 1 &&
       (await panel.getByText("Today's card takings are settled once the day is over").isVisible()),
@@ -96,7 +98,7 @@ console.log("▸ the owner settles yesterday's against the terminal and the bank
   await panel.getByLabel("Why it is cancelled").fill("The terminal's report was the day before's");
   await panel.getByRole("button", { name: "Cancel it" }).click();
   await page.getByText(/^✅ Cancelled: its journal is reversed/).waitFor({ timeout: 10000 });
-  await open(page, "/sales#card");
+  await open(page, "/sales");
   check(
     num(await panel.getByTestId("card-till").textContent()) === 10000,
     "cancelled, yesterday's takings wait again",
@@ -109,7 +111,7 @@ console.log("▸ the owner settles yesterday's against the terminal and the bank
     lines("card_settlement") === "1010 Cr 10000 | 1020 Dr 9900 | 6500 Dr 100",
     "settled again with no difference: no note needed",
   );
-  await open(page, "/sales#card");
+  await open(page, "/sales");
   check(
     (await panel.getByTestId("card-settlement").count()) === 2 &&
       (await panel.getByText("Cancelled", { exact: true }).count()) === 1,

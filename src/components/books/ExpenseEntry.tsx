@@ -158,7 +158,8 @@ export function ExpenseEntry({
       <div
         className="grid"
         style={{
-          gridTemplateColumns: "minmax(280px, 1fr) minmax(240px, 1fr)",
+          // Side by side where both fit, one above the other on a phone.
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))",
           marginBlockStart: 16,
         }}
       >

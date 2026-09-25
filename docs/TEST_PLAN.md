@@ -158,7 +158,9 @@ database, behind a small local stand-in for Supabase's auth service.
 
 - `pages`: every screen signed out redirects to sign-in. Signed in as owner,
   manager, cashier and counter, every screen a role is offered renders, and every
-  other one sends it home. The session cookie is HTTP-only.
+  other one sends it home. The session cookie is HTTP-only. On a 390px phone,
+  no screen reaches past the edge or is cut off: wide tables, the till's
+  category chips and a vendor's tabs scroll inside their own box.
 - `flows`: the day's work through the screens:
   - cash and platform-paid sales, a void and a refund; a Talabat sale waits
     for its order number (a colon refused), prints it, and the same number is
