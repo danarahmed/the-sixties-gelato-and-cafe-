@@ -38,3 +38,6 @@ Thumbs.db
 # TS build info
 *.tsbuildinfo
 next-env.d.ts
+
+# Workers' checkouts (git worktrees)
+.claude/worktrees/

@@ -50,7 +50,7 @@ export function functionBodies() {
 export function tokens(body) {
   const strings = [];
   let code = "";
-  for (let i = 0; i < body.length; ) {
+  for (let i = 0; i < body.length;) {
     const c = body[i];
     if (c === "-" && body[i + 1] === "-") {
       const end = body.indexOf("\n", i);
