@@ -48,7 +48,11 @@ The panel on the right is the order you are working on.
    prints it.
 
 A **Talabat** order has one button, **🧾 Complete (paid through the
-platform)**: Talabat collects the money.
+platform)**: Talabat collects the money. Type the **Talabat order number**
+from the tablet (the `#` before it can be left out), then **Confirm
+payment**. The sale is not recorded without it, and the receipt prints it. If
+the till says the number is already recorded, the order was rung before:
+check the tablet, and do not ring it again.
 
 ## A table, paid later
 
