@@ -138,7 +138,10 @@ browser tests through the real app, or both.
   history; a bill's amount is typed from the invoice. Items and suppliers are
   corrected and taken out of use on their screens, pack units are added, and
   no two in use share a name. The merge tool waits until a duplicate exists
-  (none do). Built and tested.
+  (none do). Built and tested. The migration was applied to the live database
+  on 25 September 2026, matches the tested build object by object
+  (permissions included), and was checked as the owner in a transaction that
+  was rolled back.
 
 ## The August 2026 audit, finding by finding
 
