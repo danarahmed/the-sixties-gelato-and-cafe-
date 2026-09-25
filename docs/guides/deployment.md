@@ -710,6 +710,11 @@ in may read; every new function sets its search path. The performance
 advisor adds only the new tables' foreign keys to its list of those without
 an index of their own, as for every table before them.
 
+The screens went live the same day with
+[pull request #16](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/16):
+the deployment and the production address serve the same build, so the till
+asks for the Talabat order number from then on.
+
 ## Clearing the test records
 
 Every record of trading in the live database so far is a test (the owner, 25
