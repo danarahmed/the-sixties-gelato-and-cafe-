@@ -39,12 +39,12 @@ select test.act_as('manager@example.com');
 select test.eq((drawer_status() ->> 'needs_start')::boolean, false, 'the drawer needs no starting cash');
 select test.eq((drawer_status() ->> 'expected')::numeric, 0::numeric, 'and should hold nothing');
 select test.eq((select count(*) from stock_board)::int, 0, 'no item has stock');
-create temp table op as select record_opening_stock('c0000000-0000-0000-0000-000000000001', 1, 'kg', 12000) r;
+select test.act_as('owner@example.com');
+create temp table op as select record_opening_stock('c0000000-0000-0000-0000-000000000001', 1, 'kg', 12000, 'the opening count') r;
 grant select on op to public;
-select record_opening_stock('c0000000-0000-0000-0000-000000000002', 100, null, 50);
+select record_opening_stock('c0000000-0000-0000-0000-000000000002', 100, null, 50, 'the opening count');
 select test.eq((select (r ->> 'journal_no')::int from op), 1001, 'each item is given its opening stock; journals number from 1001 again');
 
-select test.act_as('owner@example.com');
 select move_cash('owner', 'till', 10000, 'Float for the till');
 select test.eq(next_bill_number(), 'SGC-' || extract(year from test.today()) || '-0001', 'the café''s own bill numbers start again at 0001');
 

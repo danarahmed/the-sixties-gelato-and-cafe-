@@ -30,10 +30,16 @@ const itemInput = z.object({
   minLevel: optionalNonNegative("Reorder level"),
   openingQty: optionalNonNegative("Opening quantity"),
   openingUnitCost: optionalNonNegative("Opening cost"),
+  /** Where the opening stock came from: it is the owner's capital (0027). */
+  openingReason: optionalText(300),
   returnable: z.boolean().default(false),
 });
 
-/** A new stock item; opening stock is journaled (Dr Inventory / Cr Owner equity). */
+/**
+ * A new stock item, its name unlike any other item in use. Opening stock is
+ * the owner's, with where it came from, and is journaled (Dr Inventory / Cr
+ * Owner equity).
+ */
 export async function createItemAction(
   input: z.input<typeof itemInput>,
 ): Promise<ActionResult<{ itemId: string }>> {
@@ -42,6 +48,9 @@ export async function createItemAction(
   const d = v.data;
   if (d.openingQty && Number(d.openingQty) > 0 && d.openingUnitCost === null) {
     return { ok: false, error: "Opening stock needs its cost per unit" };
+  }
+  if (d.openingQty && Number(d.openingQty) > 0 && d.openingReason === null) {
+    return { ok: false, error: "Say where this stock came from (the opening count, say)" };
   }
   const r = await callRpc<Record<string, unknown>>("create_item", {
     p_name: d.name,
@@ -55,6 +64,7 @@ export async function createItemAction(
     p_opening_qty: d.openingQty,
     p_opening_unit_cost: d.openingUnitCost,
     p_returnable: d.returnable,
+    p_opening_reason: d.openingReason,
   });
   if (!r.ok) return r;
   refresh(...STOCK_PATHS, "/products", "/purchasing");
@@ -129,11 +139,13 @@ const openingInput = z.object({
   qty: positive("Quantity on the shelf"),
   unitCode: z.string().min(1).nullable(),
   unitCost: positive("Cost per unit"),
+  reason: text("Where this stock came from", 300),
 });
 
 /**
  * Opening stock for an item with no stock history yet (0024), at what it cost:
- * Dr Inventory / Cr Owner equity, as a new item's opening stock is posted.
+ * Dr Inventory / Cr Owner equity, as a new item's opening stock is posted. It
+ * is capital the owner puts in, so it is the owner's, with a reason (0027).
  */
 export async function recordOpeningStockAction(
   input: z.input<typeof openingInput>,
@@ -145,6 +157,7 @@ export async function recordOpeningStockAction(
     p_qty: v.data.qty,
     p_unit_code: v.data.unitCode,
     p_unit_cost: v.data.unitCost,
+    p_reason: v.data.reason,
   });
   if (!r.ok) return r;
   refresh(...STOCK_PATHS, "/products");
@@ -156,6 +169,81 @@ export async function recordOpeningStockAction(
       journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
     },
   };
+}
+
+const updateItemInput = z.object({
+  itemId: id("an item"),
+  name: text("Name", 120),
+  nameAr: optionalText(120),
+  nameCkb: optionalText(120),
+  itemType: z.enum(["ingredient", "packaging", "consumable", "finished_good", "resale"], {
+    message: "Choose a type",
+  }),
+  minLevel: optionalNonNegative("Reorder level"),
+  parLevel: optionalNonNegative("Par level"),
+  isActive: z.boolean(),
+  reason: optionalText(300),
+});
+
+/**
+ * An item corrected (0027, the audit's P1-4): its names, type and levels, and
+ * whether it is in use. Its base unit never changes — its whole history is
+ * counted in it. The database keeps the name unique among items in use,
+ * refuses to take an item out of use while it has stock or anything needs it,
+ * and puts the change on the audit trail with its values before and after.
+ */
+export async function updateItemAction(
+  input: z.input<typeof updateItemInput>,
+): Promise<ActionResult<null>> {
+  const v = parse(updateItemInput, input);
+  if (!v.ok) return v;
+  const d = v.data;
+  const r = await callRpc("update_item", {
+    p_item: d.itemId,
+    p_name: d.name,
+    p_item_type: d.itemType,
+    p_name_ar: d.nameAr,
+    p_name_ckb: d.nameCkb,
+    p_min_level: d.minLevel,
+    p_par_level: d.parLevel,
+    p_is_active: d.isActive,
+    p_reason: d.reason,
+  });
+  if (!r.ok) return r;
+  refresh(...STOCK_PATHS, `/inventory/${d.itemId}`, "/products", "/purchasing", "/production");
+  return { ok: true, data: null };
+}
+
+const unitInput = z.object({
+  itemId: id("an item"),
+  code: z
+    .string()
+    .transform((c) => c.trim())
+    .refine((c) => /^[A-Za-z][A-Za-z0-9_]{0,23}$/.test(c), {
+      message: "Name the unit in letters, digits and _ (such as case_24)",
+    }),
+  label: optionalText(60),
+  factor: positive("How many it holds"),
+});
+
+/**
+ * A pack size for an item: a case of 24, a sleeve of 50 (0027). A unit in use
+ * keeps its size for good, so a different size is a new unit of its own.
+ */
+export async function addItemUnitAction(
+  input: z.input<typeof unitInput>,
+): Promise<ActionResult<null>> {
+  const v = parse(unitInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("add_item_unit", {
+    p_item: v.data.itemId,
+    p_code: v.data.code,
+    p_label: v.data.label,
+    p_factor: v.data.factor,
+  });
+  if (!r.ok) return r;
+  refresh("/inventory", `/inventory/${v.data.itemId}`, "/purchasing", "/count", "/products");
+  return { ok: true, data: null };
 }
 
 /* --------------------------------------------------------------- counting */

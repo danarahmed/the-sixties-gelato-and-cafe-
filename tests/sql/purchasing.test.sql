@@ -18,10 +18,11 @@ select test.eq((select base_quantity_signed from inventory_movement where refere
   2000::numeric, '2 kg converted to 2,000 g by the item''s own unit, not a browser-supplied factor');
 
 -- Landed cost: 100 freight over three equal lines is 34/33/33, never 33/33/33.
+-- (Cups at twice their cost: the price is confirmed, 0027.)
 create temp table r2 as select receive_goods((select id from sup),
   '[{"item_id":"c0000000-0000-0000-0000-000000000002","qty":1,"goods_value":100},
     {"item_id":"c0000000-0000-0000-0000-000000000002","qty":1,"goods_value":100},
-    {"item_id":"c0000000-0000-0000-0000-000000000002","qty":1,"goods_value":100}]', 100) as r;
+    {"item_id":"c0000000-0000-0000-0000-000000000002","qty":1,"goods_value":100}]', 100, p_confirm => true) as r;
 select test.eq((select sum(value) from inventory_movement where reference_id = (select (r->>'receipt_id')::uuid from r2)),
   400::numeric, 'landed values add up to goods + freight exactly');
 select test.eq((select string_agg(value::text, ',' order by value desc) from inventory_movement

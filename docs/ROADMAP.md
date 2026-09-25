@@ -29,8 +29,9 @@ honest, not by building a queue.
    while trading, the drawer across midnight, where money came from, a lost
    answer from the database — are fixed in `0024`, and P1-5 to P1-7 (the
    recipe and price in force, printed bills, sales costed at nothing) in
-   `0025`, and P1-2 (reports that agree, and numbers that open) in `0026`;
-   the other P1s come next. Then,
+   `0025`, P1-2 (reports that agree, and numbers that open) in `0026`, and
+   P1-1, P1-3 and P1-4 (who changed what, delivery prices checked, items and
+   suppliers kept right) in `0027`; the other P1s come next. Then,
    on the owner's word, clear the test records and enter the opening balances
    ([`guides/deployment.md`](guides/deployment.md)).
 2. **Delivery-platform settlements (M-10).** Import a Talabat statement, match it

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
-import { getItems, getMovements, getStockBoard } from "@/lib/db/read";
+import { getItems, getItemsOutOfUse, getMovements, getStockBoard } from "@/lib/db/read";
 import { itemTypeLabel, movementLabel, fmtIQD, fmtQty } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
 import { InventoryForms } from "@/components/InventoryForms";
@@ -13,14 +13,18 @@ export default async function InventoryPage() {
   const profile = await requirePermission("cost.view", "waste.record");
   const t = await getT();
   const seesCost = has(profile, "cost.view");
-  const [items, board, movements] = await Promise.all([
+  const [items, allBoard, movements, outOfUse] = await Promise.all([
     getItems(),
     seesCost ? getStockBoard() : Promise.resolve([]),
     seesCost ? getMovements(60) : Promise.resolve([]),
+    seesCost ? getItemsOutOfUse() : Promise.resolve([]),
   ]);
+  // The board shows the items in use; one out of use has no stock left (0027).
+  const inUse = new Set(items.map((i) => i.id));
+  const board = allBoard.filter((r) => inUse.has(r.itemId));
 
   // An item with no movement at all is not on the board: it has no stock yet.
-  const stocked = new Set(board.map((r) => r.itemId));
+  const stocked = new Set(allBoard.map((r) => r.itemId));
   const unstocked = seesCost ? items.filter((i) => !stocked.has(i.id)) : [];
   const totalValue = board.reduce((s, r) => s + r.value, 0);
   const low = board.filter((r) => r.isLow).length;
@@ -78,6 +82,7 @@ export default async function InventoryPage() {
         }
         canWaste={has(profile, "waste.record")}
         canCorrect={has(profile, "inventory.adjust.approve")}
+        isOwner={profile.roles.includes("owner")}
       />
 
       {seesCost &&
@@ -159,6 +164,40 @@ export default async function InventoryPage() {
             )}
           </div>
         ))}
+
+      {seesCost && (unstocked.length > 0 || outOfUse.length > 0) && (
+        <div className="card" data-testid="other-items" style={{ fontSize: ".88rem" }}>
+          {unstocked.length > 0 && (
+            <p style={{ marginTop: 0 }}>
+              <strong>No stock yet:</strong>{" "}
+              {unstocked.map((i, n) => (
+                <span key={i.id}>
+                  {n > 0 && ", "}
+                  <Link className="drill" href={`/inventory/${i.id}`}>
+                    {i.name}
+                  </Link>
+                </span>
+              ))}
+            </p>
+          )}
+          {outOfUse.length > 0 && (
+            <p style={{ marginBottom: 0 }}>
+              <strong>Out of use:</strong>{" "}
+              {outOfUse.map((i, n) => (
+                <span key={i.id}>
+                  {n > 0 && ", "}
+                  <Link className="drill" href={`/inventory/${i.id}`}>
+                    {i.name}
+                  </Link>
+                </span>
+              ))}{" "}
+              <span className="muted">
+                · kept for their history; open one to bring it back into use
+              </span>
+            </p>
+          )}
+        </div>
+      )}
 
       {movements.length > 0 && (
         <details className="card">

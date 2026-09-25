@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems, getReceipts, getSuppliers } from "@/lib/db/read";
+import { getItemCosts } from "@/lib/db/reports";
 import { fmtIQD } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
 import { ReceiveStockForm } from "@/components/ReceiveStockForm";
@@ -11,10 +12,11 @@ export const dynamic = "force-dynamic";
 export default async function PurchasingPage() {
   const profile = await requirePermission("cost.view");
   const t = await getT();
-  const [items, suppliers, receipts] = await Promise.all([
+  const [items, suppliers, receipts, costs] = await Promise.all([
     getItems(),
     getSuppliers(),
     getReceipts(40),
+    getItemCosts(),
   ]);
 
   return (
@@ -25,11 +27,20 @@ export default async function PurchasingPage() {
         spread over the lines by value — and posts{" "}
         <strong>Dr 1200 Inventory / Cr 2050 Goods received not invoiced</strong>. The
         supplier&apos;s bill, recorded on <Link href="/vendors">Vendors</Link>, clears 2050 and
-        raises the payable, so the purchase is never counted twice.
+        raises the payable, so the purchase is never counted twice. Each line is entered at its
+        price per unit, as the invoice gives it; a price more than 25% away from what the item costs
+        now is asked about before anything is received.
       </p>
 
       <ReceiveStockForm
-        items={items.map((i) => ({ id: i.id, name: i.name, baseUnit: i.baseUnit, units: i.units }))}
+        items={items.map((i) => ({
+          id: i.id,
+          name: i.name,
+          baseUnit: i.baseUnit,
+          units: i.units,
+          // What a base unit costs now, to set each delivery's price against (0027).
+          costNow: Number(costs.get(i.id) ?? 0) || null,
+        }))}
         suppliers={suppliers.map((s) => ({ id: s.id, name: s.name }))}
         canReceive={has(profile, "purchase.receive")}
         canAddSupplier={has(profile, "purchase.create")}

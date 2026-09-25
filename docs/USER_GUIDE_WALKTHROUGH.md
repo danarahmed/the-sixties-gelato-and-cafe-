@@ -32,8 +32,9 @@ each job.
 16. [Journals](#16-journals) · `/journals`
 17. [Chart of Accounts](#17-chart-of-accounts) · `/accounting`
 18. [Reports](#18-reports) · `/reports`
-19. [Settings](#19-settings) · `/settings`
-20. [Every feature, and where it is](#20-every-feature-and-where-it-is)
+19. [Audit trail](#19-audit-trail) · `/audit`
+20. [Settings](#20-settings) · `/settings`
+21. [Every feature, and where it is](#21-every-feature-and-where-it-is)
 
 ---
 
@@ -159,9 +160,10 @@ prices every ten minutes and whenever their screen comes back to the front. A
 **Location:** Sidebar → **Orders** · `/orders` · **Who:** anyone who sees costs
 
 Every sale: number, time, channel, items, how it was paid, status, net and
-margin (the sale's price less the recipe cost of what it used). Choose **From**,
-**To** and a **Channel** to see the sales of those days; a report's figures open
-here with them chosen.
+margin (the sale's price less the recipe cost of what it used). Each item keeps
+the name it was sold under: renaming a product later does not relabel its past
+sales. Choose **From**, **To** and a **Channel** to see the sales of those days;
+a report's figures open here with them chosen.
 
 - **Void.** For a sale rung in error, until the drawer holding its cash is
   counted (after midnight too: the count, not the date, decides).
@@ -237,7 +239,8 @@ owner
 **At the top:** what is owed, aged: not yet due, 1–15, 16–30 and over 30 days
 late.
 
-**Left:** every vendor with their balance. **Right,** three tabs:
+**Left:** every vendor with their balance; those taken out of use are listed
+last, marked, with their history. **Right,** four tabs:
 
 - **Statement:** every bill and payment to date, with a running balance.
   Cancelled bills stay on the statement, marked.
@@ -251,13 +254,21 @@ late.
     (SGC-2026-0001, then -0002 …), given when the bill is recorded and never to
     another bill. If the supplier's invoice has its own number, type that
     instead; the same supplier number from the same vendor is refused. Then
-    enter the date, amount and terms (due now, net 7, 15 or 30).
+    enter the date, the **amount the invoice says** and terms (due now, net 7,
+    15 or 30). The amount is typed, never copied from the delivery, so a typo
+    on the delivery is not billed and paid too; the screen shows what the
+    delivery recorded, and any difference posts to 5050.
 
   - **Open bills,** with **Pay bill**: amount, and paid from 1000 Cash, 1010 Card
     or 1020 Bank. You cannot pay more than is outstanding.
   - **Cancel** a bill entered in error, if nothing was paid on it. Give a reason
     and a date. The bill stays on record and its journal is reversed.
-- **New vendor:** name, what they supply, phone.
+- **Edit vendor:** correct the name, what they supply and the phone, or take
+  them **out of use** (not while they are owed money); say **why**. Every change
+  is on the audit trail with its values before and after.
+- **New vendor:** name, what they supply, phone. No two vendors in use share a
+  name, whatever the capitals, spaces or punctuation ("Dairy Co" and "Dairy Co."
+  are one vendor), so one invoice cannot be billed twice under two spellings.
 
 Deliveries received before these controls show as **Before controls ·
 (supplier's name)** under every vendor. The previous app did not record the
@@ -295,10 +306,17 @@ costs; receiving: purchasing, managers
 - **🏭 Add supplier:** name, what they supply, phone.
 - **📦 Receive stock (goods receipt):**
   1. Choose the supplier.
-  2. Add a line for each item: the unit you bought it in and the quantity, and
-     the goods value.
+  2. Add a line for each item: the unit you bought it in, the quantity, and the
+     **price of one unit** as the invoice gives it (a kilogram, a case of 24).
+     The line shows its total, what that is a base unit (a gram, a bottle), and
+     what the item costs now.
   3. Add freight, other landed costs and any rebate.
-  4. **Receive goods.**
+  4. **Receive goods.** A price more than 25% above or below what the item
+     costs now stops here, with both figures, and nothing is received: "2.5 or
+     50?" is asked before the stock is costed. **Let me correct it**, or, if the
+     invoice really says so, **The price is right: receive it** — your
+     confirmation goes on the audit trail. An item's first delivery has nothing
+     to compare with.
 
   Stock goes up in base units, and the landed cost is spread over the lines to
   the dinar. The books post Dr Inventory, Cr Goods received not invoiced (2050),
@@ -359,30 +377,48 @@ costs; baristas can record waste
 
 - **Cards:** items tracked, stock value (from the ledger), items below reorder
   level, items with negative stock.
-- **📦 Opening stock** (shown while any item has no stock recorded yet — after
-  the test records are cleared, or for an item added without it): choose the
-  item, count what is on the shelf, and enter the quantity, its unit and **what
-  one unit cost**. Posted Dr Inventory, Cr Owner equity, so the item's sales
-  are costed from the first one. An item with stock history is corrected by a
+- **📦 Opening stock** (the owner's alone; shown while any item has no stock
+  recorded yet — after the test records are cleared, or for an item added
+  without it): choose the item, count what is on the shelf, and enter the
+  quantity, its unit, **what one unit cost** and **where it came from** (the
+  opening count, say). It is capital the owner puts into the business: posted
+  Dr Inventory, Cr Owner equity, so the item's sales are costed from the first
+  one, and on the audit trail. An item with stock history is corrected by a
   count or a correction instead.
 - **➕ Add stock item:**
-  - its name, type (ingredient, packaging, consumable, finished good, resale);
+  - its name — one no other item in use has, whatever the capitals, spaces or
+    punctuation (two "Milk"s would split the stock) — and its type
+    (ingredient, packaging, consumable, finished good, resale);
   - what it is measured in and its base unit;
-  - optional purchase units (e.g. a carton of 1,000);
-  - optional opening quantity and cost, posted as Dr Inventory, Cr Owner equity.
+  - the owner only: an opening quantity and cost, and where it came from,
+    posted as Dr Inventory, Cr Owner equity. Anyone else's new item gets its
+    stock from a delivery.
 - **🗑️ Record waste:** the item, what happened (waste, spoilage, expired,
   damaged, melt, staff, complimentary, sampling), the quantity and unit, and
   **why**. It is valued at average cost and posts to 5300. Waste above the
   business's threshold needs a manager.
 - **✏️ Correct stock (manager):** a signed change (− to reduce), the cost per base
   unit for additions (blank = average), and **why**. It posts to 5400.
-- **Stock on hand:** each item's quantity, unit, reorder level, average cost,
-  value and status: **low**, or **negative** (shown, never hidden). Open an
-  item for its **stock card**: for the dates chosen (this month unless
-  changed), what was on hand when the first day began; what was received,
-  sold, used in batches, made, wasted, counted and corrected; and what was on
-  hand at the end, which is what Stock on hand shows. Below, every movement,
-  with the quantity and value on hand after it.
+- **Stock on hand:** each item in use, with its quantity, unit, reorder level,
+  average cost, value and status: **low**, or **negative** (shown, never
+  hidden). Below it, the items with **no stock yet** and those **out of use**,
+  each opening its card. Open an item for its **stock card**:
+  - for the dates chosen (this month unless changed), what was on hand when
+    the first day began; what was received, sold, used in batches, made,
+    wasted, counted and corrected; and what was on hand at the end, which is
+    what Stock on hand shows; then every movement, with the quantity and value
+    on hand after it;
+  - **What it has cost:** each delivery, newest first, with the supplier, what
+    was paid a base unit and what it cost landed;
+  - **Units:** what it is delivered and counted in, and **Add unit** for a new
+    pack size (a case of 24, a bottle of 750 ml). A unit keeps its size for
+    good, because every delivery and count in it was taken at that size: a
+    different size is a new unit;
+  - **Correct this item** (purchasing, managers, owner): its names, type,
+    reorder and par levels, and whether it is **in use**, with **why**. It stays
+    counted in its base unit. It is taken out of use only when it has no stock
+    and no recipe, product or batch needs it; then its name is free again. Every
+    change is on the audit trail with its values before and after.
 - **Movements:** the most recent entries in the stock ledger.
 
 ## 14. Stock Count
@@ -515,7 +551,7 @@ who sees costs; locking: accountant, general manager, owner; reopening: owner
   the owner's alone, and needs a reason; reopen the most recent locked month
   first.
 
-- **Audit Trail:** the latest privileged actions: who, when, what and why.
+- Who changed what is on the [Audit trail](#19-audit-trail).
 
 ## 18. Reports
 
@@ -555,7 +591,33 @@ accountant's own tools.
 - **Product Margin by Channel:** price, cost and margin of every product on every
   channel.
 
-## 19. Settings
+## 19. Audit trail
+
+**Location:** Sidebar → **Audit trail** · `/audit` · **Who:** owner, managers,
+accountant, auditor
+
+Every change the database recorded, newest first: **when**, **who**, **what
+happened**, **what it was about** (by name), each value **before → after**,
+and **why**.
+
+- Prices set, changed or withdrawn, with the price each replaced; products,
+  categories, stock items and their units, suppliers, business settings and
+  places, added, changed or deleted; opening stock, with where it came from;
+  batch recipes and their ingredients; a delivery's price confirmed, with what
+  the person was told; and every void, refund, discount, count, correction,
+  cash movement, journal reversal, period lock and change of roles.
+- A change made in the database itself, with no one signed in, shows **No one
+  signed in**: itself worth asking about.
+- Choose the dates, **What** (prices; products and recipes; stock items and
+  opening stock; suppliers and deliveries; counts, corrections and batches;
+  sales, bills and discounts; cash; the books; settings, places and people) and
+  **Who** (anyone, a person, or no one signed in). **CSV** downloads every row
+  chosen, with the values as the database stored them.
+
+The trail is written in the same step as the change and is never edited or
+deleted.
+
+## 20. Settings
 
 **Location:** Sidebar → **Settings** · `/settings` · **Who:** owner, general
 manager
@@ -580,7 +642,7 @@ manager
 
 ---
 
-## 20. Every feature, and where it is
+## 21. Every feature, and where it is
 
 | Feature                                                                                                    | Where                              | Who                                                                   |
 | ---------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------- |
@@ -593,15 +655,16 @@ manager
 | Void (until the drawer is counted) and refund                                                              | `/orders`                          | managers, owner                                                       |
 | Daily summaries; count the drawer; move cash between till, safe, bank and owner                            | `/sales`                           | cost viewers; counting: managers, owner                               |
 | Platform orders; payout by journal                                                                         | `/platforms`, `/journals`          | cost viewers                                                          |
-| Vendor statements, bills, payments, cancel a bill, ageing                                                  | `/vendors`                         | cost viewers (by permission)                                          |
+| Vendor statements, bills, payments, cancel a bill, ageing; correct a vendor, take one out of use           | `/vendors`                         | cost viewers (by permission)                                          |
 | Expenses with a proposed account                                                                           | `/expenses`                        | managers, accountant, owner                                           |
-| Suppliers; receive goods with landed cost                                                                  | `/purchasing`                      | purchasing, managers, owner                                           |
+| Suppliers; receive goods at a price per unit, checked against the cost now; landed cost                    | `/purchasing`                      | purchasing, managers, owner                                           |
 | Products, recipes by channel, prices from a date, margins                                                  | `/products`                        | cost viewers; editing: owner, general manager                         |
-| Stock board, add items, opening stock, waste, corrections, movements                                       | `/inventory`                       | cost viewers; waste: baristas too                                     |
+| Stock board, add and correct items, pack units, price history, opening stock (owner), waste, corrections   | `/inventory`                       | cost viewers; waste: baristas too                                     |
 | Blind count while trading, second-person approval, cancel a count                                          | `/count`                           | counter; reviewers                                                    |
 | Journal register, manual journals, reversal                                                                | `/journals`                        | cost viewers; posting: accountant, general manager, owner             |
 | Owner's correction to a control account                                                                    | `/journals`                        | owner                                                                 |
-| Trial balance, closing checklist, lock / reopen, audit trail                                               | `/accounting`                      | cost viewers; lock: accountant, general manager, owner; reopen: owner |
+| Trial balance, closing checklist, lock / reopen                                                            | `/accounting`                      | cost viewers; lock: accountant, general manager, owner; reopen: owner |
+| Who changed what, before and after, by kind and person; CSV                                                | `/audit`                           | owner, managers, accountant, auditor                                  |
 | Reconciliation, P&L, channels, ageing, margins, CSV                                                        | `/reports`                         | cost viewers                                                          |
 | Post the stock the old app never journaled                                                                 | `/reports`                         | owner                                                                 |
 | People and roles, business configuration                                                                   | `/settings`                        | owner, general manager                                                |

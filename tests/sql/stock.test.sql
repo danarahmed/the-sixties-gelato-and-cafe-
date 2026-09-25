@@ -12,10 +12,18 @@ insert into user_role (app_user_id, role) select id, 'barista' from app_user whe
 create temp table loc as select default_location('00000000-0000-0000-0000-0000000000b1') id;
 grant select on loc to public;
 
--- Opening stock goes into the books: Dr Inventory / Cr Owner equity.
+-- Opening stock goes into the books: Dr Inventory / Cr Owner equity. It is
+-- capital the owner puts in, so it is the owner's, with a reason (0027).
 select test.act_as('manager@example.com');
+select test.throws($$select create_item('Oat milk', 'ingredient', 'ml', 'volume', p_opening_qty => 12000,
+                                        p_opening_unit_cost => 3, p_opening_reason => 'the opening count')$$,
+  '%Only the owner records opening stock%', 'a manager may create an item, but not give it opening stock');
+select test.act_as('owner@example.com');
+select test.throws($$select create_item('Oat milk', 'ingredient', 'ml', 'volume', p_opening_qty => 12000,
+                                        p_opening_unit_cost => 3)$$,
+  '%Say where this stock came from%', 'the owner says where it came from');
 create temp table it as select create_item('Oat milk', 'ingredient', 'ml', 'volume', p_units => '[{"code":"carton","label":"1L carton","factor":1000}]',
-  p_opening_qty => 12000, p_opening_unit_cost => 3) as r;
+  p_opening_qty => 12000, p_opening_unit_cost => 3, p_opening_reason => 'the opening count') as r;
 select test.eq((select (r->>'opening_value')::numeric from it), 36000::numeric, '12 L at 3/ml');
 select test.eq(test.lines_of((select id from inventory_movement where item_id = (select (r->>'item_id')::uuid from it))),
   '1200 Dr 36000 | 3000 Cr 36000', 'opening stock is journaled');
@@ -143,16 +151,21 @@ create temp table milk as
                       p_units => '[{"code":"l","label":"Litre","factor":1000}]'::jsonb) ->> 'item_id')::uuid as id;
 grant select on milk to public;
 select test.act_as('cashier@example.com');
-select test.throws($$select record_opening_stock((select id from milk), 12, 'l', 1500)$$, '%permission%',
+select test.throws($$select record_opening_stock((select id from milk), 12, 'l', 1500, 'the opening count')$$, '%permission%',
   'a cashier cannot give stock an opening balance');
 select test.act_as('manager@example.com');
-select test.throws($$select record_opening_stock((select id from milk), 0, 'l', 1500)$$, '%quantity on the shelf%',
+select test.throws($$select record_opening_stock((select id from milk), 12, 'l', 1500, 'the opening count')$$,
+  '%Only the owner records opening stock%', 'nor can a manager: it is capital the owner puts in (0027)');
+select test.act_as('owner@example.com');
+select test.throws($$select record_opening_stock((select id from milk), 12, 'l', 1500, '  ')$$,
+  '%Say where this stock came from%', 'and the owner says where it came from');
+select test.throws($$select record_opening_stock((select id from milk), 0, 'l', 1500, 'the opening count')$$, '%quantity on the shelf%',
   'the quantity must be more than zero');
-select test.throws($$select record_opening_stock((select id from milk), 12, 'l', 0)$$, '%Enter what one l of Fresh milk cost%',
+select test.throws($$select record_opening_stock((select id from milk), 12, 'l', 0, 'the opening count')$$, '%Enter what one l of Fresh milk cost%',
   'and it needs its cost: stock at no cost would be sold at no cost');
-select test.throws($$select record_opening_stock((select id from milk), 12, 'crate', 1500)$$, '%not defined for this item%',
+select test.throws($$select record_opening_stock((select id from milk), 12, 'crate', 1500, 'the opening count')$$, '%not defined for this item%',
   'only in a unit the item has');
-create temp table op as select record_opening_stock((select id from milk), 12.5, 'l', 1500) as r;
+create temp table op as select record_opening_stock((select id from milk), 12.5, 'l', 1500, 'the opening count') as r;
 select test.eq((select (r->>'qty')::numeric || ' ml worth ' || (r->>'value')::numeric from op), '12500 ml worth 18750',
   '12.5 litres at 1,500 a litre is 12,500 ml worth 18,750');
 select test.as_admin();
@@ -160,11 +173,13 @@ select test.eq(test.lines_of((select (r->>'movement_id')::uuid from op)), '1200 
   'journaled as a new item''s opening stock: Dr Inventory, Cr Owner equity');
 select test.eq(item_issue_cost('00000000-0000-0000-0000-0000000000b1', (select id from milk), (select id from loc)), 1.5::numeric,
   'the milk is now issued at 1.5 a millilitre, not at nothing');
-select test.ok(exists (select 1 from audit_log where action = 'inventory.opening'), 'the opening balance is on the audit trail');
-select test.act_as('manager@example.com');
-select test.throws($$select record_opening_stock((select id from milk), 1, 'l', 1500)$$, '%already has stock recorded here%',
+select test.eq((select reason || ' by ' || u.email from audit_log a join app_user u on u.id = a.app_user_id
+                 where action = 'inventory.opening' and entity_id = (select r ->> 'movement_id' from op)),
+  'the opening count by owner@example.com', 'the opening balance is on the audit trail, with who and why');
+select test.act_as('owner@example.com');
+select test.throws($$select record_opening_stock((select id from milk), 1, 'l', 1500, 'the opening count')$$, '%already has stock recorded here%',
   'a second opening balance is refused');
-select test.throws($$select record_opening_stock('c0000000-0000-0000-0000-000000000001', 1, 'kg', 10000)$$,
+select test.throws($$select record_opening_stock('c0000000-0000-0000-0000-000000000001', 1, 'kg', 10000, 'the opening count')$$,
   '%Golden beans already has stock recorded here%', 'as is one for an item whose stock has moved');
 select test.as_admin();
 select test.eq((select sum(value * sign(base_quantity_signed)) from inventory_movement where business_id = '00000000-0000-0000-0000-0000000000b1'),

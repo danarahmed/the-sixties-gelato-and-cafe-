@@ -78,7 +78,9 @@ create temp table costs as select c.*, i.sku from item_costs() c join item i on 
 select test.eq((select string_agg(sku || '=' || unit_cost, ',' order by sku) from costs where sku like 'G-%'),
   'G-BEANS=10,G-CUP=50,G-WATER=250', 'each item''s cost per base unit today');
 -- Three more cups for 200 make the average 7,700 / 153: every digit reaches the form.
-select receive_goods((select id from sup), '[{"item_id":"c0000000-0000-0000-0000-000000000002","qty":3,"goods_value":200}]');
+-- (At a third over their cost, confirmed: 0027.)
+select receive_goods((select id from sup), '[{"item_id":"c0000000-0000-0000-0000-000000000002","qty":3,"goods_value":200}]',
+                     p_confirm => true);
 select test.eq((select unit_cost from item_costs() where item_id = 'c0000000-0000-0000-0000-000000000002'),
   trim_scale(7700::numeric / 153)::text, 'an uneven average is sent to the last digit');
 create temp table cup_cost as select unit_cost::numeric c from item_costs()

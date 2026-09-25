@@ -224,7 +224,7 @@ check(
 );
 
 // ---------------------------------------------------------- opening stock
-console.log("▸ manager gives an item with no stock its opening stock, at what it cost");
+console.log("▸ the owner gives an item with no stock its opening stock, at what it cost");
 sql(`
   insert into item (id, business_id, sku, name, item_type, base_unit_code, dimension)
   values ('e2e00000-0000-0000-0000-00000000000f', '00000000-0000-0000-0000-0000000000b1', 'MILK-E2E',
@@ -233,7 +233,16 @@ sql(`
   values ('e2e00000-0000-0000-0000-00000000000f', 'l', 'Litre', 'volume', 1000);
 `);
 {
-  const { ctx, page } = await signIn(browser, "manager");
+  // It is capital the owner puts in: a manager is not offered it (0027).
+  const m = await signIn(browser, "manager");
+  await open(m.page, "/inventory");
+  check(
+    (await m.page.getByTestId("opening-stock").count()) === 0,
+    "a manager is not offered opening stock: it is the owner's capital",
+  );
+  await m.ctx.close();
+
+  const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/inventory");
   const panel = page.getByTestId("opening-stock");
   await panel.getByLabel("Item with no stock yet").selectOption({ label: "Fresh milk" });
@@ -241,11 +250,22 @@ sql(`
   // A select inside its label adds its option to the label's name ("Unit ml").
   await panel.locator("label", { hasText: /^Unit/ }).locator("select").selectOption("l");
   await panel.getByLabel("Cost per Litre (IQD)").fill("1500");
+  check(
+    await panel.getByRole("button", { name: "Record opening stock" }).isDisabled(),
+    "it is not recorded until the owner says where it came from",
+  );
+  await panel.getByLabel("Where it came from").fill("the opening count");
   await panel.getByRole("button", { name: "Record opening stock" }).click();
   await page
     .getByText(/Opening stock of Fresh milk: 12.5 Litre, worth 18,750 IQD \(journal \d+\)/)
     .waitFor({ timeout: 10000 });
   ok("12.5 litres at 1,500 a litre: 18,750 IQD");
+  check(
+    sql(
+      `select reason from audit_log where action = 'inventory.opening' order by id desc limit 1`,
+    ) === "the opening count",
+    "and on the audit trail with where it came from",
+  );
   await open(page, "/inventory");
   check(
     (await page.getByTestId("opening-stock").count()) === 0 ||

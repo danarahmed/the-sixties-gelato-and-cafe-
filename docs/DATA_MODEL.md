@@ -316,3 +316,58 @@ No table changes.
 - `stock_card(item, from, to)` (needs `cost.view`): an opening line (seq 0)
   then each movement, its kind (`stock_card_kind`, internal) and the quantity
   and value on hand after it.
+
+### Master data: who changed what, delivery prices, items and suppliers (`0027`)
+
+- **Who changed what.** The trigger `audit_change` (`audit_row_change`,
+  internal) writes an `audit_log` row for every row added, changed or deleted
+  in `product`, `product_variant`, `product_category`, `item`, `item_unit`,
+  `supplier`, `business` and `location`: the action is `<table>.create`,
+  `.update` or `.delete`; `before_state` and `after_state` hold only the columns
+  that changed (the whole row when added or deleted); the person is whoever is
+  signed in — none for a change made in SQL. A function may give a reason in
+  the transaction's `audit.reason` setting (`update_item`, `update_supplier`,
+  `cancel_scheduled_price` do). A change that changes nothing writes nothing.
+- **Prices.** `channel_price.created_by` (the person signed in when it was
+  set). The trigger `audit_price` (`audit_price_change`, internal) writes
+  `price.set` for every price added — with the price in force it replaces —
+  `price.update` for one changed in SQL, and `price.cancel` for one deleted,
+  with the reason `cancel_scheduled_price` gives. `set_price` and
+  `cancel_scheduled_price` no longer write their own rows.
+- **What each sale was called.** `sales_order_line.product_name`, set when the
+  line is written (`name_sale_line`, internal): "Product — Variant", or the
+  product's name when they are the same. Lines written before `0027` have none,
+  and are shown by the product's name now. `uncosted_sales` uses it.
+- **Names unique among those in use.** The partial unique indexes
+  `item_name_in_use`, `supplier_name_in_use` and `product_name_in_use` on
+  `(business_id, name_key(name)) where is_active`. `name_key` ignores case,
+  spaces and punctuation, never letters ("Dairy Co" and "Dairy co." are one
+  name). `assert_name_free` (internal) says it in words first.
+- **Opening stock is the owner's.** `record_opening_stock` gains `p_reason`
+  and `create_item` gains `p_opening_reason`: opening stock needs the owner's
+  role and a reason (`assert_owner_opening`, internal), which goes on the
+  movement and the `inventory.opening` audit row.
+- **Items, units and suppliers corrected** (`settings.manage`,
+  `purchase.create` or `inventory.adjust.approve`; suppliers `purchase.create`):
+  `update_item(item, name, type, name_ar, name_ckb, min_level, par_level,
+is_active, reason)` — the base unit never changes; out of use only with no
+  stock, no recipe in force or scheduled, no product selling it as bought and
+  no batch recipe making it. `add_item_unit(item, code, label, factor)` — a
+  code not already the item's (in any case), a positive size, 1,000 for a
+  kilogram of grams or a litre of millilitres. `update_supplier(supplier, name,
+contact, phone, is_active, reason)` — out of use only when owed nothing.
+  `create_supplier`, `create_item`, `create_product` and `set_product_details`
+  refuse a name in use.
+- **Deliveries.** `receive_goods` gains `p_confirm`; a line may carry
+  `unit_price` (times `qty`) in place of `goods_value`. A cost a base unit more
+  than 25% from `item_reference_cost` (internal: the average cost where it is
+  received, or the last delivery's cost) is refused unless confirmed, and a
+  confirmation is audited `purchase.price_confirmed`. An item out of use, like
+  a supplier out of use, receives nothing. `item_price_history(item)` (needs
+  `cost.view`): its last 50 deliveries, with the supplier, what was paid and
+  what it cost landed, a base unit.
+- **Batch recipes** are audited: `save_batch_recipe` writes
+  `recipe.batch.create` or `recipe.batch.change` with the recipe and its
+  ingredients before and after (`recipe_lines_json`, internal). The older
+  `new_recipe_version`, which changed a recipe without the audit trail, can no
+  longer be called by anyone signed in.

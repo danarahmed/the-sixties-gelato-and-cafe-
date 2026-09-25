@@ -4,6 +4,14 @@ import "server-only";
  * journal register, periods and the audit trail. All run as the signed-in
  * person, so row-level security decides what they return.
  */
+import {
+  actionLabel,
+  auditGroup,
+  describeChanges,
+  subjectOf,
+  type Change,
+  type Json,
+} from "@/lib/audit";
 import { daysBetween } from "@/lib/dates";
 import { db, num, numOrNull, one, rows, str, strOrNull } from "./client";
 
@@ -176,6 +184,8 @@ export interface VendorRow {
   name: string;
   contact: string | null;
   phone: string | null;
+  /** Out of use (0027): kept for its history; nothing more is received from them. */
+  isActive: boolean;
   billed: number;
   paid: number;
   balance: number;
@@ -207,7 +217,7 @@ export async function getVendorBook(
 ): Promise<{ vendors: VendorRow[]; openBills: OpenBill[] }> {
   const c = await db();
   const [suppliers, bills, payments] = await Promise.all([
-    c.from("supplier").select("id,name,contact,phone").eq("is_active", true).order("name"),
+    c.from("supplier").select("id,name,contact,phone,is_active").order("name"),
     c
       .from("purchase_invoice")
       .select(
@@ -293,6 +303,7 @@ export async function getVendorBook(
       name: str(s.name),
       contact: strOrNull(s.contact),
       phone: strOrNull(s.phone),
+      isActive: s.is_active !== false,
       billed,
       paid,
       balance: billed - paid,
@@ -300,6 +311,8 @@ export async function getVendorBook(
       lines,
     };
   });
+  // Those out of use last: kept for their history.
+  vendors.sort((x, y) => Number(y.isActive) - Number(x.isActive));
   return { vendors, openBills };
 }
 
@@ -607,33 +620,140 @@ export async function getCloseChecklist(periodId: string): Promise<CheckRow[]> {
 
 /* ------------------------------------------------------------------ audit */
 
-export interface AuditRow {
+export interface AuditEntry {
   id: string;
   at: string;
   action: string;
-  entity: string;
-  reason: string | null;
+  /** What happened, in words. */
+  label: string;
+  /** What it was about, by name. */
+  subject: string;
+  /** Who was signed in; null for a change made in the database itself. */
   by: string | null;
+  reason: string | null;
+  changes: Change[];
+  before: Json;
+  after: Json;
 }
 
-/** Who did what, when — written by the database in the same transaction (M-03). */
-export async function getAuditLog(limit = 50): Promise<AuditRow[]> {
+export interface AuditFilter {
+  fromTs: string;
+  toTs: string;
+  /** One of AUDIT_GROUPS, or everything. */
+  group?: string | null;
+  /** A person's id, or "none" for changes made with no one signed in. */
+  person?: string | null;
+}
+
+const AUDIT_PAGE = 1000;
+
+/**
+ * The names the trail refers to: stock items, products and what the till
+ * sells, suppliers, categories, places, recipes and people.
+ */
+async function auditNames(): Promise<{ names: Map<string, string>; people: Map<string, string> }> {
   const c = await db();
-  const [log, people] = await Promise.all([
-    c
-      .from("audit_log")
-      .select("id,occurred_at,action,entity_type,entity_id,reason,app_user_id")
-      .order("occurred_at", { ascending: false })
-      .limit(limit),
-    c.from("app_user").select("id,full_name"),
-  ]);
+  const [items, products, variants, suppliers, categories, locations, recipes, people] =
+    await Promise.all([
+      c.from("item").select("id,name"),
+      c.from("product").select("id,name"),
+      c.from("product_variant").select("id,product_id,name"),
+      c.from("supplier").select("id,name"),
+      c.from("product_category").select("id,name"),
+      c.from("location").select("id,name"),
+      c.from("recipe").select("id,name"),
+      c.from("app_user").select("id,full_name"),
+    ]);
+  const names = new Map<string, string>();
+  for (const [res, what] of [
+    [items, "items"],
+    [products, "products"],
+    [suppliers, "suppliers"],
+    [categories, "categories"],
+    [locations, "locations"],
+    [recipes, "recipes"],
+  ] as const) {
+    for (const r of rows(res, what)) names.set(str(r.id), str(r.name));
+  }
+  const productName = new Map(rows(products, "products").map((p) => [str(p.id), str(p.name)]));
+  for (const v of rows(variants, "product variants")) {
+    const pn = productName.get(str(v.product_id)) ?? "";
+    const vn = str(v.name);
+    names.set(str(v.id), pn && pn !== vn ? `${pn} — ${vn}` : vn || pn);
+  }
   const person = new Map(rows(people, "people").map((p) => [str(p.id), str(p.full_name)]));
-  return rows(log, "the audit trail").map((a) => ({
-    id: str(a.id),
-    at: str(a.occurred_at),
-    action: str(a.action),
-    entity: `${str(a.entity_type)} ${str(a.entity_id).slice(0, 8)}`.trim(),
-    reason: strOrNull(a.reason),
-    by: a.app_user_id ? (person.get(str(a.app_user_id)) ?? null) : null,
-  }));
+  for (const [id, n] of person) names.set(id, n);
+  return { names, people: person };
+}
+
+/**
+ * Who changed what (0027, the audit's P1-1): the trail between two instants,
+ * newest first, narrowed to a kind of change or a person, each row with what
+ * it was about and its values before and after. Needs audit.view (row-level
+ * security returns nothing otherwise). Read a page at a time, up to `max`.
+ */
+export async function getAuditTrail(
+  filter: AuditFilter,
+  max = 500,
+): Promise<{ entries: AuditEntry[]; more: boolean; people: { id: string; name: string }[] }> {
+  const c = await db();
+  const { names, people } = await auditNames();
+  const group = auditGroup(filter.group ?? undefined);
+  const entries: AuditEntry[] = [];
+  let more = true;
+  for (let start = 0; start < max; start += AUDIT_PAGE) {
+    const size = Math.min(AUDIT_PAGE, max - start);
+    let q = c
+      .from("audit_log")
+      .select(
+        "id,occurred_at,action,entity_type,entity_id,reason,app_user_id,before_state,after_state",
+      )
+      .gte("occurred_at", filter.fromTs)
+      .lt("occurred_at", filter.toTs);
+    if (group) {
+      // An action in the group: "price.*", or one action named in full.
+      q = q.or(
+        group.prefixes
+          .map((p) => `action.like.${JSON.stringify(p.endsWith(".") ? `${p}*` : p)}`)
+          .join(","),
+      );
+    }
+    if (filter.person === "none") q = q.is("app_user_id", null);
+    else if (filter.person) q = q.eq("app_user_id", filter.person);
+    const page = rows(
+      await q
+        .order("occurred_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(start, start + size - 1),
+      "the audit trail",
+    );
+    for (const a of page) {
+      const before = (a.before_state ?? null) as Json;
+      const after = (a.after_state ?? null) as Json;
+      const entityId = strOrNull(a.entity_id);
+      entries.push({
+        id: str(a.id),
+        at: str(a.occurred_at),
+        action: str(a.action),
+        label: actionLabel(str(a.action)),
+        subject: subjectOf(str(a.entity_type), entityId, before, after, names),
+        by: a.app_user_id ? (people.get(str(a.app_user_id)) ?? "Someone") : null,
+        reason: strOrNull(a.reason),
+        changes: describeChanges(before, after, names),
+        before,
+        after,
+      });
+    }
+    if (page.length < size) {
+      more = false;
+      break;
+    }
+  }
+  return {
+    entries,
+    more,
+    people: [...people]
+      .map(([id, name]) => ({ id, name }))
+      .sort((x, y) => x.name.localeCompare(y.name)),
+  };
 }

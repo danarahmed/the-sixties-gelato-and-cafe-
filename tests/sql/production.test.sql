@@ -14,12 +14,13 @@ values ('00000000-0000-0000-0000-0000000000b1', 'Demo Barista', 'barista@example
 insert into user_role (app_user_id, role) select id, 'barista' from app_user where email = 'barista@example.com';
 
 -- Ingredients, with opening stock: milk at 1.5 a ml, sugar at 1.2 a g, paste at 30 a g.
-select test.act_as('manager@example.com');
+select test.act_as('owner@example.com');
 select create_item('Golden milk', 'ingredient', 'ml', 'volume', p_units => '[{"code":"L","label":"L","factor":1000}]',
-  p_opening_qty => 20000, p_opening_unit_cost => 1.5);
+  p_opening_qty => 20000, p_opening_unit_cost => 1.5, p_opening_reason => 'the opening count');
 select create_item('Golden sugar', 'ingredient', 'g', 'mass', p_units => '[{"code":"kg","label":"kg","factor":1000}]',
-  p_opening_qty => 10000, p_opening_unit_cost => 1.2);
-select create_item('Golden paste', 'ingredient', 'g', 'mass', p_opening_qty => 2000, p_opening_unit_cost => 30);
+  p_opening_qty => 10000, p_opening_unit_cost => 1.2, p_opening_reason => 'the opening count');
+select create_item('Golden paste', 'ingredient', 'g', 'mass', p_opening_qty => 2000, p_opening_unit_cost => 30,
+  p_opening_reason => 'the opening count');
 select test.as_admin();
 create temp table ids as
 select (select id from item where name = 'Golden milk') milk, (select id from item where name = 'Golden sugar') sugar,
@@ -229,8 +230,8 @@ select test.act_as('owner@example.com');
 select test.throws($$select change_product_recipe('d1000000-0000-0000-0000-000000000001',
   '[{"item_id":"c0000000-0000-0000-0000-0000000000f2","qty":18}]')$$, '%Unknown item%', 'nor another business''s item');
 select test.throws($$select new_recipe_version('d2000000-0000-0000-0000-000000000001',
-  '[{"item_id":"c0000000-0000-0000-0000-0000000000f2","qty":18}]')$$, '%Unknown item%',
-  'and the older way in checks its lines too');
+  '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":18}]')$$, '%permission denied%',
+  'and the older way in, which bypassed the audit trail, is closed (0027)');
 select test.act_as('manager@example.com');
 select test.throws($$select change_product_recipe('d1000000-0000-0000-0000-000000000001',
   '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":18}]')$$, '%permission%',

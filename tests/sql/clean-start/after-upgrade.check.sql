@@ -51,9 +51,9 @@ select test.eq((select count(*) from legacy_unposted())::int, 0, 'nothing is lef
 
 -- --- Trading from empty books -------------------------------------------------
 create temp table beans as select create_item('Coffee beans', 'ingredient', 'g', 'mass',
-  p_opening_qty => 1000, p_opening_unit_cost => 20) r;
+  p_opening_qty => 1000, p_opening_unit_cost => 20, p_opening_reason => 'the opening count') r;
 create temp table cups as select create_item('Takeaway cup', 'packaging', 'each', 'count',
-  p_opening_qty => 100, p_opening_unit_cost => 150) r;
+  p_opening_qty => 100, p_opening_unit_cost => 150, p_opening_reason => 'the opening count') r;
 select test.eq((select min(journal_no) from journal_entry)::int, 1001, 'the first journal is number 1001');
 
 create temp table espresso as select create_product('Espresso', '{"dine_in": 3000, "talabat": 3500}',

@@ -6,7 +6,9 @@ import {
   getReconciliation,
   getTrialBalance,
 } from "@/lib/db/reports";
-import { businessToday, dateTimeIn, monthStart, parseDay } from "@/lib/dates";
+import { getAuditTrail } from "@/lib/db/books";
+import { auditGroup } from "@/lib/audit";
+import { addDays, businessToday, dateTimeIn, dayStart, monthStart, parseDay } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -92,6 +94,59 @@ export async function GET(request: NextRequest) {
         ]),
       );
       name = `journal-lines_${from}_${to}${accounts.length ? `_${accounts.join("-")}` : ""}.csv`;
+    } else if (report === "audit") {
+      // Who changed what (0027): every row in the dates, however many.
+      if (!s.profile.permissions.includes("audit.view")) {
+        return NextResponse.json(
+          { error: "You do not have permission to see the audit trail" },
+          { status: 403 },
+        );
+      }
+      const tz = s.profile.timezone;
+      const group = auditGroup(q.get("group") ?? undefined)?.key ?? null;
+      const person = q.get("person");
+      const { entries } = await getAuditTrail(
+        {
+          fromTs: dayStart(from, tz),
+          toTs: dayStart(addDays(to, 1), tz),
+          group,
+          person: person === "none" || /^[0-9a-f-]{36}$/i.test(person ?? "") ? person : null,
+        },
+        1_000_000,
+      );
+      body = csv(
+        [
+          "when",
+          "person",
+          "action",
+          "what_happened",
+          "about",
+          "changes",
+          "reason",
+          "before",
+          "after",
+        ],
+        entries.map((e) => [
+          dateTimeIn(tz, e.at),
+          e.by ?? "no one signed in",
+          e.action,
+          e.label,
+          e.subject,
+          e.changes
+            .map((c) =>
+              c.before === ""
+                ? `${c.field}: ${c.after}`
+                : c.after === ""
+                  ? `${c.field}: ${c.before} (removed)`
+                  : `${c.field}: ${c.before} → ${c.after}`,
+            )
+            .join("; "),
+          e.reason ?? "",
+          e.before === null ? "" : JSON.stringify(e.before),
+          e.after === null ? "" : JSON.stringify(e.after),
+        ]),
+      );
+      name = `audit-trail_${from}_${to}.csv`;
     } else if (report === "reconciliation") {
       const rows = await getReconciliation(to);
       body = csv(

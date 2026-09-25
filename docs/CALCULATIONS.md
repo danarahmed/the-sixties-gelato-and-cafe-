@@ -22,6 +22,10 @@ targetFactor`. Conversions are only valid within one dimension
   (count/mass/volume) and are validated + tested.
 - Example: `1 carton_1000 = 1000 each`; `1 case_12x1L = 12000 ml`;
   `1 kg = 1000 g`; `1 bottle_700 = 700 ml`. (`src/domain/units/units.ts`)
+- A unit in use keeps its size for good (`0027`): every delivery and count in
+  it was taken at that size, so a different size is a new unit under its own
+  name (`case_12`, not `case_24` changed). A kilogram is always 1,000 g and a
+  litre 1,000 ml.
 
 ## 3. Inventory ledger & current stock
 
@@ -46,6 +50,27 @@ quantity`.
 
 `landedValue = goods + freight + otherLanded − rebate`; `unitCost = landedValue
 ÷ quantityBase`. Freight/rebates/discounts are allocated to lines before costing.
+
+### A delivery's price, checked (`0027`, audit P1-3)
+
+- A line is entered at its **price per unit received**, as the invoice gives it
+  (a kilogram, a case of 24): `goods = unitPrice × quantity`, and what it cost a
+  base unit is `goods ÷ (quantity × the unit's size)`. The form shows both as
+  they are typed.
+- That is set against **what the item costs now**: its average cost where it
+  is received, or, with none on hand, what it cost at its last delivery. More
+  than **25%** above or below, the delivery is refused, with both figures and
+  nothing recorded, until the person confirms the price; the confirmation goes
+  on the audit trail with what they were told. An item's first delivery has
+  nothing to compare with.
+- Worked example (the SQL test): cups that cost 50 each, received at 2.5 each,
+  are refused ("95% below its cost now (50 each)"); confirmed, they are
+  received. Two kilograms of beans at 9,000 a kilogram with 2,000 freight cost
+  9 a gram as paid and 10 landed.
+- A supplier's bill is typed from the invoice, never copied from the receipt;
+  any difference from what the receipt recorded goes to 5050.
+- Each item's **price history** lists its deliveries, newest first, with the
+  supplier, what was paid a base unit and what it cost landed.
 
 ### FIFO (optional)
 

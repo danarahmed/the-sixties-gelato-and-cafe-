@@ -55,7 +55,8 @@ ok "$(sql "select count(*) from journal_entry where reference_id = (select id fr
 
 # H-11 — ten people pay the same 20,000 bill in full at once: one payment.
 sql "select test.act_as('manager@example.com');
-     select receive_goods((select id from supplier limit 1), '[{\"item_id\":\"c0000000-0000-0000-0000-000000000002\",\"qty\":10,\"goods_value\":20000}]');
+     select receive_goods((select id from supplier limit 1), '[{\"item_id\":\"c0000000-0000-0000-0000-000000000002\",\"qty\":10,\"goods_value\":20000}]',
+                          p_confirm => true);
      select record_bill((select id from supplier limit 1), 'RACE-1', test.today(), 20000, 0,
                         (select id from goods_receipt order by receipt_no desc limit 1));" >/dev/null
 BILL=$(sql "select id from purchase_invoice where invoice_no = 'RACE-1'")
