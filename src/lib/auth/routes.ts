@@ -47,7 +47,12 @@ export const NAV: NavEntry[] = [
     key: "nav.count",
     anyOf: ["inventory.count", "inventory.count.view_expected", "inventory.adjust.approve"],
   },
-  { group: OPERATIONS, href: "/production", key: "nav.production", anyOf: ["cost.view"] },
+  {
+    group: OPERATIONS,
+    href: "/production",
+    key: "nav.production",
+    anyOf: ["cost.view", "production.record"],
+  },
 
   { group: BOOKS, href: "/journals", key: "nav.journals", anyOf: ["cost.view"] },
   { group: BOOKS, href: "/accounting", key: "nav.chart", anyOf: ["cost.view"] },

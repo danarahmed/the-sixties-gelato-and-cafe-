@@ -299,6 +299,10 @@ sees costs; creating and pricing: owner, general manager
 
 - **Each product** shows its **Recipe** (component, quantity, applies to) and
   **Price & margin by channel**, costed exactly as a sale would post it today.
+- **Change the recipe…:** the recipe in force today, to change, costed as you
+  change it, in force from a date (today or later). Sales before that date keep
+  the old recipe. Use it to switch a product to something made on Production
+  (a cup of gelato: 120 g of the gelato made, a cup, a spoon).
 - **Set price:** a new price for a channel, from a date. A sale always uses the
   price and the recipe in force on its own day.
 
@@ -344,11 +348,43 @@ More in [`guides/counting-guide.md`](guides/counting-guide.md).
 ## 15. Production
 
 **Location:** Sidebar → **Production** · `/production` · **Who:** anyone who sees
-costs
+costs, and baristas (who make the batches); setting up what is made: owner,
+general manager; cancelling a batch: owner, managers
 
-Batch history only. **Recording a batch is not built yet**, and the screen says
-so. Meanwhile, give products a recipe of their ingredients so each sale takes
-them from stock.
+What the café makes in batches: gelato, a base, syrup, cold brew, dough.
+
+- **Record a batch:** what was made, how many batches (0.5 and 2 work too), and,
+  if you weighed or counted it, what came out, in any of the item's units (kg,
+  pans, trays, pieces). Left empty, it came out as the recipe says. Before you
+  record it, the form shows what it will use (and how much of each is in stock),
+  what it makes and how that compares with the recipe, and, for those who see
+  costs, what it costs and the cost per kg (or per pan, or per piece).
+  Recording takes the ingredients out of stock at their average cost and puts
+  what came out in, at exactly that cost. Baristas are shown no costs.
+- **What you make:** each batch recipe, with what one batch makes, what goes
+  into it, how to make it, and (for those who see costs) what a batch costs.
+  **➕ Add something you make** sets one up:
+  1. **What it makes:** its name; something new to keep in stock (weighed,
+     measured or counted in pieces, and optionally kept in a container such as a
+     pan of 5 kg) or an item already kept; and how much one batch makes, roughly
+     is fine.
+  2. **What goes into one batch:** any stock item, bought or made here. A white
+     base made first and then flavoured works the same as milk and sugar; so
+     does a dough, then the croissants baked from it.
+  3. **How to make it** (optional): shown to whoever records a batch.
+
+  **Change…** changes it from today; **Stop making it** hides it (it comes back
+  with **Make it again**).
+
+- **Batches:** every batch, newest first: when, what, how many, what came out
+  (against the recipe), its cost (for those who see costs) and who made it. A
+  batch recorded in error is **Cancel…**led by a manager with a reason: its
+  stock movements are reversed at the values they had, and it stays on the list,
+  struck through.
+
+A made item is then used like any other: in another batch, or in a product's
+recipe on Products & Recipes (**Change the recipe…**), so a cup of gelato takes
+120 g of the gelato you made.
 
 ## 16. Journals
 
@@ -464,27 +500,27 @@ manager
 
 ## 20. Every feature, and where it is
 
-| Feature                                                                                                                                               | Where                              | Who                                                                   |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------- |
-| Sign in, create a login, reset password                                                                                                               | `/login`                           | everyone                                                              |
-| Change password, see your permissions                                                                                                                 | My account `/account`              | everyone                                                              |
-| Language (EN / AR / CKB, right-to-left), light/dark                                                                                                   | top bar                            | everyone                                                              |
-| Today at a glance, low stock, books reconcile                                                                                                         | `/dashboard`                       | owner, managers, accountant, auditor                                  |
-| Sell by channel; cash, card, platform-paid                                                                                                            | `/pos`                             | cashier, barista, managers, owner                                     |
-| Retry a sale without recording it twice                                                                                                               | `/pos`                             | the same                                                              |
-| Void (same day) and refund                                                                                                                            | `/orders`                          | managers, owner                                                       |
-| Daily summaries; close the day against the drawer                                                                                                     | `/sales`                           | cost viewers; closing: managers, owner                                |
-| Platform orders; payout by journal                                                                                                                    | `/platforms`, `/journals`          | cost viewers                                                          |
-| Vendor statements, bills, payments, cancel a bill, ageing                                                                                             | `/vendors`                         | cost viewers (by permission)                                          |
-| Expenses with a proposed account                                                                                                                      | `/expenses`                        | managers, accountant, owner                                           |
-| Suppliers; receive goods with landed cost                                                                                                             | `/purchasing`                      | purchasing, managers, owner                                           |
-| Products, recipes by channel, prices from a date, margins                                                                                             | `/products`                        | cost viewers; editing: owner, general manager                         |
-| Stock board, add items, waste, corrections, movements                                                                                                 | `/inventory`                       | cost viewers; waste: baristas too                                     |
-| Blind count, second-person approval                                                                                                                   | `/count`                           | counter; reviewers                                                    |
-| Journal register, manual journals, reversal                                                                                                           | `/journals`                        | cost viewers; posting: accountant, general manager, owner             |
-| Owner's correction to a control account                                                                                                               | `/journals`                        | owner                                                                 |
-| Trial balance, closing checklist, lock / reopen, audit trail                                                                                          | `/accounting`                      | cost viewers; lock: accountant, general manager, owner; reopen: owner |
-| Reconciliation, P&L, channels, ageing, margins, CSV                                                                                                   | `/reports`                         | cost viewers                                                          |
-| Post the stock the old app never journaled                                                                                                            | `/reports`                         | owner                                                                 |
-| People and roles, business configuration                                                                                                              | `/settings`                        | owner, general manager                                                |
-| **Not built:** settlement import (M-10), production batches (M-11), offline selling, partial refunds, till discounts, balance sheet, PDF, attachments | [`LIMITATIONS.md`](LIMITATIONS.md) | —                                                                     |
+| Feature                                                                                                                    | Where                              | Who                                                                   |
+| -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------- |
+| Sign in, create a login, reset password                                                                                    | `/login`                           | everyone                                                              |
+| Change password, see your permissions                                                                                      | My account `/account`              | everyone                                                              |
+| Language (EN / AR / CKB, right-to-left), light/dark                                                                        | top bar                            | everyone                                                              |
+| Today at a glance, low stock, books reconcile                                                                              | `/dashboard`                       | owner, managers, accountant, auditor                                  |
+| Sell by channel; cash, card, platform-paid                                                                                 | `/pos`                             | cashier, barista, managers, owner                                     |
+| Retry a sale without recording it twice                                                                                    | `/pos`                             | the same                                                              |
+| Void (same day) and refund                                                                                                 | `/orders`                          | managers, owner                                                       |
+| Daily summaries; close the day against the drawer                                                                          | `/sales`                           | cost viewers; closing: managers, owner                                |
+| Platform orders; payout by journal                                                                                         | `/platforms`, `/journals`          | cost viewers                                                          |
+| Vendor statements, bills, payments, cancel a bill, ageing                                                                  | `/vendors`                         | cost viewers (by permission)                                          |
+| Expenses with a proposed account                                                                                           | `/expenses`                        | managers, accountant, owner                                           |
+| Suppliers; receive goods with landed cost                                                                                  | `/purchasing`                      | purchasing, managers, owner                                           |
+| Products, recipes by channel, prices from a date, margins                                                                  | `/products`                        | cost viewers; editing: owner, general manager                         |
+| Stock board, add items, waste, corrections, movements                                                                      | `/inventory`                       | cost viewers; waste: baristas too                                     |
+| Blind count, second-person approval                                                                                        | `/count`                           | counter; reviewers                                                    |
+| Journal register, manual journals, reversal                                                                                | `/journals`                        | cost viewers; posting: accountant, general manager, owner             |
+| Owner's correction to a control account                                                                                    | `/journals`                        | owner                                                                 |
+| Trial balance, closing checklist, lock / reopen, audit trail                                                               | `/accounting`                      | cost viewers; lock: accountant, general manager, owner; reopen: owner |
+| Reconciliation, P&L, channels, ageing, margins, CSV                                                                        | `/reports`                         | cost viewers                                                          |
+| Post the stock the old app never journaled                                                                                 | `/reports`                         | owner                                                                 |
+| People and roles, business configuration                                                                                   | `/settings`                        | owner, general manager                                                |
+| **Not built:** settlement import (M-10), offline selling, partial refunds, till discounts, balance sheet, PDF, attachments | [`LIMITATIONS.md`](LIMITATIONS.md) | —                                                                     |

@@ -146,6 +146,20 @@ A finished sale cannot be edited. Tell a manager:
 
 Both are done on **Orders**, with a reason.
 
+## Making a batch (baristas)
+
+When you make gelato, a base, syrup or dough, record it on **Production →
+Record a batch**, right after:
+
+1. **What did you make?** Choose it. The form shows what it uses.
+2. **Batches:** how many (1, 2, or 0.5 for half).
+3. **What came out** (optional): if you weighed or counted it, enter it, in kg,
+   pans, pieces, whatever the list offers. Leave it empty if it came out as the
+   recipe says.
+4. **Record batch.** The ingredients leave stock and what you made goes in.
+
+Recorded the wrong thing? Tell a manager: they cancel the batch, with the reason.
+
 ## End of the day
 
 A manager counts the drawer and closes the day on **Sales**. **The day cannot

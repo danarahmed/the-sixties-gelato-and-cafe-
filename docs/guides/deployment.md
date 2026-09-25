@@ -23,7 +23,8 @@ Plan a short window when the café is closed.
 | Discounts (`0019`)           | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens were merged ([pull request #3](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/3)) and deployed (see [After `0019`](#after-0019))                                                          |
 | Discount rounding (`0020`)   | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens were merged ([pull request #4](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/4)) and deployed. The step was then set to 250 IQD at the owner's request (see [After `0020`](#after-0020)) |
 | Bill numbers (`0021`)        | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0021`](#after-0021)). The form was merged ([pull request #6](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/6)) and deployed                                                              |
-| Recipe costing (`0022`)      | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0022`](#after-0022)). The form goes live with the pull request that carries it                                                                                                                             |
+| Recipe costing (`0022`)      | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0022`](#after-0022)). The form was merged ([pull request #8](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/8)) and deployed                                                              |
+| Production (`0023`)          | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0023`](#after-0023)). The screens go live with the pull request that carries them                                                                                                    |
 
 ## 0. Before you start
 
@@ -325,3 +326,34 @@ public. A check as the owner, in a transaction that was rolled back:
   product's card shows.
 
 The check only read: nothing was written, and nothing was kept.
+
+## After `0023`
+
+Migration `0023` makes production real: batch recipes (what the café makes,
+from what, and how much a batch makes), recording a batch, cancelling one, and
+changing a product's recipe from a date. It adds seven columns (to `recipe` and
+`production_batch`), the `production.record` permission (owner, general
+manager, branch manager, barista) and six functions signed-in users may call,
+each checking the person's permission; it tightens `new_recipe_version` and
+names each line's item in `menu_recipe_lines`. It goes in before the screens:
+the app deployed before it calls none of the new functions, and reads
+`menu_recipe_lines` as before.
+
+It was applied on 25 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0022` build, with no batch recipes
+and no batches. It was then compared with the tested build, object by object,
+the role permissions and column grants included: identical. A check as the
+owner, in a transaction that was rolled back:
+
+- a batch recipe from the live milk and sugar, two batches recorded: 2,000 ml
+  of milk out at 1.5 a ml (3,000 IQD), 200 g of sugar at its average (318), and
+  the base in at exactly 3,318;
+- no journal written (67 before and after), and every reconciliation check zero
+  before the batch, after it, and after cancelling it;
+- the cancelled batch's movements net to zero;
+- the Latte's recipe saved again from today, unchanged: version 2, its costs the
+  same on every channel;
+- every live recipe line names its item.
+
+Nothing was kept.

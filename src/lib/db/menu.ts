@@ -14,6 +14,8 @@ export interface MenuVariant {
   id: string;
   name: string;
   isActive: boolean;
+  /** Sold as bought (a bottle of water): no recipe of its own. */
+  soldAsBought: boolean;
 }
 
 /** A product as the menu is set up: on the till or hidden from it. */
@@ -45,12 +47,17 @@ export async function getMenuSetup(): Promise<{
       .from("product")
       .select("id,name,name_ar,name_ckb,category_id,image_url,is_active,is_favourite")
       .order("name"),
-    c.from("product_variant").select("id,product_id,name,is_active").order("name"),
+    c.from("product_variant").select("id,product_id,name,is_active,resale_item_id").order("name"),
   ]);
   const variants = new Map<string, MenuVariant[]>();
   for (const v of rows(vars, "product variants")) {
     const list = variants.get(str(v.product_id)) ?? [];
-    list.push({ id: str(v.id), name: str(v.name), isActive: v.is_active === true });
+    list.push({
+      id: str(v.id),
+      name: str(v.name),
+      isActive: v.is_active === true,
+      soldAsBought: v.resale_item_id != null,
+    });
     variants.set(str(v.product_id), list);
   }
   return {

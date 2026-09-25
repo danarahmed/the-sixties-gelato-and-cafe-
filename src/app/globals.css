@@ -1839,3 +1839,206 @@ details > summary {
     justify-self: end;
   }
 }
+
+/* ------------------------------------------------------- recipe lines, shared */
+.pf-lines {
+  display: grid;
+  gap: 8px;
+}
+.pf-lines.no-use .pf-line,
+.pf-lines.no-use .pf-head {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1.2fr) 112px 40px;
+}
+.pf-change {
+  display: grid;
+  gap: 8px;
+  margin-block-start: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+@media (max-width: 720px) {
+  .pf-lines.no-use .pf-line {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      "ing ing rm"
+      "qty unit cost";
+  }
+}
+
+/* ------------------------------------------------------- production */
+.pr-record {
+  display: grid;
+  gap: 12px;
+}
+.pr-fields,
+.pr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px 12px;
+  align-items: end;
+}
+.pr-fields label,
+.pr-grid label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.pr-what {
+  grid-column: span 2;
+}
+.pr-out {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+  gap: 6px;
+}
+.pr-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px 24px;
+  padding: 10px 12px;
+  border-inline-start: 3px solid var(--accent);
+  background: var(--paper);
+  font-size: 0.9rem;
+}
+.pr-uses ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 3px;
+}
+.pr-uses li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+.pr-uses li > :first-child {
+  min-width: 9em;
+}
+.pr-uses li .muted,
+.pr-uses li .pr-short {
+  font-size: 0.78rem;
+}
+.pr-makes {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.pr-cost strong {
+  font-size: 1.05rem;
+}
+.pr-short {
+  color: var(--warn);
+}
+.pr-container,
+.pr-yield {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: center;
+  font-size: 0.85rem;
+}
+.pr-container input,
+.pr-container select,
+.pr-yield input,
+.pr-yield select {
+  width: auto;
+  min-width: 90px;
+  max-width: 180px;
+}
+.pr-new > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.pr-new[open] > summary {
+  margin-block-end: 12px;
+}
+.pr-recipes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+}
+.pr-recipe {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+.pr-recipe-head {
+  display: grid;
+  gap: 2px;
+}
+.pr-recipe-head .muted {
+  font-size: 0.85rem;
+}
+.pr-recipe-cost {
+  font-size: 0.85rem;
+}
+.pr-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+  font-size: 0.88rem;
+}
+.pr-instructions {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: pre-line;
+}
+.pr-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.pr-form {
+  padding-block-start: 6px;
+}
+.card > table.pr-batches {
+  min-width: 640px;
+}
+.card > table.pr-batches th,
+.card > table.pr-batches td {
+  padding-inline: 8px;
+  vertical-align: top;
+}
+.card > table.pr-batches th:first-child,
+.card > table.pr-batches td:first-child {
+  padding-inline-start: 0;
+}
+.card > table.pr-batches th:last-child,
+.card > table.pr-batches td:last-child {
+  padding-inline-end: 0;
+}
+.pr-cancelled td {
+  color: var(--faint);
+}
+.pr-cancelled td:nth-child(3),
+.pr-cancelled td:nth-child(4) {
+  text-decoration: line-through;
+}
+.pr-note-cell {
+  font-size: 0.78rem;
+}
+.pr-cancel {
+  min-height: 28px;
+  font-size: 0.78rem;
+  padding: 0 8px;
+}
+.pr-cancel-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-width: 260px;
+}
+@media (max-width: 720px) {
+  .pr-what {
+    grid-column: auto;
+  }
+}

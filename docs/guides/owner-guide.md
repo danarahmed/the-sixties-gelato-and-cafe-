@@ -78,6 +78,14 @@ fast. Set it up once, on **Products** and on the till itself:
   and food 65–70%). Delivery
   platforms take their commission from the price, so price them higher. An
   ingredient never bought counts as 0: receive it first for a true cost.
+- **What you make** (Production): set up each thing made in batches once, with
+  what one batch makes (roughly; weighing is optional) and what goes in. Make a
+  base first and flavour it, or make each flavour from scratch: both work, since
+  a batch may use anything in stock, bought or made. Then have whoever makes it
+  record each batch on Production (baristas can; they see no costs). Switch the
+  product to the made item with **Change the recipe…** on Products (a cup of
+  pistachio gelato: 120 g of pistachio gelato, a cup, a spoon), so each sale
+  takes the gelato out at what it cost to make.
 - **Tables** (on the till: **🪑 Tables → Edit tables**, for owners, general
   managers and branch managers): add them one by one, or twenty at once
   ("Add 20 tables named Table starting at 1"). Give them an **area** (Inside,

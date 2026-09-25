@@ -1,7 +1,8 @@
 // A stand-in for Supabase's API gateway, for LOCAL end-to-end checks only:
 //   /rest/v1/*  -> the real PostgREST (port 54330)
 //   /auth/v1/*  -> a minimal auth server issuing HS256 JWTs PostgREST accepts,
-//                  for the four fixture people (tests/sql/harness/fixtures.sql).
+//                  for the four fixture people (tests/sql/harness/fixtures.sql)
+//                  and the barista the production suite adds.
 // It is not Supabase Auth and must never be deployed; it exists so the app's
 // cookie sessions, row-level security and every database call can be exercised
 // for real, with real JWTs, without a hosted project.
@@ -16,6 +17,8 @@ const USERS = {
   "manager@example.com": "a0000000-0000-0000-0000-00000000000b",
   "cashier@example.com": "a0000000-0000-0000-0000-00000000000c",
   "counter@example.com": "a0000000-0000-0000-0000-00000000000d",
+  // Made by the production suite, which needs someone who makes the gelato.
+  "barista@example.com": "a0000000-0000-0000-0000-00000000000e",
 };
 const PASSWORD = "password123";
 

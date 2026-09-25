@@ -7,9 +7,9 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0022` and the rebuilt app. The SQL
-  checks (17), the browser suites (6, every role), the unit and contract tests
-  (137) and a production build all pass.
+- **Built and verified:** migrations `0014`–`0023` and the rebuilt app. The SQL
+  checks (18), the browser suites (7, every role), the unit and contract tests
+  (150) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -66,7 +66,18 @@ browser tests through the real app, or both.
   migration was applied to the live database on 24 September 2026, matches
   the tested build object by object, and was checked as the owner in a
   transaction that was rolled back: for every price on the live menu, the
-  form's cost equals the product card's.
+  form's cost equals the product card's. The form went live the same day with
+  [pull request #8](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/8).
+- **Production (migration `0023`):** batches of what the café makes (gelato, a
+  base, syrup, dough), set up either way: a base made first and then flavoured,
+  or each flavour from scratch. Recording a batch takes the ingredients out at
+  their average cost and puts what came out in at exactly that cost, weighed,
+  counted in pans or pieces, or as the recipe says; baristas record batches and
+  are shown no cost; a manager cancels one with a reason. A product's recipe can
+  now be changed from a date on Products & Recipes, to use what was made. Built
+  and tested. The migration was applied to the live database on 25 September
+  2026, matches the tested build object by object (permissions included), and
+  was checked as the owner in a transaction that was rolled back.
 
 ## The August 2026 audit, finding by finding
 
@@ -103,7 +114,7 @@ browser tests through the real app, or both.
 | M-08 | Vendor balance and ageing disagree             |   ✅   | Both from the same bills and payments; payables reconciled to 2000                                                                                   |
 | M-09 | Discarding a published journal "succeeds"      |   ✅   | Refused with a clear message                                                                                                                         |
 | M-10 | Platform reconciliation unreachable            |   ⬜   | Not built. Platform orders post to 1100; payouts are recorded by a journal ([`guides/talabat.md`](guides/talabat.md))                                |
-| M-11 | Production has no write path                   |   ⬜   | Not built; the Production screen says so                                                                                                             |
+| M-11 | Production has no write path                   |   ✅   | Batches recorded, costed and cancelled (0023); planning, lots and moves between locations not built                                                  |
 | M-12 | Movement value ≠ unit cost × quantity          |   ✅   | Enforced by a constraint                                                                                                                             |
 | M-13 | Stock adjustments unchecked                    |   ✅   | Allowed types only, cost from the ledger, a reason, manager approval over the threshold, journal in the same transaction                             |
 | M-14 | Documents contradict the code                  |   ✅   | Rewritten against the code (this set). No automated check keeps them so                                                                              |
@@ -126,11 +137,11 @@ browser tests through the real app, or both.
 | Vendors             | cost viewers                                               | Statements, bills (for a receipt or an account), payments, cancel a bill, payable ageing                                                                                                                                                                      |
 | Expenses            | cost viewers (recording: managers, accountant)             | Proposed account from the narration, confirmed by the person, posted in one step                                                                                                                                                                              |
 | Purchasing          | cost viewers (purchasing, managers)                        | Suppliers; receive goods with landed costs into stock and GRNI                                                                                                                                                                                                |
-| Products & Recipes  | cost viewers                                               | Create a product: its recipe costed as it is typed, prices with their margin and a suggested price; change a price from a date; menu costing; photos, categories, favourites, show or hide on the till                                                        |
+| Products & Recipes  | cost viewers                                               | Create a product: its recipe costed as it is typed, prices with their margin and a suggested price; change a price or the recipe from a date; menu costing; photos, categories, favourites, show or hide on the till                                          |
 | Inventory           | cost viewers; waste for baristas                           | Stock board from the ledger, add items with opening stock, record waste, manager corrections, movements                                                                                                                                                       |
 | Stock Count         | counter; reviewers                                         | Blind count, submit, second-person review and approval                                                                                                                                                                                                        |
 | Delivery Platforms  | cost viewers                                               | Platform orders and their value; settlement import not built (M-10)                                                                                                                                                                                           |
-| Production          | cost viewers                                               | Batch history; batch entry not built (M-11)                                                                                                                                                                                                                   |
+| Production          | cost viewers, baristas                                     | Record a batch with a preview of what it uses and makes; batch recipes (a base, then its flavours); batch history with cost per unit; cancel a batch                                                                                                          |
 | Journals            | cost viewers (posting: accountant, owner, general manager) | Register, manual journals (draft/publish), reversal, owner's control correction                                                                                                                                                                               |
 | Chart of Accounts   | cost viewers                                               | Trial balance by period, closing checklist, lock and reopen, audit trail, CSV                                                                                                                                                                                 |
 | Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, payable ageing, product margin, CSV                                                                                                                                                                               |
@@ -140,9 +151,9 @@ browser tests through the real app, or both.
 
 | Layer                        | What                                                                                                          | Result      |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 137 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, 11 suites, concurrency | 17 passing  |
-| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, retry, offline, tables and bills, pricing  | 6 passing   |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 150 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, 12 suites, concurrency | 18 passing  |
+| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, retry, offline, bills, pricing, production | 7 passing   |
 | Build                        | `npm run build`, types, lint, formatting                                                                      | green       |
 
 What is not built, and why, is in [`LIMITATIONS.md`](LIMITATIONS.md); the order
