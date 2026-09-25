@@ -47,7 +47,7 @@ export default async function AccountPage() {
               </tr>
               <tr>
                 <td className="muted">{t("account.roles")}</td>
-                <td>{s.profile.roles.map(roleLabel).join(", ") || "—"}</td>
+                <td>{s.profile.roles.map((r) => t(roleLabel(r))).join(", ") || "—"}</td>
               </tr>
             </tbody>
           </table>

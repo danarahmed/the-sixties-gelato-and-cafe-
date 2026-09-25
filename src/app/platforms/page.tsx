@@ -1,4 +1,5 @@
 import { getT } from "@/lib/i18n/server";
+import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getSalesOrders } from "@/lib/db/read";
 import { getPlatformMoney } from "@/lib/db/settlements";
@@ -38,11 +39,11 @@ export default async function PlatformsPage() {
       <div className="grid" style={{ gap: 16 }}>
         <h1 style={{ margin: 0 }}>{t("nav.platforms")}</h1>
         <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-          A delivery-platform order is platform-paid: the customer pays the platform, and the sale
-          sits in <strong>1100 Platform receivable</strong> until the platform pays out. Each sale
-          carries the order number from the platform&apos;s tablet, and the platform&apos;s
-          statement is matched to the sales by it. Direct delivery is not a platform sale — it is
-          taken as cash or card.
+          <Rich
+            text={t(
+              "A delivery-platform order is platform-paid: the customer pays the platform, and the sale sits in <b>1100 Platform receivable</b> until the platform pays out. Each sale carries the order number from the platform's tablet, and the platform's statement is matched to the sales by it. Direct delivery is not a platform sale — it is taken as cash or card.",
+            )}
+          />
         </p>
 
         <section className="panel" id="manage">
@@ -60,27 +61,29 @@ export default async function PlatformsPage() {
 
         <section className="panel" id="owed">
           <div className="panel-h">
-            <h3>Owed by the Platforms</h3>
+            <h3>{t("Owed by the Platforms")}</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              Each order sold and not yet paid out, by its number
+              {t("Each order sold and not yet paid out, by its number")}
             </span>
           </div>
           <div className="panel-b">
             <div className="cards2">
               <div>
-                <div className="sc">Waiting to be paid out</div>
+                <div className="sc">{t("Waiting to be paid out")}</div>
                 <div className="v" data-testid="platform-waiting">
                   {fmtIQD(money.waiting)}
                 </div>
-                <div className="m">{money.orders.length} order(s), at their price on the till</div>
+                <div className="m">
+                  {t("{n} order(s), at their price on the till", { n: money.orders.length })}
+                </div>
               </div>
               <div>
-                <div className="sc">1100 Platform receivable</div>
+                <div className="sc">{t("1100 Platform receivable")}</div>
                 <div className="v">{fmtIQD(money.receivable)}</div>
-                <div className="m">what the books say the platforms owe</div>
+                <div className="m">{t("what the books say the platforms owe")}</div>
               </div>
               <div>
-                <div className="sc">Not explained by any order</div>
+                <div className="sc">{t("Not explained by any order")}</div>
                 <div
                   className="v"
                   style={{ color: money.unmatched !== 0 ? "var(--warn)" : undefined }}
@@ -90,10 +93,14 @@ export default async function PlatformsPage() {
                 </div>
                 <div className="m">
                   {money.unmatched === 0
-                    ? "the receivable is exactly the orders waiting"
+                    ? t("the receivable is exactly the orders waiting")
                     : money.unmatched > 0
-                      ? "in the receivable with no order number: sales from before order numbers, or a hand journal"
-                      : "paid out by hand, matched to no order: a journal to 1100 outside this screen"}
+                      ? t(
+                          "in the receivable with no order number: sales from before order numbers, or a hand journal",
+                        )
+                      : t(
+                          "paid out by hand, matched to no order: a journal to 1100 outside this screen",
+                        )}
                 </div>
               </div>
             </div>
@@ -103,12 +110,16 @@ export default async function PlatformsPage() {
                 {owed.map((p) => (
                   <div className="deduction-row" key={p.platform}>
                     <span>
-                      <strong>{names[p.platform] ?? p.platform}</strong> · {p.count} order(s)
+                      <strong>{names[p.platform] ?? p.platform}</strong> ·{" "}
+                      {t("{n} order(s)", { n: p.count })}
                       {p.oldest && (
                         <span className="muted">
                           {" "}
-                          · the oldest {dateTimeIn(profile.timezone, p.oldest)}, {p.overDays} day(s)
-                          ago
+                          ·{" "}
+                          {t("the oldest {when}, {n} day(s) ago", {
+                            when: dateTimeIn(profile.timezone, p.oldest),
+                            n: p.overDays,
+                          })}
                         </span>
                       )}
                     </span>
@@ -121,8 +132,10 @@ export default async function PlatformsPage() {
             {money.orders.length === 0 ? (
               <div style={{ marginBlockStart: 12 }}>
                 <EmptyState
-                  title="No platform order is waiting to be paid out"
-                  hint="A delivery-platform sale rung up on the till waits here, by its order number, until a statement pays it."
+                  title={t("No platform order is waiting to be paid out")}
+                  hint={t(
+                    "A delivery-platform sale rung up on the till waits here, by its order number, until a statement pays it.",
+                  )}
                 />
               </div>
             ) : (
@@ -130,11 +143,11 @@ export default async function PlatformsPage() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Platform</th>
-                      <th>Order</th>
-                      <th>Sold</th>
-                      <th className="right">Days waiting</th>
-                      <th className="right">Sold for</th>
+                      <th>{t("Platform")}</th>
+                      <th>{t("Order")}</th>
+                      <th>{t("Sold")}</th>
+                      <th className="right">{t("Days waiting")}</th>
+                      <th className="right">{t("Sold for")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -158,10 +171,11 @@ export default async function PlatformsPage() {
 
         <section className="panel" id="statement">
           <div className="panel-h">
-            <h3>Match a Statement</h3>
+            <h3>{t("Match a Statement")}</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              The platform&apos;s statement against the orders waiting · nothing is posted until you
-              say so
+              {t(
+                "The platform's statement against the orders waiting · nothing is posted until you say so",
+              )}
             </span>
           </div>
           <StatementMatcher
@@ -179,9 +193,9 @@ export default async function PlatformsPage() {
         {money.settlements.length > 0 && (
           <section className="panel">
             <div className="panel-h">
-              <h3>Statements Posted</h3>
+              <h3>{t("Statements Posted")}</h3>
               <span className="muted" style={{ fontSize: ".74rem" }}>
-                Newest first · a cancelled one is kept, marked
+                {t("Newest first · a cancelled one is kept, marked")}
               </span>
             </div>
             <PlatformSettlements
@@ -195,23 +209,23 @@ export default async function PlatformsPage() {
 
         <section className="panel">
           <div className="panel-h">
-            <h3>Platform Sales</h3>
+            <h3>{t("Platform Sales")}</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              Among the last 500 sales · margin before the platform&apos;s commission
+              {t("Among the last 500 sales · margin before the platform's commission")}
             </span>
           </div>
           <div className="panel-b">
             <div className="cards2">
               <div>
-                <div className="sc">Platform sales shown</div>
+                <div className="sc">{t("Platform sales shown")}</div>
                 <div className="v">{platform.length}</div>
               </div>
               <div>
-                <div className="sc">Their net sales</div>
+                <div className="sc">{t("Their net sales")}</div>
                 <div className="v">{fmtIQD(net)}</div>
               </div>
               <div>
-                <div className="sc">Before commission</div>
+                <div className="sc">{t("Before commission")}</div>
                 <div className="v" style={{ color: "var(--ok)" }}>
                   {fmtIQD(margin)}
                 </div>
@@ -220,8 +234,8 @@ export default async function PlatformsPage() {
             {platform.length === 0 ? (
               <div style={{ marginBlockStart: 12 }}>
                 <EmptyState
-                  title="No delivery-platform sales yet"
-                  hint="Delivery-platform orders rung up on the till appear here."
+                  title={t("No delivery-platform sales yet")}
+                  hint={t("Delivery-platform orders rung up on the till appear here.")}
                 />
               </div>
             ) : (
@@ -229,13 +243,13 @@ export default async function PlatformsPage() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Sale</th>
-                      <th>When</th>
-                      <th>Platform</th>
-                      <th>Items</th>
-                      <th className="right">Net</th>
-                      <th className="right">COGS</th>
-                      <th className="right">Before commission</th>
+                      <th>{t("Sale")}</th>
+                      <th>{t("When")}</th>
+                      <th>{t("Platform")}</th>
+                      <th>{t("Items")}</th>
+                      <th className="right">{t("Net")}</th>
+                      <th className="right">{t("COGS")}</th>
+                      <th className="right">{t("Before commission")}</th>
                     </tr>
                   </thead>
                   <tbody>
