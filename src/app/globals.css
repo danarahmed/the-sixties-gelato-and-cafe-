@@ -1405,7 +1405,8 @@ details > summary {
     border-block-end: 1px solid var(--border);
   }
   .three {
-    grid-template-columns: 1fr;
+    /* minmax(0, …): the detail pane fits the screen instead of being cut off. */
+    grid-template-columns: minmax(0, 1fr);
   }
   .listpane {
     border-inline-end: none;

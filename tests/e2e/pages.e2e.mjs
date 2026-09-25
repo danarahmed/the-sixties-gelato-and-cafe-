@@ -1,6 +1,7 @@
 // Every screen, as every role. Signed out, each one sends you to sign-in.
 // Signed in, each screen a role is offered renders (no error boundary); a
-// screen it is not offered sends it to its own starting screen instead.
+// screen it is not offered sends it to its own starting screen instead. And
+// every screen fits a phone.
 import { chromium, BASE, check, done, open, signIn } from "./lib.mjs";
 
 const PAGES = [
@@ -85,6 +86,41 @@ for (const [who, want] of Object.entries(expected)) {
   check(
     JSON.stringify(menu) === JSON.stringify(want),
     `${who} is offered exactly ${want.join(", ")}`,
+  );
+  await ctx.close();
+}
+
+console.log("▸ on a phone");
+{
+  // 390px wide: nothing reaches past the screen or is cut off. A wide table,
+  // the till's category chips or a vendor's tabs scroll inside their own box.
+  const { ctx, page } = await signIn(browser, "owner", { viewport: { width: 390, height: 900 } });
+  const wide = [];
+  for (const p of PAGES) {
+    await open(page, p);
+    const over = await page.evaluate(() => {
+      const main = document.querySelector("main");
+      let worst = main.scrollWidth - main.clientWidth;
+      for (const el of main.querySelectorAll("*")) {
+        const b = el.getBoundingClientRect();
+        if (b.width === 0 || b.height === 0) continue;
+        let edge = document.documentElement.clientWidth;
+        for (let e = el.parentElement; e && e !== main; e = e.parentElement) {
+          const ox = getComputedStyle(e).overflowX;
+          if (ox === "auto" || ox === "scroll") edge = Infinity;
+          else if (ox !== "visible") edge = e.getBoundingClientRect().right;
+          else continue;
+          break;
+        }
+        worst = Math.max(worst, b.right - edge);
+      }
+      return Math.round(worst);
+    });
+    if (over > 1) wide.push(`${p} by ${over}px`);
+  }
+  check(
+    wide.length === 0,
+    `every screen fits a 390px phone${wide.length ? ` (not: ${wide.join(", ")})` : ""}`,
   );
   await ctx.close();
 }
