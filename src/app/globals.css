@@ -2089,3 +2089,95 @@ a.card.stat:focus-visible {
     grid-column: auto;
   }
 }
+
+/* ------------------------------------------ 0029: what needs the owner */
+:root {
+  --info: #2f5d8a;
+}
+:root[data-theme="dark"] {
+  --info: #86aee0;
+}
+.badge.info {
+  color: var(--info);
+  border-color: var(--info);
+}
+.alerts {
+  display: grid;
+  gap: 10px;
+}
+.alert-row {
+  display: grid;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-inline-start: 4px solid var(--warn);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+.alert-row.red {
+  border-inline-start-color: var(--err);
+}
+.alert-row.blue {
+  border-inline-start-color: var(--info);
+}
+.alert-row.green {
+  border-inline-start-color: var(--ok);
+}
+.alert-title {
+  font-weight: 600;
+}
+.alert-why {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+.alert-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.alert-answer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+.alert-answer button,
+.alert-answer input {
+  min-height: 34px;
+  font-size: 0.85rem;
+}
+.brief {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.brief h4 {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.brief ul {
+  margin: 0;
+  padding-inline-start: 18px;
+  display: grid;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+.alert-group > summary {
+  cursor: pointer;
+  list-style-position: inside;
+}
+.alert-group[open] > summary {
+  margin-bottom: 4px;
+}
+.th-grid {
+  display: grid;
+  gap: 10px 16px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}

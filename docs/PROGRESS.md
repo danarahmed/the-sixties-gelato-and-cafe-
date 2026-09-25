@@ -7,10 +7,10 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0028` and the rebuilt app. The SQL
-  checks (29, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (9, every role), the unit and contract
-  tests (204) and a production build all pass.
+- **Built and verified:** migrations `0014`–`0029` and the rebuilt app. The SQL
+  checks (30, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (10, every role), the unit and contract
+  tests (223) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -157,6 +157,19 @@ browser tests through the real app, or both.
   included), and was checked as the owner in a transaction that was rolled
   back. The screens went live the same day with
   [pull request #14](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/14).
+- **The system speaks (migration `0029`, the audit's P1-8):** the dashboard
+  opens on what needs someone. Sixteen rules check the books each time it
+  opens — cash below zero, a drawer not counted, a count left open, running
+  out (by each item's use and its supplier's delivery time), below the reorder
+  level, a delivery price confirmed, a product with no recipe, an ingredient
+  with no cost, margins under the target or below cost, waste above its usual,
+  one person's exceptions, card and platform money not in, bills due, price
+  typos, possible duplicate payments — each saying what happened, why it
+  matters, how urgent, what to do and how sure it is. An alert is answered
+  with a note or snoozed with a reason (both audited), and resolves itself
+  when the condition clears. Below it, yesterday's brief: facts, calculations
+  and what to do, apart. The owner sets the thresholds on Settings; each
+  vendor says how many days a delivery takes. Built and tested.
 
 ## The August 2026 audit, finding by finding
 
@@ -209,11 +222,11 @@ browser tests through the real app, or both.
 | Screen              | Who                                                        | What works                                                                                                                                                                                                                                                    |
 | ------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Sign-in, My account | everyone                                                   | Sign in, create a login for an invited email, reset and change password                                                                                                                                                                                       |
-| Dashboard           | owner, managers, accountant, auditor                       | Today from the books: net revenue, gross profit, orders, stock value, low and negative stock                                                                                                                                                                  |
+| Dashboard           | owner, managers, accountant, auditor                       | What needs someone first: the alerts, red then orange, answered with a note or snoozed with a reason (owner, managers, accountant); yesterday's brief; then today from the books: net revenue, gross profit, orders, stock value, low and negative stock      |
 | POS                 | cashier, barista, managers                                 | Full-screen till: categories, search in three languages, photos, favourites; tables and bills paid later (print, split, move, cancel); cash with change, card, platform-paid; 80 mm bill and receipt printing; exactly-once payment and retry; honest offline |
 | Orders              | cost viewers                                               | Every sale; void (until the drawer is counted) and refund (after), with reasons                                                                                                                                                                               |
 | Sales               | cost viewers                                               | Daily summaries; count the drawer (everything since the last count, past midnight too), keep a float and send the rest to the safe or the bank; move cash between the till, the safe, the bank and the owner; every count's over or short                     |
-| Vendors             | cost viewers                                               | Statements, bills (for a receipt or an account), payments saying where the money came from, cancel a bill, payable ageing                                                                                                                                     |
+| Vendors             | cost viewers                                               | Statements, bills (for a receipt or an account), payments saying where the money came from, cancel a bill, payable ageing; each vendor's details and how many days a delivery takes                                                                           |
 | Expenses            | cost viewers (recording: managers, accountant)             | Proposed account from the narration, confirmed by the person; where the money came from, always said; posted in one step                                                                                                                                      |
 | Purchasing          | cost viewers (purchasing, managers)                        | Suppliers; receive goods with landed costs into stock and GRNI                                                                                                                                                                                                |
 | Products & Recipes  | cost viewers                                               | Create a product: its recipe costed as it is typed, prices with their margin and a suggested price; change a price or the recipe from a date; menu costing; photos, categories, favourites, show or hide on the till                                          |
@@ -224,16 +237,16 @@ browser tests through the real app, or both.
 | Journals            | cost viewers (posting: accountant, owner, general manager) | Register, manual journals (draft/publish), reversal, owner's control correction                                                                                                                                                                               |
 | Chart of Accounts   | cost viewers                                               | Trial balance by period, closing checklist, lock and reopen, audit trail, CSV                                                                                                                                                                                 |
 | Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, payable ageing, product margin, CSV                                                                                                                                                                               |
-| Settings            | owner, general manager                                     | People and roles, business configuration, locations, the role matrix                                                                                                                                                                                          |
+| Settings            | owner, general manager                                     | People and roles, business configuration, the alert thresholds, locations, the role matrix                                                                                                                                                                    |
 
 ## Tests
 
-| Layer                        | What                                                                                                                                             | Result      |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                    | 163 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 14 suites, concurrency         | 25 passing  |
-| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work and the drawer, retry (a lost answer too), offline, bills, pricing, production | 7 passing   |
-| Build                        | `npm run build`, types, lint, formatting                                                                                                         | green       |
+| Layer                        | What                                                                                                                                                                  | Result      |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                         | 223 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 19 suites, concurrency                              | 30 passing  |
+| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work and the drawer, retry (a lost answer too), offline, bills, pricing, production, master data, alerts | 10 passing  |
+| Build                        | `npm run build`, types, lint, formatting                                                                                                                              | green       |
 
 What is not built, and why, is in [`LIMITATIONS.md`](LIMITATIONS.md); the order
 of the next work is in [`ROADMAP.md`](ROADMAP.md).

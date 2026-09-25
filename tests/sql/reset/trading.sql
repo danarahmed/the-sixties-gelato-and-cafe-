@@ -79,4 +79,10 @@ select reverse_journal((select id from journal_entry where description = 'Genera
 select test.act_as('cashier@example.com');
 select open_tab('dine_in', (select id from dining_table where name = 'Table 9'), 'Late customer', null,
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]'::jsonb, null, null);
+
+-- The owner opens the dashboard: its alerts are kept, one acknowledged; and a
+-- threshold is changed.
+select test.act_as('owner@example.com');
+select acknowledge_alert((select id from current_alerts() where rule <> 'exceptions_person' limit 1), 'seen while testing');
+select set_alert_thresholds('{"margin_target_percent": 65}');
 select test.as_admin();

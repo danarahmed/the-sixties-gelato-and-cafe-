@@ -46,12 +46,21 @@ const updateSupplierInput = supplierInput.extend({
   supplierId: id("the supplier"),
   isActive: z.boolean(),
   reason: optionalText(300),
+  /** Days a delivery takes (0029), for "running out"; null: the café's default. */
+  leadTimeDays: z
+    .number()
+    .int("Days a delivery takes: a whole number")
+    .min(0, "A delivery takes 0 to 30 days")
+    .max(30, "A delivery takes 0 to 30 days")
+    .nullable()
+    .optional(),
 });
 
 /**
  * A supplier corrected (0027, the audit's P1-4): name, what they supply, phone,
- * and whether they are in use. Not taken out of use while they are owed money.
- * On the audit trail, with the values before and after.
+ * whether they are in use, and how many days a delivery takes (0029). Not
+ * taken out of use while they are owed money. On the audit trail, with the
+ * values before and after.
  */
 export async function updateSupplierAction(
   input: z.input<typeof updateSupplierInput>,
@@ -65,6 +74,7 @@ export async function updateSupplierAction(
     p_phone: v.data.phone,
     p_is_active: v.data.isActive,
     p_reason: v.data.reason,
+    p_lead_time_days: v.data.leadTimeDays ?? null,
   });
   if (!r.ok) return r;
   refresh("/purchasing", "/vendors");

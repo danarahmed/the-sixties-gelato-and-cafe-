@@ -667,9 +667,10 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
 }
 
 /**
- * A supplier corrected (0027): name, what they supply, phone, and whether they
- * are in use — not taken out of use while they are owed money. On the audit
- * trail, with the values before and after.
+ * A supplier corrected (0027): name, what they supply, phone, whether they are
+ * in use — not taken out of use while they are owed money — and how many days
+ * a delivery takes, for the "running out" alert (0029). On the audit trail,
+ * with the values before and after.
  */
 function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void }) {
   const [busy, start] = useTransition();
@@ -679,6 +680,7 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
     contact: vendor.contact ?? "",
     phone: vendor.phone ?? "",
     isActive: vendor.isActive,
+    leadTimeDays: vendor.leadTimeDays === null ? "" : String(vendor.leadTimeDays),
   };
   const [f, setF] = useState(initial);
   const [reason, setReason] = useState("");
@@ -687,7 +689,16 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
   function save() {
     setMsg(null);
     start(async () => {
-      const r = await updateSupplierAction({ supplierId: vendor.id, ...f, reason });
+      const days = f.leadTimeDays.trim();
+      const r = await updateSupplierAction({
+        supplierId: vendor.id,
+        name: f.name,
+        contact: f.contact,
+        phone: f.phone,
+        isActive: f.isActive,
+        reason,
+        leadTimeDays: days === "" ? null : Number(days),
+      });
       if (r.ok) {
         setMsg({ ok: true, text: "Saved, and on the audit trail." });
         setReason("");
@@ -711,6 +722,18 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
           <div className="sc">Phone</div>
           <input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
         </label>
+        <label style={{ width: 150 }}>
+          <div className="sc">Days a delivery takes</div>
+          <input
+            inputMode="numeric"
+            aria-label="Days a delivery takes"
+            value={f.leadTimeDays}
+            placeholder="Café default"
+            onChange={(e) =>
+              setF({ ...f, leadTimeDays: e.target.value.replace(/[^0-9]/g, "").slice(0, 2) })
+            }
+          />
+        </label>
       </div>
       <label style={{ fontSize: ".85rem", display: "flex", gap: 6, alignItems: "center" }}>
         <input
@@ -732,7 +755,8 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
       <p className="muted" style={{ fontSize: ".78rem", margin: 0 }}>
         No two vendors in use share a name, whatever the capitals, spaces or punctuation — so the
         same invoice cannot be billed twice under two spellings. A vendor still owed money stays in
-        use until their bills are paid or cancelled.
+        use until their bills are paid or cancelled. The days a delivery takes tell the dashboard
+        when an item they supply is running out (empty: the café&apos;s default, on Settings).
       </p>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <button

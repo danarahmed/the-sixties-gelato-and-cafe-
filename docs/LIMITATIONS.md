@@ -35,6 +35,15 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   over the business's cap (10%) needs a manager's approval; the cap is the
   same for every role that may give discounts, and it is changed in the
   database, not on Settings. A journal's narration is still free text.
+- **Alerts, what they do not do (`0029`).** The rules are checked when the
+  dashboard opens, not in the background, and nothing is sent: there is no
+  email, WhatsApp or phone notification, and the daily brief waits on the
+  dashboard rather than arriving at 07:00. The alert texts and the brief are
+  in English only. Running out knows a delivery time per supplier, taken from
+  the item's last delivery; an item with no delivery yet uses the café's. Card
+  and platform money not in is judged from the clearing accounts' balances
+  until P1-9 matches settlements to sales. Use-by dates (P2-7) and a late sale
+  (impossible since `0024`) raise nothing.
 - **Balance sheet and cash-flow statements.** The trial balance carries every
   balance, and the P&L is built; the formatted balance sheet and cash-flow
   statements are not.
@@ -60,7 +69,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   [`guides/backup-restore.md`](guides/backup-restore.md)).
 - **MFA and sign-up policy.** Both are Supabase settings. The runbook recommends
   MFA for the owner, and turning off open sign-up once everyone has a login.
-- **Monitoring.** No error monitoring or uptime checks are configured.
+- **Monitoring.** No error monitoring or uptime checks are configured, and
+  there is no channel (email, WhatsApp) to send alerts or the daily brief.
 
 ## Deliberate constraints (not bugs)
 

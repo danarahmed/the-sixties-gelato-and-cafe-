@@ -164,8 +164,17 @@ discount, why and who approved it. The 10% is a business setting (shown on
 
 ## Every day
 
-- **Dashboard:** today's revenue, gross profit, orders, stock value, low and
-  negative stock, and whether the books reconcile.
+- **Dashboard:** it opens on **what needs you** — 🔴 now, 🟠 soon. Each says
+  what happened, why it matters, what to do (follow it to the screen where it
+  is done) and how sure the rule is. When you have dealt with one, **Answer**
+  it in a line (what was done, or why it is fine); if it can wait, **Snooze**
+  it until a day, with a reason. Either way it stays, marked 🔵, until its
+  condition clears, and then leaves by itself; one that turns from orange to
+  red asks again. Many of one kind (say, twenty ingredients with no cost yet)
+  fold into one row to open. 🟢 means nothing needs you. Below it,
+  **yesterday's brief** — what happened, what follows from it, and what to do,
+  kept apart — then today's revenue, gross profit, orders, stock value, low
+  and negative stock, and whether the books reconcile.
 - **Sales → Count the Drawer**, when the till closes — after midnight too: a
   count covers everything since the last one, whatever the date, so one
   night's count takes in both calendar days. Enter the cash counted and how
@@ -185,6 +194,13 @@ discount, why and who approved it. The 10% is a business setting (shown on
   taken off a bill and wrong PIN, by person, with the reason and who approved
   it. Those marked **review** are yours to look at: a void or refund nobody
   else approved, or a wrong PIN. It downloads as CSV.
+- **The alerts' thresholds** are yours (and the general manager's): on
+  **Settings → Alerts**, the margin you aim for (70%), how long a count may
+  stay open (8 hours), how many days card and platform money take to arrive
+  (3 and 7), and the rest; an empty box follows its default, and every change
+  is on the audit trail. On **Vendors → Edit vendor**, say how many days each
+  supplier takes to deliver: running out warns that much sooner for what they
+  supply.
 
 ## Every week
 

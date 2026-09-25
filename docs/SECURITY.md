@@ -74,6 +74,15 @@ caller's permission itself.
   bills, control corrections, posting the old app's stock, period locks and
   reopenings, and people added, activated, deactivated or given roles. Every
   stock movement also carries the person and the reason.
+- **Alerts (`0029`)** are kept in a table no one signed in can read; the
+  dashboard reads them through `current_alerts` (those who see profits), and
+  only the owner, managers and the accountant answer or snooze them — each
+  answer audited with its note. Nobody answers an alert about their own
+  exceptions, and an answer never hides one: it stays on the dashboard,
+  marked answered, until its condition clears, and turns back into a question
+  if it goes from orange to red. The rules only read; nothing in the books is
+  written from them. Only the owner and general manager change the
+  thresholds, audited as a change to the business.
 
 ## Input and output
 

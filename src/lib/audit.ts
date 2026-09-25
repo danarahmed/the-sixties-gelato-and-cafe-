@@ -4,6 +4,7 @@
  * Pure: the screen and the CSV both read through here, and the tests too.
  */
 import { channelLabel, itemTypeLabel, roleLabel } from "@/lib/format";
+import { THRESHOLD_LABEL, ruleLabel } from "@/lib/alerts";
 
 /** A stored JSON value, as the database wrote it. */
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
@@ -38,6 +39,7 @@ export const AUDIT_GROUPS = [
   },
   { key: "cash", label: "Cash & the drawer", prefixes: ["cash.", "drawer."] },
   { key: "books", label: "Books & periods", prefixes: ["journal.", "period.", "legacy."] },
+  { key: "alerts", label: "Alerts answered", prefixes: ["alert."] },
   {
     key: "settings",
     label: "Settings, places & people",
@@ -88,6 +90,8 @@ const ACTION_LABEL: Record<string, string> = {
   "member.activate": "Person given access again",
   "member.deactivate": "Person's access removed",
   "member.pin_set": "Approval PIN set",
+  "alert.acknowledge": "Alert answered",
+  "alert.snooze": "Alert snoozed",
   "business.clean_start": "Trial records cleared (clean start)",
   "business.reset_test_data": "Test records cleared",
 };
@@ -166,6 +170,11 @@ const FIELD_LABEL: Record<string, string> = {
   kind: "Kind",
   roles: "Roles",
   reason: "Reason",
+  alert_settings: "Alert thresholds",
+  lead_time_days: "Days a delivery takes",
+  rule: "Alert",
+  title: "What it said",
+  until: "Until",
 };
 
 /** Keys that are bookkeeping, not what anyone changed. */
@@ -189,6 +198,7 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
   if (typeof v === "string") {
     if (UUID.test(v)) return names.get(v) ?? `${v.slice(0, 8)}…`;
     if (key === "channel") return channelLabel[v as keyof typeof channelLabel] ?? v;
+    if (key === "rule") return ruleLabel(v);
     if (key === "item_type") return itemTypeLabel(v);
     return v;
   }
@@ -211,6 +221,13 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
     }
     if (key === "roles") return v.map((r) => roleLabel(String(r))).join(", ");
     return v.map((x) => showValue(x, key, names)).join(", ");
+  }
+  // The alert thresholds the owner set (0029): "Margin target (%) 65"; none, the defaults.
+  if (key === "alert_settings") {
+    const set = Object.entries(v);
+    return set.length
+      ? set.map(([k, x]) => `${THRESHOLD_LABEL[k] ?? k} ${showValue(x, k, names)}`).join(", ")
+      : "the defaults";
   }
   return JSON.stringify(v);
 }
@@ -303,6 +320,8 @@ export function subjectOf(
       return `Supplier bill ${pick("invoice_no") ?? short(entityId)}`;
     case "journal_entry":
       return pick("journal_no") ? `Journal ${pick("journal_no")}` : `Journal ${short(entityId)}`;
+    case "alert":
+      return pick("rule") ? ruleLabel(pick("rule") as string) : "An alert";
     default:
       return (
         named(entityId) ??
