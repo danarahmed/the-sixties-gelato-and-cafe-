@@ -739,12 +739,13 @@ tr.grand td {
   transition: transform 0.2s;
   z-index: 30;
 }
+/* Right to left, inset-inline-start is already the right edge: only the way
+   it slides out turns round. Open, it is in view either way. */
 html[dir="rtl"] .app-shell.pos-mode .sidenav {
-  inset-inline-start: auto;
-  inset-inline-end: 0;
   transform: translateX(100%);
 }
-.app-shell.pos-mode .sidenav.open {
+.app-shell.pos-mode .sidenav.open,
+html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   transform: translateX(0);
 }
 .app-shell.pos-mode .content {
@@ -1114,6 +1115,20 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav {
   gap: 6px;
   font-size: 0.8rem;
 }
+/* Read by screen readers, never seen. Clipped in place: an element moved
+   off to the left would widen a right-to-left page by as much, and every
+   screen in Arabic and Kurdish would scroll sideways into nothing. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 .autoprint input,
 input.check {
   width: auto;
@@ -1430,11 +1445,10 @@ details > summary {
     z-index: 30;
   }
   html[dir="rtl"] .sidenav {
-    inset-inline-start: auto;
-    inset-inline-end: 0;
     transform: translateX(100%);
   }
-  .sidenav.open {
+  .sidenav.open,
+  html[dir="rtl"] .sidenav.open {
     transform: translateX(0);
   }
 }

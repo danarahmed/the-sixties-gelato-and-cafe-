@@ -6,10 +6,11 @@
  */
 import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
-import { channelLabel, fmtIQD, fmtQty, SELLABLE_CHANNELS } from "@/lib/format";
+import { NO_CHANNELS, type ChannelSet } from "@/lib/channels";
+import { fmtIQD, fmtQty } from "@/lib/format";
 import { inputStyle } from "@/components/ui";
+import { useChannels } from "@/components/ChannelsProvider";
 import {
-  TO_GO,
   channelsFor,
   lineCost,
   servingCost,
@@ -47,17 +48,22 @@ export const newLine = (): LineDraft => ({
 const sameSet = (a: readonly string[], b: readonly string[]) =>
   a.length === b.length && a.every((x) => b.includes(x));
 
-/** Lines to edit, from a recipe as saved: its channels read back as the choice they came from. */
+/**
+ * Lines to edit, from a recipe as saved: its channels read back as the choice
+ * they came from. A line's channels out of use stay ticked, so saving it
+ * unchanged keeps them.
+ */
 export function linesFrom(
   saved: { itemId: string; quantity: number; unitCode: string; channels?: string[] | null }[],
+  set: ChannelSet,
 ): LineDraft[] {
   if (saved.length === 0) return [newLine()];
   return saved.map((s) => {
-    const ch = (s.channels ?? []) as SalesChannel[];
+    const ch = s.channels ?? [];
     const use: LineUse =
       ch.length === 0
         ? "all"
-        : sameSet(ch, TO_GO)
+        : sameSet(ch, set.toGo)
           ? "to_go"
           : sameSet(ch, ["dine_in"])
             ? "dine_in"
@@ -68,18 +74,18 @@ export function linesFrom(
       quantity: fmtQty(s.quantity).replace(/,/g, ""),
       unit: s.unitCode,
       use,
-      ticked: use === "custom" ? ch.filter((c) => SELLABLE_CHANNELS.includes(c)) : [],
+      ticked: use === "custom" ? ch : [],
     };
   });
 }
 
 /** The lines as they will be saved and costed. */
-export function toCostLines(lines: LineDraft[]): CostLine[] {
+export function toCostLines(lines: LineDraft[], set: ChannelSet): CostLine[] {
   return lines.map((l) => ({
     itemId: l.itemId,
     quantity: l.quantity,
     unit: l.unit,
-    channels: channelsFor(l.use, l.ticked, SELLABLE_CHANNELS),
+    channels: channelsFor(l.use, l.ticked, set),
   }));
 }
 
@@ -89,8 +95,8 @@ export function halfFilled(lines: LineDraft[]): number {
 }
 
 /** The lines to send: those with both an item and a quantity. */
-export function filledLines(lines: LineDraft[]) {
-  return toCostLines(lines)
+export function filledLines(lines: LineDraft[], set: ChannelSet) {
+  return toCostLines(lines, set)
     .filter((l) => l.itemId && l.quantity.trim() !== "")
     .map((l) => ({ itemId: l.itemId, qty: l.quantity, unitCode: l.unit, channels: l.channels }));
 }
@@ -120,8 +126,9 @@ export function RecipeLinesEditor({
   channels: boolean;
   addLabel?: string;
 }) {
+  const { set, name } = useChannels();
   const byId = new Map(items.map((i) => [i.id, i]));
-  const costLines = toCostLines(lines);
+  const costLines = toCostLines(lines, channels ? set : NO_CHANNELS);
   const setLine = (key: number, patch: Partial<LineDraft>) =>
     onChange((ls) => ls.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   const toggle = (key: number, ch: SalesChannel) =>
@@ -236,14 +243,14 @@ export function RecipeLinesEditor({
             </div>
             {channels && l.use === "custom" && (
               <div className="pf-channels">
-                {SELLABLE_CHANNELS.map((c) => (
+                {[...set.inUse, ...l.ticked.filter((c) => !set.inUse.includes(c))].map((c) => (
                   <label key={c}>
                     <input
                       type="checkbox"
                       checked={l.ticked.includes(c)}
                       onChange={() => toggle(l.key, c)}
                     />
-                    {channelLabel[c]}
+                    {name(c)}
                   </label>
                 ))}
                 {l.ticked.length === 0 && (
@@ -270,11 +277,12 @@ export function servingGroups(
   lines: LineDraft[],
   items: ItemOpt[],
   decimals: number,
+  set: ChannelSet,
 ): { cost: Decimal; channels: SalesChannel[] }[] {
   const byId = new Map(items.map((i) => [i.id, i]));
-  const costLines = toCostLines(lines);
+  const costLines = toCostLines(lines, set);
   const groups: { cost: Decimal; channels: SalesChannel[] }[] = [];
-  for (const c of SELLABLE_CHANNELS) {
+  for (const c of set.inUse) {
     const cost = servingCost(costLines, byId, c, decimals);
     const g = groups.find((x) => x.cost.eq(cost));
     if (g) g.channels.push(c);
@@ -286,7 +294,9 @@ export function servingGroups(
 /** True once any line has an item and a quantity to cost. */
 export function anyCosted(lines: LineDraft[], items: ItemOpt[], decimals: number): boolean {
   const byId = new Map(items.map((i) => [i.id, i]));
-  return toCostLines(lines).some((l) => lineCost(l, byId.get(l.itemId), decimals) !== null);
+  return toCostLines(lines, NO_CHANNELS).some(
+    (l) => lineCost(l, byId.get(l.itemId), decimals) !== null,
+  );
 }
 
 /** The cost of one serving, under a product's recipe lines. */
@@ -299,7 +309,8 @@ export function ServingCost({
   items: ItemOpt[];
   decimals: number;
 }) {
-  const groups = servingGroups(lines, items, decimals);
+  const { set, name } = useChannels();
+  const groups = servingGroups(lines, items, decimals, set);
   return (
     <div className="pf-total" data-testid="serving-cost">
       {!anyCosted(lines, items, decimals) ? (
@@ -313,7 +324,7 @@ export function ServingCost({
             {groups.map((g) => (
               <span key={g.channels.join()}>
                 <strong className="mono">{iqd(g.cost)}</strong>
-                {groups.length > 1 && ` ${g.channels.map((c) => channelLabel[c]).join(", ")}`}
+                {groups.length > 1 && ` ${g.channels.map(name).join(", ")}`}
               </span>
             ))}
           </span>

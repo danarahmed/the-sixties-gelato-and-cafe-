@@ -143,9 +143,11 @@ insert into supplier (business_id, name, contact, phone) values
   ('00000000-0000-0000-0000-0000000000b1','Kurdistan Coffee Imports','Sales', '+964-770-000-0002'),
   ('00000000-0000-0000-0000-0000000000b1','City Packaging Supplies', 'Sales', '+964-770-000-0003');
 
-insert into delivery_platform (business_id, code, name) values
-  ('00000000-0000-0000-0000-0000000000b1','talabat','Talabat'),
-  ('00000000-0000-0000-0000-0000000000b1','web','Direct Web');
+-- As the live café has them: Talabat in use; Careem and Toters listed, not in use.
+insert into delivery_platform (business_id, code, name, is_active) values
+  ('00000000-0000-0000-0000-0000000000b1','talabat','Talabat', true),
+  ('00000000-0000-0000-0000-0000000000b1','careem', 'Careem',  false),
+  ('00000000-0000-0000-0000-0000000000b1','toters', 'Toters',  false);
 
 insert into gl_account (business_id, code, name, account_type, normal_balance) values
   ('00000000-0000-0000-0000-0000000000b1','1000','Cash on hand',            'asset','debit'),

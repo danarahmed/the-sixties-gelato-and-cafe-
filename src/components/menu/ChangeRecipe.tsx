@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { changeProductRecipeAction } from "@/lib/actions/menu";
 import { Notice } from "@/components/ui";
+import { useChannels } from "@/components/ChannelsProvider";
 import {
   NoCostYet,
   RecipeLinesEditor,
@@ -41,6 +42,7 @@ export function ChangeRecipe({
   today: string;
 }) {
   const router = useRouter();
+  const { set } = useChannels();
   const [busy, start] = useTransition();
   const [open, setOpen] = useState(false);
   const [lines, setLines] = useState<LineDraft[]>([]);
@@ -53,6 +55,7 @@ export function ChangeRecipe({
         current
           .filter((c): c is typeof c & { itemId: string } => c.itemId !== null)
           .map((c) => ({ ...c })),
+        set,
       ),
     );
     setFrom(today);
@@ -73,7 +76,7 @@ export function ChangeRecipe({
     start(async () => {
       const r = await changeProductRecipeAction({
         variantId,
-        lines: filledLines(lines),
+        lines: filledLines(lines, set),
         effectiveFrom: from,
       });
       if (r.ok) {

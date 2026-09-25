@@ -3,6 +3,7 @@
 import type { DiningTable, OpenBill } from "@/lib/db/pos";
 import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { useChannels } from "@/components/ChannelsProvider";
 import { minutesSince } from "./model";
 
 function Elapsed({ at, now }: { at: string | null; now: number }) {
@@ -51,6 +52,7 @@ export function FloorView({
   onEditTables: (() => void) | null;
 }) {
   const { t } = useT();
+  const { name: channelName } = useChannels();
   const areas = new Map<string, DiningTable[]>();
   for (const tb of tables) {
     const a = tb.area ?? "";
@@ -145,7 +147,7 @@ export function FloorView({
                 onClick={() => onBill(b)}
               >
                 <strong>{b.label}</strong>
-                <span className="muted">{t(`pos.channel.${b.channel}`)}</span>
+                <span className="muted">{channelName(b.channel)}</span>
                 <BillState printed={!!b.billPrintedAt} />
                 <Elapsed at={b.openedAt} now={now} />
                 <span className="mono" style={{ marginInlineStart: "auto" }}>

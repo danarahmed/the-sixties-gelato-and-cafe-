@@ -28,6 +28,11 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   shows as 1010 holding more than the days waiting, and the card alert names
   it. The platform store and product maps and promotions of the original
   design are not used.
+- **Delivery platforms the owner adds (`0031`), what they do not do.** A
+  platform is never deleted, and its short name never changes: one no longer
+  used is taken out of use, and its sales, orders and statements stay. A
+  platform is named in the app's languages (English, Arabic, Kurdish). Its
+  commission is not set on it: the statement says what the platform kept.
 - **Production (M-11), what it does not do.** Batches are recorded, costed and
   cancelled, and made items are kept and sold (see the walkthrough). It does not
   plan batches ahead, track lots or expiry dates, or move stock between the

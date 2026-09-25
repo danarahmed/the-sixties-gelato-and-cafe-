@@ -1,24 +1,7 @@
-/** Shared, framework-neutral display labels and formatters (no demo data). */
-import type { SalesChannel } from "@domain/sales/recipe.js";
-
-export const SELLABLE_CHANNELS: SalesChannel[] = [
-  "dine_in",
-  "takeaway",
-  "direct_delivery",
-  "talabat",
-];
-
-/** Delivery platforms settle the money themselves: their orders are platform-paid. */
-export const PLATFORM_CHANNELS: SalesChannel[] = ["talabat", "careem", "toters"];
-
-export const channelLabel: Record<SalesChannel, string> = {
-  dine_in: "Dine-in",
-  takeaway: "Takeaway",
-  direct_delivery: "Direct delivery",
-  talabat: "Talabat",
-  careem: "Careem",
-  toters: "Toters",
-};
+/**
+ * Shared, framework-neutral display labels and formatters (no demo data). The
+ * channels, and their names, come from the database: see @/lib/channels.
+ */
 
 const TENDER_LABEL: Record<string, string> = {
   cash: "Cash",

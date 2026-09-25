@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Decimal from "decimal.js";
 import { saveBatchRecipeAction } from "@/lib/actions/production";
+import { NO_CHANNELS } from "@/lib/channels";
 import { fmtIQD } from "@/lib/format";
 import { Notice, inputStyle } from "@/components/ui";
 import { parseNumber } from "@/components/pos/model";
@@ -93,6 +94,7 @@ export function BatchRecipeForm({
             quantity: l.quantity,
             unitCode: l.unitCode,
           })),
+          NO_CHANNELS,
         )
       : [newLine()],
   );
@@ -117,7 +119,7 @@ export function BatchRecipeForm({
 
   // What one batch costs, and each unit of what it makes.
   const yieldAmount = parseNumber(yieldQty);
-  const costLines = filledLines(lines).map((l) => {
+  const costLines = filledLines(lines, NO_CHANNELS).map((l) => {
     const it = itemOf(l.itemId);
     const f = unitFactor(it, l.unitCode) ?? 1;
     return { itemId: l.itemId, baseQty: new Decimal(parseNumber(l.qty) ?? 0).times(f).toNumber() };
@@ -170,7 +172,7 @@ export function BatchRecipeForm({
               },
         yieldQty,
         yieldUnit,
-        lines: filledLines(lines).map((l) => ({
+        lines: filledLines(lines, NO_CHANNELS).map((l) => ({
           itemId: l.itemId,
           qty: l.qty,
           unitCode: l.unitCode,

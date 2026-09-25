@@ -4,8 +4,9 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import { createProductAction, setPriceAction } from "@/lib/actions/menu";
-import { channelLabel, fmtIQD, SELLABLE_CHANNELS } from "@/lib/format";
+import { fmtIQD } from "@/lib/format";
 import { Field, Notice, inputStyle } from "@/components/ui";
+import { useChannels } from "@/components/ChannelsProvider";
 import { parseNumber } from "@/components/pos/model";
 import { margin, servingCost, suggestedPrice } from "@/components/menu/recipeCost";
 import {
@@ -24,14 +25,8 @@ import {
 
 type Msg = { ok: boolean; text: string } | null;
 
-const noPrices = (): Record<SalesChannel, string> => ({
-  dine_in: "",
-  takeaway: "",
-  direct_delivery: "",
-  talabat: "",
-  careem: "",
-  toters: "",
-});
+/** A price typed for each channel, by its code; a channel left out is not sold there. */
+type Prices = Record<SalesChannel, string>;
 
 /**
  * A product, its recipe and its prices — created in one step, or not at all.
@@ -49,6 +44,7 @@ export function AddProductForm({
   money: { decimals: number; priceStep: number };
 }) {
   const router = useRouter();
+  const { set, name: channelName } = useChannels();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
   const [open, setOpen] = useState(false);
@@ -56,7 +52,7 @@ export function AddProductForm({
   const [nameAr, setNameAr] = useState("");
   const [nameCkb, setNameCkb] = useState("");
   const [categoryId, setCategoryId] = useState("");
-  const [prices, setPrices] = useState(noPrices());
+  const [prices, setPrices] = useState<Prices>({});
   const [target, setTarget] = useState("70");
   const [lines, setLines] = useState<LineDraft[]>(() => [newLine()]);
   /** With no ingredients: why it uses no stock (a service charge, say). */
@@ -64,7 +60,7 @@ export function AddProductForm({
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
 
   // What one serving of the recipe, as it will be saved, costs on each channel.
-  const recipe = toCostLines(lines);
+  const recipe = toCostLines(lines, set);
   const costOf = (c: SalesChannel) => servingCost(recipe, byId, c, rules.decimals);
   const costed = anyCosted(lines, items, rules.decimals);
   const targetMargin = parseNumber(target);
@@ -79,7 +75,7 @@ export function AddProductForm({
       });
       return;
     }
-    const noRecipe = filledLines(lines).length === 0;
+    const noRecipe = filledLines(lines, set).length === 0;
     if (noRecipe && !noStock.trim()) {
       setMsg({
         ok: false,
@@ -94,9 +90,9 @@ export function AddProductForm({
         nameCkb,
         categoryId: categoryId || null,
         prices: Object.fromEntries(
-          SELLABLE_CHANNELS.filter((c) => prices[c].trim() !== "").map((c) => [c, prices[c]]),
+          set.inUse.map((c) => [c, (prices[c] ?? "").trim()]).filter(([, p]) => p !== ""),
         ),
-        recipe: filledLines(lines),
+        recipe: filledLines(lines, set),
         noStockReason: noRecipe ? noStock : null,
       });
       if (r.ok) {
@@ -104,7 +100,7 @@ export function AddProductForm({
         setName("");
         setNameAr("");
         setNameCkb("");
-        setPrices(noPrices());
+        setPrices({});
         setLines([newLine()]);
         setNoStock("");
         router.refresh();
@@ -199,7 +195,7 @@ export function AddProductForm({
             />
             <ServingCost lines={lines} items={items} decimals={rules.decimals} />
             <NoCostYet lines={lines} items={items} />
-            {filledLines(lines).length === 0 && (
+            {filledLines(lines, set).length === 0 && (
               <label style={{ display: "block", marginBlockStart: 8 }}>
                 <div className="pf-hint" style={{ marginBlockEnd: 4 }}>
                   No ingredients? Then it sells at no cost: say why it uses no stock.
@@ -234,9 +230,9 @@ export function AddProductForm({
               commission is not in the cost.
             </p>
             <div className="pf-prices">
-              {SELLABLE_CHANNELS.map((c) => {
+              {set.inUse.map((c) => {
                 const cost = costOf(c);
-                const price = parseNumber(prices[c]);
+                const price = parseNumber(prices[c] ?? "");
                 const m = price && price.gt(0) ? margin(price, cost) : null;
                 const suggested =
                   targetMargin === null
@@ -251,13 +247,13 @@ export function AddProductForm({
                 return (
                   <div key={c} className="pf-price" data-channel={c}>
                     <div className="pf-price-top">
-                      <span>{channelLabel[c]}</span>
+                      <span>{channelName(c)}</span>
                       {costed && <span className="mono">cost {iqd(cost)}</span>}
                     </div>
                     <input
-                      aria-label={`${channelLabel[c]} price`}
+                      aria-label={`${channelName(c)} price`}
                       style={inputStyle}
-                      value={prices[c]}
+                      value={prices[c] ?? ""}
                       onChange={(e) => setPrices({ ...prices, [c]: e.target.value })}
                       inputMode="decimal"
                     />
@@ -297,6 +293,7 @@ export function AddProductForm({
 /** A new price from a date. The old price stays in force until then; history is kept. */
 export function PriceChange({ variantId, today }: { variantId: string; today: string }) {
   const router = useRouter();
+  const { set, name: channelName } = useChannels();
   const [busy, start] = useTransition();
   const [open, setOpen] = useState(false);
   const [channel, setChannel] = useState<SalesChannel>("dine_in");
@@ -325,10 +322,10 @@ export function PriceChange({ variantId, today }: { variantId: string; today: st
         <div className="muted" style={{ fontSize: ".75rem" }}>
           Channel
         </div>
-        <select value={channel} onChange={(e) => setChannel(e.target.value as SalesChannel)}>
-          {SELLABLE_CHANNELS.map((c) => (
+        <select value={channel} onChange={(e) => setChannel(e.target.value)}>
+          {set.inUse.map((c) => (
             <option key={c} value={c}>
-              {channelLabel[c]}
+              {channelName(c)}
             </option>
           ))}
         </select>

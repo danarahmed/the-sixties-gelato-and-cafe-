@@ -7,10 +7,10 @@ import {
   cancelScheduledRecipeAction,
   setNoStockAction,
 } from "@/lib/actions/menu";
-import { channelLabel, fmtIQD } from "@/lib/format";
+import { fmtIQD } from "@/lib/format";
 import { Notice } from "@/components/ui";
+import { useChannels } from "@/components/ChannelsProvider";
 import type { ScheduledChange } from "@/lib/db/reports";
-import type { SalesChannel } from "@domain/sales/recipe.js";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -43,13 +43,14 @@ export function ScheduledChanges({
 
 function ScheduledRow({ change, canEdit }: { change: ScheduledChange; canEdit: boolean }) {
   const router = useRouter();
+  const { name: channelName } = useChannels();
   const [busy, start] = useTransition();
   const [asking, setAsking] = useState(false);
   const [reason, setReason] = useState("");
   const [msg, setMsg] = useState<Msg>(null);
   const what =
     change.kind === "price"
-      ? `${channelLabel[change.channel as SalesChannel] ?? change.channel} at ${fmtIQD(change.price ?? 0)}`
+      ? `${channelName(change.channel ?? "")} at ${fmtIQD(change.price ?? 0)}`
       : `a new recipe (version ${change.versionNo})`;
 
   function withdraw() {

@@ -6,6 +6,7 @@
  */
 import { z } from "zod";
 import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { isPlatformChannel } from "@/lib/channels";
 import {
   discountAmount,
   discountPercent,
@@ -22,7 +23,6 @@ import {
 // Not /pos: the till keeps itself current from each action's answer, and
 // re-rendering it after every sale would only slow the cashier down.
 const SALE_PATHS = ["/orders", "/sales", "/dashboard", "/inventory", "/reports", "/journals"];
-const PLATFORMS = new Set(["talabat", "careem", "toters"]);
 
 const saleInput = z.object({
   /** Minted by the till when payment starts, reused on every retry (H-01, P0-4). */
@@ -73,7 +73,7 @@ export async function recordSaleAction(
   if (v.data.discountPercent !== null && v.data.discountAmount !== null)
     return { ok: false, error: "Give the discount as a percentage or as an amount, not both" };
   // Only a delivery platform's sale has one; the database asks for it (0030).
-  const orderNo = PLATFORMS.has(v.data.channel) ? v.data.platformOrderNo : null;
+  const orderNo = isPlatformChannel(v.data.channel) ? v.data.platformOrderNo : null;
   const r = await callRpc<Record<string, unknown>>("record_sale", {
     p_idempotency_key: v.data.key,
     p_channel: v.data.channel,

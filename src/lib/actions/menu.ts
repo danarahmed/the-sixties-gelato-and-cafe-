@@ -7,15 +7,7 @@
  */
 import { z } from "zod";
 import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
-import {
-  SALES_CHANNELS,
-  day,
-  id,
-  optionalText,
-  positive,
-  salesChannel,
-  text,
-} from "@/lib/validation";
+import { day, id, optionalText, positive, salesChannel, text } from "@/lib/validation";
 
 const MENU_PATHS = ["/products", "/pos", "/reports"];
 
@@ -24,7 +16,7 @@ const productInput = z.object({
   nameAr: optionalText(120),
   nameCkb: optionalText(120),
   categoryId: id("a category").nullable().optional(),
-  prices: z.record(z.enum(SALES_CHANNELS), positive("Price")),
+  prices: z.record(salesChannel, positive("Price")),
   recipe: z.array(
     z.object({
       itemId: id("an ingredient"),

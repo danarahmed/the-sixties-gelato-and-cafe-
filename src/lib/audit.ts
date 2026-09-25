@@ -3,7 +3,8 @@
  * was about, and each value before and after, with ids given their names.
  * Pure: the screen and the CSV both read through here, and the tests too.
  */
-import { channelLabel, itemTypeLabel, roleLabel } from "@/lib/format";
+import { itemTypeLabel, roleLabel } from "@/lib/format";
+import { channelName } from "@/lib/channels";
 import { THRESHOLD_LABEL, ruleLabel } from "@/lib/alerts";
 
 /** A stored JSON value, as the database wrote it. */
@@ -41,14 +42,21 @@ export const AUDIT_GROUPS = [
   {
     key: "settlements",
     label: "Card & platform settlements",
-    prefixes: ["card.", "platform."],
+    prefixes: ["card.", "platform.settlement", "platform.settlement_cancel"],
   },
   { key: "books", label: "Books & periods", prefixes: ["journal.", "period.", "legacy."] },
   { key: "alerts", label: "Alerts answered", prefixes: ["alert."] },
   {
     key: "settings",
-    label: "Settings, places & people",
-    prefixes: ["business.", "location.", "member."],
+    label: "Settings, places, platforms & people",
+    prefixes: [
+      "business.",
+      "location.",
+      "member.",
+      "platform.create",
+      "platform.setup",
+      "platform.update",
+    ],
   },
 ] as const;
 
@@ -89,6 +97,9 @@ const ACTION_LABEL: Record<string, string> = {
   "card.settlement_cancel": "Card settlement cancelled",
   "platform.settlement": "Platform payout recorded",
   "platform.settlement_cancel": "Platform payout cancelled",
+  "platform.create": "Delivery platform added",
+  "platform.setup": "Delivery platform's packaging and prices copied",
+  "platform.update": "Delivery platform changed",
   "journal.reverse": "Journal reversed",
   "journal.control_correction": "Owner's correction posted",
   "legacy.post_unposted": "Old record posted",
@@ -199,6 +210,11 @@ const FIELD_LABEL: Record<string, string> = {
   commission: "Commission",
   fees: "Fees",
   not_posted: "On lines not posted",
+  platform_code: "Short name",
+  names: "In other languages",
+  set_up_like: "Set up like",
+  packaging_lines: "Recipe lines given its packaging",
+  prices_copied: "Prices copied",
 };
 
 /** Keys that are bookkeeping, not what anyone changed. */
@@ -221,7 +237,7 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
   if (typeof v === "number") return v.toLocaleString("en-US", { maximumFractionDigits: 6 });
   if (typeof v === "string") {
     if (UUID.test(v)) return names.get(v) ?? `${v.slice(0, 8)}…`;
-    if (key === "channel") return channelLabel[v as keyof typeof channelLabel] ?? v;
+    if (key === "channel") return names.get(`channel:${v}`) ?? channelName([], v);
     if (key === "rule") return ruleLabel(v);
     if (key === "item_type") return itemTypeLabel(v);
     return v;
@@ -245,6 +261,11 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
     }
     if (key === "roles") return v.map((r) => roleLabel(String(r))).join(", ");
     return v.map((x) => showValue(x, key, names)).join(", ");
+  }
+  // A platform's names in other languages (0031): "ar ليزو, ckb لێزۆ".
+  if (key === "names") {
+    const set = Object.entries(v);
+    return set.length ? set.map(([k, x]) => `${k} ${String(x)}`).join(", ") : "—";
   }
   // The alert thresholds the owner set (0029): "Margin target (%) 65"; none, the defaults.
   if (key === "alert_settings") {

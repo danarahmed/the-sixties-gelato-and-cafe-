@@ -5,6 +5,7 @@ import type { PosItem } from "@/lib/db/pos";
 import type { SaleReceipt } from "@/lib/actions/sales";
 import { fmtIQD, fmtQty } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { useChannels } from "@/components/ChannelsProvider";
 import { Notice } from "@/components/ui";
 import { REASONS, reasonKey } from "@/lib/reasons";
 import Decimal from "decimal.js";
@@ -353,6 +354,7 @@ export function OrderPanel({
   onAskApproval: () => void;
 }) {
   const { t } = useT();
+  const { name: channelName } = useChannels();
   const isBill = order.kind === "bill";
   const blocked = busy !== null || pending;
   const empty = order.lines.length === 0;
@@ -379,7 +381,7 @@ export function OrderPanel({
         <div style={{ minWidth: 0 }}>
           <div className="order-title">{title}</div>
           <div className="order-badges">
-            <span className="badge">{t(`pos.channel.${order.channel}`)}</span>
+            <span className="badge">{channelName(order.channel)}</span>
             {isBill && order.tabId === null && <span className="badge">{t("pos.newBill")}</span>}
             {isBill && order.printedAt && (
               <span className="badge warn">

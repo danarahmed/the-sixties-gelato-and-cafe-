@@ -4,11 +4,11 @@ import { has, requirePermission } from "@/lib/auth/session";
 import { getDashboard, getReconciliation } from "@/lib/db/reports";
 import { getSalesOrders, getStockBoard } from "@/lib/db/read";
 import { getCurrentAlerts, getDailyBrief } from "@/lib/db/alerts";
-import { channelLabel, fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty } from "@/lib/format";
+import { getChannelNames } from "@/lib/db/channels";
 import { addDays, businessToday, dateTimeIn } from "@/lib/dates";
 import { NeedsYou } from "@/components/dashboard/NeedsYou";
 import { DailyBrief } from "@/components/dashboard/DailyBrief";
-import type { SalesChannel } from "@domain/sales/recipe.js";
 
 export const dynamic = "force-dynamic";
 
@@ -21,13 +21,14 @@ export default async function DashboardPage() {
   const profile = await requirePermission("profit.view");
   const t = await getT();
   const today = businessToday(profile.timezone);
-  const [alerts, brief, d, rec, board, recent] = await Promise.all([
+  const [alerts, brief, d, rec, board, recent, channels] = await Promise.all([
     getCurrentAlerts(),
     getDailyBrief(addDays(today, -1)),
     getDashboard(today),
     getReconciliation(today),
     getStockBoard(),
     getSalesOrders(6),
+    getChannelNames(),
   ]);
   const low = board.filter((s) => s.isLow || s.isNegative);
   const differences = rec.filter((r) => r.difference !== 0);
@@ -153,9 +154,7 @@ export default async function DashboardPage() {
             recent.map((o) => (
               <div key={o.id} className="deduction-row">
                 <span>
-                  <span className="badge">
-                    {channelLabel[o.channel as SalesChannel] ?? o.channel}
-                  </span>{" "}
+                  <span className="badge">{channels.name(o.channel)}</span>{" "}
                   {o.lines.map((l) => `${l.name} ×${l.qty}`).join(", ") || "—"}
                   <span className="muted" style={{ fontSize: ".75rem" }}>
                     {" "}

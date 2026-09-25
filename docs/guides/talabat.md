@@ -1,5 +1,8 @@
 # Talabat and Other Delivery Platforms
 
+Talabat is the example here; every delivery platform works the same way,
+including one you add yourself (see [Adding a platform](#adding-a-platform)).
+
 ## Selling
 
 On the till, choose the **Talabat** channel. The product is sold at its Talabat
@@ -104,11 +107,58 @@ Dr 1020 the amount that arrived, Dr 5100 the commission, Dr 5200 the fees, Cr
 the statement number in **Reference #**. The "Not explained by any order" figure
 comes back to 0 once 1100 holds only the orders waiting.
 
+## Adding a platform
+
+The owner or the general manager adds a platform on **Delivery Platforms →
+Your Delivery Platforms**. A branch manager sees the list but changes nothing.
+
+1. Press **+ Add a delivery platform**.
+2. Type its **name, as its customers know it** (Lezzoo), and its name in
+   Arabic and in Kurdish. The till, the receipts and the reports show the name
+   in the language the person reading uses; a language left empty shows the
+   first name.
+3. **Its orders take the packaging of**: the channel it works like, usually
+   Talabat. Every recipe line a Talabat order takes (the cup, the lid, the bag,
+   the sticker…) is taken by its orders too. Tick **and its prices too** to
+   give each product the price it has on that channel, from today; change them
+   afterwards on **Products & Recipes** like any other price. Choose **Nothing
+   yet** to set it up later.
+4. **Short name (optional)**: the name the system keeps it under, small Latin
+   letters, digits and `_`. It is made from the name when left empty
+   (`lezzoo`), or `platform_1`, `platform_2`… for a name in Arabic letters. It
+   cannot be changed later; the name can.
+5. Press **Add the platform**. The message says how many prices and packaging
+   lines were copied.
+
+The platform is then a button on the till (once a product has a price on it),
+a column of prices on **Products & Recipes**, and a platform on this page: its
+sales need the order number from its tablet, what it owes is listed by order,
+and its statements are matched like Talabat's.
+
+**Each platform's row** shows whether it is in use, how many products the till
+can sell on it, and how many of its orders wait to be paid out. The owner or
+the general manager can:
+
+- **Edit…**: rename it, or change its Arabic and Kurdish names. Past sales and
+  statements show the new name.
+- **Copy prices & packaging…**: give it, later, the packaging of a channel it
+  works like, and a price for each product it has none for. A price already
+  set is not changed.
+- **Take out of use…**: it leaves the till and sells nothing more, and raises
+  no margin or price alerts. What it owes, and its statements, stay: its next
+  statement is still matched here. A sale it made before, sent again by a till
+  that was offline, is still recorded once.
+- **Bring back into use**: it is on the till again.
+
+Careem and Toters are listed as **not in use** until you bring them in: they
+had never been priced or sold through. Bring one in, then **Copy prices &
+packaging…** from Talabat.
+
+Every change is on the **Audit Trail**, under "Settings, places, platforms &
+people".
+
 ## Not built yet
 
 - **Reading the statement file itself**, and **Talabat's live feed**. The feed
   needs an approved Talabat partner account and credentials, arranged through
   Talabat. No endpoint or credential is invented here.
-- **Careem and Toters at the till.** The books, the order numbers and the
-  statement matching already know them as platforms; the till offers Talabat
-  only.
