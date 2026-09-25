@@ -16,6 +16,7 @@ import {
   discountAmount,
   discountPercent,
   id,
+  optionalNonNegative,
   optionalText,
   positive,
   salesChannel,
@@ -123,6 +124,8 @@ const payInput = tabRef.extend({
   /** Minted when the cashier starts taking payment, reused on every retry. */
   key: z.string().uuid("This payment has no idempotency key"),
   tender: z.enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" }),
+  /** The total the till showed; the bill is not paid at another (0025). */
+  expectedNet: optionalNonNegative("The total shown"),
 });
 
 /** Take the money: the bill becomes one sale. Paying twice returns the sale already recorded. */
@@ -136,6 +139,7 @@ export async function payBillAction(
     p_version: v.data.version,
     p_idempotency_key: v.data.key,
     p_tender: v.data.tender,
+    p_expected_net: v.data.expectedNet,
   });
   if (!r.ok) return r;
   refresh(...PAID_PATHS);

@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 163 tests)
+## 1. Unit (Vitest, 171 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -34,9 +34,11 @@ layers before every release.
   margin and the suggested price; what a batch uses and costs, before it is
   recorded, in any of the made item's units; a recipe reopened to change it; the
   Baghdad trading day; the expense-account suggestions; what the drawer count
-  previews (expected, over or short, what stays and what is taken out); and
+  previews (expected, over or short, what stays and what is taken out);
   which failed database calls are refusals and which may have been saved (no
-  answer, a gateway giving up, the database unreachable).
+  answer, a gateway giving up, the database unreachable); and a printed bill
+  on the till at its printed prices (one more of the same too), and a bill on
+  screen replaced when another till or a new price changed it (`0025`).
 
 ## 2. SQL (`scripts/test-sql.sh`, about 450 assertions)
 
@@ -89,22 +91,23 @@ costing the first sale, the drawer from its float.
 
 **Suites**, each in a fresh copy of a template database:
 
-| Suite          | Proves                                                                                                                                                                                                                                                                                                                               |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `smoke`        | The template builds and the fixtures load                                                                                                                                                                                                                                                                                            |
-| `sales`        | Golden postings per tender and channel; exactly-once by key; negative stock; recipe and price dates                                                                                                                                                                                                                                  |
-| `refunds`      | Void until the drawer is counted; refund after; only returnable stock comes back                                                                                                                                                                                                                                                     |
-| `stock`        | Waste, corrections, opening stock (for a new item, and for one with no stock yet); blind two-person counts compared with the stock when each item is counted, while trading; one count at a time; cancelling; every movement journaled                                                                                               |
-| `purchasing`   | Receipt → GRNI → bill → payment; landed cost; duplicate invoices; cancellation; overpayment; the café's own bill numbers (yearly count, passed over when taken, never reused, never typed)                                                                                                                                           |
-| `journals`     | Draft/publish; subledger accounts and the till's cash closed to manual journals; reversal rules and dates; numbering                                                                                                                                                                                                                 |
-| `close`        | The trading day in Baghdad time; the drawer count; the closing checklist; every route into a locked month                                                                                                                                                                                                                            |
-| `reports`      | Trial balance, P&L and reconciliation from published lines, for exactly the dates asked; menu costs; each item's cost today, to the last digit, only for those who see costs                                                                                                                                                         |
-| `discounts`    | A percentage (rounded to the business's step: to the dinar, then to 500) or an amount; each line's share; 4000 at full price and 4100; refunds, voids and the reconciliation; who may give one; bills, printed bills and splits                                                                                                      |
-| `pos`          | Tables, categories, photos judged by their bytes; bills paid later post exactly like a counter sale, once; stale tills refused; printed bills and cancellations guarded; split; the day held open by an open bill                                                                                                                    |
-| `production`   | Batch recipes, both ways: a base then its flavour, kept in pans; a batch's ingredients out at their cost and what came out in at exactly that, no journal, the ledger still tied; costs hidden from baristas; a made item sold; a batch cancelled; a product's recipe changed from a date                                            |
-| `drawer`       | The drawer: a float, cash in and card beside it; paying out of the till, the safe, the bank, a card or the owner, and neither the till nor the safe below zero; a void, a count with takings to the safe; a sale after the count in the next one; moving cash, and only the owner taking it; 1000 always what the drawer should hold |
-| `drawer_carry` | The cash taken since the last day closed the old way, carried into the drawer once as its record would write it, and the first count expecting it                                                                                                                                                                                    |
-| `controls`     | Who may do what; tenant isolation; the public can call nothing; the exact list of callable functions                                                                                                                                                                                                                                 |
+| Suite          | Proves                                                                                                                                                                                                                                                                                                                                  |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `smoke`        | The template builds and the fixtures load                                                                                                                                                                                                                                                                                               |
+| `sales`        | Golden postings per tender and channel; exactly-once by key; negative stock; recipe and price dates                                                                                                                                                                                                                                     |
+| `refunds`      | Void until the drawer is counted; refund after; only returnable stock comes back                                                                                                                                                                                                                                                        |
+| `stock`        | Waste, corrections, opening stock (for a new item, and for one with no stock yet); blind two-person counts compared with the stock when each item is counted, while trading; one count at a time; cancelling; every movement journaled                                                                                                  |
+| `purchasing`   | Receipt → GRNI → bill → payment; landed cost; duplicate invoices; cancellation; overpayment; the café's own bill numbers (yearly count, passed over when taken, never reused, never typed)                                                                                                                                              |
+| `journals`     | Draft/publish; subledger accounts and the till's cash closed to manual journals; reversal rules and dates; numbering                                                                                                                                                                                                                    |
+| `close`        | The trading day in Baghdad time; the drawer count; the closing checklist; every route into a locked month                                                                                                                                                                                                                               |
+| `reports`      | Trial balance, P&L and reconciliation from published lines, for exactly the dates asked; menu costs; each item's cost today, to the last digit, only for those who see costs                                                                                                                                                            |
+| `discounts`    | A percentage (rounded to the business's step: to the dinar, then to 500) or an amount; each line's share; 4000 at full price and 4100; refunds, voids and the reconciliation; who may give one; bills, printed bills and splits                                                                                                         |
+| `pos`          | Tables, categories, photos judged by their bytes; bills paid later post exactly like a counter sale, once; stale tills refused; printed bills and cancellations guarded; split; the day held open by an open bill                                                                                                                       |
+| `production`   | Batch recipes, both ways: a base then its flavour, kept in pans; a batch's ingredients out at their cost and what came out in at exactly that, no journal, the ledger still tied; costs hidden from baristas; a made item sold; a batch cancelled; a product's recipe changed from a date                                               |
+| `drawer`       | The drawer: a float, cash in and card beside it; paying out of the till, the safe, the bank, a card or the owner, and neither the till nor the safe below zero; a void, a count with takings to the safe; a sale after the count in the next one; moving cash, and only the owner taking it; 1000 always what the drawer should hold    |
+| `drawer_carry` | The cash taken since the last day closed the old way, carried into the drawer once as its record would write it, and the first count expecting it                                                                                                                                                                                       |
+| `menu_changes` | `0025`: the recipe that started last is in force, whatever was changed in between; a same-day version replaces the other; scheduled prices and recipes listed and withdrawn; past prices refused; a printed bill paid at its printed prices (splits too), a stale total refused, a replay returned; uncosted sales listed and warned of |
+| `controls`     | Who may do what; tenant isolation; the public can call nothing; the exact list of callable functions                                                                                                                                                                                                                                    |
 
 **Concurrency** (`scripts/test-sql-concurrency.sh`), with real parallel
 connections:
@@ -160,7 +163,10 @@ database, behind a small local stand-in for Supabase's auth service.
   - a bill cancelled by a manager with a reason;
   - a discount typed as 10% fills in 500 and typed as 750 fills in 15%; 7% of
     5,000 rounds to 500 and 47% to 2,500, and the sale posts what the till
-    showed: 5,000 to 4000 and 2,500 to 4100.
+    showed: 5,000 to 4000 and 2,500 to 4100;
+  - a bill printed at 2,500 a cup, then the price put up to 3,000 on Products:
+    the bill is paid at 5,000; a till still showing 2,500 is refused, nothing
+    is recorded, it fetches the new price, and the sale records 3,000 (`0025`).
 - `flows` also checks that a bill still open holds the drawer count.
 - `menu` (run last, as the costs stand after the others): a new product built
   on Products & Recipes shows each ingredient's cost, one serving's cost at a
@@ -168,7 +174,13 @@ database, behind a small local stand-in for Supabase's auth service.
   margin (amber under the target, a loss in red) and a suggested price that one
   click takes; a line without its quantity stops the save; the recipe, where
   each line is used and the prices are saved as shown; and the saved product's
-  card shows the same costs, the ones a sale posts.
+  card shows the same costs, the ones a sale posts. Then (`0025`) a price
+  dated yesterday is refused; one for next week is listed as scheduled and
+  withdrawn with a reason; a product with no recipe is refused until it says
+  why it uses no stock, and flagged "Costed at nothing" when that is taken
+  back; sold so, it posts no cost, Reports' Uncosted Sales lists it and why
+  (exactly the database's list), and the month's checklist warns of it without
+  counting it among the checks that stop the lock.
 - `production` (run last, as it adds a barista): the owner sets up a base and a
   flavour made from it, kept in pans of 5 kg; a barista records two batches of
   the base, sees what they use, and is shown no cost anywhere; the owner records

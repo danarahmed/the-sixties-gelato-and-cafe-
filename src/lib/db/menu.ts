@@ -16,6 +16,8 @@ export interface MenuVariant {
   isActive: boolean;
   /** Sold as bought (a bottle of water): no recipe of its own. */
   soldAsBought: boolean;
+  /** Why it uses no stock (a service charge, say); null if it should (0025). */
+  noStockReason: string | null;
 }
 
 /** A product as the menu is set up: on the till or hidden from it. */
@@ -47,7 +49,10 @@ export async function getMenuSetup(): Promise<{
       .from("product")
       .select("id,name,name_ar,name_ckb,category_id,image_url,is_active,is_favourite")
       .order("name"),
-    c.from("product_variant").select("id,product_id,name,is_active,resale_item_id").order("name"),
+    c
+      .from("product_variant")
+      .select("id,product_id,name,is_active,resale_item_id,no_stock_reason")
+      .order("name"),
   ]);
   const variants = new Map<string, MenuVariant[]>();
   for (const v of rows(vars, "product variants")) {
@@ -57,6 +62,7 @@ export async function getMenuSetup(): Promise<{
       name: str(v.name),
       isActive: v.is_active === true,
       soldAsBought: v.resale_item_id != null,
+      noStockReason: strOrNull(v.no_stock_reason),
     });
     variants.set(str(v.product_id), list);
   }

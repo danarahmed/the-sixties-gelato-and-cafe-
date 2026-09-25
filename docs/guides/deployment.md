@@ -425,6 +425,36 @@ Nothing was kept. The till's account (1000) on the test records stands at
 −220,000, from test expenses paid "from cash" before `0024`; clearing the test
 records clears it.
 
+## After `0025`
+
+Migration `0025` is the September 2026 audit's first P1s
+([`../SYSTEM_AUDIT_2026-09.md`](../SYSTEM_AUDIT_2026-09.md), P1-5 to P1-7):
+
+- **The recipe and price in force.** The recipe that started last is used, so
+  a change made today no longer hides one scheduled for later. Scheduled
+  prices and recipes are listed on each product and can be withdrawn with a
+  reason. A price cannot be dated in the past; each one set is audited.
+- **Printed bills.** Printing a bill fixes its prices, and it is paid at them.
+  Every payment carries the total the till showed, and the database refuses
+  one it would record at another total; the till then fetches today's prices
+  (as it also does every ten minutes and when its screen comes back to the
+  front).
+- **Sales costed at nothing** are listed on Reports and warned of on the
+  month-end checklist, without stopping the lock. A new product needs a
+  recipe, or a reason it uses no stock.
+
+It adds two columns (`pos_tab_line.unit_price`, `product_variant.no_stock_reason`)
+and five functions signed-in users may call (`menu_scheduled`,
+`cancel_scheduled_price`, `cancel_scheduled_recipe`, `set_no_stock`,
+`report_uncosted_sales`); it redefines the recipe-version and price rules,
+printing, saving, splitting and listing bills, the sale and bill payment
+functions (which take the till's total, optionally), creating a product,
+changing its recipe, and the period checklist and lock. Nothing recorded before
+it changes. It goes in before the screens, as before: the app deployed before
+it keeps working (the total is optional), except that creating a product with
+no recipe is refused until the new form, which asks why, follows within
+minutes.
+
 ## Clearing the test records
 
 Every record of trading in the live database so far is a test (the owner, 25

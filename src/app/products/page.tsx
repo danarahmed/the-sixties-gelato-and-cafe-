@@ -6,8 +6,10 @@ import {
   getItemCosts,
   getMenuCosting,
   getMenuRecipeLines,
+  getMenuScheduled,
   type MenuCostRow,
   type RecipeLineRow,
+  type ScheduledChange,
 } from "@/lib/db/reports";
 import { channelLabel, fmtIQD, fmtQty } from "@/lib/format";
 import { businessToday } from "@/lib/dates";
@@ -15,6 +17,7 @@ import { AddProductForm, PriceChange } from "@/components/AddProductForm";
 import { ChangeRecipe } from "@/components/menu/ChangeRecipe";
 import type { ItemOpt } from "@/components/menu/RecipeLines";
 import { CategoriesManager } from "@/components/menu/CategoriesManager";
+import { CostWarning, ScheduledChanges } from "@/components/menu/MenuChanges";
 import { ProductSetup } from "@/components/menu/ProductSetup";
 import { EmptyState } from "@/components/ui";
 import type { SalesChannel } from "@domain/sales/recipe.js";
@@ -33,6 +36,10 @@ function RecipeAndPrices({
   canEdit,
   today,
   editor,
+  soldAsBought,
+  noStockReason,
+  itemCosts,
+  scheduled,
 }: {
   name: string | null;
   costing: Costing | undefined;
@@ -41,12 +48,29 @@ function RecipeAndPrices({
   today: string;
   /** For those who edit recipes: the items a recipe may use, costed. Null when sold as bought. */
   editor: { items: ItemOpt[]; decimals: number } | null;
+  soldAsBought: boolean;
+  noStockReason: string | null;
+  /** Each item's cost per base unit today, by id ("0" when it has none). */
+  itemCosts: Map<string, string>;
+  scheduled: ScheduledChange[];
 }) {
   const recipe = costing?.recipe ?? [];
   const rows = costing?.rows ?? [];
+  const zeroCostItems = recipe
+    .filter((l) => l.itemId !== null && Number(itemCosts.get(l.itemId) ?? "0") === 0)
+    .map((l) => l.component);
   return (
     <div>
       {name && <h4 style={{ margin: "10px 0 4px" }}>{name}</h4>}
+      {!soldAsBought && (
+        <CostWarning
+          variantId={variantId}
+          noRecipe={recipe.length === 0}
+          noStockReason={noStockReason}
+          zeroCostItems={zeroCostItems}
+          canEdit={canEdit}
+        />
+      )}
       <div
         className="grid"
         style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}
@@ -135,6 +159,7 @@ function RecipeAndPrices({
           {canEdit && <PriceChange variantId={variantId} today={today} />}
         </div>
       </div>
+      <ScheduledChanges changes={scheduled} canEdit={canEdit} />
       {editor && (
         <ChangeRecipe
           variantId={variantId}
@@ -158,12 +183,13 @@ export default async function ProductsPage() {
   const t = await getT();
   const today = businessToday(profile.timezone);
   const canEdit = has(profile, "recipe.edit");
-  const [menu, lines, items, itemCosts, setup] = await Promise.all([
+  const [menu, lines, items, itemCosts, setup, scheduled] = await Promise.all([
     getMenuCosting(),
     getMenuRecipeLines(),
     canEdit ? getItems() : Promise.resolve([]),
-    canEdit ? getItemCosts() : Promise.resolve(new Map<string, string>()),
+    getItemCosts(),
     getMenuSetup(),
+    getMenuScheduled(),
   ]);
 
   const costing = new Map<string, Costing>();
@@ -226,6 +252,10 @@ export default async function ProductsPage() {
                 canEdit={canEdit}
                 today={today}
                 editor={canEdit && !v.soldAsBought ? { items: itemOpts, decimals } : null}
+                soldAsBought={v.soldAsBought}
+                noStockReason={v.noStockReason}
+                itemCosts={itemCosts}
+                scheduled={scheduled.filter((s) => s.variantId === v.id)}
               />
             ))}
         </details>

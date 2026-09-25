@@ -25,6 +25,7 @@ import { TablesEditor } from "./TablesEditor";
 import { PrintSlip, type PrintJob } from "./PrintSlip";
 import {
   addLine,
+  billChanged,
   billTitle,
   isDirty,
   isPlatform,
@@ -67,6 +68,11 @@ interface Pending {
   /** A quick sale's discount, sent again with the retry. */
   discountPercent: string | null;
   discountAmount: string | null;
+  /**
+   * The total the customer was shown. The database records the payment only
+   * at this total (0025); null for a payment left by an older till screen.
+   */
+  expectedNet: string | null;
 }
 
 const PENDING_KEY = "sixties.pos.pending";
@@ -98,6 +104,7 @@ function loadPending(): Pending | null {
       job: p.job ?? null,
       discountPercent: p.discountPercent ?? null,
       discountAmount: p.discountAmount ?? null,
+      expectedNet: p.expectedNet ?? null,
     };
   } catch {
     return null;
@@ -111,6 +118,31 @@ function savePending(p: Pending | null) {
     /* private mode: the pending payment stays in memory only */
   }
 }
+
+/** JSON from one of the till's own routes; null when offline, signed out or refused. */
+async function fetchJson<T>(url: string): Promise<T | null> {
+  try {
+    const res = await fetch(url, { cache: "no-store", headers: { accept: "application/json" } });
+    return res.ok ? ((await res.json()) as T) : null;
+  } catch {
+    return null; // offline or signed out: the banner and the next action say so
+  }
+}
+
+/** The open bills as the database has them now. */
+async function fetchBills(): Promise<OpenBill[] | null> {
+  const body = await fetchJson<{ ok?: boolean; bills?: OpenBill[] }>("/api/pos/bills");
+  return body?.ok && Array.isArray(body.bills) ? body.bills : null;
+}
+
+/** The menu at today's prices (0025): a till left open still sells at them. */
+async function fetchMenu(): Promise<PosItem[] | null> {
+  const body = await fetchJson<{ ok?: boolean; items?: PosItem[] }>("/api/pos/menu");
+  return body?.ok && Array.isArray(body.items) && body.items.length > 0 ? body.items : null;
+}
+
+/** How often a till left open fetches today's prices, besides when it comes back to the front. */
+const MENU_EVERY_MS = 10 * 60 * 1000;
 
 type Dialog =
   | { kind: "pay"; key: string; tender: Tender; order: Order; title: string; error: string | null }
@@ -130,7 +162,7 @@ type Dialog =
  * once, with a key the till mints and reuses on every retry (audit H-01).
  */
 export function PosClient({
-  items,
+  items: initialItems,
   tables,
   initialBills,
   canSeeCost,
@@ -158,6 +190,8 @@ export function PosClient({
 }) {
   const { t, locale } = useT();
   const online = useOnline();
+  // The menu as the page loaded it, then as fetched again while the till stays open.
+  const [items, setItems] = useState<PosItem[]>(initialItems);
   const byId = useMemo(() => new Map(items.map((i) => [i.variantId, i])), [items]);
   const channels = useMemo(
     () => SELLABLE_CHANNELS.filter((c) => items.some((i) => i.prices[c] !== undefined)),
@@ -198,6 +232,9 @@ export function PosClient({
   const generation = useRef(0);
   const quiet = useRef(true);
   quiet.current = busy === null && dialog === null;
+  // Prices are not changed under a payment that is waiting for its answer.
+  const menuQuiet = useRef(true);
+  menuQuiet.current = quiet.current && pending === null;
 
   const order = showBill && bill ? bill : quick;
   const title = (o: Order) =>
@@ -220,45 +257,38 @@ export function PosClient({
       }
       return;
     }
-    if (
-      !isDirty(cur) &&
-      (fresh.version !== cur.version ||
-        fresh.billPrintedAt !== cur.printedAt ||
-        fresh.billPrintCount !== cur.printCount)
-    ) {
-      putBill(orderFromBill(fresh));
-    }
+    // Another till's change, a print, or a price that has changed since (0025).
+    if (!isDirty(cur) && billChanged(cur, fresh)) putBill(orderFromBill(fresh));
   }
   const applyRef = useRef(applyBills);
   applyRef.current = applyBills;
 
-  // Other tills' work, every 15 seconds and whenever the till comes back to the front.
+  // Other tills' work, every 15 seconds and whenever the till comes back to the
+  // front; today's prices every ten minutes and then too (0025).
   useEffect(() => {
     const tick = async () => {
       if (document.hidden || !navigator.onLine || !quiet.current) return;
       const g = generation.current;
-      try {
-        const res = await fetch("/api/pos/bills", {
-          cache: "no-store",
-          headers: { accept: "application/json" },
-        });
-        if (!res.ok) return;
-        const body = (await res.json()) as { ok?: boolean; bills?: OpenBill[] };
-        if (body.ok && Array.isArray(body.bills) && g === generation.current && quiet.current) {
-          applyRef.current(body.bills);
-        }
-      } catch {
-        /* offline or signed out: the banner and the next action say so */
-      }
+      const list = await fetchBills();
+      if (list && g === generation.current && quiet.current) applyRef.current(list);
+    };
+    const menuTick = async () => {
+      if (document.hidden || !navigator.onLine || !menuQuiet.current) return;
+      const fresh = await fetchMenu();
+      if (fresh && menuQuiet.current) setItems(fresh);
     };
     const poll = window.setInterval(tick, 15000);
+    const menuPoll = window.setInterval(menuTick, MENU_EVERY_MS);
     const clock = window.setInterval(() => setNow(Date.now()), 30000);
     const onVisible = () => {
-      if (!document.hidden) void tick();
+      if (document.hidden) return;
+      void tick();
+      void menuTick();
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       window.clearInterval(poll);
+      window.clearInterval(menuPoll);
       window.clearInterval(clock);
       document.removeEventListener("visibilitychange", onVisible);
     };
@@ -280,7 +310,7 @@ export function PosClient({
       note: l.note,
       lineId: null,
       fallbackName: null,
-      fallbackPrice: null,
+      billPrice: null,
     }));
     setPending(p);
     if (p.kind === "quick") {
@@ -679,6 +709,8 @@ export function PosClient({
       ...(o.kind === "quick"
         ? discountParams(o.discount)
         : { discountPercent: null, discountAmount: null }),
+      // What the dialog showed: the database takes the money only at this total.
+      expectedNet: orderDue(o, byId, money).toFixed(),
       job: {
         kind: "receipt",
         title: dialog.title,
@@ -707,12 +739,14 @@ export function PosClient({
               lines: p.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty) })),
               discountPercent: p.discountPercent,
               discountAmount: p.discountAmount,
+              expectedNet: p.expectedNet,
             })
           : await payBillAction({
               tabId: p.tabId!,
               version: p.version!,
               key: p.key,
               tender: p.tender,
+              expectedNet: p.expectedNet,
             });
       if (!r.ok && r.uncertain) {
         // No answer from the database: it may have been recorded. Freeze, and
@@ -729,6 +763,13 @@ export function PosClient({
         savePending(null);
         if (dialogRef.current?.kind === "pay") setDialog({ ...dialogRef.current, error: r.error });
         else setMsg({ ok: false, text: r.error });
+        // A price, or the bill, may have changed since this till last looked.
+        // If what is owed has, the order is shown as it now stands, so the
+        // customer is told before the money is taken again.
+        if (await catchUp(p)) {
+          setDialog(null);
+          setMsg({ ok: false, text: r.error });
+        }
         return;
       }
       const net = r.data.net;
@@ -780,6 +821,36 @@ export function PosClient({
   }
   const dialogRef = useRef<Dialog | null>(null);
   dialogRef.current = dialog;
+
+  /**
+   * After a refusal: today's prices and the open bills, as the database has
+   * them now (0025). True when what the payment was for has changed: a price
+   * on it, or the bill itself.
+   */
+  async function catchUp(p: Pending): Promise<boolean> {
+    try {
+      const [fresh, list] = await Promise.all([fetchMenu(), fetchBills()]);
+      if (fresh) setItems(fresh);
+      if (list) applyRef.current(list);
+      if (p.kind === "bill") {
+        if (!list) return false;
+        const b = list.find((x) => x.tabId === p.tabId);
+        return (
+          !b ||
+          b.version !== p.version ||
+          (p.expectedNet !== null && !new Decimal(b.total).eq(p.expectedNet))
+        );
+      }
+      if (!fresh) return false;
+      const now = new Map(fresh.map((i) => [i.variantId, i]));
+      return p.lines.some(
+        (l) => byId.get(l.variantId)?.prices[p.channel] !== now.get(l.variantId)?.prices[p.channel],
+      );
+    } catch {
+      // Catching up is a courtesy: the refusal stands, and is shown, either way.
+      return false;
+    }
+  }
 
   const emptyJob = (p: Pending, orderId: string, net: number): PrintJob => ({
     kind: "receipt",

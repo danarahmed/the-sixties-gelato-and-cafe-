@@ -16,11 +16,14 @@ import { isUncertainFailure } from "@/lib/db/rpcOutcome";
 import { drawerPreview } from "@/components/books/drawerMath";
 import Decimal from "decimal.js";
 import {
+  addLine,
+  billChanged,
   discountAmount,
   discountInvalid,
   discountParams,
   isDirty,
   orderDue,
+  orderFromBill,
   orderSubtotal,
   percentOf,
   quickOrder,
@@ -28,7 +31,7 @@ import {
   type Discount,
   type MoneyRules,
 } from "@/components/pos/model";
-import type { PosItem } from "@/lib/db/pos";
+import type { OpenBill, PosItem } from "@/lib/db/pos";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import {
   channelsFor,
@@ -213,7 +216,7 @@ describe("a discount at the till: the percentage and the amount fill each other 
         note: null,
         lineId: null,
         fallbackName: null,
-        fallbackPrice: null,
+        billPrice: null,
       },
     ];
     const bill = { ...quickOrder("takeaway"), kind: "bill" as const, lines };
@@ -228,6 +231,83 @@ describe("a discount at the till: the percentage and the amount fill each other 
     const saved = { ...discounted, saved: signature(lines, discounted.discount) };
     expect(isDirty({ ...saved, discount: pct("10.0") })).toBe(false);
     expect(isDirty({ ...saved, discount: amt("450") })).toBe(true);
+  });
+});
+
+describe("a printed bill is paid at the prices the customer was shown (0025)", () => {
+  const money: MoneyRules = { decimals: 0, discountStep: 500 };
+  // The menu has moved on to 3,000; the bill was printed at 2,500.
+  const latte: PosItem = {
+    variantId: "v-latte",
+    productId: "p-latte",
+    productName: "Latte",
+    variantName: "Latte",
+    nameAr: null,
+    nameCkb: null,
+    category: null,
+    categoryId: null,
+    categorySort: null,
+    categoryAr: null,
+    categoryCkb: null,
+    imageUrl: null,
+    isFavourite: false,
+    prices: { dine_in: 3000 },
+  };
+  const byId = new Map([[latte.variantId, latte]]);
+  const printed: OpenBill = {
+    tabId: "t1",
+    version: 3,
+    tableId: null,
+    tableName: null,
+    label: "Table 4",
+    channel: "dine_in",
+    businessDay: "2026-09-25",
+    openedAt: "2026-09-25T18:00:00Z",
+    openedBy: null,
+    billPrintedAt: "2026-09-25T19:00:00Z",
+    billPrintCount: 1,
+    lines: [
+      {
+        lineId: "l1",
+        variantId: latte.variantId,
+        qty: 2,
+        note: "oat milk",
+        productName: "Latte",
+        variantName: "Latte",
+        price: 2500,
+      },
+    ],
+    subtotal: 5000,
+    discount: 0,
+    discountPercent: null,
+    discountAmount: null,
+    total: 5000,
+  };
+
+  it("the bill shows, and the till asks for, its printed total", () => {
+    const o = orderFromBill(printed);
+    expect(orderDue(o, byId, money).toFixed()).toBe("5000");
+  });
+
+  it("one more of the same is at the printed price too, as the database adds it", () => {
+    const o = orderFromBill(printed);
+    // The printed line has a note, so the new one is a line of its own.
+    const more = { ...o, lines: addLine(o.lines, latte.variantId) };
+    expect(more.lines).toHaveLength(2);
+    expect(orderDue(more, byId, money).toFixed()).toBe("7500");
+  });
+
+  it("a bill on screen is replaced when another till changed it, or a price on it did", () => {
+    const o = orderFromBill(printed);
+    expect(billChanged(o, printed)).toBe(false);
+    expect(billChanged(o, { ...printed, version: 4 })).toBe(true);
+    expect(billChanged(o, { ...printed, billPrintCount: 2 })).toBe(true);
+    // Not yet printed, and a new price started at midnight.
+    const open = { ...printed, billPrintedAt: null, billPrintCount: 0 };
+    const shown = orderFromBill(open);
+    const repriced = { ...open, lines: [{ ...open.lines[0]!, price: 3000 }] };
+    expect(billChanged(shown, repriced)).toBe(true);
+    expect(orderDue(orderFromBill(repriced), byId, money).toFixed()).toBe("6000");
   });
 });
 

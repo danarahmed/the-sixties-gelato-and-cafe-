@@ -565,6 +565,8 @@ export interface CheckRow {
   label: string;
   ok: boolean;
   detail: string | null;
+  /** False for a warning: the owner should know, but it does not stop the lock (0025). */
+  blocks: boolean;
 }
 
 /** Every check a period must pass before it may be locked (audit H-08). */
@@ -578,6 +580,7 @@ export async function getCloseChecklist(periodId: string): Promise<CheckRow[]> {
     label: str(r.label),
     ok: Boolean(r.ok),
     detail: strOrNull(r.detail),
+    blocks: r.blocks !== false,
   }));
 }
 

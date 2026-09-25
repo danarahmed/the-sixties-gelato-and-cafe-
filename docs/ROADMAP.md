@@ -27,7 +27,9 @@ honest, not by building a queue.
 1. **The September 2026 audit's action matrix**
    ([`SYSTEM_AUDIT_2026-09.md`](SYSTEM_AUDIT_2026-09.md)). Its P0s — counts
    while trading, the drawer across midnight, where money came from, a lost
-   answer from the database — are fixed in `0024`; the P1s come next. Then,
+   answer from the database — are fixed in `0024`, and P1-5 to P1-7 (the
+   recipe and price in force, printed bills, sales costed at nothing) in
+   `0025`; the other P1s come next, reports first. Then,
    on the owner's word, clear the test records and enter the opening balances
    ([`guides/deployment.md`](guides/deployment.md)).
 2. **Delivery-platform settlements (M-10).** Import a Talabat statement, match it

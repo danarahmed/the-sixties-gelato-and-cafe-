@@ -83,6 +83,24 @@ cost. WAC is the default; FIFO is a per-item/business option.
   Example: a serving costing 1,180 IQD at 70% → 3,933.33 → **4,000 IQD**
   (70.5%).
 
+### The recipe and the price in force (`0025`)
+
+- A sale, or a batch, uses the recipe version **that started last** on or
+  before its day (latest `effective_from`, then the highest version number).
+  A new version ends the day before a change already scheduled, so what is
+  scheduled still takes over on its date; a new version starting the same day
+  as another replaces it, and that one is never used. Example: a new recipe
+  is scheduled for 1 November; on 10 October the recipe is changed again from
+  that day. The 10 October recipe is used from 10 to 31 October, the
+  1 November one from then on. (Before `0025` the 10 October change stayed in
+  force for ever.)
+- A price is in force from its date: the latest one dated on or before the
+  day. A price can start today or later, never in the past, so every sale
+  keeps the price it was made at. Each price set is on the audit trail.
+- A price or recipe scheduled for a later date is listed on its product, and
+  can be withdrawn (with a reason, on the audit trail) until it starts. A
+  withdrawn recipe leaves the one it would have replaced in force.
+
 ## 6. Production
 
 - A batch consumes its recipe's ingredients (the version in force that day),
@@ -157,6 +175,23 @@ to validate charges.
    allocation (rent/salaries/utilities). This is an estimate; the allocation
    method is a business choice.
 
+### Sales costed at nothing (`0025`)
+
+A sale's cost is what its recipe's ingredients cost when it was made. It is
+**understated** — so its profit is overstated — when:
+
+- a line has no cost because the product has **no recipe**, and was not
+  marked as using no stock (a service charge, with its reason); or
+- an ingredient was used **before it had any cost** (never received, and no
+  opening stock at a cost), so its share went out at nothing.
+
+An ingredient that has a cost but whose share rounds to nothing (a pinch of
+salt) is not one of them. Such sales are listed on Reports (Uncosted Sales)
+and counted as a **warning** on the month-end checklist: it does not stop the
+lock, since a sale keeps the cost it was recorded with; the fix is for the
+next sales — give the product its recipe, or the item its cost. A new product
+must list what one serving uses, or say why it uses none.
+
 ## 11. Double-entry accounting
 
 Every journal entry must balance (Σ debits = Σ credits) to currency precision or
@@ -168,6 +203,14 @@ corrections are new entries. What each record posts (migration `0015`):
   tender) / Cr 4000 Sales; Dr 5000 COGS / Cr 1200 Inventory. With a discount
   (`0019`): Cr 4000 at the full price, Dr 4100 Merchant-funded discount for the
   discount, and the tender at what was paid.
+- The price a sale is made at (`0025`): the price in force that day, except a
+  bill printed for the customer, which is paid at the prices printed on it —
+  printing fixes each line's price, and more of the same product added later
+  is at that price too (anything new is priced when the bill is printed
+  again, or paid). The till sends the total it showed; if the database would
+  record another (a price changed since the till loaded its menu), nothing is
+  recorded, the till fetches today's prices, and the cashier tells the
+  customer before taking the money again.
 - Discount: a percentage of the bill, rounded to the nearest multiple of the
   business's `discount_round_to` (`0020`; a new business starts at 500; the
   café has used 250 IQD since 24 September 2026), exactly half-way rounding

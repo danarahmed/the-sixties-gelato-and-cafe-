@@ -7,11 +7,20 @@ import {
   getMenuCosting,
   getProfitAndLoss,
   getReconciliation,
+  getUncostedSales,
   pnlTotals,
 } from "@/lib/db/reports";
 import { LegacyPostings } from "@/components/books/LegacyPostings";
 import { channelLabel, fmtIQD } from "@/lib/format";
-import { addDays, businessToday, monthEnd, monthStart, parseDay, yearStart } from "@/lib/dates";
+import {
+  addDays,
+  businessToday,
+  dateTimeIn,
+  monthEnd,
+  monthStart,
+  parseDay,
+  yearStart,
+} from "@/lib/dates";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 
 export const dynamic = "force-dynamic";
@@ -29,14 +38,16 @@ export default async function ReportsPage({
   const to = parseDay(sp.to, today);
   const seesProfit = has(profile, "profit.view");
 
-  const [pnl, rec, sales, book, menu, unposted] = await Promise.all([
+  const [pnl, rec, sales, book, menu, unposted, uncosted] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
     getReconciliation(to),
     getDailySales(from, to),
     getVendorBook(today),
     getMenuCosting(),
     getLegacyUnposted(),
+    getUncostedSales(from, to),
   ]);
+  const uncostedNet = uncosted.reduce((sum, u) => sum + u.net, 0);
   const totals = pnlTotals(pnl);
   const ageing = ageBills(book.openBills);
   const unreconciled = rec.filter((r) => r.difference !== 0);
@@ -245,6 +256,69 @@ export default async function ReportsPage({
               </tbody>
             </table>
           </div>
+        )}
+      </section>
+
+      {/* ---- Sales costed at nothing (0025) ---- */}
+      <section className="panel" id="uncosted">
+        <div className="panel-h">
+          <h3>Uncosted Sales</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            Sales {from} to {to} with no cost, or part of it missing
+          </span>
+        </div>
+        {uncosted.length === 0 ? (
+          <div className="panel-b">
+            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+              ✅ Every sale in these dates carries its cost.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="tw">
+              <table>
+                <thead>
+                  <tr>
+                    <th>When</th>
+                    <th>Products</th>
+                    <th>Channel</th>
+                    <th className="right">Net sales</th>
+                    <th className="right">Cost recorded</th>
+                    <th>Why</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {uncosted.map((u) => (
+                    <tr key={u.orderId}>
+                      <td className="mono" style={{ whiteSpace: "nowrap" }}>
+                        {dateTimeIn(profile.timezone, u.placedAt)}
+                      </td>
+                      <td>{u.products}</td>
+                      <td>
+                        <span className="ref">
+                          {channelLabel[u.channel as SalesChannel] ?? u.channel}
+                        </span>
+                      </td>
+                      <td className="right money">{fmtIQD(u.net)}</td>
+                      <td className="right money">{fmtIQD(u.cogs)}</td>
+                      <td style={{ fontSize: ".82rem", color: "var(--warn)" }}>{u.reasons}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p
+              className="muted"
+              style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
+            >
+              ⚠️ {uncosted.length} sale(s), {fmtIQD(uncostedNet)} of sales: their profit is
+              overstated by what went into them uncosted. A sale keeps the cost it was recorded
+              with. To cost the next ones, give the product its recipe on{" "}
+              <Link href="/products">Products</Link> (or say why it uses no stock), and give an item
+              with no cost its opening stock or its first delivery on{" "}
+              <Link href="/inventory">Inventory</Link>.
+            </p>
+          </>
         )}
       </section>
 

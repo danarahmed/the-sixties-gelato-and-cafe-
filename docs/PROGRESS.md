@@ -1,16 +1,16 @@
 # Progress & Status
 
-_Last updated: 2026-09-24._ This is the one place that says what works and what
+_Last updated: 2026-09-25._ This is the one place that says what works and what
 does not. A feature is marked done only when it runs on the real database path
 and is tested. Tested means the SQL suites on real PostgreSQL 16 and 17, the
 browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0024` and the rebuilt app. The SQL
-  checks (25, with the rehearsals of the upgrade, the clean start and clearing
+- **Built and verified:** migrations `0014`–`0025` and the rebuilt app. The SQL
+  checks (26, with the rehearsals of the upgrade, the clean start and clearing
   the test records), the browser suites (7, every role), the unit and contract
-  tests (163) and a production build all pass.
+  tests (171) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -98,6 +98,17 @@ browser tests through the real app, or both.
   went live the same day with
   [pull request #10](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/10).
   The test records have not been cleared: that waits for the owner's word.
+- **Prices, recipes and costs (migration `0025`, the audit's P1-5, P1-6 and
+  P1-7):** the recipe in force is the one that started last, so a change made
+  today no longer hides one scheduled for later; scheduled prices and recipes
+  are listed on each product and can be withdrawn; a price cannot be dated in
+  the past, and each is audited. A printed bill is paid at its printed prices,
+  and every payment carries the total the till showed: the database refuses
+  one it would record at another, and the till then fetches today's prices
+  (it also does every ten minutes). Sales costed at nothing (no recipe, or an
+  ingredient used before it had a cost) are listed on Reports and warned of at
+  month end; a new product needs a recipe or a reason it uses no stock. Built
+  and tested.
 
 ## The August 2026 audit, finding by finding
 

@@ -149,5 +149,142 @@ console.log("▸ owner prices a new drink from what its recipe costs");
   await ctx.close();
 }
 
+console.log("▸ owner schedules a price, sees it waiting, and withdraws it; the past is refused");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/products");
+  const today = sql(`select business_local_date('${B}', now())`);
+  const card = page.locator(".card", { has: page.locator('input[value="Golden cortado"]') });
+  await card.locator("summary").click();
+  await card.getByRole("button", { name: "Change a price…" }).click();
+  await card
+    .locator("label", { hasText: /^Channel/ })
+    .locator("select")
+    .selectOption("dine_in");
+  await card.locator("label", { hasText: "New price" }).locator("input").fill("9000");
+  const from = card.locator("label", { hasText: /^From/ }).locator("input");
+  await from.fill(sql(`select ('${today}'::date - 1)::text`));
+  await card.getByRole("button", { name: "Set price" }).click();
+  await card.getByText("A price cannot start in the past").waitFor({ timeout: 10000 });
+  const nines = "select count(*) from channel_price where price = 9000";
+  check(sql(nines) === "0", "a price dated yesterday is refused: yesterday's sales keep theirs");
+
+  const later = sql(`select ('${today}'::date + 7)::text`);
+  await from.fill(later);
+  await card.getByRole("button", { name: "Set price" }).click();
+  await card.getByText(`New price takes effect on ${later}.`).waitFor({ timeout: 10000 });
+  const waiting = card.getByTestId("scheduled-changes");
+  await waiting.waitFor({ timeout: 10000 });
+  check(
+    (await waiting.textContent()).includes(`From ${later}: Dine-in at 9,000 IQD`),
+    "a price set for next week is listed on the product, waiting",
+  );
+  await waiting.getByRole("button", { name: "Withdraw…" }).click();
+  await waiting.getByLabel("Why the change is withdrawn").fill("The supplier kept its price");
+  await waiting.getByRole("button", { name: "Withdraw it" }).click();
+  await waiting.waitFor({ state: "detached", timeout: 10000 });
+  check(sql(nines) === "0", "withdrawn before it starts, it is gone");
+  check(
+    sql(
+      "select count(*) from audit_log where action = 'price.cancel' and reason = 'The supplier kept its price'",
+    ) === "1",
+    "with the reason on the audit trail",
+  );
+  await ctx.close();
+}
+
+console.log("▸ a product with no recipe says why it uses no stock, or is flagged");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/products");
+  await page.getByRole("button", { name: "➕ Add menu product" }).click();
+  await page.getByLabel("Product name (English)").fill("Golden service");
+  await page.getByLabel("Dine-in price").fill("1000");
+  await page.getByRole("button", { name: "Create product" }).click();
+  await page
+    .getByText("List what one serving uses, or say why it uses no stock (a service charge, say).")
+    .waitFor({ timeout: 10000 });
+  check(
+    sql("select count(*) from product where name = 'Golden service'") === "0",
+    "a product with no ingredients and no reason is not created",
+  );
+  await page.getByLabel("Why it uses no stock").first().fill("A table service charge");
+  await page.getByRole("button", { name: "Create product" }).click();
+  await page.getByText("Created “Golden service”.").waitFor({ timeout: 10000 });
+  check(
+    sql(
+      "select pv.no_stock_reason from product_variant pv join product p on p.id = pv.product_id where p.name = 'Golden service'",
+    ) === "A table service charge",
+    "with its reason, it is: it sells at no cost, and says why",
+  );
+  const card = page.locator(".card", { has: page.locator('input[value="Golden service"]') });
+  await card.waitFor({ timeout: 10000 });
+  await card.locator("summary").click();
+  check(
+    (await card.getByText("Uses no stock: A table service charge.").count()) === 1 &&
+      (await card.getByTestId("cost-warning").count()) === 0,
+    "its card says so, and does not flag it",
+  );
+  await card.getByRole("button", { name: "It does use stock" }).click();
+  await card.getByTestId("cost-warning").waitFor({ timeout: 10000 });
+  check(
+    (await card.getByTestId("cost-warning").textContent()).includes("Costed at nothing"),
+    "taken back, it is flagged as costed at nothing until it has a recipe",
+  );
+  await ctx.close();
+}
+
+console.log("▸ it is sold, and Reports list the sale as costed at nothing");
+{
+  const cashier = await signIn(browser, "cashier");
+  await open(cashier.page, "/pos");
+  await cashier.page.locator(".strip-chip", { hasText: "Quick sale" }).click();
+  await cashier.page.getByRole("button", { name: "Dine-in" }).click();
+  await cashier.page.getByRole("tab", { name: /All/ }).click();
+  await cashier.page.locator(".product-tile", { hasText: "Golden service" }).click();
+  await cashier.page.getByRole("button", { name: /Cash/ }).click();
+  await cashier.page.locator(".pay-confirm").click();
+  await cashier.page.getByText("Sale recorded").waitFor({ timeout: 10000 });
+  check(
+    sql(
+      "select net_amount || '/' || cogs_amount from sales_order order by created_at desc limit 1",
+    ) === "1000/0",
+    "a sale of it posts no cost",
+  );
+  await cashier.ctx.close();
+
+  const { ctx, page } = await signIn(browser, "owner");
+  const to = sql(`select business_local_date('${B}', now())`);
+  const from = sql(`select ('${to}'::date - 60)::text`);
+  await open(page, `/reports?from=${from}&to=${to}`);
+  const section = page.locator("#uncosted");
+  const row = section.locator("tbody tr", { hasText: "Golden service" });
+  check(
+    (await row.count()) === 1 &&
+      (await row.textContent()).includes("Costed at nothing: Golden service"),
+    "Reports list the sale under Uncosted Sales, and why",
+  );
+  const uncosted = Number(sql(`select count(*) from uncosted_sales('${B}', '${from}', '${to}')`));
+  check(
+    (await section.locator("tbody tr").count()) === uncosted,
+    `and list exactly the database's ${uncosted} uncosted sale(s) in these dates`,
+  );
+
+  await open(page, "/accounting");
+  const warning = (await page.locator('tr[data-check="uncosted"]').textContent()) ?? "";
+  check(
+    warning.includes("⚠️") && warning.includes("costed at nothing"),
+    "the month's closing checklist warns of it",
+  );
+  const blocking = await page.locator("tr[data-check]", { hasText: "⛔" }).count();
+  const hints = page.getByText(/Resolve the \d+ failing check/);
+  const hint = (await hints.count()) > 0 ? await hints.textContent() : "";
+  check(
+    blocking === 0 ? hint === "" : hint.includes(`Resolve the ${blocking} failing`),
+    `as a warning only: the lock waits on the ${blocking} blocking check(s), not on it`,
+  );
+  await ctx.close();
+}
+
 await browser.close();
 done("menu");

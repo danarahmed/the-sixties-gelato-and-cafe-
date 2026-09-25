@@ -9,6 +9,7 @@ import { chromium, BASE, check, done, open, signIn, sql } from "./lib.mjs";
 const browser = await chromium.launch();
 const ok = (m) => check(true, m);
 const ESPRESSO = "d0000000-0000-0000-0000-000000000001";
+const ESPRESSO_SINGLE = "d1000000-0000-0000-0000-000000000001";
 // A 1×1 PNG: the browser shrinks and re-encodes it, the database checks the bytes.
 const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
@@ -296,6 +297,109 @@ check(
   Number(sql("select count(*) from sales_order")) === salesBefore + 4,
   "three bills and one discounted sale: four sales",
 );
+
+// ------------------------------------------------------------ prices (0025)
+console.log(
+  "▸ a printed bill keeps its prices; a till with the old prices is stopped, then catches up",
+);
+{
+  /** Wait for the database to say so (a message shown twice cannot be waited for). */
+  const until = async (q, want) => {
+    for (let i = 0; i < 50 && sql(q) !== want; i++) await new Promise((r) => setTimeout(r, 200));
+    return sql(q) === want;
+  };
+  const { ctx, page } = await till("cashier");
+  await open(page, "/pos");
+  await page.locator(".table-tile", { hasText: "Table 3" }).click();
+  const espresso = page.locator(".product-tile", { hasText: "Golden espresso" });
+  await espresso.click();
+  await espresso.click();
+  await page.getByRole("button", { name: /Print bill/ }).click();
+  await page.waitForFunction(() => window.__printed === 1, null, { timeout: 10000 });
+  check(
+    sql(
+      "select string_agg(trim_scale(l.unit_price)::text, ',') from pos_tab_line l join pos_tab t on t.id = l.tab_id where t.status = 'open'",
+    ) === "2500",
+    "printing the bill freezes the price the customer is shown",
+  );
+
+  // Meanwhile the owner puts the espresso up to 3,000, from today.
+  const owner = await signIn(browser, "owner");
+  await open(owner.page, "/products");
+  const card = owner.page.locator(".card", {
+    has: owner.page.locator('input[value="Golden espresso"]'),
+  });
+  await card.locator("summary").click();
+  await card.getByRole("button", { name: "Change a price…" }).click();
+  const priceNow = (c) =>
+    `select trim_scale(price_on('${ESPRESSO_SINGLE}', '${c}', null, business_local_date(business_id, now())))::text from product_variant where id = '${ESPRESSO_SINGLE}'`;
+  for (const [c, label] of [
+    ["dine_in", "Dine-in"],
+    ["takeaway", "Takeaway"],
+  ]) {
+    await card
+      .locator("label", { hasText: /^Channel/ })
+      .locator("select")
+      .selectOption(c);
+    await card.locator("label", { hasText: "New price" }).locator("input").fill("3000");
+    await card.getByRole("button", { name: "Set price" }).click();
+    check(await until(priceNow(c), "3000"), `${label} is 3,000 from today`);
+  }
+  check(
+    sql(
+      "select count(*) from audit_log where action = 'price.set' and after_state ->> 'price' = '3000'",
+    ) === "2",
+    "each price set is on the audit trail",
+  );
+  await owner.ctx.close();
+
+  // The customer pays what the bill in their hand says.
+  await page.getByRole("button", { name: /Cash/ }).click();
+  check(
+    (await page.locator(".pay-modal .pay-total").textContent()) === "5,000 IQD",
+    "the printed bill is still 5,000 on the till",
+  );
+  await page.locator(".pay-confirm").click();
+  await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
+  check(
+    sql("select net_amount from sales_order order by created_at desc limit 1") === "5000",
+    "and is paid at its printed prices: 5,000, not 6,000",
+  );
+
+  // A quick sale on a till that loaded the menu before the change.
+  const sales = Number(sql("select count(*) from sales_order"));
+  await page.locator(".strip-chip", { hasText: "Quick sale" }).click();
+  await page.getByRole("button", { name: "Takeaway" }).click();
+  await espresso.click();
+  check(
+    (await page.locator(".order-total strong").textContent()) === "2,500 IQD",
+    "a till left open still shows the old price",
+  );
+  await page.getByRole("button", { name: /Cash/ }).click();
+  await page.locator(".pay-confirm").click();
+  await page.getByText(/The total is 3000 now, not the 2500 shown/).waitFor({ timeout: 10000 });
+  check(
+    Number(sql("select count(*) from sales_order")) === sales,
+    "taking 2,500 for a 3,000 espresso is refused: nothing is recorded",
+  );
+  await page.locator(".order-total strong", { hasText: "3,000 IQD" }).waitFor({ timeout: 10000 });
+  check(
+    (await page.locator(".pay-modal").count()) === 0,
+    "the till fetches today's prices and shows the order as it now stands",
+  );
+  await page.getByRole("button", { name: /Cash/ }).click();
+  check(
+    (await page.locator(".pay-modal .pay-total").textContent()) === "3,000 IQD",
+    "taking the money again asks for 3,000",
+  );
+  await page.locator(".pay-confirm").click();
+  await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
+  check(
+    sql("select net_amount from sales_order order by created_at desc limit 1") === "3000",
+    "and the sale records what the customer was told",
+  );
+  await ctx.close();
+}
 
 await browser.close();
 done("bills");

@@ -11,8 +11,9 @@ import type { CheckRow } from "@/lib/db/books";
  * Closing a period. Every check must pass before the lock is offered, and the
  * database runs them all again as it locks, so the lock cannot be forced past
  * an open day, an unapproved count, a draft or a subledger that disagrees
- * with its control account (audit H-08). Reopening is the owner's alone, with
- * a reason on the audit trail.
+ * with its control account (audit H-08). A warning (sales costed at nothing,
+ * 0025) is shown but does not stop the lock. Reopening is the owner's alone,
+ * with a reason on the audit trail.
  */
 export function PeriodControl({
   period,
@@ -38,7 +39,7 @@ export function PeriodControl({
   const [reason, setReason] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const locked = period.status === "locked";
-  const failing = checklist.filter((c) => !c.ok);
+  const failing = checklist.filter((c) => !c.ok && c.blocks);
 
   function lock() {
     setMsg(null);
@@ -88,10 +89,16 @@ export function PeriodControl({
           <table>
             <tbody>
               {checklist.map((c) => (
-                <tr key={c.key}>
-                  <td style={{ width: 28 }}>{c.ok ? "✅" : "⛔"}</td>
+                <tr key={c.key} data-check={c.key}>
+                  <td style={{ width: 28 }}>{c.ok ? "✅" : c.blocks ? "⛔" : "⚠️"}</td>
                   <td>{c.label}</td>
-                  <td className={c.ok ? "muted" : "red"} style={{ fontSize: ".82rem" }}>
+                  <td
+                    className={c.ok ? "muted" : c.blocks ? "red" : undefined}
+                    style={{
+                      fontSize: ".82rem",
+                      color: !c.ok && !c.blocks ? "var(--warn)" : undefined,
+                    }}
+                  >
                     {c.detail ?? ""}
                   </td>
                 </tr>

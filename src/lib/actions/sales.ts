@@ -33,6 +33,12 @@ const saleInput = z.object({
   /** At most one of the two: a percentage of the bill, or an amount off it. */
   discountPercent,
   discountAmount,
+  /**
+   * The total the till showed the customer. If the database would record
+   * another (a price changed since the till loaded its menu), nothing is
+   * recorded and the till is told the new total (0025).
+   */
+  expectedNet: optionalNonNegative("The total shown"),
 });
 
 export interface SaleReceipt {
@@ -63,6 +69,7 @@ export async function recordSaleAction(
     p_lines: v.data.lines.map((l) => ({ variant_id: l.variantId, qty: l.qty })),
     p_discount_percent: v.data.discountPercent,
     p_discount_amount: v.data.discountAmount,
+    p_expected_net: v.data.expectedNet,
   });
   if (!r.ok) return r;
   refresh(...SALE_PATHS);
