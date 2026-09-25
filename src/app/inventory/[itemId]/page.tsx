@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { requirePermission } from "@/lib/auth/session";
-import { getItem } from "@/lib/db/read";
+import { has, requirePermission } from "@/lib/auth/session";
+import { getItem, getItemPriceHistory } from "@/lib/db/read";
 import { getStockCard, type StockCardKind, type StockCardRow } from "@/lib/db/reports";
-import { fmtIQD, fmtQty, movementLabel } from "@/lib/format";
+import { fmtIQD, fmtQty, itemTypeLabel, movementLabel } from "@/lib/format";
 import { businessToday, dateTimeIn, monthStart, parseDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui";
+import { EditItem, PackUnits } from "@/components/ItemEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * An item's stock card (audit P1-2): what it opened with, each kind of
  * movement in the dates, and what it closed with, which is what the stock
  * board shows at the end of the last day; then every movement, with the
- * balance after it.
+ * balance after it. Below it (0027, P1-3 and P1-4): what each delivery cost,
+ * the item's units, and the item corrected, by those who look after stock.
  */
 export default async function StockCardPage({
   params,
@@ -52,7 +54,14 @@ export default async function StockCardPage({
       </div>
     );
   }
-  const card = await getStockCard(item.id, from, to);
+  const [card, prices] = await Promise.all([
+    getStockCard(item.id, from, to),
+    getItemPriceHistory(item.id),
+  ]);
+  const canEdit =
+    has(profile, "settings.manage") ||
+    has(profile, "purchase.create") ||
+    has(profile, "inventory.adjust.approve");
   const opening = card.find((r) => r.seq === 0);
   const moves = card.filter((r) => r.seq > 0);
   const last: StockCardRow | undefined = card[card.length - 1];
@@ -69,8 +78,13 @@ export default async function StockCardPage({
       <div className="phead">
         <h1>Stock card: {item.name}</h1>
         <span className="sc">
-          {from} to {to} · in {unit}
+          {itemTypeLabel(item.itemType)} · {from} to {to} · in {unit}
         </span>
+        {!item.isActive && (
+          <div className="sp">
+            <span className="badge warn">Out of use</span>
+          </div>
+        )}
       </div>
 
       <form
@@ -189,6 +203,62 @@ export default async function StockCardPage({
           </div>
         )}
       </section>
+
+      <section className="panel" data-testid="price-history">
+        <div className="panel-h">
+          <h3>What it has cost</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            Each delivery, newest first: the price paid, and with freight shared out
+          </span>
+        </div>
+        {prices.length === 0 ? (
+          <div className="panel-b">
+            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+              No deliveries of it yet.
+            </p>
+          </div>
+        ) : (
+          <div className="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>Received</th>
+                  <th>Receipt</th>
+                  <th>Supplier</th>
+                  <th className="right">Quantity</th>
+                  <th className="right">Paid</th>
+                  <th className="right">A {unit}</th>
+                  <th className="right">Landed, a {unit}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {prices.map((p, i) => (
+                  <tr key={`${p.receiptNo}-${i}`}>
+                    <td className="mono muted" style={{ fontSize: ".8rem", whiteSpace: "nowrap" }}>
+                      {dateTimeIn(profile.timezone, p.receivedAt)}
+                    </td>
+                    <td className="mono">{p.receiptNo ?? "—"}</td>
+                    <td>{p.supplier ?? "—"}</td>
+                    <td className="right mono">
+                      {fmtQty(p.qty)} {p.unit}
+                    </td>
+                    <td className="right money">{fmtIQD(p.goodsValue)}</td>
+                    <td className="right mono">
+                      {p.costPerBase === null ? "—" : `${fmtQty(p.costPerBase)} IQD`}
+                    </td>
+                    <td className="right mono">
+                      {p.landedPerBase === null ? "—" : `${fmtQty(p.landedPerBase)} IQD`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <PackUnits item={item} canAdd={canEdit} />
+      {canEdit && <EditItem item={item} />}
     </div>
   );
 }

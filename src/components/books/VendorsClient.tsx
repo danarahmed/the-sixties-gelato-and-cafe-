@@ -7,6 +7,7 @@ import {
   createSupplierAction,
   payBillAction,
   recordBillAction,
+  updateSupplierAction,
 } from "@/lib/actions/purchasing";
 import type { PaymentSource } from "@/lib/validation";
 import { fmtIQD } from "@/lib/format";
@@ -27,7 +28,7 @@ export interface AccountOption {
   name: string;
 }
 
-type Tab = "statement" | "bills" | "new";
+type Tab = "statement" | "bills" | "edit" | "new";
 type Msg = { ok: boolean; text: string } | null;
 
 export function VendorsClient({
@@ -55,9 +56,10 @@ export function VendorsClient({
   canAddVendor: boolean;
 }) {
   const router = useRouter();
-  const [sel, setSel] = useState(0);
+  // By id, not position: a vendor renamed or taken out of use moves in the list.
+  const [selId, setSelId] = useState(vendors[0]?.id ?? "");
   const [tab, setTab] = useState<Tab>("statement");
-  const vendor = vendors[sel];
+  const vendor = vendors.find((v) => v.id === selId) ?? vendors[0];
 
   if (vendors.length === 0) {
     return canAddVendor ? (
@@ -71,7 +73,7 @@ export function VendorsClient({
     ["statement", "Statement"],
     ["bills", "Bills & payments"],
   ];
-  if (canAddVendor) tabs.push(["new", "New vendor"]);
+  if (canAddVendor) tabs.push(["edit", "Edit vendor"], ["new", "New vendor"]);
 
   return (
     <div className="three">
@@ -82,19 +84,19 @@ export function VendorsClient({
             {vendors.length}
           </span>
         </div>
-        {vendors.map((v, i) => (
+        {vendors.map((v) => (
           <button
             key={v.id}
-            className={`vrow ${i === sel ? "on" : ""}`}
+            className={`vrow ${v.id === vendor?.id ? "on" : ""}`}
             onClick={() => {
-              setSel(i);
+              setSelId(v.id);
               setTab("statement");
             }}
           >
             <span>
               <span className="nm">{v.name}</span>
               <span className="sub2" style={{ display: "block" }}>
-                {v.contact ?? "—"}
+                {v.isActive ? (v.contact ?? "—") : "Out of use"}
               </span>
             </span>
             <span
@@ -109,7 +111,14 @@ export function VendorsClient({
 
       <div>
         <div style={{ padding: "14px 18px 0" }}>
-          <h2 style={{ margin: 0 }}>{vendor?.name}</h2>
+          <h2 style={{ margin: 0 }}>
+            {vendor?.name}
+            {vendor && !vendor.isActive && (
+              <span className="badge warn" style={{ marginInlineStart: 8, fontSize: ".7rem" }}>
+                Out of use
+              </span>
+            )}
+          </h2>
           <div className="sc" style={{ marginBlockStart: 3 }}>
             {vendor?.phone ? `${vendor.phone} · ` : ""}
             {vendor && vendor.overdue > 0 ? `${fmtIQD(vendor.overdue)} overdue` : "Nothing overdue"}
@@ -150,6 +159,9 @@ export function VendorsClient({
               canPay={canPay}
               onDone={() => router.refresh()}
             />
+          )}
+          {tab === "edit" && vendor && (
+            <EditVendor key={vendor.id} vendor={vendor} onDone={() => router.refresh()} />
           )}
           {tab === "new" && <AddVendor onDone={() => router.refresh()} />}
         </div>
@@ -281,7 +293,9 @@ function Bills({
   // null: the box shows the café's next number, taken when the bill is saved.
   const [inv, setInv] = useState<string | null>(null);
   const [invDate, setInvDate] = useState(today);
-  const [amount, setAmount] = useState(receipts[0] ? String(receipts[0].value) : "");
+  // Typed from the supplier's invoice, never copied from the receipt (audit P1-3):
+  // a typo on the receipt would otherwise be billed and paid too.
+  const [amount, setAmount] = useState("");
   const [terms, setTerms] = useState("15");
   const [payFor, setPayFor] = useState("");
   const [payAmt, setPayAmt] = useState("");
@@ -374,14 +388,7 @@ function Bills({
               {kind === "receipt" ? (
                 <label style={{ flex: 2, minWidth: 220 }}>
                   <div className="sc">Goods receipt</div>
-                  <select
-                    value={receiptId}
-                    onChange={(e) => {
-                      setReceiptId(e.target.value);
-                      const r = receipts.find((x) => x.id === e.target.value);
-                      if (r) setAmount(String(r.value));
-                    }}
-                  >
+                  <select value={receiptId} onChange={(e) => setReceiptId(e.target.value)}>
                     {receipts.map((r) => (
                       <option key={r.id} value={r.id}>
                         {r.supplierId === null
@@ -457,7 +464,13 @@ function Bills({
                 instead.
               </p>
             )}
-            {kind === "receipt" && receipt && variance !== 0 && (
+            {kind === "receipt" && receipt && amountN === 0 && (
+              <p className="muted" style={{ fontSize: ".78rem", margin: 0 }}>
+                Type the amount the supplier&apos;s invoice says. It is checked against the{" "}
+                {fmtIQD(receipt.value)} the receipt recorded.
+              </p>
+            )}
+            {kind === "receipt" && receipt && amountN > 0 && variance !== 0 && (
               <p className="muted" style={{ fontSize: ".78rem", margin: 0 }}>
                 The bill is {fmtIQD(Math.abs(variance))} {variance > 0 ? "more" : "less"} than the
                 receipt recorded; the difference goes to 5050 Purchase price variance.
@@ -648,6 +661,88 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
         <div style={{ marginBlockStart: 12 }}>
           <Notice msg={msg} />
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A supplier corrected (0027): name, what they supply, phone, and whether they
+ * are in use — not taken out of use while they are owed money. On the audit
+ * trail, with the values before and after.
+ */
+function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void }) {
+  const [busy, start] = useTransition();
+  const [msg, setMsg] = useState<Msg>(null);
+  const initial = {
+    name: vendor.name,
+    contact: vendor.contact ?? "",
+    phone: vendor.phone ?? "",
+    isActive: vendor.isActive,
+  };
+  const [f, setF] = useState(initial);
+  const [reason, setReason] = useState("");
+  const changed = JSON.stringify(f) !== JSON.stringify(initial);
+
+  function save() {
+    setMsg(null);
+    start(async () => {
+      const r = await updateSupplierAction({ supplierId: vendor.id, ...f, reason });
+      if (r.ok) {
+        setMsg({ ok: true, text: "Saved, and on the audit trail." });
+        setReason("");
+        onDone();
+      } else setMsg({ ok: false, text: r.error });
+    });
+  }
+
+  return (
+    <div className="grid" style={{ gap: 12, maxWidth: 720 }} data-testid="edit-vendor">
+      <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
+        <label style={{ flex: 1, minWidth: 160 }}>
+          <div className="sc">Vendor name</div>
+          <input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+        </label>
+        <label style={{ flex: 1, minWidth: 140 }}>
+          <div className="sc">What they supply</div>
+          <input value={f.contact} onChange={(e) => setF({ ...f, contact: e.target.value })} />
+        </label>
+        <label style={{ minWidth: 130 }}>
+          <div className="sc">Phone</div>
+          <input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+        </label>
+      </div>
+      <label style={{ fontSize: ".85rem", display: "flex", gap: 6, alignItems: "center" }}>
+        <input
+          type="checkbox"
+          checked={f.isActive}
+          onChange={(e) => setF({ ...f, isActive: e.target.checked })}
+        />
+        In use: deliveries can be received from them
+      </label>
+      <label>
+        <div className="sc">Why (on the audit trail)</div>
+        <input
+          value={reason}
+          maxLength={300}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder={f.isActive ? "e.g. their registered name" : "e.g. no longer delivers"}
+        />
+      </label>
+      <p className="muted" style={{ fontSize: ".78rem", margin: 0 }}>
+        No two vendors in use share a name, whatever the capitals, spaces or punctuation — so the
+        same invoice cannot be billed twice under two spellings. A vendor still owed money stays in
+        use until their bills are paid or cancelled.
+      </p>
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <button
+          className="btn-primary"
+          onClick={save}
+          disabled={busy || !changed || !f.name.trim()}
+        >
+          {busy ? "Saving…" : "Save changes"}
+        </button>
+        <Notice msg={msg} />
       </div>
     </div>
   );

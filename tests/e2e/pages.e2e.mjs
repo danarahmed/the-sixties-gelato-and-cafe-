@@ -19,6 +19,7 @@ const PAGES = [
   "/journals",
   "/accounting",
   "/reports",
+  "/audit",
   "/settings",
   "/account",
 ];

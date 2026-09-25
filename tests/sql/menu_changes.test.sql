@@ -141,10 +141,11 @@ select test.throws($$select create_product('Tap water', '{"dine_in": 500}')$$, '
   'a new product lists what it uses, or says why it uses no stock');
 insert into ids select 'svc', (create_product('Service charge', '{"dine_in": 1000}',
   p_no_stock_reason => 'a charge, not a product') ->> 'variant_id')::uuid;
-insert into ids select 'syrup', (create_item('Vanilla syrup', 'ingredient', 'ml', 'volume') ->> 'item_id')::uuid;
+insert into ids select 'syrup', (create_item('Golden vanilla syrup', 'ingredient', 'ml', 'volume') ->> 'item_id')::uuid;
 insert into ids select 'salt', (create_item('Sea salt', 'ingredient', 'g', 'mass', p_opening_qty => 100,
-                                            p_opening_unit_cost => 0.2) ->> 'item_id')::uuid;
-insert into ids select 'vl', (create_product('Vanilla latte', '{"dine_in": 4000}', jsonb_build_array(
+                                            p_opening_unit_cost => 0.2, p_opening_reason => 'the opening count')
+                                ->> 'item_id')::uuid;
+insert into ids select 'vl', (create_product('Golden vanilla latte', '{"dine_in": 4000}', jsonb_build_array(
   jsonb_build_object('item_id', pg_temp.id('syrup'), 'qty', 20, 'unit_code', 'ml'),
   jsonb_build_object('item_id', 'c0000000-0000-0000-0000-000000000001', 'qty', 20, 'unit_code', 'g'))) ->> 'variant_id')::uuid;
 insert into ids select 'salted', (create_product('Salted espresso', '{"dine_in": 3000}', jsonb_build_array(
@@ -165,7 +166,7 @@ select test.throws($$select * from report_uncosted_sales(test.today(), test.toda
   'a cashier is not shown costs');
 select test.act_as('manager@example.com');
 select test.eq((select string_agg(products || ': ' || reasons, ' | ' order by placed_at) from report_uncosted_sales(test.today(), test.today())),
-  'Vanilla latte: Used before it had a cost: Vanilla syrup | Old tea: Costed at nothing: Old tea',
+  'Golden vanilla latte: Used before it had a cost: Golden vanilla syrup | Old tea: Costed at nothing: Old tea',
   'listed: the syrup used before it had any cost, and the old product with no recipe; not the service charge, nor the salt whose share rounds to nothing');
 select test.act_as('owner@example.com');
 create temp table cl as select * from period_close_checklist(

@@ -15,6 +15,15 @@ import { getBookkeeper } from "@/lib/bookkeeping/rules";
 import { isUncertainFailure } from "@/lib/db/rpcOutcome";
 import { drawerPreview } from "@/components/books/drawerMath";
 import { salesTotals } from "@/lib/db/salesTotals";
+import {
+  AUDIT_GROUPS,
+  actionLabel,
+  auditGroup,
+  describeChanges,
+  showValue,
+  subjectOf,
+} from "@/lib/audit";
+import { deliveryLineCost, needsPriceConfirmation, priceGap } from "@/lib/receiving";
 import Decimal from "decimal.js";
 import {
   addLine,
@@ -86,6 +95,14 @@ describe("where each role lands", () => {
         ROLE_PERMISSIONS[role].has("settings.manage"),
       );
     }
+  });
+
+  it("the audit trail is offered to those who may read it, and no one else", () => {
+    const audit = NAV.find((n) => n.href === "/audit")!;
+    const offered = roles.filter((r) => holdsAny(perms(r), audit.anyOf)).sort();
+    expect(offered).toEqual(
+      ["accountant", "auditor", "branch_manager", "general_manager", "owner"].sort(),
+    );
   });
 
   it("only sign-in and setup are reachable signed out", () => {
@@ -634,5 +651,113 @@ describe("a failed database call: a refusal, or an unknown (audit P0-4)", () => 
   });
   it("no error is no failure", () => {
     expect(isUncertainFailure(null, 200)).toBe(false);
+  });
+});
+
+describe("the audit trail in words (0027, the audit's P1-1)", () => {
+  const V = "d1000000-0000-0000-0000-000000000001";
+  const I = "c0000000-0000-0000-0000-000000000001";
+  const names = new Map([
+    [V, "Espresso — Single"],
+    [I, "Coffee beans"],
+  ]);
+
+  it("names what happened, including changes the database records itself", () => {
+    expect(actionLabel("price.set")).toBe("Price set");
+    expect(actionLabel("item.update")).toBe("Stock item changed");
+    expect(actionLabel("supplier.create")).toBe("Supplier added");
+    expect(actionLabel("product_category.delete")).toBe("Category deleted");
+    expect(actionLabel("something.new")).toBe("something.new");
+  });
+
+  it("a price set: what it was and what it became, about the product and channel", () => {
+    const before = { price: 2500, channel: "dine_in", variant: V };
+    const after = { price: 3000, channel: "dine_in", variant: V, effective_from: "2026-09-25" };
+    expect(describeChanges(before, after, names)).toEqual([
+      { field: "Price", before: "2,500", after: "3,000" },
+      { field: "From", before: "—", after: "2026-09-25" },
+    ]);
+    expect(subjectOf("channel_price", "x", before, after, names)).toBe(
+      "Espresso — Single, Dine-in",
+    );
+  });
+
+  it("a change lists only what changed; bookkeeping columns are left out", () => {
+    expect(
+      describeChanges(
+        { name: "Milk", is_active: true, created_at: "2026-01-01" },
+        { name: "Fresh milk", is_active: false, created_at: "2026-09-25" },
+        names,
+      ),
+    ).toEqual([
+      { field: "Name", before: "Milk", after: "Fresh milk" },
+      { field: "In use", before: "yes", after: "no" },
+    ]);
+  });
+
+  it("a record added shows what it was given; one deleted, what it held", () => {
+    const row = { id: "x", business_id: "b", name: "Cakes", sort_order: 5, name_ar: null };
+    expect(describeChanges(null, row, names)).toEqual([
+      { field: "Name", before: "", after: "Cakes" },
+      { field: "Order on the till", before: "", after: "5" },
+    ]);
+    expect(describeChanges(row, null, names)).toEqual([
+      { field: "Name", before: "Cakes", after: "" },
+      { field: "Order on the till", before: "5", after: "" },
+    ]);
+  });
+
+  it("ingredients read as a recipe, with their names", () => {
+    expect(
+      showValue(
+        [
+          { item: "Golden beans", qty: 100, unit: "g" },
+          { item_id: I, qty: 1, unit_code: "each", channels: ["takeaway"] },
+        ],
+        "lines",
+        names,
+      ),
+    ).toBe("Golden beans 100 g, Coffee beans 1 each (Takeaway)");
+  });
+
+  it("an id is given its name, or shown short when the name is not known", () => {
+    expect(showValue(I, "item_id", names)).toBe("Coffee beans");
+    expect(showValue("e0000000-0000-0000-0000-000000000009", "item_id", names)).toBe("e0000000…");
+  });
+
+  it("says what a row is about", () => {
+    expect(subjectOf("item", I, null, { name: "Coffee beans" }, names)).toBe("Coffee beans");
+    expect(subjectOf("item_unit", "u", null, { item_id: I, code: "case_24" }, names)).toBe(
+      "Coffee beans: case_24",
+    );
+    expect(subjectOf("business", "b", null, null, names)).toBe("Business settings");
+    expect(subjectOf("goods_receipt", "r", null, { receipt_no: 12 }, names)).toBe("Receipt 12");
+    expect(subjectOf("inventory_movement", "m", null, { item: I }, names)).toBe("Coffee beans");
+  });
+
+  it("narrows to a kind of change, and nothing unknown", () => {
+    expect(auditGroup("prices")?.prefixes).toEqual(["price."]);
+    expect(auditGroup("nonsense")).toBeNull();
+    expect(new Set(AUDIT_GROUPS.map((g) => g.key)).size).toBe(AUDIT_GROUPS.length);
+  });
+});
+
+describe("a delivery at a price per unit (0027, the audit's P1-3)", () => {
+  it("a line's total, and what it costs a base unit", () => {
+    // 2 cases of 24 at 12,000 a case: 24,000, 500 a bottle.
+    expect(deliveryLineCost(2, 24, 12000)).toEqual({ total: 24000, perBase: 500 });
+    expect(deliveryLineCost(0, 24, 12000).perBase).toBeNull();
+  });
+
+  it("how far a price is from the cost now", () => {
+    expect(priceGap(2.5, 50)).toBeCloseTo(-0.95);
+    expect(priceGap(65, 25)).toBeCloseTo(1.6);
+    expect(priceGap(10, null)).toBeNull();
+    expect(priceGap(10, 0)).toBeNull();
+  });
+
+  it("knows the database asking for a price to be confirmed", () => {
+    expect(needsPriceConfirmation("Check the price: Cups at 2.5 each is 95% below")).toBe(true);
+    expect(needsPriceConfirmation("Choose an active supplier")).toBe(false);
   });
 });

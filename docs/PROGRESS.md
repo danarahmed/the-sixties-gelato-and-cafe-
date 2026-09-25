@@ -7,10 +7,10 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0026` and the rebuilt app. The SQL
-  checks (27, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (8, every role), the unit and contract
-  tests (175) and a production build all pass.
+- **Built and verified:** migrations `0014`–`0027` and the rebuilt app. The SQL
+  checks (28, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (9, every role), the unit and contract
+  tests (191) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -123,7 +123,25 @@ browser tests through the real app, or both.
   every item has a stock card; every journal line downloads as CSV. Built and
   tested. The migration was applied to the live database on 25 September
   2026, matches the tested build object by object (permissions included), and
-  its reports were checked as the owner against the live records.
+  its reports were checked as the owner against the live records. The screens
+  went live the same day with
+  [pull request #12](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/12).
+- **Who changed what, delivery prices, items and suppliers (migration `0027`,
+  the audit's P1-1, P1-3 and P1-4):** every change to prices, products, stock
+  items and their units, suppliers, settings and places is on the new **Audit
+  trail** screen, with the values before and after and the person — a change
+  made in the database itself shows no one — and downloads as CSV. Opening
+  stock is the owner's alone, with a reason; batch recipes are audited; each
+  sale keeps the name it was sold under. A delivery is entered at its price
+  per unit, and a price more than 25% from what the item costs now is asked
+  about before anything is received; each item's card shows its price
+  history; a bill's amount is typed from the invoice. Items and suppliers are
+  corrected and taken out of use on their screens, pack units are added, and
+  no two in use share a name. The merge tool waits until a duplicate exists
+  (none do). Built and tested. The migration was applied to the live database
+  on 25 September 2026, matches the tested build object by object
+  (permissions included), and was checked as the owner in a transaction that
+  was rolled back.
 
 ## The August 2026 audit, finding by finding
 

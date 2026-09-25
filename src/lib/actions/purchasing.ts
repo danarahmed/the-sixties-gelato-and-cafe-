@@ -26,6 +26,7 @@ const supplierInput = z.object({
   phone: optionalText(40),
 });
 
+/** A new supplier, its name unlike any other supplier in use (0027). */
 export async function createSupplierAction(
   input: z.input<typeof supplierInput>,
 ): Promise<ActionResult<{ id: string }>> {
@@ -41,6 +42,35 @@ export async function createSupplierAction(
   return { ok: true, data: { id: String(r.data) } };
 }
 
+const updateSupplierInput = supplierInput.extend({
+  supplierId: id("the supplier"),
+  isActive: z.boolean(),
+  reason: optionalText(300),
+});
+
+/**
+ * A supplier corrected (0027, the audit's P1-4): name, what they supply, phone,
+ * and whether they are in use. Not taken out of use while they are owed money.
+ * On the audit trail, with the values before and after.
+ */
+export async function updateSupplierAction(
+  input: z.input<typeof updateSupplierInput>,
+): Promise<ActionResult<null>> {
+  const v = parse(updateSupplierInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("update_supplier", {
+    p_supplier: v.data.supplierId,
+    p_name: v.data.name,
+    p_contact: v.data.contact,
+    p_phone: v.data.phone,
+    p_is_active: v.data.isActive,
+    p_reason: v.data.reason,
+  });
+  if (!r.ok) return r;
+  refresh("/purchasing", "/vendors");
+  return { ok: true, data: null };
+}
+
 const receiveInput = z.object({
   supplierId: id("the supplier"),
   freight: nonNegative("Freight"),
@@ -53,12 +83,22 @@ const receiveInput = z.object({
         itemId: id("an item"),
         qty: positive("Quantity"),
         unitCode: z.string().min(1, "Choose a unit"),
-        goodsValue: nonNegative("Value"),
+        /** The price of one of the unit received, as the invoice gives it (0027). */
+        unitPrice: nonNegative("Price per unit"),
       }),
     )
     .min(1, "Add at least one line"),
+  /** The person has seen a price far from the item's cost now, and says it is right. */
+  confirm: z.boolean().default(false),
 });
 
+/**
+ * Goods received, each line at its price per unit times the quantity (0027,
+ * the audit's P1-3). A line more than 25% away from what the item costs now is
+ * refused with the reason, so "2.5 or 50?" is asked before the stock is
+ * costed; received again with `confirm`, it goes in, and the confirmation is on
+ * the audit trail.
+ */
 export async function receiveGoodsAction(
   input: z.input<typeof receiveInput>,
 ): Promise<ActionResult<{ receiptNo: number; value: number }>> {
@@ -70,12 +110,13 @@ export async function receiveGoodsAction(
       item_id: l.itemId,
       qty: l.qty,
       unit_code: l.unitCode,
-      goods_value: l.goodsValue,
+      unit_price: l.unitPrice,
     })),
     p_freight: v.data.freight,
     p_other: v.data.other,
     p_rebate: v.data.rebate,
     p_note: v.data.note,
+    p_confirm: v.data.confirm,
   });
   if (!r.ok) return r;
   refresh(...BUY_PATHS);

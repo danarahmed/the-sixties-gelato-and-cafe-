@@ -1,16 +1,10 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
-import {
-  getAuditLog,
-  getCloseChecklist,
-  getPeriods,
-  periodFor,
-  type CheckRow,
-} from "@/lib/db/books";
+import { getCloseChecklist, getPeriods, periodFor, type CheckRow } from "@/lib/db/books";
 import { getTrialBalance } from "@/lib/db/reports";
 import { fmtIQD } from "@/lib/format";
-import { businessToday, dateTimeIn, monthEnd, monthStart } from "@/lib/dates";
+import { businessToday, monthEnd, monthStart } from "@/lib/dates";
 import { PeriodControl } from "@/components/books/PeriodControl";
 
 export const dynamic = "force-dynamic";
@@ -41,10 +35,9 @@ export default async function AccountingPage({
     has(profile, "accounting.period.lock") ||
     has(profile, "accounting.post") ||
     has(profile, "audit.view");
-  const [trial, checklist, audit] = await Promise.all([
+  const [trial, checklist] = await Promise.all([
     getTrialBalance(from, to),
     chosen && canSeeChecklist ? getCloseChecklist(chosen.id) : Promise.resolve([] as CheckRow[]),
-    has(profile, "audit.view") ? getAuditLog(40) : Promise.resolve([]),
   ]);
 
   const totalDebit = trial.reduce((s, r) => s + r.debit, 0);
@@ -185,39 +178,12 @@ export default async function AccountingPage({
         />
       )}
 
-      {audit.length > 0 && (
-        <section className="panel">
-          <div className="panel-h">
-            <h3>Audit Trail</h3>
-            <span className="muted" style={{ fontSize: ".74rem" }}>
-              Written by the database in the same step as the action
-            </span>
-          </div>
-          <div className="tw">
-            <table>
-              <thead>
-                <tr>
-                  <th>When</th>
-                  <th>Action</th>
-                  <th>On</th>
-                  <th>Reason</th>
-                  <th>By</th>
-                </tr>
-              </thead>
-              <tbody>
-                {audit.map((a) => (
-                  <tr key={a.id}>
-                    <td className="faint">{dateTimeIn(profile.timezone, a.at)}</td>
-                    <td>{a.action}</td>
-                    <td className="faint">{a.entity}</td>
-                    <td>{a.reason ?? "—"}</td>
-                    <td>{a.by ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+      {has(profile, "audit.view") && (
+        <p className="muted" style={{ fontSize: ".82rem", margin: 0 }}>
+          Who changed what — prices, products, items, suppliers, settings, and every void, refund,
+          count and correction — is on the <Link href="/audit">audit trail</Link>, with the values
+          before and after.
+        </p>
       )}
     </div>
   );

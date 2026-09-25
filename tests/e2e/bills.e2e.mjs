@@ -347,9 +347,11 @@ console.log(
   }
   check(
     sql(
-      "select count(*) from audit_log where action = 'price.set' and after_state ->> 'price' = '3000'",
+      `select count(*) from audit_log a join app_user u on u.id = a.app_user_id
+        where a.action = 'price.set' and a.after_state ->> 'variant' = '${ESPRESSO_SINGLE}'
+          and a.after_state ->> 'price' = '3000' and u.email = 'owner@example.com'`,
     ) === "2",
-    "each price set is on the audit trail",
+    "each price set is on the audit trail, with who set it",
   );
   await owner.ctx.close();
 

@@ -27,6 +27,7 @@ export function InventoryForms({
   canAddItem,
   canWaste,
   canCorrect,
+  isOwner,
 }: {
   items: ItemOpt[];
   /** Items with no stock history yet: they can be given their opening stock. */
@@ -34,6 +35,8 @@ export function InventoryForms({
   canAddItem: boolean;
   canWaste: boolean;
   canCorrect: boolean;
+  /** Opening stock is capital the owner puts in: the owner's alone (0027). */
+  isOwner: boolean;
 }) {
   if (!canAddItem && !canWaste && !canCorrect) return null;
   return (
@@ -41,15 +44,15 @@ export function InventoryForms({
       className="grid"
       style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px,1fr))", gap: 16 }}
     >
-      {canAddItem && unstocked.length > 0 && <OpeningStock items={unstocked} />}
-      {canAddItem && <AddItem />}
+      {isOwner && unstocked.length > 0 && <OpeningStock items={unstocked} />}
+      {canAddItem && <AddItem isOwner={isOwner} />}
       {canWaste && <RecordWaste items={items} />}
       {canCorrect && <CorrectStock items={items} />}
     </div>
   );
 }
 
-function AddItem() {
+function AddItem({ isOwner }: { isOwner: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -63,6 +66,7 @@ function AddItem() {
     minLevel: "",
     openingQty: "",
     openingUnitCost: "",
+    openingReason: "",
   };
   const [f, setF] = useState(empty);
   const [returnable, setReturnable] = useState(false);
@@ -80,8 +84,9 @@ function AddItem() {
         baseUnit,
         dimension,
         minLevel: f.minLevel || null,
-        openingQty: f.openingQty || null,
-        openingUnitCost: f.openingUnitCost || null,
+        openingQty: isOwner ? f.openingQty || null : null,
+        openingUnitCost: isOwner ? f.openingUnitCost || null : null,
+        openingReason: isOwner ? f.openingReason || null : null,
         returnable,
       });
       if (r.ok) {
@@ -140,7 +145,10 @@ function AddItem() {
           />
         </Field>
       </div>
-      <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+      <div
+        className="grid"
+        style={{ gridTemplateColumns: isOwner ? "1fr 1fr 1fr" : "1fr 2fr", gap: 8 }}
+      >
         <Field label={`Reorder level (${baseUnit})`}>
           <input
             style={inputStyle}
@@ -149,23 +157,43 @@ function AddItem() {
             inputMode="decimal"
           />
         </Field>
-        <Field label={`Opening stock (${baseUnit})`}>
-          <input
-            style={inputStyle}
-            value={f.openingQty}
-            onChange={set("openingQty")}
-            inputMode="decimal"
-          />
-        </Field>
-        <Field label={`Cost per ${baseUnit} (IQD)`}>
-          <input
-            style={inputStyle}
-            value={f.openingUnitCost}
-            onChange={set("openingUnitCost")}
-            inputMode="decimal"
-          />
-        </Field>
+        {isOwner ? (
+          <>
+            <Field label={`Opening stock (${baseUnit})`}>
+              <input
+                style={inputStyle}
+                value={f.openingQty}
+                onChange={set("openingQty")}
+                inputMode="decimal"
+              />
+            </Field>
+            <Field label={`Cost per ${baseUnit} (IQD)`}>
+              <input
+                style={inputStyle}
+                value={f.openingUnitCost}
+                onChange={set("openingUnitCost")}
+                inputMode="decimal"
+              />
+            </Field>
+          </>
+        ) : (
+          <p className="muted" style={{ fontSize: ".8rem", margin: 0, alignSelf: "end" }}>
+            Its stock comes in with a delivery. Opening stock, the owner&apos;s capital, is the
+            owner&apos;s to record.
+          </p>
+        )}
       </div>
+      {isOwner && f.openingQty.trim() !== "" && (
+        <Field label="Where the opening stock came from">
+          <input
+            style={inputStyle}
+            value={f.openingReason}
+            onChange={set("openingReason")}
+            maxLength={300}
+            placeholder="e.g. the opening count on the first day"
+          />
+        </Field>
+      )}
       <label style={{ fontSize: ".85rem", display: "flex", gap: 6, alignItems: "center" }}>
         <input
           type="checkbox"
@@ -175,10 +203,19 @@ function AddItem() {
         Goes back on the shelf when a sale is refunded (sealed goods only)
       </label>
       <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
-        Opening stock is journaled: Dr 1200 Inventory / Cr 3000 Owner equity.
+        No two items in use share a name, whatever the capitals, spaces or punctuation.
+        {isOwner && " Opening stock is journaled: Dr 1200 Inventory / Cr 3000 Owner equity."}
       </p>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <button className="btn-primary" onClick={submit} disabled={pending || !f.name.trim()}>
+        <button
+          className="btn-primary"
+          onClick={submit}
+          disabled={
+            pending ||
+            !f.name.trim() ||
+            (isOwner && f.openingQty.trim() !== "" && !f.openingReason.trim())
+          }
+        >
           {pending ? "Saving…" : "Add item"}
         </button>
         <Notice msg={msg} />
@@ -224,6 +261,7 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
   const unit = item?.units.some((u) => u.code === unitChoice) ? unitChoice : (item?.baseUnit ?? "");
   const [qty, setQty] = useState("");
   const [unitCost, setUnitCost] = useState("");
+  const [reason, setReason] = useState("");
   const unitLabel = item?.units.find((u) => u.code === unit)?.label ?? unit;
   const value =
     (Number(qty.replace(/[^0-9.]/g, "")) || 0) * (Number(unitCost.replace(/[^0-9.]/g, "")) || 0);
@@ -237,6 +275,7 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
         qty,
         unitCode: unit || null,
         unitCost,
+        reason,
       });
       if (r.ok) {
         setMsg({
@@ -245,6 +284,7 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
         });
         setQty("");
         setUnitCost("");
+        setReason("");
         router.refresh();
       } else setMsg({ ok: false, text: r.error });
     });
@@ -299,16 +339,26 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
           />
         </Field>
       </div>
+      <Field label="Where it came from">
+        <input
+          style={inputStyle}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          maxLength={300}
+          placeholder="e.g. the opening count on the first day"
+        />
+      </Field>
       <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
-        {value > 0 ? `Worth ${fmtIQD(value)}. ` : ""}Journaled Dr 1200 Inventory / Cr 3000 Owner
-        equity. Once an item has stock, it changes only by deliveries, sales, waste, counts and
+        {value > 0 ? `Worth ${fmtIQD(value)}. ` : ""}It is capital you put into the business:
+        journaled Dr 1200 Inventory / Cr 3000 Owner equity, and on the audit trail with where it
+        came from. Once an item has stock, it changes only by deliveries, sales, waste, counts and
         corrections.
       </p>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <button
           className="btn-primary"
           onClick={submit}
-          disabled={pending || !qty.trim() || !unitCost.trim()}
+          disabled={pending || !qty.trim() || !unitCost.trim() || !reason.trim()}
         >
           {pending ? "Recording…" : "Record opening stock"}
         </button>

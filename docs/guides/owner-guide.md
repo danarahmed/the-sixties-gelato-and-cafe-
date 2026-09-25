@@ -23,8 +23,10 @@ once more when you say so, keeping the menu, the stock items, suppliers,
 tables and people ([deployment runbook](deployment.md), "Clearing the test
 records"). Then enter your opening balances before the first sale:
 
-- **Inventory → Opening stock:** each item — what is on the shelf, and what
-  one unit cost. Until an item has it, its sales are costed at nothing.
+- **Inventory → Opening stock:** each item — what is on the shelf, what one
+  unit cost, and where it came from (the opening count, say). It is capital you
+  put into the business, so only you can record it, and it is on the audit
+  trail. Until an item has it, its sales are costed at nothing.
 - Stock not yet paid for: as a delivery and its bill (**Purchasing**,
   **Vendors**).
 - **Sales → Move Cash:** the float you put in the till, and any cash in the
@@ -171,15 +173,24 @@ counts them.
 
 ## Every week
 
-- **Purchasing:** receive deliveries as they arrive. Stock goes up, and the
-  goods wait in 2050 Goods received not invoiced for their bill.
-- **Vendors:** record each supplier's bill against its delivery, and pay bills
-  from the till, the safe, the bank, a card or your own pocket. Watch **Payable ageing** on Reports. A bill without
+- **Purchasing:** receive deliveries as they arrive, each line at its price
+  per unit as the invoice gives it. A price more than 25% above or below what
+  the item costs now is asked about before anything is received ("2.5 or
+  50?"): correct it, or confirm it, and the confirmation is on the audit trail.
+  Stock goes up, and the goods wait in 2050 Goods received not invoiced for
+  their bill. Each item's card on Inventory shows what every delivery cost.
+- **Vendors:** record each supplier's bill against its delivery, typing the
+  amount from the invoice (the screen shows what the delivery recorded; a
+  difference posts to 5050), and pay bills from the till, the safe, the bank, a
+  card or your own pocket. Watch **Payable ageing** on Reports. A bill without
   the supplier's own number takes the café's (SGC-2026-0001, -0002 …): each is
   given once, is never reused (not even after a cancellation), and cannot be
   typed in by hand, so it can never be mistaken for a supplier's invoice.
 - **Stock Count:** have a counter count, then review and approve it yourself (see
   the [counting guide](counting-guide.md)).
+- **Audit trail:** read who changed what — prices, products, items, suppliers,
+  settings — with each value before and after. Anything marked **No one signed
+  in** was changed in the database itself: ask who did it, and why.
 - **Reports → Product margin by channel:** what each product earns on each
   channel.
 
@@ -211,13 +222,14 @@ line (CSV)** gives your accountant the whole ledger.
 
 ## Correcting a mistake
 
-| The mistake                                                              | Correct it with                                                                                                                |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| A sale rung wrongly                                                      | **Orders → Void** (until the drawer is counted) or **Refund**                                                                  |
-| A bill entered twice or wrongly                                          | **Vendors → Cancel** (only if nothing was paid on it), then enter it correctly                                                 |
-| Stock that is wrong                                                      | a **count**, or **Inventory → Correct stock** (manager), with the reason                                                       |
-| A manual journal or an expense                                           | **Journals → Reverse**, dated in the month it corrects                                                                         |
-| A control account (the till's cash, Inventory, payables, goods received) | your **Correction to a control account** on Journals — owner only, with a reason. Meant for history from before these controls |
+| The mistake                                                              | Correct it with                                                                                                                  |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| A sale rung wrongly                                                      | **Orders → Void** (until the drawer is counted) or **Refund**                                                                    |
+| A bill entered twice or wrongly                                          | **Vendors → Cancel** (only if nothing was paid on it), then enter it correctly                                                   |
+| Stock that is wrong                                                      | a **count**, or **Inventory → Correct stock** (manager), with the reason                                                         |
+| An item or a vendor named, typed or levelled wrongly                     | its card on **Inventory → Correct this item**, or **Vendors → Edit vendor**, with the reason; take one no longer used out of use |
+| A manual journal or an expense                                           | **Journals → Reverse**, dated in the month it corrects                                                                           |
+| A control account (the till's cash, Inventory, payables, goods received) | your **Correction to a control account** on Journals — owner only, with a reason. Meant for history from before these controls   |
 
 ## Golden rules
 

@@ -114,7 +114,7 @@ begin
   insert into item (id, business_id, sku, name, item_type, base_unit_code, dimension, returnable_to_stock)
   values ('c0000000-0000-0000-0000-000000000001', b, 'G-BEANS', 'Golden beans', 'ingredient', 'g', 'mass', false),
          ('c0000000-0000-0000-0000-000000000002', b, 'G-CUP',   'Golden cup',   'packaging',  'each', 'count', false),
-         ('c0000000-0000-0000-0000-000000000003', b, 'G-WATER', 'Bottled water','resale',     'each', 'count', true);
+         ('c0000000-0000-0000-0000-000000000003', b, 'G-WATER', 'Golden water', 'resale',     'each', 'count', true);
   insert into item_unit (item_id, code, label, dimension, factor_to_base)
   values ('c0000000-0000-0000-0000-000000000001', 'kg', 'Kilogram', 'mass', 1000),
          ('c0000000-0000-0000-0000-000000000002', 'sleeve_50', 'Sleeve of 50', 'count', 50);

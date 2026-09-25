@@ -18,10 +18,11 @@ sql(`insert into auth.users (id, email) values ('a0000000-0000-0000-0000-0000000
      insert into user_role (app_user_id, role) select id, 'barista' from app_user where email = 'barista@example.com';
      select test.act_as('owner@example.com');
      select create_item('E2E milk', 'ingredient', 'ml', 'volume', p_units => '[{"code":"L","label":"L","factor":1000}]',
-                        p_opening_qty => 20000, p_opening_unit_cost => 1.5);
+                        p_opening_qty => 20000, p_opening_unit_cost => 1.5, p_opening_reason => 'the opening count');
      select create_item('E2E sugar', 'ingredient', 'g', 'mass', p_units => '[{"code":"kg","label":"kg","factor":1000}]',
-                        p_opening_qty => 10000, p_opening_unit_cost => 1.2);
-     select create_item('E2E paste', 'ingredient', 'g', 'mass', p_opening_qty => 2000, p_opening_unit_cost => 30);`);
+                        p_opening_qty => 10000, p_opening_unit_cost => 1.2, p_opening_reason => 'the opening count');
+     select create_item('E2E paste', 'ingredient', 'g', 'mass', p_opening_qty => 2000, p_opening_unit_cost => 30,
+                        p_opening_reason => 'the opening count');`);
 
 /**
  * How far the stock ledger is from Inventory (1200). Other suites leave it where

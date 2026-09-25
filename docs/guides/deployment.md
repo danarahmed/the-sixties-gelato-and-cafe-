@@ -27,7 +27,8 @@ Plan a short window when the café is closed.
 | Production (`0023`)            | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0023`](#after-0023)). The screens were merged ([pull request #9](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/9)) and deployed                                    |
 | Counts and the drawer (`0024`) | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0024`](#after-0024)). The screens were merged ([pull request #10](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/10)) and deployed                                  |
 | Prices, bills, costs (`0025`)  | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0025`](#after-0025)). The screens were merged ([pull request #11](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/11)) and deployed                                  |
-| Reports that agree (`0026`)    | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner against the live records (see [After `0026`](#after-0026)). The screens follow by pull request                                                                                                                                          |
+| Reports that agree (`0026`)    | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner against the live records (see [After `0026`](#after-0026)). The screens were merged ([pull request #12](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/12)) and deployed                                               |
+| Master data (`0027`)           | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0027`](#after-0027)). The screens follow in a pull request                                                                                                                           |
 
 ## 0. Before you start
 
@@ -514,6 +515,48 @@ against the live records of September, in a transaction that was rolled back:
 
 The security advisor's only new lines are the two new report functions
 signed-in users may call (each checks `cost.view`).
+
+## After `0027`
+
+Migration `0027` is the audit's P1-1, P1-3 and P1-4: who changed what,
+delivery prices checked, and items and suppliers kept right. Every change to
+products, stock items and their units, suppliers, categories, business
+settings and places is recorded by the database with its values before and
+after, and every price with the one it replaced; opening stock becomes the
+owner's, with a reason; a delivery far from what the item costs now waits for
+the person to confirm it; items and suppliers can be corrected and taken out of
+use; names are unique among those in use. Nothing recorded changes: the prices
+set before it say no one set them, and sales before it show their product's
+name as it is now. Until the new screens follow, minutes later, the Inventory
+page deployed before it cannot record opening stock (it sends no reason), and
+a delivery far from the cost now is refused without a way to confirm it.
+
+It was applied on 25 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0026` build, and that no two items,
+suppliers or products in use would share a name (9 items, 4 suppliers and 7
+products, all different). Compared with the tested build object by object,
+permissions included: identical. A check as the owner against the live
+records, in a transaction that was rolled back:
+
+- a price set for next week recorded the 3,000 it would replace and 3,500,
+  against the owner, who is also on the price itself; withdrawn, it left one
+  row with its reason;
+- "BOTTLED WATER." was refused as a second Bottled water, and "erbil dairy
+  supply." as a second Erbil Dairy Supply;
+- an item added, corrected (with its reason), given a kilogram and given its
+  opening stock by the owner (refused without a reason) left four rows saying
+  so, and a kilogram of another size was refused;
+- coffee beans received at 1.61 a gram, when they cost 32.18, were stopped
+  ("95% below its cost now"); confirmed, they were received and the
+  confirmation recorded; at their cost they went straight in;
+- a drink sold and then renamed kept its name on the sale;
+- the older recipe change was refused; every reconciliation check stayed at
+  zero.
+
+Nothing was kept. The security advisor's only new lines are the four new
+functions signed-in users may call (each checks its permission); every new
+function sets its search path.
 
 ## Clearing the test records
 

@@ -57,6 +57,7 @@ export const NAV: NavEntry[] = [
   { group: BOOKS, href: "/journals", key: "nav.journals", anyOf: ["cost.view"] },
   { group: BOOKS, href: "/accounting", key: "nav.chart", anyOf: ["cost.view"] },
   { group: BOOKS, href: "/reports", key: "nav.reports", anyOf: ["cost.view"] },
+  { group: BOOKS, href: "/audit", key: "nav.audit", anyOf: ["audit.view"] },
   { group: BOOKS, href: "/settings", key: "nav.settings", anyOf: ["settings.manage"] },
 ];
 

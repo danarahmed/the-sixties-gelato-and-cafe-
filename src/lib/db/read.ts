@@ -89,16 +89,90 @@ export interface ItemRow {
   units: UnitOption[];
 }
 
-/** One item by id, in use or not: its name and base unit (for its stock card). */
-export async function getItem(
-  id: string,
-): Promise<{ id: string; name: string; baseUnit: string } | null> {
+export interface ItemDetail {
+  id: string;
+  name: string;
+  nameAr: string | null;
+  nameCkb: string | null;
+  itemType: string;
+  baseUnit: string;
+  dimension: string;
+  minLevelBase: number | null;
+  parLevelBase: number | null;
+  isActive: boolean;
+  /** The base unit first, then its pack sizes. */
+  units: UnitOption[];
+}
+
+/** One item by id, in use or not, with its units (for its stock card). */
+export async function getItem(id: string): Promise<ItemDetail | null> {
   const c = await db();
-  const r = rows(
-    await c.from("item").select("id,name,base_unit_code").eq("id", id).limit(1),
-    "the item",
-  )[0];
-  return r ? { id: str(r.id), name: str(r.name), baseUnit: str(r.base_unit_code) } : null;
+  const [items, units] = await Promise.all([
+    c
+      .from("item")
+      .select(
+        "id,name,name_ar,name_ckb,item_type,base_unit_code,dimension,min_level_base,par_level_base,is_active",
+      )
+      .eq("id", id)
+      .limit(1),
+    c
+      .from("item_unit")
+      .select("code,label,factor_to_base")
+      .eq("item_id", id)
+      .order("factor_to_base"),
+  ]);
+  const r = rows(items, "the item")[0];
+  if (!r) return null;
+  const base = str(r.base_unit_code);
+  return {
+    id: str(r.id),
+    name: str(r.name),
+    nameAr: strOrNull(r.name_ar),
+    nameCkb: strOrNull(r.name_ckb),
+    itemType: str(r.item_type),
+    baseUnit: base,
+    dimension: str(r.dimension),
+    minLevelBase: numOrNull(r.min_level_base),
+    parLevelBase: numOrNull(r.par_level_base),
+    isActive: Boolean(r.is_active),
+    units: [
+      { code: base, label: base, factor: 1 },
+      ...rows(units, "the item's units")
+        .filter((u) => str(u.code) !== base)
+        .map((u) => ({ code: str(u.code), label: str(u.label), factor: num(u.factor_to_base) })),
+    ],
+  };
+}
+
+export interface PriceHistoryRow {
+  receivedAt: string;
+  receiptNo: number | null;
+  supplier: string | null;
+  qty: number;
+  unit: string;
+  goodsValue: number;
+  /** What was paid, per base unit. */
+  costPerBase: number | null;
+  /** With freight and other costs shared out, per base unit. */
+  landedPerBase: number | null;
+}
+
+/** What an item has cost, delivery by delivery, newest first (0027; needs cost.view). */
+export async function getItemPriceHistory(itemId: string): Promise<PriceHistoryRow[]> {
+  const c = await db();
+  return rows(
+    await c.rpc("item_price_history", { p_item: itemId }),
+    "the item's price history",
+  ).map((r) => ({
+    receivedAt: str(r.received_at),
+    receiptNo: r.receipt_no == null ? null : num(r.receipt_no),
+    supplier: strOrNull(r.supplier),
+    qty: num(r.qty),
+    unit: str(r.unit),
+    goodsValue: num(r.goods_value),
+    costPerBase: numOrNull(r.cost_per_base),
+    landedPerBase: numOrNull(r.landed_per_base),
+  }));
 }
 
 export async function getItems(): Promise<ItemRow[]> {
@@ -130,6 +204,15 @@ export async function getItems(): Promise<ItemRow[]> {
       units: [{ code: base, label: base, factor: 1 }, ...extra],
     };
   });
+}
+
+/** Items taken out of use (0027): kept for their history, and to be brought back. */
+export async function getItemsOutOfUse(): Promise<{ id: string; name: string }[]> {
+  const c = await db();
+  return rows(
+    await c.from("item").select("id,name").eq("is_active", false).order("name"),
+    "items out of use",
+  ).map((i) => ({ id: str(i.id), name: str(i.name) }));
 }
 
 export interface StockRow {
@@ -381,7 +464,7 @@ export async function getSalesOrders(
   const [lines, tenders, adjustments, variants, products, people] = await Promise.all([
     c
       .from("sales_order_line")
-      .select("sales_order_id,product_variant_id,quantity,unit_price,line_net")
+      .select("sales_order_id,product_variant_id,product_name,quantity,unit_price,line_net")
       .in("sales_order_id", ids),
     c.from("sales_tender").select("sales_order_id,tender_type").in("sales_order_id", ids),
     c
@@ -420,7 +503,8 @@ export async function getSalesOrders(
       tenders: (tendersBy.get(id) ?? []).map((t) => str(t.tender_type)),
       cashier: o.cashier_id ? (person.get(str(o.cashier_id)) ?? null) : null,
       lines: (linesBy.get(id) ?? []).map((l) => ({
-        name: variantLabel.get(str(l.product_variant_id)) ?? "—",
+        // The name it was sold under (0027); older lines, the product's name now.
+        name: strOrNull(l.product_name) ?? variantLabel.get(str(l.product_variant_id)) ?? "—",
         qty: num(l.quantity),
         unitPrice: num(l.unit_price),
         lineNet: num(l.line_net),
