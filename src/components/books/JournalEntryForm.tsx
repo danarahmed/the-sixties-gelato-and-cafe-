@@ -227,9 +227,9 @@ export function JournalEntryForm({
               setReverseOn("");
             }}
           />
-          Correction to a control account (Inventory, payables, goods received, retained earnings) —
-          owner only, with a reason on the audit trail. For repairing history recorded before the
-          controls; see docs/REMEDIATION.md.
+          Correction to a control account (the till&apos;s cash, Inventory, payables, goods
+          received, retained earnings) — owner only, with a reason on the audit trail. For repairing
+          history recorded before the controls; see docs/REMEDIATION.md.
         </label>
       )}
       {correction && (

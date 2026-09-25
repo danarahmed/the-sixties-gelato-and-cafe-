@@ -150,7 +150,8 @@ A cart left frozen when the page reloads is brought back for its retry.
 Every sale: number, time, channel, items, how it was paid, status, net and
 margin.
 
-- **Void.** For a sale rung in error, the same day and before the day is closed.
+- **Void.** For a sale rung in error, until the drawer holding its cash is
+  counted (after midnight too: the count, not the date, decides).
   Revenue, payment, cost and stock all come back exactly.
 - **Refund.** After that: the money goes back through 4200 Sales returns. Only
   items marked returnable come back into stock; a used cup does not.
@@ -161,29 +162,45 @@ sale.refund permission (managers and the owner).
 ## 7. Sales
 
 **Location:** Sidebar → **Sales** · `/sales` · **Who:** anyone who sees costs;
-closing a day: managers and the owner
+counting the drawer: managers and the owner; moving cash: managers, the
+accountant and the owner
 
 - **Cards:**
   - net sales over the last 30 trading days;
   - refunds since;
   - cost of sales and margin;
-  - **Days not yet closed**, with how many are before today.
+  - **Days whose cash is not counted**, with how many are before today, and
+    when the drawer was last counted.
 - **Daily Sales Summaries:** one line per day and channel (voided sales left
-  out), with orders, net, later refunds, cost, and whether the day is **Open** or
-  **Closed**.
-- **Close the Day:**
-  1. Pick the **Trading day**. Every day that sold and is not closed is listed,
-     oldest first, however old.
-  2. Enter the **Opening float** and the **Cash counted**. The screen shows what
-     the **Drawer should hold** (float + cash sales − cash refunds) and the
-     **Over / short**.
-  3. **Close the day.** Any difference posts to 6300 Cash over / short, dated on
-     that day.
+  out), with orders, net, later refunds, cost, and whether the day's cash is
+  **Counted** or **Not counted**.
+- **Count the Drawer** — at the end of a shift or of the night, whatever the
+  time. The café trades past midnight, so a count covers **everything since
+  the last count**, not one calendar day; a sale rung after the count is in the
+  next one.
+  1. The screen lists what the drawer started with (what the last count left
+     in it), the cash sales, refunds, voided sales, money paid out of the till,
+     and cash put in or taken out since, and what **the drawer should hold**.
+     (Only the first count after days were closed the old way asks what was in
+     the drawer when trading began.)
+  2. Enter the **Cash counted**. The **Over / short** shows at once.
+  3. Say how much **Stays in the drawer** for next time (empty: all of it). The
+     rest goes to **the safe** or **the bank** — choose which.
+  4. **Count the drawer.** Any difference posts to 6300 Cash over / short; the
+     takings leave 1000 for 1005 Cash in the safe or 1020 Bank.
 
-  A day closes once. A month cannot lock while one of its trading days is open.
+  Every bill kept open on the till must be paid or cancelled first. A month
+  cannot lock while a day's cash is not counted.
 
-- **Closed Days:** each day's float, expected, counted, over/short and who
-  closed it.
+- **Move Cash:** from the till, the safe, the bank or the owner to another of
+  them — a float into the till, takings to the safe during the day, a bank
+  deposit, money the owner puts in. Only the owner takes money out for
+  themselves (3200 Owner drawings), and money to or from the owner says what it
+  is for. Neither the till nor the safe can pay out more than the books say it
+  holds.
+- **Drawer Counts:** each count — what it started with, should have held,
+  counted, over/short, what stayed, what was taken out and where — and who
+  counted it. Days closed the old way are listed too, marked "by day".
 
 ## 8. Delivery Platforms
 
@@ -239,8 +256,11 @@ costs; recording: managers, accountant, owner
 **Record an Expense:**
 
 1. Write the **Narration** in plain words ("September shop rent").
-2. Enter the **Amount**, **Date** and **Paid from** (Cash on hand, Card clearing
-   or Bank).
+2. Enter the **Amount** and **Date**, and choose where it was **Paid from**:
+   the till (today's drawer), the safe, the bank, a card, or the owner
+   personally. There is no default: the money came from somewhere, and the
+   books follow it. From the till it lowers what the drawer should hold, and
+   neither the till nor the safe can pay more than the books say it holds.
 3. An **Account** is proposed from the narration: rent → 6000, wages → 6100,
    electricity → 6200, anything unclear → 6900 Other expenses. **Confirm or
    change it.** A stock loss is sent to Inventory instead, because it is not an
@@ -313,6 +333,12 @@ costs; baristas can record waste
 
 - **Cards:** items tracked, stock value (from the ledger), items below reorder
   level, items with negative stock.
+- **📦 Opening stock** (shown while any item has no stock recorded yet — after
+  the test records are cleared, or for an item added without it): choose the
+  item, count what is on the shelf, and enter the quantity, its unit and **what
+  one unit cost**. Posted Dr Inventory, Cr Owner equity, so the item's sales
+  are costed from the first one. An item with stock history is corrected by a
+  count or a correction instead.
 - **➕ Add stock item:**
   - its name, type (ingredient, packaging, consumable, finished good, resale);
   - what it is measured in and its base unit;
@@ -335,9 +361,13 @@ branch manager, general manager, owner (review and approve)
 
 - **Counting.** **Start count** lists every item by name and unit. Enter what is
   on the shelf; each entry saves as you go. Then **Submit count**. The counter
-  never sees the expected quantities.
-- **Review.** Open a submitted count with **Review**: expected (the database's
-  snapshot from when the count started), counted, variance and value. Then either
+  never sees the expected quantities. The café can keep trading: each item is
+  compared with the stock at the moment it is counted, so a sale or delivery
+  while counting is not a difference. One count is open at a time; a count
+  started by mistake is ended with **Cancel this count…** and a reason (by its
+  counter or a manager).
+- **Review.** Open a submitted count with **Review**: expected (the stock when
+  each item was counted), counted, variance and value. Then either
   **Approve and post variances** (to 5400, dated when submitted) or **Reject**,
   with a reason for the recount. The person who counted cannot approve.
 - **Counts:** every count with when it started, who counted, how many items,
@@ -394,8 +424,8 @@ costs; posting: accountant, general manager, owner
 - **Journal Register:** every entry by journal number, newest first (1054,
   1053, 1052 …; drafts, which have no number yet, above them): date, number,
   reference, status, notes, amount and who posted it. Each shows its source (Sale, Refund,
-  Reversal, Receipt, Bill, Payment, Expense, Stock, Count, Day close, Manual,
-  Year end). **Manual and reversals** filters to the hand-made ones. Open a row
+  Reversal, Receipt, Bill, Payment, Expense, Stock, Count, Drawer count, Cash
+  moved, Manual, Year end). **Manual and reversals** filters to the hand-made ones. Open a row
   to see its lines. Entries from the previous app are marked **before
   controls**.
 - **New Journal:**
@@ -405,12 +435,13 @@ costs; posting: accountant, general manager, owner
 
   **Save and publish** only when debits equal credits; the number is given on
   publish. **Save as draft** parks it outside the books. A draft blocks the month
-  from closing until it is published or discarded. Inventory, payables, goods
-  received and retained earnings are not offered: they change only through their
-  own records.
+  from closing until it is published or discarded. The till's cash, inventory,
+  payables, goods received and retained earnings are not offered: they change
+  only through their own records (the till's through sales, payments, drawer
+  counts and **Move Cash** on Sales).
 
 - **Correction to a control account (owner only).** Tick it on New Journal to
-  post to one of those four accounts, with a reason on the audit trail. It exists
+  post to one of those accounts, with a reason on the audit trail. It exists
   to correct history from before these controls.
 - **Reverse:**
   - offered on manual journals, expenses, corrections, year-end closes and
@@ -419,8 +450,9 @@ costs; posting: accountant, general manager, owner
     open month;
   - posts a mirror entry.
 
-  A journal written by a sale, receipt, bill, payment, stock movement, count or
-  day close is corrected through that record instead.
+  A journal written by a sale, receipt, bill, payment, stock movement, count,
+  drawer count or cash moved is corrected through that record instead (cash
+  moved: move it back).
 
 ## 17. Chart of Accounts
 
@@ -434,7 +466,7 @@ who sees costs; locking: accountant, general manager, owner; reopening: owner
 - **Closing the month:** the checklist, every item of which must pass:
   - earlier months locked;
   - no drafts;
-  - every trading day closed;
+  - every trading day's cash counted;
   - no count awaiting approval;
   - stock, unpaid bills and goods received each agree with their account;
   - the month's journals balance.
@@ -500,27 +532,27 @@ manager
 
 ## 20. Every feature, and where it is
 
-| Feature                                                                                                                    | Where                              | Who                                                                   |
-| -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------- |
-| Sign in, create a login, reset password                                                                                    | `/login`                           | everyone                                                              |
-| Change password, see your permissions                                                                                      | My account `/account`              | everyone                                                              |
-| Language (EN / AR / CKB, right-to-left), light/dark                                                                        | top bar                            | everyone                                                              |
-| Today at a glance, low stock, books reconcile                                                                              | `/dashboard`                       | owner, managers, accountant, auditor                                  |
-| Sell by channel; cash, card, platform-paid                                                                                 | `/pos`                             | cashier, barista, managers, owner                                     |
-| Retry a sale without recording it twice                                                                                    | `/pos`                             | the same                                                              |
-| Void (same day) and refund                                                                                                 | `/orders`                          | managers, owner                                                       |
-| Daily summaries; close the day against the drawer                                                                          | `/sales`                           | cost viewers; closing: managers, owner                                |
-| Platform orders; payout by journal                                                                                         | `/platforms`, `/journals`          | cost viewers                                                          |
-| Vendor statements, bills, payments, cancel a bill, ageing                                                                  | `/vendors`                         | cost viewers (by permission)                                          |
-| Expenses with a proposed account                                                                                           | `/expenses`                        | managers, accountant, owner                                           |
-| Suppliers; receive goods with landed cost                                                                                  | `/purchasing`                      | purchasing, managers, owner                                           |
-| Products, recipes by channel, prices from a date, margins                                                                  | `/products`                        | cost viewers; editing: owner, general manager                         |
-| Stock board, add items, waste, corrections, movements                                                                      | `/inventory`                       | cost viewers; waste: baristas too                                     |
-| Blind count, second-person approval                                                                                        | `/count`                           | counter; reviewers                                                    |
-| Journal register, manual journals, reversal                                                                                | `/journals`                        | cost viewers; posting: accountant, general manager, owner             |
-| Owner's correction to a control account                                                                                    | `/journals`                        | owner                                                                 |
-| Trial balance, closing checklist, lock / reopen, audit trail                                                               | `/accounting`                      | cost viewers; lock: accountant, general manager, owner; reopen: owner |
-| Reconciliation, P&L, channels, ageing, margins, CSV                                                                        | `/reports`                         | cost viewers                                                          |
-| Post the stock the old app never journaled                                                                                 | `/reports`                         | owner                                                                 |
-| People and roles, business configuration                                                                                   | `/settings`                        | owner, general manager                                                |
-| **Not built:** settlement import (M-10), offline selling, partial refunds, till discounts, balance sheet, PDF, attachments | [`LIMITATIONS.md`](LIMITATIONS.md) | —                                                                     |
+| Feature                                                                                                    | Where                              | Who                                                                   |
+| ---------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------- |
+| Sign in, create a login, reset password                                                                    | `/login`                           | everyone                                                              |
+| Change password, see your permissions                                                                      | My account `/account`              | everyone                                                              |
+| Language (EN / AR / CKB, right-to-left), light/dark                                                        | top bar                            | everyone                                                              |
+| Today at a glance, low stock, books reconcile                                                              | `/dashboard`                       | owner, managers, accountant, auditor                                  |
+| Sell by channel; cash, card, platform-paid                                                                 | `/pos`                             | cashier, barista, managers, owner                                     |
+| Retry a sale without recording it twice                                                                    | `/pos`                             | the same                                                              |
+| Void (until the drawer is counted) and refund                                                              | `/orders`                          | managers, owner                                                       |
+| Daily summaries; count the drawer; move cash between till, safe, bank and owner                            | `/sales`                           | cost viewers; counting: managers, owner                               |
+| Platform orders; payout by journal                                                                         | `/platforms`, `/journals`          | cost viewers                                                          |
+| Vendor statements, bills, payments, cancel a bill, ageing                                                  | `/vendors`                         | cost viewers (by permission)                                          |
+| Expenses with a proposed account                                                                           | `/expenses`                        | managers, accountant, owner                                           |
+| Suppliers; receive goods with landed cost                                                                  | `/purchasing`                      | purchasing, managers, owner                                           |
+| Products, recipes by channel, prices from a date, margins                                                  | `/products`                        | cost viewers; editing: owner, general manager                         |
+| Stock board, add items, opening stock, waste, corrections, movements                                       | `/inventory`                       | cost viewers; waste: baristas too                                     |
+| Blind count while trading, second-person approval, cancel a count                                          | `/count`                           | counter; reviewers                                                    |
+| Journal register, manual journals, reversal                                                                | `/journals`                        | cost viewers; posting: accountant, general manager, owner             |
+| Owner's correction to a control account                                                                    | `/journals`                        | owner                                                                 |
+| Trial balance, closing checklist, lock / reopen, audit trail                                               | `/accounting`                      | cost viewers; lock: accountant, general manager, owner; reopen: owner |
+| Reconciliation, P&L, channels, ageing, margins, CSV                                                        | `/reports`                         | cost viewers                                                          |
+| Post the stock the old app never journaled                                                                 | `/reports`                         | owner                                                                 |
+| People and roles, business configuration                                                                   | `/settings`                        | owner, general manager                                                |
+| **Not built:** settlement import (M-10), offline selling, partial refunds, balance sheet, PDF, attachments | [`LIMITATIONS.md`](LIMITATIONS.md) | —                                                                     |

@@ -1,6 +1,7 @@
 -- =============================================================================
--- Day close (G9, H-09) and period close (H-08, C-07): the close refuses while
--- anything is unresolved, and a locked period refuses every route in.
+-- Drawer count (G9, H-09, 0024) and period close (H-08, C-07): the close
+-- refuses while anything is unresolved, and a locked period refuses every
+-- route in. The drawer itself is tested in drawer.test.sql.
 -- =============================================================================
 select test.golden_catalogue();
 select test.as_admin();
@@ -16,12 +17,12 @@ select test.eq(business_local_date('00000000-0000-0000-0000-0000000000b1', '2026
 select test.act_as('cashier@example.com');
 select record_sale(gen_random_uuid(), 'dine_in', 'cash', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]');
 
--- The close refuses while a trading day is open and a draft is parked.
+-- The close refuses while a trading day's cash is uncounted and a draft is parked.
 select test.act_as('owner@example.com');
 create temp table dr as select save_journal((select d from today), 'Unfinished accrual',
-  '[{"code":"6200","debit":1000},{"code":"1000","credit":1000}]', false) as r;
+  '[{"code":"6200","debit":1000},{"code":"1020","credit":1000}]', false) as r;
 grant select on dr to public;
-select test.throws($$select lock_period((select id from per))$$, '%Every trading day is closed%Not closed%', 'an unclosed day blocks the close');
+select test.throws($$select lock_period((select id from per))$$, '%cash is counted%Not counted%', 'an uncounted day blocks the close');
 select test.throws($$select lock_period((select id from per))$$, '%No draft journals%', 'a parked draft blocks the close');
 
 -- Every day that blocks the close is listed for closing, with no date window.
@@ -31,20 +32,21 @@ select test.act_as('manager@example.com');
 select test.eq((select string_agg(day::text, ',') from report_unclosed_days()), (select d::text from today),
   'the day that blocks the close is the day listed for closing');
 
--- G9 — close the day 2,000 short: Dr Cash over/short, Cr Cash.
+-- G9 — count the drawer 2,000 short: Dr Cash over/short, Cr the till.
 select test.act_as('cashier@example.com');
-select test.throws($$select close_day((select d from today), 3000)$$, '%permission%', 'a cashier does not close their own till');
+select test.throws($$select count_drawer(3000)$$, '%permission%', 'a cashier does not count their own till');
 select test.act_as('manager@example.com');
-create temp table cl as select close_day((select d from today), 3000) as r;
-select test.eq((select count(*) from report_unclosed_days())::int, 0, 'once closed, it is no longer listed');
+create temp table cl as select count_drawer(3000) as r;
+select test.eq((select count(*) from report_unclosed_days())::int, 0, 'once counted, it is no longer listed');
 select test.eq((select (r->>'expected')::numeric from cl), 5000::numeric, 'expected 5,000 cash');
 select test.eq((select (r->>'variance')::numeric from cl), -2000::numeric, '2,000 short');
 select test.as_admin();
-select test.eq(test.lines_of((select id from work_shift where business_day = (select d from today))),
+select test.eq(test.lines_of((select (r->>'shift_id')::uuid from cl)),
   '1000 Cr 2000 | 6300 Dr 2000', 'G9: the shortage is expensed');
 select test.act_as('manager@example.com');
-select test.throws($$select close_day((select d from today), 3000)$$, '%already closed%', 'a day closes once — no double-posted shortage');
-select test.throws($$select close_day((select d from today) + 1, 0)$$, '%has happened%', 'a future day cannot be closed');
+select test.eq((count_drawer(3000) ->> 'variance')::numeric, 0::numeric,
+  'counting again at once finds nothing new — no double-posted shortage');
+select test.throws($$select close_day((select d from today), 3000)$$, '%now a drawer count%', 'the old day close says what replaced it');
 
 -- Resolve the blockers, then lock. Only someone with the lock permission may.
 select test.act_as('owner@example.com');
@@ -71,7 +73,7 @@ select test.eq((select count(*) from sales_order), (select o from n0), 'the refu
 select test.eq((select count(*) from inventory_movement), (select m from n0), 'nor any stock movement');
 select test.eq((select count(*) from journal_entry), (select j from n0), 'nor any journal');
 select test.act_as('owner@example.com');
-select test.throws($$select save_journal((select d from today), 'late entry', '[{"code":"6200","debit":5},{"code":"1000","credit":5}]', true)$$,
+select test.throws($$select save_journal((select d from today), 'late entry', '[{"code":"6200","debit":5},{"code":"1020","credit":5}]', true)$$,
   '%is locked%', 'a manual journal into a locked period is refused');
 select test.throws($$select record_expense('late rent', 100, '6000', 'cash', (select d from today))$$, '%is locked%', 'an expense too');
 select test.as_admin();

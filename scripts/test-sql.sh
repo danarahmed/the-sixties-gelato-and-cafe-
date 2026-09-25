@@ -20,7 +20,11 @@
 #
 #   3. Tests. Builds a clean template once (all migrations + master/recipe seed
 #      + fixtures) and runs each tests/sql/*.test.sql in its own fresh copy, so
-#      no test can leak state into another.
+#      no test can leak state into another. Before them, on a copy with a day
+#      of test trading (tests/sql/reset/trading.sql), it rehearses clearing
+#      test records with supabase/remediation/reset-test-data.sql: its
+#      refusals, its dry run, and a café that trades again from nothing
+#      afterwards (tests/sql/reset/*.check.sql).
 #
 # Needs a PostgreSQL 15+ server you may create databases on. It is NEVER
 # pointed at the production Supabase project — it creates and drops its own.
@@ -178,6 +182,77 @@ run sixties_tpl supabase/seed/01_master.sql >/dev/null
 run sixties_tpl supabase/seed/02_recipes.sql >/dev/null
 run sixties_tpl tests/sql/harness/fixtures.sql >/dev/null
 echo "  $(ls supabase/migrations/*.sql | wc -l) migrations applied"
+
+# ------------------------------------------------------ 3a. clearing test data
+# The live database's test records are cleared by
+# supabase/remediation/reset-test-data.sql when the owner says so. Rehearsed
+# here on a day of test trading: it must refuse without the owner's
+# confirmation, when a table it does not know holds records, and once a period
+# is locked — changing nothing each time; a dry run must change nothing; and
+# the real run (twice, harmlessly) must leave a café that trades again from
+# nothing (tests/sql/reset/*.check.sql).
+if [ $# -eq 0 ] && [ -f supabase/remediation/reset-test-data.sql ]; then
+  echo "▸ reset: a day of test trading cleared by supabase/remediation/reset-test-data.sql"
+  run_reset() {
+    local args=(-U sb_admin -d "$1")
+    [ -n "$2" ] && args+=(-c "set sixties.reset = '$2'")
+    PGOPTIONS="-c search_path=public,extensions" "${PSQL[@]}" "${args[@]}" -f supabase/remediation/reset-test-data.sql 2>&1
+  }
+  snap() { q "$1" "select (select count(*) from sales_order) || '/' || (select count(*) from journal_entry) || '/' || (select count(*) from inventory_movement) || '/' || (select count(*) from audit_log)"; }
+  reset_ok() { pass=$((pass + 1)); echo "  ✓ $1"; }
+  reset_bad() { fail=$((fail + 1)); echo "  ✗ $1"; [ -n "${2:-}" ] && echo "$2" | grep ERROR | head -3 | sed 's/^/      /'; return 0; }
+  fresh_db sixties_reset_src sixties_tpl
+  if ! out=$(run sixties_reset_src tests/sql/reset/trading.sql); then
+    reset_bad "the day of test trading did not run" "$out"
+  else
+    before=$(snap sixties_reset_src)
+    fresh_db sixties_reset sixties_reset_src
+    if out=$(run_reset sixties_reset ""); then
+      reset_bad "cleared the records without the owner's confirmation"
+    elif grep -q "To clear the test records, first run" <<<"$out" && [ "$(snap sixties_reset)" = "$before" ]; then
+      reset_ok "refuses without the owner's confirmation, and changes nothing"
+    else reset_bad "unexpected failure without the confirmation:" "$out"; fi
+
+    if out=$(run_reset sixties_reset "dry run"); then
+      reset_bad "a dry run committed: it must end in its report and undo everything"
+    elif grep -q "DRY RUN passed" <<<"$out" && grep -q "sales_order 4" <<<"$out" && [ "$(snap sixties_reset)" = "$before" ]; then
+      reset_ok "a dry run reports what it would clear, and changes nothing"
+    else reset_bad "the dry run failed:" "$out"; fi
+
+    "${PSQL[@]}" -U sb_admin -d sixties_reset -c "create table stray (x int); insert into stray values (1)" >/dev/null
+    if out=$(run_reset sixties_reset "clear the test records"); then
+      reset_bad "cleared the books although a table it does not know still had a record"
+    elif grep -q "stray still has 1 row" <<<"$out" && [ "$(snap sixties_reset)" = "$before" ]; then
+      reset_ok "stops and changes nothing when a table it does not know has records"
+    else reset_bad "unexpected failure with a stray table:" "$out"; fi
+    "${PSQL[@]}" -U sb_admin -d sixties_reset -c "drop table stray" >/dev/null
+
+    fresh_db sixties_reset_locked sixties_reset_src
+    "${PSQL[@]}" -d sixties_reset_locked -c "insert into accounting_period (business_id, name, starts_on, ends_on, status)
+      values ('00000000-0000-0000-0000-0000000000b1', '2020-01', '2020-01-01', '2020-01-31', 'locked')" >/dev/null
+    if out=$(run_reset sixties_reset_locked "clear the test records"); then
+      reset_bad "cleared the books although a period was locked"
+    elif grep -q "2020-01 is locked" <<<"$out" && [ "$(snap sixties_reset_locked)" = "$before" ]; then
+      reset_ok "refuses once a period is locked: those are closed books"
+    else reset_bad "unexpected failure with a locked period:" "$out"; fi
+    drop_db sixties_reset_locked
+
+    if ! out=$(run_reset sixties_reset "clear the test records") || ! out=$(run_reset sixties_reset "clear the test records"); then
+      reset_bad "reset-test-data.sql failed:" "$out"
+    else
+      echo "  cleared (twice, harmlessly)"
+      for f in tests/sql/reset/*.check.sql; do
+        if out=$(run sixties_reset "$f"); then reset_ok "$(basename "$f")"
+        else
+          fail=$((fail + 1)); echo "  ✗ $(basename "$f")"
+          echo "$out" | grep -E "ASSERTION FAILED|ERROR" | head -5 | sed 's/^/      /'
+        fi
+      done
+    fi
+    drop_db sixties_reset
+  fi
+  drop_db sixties_reset_src
+fi
 
 files=("$@")
 [ ${#files[@]} -eq 0 ] && files=(tests/sql/*.test.sql)

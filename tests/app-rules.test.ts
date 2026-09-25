@@ -2,7 +2,9 @@
  * The small rules the screens depend on: who lands where, what the menu
  * offers each role, how numbers typed in three scripts are read, what a
  * discount at the till comes to, what a new recipe costs and what price that
- * suggests, what a batch uses and costs, and when a trading day starts.
+ * suggests, what a batch uses and costs, when a trading day starts, what the
+ * drawer count shows before it is posted, and when a failed call is a refusal
+ * and when it is an unknown.
  */
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
@@ -10,6 +12,8 @@ import { NAV, holdsAny, homeFor, isPublicPath } from "@/lib/auth/routes";
 import { addDays, dateIn, monthEnd, monthStart, parseDay } from "@/lib/dates";
 import { normaliseNumber, positive, signedNonZero } from "@/lib/validation";
 import { getBookkeeper } from "@/lib/bookkeeping/rules";
+import { isUncertainFailure } from "@/lib/db/rpcOutcome";
+import { drawerPreview } from "@/components/books/drawerMath";
 import Decimal from "decimal.js";
 import {
   discountAmount,
@@ -476,5 +480,58 @@ describe("expense suggestions", () => {
     const s = await bk.categorizeExpense("spoiled milk thrown away", 1000);
     expect(s.needsReview).toBe(true);
     expect(s.explanation).toMatch(/Inventory/);
+  });
+});
+
+describe("the drawer count, as the form shows it before it is posted (0024)", () => {
+  const status = { start: 25000, startTyped: "", moved: 4000 };
+  it("expects what the last count left plus every movement since", () => {
+    expect(drawerPreview({ ...status, counted: "", left: "" }).expected).toBe(29000);
+  });
+  it("is short or over by the difference", () => {
+    const p = drawerPreview({ ...status, counted: "28,500", left: "25000" });
+    expect(p.variance).toBe(-500);
+    expect(p.left).toBe(25000);
+    expect(p.taken).toBe(3500);
+  });
+  it("keeps everything in the drawer when nothing is said", () => {
+    const p = drawerPreview({ ...status, counted: "29000", left: "" });
+    expect(p.variance).toBe(0);
+    expect(p.taken).toBe(0);
+  });
+  it("refuses to leave more than was counted", () => {
+    expect(drawerPreview({ ...status, counted: "1000", left: "2000" }).error).toMatch(/between 0/);
+  });
+  it("reads the counted cash typed in Arabic-Indic digits", () => {
+    expect(drawerPreview({ ...status, counted: "٢٩٠٠٠", left: "" }).variance).toBe(0);
+  });
+  it("after days closed the old way, starts from the cash typed", () => {
+    const first = { start: null, startTyped: "", moved: 4000 };
+    expect(drawerPreview({ ...first, counted: "5000", left: "" }).expected).toBeNull();
+    expect(
+      drawerPreview({ ...first, startTyped: "1000", counted: "5000", left: "" }).variance,
+    ).toBe(0);
+  });
+});
+
+describe("a failed database call: a refusal, or an unknown (audit P0-4)", () => {
+  it("a function the database ran and refused is a refusal: nothing was saved", () => {
+    expect(isUncertainFailure({ code: "P0001", message: "Enter the cash you counted" }, 400)).toBe(
+      false,
+    );
+    expect(isUncertainFailure({ code: "42501", message: "permission denied" }, 403)).toBe(false);
+    expect(isUncertainFailure({ code: "23505", message: "duplicate" }, 409)).toBe(false);
+  });
+  it("no answer at all is an unknown: it may have been saved", () => {
+    expect(isUncertainFailure({ code: "", message: "TypeError: fetch failed" }, 0)).toBe(true);
+    expect(isUncertainFailure({ message: "FetchError: timeout" }, undefined)).toBe(true);
+  });
+  it("a gateway that gave up is an unknown", () => {
+    expect(isUncertainFailure({ code: "", message: "Bad gateway" }, 502)).toBe(true);
+    expect(isUncertainFailure({ code: "", message: "Gateway timeout" }, 504)).toBe(true);
+    expect(isUncertainFailure({ code: "PGRST001", message: "connection" }, 503)).toBe(true);
+  });
+  it("no error is no failure", () => {
+    expect(isUncertainFailure(null, 200)).toBe(false);
   });
 });

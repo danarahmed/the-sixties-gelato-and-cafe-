@@ -76,8 +76,8 @@ select test.eq((select count(*) from report_reconciliation(:'today') where diffe
 select test.eq((select sum(debit) - sum(credit) from report_trial_balance(:'today', :'today')), 0::numeric,
                'the trial balance balances');
 select test.eq((select array_agg(day) from report_unclosed_days()), array[:'today'::date], 'today is the one open day');
-select close_day(:'today', 6000);
-select test.eq((select count(*) from report_unclosed_days())::int, 0, 'and once closed, none is');
+select count_drawer(6000);
+select test.eq((select count(*) from report_unclosed_days())::int, 0, 'and once the drawer is counted, none is');
 
 reset role;
 select test.eq((select string_agg(i.name || '=' || s.qty::text, ',' order by i.name)

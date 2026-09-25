@@ -9,7 +9,7 @@ every write permission the old app relied on, so the old till stops recording
 sales the moment it is applied; the new app needs `0014`–`0017` to work at all.
 Plan a short window when the café is closed.
 
-## Where the live system stands (24 September 2026)
+## Where the live system stands (25 September 2026)
 
 | Step                         | Status                                                                                                                                                                                                                                                                                                                                                                                   |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -24,7 +24,7 @@ Plan a short window when the café is closed.
 | Discount rounding (`0020`)   | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens were merged ([pull request #4](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/4)) and deployed. The step was then set to 250 IQD at the owner's request (see [After `0020`](#after-0020)) |
 | Bill numbers (`0021`)        | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0021`](#after-0021)). The form was merged ([pull request #6](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/6)) and deployed                                                              |
 | Recipe costing (`0022`)      | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0022`](#after-0022)). The form was merged ([pull request #8](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/8)) and deployed                                                              |
-| Production (`0023`)          | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0023`](#after-0023)). The screens go live with the pull request that carries them                                                                                                    |
+| Production (`0023`)          | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0023`](#after-0023)). The screens were merged ([pull request #9](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/9)) and deployed                                    |
 
 ## 0. Before you start
 
@@ -168,11 +168,16 @@ not on that team). Choose one:
 The books start empty. Enter what the café has on the day you start:
 
 - **Inventory → Add stock item** for each item, with its opening quantity and
-  unit cost (Dr 1200 Inventory, Cr 3000 Owner equity);
+  unit cost (Dr 1200 Inventory, Cr 3000 Owner equity); an item that already
+  exists with no stock recorded (after the test records are cleared) takes it
+  on **Inventory → Opening stock**;
 - stock not yet paid for: **Purchasing → Receive stock**, then the supplier's
   bill on **Vendors**;
-- cash in the drawer or the bank: **Journals → New Journal**, Dr 1000 Cash or
-  1020 Bank, Cr 3000 Owner equity;
+- cash in the drawer or the safe: **Sales → Move Cash**, from the owner (Dr
+  1000 Cash in the till or 1005 Cash in the safe, Cr 3000 Owner equity); money
+  in the bank: **Journals → New Journal**, Dr 1020 Bank, Cr 3000 Owner equity
+  (since `0024` no manual journal touches 1000: the till's cash moves only
+  through its own records);
 - the menu on **Products & Recipes**, with each channel's price.
 
 **Reports → Do the books tie?** should then show ✅ on every line.
@@ -357,3 +362,64 @@ owner, in a transaction that was rolled back:
 - every live recipe line names its item.
 
 Nothing was kept.
+
+## After `0024`
+
+Migration `0024` puts right what the September 2026 audit
+([`../SYSTEM_AUDIT_2026-09.md`](../SYSTEM_AUDIT_2026-09.md), P0-1 to P0-3)
+found could make the numbers wrong in everyday use:
+
+- **Counts while trading.** Each item is compared with the stock at the moment
+  it is counted, not when the count opened; one count at a time; a count can
+  be cancelled.
+- **The drawer.** The day close becomes a drawer count covering everything
+  since the last count, whatever the date — the café trades past midnight.
+  What stays in the drawer carries to the next count; the rest goes to the
+  safe (new account 1005) or the bank. Cash can be moved between the till, the
+  safe, the bank and the owner.
+- **Where money came from.** Every expense and bill payment says: the till,
+  the safe, the bank, a card, or the owner personally. Neither the till nor
+  the safe pays out more than the books say it holds, and 1000 takes no
+  manual journal.
+- **Opening stock** for an item with no stock history, at its cost.
+
+It adds two tables (`cash_event`, `cash_transfer`), columns on `work_shift`
+and `stock_count_line`, account 1005, and five functions signed-in users may
+call (`count_drawer`, `move_cash`, `drawer_status`, `cancel_stock_count`,
+`record_opening_stock`); it redefines the counting, expense, bill-payment,
+void and reversal functions, and `close_day` now only asks an open page to
+refresh. Nothing recorded before it changes; the cash taken since the last
+day closed the old way (in the live database, four sales of 25 September) is
+carried into the drawer as its first events, so the first count expects it. It
+goes in before the screens,
+as before: the app deployed before it keeps working — its "cash" still means
+the till and "transfer" the bank — except closing a day, which asks the page to
+be refreshed; the new screens follow within minutes.
+
+The app also treats a lost answer from the database as "may have been saved"
+(audit P0-4): the till keeps the sale and retries it with the same key, which
+cannot record it twice.
+
+## Clearing the test records
+
+Every record of trading in the live database so far is a test (the owner, 25
+September 2026). They are cleared **when the owner says so**, and not before,
+with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/reset-test-data.sql):
+
+1. It keeps the business and its locations, the chart of accounts, the people
+   and their roles, the menu (products, variants, categories, photos, prices,
+   recipes), the stock items and their units, suppliers, tables, and the audit
+   trail, which gains one line saying what was cleared.
+2. It clears sales, open bills, voids and refunds, drawer counts and cash
+   moved, stock movements, counts and batches, deliveries, supplier bills and
+   payments, expenses, every journal and period, and the document numbers
+   (journals start again at 1001, the café's bill numbers at 0001).
+3. Run it in the SQL editor with the confirmation set in the same session:
+   `set sixties.reset = 'dry run';` first — it clears, checks, reports what it
+   would clear and changes nothing — then
+   `set sixties.reset = 'clear the test records';`. It is one transaction, and
+   refuses without the confirmation, once a period is locked, or when a table
+   it does not know holds records. `scripts/test-sql.sh` rehearses all of it
+   on a day of test trading.
+4. Then the opening balances (step 7): **Inventory → Opening stock** for each
+   item before the first sale, and the float with **Sales → Move Cash**.

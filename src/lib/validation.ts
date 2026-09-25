@@ -94,6 +94,16 @@ export const optionalText = (max = 500) =>
     .refine((v) => v.length <= max, "Too long")
     .transform((v) => (v === "" ? null : v));
 
+/**
+ * Where money paid out came from (0024): the till's drawer, the safe, the bank,
+ * a card, or the owner's own pocket.
+ */
+export const PAYMENT_SOURCES = ["till", "safe", "bank", "card", "owner"] as const;
+export type PaymentSource = (typeof PAYMENT_SOURCES)[number];
+export const paymentSource = z.enum(PAYMENT_SOURCES, {
+  message: "Choose where the money came from",
+});
+
 export const SALES_CHANNELS = [
   "dine_in",
   "takeaway",

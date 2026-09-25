@@ -24,9 +24,12 @@ honest, not by building a queue.
 
 ## Next
 
-1. **Go live.** Deploy this version ([`guides/deployment.md`](guides/deployment.md))
-   and correct or restart the existing history ([`REMEDIATION.md`](REMEDIATION.md)).
-   Until then the live site is publicly writable.
+1. **The September 2026 audit's action matrix**
+   ([`SYSTEM_AUDIT_2026-09.md`](SYSTEM_AUDIT_2026-09.md)). Its P0s — counts
+   while trading, the drawer across midnight, where money came from, a lost
+   answer from the database — are fixed in `0024`; the P1s come next. Then,
+   on the owner's word, clear the test records and enter the opening balances
+   ([`guides/deployment.md`](guides/deployment.md)).
 2. **Delivery-platform settlements (M-10).** Import a Talabat statement, match it
    to platform orders with the tested `src/domain/platform/settlement.ts`, post
    the payout, commission and fees, and surface every unmatched line.
@@ -39,8 +42,8 @@ honest, not by building a queue.
    ledger; PDF; invoice scans attached to bills and expenses.
 6. **Accounts maintenance (M-06).** Add and deactivate accounts on screen, within
    the rules the database already enforces.
-7. **Partial refunds and till discounts,** each with a reason, an approval limit
-   and the audit trail.
+7. **Partial refunds,** and a reason and an approval limit on discounts (which
+   the till already gives), with the audit trail.
 8. **Offline selling, if it is needed.** A queue with its own rules for prices
    and stock that change while offline, and a reconciliation of what synced.
 9. **Operations.** Error monitoring, a scheduled restore drill, and staging as a

@@ -53,7 +53,7 @@ select test.eq(test.lines_of((select id from sale_adjustment where kind = 'refun
 select test.eq((select count(*) from inventory_movement where type = 'refund_return_to_stock'
                 and item_id = 'c0000000-0000-0000-0000-000000000001')::int, 0, 'used coffee is never returned to stock');
 
--- Once the day is closed, a sale can only be refunded, not voided.
+-- Once the drawer is counted, a sale can only be refunded, not voided.
 select test.act_as('cashier@example.com');
 create temp table s3 as select record_sale(gen_random_uuid(), 'dine_in', 'cash',
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]') as r;
@@ -62,9 +62,9 @@ select test.as_admin();
 create temp table today as select business_local_date('00000000-0000-0000-0000-0000000000b1', now()) d;
 grant select on today to public;
 select test.act_as('manager@example.com');
-select close_day((select d from today), 0);
+select count_drawer((drawer_status() ->> 'expected')::numeric);
 select test.throws($$select void_sale((select (r->>'order_id')::uuid from s3), 'too late')$$,
-  '%is closed; refund%', 'a closed day cannot be voided into');
+  '%counted since this sale; refund%', 'a sale in a counted drawer cannot be voided');
 
 select test.as_admin();
 select test.eq((select sum(value * sign(base_quantity_signed)) from inventory_movement where business_id = '00000000-0000-0000-0000-0000000000b1'),

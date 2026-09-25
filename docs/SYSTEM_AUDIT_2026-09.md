@@ -11,6 +11,32 @@ the code before it was included. Nothing in the app or the database was changed.
 Evidence is given as `file:line`; migrations are cited by number, for example
 `0015:1218` means `supabase/migrations/0015_posting_functions.sql`, line 1218.
 
+## Status (25 September 2026, later the same day)
+
+The four P0s are fixed together, in migration `0024` and the app
+([`PROGRESS.md`](PROGRESS.md)):
+
+- **P0-1** as recommended, recording the stock when each item is counted
+  instead of rebuilding it at approval. The count open on the live database
+  has none of its items entered yet, so each will be compared at the moment it
+  is entered; it can also be cancelled now.
+- **P0-2** differently, after the owner's answer that the café trades past
+  midnight (Appendix A): there is no closed day to sell into. A **drawer
+  count** covers every movement of cash since the last count, whatever the
+  date; a sale after a count is simply in the next one, and a void is allowed
+  until the drawer holding its cash is counted. No reopening is needed.
+- **P0-3** as recommended, with the till, the safe (1005), the bank, a card
+  and the owner personally; takings leave the drawer at the count, to the safe
+  or the bank. A payment that would take the till or the safe below zero is
+  refused outright (move the cash first, or say it came from elsewhere), and
+  1000 takes no manual journal.
+- **P0-4** as recommended.
+
+Also in the same change: opening stock for an item with no stock history, and
+a tool that clears the test records when the owner says so
+([`guides/deployment.md`](guides/deployment.md)). The doc lines of Appendix B
+that these touch are corrected; the rest wait for the P1 work.
+
 ## The short version
 
 - **Keep the foundation.** The database is the only thing that writes to the books.

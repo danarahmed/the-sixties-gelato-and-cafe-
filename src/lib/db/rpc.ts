@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import type { PostgrestError } from "@supabase/supabase-js";
 import type { ZodType } from "zod";
 import { createServerSupabase, NotConfiguredError } from "@/lib/supabase/server";
+import { UNCERTAIN_MESSAGE, isUncertainFailure } from "./rpcOutcome";
 
 /**
  * Every change to the books is ONE call to a database function that checks
@@ -10,7 +11,10 @@ import { createServerSupabase, NotConfiguredError } from "@/lib/supabase/server"
  * (audit C-06). The app never writes a table directly — it cannot: signed-in
  * users hold no write grant on any table.
  */
-export type ActionResult<T = unknown> = { ok: true; data: T } | { ok: false; error: string };
+export type ActionResult<T = unknown> =
+  | { ok: true; data: T }
+  /** `uncertain`: no answer came back, so it may have been saved (see rpcOutcome.ts). */
+  | { ok: false; error: string; uncertain?: boolean };
 
 /** A database error, in words the person at the screen can act on. */
 export function friendlyError(e: Pick<PostgrestError, "code" | "message">): string {
@@ -48,15 +52,16 @@ export async function callRpc<T>(
     };
   }
   try {
-    const { data, error } = await client.rpc(fn, args);
-    if (error) return { ok: false, error: friendlyError(error) };
+    const { data, error, status } = await client.rpc(fn, args);
+    if (error) {
+      if (isUncertainFailure(error, status)) {
+        return { ok: false, uncertain: true, error: UNCERTAIN_MESSAGE };
+      }
+      return { ok: false, error: friendlyError(error) };
+    }
     return { ok: true, data: data as T };
   } catch {
-    return {
-      ok: false,
-      error:
-        "The database could not be reached, so this may not have been saved. Refresh and check before trying again.",
-    };
+    return { ok: false, uncertain: true, error: UNCERTAIN_MESSAGE };
   }
 }
 

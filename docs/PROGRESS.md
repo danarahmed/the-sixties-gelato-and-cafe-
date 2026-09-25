@@ -7,9 +7,10 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0023` and the rebuilt app. The SQL
-  checks (18), the browser suites (7, every role), the unit and contract tests
-  (150) and a production build all pass.
+- **Built and verified:** migrations `0014`–`0024` and the rebuilt app. The SQL
+  checks (25, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (7, every role), the unit and contract
+  tests (163) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -78,6 +79,20 @@ browser tests through the real app, or both.
   and tested. The migration was applied to the live database on 25 September
   2026, matches the tested build object by object (permissions included), and
   was checked as the owner in a transaction that was rolled back.
+- **Counts and the drawer (migration `0024`, the September 2026 audit's
+  P0s):** a stock count compares each item with the stock when it is counted,
+  so the café can trade while counting; one count at a time, and one can be
+  cancelled. The day close becomes a drawer count covering everything since
+  the last count, whatever the date — the café trades past midnight — with
+  what stays in the drawer carried to the next count and the rest to the safe
+  (new account 1005) or the bank. Every expense and bill payment says where the
+  money came from; neither the till nor the safe pays more than it holds; 1000
+  takes no manual journal. Cash moves between the till, the safe, the bank and
+  the owner. An item with no stock history takes its opening stock at its cost.
+  The till treats a lost answer from the database as "may have been saved"
+  (P0-4). And [`supabase/remediation/reset-test-data.sql`](../supabase/remediation/reset-test-data.sql)
+  clears the test records, keeping the set-up, when the owner says so. Built
+  and tested.
 
 ## The August 2026 audit, finding by finding
 
@@ -85,25 +100,25 @@ browser tests through the real app, or both.
 
 | #    | Finding                                        | Status | How it is closed, or what remains                                                                                                                    |
 | ---- | ---------------------------------------------- | :----: | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| C-01 | Public write access, no authentication         |   ✅   | Every person signs in; the database refuses the public key everything (`0016`, tested); no built-in key. _Live until deployed._                      |
+| C-01 | Public write access, no authentication         |   ✅   | Every person signs in; the database refuses the public key everything (`0016`, tested); no built-in key. Live since 23 September 2026                |
 | C-02 | Published journals editable and deletable      |   ✅   | Draft → lines → publish; a published entry never changes (`0014`)                                                                                    |
 | C-03 | P&L not from the ledger                        |   ✅   | P&L, trial balance and reconciliation read published journal lines (`0017`)                                                                          |
 | C-04 | Sales journal best-effort                      |   ✅   | The sale, its stock and its journal are one function, one transaction                                                                                |
 | C-05 | Receipt and bill both debit Inventory          |   ✅   | Goods received not invoiced (2050); a bill clears it; price differences to 5050                                                                      |
 | C-06 | No transaction boundaries                      |   ✅   | Every operation is one database function (`0015`)                                                                                                    |
 | C-07 | Period lock bypassable                         |   ✅   | Every route into a locked month is refused (tested route by route)                                                                                   |
-| H-01 | Idempotency key made on the server             |   ✅   | Made when the cart starts; a retry returns the sale already recorded                                                                                 |
+| H-01 | Idempotency key made on the server             |   ✅   | Made by the till when payment starts; a retry returns the sale already recorded, and so does one after a lost answer from the database (P0-4)        |
 | H-02 | Journal numbering broken                       |   ✅   | Gapless numbers from the database, tested under 20 concurrent posts                                                                                  |
 | H-03 | Card sales posted to Cash                      |   ✅   | Each tender posts to its own account (1000 / 1010 / 1100)                                                                                            |
 | H-04 | Offline advertised, not built                  |   ✅   | Honest instead: offline, the till says so and refuses the sale. A queue is not built (roadmap)                                                       |
-| H-05 | No voids or refunds                            |   ✅   | Void the same day before the close; refund after, through 4200. Whole-sale refunds only                                                              |
+| H-05 | No voids or refunds                            |   ✅   | Void until the drawer holding its cash is counted; refund after, through 4200. Whole-sale refunds only                                               |
 | H-06 | Child tables readable across businesses        |   ✅   | `business_id` on every child table, row-level security on each                                                                                       |
 | H-07 | Floating-point posting                         |   ✅   | Exact decimal strings in, `NUMERIC` in the database                                                                                                  |
 | H-08 | Period close checks nothing                    |   ✅   | Closing checklist; the lock refuses until it passes; year end closes to 3100                                                                         |
 | H-09 | Day boundaries in UTC                          |   ✅   | Trading days and periods in Asia/Baghdad time                                                                                                        |
-| H-10 | Negative stock unguarded                       |   ✅   | Enforced when the business says so; otherwise costed at last cost and shown, never hidden                                                            |
+| H-10 | Negative stock unguarded                       |   ✅   | Enforced on sales when the business says so; otherwise shown, never hidden, and costed at the last incoming cost — so opening stock carries its cost |
 | H-11 | Races in payments and auto-posting             |   ✅   | Row locks and unique references; overpayment impossible (concurrency tests)                                                                          |
-| H-12 | Self-approved counts, client-supplied expected |   ✅   | Blind counts; expected snapshotted by the database; a second person approves                                                                         |
+| H-12 | Self-approved counts, client-supplied expected |   ✅   | Blind counts; expected read by the database when each item is counted (`0024`); a second person approves                                             |
 | M-01 | "Period" reports are lifetime totals           |   ✅   | Every report is for exactly the dates asked                                                                                                          |
 | M-02 | Drafts in the trial balance                    |   ✅   | Published entries only                                                                                                                               |
 | M-03 | Audit log never written                        |   ✅   | Every privileged action writes `audit_log` in its own transaction                                                                                    |
@@ -117,7 +132,7 @@ browser tests through the real app, or both.
 | M-11 | Production has no write path                   |   ✅   | Batches recorded, costed and cancelled (0023); planning, lots and moves between locations not built                                                  |
 | M-12 | Movement value ≠ unit cost × quantity          |   ✅   | Enforced by a constraint                                                                                                                             |
 | M-13 | Stock adjustments unchecked                    |   ✅   | Allowed types only, cost from the ledger, a reason, manager approval over the threshold, journal in the same transaction                             |
-| M-14 | Documents contradict the code                  |   ✅   | Rewritten against the code (this set). No automated check keeps them so                                                                              |
+| M-14 | Documents contradict the code                  |   🟡   | Rewritten against the code; the September 2026 audit (Appendix B) found drift again, and `0024` fixes the lines it touches. No automated check       |
 | L-01 | Journals with no lines                         |   ✅   | A published entry needs balanced lines                                                                                                               |
 | L-02 | A finished sale's cost can change              |   ✅   | Cost, lines and tenders frozen                                                                                                                       |
 | L-03 | Period names in UTC                            |   ✅   | Business timezone                                                                                                                                    |
@@ -132,14 +147,14 @@ browser tests through the real app, or both.
 | Sign-in, My account | everyone                                                   | Sign in, create a login for an invited email, reset and change password                                                                                                                                                                                       |
 | Dashboard           | owner, managers, accountant, auditor                       | Today from the books: net revenue, gross profit, orders, stock value, low and negative stock                                                                                                                                                                  |
 | POS                 | cashier, barista, managers                                 | Full-screen till: categories, search in three languages, photos, favourites; tables and bills paid later (print, split, move, cancel); cash with change, card, platform-paid; 80 mm bill and receipt printing; exactly-once payment and retry; honest offline |
-| Orders              | cost viewers                                               | Every sale; void (same day) and refund (after), with reasons                                                                                                                                                                                                  |
-| Sales               | cost viewers                                               | Daily summaries; close each trading day against the counted drawer                                                                                                                                                                                            |
-| Vendors             | cost viewers                                               | Statements, bills (for a receipt or an account), payments, cancel a bill, payable ageing                                                                                                                                                                      |
-| Expenses            | cost viewers (recording: managers, accountant)             | Proposed account from the narration, confirmed by the person, posted in one step                                                                                                                                                                              |
+| Orders              | cost viewers                                               | Every sale; void (until the drawer is counted) and refund (after), with reasons                                                                                                                                                                               |
+| Sales               | cost viewers                                               | Daily summaries; count the drawer (everything since the last count, past midnight too), keep a float and send the rest to the safe or the bank; move cash between the till, the safe, the bank and the owner; every count's over or short                     |
+| Vendors             | cost viewers                                               | Statements, bills (for a receipt or an account), payments saying where the money came from, cancel a bill, payable ageing                                                                                                                                     |
+| Expenses            | cost viewers (recording: managers, accountant)             | Proposed account from the narration, confirmed by the person; where the money came from, always said; posted in one step                                                                                                                                      |
 | Purchasing          | cost viewers (purchasing, managers)                        | Suppliers; receive goods with landed costs into stock and GRNI                                                                                                                                                                                                |
 | Products & Recipes  | cost viewers                                               | Create a product: its recipe costed as it is typed, prices with their margin and a suggested price; change a price or the recipe from a date; menu costing; photos, categories, favourites, show or hide on the till                                          |
-| Inventory           | cost viewers; waste for baristas                           | Stock board from the ledger, add items with opening stock, record waste, manager corrections, movements                                                                                                                                                       |
-| Stock Count         | counter; reviewers                                         | Blind count, submit, second-person review and approval                                                                                                                                                                                                        |
+| Inventory           | cost viewers; waste for baristas                           | Stock board from the ledger, add items with opening stock, opening stock for items with none, record waste, manager corrections, movements                                                                                                                    |
+| Stock Count         | counter; reviewers                                         | Blind count while trading, one at a time; submit or cancel; second-person review and approval                                                                                                                                                                 |
 | Delivery Platforms  | cost viewers                                               | Platform orders and their value; settlement import not built (M-10)                                                                                                                                                                                           |
 | Production          | cost viewers, baristas                                     | Record a batch with a preview of what it uses and makes; batch recipes (a base, then its flavours); batch history with cost per unit; cancel a batch                                                                                                          |
 | Journals            | cost viewers (posting: accountant, owner, general manager) | Register, manual journals (draft/publish), reversal, owner's control correction                                                                                                                                                                               |
@@ -149,12 +164,12 @@ browser tests through the real app, or both.
 
 ## Tests
 
-| Layer                        | What                                                                                                          | Result      |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function | 150 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, 12 suites, concurrency | 18 passing  |
-| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, retry, offline, bills, pricing, production | 7 passing   |
-| Build                        | `npm run build`, types, lint, formatting                                                                      | green       |
+| Layer                        | What                                                                                                                                             | Result      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                    | 163 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 14 suites, concurrency         | 25 passing  |
+| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work and the drawer, retry (a lost answer too), offline, bills, pricing, production | 7 passing   |
+| Build                        | `npm run build`, types, lint, formatting                                                                                                         | green       |
 
 What is not built, and why, is in [`LIMITATIONS.md`](LIMITATIONS.md); the order
 of the next work is in [`ROADMAP.md`](ROADMAP.md).

@@ -34,10 +34,16 @@ select test.eq((select count(distinct journal_no) from journal_entry where journ
 select test.eq((select next_no from document_counter where doc_type = 'journal')::bigint,
                (select max(journal_no) + 1 from journal_entry)::bigint, 'the counter continues after the highest number');
 
--- The chart is completed without touching existing accounts.
+-- The chart is completed without touching existing accounts, but for one
+-- name: 0024 calls 1000 what it now is, the till's cash, beside the safe's.
 select test.eq((select count(*) from test.legacy_accounts l join gl_account g using (id)
                 where (g.code, g.name, g.account_type, g.normal_balance) is distinct from
-                      (l.code, l.name, l.account_type, l.normal_balance))::int, 0, 'existing accounts unchanged');
+                      (l.code, l.name, l.account_type, l.normal_balance)
+                  and not (g.code = '1000' and l.name = 'Cash on hand' and g.name = 'Cash in the till'))::int,
+               0, 'existing accounts unchanged');
+select test.eq((select string_agg(code || ' ' || name, ', ' order by code) from gl_account
+                where business_id = '00000000-0000-0000-0000-0000000000b1' and code in ('1000', '1005')),
+               '1000 Cash in the till, 1005 Cash in the safe', 'the till and the safe each have their account');
 select test.eq((select count(*) from gl_account where business_id = '00000000-0000-0000-0000-0000000000b1'
                 and code in ('2050', '3100', '3200', '4200', '5050', '5400', '6900', '1020'))::int, 8,
                'GRNI, retained earnings, drawings, returns, PPV, count variance, other, bank are added');

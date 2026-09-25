@@ -132,10 +132,10 @@ Added after the August 2026 audit; see [ADR 0002](adr/0002-database-posting-engi
   `purchase_invoice` gains `cancelled_at`/`cancel_reason` (one-way, audited) and
   `legacy`.
 - **Day close.** `work_shift.business_day`: one close per trading day per
-  location.
+  location (replaced by the drawer count of `0024`, below).
 - **Counts.** `stock_count` records who counted and who approved; the expected
-  quantities are snapshotted when the count opens and never shown to the
-  counter.
+  quantities are never shown to the counter (since `0024`, each is the stock
+  when the item is counted).
 - **Tenancy.** Child tables carry `business_id`, so row-level security isolates
   them directly.
 - **Access.** `role_permission` mirrors `src/domain/auth/permissions.ts`.
@@ -222,3 +222,48 @@ through the functions in `0018`.
   serving. It is sent as text, so the product form receives every digit and
   prices a new recipe to the dinar the product's card will show. No table
   changes.
+
+### Counts and the drawer (`0024`)
+
+- **Counts.** `stock_count_line` gains `expected_at_count` (the ledger's
+  quantity when the line was recorded, under the item's lock) and
+  `counted_at`; neither is granted to signed-in users. Review and approval
+  compare with `expected_at_count` (falling back to the opening snapshot for a
+  line recorded before `0024`). `start_stock_count` refuses while another
+  count at the location is being counted or waits for approval;
+  `cancel_stock_count` (the counter or a manager, with a reason) marks it
+  `rejected` with `Cancelled: …`, audited.
+- **Accounts.** `1005 Cash in the safe` is added for every business; `1000` is
+  named `Cash in the till` (a name the owner chose is kept). `1000` joins the
+  accounts no manual journal may touch. `payment_account()` maps where money
+  came from to its account: till 1000, safe 1005, card 1010, bank 1020, owner
+  3000 (the old `cash` and `transfer` still mean the till and the bank).
+- **`cash_event`** — every movement of cash in and out of a location's drawer,
+  signed (+ in, − out): `sale` (a cash tender, by trigger), `void` and `refund`
+  (by trigger on `sale_adjustment`), `paid_out` and `paid_out_reversed`
+  (expenses and bills paid from the till, and their reversals), `cash_in` and
+  `cash_out` (cash moved). `work_shift_id` is set once, by the count that
+  covers it, and never changes; nothing else about an event ever changes. As
+  `0024` went in, `carry_cash_since_last_close()` (the migration's alone)
+  carried every published movement of 1000 since each location's last day
+  closed the old way into the drawer as its first events, so the first count
+  expects the cash already taken.
+- **`cash_transfer`** — cash moved between `till`, `safe`, `bank` and `owner`,
+  with its journal; append-only. Takings sent to the safe or the bank after a
+  count are one too, linked to the count.
+- **`work_shift`** gains `kind` (`day` for the closes before `0024`, `drawer`
+  after), `covers_from`, `left_in_drawer`, `taken_out` and `taken_to`. The
+  one-close-per-day rule now applies to `day` closes only.
+- **Functions.** `count_drawer` (needs `day.close`): counts everything since
+  the last count at the location, posts the difference to 6300 and the takings
+  to the safe or the bank, and audits `drawer.count`. `move_cash` (needs
+  `day.close` or `accounting.post`; only the owner pays money out to the
+  owner). `drawer_status` (what the drawer should hold now, and what moved
+  since the last count). `record_expense` and `pay_bill` take where the money
+  came from; paying from the till or the safe is refused beyond what the books
+  say it holds. `close_day` now only tells an open page to refresh.
+  `uncounted_days` lists the trading days whose cash no count has covered;
+  `report_unclosed_days` and the period checklist use it.
+- **Opening stock.** `record_opening_stock` (as `create_item`): an item with no
+  stock history at a location is given its opening stock at the cost typed,
+  Dr 1200 / Cr 3000, audited `inventory.opening`.

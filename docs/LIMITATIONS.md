@@ -4,15 +4,15 @@ What is **not** built, what is deliberately left out, and what depends on
 something outside this repository. Nothing here is claimed to work. The status
 of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
 
-## Until this version is deployed
+## Before the books are relied on
 
-- **The live site is publicly writable.** It still runs the previous app, which
-  anyone holding its public key can read and write. The fix is this version;
-  until it is deployed, turn on Vercel deployment protection. See
-  [`guides/deployment.md`](guides/deployment.md).
-- **The existing history is unverified.** It must be reviewed and corrected, or
-  replaced by a clean start, before the books are relied on. See
-  [`REMEDIATION.md`](REMEDIATION.md).
+- **The records so far are tests.** The live site has run this version, closed
+  to the public, since 23 September 2026, when the trial history was cleared.
+  Everything recorded since is a test too (the owner, 25 September), and is
+  cleared when the owner says so, keeping the set-up
+  ([`guides/deployment.md`](guides/deployment.md), "Clearing the test
+  records"). Then each item needs its opening stock before its first sale, or
+  that sale is costed at nothing.
 
 ## Not built
 
@@ -31,7 +31,9 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   stock and prices that change while the till is offline.
 - **Partial refunds.** A refund returns the whole sale. A partial refund is a
   refund of the sale followed by a new sale for what was kept.
-- **Discounts and comps at the till.** The till sells at the channel price.
+- **A reason or a limit on discounts.** Discounts are given at the till
+  (`0019`, `0020`), by percentage or amount, with neither a reason nor an
+  approval limit (audit P1).
 - **Balance sheet and cash-flow statements.** The trial balance carries every
   balance, and the P&L is built; the formatted balance sheet and cash-flow
   statements are not.

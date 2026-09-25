@@ -33,82 +33,125 @@ export async function getDailySales(from: string, to: string): Promise<DailySale
   );
 }
 
-/** Trading days that sold and are not closed, oldest first, however long ago. */
+/** Trading days whose cash has not been counted, oldest first, however long ago. */
 export async function getUnclosedDays(): Promise<string[]> {
   const c = await db();
-  return rows(await c.rpc("report_unclosed_days"), "the days not yet closed").map((r) =>
+  return rows(await c.rpc("report_unclosed_days"), "the days not yet counted").map((r) =>
     str(r.day),
   );
 }
 
-export interface DayTotals {
-  day: string;
-  orders: number;
+/** The drawer now: what the last count left in it, and the cash in and out since. */
+export interface DrawerStatus {
+  /** When the drawer was last counted; null before the first count. */
+  since: string | null;
+  /** What the last count left in the drawer; null when the first count must be told. */
+  start: number | null;
+  needsStart: boolean;
   cashSales: number;
-  cashRefunds: number;
+  refunds: number;
+  voids: number;
+  paidOut: number;
+  cashIn: number;
+  cashOut: number;
+  /** Every cash movement since the last count, signed. */
+  moved: number;
+  /** What the drawer should hold; null until its start is known. */
+  expected: number | null;
+  orders: number;
   card: number;
   platform: number;
-  closed: boolean;
-  /** Bills from the till still waiting for their money: the day cannot close until they are settled. */
+  /** Bills still waiting for their money: the drawer is counted once they are settled. */
   openBills: number;
+  safe: number;
 }
 
-/** What the till should hold for a day, before it is counted. */
-export async function getDayTotals(day: string): Promise<DayTotals> {
+export async function getDrawerStatus(): Promise<DrawerStatus> {
   const c = await db();
-  const t = one(
-    await c.rpc("report_day_totals", { p_day: day }),
-    `the totals for ${day}`,
-  ) as Record<string, unknown> | null;
+  const t = one(await c.rpc("drawer_status"), "the drawer") as Record<string, unknown> | null;
   return {
-    day,
-    orders: num(t?.orders),
+    since: strOrNull(t?.since),
+    start: numOrNull(t?.start),
+    needsStart: Boolean(t?.needs_start),
     cashSales: num(t?.cash_sales),
-    cashRefunds: num(t?.cash_refunds),
+    refunds: num(t?.refunds),
+    voids: num(t?.voids),
+    paidOut: num(t?.paid_out),
+    cashIn: num(t?.cash_in),
+    cashOut: num(t?.cash_out),
+    moved: num(t?.moved),
+    expected: numOrNull(t?.expected),
+    orders: num(t?.orders),
     card: num(t?.card),
     platform: num(t?.platform),
-    closed: Boolean(t?.closed),
     openBills: num(t?.open_bills),
+    safe: num(t?.safe),
   };
 }
 
-export interface DayCloseRow {
+export interface DrawerCountRow {
   id: string;
-  day: string;
-  openingFloat: number;
-  expectedCash: number;
-  countedCash: number;
+  /** When it was counted. */
+  at: string;
+  /** The count before it: what this one covers starts there. */
+  from: string | null;
+  /** Counted the old way, one calendar day at a time. */
+  byDay: boolean;
+  day: string | null;
+  start: number;
+  expected: number;
+  counted: number;
   variance: number;
-  closedBy: string | null;
+  left: number | null;
+  taken: number | null;
+  takenTo: string | null;
+  by: string | null;
 }
 
-/** Trading days already closed off with a counted drawer. */
-export async function getDayCloses(limit = 60): Promise<DayCloseRow[]> {
+/** Drawer counts, newest first: each covers the cash since the one before. */
+export async function getDrawerCounts(limit = 60): Promise<DrawerCountRow[]> {
   const c = await db();
   const [shifts, people] = await Promise.all([
     c
       .from("work_shift")
       .select(
-        "id,business_day,opened_at,opening_float,expected_cash,counted_cash,variance,opened_by",
+        "id,kind,business_day,covers_from,closed_at,opening_float,expected_cash,counted_cash,variance,left_in_drawer,taken_out,taken_to,opened_by",
       )
       .not("closed_at", "is", null)
-      .order("business_day", { ascending: false, nullsFirst: false })
+      .order("closed_at", { ascending: false })
       .limit(limit),
     c.from("app_user").select("id,full_name"),
   ]);
   const person = new Map(rows(people, "people").map((p) => [str(p.id), str(p.full_name)]));
-  return rows(shifts, "closed days").map((s) => ({
+  return rows(shifts, "drawer counts").map((s) => ({
     id: str(s.id),
-    day: s.business_day ? str(s.business_day) : str(s.opened_at).slice(0, 10),
-    openingFloat: num(s.opening_float),
-    expectedCash: num(s.expected_cash),
-    countedCash: num(s.counted_cash),
+    at: str(s.closed_at),
+    from: strOrNull(s.covers_from),
+    byDay: str(s.kind) === "day",
+    day: strOrNull(s.business_day),
+    start: num(s.opening_float),
+    expected: num(s.expected_cash),
+    counted: num(s.counted_cash),
     variance: num(s.variance),
-    closedBy: s.opened_by ? (person.get(str(s.opened_by)) ?? null) : null,
+    left: numOrNull(s.left_in_drawer),
+    taken: numOrNull(s.taken_out),
+    takenTo: strOrNull(s.taken_to),
+    by: s.opened_by ? (person.get(str(s.opened_by)) ?? null) : null,
   }));
 }
 
 /* ---------------------------------------------------------------- vendors */
+
+/** How a supplier was paid, in words (0024 names where the money came from). */
+const PAID_BY: Record<string, string> = {
+  till: "from the till",
+  cash: "cash",
+  safe: "from the safe",
+  bank: "by bank",
+  transfer: "by bank",
+  card: "by card",
+  owner: "paid by the owner",
+};
 
 export interface VendorLine {
   date: string;
@@ -224,7 +267,7 @@ export async function getVendorBook(
       })),
       ...pays.map((p) => ({
         date: str(p.paid_on),
-        particulars: `Payment${p.method ? ` — ${str(p.method)}` : ""}`,
+        particulars: `Payment${p.method ? ` — ${PAID_BY[str(p.method)] ?? str(p.method)}` : ""}`,
         ref: "",
         charge: 0,
         payment: num(p.amount),

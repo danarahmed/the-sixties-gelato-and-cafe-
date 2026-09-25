@@ -124,6 +124,40 @@ export async function adjustStockAction(
   };
 }
 
+const openingInput = z.object({
+  itemId: id("an item"),
+  qty: positive("Quantity on the shelf"),
+  unitCode: z.string().min(1).nullable(),
+  unitCost: positive("Cost per unit"),
+});
+
+/**
+ * Opening stock for an item with no stock history yet (0024), at what it cost:
+ * Dr Inventory / Cr Owner equity, as a new item's opening stock is posted.
+ */
+export async function recordOpeningStockAction(
+  input: z.input<typeof openingInput>,
+): Promise<ActionResult<{ qty: number; value: number; journalNo: number | null }>> {
+  const v = parse(openingInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("record_opening_stock", {
+    p_item: v.data.itemId,
+    p_qty: v.data.qty,
+    p_unit_code: v.data.unitCode,
+    p_unit_cost: v.data.unitCost,
+  });
+  if (!r.ok) return r;
+  refresh(...STOCK_PATHS, "/products");
+  return {
+    ok: true,
+    data: {
+      qty: Number(r.data.qty ?? 0),
+      value: Number(r.data.value ?? 0),
+      journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
+    },
+  };
+}
+
 /* --------------------------------------------------------------- counting */
 
 /** Opens a blind count; the database snapshots what it expects, out of sight. */
@@ -166,6 +200,26 @@ export async function submitCountAction(
   const r = await callRpc("submit_stock_count", { p_count: v.data.countId });
   if (!r.ok) return r;
   refresh("/count", "/accounting");
+  return { ok: true, data: null };
+}
+
+const cancelCountInput = z.object({
+  countId: id("a count"),
+  reason: text("Why the count is cancelled", 300),
+});
+
+/** A count still being counted is cancelled by its counter or a manager, with a reason. */
+export async function cancelCountAction(
+  input: z.input<typeof cancelCountInput>,
+): Promise<ActionResult<null>> {
+  const v = parse(cancelCountInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("cancel_stock_count", {
+    p_count: v.data.countId,
+    p_reason: v.data.reason,
+  });
+  if (!r.ok) return r;
+  refresh("/count");
   return { ok: true, data: null };
 }
 

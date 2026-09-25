@@ -2,7 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { adjustStockAction, createItemAction, recordWasteAction } from "@/lib/actions/stock";
+import {
+  adjustStockAction,
+  createItemAction,
+  recordOpeningStockAction,
+  recordWasteAction,
+} from "@/lib/actions/stock";
 import { WASTE_TYPES, fmtIQD, movementLabel } from "@/lib/format";
 import { Field, Notice, inputStyle } from "@/components/ui";
 
@@ -18,11 +23,14 @@ const DEFAULT_BASE: Record<string, string> = { count: "each", mass: "g", volume:
 
 export function InventoryForms({
   items,
+  unstocked,
   canAddItem,
   canWaste,
   canCorrect,
 }: {
   items: ItemOpt[];
+  /** Items with no stock history yet: they can be given their opening stock. */
+  unstocked: ItemOpt[];
   canAddItem: boolean;
   canWaste: boolean;
   canCorrect: boolean;
@@ -33,6 +41,7 @@ export function InventoryForms({
       className="grid"
       style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px,1fr))", gap: 16 }}
     >
+      {canAddItem && unstocked.length > 0 && <OpeningStock items={unstocked} />}
       {canAddItem && <AddItem />}
       {canWaste && <RecordWaste items={items} />}
       {canCorrect && <CorrectStock items={items} />}
@@ -197,6 +206,115 @@ function UnitSelect({
         </option>
       ))}
     </select>
+  );
+}
+
+/**
+ * Opening stock for an item that has none yet — at go-live, or for an item
+ * added without it — at what it cost, so its sales are costed from the start.
+ */
+function OpeningStock({ items }: { items: ItemOpt[] }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [msg, setMsg] = useState<Msg>(null);
+  const [itemId, setItemId] = useState(items[0]?.id ?? "");
+  // Once an item has its opening stock it leaves the list: fall back to the first.
+  const item = items.find((i) => i.id === itemId) ?? items[0];
+  const [unitChoice, setUnit] = useState(item?.baseUnit ?? "");
+  const unit = item?.units.some((u) => u.code === unitChoice) ? unitChoice : (item?.baseUnit ?? "");
+  const [qty, setQty] = useState("");
+  const [unitCost, setUnitCost] = useState("");
+  const unitLabel = item?.units.find((u) => u.code === unit)?.label ?? unit;
+  const value =
+    (Number(qty.replace(/[^0-9.]/g, "")) || 0) * (Number(unitCost.replace(/[^0-9.]/g, "")) || 0);
+
+  function submit() {
+    if (!item) return;
+    setMsg(null);
+    start(async () => {
+      const r = await recordOpeningStockAction({
+        itemId: item.id,
+        qty,
+        unitCode: unit || null,
+        unitCost,
+      });
+      if (r.ok) {
+        setMsg({
+          ok: true,
+          text: `Opening stock of ${item.name}: ${qty} ${unitLabel}, worth ${fmtIQD(r.data.value)} (journal ${r.data.journalNo ?? "—"}).`,
+        });
+        setQty("");
+        setUnitCost("");
+        router.refresh();
+      } else setMsg({ ok: false, text: r.error });
+    });
+  }
+
+  if (!item) return null;
+  return (
+    <div
+      className="card grid"
+      style={{ gap: 10, alignContent: "start" }}
+      data-testid="opening-stock"
+    >
+      <h3 style={{ margin: 0 }}>📦 Opening stock</h3>
+      <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
+        {items.length} item(s) have no stock recorded yet. Count what is on the shelf and enter it
+        at what it cost, so every sale of it is costed.
+      </p>
+      <Field label="Item with no stock yet">
+        <select
+          style={inputStyle}
+          value={item.id}
+          onChange={(e) => {
+            setItemId(e.target.value);
+            setUnit(items.find((i) => i.id === e.target.value)?.baseUnit ?? "");
+          }}
+        >
+          {items.map((i) => (
+            <option key={i.id} value={i.id}>
+              {i.name}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+        <Field label="Quantity on the shelf">
+          <input
+            style={inputStyle}
+            value={qty}
+            onChange={(e) => setQty(e.target.value)}
+            inputMode="decimal"
+          />
+        </Field>
+        <Field label="Unit">
+          <UnitSelect item={item} value={unit} onChange={setUnit} />
+        </Field>
+        <Field label={`Cost per ${unitLabel} (IQD)`}>
+          <input
+            style={inputStyle}
+            value={unitCost}
+            onChange={(e) => setUnitCost(e.target.value)}
+            inputMode="decimal"
+          />
+        </Field>
+      </div>
+      <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
+        {value > 0 ? `Worth ${fmtIQD(value)}. ` : ""}Journaled Dr 1200 Inventory / Cr 3000 Owner
+        equity. Once an item has stock, it changes only by deliveries, sales, waste, counts and
+        corrections.
+      </p>
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <button
+          className="btn-primary"
+          onClick={submit}
+          disabled={pending || !qty.trim() || !unitCost.trim()}
+        >
+          {pending ? "Recording…" : "Record opening stock"}
+        </button>
+        <Notice msg={msg} />
+      </div>
+    </div>
   );
 }
 

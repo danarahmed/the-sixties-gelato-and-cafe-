@@ -14,11 +14,15 @@ interface Suggestion {
   needsReview: boolean;
 }
 
+/** Where the money came from (0024). From the till it leaves today's drawer. */
 const PAID_FROM = {
-  cash: { code: "1000", name: "Cash on hand" },
-  card: { code: "1010", name: "Card clearing" },
-  bank: { code: "1020", name: "Bank" },
+  till: { code: "1000", name: "Cash in the till", label: "The till (today's drawer)" },
+  safe: { code: "1005", name: "Cash in the safe", label: "The safe" },
+  bank: { code: "1020", name: "Bank", label: "The bank" },
+  card: { code: "1010", name: "Card clearing", label: "A card" },
+  owner: { code: "3000", name: "Owner equity", label: "The owner, personally" },
 } as const;
+type PaidFrom = keyof typeof PAID_FROM;
 
 /**
  * Write the expense in plain words. The house rules PROPOSE an account from
@@ -37,7 +41,7 @@ export function ExpenseEntry({
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(today);
-  const [paidFrom, setPaidFrom] = useState<keyof typeof PAID_FROM>("cash");
+  const [paidFrom, setPaidFrom] = useState<PaidFrom | "">("");
   const [account, setAccount] = useState("");
   const [chosenByHand, setChosenByHand] = useState(false);
   const [hint, setHint] = useState<Suggestion | null>(null);
@@ -67,6 +71,7 @@ export function ExpenseEntry({
   function post() {
     setMsg(null);
     start(async () => {
+      if (!paidFrom) return;
       const r = await recordExpenseAction({
         description: desc,
         amount,
@@ -119,12 +124,14 @@ export function ExpenseEntry({
         <label style={{ minWidth: 150 }}>
           <div className="sc">Paid from</div>
           <select
+            aria-label="Paid from"
             value={paidFrom}
-            onChange={(e) => setPaidFrom(e.target.value as keyof typeof PAID_FROM)}
+            onChange={(e) => setPaidFrom(e.target.value as PaidFrom | "")}
           >
-            {Object.entries(PAID_FROM).map(([k, a]) => (
+            <option value="">Choose…</option>
+            {(Object.keys(PAID_FROM) as PaidFrom[]).map((k) => (
               <option key={k} value={k}>
-                {a.code} {a.name}
+                {PAID_FROM[k].label}
               </option>
             ))}
           </select>
@@ -178,14 +185,18 @@ export function ExpenseEntry({
                 </span>
                 <span className="amt">{fmtIQD(value)}</span>
               </div>
-              <div className="vline credit">
-                <span className="dr">Cr</span>
-                <span className="acct">
-                  <em>{PAID_FROM[paidFrom].code}</em>
-                  {PAID_FROM[paidFrom].name}
-                </span>
-                <span className="amt">{fmtIQD(value)}</span>
-              </div>
+              {paidFrom ? (
+                <div className="vline credit">
+                  <span className="dr">Cr</span>
+                  <span className="acct">
+                    <em>{PAID_FROM[paidFrom].code}</em>
+                    {PAID_FROM[paidFrom].name}
+                  </span>
+                  <span className="amt">{fmtIQD(value)}</span>
+                </div>
+              ) : (
+                <div className="vempty">Choose where the money came from…</div>
+              )}
               {desc.trim() && (
                 <div className="vline" style={{ paddingBlockStart: 6 }}>
                   <span className="dr" />
@@ -213,7 +224,7 @@ export function ExpenseEntry({
           <button
             className="btn-primary"
             onClick={post}
-            disabled={busy || !desc.trim() || value <= 0 || !account}
+            disabled={busy || !desc.trim() || value <= 0 || !account || !paidFrom}
           >
             {busy ? "Posting…" : "Post expense"}
           </button>

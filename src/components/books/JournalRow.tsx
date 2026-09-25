@@ -21,7 +21,8 @@ const SOURCE: Record<string, string> = {
   expense: "Expense",
   inventory_movement: "Stock",
   stock_count: "Count",
-  work_shift: "Day close",
+  work_shift: "Drawer count",
+  cash_transfer: "Cash moved",
   manual: "Manual",
   year_end_close: "Year end",
 };
