@@ -130,6 +130,16 @@ ok "$(sql "select (select sum(amount) from cash_event where kind = 'sale')
                = (select sum(t.amount) from sales_tender t where t.tender_type = 'cash')")" "t" \
    "exactly once: the counted cash equals the cash taken"
 
+# 0029 — ten dashboards opened at once: each brings the alerts up to date, one
+# at a time, and none is refused; every condition keeps one open alert.
+race 10 owner@example.com "select count(*) from current_alerts()"
+ok "$(cat "$WORK"/*.out | grep -c 'ERROR' || true)" "0" "ten dashboards opened at once all load their alerts"
+ok "$(sql "select count(*) from (select rule, subject from alert where resolved_at is null group by 1, 2 having count(*) > 1) x")" "0" \
+   "and each condition has one open alert, not ten"
+ok "$(sql "select count(*) from alert where resolved_at is null")" \
+   "$(sql "select count(*) from alert_conditions('00000000-0000-0000-0000-0000000000b1', now())")" \
+   "one for every condition the rules find"
+
 # The books still tie after all of it.
 ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(test.today())")" \
    "0,0,0,0" "every subledger still reconciles to its control account"

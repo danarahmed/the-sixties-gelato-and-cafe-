@@ -1,20 +1,29 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
-import { requirePermission } from "@/lib/auth/session";
+import { has, requirePermission } from "@/lib/auth/session";
 import { getDashboard, getReconciliation } from "@/lib/db/reports";
 import { getSalesOrders, getStockBoard } from "@/lib/db/read";
+import { getCurrentAlerts, getDailyBrief } from "@/lib/db/alerts";
 import { channelLabel, fmtIQD, fmtQty } from "@/lib/format";
-import { businessToday, dateTimeIn } from "@/lib/dates";
+import { addDays, businessToday, dateTimeIn } from "@/lib/dates";
+import { NeedsYou } from "@/components/dashboard/NeedsYou";
+import { DailyBrief } from "@/components/dashboard/DailyBrief";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 
 export const dynamic = "force-dynamic";
 
-/** Today at a glance, from the books, for the people who run the business. */
+/**
+ * Exceptions first (0029, the audit's P1-8): what needs someone, then
+ * yesterday's brief, then today at a glance — all from the books, for the
+ * people who run the business.
+ */
 export default async function DashboardPage() {
   const profile = await requirePermission("profit.view");
   const t = await getT();
   const today = businessToday(profile.timezone);
-  const [d, rec, board, recent] = await Promise.all([
+  const [alerts, brief, d, rec, board, recent] = await Promise.all([
+    getCurrentAlerts(),
+    getDailyBrief(addDays(today, -1)),
     getDashboard(today),
     getReconciliation(today),
     getStockBoard(),
@@ -63,6 +72,25 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      <NeedsYou
+        alerts={alerts}
+        canAct={has(profile, "sale.void") || has(profile, "accounting.post")}
+        myId={profile.id}
+        today={today}
+        timezone={profile.timezone}
+      />
+
+      <DailyBrief
+        brief={brief}
+        heading={t("dash.yesterday")}
+        labels={{
+          facts: t("dash.facts"),
+          calculations: t("dash.calculations"),
+          toDo: t("dash.toDo"),
+        }}
+      />
+
+      <h2 style={{ margin: 0, fontSize: "1.15rem" }}>{t("dash.today")}</h2>
       <div
         className="grid"
         style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}

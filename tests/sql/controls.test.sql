@@ -134,11 +134,11 @@ select test.eq((
   select string_agg(p.proname, ',' order by p.proname)
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'execute')),
-  'add_item_unit,adjust_stock,approve_stock_count,cancel_bill,cancel_production,cancel_scheduled_price,cancel_scheduled_recipe,'
+  'acknowledge_alert,add_item_unit,adjust_stock,alert_thresholds,approve_stock_count,cancel_bill,cancel_production,cancel_scheduled_price,cancel_scheduled_recipe,'
   'cancel_stock_count,cancel_tab,change_product_recipe,'
   'clear_product_image,close_day,count_drawer,create_item,create_product,'
-  'create_supplier,current_app_user_id,'
-  'current_business_id,current_can_view_costs,current_has_permission,current_has_role,dashboard_summary,'
+  'create_supplier,current_alerts,current_app_user_id,'
+  'current_business_id,current_can_view_costs,current_has_permission,current_has_role,daily_brief,dashboard_summary,'
   'discard_journal,drawer_status,invite_member,item_costs,item_price_history,legacy_unposted,list_approvers,list_members,'
   'lock_period,'
   'mark_bill_printed,'
@@ -153,8 +153,8 @@ select test.eq((
   'request_approval,reverse_journal,review_stock_count,'
   'save_batch_recipe,save_category,'
   'save_journal,save_tab,save_table,'
-  'set_member_active,set_member_roles,set_my_pin,set_no_stock,set_price,set_product_details,set_product_image,settle_tab,'
-  'split_tab,'
+  'set_alert_thresholds,set_member_active,set_member_roles,set_my_pin,set_no_stock,set_price,set_product_details,set_product_image,settle_tab,'
+  'snooze_alert,split_tab,'
   'start_stock_count,stock_card,submit_stock_count,unlock_period,update_item,update_supplier,void_sale',
   'signed-in users can call exactly the intended API');
 select test.eq((

@@ -428,3 +428,55 @@ reason_code)`: a bill with items needs a manager and a reason from the list;
   wrong PIN in the dates, with the person, amount, reason, who approved it
   and whether it waits for review (a void or refund nobody else approved, a
   wrong PIN, a discount over the cap given before `0028`).
+
+### Alerts and the daily brief (`0029`)
+
+- **The rules.** `alert_conditions(business, at)` (internal, read-only): the
+  audit's §7, version 1 — each row a `rule`, the `subject` it is about (an
+  account, a location, an item, a product and channel, a bill, a person…), an
+  `urgency` (`red` now, `orange` soon), a `title` saying what happened, `why`
+  it matters, the `action` to take, a `confidence` (`high`, `medium`, `low`), a
+  `link` to where to act, and its `facts` as JSON. The rules are
+  `cash_negative`, `drawer_uncounted`, `count_stale`, `running_out`,
+  `below_minimum`, `price_confirmed`, `no_recipe`, `no_cost`, `margin`,
+  `waste_spike`, `exceptions_person`, `card_not_banked`,
+  `platform_not_received`, `bill_due`, `price_typo` and `duplicate_payment`
+  ([`CALCULATIONS.md`](CALCULATIONS.md) has each one's arithmetic).
+- **The alerts kept.** `alert (rule, subject, urgency, title, why, action,
+confidence, link, facts, first_seen_at, last_seen_at, resolved_at,
+acknowledged_at, acknowledged_by, ack_note, snoozed_until, snoozed_by,
+snooze_reason)`, readable by no one signed in: one open alert per business,
+  rule and subject (`alert_open_one`). `refresh_alerts(business)` (internal,
+  one at a time per business) opens an alert for each new condition, brings
+  the open ones up to date, and resolves those whose condition has cleared;
+  an alert that turns from orange to red loses its answer and its snooze. A
+  condition that returns later opens a new alert. These rows are signals
+  beside the books: nothing in the books is written from them.
+- **Reading and answering.** `current_alerts()` (needs `profit.view`)
+  refreshes, then lists the open alerts, red first, with who answered and a
+  snooze only while it lasts. `acknowledge_alert(alert, note)` and
+  `snooze_alert(alert, until, reason)` (need `sale.void` or
+  `accounting.post`): a note or reason of three characters or more; a snooze
+  until a day from tomorrow to 30 days ahead, lasting to the start of that day
+  in the business's time; audited `alert.acknowledge` and `alert.snooze`.
+  Nobody answers or snoozes an alert about their own exceptions.
+- **The brief.** `daily_brief(day)` (needs `profit.view`; not a day to come)
+  refreshes, then returns `facts` (sales, net sales from the ledger, voids,
+  refunds and discounts with their amounts, waste, drawer counts and their
+  difference, sales costed at nothing), `calculations` (cost of goods and its
+  share of sales, gross profit and margin, the same weekday last week and the
+  change since, the usual for the weekday — the four before with sales), the
+  open `alerts` not snoozed with their `red` and `orange` counts, and the
+  `recommendations`: the actions of red alerts nobody has answered.
+- **Thresholds.** `business.alert_settings` (JSON, `{}` by default): the
+  café's own thresholds; `alert_threshold_rules()` (internal) holds each one's
+  default, limits and name, and `alert_setting(business, key)` (internal) the
+  value in force. `alert_thresholds()` and `set_alert_thresholds(settings)`
+  (need `settings.manage`): read them all, or change some — a number within
+  the limits (a whole one for days, hours and counts), or empty to follow the
+  default again; a change is on the audit trail as `business.update`.
+- **Delivery times.** `supplier.lead_time_days` (0 to 30; empty: the café's
+  default), set with `update_supplier`'s new `p_lead_time_days` and audited
+  as `supplier.update`. Running out uses the item's last supplier's.
+- **Clearing the test records.** `reset-test-data.sql` clears `alert`; the
+  thresholds, with the business, are kept.

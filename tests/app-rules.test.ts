@@ -28,6 +28,23 @@ import {
 import { deliveryLineCost, needsPriceConfirmation, priceGap } from "@/lib/receiving";
 import { REASONS, noteIsEnough, reasonKey, reasonMissing, type ReasonKind } from "@/lib/reasons";
 import { LOCALES, getDictionary } from "@/lib/i18n/dictionaries";
+import {
+  RULE_LABEL,
+  THRESHOLD_LABEL,
+  THRESHOLD_ORDER,
+  briefCalculations,
+  briefFacts,
+  briefToDo,
+  canAnswer,
+  groupByRule,
+  overall,
+  parseBrief,
+  parseThresholds,
+  snoozeRange,
+  sortAlerts,
+  thresholdChanges,
+  type Alert,
+} from "@/lib/alerts";
 import { exceptionsByPerson, type ExceptionRow } from "@/lib/exceptions";
 import Decimal from "decimal.js";
 import {
@@ -967,5 +984,243 @@ describe("the exceptions report, by person (0028)", () => {
       ["Demo Manager", { void: 2, refund: 1 }, 8500, 2],
       ["Demo Cashier", { discount: 1, wrong_pin: 1 }, 500, 1],
     ]);
+  });
+});
+
+describe("the system speaks: alerts and the daily brief (0029, the audit's P1-8)", () => {
+  const migration = readFileSync(join(__dirname, "../supabase/migrations/0029_alerts.sql"), "utf8");
+  const alert = (over: Partial<Alert>): Alert => ({
+    id: "a",
+    rule: "margin",
+    subject: "s",
+    urgency: "orange",
+    title: "t",
+    why: null,
+    action: null,
+    confidence: "high",
+    link: null,
+    firstSeenAt: "2026-09-25T08:00:00Z",
+    lastSeenAt: "2026-09-25T09:00:00Z",
+    acknowledgedAt: null,
+    acknowledgedBy: null,
+    ackNote: null,
+    snoozedUntil: null,
+    snoozedBy: null,
+    snoozeReason: null,
+    ...over,
+  });
+
+  it("red first, then orange, oldest first; answered and snoozed apart", () => {
+    const list = [
+      alert({ id: "o2", firstSeenAt: "2026-09-25T09:00:00Z" }),
+      alert({ id: "r", urgency: "red", firstSeenAt: "2026-09-25T10:00:00Z" }),
+      alert({ id: "o1", firstSeenAt: "2026-09-25T07:00:00Z" }),
+      alert({ id: "ack", urgency: "red", acknowledgedAt: "2026-09-25T10:30:00Z" }),
+      alert({ id: "zz", snoozedUntil: "2026-09-27T21:00:00Z" }),
+    ];
+    const { needsYou, answered } = sortAlerts(list);
+    expect(needsYou.map((a) => a.id)).toEqual(["r", "o1", "o2"]);
+    expect(answered.map((a) => a.id)).toEqual(["ack", "zz"]);
+    expect(overall(list)).toBe("red");
+    expect(overall(list.filter((a) => a.id !== "r"))).toBe("orange");
+    expect(overall([list[3]!, list[4]!])).toBe("green");
+  });
+
+  it("orange alerts of one rule fold together, in the order the rules first appear", () => {
+    const g = groupByRule([
+      alert({ id: "1", rule: "no_cost" }),
+      alert({ id: "2", rule: "bill_due" }),
+      alert({ id: "3", rule: "no_cost" }),
+    ]);
+    expect(g.map((x) => [x.rule, x.alerts.map((a) => a.id)])).toEqual([
+      ["no_cost", ["1", "3"]],
+      ["bill_due", ["2"]],
+    ]);
+  });
+
+  it("nobody answers an alert about their own exceptions", () => {
+    expect(canAnswer(alert({ rule: "exceptions_person", subject: "me" }), "me")).toBe(false);
+    expect(canAnswer(alert({ rule: "exceptions_person", subject: "them" }), "me")).toBe(true);
+    expect(canAnswer(alert({ rule: "margin", subject: "me" }), "me")).toBe(true);
+  });
+
+  it("a snooze runs from tomorrow to 30 days ahead, a week offered", () => {
+    expect(snoozeRange("2026-09-25")).toEqual({
+      min: "2026-09-26",
+      max: "2026-10-25",
+      suggested: "2026-10-02",
+    });
+  });
+
+  it("every rule the database checks has a name on the screen", () => {
+    const emitted = new Set([
+      ...[...migration.matchAll(/select '([a-z_]+)'::text, /g)].map((m) => m[1]),
+      ...[...migration.matchAll(/rule := '([a-z_]+)'/g)].map((m) => m[1]),
+      ...[...migration.matchAll(/select '(card_not_banked|platform_not_received)'/g)].map(
+        (m) => m[1],
+      ),
+    ]);
+    emitted.delete("waste"); // a subject, not a rule
+    expect([...emitted].sort()).toEqual(Object.keys(RULE_LABEL).sort());
+  });
+
+  it("the thresholds are the database's, with the same words", () => {
+    const json = migration.match(/select '(\{[\s\S]*?\})'::jsonb/)?.[1] ?? "{}";
+    const rules = JSON.parse(json.replace(/''/g, "'")) as Record<string, { label: string }>;
+    expect(Object.keys(rules).sort()).toEqual([...THRESHOLD_ORDER].sort());
+    for (const [k, r] of Object.entries(rules)) expect(THRESHOLD_LABEL[k], k).toBe(r.label);
+  });
+
+  it("thresholds are checked as the database checks them; empty is the default again", () => {
+    const list = parseThresholds({
+      count_stale_hours: { default: 8, min: 1, max: 72, whole: true, label: "Hours", value: 12 },
+      margin_target_percent: {
+        default: 70,
+        min: 0,
+        max: 95,
+        whole: false,
+        label: "Margin",
+        value: 70,
+      },
+    });
+    expect(list.map((t) => t.key)).toEqual(["margin_target_percent", "count_stale_hours"]);
+    expect(thresholdChanges(list, { count_stale_hours: "", margin_target_percent: "" })).toEqual({
+      ok: true,
+      changes: { count_stale_hours: null },
+    });
+    expect(
+      thresholdChanges(list, { count_stale_hours: "12", margin_target_percent: "65.5" }),
+    ).toEqual({
+      ok: true,
+      changes: { margin_target_percent: 65.5 },
+    });
+    expect(thresholdChanges(list, { count_stale_hours: "2.5" })).toEqual({
+      ok: false,
+      error: "Hours: enter a whole number from 1 to 72",
+    });
+    expect(thresholdChanges(list, { margin_target_percent: "96" })).toEqual({
+      ok: false,
+      error: "Margin: enter a number from 0 to 95",
+    });
+    expect(thresholdChanges(list, { margin_target_percent: "lots" })).toEqual({
+      ok: false,
+      error: "Margin: enter a number",
+    });
+  });
+
+  // The day the SQL test builds: three sales, one voided, one refunded, one
+  // discounted; beans wasted; the drawer 500 short.
+  const brief = parseBrief({
+    day: "2026-09-24",
+    facts: {
+      sales: 2,
+      net_sales: 5000,
+      voids: 1,
+      voided: 2500,
+      refunds: 1,
+      refunded: 900,
+      discounts: 1,
+      discounted: 100,
+      waste: 1000,
+      drawer_counts: 1,
+      drawer_difference: -500,
+      uncosted_sales: 0,
+    },
+    calculations: {
+      cost_of_goods: 400,
+      cost_of_goods_percent: 8.0,
+      gross_profit: 3600,
+      gross_margin_percent: 72.0,
+      same_day_last_week: 4000,
+      change_from_last_week_percent: 25.0,
+      usual_for_the_weekday: 4500,
+    },
+    alerts: [
+      {
+        urgency: "red",
+        title: "Bank is -50,000 IQD: below zero",
+        action: "Open it.",
+        link: null,
+        acknowledged: false,
+      },
+      { urgency: "orange", title: "Cups", action: "Order it.", link: null, acknowledged: false },
+      { urgency: "orange", title: "Milk", action: "Order it.", link: null, acknowledged: true },
+    ],
+    red: 1,
+    orange: 2,
+    recommendations: ["Open it."],
+  });
+
+  it("the brief's facts say what happened, and nothing else", () => {
+    expect(briefFacts(brief)).toEqual([
+      "Net sales 5,000 IQD over 2 sales.",
+      "1 void (2,500 IQD).",
+      "1 refund (900 IQD).",
+      "1 discount (100 IQD).",
+      "Waste 1,000 IQD.",
+      "The drawer was counted 500 IQD short.",
+    ]);
+  });
+
+  it("its calculations, apart", () => {
+    expect(briefCalculations(brief, "Thursday")).toEqual([
+      "Cost of goods 400 IQD, 8% of sales.",
+      "Gross profit 3,600 IQD (72%), after waste and every other cost of sales.",
+      "Last Thursday: 4,000 IQD (+25% since).",
+      "A usual Thursday (the four before): 4,500 IQD.",
+    ]);
+  });
+
+  it("and what to do: the red alerts nobody has answered, else what can wait", () => {
+    expect(briefToDo(brief)).toEqual(["Open it."]);
+    expect(briefToDo({ ...brief, recommendations: [] })).toEqual([
+      "Nothing urgent. 1 orange alert waits for a quiet moment.",
+    ]);
+    expect(briefToDo({ ...brief, recommendations: [], alerts: [] })).toEqual(["Nothing to do."]);
+  });
+
+  it("a day with no sales says so", () => {
+    const quiet = parseBrief({ day: "2026-09-23", facts: {}, calculations: {}, alerts: [] });
+    expect(briefFacts(quiet)).toEqual(["No sales."]);
+    expect(briefCalculations(quiet, "Wednesday")).toEqual([
+      "Nothing to calculate: there were no sales.",
+    ]);
+  });
+
+  it("an answer or a new threshold reads plainly on the audit trail", () => {
+    expect(actionLabel("alert.acknowledge")).toBe("Alert answered");
+    expect(actionLabel("alert.snooze")).toBe("Alert snoozed");
+    expect(auditGroup("alerts")?.prefixes).toEqual(["alert."]);
+    const none = new Map<string, string>();
+    expect(
+      describeChanges(
+        { alert_settings: {} },
+        { alert_settings: { margin_target_percent: 65 } },
+        none,
+      ),
+    ).toEqual([
+      { field: "Alert thresholds", before: "the defaults", after: "Margin target (%) 65" },
+    ]);
+    expect(subjectOf("alert", "x", null, { rule: "cash_negative", title: "Bank" }, none)).toBe(
+      "Cash below zero",
+    );
+    expect(showValue("running_out", "rule", none)).toBe("Running out");
+  });
+
+  it("the dashboard's words are there in English, Arabic and Kurdish", () => {
+    for (const locale of LOCALES) {
+      const d = getDictionary(locale);
+      for (const k of [
+        "needsYou",
+        "allClear",
+        "answered",
+        "yesterday",
+        "today",
+        "facts",
+        "calculations",
+        "toDo",
+      ])
+        expect(d[`dash.${k}`], `${locale} dash.${k}`).toBeTruthy();
+    }
   });
 });

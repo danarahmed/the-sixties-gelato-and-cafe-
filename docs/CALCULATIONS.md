@@ -331,3 +331,80 @@ corrections are new entries. What each record posts (migration `0015`):
   manual journal. Neither the till nor the safe may pay out more than the
   books say it holds.
 - Year end: revenue and expense accounts closed to 3100 Retained earnings.
+
+## 12. Alerts and the daily brief (`0029`, audit P1-8)
+
+Each rule reads the books as they are when the dashboard opens; the numbers in
+_italics_ are thresholds the owner can change on Settings (their defaults
+shown).
+
+- **Cash below zero** (🔴): the balance of 1000 (till), 1005 (safe) or 1020
+  (bank) under 0.
+- **Drawer not counted:** days before today with cash no drawer count has
+  taken in (sales after the last count, or cash moved since); 🟠 for one day,
+  🔴 for two or more.
+- **Stock count left open** (🟠): open longer than _8 hours_.
+- **Running out:** `daily use = use over the last 14 days ÷ min(14, days of
+history)`, where use is what sales, production, waste and spoilage took off
+  the shelf, less what refunds and voids put back. `days of cover = on hand ÷
+daily use`; it fires when that is under `lead + 1` days, the lead being the
+  item's last supplier's delivery time or the café's _1 day_. 🔴 under a day,
+  🟠 otherwise. Quiet with under 7 days of history, and on a day the item is
+  received. Sure with 28 days of history or more, fairly sure with 14–27, an
+  early sign with 7–13. It suggests ordering `ceil(daily use × 7)`, a week's
+  worth (or a batch, for an item made on Production).
+- **Below the reorder level** (🟠): on hand under the item's reorder level,
+  items never stocked included; not said again for an item running out.
+- **Delivery price confirmed** (🟠): a receipt confirmed at a price more than
+  25% from the item's cost (`0027`), for 7 days after.
+- **Margins:** each product on each channel it is priced on, at today's cost
+  (every ingredient at what a sale would take it off the shelf at now): `cost
+= Σ round(quantity × cost a base unit)`, `margin = (price − cost) ÷ price`.
+  🔴 when the price is under the cost; 🟠 when the margin is under _70%_.
+  Fairly sure when an ingredient has none on hand, so its cost is its last
+  delivery's. A product whose ingredient has no cost yet waits: that
+  ingredient is named once instead, with the products that use it (🟠 no
+  cost); a product sold with no recipe, and no reason for using no stock, is
+  🟠 once, whatever its channels.
+- **Waste above its usual** (🟠): waste (5300) in the last 7 days against the
+  usual week, `prior waste ÷ prior days × 7`, the prior days being days 8–35
+  back, at most 28 and at least 7 (so the books need 14 days of history). It
+  fires above _1.5_ times the usual week and above _20,000 IQD_. Fairly sure
+  with four weeks to compare with, an early sign with fewer.
+- **One person's exceptions** (🟠, fairly sure): over the last 7 days, the
+  voids and refunds they made, the discounts they gave and the bills with
+  items they cancelled — at least _10_ of them, or their amount more than _3%_
+  of the person's own sales (every sale they rang, voided ones included).
+- **Card money not banked, platform money not received** (🟠): what the
+  clearing account (1010 card, 1100 platforms) holds beyond what came into it
+  in the last _3_ (card) or _7_ (platform) days — settlements are taken as
+  clearing the oldest first. Platform money is fairly sure until sales carry
+  the platform's order number (P1-9).
+- **Bill due** (🟠): a supplier bill not paid in full, due within _3 days_ or
+  overdue.
+- **Price typo** (🟠, fairly sure): a product's highest channel price more than
+  _3_ times its lowest.
+- **Possible duplicate payment** (🟠, fairly sure): two expenses, bills or
+  journals to the same 6xxx account for the same amount within 3 days in the
+  last 30, neither reversed.
+
+**The brief** of a day (midnight to midnight, Baghdad time):
+
+- _Facts:_ sales (not voided, bills paid), net sales (the revenue accounts,
+  credit less debit, as the P&L has them — after voids, refunds and
+  discounts), voids and refunds made that day and their amounts, discounts
+  and their amounts, waste (5300), drawer counts and the sum of their
+  differences, sales costed at nothing.
+- _Calculations:_ `cost of goods` (5000) and its share of net sales; `gross
+profit = net sales − every 5xxx account` (waste, count differences, price
+  differences and platform fees included) and its share; the same weekday a
+  week before, and `change = (net sales − last week) ÷ last week`; the usual
+  for the weekday, the average of the four before that had sales.
+- _To do:_ the action of every red alert nobody has answered; else how many
+  orange ones wait; else nothing.
+
+Worked example (the SQL test): two espressos (5,000, cash), one takeaway on
+card (2,500, voided), a water with 10% off (900, refunded, the bottle back on
+the shelf), 100 g of beans wasted (1,000) and the drawer counted at 4,500:
+net sales 5,000 over 2 sales; cost of goods 400 (8%); gross profit 3,600
+(72%); the drawer 500 short.

@@ -34,6 +34,9 @@ select test.eq((select count(*) from sales_order) + (select count(*) from journa
   'no sale, journal, stock movement, cash event, open bill, drawer count, period or number is left');
 select test.eq((select count(*) from approval) + (select count(*) from pin_attempt), 0::bigint,
   'nor any approval, or PIN typed, while testing');
+select test.eq((select count(*) from alert)::int, 0, 'nor the alerts raised on them: they rise again from what is recorded next');
+select test.eq((select alert_settings from business where id = '00000000-0000-0000-0000-0000000000b1'),
+  '{"margin_target_percent": 65}'::jsonb, 'the alert thresholds are kept');
 select test.ok(exists (select 1 from audit_log where action = 'business.reset_test_data' and (after_state ->> 'sales_order')::int = 4),
   'the audit trail records what was cleared');
 select test.ok(exists (select 1 from audit_log where action = 'drawer.count'), 'and still holds what happened before it');

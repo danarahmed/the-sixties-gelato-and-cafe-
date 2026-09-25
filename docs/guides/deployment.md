@@ -29,7 +29,8 @@ Plan a short window when the café is closed.
 | Prices, bills, costs (`0025`)  | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0025`](#after-0025)). The screens were merged ([pull request #11](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/11)) and deployed                                  |
 | Reports that agree (`0026`)    | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner against the live records (see [After `0026`](#after-0026)). The screens were merged ([pull request #12](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/12)) and deployed                                               |
 | Master data (`0027`)           | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0027`](#after-0027)). The screens were merged ([pull request #13](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/13)) and deployed                                  |
-| Exceptions (`0028`)            | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0028`](#after-0028)). The screens follow in the next pull request                                                                                                                    |
+| Exceptions (`0028`)            | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0028`](#after-0028)). The screens were merged ([pull request #14](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/14)) and deployed                                  |
+| Alerts and the brief (`0029`)  | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0029`](#after-0029)). The screens follow with their pull request                                                                                                                     |
 
 ## 0. Before you start
 
@@ -607,6 +608,48 @@ The security advisor's only new lines are the four new functions signed-in
 users may call (each checks its permission) and the two approval tables,
 which no one signed in may read: only the functions use them. Every new
 function sets its search path.
+
+## After `0029`
+
+Migration `0029` is the audit's P1-8: the dashboard opens on what needs
+someone. Sixteen rules check the books each time it opens and say what
+happened, why it matters, how urgent (🔴 now, 🟠 soon), what to do and how sure
+they are; an alert is answered with a note or snoozed with a reason (both on
+the audit trail) and resolves itself when its condition clears. Below them,
+yesterday's brief: facts, calculations and what to do, apart. The thresholds
+are on **Settings → Alerts**, and each vendor may say how many days a
+delivery takes (**Vendors → Edit vendor**). Nothing recorded changes. Until
+the new screens follow, minutes later, the dashboard deployed before it
+shows no alerts, and editing a vendor still works (its delivery time left
+empty).
+
+It was applied on 25 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0028` build. Compared with the
+tested build object by object, permissions included: identical. A check as
+the owner against the live records, in a transaction that was rolled back:
+
+- the first look at the live books took 143 ms, and found what the audit
+  found by hand: the till at −220,000 IQD (red), the stock count open since
+  24 September 14:55, rent of 150,000 recorded twice, Bottled Water at 5,000
+  dine-in but 500 takeaway, the owner's seven voids, refunds and discounts in
+  the week (10.6% of their sales), and nine prices under the 70% margin
+  target; card (19,000) and Talabat (5,250) money were too recent to be late;
+- yesterday's brief read net sales 130,250 over 20 sales, 2 voids (16,000),
+  2 refunds (4,500), 1 discount (1,000), waste 3,400; cost of goods 36,168
+  (27.8%), gross profit 86,682 (66.6%); to do: the till below zero;
+- the bank taken 50,000 below zero was red and first; "ok" was refused as an
+  answer and a real one kept, with the owner's name; the money put back, the
+  alert resolved itself;
+- an orange alert could not be snoozed until today, and was snoozed a week;
+  a 96% margin target was refused and 65% kept; eleven thresholds listed;
+- the audit trail gained exactly the answer, the snooze and the threshold;
+  every reconciliation check stayed at zero.
+
+Nothing was kept (no alerts, answers, thresholds or journals remained). The
+security advisor's only new lines are the six new functions signed-in users
+may call (each checks its permission) and the alerts table, which no one
+signed in may read. Every new function sets its search path.
 
 ## Clearing the test records
 

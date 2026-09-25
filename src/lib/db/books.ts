@@ -186,6 +186,8 @@ export interface VendorRow {
   phone: string | null;
   /** Out of use (0027): kept for its history; nothing more is received from them. */
   isActive: boolean;
+  /** Days a delivery takes, for "running out" (0029); null: the café's default. */
+  leadTimeDays: number | null;
   billed: number;
   paid: number;
   balance: number;
@@ -217,7 +219,7 @@ export async function getVendorBook(
 ): Promise<{ vendors: VendorRow[]; openBills: OpenBill[] }> {
   const c = await db();
   const [suppliers, bills, payments] = await Promise.all([
-    c.from("supplier").select("id,name,contact,phone,is_active").order("name"),
+    c.from("supplier").select("id,name,contact,phone,is_active,lead_time_days").order("name"),
     c
       .from("purchase_invoice")
       .select(
@@ -304,6 +306,7 @@ export async function getVendorBook(
       contact: strOrNull(s.contact),
       phone: strOrNull(s.phone),
       isActive: s.is_active !== false,
+      leadTimeDays: s.lead_time_days == null ? null : num(s.lead_time_days),
       billed,
       paid,
       balance: billed - paid,

@@ -6,6 +6,8 @@ import { getMembers } from "@/lib/db/reports";
 import { fmtIQD, roleLabel } from "@/lib/format";
 import { businessToday } from "@/lib/dates";
 import { PeopleManager } from "@/components/PeopleManager";
+import { getAlertThresholds } from "@/lib/db/alerts";
+import { AlertThresholds } from "./AlertThresholds";
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +21,11 @@ export default async function SettingsPage() {
   const profile = await requirePermission("settings.manage");
   const t = await getT();
   const today = businessToday(profile.timezone);
-  const [cfg, locations, members] = await Promise.all([
+  const [cfg, locations, members, thresholds] = await Promise.all([
     getBusinessConfig(),
     getLocations(),
     getMembers(),
+    getAlertThresholds(),
   ]);
 
   const config: [string, string][] = cfg
@@ -90,6 +93,16 @@ export default async function SettingsPage() {
         <p className="muted" style={{ fontSize: ".8rem" }}>
           These are changed in the database by the owner; there is no screen for them yet.
         </p>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>Alerts</h3>
+        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+          The dashboard checks the books against these each time it opens, and says what needs
+          someone: red now, orange soon. Leave a box empty to follow its default. How long a
+          supplier takes to deliver is set on each vendor (Vendors → Edit); this is for the rest.
+        </p>
+        <AlertThresholds thresholds={thresholds} />
       </div>
 
       <div className="card">
