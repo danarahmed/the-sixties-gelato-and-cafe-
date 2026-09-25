@@ -83,6 +83,8 @@ interface Pending {
    * at this total (0025); null for a payment left by an older till screen.
    */
   expectedNet: string | null;
+  /** A delivery platform's order number (0030), sent again with the retry. */
+  platformOrderNo: string | null;
 }
 
 const PENDING_KEY = "sixties.pos.pending";
@@ -118,6 +120,7 @@ function loadPending(): Pending | null {
       discountNote: p.discountNote ?? null,
       approvalId: p.approvalId ?? null,
       expectedNet: p.expectedNet ?? null,
+      platformOrderNo: p.platformOrderNo ?? null,
     };
   } catch {
     return null;
@@ -792,7 +795,7 @@ export function PosClient({
     });
   }
 
-  async function confirmPay(tender: Tender, received: number | null) {
+  async function confirmPay(tender: Tender, received: number | null, orderNo: string | null) {
     if (dialog?.kind !== "pay" || busy) return;
     const o = dialog.order;
     await sendPayment({
@@ -816,6 +819,7 @@ export function PosClient({
           }),
       // What the dialog showed: the database takes the money only at this total.
       expectedNet: orderDue(o, byId, money).toFixed(),
+      platformOrderNo: isPlatform(o.channel) ? orderNo : null,
       job: {
         kind: "receipt",
         title: dialog.title,
@@ -824,6 +828,7 @@ export function PosClient({
         ...printTotals(o),
         tender,
         received,
+        platformOrderNo: isPlatform(o.channel) ? orderNo : null,
         at: new Date().toISOString(),
         by: cashierName,
       },
@@ -848,6 +853,7 @@ export function PosClient({
               discountNote: p.discountNote,
               approvalId: p.approvalId,
               expectedNet: p.expectedNet,
+              platformOrderNo: p.platformOrderNo,
             })
           : await payBillAction({
               tabId: p.tabId!,
@@ -893,6 +899,7 @@ export function PosClient({
             discount: r.data.discount,
             change,
             reference: r.data.orderId.slice(0, 8),
+            platformOrderNo: r.data.platformOrderNo ?? p.platformOrderNo,
             journalNo: r.data.journalNo,
           }
         : null;
@@ -969,6 +976,7 @@ export function PosClient({
     total: net,
     tender: p.tender,
     reference: orderId.slice(0, 8),
+    platformOrderNo: p.platformOrderNo,
     at: new Date().toISOString(),
     by: cashierName,
   });
@@ -1177,6 +1185,9 @@ export function PosClient({
           note={discountNote(dialog.order)}
           tenders={isPlatform(dialog.order.channel) ? ["platform_paid"] : ["cash", "card"]}
           initialTender={isPlatform(dialog.order.channel) ? "platform_paid" : dialog.tender}
+          platform={
+            isPlatform(dialog.order.channel) ? t(`pos.channel.${dialog.order.channel}`) : null
+          }
           busy={busy === "pay"}
           error={dialog.error}
           onConfirm={confirmPay}

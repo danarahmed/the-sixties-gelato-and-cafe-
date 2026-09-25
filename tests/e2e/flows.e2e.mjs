@@ -35,11 +35,38 @@ console.log("▸ cashier rings up two sales");
   );
   check(!(await page.getByRole("button", { name: /💵/ }).isVisible()), "and no cash button");
   await page.getByRole("button", { name: /platform/i }).click();
+  // The order number from the Talabat tablet (0030): the payout is matched by it.
+  const number = page.getByLabel("Talabat order number");
+  check(await page.locator(".pay-confirm").isDisabled(), "the sale waits for the order number");
+  await number.fill("70:01");
+  check(
+    (await page.getByText("Letters and digits only").isVisible()) &&
+      (await page.locator(".pay-confirm").isDisabled()),
+    "as the tablet shows it: letters and digits",
+  );
+  await number.fill("#7001");
   await page.locator(".pay-confirm").click();
   await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
-  ok("a Talabat sale recorded");
+  check(
+    (await page.locator(".receipt-card").textContent()).includes("Order 7001"),
+    "a Talabat sale recorded, with its order number",
+  );
+  // The same order again is refused, and nothing is recorded.
+  await page.locator(".product-tile", { hasText: "Golden espresso" }).click();
+  await page.getByRole("button", { name: /platform/i }).click();
+  await page.getByLabel("Talabat order number").fill("7001");
+  await page.locator(".pay-confirm").click();
+  await page.getByText(/Talabat order 7001 is already recorded, on the sale of/).waitFor({
+    timeout: 10000,
+  });
+  ok("the same Talabat order is not recorded twice");
   await ctx.close();
 }
+check(
+  sql("select string_agg(external_order_id || ':' || import_source, ',') from platform_order") ===
+    "7001:till",
+  "the Talabat order is kept by its number, from the till",
+);
 check(
   sql("select count(*) from sales_order where status = 'completed'") === "3",
   "three completed orders in the database",

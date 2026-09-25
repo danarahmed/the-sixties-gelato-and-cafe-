@@ -42,6 +42,8 @@ erDiagram
   delivery_platform ||--o{ platform_order : receives
   platform_settlement ||--o{ platform_settlement_line : lines
   platform_settlement ||--o{ reconciliation_issue : flags
+  platform_settlement ||--o{ platform_order : "pays out"
+  card_settlement ||--|| journal_entry : posts
 
   gl_account ||--o{ journal_line : posts
   journal_entry ||--o{ journal_line : balances
@@ -237,7 +239,8 @@ through the functions in `0018`.
   named `Cash in the till` (a name the owner chose is kept). `1000` joins the
   accounts no manual journal may touch. `payment_account()` maps where money
   came from to its account: till 1000, safe 1005, card 1010, bank 1020, owner
-  3000 (the old `cash` and `transfer` still mean the till and the bank).
+  3000 (the old `cash` and `transfer` still mean the till and the bank). Since
+  `0030` a card pays from the bank, 1020.
 - **`cash_event`** — every movement of cash in and out of a location's drawer,
   signed (+ in, − out): `sale` (a cash tender, by trigger), `void` and `refund`
   (by trigger on `sale_adjustment`), `paid_out` and `paid_out_reversed`
@@ -480,3 +483,82 @@ snooze_reason)`, readable by no one signed in: one open alert per business,
   as `supplier.update`. Running out uses the item's last supplier's.
 - **Clearing the test records.** `reset-test-data.sql` clears `alert`; the
   thresholds, with the business, are kept.
+
+### Card and platform money (`0030`)
+
+- **Accounts.** `6500 Card and bank fees` is added for every business.
+  `payment_account('card')` is 1020: an expense or a bill paid by card comes
+  out of the bank, so 1010 Card clearing holds only the till's card takings.
+  `signed_line(code, amount)` (internal) makes a journal line from a signed
+  amount: a debit when positive, a credit when negative.
+- **`card_settlement`** `(covers_from, covers_to, till_total, terminal_total,
+received, fee, difference, received_on, reference, note, journal_entry_id,
+created_by, cancelled_at, cancelled_by, cancel_reason)`, readable by no one
+  signed in: the card takings of a run of days. One in force per first day
+  (`card_settlement_from`); a settlement starts the day after the last one in
+  force. `fee` = the terminal's total − what reached the bank; `difference` =
+  the till's card takings − the terminal's total.
+- **`card_takings()`** (needs `cost.view`): the first day not yet settled
+  (`from`), each day's card takings since (`days`: 1010 lines, less refunds
+  and voids, leaving out the settlements' own journals and their reversals),
+  1010's balance, and the last 30 settlements.
+- **`record_card_settlement(through, terminal_total, received, received_on,
+reference, note)`** (needs `accounting.post`): the days from `from` to
+  `through`, a day that is over (not today); what reached the bank no more
+  than the terminal's total; a note when the till and the terminal differ;
+  the money arriving from `through` to today. Posts Dr 1020 received, Dr 6500
+  fee, Dr or Cr 6300 the difference, Cr 1010 the till's takings; audited
+  `card.settlement`. One at a time per business.
+- **`cancel_card_settlement(settlement, reason)`** (needs `accounting.post`):
+  the latest in force only, with a reason; its journal reversed, its days
+  waiting again; audited `card.settlement_cancel`.
+- **Platform order numbers.** `delivery_platform` has Talabat, Careem and
+  Toters for every business (`platform_id_for(business, channel)`, internal,
+  adds a platform the first time it is sold through). `record_sale` takes
+  `p_platform_order_no`: a platform sale needs it — letters, digits and
+  `# / _ . -`, at most 40 — and it is refused if that platform already has
+  the number (ignoring case). The sale writes its `platform_order`
+  (`external_order_id`, `store_list_value` = the sale's gross,
+  `customer_payment` = its net, `import_source` = `till`), and the answer
+  gives `platform_order_no`. A replay of the same sale is not asked again.
+- **`platform_settlement`** gains `received_on`, `journal_entry_id`, `note`,
+  `created_by`, `cancelled_at`, `cancelled_by`, `cancel_reason`; one in force
+  per platform and reference, ignoring case
+  (`platform_settlement_reference`). **`platform_settlement_line`** gains
+  `reported_fees`, `status` (`matched`, `not_found`, `already_paid`,
+  `voided`, `duplicate`), `sales_order_id` and `expected` (the sale's net).
+- **`platform_money()`** (needs `cost.view`): the platforms, each order not
+  yet paid out (not voided or refunded) with its number, sale, value and
+  days waiting, their total (`waiting`), 1100's balance (`receivable`), the
+  difference (`unmatched`), and the last 30 statements.
+- **`match_platform_statement(platform, lines)`** (needs `cost.view`; writes
+  nothing) over `platform_statement_match` (internal): each line
+  `{order_no, payout, commission?, fees?}` matched to its platform order, or
+  its status; with neither commission nor fees given, what the platform kept
+  is its commission. `missing`: the orders waiting, sold no later than the
+  latest matched one, that the statement leaves out. `totals` (the orders'
+  value, payout, commission, fees, `difference` — value − payout − commission
+  − fees — and `not_posted`, the payout on lines that match no order waiting)
+  and the proposed `journal`: Dr 1020 payout, Dr 5100 commission, Dr 5200
+  fees + difference, Cr 1100 the orders' value.
+- **`post_platform_settlement(platform, reference, lines, received_on,
+note)`** (needs `accounting.post`; one at a time per business): matches
+  again, then needs a matched order, the statement's reference (once per
+  platform), a note when any line is not a clean match, and the payout
+  arriving from the latest order's day to today. Writes the settlement, its
+  lines (the unmatched ones with why), a `reconciliation_issue` for each line
+  not a clean match, marks the matched orders paid (`settlement_id`,
+  `settlement_reference`, `settled_at`, `actual_payout`), and posts the
+  proposed journal (`reference_type` `platform_settlement`); audited
+  `platform.settlement` with the totals and `order_count`.
+- **`cancel_platform_settlement(settlement, reason)`** (needs
+  `accounting.post`): its journal reversed, its orders waiting again, the
+  settlement kept and marked; audited `platform.settlement_cancel`.
+- **The alerts.** `card_not_banked`: 1010's balance less the card takings of
+  the last `card_days`, that is, takings older than that not yet settled.
+  `platform_not_received`: for each platform, its orders waiting longer than
+  `platform_days`, by number; and, as subject `unmatched`, 1100 that no order
+  waiting explains.
+- **Clearing the test records.** `reset-test-data.sql` clears
+  `card_settlement` with the platform orders and settlements; the delivery
+  platforms, with the business, are kept.

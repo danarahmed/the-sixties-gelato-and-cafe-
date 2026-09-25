@@ -38,7 +38,7 @@ select test.eq(test.lines_of((select (r->>'order_id')::uuid from s3)),
 
 -- G3 (sale side) — a Talabat order is platform-paid, at the Talabat price.
 create temp table s4 as select record_sale(gen_random_uuid(), 'talabat', 'platform_paid',
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]') as r;
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', p_platform_order_no => 'T-4001') as r;
 select test.eq(test.lines_of((select (r->>'order_id')::uuid from s4)),
   '1100 Dr 3000 | 1200 Cr 250 | 4000 Cr 3000 | 5000 Dr 250', 'Talabat sale posts to Platform receivable');
 

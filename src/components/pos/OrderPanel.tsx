@@ -601,6 +601,9 @@ export function OrderPanel({
             </div>
             <p className="muted" style={{ fontSize: ".85rem", margin: "4px 0" }}>
               {fmtIQD(receipt.net)}
+              {receipt.platformOrderNo
+                ? ` · ${t("print.orderNo").replace("{no}", receipt.platformOrderNo)}`
+                : ""}
               {receipt.discount > 0 ? ` · ${t("pos.discount")} −${fmtIQD(receipt.discount)}` : ""}
               {receipt.journalNo !== null ? ` · ${t("pos.journal")} ${receipt.journalNo}` : ""}
               {canSeeCost && receipt.cogs !== undefined

@@ -30,13 +30,15 @@ begin
   for t in select c.relname from pg_class c join pg_namespace s on s.oid = c.relnamespace
             where s.nspname = 'public' and c.relkind in ('r', 'p')
               and c.relname not in ('business', 'location', 'gl_account', 'app_user', 'user_role', 'audit_log',
-                                    'role_permission', 'reason_code')
+                                    'role_permission', 'reason_code', 'delivery_platform')
   loop
     execute format('select count(*) from public.%I', t) into n;
     perform test.eq(n, 0::bigint, t || ' is empty');
   end loop;
 end $$;
 select test.eq((select count(*) from reason_code)::int, 20, 'the upgrade brings only the list of reasons (0028)');
+select test.eq((select string_agg(code, ',' order by code) from delivery_platform), 'careem,talabat,toters',
+  'and the delivery platforms sales are matched to (0030)');
 select test.eq((select string_agg(action, ',' order by id) from audit_log), 'business.clean_start',
                'the audit trail opens with the clean start');
 
@@ -67,10 +69,11 @@ select test.eq((select count(*) from pos_catalogue())::int, 1, 'the till offers 
 create temp table cash_sale as select record_sale(gen_random_uuid(), 'dine_in', 'cash',
   jsonb_build_array(jsonb_build_object('variant_id', (select r ->> 'variant_id' from espresso), 'qty', 2))) r;
 create temp table talabat_sale as select record_sale(gen_random_uuid(), 'talabat', 'platform_paid',
-  jsonb_build_array(jsonb_build_object('variant_id', (select r ->> 'variant_id' from espresso), 'qty', 1))) r;
+  jsonb_build_array(jsonb_build_object('variant_id', (select r ->> 'variant_id' from espresso), 'qty', 1)),
+  p_platform_order_no => '100200') r;
 select test.eq((select (r ->> 'net')::numeric from cash_sale), 6000::numeric, 'a cash sale at the dine-in price');
 select test.eq((select (r ->> 'net')::numeric from talabat_sale), 3500::numeric,
-               'a Talabat sale at its own price, with no platform records set up');
+               'a Talabat sale at its own price, with its order number');
 
 select test.eq((select count(*) from report_reconciliation(:'today') where difference <> 0)::int, 0,
                'every reconciliation check is at zero');

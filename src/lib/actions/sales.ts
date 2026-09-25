@@ -13,6 +13,7 @@ import {
   nonNegative,
   optionalNonNegative,
   optionalText,
+  platformOrderNo,
   positive,
   salesChannel,
   text,
@@ -21,6 +22,7 @@ import {
 // Not /pos: the till keeps itself current from each action's answer, and
 // re-rendering it after every sale would only slow the cashier down.
 const SALE_PATHS = ["/orders", "/sales", "/dashboard", "/inventory", "/reports", "/journals"];
+const PLATFORMS = new Set(["talabat", "careem", "toters"]);
 
 const saleInput = z.object({
   /** Minted by the till when payment starts, reused on every retry (H-01, P0-4). */
@@ -43,6 +45,8 @@ const saleInput = z.object({
    * recorded and the till is told the new total (0025).
    */
   expectedNet: optionalNonNegative("The total shown"),
+  /** A delivery platform's sale: its order number, which its payout is matched by (0030). */
+  platformOrderNo,
 });
 
 export interface SaleReceipt {
@@ -57,6 +61,8 @@ export interface SaleReceipt {
   journalNo: number | null;
   /** True when this key had already been recorded: the original sale is returned. */
   replayed: boolean;
+  /** A delivery platform's order number, as recorded. */
+  platformOrderNo: string | null;
 }
 
 export async function recordSaleAction(
@@ -66,6 +72,8 @@ export async function recordSaleAction(
   if (!v.ok) return v;
   if (v.data.discountPercent !== null && v.data.discountAmount !== null)
     return { ok: false, error: "Give the discount as a percentage or as an amount, not both" };
+  // Only a delivery platform's sale has one; the database asks for it (0030).
+  const orderNo = PLATFORMS.has(v.data.channel) ? v.data.platformOrderNo : null;
   const r = await callRpc<Record<string, unknown>>("record_sale", {
     p_idempotency_key: v.data.key,
     p_channel: v.data.channel,
@@ -77,9 +85,10 @@ export async function recordSaleAction(
     p_discount_reason: v.data.discountReason,
     p_discount_note: v.data.discountNote,
     p_approval: v.data.approvalId ?? null,
+    p_platform_order_no: orderNo,
   });
   if (!r.ok) return r;
-  refresh(...SALE_PATHS);
+  refresh(...SALE_PATHS, "/platforms");
   return { ok: true, data: saleReceipt(r.data) };
 }
 
@@ -94,6 +103,7 @@ function saleReceipt(d: Record<string, unknown>): SaleReceipt {
     ...(d.cogs !== undefined ? { cogs: Number(d.cogs) } : {}),
     journalNo: d.journal_no == null ? null : Number(d.journal_no),
     replayed: Boolean(d.replayed),
+    platformOrderNo: d.platform_order_no == null ? null : String(d.platform_order_no),
   };
 }
 

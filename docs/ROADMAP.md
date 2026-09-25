@@ -32,15 +32,16 @@ honest, not by building a queue.
    `0025`, P1-2 (reports that agree, and numbers that open) in `0026`, and
    P1-1, P1-3 and P1-4 (who changed what, delivery prices checked, items and
    suppliers kept right) in `0027`, P1-10 (reasons, approvals with a
-   manager's PIN, the exceptions report) in `0028`, and P1-8 (alerts, the
-   exception-first dashboard and the daily brief) in `0029`; P1-9 (card and
-   platform money reconciled) comes next, and P1-11 (backups and monitoring)
+   manager's PIN, the exceptions report) in `0028`, P1-8 (alerts, the
+   exception-first dashboard and the daily brief) in `0029`, and P1-9 (card
+   and platform money reconciled) in `0030`; P1-11 (backups and monitoring)
    waits for the owner's choice of plans. Then,
    on the owner's word, clear the test records and enter the opening balances
    ([`guides/deployment.md`](guides/deployment.md)).
-2. **Delivery-platform settlements (M-10).** Import a Talabat statement, match it
-   to platform orders with the tested `src/domain/platform/settlement.ts`, post
-   the payout, commission and fees, and surface every unmatched line.
+2. **Platform statements, further.** Matching a statement to the orders by
+   number and posting its payout are built (`0030`, M-10); a statement is
+   pasted from the platform's report. Next: read the statement file itself,
+   and, with an approved partner account, Talabat's own feed.
 3. **Production, further (M-11).** Planned batches, lots and expiry dates, and
    stock moved between the central kitchen and the branch. (Recording batches,
    made items and their costs are built.)

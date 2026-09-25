@@ -16,10 +16,18 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
 
 ## Not built
 
-- **Delivery-platform settlements (audit M-10).** Platform orders are sold as
-  platform-paid and post to 1100 Platform receivable. Settlement import, fee
-  matching and the reconciliation workbench are not built. A payout is recorded
-  with a manual journal ([`guides/talabat.md`](guides/talabat.md)).
+- **Settlements, what they do not do (`0030`).** A platform's statement is
+  pasted from its report, not read from its file, and nothing comes from the
+  platforms themselves (Talabat's partner feed needs an approved account). The
+  statement is matched by order number, so the platform sales from before
+  `0030`, which have none, are matched by nobody: the 1100 they hold is
+  flagged until a journal explains it. Card takings are settled a run of whole
+  days, once each day is over, and the totals are typed from the terminal's
+  report and the bank statement, not read from them. A journal typed by hand
+  into 1010 for a day already settled is left out of every settlement; it
+  shows as 1010 holding more than the days waiting, and the card alert names
+  it. The platform store and product maps and promotions of the original
+  design are not used.
 - **Production (M-11), what it does not do.** Batches are recorded, costed and
   cancelled, and made items are kept and sold (see the walkthrough). It does not
   plan batches ahead, track lots or expiry dates, or move stock between the
@@ -40,10 +48,9 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   email, WhatsApp or phone notification, and the daily brief waits on the
   dashboard rather than arriving at 07:00. The alert texts and the brief are
   in English only. Running out knows a delivery time per supplier, taken from
-  the item's last delivery; an item with no delivery yet uses the café's. Card
-  and platform money not in is judged from the clearing accounts' balances
-  until P1-9 matches settlements to sales. Use-by dates (P2-7) and a late sale
-  (impossible since `0024`) raise nothing.
+  the item's last delivery; an item with no delivery yet uses the café's.
+  Use-by dates (P2-7) and a late sale (impossible since `0024`) raise
+  nothing.
 - **Balance sheet and cash-flow statements.** The trial balance carries every
   balance, and the P&L is built; the formatted balance sheet and cash-flow
   statements are not.

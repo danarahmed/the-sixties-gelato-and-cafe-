@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Decimal from "decimal.js";
 import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
-import { normaliseNumber } from "@/lib/validation";
+import { cleanOrderNo, normaliseNumber, ORDER_NO } from "@/lib/validation";
 import type { Tender } from "./model";
 
 /** Notes a customer is likely to hand over for this total: the next round sums above it. */
@@ -20,7 +20,9 @@ export function suggestedCash(total: number): number[] {
 /**
  * Taking the money. For cash, the cashier enters what was handed over (or
  * taps a note) and the change is worked out; nothing is recorded until
- * Confirm, and Confirm records it once however often it is pressed.
+ * Confirm, and Confirm records it once however often it is pressed. A
+ * delivery platform's sale takes the order number its tablet shows: the
+ * platform's payout is matched to the sale by it (0030).
  */
 export function PayDialog({
   title,
@@ -28,6 +30,7 @@ export function PayDialog({
   note,
   tenders,
   initialTender,
+  platform,
   busy,
   error,
   onConfirm,
@@ -40,29 +43,42 @@ export function PayDialog({
   note: string | null;
   tenders: Tender[];
   initialTender: Tender;
+  /** The delivery platform's name, for its sale: "Talabat". */
+  platform?: string | null;
   busy: boolean;
   error: string | null;
-  onConfirm: (tender: Tender, received: number | null) => void;
+  onConfirm: (tender: Tender, received: number | null, orderNo: string | null) => void;
   onClose: () => void;
 }) {
   const { t } = useT();
   const [tender, setTender] = useState<Tender>(initialTender);
   const [received, setReceived] = useState("");
+  const [orderNo, setOrderNo] = useState("");
   const input = useRef<HTMLInputElement>(null);
+  const orderInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (tender === "cash") input.current?.focus();
+    if (tender === "platform_paid") orderInput.current?.focus();
   }, [tender]);
 
   const typed = normaliseNumber(received);
   const cash = /^\d+(\.\d+)?$/.test(typed) ? new Decimal(typed) : null;
   const short = tender === "cash" && cash !== null && cash.lessThan(total);
   const change = tender === "cash" && cash !== null && !short ? cash.minus(total) : null;
-  const canConfirm = !busy && !short;
+  const number = cleanOrderNo(orderNo);
+  const numberBad = number !== "" && !ORDER_NO.test(number);
+  const needsNumber = tender === "platform_paid" && (number === "" || numberBad);
+  const canConfirm = !busy && !short && !needsNumber;
+  const platformName = platform ?? t("pos.tender.platform_paid");
 
   function confirm() {
     if (!canConfirm) return;
-    onConfirm(tender, tender === "cash" && cash !== null ? cash.toNumber() : null);
+    onConfirm(
+      tender,
+      tender === "cash" && cash !== null ? cash.toNumber() : null,
+      tender === "platform_paid" ? number : null,
+    );
   }
 
   return (
@@ -153,7 +169,37 @@ export function PayDialog({
             </div>
           </div>
         )}
-        {tender === "platform_paid" && <p className="muted">{t("pos.platformNote")}</p>}
+        {tender === "platform_paid" && (
+          <div className="cash-box">
+            <label className="muted" htmlFor="platform-order-no" style={{ fontSize: ".85rem" }}>
+              {t("pos.orderNo").replace("{platform}", platformName)}
+            </label>
+            <input
+              id="platform-order-no"
+              ref={orderInput}
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={60}
+              className="cash-input mono"
+              value={orderNo}
+              onChange={(e) => setOrderNo(e.target.value)}
+              disabled={busy}
+              aria-invalid={numberBad}
+            />
+            {numberBad ? (
+              <span className="red" style={{ fontSize: ".85rem" }}>
+                {t("pos.orderNoFormat")}
+              </span>
+            ) : (
+              <span className="muted" style={{ fontSize: ".85rem" }}>
+                {t("pos.orderNoHint").replace("{platform}", platformName)}
+              </span>
+            )}
+            <p className="muted" style={{ fontSize: ".85rem", margin: 0 }}>
+              {t("pos.platformNote")}
+            </p>
+          </div>
+        )}
 
         {error && (
           <div className="badge err" style={{ whiteSpace: "normal", marginTop: 8 }}>

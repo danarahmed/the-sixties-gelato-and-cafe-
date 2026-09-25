@@ -154,7 +154,10 @@ owner
    shown.
 4. **Pay:**
    - in the shop: **💵 Cash** or **💳 Card**;
-   - on Talabat: **🧾 Complete (paid through the platform)**.
+   - on Talabat: **🧾 Complete (paid through the platform)**, then type the
+     **Talabat order number** from the tablet (the `#` can be left out).
+     Nothing is recorded without it, and a number already recorded is
+     refused, with the sale it belongs to. The receipt prints it.
 5. **✅ Sale recorded** confirms it, with the sale and journal numbers. The
    cost is shown only to people allowed to see costs.
 
@@ -216,7 +219,8 @@ void or refund shows why, who asked and who approved it.
 
 **Location:** Sidebar → **Sales** · `/sales` · **Who:** anyone who sees costs;
 counting the drawer: managers and the owner; moving cash: managers, the
-accountant and the owner
+accountant and the owner; settling card takings: the owner, the general
+manager and the accountant
 
 - **Cards:**
   - net sales, after refunds, over the last 30 trading days;
@@ -253,6 +257,26 @@ accountant and the owner
   themselves (3200 Owner drawings), and money to or from the owner says what it
   is for. Neither the till nor the safe can pay out more than the books say it
   holds.
+- **Card Takings** (`/sales#card`): each day's card takings not yet settled,
+  less card refunds and voids. When the bank pays them:
+  1. Choose the last day the payment covers in **Settle the days up to**. Only
+     days that are over are offered: the till takes cards until midnight, so
+     today's wait for tomorrow. Days are settled in order, from the day after
+     the last settlement; **The till took by card** shows their total.
+  2. Type **The terminal's total** for those days, from its report (**Same as
+     the till** fills in the till's), and what **Reached the bank**.
+  3. The journal is shown before anything is posted: Dr 1020 Bank what
+     arrived, Dr 6500 Card and bank fees the terminal's total less what
+     arrived, Cr 1010 Card clearing the till's takings. If the till and the
+     terminal differ (a sale rung as card and paid in cash, or the other way),
+     the difference posts to 6300 Cash over / short, and the **Note** must say
+     why.
+  4. Say when it **Arrived on**, and the bank's reference if there is one, and
+     **Record the settlement**.
+
+  Past settlements are listed with their fee and difference. **Cancel…** the
+  latest one, with the reason, to reverse its journal: its days wait again.
+
 - **Drawer Counts:** each count — what it started with, should have held,
   counted, over/short, what stayed, what was taken out and where — and who
   counted it. Days closed the old way are listed too, marked "by day".
@@ -262,11 +286,29 @@ accountant and the owner
 **Location:** Sidebar → **Delivery Platforms** · `/platforms` · **Who:** anyone
 who sees costs
 
-Platform orders rung on the till, with their value before commission and their
-cost, and the balance of 1100 Platform receivable.
+- **Owed by the Platforms:** every platform order not yet paid out, by its
+  order number, with the day it was sold and how many days it has waited; each
+  platform's total and its oldest order; what they come to, **1100 Platform
+  receivable**, and the difference — **Not explained by any order**, normally 0.
+- **Match a Statement:** choose the platform and paste the statement's rows,
+  with their column names (Order, Payout, and Commission and Fees if it gives
+  them), from its report. The screen says how many lines it read. **Match to
+  the orders waiting** shows, line by line, the sale each pays for, or why
+  none (no sale has the number, already paid out, voided or refunded, on the
+  statement twice); what it leaves out; what is not explained; and the journal
+  it would post — nothing is written yet. The owner, the general manager or
+  the accountant types the statement's number or date and the day the money
+  arrived, a note when any line is not a clean match, and **Post the payout**:
+  Dr 1020 Bank, Dr 5100 commission, Dr 5200 fees and anything short, Cr 1100
+  the orders' value. Lines that match no order waiting are kept with the
+  statement, not posted.
+- **Statements Posted:** each statement, the orders it paid of its lines, what
+  was paid for them, the journal and who posted it. **Cancel…** one posted by
+  mistake, with the reason: its journal is reversed and its orders wait again.
+- **Platform Sales:** the platform sales among the last 500, with their value
+  before commission and their cost.
 
-Not built yet: settlement import and matching. Record each payout with a journal,
-as described in [`guides/talabat.md`](guides/talabat.md).
+See [`guides/talabat.md`](guides/talabat.md) for the whole routine.
 
 ## 9. Vendors
 
@@ -297,8 +339,9 @@ last, marked, with their history. **Right,** four tabs:
     on the delivery is not billed and paid too; the screen shows what the
     delivery recorded, and any difference posts to 5050.
 
-  - **Open bills,** with **Pay bill**: amount, and paid from 1000 Cash, 1010 Card
-    or 1020 Bank. You cannot pay more than is outstanding.
+  - **Open bills,** with **Pay bill**: amount, and where the money came from —
+    the till, the safe, the bank, a card (paid by the bank, 1020) or the
+    owner. You cannot pay more than is outstanding.
   - **Cancel** a bill entered in error, if nothing was paid on it. Give a reason
     and a date. The bill stays on record and its journal is reversed.
 - **Edit vendor:** correct the name, what they supply and the phone, say how
@@ -323,8 +366,8 @@ costs; recording: managers, accountant, owner
 
 1. Write the **Narration** in plain words ("September shop rent").
 2. Enter the **Amount** and **Date**, and choose where it was **Paid from**:
-   the till (today's drawer), the safe, the bank, a card, or the owner
-   personally. There is no default: the money came from somewhere, and the
+   the till (today's drawer), the safe, the bank, a card (which the bank
+   pays, 1020), or the owner personally. There is no default: the money came from somewhere, and the
    books follow it. From the till it lowers what the drawer should hold, and
    neither the till nor the safe can pay more than the books say it holds.
 3. An **Account** is proposed from the narration: rent → 6000, wages → 6100,

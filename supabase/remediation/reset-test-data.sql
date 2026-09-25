@@ -14,14 +14,14 @@
 --            and the audit trail (which gains one line saying the test records
 --            were cleared, and when)
 --   cleared  sales, bills kept open, voids and refunds, managers' approvals
---            and PIN attempts, drawer counts, cash events and cash moved, stock
---            movements and lots, stock counts, production batches, purchase
---            orders, deliveries, supplier bills and payments, expenses, every
---            journal and accounting period, platform orders and settlements,
---            reconciliation and sync logs, AI notes, the alerts raised on all
---            of it (they rise again from what is recorded next), and the
---            document numbers (journals start again at 1001, the café's own
---            bill numbers at 0001)
+--            and PIN attempts, drawer counts, cash events and cash moved, card
+--            settlements, stock movements and lots, stock counts, production
+--            batches, purchase orders, deliveries, supplier bills and payments,
+--            expenses, every journal and accounting period, platform orders and
+--            settlements, reconciliation and sync logs, AI notes, the alerts
+--            raised on all of it (they rise again from what is recorded next),
+--            and the document numbers (journals start again at 1001, the café's
+--            own bill numbers at 0001)
 --
 -- Afterwards no item has stock. Before the first sale, give each item its
 -- opening stock (Inventory → Opening stock): what is on the shelf, at what it
@@ -89,7 +89,8 @@ end $$;
 -- triggers that keep the ledger append-only, and fails, changing nothing, if a
 -- table left out still refers to one of these.
 truncate table
-  accounting_period, ai_insight, ai_interaction_log, alert, approval, cash_event, cash_transfer, document_counter,
+  accounting_period, ai_insight, ai_interaction_log, alert, approval, card_settlement, cash_event, cash_transfer,
+  document_counter,
   expense, goods_receipt, goods_receipt_line, inventory_movement, item_lot, journal_entry, journal_line,
   pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   production_batch,

@@ -113,3 +113,25 @@ export const SALES_CHANNELS = [
   "toters",
 ] as const;
 export const salesChannel = z.enum(SALES_CHANNELS, { message: "Choose a channel" });
+
+/**
+ * A delivery platform's order number, as its tablet shows it (0030): letters,
+ * digits and # / _ . -, at most 40. Arabic and Kurdish digits are read as
+ * digits; spaces, and the # a tablet or statement puts before the number,
+ * are dropped, so the till and the platform's statement give it alike.
+ */
+export const ORDER_NO = /^[A-Za-z0-9#/_.-]{1,40}$/;
+export function cleanOrderNo(input: unknown): string {
+  return String(input ?? "")
+    .replace(ARABIC_INDIC, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(EASTERN_ARABIC_INDIC, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/\s+/g, "")
+    .replace(/^#+/, "");
+}
+export const platformOrderNo = z
+  .union([z.string(), z.null(), z.undefined()])
+  .transform((v) => cleanOrderNo(v) || null)
+  .refine(
+    (v) => v === null || ORDER_NO.test(v),
+    "An order number is letters and digits, as the platform's tablet shows it",
+  );

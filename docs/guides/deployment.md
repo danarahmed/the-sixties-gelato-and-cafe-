@@ -11,26 +11,27 @@ Plan a short window when the café is closed.
 
 ## Where the live system stands (25 September 2026)
 
-| Step                           | Status                                                                                                                                                                                                                                                                                                                                                                                   |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0. The old history             | ✅ Cleared: it was trial data                                                                                                                                                                                                                                                                                                                                                            |
-| 2. The Vercel settings         | ✅ Added by the owner                                                                                                                                                                                                                                                                                                                                                                    |
-| 3. Migrations `0014`–`0017`    | ✅ Applied on 23 September, then compared with the tested build object by object: functions, tables, rules, indexes, triggers and permissions are identical. The public key has no access                                                                                                                                                                                                |
-| 4. The new app                 | ✅ Merged for production ([pull request #1](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/1)) and deployed                                                                                                                                                                                                                                                             |
-| 5. Sign-in settings            | ✅ Set                                                                                                                                                                                                                                                                                                                                                                                   |
-| 6. The owner's first sign-in   | ✅ 23 September                                                                                                                                                                                                                                                                                                                                                                          |
-| The till update (`0018`)       | ✅ Migration applied on 24 September and compared object by object with the tested build: identical. The screens were merged ([pull request #2](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/2)) and deployed (see [After `0018`](#after-0018))                                                                                                                       |
-| Discounts (`0019`)             | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens were merged ([pull request #3](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/3)) and deployed (see [After `0019`](#after-0019))                                                          |
-| Discount rounding (`0020`)     | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens were merged ([pull request #4](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/4)) and deployed. The step was then set to 250 IQD at the owner's request (see [After `0020`](#after-0020)) |
-| Bill numbers (`0021`)          | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0021`](#after-0021)). The form was merged ([pull request #6](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/6)) and deployed                                                              |
-| Recipe costing (`0022`)        | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0022`](#after-0022)). The form was merged ([pull request #8](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/8)) and deployed                                                              |
-| Production (`0023`)            | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0023`](#after-0023)). The screens were merged ([pull request #9](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/9)) and deployed                                    |
-| Counts and the drawer (`0024`) | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0024`](#after-0024)). The screens were merged ([pull request #10](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/10)) and deployed                                  |
-| Prices, bills, costs (`0025`)  | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0025`](#after-0025)). The screens were merged ([pull request #11](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/11)) and deployed                                  |
-| Reports that agree (`0026`)    | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner against the live records (see [After `0026`](#after-0026)). The screens were merged ([pull request #12](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/12)) and deployed                                               |
-| Master data (`0027`)           | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0027`](#after-0027)). The screens were merged ([pull request #13](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/13)) and deployed                                  |
-| Exceptions (`0028`)            | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0028`](#after-0028)). The screens were merged ([pull request #14](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/14)) and deployed                                  |
-| Alerts and the brief (`0029`)  | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0029`](#after-0029)). The screens follow with their pull request                                                                                                                     |
+| Step                             | Status                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0. The old history               | ✅ Cleared: it was trial data                                                                                                                                                                                                                                                                                                                                                            |
+| 2. The Vercel settings           | ✅ Added by the owner                                                                                                                                                                                                                                                                                                                                                                    |
+| 3. Migrations `0014`–`0017`      | ✅ Applied on 23 September, then compared with the tested build object by object: functions, tables, rules, indexes, triggers and permissions are identical. The public key has no access                                                                                                                                                                                                |
+| 4. The new app                   | ✅ Merged for production ([pull request #1](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/1)) and deployed                                                                                                                                                                                                                                                             |
+| 5. Sign-in settings              | ✅ Set                                                                                                                                                                                                                                                                                                                                                                                   |
+| 6. The owner's first sign-in     | ✅ 23 September                                                                                                                                                                                                                                                                                                                                                                          |
+| The till update (`0018`)         | ✅ Migration applied on 24 September and compared object by object with the tested build: identical. The screens were merged ([pull request #2](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/2)) and deployed (see [After `0018`](#after-0018))                                                                                                                       |
+| Discounts (`0019`)               | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens were merged ([pull request #3](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/3)) and deployed (see [After `0019`](#after-0019))                                                          |
+| Discount rounding (`0020`)       | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back. The screens were merged ([pull request #4](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/4)) and deployed. The step was then set to 250 IQD at the owner's request (see [After `0020`](#after-0020)) |
+| Bill numbers (`0021`)            | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0021`](#after-0021)). The form was merged ([pull request #6](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/6)) and deployed                                                              |
+| Recipe costing (`0022`)          | ✅ Migration applied on 24 September, compared object by object with the tested build (identical) and checked as the owner in a transaction that was rolled back (see [After `0022`](#after-0022)). The form was merged ([pull request #8](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/8)) and deployed                                                              |
+| Production (`0023`)              | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0023`](#after-0023)). The screens were merged ([pull request #9](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/9)) and deployed                                    |
+| Counts and the drawer (`0024`)   | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0024`](#after-0024)). The screens were merged ([pull request #10](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/10)) and deployed                                  |
+| Prices, bills, costs (`0025`)    | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0025`](#after-0025)). The screens were merged ([pull request #11](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/11)) and deployed                                  |
+| Reports that agree (`0026`)      | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner against the live records (see [After `0026`](#after-0026)). The screens were merged ([pull request #12](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/12)) and deployed                                               |
+| Master data (`0027`)             | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0027`](#after-0027)). The screens were merged ([pull request #13](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/13)) and deployed                                  |
+| Exceptions (`0028`)              | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0028`](#after-0028)). The screens were merged ([pull request #14](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/14)) and deployed                                  |
+| Alerts and the brief (`0029`)    | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0029`](#after-0029)). The screens were merged ([pull request #15](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/15)) and deployed                                  |
+| Card and platform money (`0030`) | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0030`](#after-0030)). The screens were merged ([pull request #16](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/16)) and deployed                                  |
 
 ## 0. Before you start
 
@@ -650,6 +651,64 @@ Nothing was kept (no alerts, answers, thresholds or journals remained). The
 security advisor's only new lines are the six new functions signed-in users
 may call (each checks its permission) and the alerts table, which no one
 signed in may read. Every new function sets its search path.
+
+## After `0030`
+
+Migration `0030` is the audit's P1-9: card and platform money reconciled.
+
+- **Card takings are settled** on **Sales → Card Takings**, a run of days at a
+  time and each day once it is over, against the terminal's report and what
+  reached the bank: the bank's money to 1020, the card company's fee to the
+  new **6500 Card and bank fees** (added to the chart of accounts), and a
+  difference between the till and the terminal to 6300 with a note. A
+  settlement can be cancelled. A payment by card — an expense or a supplier
+  bill — now comes out of the bank.
+- **A platform sale needs the order number** from the platform's tablet, once
+  per platform; the till asks for it. Talabat, Careem and Toters are added to
+  the delivery platforms.
+- **Delivery Platforms** shows what each platform owes, order by order, and
+  matches a pasted statement to the orders; a person who keeps the books posts
+  the payout. See [`talabat.md`](talabat.md).
+- Until the new screens follow, minutes later, the till deployed before it
+  cannot record a Talabat sale: it has no box for the order number, and the
+  database asks for one. Everything else carries on.
+
+Nothing recorded changes. The two Talabat sales from before `0030` have no
+order number, so their 5,250 IQD in 1100 is matched to no order: the dashboard
+flags it until a journal explains it, or the test records are cleared.
+
+It was applied on 25 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0029` build. Compared with the
+tested build object by object, permissions included: identical; the chart of
+accounts gained exactly 6500, and the three platforms were added. A check as
+the owner against the live records, in a transaction that was rolled back:
+
+- the card takings read 19,000 IQD, all of 24 September, in 7 ms; settling
+  today was refused (a day is settled once it is over); a terminal total
+  differing from the till was refused without a note; 24 September settled at
+  a 1% fee posted Dr 1020 18,810, Dr 6500 190, Cr 1010 19,000 and left nothing
+  waiting; cancelled, the 19,000 waited again;
+- an expense paid by card posted Cr 1020, not 1010;
+- a Talabat sale without an order number was refused; with SMOKE-1 it was
+  recorded (3,000 IQD); the same number again, in small letters, was refused
+  with the sale it belongs to; Delivery Platforms read 1 order waiting (3,000),
+  1100 at 8,250 and 5,250 matched to no order, which the dashboard flagged;
+- a statement paying SMOKE-1 2,550 with 450 commission, and a line for no
+  sale of ours, matched one and not the other and proposed Dr 1020 2,550, Dr
+  5100 450, Cr 1100 3,000; without a note it was refused; with one it posted
+  exactly that, the order stopped waiting, and cancelled, it waited again;
+- the audit trail gained exactly the two settlements and their cancellations;
+  every reconciliation check stayed at zero.
+
+Nothing was kept: no settlement, platform order, sale, expense or journal
+remained, the journals are still numbered 1001–1067 without a gap, and 1010,
+1020 and 1100 read as before. The security advisor's only new lines are the
+seven new functions signed-in users may call and the new `record_sale` (each
+checks its permission), and the card settlements table, which no one signed
+in may read; every new function sets its search path. The performance
+advisor adds only the new tables' foreign keys to its list of those without
+an index of their own, as for every table before them.
 
 ## Clearing the test records
 

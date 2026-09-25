@@ -24,6 +24,8 @@ export interface PrintJob {
   received?: number | null;
   change?: number | null;
   reference?: string | null;
+  /** A delivery platform's order number (0030). */
+  platformOrderNo?: string | null;
   journalNo?: number | null;
   /** The second and later prints of a bill say so. */
   printCount?: number;
@@ -101,6 +103,11 @@ export function PrintSlip({
         <span className="ps-strong">{job.title}</span>
         <span>{job.channelLabel}</span>
       </div>
+      {job.platformOrderNo && (
+        <div className="ps-row ps-strong">
+          <span>{t("print.orderNo").replace("{no}", job.platformOrderNo)}</span>
+        </div>
+      )}
       <div className="ps-row">
         <span>{when}</span>
         <span>{job.by}</span>

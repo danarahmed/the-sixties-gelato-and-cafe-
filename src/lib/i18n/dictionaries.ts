@@ -231,6 +231,10 @@ const en: Dict = {
   "pos.confirmPayment": "Confirm payment",
   "pos.platformNote":
     "The delivery platform collects the money and pays the café later; the sale is recorded as platform-paid.",
+  "pos.orderNo": "{platform} order number",
+  "pos.orderNoHint":
+    "As the {platform} tablet shows it: the payout is matched to this sale by its number.",
+  "pos.orderNoFormat": "Letters and digits only, as the tablet shows it.",
   "pos.editTables": "Edit tables",
   "pos.noTables": "No tables have been set up yet. A manager can add them.",
   "pos.noTablesManager":
@@ -252,6 +256,7 @@ const en: Dict = {
   "print.copy": "Copy",
   "print.notPaid": "Not paid yet: this is not a receipt",
   "print.sale": "Sale",
+  "print.orderNo": "Order {no}",
   "print.thanks": "Thank you!",
   "reason.other": "Other",
   "reason.void.rang_wrong_item": "Rang the wrong item",
@@ -504,6 +509,9 @@ const ar: Dict = {
   "pos.confirmPayment": "تأكيد الدفع",
   "pos.platformNote":
     "تستلم منصة التوصيل المبلغ وتدفعه للمقهى لاحقًا؛ يُسجَّل البيع مدفوعًا عبر المنصة.",
+  "pos.orderNo": "رقم طلب {platform}",
+  "pos.orderNoHint": "كما يظهر على جهاز {platform}: تُطابَق دفعة المنصة مع هذا البيع برقمه.",
+  "pos.orderNoFormat": "أحرف وأرقام فقط، كما تظهر على الجهاز.",
   "pos.editTables": "تعديل الطاولات",
   "pos.noTables": "لم تُضف طاولات بعد. يستطيع المدير إضافتها.",
   "pos.noTablesManager":
@@ -525,6 +533,7 @@ const ar: Dict = {
   "print.copy": "نسخة",
   "print.notPaid": "لم تُدفع بعد: هذه ليست إيصالًا",
   "print.sale": "بيع",
+  "print.orderNo": "الطلب {no}",
   "print.thanks": "شكرًا لزيارتكم!",
   "reason.other": "سبب آخر",
   "reason.void.rang_wrong_item": "أُدخل صنف خاطئ",
@@ -782,6 +791,10 @@ const ckb: Dict = {
   "pos.confirmPayment": "دڵنیاکردنەوەی پارەدان",
   "pos.platformNote":
     "پلاتفۆرمی گەیاندن پارەکە وەردەگرێت و دواتر دەیداتە کافێکە؛ فرۆشتنەکە وەک پارەدراو لە ڕێگەی پلاتفۆرمەوە تۆمار دەکرێت.",
+  "pos.orderNo": "ژمارەی داواکاریی {platform}",
+  "pos.orderNoHint":
+    "وەک لەسەر ئامێری {platform} دەردەکەوێت: پارەی پلاتفۆرمەکە بەم ژمارەیە لەگەڵ ئەم فرۆشتنە بەراورد دەکرێت.",
+  "pos.orderNoFormat": "تەنها پیت و ژمارە، وەک لەسەر ئامێرەکە دەردەکەوێت.",
   "pos.editTables": "دەستکاریکردنی مێزەکان",
   "pos.noTables": "هێشتا هیچ مێزێک زیاد نەکراوە. بەڕێوەبەر دەتوانێت زیادیان بکات.",
   "pos.noTablesManager":
@@ -803,6 +816,7 @@ const ckb: Dict = {
   "print.copy": "کۆپی",
   "print.notPaid": "هێشتا پارە نەدراوە: ئەمە وەسڵ نییە",
   "print.sale": "فرۆشتن",
+  "print.orderNo": "داواکاری {no}",
   "print.thanks": "سوپاس بۆ سەردانتان!",
   "reason.other": "هۆکاری تر",
   "reason.void.rang_wrong_item": "کاڵای هەڵە تۆمار کرا",

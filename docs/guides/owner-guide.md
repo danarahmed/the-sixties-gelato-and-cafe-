@@ -183,7 +183,8 @@ discount, why and who approved it. The 10% is a business setting (shown on
   the till must be paid or cancelled first. Sales shows every day whose cash
   is not yet counted, however old; a month cannot lock until each is.
 - **Paying for something:** always say where the money came from — the till,
-  the safe, the bank, a card, or you personally. From the till it comes out of
+  the safe, the bank, a card (which the bank pays), or you personally. From
+  the till it comes out of
   what the drawer should hold, and neither the till nor the safe can pay out
   more than the books say it holds. Put money into the till (a float), take
   takings to the safe, or bank them with **Sales → Move Cash**; only you can
@@ -217,6 +218,19 @@ discount, why and who approved it. The 10% is a business setting (shown on
   the supplier's own number takes the café's (SGC-2026-0001, -0002 …): each is
   given once, is never reused (not even after a cancellation), and cannot be
   typed in by hand, so it can never be mistaken for a supplier's invoice.
+- **Card takings, when the bank pays them** (**Sales → Card Takings**): choose
+  the last day the bank's payment covers — a day that is over; today's card
+  takings wait for tomorrow — then type the terminal's total for those days,
+  from its report, and what reached the bank. The difference between the two
+  is the card company's fee (6500 Card and bank fees). When the till and the
+  terminal differ — a sale rung as card and paid in cash, or the other way —
+  say why in the note; it posts to 6300 Cash over / short. Days are settled in
+  order; the latest settlement can be cancelled, with the reason, and settled
+  again.
+- **Delivery platforms, when a statement comes:** paste it on **Delivery
+  Platforms → Match a Statement**, check what matched, what did not and which
+  orders it left out, and post the payout (see the [Talabat guide](talabat.md)).
+  The dashboard names the orders a platform has not paid after 7 days.
 - **Stock Count:** have a counter count, then review and approve it yourself (see
   the [counting guide](counting-guide.md)).
 - **Audit trail:** read who changed what — prices, products, items, suppliers,
