@@ -27,6 +27,7 @@ Plan a short window when the café is closed.
 | Production (`0023`)            | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0023`](#after-0023)). The screens were merged ([pull request #9](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/9)) and deployed                                    |
 | Counts and the drawer (`0024`) | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0024`](#after-0024)). The screens were merged ([pull request #10](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/10)) and deployed                                  |
 | Prices, bills, costs (`0025`)  | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0025`](#after-0025)). The screens were merged ([pull request #11](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/11)) and deployed                                  |
+| Reports that agree (`0026`)    | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner against the live records (see [After `0026`](#after-0026)). The screens follow by pull request                                                                                                                                          |
 
 ## 0. Before you start
 
@@ -483,6 +484,36 @@ Nothing was kept. The security advisor's only new lines are the five new
 functions signed-in users may call (each checks its permission, as every one
 does) and an internal helper (`assert_sale_total`) that sets no search path;
 no one can call it directly.
+
+## After `0026`
+
+Migration `0026` is the audit's P1-2: reports that agree, and numbers that
+open. A refund counts on the day it is made, so Sales by Channel's net sales
+are the P&L's net revenue; the dashboard no longer counts a year-end close as
+trading; and three reports are added for the screens: the journal lines behind
+any account and dates (the trial balance's, the P&L's and the reconciliation's
+figures open onto them, and they download as CSV), and each item's stock card.
+No table changes and nothing recorded changes. `report_daily_sales` returns
+refunds and their returned cost in place of `refunded`: the Sales page deployed
+before it shows no refunds until the new screens follow, minutes later.
+
+It was applied on 25 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0025` build. Compared with the tested
+build object by object, permissions included: identical. A check as the owner
+against the live records of September, in a transaction that was rolled back:
+
+- by channel, takeaway sold 49,000 and refunded 4,500: net 44,500, the audit's
+  own example put right; net sales in all, 180,750, are the P&L's net revenue,
+  and their cost, 47,226, is the P&L's cost of goods sold;
+- the month's 196 journal lines balance (4,282,090 each side); 4000's add up
+  to the P&L's 186,250; 1000's run from the trial balance's opening to its
+  closing (−220,000, from the test records);
+- the stock card of each of the nine items in use closes at the stock board's
+  quantity and value.
+
+The security advisor's only new lines are the two new report functions
+signed-in users may call (each checks `cost.view`).
 
 ## Clearing the test records
 

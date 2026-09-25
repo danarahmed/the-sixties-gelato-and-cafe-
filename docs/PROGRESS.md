@@ -121,7 +121,9 @@ browser tests through the real app, or both.
   no longer counted as spent. Every dashboard figure, P&L and trial-balance
   line and reconciliation figure opens the records or journal lines behind it;
   every item has a stock card; every journal line downloads as CSV. Built and
-  tested.
+  tested. The migration was applied to the live database on 25 September
+  2026, matches the tested build object by object (permissions included), and
+  its reports were checked as the owner against the live records.
 
 ## The August 2026 audit, finding by finding
 
