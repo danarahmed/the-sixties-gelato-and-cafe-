@@ -83,6 +83,45 @@ export async function setPriceAction(
   return { ok: true, data: null };
 }
 
+const recipeInput = z.object({
+  variantId: id("a product"),
+  lines: z
+    .array(
+      z.object({
+        itemId: id("an ingredient"),
+        qty: positive("Quantity"),
+        unitCode: z.string().min(1),
+        channels: z.array(salesChannel),
+      }),
+    )
+    .min(1, "List what goes into one serving"),
+  effectiveFrom: day("The start date"),
+});
+
+/**
+ * A product's recipe changed from a date (today or later). The recipe before
+ * it stays in force until then, and every sale keeps the recipe of its own day.
+ */
+export async function changeProductRecipeAction(
+  input: z.input<typeof recipeInput>,
+): Promise<ActionResult<{ effectiveFrom: string }>> {
+  const v = parse(recipeInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("change_product_recipe", {
+    p_variant: v.data.variantId,
+    p_lines: v.data.lines.map((l) => ({
+      item_id: l.itemId,
+      qty: l.qty,
+      unit_code: l.unitCode,
+      channels: l.channels,
+    })),
+    p_effective_from: v.data.effectiveFrom,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: { effectiveFrom: String(r.data.effective_from) } };
+}
+
 const categoryInput = z.object({
   id: id("a category").nullable(),
   name: text("The category's name", 60),

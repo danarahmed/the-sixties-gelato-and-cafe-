@@ -33,6 +33,15 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Servers left running by an earlier E2E_KEEP run would answer in place of the
+# ones started below, and the checks would run against an old build.
+for port in 54330 54321 3100; do
+  if (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; then
+    echo "✗ port $port is in use (servers left by an earlier E2E_KEEP run?): stop them first"
+    exit 1
+  fi
+done
+
 if [ -z "${PLAYWRIGHT_MJS:-}" ] && ! node -e "require.resolve('playwright')" 2>/dev/null; then
   export PLAYWRIGHT_MJS="$(npm root -g)/playwright/index.mjs"
 fi
@@ -86,7 +95,7 @@ for _ in $(seq 1 60); do curl -s -o /dev/null "$E2E_BASE/login" && break; sleep 
 
 fail=0
 suites=("$@")
-[ ${#suites[@]} -eq 0 ] && suites=(pages flows retry offline bills menu)
+[ ${#suites[@]} -eq 0 ] && suites=(pages flows retry offline bills menu production)
 for t in "${suites[@]}"; do
   node "tests/e2e/$t.e2e.mjs" || fail=1
 done

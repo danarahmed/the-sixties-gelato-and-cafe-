@@ -20,10 +20,11 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   platform-paid and post to 1100 Platform receivable. Settlement import, fee
   matching and the reconciliation workbench are not built. A payout is recorded
   with a manual journal ([`guides/talabat.md`](guides/talabat.md)).
-- **Production batches (M-11).** Batch history is shown, but a batch cannot be
-  recorded, so finished-goods stock and yield variance are not tracked. Until it
-  is built, give a product a recipe of its ingredients (as the live menu does):
-  each sale then takes its ingredients out of stock directly.
+- **Production (M-11), what it does not do.** Batches are recorded, costed and
+  cancelled, and made items are kept and sold (see the walkthrough). It does not
+  plan batches ahead, track lots or expiry dates, or move stock between the
+  branch and the central kitchen; a batch is recorded at the branch, when it is
+  made (not backdated).
 - **Offline selling (H-04).** The till needs a connection. Offline, it says so
   and refuses the sale. A sale whose confirmation was lost is retried with the
   same key and recorded once. An offline queue would need its own design for

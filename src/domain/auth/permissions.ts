@@ -31,6 +31,7 @@ export type Permission =
   | "inventory.adjust.approve"
   | "waste.record"
   | "waste.approve"
+  | "production.record"
   | "purchase.create"
   | "purchase.receive"
   | "expense.record"
@@ -56,6 +57,7 @@ const ALL: Permission[] = [
   "inventory.adjust.approve",
   "waste.record",
   "waste.approve",
+  "production.record",
   "purchase.create",
   "purchase.receive",
   "expense.record",
@@ -91,6 +93,7 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "inventory.adjust.approve",
     "waste.record",
     "waste.approve",
+    "production.record",
     "purchase.create",
     "purchase.receive",
     "expense.record",
@@ -100,7 +103,7 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "audit.view",
   ]),
   cashier: new Set<Permission>(["sale.create", "discount.apply"]),
-  barista: new Set<Permission>(["sale.create", "waste.record"]),
+  barista: new Set<Permission>(["sale.create", "waste.record", "production.record"]),
   inventory_counter: new Set<Permission>(["inventory.count"]),
   purchasing: new Set<Permission>(["purchase.create", "purchase.receive", "cost.view"]),
   accountant: new Set<Permission>([

@@ -418,36 +418,6 @@ export async function getSalesOrders(limit = 200): Promise<OrderRow[]> {
   });
 }
 
-export interface ProductionBatchRow {
-  id: string;
-  recipeName: string;
-  status: string;
-  batches: number;
-  actualYield: number | null;
-  producedAt: string | null;
-}
-
-export async function getProductionBatches(limit = 50): Promise<ProductionBatchRow[]> {
-  const c = await db();
-  const [batches, recipes] = await Promise.all([
-    c
-      .from("production_batch")
-      .select("id,recipe_id,status,batches,actual_yield_base,produced_at,created_at")
-      .order("created_at", { ascending: false })
-      .limit(limit),
-    c.from("recipe").select("id,name"),
-  ]);
-  const recipeName = new Map(rows(recipes, "recipes").map((r) => [str(r.id), str(r.name)]));
-  return rows(batches, "production batches").map((b) => ({
-    id: str(b.id),
-    recipeName: recipeName.get(str(b.recipe_id)) ?? "—",
-    status: str(b.status),
-    batches: num(b.batches),
-    actualYield: numOrNull(b.actual_yield_base),
-    producedAt: strOrNull(b.produced_at),
-  }));
-}
-
 export interface CountSummary {
   id: string;
   status: string;

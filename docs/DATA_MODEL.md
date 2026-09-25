@@ -80,7 +80,8 @@ quantities, optional cost snapshot, lot, reference, employee, reason, approval.
 `current_stock` is a **view** summing it. `item_lot` tracks lot/expiry.
 Purchasing: `supplier` → `purchase_order`(+lines) → `goods_receipt`(+lines,
 landed-cost fields) → `purchase_invoice`; receipt lines link to their movement.
-`production_batch` records planned/actual yield and consumed value.
+`production_batch` records planned/actual yield and consumed value (recorded
+from `0023`, below).
 `stock_count`(+lines) supports blind counts and links each approved line to its
 adjustment movement.
 
@@ -188,6 +189,31 @@ through the functions in `0018`.
   refuses the café's form of number typed by hand. A supplier's own number
   stays unique per supplier, as before.
 - `next_bill_number()` shows the bill form the next number without taking it.
+
+### Production (`0023`)
+
+- **Batch recipes** are `recipe` rows with an `output_item_id` (what they make),
+  `batch_yield_base` and `batch_yield_unit` (how much a batch makes, and the unit
+  the owner gave it in), `prep_instructions` and `is_active`. Their lines are
+  items only, bought or made (never the item the recipe makes), in versions like
+  a product's recipe. `save_batch_recipe` sets one up, creating the item it makes
+  (type `finished_good`, in g, ml or pieces, with kg or L and any container such
+  as a pan as further units) when it is new.
+- **`production_batch`** gains `output_item_id`, `output_unit_code` (the unit
+  what came out was given in) and `cancelled_at`, `cancelled_by`,
+  `cancel_reason`. `record_production` (needs `production.record`) writes the
+  batch and its movements in one transaction: `production_consumption` for each
+  ingredient at its average cost and one `production_output` at their total, all
+  referencing the batch. No journal: value stays in 1200. `cancel_production`
+  (needs `inventory.adjust.approve`) reverses them (`reversal`,
+  `production_cancel`), marks the batch cancelled and audits it.
+- **`production.record`**: a new permission for owner, general manager, branch
+  manager and barista. `production_recipes()` and `production_batches()` show
+  recipes and batches to them; a batch's cost only to those who see costs.
+- **A product's recipe changed from a date:** `change_product_recipe` (needs
+  `recipe.edit`) starts a new version (today or later) and audits it;
+  `new_recipe_version` now checks its lines the same way (items of the business,
+  a quantity above zero). `menu_recipe_lines` names each line's item.
 
 ### Item costs (`0022`)
 

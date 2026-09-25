@@ -85,12 +85,26 @@ cost. WAC is the default; FIFO is a per-item/business option.
 
 ## 6. Production
 
-- Consumes recipe inputs at current average cost; outputs finished goods valued
-  at **total consumed value** (no cost created/lost). `outputUnitCost =
-totalConsumed ÷ actualOutput`. `yieldVariance = plannedOutput − actualOutput`.
-- Demo: pistachio batch consumes 18,300 IQD, actual yield 4,800 g →
-  3.8125 IQD/g; planned 5,000 g → variance +200 g.
-  (`src/domain/inventory/production.ts`)
+- A batch consumes its recipe's ingredients (the version in force that day),
+  each at its current average cost: `value = round(cost × quantity)`, lines of
+  one item added together and rounded once, as a sale is. What came out goes
+  into stock valued at **the total consumed**, so no cost is created or lost:
+  `outputUnitCost = totalConsumed ÷ actualOutput`.
+- `actualOutput` is what was weighed or counted, in any of the made item's units
+  (kg, pans, pieces), or the recipe's yield × batches when left empty. The batch
+  keeps both; `plannedOutput − actualOutput` is its yield difference. A short
+  batch makes each unit cost more; nothing goes to profit and loss.
+- Value only moves inside Inventory (1200), so a batch writes **no journal** and
+  the stock ledger still agrees with 1200. Cancelling a batch reverses each of
+  its movements at the value it had.
+- Worked example (the SQL test): 2 batches of base use 8 L of milk at 1.5 a ml
+  (12,000) and 1.6 kg of sugar at 1.2 a g (1,920): 10 L of base at 13,920, so
+  1.392 a ml. One batch of pistachio gelato uses 4.5 L of base (6,264) and 500 g
+  of paste at 30 a g (15,000): 21,264 for the 4.6 kg that came out of a planned
+  5 kg, 4,622.61 a kg. A 120 g cup of it costs 554.71, rounded to 555.
+  (`supabase/migrations/0023_production.sql`,
+  `src/components/production/batchMath.ts`; the domain rule,
+  `src/domain/inventory/production.ts`, is the same)
 
 ## 7. Counting & variance
 

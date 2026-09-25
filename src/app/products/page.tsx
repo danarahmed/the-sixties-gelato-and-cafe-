@@ -12,6 +12,8 @@ import {
 import { channelLabel, fmtIQD, fmtQty } from "@/lib/format";
 import { businessToday } from "@/lib/dates";
 import { AddProductForm, PriceChange } from "@/components/AddProductForm";
+import { ChangeRecipe } from "@/components/menu/ChangeRecipe";
+import type { ItemOpt } from "@/components/menu/RecipeLines";
 import { CategoriesManager } from "@/components/menu/CategoriesManager";
 import { ProductSetup } from "@/components/menu/ProductSetup";
 import { EmptyState } from "@/components/ui";
@@ -30,12 +32,15 @@ function RecipeAndPrices({
   variantId,
   canEdit,
   today,
+  editor,
 }: {
   name: string | null;
   costing: Costing | undefined;
   variantId: string;
   canEdit: boolean;
   today: string;
+  /** For those who edit recipes: the items a recipe may use, costed. Null when sold as bought. */
+  editor: { items: ItemOpt[]; decimals: number } | null;
 }) {
   const recipe = costing?.recipe ?? [];
   const rows = costing?.rows ?? [];
@@ -130,6 +135,20 @@ function RecipeAndPrices({
           {canEdit && <PriceChange variantId={variantId} today={today} />}
         </div>
       </div>
+      {editor && (
+        <ChangeRecipe
+          variantId={variantId}
+          current={recipe.map((l) => ({
+            itemId: l.itemId,
+            quantity: l.quantity,
+            unitCode: l.unitCode,
+            channels: l.channels,
+          }))}
+          items={editor.items}
+          decimals={editor.decimals}
+          today={today}
+        />
+      )}
     </div>
   );
 }
@@ -154,6 +173,15 @@ export default async function ProductsPage() {
     costing.set(m.variantId, c);
   }
   for (const l of lines) costing.get(l.variantId)?.recipe.push(l);
+
+  const itemOpts: ItemOpt[] = items.map((i) => ({
+    id: i.id,
+    name: i.name,
+    baseUnit: i.baseUnit,
+    units: i.units,
+    unitCost: itemCosts.get(i.id) || "0",
+  }));
+  const decimals = profile.currencyDecimals;
 
   const { categories, products } = setup;
   const counts = new Map<string, number>();
@@ -197,6 +225,7 @@ export default async function ProductsPage() {
                 variantId={v.id}
                 canEdit={canEdit}
                 today={today}
+                editor={canEdit && !v.soldAsBought ? { items: itemOpts, decimals } : null}
               />
             ))}
         </details>
@@ -217,13 +246,7 @@ export default async function ProductsPage() {
 
       {canEdit && (
         <AddProductForm
-          items={items.map((i) => ({
-            id: i.id,
-            name: i.name,
-            baseUnit: i.baseUnit,
-            units: i.units,
-            unitCost: itemCosts.get(i.id) || "0",
-          }))}
+          items={itemOpts}
           categories={categories.filter((c) => c.isActive).map((c) => ({ id: c.id, name: c.name }))}
           money={{ decimals: profile.currencyDecimals, priceStep: profile.discountRoundTo }}
         />

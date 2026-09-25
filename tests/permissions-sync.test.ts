@@ -4,24 +4,30 @@
  * posting functions use to decide what is allowed). If they drift, the screen
  * offers actions the database refuses, or hides ones it would allow.
  *
- * This reads the matrix straight out of the migration and compares it, role by
- * role, with ROLE_PERMISSIONS.
+ * This reads the matrix straight out of the migrations (0015 sets it; later
+ * ones add to it) and compares it, role by role, with ROLE_PERMISSIONS.
  */
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "../src/domain/auth/permissions.js";
 
+/** Every role_permission row the migrations insert, in the order they run. */
 function sqlMatrix(): Map<string, Set<string>> {
-  const sql = readFileSync(
-    join(__dirname, "../supabase/migrations/0015_posting_functions.sql"),
-    "utf8",
-  );
-  const block = sql.slice(sql.indexOf("insert into role_permission"), sql.indexOf(") as v(r, p);"));
+  const dir = join(__dirname, "../supabase/migrations");
   const matrix = new Map<string, Set<string>>();
-  for (const [, role, permission] of block.matchAll(/\('([a-z_]+)','([a-z._]+)'\)/g)) {
-    if (!matrix.has(role!)) matrix.set(role!, new Set());
-    matrix.get(role!)!.add(permission!);
+  for (const file of readdirSync(dir).sort()) {
+    const sql = readFileSync(join(dir, file), "utf8");
+    for (let at = sql.indexOf("insert into role_permission"); at >= 0;) {
+      const end = sql.indexOf(") as v(r, p)", at);
+      for (const [, role, permission] of sql
+        .slice(at, end)
+        .matchAll(/\('([a-z_]+)','([a-z._]+)'\)/g)) {
+        if (!matrix.has(role!)) matrix.set(role!, new Set());
+        matrix.get(role!)!.add(permission!);
+      }
+      at = sql.indexOf("insert into role_permission", end);
+    }
   }
   return matrix;
 }

@@ -2,7 +2,7 @@
  * The small rules the screens depend on: who lands where, what the menu
  * offers each role, how numbers typed in three scripts are read, what a
  * discount at the till comes to, what a new recipe costs and what price that
- * suggests, and when a trading day starts.
+ * suggests, what a batch uses and costs, and when a trading day starts.
  */
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
@@ -36,6 +36,14 @@ import {
   type CostedItem,
 } from "@/components/menu/recipeCost";
 import { SELLABLE_CHANNELS } from "@/lib/format";
+import {
+  batchCost,
+  batchesOf,
+  perUnit,
+  showIn,
+  unitFactor,
+} from "@/components/production/batchMath";
+import { filledLines, halfFilled, linesFrom, newLine } from "@/components/menu/RecipeLines";
 
 const perms = (role: Role) => [...ROLE_PERMISSIONS[role]];
 
@@ -334,6 +342,96 @@ describe("what a new recipe costs, worked out as it is typed", () => {
     expect(suggest(0, 70)).toBeNull(); // nothing to go by
     expect(suggest(1180, 100)).toBeNull();
     expect(suggest(1180, -5)).toBeNull();
+  });
+});
+
+describe("a batch, as the production form shows it before it is recorded", () => {
+  // The SQL test's figures: milk at 1.5 a ml and sugar at 1.2 a g make the base;
+  // the base at 1.392 a ml and paste at 30 a g make the pistachio gelato.
+  const cost: Record<string, string> = { milk: "1.5", sugar: "1.2", base: "1.392", paste: "30" };
+  const costOf = (id: string) => cost[id] ?? "0";
+  const gelato = {
+    baseUnit: "g",
+    units: [
+      { code: "g", label: "g", factor: 1 },
+      { code: "kg", label: "kg", factor: 1000 },
+      { code: "pan", label: "Pan", factor: 5000 },
+    ],
+  };
+
+  it("costs the ingredients as the database posts them", () => {
+    const base = [
+      { itemId: "milk", baseQty: 4000 },
+      { itemId: "sugar", baseQty: 800 },
+    ];
+    expect(batchCost(base, new Decimal(2), costOf, 0).toString()).toBe("13920");
+    const pistachio = [
+      { itemId: "base", baseQty: 4500 },
+      { itemId: "paste", baseQty: 500 },
+    ];
+    expect(batchCost(pistachio, new Decimal(1), costOf, 0).toString()).toBe("21264");
+  });
+
+  it("adds an item's lines together before rounding it once", () => {
+    const twice = [
+      { itemId: "x", baseQty: 5 },
+      { itemId: "x", baseQty: 5 },
+    ];
+    expect(batchCost(twice, new Decimal(1), () => "0.3", 0).toString()).toBe("3"); // not 2 + 2
+  });
+
+  it("shows what came out in any of the item's units", () => {
+    expect(unitFactor(gelato, "pan")).toBe(5000);
+    expect(unitFactor(gelato, "tray")).toBeNull();
+    expect(showIn(new Decimal(4600), gelato, "kg")).toBe("4.6 kg");
+    expect(showIn(new Decimal(5000), gelato, "pan")).toBe("1 Pan");
+    expect(showIn(new Decimal(4600), gelato, "g")).toBe("4,600 g");
+  });
+
+  it("gives the cost of each unit made", () => {
+    expect(perUnit(new Decimal(21264), new Decimal(4.6), "kg")).toBe("4,623 IQD per kg");
+    expect(perUnit(new Decimal(13920), new Decimal(10000), "ml")).toBe("1.39 IQD per ml");
+    expect(perUnit(new Decimal(100), new Decimal(0), "kg")).toBeNull();
+  });
+
+  it("reads the number of batches in any script, and only above zero", () => {
+    expect(batchesOf("2")?.toString()).toBe("2");
+    expect(batchesOf("٢")?.toString()).toBe("2");
+    expect(batchesOf("0.5")?.toString()).toBe("0.5");
+    expect(batchesOf("0")).toBeNull();
+    expect(batchesOf("abc")).toBeNull();
+  });
+});
+
+describe("a recipe, reopened to change it", () => {
+  it("reads each line's channels back as the choice they came from", () => {
+    const lines = linesFrom([
+      { itemId: "beans", quantity: 18, unitCode: "g", channels: null },
+      {
+        itemId: "cup",
+        quantity: 1,
+        unitCode: "each",
+        channels: ["takeaway", "direct_delivery", "talabat", "careem", "toters"],
+      },
+      { itemId: "saucer", quantity: 1, unitCode: "each", channels: ["dine_in"] },
+      { itemId: "lid", quantity: 1, unitCode: "each", channels: ["takeaway", "talabat"] },
+      { itemId: "milk", quantity: 1000, unitCode: "ml" },
+    ]);
+    expect(lines.map((l) => l.use)).toEqual(["all", "to_go", "dine_in", "custom", "all"]);
+    expect(lines[3]!.ticked).toEqual(["takeaway", "talabat"]);
+    expect(lines[4]!.quantity).toBe("1000"); // no thousands separator in a box to edit
+    expect(new Set(lines.map((l) => l.key)).size).toBe(5);
+  });
+
+  it("stops at a half-filled line and sends only whole ones", () => {
+    const blank = newLine();
+    const half = { ...newLine(), itemId: "beans", unit: "g" };
+    const whole = { ...newLine(), itemId: "cup", quantity: "1", unit: "each" };
+    expect(halfFilled([whole, blank])).toBe(-1);
+    expect(halfFilled([whole, half])).toBe(1);
+    expect(filledLines([whole, blank])).toEqual([
+      { itemId: "cup", qty: "1", unitCode: "each", channels: [] },
+    ]);
   });
 });
 

@@ -197,6 +197,8 @@ export interface RecipeLineRow {
   quantity: number;
   unitCode: string;
   channels: string[] | null;
+  /** The line's item; null for a sub-recipe line. */
+  itemId: string | null;
 }
 
 export async function getMenuRecipeLines(): Promise<RecipeLineRow[]> {
@@ -209,6 +211,7 @@ export async function getMenuRecipeLines(): Promise<RecipeLineRow[]> {
     quantity: num(r.quantity),
     unitCode: str(r.unit_code),
     channels: Array.isArray(r.channels) && r.channels.length > 0 ? r.channels.map(String) : null,
+    itemId: strOrNull(r.item_id),
   }));
 }
 

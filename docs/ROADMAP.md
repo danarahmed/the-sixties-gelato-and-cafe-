@@ -30,8 +30,9 @@ honest, not by building a queue.
 2. **Delivery-platform settlements (M-10).** Import a Talabat statement, match it
    to platform orders with the tested `src/domain/platform/settlement.ts`, post
    the payout, commission and fees, and surface every unmatched line.
-3. **Production batches (M-11).** Record a batch: consume ingredients at average
-   cost, put the output into stock at the consumed cost, post the yield variance.
+3. **Production, further (M-11).** Planned batches, lots and expiry dates, and
+   stock moved between the central kitchen and the branch. (Recording batches,
+   made items and their costs are built.)
 4. **Translations (L-06).** Move the remaining screen text into the dictionaries,
    then check Arabic and Kurdish layouts on a phone.
 5. **Statements and exports (L-05).** Balance sheet and cash flow from the

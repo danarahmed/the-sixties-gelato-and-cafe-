@@ -1,37 +1,27 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import { createProductAction, setPriceAction } from "@/lib/actions/menu";
-import { channelLabel, fmtIQD, fmtQty, SELLABLE_CHANNELS } from "@/lib/format";
+import { channelLabel, fmtIQD, SELLABLE_CHANNELS } from "@/lib/format";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { parseNumber } from "@/components/pos/model";
+import { margin, servingCost, suggestedPrice } from "@/components/menu/recipeCost";
 import {
-  channelsFor,
-  lineCost,
-  margin,
-  servingCost,
-  suggestedPrice,
-  type CostedItem,
-  type LineUse,
-} from "@/components/menu/recipeCost";
+  NoCostYet,
+  RecipeLinesEditor,
+  ServingCost,
+  anyCosted,
+  filledLines,
+  halfFilled,
+  iqd,
+  newLine,
+  toCostLines,
+  type ItemOpt,
+  type LineDraft,
+} from "@/components/menu/RecipeLines";
 
-interface ItemOpt extends CostedItem {
-  name: string;
-  units: { code: string; label: string; factor: number }[];
-}
-interface LineDraft {
-  key: number;
-  /** Empty until an ingredient is chosen. */
-  itemId: string;
-  quantity: string;
-  unit: string;
-  use: LineUse;
-  /** The channels ticked when the line is used on "Some channels…". */
-  ticked: SalesChannel[];
-}
 type Msg = { ok: boolean; text: string } | null;
 
 const noPrices = (): Record<SalesChannel, string> => ({
@@ -42,15 +32,6 @@ const noPrices = (): Record<SalesChannel, string> => ({
   careem: "",
   toters: "",
 });
-
-const USES: { value: LineUse; label: string }[] = [
-  { value: "all", label: "Every order" },
-  { value: "to_go", label: "Takeaway & delivery" },
-  { value: "dine_in", label: "Dine-in only" },
-  { value: "custom", label: "Some channels…" },
-];
-
-const iqd = (d: Decimal) => fmtIQD(d.toNumber());
 
 /**
  * A product, its recipe and its prices — created in one step, or not at all.
@@ -77,61 +58,18 @@ export function AddProductForm({
   const [categoryId, setCategoryId] = useState("");
   const [prices, setPrices] = useState(noPrices());
   const [target, setTarget] = useState("70");
-  const seq = useRef(0);
-  const blank = (): LineDraft => ({
-    key: ++seq.current,
-    itemId: "",
-    quantity: "",
-    unit: "",
-    use: "all",
-    ticked: [],
-  });
-  const [lines, setLines] = useState<LineDraft[]>(() => [blank()]);
+  const [lines, setLines] = useState<LineDraft[]>(() => [newLine()]);
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
 
-  const setLine = (key: number, patch: Partial<LineDraft>) =>
-    setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...patch } : l)));
-  const toggle = (key: number, ch: SalesChannel) =>
-    setLines((ls) =>
-      ls.map((l) =>
-        l.key === key
-          ? {
-              ...l,
-              ticked: l.ticked.includes(ch) ? l.ticked.filter((c) => c !== ch) : [...l.ticked, ch],
-            }
-          : l,
-      ),
-    );
-
-  // The recipe as it will be saved, and what one serving of it costs on each channel.
-  const recipe = lines.map((l) => ({
-    itemId: l.itemId,
-    quantity: l.quantity,
-    unit: l.unit,
-    channels: channelsFor(l.use, l.ticked, SELLABLE_CHANNELS),
-  }));
+  // What one serving of the recipe, as it will be saved, costs on each channel.
+  const recipe = toCostLines(lines);
   const costOf = (c: SalesChannel) => servingCost(recipe, byId, c, rules.decimals);
-  const costed = recipe.filter((l) => lineCost(l, byId.get(l.itemId), rules.decimals) !== null);
-  const noCostYet = [
-    ...new Set(
-      costed
-        .map((l) => byId.get(l.itemId)!)
-        .filter((i) => new Decimal(i.unitCost).isZero())
-        .map((i) => i.name),
-    ),
-  ];
-  const groups: { cost: Decimal; channels: SalesChannel[] }[] = [];
-  for (const c of SELLABLE_CHANNELS) {
-    const cost = costOf(c);
-    const g = groups.find((x) => x.cost.eq(cost));
-    if (g) g.channels.push(c);
-    else groups.push({ cost, channels: [c] });
-  }
+  const costed = anyCosted(lines, items, rules.decimals);
   const targetMargin = parseNumber(target);
 
   function submit() {
     setMsg(null);
-    const half = lines.findIndex((l) => !l.itemId !== (l.quantity.trim() === ""));
+    const half = halfFilled(lines);
     if (half >= 0) {
       setMsg({
         ok: false,
@@ -148,14 +86,7 @@ export function AddProductForm({
         prices: Object.fromEntries(
           SELLABLE_CHANNELS.filter((c) => prices[c].trim() !== "").map((c) => [c, prices[c]]),
         ),
-        recipe: recipe
-          .filter((l) => l.itemId && l.quantity.trim() !== "")
-          .map((l) => ({
-            itemId: l.itemId,
-            qty: l.quantity,
-            unitCode: l.unit,
-            channels: l.channels,
-          })),
+        recipe: filledLines(lines),
       });
       if (r.ok) {
         setMsg({ ok: true, text: `Created “${name}”.` });
@@ -163,7 +94,7 @@ export function AddProductForm({
         setNameAr("");
         setNameCkb("");
         setPrices(noPrices());
-        setLines([blank()]);
+        setLines([newLine()]);
         router.refresh();
       } else setMsg({ ok: false, text: r.error });
     });
@@ -247,154 +178,15 @@ export function AddProductForm({
               Costs are today&apos;s, from what the stock cost. Cups, lids and bags are used for
               takeaway and delivery only.
             </p>
-            <div className="pf-head" aria-hidden>
-              <span>Ingredient</span>
-              <span>Quantity</span>
-              <span>Unit</span>
-              <span>Used for</span>
-              <span style={{ textAlign: "end" }}>Cost</span>
-              <span />
-            </div>
-            {lines.map((l, idx) => {
-              const it = byId.get(l.itemId);
-              const n = idx + 1;
-              const cost = lineCost(recipe[idx]!, it, rules.decimals);
-              const unit = it?.units.find((u) => u.code === l.unit);
-              const perUnit = it && unit ? new Decimal(it.unitCost).times(unit.factor) : null;
-              const none = it !== undefined && new Decimal(it.unitCost).isZero();
-              return (
-                <div key={l.key} className="pf-line-wrap">
-                  <div className="pf-line">
-                    <select
-                      className="pf-ing"
-                      aria-label={`Ingredient ${n}`}
-                      style={inputStyle}
-                      value={l.itemId}
-                      onChange={(e) =>
-                        setLine(l.key, {
-                          itemId: e.target.value,
-                          unit: byId.get(e.target.value)?.baseUnit ?? "",
-                        })
-                      }
-                    >
-                      <option value="">Choose an ingredient…</option>
-                      {items.map((i) => (
-                        <option key={i.id} value={i.id}>
-                          {i.name}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      className="pf-qty"
-                      aria-label={`Quantity ${n}`}
-                      placeholder="qty"
-                      style={inputStyle}
-                      value={l.quantity}
-                      onChange={(e) => setLine(l.key, { quantity: e.target.value })}
-                      inputMode="decimal"
-                    />
-                    <select
-                      className="pf-unit"
-                      aria-label={`Unit ${n}`}
-                      style={inputStyle}
-                      value={l.unit}
-                      onChange={(e) => setLine(l.key, { unit: e.target.value })}
-                      disabled={!it}
-                    >
-                      {(it?.units ?? []).map((u) => (
-                        <option key={u.code} value={u.code}>
-                          {u.label}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      className="pf-use"
-                      aria-label={`Used for ${n}`}
-                      style={inputStyle}
-                      value={l.use}
-                      onChange={(e) => setLine(l.key, { use: e.target.value as LineUse })}
-                    >
-                      {USES.map((u) => (
-                        <option key={u.value} value={u.value}>
-                          {u.label}
-                        </option>
-                      ))}
-                    </select>
-                    <div className={`pf-cost mono${none ? " none" : ""}`} data-testid={`cost-${n}`}>
-                      {cost === null ? "—" : iqd(cost)}
-                      {it && (
-                        <small>
-                          {none
-                            ? "no cost yet"
-                            : perUnit && `${fmtQty(perUnit.toNumber())} IQD per ${unit!.label}`}
-                        </small>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      className="pf-remove"
-                      aria-label={`Remove line ${n}`}
-                      title="Remove"
-                      onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))}
-                      disabled={lines.length === 1}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  {l.use === "custom" && (
-                    <div className="pf-channels">
-                      {SELLABLE_CHANNELS.map((c) => (
-                        <label key={c}>
-                          <input
-                            type="checkbox"
-                            checked={l.ticked.includes(c)}
-                            onChange={() => toggle(l.key, c)}
-                          />
-                          {channelLabel[c]}
-                        </label>
-                      ))}
-                      {l.ticked.length === 0 && (
-                        <span className="muted">none ticked: used on every order</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            <button
-              type="button"
-              onClick={() => setLines((ls) => [...ls, blank()])}
-              style={{ alignSelf: "start" }}
-            >
-              + Add ingredient
-            </button>
-            <div className="pf-total" data-testid="serving-cost">
-              {costed.length === 0 ? (
-                <span className="muted">
-                  Choose the ingredients and their quantities to see what one serving costs.
-                </span>
-              ) : (
-                <>
-                  <span>Cost of one serving</span>
-                  <span className="pf-total-figs">
-                    {groups.map((g) => (
-                      <span key={g.channels.join()}>
-                        <strong className="mono">{iqd(g.cost)}</strong>
-                        {groups.length > 1 &&
-                          ` ${g.channels.map((c) => channelLabel[c]).join(", ")}`}
-                      </span>
-                    ))}
-                  </span>
-                </>
-              )}
-            </div>
-            {noCostYet.length > 0 && (
-              <p className="pf-warn">
-                ⚠ No cost yet for {noCostYet.join(", ")}: never bought, so counted as 0 here.
-                Receive {noCostYet.length === 1 ? "it" : "them"} on Purchasing, or give an opening
-                cost on Inventory, for a true cost.
-              </p>
-            )}
+            <RecipeLinesEditor
+              items={items}
+              lines={lines}
+              onChange={setLines}
+              decimals={rules.decimals}
+              channels
+            />
+            <ServingCost lines={lines} items={items} decimals={rules.decimals} />
+            <NoCostYet lines={lines} items={items} />
           </section>
 
           <section className="pf-step">
@@ -433,7 +225,7 @@ export function AddProductForm({
                   <div key={c} className="pf-price" data-channel={c}>
                     <div className="pf-price-top">
                       <span>{channelLabel[c]}</span>
-                      {costed.length > 0 && <span className="mono">cost {iqd(cost)}</span>}
+                      {costed && <span className="mono">cost {iqd(cost)}</span>}
                     </div>
                     <input
                       aria-label={`${channelLabel[c]} price`}
@@ -442,7 +234,7 @@ export function AddProductForm({
                       onChange={(e) => setPrices({ ...prices, [c]: e.target.value })}
                       inputMode="decimal"
                     />
-                    {m && costed.length > 0 && (
+                    {m && costed && (
                       <div className={`pf-margin ${tone}`}>
                         {m.amount.lt(0) ? "loss" : "margin"} {iqd(m.amount.abs())}
                         {m.percent && ` (${m.percent.toFixed(1)}%)`}
