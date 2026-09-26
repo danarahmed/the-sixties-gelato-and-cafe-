@@ -768,6 +768,10 @@ const phrases: PhraseBook = {
     ar: "اجعل السبب أقل من 300 حرف",
     ckb: "با هۆکارەکە لە 300 پیت کەمتر بێت",
   },
+  // How an item is measured, as the audit trail gives it (Measured by: mass).
+  mass: { ar: "بالوزن", ckb: "بە کێش" },
+  volume: { ar: "بالحجم", ckb: "بە قەبارە" },
+  count: { ar: "بالعدد", ckb: "بە ژمارە" },
 };
 
 export default phrases;

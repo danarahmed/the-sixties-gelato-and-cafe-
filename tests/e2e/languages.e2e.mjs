@@ -21,6 +21,9 @@ const typed = sql(`
     union select name from business union select code from item_unit union select label from item_unit
     union select coalesce(prep_instructions, '') from recipe union select coalesce(note, '') from recipe_version
     union select external_order_id from platform_order union select coalesce(settlement_reference, '') from platform_order
+    union select coalesce(contact, '') from supplier union select unnest(allergens) from product
+    union select coalesce(sku, '') from item
+    union select description from journal_entry where description like '%(fixture)%'
     union select name from recipe union select invoice_no from purchase_invoice
     union select coalesce(note, '') from goods_receipt union select description from journal_entry where reference_type = 'manual'
     union select coalesce(reason, '') from audit_log
@@ -53,6 +56,8 @@ const SAME = new Set(
     "rtl",
     // A language's name is written in itself in the language menu.
     "English",
+    // The test fixtures' own records (an opening stock typed "fixture").
+    "fixture",
   ].map((w) => w.toLowerCase()),
 );
 // On Delivery Platforms, the column names of a platform's own report, which
@@ -170,7 +175,8 @@ console.log("▸ the owner adds Turkish, and gives it words");
   );
   await words.getByLabel("Search").fill("Languages");
   await words.getByLabel("Words for: Languages", { exact: true }).fill("Diller");
-  await words.getByLabel("Search").fill("Sales");
+  // The menu's "Sales" is kept by its key; the phrase "Sales" is another row.
+  await words.getByLabel("Search").fill("nav.sales");
   await words.getByLabel("Words for: Sales", { exact: true }).fill("Satışlar");
   await words.getByRole("button", { name: "Save 2 change(s)" }).click();
   await page

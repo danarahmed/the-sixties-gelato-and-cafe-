@@ -8,7 +8,7 @@
  * here): the CSV keeps the English, and the screen says them in the reader's
  * language through t(), subjectIn() and valueIn().
  */
-import type { Msg, T } from "@/lib/i18n/core";
+import { BUILT_IN_LANGUAGES, type Msg, type T } from "@/lib/i18n/core";
 import { itemTypeLabel, roleLabel } from "@/lib/format";
 import { SHOP_CHANNELS, channelName } from "@/lib/channels";
 import { RULE_LABEL, THRESHOLD_LABEL, ruleLabel } from "@/lib/alerts";
@@ -494,6 +494,7 @@ export function valueIn(value: string, field: string, t: T, msg: Msg): string {
   switch (field) {
     case FIELD_LABEL.item_type:
     case FIELD_LABEL.kind:
+    case FIELD_LABEL.dimension:
     case fieldLabel("status"):
       return t(value);
     case FIELD_LABEL.title:
@@ -507,6 +508,11 @@ export function valueIn(value: string, field: string, t: T, msg: Msg): string {
       return RULES.has(value) ? msg(value) : value;
     case FIELD_LABEL.channel:
       return channelIn(value, t);
+    case FIELD_LABEL.timezone:
+      return t(value);
+    case FIELD_LABEL.default_locale:
+      // A language by its own name: English, العربية, کوردی.
+      return BUILT_IN_LANGUAGES.find((l) => l.code === value)?.label ?? value;
     case FIELD_LABEL.alert_settings:
       if (value === "the defaults") return t(value);
       // "Margin target (%) 65, …": each threshold's name, then what it was set to.
