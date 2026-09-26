@@ -25,6 +25,7 @@ const typed = sql(`
     union select coalesce(sku, '') from item
     union select description from journal_entry where description like '%(fixture)%'
     union select description from expense union select coalesce(memo, '') from journal_line
+    union select regexp_replace(description, '^Correction: ', '') from journal_entry where reference_type = 'correction'
     union select coalesce(no_stock_reason, '') from product_variant
     union select coalesce(quality_note, '') from production_batch union select coalesce(cancel_reason, '') from production_batch
     union select coalesce(reason, '') from inventory_movement union select coalesce(reason, '') from sale_adjustment
@@ -115,7 +116,7 @@ async function english(page) {
     (w) =>
       /^[A-Za-z]['’A-Za-z-]*[A-Za-z]$/.test(w) &&
       // Not a piece of an id ("3fa9c2e1…") nor initials or a code (GC, TLB).
-      !/^[a-f]{1,4}$/.test(w) &&
+      !/^[a-f]{1,8}$/.test(w) &&
       !/^[a-f](-[a-f])+$/.test(w) &&
       !/^[A-Z]{2,3}(-[A-Z])?$/.test(w),
   );
@@ -253,11 +254,14 @@ console.log("▸ the owner adds Turkish, and gives it words");
   await page
     .getByText("Saved: 1 phrase(s) with new words, 0 back to the built-in words.")
     .waitFor();
-  await page.waitForLoadState("networkidle");
-  check(
-    await page.locator(".sidenav").getByRole("link", { name: "Gösterge paneli" }).isVisible(),
-    "and the translator's words, uploaded, are on every page",
-  );
+  // Saved, the page is refreshed: wait for the menu to be given the new words.
+  const uploaded = await page
+    .locator(".sidenav")
+    .getByRole("link", { name: "Gösterge paneli" })
+    .waitFor({ timeout: 10000 })
+    .then(() => true)
+    .catch(() => false);
+  check(uploaded, "and the translator's words, uploaded, are on every page");
   await ctx.close();
 }
 

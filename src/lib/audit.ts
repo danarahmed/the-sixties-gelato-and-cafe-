@@ -458,7 +458,12 @@ export function subjectIn(subject: string, action: string, t: T, msg: Msg): stri
   }
   if (action.startsWith("platform.settlement")) {
     const m = /^(.+) statement (.+)$/.exec(subject);
-    if (m) return t("{platform} statement {reference}", { platform: m[1]!, reference: m[2]! });
+    // A statement whose platform the trail could not name says "Platform".
+    if (m)
+      return t("{platform} statement {reference}", {
+        platform: m[1] === "Platform" ? t("Platform") : m[1]!,
+        reference: m[2]!,
+      });
   }
   // A price: the product (or "A price") and the channel.
   if (action.startsWith("price.") && subject.includes(", ")) {
