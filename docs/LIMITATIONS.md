@@ -64,9 +64,24 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
 - **Attachments and PDF (L-05).** There is no scan of an invoice on a bill or an
   expense, and no PDF export. CSV export exists for the trial balance, P&L and
   reconciliation.
-- **Translations (L-06).** Navigation, sign-in, the till and the offline
-  messages are in English, Arabic and Kurdish. Most screen bodies are English
-  only.
+- **Languages (L-06), what they do not do (release G, `0032`).** Every screen,
+  message, alert and the books' own words are in English, Arabic and Kurdish,
+  and the owner can add a language and give any phrase the café's own words.
+  But:
+  - The names the café types (products, variants, items, categories, suppliers,
+    tables, people) are its own: products, items and categories have an Arabic
+    and a Kurdish name beside the English; in a language the owner adds they
+    show their English name. An account the owner adds or renames keeps the
+    name typed.
+  - CSV downloads keep English column names, so a spreadsheet or the
+    accountant's software reads them the same whoever downloads them.
+  - The expense rules propose an account from English words in the
+    description ("rent", "salary"); a description written in Arabic or Kurdish
+    gets no proposal, and the account is chosen by hand.
+  - A page in Arabic or Kurdish carries that language's words (about 65 KB
+    compressed on a full load).
+  - Numbers are written with Western digits (1,500) in every language; typed
+    Arabic-Indic and Eastern Arabic-Indic digits are accepted.
 - **Transfers between locations.** The Central Kitchen exists as a location, but
   stock cannot yet move between locations.
 - **Tax.** Out of scope by request. If the business is VAT-registered, that is a
