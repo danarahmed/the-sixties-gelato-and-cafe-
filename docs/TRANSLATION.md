@@ -22,6 +22,24 @@ checks them.
   phrase, or a phrase with values, kept with `{1}`, `{2}`… where the values go
   (`"{1} is not in stock"`); each value is itself translated when it is a phrase.
 
+## Languages the café adds (0032)
+
+- `app_language` holds a language the owner added (its code, its name written
+  in itself, `ltr` or `rtl`, whether it is in use); `app_phrase` the café's own
+  words for a phrase in a language, a built-in one included. Nothing reads the
+  tables but `app_words()` (every page: the languages in use, and the reader's
+  language's words) and `language_settings()`; `save_language()` and
+  `save_phrases()` change them (`settings.manage`), on the audit trail.
+- `src/lib/i18n/server.ts` merges them: the café's languages after the three
+  built in, and the café's words over the built-in ones. A language the café
+  added starts from English.
+- **Settings → Languages** edits them phrase by phrase, or through a CSV
+  (`key,english,built_in,words`) a translator fills in. Words must keep the
+  English's `{placeholders}` and `<marks>`: the action checks every key
+  against `src/lib/i18n/catalogue.ts`, and the database checks the
+  placeholders again.
+- A phrase the app no longer has is left out of an upload, and counted.
+
 ## Writing a screen
 
 | Where                                       | How                                                                                                                                                     |

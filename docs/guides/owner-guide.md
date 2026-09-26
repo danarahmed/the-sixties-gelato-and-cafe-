@@ -63,6 +63,39 @@ unverified until it is corrected ([`../REMEDIATION.md`](../REMEDIATION.md)).
 
 The exact matrix is under **Settings → Roles & what they may do**.
 
+## Languages
+
+Every screen is in **English, Arabic and Kurdish (Sorani)**: its headings,
+buttons, forms, tables, messages, the alerts on the dashboard, the daily brief,
+the words the books write themselves (the chart of accounts, a journal's
+narration) and what the database says when it refuses something. Each person
+chooses their language in the menu at the top of the page; Arabic and Kurdish
+read right to left.
+
+**Settings → Languages** (the owner and the general manager):
+
+- **Add a language**: its short international code (tr for Turkish, fa for
+  Persian, kmr for Kurmanji Kurdish), its name as its speakers write it
+  (Türkçe, فارسی), and whether it is written left to right or right to left.
+  It is in everyone's language menu at once. A phrase with no words in it yet
+  shows in English, so the screens work while it is being translated.
+- **Give its words**: under **Words in …**, find a phrase (search, or show only
+  the phrases with no words yet), type its words, and **Save**. Words keep the
+  `{name}` marks of the English: they are where a number or a name goes.
+- **Hand it to a translator**: **Download CSV** gives every phrase, its
+  English and its words so far; the translator fills in the `words` column,
+  and **Upload CSV** reads it back for you to check and save.
+- **A better Arabic or Kurdish word**: choose العربية or کوردی under **Words
+  in …** and type the café's own word over the built-in one; clear it to have
+  the built-in word back.
+- **Take a language out of use**: it leaves the menu, and its words are kept
+  for when you bring it back.
+
+Every language added or changed, and every change of words, is on the audit
+trail. The names of products, items and categories are typed by the café in
+English, Arabic and Kurdish; in a language you add they show their English
+name.
+
 ## Setting up the till
 
 A café with a hundred products and twenty tables needs a till that finds things
