@@ -113,6 +113,9 @@ describe("the translator", () => {
     expect(msg("Card takings 01 Sep to 05 Sep settled")).toBe(
       "تمت تسوية مقبوضات البطاقات من 01 أيلول إلى 05 أيلول",
     );
+    // An account by code and name, when the name is a phrase.
+    expect(messenger({ Rent: "الإيجار" })("6000 Rent")).toBe("6000 الإيجار");
+    expect(messenger({ Rent: "الإيجار" })("6000 Office rent")).toBe("6000 Office rent");
     // A short phrase is for values: it never takes a whole message.
     expect(msg("The count took 3 days")).toBe("The count took 3 days");
     // What has no translation stays as it is.

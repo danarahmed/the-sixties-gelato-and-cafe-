@@ -90,7 +90,7 @@ export function LegacyPostings({
                   {say(r.description)}
                 </td>
                 <td className="mono" style={{ fontSize: ".78rem" }}>
-                  {r.entry}
+                  {r.entry.replace(/\b(Dr|Cr)\b/g, (side) => t(side))}
                 </td>
                 <td className="right money">{fmtIQD(r.amount)}</td>
               </tr>

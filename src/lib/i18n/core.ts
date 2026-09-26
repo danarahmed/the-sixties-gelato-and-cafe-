@@ -63,6 +63,9 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const letters = (s: string) => (s.match(/[A-Za-z]/g) ?? []).length;
 
+/** An account's code and name, as the books show one: "6000 Rent". */
+const ACCOUNT = /^(\d{4}) (.+)$/s;
+
 /** "05 Sep" or "05 Sep 14:30", as the database writes a date in a message. */
 const SHORT_DATE = /^(\d{1,2}) ([A-Z][a-z]{2})((?: \d{2}:\d{2})?)$/;
 
@@ -99,6 +102,10 @@ export function messenger(words: Words): Msg {
   const translate = (text: string, depth: number): string => {
     const exact = words[text];
     if (exact !== undefined) return exact;
+    // An account by its code and name, "6000 Rent": the name the database gave it.
+    const account = ACCOUNT.exec(text);
+    const named = account ? words[account[2]!] : undefined;
+    if (account && named !== undefined) return `${account[1]} ${named}`;
     if (depth > 0) {
       const d = SHORT_DATE.exec(text);
       const month = d ? words[d[2]!] : undefined;

@@ -26,6 +26,9 @@ const SOURCE: Record<string, string> = {
   work_shift: "Drawer count",
   cash_transfer: "Cash moved",
   manual: "Manual",
+  correction: "Correction",
+  card_settlement: "Card settlement",
+  platform_settlement: "Platform settlement",
   year_end_close: "Year end",
 };
 
@@ -225,7 +228,7 @@ export function JournalRow({
                 <div key={i} className={`vline ${l.credit > 0 ? "credit" : ""}`}>
                   <span className="dr">{l.debit > 0 ? t("Dr") : t("Cr")}</span>
                   <span className="acct">
-                    {l.account}
+                    {msg(l.account)}
                     {l.memo && <em style={{ marginInlineStart: 8 }}>{l.memo}</em>}
                   </span>
                   <span className="amt">{fmtIQD(l.debit > 0 ? l.debit : l.credit)}</span>

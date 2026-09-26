@@ -1,4 +1,4 @@
-import { getT } from "@/lib/i18n/server";
+import { getMsg, getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getExpenses, getGlAccounts, getPeriods, periodFor } from "@/lib/db/books";
 import { fmtIQD } from "@/lib/format";
@@ -14,6 +14,7 @@ const NOT_EXPENSES = new Set(["5000", "5050", "5300", "5400"]);
 export default async function ExpensesPage() {
   const profile = await requirePermission("cost.view");
   const t = await getT();
+  const msg = await getMsg();
   const today = businessToday(profile.timezone);
   const [rows, accounts, periods] = await Promise.all([
     getExpenses(100),
@@ -98,7 +99,7 @@ export default async function ExpensesPage() {
                         </span>
                       )}
                     </td>
-                    <td className="muted">{r.account}</td>
+                    <td className="muted">{msg(r.account)}</td>
                     <td className="mono">{r.journalNo ?? "—"}</td>
                     <td className="muted">{r.by ?? "—"}</td>
                     <td
@@ -142,7 +143,7 @@ export default async function ExpensesPage() {
               .sort((a, b) => b[1] - a[1])
               .map(([account, amount]) => (
                 <div key={account} className="st-row">
-                  <span className="lbl">{account}</span>
+                  <span className="lbl">{msg(account)}</span>
                   <span className="amt">{fmtIQD(amount)}</span>
                 </div>
               ))}

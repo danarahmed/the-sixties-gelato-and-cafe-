@@ -436,6 +436,10 @@ const phrases: PhraseBook = {
     ar: "يحتاج التصحيح إلى سطرين على الأقل",
     ckb: "ڕاستکردنەوە لانیکەم دوو هێڵی پێویستە",
   },
+  // Where a journal came from, for the kinds the register had no name for.
+  Correction: { ar: "تصحيح", ckb: "ڕاستکردنەوە" },
+  "Card settlement": { ar: "تسوية البطاقات", ckb: "یەکلاکردنەوەی کارت" },
+  "Platform settlement": { ar: "تسوية المنصة", ckb: "یەکلاکردنەوەی پلاتفۆرم" },
 };
 
 export default phrases;
