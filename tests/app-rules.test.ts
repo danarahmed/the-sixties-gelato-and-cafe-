@@ -63,6 +63,8 @@ import { cleanOrderNo, platformOrderNo } from "@/lib/validation";
 import Decimal from "decimal.js";
 import {
   addLine,
+  ticketChanges,
+  ticketLines,
   approvalPercent,
   approvalRefused,
   billChanged,
@@ -1721,5 +1723,66 @@ describe("names that look alike, before a new item is added (release H)", () => 
     // A name in Arabic or Kurdish letters: pack_ and its size.
     expect(packCode("کارتۆن", 24)).toBe("pack_24");
     expect(packCode("علبة", 0.5)).toBe("pack_0_5");
+  });
+});
+
+describe("the barista's ticket (release I)", () => {
+  const l = (variantId: string, qty: number, note: string | null = null) => ({
+    variantId,
+    qty,
+    note,
+  });
+
+  it("sends a new order whole, and what is added to it after", () => {
+    expect(ticketChanges([], [l("latte", 2), l("water", 1)])).toEqual({
+      added: [l("latte", 2), l("water", 1)],
+      removed: [],
+    });
+    expect(ticketChanges([l("latte", 2)], [l("latte", 3), l("water", 1)])).toEqual({
+      added: [l("latte", 1), l("water", 1)],
+      removed: [],
+    });
+  });
+
+  it("tells the bar what was taken off, so it is not made", () => {
+    expect(ticketChanges([l("latte", 2), l("water", 1)], [l("latte", 1)])).toEqual({
+      added: [],
+      removed: [l("latte", 1), l("water", 1)],
+    });
+  });
+
+  it("has nothing to say when nothing the bar makes has changed", () => {
+    const lines = [l("latte", 2), l("water", 1, "cold")];
+    expect(ticketChanges(lines, [l("water", 1, " cold "), l("latte", 2)])).toEqual({
+      added: [],
+      removed: [],
+    });
+  });
+
+  it("counts the same product on two lines together, and a new note as another way to make it", () => {
+    expect(ticketChanges([l("latte", 1), l("latte", 1)], [l("latte", 2)])).toEqual({
+      added: [],
+      removed: [],
+    });
+    expect(ticketChanges([l("latte", 2)], [l("latte", 1), l("latte", 1, "oat milk")])).toEqual({
+      added: [l("latte", 1, "oat milk")],
+      removed: [l("latte", 1)],
+    });
+  });
+
+  it("takes an order's lines as the bar needs them: what, how many and how", () => {
+    expect(
+      ticketLines([
+        {
+          key: "k1",
+          variantId: "latte",
+          qty: 2,
+          note: "oat milk",
+          lineId: "l1",
+          fallbackName: null,
+          billPrice: 2500,
+        },
+      ]),
+    ).toEqual([l("latte", 2, "oat milk")]);
   });
 });

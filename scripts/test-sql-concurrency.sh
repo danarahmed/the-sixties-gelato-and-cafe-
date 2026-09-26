@@ -130,6 +130,14 @@ ok "$(sql "select (select sum(amount) from cash_event where kind = 'sale')
                = (select sum(t.amount) from sales_tender t where t.tender_type = 'cash')")" "t" \
    "exactly once: the counted cash equals the cash taken"
 
+# 0034 — through every race above, each order took a turn number of its own:
+# none shared, and none skipped, though sales were refused and payments replayed.
+ok "$(sql "select count(*) = count(distinct turn_no) and count(*) = count(turn_no) from sales_order")" "t" \
+   "each sale has its own turn number, however many tills raced"
+ok "$(sql "select max(n) = count(distinct n) from (select turn_no n from sales_order
+                                                  union all select turn_no from pos_tab) x")" "t" \
+   "and none was skipped, though sales were refused and payments replayed"
+
 # 0029 — ten dashboards opened at once: each brings the alerts up to date, one
 # at a time, and none is refused; every condition keeps one open alert.
 race 10 owner@example.com "select count(*) from current_alerts()"

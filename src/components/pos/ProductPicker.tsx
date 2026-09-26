@@ -101,22 +101,25 @@ export function ProductPicker({
 
   const categories = useMemo(() => {
     const seen = new Map<string, string>();
-    let uncategorised = false;
+    const count = new Map<string, number>();
+    let uncategorised = 0;
     for (const p of products) {
       if (p.item.categoryId) {
         if (!seen.has(p.item.categoryId))
           seen.set(p.item.categoryId, categoryName(p.item, locale) ?? "");
-      } else uncategorised = true;
+        count.set(p.item.categoryId, (count.get(p.item.categoryId) ?? 0) + 1);
+      } else uncategorised++;
     }
-    return { list: [...seen.entries()], uncategorised };
+    return { list: [...seen.entries()], count, uncategorised };
   }, [products, locale]);
-  const hasFavourites = products.some((p) => p.item.isFavourite);
+  const favourites = products.filter((p) => p.item.isFavourite).length;
+  const hasFavourites = favourites > 0;
 
   // A category that has nothing on this channel falls back to everything.
   const activeCategory =
     category === ALL ||
     (category === FAVOURITES && hasFavourites) ||
-    (category === NONE && categories.uncategorised) ||
+    (category === NONE && categories.uncategorised > 0) ||
     categories.list.some(([id]) => id === category)
       ? category
       : ALL;
@@ -170,6 +173,15 @@ export function ProductPicker({
   return (
     <div className="picker">
       <div className="picker-search">
+        <svg className="search-icon" viewBox="0 0 20 20" aria-hidden="true">
+          <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path
+            d="M12.6 12.6l4.4 4.4"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
         <input
           ref={search}
           type="search"
@@ -193,91 +205,99 @@ export function ProductPicker({
         )}
       </div>
 
-      {!query && (
-        <div className="chips" role="tablist" aria-label={t("pos.categories")}>
-          <button
-            role="tab"
-            aria-selected={activeCategory === ALL}
-            className={activeCategory === ALL ? "chip active" : "chip"}
-            onClick={() => setCategory(ALL)}
-          >
-            {t("pos.all")} <span className="chip-n">{products.length}</span>
-          </button>
-          {hasFavourites && (
+      <div className="picker-body">
+        {!query && (
+          <div className="chips cat-rail" role="tablist" aria-label={t("pos.categories")}>
             <button
               role="tab"
-              aria-selected={activeCategory === FAVOURITES}
-              className={activeCategory === FAVOURITES ? "chip active" : "chip"}
-              onClick={() => setCategory(FAVOURITES)}
+              aria-selected={activeCategory === ALL}
+              className={activeCategory === ALL ? "chip active" : "chip"}
+              onClick={() => setCategory(ALL)}
             >
-              ★ {t("pos.favourites")}
+              <span className="chip-label">{t("pos.all")}</span>
+              <span className="chip-n">{products.length}</span>
             </button>
-          )}
-          {categories.list.map(([id, name]) => (
-            <button
-              key={id}
-              role="tab"
-              aria-selected={activeCategory === id}
-              className={activeCategory === id ? "chip active" : "chip"}
-              onClick={() => setCategory(id)}
-            >
-              {name}
-            </button>
-          ))}
-          {categories.uncategorised && categories.list.length > 0 && (
-            <button
-              role="tab"
-              aria-selected={activeCategory === NONE}
-              className={activeCategory === NONE ? "chip active" : "chip"}
-              onClick={() => setCategory(NONE)}
-            >
-              {t("pos.otherCategory")}
-            </button>
-          )}
-        </div>
-      )}
-
-      {shown.length === 0 ? (
-        <p className="muted" style={{ padding: "18px 4px" }}>
-          {query ? t("pos.noMatch") : t("pos.noneOnChannel")}
-        </p>
-      ) : (
-        <div className="product-grid">
-          {shown.map((p) => {
-            const name = productName(p.item, locale);
-            const n = qtyOf(p);
-            return (
+            {hasFavourites && (
               <button
-                key={p.productId}
-                className="product-tile"
-                onClick={() => pick(p)}
-                disabled={disabled}
+                role="tab"
+                aria-selected={activeCategory === FAVOURITES}
+                className={activeCategory === FAVOURITES ? "chip active" : "chip"}
+                onClick={() => setCategory(FAVOURITES)}
               >
-                <ProductThumb
-                  name={name}
-                  imageUrl={p.item.imageUrl}
-                  seed={p.item.categoryId ?? p.productId}
-                />
-                {n > 0 && <span className="tile-count">{n}</span>}
-                {p.item.isFavourite && (
-                  <span className="tile-fav" aria-hidden>
-                    ★
-                  </span>
-                )}
-                <span className="tile-name">{name}</span>
-                <span className="tile-meta">
-                  {p.variants.length > 1 && (
-                    <span className="muted">
-                      {p.variants.length} {t("pos.options")}
-                    </span>
-                  )}
-                  <span className="price mono">{priceOf(p)}</span>
-                </span>
+                <span className="chip-label">★ {t("pos.favourites")}</span>
+                <span className="chip-n">{favourites}</span>
               </button>
-            );
-          })}
+            )}
+            {categories.list.map(([id, name]) => (
+              <button
+                key={id}
+                role="tab"
+                aria-selected={activeCategory === id}
+                className={activeCategory === id ? "chip active" : "chip"}
+                onClick={() => setCategory(id)}
+              >
+                <span className="chip-label">{name}</span>
+                <span className="chip-n">{categories.count.get(id) ?? 0}</span>
+              </button>
+            ))}
+            {categories.uncategorised > 0 && categories.list.length > 0 && (
+              <button
+                role="tab"
+                aria-selected={activeCategory === NONE}
+                className={activeCategory === NONE ? "chip active" : "chip"}
+                onClick={() => setCategory(NONE)}
+              >
+                <span className="chip-label">{t("pos.otherCategory")}</span>
+                <span className="chip-n">{categories.uncategorised}</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        <div className="picker-grid">
+          {shown.length === 0 ? (
+            <p className="muted" style={{ padding: "18px 4px" }}>
+              {query ? t("pos.noMatch") : t("pos.noneOnChannel")}
+            </p>
+          ) : (
+            <div className="product-grid">
+              {shown.map((p) => {
+                const name = productName(p.item, locale);
+                const n = qtyOf(p);
+                return (
+                  <button
+                    key={p.productId}
+                    className={n > 0 ? "product-tile in-order" : "product-tile"}
+                    onClick={() => pick(p)}
+                    disabled={disabled}
+                  >
+                    <ProductThumb
+                      name={name}
+                      imageUrl={p.item.imageUrl}
+                      seed={p.item.categoryId ?? p.productId}
+                    />
+                    {n > 0 && <span className="tile-count">{n}</span>}
+                    {p.item.isFavourite && (
+                      <span className="tile-fav" aria-hidden>
+                        ★
+                      </span>
+                    )}
+                    <span className="tile-name">{name}</span>
+                    <span className="tile-meta">
+                      {p.variants.length > 1 && (
+                        <span className="muted">
+                          {p.variants.length} {t("pos.options")}
+                        </span>
+                      )}
+                      <span className="price mono">{priceOf(p)}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {choosing && (
         <div className="pos-modal-back" onClick={() => setChoosing(null)}>

@@ -614,3 +614,20 @@ note)`** (needs `accounting.post`; one at a time per business): matches
   (`alert_channel(business, channel)`, internal; the one-argument version is
   dropped). A price that looks mistyped names the dearest channel, and the
   first in order when two charge the same.
+
+### Turn numbers (`0034`)
+
+- **`sales_order.turn_no` and `pos_tab.turn_no`**: the order's number for
+  the day, printed on the customer's receipt and the barista's ticket and
+  called out when the order is ready. Null on orders from before `0034`.
+- **Taken from `document_counter`**, one counter a day (`turn:YYYY-MM-DD`,
+  the business's own day, from 1), by `take_turn_no(business, day)`
+  (internal), in the transaction of the order it numbers: an order refused
+  takes none and no number is skipped, and two tills never take the same one.
+- **A bill** takes its number as it is inserted (trigger `pos_tab_turn_no`,
+  whatever opens it); the part `split_tab` splits off keeps it. **A sale**
+  takes its number in `post_sale` (now given `p_turn_no`), written as the
+  sale is completed, since a finalized sale never changes (`0014`): a quick
+  sale takes the day's next number; `settle_tab` passes the bill's, and a bill
+  from before `0034` takes one then. `record_sale`, `settle_tab` (and their
+  replays) return `turn_no`; `pos_open_bills()` gives each bill's.

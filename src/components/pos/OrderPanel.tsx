@@ -5,6 +5,7 @@ import type { PosItem } from "@/lib/db/pos";
 import type { SaleReceipt } from "@/lib/actions/sales";
 import { fmtIQD, fmtQty } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
+import type { SalesChannel } from "@domain/sales/recipe.js";
 import { useChannels } from "@/components/ChannelsProvider";
 import { Notice } from "@/components/ui";
 import { REASONS, reasonKey } from "@/lib/reasons";
@@ -30,12 +31,15 @@ import {
   type Order,
   type Tender,
 } from "./model";
-import type { PrintJob } from "./PrintSlip";
+import { Emblem, type BaristaTicket, type PrintJob } from "./PrintSlip";
 
 export interface Receipt extends SaleReceipt {
   tender: Tender;
   change: number | null;
   job: PrintJob;
+  /** The barista's copy of a quick sale; a bill's went to the bar when it was saved. */
+  ticket: BaristaTicket | null;
+  ticketPrinted: boolean;
 }
 
 function OrderLine({
@@ -279,8 +283,11 @@ function DiscountRow({
 }
 
 /**
- * The order on the right: what is being sold, what it comes to, and every
- * way to finish it — paid now, kept open for later, printed, split or moved.
+ * The order on the right, laid out as a ticket: who it is for and its number
+ * at the top, what is being sold in the middle, and at the foot what it comes
+ * to and every way to finish it — paid now, kept open for later, printed,
+ * split or moved. After a payment the middle shows the sale just recorded:
+ * the customer's number, the change to give, and its printouts.
  */
 export function OrderPanel({
   order,
@@ -294,14 +301,16 @@ export function OrderPanel({
   hasTables,
   receipt,
   msg,
-  autoPrint,
-  onAutoPrint,
+  channels,
+  onChannel,
+  ticketOn,
   onQty,
   onNote,
   onLabel,
   onPay,
   onSave,
   onPrintBill,
+  onTicket,
   onSplit,
   onMove,
   onCancelBill,
@@ -310,6 +319,7 @@ export function OrderPanel({
   onRetry,
   onDiscard,
   onPrintReceipt,
+  onPrintReceiptTicket,
   now,
   canDiscount,
   money,
@@ -328,14 +338,19 @@ export function OrderPanel({
   hasTables: boolean;
   receipt: Receipt | null;
   msg: { ok: boolean; text: string } | null;
-  autoPrint: boolean;
-  onAutoPrint: (v: boolean) => void;
+  /** The channels this order may still move between; null once it cannot. */
+  channels: SalesChannel[] | null;
+  onChannel: (c: SalesChannel) => void;
+  /** This till prints the barista's ticket. */
+  ticketOn: boolean;
   onQty: (key: string, delta: number) => void;
   onNote: (key: string, note: string | null) => void;
   onLabel: (label: string) => void;
   onPay: (tender: Tender) => void;
   onSave: () => void;
   onPrintBill: () => void;
+  /** The barista's ticket for a bill: what the bar has not had yet, or the whole order again. */
+  onTicket: () => void;
   onSplit: () => void;
   onMove: () => void;
   onCancelBill: () => void;
@@ -344,6 +359,7 @@ export function OrderPanel({
   onRetry: () => void;
   onDiscard: () => void;
   onPrintReceipt: () => void;
+  onPrintReceiptTicket: () => void;
   now: number;
   /** discount.apply: the discount row is offered. */
   canDiscount: boolean;
@@ -375,11 +391,12 @@ export function OrderPanel({
   const showDiscount = offerDiscount && (discountOpen || order.discount !== null);
   // The customer has seen the printed total: only a manager may change what it comes to.
   const discountLocked = isBill && order.printedAt !== null && !canVoid;
+  const receiptTicket = receipt?.ticket && ticketOn ? receipt.ticket : null;
 
   return (
     <div className="card order-panel" aria-live="polite">
       <div className="order-head">
-        <div style={{ minWidth: 0 }}>
+        <div className="order-head-main">
           <div className="order-title">{title}</div>
           <div className="order-badges">
             <span className="badge">{channelName(order.channel)}</span>
@@ -393,16 +410,38 @@ export function OrderPanel({
             {dirty && <span className="badge err">{t("pos.notSaved")}</span>}
           </div>
           {isBill && order.openedAt && (
-            <div className="muted" style={{ fontSize: ".78rem", marginTop: 3 }}>
+            <div className="order-opened muted">
               {t("pos.openedBy")} {order.openedBy ?? "—"}
               {opened !== null ? ` · ${opened} ${t("pos.min")}` : ""}
             </div>
           )}
         </div>
+        {order.turnNo !== null && (
+          <div className="order-turn" title={t("pos.turnHint")}>
+            <span>{t("print.no")}</span>
+            <strong>{order.turnNo}</strong>
+          </div>
+        )}
       </div>
 
+      {channels && channels.length > 1 && (
+        <div className="channel-tabs" role="group" aria-label={t("pos.channel")}>
+          {channels.map((c) => (
+            <button
+              key={c}
+              className={c === order.channel ? "active" : ""}
+              aria-pressed={c === order.channel}
+              onClick={() => onChannel(c)}
+              disabled={blocked && c !== order.channel}
+            >
+              {channelName(c)}
+            </button>
+          ))}
+        </div>
+      )}
+
       {isBill && order.tabId === null && order.tableId === null && (
-        <label className="muted" style={{ display: "block", fontSize: ".82rem", marginBottom: 8 }}>
+        <label className="order-customer muted">
           {t("pos.customerName")}
           <input
             value={order.label ?? ""}
@@ -414,10 +453,55 @@ export function OrderPanel({
       )}
 
       <div className="order-lines">
-        {empty ? (
-          <p className="muted" style={{ margin: "10px 0" }}>
-            {receipt ? t("pos.nextCustomer") : t("pos.tapToAdd")}
-          </p>
+        {empty && receipt ? (
+          <div className="receipt-card">
+            <div className="rc-top">
+              <strong>
+                ✅ {t("pos.recorded")} · {receipt.orderId.slice(0, 8)}
+              </strong>
+              <span className="badge ok">{t(`pos.tender.${receipt.tender}`)}</span>
+            </div>
+            {receipt.turnNo !== null && (
+              <div className="rc-turn">
+                <span>{t("pos.customerNumber")}</span>
+                <strong>{receipt.turnNo}</strong>
+              </div>
+            )}
+            <p className="rc-facts muted">
+              {fmtIQD(receipt.net)}
+              {receipt.platformOrderNo
+                ? ` · ${t("print.orderNo").replace("{no}", receipt.platformOrderNo)}`
+                : ""}
+              {receipt.discount > 0 ? ` · ${t("pos.discount")} −${fmtIQD(receipt.discount)}` : ""}
+              {receipt.journalNo !== null ? ` · ${t("pos.journal")} ${receipt.journalNo}` : ""}
+              {canSeeCost && receipt.cogs !== undefined
+                ? ` · ${t("pos.cost")} ${fmtIQD(receipt.cogs)}`
+                : ""}
+            </p>
+            {receipt.change !== null && (
+              <div className="change-row">
+                <span>{t("pos.changeDue")}</span>
+                <strong className="mono change-amt">{fmtIQD(receipt.change)}</strong>
+              </div>
+            )}
+            <div className="rc-actions">
+              <button onClick={onPrintReceipt}>
+                🖨{" "}
+                {receiptTicket && !receipt.ticketPrinted
+                  ? t("pos.printBoth")
+                  : t("pos.printReceipt")}
+              </button>
+              {receiptTicket && (
+                <button onClick={onPrintReceiptTicket}>☕ {t("pos.baristaTicket")}</button>
+              )}
+            </div>
+            <p className="rc-next muted">{t("pos.nextCustomer")}</p>
+          </div>
+        ) : empty ? (
+          <div className="order-empty">
+            <Emblem />
+            <p>{t("pos.tapToAdd")}</p>
+          </div>
         ) : (
           order.lines.map((l) => (
             <OrderLine
@@ -538,6 +622,11 @@ export function OrderPanel({
                     <button onClick={onPrintBill} disabled={blocked || !online || badDiscount}>
                       🖨 {t("pos.printBill")}
                     </button>
+                    {ticketOn && (
+                      <button onClick={onTicket} disabled={blocked || !online || badDiscount}>
+                        ☕ {t("pos.baristaTicket")}
+                      </button>
+                    )}
                     <button
                       onClick={onSplit}
                       disabled={
@@ -584,55 +673,9 @@ export function OrderPanel({
             </button>
           </div>
         )}
-        {!online && !pending && (
-          <p className="red" style={{ fontSize: ".82rem", margin: "6px 0 0" }}>
-            {t("pos.offlineBlocked")}
-          </p>
-        )}
+        {!online && !pending && <p className="red order-offline">{t("pos.offlineBlocked")}</p>}
 
-        <div style={{ marginTop: 8 }}>
-          <Notice msg={msg} />
-        </div>
-
-        {receipt && (
-          <div className="receipt-card">
-            <div className="deduction-row">
-              <strong>
-                ✅ {t("pos.recorded")} · {receipt.orderId.slice(0, 8)}
-              </strong>
-              <span className="badge ok">{t(`pos.tender.${receipt.tender}`)}</span>
-            </div>
-            <p className="muted" style={{ fontSize: ".85rem", margin: "4px 0" }}>
-              {fmtIQD(receipt.net)}
-              {receipt.platformOrderNo
-                ? ` · ${t("print.orderNo").replace("{no}", receipt.platformOrderNo)}`
-                : ""}
-              {receipt.discount > 0 ? ` · ${t("pos.discount")} −${fmtIQD(receipt.discount)}` : ""}
-              {receipt.journalNo !== null ? ` · ${t("pos.journal")} ${receipt.journalNo}` : ""}
-              {canSeeCost && receipt.cogs !== undefined
-                ? ` · ${t("pos.cost")} ${fmtIQD(receipt.cogs)}`
-                : ""}
-            </p>
-            {receipt.change !== null && (
-              <div className="change-row">
-                <span>{t("pos.changeDue")}</span>
-                <strong className="mono change-amt">{fmtIQD(receipt.change)}</strong>
-              </div>
-            )}
-            <button onClick={onPrintReceipt} style={{ marginTop: 6 }}>
-              🖨 {t("pos.printReceipt")}
-            </button>
-          </div>
-        )}
-
-        <label className="autoprint muted">
-          <input
-            type="checkbox"
-            checked={autoPrint}
-            onChange={(e) => onAutoPrint(e.target.checked)}
-          />{" "}
-          {t("pos.autoPrint")}
-        </label>
+        <Notice msg={msg} />
       </div>
     </div>
   );

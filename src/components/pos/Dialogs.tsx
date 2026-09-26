@@ -383,3 +383,66 @@ export function ApproveDialog({
     </Modal>
   );
 }
+
+/**
+ * How this till prints, remembered on the till itself: by itself after each
+ * order, or only when asked; and whether the barista's ticket comes out with
+ * the customer's check. A test print shows both, to set the printer up by.
+ */
+export function PrintingDialog({
+  autoPrint,
+  ticketOn,
+  onAutoPrint,
+  onTicket,
+  onTest,
+  onClose,
+}: {
+  autoPrint: boolean;
+  ticketOn: boolean;
+  onAutoPrint: (v: boolean) => void;
+  onTicket: (v: boolean) => void;
+  onTest: () => void;
+  onClose: () => void;
+}) {
+  const { t } = useT();
+  return (
+    <Modal label={t("pos.printingTitle")} onClose={onClose}>
+      <h3 style={{ marginTop: 0 }}>🖨 {t("pos.printingTitle")}</h3>
+      <div className="print-options">
+        <label className="print-option">
+          <input
+            type="checkbox"
+            className="check"
+            checked={autoPrint}
+            onChange={(e) => onAutoPrint(e.target.checked)}
+          />
+          <span>
+            <strong>{t("pos.autoPrint")}</strong>
+            <span className="muted">{t("pos.autoPrintHint")}</span>
+          </span>
+        </label>
+        <label className="print-option">
+          <input
+            type="checkbox"
+            className="check"
+            checked={ticketOn}
+            onChange={(e) => onTicket(e.target.checked)}
+          />
+          <span>
+            <strong>{t("pos.ticketOn")}</strong>
+            <span className="muted">{t("pos.ticketOnHint")}</span>
+          </span>
+        </label>
+      </div>
+      <p className="muted" style={{ fontSize: ".8rem" }}>
+        {t("pos.printerTip")}
+      </p>
+      <div className="pay-actions">
+        <button onClick={onTest}>{t("pos.testPrint")}</button>
+        <button className="btn-primary" onClick={onClose}>
+          {t("pos.ok")}
+        </button>
+      </div>
+    </Modal>
+  );
+}
