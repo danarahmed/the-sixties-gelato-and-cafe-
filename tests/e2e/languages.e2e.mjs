@@ -18,7 +18,9 @@ const typed = sql(`
     union select full_name from app_user union select email from app_user
     union select name from location union select name from dining_table
     union select name from product_category union select name from delivery_platform
-    union select name from business union select code from item_unit
+    union select name from business union select code from item_unit union select label from item_unit
+    union select coalesce(prep_instructions, '') from recipe union select coalesce(note, '') from recipe_version
+    union select external_order_id from platform_order union select coalesce(settlement_reference, '') from platform_order
     union select name from recipe union select invoice_no from purchase_invoice
     union select coalesce(note, '') from goods_receipt union select description from journal_entry where reference_type = 'manual'
     union select coalesce(reason, '') from audit_log
@@ -49,8 +51,13 @@ const SAME = new Set(
     "kmr",
     "ltr",
     "rtl",
+    // A language's name is written in itself in the language menu.
+    "English",
   ].map((w) => w.toLowerCase()),
 );
+// On Delivery Platforms, the column names of a platform's own report, which
+// the statement reader looks for as the platform writes them.
+const SAME_ON = { "/platforms": ["order", "payout", "commission", "fees", "id"] };
 
 /** The English words a screen shows that are not the café's own names. */
 async function english(page) {
@@ -64,6 +71,8 @@ async function english(page) {
       // Written in English on purpose: the Languages screen's English column,
       // and its table of phrases, whose boxes show the English until given words.
       if (el.getAttribute("lang") === "en") return;
+      // Codes, marked as such (a permission's code).
+      if (el.getAttribute("translate") === "no") return;
       if (el.tagName === "TABLE" && el.closest("#words")) return;
       if (el.hidden || getComputedStyle(el).display === "none") return;
       for (const attr of ["placeholder", "title", "aria-label"])
@@ -75,8 +84,12 @@ async function english(page) {
   });
   // A word is English when it is all Latin letters: "Türkçe" or "Kaydet" is not
   // taken for it.
-  const words = (text.match(/[\p{L}'’-]+/gu) ?? []).filter((w) =>
-    /^[A-Za-z]['’A-Za-z-]*[A-Za-z]$/.test(w),
+  const words = (text.match(/[\p{L}'’-]+/gu) ?? []).filter(
+    (w) =>
+      /^[A-Za-z]['’A-Za-z-]*[A-Za-z]$/.test(w) &&
+      // Not a piece of an id ("3fa9c2e1…") nor initials or a code (GC, TLB).
+      !/^[a-f]{1,4}$/.test(w) &&
+      !/^[A-Z]{2,3}(-[A-Z])?$/.test(w),
   );
   return [...new Set(words.filter((w) => !OWN.has(w.toLowerCase()) && !SAME.has(w.toLowerCase())))];
 }
@@ -110,7 +123,9 @@ for (const locale of ["ar", "ckb"]) {
   const left = [];
   for (const path of SCREENS) {
     await open(page, path);
-    const words = await english(page);
+    const words = (await english(page)).filter(
+      (w) => !(SAME_ON[path] ?? []).includes(w.toLowerCase()),
+    );
     if (words.length) left.push(`${path}: ${words.slice(0, 12).join(" ")}`);
   }
   check(

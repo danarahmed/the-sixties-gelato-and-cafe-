@@ -47,7 +47,7 @@ export default async function SalesPage() {
       <div className="phead">
         <h1>{t("nav.sales")}</h1>
         <span className="sc">
-          {t("Last 30 trading days · {timezone}", { timezone: profile.timezone })}
+          {t("Last 30 trading days · {timezone}", { timezone: t(profile.timezone) })}
         </span>
         <div className="sp">
           {has(profile, "sale.create") && (

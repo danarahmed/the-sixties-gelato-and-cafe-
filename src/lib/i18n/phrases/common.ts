@@ -81,6 +81,9 @@ const phrases: PhraseBook = {
   "Nothing yet": { ar: "لا شيء بعد", ckb: "هێشتا هیچ" },
   unknown: { ar: "غير معروف", ckb: "نەزانراو" },
 
+  // The café's timezone, as the screens name it.
+  "Asia/Baghdad": { ar: "توقيت بغداد", ckb: "کاتی بەغدا" },
+
   // Days and months, as a date is written out.
   Monday: { ar: "الإثنين", ckb: "دووشەممە" },
   Tuesday: { ar: "الثلاثاء", ckb: "سێشەممە" },

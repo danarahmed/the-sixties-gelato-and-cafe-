@@ -60,7 +60,7 @@ export default async function DashboardPage() {
       <div className="phead">
         <h1>{t("dash.title")}</h1>
         <span className="sc">
-          {today} · {profile.timezone}
+          {today} · {t(profile.timezone)}
         </span>
         <div className="sp">
           <Link

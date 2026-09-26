@@ -57,7 +57,7 @@ export default async function AccountPage() {
             </summary>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBlockStart: 8 }}>
               {s.profile.permissions.map((p) => (
-                <span key={p} className="badge" style={{ fontSize: ".72rem" }}>
+                <span key={p} className="badge" translate="no" style={{ fontSize: ".72rem" }}>
                   {p}
                 </span>
               ))}

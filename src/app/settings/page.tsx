@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
+import { BUILT_IN_LANGUAGES } from "@/lib/i18n/core";
 import { has, requirePermission } from "@/lib/auth/session";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
 import { getBusinessConfig, getLocations } from "@/lib/db/read";
@@ -41,10 +42,13 @@ export default async function SettingsPage() {
         [
           "Timezone",
           t("{timezone} — every trading day and period runs midnight to midnight here", {
-            timezone: cfg.timezone,
+            timezone: t(cfg.timezone),
           }),
         ],
-        ["Default language", cfg.defaultLocale],
+        [
+          "Default language",
+          BUILT_IN_LANGUAGES.find((l) => l.code === cfg.defaultLocale)?.label ?? cfg.defaultLocale,
+        ],
         [
           "Negative stock",
           cfg.preventNegativeStock
@@ -169,7 +173,7 @@ export default async function SettingsPage() {
                 <strong>{t(roleLabel(role))}</strong>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 }}>
                   {[...ROLE_PERMISSIONS[role]].map((p) => (
-                    <span key={p} className="badge" style={{ fontSize: ".72rem" }}>
+                    <span key={p} className="badge" translate="no" style={{ fontSize: ".72rem" }}>
                       {p}
                     </span>
                   ))}
