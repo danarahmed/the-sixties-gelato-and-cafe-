@@ -6,7 +6,10 @@
  */
 import { z } from "zod";
 import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { getItems } from "@/lib/db/read";
 import { WASTE_TYPES } from "@/lib/format";
+import { LOOKS_LIKE, lookAlikes, type LookAlike } from "@/lib/names";
+import { packCode } from "@/lib/receiving";
 import {
   id,
   optionalNonNegative,
@@ -33,7 +36,17 @@ const itemInput = z.object({
   /** Where the opening stock came from: it is the owner's capital (0027). */
   openingReason: optionalText(300),
   returnable: z.boolean().default(false),
+  /** The pack it is bought in, such as a carton of 24 (release H). */
+  pack: z
+    .object({ label: text("The pack's name", 60), holds: positive("How many it holds") })
+    .nullable()
+    .default(null),
+  /** Added although its name looks like an item already there: the person said so. */
+  acceptSimilar: z.boolean().default(false),
 });
+
+/** A new item not added, because items already there look like it (release H). */
+export type LookAlikeRefusal = { ok: false; error: string; similar: LookAlike[] };
 
 /**
  * A new stock item, its name unlike any other item in use. Opening stock is
@@ -42,10 +55,19 @@ const itemInput = z.object({
  */
 export async function createItemAction(
   input: z.input<typeof itemInput>,
-): Promise<ActionResult<{ itemId: string }>> {
+): Promise<ActionResult<{ itemId: string; unitCode: string | null }> | LookAlikeRefusal> {
   const v = parse(itemInput, input);
   if (!v.ok) return v;
   const d = v.data;
+  // "Botled water" beside "Bottled water": asked about before a second item is
+  // made for the same thing. The screen asks as the name is typed; this is for
+  // an item added elsewhere since the screen was opened.
+  if (!d.acceptSimilar) {
+    const items = await getItems().catch(() => []);
+    const similar = lookAlikes({ name: d.name, nameAr: d.nameAr, nameCkb: d.nameCkb }, items);
+    if (similar.length > 0) return { ok: false, error: LOOKS_LIKE, similar };
+  }
+  const unitCode = d.pack ? packCode(d.pack.label, Number(d.pack.holds)) : null;
   if (d.openingQty && Number(d.openingQty) > 0 && d.openingUnitCost === null) {
     return { ok: false, error: "Opening stock needs its cost per unit" };
   }
@@ -60,7 +82,7 @@ export async function createItemAction(
     p_name_ar: d.nameAr,
     p_name_ckb: d.nameCkb,
     p_min_level: d.minLevel,
-    p_units: [],
+    p_units: d.pack ? [{ code: unitCode, label: d.pack.label, factor: d.pack.holds }] : [],
     p_opening_qty: d.openingQty,
     p_opening_unit_cost: d.openingUnitCost,
     p_returnable: d.returnable,
@@ -68,7 +90,7 @@ export async function createItemAction(
   });
   if (!r.ok) return r;
   refresh(...STOCK_PATHS, "/products", "/purchasing");
-  return { ok: true, data: { itemId: String(r.data.item_id) } };
+  return { ok: true, data: { itemId: String(r.data.item_id), unitCode } };
 }
 
 const wasteInput = z.object({

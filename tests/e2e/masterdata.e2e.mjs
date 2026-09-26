@@ -150,6 +150,140 @@ console.log("▸ deliveries at a price per unit; a mistyped price is asked about
   await ctx.close();
 }
 
+console.log(
+  "▸ an item not in Inventory yet, added on the receipt; a name like another's is asked about",
+);
+{
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/purchasing");
+  const form = page.getByTestId("receive");
+  await form
+    .locator("label", { hasText: /^Supplier/ })
+    .locator("select")
+    .selectOption({ label: "E2E Farm" });
+  const line = form.getByTestId("receive-line").first();
+  const item = line.locator("label", { hasText: /^Item/ }).locator("select");
+  const NEW = { label: "+ New item (not in Inventory yet)…" };
+  await item.selectOption(NEW);
+  const panel = line.getByTestId("new-item");
+  await panel.waitFor({ timeout: 10000 });
+  check(
+    await form.getByRole("button", { name: "Receive goods" }).isDisabled(),
+    "nothing is received while the new item is still being added",
+  );
+
+  // A letter missing: the item already there is shown, and taken instead.
+  await panel.getByLabel("Name (English)").fill("E2E vanila syrup");
+  const alikes = panel.getByTestId("look-alikes");
+  await alikes.waitFor({ timeout: 10000 });
+  check(
+    (await alikes.textContent()).includes("E2E vanilla syrup") &&
+      (await panel.getByRole("button", { name: "It is a different item: add it" }).isEnabled()),
+    "“E2E vanila syrup”: “E2E vanilla syrup” is shown, and adding it all the same is the person's to say",
+  );
+  await alikes.getByRole("button", { name: "Use it" }).click();
+  await panel.waitFor({ state: "detached", timeout: 10000 });
+  check((await item.inputValue()) === SYRUP, "“Use it”: the line takes the syrup already there");
+
+  // The same name, whatever its capitals: not offered to be added again.
+  await item.selectOption(NEW);
+  await panel.getByLabel("Name (English)").fill("e2e VANILLA syrup");
+  await panel
+    .getByText("There is already an item called “E2E vanilla syrup”.")
+    .waitFor({ timeout: 10000 });
+  check(
+    await panel.getByRole("button", { name: "It is a different item: add it" }).isDisabled(),
+    "the same name, whatever its capitals, cannot be added again",
+  );
+
+  // A new item, named in three languages, bought by the carton.
+  await panel.getByLabel("Name (English)").fill("E2E sparkling water");
+  await panel.getByLabel("الاسم (Arabic)").fill("ماء فوار");
+  await panel.getByLabel("ناو (Kurdish)").fill("ئاوی گازدار");
+  check(
+    (await panel.getByTestId("look-alikes").count()) === 0,
+    "a name like no other: nothing to ask",
+  );
+  await panel.locator("label", { hasText: /^Type/ }).locator("select").selectOption("resale");
+  await panel.getByLabel("The pack it is bought in (optional)").fill("Carton of 24");
+  check(
+    await panel.getByRole("button", { name: "Add the item" }).isDisabled(),
+    "a pack without what it holds is not added",
+  );
+  await panel.getByLabel("Holds (each)").fill("24");
+  await panel.getByRole("button", { name: "Add the item" }).click();
+  await form
+    .getByText("Added “E2E sparkling water” to Inventory: its stock comes in with this delivery.")
+    .waitFor({ timeout: 10000 });
+  const WATER = sql(`select id from item where name = 'E2E sparkling water'`);
+  check(
+    (await item.inputValue()) === WATER &&
+      (await line.locator("label", { hasText: /^Unit/ }).locator("select").inputValue()) ===
+        "carton_of_24",
+    "the line takes the new item, by the carton",
+  );
+  check(
+    sql(
+      `select i.name_ar || ' / ' || i.name_ckb || ' / ' || i.item_type || ' / ' || u.code || ' = ' || trim_scale(u.factor_to_base)
+         from item i join item_unit u on u.item_id = i.id where i.id = '${WATER}'`,
+    ) === "ماء فوار / ئاوی گازدار / resale / carton_of_24 = 24",
+    "in Inventory, named in Arabic and Kurdish too, with its carton of 24",
+  );
+  await line
+    .locator("label", { hasText: /^Quantity/ })
+    .locator("input")
+    .fill("2");
+  await line
+    .locator("label", { hasText: /^Price per/ })
+    .locator("input")
+    .fill("6000");
+  await form.getByRole("button", { name: "Receive goods" }).click();
+  await form.getByText(/Receipt \d+ — 12,000 IQD into stock/).waitFor({ timeout: 10000 });
+  check(
+    sql(
+      `select trim_scale(sum(base_quantity_signed)) || ' each at ' || trim_scale(max(unit_cost))
+         from inventory_movement where item_id = '${WATER}'`,
+    ) === "48 each at 250",
+    "received: 2 cartons at 6,000 a carton are 48 in stock at 250 each",
+  );
+
+  // An item added elsewhere since the page was opened: the database's list is asked too.
+  await open(page, "/purchasing");
+  sql(`select test.act_as('owner@example.com');
+       select create_item('E2E kiwi puree', 'ingredient', 'g', 'mass');`);
+  await item.selectOption(NEW);
+  await panel.getByLabel("Name (English)").fill("E2E kiwi purees");
+  await panel.getByRole("button", { name: "Add the item" }).click();
+  await alikes.waitFor({ timeout: 10000 });
+  check(
+    (await alikes.textContent()).includes("E2E kiwi puree") &&
+      sql(`select count(*) from item where name = 'E2E kiwi purees'`) === "0",
+    "added elsewhere since the page opened: shown before anything is added",
+  );
+  await panel.getByRole("button", { name: "It is a different item: add it" }).click();
+  await form
+    .getByText("Added “E2E kiwi purees” to Inventory: its stock comes in with this delivery.")
+    .waitFor({ timeout: 10000 });
+  check(
+    sql(`select count(*) from item where name = 'E2E kiwi purees'`) === "1",
+    "said to be a different item, it is added",
+  );
+
+  // On Inventory, the same warning; a look-alike opens its page.
+  await open(page, "/inventory");
+  const add = page.getByTestId("new-item-form");
+  await add.getByLabel("Name (English)").fill("E2E sparkling watr");
+  await add.getByTestId("look-alikes").waitFor({ timeout: 10000 });
+  check(
+    (await add
+      .getByTestId("look-alikes")
+      .getByRole("link", { name: "Open it" })
+      .getAttribute("href")) === `/inventory/${WATER}`,
+    "on Inventory too: “E2E sparkling watr” shows E2E sparkling water, to open",
+  );
+  await ctx.close();
+}
+
 console.log("▸ a vendor renamed; a bill's amount is typed from the invoice");
 {
   const { ctx, page } = await signIn(browser, "manager");

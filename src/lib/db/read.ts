@@ -84,6 +84,8 @@ export interface UnitOption {
 export interface ItemRow {
   id: string;
   name: string;
+  nameAr: string | null;
+  nameCkb: string | null;
   itemType: string;
   baseUnit: string;
   dimension: string;
@@ -183,7 +185,7 @@ export async function getItems(): Promise<ItemRow[]> {
   const [items, units] = await Promise.all([
     c
       .from("item")
-      .select("id,name,item_type,base_unit_code,dimension,min_level_base")
+      .select("id,name,name_ar,name_ckb,item_type,base_unit_code,dimension,min_level_base")
       .eq("is_active", true)
       .order("name"),
     c.from("item_unit").select("item_id,code,label,factor_to_base").order("factor_to_base"),
@@ -200,6 +202,8 @@ export async function getItems(): Promise<ItemRow[]> {
     return {
       id: str(i.id),
       name: str(i.name),
+      nameAr: strOrNull(i.name_ar),
+      nameCkb: strOrNull(i.name_ckb),
       itemType: str(i.item_type),
       baseUnit: base,
       dimension: str(i.dimension),

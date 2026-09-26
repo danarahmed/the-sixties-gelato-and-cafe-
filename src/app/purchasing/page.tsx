@@ -36,6 +36,8 @@ export default async function PurchasingPage() {
         items={items.map((i) => ({
           id: i.id,
           name: i.name,
+          nameAr: i.nameAr,
+          nameCkb: i.nameCkb,
           baseUnit: i.baseUnit,
           units: i.units,
           // What a base unit costs now, to set each delivery's price against (0027).
@@ -44,6 +46,12 @@ export default async function PurchasingPage() {
         suppliers={suppliers.map((s) => ({ id: s.id, name: s.name }))}
         canReceive={has(profile, "purchase.receive")}
         canAddSupplier={has(profile, "purchase.create")}
+        // As on Inventory, and as create_item() allows (0027).
+        canAddItem={
+          has(profile, "settings.manage") ||
+          has(profile, "purchase.create") ||
+          has(profile, "inventory.adjust.approve")
+        }
       />
 
       <div className="card tw">
