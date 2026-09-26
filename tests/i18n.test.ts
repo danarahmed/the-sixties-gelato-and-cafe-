@@ -72,6 +72,15 @@ describe("the phrase books", () => {
     expect(clashes).toEqual([]);
   });
 
+  it("write Kurdish in Kurdish letters, and Arabic in Arabic ones", () => {
+    // Sorani has its own letters where Arabic has ك ي ة ى; Arabic has none of ڕ ڵ ێ ۆ ە ڤ.
+    const wrong = all.flatMap((p) => [
+      ...(/[كيةى]/.test(p.t.ckb) ? [`ckb ${p.book}: ${p.en}`] : []),
+      ...(/[ڕڵێۆەڤ]/.test(p.t.ar) ? [`ar ${p.book}: ${p.en}`] : []),
+    ]);
+    expect(wrong).toEqual([]);
+  });
+
   it("have every label the app gives payments, roles, items, movements and orders", () => {
     const common = BOOKS.common ?? {};
     expect(LABELS.filter((l) => !common[l])).toEqual([]);
