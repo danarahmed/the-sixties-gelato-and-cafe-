@@ -775,10 +775,6 @@ const phrases: PhraseBook = {
     ckb: "بڵێ بۆچی هەژمارێکی کۆنترۆڵ ڕاست دەکرێتەوە",
   },
   "Narrate the correction": { ar: "اكتب شرح التصحيح", ckb: "ڕوونکردنەوەی ڕاستکردنەوەکە بنووسە" },
-  "A correction needs at least two lines": {
-    ar: "يحتاج التصحيح إلى سطرين على الأقل",
-    ckb: "ڕاستکردنەوە لانیکەم پێویستی بە دوو هێڵ هەیە",
-  },
   "Say why these records are being posted": {
     ar: "اذكر سبب ترحيل هذه السجلات",
     ckb: "بڵێ بۆچی ئەم تۆمارانە دەخرێنە ناو دەفتەرەکانەوە",

@@ -15,7 +15,6 @@ const phrases: PhraseBook = {
   },
   "{n} draft": { ar: "مسودات: {n}", ckb: "ڕەشنووس: {n}" },
   // A period's state, after its name ("2026-09 open").
-  open: { ar: "مفتوحة", ckb: "کراوە" },
   locked: { ar: "مقفلة", ckb: "قفڵکراو" },
   "New Journal": { ar: "قيد جديد", ckb: "تۆماری نوێ" },
   "Debits must equal credits before it can be published": {
