@@ -38,42 +38,42 @@ export default async function VendorsPage() {
     <div className="grid" style={{ gap: 18 }}>
       <div className="phead">
         <h1>{t("nav.vendors")}</h1>
-        <span className="sc">Suppliers the shop buys from</span>
+        <span className="sc">{t("Suppliers the shop buys from")}</span>
         <div className="sp">
           <span
             className={`badge ${ageing.d1_15 + ageing.d16_30 + ageing.d31plus > 0 ? "err" : "ok"}`}
           >
-            {fmtIQD(ageing.total)} payable
+            {t("{amount} payable", { amount: fmtIQD(ageing.total) })}
           </span>
         </div>
       </div>
 
       <div className="cards2">
         <div>
-          <div className="sc">Not yet due</div>
+          <div className="sc">{t("Not yet due")}</div>
           <div className="v">{fmtIQD(ageing.current)}</div>
-          <div className="m">Within terms</div>
+          <div className="m">{t("Within terms")}</div>
         </div>
         <div>
-          <div className="sc">1 – 15 days over</div>
+          <div className="sc">{t("1 – 15 days over")}</div>
           <div className="v" style={{ color: ageing.d1_15 ? "var(--warn)" : undefined }}>
             {fmtIQD(ageing.d1_15)}
           </div>
-          <div className="m">Chase this week</div>
+          <div className="m">{t("Chase this week")}</div>
         </div>
         <div>
-          <div className="sc">16 – 30 days over</div>
+          <div className="sc">{t("16 – 30 days over")}</div>
           <div className="v" style={{ color: ageing.d16_30 ? "var(--err)" : undefined }}>
             {fmtIQD(ageing.d16_30)}
           </div>
-          <div className="m">Late</div>
+          <div className="m">{t("Late")}</div>
         </div>
         <div>
-          <div className="sc">Over 30 days</div>
+          <div className="sc">{t("Over 30 days")}</div>
           <div className="v" style={{ color: ageing.d31plus ? "var(--err)" : undefined }}>
             {fmtIQD(ageing.d31plus)}
           </div>
-          <div className="m">Relationship at risk</div>
+          <div className="m">{t("Relationship at risk")}</div>
         </div>
       </div>
 
@@ -107,13 +107,9 @@ export default async function VendorsPage() {
       />
 
       <p className="muted" style={{ fontSize: ".76rem", lineHeight: 1.7, maxWidth: 780 }}>
-        A bill for goods is matched to the receipt that brought them in: it clears Goods received
-        not invoiced (2050) for what the receipt recorded, puts any price difference to 5050, and
-        raises Accounts payable (2000). A delivery received before the controls, whose payable the
-        old app posted when the goods arrived, is billed against that payable: only a difference in
-        price is posted. A bill for a service or an asset is charged straight to its account. A
-        payment settles the payable from cash, card or the bank. The same invoice number from the
-        same vendor can only be entered once.
+        {t(
+          "A bill for goods is matched to the receipt that brought them in: it clears Goods received not invoiced (2050) for what the receipt recorded, puts any price difference to 5050, and raises Accounts payable (2000). A delivery received before the controls, whose payable the old app posted when the goods arrived, is billed against that payable: only a difference in price is posted. A bill for a service or an asset is charged straight to its account. A payment settles the payable from cash, card or the bank. The same invoice number from the same vendor can only be entered once.",
+        )}
       </p>
     </div>
   );
