@@ -2,10 +2,16 @@
  * The audit trail in words (0027, the audit's P1-1): what happened, what it
  * was about, and each value before and after, with ids given their names.
  * Pure: the screen and the CSV both read through here, and the tests too.
+ *
+ * The words are English, and each is a phrase of src/lib/i18n/phrases/reports.ts
+ * (the groups, what happened, the fields, the values and subjects written
+ * here): the CSV keeps the English, and the screen says them in the reader's
+ * language through t(), subjectIn() and valueIn().
  */
+import { BUILT_IN_LANGUAGES, type Msg, type T } from "@/lib/i18n/core";
 import { itemTypeLabel, roleLabel } from "@/lib/format";
-import { channelName } from "@/lib/channels";
-import { THRESHOLD_LABEL, ruleLabel } from "@/lib/alerts";
+import { SHOP_CHANNELS, channelName } from "@/lib/channels";
+import { RULE_LABEL, THRESHOLD_LABEL, ruleLabel } from "@/lib/alerts";
 
 /** A stored JSON value, as the database wrote it. */
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
@@ -14,41 +20,45 @@ type Obj = { [k: string]: Json };
 /** Names for the ids the trail refers to: items, products, suppliers, people… */
 export type Names = ReadonlyMap<string, string>;
 
-/** What the trail can be narrowed to: each group is a set of action prefixes. */
+/**
+ * What the trail can be narrowed to: each group is a set of action prefixes.
+ * Each label is a phrase, which the screen says through t() (i18n-ignore: the
+ * checker would take it for English written into a screen).
+ */
 export const AUDIT_GROUPS = [
-  { key: "prices", label: "Prices", prefixes: ["price."] },
+  { key: "prices", label: "Prices", prefixes: ["price."] }, // i18n-ignore
   {
     key: "menu",
-    label: "Products & recipes",
+    label: "Products & recipes", // i18n-ignore
     prefixes: ["product.", "product_variant.", "product_category.", "recipe."],
   },
   {
     key: "items",
-    label: "Stock items & opening stock",
+    label: "Stock items & opening stock", // i18n-ignore
     prefixes: ["item.", "item_unit.", "inventory.opening"],
   },
-  { key: "suppliers", label: "Suppliers & deliveries", prefixes: ["supplier.", "purchase."] },
+  { key: "suppliers", label: "Suppliers & deliveries", prefixes: ["supplier.", "purchase."] }, // i18n-ignore
   {
     key: "stock",
-    label: "Counts, corrections & batches",
+    label: "Counts, corrections & batches", // i18n-ignore
     prefixes: ["inventory.adjust", "inventory.count.", "production."],
   },
   {
     key: "sales",
-    label: "Sales, bills, discounts & approvals",
+    label: "Sales, bills, discounts & approvals", // i18n-ignore
     prefixes: ["sale.", "bill.", "approval."],
   },
-  { key: "cash", label: "Cash & the drawer", prefixes: ["cash.", "drawer."] },
+  { key: "cash", label: "Cash & the drawer", prefixes: ["cash.", "drawer."] }, // i18n-ignore
   {
     key: "settlements",
-    label: "Card & platform settlements",
+    label: "Card & platform settlements", // i18n-ignore
     prefixes: ["card.", "platform.settlement", "platform.settlement_cancel"],
   },
-  { key: "books", label: "Books & periods", prefixes: ["journal.", "period.", "legacy."] },
-  { key: "alerts", label: "Alerts answered", prefixes: ["alert."] },
+  { key: "books", label: "Books & periods", prefixes: ["journal.", "period.", "legacy."] }, // i18n-ignore
+  { key: "alerts", label: "Alerts answered", prefixes: ["alert."] }, // i18n-ignore
   {
     key: "settings",
-    label: "Settings, places, platforms & people",
+    label: "Settings, places, platforms & people", // i18n-ignore
     prefixes: [
       "business.",
       "location.",
@@ -56,6 +66,7 @@ export const AUDIT_GROUPS = [
       "platform.create",
       "platform.setup",
       "platform.update",
+      "language.",
     ],
   },
 ] as const;
@@ -100,6 +111,9 @@ const ACTION_LABEL: Record<string, string> = {
   "platform.create": "Delivery platform added",
   "platform.setup": "Delivery platform's packaging and prices copied",
   "platform.update": "Delivery platform changed",
+  "language.add": "Language added",
+  "language.update": "Language changed",
+  "language.words": "The café's words for phrases changed",
   "journal.reverse": "Journal reversed",
   "journal.control_correction": "Owner's correction posted",
   "legacy.post_unposted": "Old record posted",
@@ -116,7 +130,10 @@ const ACTION_LABEL: Record<string, string> = {
   "business.reset_test_data": "Test records cleared",
 };
 
-/** What each table is, for the changes the database records itself. */
+/**
+ * What each table is, for the changes the database records itself. Each
+ * "{table} {verb}" it makes ("Stock item changed") is a phrase in full.
+ */
 const TABLE_LABEL: Record<string, string> = {
   product: "Product",
   product_variant: "What the till sells",
@@ -163,7 +180,7 @@ const FIELD_LABEL: Record<string, string> = {
   contact: "What they supply",
   phone: "Phone",
   code: "Unit",
-  label: "Label",
+  label: "Label", // i18n-ignore: a phrase, like every field's name here
   factor_to_base: "Holds (base units)",
   item_id: "Item",
   item: "Item",
@@ -193,7 +210,7 @@ const FIELD_LABEL: Record<string, string> = {
   alert_settings: "Alert thresholds",
   lead_time_days: "Days a delivery takes",
   rule: "Alert",
-  title: "What it said",
+  title: "What it said", // i18n-ignore: a phrase, like every field's name here
   until: "Until",
   from: "From",
   to: "To",
@@ -217,7 +234,10 @@ const FIELD_LABEL: Record<string, string> = {
   prices_copied: "Prices copied",
 };
 
-/** Keys that are bookkeeping, not what anyone changed. */
+/**
+ * Keys that are bookkeeping, not what anyone changed. (A key not named above
+ * reads as itself, "Track expiry"; those the trail records are phrases too.)
+ */
 const NOISE = new Set(["id", "business_id", "created_at", "created_by", "updated_at"]);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -371,6 +391,8 @@ export function subjectOf(
       return pick("from") && pick("to")
         ? `Card takings ${pick("from")} to ${pick("to")}`
         : "Card takings";
+    case "app_language":
+      return pick("name") ?? `Language ${entityId ?? ""}`.trim();
     case "platform_settlement":
       return pick("reference")
         ? `${pick("platform") ?? "Platform"} statement ${pick("reference")}`
@@ -382,4 +404,130 @@ export function subjectOf(
         `${fieldLabel(entityType)}${entityId ? ` ${short(entityId)}` : ""}`
       );
   }
+}
+
+// ------------------------------------------- in the reader's language
+
+/** What subjectOf says where it has no name to give. */
+const SUBJECT_WORDS = new Set([
+  "A price",
+  "An item",
+  "Business settings",
+  "Stock",
+  "A delivery",
+  "A recipe",
+  "An alert",
+  "Card takings",
+  "A platform statement",
+]);
+
+/** An id shown short, as subjectOf shows it: "1a2b3c4d…". */
+const SHORT_ID = "[0-9a-f]{8}…";
+
+/** subjectOf's sentences with a value in them: how each reads, its phrase, and its values' names. */
+const SUBJECTS: [RegExp, string, string[]][] = [
+  [new RegExp(`^Sale (${SHORT_ID})$`), "Sale {id}", ["id"]],
+  [new RegExp(`^Open bill (${SHORT_ID})$`), "Open bill {id}", ["id"]],
+  [/^Receipt (\S*\d\S*)$/, "Receipt {no}", ["no"]],
+  [/^Supplier bill (.+)$/, "Supplier bill {no}", ["no"]],
+  [new RegExp(`^Journal (\\d+|${SHORT_ID})$`), "Journal {no}", ["no"]],
+  [/^Language ([a-z]{2,3}(?:-[a-z0-9]{2,8})?)$/, "Language {code}", ["code"]],
+  [
+    /^Card takings (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})$/,
+    "Card takings {from} to {to}",
+    ["from", "to"],
+  ],
+];
+
+/** One of the shop's own channels, by the English name the trail gives it, as the reader calls it. */
+function channelIn(name: string, t: T): string {
+  const code = SHOP_CHANNELS.find((c) => channelName([], c) === name);
+  return code ? channelName([], code, "en", t) : name;
+}
+
+/**
+ * What a line of the trail is about, as the screen shows it: subjectOf's own
+ * words in the reader's language, and a name, a number or a code as it is.
+ */
+export function subjectIn(subject: string, action: string, t: T, msg: Msg): string {
+  if (SUBJECT_WORDS.has(subject)) return t(subject);
+  if (action.startsWith("alert.")) return msg(subject);
+  for (const [re, phrase, keys] of SUBJECTS) {
+    const m = re.exec(subject);
+    if (m) return t(phrase, Object.fromEntries(keys.map((k, i) => [k, m[i + 1] ?? ""])));
+  }
+  if (action.startsWith("platform.settlement")) {
+    const m = /^(.+) statement (.+)$/.exec(subject);
+    // A statement whose platform the trail could not name says "Platform".
+    if (m)
+      return t("{platform} statement {reference}", {
+        platform: m[1] === "Platform" ? t("Platform") : m[1]!,
+        reference: m[2]!,
+      });
+  }
+  // A price: the product (or "A price") and the channel.
+  if (action.startsWith("price.") && subject.includes(", ")) {
+    const at = subject.lastIndexOf(", ");
+    const what = subject.slice(0, at);
+    return `${what === "A price" ? t(what) : what}, ${channelIn(subject.slice(at + 2), t)}`;
+  }
+  // A pack unit: the item (or "An item") and its code (or "a unit").
+  if (action.startsWith("item_unit.") && subject.includes(": ")) {
+    const at = subject.indexOf(": ");
+    const item = subject.slice(0, at);
+    const code = subject.slice(at + 2);
+    return `${item === "An item" ? t(item) : item}: ${code === "a unit" ? t(code) : code}`;
+  }
+  // A record with no name: what it is ("Stock count"), and its id shown short.
+  const m = new RegExp(`^(.+) (${SHORT_ID})$`).exec(subject);
+  if (m) return `${t(m[1]!)} ${m[2]}`;
+  return subject;
+}
+
+const RULES = new Set(Object.values(RULE_LABEL));
+const THRESHOLDS = Object.values(THRESHOLD_LABEL);
+
+/**
+ * A value as the screen shows it: the words this file writes (yes and no, an
+ * item type, the roles, an alert's rule, the thresholds' names, the shop's
+ * own channels), a sale's state and an approval's kind, and what an alert
+ * said, in the reader's language; a name, a number or a code as it is. The
+ * field is the English name fieldLabel gives it.
+ */
+export function valueIn(value: string, field: string, t: T, msg: Msg): string {
+  if (value === "yes" || value === "no") return t(value);
+  switch (field) {
+    case FIELD_LABEL.item_type:
+    case FIELD_LABEL.kind:
+    case FIELD_LABEL.dimension:
+    case fieldLabel("status"):
+      return t(value);
+    case FIELD_LABEL.title:
+      return msg(value);
+    case FIELD_LABEL.roles:
+      return value
+        .split(", ")
+        .map((r) => t(r))
+        .join(", ");
+    case FIELD_LABEL.rule:
+      return RULES.has(value) ? msg(value) : value;
+    case FIELD_LABEL.channel:
+      return channelIn(value, t);
+    case FIELD_LABEL.timezone:
+      return t(value);
+    case FIELD_LABEL.default_locale:
+      // A language by its own name: English, العربية, کوردی.
+      return BUILT_IN_LANGUAGES.find((l) => l.code === value)?.label ?? value;
+    case FIELD_LABEL.alert_settings:
+      if (value === "the defaults") return t(value);
+      // "Margin target (%) 65, …": each threshold's name, then what it was set to.
+      return value
+        .split(", ")
+        .map((s) => {
+          const label = THRESHOLDS.find((l) => s.startsWith(`${l} `));
+          return label ? `${msg(label)}${s.slice(label.length)}` : s;
+        })
+        .join(", ");
+  }
+  return value;
 }

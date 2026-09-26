@@ -15,15 +15,11 @@ import {
 } from "@/lib/actions/platforms";
 import type { PlatformInfo } from "@/lib/settlements";
 import { useT } from "@/lib/i18n/I18nProvider";
-import { LOCALE_META, LOCALES, type Locale } from "@/lib/i18n/dictionaries";
 import { useChannels } from "@/components/ChannelsProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 
 type Msg = { ok: boolean; text: string } | null;
 type Names = Record<string, string>;
-
-/** The languages a platform is named in, besides the name its customers know it by. */
-const OTHER_LANGUAGES = LOCALES.filter((l) => l !== "en");
 
 /** The channel a new platform most likely works like: Talabat, else takeaway. */
 function likeDefault(inUse: string[]): string {
@@ -80,22 +76,25 @@ function OtherNames({
   onChange: (n: Names) => void;
   disabled: boolean;
 }) {
-  const { t } = useT();
+  // Every language of the café's but English: the one its customers know it by.
+  const { t, languages } = useT();
   return (
     <>
-      {OTHER_LANGUAGES.map((l: Locale) => (
-        <Field key={l} label={t("plat.form.nameIn").replace("{language}", LOCALE_META[l].label)}>
-          <input
-            style={inputStyle}
-            dir={LOCALE_META[l].dir}
-            lang={l}
-            value={names[l] ?? ""}
-            maxLength={60}
-            disabled={disabled}
-            onChange={(e) => onChange({ ...names, [l]: e.target.value })}
-          />
-        </Field>
-      ))}
+      {languages
+        .filter((l) => l.code !== "en")
+        .map((l) => (
+          <Field key={l.code} label={t("plat.form.nameIn", { language: l.label })}>
+            <input
+              style={inputStyle}
+              dir={l.dir}
+              lang={l.code}
+              value={names[l.code] ?? ""}
+              maxLength={60}
+              disabled={disabled}
+              onChange={(e) => onChange({ ...names, [l.code]: e.target.value })}
+            />
+          </Field>
+        ))}
     </>
   );
 }
@@ -314,7 +313,7 @@ function PlatformRow({
 }
 
 function AddPlatform({ onDone }: { onDone: (m: Msg) => void }) {
-  const { t } = useT();
+  const { t, msg: say } = useT();
   const { set, name: channelName } = useChannels();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -332,7 +331,7 @@ function AddPlatform({ onDone }: { onDone: (m: Msg) => void }) {
       if (!r.ok) return onDone({ ok: false, text: r.error });
       const d = r.data;
       const parts = [t("plat.added").replace("{name}", d.name)];
-      if (d.setupError) parts.push(t("plat.setupFailed").replace("{error}", d.setupError));
+      if (d.setupError) parts.push(t("plat.setupFailed").replace("{error}", say(d.setupError)));
       else if (like)
         parts.push(
           t("plat.copied")
@@ -367,7 +366,7 @@ function AddPlatform({ onDone }: { onDone: (m: Msg) => void }) {
           style={inputStyle}
           value={name}
           maxLength={60}
-          placeholder="Lezzoo"
+          placeholder="Lezzoo" // i18n-ignore: an example name
           disabled={busy}
           onChange={(e) => setName(e.target.value)}
         />
@@ -412,7 +411,7 @@ function AddPlatform({ onDone }: { onDone: (m: Msg) => void }) {
             dir="ltr"
             value={code}
             maxLength={30}
-            placeholder="lezzoo"
+            placeholder="lezzoo" // i18n-ignore: an example code
             disabled={busy}
             onChange={(e) => setCode(e.target.value)}
           />

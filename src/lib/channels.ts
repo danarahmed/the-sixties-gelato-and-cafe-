@@ -4,7 +4,7 @@
  * adds, names in each language and takes out of use on Delivery Platforms.
  * The database lists them (sales_channels()); nothing here names a platform.
  */
-import { translate, type Locale } from "@/lib/i18n/dictionaries";
+import type { Locale, T } from "@/lib/i18n/core";
 
 export type ChannelKind = "dine_in" | "takeaway" | "delivery" | "platform";
 
@@ -52,21 +52,31 @@ export function channelSet(channels: readonly Channel[]): ChannelSet {
 export const NO_CHANNELS: ChannelSet = { all: [], inUse: [], toGo: [] };
 
 /**
- * A channel's name in a language: the shop's own three as the dictionary has
+ * A channel's name in a language: the shop's own three as the translator has
  * them; a platform as the café named it in that language, else as it named it.
  */
 export function channelName(
   channels: readonly Channel[],
   code: string,
   locale: Locale = "en",
+  t?: T,
 ): string {
   const c = channels.find((x) => x.code === code);
   if (c?.kind === "platform") return c.names[locale]?.trim() || c.name;
   const key = `pos.channel.${code}`;
-  const word = translate(locale, key);
+  const word = t ? t(key) : key;
   if (word !== key) return word;
-  return c?.name ?? code.replace(/_/g, " ").replace(/^./, (m) => m.toUpperCase());
+  return (
+    c?.name ?? SHOP_NAMES[code] ?? code.replace(/_/g, " ").replace(/^./, (m) => m.toUpperCase())
+  );
 }
+
+/** The shop's own three in English, where no translator is at hand (a CSV, a test). */
+const SHOP_NAMES: Record<string, string> = {
+  dine_in: "Dine-in",
+  takeaway: "Takeaway",
+  direct_delivery: "Direct delivery",
+};
 
 const KINDS: ChannelKind[] = ["dine_in", "takeaway", "delivery", "platform"];
 

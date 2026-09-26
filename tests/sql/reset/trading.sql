@@ -85,4 +85,8 @@ select open_tab('dine_in', (select id from dining_table where name = 'Table 9'),
 select test.act_as('owner@example.com');
 select acknowledge_alert((select id from current_alerts() where rule <> 'exceptions_person' limit 1), 'seen while testing');
 select set_alert_thresholds('{"margin_target_percent": 65}');
+-- And the café adds a language, and corrects an Arabic word.
+select save_language('tr', 'Türkçe');
+select save_phrases('tr', '{"Save": "Kaydet"}');
+select save_phrases('ar', '{"Save": "احفظ"}');
 select test.as_admin();

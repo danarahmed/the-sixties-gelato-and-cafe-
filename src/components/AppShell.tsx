@@ -4,7 +4,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useT } from "@/lib/i18n/I18nProvider";
-import { LOCALES, LOCALE_META, type Locale } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/core";
 import { NAV, holdsAny } from "@/lib/auth/routes";
 
 export interface ShellMember {
@@ -47,7 +47,7 @@ function OfflineBanner() {
 }
 
 function Controls({ locale, theme }: { locale: Locale; theme: "light" | "dark" }) {
-  const { t } = useT();
+  const { t, languages } = useT();
   const [cur, setCur] = useState(theme);
   const online = useOnline();
 
@@ -82,9 +82,9 @@ function Controls({ locale, theme }: { locale: Locale; theme: "light" | "dark" }
             border: "1px solid var(--border)",
           }}
         >
-          {LOCALES.map((l) => (
-            <option key={l} value={l}>
-              {LOCALE_META[l].label}
+          {languages.map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.label}
             </option>
           ))}
         </select>
@@ -137,7 +137,7 @@ export function AppShell({
       <header className="topbar">
         <button
           onClick={() => setMenuOpen((v) => !v)}
-          aria-label="Menu"
+          aria-label={t("Menu")}
           style={{ minWidth: 44 }}
           className="menu-toggle"
         >

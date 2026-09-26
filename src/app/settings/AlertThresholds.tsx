@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { setAlertThresholdsAction } from "@/lib/actions/alerts";
 import { thresholdChanges, type Threshold } from "@/lib/alerts";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 
 const shown = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -13,6 +14,8 @@ const shown = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 
  * default. A change is on the audit trail as a change to the business.
  */
 export function AlertThresholds({ thresholds }: { thresholds: Threshold[] }) {
+  // "tr": each threshold below is "t". A threshold's name comes from the database.
+  const { t: tr, msg: say } = useT();
   const router = useRouter();
   const initial = Object.fromEntries(
     thresholds.map((t) => [t.key, t.value === t.default ? "" : String(t.value)]),
@@ -29,7 +32,7 @@ export function AlertThresholds({ thresholds }: { thresholds: Threshold[] }) {
       return;
     }
     if (Object.keys(c.changes).length === 0) {
-      setMsg({ ok: true, text: "Nothing changed." });
+      setMsg({ ok: true, text: tr("Nothing changed.") });
       return;
     }
     start(async () => {
@@ -38,7 +41,10 @@ export function AlertThresholds({ thresholds }: { thresholds: Threshold[] }) {
         setMsg({ ok: false, text: r.error });
         return;
       }
-      setMsg({ ok: true, text: "Saved, and on the audit trail. The dashboard uses them now." });
+      setMsg({
+        ok: true,
+        text: tr("Saved, and on the audit trail. The dashboard uses them now."),
+      });
       router.refresh();
     });
   }
@@ -56,24 +62,28 @@ export function AlertThresholds({ thresholds }: { thresholds: Threshold[] }) {
       <div className="th-grid">
         {thresholds.map((t) => (
           <label key={t.key} style={{ display: "grid", gap: 4 }}>
-            <span className="sc">{t.label}</span>
+            <span className="sc">{say(t.label)}</span>
             <input
               inputMode="decimal"
-              aria-label={t.label}
+              aria-label={say(t.label)}
               value={typed[t.key] ?? ""}
               placeholder={shown(t.default)}
               onChange={(e) => setTyped({ ...typed, [t.key]: e.target.value })}
             />
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              Default {shown(t.default)} · {shown(t.min)} to {shown(t.max)}
-              {t.value !== t.default ? ` · now ${shown(t.value)}` : ""}
+              {tr("Default {default} · {min} to {max}", {
+                default: shown(t.default),
+                min: shown(t.min),
+                max: shown(t.max),
+              })}
+              {t.value !== t.default ? ` · ${tr("now {value}", { value: shown(t.value) })}` : ""}
             </span>
           </label>
         ))}
       </div>
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <button className="btn-primary" disabled={busy}>
-          {busy ? "Saving…" : "Save thresholds"}
+          {busy ? tr("Saving…") : tr("Save thresholds")}
         </button>
         <Notice msg={msg} />
       </div>

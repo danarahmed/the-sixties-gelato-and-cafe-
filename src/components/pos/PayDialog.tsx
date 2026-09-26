@@ -50,7 +50,7 @@ export function PayDialog({
   onConfirm: (tender: Tender, received: number | null, orderNo: string | null) => void;
   onClose: () => void;
 }) {
-  const { t } = useT();
+  const { t, msg } = useT();
   const [tender, setTender] = useState<Tender>(initialTender);
   const [received, setReceived] = useState("");
   const [orderNo, setOrderNo] = useState("");
@@ -203,7 +203,7 @@ export function PayDialog({
 
         {error && (
           <div className="badge err" style={{ whiteSpace: "normal", marginTop: 8 }}>
-            ⚠️ {error}
+            ⚠️ {msg(error)}
           </div>
         )}
 

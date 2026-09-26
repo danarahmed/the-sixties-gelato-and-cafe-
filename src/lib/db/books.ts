@@ -175,8 +175,10 @@ const PAID_BY: Record<string, string> = {
 
 export interface VendorLine {
   date: string;
+  /** What the line is, in English: the screen shows it through msg(). */
   particulars: string;
-  ref: string;
+  /** Its note, as a phrase and its values: the screen shows it through t(). */
+  ref: { text: string; vars: Record<string, string> } | null;
   charge: number;
   payment: number;
 }
@@ -278,21 +280,24 @@ export async function getVendorBook(
       ...mine.map((b) => ({
         date: str(b.invoice_date),
         particulars: `Bill ${str(b.invoice_no)}`.trim() + (b.legacy ? " (before controls)" : ""),
-        ref: b.due_date ? `Due ${str(b.due_date)}` : "",
+        ref: b.due_date ? { text: "Due {date}", vars: { date: str(b.due_date) } } : null,
         charge: num(b.amount_total),
         payment: 0,
       })),
       ...cancelled.map((b) => ({
         date: str(b.invoice_date),
         particulars: `Bill ${str(b.invoice_no)} — cancelled: ${str(b.cancel_reason)}`,
-        ref: `was ${num(b.amount_total).toLocaleString("en-US")}`,
+        ref: {
+          text: "was {amount}",
+          vars: { amount: num(b.amount_total).toLocaleString("en-US") },
+        },
         charge: 0,
         payment: 0,
       })),
       ...pays.map((p) => ({
         date: str(p.paid_on),
         particulars: `Payment${p.method ? ` — ${PAID_BY[str(p.method)] ?? str(p.method)}` : ""}`,
-        ref: "",
+        ref: null,
         charge: 0,
         payment: num(p.amount),
       })),

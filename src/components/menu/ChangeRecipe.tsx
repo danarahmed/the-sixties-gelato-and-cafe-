@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { changeProductRecipeAction } from "@/lib/actions/menu";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import { useChannels } from "@/components/ChannelsProvider";
 import {
@@ -41,6 +42,7 @@ export function ChangeRecipe({
   decimals: number;
   today: string;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const { set } = useChannels();
   const [busy, start] = useTransition();
@@ -69,7 +71,9 @@ export function ChangeRecipe({
     if (half >= 0) {
       setMsg({
         ok: false,
-        text: `Line ${half + 1}: choose the ingredient and its quantity, or remove the line.`,
+        text: t("Line {n}: choose the ingredient and its quantity, or remove the line.", {
+          n: half + 1,
+        }),
       });
       return;
     }
@@ -85,8 +89,8 @@ export function ChangeRecipe({
           ok: true,
           text:
             r.data.effectiveFrom === today
-              ? "The new recipe is in force from today."
-              : `The new recipe starts on ${r.data.effectiveFrom}.`,
+              ? t("The new recipe is in force from today.")
+              : t("The new recipe starts on {date}.", { date: r.data.effectiveFrom }),
         });
         router.refresh();
       } else setMsg({ ok: false, text: r.error });
@@ -97,7 +101,7 @@ export function ChangeRecipe({
     return (
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         <button onClick={begin} style={{ marginBlockStart: 8, fontSize: ".8rem" }}>
-          Change the recipe…
+          {t("Change the recipe…")}
         </button>
         <Notice msg={msg} />
       </div>
@@ -106,8 +110,9 @@ export function ChangeRecipe({
   return (
     <div className="pf-change">
       <p className="pf-hint">
-        The recipe in force today, to change. Costs are today&apos;s. Sales before the new recipe
-        starts keep the old one.
+        {t(
+          "The recipe in force today, to change. Costs are today's. Sales before the new recipe starts keep the old one.",
+        )}
       </p>
       <RecipeLinesEditor
         items={items}
@@ -121,15 +126,15 @@ export function ChangeRecipe({
       <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
         <label>
           <div className="muted" style={{ fontSize: ".75rem" }}>
-            In force from
+            {t("In force from")}
           </div>
           <input type="date" value={from} min={today} onChange={(e) => setFrom(e.target.value)} />
         </label>
         <button className="btn-primary" disabled={busy} onClick={save}>
-          {busy ? "Saving…" : "Save the new recipe"}
+          {busy ? t("Saving…") : t("Save the new recipe")}
         </button>
         <button onClick={() => setOpen(false)} disabled={busy}>
-          Cancel
+          {t("Cancel")}
         </button>
         <Notice msg={msg} />
       </div>

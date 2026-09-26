@@ -11,7 +11,8 @@
 --            versions), the stock items and their units, suppliers, dining
 --            tables, platform and promotion settings, expense categories, the
 --            list of reasons for voids, refunds, discounts and cancelled bills,
---            and the audit trail (which gains one line saying the test records
+--            the languages the café added and its own words for phrases, and
+--            the audit trail (which gains one line saying the test records
 --            were cleared, and when)
 --   cleared  sales, bills kept open, voids and refunds, managers' approvals
 --            and PIN attempts, drawer counts, cash events and cash moved, card
@@ -52,7 +53,7 @@ insert into reset_keep values
   ('recipe'), ('recipe_version'), ('recipe_line'), ('variant_recipe'),
   ('item'), ('item_unit'), ('supplier'), ('dining_table'), ('expense_category'),
   ('delivery_platform'), ('platform_store_map'), ('platform_product_map'), ('promotion'),
-  ('reason_code'), ('audit_log');
+  ('reason_code'), ('app_language'), ('app_phrase'), ('audit_log');
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');

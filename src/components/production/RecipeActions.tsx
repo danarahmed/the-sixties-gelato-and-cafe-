@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Decimal from "decimal.js";
 import { cancelProductionAction, saveBatchRecipeAction } from "@/lib/actions/production";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice, inputStyle } from "@/components/ui";
 import type { BatchRecipe } from "@/lib/db/production";
 import type { ItemOpt } from "@/components/menu/RecipeLines";
@@ -22,6 +23,7 @@ export function RecipeActions({
   items: ItemOpt[];
   decimals: number;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [editing, setEditing] = useState(false);
@@ -61,15 +63,15 @@ export function RecipeActions({
   return (
     <div className="pr-actions">
       <button onClick={() => setEditing(true)} disabled={busy}>
-        Change…
+        {t("Change…")}
       </button>
       {recipe.isActive ? (
         <button onClick={() => setActive(false)} disabled={busy}>
-          Stop making it
+          {t("Stop making it")}
         </button>
       ) : (
         <button onClick={() => setActive(true)} disabled={busy}>
-          Make it again
+          {t("Make it again")}
         </button>
       )}
       <Notice msg={msg} />
@@ -79,6 +81,7 @@ export function RecipeActions({
 
 /** A batch recorded in error, cancelled by a manager with the reason. */
 export function CancelBatch({ batchId, label }: { batchId: string; label: string }) {
+  const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [open, setOpen] = useState(false);
@@ -87,19 +90,23 @@ export function CancelBatch({ batchId, label }: { batchId: string; label: string
 
   if (!open) {
     return (
-      <button className="pr-cancel" onClick={() => setOpen(true)} aria-label={`Cancel ${label}`}>
-        Cancel…
+      <button
+        className="pr-cancel"
+        onClick={() => setOpen(true)}
+        aria-label={t("Cancel {what}", { what: label })}
+      >
+        {t("Cancel…")}
       </button>
     );
   }
   return (
     <div className="pr-cancel-form">
       <input
-        aria-label="Why it is cancelled"
+        aria-label={t("Why it is cancelled")}
         style={inputStyle}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
-        placeholder="Why? e.g. recorded twice"
+        placeholder={t("Why? e.g. recorded twice")}
       />
       <button
         className="btn-primary"
@@ -114,10 +121,10 @@ export function CancelBatch({ batchId, label }: { batchId: string; label: string
           })
         }
       >
-        {busy ? "…" : "Cancel the batch"}
+        {busy ? "…" : t("Cancel the batch")}
       </button>
       <button onClick={() => setOpen(false)} disabled={busy}>
-        Keep it
+        {t("Keep it")}
       </button>
       <Notice msg={msg} />
     </div>

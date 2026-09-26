@@ -6,6 +6,7 @@ import Decimal from "decimal.js";
 import { postControlCorrectionAction, saveJournalAction } from "@/lib/actions/books";
 import { fmtIQD } from "@/lib/format";
 import { normaliseNumber } from "@/lib/validation";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 
 export interface AccountOption {
@@ -48,6 +49,8 @@ export function JournalEntryForm({
   today: string;
   currency: string;
 }) {
+  // say: an account's name as the database has it, in the reader's language.
+  const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [open, setOpen] = useState(false);
@@ -113,7 +116,9 @@ export function JournalEntryForm({
         if (r.ok) {
           setMsg({
             ok: true,
-            text: `Correction published as journal ${r.data.journalNo}; the reason is on the audit trail.`,
+            text: t("Correction published as journal {no}; the reason is on the audit trail.", {
+              no: String(r.data.journalNo),
+            }),
           });
           reset();
           router.refresh();
@@ -139,8 +144,13 @@ export function JournalEntryForm({
         setMsg({
           ok: true,
           text: publish
-            ? `Journal ${r.data.journalNo} published${r.data.reversalNo ? `; its reversal is journal ${r.data.reversalNo}` : ""}.`
-            : "Saved as a draft. It is not in the books until it is published.",
+            ? r.data.reversalNo
+              ? t("Journal {no} published; its reversal is journal {reversal}.", {
+                  no: String(r.data.journalNo),
+                  reversal: r.data.reversalNo,
+                })
+              : t("Journal {no} published.", { no: String(r.data.journalNo) })
+            : t("Saved as a draft. It is not in the books until it is published."),
         });
         reset();
         router.refresh();
@@ -155,12 +165,12 @@ export function JournalEntryForm({
         style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}
       >
         <button className="btn-primary" onClick={() => setOpen(true)}>
-          New Journal
+          {t("New Journal")}
         </button>
         <span className="muted" style={{ fontSize: ".78rem" }}>
-          For anything that is not a sale, a receipt, a bill, a payment or an expense. Stock,
-          payables, goods-received and retained earnings are kept by their own records and take no
-          manual journal.
+          {t(
+            "For anything that is not a sale, a receipt, a bill, a payment or an expense. Stock, payables, goods-received and retained earnings are kept by their own records and take no manual journal.",
+          )}
         </span>
       </div>
     );
@@ -173,12 +183,12 @@ export function JournalEntryForm({
         style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 14 }}
       >
         <label>
-          <div className="sc">Date *</div>
+          <div className="sc">{t("Date")} *</div>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </label>
         {!correction && (
           <label>
-            <div className="sc">Reverse on (optional)</div>
+            <div className="sc">{t("Reverse on (optional)")}</div>
             <input
               type="date"
               value={reverseOn}
@@ -188,15 +198,15 @@ export function JournalEntryForm({
           </label>
         )}
         <label>
-          <div className="sc">Journal #</div>
+          <div className="sc">{t("Journal #")}</div>
           <input
-            value={nextNo ? `${nextNo} (given on publish)` : "Given on publish"}
+            value={nextNo ? t("{n} (given on publish)", { n: nextNo }) : t("Given on publish")}
             readOnly
             style={{ color: "var(--faint)" }}
           />
         </label>
         <label>
-          <div className="sc">Reference #</div>
+          <div className="sc">{t("Reference #")}</div>
           <input
             value={referenceNo}
             onChange={(e) => setReferenceNo(e.target.value)}
@@ -204,7 +214,7 @@ export function JournalEntryForm({
           />
         </label>
         <label>
-          <div className="sc">Currency</div>
+          <div className="sc">{t("Currency")}</div>
           <input value={currency} readOnly style={{ color: "var(--faint)" }} />
         </label>
       </div>
@@ -227,36 +237,39 @@ export function JournalEntryForm({
               setReverseOn("");
             }}
           />
-          Correction to a control account (the till&apos;s cash, Inventory, payables, goods
-          received, retained earnings) — owner only, with a reason on the audit trail. For repairing
-          history recorded before the controls; see docs/REMEDIATION.md.
+          {t(
+            "Correction to a control account (the till's cash, Inventory, payables, goods received, retained earnings) — owner only, with a reason on the audit trail. For repairing history recorded before the controls; see docs/REMEDIATION.md.",
+          )}
         </label>
       )}
       {correction && (
         <label style={{ display: "block", marginBlockStart: 8 }}>
-          <div className="sc">Reason for the correction *</div>
+          <div className="sc">{t("Reason for the correction")} *</div>
           <input
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="What was wrong, and how this entry puts it right"
+            placeholder={t("What was wrong, and how this entry puts it right")}
             maxLength={500}
           />
         </label>
       )}
 
       <label style={{ display: "block", marginBlockStart: 12 }}>
-        <div className="sc">Notes *</div>
+        <div className="sc">{t("Notes")} *</div>
         <input
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Being the reason this entry is made"
+          placeholder={t("Being the reason this entry is made")}
           maxLength={500}
         />
       </label>
 
       {reverseOn && (
         <p className="muted" style={{ fontSize: ".76rem", marginBlockEnd: 0 }}>
-          On publishing, a mirror entry dated {reverseOn} is posted too, reversing every line below.
+          {t(
+            "On publishing, a mirror entry dated {date} is posted too, reversing every line below.",
+            { date: reverseOn },
+          )}
         </p>
       )}
 
@@ -264,13 +277,13 @@ export function JournalEntryForm({
         <table>
           <thead>
             <tr>
-              <th style={{ minWidth: 190 }}>Account</th>
-              <th style={{ minWidth: 180 }}>Description</th>
+              <th style={{ minWidth: 190 }}>{t("Account")}</th>
+              <th style={{ minWidth: 180 }}>{t("Description")}</th>
               <th className="right" style={{ width: 130 }}>
-                Debits
+                {t("Debits")}
               </th>
               <th className="right" style={{ width: 130 }}>
-                Credits
+                {t("Credits")}
               </th>
               <th style={{ width: 40 }} />
             </tr>
@@ -280,10 +293,10 @@ export function JournalEntryForm({
               <tr key={i}>
                 <td>
                   <select value={r.code} onChange={(e) => setRow(i, { code: e.target.value })}>
-                    <option value="">Select an account</option>
+                    <option value="">{t("Select an account")}</option>
                     {options.map((a) => (
                       <option key={a.code} value={a.code}>
-                        {a.code} {a.name}
+                        {a.code} {say(a.name)}
                       </option>
                     ))}
                   </select>
@@ -292,7 +305,7 @@ export function JournalEntryForm({
                   <input
                     value={r.memo}
                     onChange={(e) => setRow(i, { memo: e.target.value })}
-                    placeholder="Description"
+                    placeholder={t("Description")}
                     maxLength={200}
                   />
                 </td>
@@ -318,7 +331,7 @@ export function JournalEntryForm({
                   <button
                     onClick={() => setRows((rs) => rs.filter((_, idx) => idx !== i))}
                     disabled={rows.length <= 2}
-                    title="Remove line"
+                    title={t("Remove line")}
                     style={{ minHeight: 28, padding: "0 8px" }}
                   >
                     ×
@@ -339,11 +352,14 @@ export function JournalEntryForm({
           marginBlockStart: 12,
         }}
       >
-        <button onClick={() => setRows((rs) => [...rs, { ...emptyRow }])}>+ Add line</button>
+        <button onClick={() => setRows((rs) => [...rs, { ...emptyRow }])}>{t("+ Add line")}</button>
         <div className="voucher" style={{ minWidth: 300, flex: 1, maxWidth: 420 }}>
           <div className="st-row total">
-            <span className="lbl">Total ({currency})</span>
+            <span className="lbl">
+              {t("Total")} ({currency})
+            </span>
             <span className="amt">
+              {/* i18n-ignore: the spaces around the slash, not words */}
               {fmtIQD(totals.debit)} &nbsp;/&nbsp; {fmtIQD(totals.credit)}
             </span>
           </div>
@@ -352,7 +368,7 @@ export function JournalEntryForm({
               className="lbl"
               style={{ color: totals.difference === 0 ? "var(--ok)" : "var(--err)" }}
             >
-              Difference
+              {t("Difference")}
             </span>
             <span className={`amt ${totals.difference === 0 ? "" : "red"}`}>
               {fmtIQD(Math.abs(totals.difference))}
@@ -371,10 +387,10 @@ export function JournalEntryForm({
         }}
       >
         <button className="btn-primary" onClick={() => save(true)} disabled={busy || !canPublish}>
-          {busy ? "Saving…" : "Save and publish"}
+          {busy ? t("Saving…") : t("Save and publish")}
         </button>
         <button onClick={() => save(false)} disabled={busy || !canDraft || correction}>
-          Save as draft
+          {t("Save as draft")}
         </button>
         <button
           onClick={() => {
@@ -384,11 +400,11 @@ export function JournalEntryForm({
           }}
           disabled={busy}
         >
-          Cancel
+          {t("Cancel")}
         </button>
         {!canPublish && usable.length > 0 && totals.difference !== 0 && (
           <span className="muted" style={{ fontSize: ".76rem" }}>
-            Debits and credits must agree before it can be published.
+            {t("Debits and credits must agree before it can be published.")}
           </span>
         )}
         <Notice msg={msg} />

@@ -46,11 +46,13 @@ export default async function SalesPage() {
     <div className="grid" style={{ gap: 18 }}>
       <div className="phead">
         <h1>{t("nav.sales")}</h1>
-        <span className="sc">Last 30 trading days · {profile.timezone}</span>
+        <span className="sc">
+          {t("Last 30 trading days · {timezone}", { timezone: t(profile.timezone) })}
+        </span>
         <div className="sp">
           {has(profile, "sale.create") && (
             <Link href="/pos">
-              <button className="btn-primary">Open POS</button>
+              <button className="btn-primary">{t("Open POS")}</button>
             </Link>
           )}
         </div>
@@ -58,66 +60,69 @@ export default async function SalesPage() {
 
       <div className="cards2">
         <div>
-          <div className="sc">Net sales, after refunds</div>
+          <div className="sc">{t("Net sales, after refunds")}</div>
           <div className="v">{fmtIQD(totals.net)}</div>
           <div className="m">
             <Link className="drill" href={`/orders?from=${from}&to=${today}`}>
-              Across {days} trading day(s)
+              {t("Across {days} trading day(s)", { days })}
             </Link>
           </div>
         </div>
         <div>
-          <div className="sc">Refunds made</div>
+          <div className="sc">{t("Refunds made")}</div>
           <div className="v red">({fmtIQD(totals.refunds)})</div>
-          <div className="m">On the day they were made, through 4200 Sales returns</div>
+          <div className="m">{t("On the day they were made, through 4200 Sales returns")}</div>
         </div>
         <div>
-          <div className="sc">Cost of what was sold</div>
+          <div className="sc">{t("Cost of what was sold")}</div>
           <div className="v">{fmtIQD(totals.cost)}</div>
           <div className="m">
-            Sales margin {totals.net > 0 ? ((totals.margin / totals.net) * 100).toFixed(1) : "0.0"}%
-            · before waste and fees
+            {t("Sales margin {margin}% · before waste and fees", {
+              margin: totals.net > 0 ? ((totals.margin / totals.net) * 100).toFixed(1) : "0.0",
+            })}
           </div>
         </div>
         <div>
-          <div className="sc">Days whose cash is not counted</div>
+          <div className="sc">{t("Days whose cash is not counted")}</div>
           <div className="v" style={{ color: overdue > 0 ? "var(--warn)" : undefined }}>
             {uncounted.length}
           </div>
           <div className="m">
             {counts[0]
-              ? `Drawer last counted ${at(counts[0].at)}`
-              : "The drawer has not been counted yet"}
-            {overdue > 0 ? ` · ${overdue} before today` : ""}
+              ? t("Drawer last counted {when}", { when: String(at(counts[0].at)) })
+              : t("The drawer has not been counted yet")}
+            {overdue > 0 ? ` · ${t("{n} before today", { n: overdue })}` : ""}
           </div>
         </div>
       </div>
 
       <section className="panel">
         <div className="panel-h">
-          <h3>Daily Sales Summaries</h3>
+          <h3>{t("Daily Sales Summaries")}</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            One line per day per channel · voided sales excluded · a refund on the day it was made
+            {t(
+              "One line per day per channel · voided sales excluded · a refund on the day it was made",
+            )}
           </span>
         </div>
         {rows.length === 0 ? (
           <EmptyState
-            title="No sales in the last 30 days"
-            hint="Sales rung up on the till appear here by day."
+            title={t("No sales in the last 30 days")}
+            hint={t("Sales rung up on the till appear here by day.")}
           />
         ) : (
           <div className="tw">
             <table>
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Channel</th>
-                  <th className="right">Orders</th>
-                  <th className="right">Sales</th>
-                  <th className="right">Refunds</th>
-                  <th className="right">Net sales</th>
-                  <th className="right">Cost</th>
-                  <th className="right">Cash</th>
+                  <th>{t("Date")}</th>
+                  <th>{t("Channel")}</th>
+                  <th className="right">{t("Orders")}</th>
+                  <th className="right">{t("Sales")}</th>
+                  <th className="right">{t("Refunds")}</th>
+                  <th className="right">{t("Net sales")}</th>
+                  <th className="right">{t("Cost")}</th>
+                  <th className="right">{t("Cash")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -141,7 +146,7 @@ export default async function SalesPage() {
                     <td className="right money">{fmtIQD(r.cogs - r.returnedCost)}</td>
                     <td className="right">
                       <span className={`ref ${notCounted.has(r.day) ? "due" : "auto"}`}>
-                        {notCounted.has(r.day) ? "Not counted" : "Counted"}
+                        {notCounted.has(r.day) ? t("Not counted") : t("Counted")}
                       </span>
                     </td>
                   </tr>
@@ -155,9 +160,9 @@ export default async function SalesPage() {
       {canCount && drawer && (
         <section className="panel">
           <div className="panel-h">
-            <h3>Count the Drawer</h3>
+            <h3>{t("Count the Drawer")}</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              Everything since the last count, whatever the day
+              {t("Everything since the last count, whatever the day")}
             </span>
           </div>
           <DrawerCount status={drawer} since={at(drawer.since)} />
@@ -167,9 +172,9 @@ export default async function SalesPage() {
       {canMove && drawer && (
         <section className="panel">
           <div className="panel-h">
-            <h3>Move Cash</h3>
+            <h3>{t("Move Cash")}</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              Between the till, the safe, the bank and the owner
+              {t("Between the till, the safe, the bank and the owner")}
             </span>
           </div>
           <MoveCash isOwner={profile.roles.includes("owner")} safe={drawer.safe} />
@@ -178,9 +183,9 @@ export default async function SalesPage() {
 
       <section className="panel" id="card">
         <div className="panel-h">
-          <h3>Card Takings</h3>
+          <h3>{t("Card Takings")}</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            Settled against the terminal&apos;s report and what reached the bank · the fee to 6500
+            {t("Settled against the terminal's report and what reached the bank · the fee to 6500")}
           </span>
         </div>
         <CardTakingsPanel
@@ -193,31 +198,35 @@ export default async function SalesPage() {
       {counts.length > 0 && (
         <section className="panel">
           <div className="panel-h">
-            <h3>Drawer Counts</h3>
+            <h3>{t("Drawer Counts")}</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              Each covers the cash since the one before · over / short history
+              {t("Each covers the cash since the one before · over / short history")}
             </span>
           </div>
           <div className="tw">
             <table>
               <thead>
                 <tr>
-                  <th>Counted</th>
-                  <th className="right">Started with</th>
-                  <th className="right">Should hold</th>
-                  <th className="right">Counted</th>
-                  <th className="right">Over / short</th>
-                  <th className="right">Stayed</th>
-                  <th className="right">Taken out</th>
-                  <th>By</th>
+                  <th>{t("Counted")}</th>
+                  <th className="right">{t("Started with")}</th>
+                  <th className="right">{t("Should hold")}</th>
+                  <th className="right">{t("Counted")}</th>
+                  <th className="right">{t("Over / short")}</th>
+                  <th className="right">{t("Stayed")}</th>
+                  <th className="right">{t("Taken out")}</th>
+                  <th>{t("By")}</th>
                 </tr>
               </thead>
               <tbody>
                 {counts.map((c) => (
                   <tr key={c.id}>
                     <td className="mono" style={{ fontSize: ".8rem" }}>
-                      {c.byDay ? `${c.day} (by day)` : at(c.at)}
-                      {!c.byDay && c.from && <div className="muted">since {at(c.from)}</div>}
+                      {c.byDay ? t("{day} (by day)", { day: String(c.day) }) : at(c.at)}
+                      {!c.byDay && c.from && (
+                        <div className="muted">
+                          {t("since {when}", { when: String(at(c.from)) })}
+                        </div>
+                      )}
                     </td>
                     <td className="right money">{fmtIQD(c.start)}</td>
                     <td className="right money">{fmtIQD(c.expected)}</td>
@@ -231,7 +240,7 @@ export default async function SalesPage() {
                     </td>
                     <td className="right money">{c.left === null ? "—" : fmtIQD(c.left)}</td>
                     <td className="right money">
-                      {c.taken ? `${fmtIQD(c.taken)} → ${c.takenTo}` : "—"}
+                      {c.taken ? `${fmtIQD(c.taken)} → ${t(String(c.takenTo))}` : "—"}
                     </td>
                     <td className="muted">{c.by ?? "—"}</td>
                   </tr>

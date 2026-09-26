@@ -6,6 +6,7 @@ import { createSupplierAction, receiveGoodsAction } from "@/lib/actions/purchasi
 import { fmtIQD, fmtQty } from "@/lib/format";
 import { deliveryLineCost, needsPriceConfirmation, priceGap } from "@/lib/receiving";
 import { normaliseNumber } from "@/lib/validation";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 
 interface ItemOpt {
@@ -53,6 +54,7 @@ export function ReceiveStockForm({
 }
 
 function AddSupplier() {
+  const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -63,7 +65,7 @@ function AddSupplier() {
     start(async () => {
       const r = await createSupplierAction(f);
       if (r.ok) {
-        setMsg({ ok: true, text: "Supplier added." });
+        setMsg({ ok: true, text: t("Supplier added.") });
         setF({ name: "", contact: "", phone: "" });
         router.refresh();
       } else setMsg({ ok: false, text: r.error });
@@ -72,22 +74,22 @@ function AddSupplier() {
 
   return (
     <div className="card grid" style={{ gap: 10, alignContent: "start" }}>
-      <h3 style={{ margin: 0 }}>🏭 Add supplier</h3>
-      <Field label="Name">
+      <h3 style={{ margin: 0 }}>🏭 {t("Add supplier")}</h3>
+      <Field label={t("Name")}>
         <input
           style={inputStyle}
           value={f.name}
           onChange={(e) => setF({ ...f, name: e.target.value })}
         />
       </Field>
-      <Field label="What they supply">
+      <Field label={t("What they supply")}>
         <input
           style={inputStyle}
           value={f.contact}
           onChange={(e) => setF({ ...f, contact: e.target.value })}
         />
       </Field>
-      <Field label="Phone">
+      <Field label={t("Phone")}>
         <input
           style={inputStyle}
           value={f.phone}
@@ -96,7 +98,7 @@ function AddSupplier() {
       </Field>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <button className="btn-primary" onClick={submit} disabled={pending || !f.name.trim()}>
-          {pending ? "…" : "Add"}
+          {pending ? "…" : t("Add")}
         </button>
         <Notice msg={msg} />
       </div>
@@ -105,6 +107,7 @@ function AddSupplier() {
 }
 
 function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOpt[] }) {
+  const { t, msg: say } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -154,7 +157,10 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
         setCheck(null);
         setMsg({
           ok: true,
-          text: `Receipt ${r.data.receiptNo} — ${fmtIQD(r.data.value)} into stock, awaiting its bill.`,
+          text: t("Receipt {no} — {value} into stock, awaiting its bill.", {
+            no: r.data.receiptNo,
+            value: fmtIQD(r.data.value),
+          }),
         });
         setLines([blank()]);
         setFreight("");
@@ -171,9 +177,11 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
   if (items.length === 0 || suppliers.length === 0) {
     return (
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>📦 Receive stock</h3>
+        <h3 style={{ marginTop: 0 }}>📦 {t("Receive stock")}</h3>
         <p className="muted" style={{ fontSize: ".9rem" }}>
-          {items.length === 0 ? "Add stock items on Inventory first." : "Add the supplier first."}
+          {items.length === 0
+            ? t("Add stock items on Inventory first.")
+            : t("Add the supplier first.")}
         </p>
       </div>
     );
@@ -181,9 +189,9 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
 
   return (
     <div className="card grid" style={{ gap: 10, gridColumn: "span 2" }} data-testid="receive">
-      <h3 style={{ margin: 0 }}>📦 Receive stock (goods receipt)</h3>
+      <h3 style={{ margin: 0 }}>📦 {t("Receive stock (goods receipt)")}</h3>
       <div className="grid" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 8 }}>
-        <Field label="Supplier">
+        <Field label={t("Supplier")}>
           <select
             style={inputStyle}
             value={supplier}
@@ -199,7 +207,7 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
             ))}
           </select>
         </Field>
-        <Field label="Freight (IQD)">
+        <Field label={t("Freight (IQD)")}>
           <input
             style={inputStyle}
             value={freight}
@@ -207,7 +215,7 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
             inputMode="decimal"
           />
         </Field>
-        <Field label="Other landed costs">
+        <Field label={t("Other landed costs")}>
           <input
             style={inputStyle}
             value={other}
@@ -215,7 +223,7 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
             inputMode="decimal"
           />
         </Field>
-        <Field label="Rebate (−)">
+        <Field label={t("Rebate (−)")}>
           <input
             style={inputStyle}
             value={rebate}
@@ -238,7 +246,7 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
               <div style={{ display: "flex", gap: 8, alignItems: "end", flexWrap: "wrap" }}>
                 <label style={{ flex: 2, minWidth: 150 }}>
                   <div className="muted" style={{ fontSize: ".78rem" }}>
-                    Item
+                    {t("Item")}
                   </div>
                   <select
                     style={inputStyle}
@@ -259,7 +267,7 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
                 </label>
                 <label style={{ flex: 1, minWidth: 80 }}>
                   <div className="muted" style={{ fontSize: ".78rem" }}>
-                    Quantity
+                    {t("Quantity")}
                   </div>
                   <input
                     style={inputStyle}
@@ -270,7 +278,7 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
                 </label>
                 <label style={{ flex: 1, minWidth: 110 }}>
                   <div className="muted" style={{ fontSize: ".78rem" }}>
-                    Unit
+                    {t("Unit")}
                   </div>
                   <select
                     style={inputStyle}
@@ -287,7 +295,7 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
                 </label>
                 <label style={{ flex: 1, minWidth: 120 }}>
                   <div className="muted" style={{ fontSize: ".78rem" }}>
-                    Price per {unit?.label ?? l.unit} (IQD)
+                    {t("Price per {unit} (IQD)", { unit: unit?.label ?? l.unit })}
                   </div>
                   <input
                     style={inputStyle}
@@ -314,13 +322,23 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
                 >
                   {fmtQty(n(l.qty))} × {fmtQty(n(l.unitPrice))} = {fmtIQD(cost.total)}
                   {cost.perBase !== null && it
-                    ? ` · ${fmtQty(Number(cost.perBase.toFixed(4)))} IQD a ${it.baseUnit}`
+                    ? ` · ${t("{cost} IQD a {unit}", {
+                        cost: fmtQty(Number(cost.perBase.toFixed(4))),
+                        unit: it.baseUnit,
+                      })}`
                     : ""}
                   {it?.costNow
-                    ? ` · it costs ${fmtQty(Number(it.costNow.toFixed(4)))} a ${it.baseUnit} now`
-                    : " · its first delivery: no cost to compare yet"}
+                    ? ` · ${t("it costs {cost} a {unit} now", {
+                        cost: fmtQty(Number(it.costNow.toFixed(4))),
+                        unit: it.baseUnit,
+                      })}`
+                    : ` · ${t("its first delivery: no cost to compare yet")}`}
                   {gap !== null && far
-                    ? ` — ${Math.round(Math.abs(gap) * 100)}% ${gap > 0 ? "above" : "below"}: check it`
+                    ? ` — ${
+                        gap > 0
+                          ? t("{pct}% above: check it", { pct: Math.round(Math.abs(gap) * 100) })
+                          : t("{pct}% below: check it", { pct: Math.round(Math.abs(gap) * 100) })
+                      }`
                     : ""}
                 </div>
               )}
@@ -334,10 +352,10 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
           }}
           style={{ alignSelf: "start" }}
         >
-          + Add line
+          + {t("Add line")}
         </button>
       </div>
-      <Field label="Note (delivery note number, etc.)">
+      <Field label={t("Note (delivery note number, etc.)")}>
         <input
           style={inputStyle}
           value={note}
@@ -354,20 +372,20 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
         >
           <p style={{ marginTop: 0, fontSize: ".88rem" }}>
             <strong>
-              {check.replace(/\. If it is right, confirm it and receive again$/, ".")}
+              {say(check.replace(/\. If it is right, confirm it and receive again$/, "."))}
             </strong>
           </p>
           <p className="muted" style={{ fontSize: ".8rem" }}>
-            A price typed per gram instead of per kilogram, or a digit too many, would cost every
-            sale of it wrongly. If the invoice says so, receive it as it is: your confirmation goes
-            on the audit trail.
+            {t(
+              "A price typed per gram instead of per kilogram, or a digit too many, would cost every sale of it wrongly. If the invoice says so, receive it as it is: your confirmation goes on the audit trail.",
+            )}
           </p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button className="btn-primary" onClick={() => submit(true)} disabled={pending}>
-              {pending ? "Receiving…" : "The price is right: receive it"}
+              {pending ? t("Receiving…") : t("The price is right: receive it")}
             </button>
             <button onClick={() => setCheck(null)} disabled={pending}>
-              Let me correct it
+              {t("Let me correct it")}
             </button>
           </div>
         </div>
@@ -378,11 +396,11 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
           onClick={() => submit(false)}
           disabled={pending || !supplier || check !== null}
         >
-          {pending ? "Receiving…" : "Receive goods"}
+          {pending ? t("Receiving…") : t("Receive goods")}
         </button>
         {goods > 0 && (
           <span className="muted" style={{ fontSize: ".85rem" }}>
-            Goods {fmtIQD(goods)}
+            {t("Goods {value}", { value: fmtIQD(goods) })}
           </span>
         )}
         <Notice msg={msg} />

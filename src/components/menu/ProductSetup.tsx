@@ -8,6 +8,7 @@ import {
   setProductImageAction,
 } from "@/lib/actions/menu";
 import type { MenuCategory, MenuProduct } from "@/lib/db/menu";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { ProductThumb } from "@/components/pos/ProductPicker";
 import { Notice } from "@/components/ui";
 import { shrinkPhoto } from "./photo";
@@ -26,6 +27,7 @@ export function ProductSetup({
   categories: MenuCategory[];
   canEdit: boolean;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [photoBusy, setPhotoBusy] = useState(false);
@@ -60,7 +62,7 @@ export function ProductSetup({
         isActive: d.isActive,
         isFavourite: d.isFavourite,
       });
-      setMsg(r.ok ? { ok: true, text: "Saved." } : { ok: false, text: r.error });
+      setMsg(r.ok ? { ok: true, text: t("Saved.") } : { ok: false, text: r.error });
       if (r.ok) router.refresh();
     });
   }
@@ -73,13 +75,13 @@ export function ProductSetup({
       const r = await setProductImageAction({ productId: product.id, ...photo });
       if (!r.ok) setMsg({ ok: false, text: r.error });
       else {
-        setMsg({ ok: true, text: "Photo saved: the till shows it now." });
+        setMsg({ ok: true, text: t("Photo saved: the till shows it now.") });
         router.refresh();
       }
     } catch (e) {
       setMsg({
         ok: false,
-        text: e instanceof Error ? e.message : "The picture could not be prepared.",
+        text: e instanceof Error ? e.message : t("The picture could not be prepared."),
       });
     } finally {
       setPhotoBusy(false);
@@ -91,7 +93,7 @@ export function ProductSetup({
     setMsg(null);
     start(async () => {
       const r = await clearProductImageAction({ productId: product.id });
-      setMsg(r.ok ? { ok: true, text: "Photo removed." } : { ok: false, text: r.error });
+      setMsg(r.ok ? { ok: true, text: t("Photo removed.") } : { ok: false, text: r.error });
       if (r.ok) router.refresh();
     });
   }
@@ -107,11 +109,11 @@ export function ProductSetup({
         {canEdit && (
           <>
             <button onClick={() => file.current?.click()} disabled={busy}>
-              {photoBusy ? "…" : product.imageUrl ? "Change photo" : "Add photo"}
+              {photoBusy ? "…" : product.imageUrl ? t("Change photo") : t("Add photo")}
             </button>
             {product.imageUrl && (
               <button className="linklike" onClick={removePhoto} disabled={busy}>
-                Remove photo
+                {t("Remove photo")}
               </button>
             )}
             <input
@@ -119,7 +121,7 @@ export function ProductSetup({
               type="file"
               accept="image/png,image/jpeg,image/webp,image/*"
               hidden
-              aria-label={`Photo of ${product.name}`}
+              aria-label={t("Photo of {name}", { name: product.name })}
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) void upload(f);
@@ -131,7 +133,7 @@ export function ProductSetup({
       <div className="grid" style={{ gap: 8 }}>
         <div className="setup-fields">
           <label>
-            <span className="muted">Name</span>
+            <span className="muted">{t("Name")}</span>
             <input
               value={d.name}
               maxLength={120}
@@ -160,17 +162,16 @@ export function ProductSetup({
             />
           </label>
           <label>
-            <span className="muted">Category</span>
+            <span className="muted">{t("Category")}</span>
             <select
               value={d.categoryId}
               disabled={!canEdit}
               onChange={(e) => setD({ ...d, categoryId: e.target.value })}
             >
-              <option value="">— none —</option>
+              <option value="">{t("— none —")}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name}
-                  {c.isActive ? "" : " (hidden)"}
+                  {c.isActive ? c.name : t("{name} (hidden)", { name: c.name })}
                 </option>
               ))}
             </select>
@@ -185,7 +186,7 @@ export function ProductSetup({
               disabled={!canEdit}
               onChange={(e) => setD({ ...d, isActive: e.target.checked })}
             />
-            On the till
+            {t("On the till")}
           </label>
           <label>
             <input
@@ -195,7 +196,7 @@ export function ProductSetup({
               disabled={!canEdit}
               onChange={(e) => setD({ ...d, isFavourite: e.target.checked })}
             />
-            ★ Favourite (shown first)
+            {t("★ Favourite (shown first)")}
           </label>
           {canEdit && (
             <button
@@ -203,7 +204,7 @@ export function ProductSetup({
               onClick={save}
               disabled={busy || !dirty || !d.name.trim()}
             >
-              {pending ? "…" : "Save"}
+              {pending ? "…" : t("Save")}
             </button>
           )}
         </div>

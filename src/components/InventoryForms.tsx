@@ -9,6 +9,7 @@ import {
   recordWasteAction,
 } from "@/lib/actions/stock";
 import { WASTE_TYPES, fmtIQD, movementLabel } from "@/lib/format";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 
 interface ItemOpt {
@@ -53,6 +54,7 @@ export function InventoryForms({
 }
 
 function AddItem({ isOwner }: { isOwner: boolean }) {
+  const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -90,7 +92,7 @@ function AddItem({ isOwner }: { isOwner: boolean }) {
         returnable,
       });
       if (r.ok) {
-        setMsg({ ok: true, text: `Added “${f.name}”.` });
+        setMsg({ ok: true, text: t("Added “{name}”.", { name: f.name }) });
         setF(empty);
         setReturnable(false);
         router.refresh();
@@ -100,29 +102,34 @@ function AddItem({ isOwner }: { isOwner: boolean }) {
 
   return (
     <div className="card grid" style={{ gap: 10, alignContent: "start" }}>
-      <h3 style={{ margin: 0 }}>➕ Add stock item</h3>
-      <Field label="Name (English)">
-        <input style={inputStyle} value={f.name} onChange={set("name")} placeholder="e.g. Milk" />
+      <h3 style={{ margin: 0 }}>➕ {t("Add stock item")}</h3>
+      <Field label={t("Name (English)")}>
+        <input
+          style={inputStyle}
+          value={f.name}
+          onChange={set("name")}
+          placeholder={t("e.g. Milk")}
+        />
       </Field>
       <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <Field label="الاسم (Arabic)">
+        <Field label={t("الاسم (Arabic)")}>
           <input style={inputStyle} value={f.nameAr} onChange={set("nameAr")} dir="rtl" />
         </Field>
-        <Field label="ناو (Kurdish)">
+        <Field label={t("ناو (Kurdish)")}>
           <input style={inputStyle} value={f.nameCkb} onChange={set("nameCkb")} dir="rtl" />
         </Field>
       </div>
       <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <Field label="Type">
+        <Field label={t("Type")}>
           <select style={inputStyle} value={f.itemType} onChange={set("itemType")}>
-            <option value="ingredient">Ingredient</option>
-            <option value="packaging">Packaging</option>
-            <option value="consumable">Consumable</option>
-            <option value="finished_good">Finished good</option>
-            <option value="resale">Resale</option>
+            <option value="ingredient">{t("Ingredient")}</option>
+            <option value="packaging">{t("Packaging")}</option>
+            <option value="consumable">{t("Consumable")}</option>
+            <option value="finished_good">{t("Finished good")}</option>
+            <option value="resale">{t("Resale")}</option>
           </select>
         </Field>
-        <Field label="Measured in">
+        <Field label={t("Measured in")}>
           <select
             style={inputStyle}
             value={dimension}
@@ -132,12 +139,12 @@ function AddItem({ isOwner }: { isOwner: boolean }) {
               setBaseUnit(DEFAULT_BASE[d] ?? "each");
             }}
           >
-            <option value="count">Count (each)</option>
-            <option value="mass">Mass (g)</option>
-            <option value="volume">Volume (ml)</option>
+            <option value="count">{t("Count (each)")}</option>
+            <option value="mass">{t("Mass (g)")}</option>
+            <option value="volume">{t("Volume (ml)")}</option>
           </select>
         </Field>
-        <Field label="Base unit">
+        <Field label={t("Base unit")}>
           <input
             style={inputStyle}
             value={baseUnit}
@@ -149,7 +156,7 @@ function AddItem({ isOwner }: { isOwner: boolean }) {
         className="grid"
         style={{ gridTemplateColumns: isOwner ? "1fr 1fr 1fr" : "1fr 2fr", gap: 8 }}
       >
-        <Field label={`Reorder level (${baseUnit})`}>
+        <Field label={t("Reorder level ({unit})", { unit: baseUnit })}>
           <input
             style={inputStyle}
             value={f.minLevel}
@@ -159,7 +166,7 @@ function AddItem({ isOwner }: { isOwner: boolean }) {
         </Field>
         {isOwner ? (
           <>
-            <Field label={`Opening stock (${baseUnit})`}>
+            <Field label={t("Opening stock ({unit})", { unit: baseUnit })}>
               <input
                 style={inputStyle}
                 value={f.openingQty}
@@ -167,7 +174,7 @@ function AddItem({ isOwner }: { isOwner: boolean }) {
                 inputMode="decimal"
               />
             </Field>
-            <Field label={`Cost per ${baseUnit} (IQD)`}>
+            <Field label={t("Cost per {unit} (IQD)", { unit: baseUnit })}>
               <input
                 style={inputStyle}
                 value={f.openingUnitCost}
@@ -178,19 +185,20 @@ function AddItem({ isOwner }: { isOwner: boolean }) {
           </>
         ) : (
           <p className="muted" style={{ fontSize: ".8rem", margin: 0, alignSelf: "end" }}>
-            Its stock comes in with a delivery. Opening stock, the owner&apos;s capital, is the
-            owner&apos;s to record.
+            {t(
+              "Its stock comes in with a delivery. Opening stock, the owner's capital, is the owner's to record.",
+            )}
           </p>
         )}
       </div>
       {isOwner && f.openingQty.trim() !== "" && (
-        <Field label="Where the opening stock came from">
+        <Field label={t("Where the opening stock came from")}>
           <input
             style={inputStyle}
             value={f.openingReason}
             onChange={set("openingReason")}
             maxLength={300}
-            placeholder="e.g. the opening count on the first day"
+            placeholder={t("e.g. the opening count on the first day")}
           />
         </Field>
       )}
@@ -200,11 +208,12 @@ function AddItem({ isOwner }: { isOwner: boolean }) {
           checked={returnable}
           onChange={(e) => setReturnable(e.target.checked)}
         />
-        Goes back on the shelf when a sale is refunded (sealed goods only)
+        {t("Goes back on the shelf when a sale is refunded (sealed goods only)")}
       </label>
       <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
-        No two items in use share a name, whatever the capitals, spaces or punctuation.
-        {isOwner && " Opening stock is journaled: Dr 1200 Inventory / Cr 3000 Owner equity."}
+        {t("No two items in use share a name, whatever the capitals, spaces or punctuation.")}
+        {isOwner &&
+          ` ${t("Opening stock is journaled: Dr 1200 Inventory / Cr 3000 Owner equity.")}`}
       </p>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <button
@@ -216,7 +225,7 @@ function AddItem({ isOwner }: { isOwner: boolean }) {
             (isOwner && f.openingQty.trim() !== "" && !f.openingReason.trim())
           }
         >
-          {pending ? "Saving…" : "Add item"}
+          {pending ? t("Saving…") : t("Add item")}
         </button>
         <Notice msg={msg} />
       </div>
@@ -251,6 +260,7 @@ function UnitSelect({
  * added without it — at what it cost, so its sales are costed from the start.
  */
 function OpeningStock({ items }: { items: ItemOpt[] }) {
+  const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -280,7 +290,13 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
       if (r.ok) {
         setMsg({
           ok: true,
-          text: `Opening stock of ${item.name}: ${qty} ${unitLabel}, worth ${fmtIQD(r.data.value)} (journal ${r.data.journalNo ?? "—"}).`,
+          text: t("Opening stock of {name}: {qty} {unit}, worth {value} (journal {journal}).", {
+            name: item.name,
+            qty,
+            unit: unitLabel,
+            value: fmtIQD(r.data.value),
+            journal: r.data.journalNo ?? "—",
+          }),
         });
         setQty("");
         setUnitCost("");
@@ -297,12 +313,14 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
       style={{ gap: 10, alignContent: "start" }}
       data-testid="opening-stock"
     >
-      <h3 style={{ margin: 0 }}>📦 Opening stock</h3>
+      <h3 style={{ margin: 0 }}>📦 {t("Opening stock")}</h3>
       <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
-        {items.length} item(s) have no stock recorded yet. Count what is on the shelf and enter it
-        at what it cost, so every sale of it is costed.
+        {t(
+          "{n} item(s) have no stock recorded yet. Count what is on the shelf and enter it at what it cost, so every sale of it is costed.",
+          { n: items.length },
+        )}
       </p>
-      <Field label="Item with no stock yet">
+      <Field label={t("Item with no stock yet")}>
         <select
           style={inputStyle}
           value={item.id}
@@ -319,7 +337,7 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
         </select>
       </Field>
       <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <Field label="Quantity on the shelf">
+        <Field label={t("Quantity on the shelf")}>
           <input
             style={inputStyle}
             value={qty}
@@ -327,10 +345,10 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
             inputMode="decimal"
           />
         </Field>
-        <Field label="Unit">
+        <Field label={t("Unit")}>
           <UnitSelect item={item} value={unit} onChange={setUnit} />
         </Field>
-        <Field label={`Cost per ${unitLabel} (IQD)`}>
+        <Field label={t("Cost per {unit} (IQD)", { unit: unitLabel })}>
           <input
             style={inputStyle}
             value={unitCost}
@@ -339,20 +357,20 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
           />
         </Field>
       </div>
-      <Field label="Where it came from">
+      <Field label={t("Where it came from")}>
         <input
           style={inputStyle}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           maxLength={300}
-          placeholder="e.g. the opening count on the first day"
+          placeholder={t("e.g. the opening count on the first day")}
         />
       </Field>
       <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
-        {value > 0 ? `Worth ${fmtIQD(value)}. ` : ""}It is capital you put into the business:
-        journaled Dr 1200 Inventory / Cr 3000 Owner equity, and on the audit trail with where it
-        came from. Once an item has stock, it changes only by deliveries, sales, waste, counts and
-        corrections.
+        {value > 0 ? `${t("Worth {value}.", { value: fmtIQD(value) })} ` : ""}
+        {t(
+          "It is capital you put into the business: journaled Dr 1200 Inventory / Cr 3000 Owner equity, and on the audit trail with where it came from. Once an item has stock, it changes only by deliveries, sales, waste, counts and corrections.",
+        )}
       </p>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <button
@@ -360,7 +378,7 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
           onClick={submit}
           disabled={pending || !qty.trim() || !unitCost.trim() || !reason.trim()}
         >
-          {pending ? "Recording…" : "Record opening stock"}
+          {pending ? t("Recording…") : t("Record opening stock")}
         </button>
         <Notice msg={msg} />
       </div>
@@ -369,6 +387,7 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
 }
 
 function RecordWaste({ items }: { items: ItemOpt[] }) {
+  const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -386,7 +405,13 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
       if (r.ok) {
         setMsg({
           ok: true,
-          text: `Recorded${r.data.value !== undefined ? ` — ${fmtIQD(r.data.value)} written off` : ""} (journal ${r.data.journalNo ?? "—"}).`,
+          text:
+            r.data.value !== undefined
+              ? t("Recorded — {value} written off (journal {journal}).", {
+                  value: fmtIQD(r.data.value),
+                  journal: r.data.journalNo ?? "—",
+                })
+              : t("Recorded (journal {journal}).", { journal: r.data.journalNo ?? "—" }),
         });
         setQty("");
         setReason("");
@@ -398,8 +423,8 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
   if (items.length === 0) return null;
   return (
     <div className="card grid" style={{ gap: 10, alignContent: "start" }}>
-      <h3 style={{ margin: 0 }}>🗑️ Record waste</h3>
-      <Field label="Item">
+      <h3 style={{ margin: 0 }}>🗑️ {t("Record waste")}</h3>
+      <Field label={t("Item")}>
         <select
           style={inputStyle}
           value={itemId}
@@ -416,7 +441,7 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
         </select>
       </Field>
       <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <Field label="What happened">
+        <Field label={t("What happened")}>
           <select
             style={inputStyle}
             value={type}
@@ -424,12 +449,12 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
           >
             {WASTE_TYPES.map((w) => (
               <option key={w} value={w}>
-                {movementLabel(w)}
+                {t(movementLabel(w))}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Quantity lost">
+        <Field label={t("Quantity lost")}>
           <input
             style={inputStyle}
             value={qty}
@@ -437,11 +462,11 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
             inputMode="decimal"
           />
         </Field>
-        <Field label="Unit">
+        <Field label={t("Unit")}>
           <UnitSelect item={item} value={unit} onChange={setUnit} />
         </Field>
       </div>
-      <Field label="Why (required)">
+      <Field label={t("Why (required)")}>
         <input
           style={inputStyle}
           value={reason}
@@ -450,8 +475,9 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
         />
       </Field>
       <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
-        Taken out at average cost: Dr 5300 Waste / Cr 1200 Inventory. Large write-offs need a
-        manager.
+        {t(
+          "Taken out at average cost: Dr 5300 Waste / Cr 1200 Inventory. Large write-offs need a manager.",
+        )}
       </p>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <button
@@ -459,7 +485,7 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
           onClick={submit}
           disabled={pending || !qty || !reason.trim()}
         >
-          {pending ? "Recording…" : "Record waste"}
+          {pending ? t("Recording…") : t("Record waste")}
         </button>
         <Notice msg={msg} />
       </div>
@@ -468,6 +494,7 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
 }
 
 function CorrectStock({ items }: { items: ItemOpt[] }) {
+  const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -492,7 +519,10 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
       if (r.ok) {
         setMsg({
           ok: true,
-          text: `Corrected — ${fmtIQD(r.data.value)} (journal ${r.data.journalNo ?? "—"}).`,
+          text: t("Corrected — {value} (journal {journal}).", {
+            value: fmtIQD(r.data.value),
+            journal: r.data.journalNo ?? "—",
+          }),
         });
         setDelta("");
         setUnitCost("");
@@ -505,8 +535,8 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
   if (items.length === 0) return null;
   return (
     <div className="card grid" style={{ gap: 10, alignContent: "start" }}>
-      <h3 style={{ margin: 0 }}>✏️ Correct stock (manager)</h3>
-      <Field label="Item">
+      <h3 style={{ margin: 0 }}>✏️ {t("Correct stock (manager)")}</h3>
+      <Field label={t("Item")}>
         <select
           style={inputStyle}
           value={itemId}
@@ -523,7 +553,7 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
         </select>
       </Field>
       <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <Field label="Change (− to reduce)">
+        <Field label={t("Change (− to reduce)")}>
           <input
             style={inputStyle}
             value={delta}
@@ -532,21 +562,21 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
             placeholder="-250"
           />
         </Field>
-        <Field label="Unit">
+        <Field label={t("Unit")}>
           <UnitSelect item={item} value={unit} onChange={setUnit} />
         </Field>
-        <Field label="Cost per base unit (additions)">
+        <Field label={t("Cost per base unit (additions)")}>
           <input
             style={inputStyle}
             value={unitCost}
             onChange={(e) => setUnitCost(e.target.value)}
             inputMode="decimal"
             disabled={!adding}
-            placeholder="average"
+            placeholder={t("average")}
           />
         </Field>
       </div>
-      <Field label="Why (required)">
+      <Field label={t("Why (required)")}>
         <input
           style={inputStyle}
           value={reason}
@@ -555,9 +585,9 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
         />
       </Field>
       <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
-        For corrections outside a count. Losses go out at average cost; posted against 5400
-        Inventory count variance and written to the audit trail. Counted stock is corrected by
-        approving a count.
+        {t(
+          "For corrections outside a count. Losses go out at average cost; posted against 5400 Inventory count variance and written to the audit trail. Counted stock is corrected by approving a count.",
+        )}
       </p>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <button
@@ -565,7 +595,7 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
           onClick={submit}
           disabled={pending || !delta || !reason.trim()}
         >
-          {pending ? "Posting…" : "Post correction"}
+          {pending ? t("Posting…") : t("Post correction")}
         </button>
         <Notice msg={msg} />
       </div>

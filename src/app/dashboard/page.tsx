@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getT } from "@/lib/i18n/server";
+import { getMsg, getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getDashboard, getReconciliation } from "@/lib/db/reports";
 import { getSalesOrders, getStockBoard } from "@/lib/db/read";
@@ -20,6 +20,7 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const profile = await requirePermission("profit.view");
   const t = await getT();
+  const msg = await getMsg();
   const today = businessToday(profile.timezone);
   const [alerts, brief, d, rec, board, recent, channels] = await Promise.all([
     getCurrentAlerts(),
@@ -45,7 +46,7 @@ export default async function DashboardPage() {
     },
     { label: t("dash.orders"), value: String(d.orders), href: `/orders?${day}` },
     { label: t("dash.avgOrder"), value: fmtIQD(d.averageOrder), href: `/orders?${day}` },
-    { label: "Inventory (1200)", value: fmtIQD(d.inventoryValue), href: "/inventory" },
+    { label: t("Inventory (1200)"), value: fmtIQD(d.inventoryValue), href: "/inventory" },
     {
       label: t("dash.lowStock"),
       value: String(d.lowStock),
@@ -59,7 +60,7 @@ export default async function DashboardPage() {
       <div className="phead">
         <h1>{t("dash.title")}</h1>
         <span className="sc">
-          {today} · {profile.timezone}
+          {today} · {t(profile.timezone)}
         </span>
         <div className="sp">
           <Link
@@ -67,8 +68,8 @@ export default async function DashboardPage() {
             className={`badge ${differences.length ? "err" : "ok"}`}
           >
             {differences.length
-              ? `${differences.length} reconciliation difference(s)`
-              : "Books reconcile"}
+              ? t("{n} reconciliation difference(s)", { n: differences.length })
+              : t("Books reconcile")}
           </Link>
         </div>
       </div>
@@ -89,6 +90,8 @@ export default async function DashboardPage() {
           calculations: t("dash.calculations"),
           toDo: t("dash.toDo"),
         }}
+        t={t}
+        msg={msg}
       />
 
       <h2 style={{ margin: 0, fontSize: "1.15rem" }}>{t("dash.today")}</h2>
@@ -118,10 +121,9 @@ export default async function DashboardPage() {
         ))}
       </div>
       <p className="muted" style={{ margin: 0, fontSize: ".8rem" }}>
-        Revenue and cost of sales are read from today&apos;s published journal lines — the same
-        figures the profit and loss will show. Gross profit here is after everything in cost of
-        sales: waste, count differences, purchase price differences and platform fees. Open a figure
-        to see what is behind it.
+        {t(
+          "Revenue and cost of sales are read from today's published journal lines — the same figures the profit and loss will show. Gross profit here is after everything in cost of sales: waste, count differences, purchase price differences and platform fees. Open a figure to see what is behind it.",
+        )}
       </p>
 
       <div
@@ -131,9 +133,9 @@ export default async function DashboardPage() {
         <div className="card">
           <h3 style={{ marginTop: 0 }}>{t("dash.lowStock")}</h3>
           {board.length === 0 ? (
-            <span className="muted">No items yet.</span>
+            <span className="muted">{t("No items yet.")}</span>
           ) : low.length === 0 ? (
-            <span className="badge ok">All above reorder level</span>
+            <span className="badge ok">{t("All above reorder level")}</span>
           ) : (
             low.map((s) => (
               <div key={s.itemId} className="deduction-row">
@@ -147,9 +149,9 @@ export default async function DashboardPage() {
           )}
         </div>
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Recent sales</h3>
+          <h3 style={{ marginTop: 0 }}>{t("Recent sales")}</h3>
           {recent.length === 0 ? (
-            <span className="muted">No sales yet.</span>
+            <span className="muted">{t("No sales yet.")}</span>
           ) : (
             recent.map((o) => (
               <div key={o.id} className="deduction-row">
@@ -159,7 +161,7 @@ export default async function DashboardPage() {
                   <span className="muted" style={{ fontSize: ".75rem" }}>
                     {" "}
                     · {dateTimeIn(profile.timezone, o.placedAt).slice(11)}
-                    {o.status !== "completed" ? ` · ${o.status}` : ""}
+                    {o.status !== "completed" ? ` · ${t(o.status)}` : ""}
                   </span>
                 </span>
                 <span className="mono">{fmtIQD(o.net)}</span>

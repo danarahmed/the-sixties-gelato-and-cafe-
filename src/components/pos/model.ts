@@ -7,7 +7,7 @@
  */
 import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
-import type { Locale } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/core";
 import type { DiningTable, OpenBill, PosItem } from "@/lib/db/pos";
 import { isPlatformChannel } from "@/lib/channels";
 import { reasonMissing } from "@/lib/reasons";

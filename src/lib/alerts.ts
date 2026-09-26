@@ -6,6 +6,10 @@
  */
 import { addDays } from "@/lib/dates";
 import { fmtIQD } from "@/lib/format";
+import { fill, type T } from "@/lib/i18n/core";
+
+/** The brief in English, when no translator is given (the tests, the server's logs). */
+const english: T = (key, vars) => fill(key, vars);
 
 export type Urgency = "red" | "orange";
 export type Confidence = "high" | "medium" | "low";
@@ -294,71 +298,123 @@ export function parseBrief(raw: unknown): DailyBrief {
   };
 }
 
-const times = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
-
-/** What happened, and nothing else: the brief's facts as lines. */
-export function briefFacts(b: DailyBrief): string[] {
+/** What happened, and nothing else: the brief's facts as lines, in the reader's language. */
+export function briefFacts(b: DailyBrief, t: T = english): string[] {
   const f = b.facts;
   if (f.sales === 0 && f.netSales === 0 && f.voids === 0 && f.refunds === 0) {
     return [
-      "No sales.",
-      ...(f.waste ? [`Waste ${fmtIQD(f.waste)}.`] : []),
-      ...(f.drawerCounts ? [drawerLine(f.drawerDifference)] : []),
+      t("No sales."),
+      ...(f.waste ? [t("Waste {amount}.", { amount: fmtIQD(f.waste) })] : []),
+      ...(f.drawerCounts ? [drawerLine(f.drawerDifference, t)] : []),
     ];
   }
-  const out = [`Net sales ${fmtIQD(f.netSales)} over ${times(f.sales, "sale", "sales")}.`];
-  if (f.voids) out.push(`${times(f.voids, "void", "voids")} (${fmtIQD(f.voided)}).`);
-  if (f.refunds) out.push(`${times(f.refunds, "refund", "refunds")} (${fmtIQD(f.refunded)}).`);
+  const out = [
+    f.sales === 1
+      ? t("Net sales {amount} over 1 sale.", { amount: fmtIQD(f.netSales) })
+      : t("Net sales {amount} over {n} sales.", { amount: fmtIQD(f.netSales), n: f.sales }),
+  ];
+  if (f.voids)
+    out.push(
+      f.voids === 1
+        ? t("1 void ({amount}).", { amount: fmtIQD(f.voided) })
+        : t("{n} voids ({amount}).", { n: f.voids, amount: fmtIQD(f.voided) }),
+    );
+  if (f.refunds)
+    out.push(
+      f.refunds === 1
+        ? t("1 refund ({amount}).", { amount: fmtIQD(f.refunded) })
+        : t("{n} refunds ({amount}).", { n: f.refunds, amount: fmtIQD(f.refunded) }),
+    );
   if (f.discounts)
-    out.push(`${times(f.discounts, "discount", "discounts")} (${fmtIQD(f.discounted)}).`);
-  if (f.waste) out.push(`Waste ${fmtIQD(f.waste)}.`);
-  out.push(f.drawerCounts ? drawerLine(f.drawerDifference) : "The drawer was not counted.");
+    out.push(
+      f.discounts === 1
+        ? t("1 discount ({amount}).", { amount: fmtIQD(f.discounted) })
+        : t("{n} discounts ({amount}).", { n: f.discounts, amount: fmtIQD(f.discounted) }),
+    );
+  if (f.waste) out.push(t("Waste {amount}.", { amount: fmtIQD(f.waste) }));
+  out.push(f.drawerCounts ? drawerLine(f.drawerDifference, t) : t("The drawer was not counted."));
   if (f.uncostedSales)
     out.push(
-      `${times(f.uncostedSales, "sale", "sales")} with something costed at nothing (Reports → Uncosted sales).`,
+      f.uncostedSales === 1
+        ? t("1 sale with something costed at nothing (Reports → Uncosted sales).")
+        : t("{n} sales with something costed at nothing (Reports → Uncosted sales).", {
+            n: f.uncostedSales,
+          }),
     );
   return out;
 }
 
-function drawerLine(difference: number): string {
-  if (difference === 0) return "The drawer was counted, and was right.";
-  return `The drawer was counted ${fmtIQD(Math.abs(difference))} ${difference < 0 ? "short" : "over"}.`;
+function drawerLine(difference: number, t: T): string {
+  if (difference === 0) return t("The drawer was counted, and was right.");
+  const amount = fmtIQD(Math.abs(difference));
+  return difference < 0
+    ? t("The drawer was counted {amount} short.", { amount })
+    : t("The drawer was counted {amount} over.", { amount });
 }
 
 const pct = (v: number) => `${Number(v.toFixed(1))}%`;
 
-/** What follows from the facts: the brief's calculations as lines. */
-export function briefCalculations(b: DailyBrief, weekday: string): string[] {
+/**
+ * What follows from the facts: the brief's calculations as lines, in the
+ * reader's language. `weekday` is the day's English name ("Monday").
+ */
+export function briefCalculations(b: DailyBrief, weekday: string, t: T = english): string[] {
   const c = b.calculations;
+  const day = t(weekday);
   const out: string[] = [];
   if (b.facts.netSales > 0) {
     out.push(
-      `Cost of goods ${fmtIQD(c.costOfGoods)}${c.costOfGoodsPercent === null ? "" : `, ${pct(c.costOfGoodsPercent)} of sales`}.`,
+      c.costOfGoodsPercent === null
+        ? t("Cost of goods {amount}.", { amount: fmtIQD(c.costOfGoods) })
+        : t("Cost of goods {amount}, {pct} of sales.", {
+            amount: fmtIQD(c.costOfGoods),
+            pct: pct(c.costOfGoodsPercent),
+          }),
     );
     out.push(
-      `Gross profit ${fmtIQD(c.grossProfit)}${c.grossMarginPercent === null ? "" : ` (${pct(c.grossMarginPercent)})`}, after waste and every other cost of sales.`,
+      c.grossMarginPercent === null
+        ? t("Gross profit {amount}, after waste and every other cost of sales.", {
+            amount: fmtIQD(c.grossProfit),
+          })
+        : t("Gross profit {amount} ({pct}), after waste and every other cost of sales.", {
+            amount: fmtIQD(c.grossProfit),
+            pct: pct(c.grossMarginPercent),
+          }),
     );
   }
   if (c.sameDayLastWeek > 0) {
     const ch = c.changeFromLastWeekPercent;
     out.push(
-      `Last ${weekday}: ${fmtIQD(c.sameDayLastWeek)}${ch === null ? "" : ` (${ch > 0 ? "+" : ""}${pct(ch)} since)`}.`,
+      ch === null
+        ? t("Last {weekday}: {amount}.", { weekday: day, amount: fmtIQD(c.sameDayLastWeek) })
+        : t("Last {weekday}: {amount} ({change} since).", {
+            weekday: day,
+            amount: fmtIQD(c.sameDayLastWeek),
+            change: `${ch > 0 ? "+" : ""}${pct(ch)}`,
+          }),
     );
   }
   if (c.usualForTheWeekday !== null) {
-    out.push(`A usual ${weekday} (the four before): ${fmtIQD(c.usualForTheWeekday)}.`);
+    out.push(
+      t("A usual {weekday} (the four before): {amount}.", {
+        weekday: day,
+        amount: fmtIQD(c.usualForTheWeekday),
+      }),
+    );
   }
-  if (!out.length) out.push("Nothing to calculate: there were no sales.");
+  if (!out.length) out.push(t("Nothing to calculate: there were no sales."));
   return out;
 }
 
-/** What to do: the red alerts nobody has answered yet, or that nothing is urgent. */
-export function briefToDo(b: DailyBrief): string[] {
+/**
+ * What to do: the red alerts nobody has answered yet (as the database words
+ * them: shown through msg()), or that nothing is urgent.
+ */
+export function briefToDo(b: DailyBrief, t: T = english): string[] {
   if (b.recommendations.length) return b.recommendations;
   const orange = b.alerts.filter((a) => a.urgency === "orange" && !a.acknowledged).length;
+  if (orange === 1) return [t("Nothing urgent. 1 orange alert waits for a quiet moment.")];
   if (orange)
-    return [
-      `Nothing urgent. ${times(orange, "orange alert waits", "orange alerts wait")} for a quiet moment.`,
-    ];
-  return ["Nothing to do."];
+    return [t("Nothing urgent. {n} orange alerts wait for a quiet moment.", { n: orange })];
+  return [t("Nothing to do.")];
 }

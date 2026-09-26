@@ -11,6 +11,7 @@ import {
 } from "@/lib/actions/purchasing";
 import type { PaymentSource } from "@/lib/validation";
 import { fmtIQD } from "@/lib/format";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import type { OpenBill, VendorRow } from "@/lib/db/books";
 
@@ -55,6 +56,7 @@ export function VendorsClient({
   canPay: boolean;
   canAddVendor: boolean;
 }) {
+  const { t } = useT();
   const router = useRouter();
   // By id, not position: a vendor renamed or taken out of use moves in the list.
   const [selId, setSelId] = useState(vendors[0]?.id ?? "");
@@ -65,21 +67,21 @@ export function VendorsClient({
     return canAddVendor ? (
       <AddVendor onDone={() => router.refresh()} standalone />
     ) : (
-      <div className="card muted">No vendors yet.</div>
+      <div className="card muted">{t("No vendors yet.")}</div>
     );
   }
 
   const tabs: [Tab, string][] = [
-    ["statement", "Statement"],
-    ["bills", "Bills & payments"],
+    ["statement", t("Statement")],
+    ["bills", t("Bills & payments")],
   ];
-  if (canAddVendor) tabs.push(["edit", "Edit vendor"], ["new", "New vendor"]);
+  if (canAddVendor) tabs.push(["edit", t("Edit vendor")], ["new", t("New vendor")]);
 
   return (
     <div className="three">
       <div className="listpane">
         <div className="lh">
-          <b style={{ fontSize: ".9rem" }}>All Vendors</b>
+          <b style={{ fontSize: ".9rem" }}>{t("All Vendors")}</b>
           <span className="sc" style={{ marginInlineStart: "auto" }}>
             {vendors.length}
           </span>
@@ -96,7 +98,7 @@ export function VendorsClient({
             <span>
               <span className="nm">{v.name}</span>
               <span className="sub2" style={{ display: "block" }}>
-                {v.isActive ? (v.contact ?? "—") : "Out of use"}
+                {v.isActive ? (v.contact ?? "—") : t("Out of use")}
               </span>
             </span>
             <span
@@ -115,13 +117,15 @@ export function VendorsClient({
             {vendor?.name}
             {vendor && !vendor.isActive && (
               <span className="badge warn" style={{ marginInlineStart: 8, fontSize: ".7rem" }}>
-                Out of use
+                {t("Out of use")}
               </span>
             )}
           </h2>
           <div className="sc" style={{ marginBlockStart: 3 }}>
             {vendor?.phone ? `${vendor.phone} · ` : ""}
-            {vendor && vendor.overdue > 0 ? `${fmtIQD(vendor.overdue)} overdue` : "Nothing overdue"}
+            {vendor && vendor.overdue > 0
+              ? t("{amount} overdue", { amount: fmtIQD(vendor.overdue) })
+              : t("Nothing overdue")}
           </div>
           <div className="dtabs">
             {tabs.map(([k, label]) => (
@@ -171,6 +175,7 @@ export function VendorsClient({
 }
 
 function Statement({ vendor, businessName }: { vendor: VendorRow; businessName: string }) {
+  const { t, msg } = useT();
   const running = useMemo(() => {
     let bal = 0;
     return vendor.lines.map((l) => {
@@ -188,7 +193,7 @@ function Statement({ vendor, businessName }: { vendor: VendorRow; businessName: 
           </div>
         </div>
         <div className="muted" style={{ fontSize: ".76rem", textAlign: "end" }}>
-          <strong>To</strong>
+          <strong>{t("To")}</strong>
           <br />
           {vendor.name}
           <br />
@@ -198,9 +203,9 @@ function Statement({ vendor, businessName }: { vendor: VendorRow; businessName: 
 
       <div className="masthead" style={{ paddingBlockEnd: 0 }}>
         <div className="doc" style={{ fontSize: "1.02rem", fontStyle: "normal", fontWeight: 600 }}>
-          Statement of Account
+          {t("Statement of Account")}
         </div>
-        <div className="period">All transactions to date · IQD</div>
+        <div className="period">{t("All transactions to date · IQD")}</div>
       </div>
       <div className="rule-band" style={{ marginBlockEnd: 14 }} />
 
@@ -208,27 +213,27 @@ function Statement({ vendor, businessName }: { vendor: VendorRow; businessName: 
         <table>
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Particulars</th>
-              <th>Ref</th>
-              <th className="right">Charge</th>
-              <th className="right">Payment</th>
-              <th className="right">Balance</th>
+              <th>{t("Date")}</th>
+              <th>{t("Particulars")}</th>
+              <th>{t("Ref")}</th>
+              <th className="right">{t("Charge")}</th>
+              <th className="right">{t("Payment")}</th>
+              <th className="right">{t("Balance")}</th>
             </tr>
           </thead>
           <tbody>
             {running.length === 0 ? (
               <tr>
                 <td colSpan={6} className="muted" style={{ fontStyle: "italic" }}>
-                  No transactions with this vendor yet.
+                  {t("No transactions with this vendor yet.")}
                 </td>
               </tr>
             ) : (
               running.map((l, i) => (
                 <tr key={i}>
                   <td>{l.date}</td>
-                  <td>{l.particulars}</td>
-                  <td className="ref">{l.ref}</td>
+                  <td>{msg(l.particulars)}</td>
+                  <td className="ref">{l.ref ? t(l.ref.text, l.ref.vars) : ""}</td>
                   <td className="right money">{l.charge ? fmtIQD(l.charge) : "—"}</td>
                   <td className="right money">{l.payment ? `(${fmtIQD(l.payment)})` : "—"}</td>
                   <td className="right money">{fmtIQD(l.bal)}</td>
@@ -241,18 +246,18 @@ function Statement({ vendor, businessName }: { vendor: VendorRow; businessName: 
 
       <div className="sumbox">
         <div className="sc" style={{ marginBlockEnd: 6 }}>
-          Account Summary
+          {t("Account Summary")}
         </div>
         <div className="srow">
-          <span>Billed to date</span>
+          <span>{t("Billed to date")}</span>
           <span className="money">{fmtIQD(vendor.billed)}</span>
         </div>
         <div className="srow">
-          <span>Paid</span>
+          <span>{t("Paid")}</span>
           <span className="money">({fmtIQD(vendor.paid)})</span>
         </div>
         <div className="srow tot">
-          <span>Balance due</span>
+          <span>{t("Balance due")}</span>
           <span className="money" style={{ color: vendor.balance > 0 ? "var(--err)" : undefined }}>
             {fmtIQD(vendor.balance)}
           </span>
@@ -283,6 +288,7 @@ function Bills({
   canPay: boolean;
   onDone: () => void;
 }) {
+  const { t, msg: say } = useT();
   const [busy, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
   const [kind, setKind] = useState<"receipt" | "expense">(
@@ -322,13 +328,24 @@ function Bills({
       });
       if (r.ok) {
         const pv = r.data.priceVariance;
+        const vars = {
+          bill: r.data.invoiceNo,
+          journal: r.data.journalNo ?? "—",
+          amount: fmtIQD(Math.abs(pv)),
+        };
         setMsg({
           ok: true,
-          text:
-            `Bill ${r.data.invoiceNo} recorded (journal ${r.data.journalNo ?? "—"})` +
-            (pv
-              ? ` — ${fmtIQD(Math.abs(pv))} ${pv > 0 ? "over" : "under"} the receipt, to 5050 Purchase price variance.`
-              : "."),
+          text: pv
+            ? pv > 0
+              ? t(
+                  "Bill {bill} recorded (journal {journal}) — {amount} over the receipt, to 5050 Purchase price variance.",
+                  vars,
+                )
+              : t(
+                  "Bill {bill} recorded (journal {journal}) — {amount} under the receipt, to 5050 Purchase price variance.",
+                  vars,
+                )
+            : t("Bill {bill} recorded (journal {journal}).", vars),
         });
         setInv(null);
         setAmount("");
@@ -345,7 +362,10 @@ function Bills({
       if (r.ok) {
         setMsg({
           ok: true,
-          text: `Payment recorded (journal ${r.data.journalNo ?? "—"}). ${fmtIQD(r.data.outstanding)} still outstanding on that bill.`,
+          text: t(
+            "Payment recorded (journal {journal}). {amount} still outstanding on that bill.",
+            { journal: r.data.journalNo ?? "—", amount: fmtIQD(r.data.outstanding) },
+          ),
         });
         setPayAmt("");
         setPayFor("");
@@ -359,9 +379,9 @@ function Bills({
       {canBill && (
         <div className="panel">
           <div className="panel-h">
-            <h3>Record a bill</h3>
+            <h3>{t("Record a bill")}</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              The supplier&apos;s invoice — raises what you owe
+              {t("The supplier's invoice — raises what you owe")}
             </span>
           </div>
           <div className="panel-b grid" style={{ gap: 12 }}>
@@ -373,7 +393,7 @@ function Bills({
                   onChange={() => setKind("receipt")}
                   disabled={receipts.length === 0}
                 />
-                For goods received {receipts.length === 0 && "(no unbilled receipts)"}
+                {t("For goods received")} {receipts.length === 0 && t("(no unbilled receipts)")}
               </label>
               <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 <input
@@ -381,19 +401,21 @@ function Bills({
                   checked={kind === "expense"}
                   onChange={() => setKind("expense")}
                 />
-                For a service or asset (rent, repairs, equipment…)
+                {t("For a service or asset (rent, repairs, equipment…)")}
               </label>
             </div>
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
               {kind === "receipt" ? (
                 <label style={{ flex: 2, minWidth: 220 }}>
-                  <div className="sc">Goods receipt</div>
+                  <div className="sc">{t("Goods receipt")}</div>
                   <select value={receiptId} onChange={(e) => setReceiptId(e.target.value)}>
                     {receipts.map((r) => (
                       <option key={r.id} value={r.id}>
                         {r.supplierId === null
-                          ? `Before controls · ${r.note ?? "supplier not recorded"}`
-                          : `Receipt ${r.receiptNo ?? "—"}`}{" "}
+                          ? t("Before controls · {note}", {
+                              note: r.note ?? t("supplier not recorded"),
+                            })
+                          : t("Receipt {no}", { no: r.receiptNo ?? "—" })}{" "}
                         · {r.receivedAt.slice(0, 10)} · {fmtIQD(r.value)}
                       </option>
                     ))}
@@ -401,28 +423,28 @@ function Bills({
                 </label>
               ) : (
                 <label style={{ flex: 2, minWidth: 220 }}>
-                  <div className="sc">Charge to account</div>
+                  <div className="sc">{t("Charge to account")}</div>
                   <select value={accountCode} onChange={(e) => setAccountCode(e.target.value)}>
                     {accounts.map((a) => (
                       <option key={a.code} value={a.code}>
-                        {a.code} {a.name}
+                        {a.code} {say(a.name)}
                       </option>
                     ))}
                   </select>
                 </label>
               )}
               <label style={{ flex: 1, minWidth: 120 }}>
-                <div className="sc">Invoice no.</div>
+                <div className="sc">{t("Invoice no.")}</div>
                 <input
-                  aria-label="Invoice no."
+                  aria-label={t("Invoice no.")}
                   value={inv ?? nextBillNo ?? ""}
                   onFocus={(e) => e.target.select()}
                   onChange={(e) => setInv(e.target.value)}
-                  placeholder={nextBillNo ?? "The supplier's invoice no."}
+                  placeholder={nextBillNo ?? t("The supplier's invoice no.")}
                 />
               </label>
               <label style={{ minWidth: 140 }}>
-                <div className="sc">Invoice date</div>
+                <div className="sc">{t("Invoice date")}</div>
                 <input
                   type="date"
                   value={invDate}
@@ -431,7 +453,7 @@ function Bills({
                 />
               </label>
               <label style={{ minWidth: 130 }}>
-                <div className="sc">Amount (IQD)</div>
+                <div className="sc">{t("Amount (IQD)")}</div>
                 <input
                   className="amt"
                   style={{ textAlign: "end" }}
@@ -441,12 +463,12 @@ function Bills({
                 />
               </label>
               <label style={{ minWidth: 110 }}>
-                <div className="sc">Terms</div>
+                <div className="sc">{t("Terms")}</div>
                 <select value={terms} onChange={(e) => setTerms(e.target.value)}>
-                  <option value="0">Due now</option>
-                  <option value="7">Net 7 days</option>
-                  <option value="15">Net 15 days</option>
-                  <option value="30">Net 30 days</option>
+                  <option value="0">{t("Due now")}</option>
+                  <option value="7">{t("Net 7 days")}</option>
+                  <option value="15">{t("Net 15 days")}</option>
+                  <option value="30">{t("Net 30 days")}</option>
                 </select>
               </label>
               <button
@@ -454,26 +476,36 @@ function Bills({
                 onClick={raise}
                 disabled={busy || !amount || (kind === "receipt" ? !receiptId : !accountCode)}
               >
-                {busy ? "Saving…" : "Record bill"}
+                {busy ? t("Saving…") : t("Record bill")}
               </button>
             </div>
             {ownNo && nextBillNo && (
               <p className="muted" style={{ fontSize: ".78rem", margin: 0 }}>
-                {nextBillNo} is the café&apos;s own number, given when the bill is recorded and
-                never to another bill. If the supplier&apos;s invoice has its own number, type that
-                instead.
+                {t(
+                  "{no} is the café's own number, given when the bill is recorded and never to another bill. If the supplier's invoice has its own number, type that instead.",
+                  { no: nextBillNo },
+                )}
               </p>
             )}
             {kind === "receipt" && receipt && amountN === 0 && (
               <p className="muted" style={{ fontSize: ".78rem", margin: 0 }}>
-                Type the amount the supplier&apos;s invoice says. It is checked against the{" "}
-                {fmtIQD(receipt.value)} the receipt recorded.
+                {t(
+                  "Type the amount the supplier's invoice says. It is checked against the {amount} the receipt recorded.",
+                  { amount: fmtIQD(receipt.value) },
+                )}
               </p>
             )}
             {kind === "receipt" && receipt && amountN > 0 && variance !== 0 && (
               <p className="muted" style={{ fontSize: ".78rem", margin: 0 }}>
-                The bill is {fmtIQD(Math.abs(variance))} {variance > 0 ? "more" : "less"} than the
-                receipt recorded; the difference goes to 5050 Purchase price variance.
+                {variance > 0
+                  ? t(
+                      "The bill is {amount} more than the receipt recorded; the difference goes to 5050 Purchase price variance.",
+                      { amount: fmtIQD(Math.abs(variance)) },
+                    )
+                  : t(
+                      "The bill is {amount} less than the receipt recorded; the difference goes to 5050 Purchase price variance.",
+                      { amount: fmtIQD(Math.abs(variance)) },
+                    )}
               </p>
             )}
           </div>
@@ -482,21 +514,21 @@ function Bills({
 
       <div className="panel">
         <div className="panel-h">
-          <h3>Open bills</h3>
+          <h3>{t("Open bills")}</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            {bills.length} unpaid
+            {t("{n} unpaid", { n: bills.length })}
           </span>
         </div>
         <div className="tw">
           <table>
             <thead>
               <tr>
-                <th>Invoice</th>
-                <th>Dated</th>
-                <th>Due</th>
-                <th className="right">Total</th>
-                <th className="right">Outstanding</th>
-                <th className="right">Status</th>
+                <th>{t("Invoice")}</th>
+                <th>{t("Dated")}</th>
+                <th>{t("Due")}</th>
+                <th className="right">{t("Total")}</th>
+                <th className="right">{t("Outstanding")}</th>
+                <th className="right">{t("Status")}</th>
                 {canPay && <th />}
               </tr>
             </thead>
@@ -504,7 +536,7 @@ function Bills({
               {bills.length === 0 ? (
                 <tr>
                   <td colSpan={canPay ? 7 : 6} className="muted" style={{ fontStyle: "italic" }}>
-                    Nothing outstanding.
+                    {t("Nothing outstanding.")}
                   </td>
                 </tr>
               ) : (
@@ -517,7 +549,7 @@ function Bills({
                     <td className="right money">{fmtIQD(b.outstanding)}</td>
                     <td className="right">
                       <span className={`ref ${b.daysOverdue > 0 ? "due" : ""}`}>
-                        {b.daysOverdue > 0 ? `${b.daysOverdue}d overdue` : "Current"}
+                        {b.daysOverdue > 0 ? t("{n}d overdue", { n: b.daysOverdue }) : t("Current")}
                       </span>
                     </td>
                     {canPay && (
@@ -543,7 +575,7 @@ function Bills({
           <div className="panel-b" style={{ borderBlockStart: "1px solid var(--border)" }}>
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
               <label style={{ flex: 1, minWidth: 170 }}>
-                <div className="sc">Pay bill</div>
+                <div className="sc">{t("Pay bill")}</div>
                 <select
                   value={payFor}
                   onChange={(e) => {
@@ -552,16 +584,19 @@ function Bills({
                     if (b) setPayAmt(String(b.outstanding));
                   }}
                 >
-                  <option value="">Choose an invoice…</option>
+                  <option value="">{t("Choose an invoice…")}</option>
                   {bills.map((b) => (
                     <option key={b.id} value={b.id}>
-                      {b.invoiceNo || b.id.slice(0, 8)} — {fmtIQD(b.outstanding)} outstanding
+                      {t("{invoice} — {amount} outstanding", {
+                        invoice: b.invoiceNo || b.id.slice(0, 8),
+                        amount: fmtIQD(b.outstanding),
+                      })}
                     </option>
                   ))}
                 </select>
               </label>
               <label style={{ minWidth: 130 }}>
-                <div className="sc">Amount (IQD)</div>
+                <div className="sc">{t("Amount (IQD)")}</div>
                 <input
                   className="amt"
                   style={{ textAlign: "end" }}
@@ -571,22 +606,22 @@ function Bills({
                 />
               </label>
               <label style={{ minWidth: 120 }}>
-                <div className="sc">Paid from</div>
+                <div className="sc">{t("Paid from")}</div>
                 <select
-                  aria-label="Paid from"
+                  aria-label={t("Paid from")}
                   value={method}
                   onChange={(e) => setMethod(e.target.value as PaymentSource | "")}
                 >
-                  <option value="">Choose…</option>
-                  <option value="till">The till (today&apos;s drawer)</option>
-                  <option value="safe">The safe</option>
-                  <option value="bank">The bank</option>
-                  <option value="card">A card</option>
-                  <option value="owner">The owner, personally</option>
+                  <option value="">{t("Choose…")}</option>
+                  <option value="till">{t("The till (today's drawer)")}</option>
+                  <option value="safe">{t("The safe")}</option>
+                  <option value="bank">{t("The bank")}</option>
+                  <option value="card">{t("A card")}</option>
+                  <option value="owner">{t("The owner, personally")}</option>
                 </select>
               </label>
               <button onClick={pay} disabled={busy || !payFor || !payAmt || !method}>
-                {busy ? "Paying…" : "Record payment"}
+                {busy ? t("Paying…") : t("Record payment")}
               </button>
             </div>
           </div>
@@ -598,6 +633,7 @@ function Bills({
 }
 
 function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: boolean }) {
+  const { t } = useT();
   const [busy, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
   const [f, setF] = useState({ name: "", contact: "", phone: "" });
@@ -607,7 +643,7 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
     start(async () => {
       const r = await createSupplierAction(f);
       if (r.ok) {
-        setMsg({ ok: true, text: `Added ${f.name}.` });
+        setMsg({ ok: true, text: t("Added {name}.", { name: f.name }) });
         setF({ name: "", contact: "", phone: "" });
         onDone();
       } else setMsg({ ok: false, text: r.error });
@@ -618,9 +654,9 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
     <div className={standalone ? "panel" : ""}>
       {standalone && (
         <div className="panel-h">
-          <h3>No vendors yet</h3>
+          <h3>{t("No vendors yet")}</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            Add the suppliers the shop buys from
+            {t("Add the suppliers the shop buys from")}
           </span>
         </div>
       )}
@@ -635,27 +671,27 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
           }}
         >
           <label style={{ flex: 1, minWidth: 160 }}>
-            <div className="sc">Vendor name</div>
+            <div className="sc">{t("Vendor name")}</div>
             <input
               value={f.name}
               onChange={(e) => setF({ ...f, name: e.target.value })}
-              placeholder="Baghdad Dairy Co."
+              placeholder={t("Baghdad Dairy Co.")}
             />
           </label>
           <label style={{ flex: 1, minWidth: 140 }}>
-            <div className="sc">What they supply</div>
+            <div className="sc">{t("What they supply")}</div>
             <input
               value={f.contact}
               onChange={(e) => setF({ ...f, contact: e.target.value })}
-              placeholder="Dairy & cream"
+              placeholder={t("Dairy & cream")}
             />
           </label>
           <label style={{ minWidth: 130 }}>
-            <div className="sc">Phone</div>
+            <div className="sc">{t("Phone")}</div>
             <input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
           </label>
           <button className="btn-primary" onClick={submit} disabled={busy || !f.name.trim()}>
-            {busy ? "Saving…" : "Add vendor"}
+            {busy ? t("Saving…") : t("Add vendor")}
           </button>
         </div>
         <div style={{ marginBlockStart: 12 }}>
@@ -673,6 +709,7 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
  * with the values before and after.
  */
 function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void }) {
+  const { t } = useT();
   const [busy, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
   const initial = {
@@ -700,7 +737,7 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
         leadTimeDays: days === "" ? null : Number(days),
       });
       if (r.ok) {
-        setMsg({ ok: true, text: "Saved, and on the audit trail." });
+        setMsg({ ok: true, text: t("Saved, and on the audit trail.") });
         setReason("");
         onDone();
       } else setMsg({ ok: false, text: r.error });
@@ -711,24 +748,24 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
     <div className="grid" style={{ gap: 12, maxWidth: 720 }} data-testid="edit-vendor">
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
         <label style={{ flex: 1, minWidth: 160 }}>
-          <div className="sc">Vendor name</div>
+          <div className="sc">{t("Vendor name")}</div>
           <input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
         </label>
         <label style={{ flex: 1, minWidth: 140 }}>
-          <div className="sc">What they supply</div>
+          <div className="sc">{t("What they supply")}</div>
           <input value={f.contact} onChange={(e) => setF({ ...f, contact: e.target.value })} />
         </label>
         <label style={{ minWidth: 130 }}>
-          <div className="sc">Phone</div>
+          <div className="sc">{t("Phone")}</div>
           <input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
         </label>
         <label style={{ width: 150 }}>
-          <div className="sc">Days a delivery takes</div>
+          <div className="sc">{t("Days a delivery takes")}</div>
           <input
             inputMode="numeric"
-            aria-label="Days a delivery takes"
+            aria-label={t("Days a delivery takes")}
             value={f.leadTimeDays}
-            placeholder="Café default"
+            placeholder={t("Café default")}
             onChange={(e) =>
               setF({ ...f, leadTimeDays: e.target.value.replace(/[^0-9]/g, "").slice(0, 2) })
             }
@@ -741,22 +778,21 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
           checked={f.isActive}
           onChange={(e) => setF({ ...f, isActive: e.target.checked })}
         />
-        In use: deliveries can be received from them
+        {t("In use: deliveries can be received from them")}
       </label>
       <label>
-        <div className="sc">Why (on the audit trail)</div>
+        <div className="sc">{t("Why (on the audit trail)")}</div>
         <input
           value={reason}
           maxLength={300}
           onChange={(e) => setReason(e.target.value)}
-          placeholder={f.isActive ? "e.g. their registered name" : "e.g. no longer delivers"}
+          placeholder={f.isActive ? t("e.g. their registered name") : t("e.g. no longer delivers")}
         />
       </label>
       <p className="muted" style={{ fontSize: ".78rem", margin: 0 }}>
-        No two vendors in use share a name, whatever the capitals, spaces or punctuation — so the
-        same invoice cannot be billed twice under two spellings. A vendor still owed money stays in
-        use until their bills are paid or cancelled. The days a delivery takes tell the dashboard
-        when an item they supply is running out (empty: the café&apos;s default, on Settings).
+        {t(
+          "No two vendors in use share a name, whatever the capitals, spaces or punctuation — so the same invoice cannot be billed twice under two spellings. A vendor still owed money stays in use until their bills are paid or cancelled. The days a delivery takes tell the dashboard when an item they supply is running out (empty: the café's default, on Settings).",
+        )}
       </p>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <button
@@ -764,7 +800,7 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
           onClick={save}
           disabled={busy || !changed || !f.name.trim()}
         >
-          {busy ? "Saving…" : "Save changes"}
+          {busy ? t("Saving…") : t("Save changes")}
         </button>
         <Notice msg={msg} />
       </div>
@@ -786,6 +822,7 @@ function CancelBill({
   today: string;
   onDone: () => void;
 }) {
+  const { t, msg } = useT();
   const [busy, start] = useTransition();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -797,9 +834,9 @@ function CancelBill({
       <button
         onClick={() => setOpen(true)}
         style={small}
-        title="Entered in error — a duplicate or the wrong amount"
+        title={t("Entered in error — a duplicate or the wrong amount")}
       >
-        Cancel
+        {t("Cancel")}
       </button>
     );
   }
@@ -816,7 +853,9 @@ function CancelBill({
       <input
         value={reason}
         onChange={(e) => setReason(e.target.value)}
-        placeholder={`Why cancel ${invoiceNo || "this bill"}?`}
+        placeholder={
+          invoiceNo ? t("Why cancel {bill}?", { bill: invoiceNo }) : t("Why cancel this bill?")
+        }
         style={{ minHeight: 26, width: 180, fontSize: ".78rem" }}
         maxLength={300}
         autoFocus
@@ -827,7 +866,7 @@ function CancelBill({
         min={invoiceDate}
         max={today}
         onChange={(e) => setDate(e.target.value)}
-        aria-label="Date of the cancellation"
+        aria-label={t("Date of the cancellation")}
         style={{ minHeight: 26, fontSize: ".78rem" }}
       />
       <button
@@ -844,14 +883,14 @@ function CancelBill({
           })
         }
       >
-        {busy ? "…" : "Confirm"}
+        {busy ? "…" : t("Confirm")}
       </button>
       <button onClick={() => setOpen(false)} disabled={busy} style={small}>
-        Keep
+        {t("Keep")}
       </button>
       {err && (
         <span className="red" style={{ fontSize: ".72rem", flexBasis: "100%", textAlign: "end" }}>
-          {err}
+          {msg(err)}
         </span>
       )}
     </span>

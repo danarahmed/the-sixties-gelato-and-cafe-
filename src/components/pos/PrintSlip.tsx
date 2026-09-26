@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { fmtQty } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
-import { dirFor } from "@/lib/i18n/dictionaries";
 import type { Tender } from "./model";
 
 export interface PrintJob {
@@ -52,7 +51,7 @@ export function PrintSlip({
   timezone: string;
   onDone: () => void;
 }) {
-  const { t, locale } = useT();
+  const { t, locale, dir } = useT();
   // Printed once per job, however often the till re-renders meanwhile.
   const done = useRef(onDone);
   done.current = onDone;
@@ -88,7 +87,7 @@ export function PrintSlip({
   }).format(new Date(job.at));
 
   return createPortal(
-    <div className="print-slip" dir={dirFor(locale)} lang={locale}>
+    <div className="print-slip" dir={dir} lang={locale}>
       <div className="ps-center ps-strong ps-big">{businessName}</div>
       <div className="ps-center ps-strong">
         {job.kind === "bill" ? t("print.bill") : t("print.receipt")}

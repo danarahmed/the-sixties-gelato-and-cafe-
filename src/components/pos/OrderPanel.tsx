@@ -151,7 +151,7 @@ function DiscountRow({
   onRemove: () => void;
   onAskApproval: () => void;
 }) {
-  const { t } = useT();
+  const { t, msg } = useT();
   const amount = discountAmount(discount, subtotal, money);
   const invalid = discountInvalid(discount);
   const needs = discountNeeds(discount, subtotal, rules);
@@ -223,7 +223,8 @@ function DiscountRow({
       {discount && !invalid && kept && (kept.reason || kept.by || kept.approvedBy) && (
         <p className="muted disc-note" data-testid="discount-kept">
           {[
-            kept.reason,
+            // The reason as the database keeps it: its English label.
+            kept.reason ? msg(kept.reason) : null,
             kept.by ? t("pos.givenBy").replace("{name}", kept.by) : null,
             kept.approvedBy ? t("pos.approvedBy").replace("{name}", kept.approvedBy) : null,
           ]

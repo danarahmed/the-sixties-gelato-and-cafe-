@@ -206,7 +206,7 @@ export function CancelDialog({
   onConfirm: (reason: { code: string | null; note: string | null }) => void;
   onClose: () => void;
 }) {
-  const { t } = useT();
+  const { t, msg } = useT();
   const [code, setCode] = useState("");
   const [note, setNote] = useState("");
   const missing = needsReason ? reasonMissing(code || null, note) : null;
@@ -259,7 +259,7 @@ export function CancelDialog({
       )}
       {error && (
         <div className="badge err" style={{ whiteSpace: "normal", marginTop: 8 }}>
-          ⚠️ {error}
+          ⚠️ {msg(error)}
         </div>
       )}
       <div className="pay-actions">
@@ -304,7 +304,7 @@ export function ApproveDialog({
   onConfirm: (approverId: string, pin: string) => void;
   onClose: () => void;
 }) {
-  const { t } = useT();
+  const { t, msg } = useT();
   const [who, setWho] = useState("");
   const [pin, setPin] = useState("");
   const only = approvers?.length === 1 ? approvers[0]!.id : "";
@@ -362,7 +362,7 @@ export function ApproveDialog({
           </label>
           {error && (
             <div className="badge err" style={{ whiteSpace: "normal", marginTop: 8 }}>
-              ⚠️ {error}
+              ⚠️ {msg(error)}
             </div>
           )}
           <div className="pay-actions">

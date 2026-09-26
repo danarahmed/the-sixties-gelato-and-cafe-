@@ -1,21 +1,15 @@
 /**
- * Lightweight trilingual dictionary: English (LTR), Arabic (RTL), Kurdish
- * Sorani (RTL). Kept as plain objects so it works in server and client
- * components without extra runtime dependencies.
+ * The built-in words: English, Arabic and Kurdish (Sorani), by dotted key;
+ * the screens' phrases by their English text are in ./phrases. Read on the
+ * server: a page is given its reader's language only (see core.ts).
  */
-export type Locale = "en" | "ar" | "ckb";
+import type { Words } from "./core";
+import { phrasesIn } from "./phrases";
 
-export const LOCALES: Locale[] = ["en", "ar", "ckb"];
+/** The languages built in; the owner adds more on Settings → Languages. */
+export type BuiltInLocale = "en" | "ar" | "ckb";
 
-export const LOCALE_META: Record<Locale, { label: string; dir: "ltr" | "rtl" }> = {
-  en: { label: "English", dir: "ltr" },
-  ar: { label: "العربية", dir: "rtl" },
-  ckb: { label: "کوردی", dir: "rtl" },
-};
-
-export function dirFor(locale: Locale): "ltr" | "rtl" {
-  return LOCALE_META[locale].dir;
-}
+export const LOCALES: BuiltInLocale[] = ["en", "ar", "ckb"];
 
 type Dict = Record<string, string>;
 
@@ -67,6 +61,7 @@ const en: Dict = {
   "dash.facts": "Facts",
   "dash.calculations": "Calculations",
   "dash.toDo": "To do",
+  "orders.paidBy": "Paid",
   "pos.title": "Point of Sale",
   "pos.channel": "Channel",
   "pos.pickProduct": "Select a product",
@@ -388,6 +383,7 @@ const ar: Dict = {
   "dash.facts": "الوقائع",
   "dash.calculations": "الحسابات",
   "dash.toDo": "المطلوب",
+  "orders.paidBy": "طريقة الدفع",
   "pos.title": "نقطة البيع",
   "pos.channel": "القناة",
   "pos.pickProduct": "اختر منتجًا",
@@ -689,7 +685,7 @@ const ckb: Dict = {
   "common.offline":
     "دەرهێڵ — تا پەیوەندی نەگەڕێتەوە ناتوانرێت فرۆشتن تۆمار بکرێت. هیچ شتێک پاشەکەوت ناکرێت.",
   "dash.title": "داشبۆردی خاوەن",
-  "dash.netSales": "فرۆشی ڕەسەنی ئەمڕۆ",
+  "dash.netSales": "فرۆشی پوختی ئەمڕۆ",
   "dash.grossProfit": "قازانجی گشتی دوای بەفیڕۆچوون و کرێکان",
   "dash.contribution": "قازانجی بەشداری",
   "dash.orders": "داواکارییەکان",
@@ -705,6 +701,7 @@ const ckb: Dict = {
   "dash.facts": "ڕاستییەکان",
   "dash.calculations": "ژمێرکارییەکان",
   "dash.toDo": "پێویستە بکرێت",
+  "orders.paidBy": "شێوەی پارەدان",
   "pos.title": "خاڵی فرۆشتن",
   "pos.channel": "کەناڵ",
   "pos.pickProduct": "بەرهەمێک هەڵبژێرە",
@@ -713,7 +710,7 @@ const ckb: Dict = {
   "pos.channel.direct_delivery": "گەیاندنی ڕاستەوخۆ",
   "pos.price": "نرخ",
   "pos.cost": "تێچوو",
-  "pos.margin": "پێچی قازانج",
+  "pos.margin": "پەراوێزی قازانج",
   "pos.deductions": "ئەو کۆگایەی بەم فرۆشتنە کەم دەکرێت",
   "pos.explainChannel": "پاکەتکردنی کەمکراوە بەپێی کەناڵ دەگۆڕێت.",
   "pos.item": "کاڵا",
@@ -980,13 +977,18 @@ const ckb: Dict = {
     "خاوەن یان بەڕێوەبەری گشتی پلاتفۆرم زیاد دەکات، ناوی دەگۆڕێت یان لە بەکارهێنانی لادەبات.",
 };
 
-const DICTS: Record<Locale, Dict> = { en, ar, ckb };
+const DICTS: Record<BuiltInLocale, Dict> = { en, ar, ckb };
 
-export function getDictionary(locale: Locale): Dict {
-  return DICTS[locale] ?? en;
+/** A built-in language's dotted keys (English for a language not built in). */
+export function getDictionary(locale: string): Dict {
+  return DICTS[locale as BuiltInLocale] ?? en;
 }
 
-/** Translate a key for a locale, falling back to English then the key itself. */
-export function translate(locale: Locale, key: string): string {
-  return DICTS[locale]?.[key] ?? en[key] ?? key;
+/**
+ * Every built-in word of a language: its dotted keys, English where it has
+ * none, and its phrases. A language the owner added starts from English.
+ */
+export function builtInWords(locale: string): Words {
+  if (locale === "ar" || locale === "ckb") return { ...en, ...phrasesIn(locale), ...DICTS[locale] };
+  return { ...en };
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getT } from "@/lib/i18n/server";
+import { getMsg, getT } from "@/lib/i18n/server";
+import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems, getItemsOutOfUse, getMovements, getStockBoard } from "@/lib/db/read";
 import { itemTypeLabel, movementLabel, fmtIQD, fmtQty } from "@/lib/format";
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function InventoryPage() {
   const profile = await requirePermission("cost.view", "waste.record");
   const t = await getT();
+  const msg = await getMsg();
   const seesCost = has(profile, "cost.view");
   const [items, allBoard, movements, outOfUse] = await Promise.all([
     getItems(),
@@ -34,9 +36,11 @@ export default async function InventoryPage() {
     <div className="grid" style={{ gap: 16 }}>
       <h1 style={{ margin: 0 }}>{t("nav.inventory")}</h1>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        Stock on hand is <strong>derived from the movement ledger</strong> — there is no stock
-        figure to edit. Every change below adds a movement, valued at the item&apos;s average cost
-        by the database and journaled in the same step.
+        <Rich
+          text={t(
+            "Stock on hand is <b>derived from the movement ledger</b> — there is no stock figure to edit. Every change below adds a movement, valued at the item's average cost by the database and journaled in the same step.",
+          )}
+        />
       </p>
 
       {seesCost && (
@@ -45,21 +49,21 @@ export default async function InventoryPage() {
           style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px,1fr))" }}
         >
           <div className="card stat">
-            <span className="label">Items tracked</span>
+            <span className="label">{t("Items tracked")}</span>
             <span className="value">{board.length}</span>
           </div>
           <div className="card stat">
-            <span className="label">Stock value (ledger)</span>
+            <span className="label">{t("Stock value (ledger)")}</span>
             <span className="value mono">{fmtIQD(totalValue)}</span>
           </div>
           <div className="card stat">
-            <span className="label">Below reorder level</span>
+            <span className="label">{t("Below reorder level")}</span>
             <span className="value" style={{ color: low ? "var(--warn)" : "var(--ok)" }}>
               {low}
             </span>
           </div>
           <div className="card stat">
-            <span className="label">Negative stock</span>
+            <span className="label">{t("Negative stock")}</span>
             <span className="value" style={{ color: negative ? "var(--err)" : "var(--ok)" }}>
               {negative}
             </span>
@@ -88,31 +92,34 @@ export default async function InventoryPage() {
       {seesCost &&
         (board.length === 0 ? (
           <EmptyState
-            title={items.length > 0 ? "No stock recorded yet" : "No stock items yet"}
+            title={items.length > 0 ? t("No stock recorded yet") : t("No stock items yet")}
             hint={
               items.length > 0
-                ? "Give each item its opening stock above: what is on the shelf, at what it cost."
-                : "Add the first item above, with its opening stock."
+                ? t(
+                    "Give each item its opening stock above: what is on the shelf, at what it cost.",
+                  )
+                : t("Add the first item above, with its opening stock.")
             }
           />
         ) : (
           <div className="card tw">
-            <h3 style={{ marginTop: 0 }}>Stock on hand</h3>
+            <h3 style={{ marginTop: 0 }}>{t("Stock on hand")}</h3>
             <p className="muted" style={{ marginTop: 0, fontSize: ".82rem" }}>
-              Open an item for its stock card: what it opened with, what came in and went out, and
-              what is left.
+              {t(
+                "Open an item for its stock card: what it opened with, what came in and went out, and what is left.",
+              )}
             </p>
             <table>
               <thead>
                 <tr>
-                  <th>Item</th>
-                  <th>Type</th>
-                  <th className="right">On hand</th>
-                  <th>Unit</th>
-                  <th className="right">Reorder</th>
-                  <th className="right">Avg cost</th>
-                  <th className="right">Value</th>
-                  <th>Status</th>
+                  <th>{t("Item")}</th>
+                  <th>{t("Type")}</th>
+                  <th className="right">{t("On hand")}</th>
+                  <th>{t("Unit")}</th>
+                  <th className="right">{t("Reorder")}</th>
+                  <th className="right">{t("Avg cost")}</th>
+                  <th className="right">{t("Value")}</th>
+                  <th>{t("Status")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -122,12 +129,12 @@ export default async function InventoryPage() {
                       <Link
                         className="drill"
                         href={`/inventory/${r.itemId}`}
-                        title="Its stock card"
+                        title={t("Its stock card")}
                       >
                         {r.name}
                       </Link>
                     </td>
-                    <td className="muted">{itemTypeLabel(r.itemType)}</td>
+                    <td className="muted">{t(itemTypeLabel(r.itemType))}</td>
                     <td
                       className="right mono"
                       style={{ color: r.isNegative ? "var(--err)" : undefined }}
@@ -139,16 +146,17 @@ export default async function InventoryPage() {
                       {r.reorderBase === null ? "—" : fmtQty(r.reorderBase)}
                     </td>
                     <td className="right mono">
+                      {/* i18n-ignore: a cost in IQD, the currency's code */}
                       {r.unitCost === null ? "—" : `${fmtQty(r.unitCost)} IQD`}
                     </td>
                     <td className="right mono">{fmtIQD(r.value)}</td>
                     <td>
                       {r.isNegative ? (
-                        <span className="badge err">negative</span>
+                        <span className="badge err">{t("negative")}</span>
                       ) : r.isLow ? (
-                        <span className="badge warn">low</span>
+                        <span className="badge warn">{t("low")}</span>
                       ) : (
-                        <span className="badge ok">ok</span>
+                        <span className="badge ok">{t("ok")}</span>
                       )}
                     </td>
                   </tr>
@@ -157,9 +165,9 @@ export default async function InventoryPage() {
             </table>
             {negative > 0 && (
               <p className="red" style={{ fontSize: ".8rem" }}>
-                Negative stock means more was sold or used than the ledger knows arrived — usually a
-                receipt not yet entered. Sales from it are costed at the last purchase cost, never
-                at zero; turn on &ldquo;prevent negative stock&rdquo; to refuse such sales instead.
+                {t(
+                  "Negative stock means more was sold or used than the ledger knows arrived — usually a receipt not yet entered. Sales from it are costed at the last purchase cost, never at zero; turn on “prevent negative stock” to refuse such sales instead.",
+                )}
               </p>
             )}
           </div>
@@ -169,7 +177,7 @@ export default async function InventoryPage() {
         <div className="card" data-testid="other-items" style={{ fontSize: ".88rem" }}>
           {unstocked.length > 0 && (
             <p style={{ marginTop: 0 }}>
-              <strong>No stock yet:</strong>{" "}
+              <strong>{t("No stock yet:")}</strong>{" "}
               {unstocked.map((i, n) => (
                 <span key={i.id}>
                   {n > 0 && ", "}
@@ -182,7 +190,7 @@ export default async function InventoryPage() {
           )}
           {outOfUse.length > 0 && (
             <p style={{ marginBottom: 0 }}>
-              <strong>Out of use:</strong>{" "}
+              <strong>{t("Out of use:")}</strong>{" "}
               {outOfUse.map((i, n) => (
                 <span key={i.id}>
                   {n > 0 && ", "}
@@ -192,7 +200,7 @@ export default async function InventoryPage() {
                 </span>
               ))}{" "}
               <span className="muted">
-                · kept for their history; open one to bring it back into use
+                · {t("kept for their history; open one to bring it back into use")}
               </span>
             </p>
           )}
@@ -202,19 +210,19 @@ export default async function InventoryPage() {
       {movements.length > 0 && (
         <details className="card">
           <summary style={{ cursor: "pointer", fontWeight: 600 }}>
-            Ledger browser — last {movements.length} movements
+            {t("Ledger browser — last {n} movements", { n: movements.length })}
           </summary>
           <div className="tw">
             <table style={{ marginTop: 10 }}>
               <thead>
                 <tr>
-                  <th>When</th>
-                  <th>Item</th>
-                  <th>Type</th>
-                  <th className="right">Qty</th>
-                  <th className="right">Value</th>
-                  <th>Note</th>
-                  <th>By</th>
+                  <th>{t("When")}</th>
+                  <th>{t("Item")}</th>
+                  <th>{t("Type")}</th>
+                  <th className="right">{t("Qty")}</th>
+                  <th className="right">{t("Value")}</th>
+                  <th>{t("Note")}</th>
+                  <th>{t("By")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -225,7 +233,7 @@ export default async function InventoryPage() {
                     </td>
                     <td>{m.itemName}</td>
                     <td>
-                      <span className="badge">{movementLabel(m.type)}</span>
+                      <span className="badge">{t(movementLabel(m.type))}</span>
                     </td>
                     <td
                       className="right mono"
@@ -236,7 +244,7 @@ export default async function InventoryPage() {
                     </td>
                     <td className="right mono">{m.value === null ? "—" : fmtIQD(m.value)}</td>
                     <td className="muted" style={{ fontSize: ".85rem" }}>
-                      {m.reason ?? ""}
+                      {msg(m.reason ?? "")}
                     </td>
                     <td className="muted" style={{ fontSize: ".85rem" }}>
                       {m.by ?? ""}

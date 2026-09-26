@@ -8,6 +8,7 @@ import {
   setMemberRolesAction,
 } from "@/lib/actions/people";
 import { roleLabel } from "@/lib/format";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import type { MemberRow } from "@/lib/db/reports";
 
@@ -34,6 +35,7 @@ function RolePicker({
   onChange: (v: RoleName[]) => void;
   isOwner: boolean;
 }) {
+  const { t } = useT();
   return (
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
       {ROLES.map((r) => {
@@ -48,7 +50,7 @@ function RolePicker({
               alignItems: "center",
               opacity: ownerOnly && !isOwner ? 0.5 : 1,
             }}
-            title={ownerOnly && !isOwner ? "Only the owner can give this role" : undefined}
+            title={ownerOnly && !isOwner ? t("Only the owner can give this role") : undefined}
           >
             <input
               type="checkbox"
@@ -58,7 +60,7 @@ function RolePicker({
                 onChange(value.includes(r) ? value.filter((x) => x !== r) : [...value, r])
               }
             />
-            {roleLabel(r)}
+            {t(roleLabel(r))}
           </label>
         );
       })}
@@ -75,6 +77,7 @@ export function PeopleManager({
   myId: string;
   isOwner: boolean;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -102,10 +105,10 @@ export function PeopleManager({
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Roles</th>
-              <th>Login</th>
+              <th>{t("Name")}</th>
+              <th>{t("Email")}</th>
+              <th>{t("Roles")}</th>
+              <th>{t("Login")}</th>
               <th />
             </tr>
           </thead>
@@ -114,7 +117,7 @@ export function PeopleManager({
               <tr key={m.id} style={{ opacity: m.isActive ? 1 : 0.55 }}>
                 <td>
                   {m.name}
-                  {m.id === myId && <span className="muted"> (you)</span>}
+                  {m.id === myId && <span className="muted"> {t("(you)")}</span>}
                 </td>
                 <td dir="ltr" className="muted">
                   {m.email}
@@ -123,16 +126,16 @@ export function PeopleManager({
                   {editing === m.id ? (
                     <RolePicker value={editRoles} onChange={setEditRoles} isOwner={isOwner} />
                   ) : (
-                    m.roles.map(roleLabel).join(", ")
+                    m.roles.map((r) => t(roleLabel(r))).join(", ")
                   )}
                 </td>
                 <td>
                   {!m.isActive ? (
-                    <span className="badge">deactivated</span>
+                    <span className="badge">{t("deactivated")}</span>
                   ) : m.linked ? (
-                    <span className="badge ok">signed in</span>
+                    <span className="badge ok">{t("signed in")}</span>
                   ) : (
-                    <span className="badge warn">invited</span>
+                    <span className="badge warn">{t("invited")}</span>
                   )}
                 </td>
                 <td className="right" style={{ whiteSpace: "nowrap" }}>
@@ -144,18 +147,18 @@ export function PeopleManager({
                         onClick={() =>
                           run(
                             () => setMemberRolesAction({ memberId: m.id, roles: editRoles }),
-                            `Roles changed for ${m.name}.`,
+                            t("Roles changed for {name}.", { name: m.name }),
                           )
                         }
                         style={{ minHeight: 28, fontSize: ".75rem" }}
                       >
-                        Save
+                        {t("Save")}
                       </button>{" "}
                       <button
                         onClick={() => setEditing(null)}
                         style={{ minHeight: 28, fontSize: ".75rem" }}
                       >
-                        Cancel
+                        {t("Cancel")}
                       </button>
                     </>
                   ) : (
@@ -172,7 +175,7 @@ export function PeopleManager({
                         disabled={busy}
                         style={{ minHeight: 28, fontSize: ".75rem" }}
                       >
-                        Roles
+                        {t("Roles")}
                       </button>{" "}
                       {m.id !== myId && (
                         <button
@@ -180,14 +183,14 @@ export function PeopleManager({
                             run(
                               () => setMemberActiveAction({ memberId: m.id, active: !m.isActive }),
                               m.isActive
-                                ? `${m.name} can no longer sign in to the books.`
-                                : `${m.name} is active again.`,
+                                ? t("{name} can no longer sign in to the books.", { name: m.name })
+                                : t("{name} is active again.", { name: m.name }),
                             )
                           }
                           disabled={busy}
                           style={{ minHeight: 28, fontSize: ".75rem" }}
                         >
-                          {m.isActive ? "Deactivate" : "Reactivate"}
+                          {m.isActive ? t("Deactivate") : t("Reactivate")}
                         </button>
                       )}
                     </>
@@ -203,14 +206,14 @@ export function PeopleManager({
         style={{ borderBlockStart: "1px solid var(--border)", paddingBlockStart: 12 }}
         className="grid"
       >
-        <strong style={{ fontSize: ".9rem" }}>Add a person</strong>
+        <strong style={{ fontSize: ".9rem" }}>{t("Add a person")}</strong>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
           <label style={{ minWidth: 180 }}>
-            <div className="sc">Name</div>
+            <div className="sc">{t("Name")}</div>
             <input value={name} onChange={(e) => setName(e.target.value)} />
           </label>
           <label style={{ minWidth: 220 }}>
-            <div className="sc">Email</div>
+            <div className="sc">{t("Email")}</div>
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -225,18 +228,23 @@ export function PeopleManager({
             className="btn-primary"
             disabled={busy || !email.trim() || !name.trim() || roles.length === 0}
             onClick={() =>
-              run(async () => {
-                const r = await inviteMemberAction({ email, name, roles });
-                if (r.ok) {
-                  setEmail("");
-                  setName("");
-                  setRoles(["cashier"]);
-                }
-                return r;
-              }, `Added. Ask them to create their login with ${email.trim().toLowerCase()}.`)
+              run(
+                async () => {
+                  const r = await inviteMemberAction({ email, name, roles });
+                  if (r.ok) {
+                    setEmail("");
+                    setName("");
+                    setRoles(["cashier"]);
+                  }
+                  return r;
+                },
+                t("Added. Ask them to create their login with {email}.", {
+                  email: email.trim().toLowerCase(),
+                }),
+              )
             }
           >
-            {busy ? "…" : "Add person"}
+            {busy ? "…" : t("Add person")}
           </button>
         </div>
       </div>

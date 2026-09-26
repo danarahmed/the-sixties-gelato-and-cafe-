@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { lockPeriodAction, unlockPeriodAction } from "@/lib/actions/books";
 import { dateTimeIn } from "@/lib/dates";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import type { CheckRow } from "@/lib/db/books";
 
@@ -34,6 +35,8 @@ export function PeriodControl({
   canUnlock: boolean;
   timezone: string;
 }) {
+  // say: a closing check as the database words it, in the reader's language.
+  const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [reason, setReason] = useState("");
@@ -49,9 +52,11 @@ export function PeriodControl({
         setMsg({
           ok: true,
           text:
-            `${r.data.period} is locked. Corrections now go in by reversing entries in an open period.` +
+            t("{period} is locked. Corrections now go in by reversing entries in an open period.", {
+              period: r.data.period,
+            }) +
             (r.data.yearEndJournalNo
-              ? ` The year-end close was posted as journal ${r.data.yearEndJournalNo}.`
+              ? ` ${t("The year-end close was posted as journal {no}.", { no: r.data.yearEndJournalNo })}`
               : ""),
         });
         setReason("");
@@ -66,7 +71,9 @@ export function PeriodControl({
       if (r.ok) {
         setMsg({
           ok: true,
-          text: `${period.name} is open again. The reason is on the audit trail.`,
+          text: t("{period} is open again. The reason is on the audit trail.", {
+            period: period.name,
+          }),
         });
         setReason("");
         router.refresh();
@@ -77,11 +84,20 @@ export function PeriodControl({
   return (
     <section className="panel">
       <div className="panel-h">
-        <h3>Close {period.name}</h3>
+        <h3>{t("Close {period}", { period: period.name })}</h3>
         <span className="muted" style={{ fontSize: ".74rem" }}>
           {locked
-            ? `Locked${period.lockedAt ? ` ${dateTimeIn(timezone, period.lockedAt)}` : ""}${period.lockedBy ? ` by ${period.lockedBy}` : ""}`
-            : "Every check must pass before the period can be locked"}
+            ? period.lockedAt && period.lockedBy
+              ? t("Locked {when} by {name}", {
+                  when: dateTimeIn(timezone, period.lockedAt),
+                  name: period.lockedBy,
+                })
+              : period.lockedAt
+                ? t("Locked {when}", { when: dateTimeIn(timezone, period.lockedAt) })
+                : period.lockedBy
+                  ? t("Locked by {name}", { name: period.lockedBy })
+                  : t("Locked")
+            : t("Every check must pass before the period can be locked")}
         </span>
       </div>
       <div className="panel-b" style={{ display: "grid", gap: 14 }}>
@@ -91,7 +107,7 @@ export function PeriodControl({
               {checklist.map((c) => (
                 <tr key={c.key} data-check={c.key}>
                   <td style={{ width: 28 }}>{c.ok ? "✅" : c.blocks ? "⛔" : "⚠️"}</td>
-                  <td>{c.label}</td>
+                  <td>{say(c.label)}</td>
                   <td
                     className={c.ok ? "muted" : c.blocks ? "red" : undefined}
                     style={{
@@ -99,7 +115,7 @@ export function PeriodControl({
                       color: !c.ok && !c.blocks ? "var(--warn)" : undefined,
                     }}
                   >
-                    {c.detail ?? ""}
+                    {say(c.detail ?? "")}
                   </td>
                 </tr>
               ))}
@@ -112,16 +128,16 @@ export function PeriodControl({
             <input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Note for the audit trail (optional)"
+              placeholder={t("Note for the audit trail (optional)")}
               style={{ minHeight: 36, minWidth: 260 }}
               maxLength={300}
             />
             <button className="btn-primary" onClick={lock} disabled={busy || failing.length > 0}>
-              {busy ? "Locking…" : `Lock ${period.name}`}
+              {busy ? t("Locking…") : t("Lock {period}", { period: period.name })}
             </button>
             {failing.length > 0 && (
               <span className="muted" style={{ fontSize: ".78rem" }}>
-                Resolve the {failing.length} failing check(s) first.
+                {t("Resolve the {n} failing check(s) first.", { n: failing.length })}
               </span>
             )}
           </div>
@@ -132,18 +148,18 @@ export function PeriodControl({
             <input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Why must it be reopened? (required)"
+              placeholder={t("Why must it be reopened? (required)")}
               style={{ minHeight: 36, minWidth: 300 }}
               maxLength={300}
             />
             <button onClick={unlock} disabled={busy || !reason.trim()}>
-              {busy ? "Reopening…" : `Reopen ${period.name}`}
+              {busy ? t("Reopening…") : t("Reopen {period}", { period: period.name })}
             </button>
           </div>
         )}
         {locked && !canUnlock && (
           <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-            Only the owner can reopen a locked period.
+            {t("Only the owner can reopen a locked period.")}
           </p>
         )}
         <Notice msg={msg} />

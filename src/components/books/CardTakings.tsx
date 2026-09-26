@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { cancelCardSettlementAction, recordCardSettlementAction } from "@/lib/actions/settlements";
 import { fmtIQD } from "@/lib/format";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import { cancellableCard, cardMath, tillThrough, type CardTakings } from "@/lib/settlements";
 
@@ -27,6 +28,7 @@ export function CardTakingsPanel({
   canSettle: boolean;
   today: string;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const days = takings.days;
@@ -68,13 +70,28 @@ export function CardTakingsPanel({
         return;
       }
       const d = r.data;
+      const vars = {
+        journal: d.journalNo ?? "—",
+        fee: fmtIQD(d.fee),
+        difference: fmtIQD(Math.abs(d.difference)),
+      };
       setMsg({
         ok: true,
         text:
-          `Settled (journal ${d.journalNo ?? "—"}): ${fmtIQD(d.fee)} card fee` +
-          (d.difference !== 0
-            ? `; ${fmtIQD(Math.abs(d.difference))} ${d.difference > 0 ? "more at the till than the terminal" : "more at the terminal than the till"}, to 6300.`
-            : "; the till and the terminal agree."),
+          d.difference === 0
+            ? t(
+                "Settled (journal {journal}): {fee} card fee; the till and the terminal agree.",
+                vars,
+              )
+            : d.difference > 0
+              ? t(
+                  "Settled (journal {journal}): {fee} card fee; {difference} more at the till than the terminal, to 6300.",
+                  vars,
+                )
+              : t(
+                  "Settled (journal {journal}): {fee} card fee; {difference} more at the terminal than the till, to 6300.",
+                  vars,
+                ),
       });
       setTerminal("");
       setReceived("");
@@ -92,7 +109,7 @@ export function CardTakingsPanel({
         setMsg({ ok: false, text: r.error });
         return;
       }
-      setMsg({ ok: true, text: "Cancelled: its journal is reversed, and its days wait again." });
+      setMsg({ ok: true, text: t("Cancelled: its journal is reversed, and its days wait again.") });
       setCancelling(null);
       setReason("");
       router.refresh();
@@ -104,8 +121,11 @@ export function CardTakingsPanel({
       <div className="grid" style={{ gap: 4, maxWidth: 560 }}>
         {days.length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>
-            Nothing taken by card is waiting to be settled
-            {takings.from ? `: every day before ${takings.from} is.` : "."}
+            {takings.from
+              ? t("Nothing taken by card is waiting to be settled: every day before {day} is.", {
+                  day: takings.from,
+                })
+              : t("Nothing taken by card is waiting to be settled.")}
           </p>
         ) : (
           <>
@@ -114,23 +134,23 @@ export function CardTakingsPanel({
                 <span>
                   {d.day}
                   {d.day >= today ? (
-                    <span className="muted"> · today: settled once the day is over</span>
+                    <span className="muted"> · {t("today: settled once the day is over")}</span>
                   ) : (
-                    d.day > upTo && <span className="muted"> · not in this settlement</span>
+                    d.day > upTo && <span className="muted"> · {t("not in this settlement")}</span>
                   )}
                 </span>
                 <span className="mono">{fmtIQD(d.amount)}</span>
               </div>
             ))}
             <div className="deduction-row" style={{ borderBlockStart: "1px solid var(--rule)" }}>
-              <strong>Waiting to be settled</strong>
+              <strong>{t("Waiting to be settled")}</strong>
               <strong className="mono">{fmtIQD(waiting)}</strong>
             </div>
           </>
         )}
         {takings.balance !== waiting && (
           <div className="deduction-row">
-            <span className="muted">1010 Card clearing holds</span>
+            <span className="muted">{t("1010 Card clearing holds")}</span>
             <span className="mono">{fmtIQD(takings.balance)}</span>
           </div>
         )}
@@ -138,8 +158,9 @@ export function CardTakingsPanel({
 
       {canSettle && days.length > 0 && over.length === 0 && (
         <p className="muted" style={{ margin: "12px 0 0", fontSize: ".85rem" }}>
-          Today&apos;s card takings are settled once the day is over, from the terminal&apos;s
-          report and the bank statement.
+          {t(
+            "Today's card takings are settled once the day is over, from the terminal's report and the bank statement.",
+          )}
         </p>
       )}
 
@@ -147,9 +168,9 @@ export function CardTakingsPanel({
         <div className="grid" style={{ gap: 12, marginBlockStart: 14, maxWidth: 720 }}>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
             <label>
-              <div className="sc">Settle the days up to</div>
+              <div className="sc">{t("Settle the days up to")}</div>
               <select
-                aria-label="Settle the days up to"
+                aria-label={t("Settle the days up to")}
                 value={upTo}
                 onChange={(e) => setThrough(e.target.value)}
               >
@@ -161,15 +182,15 @@ export function CardTakingsPanel({
               </select>
             </label>
             <div>
-              <div className="sc">The till took by card</div>
+              <div className="sc">{t("The till took by card")}</div>
               <div className="mono" data-testid="card-till" style={{ paddingBlock: 6 }}>
                 {money(till)}
               </div>
             </div>
             <label style={{ minWidth: 160 }}>
-              <div className="sc">The terminal&apos;s total (IQD)</div>
+              <div className="sc">{t("The terminal's total (IQD)")}</div>
               <input
-                aria-label="The terminal's total"
+                aria-label={t("The terminal's total")}
                 className="amt"
                 style={{ textAlign: "end" }}
                 inputMode="decimal"
@@ -179,12 +200,12 @@ export function CardTakingsPanel({
               />
             </label>
             <button type="button" onClick={() => setTerminal(till.toFixed())} disabled={busy}>
-              Same as the till
+              {t("Same as the till")}
             </button>
             <label style={{ minWidth: 160 }}>
-              <div className="sc">Reached the bank (IQD)</div>
+              <div className="sc">{t("Reached the bank (IQD)")}</div>
               <input
-                aria-label="Reached the bank"
+                aria-label={t("Reached the bank")}
                 className="amt"
                 style={{ textAlign: "end" }}
                 inputMode="decimal"
@@ -196,9 +217,9 @@ export function CardTakingsPanel({
           </div>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
             <label>
-              <div className="sc">Arrived on</div>
+              <div className="sc">{t("Arrived on")}</div>
               <input
-                aria-label="Arrived on"
+                aria-label={t("Arrived on")}
                 type="date"
                 value={receivedOn}
                 min={upTo}
@@ -207,9 +228,9 @@ export function CardTakingsPanel({
               />
             </label>
             <label style={{ minWidth: 200 }}>
-              <div className="sc">Bank reference (optional)</div>
+              <div className="sc">{t("Bank reference (optional)")}</div>
               <input
-                aria-label="Bank reference"
+                aria-label={t("Bank reference")}
                 value={reference}
                 maxLength={80}
                 onChange={(e) => setReference(e.target.value)}
@@ -217,10 +238,12 @@ export function CardTakingsPanel({
             </label>
             <label style={{ flex: 1, minWidth: 240 }}>
               <div className="sc">
-                Note{needsNote ? ": say why the till and the terminal differ" : " (optional)"}
+                {needsNote
+                  ? t("Note: say why the till and the terminal differ")
+                  : t("Note (optional)")}
               </div>
               <input
-                aria-label="Note"
+                aria-label={t("Note")}
                 value={note}
                 maxLength={300}
                 onChange={(e) => setNote(e.target.value)}
@@ -231,19 +254,21 @@ export function CardTakingsPanel({
           <div className="grid" style={{ gap: 4, maxWidth: 560 }} data-testid="card-preview">
             {m.problem === "more_than_terminal" ? (
               <span className="red" style={{ fontSize: ".85rem" }}>
-                The bank cannot receive more than the terminal took: the difference is its fee.
+                {t(
+                  "The bank cannot receive more than the terminal took: the difference is its fee.",
+                )}
               </span>
             ) : (
               <>
                 <div className="deduction-row">
                   <span>
-                    <span className="muted">Dr</span> 1020 Bank
+                    <span className="muted">{t("Dr")}</span> 1020 {t("Bank")}
                   </span>
                   <span className="mono">{money(m.received)}</span>
                 </div>
                 <div className="deduction-row">
                   <span>
-                    <span className="muted">Dr</span> 6500 Card and bank fees
+                    <span className="muted">{t("Dr")}</span> 6500 {t("Card and bank fees")}
                   </span>
                   <span className="mono" data-testid="card-fee">
                     {money(m.fee)}
@@ -252,11 +277,11 @@ export function CardTakingsPanel({
                 {needsNote && m.difference && (
                   <div className="deduction-row">
                     <span>
-                      <span className="muted">{m.difference.isPositive() ? "Dr" : "Cr"}</span> 6300
-                      Cash over / short:{" "}
+                      <span className="muted">{m.difference.isPositive() ? t("Dr") : t("Cr")}</span>{" "}
+                      6300{" "}
                       {m.difference.isPositive()
-                        ? "the till took more by card than the terminal"
-                        : "the terminal took more than the till"}
+                        ? t("Cash over / short: the till took more by card than the terminal")
+                        : t("Cash over / short: the terminal took more than the till")}
                     </span>
                     <span className="mono" data-testid="card-difference">
                       {fmtIQD(m.difference.abs().toNumber())}
@@ -265,7 +290,7 @@ export function CardTakingsPanel({
                 )}
                 <div className="deduction-row">
                   <span>
-                    <span className="muted">Cr</span> 1010 Card clearing
+                    <span className="muted">{t("Cr")}</span> 1010 {t("Card clearing")}
                   </span>
                   <span className="mono">{money(till)}</span>
                 </div>
@@ -275,7 +300,7 @@ export function CardTakingsPanel({
 
           <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
             <button className="btn-primary" onClick={submit} disabled={!canSubmit}>
-              {busy ? "…" : "Record the settlement"}
+              {busy ? "…" : t("Record the settlement")}
             </button>
           </div>
         </div>
@@ -290,15 +315,15 @@ export function CardTakingsPanel({
           <table>
             <thead>
               <tr>
-                <th>Days</th>
-                <th className="right">Till</th>
-                <th className="right">Terminal</th>
-                <th className="right">To the bank</th>
-                <th className="right">Fee</th>
-                <th className="right">Difference</th>
-                <th>Arrived</th>
-                <th>Journal</th>
-                <th>By</th>
+                <th>{t("Days")}</th>
+                <th className="right">{t("Till")}</th>
+                <th className="right">{t("Terminal")}</th>
+                <th className="right">{t("To the bank")}</th>
+                <th className="right">{t("Fee")}</th>
+                <th className="right">{t("Difference")}</th>
+                <th>{t("Arrived")}</th>
+                <th>{t("Journal")}</th>
+                <th>{t("By")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -332,14 +357,14 @@ export function CardTakingsPanel({
                   <td>
                     {s.cancelledAt ? (
                       <span className="ref due" title={s.cancelReason ?? undefined}>
-                        Cancelled
+                        {t("Cancelled")}
                       </span>
                     ) : canSettle && s.id === cancellable ? (
                       cancelling === s.id ? (
                         <span style={{ display: "inline-flex", gap: 6, flexWrap: "wrap" }}>
                           <input
-                            aria-label="Why it is cancelled"
-                            placeholder="Why it is cancelled"
+                            aria-label={t("Why it is cancelled")}
+                            placeholder={t("Why it is cancelled")}
                             value={reason}
                             maxLength={300}
                             onChange={(e) => setReason(e.target.value)}
@@ -348,15 +373,15 @@ export function CardTakingsPanel({
                             onClick={() => cancel(s.id)}
                             disabled={busy || reason.trim().length < 3}
                           >
-                            Cancel it
+                            {t("Cancel it")}
                           </button>
                           <button onClick={() => setCancelling(null)} disabled={busy}>
-                            Keep
+                            {t("Keep")}
                           </button>
                         </span>
                       ) : (
                         <button onClick={() => setCancelling(s.id)} disabled={busy}>
-                          Cancel…
+                          {t("Cancel…")}
                         </button>
                       )
                     ) : null}
