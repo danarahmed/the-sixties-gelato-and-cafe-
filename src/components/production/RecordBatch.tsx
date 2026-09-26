@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Decimal from "decimal.js";
 import { recordProductionAction } from "@/lib/actions/production";
 import { fmtIQD } from "@/lib/format";
+import { useT } from "@/lib/i18n/I18nProvider";
+import { Rich } from "@/lib/i18n/Rich";
 import { Notice, inputStyle } from "@/components/ui";
 import { parseNumber } from "@/components/pos/model";
 import type { BatchRecipe } from "@/lib/db/production";
@@ -46,6 +48,7 @@ export function RecordBatch({
   seesCost: boolean;
   decimals: number;
 }) {
+  const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [recipeId, setRecipeId] = useState(recipes[0]?.id ?? "");
@@ -73,7 +76,7 @@ export function RecordBatch({
   if (recipes.length === 0) {
     return (
       <p className="muted" style={{ margin: 0 }}>
-        Nothing to record yet: first add what you make, below.
+        {t("Nothing to record yet: first add what you make, below.")}
       </p>
     );
   }
@@ -101,8 +104,13 @@ export function RecordBatch({
         setMsg({
           ok: true,
           text:
-            `Recorded: ${made} of ${recipe.outputName} into stock.` +
-            (r.data.value === null ? "" : ` The ingredients cost ${fmtIQD(r.data.value)}.`),
+            r.data.value === null
+              ? t("Recorded: {made} of {output} into stock.", { made, output: recipe.outputName })
+              : t("Recorded: {made} of {output} into stock. The ingredients cost {amount}.", {
+                  made,
+                  output: recipe.outputName,
+                  amount: fmtIQD(r.data.value),
+                }),
         });
         setBatches("1");
         setOutQty("");
@@ -117,9 +125,9 @@ export function RecordBatch({
     <div className="pr-record">
       <div className="pr-fields">
         <label className="pr-what">
-          <span>What did you make?</span>
+          <span>{t("What did you make?")}</span>
           <select
-            aria-label="What did you make"
+            aria-label={t("What did you make")}
             style={inputStyle}
             value={recipeId}
             onChange={(e) => choose(e.target.value)}
@@ -132,9 +140,9 @@ export function RecordBatch({
           </select>
         </label>
         <label>
-          <span>Batches</span>
+          <span>{t("Batches")}</span>
           <input
-            aria-label="Batches"
+            aria-label={t("Batches")}
             style={inputStyle}
             value={batches}
             onChange={(e) => setBatches(e.target.value)}
@@ -142,10 +150,10 @@ export function RecordBatch({
           />
         </label>
         <label>
-          <span>What came out (optional)</span>
+          <span>{t("What came out (optional)")}</span>
           <span className="pr-out">
             <input
-              aria-label="What came out"
+              aria-label={t("What came out")}
               style={inputStyle}
               value={outQty}
               onChange={(e) => setOutQty(e.target.value)}
@@ -153,7 +161,7 @@ export function RecordBatch({
               inputMode="decimal"
             />
             <select
-              aria-label="Unit of what came out"
+              aria-label={t("Unit of what came out")}
               style={inputStyle}
               value={outUnit}
               onChange={(e) => setOutUnit(e.target.value)}
@@ -170,13 +178,13 @@ export function RecordBatch({
           </span>
         </label>
         <label className="pr-note">
-          <span>Note (optional)</span>
+          <span>{t("Note (optional)")}</span>
           <input
-            aria-label="Note"
+            aria-label={t("Note")}
             style={inputStyle}
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="e.g. a little thick, left to rest"
+            placeholder={t("e.g. a little thick, left to rest")}
           />
         </label>
       </div>
@@ -184,7 +192,7 @@ export function RecordBatch({
       {recipe && b && (
         <div className="pr-preview" data-testid="batch-preview">
           <div className="pr-uses">
-            <strong>Uses</strong>
+            <strong>{t("Uses")}</strong>
             <ul>
               {recipe.lines.map((l, i) => {
                 const it = byId.get(l.itemId);
@@ -197,8 +205,11 @@ export function RecordBatch({
                     <span className="mono">{showIn(need, it, l.unitCode)}</span>
                     {have !== undefined && (
                       <span className={short ? "pr-short" : "muted"}>
-                        {short ? "only " : ""}
-                        {showIn(new Decimal(have), it, l.unitCode)} in stock
+                        {short
+                          ? t("only {qty} in stock", {
+                              qty: showIn(new Decimal(have), it, l.unitCode),
+                            })
+                          : t("{qty} in stock", { qty: showIn(new Decimal(have), it, l.unitCode) })}
                       </span>
                     )}
                   </li>
@@ -207,35 +218,52 @@ export function RecordBatch({
             </ul>
           </div>
           <div className="pr-makes">
-            <strong>Makes</strong>
+            <strong>{t("Makes")}</strong>
             {actual ? (
               <span>
-                <span className="mono">{showIn(actual, output, shownUnit)}</span> of{" "}
-                {recipe.outputName}
+                <Rich
+                  text={t("<qty>{qty}</qty> of {output}", {
+                    qty: showIn(actual, output, shownUnit),
+                    output: recipe.outputName,
+                  })}
+                  tags={{ qty: (c) => <span className="mono">{c}</span> }}
+                />
                 {outQty.trim() === "" ? (
-                  <span className="muted"> — as the recipe says</span>
+                  <span className="muted"> {t("— as the recipe says")}</span>
                 ) : (
                   diff &&
                   !diff.isZero() &&
                   planned && (
                     <span className={diff.lt(0) ? "pr-short" : "muted"}>
                       {" "}
-                      — {showIn(diff.abs(), output, shownUnit)} {diff.lt(0) ? "less" : "more"} than
-                      the recipe&apos;s {showIn(planned, output, shownUnit)}
+                      {diff.lt(0)
+                        ? t("— {diff} less than the recipe's {planned}", {
+                            diff: showIn(diff.abs(), output, shownUnit),
+                            planned: showIn(planned, output, shownUnit),
+                          })
+                        : t("— {diff} more than the recipe's {planned}", {
+                            diff: showIn(diff.abs(), output, shownUnit),
+                            planned: showIn(planned, output, shownUnit),
+                          })}
                     </span>
                   )
                 )}
               </span>
             ) : (
-              <span className="muted">Enter what came out as a number, or leave it empty.</span>
+              <span className="muted">
+                {t("Enter what came out as a number, or leave it empty.")}
+              </span>
             )}
             {cost && actual && (
               <span className="pr-cost">
-                Cost <strong className="mono">{fmtIQD(cost.toNumber())}</strong>
+                <Rich
+                  text={t("Cost <b>{amount}</b>", { amount: fmtIQD(cost.toNumber()) })}
+                  tags={{ b: (c) => <strong className="mono">{c}</strong> }}
+                />
                 {(() => {
                   const f = unitFactor(output, shownUnit) ?? 1;
                   const each = perUnit(cost, actual.div(f), unitLabel(output, shownUnit));
-                  return each ? ` · ${each}` : "";
+                  return each ? ` · ${say(each)}` : "";
                 })()}
               </span>
             )}
@@ -245,7 +273,7 @@ export function RecordBatch({
 
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <button className="btn-primary" onClick={submit} disabled={busy || !recipe || !b}>
-          {busy ? "Recording…" : "Record batch"}
+          {busy ? t("Recording…") : t("Record batch")}
         </button>
         <Notice msg={msg} />
       </div>

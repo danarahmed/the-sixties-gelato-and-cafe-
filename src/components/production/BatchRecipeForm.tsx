@@ -6,6 +6,7 @@ import Decimal from "decimal.js";
 import { saveBatchRecipeAction } from "@/lib/actions/production";
 import { NO_CHANNELS } from "@/lib/channels";
 import { fmtIQD } from "@/lib/format";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice, inputStyle } from "@/components/ui";
 import { parseNumber } from "@/components/pos/model";
 import type { BatchRecipe } from "@/lib/db/production";
@@ -23,26 +24,6 @@ import { batchCost, perUnit, unitFactor } from "@/components/production/batchMat
 
 type Msg = { ok: boolean; text: string } | null;
 type Measure = "weight" | "volume" | "pieces";
-
-const MEASURES: { value: Measure; label: string; units: { code: string; label: string }[] }[] = [
-  {
-    value: "weight",
-    label: "Weighed (g, kg)",
-    units: [
-      { code: "kg", label: "kg" },
-      { code: "g", label: "g" },
-    ],
-  },
-  {
-    value: "volume",
-    label: "Measured (ml, L)",
-    units: [
-      { code: "L", label: "L" },
-      { code: "ml", label: "ml" },
-    ],
-  },
-  { value: "pieces", label: "Counted in pieces", units: [{ code: "each", label: "pieces" }] },
-];
 
 /**
  * What the café makes in batches: its name, how much one batch makes (in any
@@ -64,6 +45,30 @@ export function BatchRecipeForm({
   seesCost: boolean;
   onClose?: () => void;
 }) {
+  const { t, msg: say } = useT();
+  const MEASURES: { value: Measure; label: string; units: { code: string; label: string }[] }[] = [
+    {
+      value: "weight",
+      label: t("Weighed (g, kg)"),
+      units: [
+        { code: "kg", label: "kg" }, // i18n-ignore: a unit's symbol
+        { code: "g", label: "g" },
+      ],
+    },
+    {
+      value: "volume",
+      label: t("Measured (ml, L)"),
+      units: [
+        { code: "L", label: "L" },
+        { code: "ml", label: "ml" }, // i18n-ignore: a unit's symbol
+      ],
+    },
+    {
+      value: "pieces",
+      label: t("Counted in pieces"),
+      units: [{ code: "each", label: t("pieces") }],
+    },
+  ];
   const router = useRouter();
   const itemOf = (id: string) => items.find((i) => i.id === id);
   const [busy, start] = useTransition();
@@ -152,7 +157,9 @@ export function BatchRecipeForm({
     if (half >= 0) {
       setMsg({
         ok: false,
-        text: `Line ${half + 1}: choose the ingredient and its quantity, or remove the line.`,
+        text: t("Line {n}: choose the ingredient and its quantity, or remove the line.", {
+          n: half + 1,
+        }),
       });
       return;
     }
@@ -181,7 +188,10 @@ export function BatchRecipeForm({
         isActive: recipe?.isActive ?? true,
       });
       if (r.ok) {
-        setMsg({ ok: true, text: recipe ? "Saved." : `Added “${name.trim()}”.` });
+        setMsg({
+          ok: true,
+          text: recipe ? t("Saved.") : t("Added “{name}”.", { name: name.trim() }),
+        });
         if (!recipe) {
           setName("");
           setYieldQty("");
@@ -200,43 +210,43 @@ export function BatchRecipeForm({
     <div className="pf pr-form">
       <section className="pf-step">
         <h3 className="pf-h">
-          <span className="pf-n">1</span> What it makes
+          <span className="pf-n">1</span> {t("What it makes")}
         </h3>
         <div className="pr-grid">
           <label>
-            <span>Name</span>
+            <span>{t("Name")}</span>
             <input
-              aria-label="Name of what it makes"
+              aria-label={t("Name of what it makes")}
               style={inputStyle}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Pistachio gelato, White base, Croissants"
+              placeholder={t("e.g. Pistachio gelato, White base, Croissants")}
             />
           </label>
           {!recipe && (
             <label>
-              <span>It is</span>
+              <span>{t("It is")}</span>
               <select
-                aria-label="New or kept item"
+                aria-label={t("New or kept item")}
                 style={inputStyle}
                 value={makes}
                 onChange={(e) => setMakes(e.target.value as "new" | "existing")}
               >
-                <option value="new">Something new to keep in stock</option>
-                <option value="existing">An item already kept</option>
+                <option value="new">{t("Something new to keep in stock")}</option>
+                <option value="existing">{t("An item already kept")}</option>
               </select>
             </label>
           )}
           {!recipe && makes === "existing" && (
             <label>
-              <span>Item</span>
+              <span>{t("Item")}</span>
               <select
-                aria-label="Item it makes"
+                aria-label={t("Item it makes")}
                 style={inputStyle}
                 value={existingId}
                 onChange={(e) => pickExisting(e.target.value)}
               >
-                <option value="">Choose…</option>
+                <option value="">{t("Choose…")}</option>
                 {items.map((i) => (
                   <option key={i.id} value={i.id}>
                     {i.name}
@@ -247,9 +257,9 @@ export function BatchRecipeForm({
           )}
           {!recipe && makes === "new" && (
             <label>
-              <span>How it is counted</span>
+              <span>{t("How it is counted")}</span>
               <select
-                aria-label="How it is counted"
+                aria-label={t("How it is counted")}
                 style={inputStyle}
                 value={measure}
                 onChange={(e) => pickMeasure(e.target.value as Measure)}
@@ -265,26 +275,26 @@ export function BatchRecipeForm({
         </div>
         {!recipe && makes === "new" && (
           <div className="pr-container">
-            <span className="muted">Kept in a container? (optional)</span>
+            <span className="muted">{t("Kept in a container? (optional)")}</span>
             <input
-              aria-label="Container"
+              aria-label={t("Container")}
               style={inputStyle}
               value={container}
               onChange={(e) => setContainer(e.target.value)}
-              placeholder="pan, tray, tub"
+              placeholder={t("pan, tray, tub")}
             />
             {container.trim() && (
               <>
-                <span className="muted">holds</span>
+                <span className="muted">{t("holds")}</span>
                 <input
-                  aria-label="What a container holds"
+                  aria-label={t("What a container holds")}
                   style={inputStyle}
                   value={containerQty}
                   onChange={(e) => setContainerQty(e.target.value)}
                   inputMode="decimal"
                 />
                 <select
-                  aria-label="Unit a container holds"
+                  aria-label={t("Unit a container holds")}
                   style={inputStyle}
                   value={containerUnit}
                   onChange={(e) => setContainerUnit(e.target.value)}
@@ -300,16 +310,16 @@ export function BatchRecipeForm({
           </div>
         )}
         <div className="pr-yield">
-          <span>One batch makes</span>
+          <span>{t("One batch makes")}</span>
           <input
-            aria-label="One batch makes"
+            aria-label={t("One batch makes")}
             style={inputStyle}
             value={yieldQty}
             onChange={(e) => setYieldQty(e.target.value)}
             inputMode="decimal"
           />
           <select
-            aria-label="Unit one batch makes"
+            aria-label={t("Unit one batch makes")}
             style={inputStyle}
             value={yieldUnit}
             onChange={(e) => setYieldUnit(e.target.value)}
@@ -321,19 +331,21 @@ export function BatchRecipeForm({
             ))}
           </select>
           <span className="muted">
-            — about right is fine: each batch records what really came out, if you weigh or count
-            it.
+            {t(
+              "— about right is fine: each batch records what really came out, if you weigh or count it.",
+            )}
           </span>
         </div>
       </section>
 
       <section className="pf-step">
         <h3 className="pf-h">
-          <span className="pf-n">2</span> What goes into one batch
+          <span className="pf-n">2</span> {t("What goes into one batch")}
         </h3>
         <p className="pf-hint">
-          Anything kept in stock, bought or made here: a base made first, then flavoured, works the
-          same as milk and sugar.
+          {t(
+            "Anything kept in stock, bought or made here: a base made first, then flavoured, works the same as milk and sugar.",
+          )}
         </p>
         <RecipeLinesEditor
           items={ingredients}
@@ -344,13 +356,13 @@ export function BatchRecipeForm({
         />
         {cost && (
           <div className="pf-total" data-testid="batch-cost">
-            <span>One batch costs</span>
+            <span>{t("One batch costs")}</span>
             <span className="pf-total-figs">
               <span>
                 <strong className="mono">{fmtIQD(cost.toNumber())}</strong>
               </span>
               {yieldAmount && yieldAmount.gt(0) && (
-                <span className="muted">{perUnit(cost, yieldAmount, yieldLabel)}</span>
+                <span className="muted">{say(perUnit(cost, yieldAmount, yieldLabel) ?? "")}</span>
               )}
             </span>
           </div>
@@ -360,24 +372,24 @@ export function BatchRecipeForm({
 
       <section className="pf-step">
         <h3 className="pf-h">
-          <span className="pf-n">3</span> How to make it (optional)
+          <span className="pf-n">3</span> {t("How to make it (optional)")}
         </h3>
         <textarea
-          aria-label="How to make it"
+          aria-label={t("How to make it")}
           style={{ ...inputStyle, minHeight: 70, paddingBlock: 8 }}
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
-          placeholder="Steps, temperatures, resting times — shown to whoever records a batch"
+          placeholder={t("Steps, temperatures, resting times — shown to whoever records a batch")}
         />
       </section>
 
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <button className="btn-primary" onClick={save} disabled={busy || !name.trim()}>
-          {busy ? "Saving…" : recipe ? "Save changes" : "Add it"}
+          {busy ? t("Saving…") : recipe ? t("Save changes") : t("Add it")}
         </button>
         {onClose && (
           <button onClick={onClose} disabled={busy}>
-            Cancel
+            {t("Cancel")}
           </button>
         )}
         <Notice msg={msg} />

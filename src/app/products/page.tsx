@@ -1,4 +1,5 @@
 import { getT } from "@/lib/i18n/server";
+import type { T } from "@/lib/i18n/core";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems } from "@/lib/db/read";
 import { getMenuSetup, type MenuProduct } from "@/lib/db/menu";
@@ -31,6 +32,7 @@ interface Costing {
 }
 
 function RecipeAndPrices({
+  t,
   name,
   costing,
   variantId,
@@ -44,6 +46,8 @@ function RecipeAndPrices({
   channelName,
   inUse,
 }: {
+  /** The reader's words, from the page. */
+  t: T;
   name: string | null;
   costing: Costing | undefined;
   variantId: string;
@@ -85,20 +89,24 @@ function RecipeAndPrices({
       >
         <div className="tw">
           <h4 className="muted" style={{ margin: "0 0 6px" }}>
-            Recipe in force
-            {recipe[0] ? ` (version ${recipe[0].versionNo}, from ${recipe[0].effectiveFrom})` : ""}
+            {recipe[0]
+              ? t("Recipe in force (version {version}, from {from})", {
+                  version: recipe[0].versionNo,
+                  from: recipe[0].effectiveFrom,
+                })
+              : t("Recipe in force")}
           </h4>
           {recipe.length === 0 ? (
             <p className="muted" style={{ fontSize: ".85rem" }}>
-              No recipe — sold as bought, or not yet set up.
+              {t("No recipe — sold as bought, or not yet set up.")}
             </p>
           ) : (
             <table>
               <thead>
                 <tr>
-                  <th>Component</th>
-                  <th className="right">Qty</th>
-                  <th>Applies to</th>
+                  <th>{t("Component")}</th>
+                  <th className="right">{t("Qty")}</th>
+                  <th>{t("Applies to")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,7 +117,7 @@ function RecipeAndPrices({
                       {fmtQty(l.quantity)} {l.unitCode}
                     </td>
                     <td className="muted" style={{ fontSize: ".85rem" }}>
-                      {l.channels ? l.channels.map(channelName).join(", ") : "all channels"}
+                      {l.channels ? l.channels.map(channelName).join(", ") : t("all channels")}
                     </td>
                   </tr>
                 ))}
@@ -119,20 +127,20 @@ function RecipeAndPrices({
         </div>
         <div className="tw">
           <h4 className="muted" style={{ margin: "0 0 6px" }}>
-            Price &amp; margin by channel
+            {t("Price & margin by channel")}
           </h4>
           {rows.length === 0 ? (
             <p className="muted" style={{ fontSize: ".85rem" }}>
-              No price yet: the till cannot sell it until it has one.
+              {t("No price yet: the till cannot sell it until it has one.")}
             </p>
           ) : (
             <table>
               <thead>
                 <tr>
-                  <th>Channel</th>
-                  <th className="right">Price</th>
-                  <th className="right">Cost</th>
-                  <th className="right">Margin</th>
+                  <th>{t("Channel")}</th>
+                  <th className="right">{t("Price")}</th>
+                  <th className="right">{t("Cost")}</th>
+                  <th className="right">{t("Margin")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -143,7 +151,7 @@ function RecipeAndPrices({
                       <td>{channelName(m.channel)}</td>
                       <td className="right mono">{fmtIQD(m.price)}</td>
                       <td className="right mono">
-                        {m.unitCost === null ? "unknown" : fmtIQD(m.unitCost)}
+                        {m.unitCost === null ? t("unknown") : fmtIQD(m.unitCost)}
                       </td>
                       <td
                         className="right mono"
@@ -233,7 +241,7 @@ export default async function ProductsPage() {
     })),
     {
       key: "none",
-      title: "No category",
+      title: t("No category"),
       hidden: false,
       products: onTill.filter((p) => !p.categoryId),
     },
@@ -246,13 +254,15 @@ export default async function ProductsPage() {
       {p.isActive && (
         <details>
           <summary className="muted" style={{ fontSize: ".88rem" }}>
-            Recipe, prices and margin
-            {p.variants.length > 1 ? ` · ${p.variants.length} sizes or flavours` : ""}
+            {p.variants.length > 1
+              ? t("Recipe, prices and margin · {n} sizes or flavours", { n: p.variants.length })
+              : t("Recipe, prices and margin")}
           </summary>
           {p.variants
             .filter((v) => v.isActive)
             .map((v) => (
               <RecipeAndPrices
+                t={t}
                 key={v.id}
                 name={p.variants.length > 1 || v.name !== p.name ? v.name : null}
                 costing={costing.get(v.id)}
@@ -278,11 +288,9 @@ export default async function ProductsPage() {
       <div className="grid" style={{ gap: 16 }}>
         <h1 style={{ margin: 0 }}>{t("nav.products")}</h1>
         <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-          One recipe serves every channel; lines tagged to a channel deduct only there — that is how
-          the cup and lid are used for takeaway and delivery but not at a table. Prices and recipes
-          change from a date, so every sale uses the price and recipe in force on its own day. Costs
-          shown are today&apos;s, worked out exactly as a sale posts them. A photo, a category and a
-          ★ make a product quick to find on the till.
+          {t(
+            "One recipe serves every channel; lines tagged to a channel deduct only there — that is how the cup and lid are used for takeaway and delivery but not at a table. Prices and recipes change from a date, so every sale uses the price and recipe in force on its own day. Costs shown are today's, worked out exactly as a sale posts them. A photo, a category and a ★ make a product quick to find on the till.",
+          )}
         </p>
 
         {canEdit && (
@@ -298,24 +306,27 @@ export default async function ProductsPage() {
         <CategoriesManager categories={categories} counts={counts} canEdit={canEdit} />
 
         {products.length === 0 ? (
-          <EmptyState title="No products yet" hint="Add the first one above." />
+          <EmptyState title={t("No products yet")} hint={t("Add the first one above.")} />
         ) : (
           <>
             {groups.map((g) => (
               <section key={g.key} className="grid" style={{ gap: 10 }}>
                 <h2 style={{ margin: "8px 0 0" }}>
                   {g.title}{" "}
-                  {g.hidden && <span className="badge warn">category hidden from the till</span>}
+                  {g.hidden && (
+                    <span className="badge warn">{t("category hidden from the till")}</span>
+                  )}
                 </h2>
                 {g.products.map(card)}
               </section>
             ))}
             {hidden.length > 0 && (
               <section className="grid" style={{ gap: 10 }}>
-                <h2 style={{ margin: "8px 0 0" }}>Hidden from the till</h2>
+                <h2 style={{ margin: "8px 0 0" }}>{t("Hidden from the till")}</h2>
                 <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-                  Not offered on the till. Their recipes, prices and sales history are kept; tick
-                  “On the till” to sell one again.
+                  {t(
+                    "Not offered on the till. Their recipes, prices and sales history are kept; tick “On the till” to sell one again.",
+                  )}
                 </p>
                 {hidden.map(card)}
               </section>
