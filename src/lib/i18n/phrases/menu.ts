@@ -8,7 +8,7 @@ const phrases: PhraseBook = {
   Category: { ar: "الفئة", ckb: "پۆل" },
   Channel: { ar: "القناة", ckb: "کەناڵ" },
   Products: { ar: "المنتجات", ckb: "بەرهەمەکان" },
-  Margin: { ar: "هامش الربح", ckb: "پێچی قازانج" },
+  Margin: { ar: "هامش الربح", ckb: "پەراوێزی قازانج" },
   Qty: { ar: "الكمية", ckb: "بڕ" },
   qty: { ar: "الكمية", ckb: "بڕ" },
   "Why?": { ar: "لماذا؟", ckb: "بۆچی؟" },
@@ -37,7 +37,7 @@ const phrases: PhraseBook = {
   "all channels": { ar: "كل القنوات", ckb: "هەموو کەناڵەکان" },
   "Price & margin by channel": {
     ar: "السعر وهامش الربح حسب القناة",
-    ckb: "نرخ و پێچی قازانج بەپێی کەناڵ",
+    ckb: "نرخ و پەراوێزی قازانج بەپێی کەناڵ",
   },
   "No price yet: the till cannot sell it until it has one.": {
     ar: "لا سعر بعد: لا تستطيع نقطة البيع بيعه حتى يصبح له سعر.",
@@ -46,11 +46,11 @@ const phrases: PhraseBook = {
   "No category": { ar: "بلا فئة", ckb: "بێ پۆل" },
   "Recipe, prices and margin": {
     ar: "الوصفة والأسعار وهامش الربح",
-    ckb: "ڕەسەتە، نرخەکان و پێچی قازانج",
+    ckb: "ڕەسەتە، نرخەکان و پەراوێزی قازانج",
   },
   "Recipe, prices and margin · {n} sizes or flavours": {
     ar: "الوصفة والأسعار وهامش الربح · الأحجام أو النكهات: {n}",
-    ckb: "ڕەسەتە، نرخەکان و پێچی قازانج · {n} قەبارە یان تام",
+    ckb: "ڕەسەتە، نرخەکان و پەراوێزی قازانج · {n} قەبارە یان تام",
   },
   "One recipe serves every channel; lines tagged to a channel deduct only there — that is how the cup and lid are used for takeaway and delivery but not at a table. Prices and recipes change from a date, so every sale uses the price and recipe in force on its own day. Costs shown are today's, worked out exactly as a sale posts them. A photo, a category and a ★ make a product quick to find on the till.":
     {
@@ -114,13 +114,13 @@ const phrases: PhraseBook = {
   "Leave a channel empty if the product is not sold there. Suggested prices leave a margin of <target></target>% and are rounded up to {step}. A delivery platform's commission is not in the cost.":
     {
       ar: "اترك القناة فارغة إن كان المنتج لا يُباع فيها. الأسعار المقترحة تترك هامش ربح <target></target>% وتُقرَّب صعودًا إلى أقرب {step}. عمولة منصة التوصيل غير محسوبة ضمن الكلفة.",
-      ckb: "کەناڵێک بەتاڵ بهێڵەرەوە ئەگەر بەرهەمەکە لەوێ نافرۆشرێت. نرخە پێشنیارکراوەکان پێچی قازانجی <target></target>% دەهێڵنەوە و بەرەو سەرەوە بۆ نزیکترین {step} خڕ دەکرێنەوە. کۆمیسیۆنی پلاتفۆرمی گەیاندن لە تێچووەکەدا نییە.",
+      ckb: "کەناڵێک بەتاڵ بهێڵەرەوە ئەگەر بەرهەمەکە لەوێ نافرۆشرێت. نرخە پێشنیارکراوەکان پەراوێزی قازانجی <target></target>% دەهێڵنەوە و بەرەو سەرەوە بۆ نزیکترین {step} خڕ دەکرێنەوە. کۆمیسیۆنی پلاتفۆرمی گەیاندن لە تێچووەکەدا نییە.",
     },
-  "Target margin %": { ar: "هامش الربح المستهدف %", ckb: "پێچی قازانجی ئامانج %" },
+  "Target margin %": { ar: "هامش الربح المستهدف %", ckb: "پەراوێزی قازانجی ئامانج %" },
   "cost {amount}": { ar: "الكلفة {amount}", ckb: "تێچوو {amount}" },
   "{channel} price": { ar: "سعر {channel}", ckb: "نرخی {channel}" },
   "loss {amount}": { ar: "خسارة {amount}", ckb: "زیان {amount}" },
-  "margin {amount}": { ar: "الهامش {amount}", ckb: "پێچی قازانج {amount}" },
+  "margin {amount}": { ar: "الهامش {amount}", ckb: "پەراوێزی قازانج {amount}" },
   "Use {amount}": { ar: "استخدم {amount}", ckb: "{amount} بەکاربهێنە" },
   "Create product": { ar: "إنشاء المنتج", ckb: "دروستکردنی بەرهەم" },
 
@@ -315,7 +315,7 @@ const phrases: PhraseBook = {
     ar: "كل دفعة تُسجَّل تظهر هنا.",
     ckb: "هەر دەستەیەک تۆمار بکرێت لێرە پیشان دەدرێت.",
   },
-  Made: { ar: "وقت الصنع", ckb: "کاتی دروستکردن" },
+  Made: { ar: "صُنع", ckb: "دروستکرا" },
   What: { ar: "ماذا", ckb: "چی" },
   "Came out": { ar: "الناتج", ckb: "دەرچوو" },
   cancelled: { ar: "ملغى", ckb: "هەڵوەشێنراوە" },
@@ -435,7 +435,7 @@ const phrases: PhraseBook = {
   "Stop making it": { ar: "أوقف صنعه", ckb: "چیتر دروستی مەکە" },
   "Make it again": { ar: "اصنعه مجددًا", ckb: "دووبارە دروستی بکەرەوە" },
   "Cancel {what}": { ar: "إلغاء {what}", ckb: "هەڵوەشاندنەوەی {what}" },
-  "Why it is cancelled": { ar: "سبب الإلغاء", ckb: "هۆی هەڵوەشاندنەوە" },
+  "Why it is cancelled": { ar: "سبب الإلغاء", ckb: "هۆکاری هەڵوەشاندنەوە" },
   "Why? e.g. recorded twice": {
     ar: "لماذا؟ مثلًا: سُجّلت مرتين",
     ckb: "بۆچی؟ بۆ نموونە: دوو جار تۆمار کراوە",

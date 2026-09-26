@@ -173,15 +173,15 @@ const phrases: PhraseBook = {
     ckb: "دەربارەیان پرسیار لە {platform} بکە؛ چاوەڕوان دەمێننەوە تا لە کەشفێکدا پارەیان دەدرێت.",
   },
   "The journal it would post": { ar: "القيد الذي سيُسجَّل", ckb: "ئەو تۆمارەی دەکرێت" },
-  Dr: { ar: "مدين", ckb: "قەرزدار" },
-  Cr: { ar: "دائن", ckb: "خاوەن قەرز" },
+  Dr: { ar: "مدين", ckb: "مەدین" },
+  Cr: { ar: "دائن", ckb: "دائین" },
   "Statement number or date": { ar: "رقم الكشف أو تاريخه", ckb: "ژمارە یان بەرواری کەشف" },
   "The payout arrived on": { ar: "تاريخ وصول الدفعة", ckb: "بەرواری گەیشتنی پارەکە" },
   "Note: say what the lines that do not match are": {
     ar: "ملاحظة: اذكر ما هي الأسطر غير المطابقة",
     ckb: "تێبینی: بڵێ ئەو هێڵانەی هاوتا نین چین",
   },
-  "Note (optional)": { ar: "ملاحظة (اختيارية)", ckb: "تێبینی (ئارەزوومەندانە)" },
+  "Note (optional)": { ar: "ملاحظة (اختياري)", ckb: "تێبینی (ئارەزوومەندانە)" },
   "Post the payout": { ar: "سجّل الدفعة", ckb: "پارەدانەکە تۆمار بکە" },
   "The owner or the accountant posts the payout.": {
     ar: "المالك أو المحاسب هو من يسجّل الدفعة.",

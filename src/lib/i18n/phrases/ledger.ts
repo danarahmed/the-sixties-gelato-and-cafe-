@@ -38,7 +38,6 @@ const phrases: PhraseBook = {
   // The chart of accounts the database sets up (provision_chart_of_accounts).
   "Cash in the till": { ar: "نقد درج الصندوق", ckb: "پارەی نەختینەی ناو دەخیلە" },
   "Cash in the safe": { ar: "النقد في الخزنة", ckb: "پارەی نەختینەی ناو قاسە" },
-  "Card clearing": { ar: "حساب وسيط البطاقات", ckb: "هەژماری ناوەندی کارت" },
   "Platform receivable": { ar: "ذمم المنصات", ckb: "قەرزی پلاتفۆرمەکان" },
   Inventory: { ar: "المخزون", ckb: "کۆگا" },
   Equipment: { ar: "المعدات", ckb: "ئامێرەکان" },

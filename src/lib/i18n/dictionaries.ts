@@ -707,7 +707,7 @@ const ckb: Dict = {
   "pos.channel.direct_delivery": "گەیاندنی ڕاستەوخۆ",
   "pos.price": "نرخ",
   "pos.cost": "تێچوو",
-  "pos.margin": "پێچی قازانج",
+  "pos.margin": "پەراوێزی قازانج",
   "pos.deductions": "ئەو کۆگایەی بەم فرۆشتنە کەم دەکرێت",
   "pos.explainChannel": "پاکەتکردنی کەمکراوە بەپێی کەناڵ دەگۆڕێت.",
   "pos.item": "کاڵا",
