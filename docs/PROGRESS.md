@@ -1,16 +1,17 @@
 # Progress & Status
 
-_Last updated: 2026-09-25._ This is the one place that says what works and what
+_Last updated: 2026-09-26._ This is the one place that says what works and what
 does not. A feature is marked done only when it runs on the real database path
 and is tested. Tested means the SQL suites on real PostgreSQL 16 and 17, the
 browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0031` and the rebuilt app. The SQL
-  checks (32, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (12, every role), the unit and contract
-  tests (254) and a production build all pass.
+- **Built and verified:** migrations `0014`–`0032` and the rebuilt app. The SQL
+  checks (33, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (13, every role, every screen in
+  Arabic and Kurdish), the unit and contract tests (276) and a production
+  build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -213,6 +214,25 @@ browser tests through the real app, or both.
   any width) sat over part of the page instead of sliding away, and would not
   open. Both are fixed, and the browser checks now read every screen in
   Arabic and Kurdish.
+- **Every screen in Arabic and Kurdish, and languages the owner adds
+  (release G, migration `0032`, asked for by the owner).** Before, only the
+  menu, signing in and the till were translated. Now every screen is, in
+  every detail: headings, buttons, forms, tables, hints and confirmations;
+  every message a form or the database gives (the database's 333 included);
+  the dashboard's alerts and the daily brief; the period-close checks, the
+  reconciliation and the exceptions report; the audit trail; and the words
+  the books write themselves (the chart of accounts set up, the narrations of
+  the journals posted). On **Settings → Languages** the owner or the general
+  manager adds a language (its code, its name, which way it is written),
+  gives it words phrase by phrase or through a CSV a translator fills in,
+  corrects any built-in Arabic or Kurdish word, and takes a language out of
+  use; a phrase with no words yet shows its English. Every change is on the
+  audit trail. The English is unchanged, word for word. Built and tested:
+  every phrase checked to have its Arabic and Kurdish with the same values
+  and marks, one translation per phrase, Kurdish in Kurdish letters; the
+  alerts the database raises translated whole; and in the browser, every
+  screen in Arabic and in Kurdish showing no English but what the café typed
+  itself. See [`TRANSLATION.md`](TRANSLATION.md) and the owner's guide.
 
 ## The August 2026 audit, finding by finding
 
