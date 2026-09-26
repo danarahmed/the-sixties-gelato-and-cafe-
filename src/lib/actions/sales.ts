@@ -63,6 +63,8 @@ export interface SaleReceipt {
   replayed: boolean;
   /** A delivery platform's order number, as recorded. */
   platformOrderNo: string | null;
+  /** The order's turn number, called out when it is ready (0034); none on a sale from before. */
+  turnNo: number | null;
 }
 
 export async function recordSaleAction(
@@ -104,6 +106,7 @@ function saleReceipt(d: Record<string, unknown>): SaleReceipt {
     journalNo: d.journal_no == null ? null : Number(d.journal_no),
     replayed: Boolean(d.replayed),
     platformOrderNo: d.platform_order_no == null ? null : String(d.platform_order_no),
+    turnNo: d.turn_no == null ? null : Number(d.turn_no),
   };
 }
 

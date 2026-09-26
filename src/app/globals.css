@@ -752,7 +752,13 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   padding: 10px 12px 12px;
 }
 
+/* Two panels side by side, the height of the screen: the menu on the left,
+   the order as a ticket on the right. Nothing on the page scrolls but the
+   menu and the order's lines. On a phone they stack, and the page scrolls. */
 .pos {
+  --pos-radius: 12px;
+  --pos-lift: 0 1px 2px rgba(16, 24, 32, 0.06), 0 6px 18px rgba(16, 24, 32, 0.05);
+  --pos-tint: color-mix(in srgb, var(--brand) 9%, var(--surface));
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -760,8 +766,13 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
 .pos-top {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
+  padding: 5px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--pos-radius);
+  box-shadow: var(--pos-lift);
 }
 .bill-strip,
 .chips {
@@ -774,6 +785,7 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
 }
 .bill-strip {
   flex: 1;
+  padding-bottom: 0;
 }
 .strip-chip,
 .chip {
@@ -795,6 +807,7 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
 }
 .strip-chip.waiting:not(.active) {
   border-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, var(--surface));
 }
 .chip.active {
   background: var(--text);
@@ -806,7 +819,7 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
 }
 .chip-n {
   display: inline-block;
-  min-width: 20px;
+  min-width: 22px;
   padding: 0 6px;
   border-radius: 999px;
   background: var(--surface-2);
@@ -815,31 +828,45 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   text-align: center;
 }
 .icon-btn {
+  position: relative;
   min-width: 40px;
   min-height: 40px;
   padding: 0;
   flex: none;
+  border-color: var(--border);
+  border-radius: 10px;
+  font-size: 1.05rem;
+}
+/* Printing by itself: a green dot on the printer. */
+.print-btn.on::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  inset-inline-end: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 2px var(--surface);
 }
 .seg {
   display: inline-flex;
   flex: none;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-2);
 }
 .seg button {
   border: none;
-  border-radius: 0;
-  border-inline-end: 1px solid var(--border);
-  min-height: 40px;
-  background: var(--surface);
-}
-.seg button:last-child {
-  border-inline-end: none;
+  border-radius: 8px;
+  min-height: 34px;
+  background: transparent;
 }
 .seg button.active {
   background: var(--brand);
   color: var(--brand-ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
 .pos-grid {
@@ -848,90 +875,213 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   gap: 12px;
   align-items: start;
 }
-@media (min-width: 900px) {
-  .pos-grid {
-    grid-template-columns: minmax(0, 1fr) 360px;
-  }
-  .pos-side {
-    position: sticky;
-    top: 62px;
-  }
-}
-@media (min-width: 1400px) {
-  .pos-grid {
-    grid-template-columns: minmax(0, 1fr) 400px;
-  }
-}
 .pos-main {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--pos-radius);
+  box-shadow: var(--pos-lift);
+}
+@media (min-width: 900px) {
+  .app-shell.pos-mode {
+    height: 100dvh;
+  }
+  .app-shell.pos-mode .layout {
+    min-height: 0;
+  }
+  .app-shell.pos-mode .content {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .app-shell.pos-mode .content > .pos {
+    flex: 1;
+    min-height: 0;
+  }
+  .pos-grid {
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    align-items: stretch;
+  }
+  .pos-main {
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .pos-side {
+    display: flex;
+    min-height: 0;
+  }
+}
+@media (min-width: 1400px) {
+  .pos-grid {
+    grid-template-columns: minmax(0, 1fr) 420px;
+  }
 }
 
-/* The menu: search, category chips, tiles with a picture. */
+/* The menu: a search, the categories down the side (along the top on a
+   narrow screen), and tiles with a picture. */
 .picker {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .picker-search {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
 }
+.picker-search .search-icon {
+  position: absolute;
+  inset-inline-start: 13px;
+  width: 18px;
+  height: 18px;
+  color: var(--faint);
+  pointer-events: none;
+}
 .picker-search input {
   font-size: 1rem;
-  min-height: 44px;
-  padding: 0 12px;
+  min-height: 46px;
+  padding-block: 0;
+  padding-inline: 40px 12px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 10px;
+  background: var(--paper);
+}
+.picker-search input:focus {
+  border-color: var(--brand);
   background: var(--surface);
+}
+.picker-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.picker-grid {
+  flex: 1;
+  min-width: 0;
+}
+.chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (min-width: 1100px) {
+  .picker-body {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .cat-rail {
+    position: sticky;
+    top: 0;
+    flex: none;
+    flex-direction: column;
+    width: 176px;
+    padding: 0;
+    overflow: visible;
+  }
+  .cat-rail .chip {
+    justify-content: space-between;
+    min-height: 44px;
+    padding: 0 10px 0 12px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    font-weight: 600;
+  }
+  .cat-rail .chip:hover:not(:disabled) {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .cat-rail .chip.active {
+    background: var(--pos-tint);
+    color: var(--brand);
+    box-shadow: inset 3px 0 0 var(--brand);
+  }
+  html[dir="rtl"] .cat-rail .chip.active {
+    box-shadow: inset -3px 0 0 var(--brand);
+  }
+  .cat-rail .chip.active .chip-n {
+    background: var(--brand);
+    color: var(--brand-ink);
+  }
 }
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+  gap: 10px;
+}
+/* Three across on a phone: more of the menu in view. */
+@media (max-width: 599px) {
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
+  .pos-main {
+    padding: 10px;
+  }
+  .tile-img {
+    aspect-ratio: 16 / 11;
+  }
+  .tile-name {
+    font-size: 0.84rem;
+  }
 }
 .product-tile {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 4px;
-  padding: 6px 6px 8px;
+  gap: 6px;
+  padding: 7px 7px 9px;
   text-align: start;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 12px;
   font-weight: 500;
   overflow: hidden;
+  transition:
+    border-color 0.12s,
+    box-shadow 0.12s,
+    transform 0.08s;
 }
 .product-tile:hover:not(:disabled) {
   border-color: var(--brand);
   color: inherit;
+  box-shadow: 0 6px 16px rgba(16, 24, 32, 0.08);
 }
 .product-tile:active:not(:disabled) {
   transform: scale(0.98);
+}
+.product-tile.in-order {
+  border-color: var(--brand);
+  box-shadow: inset 0 0 0 1px var(--brand);
 }
 .tile-img {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 8px;
   background: var(--surface-2);
 }
 .tile-initials {
   display: grid;
   place-items: center;
   font-family: "Source Serif 4", Georgia, serif;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: 0.04em;
 }
 .tile-name {
-  font-size: 0.86rem;
+  padding: 0 2px;
+  font-size: 0.9rem;
+  font-weight: 600;
   line-height: 1.25;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -944,67 +1094,122 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   justify-content: space-between;
   align-items: baseline;
   gap: 4px;
+  padding: 0 2px;
   font-size: 0.76rem;
 }
 .product-tile .price {
   font-family: "Source Serif 4", Georgia, serif;
   color: var(--brand);
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   margin-inline-start: auto;
 }
 .tile-count {
   position: absolute;
-  top: 4px;
-  inset-inline-end: 4px;
-  min-width: 26px;
-  height: 26px;
-  padding: 0 7px;
-  border-radius: 13px;
+  top: 5px;
+  inset-inline-end: 5px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 14px;
   background: var(--brand);
   color: var(--brand-ink);
   font-weight: 700;
   display: grid;
   place-items: center;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 .tile-fav {
   position: absolute;
-  top: 6px;
-  inset-inline-start: 9px;
+  top: 7px;
+  inset-inline-start: 11px;
   color: #e0a100;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
-/* The order on the right. */
+/* The order, as a ticket: who and what at the top, what it comes to at the foot. */
+.pos-side {
+  min-width: 0;
+}
 .order-panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px;
-  max-height: calc(100dvh - 84px);
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--pos-radius);
+  box-shadow: var(--pos-lift);
+}
+.order-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px 0;
+}
+.order-head-main {
+  min-width: 0;
 }
 .order-title {
   font-family: "Source Serif 4", Georgia, serif;
-  font-size: 1.15rem;
+  font-size: 1.3rem;
   font-weight: 700;
+  line-height: 1.2;
   overflow-wrap: anywhere;
 }
 .order-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 3px;
+  margin-top: 5px;
+}
+.order-opened {
+  font-size: 0.78rem;
+  margin-top: 4px;
+}
+/* The order's turn number, as the customer and the barista know it. */
+.order-turn {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 58px;
+  padding: 4px 8px 5px;
+  border: 2px solid var(--brand);
+  border-radius: 10px;
+  color: var(--brand);
+  line-height: 1;
+}
+.order-turn span {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.order-turn strong {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 1.6rem;
+  margin-top: 2px;
+}
+.order-panel .channel-tabs {
+  margin: 0 16px;
+}
+.order-customer {
+  display: block;
+  margin: 0 16px;
+  font-size: 0.82rem;
 }
 .order-lines {
-  overflow-y: auto;
-  min-height: 60px;
   flex: 1 1 auto;
+  min-height: 120px;
+  overflow-y: auto;
+  padding: 2px 16px;
   border-block: 1px solid var(--border);
 }
 .order-line {
-  padding: 6px 0;
+  padding: 9px 0;
   border-bottom: 1px dashed var(--border);
 }
 .order-line:last-child {
@@ -1013,7 +1218,7 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
 .ol-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 .ol-main {
   flex: 1;
@@ -1023,7 +1228,7 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
 }
 .ol-name {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   overflow-wrap: anywhere;
 }
 .ol-sub {
@@ -1033,9 +1238,9 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   color: var(--warn);
 }
 .ol-amt {
-  min-width: 74px;
+  min-width: 70px;
   text-align: end;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
 }
 .ol-note-btn {
   min-width: 32px;
@@ -1047,57 +1252,160 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
 .ol-note-edit {
   display: flex;
   gap: 6px;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 .stepper {
   display: inline-flex;
   align-items: center;
   gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--surface-2);
 }
 .stepper button {
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 34px;
+  min-height: 34px;
   padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface);
   font-size: 1.1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 .stepper .mono {
-  min-width: 28px;
+  min-width: 26px;
   text-align: center;
+}
+/* Nothing on the order yet: the café's mark, and what to do. */
+.order-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  min-height: 150px;
+  color: var(--faint);
+  text-align: center;
+}
+.order-empty .sl-emblem {
+  width: 64px;
+  height: 64px;
+  opacity: 0.55;
+}
+.order-empty p {
+  margin: 0;
 }
 .order-foot {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  padding: 0 16px 14px;
 }
 .order-total {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  padding-top: 2px;
   font-size: 1rem;
 }
 .order-total strong {
   font-family: "Source Serif 4", Georgia, serif;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
+  line-height: 1.1;
 }
 .order-actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 .order-actions .big {
   flex: 1;
-  min-height: 52px;
-  font-size: 1rem;
+  min-height: 56px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+}
+/* Card is paid in the books' green, cash in the café's colour. */
+.order-actions .big + .big {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.order-actions .big + .big:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 85%, #000);
+  border-color: color-mix(in srgb, var(--accent) 85%, #000);
+}
+.order-actions.secondary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 6px;
 }
 .order-actions.secondary button {
+  min-height: 40px;
+  padding: 0 8px;
+  border-color: var(--border);
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+.order-offline {
+  font-size: 0.82rem;
+  margin: 0;
+}
+/* The sale just recorded: the customer's number, the change, the printouts. */
+.receipt-card {
+  margin: 12px 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ok) 7%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--ok) 35%, var(--border));
+}
+.rc-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.rc-turn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 12px 0 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 2px solid var(--brand);
+  color: var(--brand);
+}
+.rc-turn span {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.rc-turn strong {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 2.3rem;
+  line-height: 1;
+}
+.rc-facts {
+  font-size: 0.85rem;
+  margin: 6px 0;
+}
+.rc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.rc-actions button {
   flex: 1 1 auto;
   min-height: 40px;
+  border-radius: 8px;
 }
-.receipt-card {
-  margin-top: 4px;
-  padding: 10px 12px;
-  border-radius: 6px;
-  background: var(--surface-2);
+.rc-next {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  text-align: center;
 }
 .change-row {
   display: flex;
@@ -1106,13 +1414,33 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   gap: 8px;
 }
 .change-amt {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   color: var(--ok);
 }
-.autoprint {
+/* How this till prints (the 🖨 button). */
+.print-options {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  gap: 12px;
+}
+.print-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.print-option input {
+  margin-top: 3px;
+}
+.print-option > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.print-option .muted {
   font-size: 0.8rem;
 }
 /* Read by screen readers, never seen. Clipped in place: an element moved
@@ -1355,31 +1683,32 @@ input.check {
   .pos-mobile-bar:hover:not(:disabled) {
     color: var(--brand-ink);
   }
-  .order-panel {
-    max-height: none;
+  .order-lines {
+    min-height: 90px;
   }
 }
+/* Where the order goes: dine-in, takeaway, delivery, each platform. */
 .channel-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  width: fit-content;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-2);
 }
 .channel-tabs button {
-  border: none;
-  border-inline-end: 1px solid var(--border);
-  border-radius: 0;
+  flex: 1 1 auto;
   min-height: 36px;
-}
-.channel-tabs button:last-child {
-  border-inline-end: none;
+  padding: 0 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 0.82rem;
 }
 .channel-tabs button.active {
   background: var(--brand);
   color: var(--brand-ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 .deduction-row {
   display: flex;
@@ -1501,7 +1830,10 @@ a.card.stat:focus-visible {
 
 /* ---------------------------------------------------- bills and receipts */
 /* Printed on an 80 mm receipt printer (72 mm printable), or any printer: the
-   slip alone is printed, everything else on the page is hidden. */
+   slips alone are printed, everything else on the page is hidden. Each slip
+   starts a page of its own, so a printer that cuts after each page cuts the
+   customer's check and the barista's ticket apart. Black only: a thermal
+   printer has no grey. */
 .print-slip {
   display: none;
 }
@@ -1521,40 +1853,331 @@ a.card.stat:focus-visible {
     width: 72mm;
     color: #000;
     font:
-      12px/1.35 Arial,
+      12px/1.35 "Libre Franklin",
+      Arial,
       "Noto Sans Arabic",
       system-ui,
       sans-serif;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: tabular-nums lining-nums;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
-  .ps-center {
+  .print-slip .slip {
+    padding: 0 1mm;
+    break-inside: avoid;
+  }
+  .print-slip .slip ~ .slip {
+    break-before: page;
+  }
+  /* Letters spaced apart break Arabic and Kurdish words, and a slant is not
+     how either is written: neither is used there. */
+  .print-slip[dir="rtl"] * {
+    letter-spacing: 0 !important;
+    font-style: normal !important;
+  }
+  .sl-cut {
+    margin: 10px 0;
+    border-top: 1px dashed #000;
+  }
+
+  /* The check */
+  .sl-head {
     text-align: center;
   }
-  .ps-strong {
+  .sl-emblem {
+    display: block;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 3px;
+  }
+  .sl-brand {
+    font:
+      700 17px/1.2 "Source Serif 4",
+      Georgia,
+      serif;
+  }
+  .sl-kind {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 5px 0 2px;
+    font-size: 10px;
     font-weight: 700;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
   }
-  .ps-big {
-    font-size: 14px;
+  .sl-kind::before,
+  .sl-kind::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid #000;
   }
-  .ps-rule {
-    border-top: 1px dashed #000;
-    margin: 4px 0;
+  .sl-copy {
+    font-size: 10px;
   }
-  .ps-row {
+  .sl-turn {
+    width: 58%;
+    margin: 7px auto 5px;
+    padding: 3px 0 5px;
+    border: 2px solid #000;
+    border-radius: 9px;
+    text-align: center;
+  }
+  .sl-turn-label {
+    display: block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .sl-turn-no {
+    display: block;
+    font:
+      700 36px/1 "Source Serif 4",
+      Georgia,
+      serif;
+  }
+  .sl-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 10px;
+    margin: 6px 0 4px;
+    padding: 5px 0;
+    border-block: 1px dashed #000;
+    font-size: 11px;
+  }
+  .sl-meta span {
+    display: block;
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .sl-meta strong {
+    display: block;
+    overflow-wrap: anywhere;
+  }
+  .sl-meta .sl-wide {
+    grid-column: 1 / -1;
+    font-size: 12px;
+  }
+  .sl-items {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .sl-items th {
+    padding: 2px 0 3px;
+    border-bottom: 1.5px solid #000;
+    color: #000;
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    text-align: start;
+    text-transform: uppercase;
+  }
+  /* Ruled like a ticket, not banded like the ledger's tables. */
+  .sl-items td {
+    padding: 4px 0 3px;
+    border-bottom: 1px dotted #000;
+    background: none !important;
+    font-size: 12px;
+    vertical-align: top;
+  }
+  .sl-items .q {
+    width: 1%;
+    padding-inline-end: 8px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .sl-items td.n {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .sl-items .a {
+    padding-inline-start: 6px;
+    text-align: end;
+    white-space: nowrap;
+  }
+  .sl-note {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 400;
+    font-style: italic;
+  }
+  .sl-sums {
+    margin-top: 4px;
+  }
+  .sl-row {
     display: flex;
     justify-content: space-between;
     gap: 6px;
   }
-  .ps-num {
-    white-space: nowrap;
+  .sl-small {
+    font-size: 10px;
   }
-  .ps-note {
+  .sl-strong {
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .sl-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px;
+    margin: 5px 0;
+    padding: 5px 0 4px;
+    border-block: 3px double #000;
+    font:
+      700 19px/1.1 "Source Serif 4",
+      Georgia,
+      serif;
+  }
+  .sl-total small {
+    font:
+      700 10px "Libre Franklin",
+      Arial,
+      sans-serif;
+  }
+  .sl-foot {
+    margin-top: 7px;
+    font-size: 10px;
+    text-align: center;
+  }
+  .sl-unpaid {
+    padding: 3px;
+    border: 1.5px solid #000;
+    font-weight: 700;
+  }
+  .sl-thanks {
+    margin-top: 7px;
+    font:
+      italic 600 13px/1.25 "Source Serif 4",
+      Georgia,
+      serif;
+  }
+  .sl-orn {
+    display: block;
+    width: 55%;
+    height: 8px;
+    margin: 5px auto 0;
+  }
+
+  /* The barista's ticket */
+  .tk-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 7px;
+    border-radius: 3px;
+    background: #000;
+    color: #fff;
     font-size: 11px;
-    padding-inline-start: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .tk-no {
+    margin-top: 4px;
+    text-align: center;
+  }
+  .tk-no-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+  .tk-no-n {
+    display: block;
+    font:
+      700 66px/0.95 "Source Serif 4",
+      Georgia,
+      serif;
+  }
+  .tk-who {
+    margin-top: 3px;
+    font-size: 17px;
+    font-weight: 700;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+  .tk-chan {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 4px 0 7px;
+  }
+  .tk-chan span {
+    padding: 0 9px;
+    border: 1.5px solid #000;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .tk-flag {
+    margin: 5px 0 4px;
+    padding: 2px 6px;
+    border: 2px solid #000;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  .tk-flag.off {
+    border-style: dashed;
+  }
+  .tk-items {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 2px solid #000;
+  }
+  .tk-items li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px dashed #000;
+  }
+  .tk-q {
+    flex: none;
+    display: grid;
+    place-items: center;
+    min-width: 32px;
+    height: 27px;
+    padding: 0 4px;
+    border: 2px solid #000;
+    border-radius: 5px;
+    font:
+      700 17px/1 "Source Serif 4",
+      Georgia,
+      serif;
+  }
+  .tk-n {
+    padding-top: 3px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+  .tk-note {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
     font-style: italic;
   }
-  .ps-thanks {
+  .tk-note::before {
+    content: "» ";
+    font-style: normal;
+  }
+  .tk-items.off .tk-n {
+    text-decoration: line-through;
+  }
+  .tk-foot {
     margin-top: 6px;
+    font-size: 10px;
+    text-align: center;
   }
 }
 

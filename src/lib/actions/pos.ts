@@ -165,6 +165,7 @@ export async function payBillAction(
     replayed: Boolean(d.replayed),
     // A bill is never a delivery platform's: the database opens none for them.
     platformOrderNo: null,
+    turnNo: d.turn_no == null ? null : Number(d.turn_no),
   });
 }
 

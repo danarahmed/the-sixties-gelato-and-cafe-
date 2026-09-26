@@ -15,13 +15,21 @@ const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
   "base64",
 );
-/** Printing is counted, not sent to a printer. */
+/** Printing is counted, not sent to a printer; each job's slips are kept to be read. */
 async function till(who) {
   const s = await signIn(browser, who);
   await s.ctx.addInitScript(() => {
     window.__printed = 0;
+    window.__slips = [];
     window.print = () => {
       window.__printed += 1;
+      window.__slips.push(
+        [...document.querySelectorAll(".print-slip > .slip")].map((slip) => ({
+          ticket: slip.classList.contains("slip-ticket"),
+          no: slip.querySelector(".tk-no-n, .sl-turn-no")?.textContent ?? null,
+          text: slip.textContent,
+        })),
+      );
     };
   });
   return s;
@@ -465,6 +473,124 @@ console.log(
   check(
     sql("select net_amount from sales_order order by created_at desc limit 1") === "3000",
     "and the sale records what the customer was told",
+  );
+  await ctx.close();
+}
+
+// ------------------------------------------------------------ two copies (release I)
+console.log("▸ an order prints twice: the customer's receipt and the barista's ticket, by number");
+{
+  const { ctx, page } = await till("cashier");
+  await open(page, "/pos");
+  const espresso = page.locator(".product-tile", { hasText: "Golden espresso" });
+  const water = page.locator(".product-tile", { hasText: "Golden water" });
+  const printed = (n) => page.waitForFunction((n) => window.__printed === n, n, { timeout: 10000 });
+  const lastJob = () => page.evaluate(() => window.__slips[window.__slips.length - 1]);
+
+  // A quick sale takes its number as it is paid; one press prints both copies.
+  await page.locator(".strip-chip", { hasText: "Quick sale" }).click();
+  await page.getByRole("button", { name: "Takeaway" }).click();
+  await espresso.click();
+  await espresso.click();
+  await page.getByRole("button", { name: "Add a note" }).first().click();
+  await page.getByPlaceholder("e.g. no sugar, extra shot").fill("oat milk");
+  await page.getByPlaceholder("e.g. no sugar, extra shot").press("Enter");
+  await page.getByRole("button", { name: /Cash/ }).click();
+  await page.locator(".pay-confirm").click();
+  await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
+  const sold = sql("select turn_no from sales_order order by created_at desc limit 1");
+  check(
+    /^\d+$/.test(sold) && (await page.locator(".rc-turn strong").textContent()) === sold,
+    "the sale takes the day's next number, shown for the customer",
+  );
+  await page.getByRole("button", { name: /Print receipt \+ barista ticket/ }).click();
+  await printed(1);
+  const both = await lastJob();
+  check(
+    both.length === 2 && !both[0].ticket && both[1].ticket,
+    "one press prints two copies: the customer's receipt, then the barista's ticket",
+  );
+  check(
+    both[0].no === sold && both[0].text.includes("Your number") && both[0].text.includes("6,000"),
+    "the receipt has the number and every amount",
+  );
+  check(
+    both[1].no === sold &&
+      both[1].text.includes("Golden espresso") &&
+      both[1].text.includes("oat milk") &&
+      !/IQD|3,000|6,000/.test(both[1].text),
+    "the barista's ticket has the number, what to make and its note, and no prices",
+  );
+  await page.getByRole("button", { name: /Print receipt$/ }).click();
+  await printed(2);
+  check(
+    (await lastJob()).length === 1,
+    "printed again, the receipt comes alone: the bar has the order",
+  );
+  await page.getByRole("button", { name: /Barista ticket/ }).click();
+  await printed(3);
+  const again = await lastJob();
+  check(
+    again.length === 1 && again[0].ticket && again[0].text.includes("Copy: already sent"),
+    "and the barista's ticket again is marked as a copy",
+  );
+
+  // A till that prints by itself: a table's order goes to the bar as it is saved.
+  await page.getByRole("button", { name: "Printing" }).click();
+  await page.getByLabel("Print by itself").check();
+  await page.getByRole("button", { name: "OK", exact: true }).click();
+  await page.getByRole("tab", { name: /Tables/ }).click();
+  await page.locator(".table-tile", { hasText: "Table 1" }).click();
+  await espresso.click();
+  await page.getByRole("button", { name: /Save/ }).click();
+  await page.getByText("Table 1 — saved").waitFor({ timeout: 10000 });
+  await printed(4);
+  const bill = sql("select turn_no from pos_tab where status = 'open'");
+  check(Number(bill) === Number(sold) + 1, "a table's bill takes the next number as it is opened");
+  const first = await lastJob();
+  check(
+    first.length === 1 &&
+      first[0].ticket &&
+      first[0].no === bill &&
+      first[0].text.includes("Table 1") &&
+      first[0].text.includes("Golden espresso") &&
+      !first[0].text.includes("Added to the order"),
+    "saving the table's order prints the bar its ticket, with the bill's number",
+  );
+  await page.locator(".table-tile", { hasText: "Table 1" }).click();
+  await water.click();
+  await page.getByRole("button", { name: /Save/ }).click();
+  await page.getByText("Table 1 — saved").waitFor({ timeout: 10000 });
+  await printed(5);
+  const more = await lastJob();
+  check(
+    more[0].text.includes("Added to the order") &&
+      more[0].text.includes("Golden water") &&
+      !more[0].text.includes("Golden espresso"),
+    "more for the table: only what was added goes to the bar",
+  );
+  await page.locator(".table-tile", { hasText: "Table 1" }).click();
+  await page.getByRole("button", { name: /Barista ticket/ }).click();
+  await printed(6);
+  const copy = await lastJob();
+  check(
+    copy[0].text.includes("Copy: already sent") &&
+      copy[0].text.includes("Golden espresso") &&
+      copy[0].text.includes("Golden water"),
+    "asked for by hand, the whole order comes out again, marked as a copy",
+  );
+  await page.getByRole("button", { name: /Cash/ }).click();
+  await page.locator(".pay-confirm").click();
+  await page.getByText("Sale recorded").waitFor({ timeout: 10000 });
+  await printed(7);
+  const paid = await lastJob();
+  check(
+    paid.length === 1 && !paid[0].ticket && paid[0].no === bill,
+    "paid, the table's receipt prints by itself with the bill's number, and no second ticket",
+  );
+  check(
+    sql("select turn_no from sales_order order by created_at desc limit 1") === bill,
+    "the sale keeps the bill's number",
   );
   await ctx.close();
 }

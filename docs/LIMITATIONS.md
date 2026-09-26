@@ -41,6 +41,16 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   items taken out of use are not compared (one is brought back on its own page,
   under Inventory). The same name, whatever its capitals, spaces or
   punctuation, is still refused by the database.
+- **The barista's ticket (release I, `0034`), what it does not do.** It
+  prints on the till's own printer, in the same print job as the customer's
+  receipt, and is cut from it by the printer (or torn along the dashed line);
+  a second printer at the bar would need a print server, since a browser sends
+  a job to one printer. What the bar has had of a table's order is remembered
+  by the till that saved it: on another till, or after the page is reloaded,
+  **☕ Barista ticket** prints the whole order again, marked as a copy. A
+  cancelled bill prints nothing for the bar. Turn numbers start again at
+  midnight, the café's day, and are printed and shown on the till, not on the
+  Sales and Orders screens.
 - **Production (M-11), what it does not do.** Batches are recorded, costed and
   cancelled, and made items are kept and sold (see the walkthrough). It does not
   plan batches ahead, track lots or expiry dates, or move stock between the

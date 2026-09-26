@@ -155,8 +155,17 @@ fast. Set it up once, on **Products** and on the till itself:
   ("Add 20 tables named Table starting at 1"). Give them an **area** (Inside,
   Garden) to group them, and a number to order them. A table with an open bill
   cannot be taken out of use.
-- **Printers:** see the [cashier quick-start](cashier-quickstart.md#printing).
-  Bills and receipts are laid out for an 80 mm receipt printer.
+- **Printers and the barista's ticket:** every order prints on two slips, cut
+  apart: the customer's receipt, with every detail, and the barista's ticket,
+  with the order's number in large figures and what to make, without prices.
+  The number starts again at 1 every day (at midnight, the café's day), comes
+  from the database so two tills never give out the same one, and stays with
+  the order: a table's bill takes it when it is opened, and its sale keeps it
+  (since `0034`). Each till chooses on **🖨** (at the top of the till) whether
+  it prints by itself and whether the barista's ticket comes out; **Test
+  print** prints a sample of both. Setting the printer up: the [cashier
+  quick-start](cashier-quickstart.md#printing). Slips are laid out for an
+  80 mm receipt printer.
 
 **How bills are controlled.** A table's bill is not a sale until it is paid,
 and then it is recorded exactly like a sale at the counter. So a served drink

@@ -111,6 +111,8 @@ export interface OpenBill {
   discountApprovedBy?: string | null;
   /** What the customer owes: the bill less its discount. */
   total: number;
+  /** Its turn number, for the barista's ticket (0034); none on a bill opened before. */
+  turnNo?: number | null;
 }
 
 export function parseOpenBills(data: unknown): OpenBill[] {
@@ -143,6 +145,7 @@ export function parseOpenBills(data: unknown): OpenBill[] {
     discountBy: strOrNull(r.discount_by),
     discountApprovedBy: strOrNull(r.discount_approved_by),
     total: num(r.total),
+    turnNo: numOrNull(r.turn_no),
   }));
 }
 

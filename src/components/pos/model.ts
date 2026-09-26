@@ -79,6 +79,20 @@ export interface Order {
   printCount: number;
   openedAt: string | null;
   openedBy: string | null;
+  /** The bill's turn number (0034); a quick sale takes its own when it is paid. */
+  turnNo: number | null;
+  /**
+   * What the bar has had of this order: a bill's saved lines, which its
+   * tickets have gone out for. Saving prints a ticket for what changed.
+   */
+  sent: TicketLine[];
+}
+
+/** A line as the barista's ticket has it: what to make, how many, and how. */
+export interface TicketLine {
+  variantId: string;
+  qty: number;
+  note: string | null;
 }
 
 /** A delivery platform's order: paid through the platform, with the number from its tablet. */
@@ -123,6 +137,8 @@ export function quickOrder(channel: SalesChannel): Order {
     printCount: 0,
     openedAt: null,
     openedBy: null,
+    turnNo: null,
+    sent: [],
   };
 }
 
@@ -172,7 +188,49 @@ export function orderFromBill(b: OpenBill): Order {
     printCount: b.billPrintCount,
     openedAt: b.openedAt,
     openedBy: b.openedBy,
+    turnNo: b.turnNo ?? null,
+    sent: ticketLines(lines),
   };
+}
+
+/** The lines as a ticket has them. */
+export function ticketLines(lines: Line[]): TicketLine[] {
+  return lines.map((l) => ({ variantId: l.variantId, qty: l.qty, note: l.note }));
+}
+
+/**
+ * What the bar is told when a bill is saved: what was added since it last had
+ * the order, and what was taken off. Lines are matched by product and note, so
+ * a note given to one of two espressos is one espresso off and one, with its
+ * note, added.
+ */
+export function ticketChanges(
+  before: TicketLine[],
+  after: TicketLine[],
+): { added: TicketLine[]; removed: TicketLine[] } {
+  const key = (l: TicketLine) => `${l.variantId}\u0000${(l.note ?? "").trim()}`;
+  const sum = (lines: TicketLine[]) => {
+    const m = new Map<string, TicketLine>();
+    for (const l of lines) {
+      const k = key(l);
+      const had = m.get(k);
+      m.set(k, had ? { ...had, qty: had.qty + l.qty } : { ...l, note: l.note?.trim() || null });
+    }
+    return m;
+  };
+  const was = sum(before);
+  const now = sum(after);
+  const added: TicketLine[] = [];
+  const removed: TicketLine[] = [];
+  for (const [k, l] of now) {
+    const more = l.qty - (was.get(k)?.qty ?? 0);
+    if (more > 0) added.push({ ...l, qty: more });
+  }
+  for (const [k, l] of was) {
+    const less = l.qty - (now.get(k)?.qty ?? 0);
+    if (less > 0) removed.push({ ...l, qty: less });
+  }
+  return { added, removed };
 }
 
 /**

@@ -22,9 +22,16 @@ import { ChooseBill, FloorView } from "./FloorView";
 import { OrderPanel, type Receipt } from "./OrderPanel";
 import { PayDialog } from "./PayDialog";
 import { SplitDialog } from "./SplitDialog";
-import { ApproveDialog, CancelDialog, KeepDialog, MoveDialog } from "./Dialogs";
+import { ApproveDialog, CancelDialog, KeepDialog, MoveDialog, PrintingDialog } from "./Dialogs";
 import { TablesEditor } from "./TablesEditor";
-import { PrintSlip, type PrintJob } from "./PrintSlip";
+import {
+  PrintSlip,
+  ticketFor,
+  type BaristaTicket,
+  type PrintJob,
+  type Slip,
+  type TicketItem,
+} from "./PrintSlip";
 import {
   addLine,
   billChanged,
@@ -32,6 +39,7 @@ import {
   isDirty,
   isPlatform,
   itemCount,
+  itemName,
   lineAmount,
   lineKey,
   lineName,
@@ -48,11 +56,15 @@ import {
   quickOrder,
   savedHasItems,
   signature,
+  ticketChanges,
+  ticketLines,
   type Discount,
   type DiscountRules,
   type MoneyRules,
+  type Line,
   type Order,
   type Tender,
+  type TicketLine,
 } from "./model";
 import { reasonKey } from "@/lib/reasons";
 
@@ -90,6 +102,8 @@ interface Pending {
 
 const PENDING_KEY = "sixties.pos.pending";
 const AUTOPRINT_KEY = "sixties.pos.autoprint";
+/** "0" when this till prints no barista's ticket; printed otherwise. */
+const TICKET_KEY = "sixties.pos.ticket";
 
 function loadPending(): Pending | null {
   try {
@@ -176,7 +190,8 @@ type Dialog =
       error: string | null;
     }
   | { kind: "choose"; table: DiningTable }
-  | { kind: "tables" };
+  | { kind: "tables" }
+  | { kind: "printing" };
 
 /**
  * The till. Two kinds of order share one screen: a quick sale at the counter,
@@ -245,8 +260,10 @@ export function PosClient({
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
-  const [printJob, setPrintJob] = useState<PrintJob | null>(null);
+  // What is waiting to print, one job after another: each job is one or more slips.
+  const [printQueue, setPrintQueue] = useState<Slip[][]>([]);
   const [autoPrint, setAutoPrint] = useState(false);
+  const [ticketOn, setTicketOn] = useState(true);
   const [now, setNow] = useState(() => Date.now());
   const panel = useRef<HTMLDivElement>(null);
 
@@ -327,6 +344,7 @@ export function PosClient({
   useEffect(() => {
     try {
       setAutoPrint(localStorage.getItem(AUTOPRINT_KEY) === "1");
+      setTicketOn(localStorage.getItem(TICKET_KEY) !== "0");
     } catch {
       /* no storage: printing stays manual */
     }
@@ -409,6 +427,48 @@ export function PosClient({
       amount: lineAmount(l, byId, o.channel)?.toNumber() ?? null,
       note: l.note,
     }));
+
+  /** Send slips to the printer, after whatever is printing now. */
+  const print = (slips: (Slip | null)[]) => {
+    const job = slips.filter((x): x is Slip => x !== null);
+    if (job.length > 0) setPrintQueue((q) => [...q, job]);
+  };
+
+  /** Lines as the barista's ticket names them. */
+  const ticketItems = (lines: TicketLine[], known: Line[]): TicketItem[] =>
+    lines.map((l) => {
+      const line = known.find((k) => k.variantId === l.variantId);
+      const item = byId.get(l.variantId);
+      return {
+        name: line ? lineName(line, byId, locale) : item ? itemName(item, locale) : "—",
+        qty: l.qty,
+        note: l.note,
+      };
+    });
+
+  /**
+   * The barista's ticket for a bill: what was added since the bar last had
+   * it, and what was taken off; or, as a copy, the whole order again. Null
+   * when there is nothing to tell the bar.
+   */
+  const barTicket = (o: Order, known: Line[], copy = false): BaristaTicket | null => {
+    const { added, removed } = copy
+      ? { added: ticketLines(o.lines), removed: [] }
+      : ticketChanges(o.sent, ticketLines(o.lines));
+    if (added.length === 0 && removed.length === 0) return null;
+    return {
+      kind: "ticket",
+      turnNo: o.turnNo,
+      title: title(o),
+      channelLabel: channelName(o.channel),
+      lines: ticketItems(added, known),
+      removed: ticketItems(removed, known),
+      more: !copy && o.sent.length > 0,
+      copy,
+      at: new Date().toISOString(),
+      by: cashierName,
+    };
+  };
 
   /** "Discount 10% · −500 IQD", under the total when taking the money. */
   const discountNote = (o: Order): string | null => {
@@ -535,8 +595,12 @@ export function PosClient({
     }
   }
 
-  /** Save the bill on screen (open it, if new) and return it as the database now has it. */
-  async function saveBill(o: Order): Promise<Order | null> {
+  /**
+   * Save the bill on screen (open it, if new) and return it as the database
+   * now has it. A till that prints by itself sends the bar a ticket for what
+   * changed, unless the caller prints it (the Barista ticket button).
+   */
+  async function saveBill(o: Order, tellBar = true): Promise<Order | null> {
     const data = await run("save", () =>
       saveBillAction({
         tabId: o.tabId,
@@ -551,7 +615,7 @@ export function PosClient({
     );
     if (!data) return null;
     const fresh = data.bills?.find((b) => b.tabId === data.tabId);
-    const next = fresh
+    const saved = fresh
       ? orderFromBill(fresh)
       : {
           ...o,
@@ -559,6 +623,14 @@ export function PosClient({
           version: data.version,
           saved: signature(o.lines, o.discount),
         };
+    // What the bar has had: all of it once its ticket is printed; otherwise
+    // what it had before, for the Barista ticket button to send.
+    let sent = o.sent;
+    if (tellBar && autoPrint && ticketOn) {
+      print([barTicket({ ...saved, sent: o.sent }, [...saved.lines, ...o.lines])]);
+      sent = ticketLines(saved.lines);
+    }
+    const next = { ...saved, sent };
     putBill(next);
     if (data.bills) applyBills(data.bills);
     return next;
@@ -645,6 +717,21 @@ export function PosClient({
     );
     setDialog(null);
     if (!data) return;
+    // The order is placed now, to be paid later: the bar makes it now.
+    if (autoPrint && ticketOn) {
+      const kept = data.bills?.find((b) => b.tabId === data.tabId);
+      print([
+        {
+          kind: "ticket",
+          turnNo: kept?.turnNo ?? null,
+          title: billTitle(choice, tables, choice.label ?? ""),
+          channelLabel: channelName(o.channel),
+          lines: ticketItems(ticketLines(o.lines), o.lines),
+          at: new Date().toISOString(),
+          by: cashierName,
+        },
+      ]);
+    }
     setQuick((q) => quickOrder(q.channel));
     if (data.bills) applyBills(data.bills);
     setMsg({
@@ -679,16 +766,37 @@ export function PosClient({
     );
     if (!data) return;
     if (data.bills) applyBills(data.bills);
-    setPrintJob({
-      kind: "bill",
-      title: title(o),
-      channelLabel: channelName(o.channel),
-      lines: printLines(o),
-      ...printTotals(o),
-      printCount: data.printCount,
-      at: new Date().toISOString(),
-      by: cashierName,
-    });
+    print([
+      {
+        kind: "bill",
+        title: title(o),
+        channelLabel: channelName(o.channel),
+        lines: printLines(o),
+        ...printTotals(o),
+        printCount: data.printCount,
+        turnNo: o.turnNo,
+        at: new Date().toISOString(),
+        by: cashierName,
+      },
+    ]);
+  }
+
+  /**
+   * The barista's ticket for the bill on screen: what the bar has not had
+   * yet (saved first, if need be), or, when it has had it all, the whole
+   * order again, marked as a copy.
+   */
+  async function sendTicket() {
+    const cur = billRef.current;
+    if (!cur) return;
+    const o = cur.tabId === null || isDirty(cur) ? await saveBill(cur, false) : cur;
+    if (!o) return;
+    const ticket = barTicket(o, [...o.lines, ...cur.lines]) ?? barTicket(o, o.lines, true);
+    if (!ticket) return;
+    print([ticket]);
+    if (billRef.current?.tabId === o.tabId) {
+      putBill({ ...billRef.current, sent: ticketLines(o.lines) });
+    }
   }
 
   async function openSplit() {
@@ -832,6 +940,7 @@ export function PosClient({
         tender,
         received,
         platformOrderNo: isPlatform(o.channel) ? orderNo : null,
+        turnNo: o.turnNo,
         at: new Date().toISOString(),
         by: cashierName,
       },
@@ -904,13 +1013,19 @@ export function PosClient({
             reference: r.data.orderId.slice(0, 8),
             platformOrderNo: r.data.platformOrderNo ?? p.platformOrderNo,
             journalNo: r.data.journalNo,
+            turnNo: r.data.turnNo ?? p.job.turnNo ?? null,
           }
         : null;
+      // A quick sale goes to the bar as it is paid; a bill went when it was saved.
+      const ticket = p.kind === "quick" && job ? ticketFor(job) : null;
+      const autoTicket = autoPrint && ticketOn && ticket !== null;
       setReceipt({
         ...r.data,
         tender: p.tender,
         change,
-        job: job ?? emptyJob(p, r.data.orderId, net),
+        job: job ?? emptyJob(p, r.data.orderId, net, r.data.turnNo),
+        ticket,
+        ticketPrinted: autoTicket,
       });
       setMsg(r.data.replayed ? { ok: true, text: t("pos.replayed") } : null);
       setPending(null);
@@ -925,7 +1040,8 @@ export function PosClient({
         if (list) applyBills(list);
         if (floorTables.length > 0) setView("floor");
       }
-      if (autoPrint && job) setPrintJob(job);
+      // Two copies, cut apart: the customer's check, and the barista's ticket.
+      if (autoPrint) print([job, autoTicket ? ticket : null]);
     } catch {
       // No answer: it may or may not have been recorded. Freeze, and retry
       // with the SAME key, which cannot record it twice.
@@ -971,7 +1087,7 @@ export function PosClient({
     }
   }
 
-  const emptyJob = (p: Pending, orderId: string, net: number): PrintJob => ({
+  const emptyJob = (p: Pending, orderId: string, net: number, turnNo: number | null): PrintJob => ({
     kind: "receipt",
     title: p.title,
     channelLabel: channelName(p.channel),
@@ -980,6 +1096,7 @@ export function PosClient({
     tender: p.tender,
     reference: orderId.slice(0, 8),
     platformOrderNo: p.platformOrderNo,
+    turnNo,
     at: new Date().toISOString(),
     by: cashierName,
   });
@@ -1005,6 +1122,51 @@ export function PosClient({
     } catch {
       /* not remembered on this till */
     }
+  }
+  function toggleTicket(v: boolean) {
+    setTicketOn(v);
+    try {
+      localStorage.setItem(TICKET_KEY, v ? "1" : "0");
+    } catch {
+      /* not remembered on this till */
+    }
+  }
+
+  /** The sale just paid, printed: with the barista's ticket, the first time. */
+  function printReceipt() {
+    if (!receipt) return;
+    const withTicket = ticketOn && receipt.ticket !== null && !receipt.ticketPrinted;
+    print([receipt.job, withTicket ? receipt.ticket : null]);
+    if (withTicket) setReceipt({ ...receipt, ticketPrinted: true });
+  }
+  /** The barista's ticket alone: again, marked as a copy, if the bar has had it. */
+  function printReceiptTicket() {
+    if (!receipt?.ticket) return;
+    print([{ ...receipt.ticket, copy: receipt.ticketPrinted }]);
+    setReceipt({ ...receipt, ticketPrinted: true });
+  }
+
+  /** A sample check and ticket, to set the printer up by. */
+  function testPrint() {
+    const sample = items.slice(0, 3);
+    const job: PrintJob = {
+      kind: "receipt",
+      title: t("pos.testPrint"),
+      channelLabel: channelName(channels[0] ?? "takeaway"),
+      lines: sample.map((i, n) => ({
+        name: itemName(i, locale),
+        qty: n === 0 ? 2 : 1,
+        amount: (i.prices[channels[0] ?? "takeaway"] ?? 0) * (n === 0 ? 2 : 1),
+        note: n === 0 ? t("pos.sampleNote") : null,
+      })),
+      total: 0,
+      tender: "cash",
+      turnNo: 1,
+      at: new Date().toISOString(),
+      by: cashierName,
+    };
+    job.total = job.lines.reduce((sum, l) => sum + (l.amount ?? 0), 0);
+    print([job, ticketOn ? ticketFor(job) : null]);
   }
 
   function fullscreen() {
@@ -1081,6 +1243,14 @@ export function PosClient({
           ))}
         </div>
         <button
+          className={`icon-btn print-btn${autoPrint ? " on" : ""}`}
+          onClick={() => setDialog({ kind: "printing" })}
+          title={t("pos.printing")}
+          aria-label={t("pos.printing")}
+        >
+          🖨
+        </button>
+        <button
           className="icon-btn"
           onClick={fullscreen}
           title={t("pos.fullscreen")}
@@ -1104,29 +1274,13 @@ export function PosClient({
               onEditTables={canManageTables ? () => setDialog({ kind: "tables" }) : null}
             />
           ) : (
-            <>
-              {channelChoice && channelChoice.length > 1 && (
-                <div className="channel-tabs">
-                  {channelChoice.map((c) => (
-                    <button
-                      key={c}
-                      className={c === order.channel ? "active" : ""}
-                      onClick={() => setChannel(c)}
-                      disabled={blocked && c !== order.channel}
-                    >
-                      {channelName(c)}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <ProductPicker
-                items={items}
-                channel={order.channel}
-                counts={counts}
-                disabled={blocked}
-                onAdd={add}
-              />
-            </>
+            <ProductPicker
+              items={items}
+              channel={order.channel}
+              counts={counts}
+              disabled={blocked}
+              onAdd={add}
+            />
           )}
         </div>
 
@@ -1143,14 +1297,16 @@ export function PosClient({
             hasTables={floorTables.length > 0}
             receipt={receipt}
             msg={msg}
-            autoPrint={autoPrint}
-            onAutoPrint={toggleAutoPrint}
+            channels={channelChoice}
+            onChannel={setChannel}
+            ticketOn={ticketOn}
             onQty={changeQty}
             onNote={setNote}
             onLabel={(label) => billRef.current && putBill({ ...billRef.current, label })}
             onPay={startPay}
             onSave={saveAndClose}
             onPrintBill={printBill}
+            onTicket={sendTicket}
             onSplit={openSplit}
             onMove={() => setDialog({ kind: "move" })}
             onCancelBill={askCancel}
@@ -1158,7 +1314,8 @@ export function PosClient({
             onClear={() => setQuick((q) => quickOrder(q.channel))}
             onRetry={() => pending && sendPayment(pending)}
             onDiscard={discardPending}
-            onPrintReceipt={() => receipt && setPrintJob(receipt.job)}
+            onPrintReceipt={printReceipt}
+            onPrintReceiptTicket={printReceiptTicket}
             now={now}
             canDiscount={canDiscount}
             money={money}
@@ -1276,17 +1433,27 @@ export function PosClient({
       {dialog?.kind === "tables" && (
         <TablesEditor tables={tables} onClose={() => setDialog(null)} />
       )}
+      {dialog?.kind === "printing" && (
+        <PrintingDialog
+          autoPrint={autoPrint}
+          ticketOn={ticketOn}
+          onAutoPrint={toggleAutoPrint}
+          onTicket={toggleTicket}
+          onTest={testPrint}
+          onClose={() => setDialog(null)}
+        />
+      )}
 
       <PrintSlip
-        job={printJob}
+        slips={printQueue[0] ?? null}
         businessName={businessName}
         timezone={timezone}
-        onDone={clearPrint}
+        onDone={nextPrint}
       />
     </div>
   );
 
-  function clearPrint() {
-    setPrintJob(null);
+  function nextPrint() {
+    setPrintQueue((q) => q.slice(1));
   }
 }
