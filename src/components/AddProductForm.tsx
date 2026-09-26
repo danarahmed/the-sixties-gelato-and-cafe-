@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import { createProductAction, setPriceAction } from "@/lib/actions/menu";
 import { fmtIQD } from "@/lib/format";
+import { useT } from "@/lib/i18n/I18nProvider";
+import { Rich } from "@/lib/i18n/Rich";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { useChannels } from "@/components/ChannelsProvider";
 import { parseNumber } from "@/components/pos/model";
@@ -43,6 +45,7 @@ export function AddProductForm({
   /** The currency's decimals, and the step suggested prices are rounded up to (250 IQD). */
   money: { decimals: number; priceStep: number };
 }) {
+  const { t } = useT();
   const router = useRouter();
   const { set, name: channelName } = useChannels();
   const [pending, start] = useTransition();
@@ -71,7 +74,9 @@ export function AddProductForm({
     if (half >= 0) {
       setMsg({
         ok: false,
-        text: `Recipe line ${half + 1}: choose the ingredient and its quantity, or remove the line.`,
+        text: t("Recipe line {n}: choose the ingredient and its quantity, or remove the line.", {
+          n: half + 1,
+        }),
       });
       return;
     }
@@ -79,7 +84,7 @@ export function AddProductForm({
     if (noRecipe && !noStock.trim()) {
       setMsg({
         ok: false,
-        text: "List what one serving uses, or say why it uses no stock (a service charge, say).",
+        text: t("List what one serving uses, or say why it uses no stock (a service charge, say)."),
       });
       return;
     }
@@ -96,7 +101,7 @@ export function AddProductForm({
         noStockReason: noRecipe ? noStock : null,
       });
       if (r.ok) {
-        setMsg({ ok: true, text: `Created “${name}”.` });
+        setMsg({ ok: true, text: t("Created “{name}”.", { name }) });
         setName("");
         setNameAr("");
         setNameCkb("");
@@ -111,9 +116,9 @@ export function AddProductForm({
   if (items.length === 0) {
     return (
       <div className="card">
-        <strong>Add a menu product</strong>
+        <strong>{t("Add a menu product")}</strong>
         <p className="muted" style={{ fontSize: ".9rem" }}>
-          First add stock items on Inventory, so the recipe has ingredients to use.
+          {t("First add stock items on Inventory, so the recipe has ingredients to use.")}
         </p>
       </div>
     );
@@ -126,21 +131,21 @@ export function AddProductForm({
         onClick={() => setOpen((o) => !o)}
         style={{ alignSelf: "start" }}
       >
-        {open ? "▾ Hide product form" : "➕ Add menu product"}
+        {open ? t("▾ Hide product form") : t("➕ Add menu product")}
       </button>
       {open && (
         <div className="pf">
           <section className="pf-step">
             <h3 className="pf-h">
-              <span className="pf-n">1</span> Name and category
+              <span className="pf-n">1</span> {t("Name and category")}
             </h3>
             <div className="pf-names">
-              <Field label="Product name (English)">
+              <Field label={t("Product name (English)")}>
                 <input
                   style={inputStyle}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Iced Latte"
+                  placeholder={t("e.g. Iced Latte")}
                 />
               </Field>
               <Field label="الاسم">
@@ -160,13 +165,13 @@ export function AddProductForm({
                 />
               </Field>
               {categories.length > 0 && (
-                <Field label="Category on the till">
+                <Field label={t("Category on the till")}>
                   <select
                     style={inputStyle}
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
                   >
-                    <option value="">— none —</option>
+                    <option value="">{t("— none —")}</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
@@ -180,11 +185,12 @@ export function AddProductForm({
 
           <section className="pf-step">
             <h3 className="pf-h">
-              <span className="pf-n">2</span> Recipe: what goes into one serving
+              <span className="pf-n">2</span> {t("Recipe: what goes into one serving")}
             </h3>
             <p className="pf-hint">
-              Costs are today&apos;s, from what the stock cost. Cups, lids and bags are used for
-              takeaway and delivery only.
+              {t(
+                "Costs are today's, from what the stock cost. Cups, lids and bags are used for takeaway and delivery only.",
+              )}
             </p>
             <RecipeLinesEditor
               items={items}
@@ -198,13 +204,13 @@ export function AddProductForm({
             {filledLines(lines, set).length === 0 && (
               <label style={{ display: "block", marginBlockStart: 8 }}>
                 <div className="pf-hint" style={{ marginBlockEnd: 4 }}>
-                  No ingredients? Then it sells at no cost: say why it uses no stock.
+                  {t("No ingredients? Then it sells at no cost: say why it uses no stock.")}
                 </div>
                 <input
-                  aria-label="Why it uses no stock"
+                  aria-label={t("Why it uses no stock")}
                   value={noStock}
                   onChange={(e) => setNoStock(e.target.value)}
-                  placeholder="A service charge"
+                  placeholder={t("A service charge")}
                   maxLength={200}
                   style={{ width: "100%", maxWidth: 360 }}
                 />
@@ -214,20 +220,26 @@ export function AddProductForm({
 
           <section className="pf-step">
             <h3 className="pf-h">
-              <span className="pf-n">3</span> Prices (IQD)
+              <span className="pf-n">3</span> {t("Prices (IQD)")}
             </h3>
             <p className="pf-hint">
-              Leave a channel empty if the product is not sold there. Suggested prices leave a
-              margin of{" "}
-              <input
-                className="pf-target"
-                aria-label="Target margin %"
-                value={target}
-                onChange={(e) => setTarget(e.target.value)}
-                inputMode="decimal"
+              <Rich
+                text={t(
+                  "Leave a channel empty if the product is not sold there. Suggested prices leave a margin of <target></target>% and are rounded up to {step}. A delivery platform's commission is not in the cost.",
+                  { step: fmtIQD(rules.priceStep) },
+                )}
+                tags={{
+                  target: () => (
+                    <input
+                      className="pf-target"
+                      aria-label={t("Target margin %")}
+                      value={target}
+                      onChange={(e) => setTarget(e.target.value)}
+                      inputMode="decimal"
+                    />
+                  ),
+                }}
               />
-              % and are rounded up to {fmtIQD(rules.priceStep)}. A delivery platform&apos;s
-              commission is not in the cost.
             </p>
             <div className="pf-prices">
               {set.inUse.map((c) => {
@@ -248,10 +260,12 @@ export function AddProductForm({
                   <div key={c} className="pf-price" data-channel={c}>
                     <div className="pf-price-top">
                       <span>{channelName(c)}</span>
-                      {costed && <span className="mono">cost {iqd(cost)}</span>}
+                      {costed && (
+                        <span className="mono">{t("cost {amount}", { amount: iqd(cost) })}</span>
+                      )}
                     </div>
                     <input
-                      aria-label={`${channelName(c)} price`}
+                      aria-label={t("{channel} price", { channel: channelName(c) })}
                       style={inputStyle}
                       value={prices[c] ?? ""}
                       onChange={(e) => setPrices({ ...prices, [c]: e.target.value })}
@@ -259,7 +273,9 @@ export function AddProductForm({
                     />
                     {m && costed && (
                       <div className={`pf-margin ${tone}`}>
-                        {m.amount.lt(0) ? "loss" : "margin"} {iqd(m.amount.abs())}
+                        {m.amount.lt(0)
+                          ? t("loss {amount}", { amount: iqd(m.amount.abs()) })
+                          : t("margin {amount}", { amount: iqd(m.amount.abs()) })}
                         {m.percent && ` (${m.percent.toFixed(1)}%)`}
                       </div>
                     )}
@@ -269,7 +285,7 @@ export function AddProductForm({
                         className="pf-suggest"
                         onClick={() => setPrices({ ...prices, [c]: suggested.toString() })}
                       >
-                        Use {iqd(suggested)}
+                        {t("Use {amount}", { amount: iqd(suggested) })}
                       </button>
                     )}
                   </div>
@@ -280,7 +296,7 @@ export function AddProductForm({
 
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
             <button className="btn-primary" onClick={submit} disabled={pending || !name.trim()}>
-              {pending ? "Saving…" : "Create product"}
+              {pending ? t("Saving…") : t("Create product")}
             </button>
             <Notice msg={msg} />
           </div>
@@ -292,6 +308,7 @@ export function AddProductForm({
 
 /** A new price from a date. The old price stays in force until then; history is kept. */
 export function PriceChange({ variantId, today }: { variantId: string; today: string }) {
+  const { t } = useT();
   const router = useRouter();
   const { set, name: channelName } = useChannels();
   const [busy, start] = useTransition();
@@ -304,7 +321,7 @@ export function PriceChange({ variantId, today }: { variantId: string; today: st
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} style={{ marginBlockStart: 8, fontSize: ".8rem" }}>
-        Change a price…
+        {t("Change a price…")}
       </button>
     );
   }
@@ -320,7 +337,7 @@ export function PriceChange({ variantId, today }: { variantId: string; today: st
     >
       <label>
         <div className="muted" style={{ fontSize: ".75rem" }}>
-          Channel
+          {t("Channel")}
         </div>
         <select value={channel} onChange={(e) => setChannel(e.target.value)}>
           {set.inUse.map((c) => (
@@ -332,7 +349,7 @@ export function PriceChange({ variantId, today }: { variantId: string; today: st
       </label>
       <label>
         <div className="muted" style={{ fontSize: ".75rem" }}>
-          New price
+          {t("New price")}
         </div>
         <input
           value={price}
@@ -343,7 +360,7 @@ export function PriceChange({ variantId, today }: { variantId: string; today: st
       </label>
       <label>
         <div className="muted" style={{ fontSize: ".75rem" }}>
-          From
+          {t("From")}
         </div>
         <input type="date" value={from} min={today} onChange={(e) => setFrom(e.target.value)} />
       </label>
@@ -358,8 +375,8 @@ export function PriceChange({ variantId, today }: { variantId: string; today: st
                 ok: true,
                 text:
                   from === today
-                    ? "Price changed from today."
-                    : `New price takes effect on ${from}.`,
+                    ? t("Price changed from today.")
+                    : t("New price takes effect on {date}.", { date: from }),
               });
               setPrice("");
               router.refresh();
@@ -367,7 +384,7 @@ export function PriceChange({ variantId, today }: { variantId: string; today: st
           })
         }
       >
-        {busy ? "…" : "Set price"}
+        {busy ? "…" : t("Set price")}
       </button>
       <Notice msg={msg} />
     </div>

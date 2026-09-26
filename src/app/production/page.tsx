@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
-import { getT } from "@/lib/i18n/server";
+import { getMsg, getT } from "@/lib/i18n/server";
+import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems, getStockBoard } from "@/lib/db/read";
 import { getItemCosts } from "@/lib/db/reports";
@@ -18,6 +19,7 @@ export const dynamic = "force-dynamic";
 export default async function ProductionPage() {
   const profile = await requirePermission("cost.view", "production.record");
   const t = await getT();
+  const msg = await getMsg();
   const seesCost = has(profile, "cost.view");
   const canRecord = has(profile, "production.record");
   const canEdit = has(profile, "recipe.edit");
@@ -61,21 +63,35 @@ export default async function ProductionPage() {
         <div className="pr-recipe-head">
           <strong>{r.name}</strong>
           <span className="muted">
-            one batch makes <span className="mono">{showIn(yieldBase, output, r.yieldUnit)}</span>
-            {r.outputName !== r.name && ` of ${r.outputName}`}
+            <Rich
+              text={
+                r.outputName !== r.name
+                  ? t("one batch makes <qty>{qty}</qty> of {output}", {
+                      qty: showIn(yieldBase, output, r.yieldUnit),
+                      output: r.outputName,
+                    })
+                  : t("one batch makes <qty>{qty}</qty>", {
+                      qty: showIn(yieldBase, output, r.yieldUnit),
+                    })
+              }
+              tags={{ qty: (c) => <span className="mono">{c}</span> }}
+            />
           </span>
           {cost && !cost.isZero() && (
             <span className="pr-recipe-cost">
-              costs <strong className="mono">{fmtIQD(cost.toNumber())}</strong>
+              <Rich
+                text={t("costs <b>{amount}</b>", { amount: fmtIQD(cost.toNumber()) })}
+                tags={{ b: (c) => <strong className="mono">{c}</strong> }}
+              />
               {(() => {
                 const each = perUnit(cost, yieldBase.div(f), unitLabel(output, r.yieldUnit));
-                return each ? <span className="muted"> · {each}</span> : null;
+                return each ? <span className="muted"> · {msg(each)}</span> : null;
               })()}
             </span>
           )}
           {missing.length > 0 && (
             <span className="pr-short pr-recipe-cost">
-              No cost yet for {missing.join(", ")}: never bought or made
+              {t("No cost yet for {names}: never bought or made", { names: missing.join(", ") })}
             </span>
           )}
         </div>
@@ -99,15 +115,14 @@ export default async function ProductionPage() {
     <div className="grid" style={{ gap: 16 }}>
       <h1 style={{ margin: 0 }}>{t("nav.production")}</h1>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        What you make in batches: gelato, a base, syrup, dough. Recording a batch takes its
-        ingredients out of stock and puts what came out in, valued at what the ingredients cost.
-        Made items are then used like any other: in another batch (a base, then its flavours) or in
-        a product&apos;s recipe on Products &amp; Recipes (a cup of gelato).
+        {t(
+          "What you make in batches: gelato, a base, syrup, dough. Recording a batch takes its ingredients out of stock and puts what came out in, valued at what the ingredients cost. Made items are then used like any other: in another batch (a base, then its flavours) or in a product's recipe on Products & Recipes (a cup of gelato).",
+        )}
       </p>
 
       {canRecord && (
         <div className="card grid" style={{ gap: 12 }}>
-          <h2 style={{ margin: 0 }}>Record a batch</h2>
+          <h2 style={{ margin: 0 }}>{t("Record a batch")}</h2>
           <RecordBatch
             recipes={active}
             items={itemOpts}
@@ -119,20 +134,20 @@ export default async function ProductionPage() {
       )}
 
       <section className="grid" style={{ gap: 10 }}>
-        <h2 style={{ margin: "8px 0 0" }}>What you make</h2>
+        <h2 style={{ margin: "8px 0 0" }}>{t("What you make")}</h2>
         {canEdit && (
           <details className="card pr-new">
-            <summary>➕ Add something you make</summary>
+            <summary>{t("➕ Add something you make")}</summary>
             <BatchRecipeForm items={itemOpts} decimals={decimals} seesCost={seesCost} />
           </details>
         )}
         {recipes.length === 0 ? (
           <EmptyState
-            title="Nothing set up yet"
+            title={t("Nothing set up yet")}
             hint={
               canEdit
-                ? "Add what you make above: its name, how much a batch makes, and what goes in."
-                : "A manager who edits recipes adds what you make."
+                ? t("Add what you make above: its name, how much a batch makes, and what goes in.")
+                : t("A manager who edits recipes adds what you make.")
             }
           />
         ) : (
@@ -140,7 +155,9 @@ export default async function ProductionPage() {
         )}
         {stopped.length > 0 && (
           <details>
-            <summary className="muted">Not made any more ({stopped.length})</summary>
+            <summary className="muted">
+              {t("Not made any more ({n})", { n: stopped.length })}
+            </summary>
             <div className="pr-recipes" style={{ marginTop: 10 }}>
               {stopped.map(recipeCard)}
             </div>
@@ -149,20 +166,23 @@ export default async function ProductionPage() {
       </section>
 
       <section className="grid" style={{ gap: 10 }}>
-        <h2 style={{ margin: "8px 0 0" }}>Batches</h2>
+        <h2 style={{ margin: "8px 0 0" }}>{t("Batches")}</h2>
         {batches.length === 0 ? (
-          <EmptyState title="No batches yet" hint="Every batch recorded is listed here." />
+          <EmptyState
+            title={t("No batches yet")}
+            hint={t("Every batch recorded is listed here.")}
+          />
         ) : (
           <div className="card tw">
             <table className="pr-batches">
               <thead>
                 <tr>
-                  <th>Made</th>
-                  <th>What</th>
-                  <th className="right">Batches</th>
-                  <th className="right">Came out</th>
-                  {seesCost && <th className="right">Cost</th>}
-                  <th>By</th>
+                  <th>{t("Made")}</th>
+                  <th>{t("What")}</th>
+                  <th className="right">{t("Batches")}</th>
+                  <th className="right">{t("Came out")}</th>
+                  {seesCost && <th className="right">{t("Cost")}</th>}
+                  <th>{t("By")}</th>
                   <th />
                 </tr>
               </thead>
@@ -183,7 +203,7 @@ export default async function ProductionPage() {
                         {b.note && <div className="muted pr-note-cell">{b.note}</div>}
                         {cancelled && (
                           <div className="pr-note-cell">
-                            <span className="badge warn">cancelled</span> {b.cancelReason}
+                            <span className="badge warn">{t("cancelled")}</span> {b.cancelReason}
                             {b.cancelledBy ? ` — ${b.cancelledBy}` : ""}
                           </div>
                         )}
@@ -197,7 +217,9 @@ export default async function ProductionPage() {
                             style={{ fontSize: ".75rem" }}
                           >
                             {diff.lt(0) ? "−" : "+"}
-                            {showIn(diff.abs(), output, b.enteredUnit)} on the recipe
+                            {t("{qty} on the recipe", {
+                              qty: showIn(diff.abs(), output, b.enteredUnit),
+                            })}
                           </div>
                         )}
                       </td>
@@ -206,10 +228,12 @@ export default async function ProductionPage() {
                           {b.value === null ? "—" : fmtIQD(b.value)}
                           {b.value !== null && (
                             <div className="muted" style={{ fontSize: ".75rem" }}>
-                              {perUnit(
-                                new Decimal(b.value),
-                                actual.div(f),
-                                unitLabel(output, b.enteredUnit),
+                              {msg(
+                                perUnit(
+                                  new Decimal(b.value),
+                                  actual.div(f),
+                                  unitLabel(output, b.enteredUnit),
+                                ) ?? "",
                               )}
                             </div>
                           )}
@@ -220,7 +244,10 @@ export default async function ProductionPage() {
                       </td>
                       <td>
                         {canCancel && !cancelled && (
-                          <CancelBatch batchId={b.id} label={`${b.recipeName} batch`} />
+                          <CancelBatch
+                            batchId={b.id}
+                            label={t("{name} batch", { name: b.recipeName })}
+                          />
                         )}
                       </td>
                     </tr>

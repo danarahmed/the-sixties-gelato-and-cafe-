@@ -8,6 +8,8 @@ import {
   setNoStockAction,
 } from "@/lib/actions/menu";
 import { fmtIQD } from "@/lib/format";
+import { useT } from "@/lib/i18n/I18nProvider";
+import { Rich } from "@/lib/i18n/Rich";
 import { Notice } from "@/components/ui";
 import { useChannels } from "@/components/ChannelsProvider";
 import type { ScheduledChange } from "@/lib/db/reports";
@@ -26,11 +28,12 @@ export function ScheduledChanges({
   changes: ScheduledChange[];
   canEdit: boolean;
 }) {
+  const { t } = useT();
   if (changes.length === 0) return null;
   return (
     <div style={{ marginBlockStart: 10 }} data-testid="scheduled-changes">
       <h4 className="muted" style={{ margin: "0 0 4px" }}>
-        Scheduled
+        {t("Scheduled")}
       </h4>
       <ul style={{ margin: 0, paddingInlineStart: 18, fontSize: ".88rem" }}>
         {changes.map((c) => (
@@ -42,6 +45,7 @@ export function ScheduledChanges({
 }
 
 function ScheduledRow({ change, canEdit }: { change: ScheduledChange; canEdit: boolean }) {
+  const { t } = useT();
   const router = useRouter();
   const { name: channelName } = useChannels();
   const [busy, start] = useTransition();
@@ -50,8 +54,11 @@ function ScheduledRow({ change, canEdit }: { change: ScheduledChange; canEdit: b
   const [msg, setMsg] = useState<Msg>(null);
   const what =
     change.kind === "price"
-      ? `${channelName(change.channel ?? "")} at ${fmtIQD(change.price ?? 0)}`
-      : `a new recipe (version ${change.versionNo})`;
+      ? t("{channel} at {price}", {
+          channel: channelName(change.channel ?? ""),
+          price: fmtIQD(change.price ?? 0),
+        })
+      : t("a new recipe (version {version})", { version: String(change.versionNo) });
 
   function withdraw() {
     setMsg(null);
@@ -70,30 +77,30 @@ function ScheduledRow({ change, canEdit }: { change: ScheduledChange; canEdit: b
 
   return (
     <li style={{ marginBlockEnd: 4 }}>
-      From <strong>{change.effectiveFrom}</strong>: {what}
+      <Rich text={t("From <b>{date}</b>: {what}", { date: change.effectiveFrom, what })} />
       {canEdit && !asking && (
         <button
           onClick={() => setAsking(true)}
           style={{ marginInlineStart: 8, fontSize: ".78rem", minHeight: 28 }}
         >
-          Withdraw…
+          {t("Withdraw…")}
         </button>
       )}
       {asking && (
         <span style={{ display: "inline-flex", gap: 6, marginInlineStart: 8, flexWrap: "wrap" }}>
           <input
-            aria-label="Why the change is withdrawn"
+            aria-label={t("Why the change is withdrawn")}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Why?"
+            placeholder={t("Why?")}
             maxLength={300}
             style={{ minWidth: 160 }}
           />
           <button disabled={busy || !reason.trim()} onClick={withdraw}>
-            {busy ? "Withdrawing…" : "Withdraw it"}
+            {busy ? t("Withdrawing…") : t("Withdraw it")}
           </button>
           <button onClick={() => setAsking(false)} disabled={busy}>
-            Keep it
+            {t("Keep it")}
           </button>
         </span>
       )}
@@ -120,6 +127,7 @@ export function CostWarning({
   zeroCostItems: string[];
   canEdit: boolean;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [reason, setReason] = useState("");
@@ -141,14 +149,14 @@ export function CostWarning({
   if (noRecipe && noStockReason) {
     return (
       <div className="muted" style={{ fontSize: ".85rem", margin: "6px 0 0" }}>
-        Uses no stock: {noStockReason}.
+        {t("Uses no stock: {reason}.", { reason: noStockReason })}
         {canEdit && (
           <button
             onClick={() => save(null)}
             disabled={busy}
             style={{ marginInlineStart: 8, fontSize: ".78rem", minHeight: 28 }}
           >
-            It does use stock
+            {t("It does use stock")}
           </button>
         )}
         <Notice msg={msg} />
@@ -158,24 +166,29 @@ export function CostWarning({
   if (!noRecipe && zeroCostItems.length === 0) return null;
   return (
     <div style={{ margin: "6px 0 0" }} data-testid="cost-warning">
-      <span className="badge err">Costed at nothing</span>{" "}
+      <span className="badge err">{t("Costed at nothing")}</span>{" "}
       <span style={{ fontSize: ".85rem" }}>
         {noRecipe
-          ? "No recipe: nothing is taken from stock, and every sale shows full profit. Give it its recipe, or say why it uses no stock."
-          : `No cost yet for ${zeroCostItems.join(", ")}: its share of each sale is costed at nothing until it is received, or given its opening stock on Inventory.`}
+          ? t(
+              "No recipe: nothing is taken from stock, and every sale shows full profit. Give it its recipe, or say why it uses no stock.",
+            )
+          : t(
+              "No cost yet for {items}: its share of each sale is costed at nothing until it is received, or given its opening stock on Inventory.",
+              { items: zeroCostItems.join(", ") },
+            )}
       </span>
       {canEdit && noRecipe && (
         <span style={{ display: "inline-flex", gap: 6, marginInlineStart: 8, flexWrap: "wrap" }}>
           <input
-            aria-label="Why it uses no stock"
+            aria-label={t("Why it uses no stock")}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="A service charge"
+            placeholder={t("A service charge")}
             maxLength={200}
             style={{ minWidth: 160 }}
           />
           <button disabled={busy || !reason.trim()} onClick={() => save(reason)}>
-            {busy ? "Saving…" : "Uses no stock"}
+            {busy ? t("Saving…") : t("Uses no stock")}
           </button>
         </span>
       )}

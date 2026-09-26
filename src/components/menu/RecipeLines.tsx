@@ -8,6 +8,7 @@ import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import { NO_CHANNELS, type ChannelSet } from "@/lib/channels";
 import { fmtIQD, fmtQty } from "@/lib/format";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { inputStyle } from "@/components/ui";
 import { useChannels } from "@/components/ChannelsProvider";
 import {
@@ -101,13 +102,6 @@ export function filledLines(lines: LineDraft[], set: ChannelSet) {
     .map((l) => ({ itemId: l.itemId, qty: l.quantity, unitCode: l.unit, channels: l.channels }));
 }
 
-const USES: { value: LineUse; label: string }[] = [
-  { value: "all", label: "Every order" },
-  { value: "to_go", label: "Takeaway & delivery" },
-  { value: "dine_in", label: "Dine-in only" },
-  { value: "custom", label: "Some channels…" },
-];
-
 export const iqd = (d: Decimal) => fmtIQD(d.toNumber());
 
 export function RecipeLinesEditor({
@@ -116,7 +110,7 @@ export function RecipeLinesEditor({
   onChange,
   decimals,
   channels,
-  addLabel = "+ Add ingredient",
+  addLabel,
 }: {
   items: ItemOpt[];
   lines: LineDraft[];
@@ -124,8 +118,16 @@ export function RecipeLinesEditor({
   decimals: number;
   /** A product's lines say what they are used for; a batch's do not. */
   channels: boolean;
+  /** The add button's words, translated; "+ Add ingredient" when not given. */
   addLabel?: string;
 }) {
+  const { t } = useT();
+  const USES: { value: LineUse; label: string }[] = [
+    { value: "all", label: t("Every order") },
+    { value: "to_go", label: t("Takeaway & delivery") },
+    { value: "dine_in", label: t("Dine-in only") },
+    { value: "custom", label: t("Some channels…") },
+  ];
   const { set, name } = useChannels();
   const byId = new Map(items.map((i) => [i.id, i]));
   const costLines = toCostLines(lines, channels ? set : NO_CHANNELS);
@@ -146,11 +148,11 @@ export function RecipeLinesEditor({
   return (
     <div className={`pf-lines${channels ? "" : " no-use"}`}>
       <div className="pf-head" aria-hidden>
-        <span>Ingredient</span>
-        <span>Quantity</span>
-        <span>Unit</span>
-        {channels && <span>Used for</span>}
-        <span style={{ textAlign: "end" }}>Cost</span>
+        <span>{t("Ingredient")}</span>
+        <span>{t("Quantity")}</span>
+        <span>{t("Unit")}</span>
+        {channels && <span>{t("Used for")}</span>}
+        <span style={{ textAlign: "end" }}>{t("Cost")}</span>
         <span />
       </div>
       {lines.map((l, idx) => {
@@ -165,7 +167,7 @@ export function RecipeLinesEditor({
             <div className="pf-line">
               <select
                 className="pf-ing"
-                aria-label={`Ingredient ${n}`}
+                aria-label={t("Ingredient {n}", { n })}
                 style={inputStyle}
                 value={l.itemId}
                 onChange={(e) =>
@@ -175,7 +177,7 @@ export function RecipeLinesEditor({
                   })
                 }
               >
-                <option value="">Choose an ingredient…</option>
+                <option value="">{t("Choose an ingredient…")}</option>
                 {items.map((i) => (
                   <option key={i.id} value={i.id}>
                     {i.name}
@@ -184,8 +186,8 @@ export function RecipeLinesEditor({
               </select>
               <input
                 className="pf-qty"
-                aria-label={`Quantity ${n}`}
-                placeholder="qty"
+                aria-label={t("Quantity {n}", { n })}
+                placeholder={t("qty")}
                 style={inputStyle}
                 value={l.quantity}
                 onChange={(e) => setLine(l.key, { quantity: e.target.value })}
@@ -193,7 +195,7 @@ export function RecipeLinesEditor({
               />
               <select
                 className="pf-unit"
-                aria-label={`Unit ${n}`}
+                aria-label={t("Unit {n}", { n })}
                 style={inputStyle}
                 value={l.unit}
                 onChange={(e) => setLine(l.key, { unit: e.target.value })}
@@ -208,7 +210,7 @@ export function RecipeLinesEditor({
               {channels && (
                 <select
                   className="pf-use"
-                  aria-label={`Used for ${n}`}
+                  aria-label={t("Used for {n}", { n })}
                   style={inputStyle}
                   value={l.use}
                   onChange={(e) => setLine(l.key, { use: e.target.value as LineUse })}
@@ -225,16 +227,20 @@ export function RecipeLinesEditor({
                 {it && (
                   <small>
                     {none
-                      ? "no cost yet"
-                      : perUnit && `${fmtQty(perUnit.toNumber())} IQD per ${unit!.label}`}
+                      ? t("no cost yet")
+                      : perUnit &&
+                        t("{qty} IQD per {unit}", {
+                          qty: fmtQty(perUnit.toNumber()),
+                          unit: unit!.label,
+                        })}
                   </small>
                 )}
               </div>
               <button
                 type="button"
                 className="pf-remove"
-                aria-label={`Remove line ${n}`}
-                title="Remove"
+                aria-label={t("Remove line {n}", { n })}
+                title={t("Remove")}
                 onClick={() => onChange((ls) => ls.filter((x) => x.key !== l.key))}
                 disabled={lines.length === 1}
               >
@@ -254,7 +260,7 @@ export function RecipeLinesEditor({
                   </label>
                 ))}
                 {l.ticked.length === 0 && (
-                  <span className="muted">none ticked: used on every order</span>
+                  <span className="muted">{t("none ticked: used on every order")}</span>
                 )}
               </div>
             )}
@@ -266,7 +272,7 @@ export function RecipeLinesEditor({
         onClick={() => onChange((ls) => [...ls, newLine()])}
         style={{ alignSelf: "start" }}
       >
-        {addLabel}
+        {addLabel ?? t("+ Add ingredient")}
       </button>
     </div>
   );
@@ -309,17 +315,18 @@ export function ServingCost({
   items: ItemOpt[];
   decimals: number;
 }) {
+  const { t } = useT();
   const { set, name } = useChannels();
   const groups = servingGroups(lines, items, decimals, set);
   return (
     <div className="pf-total" data-testid="serving-cost">
       {!anyCosted(lines, items, decimals) ? (
         <span className="muted">
-          Choose the ingredients and their quantities to see what one serving costs.
+          {t("Choose the ingredients and their quantities to see what one serving costs.")}
         </span>
       ) : (
         <>
-          <span>Cost of one serving</span>
+          <span>{t("Cost of one serving")}</span>
           <span className="pf-total-figs">
             {groups.map((g) => (
               <span key={g.channels.join()}>
@@ -336,6 +343,7 @@ export function ServingCost({
 
 /** Items in the lines that have no cost yet: never bought or made, so counted as nothing. */
 export function NoCostYet({ lines, items }: { lines: LineDraft[]; items: ItemOpt[] }) {
+  const { t } = useT();
   const byId = new Map(items.map((i) => [i.id, i]));
   const names = [
     ...new Set(
@@ -349,9 +357,16 @@ export function NoCostYet({ lines, items }: { lines: LineDraft[]; items: ItemOpt
   if (names.length === 0) return null;
   return (
     <p className="pf-warn">
-      ⚠ No cost yet for {names.join(", ")}: never bought or made, so counted as 0 here. Receive{" "}
-      {names.length === 1 ? "it" : "them"} on Purchasing, make a batch on Production, or give an
-      opening cost on Inventory, for a true cost.
+      ⚠{" "}
+      {names.length === 1
+        ? t(
+            "No cost yet for {names}: never bought or made, so counted as 0 here. Receive it on Purchasing, make a batch on Production, or give an opening cost on Inventory, for a true cost.",
+            { names: names.join(", ") },
+          )
+        : t(
+            "No cost yet for {names}: never bought or made, so counted as 0 here. Receive them on Purchasing, make a batch on Production, or give an opening cost on Inventory, for a true cost.",
+            { names: names.join(", ") },
+          )}
     </p>
   );
 }

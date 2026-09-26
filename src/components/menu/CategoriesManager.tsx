@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { saveCategoryAction } from "@/lib/actions/menu";
 import type { MenuCategory } from "@/lib/db/menu";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 
 interface Draft {
@@ -35,6 +36,7 @@ export function CategoriesManager({
   counts: Map<string, number>;
   canEdit: boolean;
 }) {
+  const { t } = useT();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [edits, setEdits] = useState<Record<string, Draft>>({});
@@ -63,7 +65,7 @@ export function CategoriesManager({
       });
       if (!r.ok) setMsg({ ok: false, text: r.error });
       else {
-        setMsg({ ok: true, text: `Saved “${d.name.trim()}”.` });
+        setMsg({ ok: true, text: t("Saved “{name}”.", { name: d.name.trim() }) });
         after();
       }
     });
@@ -72,22 +74,23 @@ export function CategoriesManager({
   return (
     <div className="card grid" style={{ gap: 10 }}>
       <div>
-        <h3 style={{ margin: 0 }}>Categories on the till</h3>
+        <h3 style={{ margin: 0 }}>{t("Categories on the till")}</h3>
         <p className="muted" style={{ margin: "4px 0 0", fontSize: ".85rem" }}>
-          The till shows its products in these groups, in this order. Untick “On the till” to hide a
-          whole category (a seasonal menu, say); its products and their history stay as they are.
+          {t(
+            "The till shows its products in these groups, in this order. Untick “On the till” to hide a whole category (a seasonal menu, say); its products and their history stay as they are.",
+          )}
         </p>
       </div>
       <div className="tw">
         <table>
           <thead>
             <tr>
-              <th>Name</th>
+              <th>{t("Name")}</th>
               <th>العربية</th>
               <th>کوردی</th>
-              <th style={{ width: 70 }}>Order</th>
-              <th style={{ width: 80 }}>On the till</th>
-              <th className="right">Products</th>
+              <th style={{ width: 70 }}>{t("pos.order")}</th>
+              <th style={{ width: 80 }}>{t("On the till")}</th>
+              <th className="right">{t("Products")}</th>
               {canEdit && <th />}
             </tr>
           </thead>
@@ -136,7 +139,7 @@ export function CategoriesManager({
                       className="check"
                       checked={d.isActive}
                       disabled={!canEdit}
-                      aria-label={`${c.name} on the till`}
+                      aria-label={t("{name} on the till", { name: c.name })}
                       onChange={(e) => edit(c, { isActive: e.target.checked })}
                     />
                   </td>
@@ -155,7 +158,7 @@ export function CategoriesManager({
                           )
                         }
                       >
-                        Save
+                        {t("Save")}
                       </button>
                     </td>
                   )}
@@ -168,7 +171,7 @@ export function CategoriesManager({
                   <input
                     value={fresh.name}
                     maxLength={60}
-                    placeholder="New category, e.g. Hot drinks"
+                    placeholder={t("New category, e.g. Hot drinks")}
                     onChange={(e) => setFresh({ ...fresh, name: e.target.value })}
                   />
                 </td>
@@ -213,7 +216,7 @@ export function CategoriesManager({
                       )
                     }
                   >
-                    ＋ Add
+                    ＋ {t("Add")}
                   </button>
                 </td>
               </tr>
