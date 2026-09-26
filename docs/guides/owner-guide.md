@@ -244,6 +244,18 @@ discount, why and who approved it. The 10% is a business setting (shown on
   50?"): correct it, or confirm it, and the confirmation is on the audit trail.
   Stock goes up, and the goods wait in 2050 Goods received not invoiced for
   their bill. Each item's card on Inventory shows what every delivery cost.
+- **Something delivered that is not in Inventory yet:** add it from the
+  receipt itself. On the line, choose **+ New item (not in Inventory yet)…** at
+  the top of the item list, give its name (in Arabic and Kurdish too, if you
+  like), its type, how it is measured, and the pack it is bought in with what
+  the pack holds (a carton of 24, a sack of 25,000 g). **Add the item**: it goes
+  into Inventory, the line takes it by its pack, and its stock comes in with
+  the delivery. While a name is typed, the items already there whose names look
+  like it are shown — "Botled water" beside **Bottled water**, the same words in
+  another order, the same word in Arabic or Kurdish letters. Choose **Use it**
+  if it is one of them; if it is truly a different item, **It is a different
+  item: add it**. The same name, whatever its capitals or spaces, cannot be
+  added twice. Inventory's **Add stock item** warns the same way.
 - **Vendors:** record each supplier's bill against its delivery, typing the
   amount from the invoice (the screen shows what the delivery recorded; a
   difference posts to 5050), and pay bills from the till, the safe, the bank, a
