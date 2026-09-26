@@ -233,7 +233,7 @@ function Statement({ vendor, businessName }: { vendor: VendorRow; businessName: 
                 <tr key={i}>
                   <td>{l.date}</td>
                   <td>{msg(l.particulars)}</td>
-                  <td className="ref">{l.ref}</td>
+                  <td className="ref">{l.ref ? t(l.ref.text, l.ref.vars) : ""}</td>
                   <td className="right money">{l.charge ? fmtIQD(l.charge) : "—"}</td>
                   <td className="right money">{l.payment ? `(${fmtIQD(l.payment)})` : "—"}</td>
                   <td className="right money">{fmtIQD(l.bal)}</td>

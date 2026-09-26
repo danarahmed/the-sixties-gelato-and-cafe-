@@ -153,21 +153,21 @@ const phrases: PhraseBook = {
   // What a form says when an entry is wrong (src/lib/validation.ts): {1} is
   // the field's own name ("The amount"), itself a phrase of its screen's book.
   "{1} must be a number greater than zero": {
-    ar: "يجب أن يكون {1} رقمًا أكبر من الصفر",
-    ckb: "{1} دەبێت ژمارەیەک بێت لە سفر زیاتر",
+    ar: "{1}: أدخل رقمًا أكبر من الصفر",
+    ckb: "{1}: ژمارەیەک لە سفر زیاتر بنووسە",
   },
   "{1} must be a number of zero or more": {
-    ar: "يجب أن يكون {1} رقمًا يساوي الصفر أو أكثر",
-    ckb: "{1} دەبێت ژمارەیەک بێت، سفر یان زیاتر",
+    ar: "{1}: أدخل رقمًا يساوي الصفر أو أكثر",
+    ckb: "{1}: ژمارەیەک بنووسە، سفر یان زیاتر",
   },
   "{1} must be a number other than zero": {
-    ar: "يجب أن يكون {1} رقمًا غير الصفر",
-    ckb: "{1} دەبێت ژمارەیەک بێت جگە لە سفر",
+    ar: "{1}: أدخل رقمًا غير الصفر",
+    ckb: "{1}: ژمارەیەک جگە لە سفر بنووسە",
   },
   "Choose {1}": { ar: "اختر {1}", ckb: "{1} هەڵبژێرە" },
-  "{1} must be a date": { ar: "يجب أن يكون {1} تاريخًا", ckb: "{1} دەبێت بەروار بێت" },
-  "{1} is required": { ar: "{1} مطلوب", ckb: "{1} پێویستە" },
-  "{1} is too long": { ar: "{1} طويل جدًا", ckb: "{1} زۆر درێژە" },
+  "{1} must be a date": { ar: "{1}: أدخل تاريخًا", ckb: "{1}: بەروارێک بنووسە" },
+  "{1} is required": { ar: "أدخل {1}", ckb: "{1} بنووسە" },
+  "{1} is too long": { ar: "{1}: النص طويل جدًا", ckb: "{1}: دەقەکە زۆر درێژە" },
   "Too long": { ar: "طويل جدًا", ckb: "زۆر درێژە" },
   "A discount is more than 0% and no more than 100%": {
     ar: "الخصم أكثر من 0% ولا يزيد على 100%",

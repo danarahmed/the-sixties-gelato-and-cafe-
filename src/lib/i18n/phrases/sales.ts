@@ -527,6 +527,9 @@ const phrases: PhraseBook = {
     ar: "اختر إلى أين يذهب النقد",
     ckb: "هەڵبژێرە پارەکە بۆ کوێ دەچێت",
   },
+  // A vendor statement's notes (src/lib/db/books.ts).
+  "Due {date}": { ar: "تستحق في {date}", ckb: "کاتی دانەوە {date}" },
+  "was {amount}": { ar: "كانت {amount}", ckb: "پێشتر {amount} بوو" },
 };
 
 export default phrases;
