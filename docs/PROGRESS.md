@@ -7,10 +7,10 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0033` and the rebuilt app. The SQL
-  checks (34, with the rehearsals of the upgrade, the clean start and clearing
+- **Built and verified:** migrations `0014`–`0034` and the rebuilt app. The SQL
+  checks (35, with the rehearsals of the upgrade, the clean start and clearing
   the test records), the browser suites (13, every role, every screen in
-  Arabic and Kurdish), the unit and contract tests (282) and a production
+  Arabic and Kurdish), the unit and contract tests (287) and a production
   build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
@@ -267,6 +267,36 @@ browser tests through the real app, or both.
   carton; and nothing was kept — no item, unit, receipt, stock or journal, the
   receipts still numbered to 8 and the journals to 1072. The security and
   performance advisors report exactly what they did before.
+- **A tidier till, and every order printed twice (release I, migration
+  `0034`, asked for by the owner).** The till is now two panels the height of
+  the screen. On the left, the menu: a search, the categories in a list down
+  the side (along the top on a phone) with how many products each has, and
+  larger tiles. On the right, the order as a ticket: who it is for and its
+  number at the top, the channel chosen there, what is being sold in the
+  middle, and the total, **Cash** and **Card** at the foot. How the till
+  prints moved from under the order to **🖨** at the top: each till chooses
+  whether it prints by itself and whether the barista's ticket comes out, and
+  can print a test. Every order has a **number for the day**, from 1 each day,
+  given by the database so two tills never give out the same one: a quick sale
+  takes it as it is paid, a table's bill as it is opened, and its sale keeps
+  it. Printing an order prints two slips, cut apart: the customer's
+  **receipt**, redesigned (the café's mark and name, the number in a box, the
+  order, date and cashier, each item with its note and amount, the total,
+  payment and change), and the **barista's ticket** (the number in large
+  figures, who it is for, the channel, each item with how many and its note,
+  without prices). A table's ticket prints when its order is saved, with only
+  what was added and what was taken off; asked for again, it is the whole
+  order, marked as a copy. Built and tested. The migration was applied to the
+  live database on 26 September 2026, matches the tested build object by
+  object (permissions included), and was
+  checked as the owner in a transaction that was rolled back: a quick sale was
+  number 1 and kept it when sent again; a sale at a total the customer was not
+  shown was refused and took no number; a table's bill opened as number 2, the
+  part split off it kept 2, and both sales kept 2 when paid; the next quick sale
+  was 3; nobody could take a number by hand; the audit trail gained only the
+  split; and nothing was kept (still 29 sales, 10 bills, journals to 1072, and
+  no counter for the numbers). The security and performance advisors report
+  exactly what they did before.
 
 ## The August 2026 audit, finding by finding
 
