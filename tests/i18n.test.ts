@@ -236,6 +236,14 @@ describe("what the café is told without asking", () => {
       ["Alert vanilla", "Alert cream", "Alert milk"],
     ],
     ["Margin target (%): enter a number from 0 to 95", []],
+    [
+      "Period 2026-09 cannot be locked yet: No draft journals — 2 draft journal(s) must be published or discarded; Every trading day's cash is counted — Not counted: 2026-09-01, 2026-09-02",
+      [],
+    ],
+    [
+      "Check the price: Milk at 1500 a L is 30% below its cost now (2150 a L); Cups at 90 each is 50% above its cost now (60 each). If it is right, confirm it and receive again",
+      ["Milk", "Cups"],
+    ],
   ];
   // What stays the same in every language: the currency and the units.
   const SAME = /\b(IQD|ml|kg|g|L)\b/g;

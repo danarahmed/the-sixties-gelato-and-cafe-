@@ -180,6 +180,17 @@ const phrases: PhraseBook = {
     ckb: "{1} هێشتا PIN ی دانەناوە (هەژمارەکەم)",
   },
 
+  // A check and what it found, as lock_period() lists them when a period
+  // cannot be locked yet ("No draft journals — 2 draft journal(s) …").
+  "{1} — {2}": { ar: "{1} — {2}", ckb: "{1} — {2}" },
+
+  // The price check of receiving, when it lists more than one price.
+  "Check the price: {1}": { ar: "تحقّق من السعر: {1}", ckb: "نرخەکە بپشکنە: {1}" },
+  "{1}. If it is right, confirm it and receive again": {
+    ar: "{1}. إن كان صحيحًا فأكّده واستلم مرة أخرى",
+    ckb: "{1}. ئەگەر ڕاستە، دڵنیای بکەرەوە و دووبارە وەری بگرە",
+  },
+
   // The period-close checks (period_close_checklist).
   "Earlier periods are locked": { ar: "الفترات السابقة مقفلة", ckb: "ماوەکانی پێشوو داخراون" },
   "{1} earlier period(s) still open": {

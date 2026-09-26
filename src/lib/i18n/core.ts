@@ -114,10 +114,13 @@ export function messenger(words: Words): Msg {
       p.slots.forEach((slot, i) => (values[slot] = translate(m[i + 1] ?? "", depth + 1)));
       return p.to.replace(/\{(\d+)\}/g, (whole, n: string) => values[n] ?? whole);
     }
-    // Messages joined into a list: each one on its own.
+    // Messages joined into a list: each one on its own, the ones after the
+    // first as the values they are ("Label — detail").
     if (text.includes("; ")) {
       const parts = text.split("; ");
-      return parts.map((part) => translate(part, depth)).join(words["; "] ?? "; ");
+      return parts
+        .map((part, i) => translate(part, i === 0 ? depth : Math.max(depth, 1)))
+        .join(words["; "] ?? "; ");
     }
     return text;
   };
