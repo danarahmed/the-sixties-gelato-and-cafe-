@@ -288,7 +288,7 @@ function Bills({
   canPay: boolean;
   onDone: () => void;
 }) {
-  const { t } = useT();
+  const { t, msg: say } = useT();
   const [busy, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
   const [kind, setKind] = useState<"receipt" | "expense">(
@@ -427,7 +427,7 @@ function Bills({
                   <select value={accountCode} onChange={(e) => setAccountCode(e.target.value)}>
                     {accounts.map((a) => (
                       <option key={a.code} value={a.code}>
-                        {a.code} {a.name}
+                        {a.code} {say(a.name)}
                       </option>
                     ))}
                   </select>

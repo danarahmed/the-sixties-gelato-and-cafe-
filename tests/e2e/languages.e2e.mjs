@@ -43,6 +43,12 @@ const SAME = new Set(
     "Lezzoo",
     "Careem",
     "Toters",
+    // Language codes, as the Languages screen gives them for examples.
+    "tr",
+    "fa",
+    "kmr",
+    "ltr",
+    "rtl",
   ].map((w) => w.toLowerCase()),
 );
 
@@ -55,8 +61,10 @@ async function english(page) {
       if (n.nodeType !== Node.ELEMENT_NODE) return;
       const el = n;
       if (["SCRIPT", "STYLE", "CODE", "NOSCRIPT", "TEMPLATE"].includes(el.tagName)) return;
-      // Written in English on purpose: the Languages screen's English column.
+      // Written in English on purpose: the Languages screen's English column,
+      // and its table of phrases, whose boxes show the English until given words.
       if (el.getAttribute("lang") === "en") return;
+      if (el.tagName === "TABLE" && el.closest("#words")) return;
       if (el.hidden || getComputedStyle(el).display === "none") return;
       for (const attr of ["placeholder", "title", "aria-label"])
         if (el.getAttribute(attr)) out.push(el.getAttribute(attr));
@@ -65,7 +73,11 @@ async function english(page) {
     walk(document.body);
     return out.join("\n");
   });
-  const words = text.match(/[A-Za-z][A-Za-z'’-]+/g) ?? [];
+  // A word is English when it is all Latin letters: "Türkçe" or "Kaydet" is not
+  // taken for it.
+  const words = (text.match(/[\p{L}'’-]+/gu) ?? []).filter((w) =>
+    /^[A-Za-z]['’A-Za-z-]*[A-Za-z]$/.test(w),
+  );
   return [...new Set(words.filter((w) => !OWN.has(w.toLowerCase()) && !SAME.has(w.toLowerCase())))];
 }
 
