@@ -39,7 +39,7 @@ export function NeedsYou({
   today: string;
   timezone: string;
 }) {
-  const { t } = useT();
+  const { t, msg } = useT();
   const { needsYou, answered } = sortAlerts(alerts);
   const row = (a: Alert) => (
     <AlertRow
@@ -58,8 +58,10 @@ export function NeedsYou({
           <span className="alert-title">🟢 {t("dash.allClear")}</span>
           <span className="alert-why">
             {answered.length
-              ? `${answered.length} answered or snoozed, below: each stays until it clears.`
-              : "Every rule has been checked against the books just now."}
+              ? t("{n} answered or snoozed, below: each stays until it clears.", {
+                  n: answered.length,
+                })
+              : t("Every rule has been checked against the books just now.")}
           </span>
         </div>
       ) : (
@@ -77,9 +79,9 @@ export function NeedsYou({
               >
                 <summary>
                   <span className="alert-title">
-                    🟠 {ruleLabel(g.rule)}: {g.alerts.length}
+                    🟠 {msg(ruleLabel(g.rule))}: {g.alerts.length}
                   </span>{" "}
-                  <span className="alert-why">— {g.alerts[0]!.why}</span>
+                  <span className="alert-why">— {msg(g.alerts[0]!.why ?? "")}</span>
                 </summary>
                 <div className="alerts" style={{ marginTop: 8 }}>
                   {g.alerts.map(row)}
@@ -115,6 +117,7 @@ function AlertRow({
   timezone: string;
 }) {
   const router = useRouter();
+  const { t, msg: say } = useT();
   const range = snoozeRange(today);
   const [mode, setMode] = useState<"none" | "answer" | "snooze">("none");
   const [note, setNote] = useState("");
@@ -149,45 +152,51 @@ function AlertRow({
       data-urgency={answered ? "answered" : a.urgency}
     >
       <span className="alert-title">
-        {icon} {a.title}
+        {icon} {say(a.title)}
       </span>
-      {a.why && <span className="alert-why">{a.why}</span>}
+      {a.why && <span className="alert-why">{say(a.why)}</span>}
       <div className="alert-meta">
         {a.action &&
           (a.link ? (
-            <Link href={a.link}>{a.action} →</Link>
+            <Link href={a.link}>{say(a.action)} →</Link>
           ) : (
-            <span style={{ color: "var(--text)" }}>{a.action}</span>
+            <span style={{ color: "var(--text)" }}>{say(a.action)}</span>
           ))}
-        <span className="badge">{ruleLabel(a.rule)}</span>
+        <span className="badge">{say(ruleLabel(a.rule))}</span>
         <span
           className={`badge ${a.confidence === "high" ? "ok" : a.confidence === "medium" ? "warn" : ""}`}
-          title="How sure the rule is"
+          title={t("How sure the rule is")}
         >
-          {CONFIDENCE_LABEL[a.confidence]}
+          {say(CONFIDENCE_LABEL[a.confidence])}
         </span>
-        <span>since {dateTimeIn(timezone, a.firstSeenAt)}</span>
+        <span>{t("since {when}", { when: dateTimeIn(timezone, a.firstSeenAt) })}</span>
       </div>
       {a.acknowledgedAt && (
         <span className="alert-why">
-          Answered by {a.acknowledgedBy ?? "someone"} ({dateTimeIn(timezone, a.acknowledgedAt)}): “
-          {a.ackNote}”
+          {t("Answered by {name} ({when}): “{note}”", {
+            name: a.acknowledgedBy ?? t("someone"),
+            when: dateTimeIn(timezone, a.acknowledgedAt),
+            note: a.ackNote ?? "",
+          })}
         </span>
       )}
       {a.snoozedUntil && (
         <span className="alert-why">
-          Snoozed until {dateTimeIn(timezone, a.snoozedUntil).slice(0, 10)} by{" "}
-          {a.snoozedBy ?? "someone"}: “{a.snoozeReason}”
+          {t("Snoozed until {day} by {name}: “{reason}”", {
+            day: dateTimeIn(timezone, a.snoozedUntil).slice(0, 10),
+            name: a.snoozedBy ?? t("someone"),
+            reason: a.snoozeReason ?? "",
+          })}
         </span>
       )}
       {canAct && mode === "none" && (
         <div className="alert-answer">
           <button type="button" onClick={() => setMode("answer")}>
-            {a.acknowledgedAt ? "Answer again" : "Answer"}
+            {a.acknowledgedAt ? t("Answer again") : t("Answer")}
           </button>
           {!a.snoozedUntil && (
             <button type="button" onClick={() => setMode("snooze")}>
-              Snooze
+              {t("Snooze")}
             </button>
           )}
         </div>
@@ -202,10 +211,10 @@ function AlertRow({
         >
           {mode === "snooze" && (
             <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              until
+              {t("until")}
               <input
                 type="date"
-                aria-label="Snooze until"
+                aria-label={t("Snooze until")}
                 min={range.min}
                 max={range.max}
                 value={until}
@@ -215,8 +224,12 @@ function AlertRow({
             </label>
           )}
           <input
-            aria-label={mode === "answer" ? "What was done, or why it is fine" : "Why it can wait"}
-            placeholder={mode === "answer" ? "What was done, or why it is fine" : "Why it can wait"}
+            aria-label={
+              mode === "answer" ? t("What was done, or why it is fine") : t("Why it can wait")
+            }
+            placeholder={
+              mode === "answer" ? t("What was done, or why it is fine") : t("Why it can wait")
+            }
             value={note}
             maxLength={300}
             onChange={(e) => setNote(e.target.value)}
@@ -224,7 +237,7 @@ function AlertRow({
             autoFocus
           />
           <button className="btn-primary" disabled={busy || note.trim().length < 3}>
-            {busy ? "Saving…" : mode === "answer" ? "Save the answer" : "Snooze it"}
+            {busy ? t("Saving…") : mode === "answer" ? t("Save the answer") : t("Snooze it")}
           </button>
           <button
             type="button"
@@ -233,7 +246,7 @@ function AlertRow({
               setMsg(null);
             }}
           >
-            Cancel
+            {t("Cancel")}
           </button>
         </form>
       )}

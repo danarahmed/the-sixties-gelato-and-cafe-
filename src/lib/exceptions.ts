@@ -15,6 +15,10 @@ export type ExceptionKind =
   | "line_removed"
   | "wrong_pin";
 
+/**
+ * Each a phrase of src/lib/i18n/phrases/reports.ts: the screen shows it
+ * through t(); the CSV keeps the English.
+ */
 export const EXCEPTION_LABEL: Record<ExceptionKind, string> = {
   void: "Void",
   refund: "Refund",
@@ -24,6 +28,9 @@ export const EXCEPTION_LABEL: Record<ExceptionKind, string> = {
   line_removed: "Items taken off a bill",
   wrong_pin: "Wrong PIN",
 };
+
+/** Whom an exception is counted against when nobody was signed in (a phrase, like the labels). */
+export const NO_ONE = "No one signed in";
 
 /** One void, refund, discount, cancelled bill, line taken off or wrong PIN, and who. */
 export interface ExceptionRow {
@@ -53,7 +60,7 @@ export interface PersonExceptions {
 export function exceptionsByPerson(list: ExceptionRow[]): PersonExceptions[] {
   const by = new Map<string, PersonExceptions>();
   for (const e of list) {
-    const key = e.person ?? "No one signed in";
+    const key = e.person ?? NO_ONE;
     const p = by.get(key) ?? { person: key, counts: {}, amount: 0, review: 0 };
     p.counts[e.kind] = (p.counts[e.kind] ?? 0) + 1;
     p.amount += e.amount ?? 0;
