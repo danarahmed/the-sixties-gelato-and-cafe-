@@ -51,6 +51,7 @@ export function drawerPreview(p: {
       variance: expected ? counted.minus(expected).toNumber() : null,
       left: null,
       taken: null,
+      // A phrase of the sales book: the form shows it in the reader's language (msg()).
       error: "What stays in the drawer must be between 0 and the cash counted.",
     };
   }
