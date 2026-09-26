@@ -304,6 +304,7 @@ export function NewItemForm({
       <label style={{ fontSize: ".85rem", display: "flex", gap: 6, alignItems: "center" }}>
         <input
           type="checkbox"
+          className="check"
           checked={returnable}
           onChange={(e) => setReturnable(e.target.checked)}
         />

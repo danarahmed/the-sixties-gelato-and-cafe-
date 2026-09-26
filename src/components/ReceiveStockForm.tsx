@@ -344,7 +344,9 @@ function Receive({
                 </label>
                 <label style={{ flex: 1, minWidth: 120 }}>
                   <div className="muted" style={{ fontSize: ".78rem" }}>
-                    {t("Price per {unit} (IQD)", { unit: unit?.label ?? l.unit })}
+                    {unit?.label || l.unit
+                      ? t("Price per {unit} (IQD)", { unit: unit?.label ?? l.unit })
+                      : t("Price per unit (IQD)")}
                   </div>
                   <input
                     style={inputStyle}
