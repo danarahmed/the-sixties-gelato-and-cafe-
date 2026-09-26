@@ -72,7 +72,14 @@ export default async function InventoryPage() {
       )}
 
       <InventoryForms
-        items={items.map((i) => ({ id: i.id, name: i.name, baseUnit: i.baseUnit, units: i.units }))}
+        items={items.map((i) => ({
+          id: i.id,
+          name: i.name,
+          nameAr: i.nameAr,
+          nameCkb: i.nameCkb,
+          baseUnit: i.baseUnit,
+          units: i.units,
+        }))}
         unstocked={unstocked.map((i) => ({
           id: i.id,
           name: i.name,

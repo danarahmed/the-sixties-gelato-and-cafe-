@@ -8,10 +8,14 @@ import { deliveryLineCost, needsPriceConfirmation, priceGap } from "@/lib/receiv
 import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
+import { NewItemForm, type CreatedItem } from "@/components/NewItemForm";
 
 interface ItemOpt {
   id: string;
   name: string;
+  /** Its Arabic and Kurdish names, to find look-alikes of a new item among. */
+  nameAr: string | null;
+  nameCkb: string | null;
   baseUnit: string;
   units: { code: string; label: string; factor: number }[];
   /** What one base unit costs now; null before its first delivery. */
@@ -29,17 +33,22 @@ interface LineDraft {
   unitPrice: string;
 }
 type Msg = { ok: boolean; text: string } | null;
+/** A line whose item is being added (release H): not yet an item to receive. */
+const NEW_ITEM = "__new__";
 
 export function ReceiveStockForm({
   items,
   suppliers,
   canReceive,
   canAddSupplier,
+  canAddItem,
 }: {
   items: ItemOpt[];
   suppliers: SupplierOpt[];
   canReceive: boolean;
   canAddSupplier: boolean;
+  /** An item not in Inventory yet can be added from the receipt itself (release H). */
+  canAddItem: boolean;
 }) {
   if (!canReceive && !canAddSupplier) return null;
   return (
@@ -48,7 +57,7 @@ export function ReceiveStockForm({
       style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}
     >
       {canAddSupplier && <AddSupplier />}
-      {canReceive && <Receive items={items} suppliers={suppliers} />}
+      {canReceive && <Receive items={items} suppliers={suppliers} canAddItem={canAddItem} />}
     </div>
   );
 }
@@ -106,8 +115,19 @@ function AddSupplier() {
   );
 }
 
-function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOpt[] }) {
+function Receive({
+  items: listed,
+  suppliers,
+  canAddItem,
+}: {
+  items: ItemOpt[];
+  suppliers: SupplierOpt[];
+  canAddItem: boolean;
+}) {
   const { t, msg: say } = useT();
+  // Items added on this receipt, until the page's list brings them.
+  const [added, setAdded] = useState<ItemOpt[]>([]);
+  const items = [...listed, ...added.filter((a) => !listed.some((i) => i.id === a.id))];
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -119,7 +139,7 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
   const [rebate, setRebate] = useState("");
   const [note, setNote] = useState("");
   const blank = (): LineDraft => ({
-    itemId: items[0]?.id ?? "",
+    itemId: items[0]?.id ?? (canAddItem ? NEW_ITEM : ""),
     qty: "",
     unit: items[0]?.baseUnit ?? "",
     unitPrice: "",
@@ -133,6 +153,32 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
   };
   const n = (v: string) => Number(normaliseNumber(v)) || 0;
   const goods = lines.reduce((t, l) => t + n(l.qty) * n(l.unitPrice), 0);
+  const adding = lines.some((l) => l.itemId === NEW_ITEM);
+
+  /** The item just added takes its line, by the pack it is bought in if it has one. */
+  function created(idx: number, c: CreatedItem) {
+    const units = [{ code: c.baseUnit, label: c.baseUnit, factor: 1 }];
+    if (c.pack) units.push({ code: c.pack.code, label: c.pack.label, factor: c.pack.holds });
+    setAdded((a) => [
+      ...a,
+      {
+        id: c.id,
+        name: c.name,
+        nameAr: c.nameAr,
+        nameCkb: c.nameCkb,
+        baseUnit: c.baseUnit,
+        units,
+        costNow: null,
+      },
+    ]);
+    setLine(idx, { itemId: c.id, unit: c.pack?.code ?? c.baseUnit });
+    setMsg({
+      ok: true,
+      text: t("Added “{name}” to Inventory: its stock comes in with this delivery.", {
+        name: c.name,
+      }),
+    });
+  }
 
   function submit(confirm: boolean) {
     setMsg(null);
@@ -145,7 +191,7 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
         note,
         confirm,
         lines: lines
-          .filter((l) => l.itemId && l.qty.trim() !== "")
+          .filter((l) => l.itemId && l.itemId !== NEW_ITEM && l.qty.trim() !== "")
           .map((l) => ({
             itemId: l.itemId,
             qty: l.qty,
@@ -174,7 +220,7 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
     });
   }
 
-  if (items.length === 0 || suppliers.length === 0) {
+  if ((items.length === 0 && !canAddItem) || suppliers.length === 0) {
     return (
       <div className="card">
         <h3 style={{ marginTop: 0 }}>📦 {t("Receive stock")}</h3>
@@ -258,6 +304,9 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
                       })
                     }
                   >
+                    {canAddItem && (
+                      <option value={NEW_ITEM}>{t("+ New item (not in Inventory yet)…")}</option>
+                    )}
                     {items.map((i) => (
                       <option key={i.id} value={i.id}>
                         {i.name}
@@ -295,7 +344,9 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
                 </label>
                 <label style={{ flex: 1, minWidth: 120 }}>
                   <div className="muted" style={{ fontSize: ".78rem" }}>
-                    {t("Price per {unit} (IQD)", { unit: unit?.label ?? l.unit })}
+                    {unit?.label || l.unit
+                      ? t("Price per {unit} (IQD)", { unit: unit?.label ?? l.unit })
+                      : t("Price per unit (IQD)")}
                   </div>
                   <input
                     style={inputStyle}
@@ -314,7 +365,32 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
                   ×
                 </button>
               </div>
-              {l.qty.trim() !== "" && l.unitPrice.trim() !== "" && (
+              {l.itemId === NEW_ITEM && (
+                <div
+                  className="card"
+                  data-testid="new-item"
+                  style={{ background: "var(--surface)", borderStyle: "dashed" }}
+                >
+                  <h4 style={{ margin: "0 0 4px" }}>➕ {t("A new stock item")}</h4>
+                  <p className="muted" style={{ fontSize: ".8rem", margin: "0 0 8px" }}>
+                    {t(
+                      "It goes into Inventory with its name in each language, and its stock comes in with this delivery. Its price is entered on the line, as the invoice has it.",
+                    )}
+                  </p>
+                  <NewItemForm
+                    items={items}
+                    submitLabel={t("Add the item")}
+                    onCreated={(c) => created(idx, c)}
+                    onUse={(id) => setLine(idx, { itemId: id, unit: itemById(id)?.baseUnit ?? "" })}
+                    onCancel={
+                      items.length > 0
+                        ? () => setLine(idx, { itemId: items[0]!.id, unit: items[0]!.baseUnit })
+                        : undefined
+                    }
+                  />
+                </div>
+              )}
+              {l.qty.trim() !== "" && l.unitPrice.trim() !== "" && l.itemId !== NEW_ITEM && (
                 <div
                   className="muted"
                   style={{ fontSize: ".78rem", color: far ? "var(--warn)" : undefined }}
@@ -394,10 +470,15 @@ function Receive({ items, suppliers }: { items: ItemOpt[]; suppliers: SupplierOp
         <button
           className="btn-primary"
           onClick={() => submit(false)}
-          disabled={pending || !supplier || check !== null}
+          disabled={pending || !supplier || check !== null || adding}
         >
           {pending ? t("Receiving…") : t("Receive goods")}
         </button>
+        {adding && (
+          <span className="muted" style={{ fontSize: ".85rem" }}>
+            {t("Add the new item first, or choose one from the list.")}
+          </span>
+        )}
         {goods > 0 && (
           <span className="muted" style={{ fontSize: ".85rem" }}>
             {t("Goods {value}", { value: fmtIQD(goods) })}

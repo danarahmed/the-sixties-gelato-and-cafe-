@@ -333,6 +333,61 @@ const phrases: PhraseBook = {
   "Receive goods": { ar: "استلام البضاعة", ckb: "وەرگرتنی کاڵا" },
   "Goods {value}": { ar: "البضاعة: {value}", ckb: "کاڵا: {value}" },
 
+  // An item added on a receipt, and names that look alike (release H).
+  "+ New item (not in Inventory yet)…": {
+    ar: "+ مادة جديدة (ليست في المخزون بعد)…",
+    ckb: "+ کاڵای نوێ (هێشتا لە کۆگادا نییە)…",
+  },
+  "A new stock item": { ar: "مادة مخزون جديدة", ckb: "کاڵایەکی نوێی کۆگا" },
+  "It goes into Inventory with its name in each language, and its stock comes in with this delivery. Its price is entered on the line, as the invoice has it.":
+    {
+      ar: "تُضاف إلى المخزون باسمها في كل لغة، ويدخل مخزونها مع هذه الشحنة. ويُدخَل سعرها على السطر كما في الفاتورة.",
+      ckb: "بە ناوەکەی بە هەموو زمانێک دەچێتە ناو کۆگاوە، و کۆگاکەی لەگەڵ ئەم بارەدا دێت. نرخەکەی لەسەر هێڵەکە تۆمار دەکرێت، وەک لە پسووڵەکەدا هاتووە.",
+    },
+  "Add the item": { ar: "أضف المادة", ckb: "کاڵاکە زیاد بکە" },
+  "Price per unit (IQD)": { ar: "السعر لكل وحدة (IQD)", ckb: "نرخ بۆ هەر یەکەیەک (IQD)" },
+  "Added “{name}” to Inventory: its stock comes in with this delivery.": {
+    ar: "أُضيفت «{name}» إلى المخزون: يدخل مخزونها مع هذه الشحنة.",
+    ckb: "«{name}» زیاد کرا بۆ کۆگا: کۆگاکەی لەگەڵ ئەم بارەدا دێت.",
+  },
+  "Add the new item first, or choose one from the list.": {
+    ar: "أضف المادة الجديدة أولًا، أو اختر واحدة من القائمة.",
+    ckb: "سەرەتا کاڵا نوێیەکە زیاد بکە، یان یەکێک لە لیستەکە هەڵبژێرە.",
+  },
+  "There is already an item called “{name}”.": {
+    ar: "توجد مادة باسم «{name}» بالفعل.",
+    ckb: "کاڵایەک بە ناوی «{name}» پێشتر هەیە.",
+  },
+  "Is it one of these? Its name looks like:": {
+    ar: "هل هي إحدى هذه؟ اسمها يشبه:",
+    ckb: "ئایا یەکێکە لەمانە؟ ناوەکەی لەمانە دەچێت:",
+  },
+  "Use it": { ar: "استخدمها", ckb: "بەکاری بهێنە" },
+  "Open it": { ar: "افتحها", ckb: "بیکەرەوە" },
+  "Check the name before adding it: two items for the same thing split its stock and its cost in two. If it is a different item, add it all the same.":
+    {
+      ar: "تحقّق من الاسم قبل إضافتها: مادتان للشيء نفسه تقسمان مخزونه وكلفته إلى قسمين. وإن كانت مادة مختلفة فأضفها على أي حال.",
+      ckb: "پێش زیادکردنی ناوەکە بپشکنە: دوو کاڵا بۆ هەمان شت کۆگا و تێچووەکەی دەکەن بە دوو بەش. ئەگەر کاڵایەکی جیاوازە، هەر زیادی بکە.",
+    },
+  "It is a different item: add it": {
+    ar: "إنها مادة مختلفة: أضفها",
+    ckb: "کاڵایەکی جیاوازە: زیادی بکە",
+  },
+  "It looks like an item already on the list": {
+    ar: "تبدو كمادة موجودة في القائمة بالفعل",
+    ckb: "وەک کاڵایەکی ناو لیستەکە دەچێت",
+  },
+  "The pack it is bought in (optional)": {
+    ar: "العبوة التي تُشترى بها (اختياري)",
+    ckb: "ئەو پاکەتەی پێی دەکڕدرێت (ئارەزوومەندانە)",
+  },
+  "e.g. Carton of 24": { ar: "مثلًا: كرتونة من 24", ckb: "بۆ نموونە: کارتۆنی 24 دانەیی" },
+  "Give the pack both its name and how many {unit} it holds.": {
+    ar: "أعطِ العبوة اسمها وعدد ما تحويه من {unit} معًا.",
+    ckb: "هەم ناوی پاکەتەکە و هەم ئەوەی چەند {unit} دەگرێت بنووسە.",
+  },
+  "The pack's name": { ar: "اسم العبوة", ckb: "ناوی پاکەتەکە" },
+
   // The stock count.
   "<b>Blind count.</b> Count what is on the shelf; the expected quantities are never shown to the person counting. Each item is compared with the stock at the moment it is counted, so the café can keep trading during a count. When the count is submitted, a manager — never the counter — reviews it and approves the variances into the books.":
     {

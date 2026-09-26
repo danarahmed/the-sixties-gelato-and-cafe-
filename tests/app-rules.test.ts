@@ -25,7 +25,8 @@ import {
   showValue,
   subjectOf,
 } from "@/lib/audit";
-import { deliveryLineCost, needsPriceConfirmation, priceGap } from "@/lib/receiving";
+import { deliveryLineCost, needsPriceConfirmation, packCode, priceGap } from "@/lib/receiving";
+import { lookAlike, lookAlikes, nameKey, slips } from "@/lib/names";
 import { REASONS, noteIsEnough, reasonKey, reasonMissing, type ReasonKind } from "@/lib/reasons";
 import { LOCALES, builtInWords, getDictionary } from "@/lib/i18n/dictionaries";
 import { translator } from "@/lib/i18n/core";
@@ -1650,5 +1651,75 @@ describe("delivery platforms the café adds itself (0031)", () => {
     }
     // The three 0030 set up are named in Arabic and Kurdish by the migration.
     expect(migration).toContain(`'{"ar": "طلبات", "ckb": "تەلەبات"}'`);
+  });
+});
+
+describe("names that look alike, before a new item is added (release H)", () => {
+  const items = [
+    { id: "w", name: "Bottled water", nameAr: "ماء معبأ", nameCkb: "ئاوی بوتڵ" },
+    { id: "s", name: "Sugar", nameAr: "سكر", nameCkb: "شەکر" },
+    { id: "m", name: "Mocha syrup" },
+    { id: "c", name: "Cup 8oz" },
+    { id: "r", name: "Rice" },
+    { id: "k", name: "Milk", nameAr: "حليب", nameCkb: "شیر" },
+  ];
+  const found = (name: string, extra: { nameAr?: string; nameCkb?: string } = {}) =>
+    lookAlikes({ name, ...extra }, items).map((l) => (l.same ? `=${l.name}` : l.name));
+
+  it("the same name, as the database sees it: capitals, spaces and punctuation aside", () => {
+    expect(nameKey("  Bottled-WATER! ")).toBe("bottledwater");
+    expect(found("bottled  water")).toEqual(["=Bottled water"]);
+    expect(found("BOTTLED WATER.")).toEqual(["=Bottled water"]);
+  });
+
+  it("a slip of the keyboard: a letter missing, extra, wrong or two swapped", () => {
+    expect(slips("botled", "bottled")).toBe(1);
+    expect(slips("mlik", "milk")).toBe(1);
+    expect(found("Botled water")).toEqual(["Bottled water"]);
+    expect(found("Suger")).toEqual(["Sugar"]);
+    expect(found("Mlik")).toEqual(["Milk"]);
+    expect(found("Bottled waters")).toEqual(["Bottled water"]);
+    expect(found("Water bottled")).toEqual(["Bottled water"]);
+  });
+
+  it("Arabic and Kurdish letter forms one hand writes for another", () => {
+    // ی for ي, ک for ك, ە for ه: the same word to the reader.
+    expect(lookAlike("شير", "شیر")).toBe(0);
+    expect(lookAlike("سکر", "سكر")).toBe(0);
+    expect(found("Fresh milk", { nameCkb: "شير" })).toEqual(["Milk"]);
+    expect(found("Sugar cubes", { nameAr: "سکر" })).toEqual(["Sugar"]);
+    expect(found("Water", { nameAr: "مآء معبأ" })).toEqual(["Bottled water"]);
+  });
+
+  it("different items are not warned about", () => {
+    // Another size, another word with one letter changed, another first letter.
+    expect(found("Cup 12oz")).toEqual([]);
+    expect(found("Matcha syrup")).toEqual([]);
+    expect(found("Ice")).toEqual([]);
+    expect(found("Milk powder")).toEqual([]);
+    expect(found("Salt")).toEqual([]);
+    expect(found("Tea")).toEqual([]);
+  });
+
+  it("the closest first, three at most", () => {
+    const many = ["Vanila syrups", "Vanila syrup", "Vanilla syrup", "Vanilla syrups"].map(
+      (name, i) => ({ id: String(i), name }),
+    );
+    const list = lookAlikes({ name: "vanilla SYRUP" }, many);
+    expect(list.map((l) => l.name)).toEqual(["Vanilla syrup", "Vanila syrup", "Vanilla syrups"]);
+    expect(list[0]).toEqual({ id: "2", name: "Vanilla syrup", same: true });
+    // A one-letter word is a name of its own: "Syrup A" is not "Syrup B".
+    expect(lookAlikes({ name: "Syrup A" }, [{ id: "b", name: "Syrup B" }])).toEqual([]);
+    expect(lookAlikes({ name: "  " }, many)).toEqual([]);
+  });
+
+  it("the pack an item is bought in gets a code made from what it is called", () => {
+    expect(packCode("Carton of 24", 24)).toBe("carton_of_24");
+    expect(packCode("  Box (12) ", 12)).toBe("box_12");
+    expect(packCode("Sack — 25 kg", 25000)).toBe("sack_25_kg");
+    expect(packCode("Crème tub", 1000)).toBe("creme_tub");
+    // A name in Arabic or Kurdish letters: pack_ and its size.
+    expect(packCode("کارتۆن", 24)).toBe("pack_24");
+    expect(packCode("علبة", 0.5)).toBe("pack_0_5");
   });
 });

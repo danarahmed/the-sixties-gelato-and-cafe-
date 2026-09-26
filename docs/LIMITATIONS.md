@@ -33,6 +33,14 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   used is taken out of use, and its sales, orders and statements stay. A
   platform is named in the app's languages (English, Arabic, Kurdish). Its
   commission is not set on it: the statement says what the platform kept.
+- **Look-alike names (release H, `0033`), what they do not catch.** A new
+  item's names are compared with those of the items in use: a slip of the
+  keyboard, the same words in another order, Arabic and Kurdish letter forms
+  one hand writes for another. An abbreviation ("Choc sauce" beside "Chocolate
+  sauce") or a word in another language that means the same is not caught, and
+  items taken out of use are not compared (one is brought back on its own page,
+  under Inventory). The same name, whatever its capitals, spaces or
+  punctuation, is still refused by the database.
 - **Production (M-11), what it does not do.** Batches are recorded, costed and
   cancelled, and made items are kept and sold (see the walkthrough). It does not
   plan batches ahead, track lots or expiry dates, or move stock between the
@@ -91,13 +99,16 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
 
 - **Talabat Partner API.** A live connection needs an approved partner account and
   credentials from Talabat.
-- **Backups and restore drills.** Backups are configured in the Supabase project,
-  not here. A restore has not been drilled against this schema (see
+- **Backups and restore drills.** The live project is on Supabase's free plan,
+  which keeps no backups (checked on 26 September 2026); daily backups come with
+  the Pro plan, which the owner has chosen not to take for now. A restore has
+  not been drilled against this schema (see
   [`guides/backup-restore.md`](guides/backup-restore.md)).
 - **MFA and sign-up policy.** Both are Supabase settings. The runbook recommends
   MFA for the owner, and turning off open sign-up once everyone has a login.
 - **Monitoring.** No error monitoring or uptime checks are configured, and
-  there is no channel (email, WhatsApp) to send alerts or the daily brief.
+  there is no channel to send alerts or the daily brief: the owner has chosen
+  WhatsApp and email, to be set up later.
 
 ## Deliberate constraints (not bugs)
 

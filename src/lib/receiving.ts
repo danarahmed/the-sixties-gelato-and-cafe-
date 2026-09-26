@@ -30,3 +30,20 @@ export function priceGap(perBase: number | null, costNow: number | null): number
   if (perBase === null || costNow === null || costNow <= 0) return null;
   return (perBase - costNow) / costNow;
 }
+
+/**
+ * The code of a pack an item is bought in, made from what it is called when
+ * the item is added (release H): "Carton of 24" is carton_of_24. A name in
+ * Arabic or Kurdish letters makes no code, so it is pack_ and its size.
+ */
+export function packCode(label: string, holds: number): string {
+  const code = label
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 30)
+    .replace(/_+$/, "");
+  return code || `pack_${String(holds).replace(/[^0-9]+/g, "_")}`;
+}

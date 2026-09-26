@@ -7,10 +7,10 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0032` and the rebuilt app. The SQL
-  checks (33, with the rehearsals of the upgrade, the clean start and clearing
+- **Built and verified:** migrations `0014`–`0033` and the rebuilt app. The SQL
+  checks (34, with the rehearsals of the upgrade, the clean start and clearing
   the test records), the browser suites (13, every role, every screen in
-  Arabic and Kurdish), the unit and contract tests (276) and a production
+  Arabic and Kurdish), the unit and contract tests (282) and a production
   build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
@@ -242,6 +242,31 @@ browser tests through the real app, or both.
   pages and cleared again; Turkish taken out of use left every page and kept
   its words; the audit trail gained exactly those five changes, and nothing
   was kept. See [`TRANSLATION.md`](TRANSLATION.md) and the owner's guide.
+- **An item added while its delivery is received, and names that look alike
+  (release H, migration `0033`, asked for by the owner).** Before, an item not
+  in Inventory yet had to be added there first, and the receipt started
+  again. Now each line of **Purchasing → Receive stock** offers **+ New item**:
+  its names in English, Arabic and Kurdish, its type, how it is measured and
+  the pack it is bought in (a carton of 24); it goes into Inventory, the line
+  takes it by its pack, and its stock comes in with the delivery. While a name
+  is typed, the items already there whose names look like it are shown — a
+  slip of the keyboard ("Botled water" beside Bottled water), the same words in
+  another order, Arabic and Kurdish letter forms — to use instead, or to add it
+  all the same; the same name, whatever its capitals, cannot be added twice.
+  Inventory's **Add stock item** is the same form and warns the same way.
+  `0033` checks a pack given with a new item as one added later is checked (a
+  name of its own, not the base unit's; a kilogram 1000 grams; no two of one
+  name). Built and tested. The migration was applied to the live database on
+  26 September 2026, matches the tested build object by object (permissions
+  included), and was checked as the owner in a transaction that was rolled
+  back: a pack named as the base unit, a kilogram of 500 grams and a carton
+  holding nothing were refused; an item added with its carton of 24 and
+  received by the carton, 2 at 6,000, came in as 48 at 250 each (receipt 9,
+  12,000 IQD); the carton again under another size, and the same name in other
+  capitals, were refused; the audit trail gained exactly the item and its
+  carton; and nothing was kept — no item, unit, receipt, stock or journal, the
+  receipts still numbered to 8 and the journals to 1072. The security and
+  performance advisors report exactly what they did before.
 
 ## The August 2026 audit, finding by finding
 
