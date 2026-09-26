@@ -1991,10 +1991,17 @@ a.card.stat:focus-visible {
     font-weight: 600;
     overflow-wrap: anywhere;
   }
+  .sl-items .p,
   .sl-items .a {
     padding-inline-start: 6px;
     text-align: end;
     white-space: nowrap;
+  }
+  .sl-items td.p {
+    font-size: 11px;
+  }
+  .sl-items td.a {
+    font-weight: 700;
   }
   .sl-note {
     display: block;

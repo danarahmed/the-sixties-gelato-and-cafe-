@@ -12,7 +12,15 @@ export interface PrintJob {
   kind: "bill" | "receipt";
   title: string;
   channelLabel: string;
-  lines: { name: string; qty: number; amount: number | null; note: string | null }[];
+  /** Each item: how many, at what price each, and what they come to. */
+  lines: {
+    name: string;
+    qty: number;
+    /** The price of one; missing on a receipt kept by an older till page. */
+    price?: number | null;
+    amount: number | null;
+    note: string | null;
+  }[];
   /** Before the discount. */
   subtotal?: number;
   discount?: number;
@@ -78,6 +86,10 @@ export function ticketFor(job: PrintJob): BaristaTicket {
 }
 
 const money = (n: number) => Math.round(n).toLocaleString("en-US");
+
+/** The price of one, as the line has it, or from what the line comes to. */
+const unitPrice = (l: PrintJob["lines"][number]): number | null =>
+  l.price ?? (l.amount !== null && l.qty > 0 ? l.amount / l.qty : null);
 
 /**
  * The slips for an 80 mm receipt printer (72 mm printable), or any printer
@@ -256,20 +268,25 @@ function CheckSlip({
           <tr>
             <th className="q">{t("print.qty")}</th>
             <th>{t("print.item")}</th>
+            <th className="p">{t("print.price")}</th>
             <th className="a">{t("print.amount")}</th>
           </tr>
         </thead>
         <tbody>
-          {job.lines.map((l, i) => (
-            <tr key={i}>
-              <td className="q">{fmtQty(l.qty)}</td>
-              <td className="n">
-                {l.name}
-                {l.note && <span className="sl-note">{l.note}</span>}
-              </td>
-              <td className="a">{l.amount === null ? "—" : money(l.amount)}</td>
-            </tr>
-          ))}
+          {job.lines.map((l, i) => {
+            const price = unitPrice(l);
+            return (
+              <tr key={i}>
+                <td className="q">{fmtQty(l.qty)}</td>
+                <td className="n">
+                  {l.name}
+                  {l.note && <span className="sl-note">{l.note}</span>}
+                </td>
+                <td className="p">{price === null ? "—" : money(price)}</td>
+                <td className="a">{l.amount === null ? "—" : money(l.amount)}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 

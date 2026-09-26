@@ -230,7 +230,8 @@ database, behind a small local stand-in for Supabase's auth service.
     is recorded, it fetches the new price, and the sale records 3,000 (`0025`);
   - two copies (release I): a quick sale takes the day's next number, shown
     for the customer; one press prints the receipt (the number and every
-    amount) and the barista's ticket (the number, what to make and its note,
+    amount, each line as how many, the price of one and what they come to:
+    2 × 3,000 = 6,000) and the barista's ticket (the number, what to make and its note,
     no prices); printed again, the receipt comes alone and the ticket is
     marked as a copy. On a till set to print by itself, a table's bill takes
     the next number as it is opened, its ticket prints when it is saved, more

@@ -139,8 +139,9 @@ front.)
 
 Each order prints on two slips, cut apart: the **customer's receipt** (the
 café's name and mark, the customer's number in a box, the order, date and
-cashier, every item with its note and amount, the total, how it was paid and
-the change) and the **barista's ticket** (the number in large figures, who it
+cashier, every item with how many, the price of one and what they come to —
+two espressos at 5,000 are 10,000 — and its note, then the total, how it was
+paid and the change) and the **barista's ticket** (the number in large figures, who it
 is for, the channel, and each item with how many and its note, without
 prices). A bill printed before payment says **Not paid yet: this is not a
 receipt**.
