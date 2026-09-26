@@ -232,7 +232,16 @@ browser tests through the real app, or both.
   and marks, one translation per phrase, Kurdish in Kurdish letters; the
   alerts the database raises translated whole; and in the browser, every
   screen in Arabic and in Kurdish showing no English but what the café typed
-  itself. See [`TRANSLATION.md`](TRANSLATION.md) and the owner's guide.
+  itself. The migration was applied to the live database on 26 September
+  2026, matches the tested build object by object (permissions included), and
+  was checked as the owner in a transaction that was rolled back: before, the
+  pages read the three built-in languages and no words of the café's own;
+  Turkish was added, and Arabic refused as a language to add (its words are
+  corrected instead); three Turkish words were saved and words that dropped a
+  value refused; a built-in Arabic word was corrected, read on the Arabic
+  pages and cleared again; Turkish taken out of use left every page and kept
+  its words; the audit trail gained exactly those five changes, and nothing
+  was kept. See [`TRANSLATION.md`](TRANSLATION.md) and the owner's guide.
 
 ## The August 2026 audit, finding by finding
 
@@ -278,7 +287,7 @@ browser tests through the real app, or both.
 | L-03 | Period names in UTC                            |   ✅   | Business timezone                                                                                                                                                |
 | L-04 | Demo and real data mixed                       |   ✅   | The live trial records were cleared (`supabase/remediation/clean-start.sql`); the seed has no transactions; keep staging in a separate project                   |
 | L-05 | No exports or attachments                      |   🟡   | CSV for trial balance, P&L and reconciliation. No PDF, no attachments on bills or expenses                                                                       |
-| L-06 | Translations partial                           |   🟡   | Navigation, sign-in, the till and the offline messages in all three languages; most screen bodies still English                                                  |
+| L-06 | Translations partial                           |   ✅   | Every screen, message and alert in English, Arabic and Kurdish; the owner adds languages and corrects words (`0032`). Limits: [`LIMITATIONS.md`](LIMITATIONS.md) |
 
 ## Screens
 
