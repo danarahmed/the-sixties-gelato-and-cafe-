@@ -90,10 +90,6 @@ const phrases: PhraseBook = {
     ckb: "پسووڵەیەکی کراوە لەسەر ئەم مێزەیە؛ سەرەتا پارەکەی وەربگرە یان هەڵیبوەشێنەوە",
   },
   "That table is not in use": { ar: "هذه الطاولة غير مستخدمة", ckb: "ئەو مێزە بەکارنایەت" },
-  "Give the bill a table or a name": {
-    ar: "حدّد للفاتورة طاولة أو اسمًا",
-    ckb: "مێزێک یان ناوێک بۆ پسووڵەکە دیاری بکە",
-  },
   "A bill is never deleted; cancel it instead": {
     ar: "لا تُحذف الفاتورة أبدًا؛ ألغِها بدلًا من ذلك",
     ckb: "پسووڵە هەرگیز ناسڕدرێتەوە؛ لە جیاتی ئەوە هەڵیبوەشێنەوە",
@@ -113,10 +109,6 @@ const phrases: PhraseBook = {
   },
   "The bill is empty": { ar: "الفاتورة فارغة", ckb: "پسووڵەکە بەتاڵە" },
   "The bill has no lines": { ar: "لا توجد أسطر في الفاتورة", ckb: "پسووڵەکە هیچ هێڵێکی تێدا نییە" },
-  "Choose what to move to the new bill": {
-    ar: "اختر ما تريد نقله إلى الفاتورة الجديدة",
-    ckb: "ئەوە هەڵبژێرە کە دەگوازرێتەوە بۆ پسووڵە نوێیەکە",
-  },
   "Each line can be moved once": {
     ar: "يُنقل كل سطر مرة واحدة فقط",
     ckb: "هەر هێڵێک تەنها یەک جار دەگوازرێتەوە",
@@ -143,10 +135,6 @@ const phrases: PhraseBook = {
   },
 
   // Selling and the till: discounts, and the reason given for one, a void or a refund.
-  "Give the discount as a percentage or as an amount, not both": {
-    ar: "أعطِ الخصم نسبةً مئوية أو مبلغًا، لا الاثنين معًا",
-    ckb: "داشکاندنەکە بە ڕێژەی سەدی یان بە بڕی پارە بدە، نەک هەردووکیان",
-  },
   "You do not have permission to give discounts": {
     ar: "ليست لديك صلاحية منح الخصومات",
     ckb: "مۆڵەتی دانی داشکاندنت نییە",
@@ -225,10 +213,6 @@ const phrases: PhraseBook = {
     ar: "أدخل مبلغًا أكبر من الصفر",
     ckb: "بڕە پارەیەک لە سفر زیاتر بنووسە",
   },
-  "A bill is either for a goods receipt or for an expense account — choose one": {
-    ar: "الفاتورة إما لوصل استلام بضاعة أو لحساب مصروف — اختر أحدهما",
-    ckb: "پسووڵە یان بۆ وەسڵی وەرگرتنی کاڵایە یان بۆ هەژماری خەرجی — یەکێکیان هەڵبژێرە",
-  },
   "Numbers like {1} are the café's own and are given automatically: leave the box as it is, or type the supplier's invoice number":
     {
       ar: "الأرقام مثل {1} خاصة بالمقهى وتُعطى تلقائيًا: اترك الخانة كما هي، أو اكتب رقم فاتورة المورّد",
@@ -298,10 +282,6 @@ const phrases: PhraseBook = {
     ckb: "دابینکەرێک بە ناوی {1} پێشتر هەیە",
   },
   "Unknown supplier": { ar: "مورّد غير معروف", ckb: "دابینکەری نەناسراو" },
-  "A delivery takes 0 to 30 days": {
-    ar: "يستغرق التوريد من 0 إلى 30 يومًا",
-    ckb: "گەیاندن لە 0 تا 30 ڕۆژ دەخایەنێت",
-  },
   "{1} is still owed {2}: pay or cancel their bills before taking them out of use": {
     ar: "ما زال المقهى مدينًا لـ{1} بمبلغ {2}: سدّد فواتيره أو ألغِها قبل إيقاف التعامل معه",
     ckb: "هێشتا {2} قەرزی {1} لەسەر کافێکەیە: پێش لابردنی لە بەکارهێنان، پارەی پسووڵەکانی بدە یان هەڵیانبوەشێنەوە",
@@ -373,10 +353,6 @@ const phrases: PhraseBook = {
   "Only the owner records opening stock: it is capital the owner puts in": {
     ar: "وحده المالك يسجّل المخزون الافتتاحي: فهو رأس مال يضعه المالك",
     ckb: "تەنها خاوەن کۆگای سەرەتا تۆمار دەکات: ئەوە سەرمایەیەکە کە خاوەن دایدەنێت",
-  },
-  "Say where this stock came from (the opening count, say)": {
-    ar: "اذكر من أين جاء هذا المخزون (من الجرد الافتتاحي مثلًا)",
-    ckb: "بڵێ ئەم کۆگایە لە کوێوە هات (بۆ نموونە لە ژماردنی سەرەتاوە)",
   },
   "Enter the quantity on the shelf": {
     ar: "أدخل الكمية الموجودة على الرف",
@@ -465,7 +441,6 @@ const phrases: PhraseBook = {
     ckb: "تەنها ئەو کەسەی دەژمێرێت دەتوانێت ژمارەکان بنووسێت",
   },
   "This count is already {1}": { ar: "هذا الجرد {1} بالفعل", ckb: "ئەم ژماردنە پێشتر {1}" },
-  "Enter what you counted": { ar: "أدخل ما عددته", ckb: "ئەوەی ژماردت بنووسە" },
   "That item is not in this count": {
     ar: "هذه المادة ليست ضمن هذا الجرد",
     ckb: "ئەو کاڵایە لەم ژماردنەدا نییە",
@@ -558,15 +533,7 @@ const phrases: PhraseBook = {
     ar: "توجد فئة باسم {1} بالفعل",
     ckb: "پۆلێک بە ناوی {1} پێشتر هەیە",
   },
-  "Use a PNG, JPEG or WebP picture": {
-    ar: "استخدم صورة بصيغة PNG أو JPEG أو WebP",
-    ckb: "وێنەیەکی PNG، JPEG یان WebP بەکاربهێنە",
-  },
   "The picture could not be read": { ar: "تعذّرت قراءة الصورة", ckb: "وێنەکە نەخوێندرایەوە" },
-  "The picture must be smaller than 300 KB": {
-    ar: "يجب أن يكون حجم الصورة أقل من 300 KB",
-    ckb: "قەبارەی وێنەکە دەبێت لە 300 KB کەمتر بێت",
-  },
   "That file is not a PNG, JPEG or WebP picture": {
     ar: "هذا الملف ليس صورة بصيغة PNG أو JPEG أو WebP",
     ckb: "ئەو فایلە وێنەی PNG، JPEG یان WebP نییە",
@@ -641,44 +608,36 @@ const phrases: PhraseBook = {
   // Production: batch recipes, and the batches made from them.
   "Name what the batch makes": {
     ar: "اكتب اسم ما تُنتجه دفعة الإنتاج",
-    ckb: "ناوی ئەوە بنووسە کە وەجبەکە بەرهەمی دەهێنێت",
+    ckb: "ناوی ئەوە بنووسە کە دەستەکە بەرهەمی دەهێنێت",
   },
   "Batch recipe not found": {
     ar: "لم يُعثر على وصفة الإنتاج",
     ckb: "ڕەسەتەی بەرهەمهێنانەکە نەدۆزرایەوە",
   },
-  "Say whether it is weighed, measured or counted in pieces": {
-    ar: "اذكر هل يُوزن أم يُقاس بالحجم أم يُعَدّ بالقطعة",
-    ckb: "بڵێ ئایا دەکێشرێت، بە قەبارە دەپێورێت یان بە دانە دەژمێردرێت",
-  },
   "You already keep an item called {1}: choose it as what the batch makes": {
     ar: "لديك بالفعل مادة باسم {1}: اخترها على أنها ما تُنتجه دفعة الإنتاج",
-    ckb: "پێشتر کاڵایەکت بە ناوی {1} هەیە: وەک ئەوەی وەجبەکە بەرهەمی دەهێنێت هەڵیبژێرە",
+    ckb: "پێشتر کاڵایەکت بە ناوی {1} هەیە: وەک ئەوەی دەستەکە بەرهەمی دەهێنێت هەڵیبژێرە",
   },
   '"{1}" is already a unit: name the container, such as pan or tray': {
     ar: "«{1}» وحدة قياس أصلًا: اكتب اسم الوعاء، مثل قالب أو صينية",
     ckb: "«{1}» خۆی یەکەیە: ناوی دەفرەکە بنووسە، وەک قاپ یان سینی",
   },
-  "Say how much one {1} holds": {
-    ar: "اذكر كم يسع {1} الواحد",
-    ckb: "بڵێ یەک {1} چەندی تێدا جێ دەبێتەوە",
-  },
   "Say how much one batch makes": {
     ar: "اذكر كم تُنتج دفعة الإنتاج الواحدة",
-    ckb: "بڵێ یەک وەجبە چەند بەرهەم دەهێنێت",
+    ckb: "بڵێ یەک دەستە چەند بەرهەم دەهێنێت",
   },
   "A batch cannot use what it makes": {
     ar: "لا يمكن لدفعة الإنتاج أن تستخدم ما تُنتجه",
-    ckb: "وەجبە ناتوانێت ئەوە بەکاربهێنێت کە خۆی بەرهەمی دەهێنێت",
+    ckb: "دەستە ناتوانێت ئەوە بەکاربهێنێت کە خۆی بەرهەمی دەهێنێت",
   },
   "Choose what was made": { ar: "اختر ما تم إنتاجه", ckb: "ئەوە هەڵبژێرە کە بەرهەم هێنرا" },
   "{1} is not made any more: show it again to record a batch": {
     ar: "لم يعد {1} يُنتَج: أعِد إظهاره لتسجيل دفعة إنتاج",
-    ckb: "{1} چیتر بەرهەم ناهێنرێت: دووبارە پیشانی بدەرەوە بۆ تۆمارکردنی وەجبەیەک",
+    ckb: "{1} چیتر بەرهەم ناهێنرێت: دووبارە پیشانی بدەرەوە بۆ تۆمارکردنی دەستەیەک",
   },
   "Enter how many batches were made": {
     ar: "أدخل عدد دفعات الإنتاج",
-    ckb: "بنووسە چەند وەجبە بەرهەم هێنرا",
+    ckb: "بنووسە چەند دەستە بەرهەم هێنرا",
   },
   "{1} has no ingredients in force today": {
     ar: "ليس لـ{1} مكوّنات سارية اليوم",
@@ -691,16 +650,16 @@ const phrases: PhraseBook = {
   },
   "Say why the batch is cancelled": {
     ar: "اذكر سبب إلغاء دفعة الإنتاج",
-    ckb: "بڵێ بۆچی وەجبەکە هەڵدەوەشێنرێتەوە",
+    ckb: "بڵێ بۆچی دەستەکە هەڵدەوەشێنرێتەوە",
   },
-  "Batch not found": { ar: "لم يُعثر على دفعة الإنتاج", ckb: "وەجبەکە نەدۆزرایەوە" },
+  "Batch not found": { ar: "لم يُعثر على دفعة الإنتاج", ckb: "دەستەکە نەدۆزرایەوە" },
   "This batch is already cancelled": {
     ar: "دفعة الإنتاج هذه ملغاة بالفعل",
-    ckb: "ئەم وەجبەیە پێشتر هەڵوەشێنراوەتەوە",
+    ckb: "ئەم دەستەیە پێشتر هەڵوەشێنراوەتەوە",
   },
   "Only a recorded batch can be cancelled": {
     ar: "لا تُلغى إلا دفعة إنتاج مسجّلة",
-    ckb: "تەنها وەجبەی تۆمارکراو هەڵدەوەشێنرێتەوە",
+    ckb: "تەنها دەستەی تۆمارکراو هەڵدەوەشێنرێتەوە",
   },
 
   // Journals, periods and the books: the chart of accounts.
@@ -1101,10 +1060,6 @@ const phrases: PhraseBook = {
     ar: "اكتب اسم الشخص وبريده الإلكتروني",
     ckb: "ناو و ئیمەیڵی کەسەکە بنووسە",
   },
-  "Give the person at least one role": {
-    ar: "أعطِ الشخص دورًا واحدًا على الأقل",
-    ckb: "لانیکەم یەک ڕۆڵ بدە بە کەسەکە",
-  },
   "Only the owner can appoint an owner or general manager": {
     ar: "وحده المالك يستطيع تعيين مالك أو مدير عام",
     ckb: "تەنها خاوەن دەتوانێت خاوەن یان بەڕێوەبەری گشتی دابنێت",
@@ -1132,12 +1087,10 @@ const phrases: PhraseBook = {
     ar: "لا يملك رمز PIN إلا من يوافق على الخصومات أو الإلغاءات أو الاستردادات",
     ckb: "PIN تەنها بۆ ئەوانەیە کە ڕەزامەندی لەسەر داشکاندن، هەڵوەشاندنەوە یان گەڕاندنەوەی پارە دەدەن",
   },
-  "A PIN is 4 to 8 digits": { ar: "رمز PIN من 4 إلى 8 أرقام", ckb: "PIN لە 4 تا 8 ژمارە پێکدێت" },
   "Choose a PIN that is harder to guess": {
     ar: "اختر رمز PIN أصعب في التخمين",
     ckb: "PIN هەڵبژێرە کە مەزەندەکردنی قورستر بێت",
   },
-  "Unknown approval": { ar: "نوع موافقة غير معروف", ckb: "جۆری ڕەزامەندیی نەناسراو" },
   "Choose someone who may approve this": {
     ar: "اختر شخصًا يحق له الموافقة على هذا",
     ckb: "کەسێک هەڵبژێرە کە بۆی هەیە ڕەزامەندی لەسەر ئەمە بدات",
@@ -1236,16 +1189,12 @@ const phrases: PhraseBook = {
   // when it does not know who started it.
   draft: { ar: "مسودة", ckb: "ڕەشنووس" },
   counting: { ar: "قيد العدّ", ckb: "لە ژماردندایە" },
-  submitted: { ar: "مُرسَل للمراجعة", ckb: "نێردراوە" },
-  approved: { ar: "معتمد", ckb: "پەسەندکراوە" },
-  rejected: { ar: "مرفوض", ckb: "ڕەتکراوەتەوە" },
   "waiting for review": { ar: "بانتظار المراجعة", ckb: "چاوەڕێی پێداچوونەوەیە" },
   someone: { ar: "شخص ما", ckb: "کەسێک" },
 
   // A bill's state at the till: "This bill is {1} and cannot change", "The lines of a {1}
   // bill cannot change", "This bill is already {1}".
   paid: { ar: "مدفوعة", ckb: "پارەی دراوە" },
-  cancelled: { ar: "ملغاة", ckb: "هەڵوەشێنراوەتەوە" },
   missing: { ar: "غير موجودة", ckb: "نەماوە" },
 
   // What wrote a journal (journal_source_hint): "Journal {1} was written by {2}; correct

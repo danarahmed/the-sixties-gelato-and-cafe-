@@ -168,7 +168,6 @@ const phrases: PhraseBook = {
   not_found: { ar: "لا يوجد بيع بهذا الرقم", ckb: "هیچ فرۆشتنێک بەم ژمارەیە نییە" },
   duplicate: { ar: "مكرر في الكشف", ckb: "دووبارە لە کەشفەکەدا" },
   already_paid: { ar: "مدفوع سابقًا", ckb: "پێشتر دراوە" },
-  voided: { ar: "ملغى أو مسترد", ckb: "هەڵوەشێنراوە یان گەڕێندراوەتەوە" },
 
   // A manager's PIN, as the database answers a request for approval.
   "That PIN is not right": { ar: "رمز PIN هذا غير صحيح", ckb: "ئەم PIN ـە ڕاست نییە" },

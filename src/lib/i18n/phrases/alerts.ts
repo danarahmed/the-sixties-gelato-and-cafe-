@@ -114,7 +114,7 @@ const phrases: PhraseBook = {
   },
   "Make a batch on Production.": {
     ar: "حضّر دفعة في الإنتاج.",
-    ckb: "لە بەرهەمهێنان وەجبەیەک دروست بکە.",
+    ckb: "لە بەرهەمهێنان دەستەیەک دروست بکە.",
   },
   "Order about {1} {2} (a week of use).": {
     ar: "اطلب نحو {1} {2} (استهلاك أسبوع).",
@@ -212,7 +212,7 @@ const phrases: PhraseBook = {
   },
   "Make a batch on Production: its cost comes from its ingredients.": {
     ar: "حضّر دفعة في الإنتاج: كلفته تأتي من مكوّناته.",
-    ckb: "لە بەرهەمهێنان وەجبەیەک دروست بکە: تێچووەکەی لە پێکهاتەکانییەوە دێت.",
+    ckb: "لە بەرهەمهێنان دەستەیەک دروست بکە: تێچووەکەی لە پێکهاتەکانییەوە دێت.",
   },
   "Receive it with its cost, or give it its opening stock, on Inventory.": {
     ar: "استلمه بكلفته، أو أدخل رصيده الافتتاحي، في المخزون.",
