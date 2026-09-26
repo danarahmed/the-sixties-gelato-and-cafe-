@@ -26,7 +26,7 @@ export function OrderActions({
   canRefund: boolean;
 }) {
   const router = useRouter();
-  const { t } = useT();
+  const { t, msg: say } = useT();
   const [busy, start] = useTransition();
   const [mode, setMode] = useState<"void" | "refund" | null>(null);
   const [code, setCode] = useState("");
@@ -81,14 +81,17 @@ export function OrderActions({
           setMsg({ ok: false, text: r.error });
           return;
         }
-        text = `Voided (journal ${r.data.journalNo ?? "—"}).`;
+        text = t("Voided (journal {no}).", { no: r.data.journalNo ?? "—" });
       } else {
         const r = await refundSaleAction(input);
         if (!r.ok) {
           setMsg({ ok: false, text: r.error });
           return;
         }
-        text = `Refunded ${fmtIQD(r.data.refunded)} (journal ${r.data.journalNo ?? "—"}).`;
+        text = t("Refunded {amount} (journal {no}).", {
+          amount: fmtIQD(r.data.refunded),
+          no: r.data.journalNo ?? "—",
+        });
       }
       setMsg({ ok: true, text });
       setMode(null);
@@ -103,12 +106,12 @@ export function OrderActions({
       <span style={{ display: "inline-flex", gap: 6 }}>
         {canVoid && (
           <button onClick={() => choose("void")} style={small}>
-            Void
+            {t("Void")}
           </button>
         )}
         {canRefund && (
           <button onClick={() => choose("refund")} style={small}>
-            Refund
+            {t("Refund")}
           </button>
         )}
       </span>
@@ -128,13 +131,13 @@ export function OrderActions({
       }}
     >
       <select
-        aria-label={mode === "void" ? "Why void it?" : "Why refund it?"}
+        aria-label={mode === "void" ? t("Why void it?") : t("Why refund it?")}
         value={code}
         onChange={(e) => setCode(e.target.value)}
         style={{ minHeight: 28, fontSize: ".8rem" }}
         autoFocus
       >
-        <option value="">{mode === "void" ? "Why void it?" : "Why refund it?"}</option>
+        <option value="">{mode === "void" ? t("Why void it?") : t("Why refund it?")}</option>
         {REASONS[mode].map((c) => (
           <option key={c} value={c}>
             {t(reasonKey(mode, c))}
@@ -143,16 +146,18 @@ export function OrderActions({
       </select>
       {(code === "other" || note) && (
         <input
-          aria-label="In a few words"
+          aria-label={t("pos.reasonNote")}
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder={code === "other" ? "What happened, in a few words" : "A note (optional)"}
+          placeholder={
+            code === "other" ? t("What happened, in a few words") : t("A note (optional)")
+          }
           style={{ minHeight: 28, width: 190, fontSize: ".8rem" }}
           maxLength={300}
         />
       )}
       <select
-        aria-label="Approved by"
+        aria-label={t("Approved by")}
         value={approver}
         onChange={(e) => {
           setApprover(e.target.value);
@@ -162,23 +167,23 @@ export function OrderActions({
         style={{ minHeight: 28, fontSize: ".8rem" }}
       >
         <option value="">
-          {approvers === null ? "…" : "No second person (the owner reviews it)"}
+          {approvers === null ? "…" : t("No second person (the owner reviews it)")}
         </option>
         {(approvers ?? []).map((a) => (
           <option key={a.id} value={a.id}>
-            Approved by {a.name}
+            {t("Approved by {name}", { name: a.name })}
           </option>
         ))}
       </select>
       {approver && approval?.approver !== approver && (
         <input
-          aria-label="Their PIN"
+          aria-label={t("Their PIN")}
           className="pin-input"
           type="password"
           inputMode="numeric"
           autoComplete="off"
           maxLength={8}
-          placeholder="PIN"
+          placeholder="PIN" // i18n-ignore: PIN is PIN in every language
           value={pin}
           onChange={(e) => setPin(normaliseNumber(e.target.value).replace(/\D/g, ""))}
           style={{ minHeight: 28, width: 110, fontSize: ".9rem" }}
@@ -194,7 +199,7 @@ export function OrderActions({
         }
         style={small}
       >
-        {busy ? "…" : mode === "void" ? "Confirm void" : "Confirm refund"}
+        {busy ? "…" : mode === "void" ? t("Confirm void") : t("Confirm refund")}
       </button>
       <button
         onClick={() => {
@@ -204,16 +209,16 @@ export function OrderActions({
         disabled={busy}
         style={small}
       >
-        Cancel
+        {t("Cancel")}
       </button>
       {missing === "say" && note.trim() !== "" && (
         <span className="muted" style={{ fontSize: ".75rem", flexBasis: "100%", textAlign: "end" }}>
-          Say what happened, in a few words.
+          {t("pos.sayWhat")}
         </span>
       )}
       {msg && !msg.ok && (
         <span className="red" style={{ fontSize: ".75rem", flexBasis: "100%", textAlign: "end" }}>
-          {msg.text}
+          {say(msg.text)}
         </span>
       )}
     </span>

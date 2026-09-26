@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getT } from "@/lib/i18n/server";
+import { getMsg, getT } from "@/lib/i18n/server";
+import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getSalesOrders } from "@/lib/db/read";
 import { fmtIQD, orderStatusLabel, tenderLabel } from "@/lib/format";
@@ -16,7 +17,12 @@ export default async function OrdersPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const profile = await requirePermission("cost.view");
-  const [t, sp, channels] = await Promise.all([getT(), searchParams, getChannelNames()]);
+  const [t, msg, sp, channels] = await Promise.all([
+    getT(),
+    getMsg(),
+    searchParams,
+    getChannelNames(),
+  ]);
   // Opened from a report: the sales of those days (and that channel).
   const today = businessToday(profile.timezone);
   const filtered = typeof sp.from === "string" || typeof sp.channel === "string";
@@ -47,12 +53,11 @@ export default async function OrdersPage({
     <div className="grid" style={{ gap: 16 }}>
       <h1 style={{ margin: 0 }}>{t("nav.orders")}</h1>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        A sale is never edited. A sale rung in error is <strong>voided</strong> until the drawer
-        holding it is counted — revenue, payment, cost and stock all come back exactly. After that,
-        money goes back to the customer by a <strong>refund</strong>, through Sales returns (4200);
-        only goods that can go back on the shelf return to stock. Both take a reason from the list
-        and are on the audit trail; one approved by a second person (their name and PIN) is marked
-        so, and one without waits for the owner on the exceptions report.
+        <Rich
+          text={t(
+            "A sale is never edited. A sale rung in error is <b>voided</b> until the drawer holding it is counted — revenue, payment, cost and stock all come back exactly. After that, money goes back to the customer by a <b>refund</b>, through Sales returns (4200); only goods that can go back on the shelf return to stock. Both take a reason from the list and are on the audit trail; one approved by a second person (their name and PIN) is marked so, and one without waits for the owner on the exceptions report.",
+          )}
+        />
       </p>
 
       <form
@@ -60,17 +65,17 @@ export default async function OrdersPage({
         style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}
       >
         <label>
-          <div className="sc">From</div>
+          <div className="sc">{t("From")}</div>
           <input type="date" name="from" defaultValue={filtered ? from : ""} />
         </label>
         <label>
-          <div className="sc">To</div>
+          <div className="sc">{t("To")}</div>
           <input type="date" name="to" defaultValue={filtered ? to : ""} />
         </label>
         <label>
-          <div className="sc">Channel</div>
+          <div className="sc">{t("Channel")}</div>
           <select name="channel" defaultValue={channel}>
-            <option value="">Every channel</option>
+            <option value="">{t("Every channel")}</option>
             {channels.channels.map((c) => (
               <option key={c.code} value={c.code}>
                 {channels.name(c.code)}
@@ -78,10 +83,10 @@ export default async function OrdersPage({
             ))}
           </select>
         </label>
-        <button type="submit">Show</button>
+        <button type="submit">{t("Show")}</button>
         {filtered && (
           <Link className="badge" href="/orders">
-            The latest 300
+            {t("The latest 300")}
           </Link>
         )}
       </form>
@@ -90,17 +95,30 @@ export default async function OrdersPage({
         <div className="card stat">
           <span className="label">
             {filtered
-              ? `Completed sales ${from === to ? `on ${from}` : `${from} to ${to}`}${channel ? `, ${channels.name(channel)}` : ""}`
-              : "Completed sales shown"}
+              ? from === to
+                ? channel
+                  ? t("Completed sales on {day}, {channel}", {
+                      day: from,
+                      channel: channels.name(channel),
+                    })
+                  : t("Completed sales on {day}", { day: from })
+                : channel
+                  ? t("Completed sales {from} to {to}, {channel}", {
+                      from,
+                      to,
+                      channel: channels.name(channel),
+                    })
+                  : t("Completed sales {from} to {to}", { from, to })
+              : t("Completed sales shown")}
           </span>
           <span className="value">{live.length}</span>
         </div>
         <div className="card stat">
-          <span className="label">Their net sales</span>
+          <span className="label">{t("Their net sales")}</span>
           <span className="value mono">{fmtIQD(totalNet)}</span>
         </div>
         <div className="card stat">
-          <span className="label">Their sales margin (price less recipe cost)</span>
+          <span className="label">{t("Their sales margin (price less recipe cost)")}</span>
           <span className="value mono" style={{ color: "var(--ok)" }}>
             {fmtIQD(totalMargin)}
           </span>
@@ -108,20 +126,20 @@ export default async function OrdersPage({
       </div>
 
       {orders.length === 0 ? (
-        <EmptyState title="No sales yet" hint="Sales rung up on the till appear here." />
+        <EmptyState title={t("No sales yet")} hint={t("Sales rung up on the till appear here.")} />
       ) : (
         <div className="card tw">
           <table>
             <thead>
               <tr>
-                <th>Sale</th>
-                <th>When</th>
-                <th>Channel</th>
-                <th>Items</th>
-                <th>Paid</th>
-                <th>Status</th>
-                <th className="right">Net</th>
-                <th className="right">Margin</th>
+                <th>{t("Sale")}</th>
+                <th>{t("When")}</th>
+                <th>{t("Channel")}</th>
+                <th>{t("Items")}</th>
+                <th>{t("Paid")}</th>
+                <th>{t("Status")}</th>
+                <th className="right">{t("Net")}</th>
+                <th className="right">{t("Margin")}</th>
                 <th />
               </tr>
             </thead>
@@ -147,23 +165,25 @@ export default async function OrdersPage({
                         </div>
                       )}
                     </td>
-                    <td className="muted">{o.tenders.map(tenderLabel).join(", ")}</td>
+                    <td className="muted">{o.tenders.map((x) => t(tenderLabel(x))).join(", ")}</td>
                     <td>
                       <span className={`badge ${o.status === "completed" ? "ok" : "warn"}`}>
-                        {orderStatusLabel(o.status)}
+                        {t(orderStatusLabel(o.status))}
                       </span>
                       {adj && (
                         <div className="muted" style={{ fontSize: ".75rem" }}>
-                          {adj.reason}
-                          {adj.by && (
-                            <>
-                              {" "}
-                              · {adj.by}
-                              {adj.approvedBy
-                                ? `, approved by ${adj.approvedBy}`
-                                : ", no second person"}
-                            </>
-                          )}
+                          {adj.by
+                            ? adj.approvedBy
+                              ? t("{reason} · {by}, approved by {approver}", {
+                                  reason: msg(adj.reason ?? ""),
+                                  by: adj.by,
+                                  approver: adj.approvedBy,
+                                })
+                              : t("{reason} · {by}, no second person", {
+                                  reason: msg(adj.reason ?? ""),
+                                  by: adj.by,
+                                })
+                            : msg(adj.reason ?? "")}
                         </div>
                       )}
                     </td>
