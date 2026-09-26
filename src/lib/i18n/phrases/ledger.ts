@@ -103,7 +103,6 @@ const phrases: PhraseBook = {
   "Stock count variance": { ar: "فرق جرد المخزون", ckb: "جیاوازی ژماردنی کۆگا" },
   "Count variance": { ar: "فرق الجرد", ckb: "جیاوازی ژماردن" },
   "Opening stock: {1}": { ar: "مخزون افتتاحي: {1}", ckb: "کۆگای سەرەتا: {1}" },
-  "Opening balance: {1}": { ar: "رصيد افتتاحي: {1}", ckb: "باڵانسی سەرەتا: {1}" },
   "Goods received": { ar: "بضاعة مستلمة", ckb: "کاڵای وەرگیراو" },
   "Goods received — {1}": { ar: "بضاعة مستلمة — {1}", ckb: "کاڵای وەرگیراو — {1}" },
   "Goods received — receipt {1}": {
@@ -158,18 +157,9 @@ const phrases: PhraseBook = {
   },
 
   // What the database notes on a platform's statement (post_platform_settlement).
-  "No sale has this order number": {
-    ar: "لا يوجد بيع بهذا الرقم",
-    ckb: "هیچ فرۆشتنێک ئەم ژمارە داواکارییەی نییە",
-  },
-  "On the statement twice": { ar: "مذكور في الكشف مرتين", ckb: "دوو جار لە کەشفەکەدایە" },
   "Already paid out by statement {1}": {
     ar: "دُفع سابقًا بالكشف {1}",
     ckb: "پێشتر بە کەشفی {1} پارەکەی دراوە",
-  },
-  "The sale was voided or refunded": {
-    ar: "أُلغي البيع أو استُرد",
-    ckb: "فرۆشتنەکە هەڵوەشێنرایەوە یان پارەکەی گەڕێندرایەوە",
   },
   "Expected {1}; paid {2}, commission {3}, fees {4}": {
     ar: "المتوقع {1}؛ المدفوع {2}، العمولة {3}، الرسوم {4}",
@@ -270,7 +260,7 @@ const phrases: PhraseBook = {
   },
   "Sales recorded vs net revenue in the ledger (4000 less 4100 and 4200)": {
     ar: "المبيعات المسجّلة مقابل صافي الإيراد في الدفاتر (4000 ناقص 4100 و4200)",
-    ckb: "فرۆشتنی تۆمارکراو بەرامبەر داهاتی ڕەسەن لە دەفتەردا (4000 کەم 4100 و 4200)",
+    ckb: "فرۆشتنی تۆمارکراو بەرامبەر داهاتی پوخت لە دەفتەردا (4000 کەم 4100 و 4200)",
   },
   "Costed at nothing: {1}": { ar: "كلفته صفر: {1}", ckb: "تێچووی سفر: {1}" },
   "Used before it had a cost: {1}": {

@@ -159,7 +159,7 @@ const phrases: PhraseBook = {
   },
   Line: { ar: "السطر", ckb: "هێڵ" },
   "What it is": { ar: "ما هو", ckb: "چییە" },
-  Paid: { ar: "المدفوع", ckb: "دراو" },
+  Paid: { ar: "المدفوع", ckb: "پارەی دراو" },
   Commission: { ar: "العمولة", ckb: "کۆمیسیۆن" },
   Fees: { ar: "الرسوم", ckb: "کرێ" },
   "by statement {ref}": { ar: "بالكشف {ref}", ckb: "بە کەشفی {ref}" },

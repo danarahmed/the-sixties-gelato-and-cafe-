@@ -44,56 +44,12 @@ const phrases: PhraseBook = {
   "Early sign": { ar: "إشارة مبكرة", ckb: "نیشانەیەکی زوو" },
 
   // The limits the owner sets (THRESHOLD_LABEL, and the database's own labels).
-  "Days a delivery takes (vendors without their own)": {
-    ar: "أيام وصول التوريد (للمورّدين الذين لم يُحدَّد لهم ذلك)",
-    ckb: "ڕۆژەکانی گەیشتنی کاڵا (بۆ ئەو دابینکەرانەی هی خۆیان نییە)",
-  },
   "Margin target (%)": { ar: "هامش الربح المستهدف (%)", ckb: "ئامانجی پەراوێزی قازانج (%)" },
-  "Hours a stock count may stay open": {
-    ar: "الساعات التي يجوز أن يبقى فيها جرد المخزون مفتوحًا",
-    ckb: "ئەو کاتژمێرانەی ژماردنی کۆگا دەتوانێت کراوە بمێنێتەوە",
-  },
-  "Waste spike: times a usual week": {
-    ar: "ارتفاع الهدر: أضعاف أسبوع معتاد",
-    ckb: "بەرزبوونەوەی بەفیڕۆچوون: چەند ئەوەندەی هەفتەیەکی ئاسایی",
-  },
   "Waste spike: at least (IQD)": {
     ar: "ارتفاع الهدر: على الأقل (IQD)",
     ckb: "بەرزبوونەوەی بەفیڕۆچوون: لانیکەم (IQD)",
   },
-  "Exceptions by one person in 7 days": {
-    ar: "الحالات الاستثنائية من شخص واحد خلال 7 أيام",
-    ckb: "حاڵەتی نائاسایی لەلایەن یەک کەسەوە لە 7 ڕۆژدا",
-  },
-  "Exceptions as a share of their sales (%)": {
-    ar: "الحالات الاستثنائية كنسبة من مبيعاته (%)",
-    ckb: "حاڵەتی نائاسایی وەک بەشێک لە فرۆشتنەکانی (%)",
-  },
-  "Days card money takes to reach the bank": {
-    ar: "أيام وصول أموال البطاقات إلى البنك",
-    ckb: "ڕۆژەکانی گەیشتنی پارەی کارت بۆ بانک",
-  },
-  "Days a delivery platform takes to pay": {
-    ar: "أيام دفع منصة التوصيل",
-    ckb: "ڕۆژەکانی پارەدانی پلاتفۆرمی گەیاندن",
-  },
-  "Days before a bill is due to warn": {
-    ar: "كم يومًا قبل استحقاق الفاتورة يُنبَّه",
-    ckb: "چەند ڕۆژ پێش کاتی پسووڵە ئاگادار بکرێتەوە",
-  },
-  "Price typo: times another channel's price": {
-    ar: "خطأ في السعر: أضعاف سعر قناة أخرى",
-    ckb: "هەڵەی نرخ: چەند ئەوەندەی نرخی کەناڵێکی تر",
-  },
   "{1}: enter a number": { ar: "{1}: أدخل رقمًا", ckb: "{1}: ژمارەیەک بنووسە" },
-  "{1}: enter a whole number from {2} to {3}": {
-    ar: "{1}: أدخل عددًا صحيحًا من {2} إلى {3}",
-    ckb: "{1}: ژمارەیەکی تەواو لە {2} تا {3} بنووسە",
-  },
-  "{1}: enter a number from {2} to {3}": {
-    ar: "{1}: أدخل رقمًا من {2} إلى {3}",
-    ckb: "{1}: ژمارەیەک لە {2} تا {3} بنووسە",
-  },
 
   // Cash below zero.
   "{1} is {2} IQD: below zero": {
@@ -426,11 +382,11 @@ const phrases: PhraseBook = {
   },
   "Net sales {amount} over 1 sale.": {
     ar: "صافي المبيعات {amount} من عملية بيع واحدة.",
-    ckb: "فرۆشی ڕەسەن {amount} لە یەک فرۆشتندا.",
+    ckb: "فرۆشی پوخت {amount} لە یەک فرۆشتندا.",
   },
   "Net sales {amount} over {n} sales.": {
     ar: "صافي المبيعات {amount} من {n} عمليات بيع.",
-    ckb: "فرۆشی ڕەسەن {amount} لە {n} فرۆشتندا.",
+    ckb: "فرۆشی پوخت {amount} لە {n} فرۆشتندا.",
   },
   "1 void ({amount}).": { ar: "إلغاء واحد ({amount}).", ckb: "یەک هەڵوەشاندنەوە ({amount})." },
   "{n} voids ({amount}).": { ar: "{n} إلغاءات ({amount}).", ckb: "{n} هەڵوەشاندنەوە ({amount})." },
