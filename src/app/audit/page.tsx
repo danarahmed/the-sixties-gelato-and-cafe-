@@ -8,6 +8,21 @@ import { addDays, businessToday, dateTimeIn, dayStart, parseDay } from "@/lib/da
 
 export const dynamic = "force-dynamic";
 
+/**
+ * A value as the trail shows it: one the database kept as JSON (a discount's
+ * figures, a bill's lines) is shown as the code it is, left to right, the same
+ * in every language.
+ */
+function shown(value: string) {
+  return /^[[{]/.test(value) ? (
+    <code translate="no" dir="ltr" style={{ fontSize: ".78rem" }}>
+      {value}
+    </code>
+  ) : (
+    value
+  );
+}
+
 const SHOWN = 500;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
@@ -147,13 +162,13 @@ export default async function AuditPage({
                           <div key={i}>
                             <span className="muted">{t(c.field)}:</span>{" "}
                             {c.before === "" ? (
-                              <strong>{valueIn(c.after, c.field, t, msg)}</strong>
+                              <strong>{shown(valueIn(c.after, c.field, t, msg))}</strong>
                             ) : c.after === "" ? (
-                              <s>{valueIn(c.before, c.field, t, msg)}</s>
+                              <s>{shown(valueIn(c.before, c.field, t, msg))}</s>
                             ) : (
                               <>
-                                {valueIn(c.before, c.field, t, msg)} →{" "}
-                                <strong>{valueIn(c.after, c.field, t, msg)}</strong>
+                                {shown(valueIn(c.before, c.field, t, msg))} →{" "}
+                                <strong>{shown(valueIn(c.after, c.field, t, msg))}</strong>
                               </>
                             )}
                           </div>

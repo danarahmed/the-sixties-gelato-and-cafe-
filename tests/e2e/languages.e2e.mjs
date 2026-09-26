@@ -24,6 +24,21 @@ const typed = sql(`
     union select coalesce(contact, '') from supplier union select unnest(allergens) from product
     union select coalesce(sku, '') from item
     union select description from journal_entry where description like '%(fixture)%'
+    union select description from expense union select coalesce(memo, '') from journal_line
+    union select coalesce(no_stock_reason, '') from product_variant
+    union select coalesce(quality_note, '') from production_batch union select coalesce(cancel_reason, '') from production_batch
+    union select coalesce(reason, '') from inventory_movement union select coalesce(reason, '') from sale_adjustment
+    union select coalesce(note, '') from sales_order union select coalesce(discount_reason, '') from sales_order
+    union select coalesce(cancel_reason, '') from pos_tab union select coalesce(label, '') from pos_tab
+    union select coalesce(cancel_reason, '') from purchase_invoice union select coalesce(rejected_reason, '') from stock_count
+    union select coalesce(note, '') from cash_transfer union select coalesce(note, '') from card_settlement
+    union select coalesce(cancel_reason, '') from card_settlement union select coalesce(note, '') from platform_settlement
+    union select coalesce(cancel_reason, '') from platform_settlement union select coalesce(ack_note, '') from alert
+    union select coalesce(snooze_reason, '') from alert
+    -- Names as they were before a change, on the audit trail.
+    union select e.v from audit_log a, jsonb_each_text(
+      case when jsonb_typeof(a.before_state) = 'object' then a.before_state else '{}' end
+      || case when jsonb_typeof(a.after_state) = 'object' then a.after_state else '{}' end) e(k, v)
     union select name from recipe union select invoice_no from purchase_invoice
     union select coalesce(note, '') from goods_receipt union select description from journal_entry where reference_type = 'manual'
     union select coalesce(reason, '') from audit_log
@@ -54,8 +69,15 @@ const SAME = new Set(
     "kmr",
     "ltr",
     "rtl",
-    // A language's name is written in itself in the language menu.
+    // A language's name is written in itself in the language menu; a platform's
+    // names on the audit trail are kept under their language's code.
     "English",
+    "ar",
+    "ckb",
+    // A file named in a sentence (docs/REMEDIATION.md).
+    "docs",
+    "REMEDIATION",
+    "md",
     // The test fixtures' own records (an opening stock typed "fixture").
     "fixture",
   ].map((w) => w.toLowerCase()),
@@ -94,6 +116,7 @@ async function english(page) {
       /^[A-Za-z]['’A-Za-z-]*[A-Za-z]$/.test(w) &&
       // Not a piece of an id ("3fa9c2e1…") nor initials or a code (GC, TLB).
       !/^[a-f]{1,4}$/.test(w) &&
+      !/^[a-f](-[a-f])+$/.test(w) &&
       !/^[A-Z]{2,3}(-[A-Z])?$/.test(w),
   );
   return [...new Set(words.filter((w) => !OWN.has(w.toLowerCase()) && !SAME.has(w.toLowerCase())))];
@@ -192,6 +215,8 @@ console.log("▸ the owner adds Turkish, and gives it words");
 
   // Chosen in the language menu, every page speaks it.
   await page.getByLabel("Language", { exact: true }).selectOption("tr");
+  // Choosing a language reloads the page: wait for the one in Turkish.
+  await page.waitForSelector('html[lang="tr"]');
   await page.waitForLoadState("networkidle");
   check(
     (await page.locator("html").getAttribute("lang")) === "tr" &&
@@ -269,6 +294,7 @@ console.log("▸ Persian, written right to left; Turkish taken out of use");
   await add.getByRole("button", { name: "Add the language" }).click();
   await page.getByText("فارسی is added").waitFor({ timeout: 10000 });
   await page.getByLabel("Language", { exact: true }).selectOption("fa");
+  await page.waitForSelector('html[lang="fa"]');
   await page.waitForLoadState("networkidle");
   check(
     (await page.locator("html").getAttribute("dir")) === "rtl" &&
