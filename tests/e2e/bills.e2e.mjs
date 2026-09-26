@@ -27,6 +27,9 @@ async function till(who) {
         [...document.querySelectorAll(".print-slip > .slip")].map((slip) => ({
           ticket: slip.classList.contains("slip-ticket"),
           no: slip.querySelector(".tk-no-n, .sl-turn-no")?.textContent ?? null,
+          rows: [...slip.querySelectorAll(".sl-items tbody tr")].map((tr) =>
+            [...tr.cells].map((td) => td.textContent),
+          ),
           text: slip.textContent,
         })),
       );
@@ -513,6 +516,11 @@ console.log("▸ an order prints twice: the customer's receipt and the barista's
   check(
     both[0].no === sold && both[0].text.includes("Your number") && both[0].text.includes("6,000"),
     "the receipt has the number and every amount",
+  );
+  const [qty, , each, amount] = both[0].rows[0] ?? [];
+  check(
+    qty === "2" && each === "3,000" && amount === "6,000",
+    "each line shows how many, the price of one and what they come to: 2 × 3,000 = 6,000",
   );
   check(
     both[1].no === sold &&

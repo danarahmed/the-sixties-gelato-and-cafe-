@@ -43,6 +43,7 @@ import {
   lineAmount,
   lineKey,
   lineName,
+  linePrice,
   approvalPercent,
   approvalRefused,
   discountAmount,
@@ -424,6 +425,7 @@ export function PosClient({
     o.lines.map((l) => ({
       name: lineName(l, byId, locale),
       qty: l.qty,
+      price: linePrice(l, byId, o.channel),
       amount: lineAmount(l, byId, o.channel)?.toNumber() ?? null,
       note: l.note,
     }));
@@ -1156,6 +1158,7 @@ export function PosClient({
       lines: sample.map((i, n) => ({
         name: itemName(i, locale),
         qty: n === 0 ? 2 : 1,
+        price: i.prices[channels[0] ?? "takeaway"] ?? 0,
         amount: (i.prices[channels[0] ?? "takeaway"] ?? 0) * (n === 0 ? 2 : 1),
         note: n === 0 ? t("pos.sampleNote") : null,
       })),

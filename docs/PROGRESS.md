@@ -281,8 +281,9 @@ browser tests through the real app, or both.
   takes it as it is paid, a table's bill as it is opened, and its sale keeps
   it. Printing an order prints two slips, cut apart: the customer's
   **receipt**, redesigned (the café's mark and name, the number in a box, the
-  order, date and cashier, each item with its note and amount, the total,
-  payment and change), and the **barista's ticket** (the number in large
+  order, date and cashier, each item with how many, the price of one and what
+  they come to, and its note, the total, payment and change), and the
+  **barista's ticket** (the number in large
   figures, who it is for, the channel, each item with how many and its note,
   without prices). A table's ticket prints when its order is saved, with only
   what was added and what was taken off; asked for again, it is the whole
@@ -296,7 +297,10 @@ browser tests through the real app, or both.
   was 3; nobody could take a number by hand; the audit trail gained only the
   split; and nothing was kept (still 29 sales, 10 bills, journals to 1072, and
   no counter for the numbers). The security and performance advisors report
-  exactly what they did before.
+  exactly what they did before. After seeing it, the owner asked that each line of the
+  receipt show the price of one as well as what the line comes to: the check
+  and the bill printed before payment now read Qty · Item · Price · Amount
+  (2 × 5,000 = 10,000).
 
 ## The August 2026 audit, finding by finding
 
