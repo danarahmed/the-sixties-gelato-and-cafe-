@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
@@ -81,6 +82,16 @@ export default async function SettingsPage() {
   return (
     <div className="grid" style={{ gap: 16 }}>
       <h1 style={{ margin: 0 }}>{t("nav.settings")}</h1>
+
+      <div className="card" data-testid="settings-languages">
+        <h3 style={{ marginTop: 0 }}>{t("Languages")}</h3>
+        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+          {t(
+            "Every screen is in English, Arabic and Kurdish. Add another language, or give any phrase the café's own words.",
+          )}
+        </p>
+        <Link href="/settings/languages">{t("Open Languages →")}</Link>
+      </div>
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>{t("People")}</h3>
