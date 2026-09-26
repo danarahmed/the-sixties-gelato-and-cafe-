@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { previewExpenseCategoryAction, recordExpenseAction } from "@/lib/actions/books";
 import { fmtIQD } from "@/lib/format";
 import { normaliseNumber } from "@/lib/validation";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 
 interface Suggestion {
@@ -14,13 +15,16 @@ interface Suggestion {
   needsReview: boolean;
 }
 
-/** Where the money came from (0024). From the till it leaves today's drawer. */
+/**
+ * Where the money came from (0024). From the till it leaves today's drawer.
+ * Each label and account name is a phrase, shown through t().
+ */
 const PAID_FROM = {
-  till: { code: "1000", name: "Cash in the till", label: "The till (today's drawer)" },
-  safe: { code: "1005", name: "Cash in the safe", label: "The safe" },
-  bank: { code: "1020", name: "Bank", label: "The bank" },
-  card: { code: "1010", name: "Card clearing", label: "A card" },
-  owner: { code: "3000", name: "Owner equity", label: "The owner, personally" },
+  till: { code: "1000", name: "Cash in the till", label: "The till (today's drawer)" }, // i18n-ignore: shown through t()
+  safe: { code: "1005", name: "Cash in the safe", label: "The safe" }, // i18n-ignore: shown through t()
+  bank: { code: "1020", name: "Bank", label: "The bank" }, // i18n-ignore: shown through t()
+  card: { code: "1010", name: "Card clearing", label: "A card" }, // i18n-ignore: shown through t()
+  owner: { code: "3000", name: "Owner equity", label: "The owner, personally" }, // i18n-ignore: shown through t()
 } as const;
 type PaidFrom = keyof typeof PAID_FROM;
 
@@ -36,6 +40,8 @@ export function ExpenseEntry({
   accounts: { code: string; name: string }[];
   today: string;
 }) {
+  // say: what the server answers (an account's name, the house rules' reason), in the reader's language.
+  const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [desc, setDesc] = useState("");
@@ -82,7 +88,11 @@ export function ExpenseEntry({
       if (r.ok) {
         setMsg({
           ok: true,
-          text: `Posted to ${account} ${accountName} (journal ${r.data.journalNo ?? "—"}).`,
+          text: t("Posted to {account} {name} (journal {no}).", {
+            account,
+            name: say(accountName),
+            no: r.data.journalNo ?? "—",
+          }),
         });
         setDesc("");
         setAmount("");
@@ -98,16 +108,16 @@ export function ExpenseEntry({
     <div className="panel-b">
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
         <label style={{ flex: 2, minWidth: 220 }}>
-          <div className="sc">Narration</div>
+          <div className="sc">{t("Narration")}</div>
           <input
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
-            placeholder="September shop rent"
+            placeholder={t("September shop rent")}
             autoComplete="off"
           />
         </label>
         <label style={{ minWidth: 130 }}>
-          <div className="sc">Amount (IQD)</div>
+          <div className="sc">{t("Amount (IQD)")}</div>
           <input
             className="amt"
             style={{ textAlign: "end" }}
@@ -118,26 +128,26 @@ export function ExpenseEntry({
           />
         </label>
         <label style={{ minWidth: 140 }}>
-          <div className="sc">Date</div>
+          <div className="sc">{t("Date")}</div>
           <input type="date" value={date} max={today} onChange={(e) => setDate(e.target.value)} />
         </label>
         <label style={{ minWidth: 150 }}>
-          <div className="sc">Paid from</div>
+          <div className="sc">{t("Paid from")}</div>
           <select
-            aria-label="Paid from"
+            aria-label={t("Paid from")}
             value={paidFrom}
             onChange={(e) => setPaidFrom(e.target.value as PaidFrom | "")}
           >
-            <option value="">Choose…</option>
+            <option value="">{t("Choose…")}</option>
             {(Object.keys(PAID_FROM) as PaidFrom[]).map((k) => (
               <option key={k} value={k}>
-                {PAID_FROM[k].label}
+                {t(PAID_FROM[k].label)}
               </option>
             ))}
           </select>
         </label>
         <label style={{ minWidth: 200 }}>
-          <div className="sc">Account</div>
+          <div className="sc">{t("Account")}</div>
           <select
             value={account}
             onChange={(e) => {
@@ -145,10 +155,10 @@ export function ExpenseEntry({
               setChosenByHand(true);
             }}
           >
-            <option value="">Choose…</option>
+            <option value="">{t("Choose…")}</option>
             {accounts.map((a) => (
               <option key={a.code} value={a.code}>
-                {a.code} {a.name}
+                {a.code} {say(a.name)}
               </option>
             ))}
           </select>
@@ -172,44 +182,44 @@ export function ExpenseEntry({
               marginBlockEnd: 8,
             }}
           >
-            As it will be written
+            {t("As it will be written")}
           </div>
           {!account ? (
-            <div className="vempty">Choose the account…</div>
+            <div className="vempty">{t("Choose the account…")}</div>
           ) : (
             <>
               <div className="vline">
-                <span className="dr">Dr</span>
+                <span className="dr">{t("Dr")}</span>
                 <span className="acct">
                   <em>{account}</em>
-                  {accountName}
+                  {say(accountName)}
                 </span>
                 <span className="amt">{fmtIQD(value)}</span>
               </div>
               {paidFrom ? (
                 <div className="vline credit">
-                  <span className="dr">Cr</span>
+                  <span className="dr">{t("Cr")}</span>
                   <span className="acct">
                     <em>{PAID_FROM[paidFrom].code}</em>
-                    {PAID_FROM[paidFrom].name}
+                    {t(PAID_FROM[paidFrom].name)}
                   </span>
                   <span className="amt">{fmtIQD(value)}</span>
                 </div>
               ) : (
-                <div className="vempty">Choose where the money came from…</div>
+                <div className="vempty">{t("Choose where the money came from…")}</div>
               )}
               {desc.trim() && (
                 <div className="vline" style={{ paddingBlockStart: 6 }}>
                   <span className="dr" />
                   <span className="acct faint" style={{ fontSize: ".74rem" }}>
-                    Being {desc.trim().toLowerCase()}
+                    {t("Being {text}", { text: desc.trim().toLowerCase() })}
                   </span>
                 </div>
               )}
             </>
           )}
           <div className="vfoot">
-            <span>{value > 0 ? "Balanced — debits equal credits" : "Enter an amount"}</span>
+            <span>{value > 0 ? t("Balanced — debits equal credits") : t("Enter an amount")}</span>
           </div>
         </div>
 
@@ -219,7 +229,7 @@ export function ExpenseEntry({
               style={{ fontSize: ".8rem", marginBlockStart: 0, lineHeight: 1.6 }}
               className={hint.needsReview ? "red" : "muted"}
             >
-              {hint.explanation}
+              {say(hint.explanation)}
             </p>
           )}
           <button
@@ -227,7 +237,7 @@ export function ExpenseEntry({
             onClick={post}
             disabled={busy || !desc.trim() || value <= 0 || !account || !paidFrom}
           >
-            {busy ? "Posting…" : "Post expense"}
+            {busy ? t("Posting…") : t("Post expense")}
           </button>
           <div style={{ marginBlockStart: 12 }}>
             <Notice msg={msg} />

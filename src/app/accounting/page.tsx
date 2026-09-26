@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getT } from "@/lib/i18n/server";
+import { getMsg, getT } from "@/lib/i18n/server";
+import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getCloseChecklist, getPeriods, periodFor, type CheckRow } from "@/lib/db/books";
 import { getTrialBalance } from "@/lib/db/reports";
@@ -9,6 +10,7 @@ import { PeriodControl } from "@/components/books/PeriodControl";
 
 export const dynamic = "force-dynamic";
 
+/** An account's class, in words: phrases, shown through t(). */
 const TYPE_LABEL: Record<string, string> = {
   asset: "Asset",
   liability: "Liability",
@@ -24,6 +26,7 @@ export default async function AccountingPage({
 }) {
   const profile = await requirePermission("cost.view");
   const t = await getT();
+  const msg = await getMsg();
   const sp = await searchParams;
   const today = businessToday(profile.timezone);
   const periods = await getPeriods();
@@ -50,14 +53,16 @@ export default async function AccountingPage({
     <div className="grid" style={{ gap: 18 }}>
       <div className="phead">
         <h1>{t("nav.chart")}</h1>
-        <span className="sc">Trial balance &amp; closing the period</span>
+        <span className="sc">{t("Trial balance & closing the period")}</span>
         <div className="sp">
           <span className={`badge ${totalDebit === totalCredit ? "ok" : "err"}`}>
-            Period debits {totalDebit === totalCredit ? "equal" : "do not equal"} credits
+            {totalDebit === totalCredit
+              ? t("Period debits equal credits")
+              : t("Period debits do not equal credits")}
           </span>
           {chosen && (
             <span className={`badge ${chosen.status === "locked" ? "err" : ""}`}>
-              {chosen.name} {chosen.status}
+              {chosen.name} {t(chosen.status)}
             </span>
           )}
         </div>
@@ -80,38 +85,44 @@ export default async function AccountingPage({
 
       <div className="masthead">
         <div className="entity">{profile.businessName}</div>
-        <div className="doc">Trial Balance</div>
+        <div className="doc">{t("Trial Balance")}</div>
         <div className="period">
-          {from} to {to} · published entries only · {profile.currency}
+          {t("{from} to {to} · published entries only · {currency}", {
+            from,
+            to,
+            currency: profile.currency,
+          })}
         </div>
         <div className="rule-band" />
       </div>
 
       <section className="panel">
         <div className="panel-h">
-          <h3>Trial Balance</h3>
+          <h3>{t("Trial Balance")}</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            <a href={`/reports/export?report=trial_balance&from=${from}&to=${to}`}>Download CSV</a>
+            <a href={`/reports/export?report=trial_balance&from=${from}&to=${to}`}>
+              {t("Download CSV")}
+            </a>
           </span>
         </div>
         <div className="tw">
           <table>
             <thead>
               <tr>
-                <th>A/C</th>
-                <th>Account</th>
-                <th>Class</th>
-                <th className="right">Opening</th>
-                <th className="right">Debit</th>
-                <th className="right">Credit</th>
-                <th className="right">Closing</th>
+                <th>{t("A/C")}</th>
+                <th>{t("Account")}</th>
+                <th>{t("Class")}</th>
+                <th className="right">{t("Opening")}</th>
+                <th className="right">{t("Debit")}</th>
+                <th className="right">{t("Credit")}</th>
+                <th className="right">{t("Closing")}</th>
               </tr>
             </thead>
             <tbody>
               {active.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="muted" style={{ fontStyle: "italic" }}>
-                    Nothing posted up to the end of this period.
+                    {t("Nothing posted up to the end of this period.")}
                   </td>
                 </tr>
               ) : (
@@ -122,13 +133,13 @@ export default async function AccountingPage({
                       <Link
                         className="drill"
                         href={`/journals?account=${r.code}&from=${from}&to=${to}`}
-                        title="The lines behind it"
+                        title={t("The lines behind it")}
                       >
-                        {r.name}
+                        {msg(r.name)}
                       </Link>
                     </td>
                     <td>
-                      <span className="ref">{TYPE_LABEL[r.type] ?? r.type}</span>
+                      <span className="ref">{t(TYPE_LABEL[r.type] ?? r.type)}</span>
                     </td>
                     <td className="right money">{signed(r.opening)}</td>
                     <td className="right money">{r.debit ? fmtIQD(r.debit) : "—"}</td>
@@ -139,7 +150,7 @@ export default async function AccountingPage({
               )}
               <tr className="grand">
                 <td />
-                <td>Totals for the period</td>
+                <td>{t("Totals for the period")}</td>
                 <td />
                 <td />
                 <td className="right money">{fmtIQD(totalDebit)}</td>
@@ -153,12 +164,12 @@ export default async function AccountingPage({
           className="muted"
           style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
         >
-          Open an account for the journal lines behind it. Opening and closing balances are
-          debit-positive (a credit balance shows in brackets). Drafts are excluded; so is anything
-          outside the dates shown. That the debits equal the credits is guaranteed by the database
-          for every published entry — whether the books are <em>right</em> is shown by the
-          reconciliation on <Link href="/reports">Reports</Link>, which compares each subledger with
-          its control account.
+          <Rich
+            text={t(
+              "Open an account for the journal lines behind it. Opening and closing balances are debit-positive (a credit balance shows in brackets). Drafts are excluded; so is anything outside the dates shown. That the debits equal the credits is guaranteed by the database for every published entry — whether the books are <em>right</em> is shown by the reconciliation on <reports>Reports</reports>, which compares each subledger with its control account.",
+            )}
+            tags={{ reports: (c) => <Link href="/reports">{c}</Link> }}
+          />
         </p>
       </section>
 
@@ -180,9 +191,12 @@ export default async function AccountingPage({
 
       {has(profile, "audit.view") && (
         <p className="muted" style={{ fontSize: ".82rem", margin: 0 }}>
-          Who changed what — prices, products, items, suppliers, settings, and every void, refund,
-          count and correction — is on the <Link href="/audit">audit trail</Link>, with the values
-          before and after.
+          <Rich
+            text={t(
+              "Who changed what — prices, products, items, suppliers, settings, and every void, refund, count and correction — is on the <audit>audit trail</audit>, with the values before and after.",
+            )}
+            tags={{ audit: (c) => <Link href="/audit">{c}</Link> }}
+          />
         </p>
       )}
     </div>

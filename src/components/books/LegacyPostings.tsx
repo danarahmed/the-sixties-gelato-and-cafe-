@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { postLegacyUnpostedAction } from "@/lib/actions/books";
 import { dateTimeIn } from "@/lib/dates";
 import { fmtIQD } from "@/lib/format";
+import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import type { UnpostedRecord } from "@/lib/db/reports";
 
+/** What kind of record it is, in words: phrases, shown through t(). */
 const KIND_LABEL: Record<string, string> = {
   opening_stock: "Opening stock",
   goods_received: "Goods received",
@@ -31,6 +33,8 @@ export function LegacyPostings({
   canPost: boolean;
   timezone: string;
 }) {
+  // say: a record's description as the database words it, in the reader's language.
+  const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [reason, setReason] = useState("");
@@ -44,7 +48,10 @@ export function LegacyPostings({
       if (r.ok) {
         setMsg({
           ok: true,
-          text: `${r.data.posted} journal(s) posted, ${fmtIQD(r.data.total)} in all. They are in the Journal Register.`,
+          text: t("{n} journal(s) posted, {amount} in all. They are in the Journal Register.", {
+            n: r.data.posted,
+            amount: fmtIQD(r.data.total),
+          }),
         });
         setReason("");
         router.refresh();
@@ -56,20 +63,20 @@ export function LegacyPostings({
 
   return (
     <div style={{ padding: "0 16px 14px" }}>
-      <h4 style={{ margin: "4px 0 6px" }}>Stock the old app never journaled</h4>
+      <h4 style={{ margin: "4px 0 6px" }}>{t("Stock the old app never journaled")}</h4>
       <p className="muted" style={{ fontSize: ".78rem", marginTop: 0, lineHeight: 1.6 }}>
-        These records moved stock before the upgrade but have no journal, so they show above as an
-        Inventory difference. Each would post the entry the new app writes for the same record,
-        dated when it happened. Post them only if the records are real.
+        {t(
+          "These records moved stock before the upgrade but have no journal, so they show above as an Inventory difference. Each would post the entry the new app writes for the same record, dated when it happened. Post them only if the records are real.",
+        )}
       </p>
       <div className="tw">
         <table>
           <thead>
             <tr>
-              <th>When</th>
-              <th>Record</th>
-              <th>Journal it would post</th>
-              <th className="right">Amount</th>
+              <th>{t("When")}</th>
+              <th>{t("Record")}</th>
+              <th>{t("Journal it would post")}</th>
+              <th className="right">{t("Amount")}</th>
             </tr>
           </thead>
           <tbody>
@@ -79,7 +86,8 @@ export function LegacyPostings({
                   {dateTimeIn(timezone, r.at)}
                 </td>
                 <td>
-                  <span className="ref auto">{KIND_LABEL[r.kind] ?? r.kind}</span> {r.description}
+                  <span className="ref auto">{t(KIND_LABEL[r.kind] ?? r.kind)}</span>{" "}
+                  {say(r.description)}
                 </td>
                 <td className="mono" style={{ fontSize: ".78rem" }}>
                   {r.entry}
@@ -89,7 +97,7 @@ export function LegacyPostings({
             ))}
             <tr>
               <td colSpan={3}>
-                <strong>{records.length} record(s)</strong>
+                <strong>{t("{n} record(s)", { n: records.length })}</strong>
               </td>
               <td className="right money">
                 <strong>{fmtIQD(total)}</strong>
@@ -112,15 +120,15 @@ export function LegacyPostings({
             style={{ flex: "1 1 260px" }}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Why they are being posted (for the audit trail)"
+            placeholder={t("Why they are being posted (for the audit trail)")}
           />
           <button className="btn-primary" onClick={post} disabled={busy || reason.trim() === ""}>
-            {busy ? "Posting…" : `Post these ${records.length} journal(s)`}
+            {busy ? t("Posting…") : t("Post these {n} journal(s)", { n: records.length })}
           </button>
         </div>
       ) : (
         <p className="muted" style={{ fontSize: ".78rem" }}>
-          Only the owner can post them.
+          {t("Only the owner can post them.")}
         </p>
       )}
       <div style={{ marginTop: 8 }}>

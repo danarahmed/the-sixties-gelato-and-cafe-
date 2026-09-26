@@ -15,7 +15,11 @@ export interface ExpenseCategorization {
   accountName: string;
   /** 0..1 — how confident the classifier is. */
   confidence: number;
-  /** Plain-language reason, shown to the human for approval. */
+  /**
+   * Plain-language reason, shown to the human for approval. Each one is a
+   * phrase of src/lib/i18n/phrases/books.ts, with {1}, {2}… where its values
+   * go: the Expenses screen shows it in the reader's language through msg().
+   */
   explanation: string;
   /** True when the model wants a human to double-check (low confidence). */
   needsReview: boolean;
