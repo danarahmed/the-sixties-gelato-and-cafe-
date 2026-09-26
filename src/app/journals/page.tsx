@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getT } from "@/lib/i18n/server";
+import { getMsg, getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import {
   getGlAccounts,
@@ -32,6 +32,7 @@ export default async function JournalsPage({
 }) {
   const profile = await requirePermission("cost.view");
   const t = await getT();
+  const msg = await getMsg();
   const sp = await searchParams;
   const manualOnly = sp.show === "manual";
   const today = businessToday(profile.timezone);
@@ -48,12 +49,12 @@ export default async function JournalsPage({
       getTrialBalance(from, to),
     ]);
     const chosen = tb.filter((r) => ledgerOf.includes(r.code));
-    const name = chosen.map((r) => `${r.code} ${r.name}`).join(" + ") || ledgerOf.join(" + ");
+    const name = chosen.map((r) => `${r.code} ${msg(r.name)}`).join(" + ") || ledgerOf.join(" + ");
     return (
       <div className="grid" style={{ gap: 18 }}>
         <div className="phead">
           <h1>{t("nav.journals")}</h1>
-          <span className="sc">The lines behind the figure</span>
+          <span className="sc">{t("The lines behind the figure")}</span>
         </div>
         <AccountLedger
           title={name}
@@ -67,6 +68,8 @@ export default async function JournalsPage({
           pnl={pnl}
           revenue={chosen.length > 0 && chosen.every((r) => r.type === "revenue")}
           timezone={profile.timezone}
+          t={t}
+          msg={msg}
         />
       </div>
     );
@@ -86,12 +89,12 @@ export default async function JournalsPage({
     <div className="grid" style={{ gap: 18 }}>
       <div className="phead">
         <h1>{t("nav.journals")}</h1>
-        <span className="sc">Every entry in the book, by number, newest first</span>
+        <span className="sc">{t("Every entry in the book, by number, newest first")}</span>
         <div className="sp">
-          {drafts > 0 && <span className="badge warn">{drafts} draft</span>}
+          {drafts > 0 && <span className="badge warn">{t("{n} draft", { n: drafts })}</span>}
           {period && (
             <span className={`badge ${period.status === "locked" ? "err" : ""}`}>
-              {period.name} {period.status}
+              {period.name} {t(period.status)}
             </span>
           )}
         </div>
@@ -100,9 +103,9 @@ export default async function JournalsPage({
       {canPost && (
         <section className="panel">
           <div className="panel-h">
-            <h3>New Journal</h3>
+            <h3>{t("New Journal")}</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              Debits must equal credits before it can be published
+              {t("Debits must equal credits before it can be published")}
             </span>
           </div>
           <JournalEntryForm
@@ -122,34 +125,36 @@ export default async function JournalsPage({
 
       <section className="panel">
         <div className="panel-h">
-          <h3>Journal Register</h3>
+          <h3>{t("Journal Register")}</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
             <Link href="/journals" className={manualOnly ? "" : "badge"}>
-              All
+              {t("All")}
             </Link>{" "}
             ·{" "}
             <Link href="/journals?show=manual" className={manualOnly ? "badge" : ""}>
-              Manual and reversals
+              {t("Manual and reversals")}
             </Link>
           </span>
         </div>
         {entries.length === 0 ? (
           <EmptyState
-            title="No journal entries yet"
-            hint="Sales, receipts, bills, payments, expenses, drawer counts and cash moved all write here, as do journals posted by hand."
+            title={t("No journal entries yet")}
+            hint={t(
+              "Sales, receipts, bills, payments, expenses, drawer counts and cash moved all write here, as do journals posted by hand.",
+            )}
           />
         ) : (
           <div className="tw">
             <table>
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Journal #</th>
-                  <th>Reference</th>
-                  <th>Status</th>
-                  <th>Notes</th>
-                  <th className="right">Amount</th>
-                  <th>Posted by</th>
+                  <th>{t("Date")}</th>
+                  <th>{t("Journal #")}</th>
+                  <th>{t("Reference")}</th>
+                  <th>{t("Status")}</th>
+                  <th>{t("Notes")}</th>
+                  <th className="right">{t("Amount")}</th>
+                  <th>{t("Posted by")}</th>
                   <th />
                 </tr>
               </thead>
@@ -171,41 +176,50 @@ export default async function JournalsPage({
           className="muted"
           style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
         >
-          A published entry can never be edited or deleted — the database refuses it. A mistake is
-          corrected by reversing the entry, so the history of the book stays intact. Only a draft,
-          which has not reached the books, may be discarded. Numbers are given in order when an
-          entry is published, with no gaps.
+          {t(
+            "A published entry can never be edited or deleted — the database refuses it. A mistake is corrected by reversing the entry, so the history of the book stays intact. Only a draft, which has not reached the books, may be discarded. Numbers are given in order when an entry is published, with no gaps.",
+          )}
           {legacy > 0 &&
-            ` ${legacy} entr${legacy === 1 ? "y is" : "ies are"} marked “before controls”: recorded before these rules existed, kept as they were, and reported for review (docs/REMEDIATION.md).`}
+            ` ${
+              legacy === 1
+                ? t(
+                    "{n} entry is marked “before controls”: recorded before these rules existed, kept as they were, and reported for review (docs/REMEDIATION.md).",
+                    { n: legacy },
+                  )
+                : t(
+                    "{n} entries are marked “before controls”: recorded before these rules existed, kept as they were, and reported for review (docs/REMEDIATION.md).",
+                    { n: legacy },
+                  )
+            }`}
         </p>
       </section>
 
       <div className="cards2">
         <div>
-          <div className="sc">Shown</div>
+          <div className="sc">{t("Shown")}</div>
           <div className="v">{entries.length}</div>
-          <div className="m">{manualOnly ? "Manual and reversals" : "All sources"}</div>
+          <div className="m">{manualOnly ? t("Manual and reversals") : t("All sources")}</div>
         </div>
         <div>
-          <div className="sc">Drafts</div>
+          <div className="sc">{t("Drafts")}</div>
           <div className="v" style={{ color: drafts ? "var(--warn)" : undefined }}>
             {drafts}
           </div>
-          <div className="m">Not in the books; block the period close</div>
+          <div className="m">{t("Not in the books; block the period close")}</div>
         </div>
         <div>
-          <div className="sc">Published, shown</div>
+          <div className="sc">{t("Published, shown")}</div>
           <div className="v">
             {fmtIQD(
               entries.filter((e) => e.status === "published").reduce((s, e) => s + e.amount, 0),
             )}
           </div>
-          <div className="m">Total debits</div>
+          <div className="m">{t("Total debits")}</div>
         </div>
         <div>
-          <div className="sc">Next number</div>
+          <div className="sc">{t("Next number")}</div>
           <div className="v">{nextNo ?? "—"}</div>
-          <div className="m">Given on publish</div>
+          <div className="m">{t("Given on publish")}</div>
         </div>
       </div>
     </div>

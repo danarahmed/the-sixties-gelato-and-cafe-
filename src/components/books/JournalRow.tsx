@@ -10,7 +10,9 @@ import {
 import { fmtIQD } from "@/lib/format";
 import { dateIn } from "@/lib/dates";
 import type { JournalRegisterRow } from "@/lib/db/books";
+import { useT } from "@/lib/i18n/I18nProvider";
 
+/** Where a journal came from, in words: phrases, shown through t(). */
 const SOURCE: Record<string, string> = {
   sales_order: "Sale",
   sale_refund: "Refund",
@@ -39,6 +41,7 @@ export function JournalRow({
   canPost: boolean;
   today: string;
 }) {
+  const { t, msg } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
   const [open, setOpen] = useState(false);
@@ -83,34 +86,36 @@ export function JournalRow({
               fontWeight: 600,
             }}
           >
-            {entry.journalNo ?? "draft"}
+            {entry.journalNo ?? t("draft")}
           </button>
         </td>
         <td className="faint">
-          {SOURCE[entry.referenceType ?? ""] ?? entry.referenceType ?? "—"}
+          {t(SOURCE[entry.referenceType ?? ""] ?? entry.referenceType ?? "—")}
           {entry.referenceNo ? ` · ${entry.referenceNo}` : ""}
         </td>
         <td>
           <span className={`ref ${isDraft ? "due" : "auto"}`}>
-            {isDraft ? "Draft" : "Published"}
+            {isDraft ? t("Draft") : t("Published")}
           </span>
           {entry.legacy && (
             <span
               className="ref"
-              title="Recorded before the ledger controls; kept as it was and reported for review"
+              title={t(
+                "Recorded before the ledger controls; kept as it was and reported for review",
+              )}
             >
               {" "}
-              before controls
+              {t("before controls")}
             </span>
           )}
         </td>
         <td>
-          {entry.notes}
+          {msg(entry.notes)}
           {entry.reversesNo !== null && (
-            <span className="muted"> · reverses #{entry.reversesNo}</span>
+            <span className="muted"> · {t("reverses #{no}", { no: entry.reversesNo })}</span>
           )}
           {entry.reversedByNo !== null && (
-            <span className="muted"> · reversed by #{entry.reversedByNo}</span>
+            <span className="muted"> · {t("reversed by #{no}", { no: entry.reversedByNo })}</span>
           )}
         </td>
         <td className="right money">{fmtIQD(entry.amount)}</td>
@@ -121,23 +126,23 @@ export function JournalRow({
               <button
                 onClick={() => run(() => publishJournalAction({ entryId: entry.id }))}
                 disabled={busy || difference !== 0}
-                title={difference === 0 ? "Publish to the books" : "Does not balance"}
+                title={difference === 0 ? t("Publish to the books") : t("Does not balance")}
                 style={small}
               >
-                Publish
+                {t("Publish")}
               </button>
               <button
                 onClick={() => run(() => discardJournalAction({ entryId: entry.id }))}
                 disabled={busy}
                 style={small}
               >
-                Discard
+                {t("Discard")}
               </button>
             </span>
           )}
           {canReverse && !reversing && (
             <button onClick={() => setReversing(true)} style={small}>
-              Reverse
+              {t("Reverse")}
             </button>
           )}
         </td>
@@ -156,7 +161,9 @@ export function JournalRow({
               }}
             >
               <span className="muted" style={{ fontSize: ".8rem" }}>
-                Reverse journal {entry.journalNo} with a mirror entry dated
+                {t("Reverse journal {no} with a mirror entry dated", {
+                  no: entry.journalNo ?? "",
+                })}
               </span>
               <input
                 type="date"
@@ -164,13 +171,13 @@ export function JournalRow({
                 min={entryDay}
                 max={today}
                 onChange={(e) => setRevDate(e.target.value)}
-                aria-label="Date of the reversal"
+                aria-label={t("Date of the reversal")}
                 style={{ minHeight: 30 }}
               />
               <input
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="Why is it being reversed?"
+                placeholder={t("Why is it being reversed?")}
                 style={{ minHeight: 30, minWidth: 260 }}
                 maxLength={300}
                 autoFocus
@@ -183,14 +190,14 @@ export function JournalRow({
                 }
                 style={small}
               >
-                {busy ? "…" : "Post reversal"}
+                {busy ? "…" : t("Post reversal")}
               </button>
               <button onClick={() => setReversing(false)} disabled={busy} style={small}>
-                Cancel
+                {t("Cancel")}
               </button>
               {err && (
                 <span className="red" style={{ fontSize: ".78rem" }}>
-                  {err}
+                  {msg(err)}
                 </span>
               )}
             </div>
@@ -210,13 +217,13 @@ export function JournalRow({
                   marginBlockEnd: 8,
                 }}
               >
-                Journal {entry.journalNo ?? "(draft)"} ·{" "}
+                {t("Journal {no}", { no: entry.journalNo ?? t("(draft)") })} ·{" "}
                 {dateIn(timezone, new Date(entry.occurredAt))}
-                {entry.referenceNo ? ` · ref ${entry.referenceNo}` : ""}
+                {entry.referenceNo ? ` · ${t("ref {ref}", { ref: entry.referenceNo })}` : ""}
               </div>
               {entry.lines.map((l, i) => (
                 <div key={i} className={`vline ${l.credit > 0 ? "credit" : ""}`}>
-                  <span className="dr">{l.debit > 0 ? "Dr" : "Cr"}</span>
+                  <span className="dr">{l.debit > 0 ? t("Dr") : t("Cr")}</span>
                   <span className="acct">
                     {l.account}
                     {l.memo && <em style={{ marginInlineStart: 8 }}>{l.memo}</em>}
@@ -225,17 +232,17 @@ export function JournalRow({
                 </div>
               ))}
               <div className="vfoot">
-                <span>Being {entry.notes.toLowerCase()}</span>
+                <span>{t("Being {text}", { text: msg(entry.notes).toLowerCase() })}</span>
                 <span className={difference === 0 ? "" : "red"}>
                   {difference === 0
-                    ? `Balanced — ${fmtIQD(debit)} both sides`
-                    : `Out by ${fmtIQD(Math.abs(difference))}`}
+                    ? t("Balanced — {amount} both sides", { amount: fmtIQD(debit) })
+                    : t("Out by {amount}", { amount: fmtIQD(Math.abs(difference)) })}
                 </span>
               </div>
             </div>
             {err && !reversing && (
               <p className="red" style={{ fontSize: ".78rem", margin: "0 0 8px" }}>
-                {err}
+                {msg(err)}
               </p>
             )}
           </td>
@@ -244,7 +251,7 @@ export function JournalRow({
       {!open && err && !reversing && (
         <tr>
           <td colSpan={8} className="red" style={{ fontSize: ".78rem" }}>
-            {err}
+            {msg(err)}
           </td>
         </tr>
       )}

@@ -34,11 +34,11 @@ export default async function ExpensesPage() {
     <div className="grid" style={{ gap: 18 }}>
       <div className="phead">
         <h1>{t("nav.expenses")}</h1>
-        <span className="sc">Rent · salaries · utilities · sundries</span>
+        <span className="sc">{t("Rent · salaries · utilities · sundries")}</span>
         <div className="sp">
           {period && (
             <span className={`badge ${locked ? "err" : "ok"}`}>
-              {period.name} {locked ? "locked" : "open"}
+              {period.name} {locked ? t("locked") : t("open")}
             </span>
           )}
         </div>
@@ -47,9 +47,9 @@ export default async function ExpensesPage() {
       {has(profile, "expense.record") && (
         <section className="panel">
           <div className="panel-h">
-            <h3>Record an Expense</h3>
+            <h3>{t("Record an Expense")}</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              The account is proposed from the narration — you confirm it before posting
+              {t("The account is proposed from the narration — you confirm it before posting")}
             </span>
           </div>
           <ExpenseEntry
@@ -63,24 +63,27 @@ export default async function ExpensesPage() {
 
       <section className="panel">
         <div className="panel-h">
-          <h3>Expense Register</h3>
+          <h3>{t("Expense Register")}</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            Last {rows.length}
+            {t("Last {n}", { n: rows.length })}
           </span>
         </div>
         {rows.length === 0 ? (
-          <EmptyState title="No expenses recorded yet" hint="Record the first one above." />
+          <EmptyState
+            title={t("No expenses recorded yet")}
+            hint={t("Record the first one above.")}
+          />
         ) : (
           <div className="tw">
             <table>
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Narration</th>
-                  <th>Account</th>
-                  <th>Journal</th>
-                  <th>By</th>
-                  <th className="right">Amount</th>
+                  <th>{t("Date")}</th>
+                  <th>{t("Narration")}</th>
+                  <th>{t("Account")}</th>
+                  <th>{t("Journal")}</th>
+                  <th>{t("By")}</th>
+                  <th className="right">{t("Amount")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -91,7 +94,7 @@ export default async function ExpensesPage() {
                       {r.description}
                       {r.reversedBy !== null && (
                         <span className="badge warn" style={{ marginInlineStart: 6 }}>
-                          reversed by #{r.reversedBy}
+                          {t("reversed by #{no}", { no: r.reversedBy })}
                         </span>
                       )}
                     </td>
@@ -111,8 +114,9 @@ export default async function ExpensesPage() {
                 <tr className="grand">
                   <td />
                   <td>
-                    Total shown
-                    {reversed > 0 ? `, less ${reversed} reversed` : ""}
+                    {reversed > 0
+                      ? t("Total shown, less {n} reversed", { n: reversed })
+                      : t("Total shown")}
                   </td>
                   <td />
                   <td />
@@ -128,9 +132,9 @@ export default async function ExpensesPage() {
       {byAccount.size > 0 && (
         <section className="panel">
           <div className="panel-h">
-            <h3>By Account</h3>
+            <h3>{t("By Account")}</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              The expenses above, by where they were posted
+              {t("The expenses above, by where they were posted")}
             </span>
           </div>
           <div className="panel-b">
@@ -144,7 +148,7 @@ export default async function ExpensesPage() {
               ))}
             <div className="rule-single" />
             <div className="st-row total">
-              <span className="lbl">Total</span>
+              <span className="lbl">{t("Total")}</span>
               <span className="amt">{fmtIQD(total)}</span>
             </div>
             <div className="rule-double" />

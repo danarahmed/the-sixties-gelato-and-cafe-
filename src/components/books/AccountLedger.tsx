@@ -2,8 +2,9 @@ import Link from "next/link";
 import type { JournalLineRow } from "@/lib/db/reports";
 import { fmtIQD } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
+import type { Msg, T } from "@/lib/i18n/core";
 
-/** Where a journal came from, in words. */
+/** Where a journal came from, in words: phrases, shown through t(). */
 const SOURCE: Record<string, string> = {
   sales_order: "Sale",
   sale_refund: "Refund",
@@ -31,6 +32,7 @@ function signed(n: number): string {
  * for the dates asked. From the trial balance or the reconciliation the lines
  * run from the opening balance to the closing one; from the P&L they add up to
  * the P&L's figure, the year-end close left out as the P&L leaves it out.
+ * A server component: the page gives it the reader's translators.
  */
 export function AccountLedger({
   title,
@@ -44,6 +46,8 @@ export function AccountLedger({
   pnl,
   revenue,
   timezone,
+  t,
+  msg,
 }: {
   title: string;
   accounts: string[];
@@ -58,6 +62,9 @@ export function AccountLedger({
   /** A revenue figure reads credit less debit; anything else debit less credit. */
   revenue: boolean;
   timezone: string;
+  t: T;
+  /** The words the database writes (account names, narrations), in the reader's language. */
+  msg: Msg;
 }) {
   const debit = lines.reduce((s, l) => s + l.debit, 0);
   const credit = lines.reduce((s, l) => s + l.credit, 0);
@@ -70,29 +77,34 @@ export function AccountLedger({
       <div className="panel-h">
         <h3>{title}</h3>
         <span className="muted" style={{ fontSize: ".74rem" }}>
-          {from} to {to} · published entries
-          {pnl ? " · the year-end close left out, as on the P&L" : ""} · <a href={csv}>CSV</a>
+          {pnl
+            ? t("{from} to {to} · published entries · the year-end close left out, as on the P&L", {
+                from,
+                to,
+              })
+            : t("{from} to {to} · published entries", { from, to })}{" "}
+          {/* i18n-ignore: CSV is the same in every language */}· <a href={csv}>CSV</a>
         </span>
       </div>
       <div className="tw">
         <table>
           <thead>
             <tr>
-              <th>When</th>
-              <th>Journal #</th>
-              {several && <th>Account</th>}
-              <th>Narration</th>
-              <th>From</th>
-              <th className="right">Debit</th>
-              <th className="right">Credit</th>
-              {!pnl && <th className="right">Balance</th>}
+              <th>{t("When")}</th>
+              <th>{t("Journal #")}</th>
+              {several && <th>{t("Account")}</th>}
+              <th>{t("Narration")}</th>
+              <th>{t("From")}</th>
+              <th className="right">{t("Debit")}</th>
+              <th className="right">{t("Credit")}</th>
+              {!pnl && <th className="right">{t("Balance")}</th>}
             </tr>
           </thead>
           <tbody>
             {!pnl && (
               <tr>
                 <td colSpan={several ? 5 : 4} className="muted">
-                  Opening balance
+                  {t("Opening balance")}
                 </td>
                 <td />
                 <td />
@@ -102,7 +114,7 @@ export function AccountLedger({
             {lines.length === 0 && (
               <tr>
                 <td colSpan={several ? 8 : 7} className="muted" style={{ fontStyle: "italic" }}>
-                  Nothing posted in these dates.
+                  {t("Nothing posted in these dates.")}
                 </td>
               </tr>
             )}
@@ -116,18 +128,21 @@ export function AccountLedger({
                   <td className="mono">{l.journalNo ?? "—"}</td>
                   {several && (
                     <td className="faint">
-                      {l.accountCode} {l.accountName}
+                      {l.accountCode} {msg(l.accountName)}
                     </td>
                   )}
                   <td>
-                    {l.description}
+                    {msg(l.description)}
                     {l.memo ? <span className="muted"> · {l.memo}</span> : null}
                     {l.reversesJournalNo !== null && (
-                      <span className="muted"> · reverses #{l.reversesJournalNo}</span>
+                      <span className="muted">
+                        {" "}
+                        · {t("reverses #{no}", { no: l.reversesJournalNo })}
+                      </span>
                     )}
                   </td>
                   <td className="muted" style={{ fontSize: ".85rem" }}>
-                    {SOURCE[l.referenceType ?? ""] ?? l.referenceType ?? "—"}
+                    {t(SOURCE[l.referenceType ?? ""] ?? l.referenceType ?? "—")}
                     {l.referenceNo ? ` ${l.referenceNo}` : ""}
                   </td>
                   <td className="right money">{l.debit ? fmtIQD(l.debit) : ""}</td>
@@ -139,8 +154,10 @@ export function AccountLedger({
             <tr className="grand">
               <td colSpan={several ? 5 : 4}>
                 {pnl
-                  ? `Total: ${fmtIQD(revenue ? credit - debit : debit - credit)}`
-                  : "Movement, and closing balance"}
+                  ? t("Total: {amount}", {
+                      amount: fmtIQD(revenue ? credit - debit : debit - credit),
+                    })
+                  : t("Movement, and closing balance")}
               </td>
               <td className="right money">{fmtIQD(debit)}</td>
               <td className="right money">{fmtIQD(credit)}</td>
@@ -154,10 +171,10 @@ export function AccountLedger({
         style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
       >
         {more
-          ? `The first ${lines.length} lines are shown; the CSV has them all. `
-          : `${lines.length} line(s). `}
-        Balances are debit-positive: a credit balance shows in brackets.{" "}
-        <Link href="/journals">Back to the journal register</Link>
+          ? `${t("The first {n} lines are shown; the CSV has them all.", { n: lines.length })} `
+          : `${t("{n} line(s).", { n: lines.length })} `}
+        {t("Balances are debit-positive: a credit balance shows in brackets.")}{" "}
+        <Link href="/journals">{t("Back to the journal register")}</Link>
       </p>
     </section>
   );
