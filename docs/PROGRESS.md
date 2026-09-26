@@ -256,7 +256,17 @@ browser tests through the real app, or both.
   Inventory's **Add stock item** is the same form and warns the same way.
   `0033` checks a pack given with a new item as one added later is checked (a
   name of its own, not the base unit's; a kilogram 1000 grams; no two of one
-  name). Built and tested.
+  name). Built and tested. The migration was applied to the live database on
+  26 September 2026, matches the tested build object by object (permissions
+  included), and was checked as the owner in a transaction that was rolled
+  back: a pack named as the base unit, a kilogram of 500 grams and a carton
+  holding nothing were refused; an item added with its carton of 24 and
+  received by the carton, 2 at 6,000, came in as 48 at 250 each (receipt 9,
+  12,000 IQD); the carton again under another size, and the same name in other
+  capitals, were refused; the audit trail gained exactly the item and its
+  carton; and nothing was kept — no item, unit, receipt, stock or journal, the
+  receipts still numbered to 8 and the journals to 1072. The security and
+  performance advisors report exactly what they did before.
 
 ## The August 2026 audit, finding by finding
 
