@@ -255,27 +255,6 @@ const phrases: PhraseBook = {
     },
 
   // The reconciliation (report_reconciliation), and sales costed at nothing.
-  "Stock ledger vs Inventory (1200)": {
-    ar: "سجل المخزون مقابل حساب المخزون (1200)",
-    ckb: "تۆماری کۆگا بەرامبەر هەژماری کۆگا (1200)",
-  },
-  "Unpaid bills vs Accounts payable (2000)": {
-    ar: "الفواتير غير المدفوعة مقابل الذمم الدائنة (2000)",
-    ckb: "پسووڵە نەدراوەکان بەرامبەر قەرزی دابینکەران (2000)",
-  },
-  "Unbilled receipts vs Goods received not invoiced (2050)": {
-    ar: "الاستلامات غير المفوترة مقابل البضاعة المستلمة غير المفوترة (2050)",
-    ckb: "وەرگرتنە بێ پسووڵەکان بەرامبەر کاڵای وەرگیراوی بێ پسووڵە (2050)",
-  },
-  "Sales recorded vs net revenue in the ledger (4000 less 4100 and 4200)": {
-    ar: "المبيعات المسجّلة مقابل صافي الإيراد في الدفاتر (4000 ناقص 4100 و4200)",
-    ckb: "فرۆشتنی تۆمارکراو بەرامبەر داهاتی پوخت لە دەفتەردا (4000 کەم 4100 و 4200)",
-  },
-  "Costed at nothing: {1}": { ar: "كلفته صفر: {1}", ckb: "تێچووی سفر: {1}" },
-  "Used before it had a cost: {1}": {
-    ar: "استُخدم قبل أن تكون له كلفة: {1}",
-    ckb: "پێش ئەوەی تێچووی هەبێت بەکارهات: {1}",
-  },
 
   // The exceptions report (report_exceptions).
   "Rung by {1}": { ar: "سجّله {1}", ckb: "{1} تۆماری کرد" },
@@ -284,16 +263,9 @@ const phrases: PhraseBook = {
     ckb: "{1} تۆماری کرد (فرۆشتنی خۆی)",
   },
   someone: { ar: "شخص ما", ckb: "کەسێک" },
-  "No reason kept (given before reasons were asked)": {
-    ar: "لم يُحفظ سبب (أُعطي قبل أن تُطلب الأسباب)",
-    ckb: "هیچ هۆکارێک نەپارێزراوە (پێش داواکردنی هۆکار درا)",
-  },
-  "Approval by {1}": { ar: "موافقة من {1}", ckb: "پەسەندکردن لەلایەن {1}" },
   "{1} line(s) on it": { ar: "عليها {1} من البنود", ckb: "{1} هێڵی لەسەرە" },
   "{1} item(s) taken off": { ar: "أُزيل {1} من الأصناف", ckb: "{1} کاڵا لابرا" },
   discount: { ar: "خصم", ckb: "داشکاندن" },
-  void: { ar: "إلغاء", ckb: "هەڵوەشاندنەوە" },
-  refund: { ar: "استرداد", ckb: "گەڕاندنەوەی پارە" },
   ...discountDetail,
 };
 

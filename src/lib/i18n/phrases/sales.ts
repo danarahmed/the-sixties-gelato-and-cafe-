@@ -12,7 +12,7 @@ const phrases: PhraseBook = {
   "Open POS": { ar: "افتح نقطة البيع", ckb: "خاڵی فرۆشتن بکەرەوە" },
   "Net sales, after refunds": {
     ar: "صافي المبيعات، بعد المستردات",
-    ckb: "فرۆشی ڕەسەن، دوای گەڕاندنەوەی پارە",
+    ckb: "فرۆشی پوخت، دوای گەڕاندنەوەی پارە",
   },
   "Across {days} trading day(s)": {
     ar: "عدد أيام العمل: {days}",
@@ -60,7 +60,7 @@ const phrases: PhraseBook = {
   Orders: { ar: "الطلبات", ckb: "داواکارییەکان" },
   Sales: { ar: "المبيعات", ckb: "فرۆشتن" },
   Refunds: { ar: "المستردات", ckb: "گەڕاندنەوەی پارە" },
-  "Net sales": { ar: "صافي المبيعات", ckb: "فرۆشی ڕەسەن" },
+  "Net sales": { ar: "صافي المبيعات", ckb: "فرۆشی پوخت" },
   "Not counted": { ar: "غير معدود", ckb: "نەژمێردراو" },
   Counted: { ar: "معدود", ckb: "ژمێردراو" },
 

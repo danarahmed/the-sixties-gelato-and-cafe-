@@ -5,7 +5,8 @@ import type { Msg, T } from "@/lib/i18n/core";
  * The owner's daily brief (0029, the audit's §6): yesterday's facts, the
  * calculations made from them, and what needs doing — kept apart, so a figure
  * is never mistaken for a judgement. The page gives it its reader's words: the
- * brief's lines are messages (msg), the rest phrases (t).
+ * brief's lines are written in them (t), and what to do is the alerts' own
+ * words from the database (msg).
  */
 export function DailyBrief({
   brief,
@@ -36,7 +37,7 @@ export function DailyBrief({
         <div data-testid="brief-facts">
           <h4>{labels.facts}</h4>
           <ul>
-            {briefFacts(brief).map((l) => (
+            {briefFacts(brief, t).map((l) => (
               <li key={l}>{msg(l)}</li>
             ))}
           </ul>
@@ -44,7 +45,7 @@ export function DailyBrief({
         <div data-testid="brief-calculations">
           <h4>{labels.calculations}</h4>
           <ul>
-            {briefCalculations(brief, weekday).map((l) => (
+            {briefCalculations(brief, weekday, t).map((l) => (
               <li key={l}>{msg(l)}</li>
             ))}
           </ul>
@@ -52,7 +53,7 @@ export function DailyBrief({
         <div data-testid="brief-to-do">
           <h4>{labels.toDo}</h4>
           <ul>
-            {briefToDo(brief).map((l) => (
+            {briefToDo(brief, t).map((l) => (
               <li key={l}>{msg(l)}</li>
             ))}
           </ul>

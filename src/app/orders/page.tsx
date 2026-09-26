@@ -136,7 +136,7 @@ export default async function OrdersPage({
                 <th>{t("When")}</th>
                 <th>{t("Channel")}</th>
                 <th>{t("Items")}</th>
-                <th>{t("Paid")}</th>
+                <th>{t("orders.paidBy")}</th>
                 <th>{t("Status")}</th>
                 <th className="right">{t("Net")}</th>
                 <th className="right">{t("Margin")}</th>

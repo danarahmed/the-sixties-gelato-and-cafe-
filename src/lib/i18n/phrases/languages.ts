@@ -37,7 +37,6 @@ const phrases: PhraseBook = {
   "Left to right": { ar: "من اليسار إلى اليمين", ckb: "لە چەپەوە بۆ ڕاست" },
   "Right to left": { ar: "من اليمين إلى اليسار", ckb: "لە ڕاستەوە بۆ چەپ" },
   "Built in": { ar: "مضمّنة", ckb: "بنەڕەتی" },
-  "In use": { ar: "قيد الاستخدام", ckb: "لە بەکارهێناندایە" },
   "Not in use": { ar: "غير مستخدمة", ckb: "بەکارنایەت" },
   "{language} is added: it is in the language menu now. Give its words below; a phrase with none shows in English.":
     {
@@ -92,6 +91,15 @@ const phrases: PhraseBook = {
     ckb: "لاپەڕەی {page} لە {pages} · {n} دەستەواژە",
   },
   Next: { ar: "التالي", ckb: "دواتر" },
+
+  // On the audit trail.
+  "Language added": { ar: "أُضيفت لغة", ckb: "زمانێک زیاد کرا" },
+  "Language {code}": { ar: "اللغة {code}", ckb: "زمانی {code}" },
+  "Language changed": { ar: "تغيّرت لغة", ckb: "زمانێک گۆڕدرا" },
+  "The café's words for phrases changed": {
+    ar: "تغيّرت كلمات المقهى للعبارات",
+    ckb: "وشەکانی کافێکە بۆ دەستەواژەکان گۆڕدران",
+  },
 
   // What its actions answer.
   "A language's code is two or three small Latin letters (tr, fa, kmr)": {

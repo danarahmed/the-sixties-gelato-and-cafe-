@@ -66,6 +66,7 @@ export const AUDIT_GROUPS = [
       "platform.create",
       "platform.setup",
       "platform.update",
+      "language.",
     ],
   },
 ] as const;
@@ -110,6 +111,9 @@ const ACTION_LABEL: Record<string, string> = {
   "platform.create": "Delivery platform added",
   "platform.setup": "Delivery platform's packaging and prices copied",
   "platform.update": "Delivery platform changed",
+  "language.add": "Language added",
+  "language.update": "Language changed",
+  "language.words": "The café's words for phrases changed",
   "journal.reverse": "Journal reversed",
   "journal.control_correction": "Owner's correction posted",
   "legacy.post_unposted": "Old record posted",
@@ -387,6 +391,8 @@ export function subjectOf(
       return pick("from") && pick("to")
         ? `Card takings ${pick("from")} to ${pick("to")}`
         : "Card takings";
+    case "app_language":
+      return pick("name") ?? `Language ${entityId ?? ""}`.trim();
     case "platform_settlement":
       return pick("reference")
         ? `${pick("platform") ?? "Platform"} statement ${pick("reference")}`
@@ -425,6 +431,7 @@ const SUBJECTS: [RegExp, string, string[]][] = [
   [/^Receipt (\S*\d\S*)$/, "Receipt {no}", ["no"]],
   [/^Supplier bill (.+)$/, "Supplier bill {no}", ["no"]],
   [new RegExp(`^Journal (\\d+|${SHORT_ID})$`), "Journal {no}", ["no"]],
+  [/^Language ([a-z]{2,3}(?:-[a-z0-9]{2,8})?)$/, "Language {code}", ["code"]],
   [
     /^Card takings (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})$/,
     "Card takings {from} to {to}",

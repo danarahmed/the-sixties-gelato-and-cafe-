@@ -232,7 +232,7 @@ export default async function ReportsPage({
               <div key={r.code} className="st-row indent">
                 <span className="lbl">
                   <Link className="drill" href={ledger(r.code, from, to, true)}>
-                    {r.code} {r.name}
+                    {r.code} {msg(r.name)}
                   </Link>
                 </span>
                 <span className={`amt ${r.amount < 0 ? "red" : ""}`}>{fmtIQD(r.amount)}</span>
@@ -250,7 +250,7 @@ export default async function ReportsPage({
               <div key={r.code} className="st-row indent">
                 <span className="lbl">
                   <Link className="drill" href={ledger(r.code, from, to, true)}>
-                    {r.code} {r.name}
+                    {r.code} {msg(r.name)}
                   </Link>
                 </span>
                 <span className="amt red">({fmtIQD(r.amount)})</span>
@@ -269,7 +269,7 @@ export default async function ReportsPage({
               <div key={r.code} className="st-row indent">
                 <span className="lbl">
                   <Link className="drill" href={ledger(r.code, from, to, true)}>
-                    {r.code} {r.name}
+                    {r.code} {msg(r.name)}
                   </Link>
                 </span>
                 <span className="amt red">({fmtIQD(r.amount)})</span>
