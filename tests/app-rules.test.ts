@@ -6,7 +6,7 @@
  * drawer count shows before it is posted, and when a failed call is a refusal
  * and when it is an unknown.
  */
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
@@ -15,7 +15,7 @@ import { addDays, dateIn, dayStart, monthEnd, monthStart, parseDay } from "@/lib
 import { normaliseNumber, positive, signedNonZero } from "@/lib/validation";
 import { getBookkeeper } from "@/lib/bookkeeping/rules";
 import { isUncertainFailure } from "@/lib/db/rpcOutcome";
-import { drawerPreview } from "@/components/books/drawerMath";
+import { closeSplit, countResult, drawerStateFrom, notesCounted, notesTotal } from "@/lib/cash";
 import { salesTotals } from "@/lib/db/salesTotals";
 import {
   AUDIT_GROUPS,
@@ -725,34 +725,104 @@ describe("expense suggestions", () => {
   });
 });
 
-describe("the drawer count, as the form shows it before it is posted (0024)", () => {
-  const status = { start: 25000, startTyped: "", moved: 4000 };
-  it("expects what the last count left plus every movement since", () => {
-    expect(drawerPreview({ ...status, counted: "", left: "" }).expected).toBe(29000);
-  });
-  it("is short or over by the difference", () => {
-    const p = drawerPreview({ ...status, counted: "28,500", left: "25000" });
-    expect(p.variance).toBe(-500);
-    expect(p.left).toBe(25000);
-    expect(p.taken).toBe(3500);
-  });
+describe("the drawer's count, as the form takes it (0036): blind", () => {
   it("keeps everything in the drawer when nothing is said", () => {
-    const p = drawerPreview({ ...status, counted: "29000", left: "" });
-    expect(p.variance).toBe(0);
-    expect(p.taken).toBe(0);
+    expect(closeSplit("29000", "")).toEqual({ counted: 29000, left: 29000, taken: 0, error: null });
+  });
+  it("takes the rest to the safe or the bank", () => {
+    expect(closeSplit("28,500", "25000")).toEqual({
+      counted: 28500,
+      left: 25000,
+      taken: 3500,
+      error: null,
+    });
   });
   it("refuses to leave more than was counted", () => {
-    expect(drawerPreview({ ...status, counted: "1000", left: "2000" }).error).toMatch(/between 0/);
+    expect(closeSplit("1000", "2000").error).toMatch(/between 0/);
   });
-  it("reads the counted cash typed in Arabic-Indic digits", () => {
-    expect(drawerPreview({ ...status, counted: "٢٩٠٠٠", left: "" }).variance).toBe(0);
+  it("reads the cash typed in Arabic-Indic digits", () => {
+    expect(closeSplit("٢٩٠٠٠", "").counted).toBe(29000);
   });
-  it("after days closed the old way, starts from the cash typed", () => {
-    const first = { start: null, startTyped: "", moved: 4000 };
-    expect(drawerPreview({ ...first, counted: "5000", left: "" }).expected).toBeNull();
-    expect(
-      drawerPreview({ ...first, startTyped: "1000", counted: "5000", left: "" }).variance,
-    ).toBe(0);
+  it("says nothing until something is counted", () => {
+    expect(closeSplit("", "")).toEqual({ counted: null, left: null, taken: null, error: null });
+  });
+  it("adds up the notes counted, one kind at a time", () => {
+    expect(notesTotal({ "25000": "2", "1000": "3", "250": "" })).toBe(53000);
+    expect(notesTotal({ "1000": "٣" })).toBe(3000);
+    expect(notesTotal({ "1000": "1.5" })).toBeNull();
+    expect(notesCounted({ "25000": "2", "1000": "0", "250": "" })).toEqual({ "25000": 2 });
+    expect(notesCounted({ "1000": "" })).toBeNull();
+  });
+  it("reads the database's answer: what it should have held comes only with it", () => {
+    const r = countResult({
+      session_no: 7,
+      expected: 29000,
+      counted: 28500,
+      variance: -500,
+      left: 25000,
+      taken: 3500,
+      taken_to: "safe",
+      journal_no: 1042,
+      cash_sales: 7500,
+      refunds: 0,
+      voids: 2500,
+      paid_out: 1000,
+      cash_in: 25000,
+      cash_out: 0,
+      card: 2500,
+      orders: 4,
+      moved: 29000,
+    });
+    expect(r).toMatchObject({
+      sessionNo: 7,
+      expected: 29000,
+      variance: -500,
+      taken: 3500,
+      takenTo: "safe",
+      journalNo: 1042,
+    });
+    expect(r.figures).toMatchObject({ cashSales: 7500, voids: 2500, card: 2500, orders: 4 });
+    const closedBlind = countResult({
+      session_no: 8,
+      expected: 6000,
+      counted: null,
+      variance: null,
+      left: 6000,
+      taken: 0,
+    });
+    expect(closedBlind).toMatchObject({ counted: null, variance: null, left: 6000, figures: null });
+  });
+  it("tells the till whose session is open, and never what it should hold unless allowed", () => {
+    const d = drawerStateFrom({
+      location: "Main Branch",
+      drawer: "Till",
+      open: true,
+      may_close: true,
+      sees_expected: false,
+      expected: null,
+      figures: null,
+      open_bills: 2,
+      session: {
+        id: "s1",
+        no: 3,
+        cashier_id: "c1",
+        cashier: "Rawand",
+        opened_at: "2026-09-27T05:00:00Z",
+        opened_by: "Rawand",
+        mine: true,
+      },
+      takers: [{ id: "m1", name: "Lana" }],
+    });
+    expect(d).toMatchObject({
+      open: true,
+      mayClose: true,
+      seesExpected: false,
+      expected: null,
+      openBills: 2,
+    });
+    expect(d.session).toMatchObject({ no: 3, cashier: "Rawand", mine: true });
+    expect(d.takers).toEqual([{ id: "m1", name: "Lana" }]);
+    expect(drawerStateFrom(null)).toMatchObject({ open: false, session: null, mayOpen: false });
   });
 });
 
@@ -1085,12 +1155,18 @@ describe("the exceptions report, by person (0028)", () => {
 });
 
 describe("the system speaks: alerts and the daily brief (0029, the audit's P1-8)", () => {
-  const migration = readFileSync(join(__dirname, "../supabase/migrations/0029_alerts.sql"), "utf8");
-  // The rules as the latest migration to redefine them has them (0030).
-  const rules = readFileSync(
-    join(__dirname, "../supabase/migrations/0030_card_and_platform_money.sql"),
-    "utf8",
-  );
+  // The migrations that define a function, in the order they run.
+  const defining = (fn: string) => {
+    const dir = join(__dirname, "../supabase/migrations");
+    return readdirSync(dir)
+      .sort()
+      .map((f) => readFileSync(join(dir, f), "utf8"))
+      .filter((sql) => sql.includes(`create or replace function ${fn}(`));
+  };
+  // The thresholds as the latest migration to redefine them has them.
+  const migration = defining("alert_threshold_rules").at(-1) ?? "";
+  // The rules, as every migration that added to them wrote them (none is taken away).
+  const rules = defining("alert_conditions").join("\n");
   const alert = (over: Partial<Alert>): Alert => ({
     id: "a",
     rule: "margin",

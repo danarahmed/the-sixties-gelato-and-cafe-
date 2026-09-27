@@ -1,7 +1,8 @@
 -- =============================================================================
--- Drawer count (G9, H-09, 0024) and period close (H-08, C-07): the close
--- refuses while anything is unresolved, and a locked period refuses every
--- route in. The drawer itself is tested in drawer.test.sql.
+-- The drawer's count (G9, H-09, 0024; a session's close since 0036) and period
+-- close (H-08, C-07): the close refuses while anything is unresolved, and a
+-- locked period refuses every route in. The drawer itself is tested in
+-- drawer.test.sql, its sessions in cash_sessions.test.sql.
 -- =============================================================================
 select test.golden_catalogue();
 select test.as_admin();
@@ -32,24 +33,32 @@ select test.act_as('manager@example.com');
 select test.eq((select string_agg(day::text, ',') from report_unclosed_days()), (select d::text from today),
   'the day that blocks the close is the day listed for closing');
 
--- G9 — count the drawer 2,000 short: Dr Cash over/short, Cr the till.
+-- G9 — the drawer's session closes 2,000 short: Dr Cash over/short, Cr the till.
+select test.act_as('counter@example.com');
+select test.throws($$select close_cash_session(3000)$$, '%permission%', 'someone who handles no cash does not close the drawer');
 select test.act_as('cashier@example.com');
-select test.throws($$select count_drawer(3000)$$, '%permission%', 'a cashier does not count their own till');
+create temp table cl as select close_cash_session(3000) as r;
+grant select on cl to public;
 select test.act_as('manager@example.com');
-create temp table cl as select count_drawer(3000) as r;
 select test.eq((select count(*) from report_unclosed_days())::int, 0, 'once counted, it is no longer listed');
 select test.eq((select (r->>'expected')::numeric from cl), 5000::numeric, 'expected 5,000 cash');
 select test.eq((select (r->>'variance')::numeric from cl), -2000::numeric, '2,000 short');
 select test.as_admin();
-select test.eq(test.lines_of((select (r->>'shift_id')::uuid from cl)),
+select test.eq(test.lines_of((select (r->>'session_id')::uuid from cl)),
   '1000 Cr 2000 | 6300 Dr 2000', 'G9: the shortage is expensed');
 select test.act_as('manager@example.com');
-select test.eq((count_drawer(3000) ->> 'variance')::numeric, 0::numeric,
-  'counting again at once finds nothing new — no double-posted shortage');
+select test.throws($$select close_cash_session(3000)$$, '%The drawer is not open%',
+  'closing again finds nothing to close — no double-posted shortage');
+select test.throws($$select count_drawer(3000)$$, '%Open the drawer on the till first%',
+  'nor does the old count, which now closes the open session');
 select test.throws($$select close_day((select d from today), 3000)$$, '%permission denied%',
   'the old day close, replaced by the drawer count, cannot be called at all (0035)');
 
 -- Resolve the blockers, then lock. Only someone with the lock permission may.
+-- (The drawer opens again, with what was left in it: an open session with
+-- nothing in it yet does not hold the month open.)
+select test.act_as('cashier@example.com');
+select open_cash_session(3000);
 select test.act_as('owner@example.com');
 select discard_journal((select (r->>'id')::uuid from dr));
 select test.throws($$select discard_journal((select (r->>'id')::uuid from dr))$$, '%Only a draft%',

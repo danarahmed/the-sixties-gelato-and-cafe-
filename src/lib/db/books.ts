@@ -109,57 +109,6 @@ export async function getDrawerStatus(): Promise<DrawerStatus> {
   };
 }
 
-export interface DrawerCountRow {
-  id: string;
-  /** When it was counted. */
-  at: string;
-  /** The count before it: what this one covers starts there. */
-  from: string | null;
-  /** Counted the old way, one calendar day at a time. */
-  byDay: boolean;
-  day: string | null;
-  start: number;
-  expected: number;
-  counted: number;
-  variance: number;
-  left: number | null;
-  taken: number | null;
-  takenTo: string | null;
-  by: string | null;
-}
-
-/** Drawer counts, newest first: each covers the cash since the one before. */
-export async function getDrawerCounts(limit = 60): Promise<DrawerCountRow[]> {
-  const c = await db();
-  const [shifts, people] = await Promise.all([
-    c
-      .from("work_shift")
-      .select(
-        "id,kind,business_day,covers_from,closed_at,opening_float,expected_cash,counted_cash,variance,left_in_drawer,taken_out,taken_to,opened_by",
-      )
-      .not("closed_at", "is", null)
-      .order("closed_at", { ascending: false })
-      .limit(limit),
-    c.from("app_user").select("id,full_name"),
-  ]);
-  const person = new Map(rows(people, "people").map((p) => [str(p.id), str(p.full_name)]));
-  return rows(shifts, "drawer counts").map((s) => ({
-    id: str(s.id),
-    at: str(s.closed_at),
-    from: strOrNull(s.covers_from),
-    byDay: str(s.kind) === "day",
-    day: strOrNull(s.business_day),
-    start: num(s.opening_float),
-    expected: num(s.expected_cash),
-    counted: num(s.counted_cash),
-    variance: num(s.variance),
-    left: numOrNull(s.left_in_drawer),
-    taken: numOrNull(s.taken_out),
-    takenTo: strOrNull(s.taken_to),
-    by: s.opened_by ? (person.get(str(s.opened_by)) ?? null) : null,
-  }));
-}
-
 /* ---------------------------------------------------------------- vendors */
 
 /** How a supplier was paid, in words (0024 names where the money came from). */

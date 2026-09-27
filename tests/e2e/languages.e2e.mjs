@@ -127,6 +127,7 @@ const SCREENS = [
   "/dashboard",
   "/pos",
   "/sales",
+  "/sales/sessions",
   "/platforms",
   "/vendors",
   "/expenses",

@@ -119,6 +119,10 @@ const ACTION_LABEL: Record<string, string> = {
   "approval.refused": "Wrong PIN for an approval",
   "cash.move": "Cash moved",
   "drawer.count": "Drawer counted",
+  "cash.session.open": "Drawer opened",
+  "cash.session.close": "Drawer closed",
+  "cash.session.hand_over": "Drawer handed over",
+  "cash.session.force_close": "Drawer closed by a manager",
   "card.settlement": "Card takings settled",
   "card.settlement_cancel": "Card settlement cancelled",
   "platform.settlement": "Platform payout recorded",
@@ -263,6 +267,18 @@ const FIELD_LABEL: Record<string, string> = {
   set_up_like: "Set up like",
   packaging_lines: "Recipe lines given its packaging",
   prices_copied: "Prices copied",
+  session_no: "Session",
+  counted: "Counted",
+  expected: "Should hold",
+  variance: "Over / short",
+  left: "Stays in the drawer",
+  taken: "Taken out",
+  taken_to: "Taken to",
+  took_over: "Took over from the drawer counts",
+  float_from_safe: "Put in from the safe",
+  notes: "Notes counted",
+  next_session_no: "Next session",
+  next_cashier: "Taken over by",
 };
 
 /**
@@ -313,6 +329,13 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
     }
     if (key === "roles") return v.map((r) => roleLabel(String(r))).join(", ");
     return v.map((x) => showValue(x, key, names)).join(", ");
+  }
+  // The notes counted in the drawer (0036): "25,000 × 2, 1,000 × 3".
+  if (key === "notes") {
+    const set = Object.entries(v).sort((x, y) => Number(y[0]) - Number(x[0]));
+    return set.length
+      ? set.map(([k, x]) => `${Number(k).toLocaleString("en-US")} × ${String(x)}`).join(", ")
+      : "—";
   }
   // A platform's names in other languages (0031): "ar ليزو, ckb لێزۆ".
   if (key === "names") {
@@ -433,6 +456,8 @@ export function subjectOf(
         : "Card takings";
     case "app_language":
       return pick("name") ?? `Language ${entityId ?? ""}`.trim();
+    case "work_shift":
+      return pick("session_no") ? `Session ${pick("session_no")}` : "A drawer count";
     case "platform_settlement":
       return pick("reference")
         ? `${pick("platform") ?? "Platform"} statement ${pick("reference")}`
@@ -463,6 +488,7 @@ const SUBJECT_WORDS = new Set([
   "A batch",
   "A stock count",
   "A table",
+  "A drawer count",
 ]);
 
 /** An id shown short, as subjectOf shows it: "1a2b3c4d…". */
@@ -476,6 +502,7 @@ const SUBJECTS: [RegExp, string, string[]][] = [
   [/^Supplier bill (.+)$/, "Supplier bill {no}", ["no"]],
   [new RegExp(`^Journal (\\d+|${SHORT_ID})$`), "Journal {no}", ["no"]],
   [/^Language ([a-z]{2,3}(?:-[a-z0-9]{2,8})?)$/, "Language {code}", ["code"]],
+  [/^Session (\d+)$/, "Session {no}", ["no"]],
   [
     /^Card takings (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})$/,
     "Card takings {from} to {to}",

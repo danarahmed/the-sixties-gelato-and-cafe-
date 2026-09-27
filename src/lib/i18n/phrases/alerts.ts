@@ -447,6 +447,78 @@ const phrases: PhraseBook = {
     ckb: "هیچ شتێکی بەپەلە نییە. {n} ئاگادارکردنەوەی پرتەقاڵی چاوەڕێی کاتێکی هێمنن.",
   },
   "Nothing to do.": { ar: "لا شيء لفعله.", ckb: "هیچ کارێک نییە." },
+  // Cash sessions (0036): left open, short, closed by a manager; and the drawer not counted, as it now reads.
+  "Cash session left open": {
+    ar: "وردية نقد بقيت مفتوحة",
+    ckb: "شیفتێکی پارە بە کراوەیی ماوەتەوە",
+  },
+  "Cash session short": {
+    ar: "عجز في وردية نقد",
+    ckb: "کەمی لە شیفتێکی پارەدا",
+  },
+  "Cash session closed by a manager": {
+    ar: "وردية نقد أغلقها مدير",
+    ckb: "شیفتێکی پارە کە بەڕێوەبەرێک دایخست",
+  },
+  "Hours a cash session may stay open": {
+    ar: "الساعات التي يجوز أن تبقى فيها وردية النقد مفتوحة",
+    ckb: "ئەو کاتژمێرانەی شیفتێکی پارە دەتوانێت کراوە بمێنێتەوە",
+  },
+  "A cash session short by at least (IQD)": {
+    ar: "عجز وردية النقد بما لا يقلّ عن (IQD)",
+    ckb: "کەمی شیفتی پارە بە لانیکەم (IQD)",
+  },
+  "Session {1} at {2} has been open since {3}": {
+    ar: "الوردية {1} في {2} مفتوحة منذ {3}",
+    ckb: "شیفتی {1} لە {2} لە {3}ەوە کراوەیە",
+  },
+  "The cash in an open session has not been counted: the longer it stays open, the more passes through it unchecked.":
+    {
+      ar: "النقد في وردية مفتوحة لم يُعدّ بعد: كلما طال بقاؤها مفتوحة، مرّ فيها مزيد من النقد دون تحقّق.",
+      ckb: "پارەی ناو شیفتێکی کراوە نەژمێردراوە: تا زیاتر کراوە بمێنێتەوە، پارەی زیاتر بێ پشکنین پێیدا تێدەپەڕێت.",
+    },
+  "Close it on the till, counting the cash; a manager can close it on Cash sessions.": {
+    ar: "أغلقها في نقطة البيع بعدّ النقد؛ ويمكن للمدير إغلاقها من ورديات النقد.",
+    ckb: "لە خاڵی فرۆشتن بە ژماردنی پارەکە دایبخە؛ بەڕێوەبەر دەتوانێت لە شیفتەکانی پارە دایبخات.",
+  },
+  "Session {1} at {2} opened {3} IQD short of what the last session left": {
+    ar: "الوردية {1} في {2} افتُتحت بعجز {3} IQD عمّا تركته الوردية السابقة",
+    ckb: "شیفتی {1} لە {2} بە {3} IQD کەمتر لەوەی شیفتی پێشوو جێی هێشت کرایەوە",
+  },
+  "Session {1} at {2} closed {3} IQD short": {
+    ar: "الوردية {1} في {2} أُغلقت بعجز {3} IQD",
+    ckb: "شیفتی {1} لە {2} بە {3} IQD کەمی داخرا",
+  },
+  "Cash that should be in the drawer is not: change miscounted, a sale not rung up, or money taken.":
+    {
+      ar: "نقد يجب أن يكون في الدرج ليس فيه: فكّة عُدّت خطأ، أو بيع لم يُسجَّل، أو مال أُخذ.",
+      ckb: "پارەیەک کە دەبێت لە دەخیلەکەدا بێت تێیدا نییە: وردە پارە بە هەڵە ژمێردراوە، فرۆشتنێک تۆمار نەکراوە، یان پارە بردراوە.",
+    },
+  "Look at the session's statement on Cash sessions, and ask whoever had the drawer.": {
+    ar: "راجع كشف الوردية في ورديات النقد، واسأل من كان مسؤولًا عن الدرج.",
+    ckb: "سەیری کەشفی شیفتەکە بکە لە شیفتەکانی پارە، و پرسیار لەو کەسە بکە کە دەخیلەکەی لا بوو.",
+  },
+  "Session {1} at {2} was closed by {3}: {4}": {
+    ar: "الوردية {1} في {2} أغلقها {3}: {4}",
+    ckb: "شیفتی {1} لە {2} لەلایەن {3}ەوە داخرا: {4}",
+  },
+  "It was closed without a count: what it held is counted when the drawer next opens.": {
+    ar: "أُغلقت دون عدّ: ما كان فيها يُعدّ عند فتح الدرج التالي.",
+    ckb: "بێ ژماردن داخرا: ئەوەی تێیدا بوو کاتی کردنەوەی داهاتووی دەخیلەکە دەژمێردرێت.",
+  },
+  "Its cashier did not close it: the count was not theirs.": {
+    ar: "لم يغلقها أمين الصندوق: العدّ لم يكن عدّه.",
+    ckb: "کاشێرەکەی دایینەخست: ژماردنەکە هی ئەو نەبوو.",
+  },
+  "Check it with the cashier on Cash sessions.": {
+    ar: "راجعها مع أمين الصندوق في ورديات النقد.",
+    ckb: "لە شیفتەکانی پارەدا لەگەڵ کاشێرەکە بیپشکنە.",
+  },
+  "Close its session on the till, counting the cash; a manager can close one left open on Cash sessions.":
+    {
+      ar: "أغلق ورديته في نقطة البيع بعدّ النقد؛ ويمكن للمدير إغلاق وردية بقيت مفتوحة من ورديات النقد.",
+      ckb: "شیفتەکەی لە خاڵی فرۆشتن بە ژماردنی پارەکە دابخە؛ بەڕێوەبەر دەتوانێت شیفتێکی کراوەماو لە شیفتەکانی پارە دابخات.",
+    },
 };
 
 export default phrases;

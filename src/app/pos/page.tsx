@@ -3,6 +3,7 @@ import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getOpenBills, getPosCatalogue, getTables } from "@/lib/db/pos";
 import { getChannels } from "@/lib/db/channels";
+import { getDrawerState } from "@/lib/db/cash";
 import { PosClient } from "@/components/pos/PosClient";
 import { ChannelsProvider } from "@/components/ChannelsProvider";
 import { EmptyState } from "@/components/ui";
@@ -12,11 +13,12 @@ export const dynamic = "force-dynamic";
 export default async function PosPage() {
   const profile = await requirePermission("sale.create");
   const t = await getT();
-  const [items, tables, bills, channels] = await Promise.all([
+  const [items, tables, bills, channels, drawer] = await Promise.all([
     getPosCatalogue(),
     getTables(),
     getOpenBills(),
     getChannels(),
+    getDrawerState(),
   ]);
 
   if (items.length === 0) {
@@ -48,6 +50,7 @@ export default async function PosPage() {
         canDiscount={has(profile, "discount.apply")}
         discountRules={{ cap: profile.discountCap, canApprove: has(profile, "discount.approve") }}
         money={{ decimals: profile.currencyDecimals, discountStep: profile.discountRoundTo }}
+        initialDrawer={drawer}
       />
     </ChannelsProvider>
   );

@@ -37,6 +37,9 @@ export type Permission =
   | "purchase.receive"
   | "expense.record"
   | "day.close"
+  | "cash.session"
+  | "cash.view_expected"
+  | "cash.session.force"
   | "accounting.post"
   | "accounting.period.lock"
   | "accounting.period.unlock"
@@ -64,6 +67,9 @@ const ALL: Permission[] = [
   "purchase.receive",
   "expense.record",
   "day.close",
+  "cash.session",
+  "cash.view_expected",
+  "cash.session.force",
   "accounting.post",
   "accounting.period.lock",
   "accounting.period.unlock",
@@ -101,12 +107,19 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "purchase.receive",
     "expense.record",
     "day.close",
+    "cash.session",
+    "cash.session.force",
     "platform.reconcile",
     "ai.view",
     "audit.view",
   ]),
-  cashier: new Set<Permission>(["sale.create", "discount.apply"]),
-  barista: new Set<Permission>(["sale.create", "waste.record", "production.record"]),
+  cashier: new Set<Permission>(["sale.create", "discount.apply", "cash.session"]),
+  barista: new Set<Permission>([
+    "sale.create",
+    "waste.record",
+    "production.record",
+    "cash.session",
+  ]),
   inventory_counter: new Set<Permission>(["inventory.count"]),
   purchasing: new Set<Permission>(["purchase.create", "purchase.receive", "cost.view"]),
   accountant: new Set<Permission>([
@@ -117,8 +130,9 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "accounting.period.lock",
     "platform.reconcile",
     "audit.view",
+    "cash.view_expected",
   ]),
-  auditor: new Set<Permission>(["cost.view", "profit.view", "audit.view"]),
+  auditor: new Set<Permission>(["cost.view", "profit.view", "audit.view", "cash.view_expected"]),
 };
 
 export function can(role: Role, permission: Permission): boolean {

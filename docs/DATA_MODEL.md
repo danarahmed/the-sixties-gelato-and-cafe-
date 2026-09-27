@@ -631,3 +631,79 @@ note)`** (needs `accounting.post`; one at a time per business): matches
   sale takes the day's next number; `settle_tab` passes the bill's, and a bill
   from before `0034` takes one then. `record_sale`, `settle_tab` (and their
   replays) return `turn_no`; `pos_open_bills()` gives each bill's.
+
+### Every write recorded once (`0035`)
+
+- **`request_log`** (`business_id`, `key`, `operation`, `request_hash`,
+  `result`, `app_user_id`, `created_at`; primary key `(business_id, key)`):
+  the answer each keyed write gave, stored in the same transaction as the
+  work. Row security is forced and nothing is granted on it: only the
+  database's own functions read or write it.
+- **`idem_begin(business, key, operation, args)`** (internal) takes an
+  advisory lock on the key, then answers a retry with the stored answer
+  (marked `replayed`), refuses a key used for another operation, other
+  arguments or by another person, and otherwise lets the work proceed;
+  **`idem_finish`** stores the answer. Each of the fifty writes keeps its name
+  and parameters, with `p_idempotency_key uuid` last; the work itself is
+  `<name>__run`, callable only by the database.
+- **Keys from the API (`0036`).** A keyed write called through the API
+  (PostgREST sets `request.path` to `/rpc/<name>`) without a key is refused:
+  _"This screen sent no retry key: reload the page and try again"_. Only the
+  function the API called is held to it, so the writes it makes inside (a
+  bill opened with its first order saves it) are not; SQL callers, which set
+  no `request.path`, are not affected.
+
+### The drawer in sessions (`0036`)
+
+- **`cash_drawer`** (`location_id`, `name` "Till", `is_active`): one active
+  drawer per location (unique index `cash_drawer_one_per_location`), made for
+  every location as `0036` went in and for each new one by trigger
+  (`location_drawer`). Members read it; nobody writes it but the database.
+- **`work_shift`** gains `kind = 'session'` beside `day` and `drawer`, with
+  `drawer_id`, `session_no` (numbered per business from `document_counter`,
+  `session`), `cashier_id`, `opening_counted`, `opening_expected` (what the
+  last session or count left), `opening_variance`, `opening_denominations`
+  and `closing_denominations` (the notes counted, `{"1000": 2}`), `closed_by`,
+  `forced_reason` (a manager's close) and `opened_from` (the session handed
+  over to this one, or the drawer record its first opening took over). A
+  session's `expected_cash` is its opening count and every movement in it.
+  One session is open per drawer (unique index `work_shift_one_open_session`);
+  a closed one never changes (the guard of `0014`). `open_session_at(business,
+location)` gives the open one.
+- **Cash joins the open session.** A `cash_event` is given its session as it
+  is inserted (trigger `cash_event_session`, which takes the session in share
+  mode, so a close waits for cash already on its way in); with no session
+  open it is refused: _"Open the drawer first: on the till, count the cash in
+  it"_. An open session's events are read only with `cash.view_expected`.
+- **`sales_order.shift_id`** names the session open when the sale was made
+  (trigger `sales_order_session`), now a foreign key to `work_shift`; a
+  session's card takings and orders come from it.
+- **Journals.** A difference at the opening posts to 6300 with reference
+  `session_opening` (the session's id), one at the close with reference
+  `work_shift`; each source is posted once (`journal_entry_one_per_source`).
+  The takings after a close are a `cash_transfer` from the till to the safe or
+  the bank; a float at the opening is one from the safe (Dr 1000, Cr 1005).
+- **The first opening takes over.** When a drawer's first session opens and
+  cash has moved since its last count (or the location has only days closed
+  the old way), a closed `drawer` record is written first: what the last
+  count left and every movement since, or, for a drawer never counted, what
+  the books say the till holds (1000, less the cash other locations' drawers
+  are known to hold). The session opens on the count against it.
+- **Functions** (each keyed, audited `cash.session.open`, `.close`,
+  `.hand_over`, `.force_close`): `open_cash_session` (`cash.session`; a float
+  from the safe needs `day.close` or `accounting.post`),
+  `close_cash_session` (the session's cashier, or `cash.session.force`),
+  `hand_over_session` (close and open the next person's, in one step) and
+  `force_close_session` (`cash.session.force`, a reason, counted or not).
+  `cash_session_status` (the till's view: what an open drawer should hold
+  only with `cash.view_expected`), `cash_sessions(from, to)` (sessions and the
+  drawer counts and day closes before them) and `cash_session_statement`
+  (every movement of a session's cash; an open one's only with
+  `cash.view_expected`). `drawer_position`, `assert_drawer_can_pay`,
+  `uncounted_days`, the void rule, the alerts and the daily brief know
+  sessions. `count_drawer` closes the open session until it is withdrawn;
+  `drawer_status` shows cash figures only with `cash.view_expected`.
+- **Permissions.** `cash.session` (owner, general manager, branch manager,
+  cashier, barista), `cash.view_expected` (owner, general manager,
+  accountant, auditor), `cash.session.force` (owner, general manager, branch
+  manager).

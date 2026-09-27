@@ -178,6 +178,16 @@ describe("what the café is told without asking", () => {
     ["Bank is -10,000 IQD: below zero", []],
     ["The drawer at Main Branch has not been counted for 05 Sep", ["Main Branch"]],
     ["The drawer at Main Branch has not been counted for 2 days, since 05 Sep", ["Main Branch"]],
+    ["Session 12 at Main Branch has been open since 05 Sep 14:30", ["Main Branch"]],
+    ["Session 12 at Main Branch closed 6,000 IQD short", ["Main Branch"]],
+    [
+      "Session 13 at Main Branch opened 9,500 IQD short of what the last session left",
+      ["Main Branch"],
+    ],
+    [
+      "Session 13 at Main Branch was closed by Demo Manager: The cashier went home",
+      ["Main Branch", "Demo Manager", "The cashier went home"],
+    ],
     ["A stock count has been open since 05 Sep 14:30", []],
     ["Alert milk runs out in under a day: 500 ml left, using about 1100 a day", ["Alert milk"]],
     ["Alert milk runs out in 1.5 days: 1500 ml left, using about 1000 a day", ["Alert milk"]],

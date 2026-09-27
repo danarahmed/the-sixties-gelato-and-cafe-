@@ -173,13 +173,16 @@ console.log("▸ manager records the rent");
     );
   const post = page.getByRole("button", { name: "Post expense" });
   check(await post.isDisabled(), "it cannot post until someone says where the money came from");
-  // The drawer holds 2,500: two cash sales, less the one refunded.
+  // The drawer holds 2,500: two cash sales, less the one refunded. A branch
+  // manager is told it is not enough, not what it holds (0036).
   await page.getByLabel("Paid from", { exact: true }).selectOption("till");
   await post.click();
   await page
-    .getByText(/The drawer should hold only 2500 — not enough to pay 400000/)
+    .getByText(/The drawer does not hold enough to pay 400000\. Move cash into the till first/)
     .waitFor({ timeout: 10000 });
-  ok("the till cannot pay out more than the drawer should hold");
+  ok(
+    "the till cannot pay out more than the drawer holds, and the manager is not told what that is",
+  );
   await page.getByLabel("Paid from", { exact: true }).selectOption("bank");
   await post.click();
   await page.getByText(/Posted to 6000/).waitFor({ timeout: 10000 });
@@ -260,7 +263,13 @@ console.log("▸ counter counts blind; manager approves");
     timeout: 20000,
   });
   await page.getByRole("button", { name: "Submit count" }).click();
-  await page.getByText("Count submitted").waitFor({ timeout: 10000 });
+  // The sheet says so, then gives way to the list, where the count waits for
+  // its review: the page may refresh before the message is seen.
+  await page
+    .getByText("Count submitted")
+    .or(page.locator("tbody tr", { hasText: "submitted" }))
+    .first()
+    .waitFor({ timeout: 10000 });
   ok(`counted ${n} items and submitted`);
   await ctx.close();
 }
@@ -348,8 +357,8 @@ check(
   "journaled Dr Inventory, Cr Owner equity, as a new item's opening stock",
 );
 
-// ------------------------------------------------------- the drawer count
-console.log("▸ a bill still waiting for its money holds the drawer count");
+// ------------------------------------------------------- the drawer
+console.log("▸ a bill still waiting for its money is no cash yet: it carries to the next session");
 {
   const { ctx, page } = await signIn(browser, "cashier");
   await open(page, "/pos");
@@ -360,17 +369,18 @@ console.log("▸ a bill still waiting for its money holds the drawer count");
   await page
     .getByText("Late customer — kept open, waiting for payment")
     .waitFor({ timeout: 10000 });
+  await page.getByTestId("drawer-button").click();
+  const drawer = page.getByTestId("drawer-panel");
+  await drawer.getByRole("button", { name: "Close the drawer" }).click();
+  await drawer
+    .getByText("1 bill(s) are still open: they are no cash yet, and are paid in the next session.")
+    .waitFor({ timeout: 10000 });
+  ok("closing the drawer, the till says the open bill carries to the next session");
+  await drawer.getByRole("button", { name: "Back" }).click();
   await ctx.close();
 }
 {
   const { ctx, page } = await signIn(browser, "manager");
-  await open(page, "/sales");
-  await page.getByText("1 bill(s) from the till are still open").waitFor({ timeout: 10000 });
-  await page.getByLabel("Cash counted", { exact: true }).fill("2000");
-  check(
-    await page.getByRole("button", { name: "Count the drawer" }).isDisabled(),
-    "the drawer cannot be counted while a bill is open",
-  );
   await open(page, "/pos");
   await page.locator(".strip-chip", { hasText: "Late customer" }).click();
   await page.getByRole("button", { name: /Cancel bill/ }).click();
@@ -391,30 +401,64 @@ const BIZ_ID = "00000000-0000-0000-0000-0000000000b1";
 const balance = (code) =>
   sql(`select trim_scale(gl_balance_at('${BIZ_ID}', '${code}', 'infinity'))`);
 
-console.log("▸ manager counts the drawer, keeps a float and takes the rest to the safe");
+console.log("▸ only those who may see it are shown what the drawer should hold");
 {
   const { ctx, page } = await signIn(browser, "manager");
   await open(page, "/sales");
+  await page.getByTestId("drawer-open").waitFor({ timeout: 10000 });
   check(
-    (await page.getByTestId("drawer-expected").textContent()).trim() === "2,500 IQD",
-    "the drawer should hold 2,500 IQD: two cash sales, less the one refunded",
+    (await page.getByTestId("drawer-expected").count()) === 0,
+    "a branch manager sees the drawer open, but not what it should hold",
   );
-  await page.getByLabel("Cash counted", { exact: true }).fill("2000");
-  await page.getByLabel("Stays in the drawer", { exact: true }).fill("1500");
-  await page.getByLabel("Takings go to", { exact: true }).selectOption("safe");
-  await page.getByRole("button", { name: "Count the drawer" }).click();
-  await page
-    .getByText(/Counted — 500 IQD short, posted to 6300 Cash over \/ short/)
-    .waitFor({ timeout: 10000 });
-  check(
-    await page.getByText("500 IQD to the safe; 1,500 IQD stays in the drawer.").isVisible(),
-    "500 short, posted to 6300; 500 to the safe, and 1,500 stays for next time",
-  );
+  await ctx.close();
+}
+{
+  const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/sales");
   check(
-    (await page.getByTestId("drawer-expected").textContent()).trim() === "1,500 IQD",
-    "the next count starts from what stayed",
+    /It should hold 2,500 IQD/.test(await page.getByTestId("drawer-expected").textContent()),
+    "the owner is shown it: 2,500 IQD, two cash sales less the one refunded",
   );
+  await ctx.close();
+}
+
+console.log(
+  "▸ the cashier closes the drawer, counted blind: a float stays, the rest goes to the safe",
+);
+{
+  const { ctx, page } = await signIn(browser, "cashier");
+  await open(page, "/pos");
+  await page.getByTestId("drawer-button").click();
+  const drawer = page.getByTestId("drawer-panel");
+  check(
+    (await drawer.getByTestId("drawer-expected").count()) === 0,
+    "the till does not say what it should hold",
+  );
+  await drawer.getByRole("button", { name: "Close the drawer" }).click();
+  await drawer.getByRole("button", { name: "Count note by note" }).click();
+  await drawer.getByLabel("Notes of 1,000 IQD").fill("2");
+  await drawer.getByLabel("Stays in the drawer", { exact: true }).fill("1500");
+  await drawer.getByLabel("Takings go to", { exact: true }).selectOption("safe");
+  await drawer.getByRole("button", { name: "Close the drawer" }).click();
+  const answer = drawer.getByTestId("drawer-answer");
+  await answer.waitFor({ timeout: 10000 });
+  const said = await answer.textContent();
+  check(
+    /Session 1 is closed\. It should have held 2,500 IQD; counted 2,000 IQD: 500 IQD short\./.test(
+      said,
+    ) &&
+      /500 IQD to the safe; 1,500 IQD stays in the drawer\./.test(said) &&
+      /6300 Cash over \/ short, journal \d+/.test(said),
+    "once the count is in: it should have held 2,500; 500 short, posted to 6300; 500 to the safe, 1,500 stays",
+  );
+  await page.getByRole("button", { name: "Close", exact: true }).click();
+  await page.getByText("🔒 Open the drawer").waitFor({ timeout: 10000 });
+  ok("the till shows the drawer closed");
+  await ctx.close();
+}
+{
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/sales");
   const uncountedCard = page.locator(".cards2 > div", {
     has: page.locator(".sc", { hasText: "Days whose cash is not counted" }),
   });
@@ -423,20 +467,26 @@ console.log("▸ manager counts the drawer, keeps a float and takes the rest to 
       /Drawer last counted/.test(await uncountedCard.textContent()),
     "and Sales shows no day left uncounted",
   );
+  check(
+    (await page.getByTestId("sessions-table").locator("tbody tr").first().textContent()).includes(
+      "Session 1",
+    ),
+    "the session is on Sales, with its count",
+  );
   await ctx.close();
 }
 check(
   sql(
     `select string_agg(kind || ' ' || trim_scale(expected_cash) || ' ' || trim_scale(counted_cash) || ' ' ||
                        trim_scale(variance) || ' ' || trim_scale(left_in_drawer) || ' ' || trim_scale(taken_out) ||
-                       ' ' || taken_to, ',')
+                       ' ' || taken_to || ' ' || closing_denominations::text, ',')
        from work_shift where closed_at is not null`,
-  ) === "drawer 2500 2000 -500 1500 500 safe",
-  "one drawer count: 2,500 expected, 2,000 counted, 500 short, 1,500 stays, 500 to the safe",
+  ) === 'session 2500 2000 -500 1500 500 safe {"1000": 2}',
+  "one session: 2,500 expected, 2,000 counted in two 1,000 notes, 500 short, 1,500 stays, 500 to the safe",
 );
 check(
   sql("select count(*) from cash_event where work_shift_id is null") === "0",
-  "every movement of cash is in the count",
+  "every movement of cash is in the session",
 );
 check(
   balance("1000") === "1500" && balance("1005") === "500",
@@ -446,6 +496,32 @@ check(
   sql(`select count(*) from uncounted_days('${BIZ_ID}')`) === "0",
   "no trading day is left with its cash uncounted",
 );
+
+console.log("▸ cash waits for the drawer to open; the next session opens on what was left");
+{
+  const { ctx, page } = await signIn(browser, "cashier");
+  await open(page, "/pos");
+  await page.locator(".product-tile", { hasText: "Golden espresso" }).click();
+  await page.getByRole("button", { name: /Cash/ }).click();
+  await page
+    .getByText("Open the drawer first: count the cash in it. A card sale needs no drawer.")
+    .waitFor({ timeout: 10000 });
+  ok("taking cash with the drawer closed opens the drawer instead");
+  const drawer = page.getByTestId("drawer-panel");
+  await drawer.getByRole("button", { name: "Open the drawer" }).click();
+  await drawer.getByLabel("Cash counted", { exact: true }).fill("1500");
+  await drawer.getByRole("button", { name: "Open the drawer" }).click();
+  await drawer
+    .getByText(
+      /Session 2 is open\. Counted 1,500 IQD; the last session left 1,500 IQD: it agrees exactly\./,
+    )
+    .waitFor({ timeout: 10000 });
+  ok("session 2 opens on the 1,500 left in the drawer, which agrees exactly");
+  await page.getByRole("button", { name: "Close", exact: true }).click();
+  await page.getByText("🔓 Session 2").waitFor({ timeout: 10000 });
+  ok("and the till shows it open");
+  await ctx.close();
+}
 
 console.log("▸ manager banks the safe; the safe cannot pay out more than it holds");
 {

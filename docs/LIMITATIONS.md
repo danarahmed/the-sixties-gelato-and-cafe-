@@ -64,8 +64,33 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
 - **Retry keys, what they do not cover (`0035`).** A screen keeps the key of an
   unanswered submission while it stays open; reloaded, it forgets it (only the
   till keeps its unanswered payment across a reload), so after a reload look
-  before entering it again. SQL typed by hand without a key is done as before,
+  before entering it again. Since `0036` a write sent through the API without
+  a key is refused; SQL typed by hand without a key is done as before,
   unprotected.
+- **Cash sessions, what they do not do (release K, `0036`).**
+  - Each location has one drawer, with one session open on it at a time: two
+    tills in one branch would share it. A drawer for each till comes with the
+    branches (release AB).
+  - The count is blind on the drawer's own screens. Someone who may read the
+    sales (Orders, the daily summaries: a branch manager, say) can still add
+    up the cash sales for themselves; a cashier and a barista may not read
+    them.
+  - Over and short is posted to 6300 with the session named on the journal,
+    but not the branch: the location on journal lines comes with the branches
+    (release AB). With one branch trading, every session is that branch's.
+  - A session is never closed on its own. One left open stays open until its
+    cashier or a manager closes it; the dashboard warns of it after 14 hours.
+  - The count is in Iraqi dinars, typed as a total or counted in notes of 250
+    to 50,000. Foreign cash is not counted (US dollars at the till are release
+    R).
+  - The Sales screen's old **Count the drawer** is gone. The database function
+    behind it, `count_drawer`, now closes the open session, counted, so a
+    screen left open during the update keeps working; it is withdrawn in
+    release L.
+  - The first opening takes over from the counts before sessions. On a drawer
+    never counted, what it should hold is what the books say the till holds
+    (1000 Cash in the till), so the first count is compared with the books,
+    whatever they say.
 - **Partial refunds.** A refund returns the whole sale. A partial refund is a
   refund of the sale followed by a new sale for what was kept.
 - **One cap for everyone.** Since `0028` every discount has a reason, and one

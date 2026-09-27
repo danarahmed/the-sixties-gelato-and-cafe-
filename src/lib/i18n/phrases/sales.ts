@@ -530,6 +530,284 @@ const phrases: PhraseBook = {
   // A vendor statement's notes (src/lib/db/books.ts).
   "Due {date}": { ar: "تستحق في {date}", ckb: "کاتی دانەوە {date}" },
   "was {amount}": { ar: "كانت {amount}", ckb: "پێشتر {amount} بوو" },
+  // The drawer in sessions (0036): the till, Sales and the sessions' record.
+  "The Drawer": {
+    ar: "درج النقد",
+    ckb: "دەخیلە",
+  },
+  "The drawer": {
+    ar: "درج النقد",
+    ckb: "دەخیلەکە",
+  },
+  "Opened and closed with a count · what it should hold is shown once the count is in": {
+    ar: "يُفتح ويُغلق بعدّ · ما يجب أن يحويه يظهر بعد إدخال العدّ",
+    ckb: "بە ژماردن دەکرێتەوە و دادەخرێت · ئەوەی دەبێت تێیدا بێت دوای تۆمارکردنی ژماردنەکە پیشان دەدرێت",
+  },
+  "Cash Sessions": {
+    ar: "ورديات النقد",
+    ckb: "شیفتەکانی پارە",
+  },
+  "Cash sessions": {
+    ar: "ورديات النقد",
+    ckb: "شیفتەکانی پارە",
+  },
+  "Each from its opening count to its closing count · over / short history": {
+    ar: "كلّ وردية من عدّ افتتاحها إلى عدّ إغلاقها · سجلّ الزيادة والعجز",
+    ckb: "هەر شیفتێک لە ژماردنی کردنەوەیەوە تا ژماردنی داخستنی · مێژووی زیادە و کەم",
+  },
+  "All sessions": {
+    ar: "كلّ الورديات",
+    ckb: "هەموو شیفتەکان",
+  },
+  Session: {
+    ar: "الوردية",
+    ckb: "شیفت",
+  },
+  "Session {no}": {
+    ar: "الوردية {no}",
+    ckb: "شیفتی {no}",
+  },
+  Opened: {
+    ar: "فُتحت",
+    ckb: "کرایەوە",
+  },
+  Closed: {
+    ar: "أُغلقت",
+    ckb: "داخرا",
+  },
+  "Opened with": {
+    ar: "مبلغ الافتتاح",
+    ckb: "بڕی کردنەوە",
+  },
+  "Day closed": {
+    ar: "إغلاق يومي",
+    ckb: "داخستنی ڕۆژانە",
+  },
+  "Closed by {name}: {reason}": {
+    ar: "أغلقها {name}: {reason}",
+    ckb: "{name} دایخست: {reason}",
+  },
+  "Handed over from session {no}": {
+    ar: "مُسلَّمة من الوردية {no}",
+    ckb: "لە شیفتی {no}ەوە ڕادەست کرا",
+  },
+  "Notes at the opening": {
+    ar: "الأوراق النقدية عند الافتتاح",
+    ckb: "پارە کاغەزییەکان لە کاتی کردنەوەدا",
+  },
+  "Notes at the close": {
+    ar: "الأوراق النقدية عند الإغلاق",
+    ckb: "پارە کاغەزییەکان لە کاتی داخستندا",
+  },
+  "Cash in and out": {
+    ar: "النقد الداخل والخارج",
+    ckb: "پارەی هاتوو و ڕۆیشتوو",
+  },
+  "Takings to the {place}": {
+    ar: "المقبوضات إلى {place}",
+    ckb: "داهات بۆ {place}",
+  },
+  "Cash sale": {
+    ar: "بيع نقدي",
+    ckb: "فرۆشتنی نەختینە",
+  },
+  "Paid out, reversed": {
+    ar: "مدفوع أُلغي",
+    ckb: "پارەدانێکی هەڵوەشێنراوە",
+  },
+  "Put in": {
+    ar: "إيداع",
+    ckb: "دانان",
+  },
+  "{n} session(s) · short {short} · over {over}": {
+    ar: "{n} وردية · العجز {short} · الزيادة {over}",
+    ckb: "{n} شیفت · کەم {short} · زیادە {over}",
+  },
+  "No cash sessions in these dates": {
+    ar: "لا ورديات نقد في هذه التواريخ",
+    ckb: "هیچ شیفتێکی پارە لەم ڕێکەوتانەدا نییە",
+  },
+  "A session begins when the drawer is opened on the till, counting the cash in it.": {
+    ar: "تبدأ الوردية عند فتح درج النقد في نقطة البيع بعدّ النقد الذي فيه.",
+    ckb: "شیفت دەست پێ دەکات کاتێک دەخیلەکە لە خاڵی فرۆشتن دەکرێتەوە و پارەی ناوی دەژمێردرێت.",
+  },
+  "The drawer is open: session {no}, {cashier}'s, since {when}": {
+    ar: "درج النقد مفتوح: الوردية {no} لـ{cashier}، منذ {when}",
+    ckb: "دەخیلەکە کراوەیە: شیفتی {no}ی {cashier}، لە {when}ەوە",
+  },
+  "The drawer is closed": {
+    ar: "درج النقد مغلق",
+    ckb: "دەخیلەکە داخراوە",
+  },
+  "Cash is taken only while it is open: open it by counting the cash in it.": {
+    ar: "لا يُقبض النقد إلا وهو مفتوح: افتحه بعدّ النقد الذي فيه.",
+    ckb: "پارە تەنها کاتێک وەردەگیرێت کە کراوە بێت: بە ژماردنی پارەی ناوی بیکەرەوە.",
+  },
+  "Open the drawer": {
+    ar: "افتح درج النقد",
+    ckb: "دەخیلەکە بکەرەوە",
+  },
+  "Close the drawer": {
+    ar: "أغلق درج النقد",
+    ckb: "دەخیلەکە دابخە",
+  },
+  "Hand over": {
+    ar: "سلّم",
+    ckb: "ڕادەست بکە",
+  },
+  "Close it for them": {
+    ar: "أغلقها نيابةً عنه",
+    ckb: "لە جیاتی ئەو دایبخە",
+  },
+  "Close session {no}": {
+    ar: "أغلق الوردية {no}",
+    ckb: "شیفتی {no} دابخە",
+  },
+  "Hand session {no} over": {
+    ar: "سلّم الوردية {no}",
+    ckb: "شیفتی {no} ڕادەست بکە",
+  },
+  "Close {cashier}'s session {no}": {
+    ar: "أغلق وردية {cashier} رقم {no}",
+    ckb: "شیفتی {no}ی {cashier} دابخە",
+  },
+  "Count what is in the drawer now, before putting anything in. Its difference from what the last session left is shown once the count is in.":
+    {
+      ar: "عُدّ ما في درج النقد الآن قبل وضع أيّ شيء فيه. يظهر فرقه عمّا تركته الوردية السابقة بعد إدخال العدّ.",
+      ckb: "ئێستا ئەوەی لە دەخیلەکەدایە بژمێرە، پێش ئەوەی هیچی تێ بخەیت. جیاوازییەکەی لەگەڵ ئەوەی شیفتی پێشوو جێی هێشت دوای تۆمارکردنی ژماردنەکە پیشان دەدرێت.",
+    },
+  "Say why. Count the drawer if you can; left empty, it closes without a count and the next opening count finds what it held.":
+    {
+      ar: "اذكر السبب. عُدّ درج النقد إن استطعت؛ وإن تُرك فارغًا، تُغلق دون عدّ ويكشف عدّ الافتتاح التالي ما كان فيه.",
+      ckb: "هۆکارەکە بڵێ. ئەگەر دەتوانیت دەخیلەکە بژمێرە؛ ئەگەر بە بەتاڵی جێبهێڵرێت، بێ ژماردن دادەخرێت و ژماردنی کردنەوەی داهاتوو دەردەخات چی تێدا بووە.",
+    },
+  "Count the cash in the drawer. What it should hold is shown once the count is in.": {
+    ar: "عُدّ النقد في درج النقد. ما يجب أن يحويه يظهر بعد إدخال العدّ.",
+    ckb: "پارەی ناو دەخیلەکە بژمێرە. ئەوەی دەبێت تێیدا بێت دوای تۆمارکردنی ژماردنەکە پیشان دەدرێت.",
+  },
+  "Why it is closed": {
+    ar: "سبب الإغلاق",
+    ckb: "هۆکاری داخستن",
+  },
+  "The cashier went home without closing it": {
+    ar: "غادر أمين الصندوق دون إغلاقها",
+    ckb: "کاشێرەکە ڕۆیشتەوە بێ ئەوەی دایبخات",
+  },
+  "Cash put in from the safe now (optional)": {
+    ar: "نقد يوضع الآن من الخزنة (اختياري)",
+    ckb: "پارەی ئێستا لە قاسەوە دادەنرێت (ئارەزوومەندانە)",
+  },
+  "Cash from the safe": {
+    ar: "نقد من الخزنة",
+    ckb: "پارە لە قاسەوە",
+  },
+  "Stays in the drawer for them": {
+    ar: "يبقى في درج النقد لمن يستلم",
+    ckb: "بۆ وەرگرەکە لە دەخیلەدا دەمێنێتەوە",
+  },
+  "Hand the drawer to": {
+    ar: "سلّم درج النقد إلى",
+    ckb: "دەخیلەکە ڕادەستی ئەم کەسە بکە",
+  },
+  "{n} bill(s) are still open: they are no cash yet, and are paid in the next session.": {
+    ar: "لا تزال {n} فاتورة مفتوحة: ليست نقدًا بعد، وتُدفع في الوردية التالية.",
+    ckb: "{n} پسووڵە هێشتا کراوەن: هێشتا پارە نین، و لە شیفتی داهاتوودا دەدرێن.",
+  },
+  "Close the session": {
+    ar: "أغلق الوردية",
+    ckb: "شیفتەکە دابخە",
+  },
+  "Close it without a count": {
+    ar: "أغلقها دون عدّ",
+    ckb: "بێ ژماردن دایبخە",
+  },
+  "It should hold {amount}": {
+    ar: "يجب أن يحوي {amount}",
+    ckb: "دەبێت {amount}ی تێدا بێت",
+  },
+  "cash sales {sales}, card {card}, {orders} order(s)": {
+    ar: "مبيعات نقدية {sales}، بطاقة {card}، {orders} طلب",
+    ckb: "فرۆشتنی نەختینە {sales}، کارت {card}، {orders} داواکاری",
+  },
+  "it agrees exactly": {
+    ar: "مطابق تمامًا",
+    ckb: "تەواو ڕێکە",
+  },
+  "{amount} short": {
+    ar: "عجز {amount}",
+    ckb: "{amount} کەم",
+  },
+  "{amount} over": {
+    ar: "زيادة {amount}",
+    ckb: "{amount} زیادە",
+  },
+  "(6300 Cash over / short, journal {no})": {
+    ar: "(6300 زيادة / عجز النقد، القيد {no})",
+    ckb: "(6300 زیادە / کەمی پارە، تۆماری {no})",
+  },
+  "Session {no} is open. The drawer counts before sessions end here: the books said the till held {expected}; counted {counted}: {difference}.":
+    {
+      ar: "الوردية {no} مفتوحة. تنتهي هنا عدّات درج النقد السابقة للورديات: كانت الدفاتر تقول إن الدرج يحوي {expected}؛ والمعدود {counted}: {difference}.",
+      ckb: "شیفتی {no} کراوەیە. ژماردنەکانی دەخیلە پێش شیفتەکان لێرە کۆتایی دێن: دەفتەرەکان دەیانگوت دەخیلەکە {expected}ی تێدایە؛ ژمێردرا {counted}: {difference}.",
+    },
+  "Session {no} is open. Counted {counted}; the last session left {expected}: {difference}.": {
+    ar: "الوردية {no} مفتوحة. المعدود {counted}؛ وتركت الوردية السابقة {expected}: {difference}.",
+    ckb: "شیفتی {no} کراوەیە. ژمێردرا {counted}؛ شیفتی پێشوو {expected}ی جێهێشت: {difference}.",
+  },
+  "{amount} put in from the safe.": {
+    ar: "وُضع {amount} من الخزنة.",
+    ckb: "{amount} لە قاسەوە دانرا.",
+  },
+  "Session {no} is closed without a count: the {expected} it should hold stays in the drawer for the next opening count.":
+    {
+      ar: "أُغلقت الوردية {no} دون عدّ: المبلغ المتوقّع {expected} يبقى في درج النقد لعدّ الافتتاح التالي.",
+      ckb: "شیفتی {no} بێ ژماردن داخرا: ئەو {expected}ـەی دەبێت تێیدا بێت بۆ ژماردنی کردنەوەی داهاتوو لە دەخیلەدا دەمێنێتەوە.",
+    },
+  "Session {no} is closed. It should have held {expected}; counted {counted}: {difference}.": {
+    ar: "أُغلقت الوردية {no}. كان يجب أن تحوي {expected}؛ والمعدود {counted}: {difference}.",
+    ckb: "شیفتی {no} داخرا. دەبوو {expected}ی تێدا بێت؛ ژمێردرا {counted}: {difference}.",
+  },
+  "Session {no} is open for {name}.": {
+    ar: "الوردية {no} مفتوحة لـ{name}.",
+    ckb: "شیفتی {no} بۆ {name} کراوەیە.",
+  },
+  "Cash sales {sales} · refunds {refunds} · voids {voids} · paid out {paidOut} · put in {cashIn} · taken out {cashOut} · card {card} · {orders} order(s)":
+    {
+      ar: "مبيعات نقدية {sales} · استردادات {refunds} · إلغاءات {voids} · مدفوعات {paidOut} · إيداعات {cashIn} · سحوبات {cashOut} · بطاقة {card} · {orders} طلب",
+      ckb: "فرۆشتنی نەختینە {sales} · گەڕاندنەوە {refunds} · هەڵوەشاندنەوە {voids} · پارەدان {paidOut} · دانان {cashIn} · دەرهێنان {cashOut} · کارت {card} · {orders} داواکاری",
+    },
+  "Notes of {note}": {
+    ar: "أوراق فئة {note}",
+    ckb: "پارەی کاغەزی {note}",
+  },
+  "Cash counted (IQD), if counted": {
+    ar: "النقد المعدود (IQD)، إن عُدّ",
+    ckb: "پارەی ژمێردراو (IQD)، ئەگەر ژمێردرا",
+  },
+  "Type the total instead": {
+    ar: "اكتب المجموع بدلًا من ذلك",
+    ckb: "لە جیاتی ئەوە کۆی گشتی بنووسە",
+  },
+  "Count note by note": {
+    ar: "عُدّ ورقةً ورقة",
+    ckb: "کاغەز بە کاغەز بژمێرە",
+  },
+  "Count whole notes.": {
+    ar: "عُدّ أوراقًا كاملة.",
+    ckb: "کاغەزی تەواو بژمێرە.",
+  },
+  "Open the drawer first: count the cash in it. A card sale needs no drawer.": {
+    ar: "افتح درج النقد أولًا: عُدّ النقد الذي فيه. البيع بالبطاقة لا يحتاج درجًا.",
+    ckb: "سەرەتا دەخیلەکە بکەرەوە: پارەی ناوی بژمێرە. فرۆشتن بە کارت پێویستی بە دەخیلە نییە.",
+  },
+  "a session": {
+    ar: "وردية",
+    ckb: "شیفتێک",
+  },
+  "the person taking the drawer": {
+    ar: "من يستلم درج النقد",
+    ckb: "ئەو کەسەی دەخیلەکە وەردەگرێت",
+  },
 };
 
 export default phrases;

@@ -152,3 +152,15 @@ begin
 end $$;
 
 grant execute on all functions in schema test to public;
+
+-- The drawer is open (0036): cash needs an open session, so the cashier opens
+-- one, counting an empty drawer. Tests of sessions close it first. (In the
+-- upgrade rehearsal these fixtures load before sessions exist.)
+do $$
+begin
+  if to_regprocedure('public.open_cash_session(numeric,jsonb,numeric,uuid,uuid)') is not null then
+    perform test.act_as('cashier@example.com');
+    perform open_cash_session(0);
+    perform test.as_admin();
+  end if;
+end $$;

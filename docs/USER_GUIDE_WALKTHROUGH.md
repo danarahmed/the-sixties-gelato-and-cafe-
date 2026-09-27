@@ -161,6 +161,24 @@ owner
 5. **✅ Sale recorded** confirms it, with the sale and journal numbers. The
    cost is shown only to people allowed to see costs.
 
+**The drawer** (`0036`). The chip at the top of the till, **🔒 Open the
+drawer** or **🔓 Session 12**, opens it. Cash is taken only while the drawer is
+open: **💵 Cash** with it closed opens the drawer instead (a card sale needs
+none).
+
+- **Open the drawer:** count the cash in it before putting anything in — a
+  total, or **Count note by note** — and **Open the drawer**. The answer says
+  whether the count agrees with what the last session left; a difference posts
+  to 6300 Cash over / short. A manager can put a float in from the safe in the
+  same step.
+- **Close the drawer:** count it again, say what **Stays in the drawer**
+  (empty: all of it) and whether the rest goes to **the safe** or **the bank**.
+  The count is blind: only the answer shows what the drawer should have held,
+  with the difference, which posts to 6300; the takings leave 1000 for 1005 or 1020.
+- **Hand over:** count it and choose who takes it: one step closes your
+  session and opens theirs on what you leave.
+- A bill still open does not stop a close; it is paid in the next session.
+
 **If the connection drops mid-sale,** the till freezes that cart and says it did
 not hear back:
 
@@ -202,8 +220,8 @@ the name it was sold under: renaming a product later does not relabel its past
 sales. Choose **From**, **To** and a **Channel** to see the sales of those days;
 a report's figures open here with them chosen.
 
-- **Void.** For a sale rung in error, until the drawer holding its cash is
-  counted (after midnight too: the count, not the date, decides).
+- **Void.** For a sale rung in error, until the drawer's session holding its
+  cash is closed (after midnight too: the close, not the date, decides).
   Revenue, payment, cost and stock all come back exactly.
 - **Refund.** After that: the money goes back through 4200 Sales returns. Only
   items marked returnable come back into stock; a used cup does not.
@@ -218,9 +236,9 @@ void or refund shows why, who asked and who approved it.
 ## 7. Sales
 
 **Location:** Sidebar → **Sales** · `/sales` · **Who:** anyone who sees costs;
-counting the drawer: managers and the owner; moving cash: managers, the
-accountant and the owner; settling card takings: the owner, the general
-manager and the accountant
+the drawer: whoever may open it (a manager closes one left open); moving cash:
+managers, the accountant and the owner; settling card takings: the owner, the
+general manager and the accountant
 
 - **Cards:**
   - net sales, after refunds, over the last 30 trading days;
@@ -228,28 +246,22 @@ manager and the accountant
   - the cost of what was sold (less what refunds put back on the shelf) and
     the sales margin;
   - **Days whose cash is not counted**, with how many are before today, and
-    when the drawer was last counted.
+    when a session was last closed.
 - **Daily Sales Summaries:** one line per day and channel (voided sales left
   out), with orders (opening that day's sales), sales, refunds made that day,
   net sales, cost, and whether the day's cash is **Counted** or **Not
   counted**.
-- **Count the Drawer** — at the end of a shift or of the night, whatever the
-  time. The café trades past midnight, so a count covers **everything since
-  the last count**, not one calendar day; a sale rung after the count is in the
-  next one.
-  1. The screen lists what the drawer started with (what the last count left
-     in it), the cash sales, refunds, voided sales, money paid out of the till,
-     and cash put in or taken out since, and what **the drawer should hold**.
-     (Only the first count after days were closed the old way asks what was in
-     the drawer when trading began.)
-  2. Enter the **Cash counted**. The **Over / short** shows at once.
-  3. Say how much **Stays in the drawer** for next time (empty: all of it). The
-     rest goes to **the safe** or **the bank** — choose which.
-  4. **Count the drawer.** Any difference posts to 6300 Cash over / short; the
-     takings leave 1000 for 1005 Cash in the safe or 1020 Bank.
-
-  Every bill kept open on the till must be paid or cancelled first. A month
-  cannot lock while a day's cash is not counted.
+- **The Drawer** (`0036`): the same panel as the till's (see
+  [POS](#5-pos)): whose session is open and since when, **Open the drawer**,
+  **Close the drawer**, **Hand over**, and, for a manager, **Close it for
+  them** on a session someone else left open, with the reason, counted or not
+  (not counted, what it should hold stays in the drawer for the next opening
+  count). The owner, the general manager, the accountant and the auditor also
+  see what the open drawer **should hold**, with its cash sales and card
+  takings so far; nobody else is shown it before their count is in. A session
+  covers everything from its opening count to its closing count, past
+  midnight too, so a sale rung after the close is in the next one. A month
+  cannot lock while a day's cash is in no closed session.
 
 - **Move Cash:** from the till, the safe, the bank or the owner to another of
   them — a float into the till, takings to the safe during the day, a bank
@@ -277,9 +289,15 @@ manager and the accountant
   Past settlements are listed with their fee and difference. **Cancel…** the
   latest one, with the reason, to reverse its journal: its days wait again.
 
-- **Drawer Counts:** each count — what it started with, should have held,
-  counted, over/short, what stayed, what was taken out and where — and who
-  counted it. Days closed the old way are listed too, marked "by day".
+- **Cash Sessions** (the owner, managers, the accountant and the auditor):
+  each session — whose, when it opened and closed, what it opened with (and
+  any difference then), what it should have held, what was counted, over or
+  short, what was taken out and where, and the card takings — newest first;
+  **All sessions** (`/sales/sessions`) chooses the dates. Each opens its
+  statement: the opening count, every movement of its cash, the close and the
+  takings. An open session shows what it should hold only to those who may see
+  it. The drawer counts before sessions, and days closed the old way, are
+  listed too.
 
 ## 8. Delivery Platforms
 
@@ -748,11 +766,11 @@ manager
 | Alert thresholds; how many days each vendor takes to deliver                                               | Settings `/settings`, Vendors `/vendors` | owner, general manager; vendors: purchasing, managers                         |
 | Sell by channel; cash, card, platform-paid                                                                 | `/pos`                                   | cashier, barista, managers, owner                                             |
 | Retry a sale without recording it twice                                                                    | `/pos`                                   | the same                                                                      |
-| Void (until the drawer is counted) and refund, with a reason; a second person's PIN                        | `/orders`                                | managers, owner                                                               |
+| Void (until its session closes) and refund, with a reason; a second person's PIN                           | `/orders`                                | managers, owner                                                               |
 | Discount over the cap approved by a manager's name and PIN                                                 | `/pos`                                   | cashiers ask; managers, owner approve                                         |
 | Set your approval PIN                                                                                      | My account `/account`                    | managers, owner                                                               |
 | Exceptions by person: voids, refunds, discounts, cancelled bills, items taken off, wrong PINs; CSV         | `/reports`                               | owner, managers, accountant, auditor                                          |
-| Daily summaries; count the drawer; move cash between till, safe, bank and owner                            | `/sales`                                 | cost viewers; counting: managers, owner                                       |
+| Daily summaries; the drawer in sessions; move cash between till, safe, bank and owner                      | `/sales`                                 | cost viewers; the drawer: whoever may open it                                 |
 | Platform orders; payout by journal                                                                         | `/platforms`, `/journals`                | cost viewers                                                                  |
 | Vendor statements, bills, payments, cancel a bill, ageing; correct a vendor, take one out of use           | `/vendors`                               | cost viewers (by permission)                                                  |
 | Expenses with a proposed account                                                                           | `/expenses`                              | managers, accountant, owner                                                   |
@@ -767,4 +785,6 @@ manager
 | Reconciliation, P&L, channels, ageing, margins, CSV                                                        | `/reports`                               | cost viewers                                                                  |
 | Post the stock the old app never journaled                                                                 | `/reports`                               | owner                                                                         |
 | People and roles, business configuration                                                                   | `/settings`                              | owner, general manager                                                        |
+| Open, close and hand over the drawer, counted blind                                                        | `/pos`, `/sales`                         | cashier, barista, managers, owner                                             |
+| Cash sessions and each one's statement                                                                     | `/sales/sessions`                        | owner, managers, accountant, auditor                                          |
 | **Not built:** settlement import (M-10), offline selling, partial refunds, balance sheet, PDF, attachments | [`LIMITATIONS.md`](LIMITATIONS.md)       | —                                                                             |

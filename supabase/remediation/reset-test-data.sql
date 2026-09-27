@@ -5,30 +5,31 @@
 -- owner, 25 September 2026: "All the data been recorded is a test"). It keeps
 -- what the café is set up with, and clears everything it did:
 --
---   kept     the business and its locations, the chart of accounts, the people
---            (with their roles and approval PINs), the menu (products,
---            variants, categories, photos, prices, recipes and their
---            versions), the stock items and their units, suppliers, dining
---            tables, platform and promotion settings, expense categories, the
---            list of reasons for voids, refunds, discounts and cancelled bills,
---            the languages the café added and its own words for phrases, and
---            the audit trail (which gains one line saying the test records
---            were cleared, and when)
+--   kept     the business, its locations and their drawers, the chart of
+--            accounts, the people (with their roles and approval PINs), the
+--            menu (products, variants, categories, photos, prices, recipes and
+--            their versions), the stock items and their units, suppliers,
+--            dining tables, platform and promotion settings, expense
+--            categories, the list of reasons for voids, refunds, discounts and
+--            cancelled bills, the languages the café added and its own words
+--            for phrases, and the audit trail (which gains one line saying the
+--            test records were cleared, and when)
 --   cleared  sales, bills kept open, voids and refunds, managers' approvals
---            and PIN attempts, drawer counts, cash events and cash moved, card
---            settlements, stock movements and lots, stock counts, production
---            batches, purchase orders, deliveries, supplier bills and payments,
+--            and PIN attempts, cash sessions and drawer counts, cash events
+--            and cash moved, the answers kept for retries, card settlements,
+--            stock movements and lots, stock counts, production batches,
+--            purchase orders, deliveries, supplier bills and payments,
 --            expenses, every journal and accounting period, platform orders and
 --            settlements, reconciliation and sync logs, AI notes, the alerts
 --            raised on all of it (they rise again from what is recorded next),
 --            and the document numbers (journals start again at 1001, the café's
---            own bill numbers at 0001)
+--            own bill numbers at 0001, cash sessions at 1)
 --
 -- Afterwards no item has stock. Before the first sale, give each item its
 -- opening stock (Inventory → Opening stock): what is on the shelf, at what it
--- cost — otherwise its sales are costed at nothing. Put the float in the till
--- (Sales → Move cash, from the owner or the safe); the first drawer count
--- starts from that.
+-- cost — otherwise its sales are costed at nothing. Then open the drawer on
+-- the till, counting the cash in it (a manager can put a float in from the
+-- safe as it opens): the first session starts from that.
 --
 -- Run it as the database owner (Supabase: the SQL editor), in one go, with the
 -- confirmation set first in the same session:
@@ -48,7 +49,7 @@ begin;
 -- What stays. Every other table in the schema must be empty afterwards.
 create temp table reset_keep (t text primary key) on commit drop;
 insert into reset_keep values
-  ('business'), ('location'), ('gl_account'), ('app_user'), ('user_role'), ('role_permission'),
+  ('business'), ('location'), ('cash_drawer'), ('gl_account'), ('app_user'), ('user_role'), ('role_permission'),
   ('product'), ('product_variant'), ('product_category'), ('product_image'), ('channel_price'),
   ('recipe'), ('recipe_version'), ('recipe_line'), ('variant_recipe'),
   ('item'), ('item_unit'), ('supplier'), ('dining_table'), ('expense_category'),
@@ -95,7 +96,7 @@ truncate table
   expense, goods_receipt, goods_receipt_line, inventory_movement, item_lot, journal_entry, journal_line,
   pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   production_batch,
-  purchase_invoice, purchase_order, purchase_order_line, reconciliation_issue, sale_adjustment,
+  purchase_invoice, purchase_order, purchase_order_line, reconciliation_issue, request_log, sale_adjustment,
   sales_order, sales_order_line, sales_tender, stock_count, stock_count_line, supplier_payment, sync_log,
   work_shift
   restart identity;
