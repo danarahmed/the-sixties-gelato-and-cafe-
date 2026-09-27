@@ -254,6 +254,14 @@ describe("what the café is told without asking", () => {
     ],
     ["Possible duplicate: Rent 15,000 IQD in journal 12 (05 Sep) and journal 14 (06 Sep)", []],
     [
+      "Golden beans: 30 g more used than the recipes say between the counts of 20 Sep and 27 Sep (10%, 300 IQD)",
+      ["Golden beans"],
+    ],
+    [
+      "Golden cup: 5 each less used than the recipes say between the counts of 20 Sep and 27 Sep (12.5%, 250 IQD)",
+      ["Golden cup"],
+    ],
+    [
       "Costed at nothing: Alert vanilla, Alert cream; Used before it had a cost: Alert milk",
       ["Alert vanilla", "Alert cream", "Alert milk"],
     ],

@@ -213,6 +213,39 @@ after it.
   Only one count is open at a location at a time; a count still being counted
   can be cancelled, with a reason, by its counter or a manager.
 
+### Usage against the recipes (`0039`)
+
+Between two approved counts of an item at a location — from its line in the
+first to its line in the last, each at the moment it was counted — the stock
+ledger is split by what each movement is:
+
+- **came in** = received (less returns, with the deliveries' corrections) +
+  made + moved between locations + opening stock + corrected by hand;
+- **the recipes say** = what the sales took, less what voids and refunds put
+  back, + what the batches took;
+- **lost** = what was recorded as waste, spoilage, melt, staff meals,
+  giveaways, samples, damage or expiry, by its kind;
+- what the counts themselves set, and revaluations, are left out: they are not
+  use.
+
+`used = first count + came in − last count − lost`;
+`difference = used − the recipes say`; `% = difference ÷ the recipes say`;
+`value = difference × the stock's average cost when last counted` (what the
+item costs now, when there was none). A difference above nothing is stock
+gone that nothing explains; below nothing, less went than the recipes say.
+Since each count sets the ledger to what was counted, the difference is also
+what the counts after the first found short.
+
+Worked example (the SQL test): beans counted at 990 g; 500 g received;
+fifteen espressos sold (300 g; two more voided); 30 g spoiled; counted at
+1,130 g. `used = 990 + 500 − 1,130 − 30 = 330`; the recipes say 300; the
+difference is 30 g, 10%, 300 IQD at 10 a gram.
+
+What may explain a difference is said beside it: more or less used than the
+recipes; no recipe using it; a recipe that changed between the counts; sales
+voided after they may have been made; a delivery corrected; stock corrected by
+hand; the books below zero when it was counted.
+
 ## 8. Delivery-platform economics
 
 Customer payment ≠ revenue ≠ payout. Stored components drive a deterministic
@@ -526,6 +559,11 @@ daily use`; it fires when that is under `lead + 1` days, the lead being the
 - **Possible duplicate payment** (🟠, fairly sure): two expenses, bills or
   journals to the same 6xxx account for the same amount within 3 days in the
   last 30, neither reversed.
+- **Usage unlike the recipes** (`0039`, fairly sure): an item whose last two
+  approved counts at a location, the later in the last 14 days, show a
+  difference (see §7) of at least _10%_ of what the recipes say and at least
+  _5,000 IQD_; 🟠, or 🔴 at five times the amount. An item no recipe uses has
+  no share, and is left to the Usage screen.
 
 **The brief** of a day (midnight to midnight, Baghdad time):
 

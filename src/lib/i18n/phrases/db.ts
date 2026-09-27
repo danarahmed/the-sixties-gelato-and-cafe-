@@ -1504,6 +1504,44 @@ const phrases: PhraseBook = {
   "drawer opening": { ar: "فتح الدرج", ckb: "کردنەوەی دەخیلە" },
   "card settlement": { ar: "تسوية البطاقات", ckb: "یەکلاکردنەوەی کارت" },
   "platform statement": { ar: "كشف المنصة", ckb: "کەشفی پلاتفۆرم" },
+
+  // Usage against the recipes, and what may explain a difference (0039).
+  "Choose the dates, the first before the last": {
+    ar: "اختر التواريخ، الأول قبل الأخير",
+    ckb: "بەروارەکان هەڵبژێرە، یەکەم پێش دوایین",
+  },
+  "More was used than the recipes say: bigger portions, waste not recorded, or sales not rung up": {
+    ar: "استُهلك أكثر مما تقوله الوصفات: حصص أكبر، أو هدر غير مسجّل، أو مبيعات لم تُسجَّل",
+    ckb: "زیاتر لەوەی ڕەچەتەکان دەڵێن بەکارهات: بەشی گەورەتر، بەفیڕۆچوونی تۆمارنەکراو، یان فرۆشتنی تۆمارنەکراو",
+  },
+  "Less was used than the recipes say: smaller portions, or a delivery that was not entered": {
+    ar: "استُهلك أقل مما تقوله الوصفات: حصص أصغر، أو توريد لم يُدخل",
+    ckb: "کەمتر لەوەی ڕەچەتەکان دەڵێن بەکارهات: بەشی بچووکتر، یان بارێک کە تۆمار نەکرا",
+  },
+  "No recipe used it in these days: what went is not explained by sales": {
+    ar: "لم تستهلكه أي وصفة في هذه الأيام: ما خرج لا تفسّره المبيعات",
+    ckb: "هیچ ڕەچەتەیەک لەم ڕۆژانەدا بەکاری نەهێنا: ئەوەی ڕۆیشت فرۆشتن ڕوونی ناکاتەوە",
+  },
+  "A recipe that uses it changed between the counts": {
+    ar: "تغيّرت وصفة تستخدمه بين الجردين",
+    ckb: "ڕەچەتەیەک کە بەکاری دەهێنێت لە نێوان ژماردنەکاندا گۆڕا",
+  },
+  "Sales that used it were voided: if they had been made, what they used is gone": {
+    ar: "أُلغيت مبيعات استخدمته: إن كانت قد صُنعت، فما استهلكته قد خرج",
+    ckb: "فرۆشتنگەلێک کە بەکاریان هێنا هەڵوەشێنرانەوە: ئەگەر دروستکرابن، ئەوەی بەکاریان هێنا ڕۆیشتووە",
+  },
+  "A delivery of it was corrected between the counts": {
+    ar: "صُحّح توريد له بين الجردين",
+    ckb: "بارێکی ئەو لە نێوان ژماردنەکاندا ڕاست کرایەوە",
+  },
+  "Its stock was corrected by hand between the counts": {
+    ar: "صُحّح مخزونه يدويًا بين الجردين",
+    ckb: "کۆگاکەی لە نێوان ژماردنەکاندا بە دەست ڕاست کرایەوە",
+  },
+  "The books had it below zero when it was counted: a delivery may not have been entered": {
+    ar: "كانت الدفاتر تُظهره دون الصفر حين جُرد: ربما لم يُدخل توريد",
+    ckb: "دەفتەرەکان کاتی ژماردن لە خوار سفرەوە پیشانیان دەدا: لەوانەیە بارێک تۆمار نەکرابێت",
+  },
 };
 
 export default phrases;

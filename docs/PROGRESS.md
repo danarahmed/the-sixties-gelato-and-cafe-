@@ -7,11 +7,11 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0038` and the rebuilt app. The SQL
-  checks (40, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (17, every role, every screen in
+- **Built and verified:** migrations `0014`–`0039` and the rebuilt app. The SQL
+  checks (41, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (18, every role, every screen in
   Arabic and Kurdish, and a lost answer on each kind of screen), the unit and
-  contract tests (304) and a production build all pass.
+  contract tests (305) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -509,6 +509,25 @@ browser tests through the real app, or both.
   advisors add only the correction table's links to its journal and its author
   without an index of their own. The screens went live with
   [pull request #27](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/27).
+- **Usage against the recipes (release N, migration `0039`, the fifth step of
+  [`COMPLETION_PLAN.md`](COMPLETION_PLAN.md)).** Until now the counts said how
+  much stock was missing, but not whether the kitchen used what its recipes
+  say. Now **Usage**, under Operations, shows each item between its first and
+  last approved count in the dates chosen: the first count, what came in
+  (deliveries, batches made, opening stock, corrections by hand), the last
+  count and what was recorded as lost; **used**, what the counts say went less
+  those losses; what **the recipes say** the sales and batches should have
+  used, voids and refunds taken off; and the **difference**, its share and its
+  value at the stock's average cost. Beside each item, what may explain it (a
+  recipe that changed, sales voided, a delivery corrected, stock corrected by
+  hand, the books below zero when counted) and, opened, the products whose
+  sales used it and the batches it went into. Nothing new is recorded: it
+  reads the counts and the ledger, each item from the moment its first count
+  was taken to the moment of its last. The dashboard names an item whose last
+  two counts, the later in the last fortnight, differ from its recipes by at
+  least 10% and 5,000 IQD, both on Settings. Built and tested: a new SQL
+  suite, a new browser suite, and the screen in every role and in Arabic and
+  Kurdish.
 
 ## The August 2026 audit, finding by finding
 

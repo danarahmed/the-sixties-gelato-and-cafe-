@@ -229,7 +229,7 @@ select test.act_as('owner@example.com');
 select test.eq(alert_thresholds() -> 'count_stale_hours',
   '{"default": 8, "min": 1, "max": 72, "whole": true, "label": "Hours a stock count may stay open", "value": 8}'::jsonb,
   'each threshold with its default, its limits, and the value in force');
-select test.eq((select count(*) from jsonb_object_keys(alert_thresholds()))::int, 13, 'thirteen of them');
+select test.eq((select count(*) from jsonb_object_keys(alert_thresholds()))::int, 15, 'fifteen of them, with the usage variance''s two (0039)');
 select test.throws($$select set_alert_thresholds('{"count_stale_hours": 0}')$$,
   'Hours a stock count may stay open: enter a whole number from 1 to 72', 'within its limits');
 select test.throws($$select set_alert_thresholds('{"count_stale_hours": 2.5}')$$,

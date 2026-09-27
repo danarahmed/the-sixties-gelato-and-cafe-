@@ -135,6 +135,20 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - The check that every record has its journal covers what was recorded
     since the business's first journal of its own. What came before is the
     remediation's ([`REMEDIATION.md`](REMEDIATION.md)).
+- **Usage against the recipes, what it does not do (release N, `0039`).**
+  - It needs two approved counts of an item at a location: an item counted
+    once in the dates is listed, waiting for a second count. Counts from
+    before `0024`, which did not record when each item was counted, are not
+    used.
+  - What the difference is worth is at the stock's average cost when it was
+    last counted, not at each day's cost.
+  - A refund of something made to order puts nothing back on the shelf: what
+    it used stays used, as the recipes say.
+  - What may explain a difference is a list of things to look at, not a
+    finding. Transfers between locations are not built, so nothing moves
+    between them.
+  - The alert looks only at each item's last two counts, the later in the
+    last 14 days, and only at items a recipe uses.
 - **One cap for everyone.** Since `0028` every discount has a reason, and one
   over the business's cap (10%) needs a manager's approval; the cap is the
   same for every role that may give discounts, and it is changed in the

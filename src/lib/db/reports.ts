@@ -116,6 +116,87 @@ export async function getDocumentProblems(asOf: string): Promise<DocumentProblem
   }));
 }
 
+export interface UsageRow {
+  itemId: string;
+  name: string;
+  unit: string;
+  /** How many approved counts of it fall in the dates: usage needs two. */
+  counts: number;
+  openedAt: string | null;
+  closedAt: string | null;
+  opening: number | null;
+  closing: number | null;
+  received: number;
+  made: number;
+  transferred: number;
+  openingStock: number;
+  corrected: number;
+  sold: number;
+  batches: number;
+  theoretical: number;
+  lost: number;
+  losses: { kind: string; qty: number }[];
+  actual: number;
+  variance: number;
+  variancePercent: number | null;
+  unitCost: number | null;
+  varianceValue: number;
+  products: { name: string; sold: number; used: number }[];
+  recipes: { name: string; batches: number; used: number }[];
+  factors: string[];
+}
+
+/**
+ * Usage against the recipes (0039): each item between its first and last
+ * approved count in the dates, at the location.
+ */
+export async function getUsageVariance(from: string, to: string): Promise<UsageRow[]> {
+  const c = await db();
+  const list = (v: unknown) => (Array.isArray(v) ? (v as Record<string, unknown>[]) : []);
+  return rows(
+    await c.rpc("report_usage_variance", { p_from: from, p_to: to }),
+    "usage against the recipes",
+  ).map((r: Record<string, unknown>) => ({
+    itemId: str(r.item_id),
+    name: str(r.name),
+    unit: str(r.unit),
+    counts: num(r.counts),
+    openedAt: strOrNull(r.opened_at),
+    closedAt: strOrNull(r.closed_at),
+    opening: numOrNull(r.opening),
+    closing: numOrNull(r.closing),
+    received: num(r.received),
+    made: num(r.made),
+    transferred: num(r.transferred),
+    openingStock: num(r.opening_stock),
+    corrected: num(r.corrected),
+    sold: num(r.sold),
+    batches: num(r.batches),
+    theoretical: num(r.theoretical),
+    lost: num(r.lost),
+    losses: Object.entries((r.losses ?? {}) as Record<string, unknown>).map(([kind, qty]) => ({
+      kind,
+      qty: num(qty),
+    })),
+    actual: num(r.actual),
+    variance: num(r.variance),
+    variancePercent: numOrNull(r.variance_percent),
+    unitCost: numOrNull(r.unit_cost),
+    varianceValue: num(r.variance_value),
+    products: list(r.products).map((p) => ({
+      name: str(p.name),
+      sold: num(p.sold),
+      used: num(p.used),
+    })),
+    recipes: list(r.recipes).map((p) => ({
+      name: str(p.name),
+      batches: num(p.batches),
+      used: num(p.used),
+    })),
+    factors: Array.isArray(r.factors) ? (r.factors as unknown[]).map(String) : [],
+  }));
+}
+
 export interface UnpostedRecord {
   kind: string;
   refId: string;

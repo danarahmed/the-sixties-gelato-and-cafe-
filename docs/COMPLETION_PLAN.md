@@ -92,6 +92,22 @@ Release M:
 - **No `idempotency_key` column.** Corrections are keyed in `request_log`,
   like every write since release J.
 
+Release N:
+
+- **The stretch between counts runs by when things were recorded.** Each
+  count compares an item with the ledger at the moment it is counted, so the
+  movements taken are those recorded after the first count's line and up to
+  the last's, not those dated in between.
+- **The window is the first and the last count in the dates.** Counts in
+  between set nothing: their own adjustments are left out, and the
+  difference is what the later counts found short.
+- **Sales volume** is shown per product, from the sale lines the movements
+  name (since `0037`); a sale voided is left out of it.
+- **The branch** is the location asked for, the default one when none is
+  given.
+- **The alert** reads each item's last two counts, the later in the last 14
+  days, with two thresholds on Settings (10% and 5,000 IQD).
+
 **Basis:**
 
 - The code at `d17436e`: migrations `0001`–`0034` and the app.

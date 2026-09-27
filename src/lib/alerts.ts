@@ -35,6 +35,7 @@ export const RULE_LABEL: Record<string, string> = {
   session_open_long: "Cash session left open",
   session_short: "Cash session short",
   session_forced: "Cash session closed by a manager",
+  usage_variance: "Usage unlike the recipes",
 };
 
 export function ruleLabel(rule: string): string {
@@ -145,6 +146,8 @@ export const THRESHOLD_ORDER = [
   "bill_due_days",
   "waste_spike_factor",
   "waste_spike_min",
+  "usage_variance_percent",
+  "usage_variance_min",
   "exceptions_count",
   "exceptions_share_percent",
   "price_typo_factor",
@@ -165,6 +168,8 @@ export const THRESHOLD_LABEL: Record<string, string> = {
   price_typo_factor: "Price typo: times another channel's price",
   session_open_hours: "Hours a cash session may stay open",
   session_short_min: "A cash session short by at least (IQD)",
+  usage_variance_percent: "Usage unlike the recipes by at least (%)",
+  usage_variance_min: "Usage unlike the recipes by at least (IQD)",
 };
 
 const n = (v: unknown): number => {

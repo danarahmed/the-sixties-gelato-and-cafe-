@@ -41,6 +41,17 @@ export default async function InventoryPage() {
             "Stock on hand is <b>derived from the movement ledger</b> — there is no stock figure to edit. Every change below adds a movement, valued at the item's average cost by the database and journaled in the same step.",
           )}
         />
+        {seesCost && (
+          <>
+            {" "}
+            <Rich
+              text={t(
+                "<usage>Usage</usage> sets what each item used between two counts against what its recipes say.",
+              )}
+              tags={{ usage: (c) => <Link href="/inventory/usage">{c}</Link> }}
+            />
+          </>
+        )}
       </p>
 
       {seesCost && (

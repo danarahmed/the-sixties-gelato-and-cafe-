@@ -150,7 +150,7 @@ select test.eq((
   'record_count,record_expense,record_opening_stock,record_production,'
   'record_sale,record_waste,'
   'refund_sale,refund_sale_lines,reject_stock_count,report_daily_sales,report_day_totals,report_document_problems,report_exceptions,report_journal_lines,'
-  'report_profit_and_loss,report_reconciliation,report_trial_balance,report_unclosed_days,report_uncosted_sales,'
+  'report_profit_and_loss,report_reconciliation,report_trial_balance,report_unclosed_days,report_uncosted_sales,report_usage_variance,'
   'request_approval,reverse_journal,reverse_receipt,review_stock_count,sales_channels,'
   'save_batch_recipe,save_category,'
   'save_journal,save_language,save_phrases,save_tab,save_table,'

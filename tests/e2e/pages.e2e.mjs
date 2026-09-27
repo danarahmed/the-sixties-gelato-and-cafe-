@@ -15,6 +15,7 @@ const PAGES = [
   "/orders",
   "/products",
   "/inventory",
+  "/inventory/usage",
   "/count",
   "/production",
   "/journals",

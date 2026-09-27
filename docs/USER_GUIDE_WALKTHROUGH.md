@@ -582,6 +582,35 @@ branch manager, general manager, owner (review and approve)
 
 More in [`guides/counting-guide.md`](guides/counting-guide.md).
 
+### Usage
+
+**Location:** Sidebar → **Usage** · `/inventory/usage` · **Who:** anyone who
+sees costs
+
+Choose **From** and **To** (this month to begin with, or **Last month**, **Last
+90 days**). Each item counted twice in those dates is shown between its first
+and last count:
+
+- **First count**, what **came in** (received, made, moved, opening stock,
+  corrected by hand), **Last count**, and what was **lost** (waste, spoilage
+  and the rest, recorded);
+- **Used** — what the counts say went, less what was recorded as lost;
+- **The recipes say** — what the sales of the products that use it, and the
+  batches made with it, should have used (voids and refunds taken off);
+- the **difference**, its **%** of what the recipes say and its **value**. Red,
+  more went than anything explains: bigger portions, waste not recorded, sales
+  not rung up. Below nothing, less went: smaller portions, or a delivery never
+  entered.
+
+Under each item, what may explain it (a recipe changed, a sale voided, a
+delivery corrected, stock corrected by hand, the books below zero when it was
+counted), and **What it is made of**: each figure's parts, the products whose
+sales used it and the batches it went into. The item's name opens its stock
+card. Items counted only once are listed below: a second count gives what
+they used. The dashboard names an item whose last two counts, the later in
+the last fortnight, differ from the recipes by 10% and 5,000 IQD or more (both
+set on **Settings → Alerts**).
+
 ## 15. Production
 
 **Location:** Sidebar → **Production** · `/production` · **Who:** anyone who sees
