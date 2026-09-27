@@ -33,6 +33,7 @@ Plan a short window when the café is closed.
 | Alerts and the brief (`0029`)           | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0029`](#after-0029)). The screens were merged ([pull request #15](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/15)) and deployed                                  |
 | Card and platform money (`0030`)        | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0030`](#after-0030)). The screens were merged ([pull request #16](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/16)) and deployed                                  |
 | Platforms to retry keys (`0031`–`0035`) | ✅ Migrations applied between 25 and 27 September, each compared object by object with its tested build and checked in a transaction that was rolled back; the screens deployed with each (see [`../PROGRESS.md`](../PROGRESS.md))                                                                                                                                                       |
+| Cash sessions (`0036`)                  | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0036`](#after-0036)). The screens were merged ([pull request #25](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/25)) and deployed                                  |
 
 ## 0. Before you start
 
@@ -750,6 +751,40 @@ the open session, or says to open the drawer on the till first.
 sessions opens against what the books say the till holds (1000); the count
 settles the difference to 6300, as a drawer count of its own, and the first
 session starts from the count.
+
+It was applied on 27 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0035` build. The text stored there
+is the file byte for byte, and it was then compared with the tested build,
+object by object, the role permissions and column grants included: identical,
+but for the schema `citext` lives in, as before. It gave the Main Branch and
+the Central Kitchen their drawers. A check as the owner, in a transaction
+that was rolled back:
+
+- with the drawer closed, a cash sale, the old count and a keyed write
+  through the API without its key were each refused;
+- the first opening, counted at nothing, took over from the books, which say
+  the till holds −320,000 IQD (test expenses paid "from cash" before
+  `0024`), took in the 20 movements of cash since the last day closed the old
+  way, and posted 320,000 to 6300 as over; opened twice with one key, it
+  opened once;
+- a cash sale of 3,000 named the session; the owner was shown that the drawer
+  should hold 3,000, the branch manager was not (nor its figures, its
+  statement or the old screen's cash figures), and the barista could not
+  close the owner's session;
+- closed at 2,500, it was 500 short, posted to 6300, and the 2,500 went to the
+  safe; cash was then refused again; no day was left uncounted, and every
+  movement of cash was in a session.
+
+Nothing was kept: still 40 sales, 18 bills (2 open), journals to 1091, the 20
+movements of cash waiting for the first opening, and no stored answers. **The
+first opening on the live site will do the same for real**: whatever is
+counted, the count plus 320,000 is posted to 6300 as over, a test record like
+the rest, cleared with them. The security advisor's only new lines are the
+seven new functions signed-in users may call (each checks its permission),
+and three older functions now set their search path; the performance advisor
+adds only the new links without an index of their own and the new index on a
+sale's session, not yet used.
 
 ## Clearing the test records
 

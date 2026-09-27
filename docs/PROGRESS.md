@@ -364,7 +364,34 @@ browser tests through the real app, or both.
   drawer counts before sessions: what the last count left plus the cash since,
   or, on a drawer never counted, what the books say the till holds. From now
   on a write sent through the API without its retry key is refused. Built and
-  tested.
+  tested. The migration was applied to the live database on 27 September
+  2026: the text stored there is the file byte for byte, and it matches the
+  tested build object by object, permissions included (the one difference,
+  as before, is the schema `citext` lives in). It gave the Main Branch and the
+  Central Kitchen their drawers. It was checked as the owner in a transaction
+  that was rolled back: with the drawer closed, a cash sale, the old count and
+  a keyed write through the API without its key were each refused; the first
+  opening, counted at nothing, took over from the books, which say the till
+  holds −320,000 IQD (the test records), took in the 20 movements of cash
+  since the last day closed the old way, and posted the 320,000 to 6300 as
+  over; opened twice with one key, it opened once; a cash sale of 3,000 named
+  the session; the owner was shown that the drawer should hold 3,000, and the
+  branch manager was not, nor its figures, its statement or the old screen's
+  cash figures; the barista could not close the owner's session; closed at
+  2,500, it was 500 short, posted to 6300, and the 2,500 went to the safe;
+  cash was then refused again; no day was left uncounted and every movement
+  of cash was in a session; the audit trail gained the opening and the close;
+  and nothing was kept (still 40 sales, 18 bills, journals to 1091, the 20
+  movements waiting for the first opening, and no stored answers). The
+  security advisors add only the seven new functions signed-in users may
+  call, each checking its permission, and three older functions no longer
+  have a changeable search path; the performance advisors add only the new
+  links without an index of their own (a drawer's business; a session's
+  cashier, who closed it and the count it opened from) and the new index on a
+  sale's session, not yet used. When the drawer is first opened on the live
+  site, the same happens for real: the count is compared with the −320,000
+  the test records leave in 1000, and the count plus 320,000 is posted to
+  6300 as over, a test record like the rest.
 
 ## The August 2026 audit, finding by finding
 
