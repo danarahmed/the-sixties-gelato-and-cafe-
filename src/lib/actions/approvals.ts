@@ -1,7 +1,8 @@
 "use server";
 /**
  * A second person on the till (0028, the audit's P1-10): a discount over the
- * cap, or a void or refund, approved by a manager's name and PIN. The PIN is
+ * cap, or a void or refund, approved by a manager's name and PIN; and since
+ * 0040 a loss over the limit, or stock used beyond what the books hold. The PIN is
  * checked by the database in a step of its own, so a wrong one is counted
  * even though nothing else happens; five in fifteen minutes lock that
  * manager's approvals until the fifteen minutes have passed.
@@ -10,7 +11,9 @@ import { z } from "zod";
 import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { id } from "@/lib/validation";
 
-const kind = z.enum(["discount", "void", "refund"], { message: "Unknown approval" });
+const kind = z.enum(["discount", "void", "refund", "waste", "negative_stock"], {
+  message: "Unknown approval",
+});
 
 export interface Approver {
   id: string;
@@ -35,10 +38,14 @@ const requestInput = z.object({
   kind,
   approverId: id("who approves it"),
   pin: z.string().regex(/^\d{4,8}$/, "A PIN is 4 to 8 digits"),
-  /** What is approved: {percent} for a discount, {order_id} for a void or refund. */
+  /**
+   * What is approved: {percent} for a discount, {order_id} for a void or
+   * refund, {items} (as the person saw them) for a loss or stock below zero.
+   */
   scope: z.union([
     z.object({ percent: z.number().positive().max(100) }),
     z.object({ order_id: z.string().uuid() }),
+    z.object({ items: z.string().max(300) }),
   ]),
 });
 

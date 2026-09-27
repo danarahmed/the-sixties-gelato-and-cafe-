@@ -149,10 +149,23 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     between them.
   - The alert looks only at each item's last two counts, the later in the
     last 14 days, and only at items a recipe uses.
-- **One cap for everyone.** Since `0028` every discount has a reason, and one
-  over the business's cap (10%) needs a manager's approval; the cap is the
-  same for every role that may give discounts, and it is changed in the
-  database, not on Settings. A journal's narration is still free text.
+- **The café's rules, what they do not do (release O, `0040`).**
+  - A rule is set for the whole café, a role, a kind of item or one item. A
+    rule for a branch waits for the branches (release AB).
+  - The margin target stays among the alert thresholds on Settings, where
+    its history already is; a target per category comes with the reports
+    (release Y).
+  - A loss saved to wait for approval is in the stock and the books at once:
+    approving it changes only its record, and reversing it puts the stock
+    back at the loss's own value.
+  - Giveaways, transfers between branches and returns to a supplier will ask
+    the stock rule when they are built (releases V, AB and S).
+  - Refunds stay with managers (the owner's decision 3); what changed is the
+    limit above which a second person approves one.
+  - A delivery corrected keeps its own confirmation for stock left below
+    zero; a rule that refuses it refuses the correction.
+  - The business row's old columns stay, as the defaults, until they are
+    retired. A journal's narration is still free text.
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the

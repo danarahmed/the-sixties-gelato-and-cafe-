@@ -140,8 +140,8 @@ select test.eq((
   'clear_product_image,close_cash_session,copy_platform_setup,correct_receipt,create_item,create_product,'
   'create_supplier,current_alerts,current_app_user_id,'
   'current_business_id,current_can_view_costs,current_has_permission,current_has_role,daily_brief,dashboard_summary,'
-  'discard_journal,drawer_status,force_close_session,hand_over_session,invite_member,item_costs,item_price_history,language_settings,legacy_unposted,list_approvers,list_members,'
-  'lock_period,'
+  'discard_journal,drawer_status,force_close_session,hand_over_session,invite_member,item_costs,item_price_history,language_settings,legacy_unposted,list_approvers,list_business_rules,list_members,'
+  'lock_period,losses_waiting,'
   'mark_bill_printed,match_platform_statement,'
   'menu_costing,menu_recipe_lines,menu_scheduled,move_cash,my_profile,'
   'next_bill_number,open_cash_session,open_tab,pay_bill,period_close_checklist,'
@@ -151,10 +151,10 @@ select test.eq((
   'record_sale,record_waste,'
   'refund_sale,refund_sale_lines,reject_stock_count,report_daily_sales,report_day_totals,report_document_problems,report_exceptions,report_journal_lines,'
   'report_profit_and_loss,report_reconciliation,report_trial_balance,report_unclosed_days,report_uncosted_sales,report_usage_variance,'
-  'request_approval,reverse_journal,reverse_receipt,review_stock_count,sales_channels,'
+  'request_approval,reverse_journal,reverse_receipt,review_loss,review_stock_count,sales_channels,'
   'save_batch_recipe,save_category,'
   'save_journal,save_language,save_phrases,save_tab,save_table,'
-  'set_alert_thresholds,set_member_active,set_member_roles,set_my_pin,set_no_stock,set_price,set_product_details,set_product_image,settle_tab,'
+  'set_alert_thresholds,set_business_rule,set_member_active,set_member_roles,set_my_pin,set_no_stock,set_price,set_product_details,set_product_image,settle_tab,'
   'snooze_alert,split_tab,'
   'start_stock_count,stock_card,submit_stock_count,unlock_period,update_delivery_platform,update_item,update_supplier,void_sale',
   'signed-in users can call exactly the intended API');

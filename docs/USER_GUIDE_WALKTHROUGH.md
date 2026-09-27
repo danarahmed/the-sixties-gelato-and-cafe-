@@ -188,6 +188,13 @@ not hear back:
 
 A cart left frozen when the page reloads is brought back for its retry.
 
+**If an item is not in the books** and its rule on **Settings → Rules** asks a
+manager (`0040`), the payment stops and says how much is there: a manager
+chooses their name and types their **PIN**, and the same payment goes through.
+An item whose rule refuses it cannot be sold until the delivery or the batch is
+entered, or it is counted; one whose rule alerts is sold, and the dashboard
+shows it below zero.
+
 **If a price changed since the till loaded its menu,** the database refuses a
 payment at the old total and nothing is recorded: the till says **“The total
 is … now, not the … shown”**, fetches today's prices and shows the order at
@@ -243,8 +250,10 @@ Both take a **reason from the list** ("Rang twice", "Customer changed their
 mind"…, or "Other" in a few words), and both go on the audit trail. You need the
 sale.void or sale.refund permission (managers and the owner). **Approved by**
 lets a second person — another manager or the owner — approve it there with
-their PIN; without one it waits for the owner on Reports → Exceptions. Each
-void or refund shows why, who asked and who approved it.
+their PIN; without one it waits for the owner on Reports → Exceptions. A refund
+over the limit on **Settings → Rules** (25,000 IQD by default) cannot go
+without one (`0040`). Each void or refund shows why, who asked and who
+approved it.
 
 ## 7. Sales
 
@@ -535,8 +544,17 @@ costs; baristas can record waste
     stock from a delivery.
 - **🗑️ Record waste:** the item, what happened (waste, spoilage, expired,
   damaged, melt, staff, complimentary, sampling), the quantity and unit, and
-  **why**. It is valued at average cost and posts to 5300. Waste above the
-  business's threshold needs a manager.
+  **why**. It is valued at average cost and posts to 5300. A loss over the
+  limit on **Settings → Rules** — on its own, added to your other losses this
+  session (or today), or to the item's losses today by anyone — needs a
+  manager (`0040`): they choose their name and type their **PIN** there and
+  then, or you **save it to wait for a manager's approval**. Either way the
+  stock comes off at once.
+- **Losses waiting for approval** (managers, `0040`): each loss saved to wait,
+  oldest first, with who recorded it and why. **Approve** it, or **Reverse**
+  one that did not happen, with a reason: the stock goes back at the loss's
+  own value and its journal is reversed. Nobody approves a loss they recorded.
+  The dashboard names the losses waiting under **Needs you**.
 - **✏️ Correct stock (manager):** a signed change (− to reduce), the cost per base
   unit for additions (blank = average), and **why**. It posts to 5400.
 - **Stock on hand:** each item in use, with its quantity, unit, reorder level,
@@ -814,13 +832,12 @@ manager
   Only the owner grants owner or general manager, and the business always keeps
   an active owner. Every change is on the audit trail.
 
+- **Rules** (`0040`): the café's rules as they stand, and **Open Rules →**.
 - **Business configuration** (shown, not edited here):
   - name;
   - currency and decimal places;
   - timezone (trading days and months run midnight to midnight there);
-  - default language;
-  - the negative-stock policy;
-  - the waste value that needs a manager.
+  - default language.
 - **Alerts** (edited here, `0029`): the thresholds the dashboard's alerts use
   — the margin target, the days a delivery takes (for vendors without their
   own), how long a count may stay open, the days card and platform money take,
@@ -829,6 +846,32 @@ manager
   empty box follows the default; a change is on the audit trail.
 - **Locations:** the branch and the central kitchen.
 - **Roles & what they may do:** the exact permission list of each role.
+
+### Rules
+
+**Location:** Settings → **Open Rules →** · `/settings/rules` · **Who:** owner,
+general manager
+
+Each rule, what it does, and every row that applies — the whole café's, and
+any set for a role, a kind of item or one item — with who set it, when and
+why, or **Default**:
+
+- **Discounts a manager approves** (10% of the bill by default; per role);
+- **Discounts rounded to** (the step a percentage discount is rounded to);
+- **Refunds a second person approves** (over 25,000 IQD by default; per role);
+- **Losses a manager approves** (over 50,000 IQD by default; per role), and
+  **one person's losses are added up over** each loss, their cash session (or
+  their day), or the day;
+- **Using more stock than the books hold**: **Refused**, **A manager approves
+  it**, **Allowed, with a red alert**, or (for one item only) **Allowed, with
+  no alert** — for the whole café, a kind of item or one item. By default what
+  is made here is refused and everything else alerts.
+
+**Change** a row, **Back to default**, or **+ Set it for** a role, a kind of
+item or an item: each takes a reason. **Every change** below lists them all,
+from what to what, why and who; each is on the audit trail too. The most
+particular row applies: an item's own, then its kind's, then the most any of
+a person's roles allows, then the café's.
 
 ---
 

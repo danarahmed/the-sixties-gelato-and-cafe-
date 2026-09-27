@@ -16,6 +16,7 @@ import { getDictionary, builtInWords } from "@/lib/i18n/dictionaries";
 import { fill, messenger, translator } from "@/lib/i18n/core";
 import { parseRich, plain } from "@/lib/i18n/Rich";
 import { LABELS } from "@/lib/format";
+import { RULE_PHRASES } from "@/lib/rules";
 import { parseCsv, toCsv } from "@/lib/csv";
 import { briefCalculations, briefFacts, briefToDo, type DailyBrief } from "@/lib/alerts";
 // @ts-expect-error: a plain script, shared with the command line
@@ -79,6 +80,19 @@ describe("the phrase books", () => {
       ...(/[ڕڵێۆەڤ]/.test(p.t.ar) ? [`ar ${p.book}: ${p.en}`] : []),
     ]);
     expect(wrong).toEqual([]);
+  });
+
+  it("have every phrase the café's rules show on Settings and on the loss form (0040)", () => {
+    const shown = [
+      ...RULE_PHRASES,
+      "A loss over {limit} needs a manager's approval.",
+      "A loss over {limit}, or that takes your losses today or the item's over it, needs a manager's approval.",
+      "A loss over {limit}, or that takes your losses this session (or today) or the item's today over it, needs a manager's approval.",
+    ];
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(shown.filter((p) => !words[p])).toEqual([]);
+    }
   });
 
   it("have every label the app gives payments, roles, items, movements and orders", () => {
@@ -261,6 +275,8 @@ describe("what the café is told without asking", () => {
       "Golden cup: 5 each less used than the recipes say between the counts of 20 Sep and 27 Sep (12.5%, 250 IQD)",
       ["Golden cup"],
     ],
+    ["Golden water is below zero in the books: -2 each", ["Golden water"]],
+    ["2 loss(es) waiting for a manager's approval (900 IQD)", []],
     [
       "Costed at nothing: Alert vanilla, Alert cream; Used before it had a cost: Alert milk",
       ["Alert vanilla", "Alert cream", "Alert milk"],

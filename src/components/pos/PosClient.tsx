@@ -110,6 +110,8 @@ interface Pending {
   expectedNet: string | null;
   /** A delivery platform's order number (0030), sent again with the retry. */
   platformOrderNo: string | null;
+  /** A manager's approval of selling more than the books hold, when its rule asks (0040). */
+  stockApprovalId?: string | null;
 }
 
 const PENDING_KEY = "sixties.pos.pending";
@@ -148,6 +150,7 @@ function loadPending(): Pending | null {
       approvalId: p.approvalId ?? null,
       expectedNet: p.expectedNet ?? null,
       platformOrderNo: p.platformOrderNo ?? null,
+      stockApprovalId: p.stockApprovalId ?? null,
     };
   } catch {
     return null;
@@ -187,6 +190,9 @@ async function fetchMenu(): Promise<PosItem[] | null> {
 /** How often a till left open fetches today's prices, besides when it comes back to the front. */
 const MENU_EVERY_MS = 10 * 60 * 1000;
 
+/** The database's answer when an item's rule asks a manager to sell beyond the books (0040). */
+const NEEDS_STOCK_APPROVAL = /is in stock: a manager approves using more than that/;
+
 type Dialog =
   | { kind: "pay"; key: string; tender: Tender; order: Order; title: string; error: string | null }
   | { kind: "split"; order: Order; title: string }
@@ -198,6 +204,14 @@ type Dialog =
       kind: "approve";
       what: string;
       percent: number;
+      approvers: Approver[] | null;
+      error: string | null;
+    }
+  /** More than the books hold, under a rule that asks a manager (0040): the payment waits. */
+  | {
+      kind: "stock";
+      what: string;
+      payment: Pending;
       approvers: Approver[] | null;
       error: string | null;
     }
@@ -247,7 +261,7 @@ export function PosClient({
   /** The drawer (0036): cash is taken only while it is open. */
   initialDrawer: DrawerState;
 }) {
-  const { t, locale } = useT();
+  const { t, msg: say, locale } = useT();
   const router = useRouter();
   // The drawer as the page last read it: each change to it reloads the page's reading.
   const drawer = initialDrawer;
@@ -560,6 +574,42 @@ export function PosClient({
     patchOrder((o) =>
       o.discount?.approval ? { ...o, discount: { ...o.discount, approval: null } } : o,
     );
+  }
+
+  /** A manager approves selling more than the books hold (0040): the payment waits for it. */
+  async function askStockApproval(payment: Pending, why: string) {
+    setDialog({ kind: "stock", what: say(why), payment, approvers: null, error: null });
+    const r = await listApproversAction("negative_stock");
+    setDialog((cur) =>
+      cur?.kind === "stock"
+        ? { ...cur, approvers: r.ok ? r.data : [], error: r.ok ? null : r.error }
+        : cur,
+    );
+  }
+
+  async function confirmStockApproval(approverId: string, pin: string) {
+    if (dialog?.kind !== "stock") return;
+    const { payment, what } = dialog;
+    setBusy("approve");
+    try {
+      const r = await requestApprovalAction({
+        kind: "negative_stock",
+        approverId,
+        pin,
+        scope: { items: what.slice(0, 300) },
+      });
+      if (!r.ok) {
+        setDialog((cur) => (cur?.kind === "stock" ? { ...cur, error: r.error } : cur));
+        return;
+      }
+      setDialog(null);
+      setBusy(null);
+      await sendPayment({ ...payment, stockApprovalId: r.data.approvalId });
+    } catch {
+      setDialog((cur) => (cur?.kind === "stock" ? { ...cur, error: t("pos.noAnswer") } : cur));
+    } finally {
+      setBusy((b) => (b === "approve" ? null : b));
+    }
   }
 
   /** A manager approves the discount on screen with their name and PIN (0028). */
@@ -1010,6 +1060,7 @@ export function PosClient({
               approvalId: p.approvalId,
               expectedNet: p.expectedNet,
               platformOrderNo: p.platformOrderNo,
+              stockApprovalId: p.stockApprovalId ?? null,
             })
           : await payBillAction({
               tabId: p.tabId!,
@@ -1017,6 +1068,7 @@ export function PosClient({
               key: p.key,
               tender: p.tender,
               expectedNet: p.expectedNet,
+              stockApprovalId: p.stockApprovalId ?? null,
             });
       if (!r.ok && r.uncertain) {
         // No answer from the database: it may have been recorded. Freeze, and
@@ -1031,6 +1083,12 @@ export function PosClient({
         // The database refused it: nothing was recorded, and the order is still here.
         setPending(null);
         savePending(null);
+        // More than the books hold, under a rule that asks a manager: they
+        // approve it here, and the same payment is sent again with it (0040).
+        if (NEEDS_STOCK_APPROVAL.test(r.error)) {
+          askStockApproval(p, r.error);
+          return;
+        }
         if (approvalRefused(r.error)) dropApproval();
         // The drawer was closed on another till: read it again.
         if (r.error.startsWith("Open the drawer first")) router.refresh();
@@ -1481,6 +1539,17 @@ export function PosClient({
           busy={busy === "approve"}
           error={dialog.error}
           onConfirm={confirmApproval}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog?.kind === "stock" && (
+        <ApproveDialog
+          title={t("A manager approves selling more than the books hold")}
+          what={dialog.what}
+          approvers={dialog.approvers}
+          busy={busy === "approve" || busy === "pay"}
+          error={dialog.error}
+          onConfirm={confirmStockApproval}
           onClose={() => setDialog(null)}
         />
       )}

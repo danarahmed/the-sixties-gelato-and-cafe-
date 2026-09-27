@@ -10,6 +10,8 @@ import { businessToday } from "@/lib/dates";
 import { PeopleManager } from "@/components/PeopleManager";
 import { getAlertThresholds } from "@/lib/db/alerts";
 import { AlertThresholds } from "./AlertThresholds";
+import { getBusinessRules } from "@/lib/db/rules";
+import { CHOICE_LABEL, RULE_LABEL } from "@/lib/rules";
 
 export const dynamic = "force-dynamic";
 
@@ -24,12 +26,26 @@ export default async function SettingsPage() {
   const profile = await requirePermission("settings.manage");
   const t = await getT();
   const today = businessToday(profile.timezone);
-  const [cfg, locations, members, thresholds] = await Promise.all([
+  const [cfg, locations, members, thresholds, rules] = await Promise.all([
     getBusinessConfig(),
     getLocations(),
     getMembers(),
     getAlertThresholds(),
+    getBusinessRules(),
   ]);
+  // The whole café's rules, as they stand; each has its own rows and history on Rules.
+  const cafeRules = rules.definitions.flatMap((d) => {
+    const r = rules.rows.find((x) => x.key === d.key && x.scopeType === "business");
+    if (!r) return [];
+    const value =
+      d.kind === "percent"
+        ? `${r.value}%`
+        : d.kind === "amount"
+          ? fmtIQD(Number(r.value))
+          : t(CHOICE_LABEL[String(r.value)] ?? String(r.value));
+    const others = rules.rows.filter((x) => x.key === d.key && x.scopeType !== "business").length;
+    return [{ key: d.key, value, others }];
+  });
 
   // Each setting's name is a phrase, shown through t() below.
   const config: [string, string][] = cfg
@@ -48,30 +64,6 @@ export default async function SettingsPage() {
         [
           "Default language",
           BUILT_IN_LANGUAGES.find((l) => l.code === cfg.defaultLocale)?.label ?? cfg.defaultLocale,
-        ],
-        [
-          "Negative stock",
-          cfg.preventNegativeStock
-            ? t("Refused — a sale needs the stock to be there")
-            : t("Allowed, costed at the last purchase cost"),
-        ],
-        [
-          "Waste needing a manager",
-          t("Above {amount}", { amount: fmtIQD(cfg.wasteApprovalThreshold) }),
-        ],
-        [
-          "Discounts",
-          t(
-            "A percentage is rounded to the nearest {step} (half-way rounds up); an amount is taken as typed",
-            { step: fmtIQD(cfg.discountRoundTo) },
-          ),
-        ],
-        [
-          "Discounts a manager approves",
-          t(
-            "Over {cap}% of the bill: a manager (owner, general or branch manager) approves it on the till with their name and PIN, or gives it themselves. Every discount, void, refund and cancelled bill takes a reason from the list",
-            { cap: cfg.discountCapPercent },
-          ),
         ],
         [
           "Bill numbers",
@@ -109,6 +101,34 @@ export default async function SettingsPage() {
           myId={profile.id}
           isOwner={profile.roles.includes("owner")}
         />
+      </div>
+
+      <div className="card" data-testid="settings-rules">
+        <h3 style={{ marginTop: 0 }}>{t("Rules")}</h3>
+        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+          {t(
+            "The discount a cashier gives without a manager, the refunds and losses a second person approves, and what happens when more stock is used than the books hold. Each is changed on Rules, with a reason, and every change is kept.",
+          )}
+        </p>
+        <table>
+          <tbody>
+            {cafeRules.map((r) => (
+              <tr key={r.key}>
+                <td className="muted">{t(RULE_LABEL[r.key])}</td>
+                <td>
+                  {r.value}
+                  {r.others > 0 && (
+                    <span className="muted" style={{ fontSize: ".8rem" }}>
+                      {" "}
+                      · {t("{n} more for roles or items", { n: r.others })}
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <Link href="/settings/rules">{t("Open Rules →")}</Link>
       </div>
 
       <div className="card">

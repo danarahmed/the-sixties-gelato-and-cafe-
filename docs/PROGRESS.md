@@ -7,11 +7,11 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0039` and the rebuilt app. The SQL
-  checks (41, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (18, every role, every screen in
+- **Built and verified:** migrations `0014`–`0040` and the rebuilt app. The SQL
+  checks (42, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (19, every role, every screen in
   Arabic and Kurdish, and a lost answer on each kind of screen), the unit and
-  contract tests (305) and a production build all pass.
+  contract tests (313) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -548,6 +548,26 @@ browser tests through the real app, or both.
   advisors add only `report_usage_variance`, which checks `cost.view`; the
   performance advisors add nothing. The screen went live with
   [pull request #28](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/28).
+- **The café's rules (release O, migration `0040`, the first step of P1 in
+  [`COMPLETION_PLAN.md`](COMPLETION_PLAN.md)).** The rules sat in four columns
+  of the business row, changed only in the database. Now **Settings → Rules**
+  shows each rule, who set it, when and why, and every change, each with a
+  reason: the discount a cashier gives without a manager (per role), the step
+  a percentage is rounded to, the refund above which a second person approves
+  it (per role, 25,000 IQD by default), the loss above which a manager
+  approves it (per role, 50,000 IQD) and what one person's losses are added up
+  over, and what happens when more stock is used than the books hold —
+  refused, a manager's PIN, or allowed with a red alert, for the café, a kind
+  of item or one item (made items refused and the rest alerted by default).
+  Sales and bills, losses, batches, corrections by hand and corrected
+  deliveries all ask the stock rule, under the items' locks. Losses are added
+  up by person and by item; over the limit a manager types their PIN, or the
+  loss waits for their approval under Needs you and on Inventory, where a
+  manager approves it or reverses it (the stock back, its journal reversed).
+  The till asks a manager when an item's rule does; a refund over the limit
+  asks for a second person. Built and tested: a new SQL suite, two races (two
+  losses at once, the last bottle sold by ten tills), a new browser suite,
+  and every new text in Arabic and Kurdish.
 
 ## The August 2026 audit, finding by finding
 

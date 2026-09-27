@@ -810,6 +810,16 @@ const phrases: PhraseBook = {
     ar: "من يستلم درج النقد",
     ckb: "ئەو کەسەی دەخیلەکە وەردەگرێت",
   },
+
+  // Refunds over the limit, and selling beyond the books (0040).
+  "Over {limit}, a second person approves it: choose who, and they type their PIN.": {
+    ar: "فوق {limit} يوافق عليه شخص ثانٍ: اختر من، ويكتب رمز PIN الخاص به.",
+    ckb: "لە سەرووی {limit} کەسێکی دووەم ڕەزامەندی لەسەر دەدات: هەڵیبژێرە، و ئەو PIN ی خۆی دەنووسێت.",
+  },
+  "A manager approves selling more than the books hold": {
+    ar: "يوافق مدير على بيع أكثر مما تحتفظ به الدفاتر",
+    ckb: "بەڕێوەبەرێک ڕەزامەندی لەسەر فرۆشتنی زیاتر لەوەی لە دەفتەرەکاندایە دەدات",
+  },
 };
 
 export default phrases;

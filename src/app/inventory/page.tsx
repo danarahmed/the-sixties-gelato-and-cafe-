@@ -6,6 +6,8 @@ import { getItems, getItemsOutOfUse, getMovements, getStockBoard } from "@/lib/d
 import { itemTypeLabel, movementLabel, fmtIQD, fmtQty } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
 import { InventoryForms } from "@/components/InventoryForms";
+import { LossesWaiting } from "@/components/LossesWaiting";
+import { getLossesWaiting } from "@/lib/db/rules";
 import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -15,11 +17,13 @@ export default async function InventoryPage() {
   const t = await getT();
   const msg = await getMsg();
   const seesCost = has(profile, "cost.view");
-  const [items, allBoard, movements, outOfUse] = await Promise.all([
+  const approvesLosses = has(profile, "waste.approve");
+  const [items, allBoard, movements, outOfUse, waiting] = await Promise.all([
     getItems(),
     seesCost ? getStockBoard() : Promise.resolve([]),
     seesCost ? getMovements(60) : Promise.resolve([]),
     seesCost ? getItemsOutOfUse() : Promise.resolve([]),
+    approvesLosses ? getLossesWaiting() : Promise.resolve([]),
   ]);
   // The board shows the items in use; one out of use has no stock left (0027).
   const inUse = new Set(items.map((i) => i.id));
@@ -82,6 +86,8 @@ export default async function InventoryPage() {
         </div>
       )}
 
+      <LossesWaiting losses={waiting} myId={profile.id} timezone={profile.timezone} />
+
       <InventoryForms
         items={items.map((i) => ({
           id: i.id,
@@ -105,6 +111,8 @@ export default async function InventoryPage() {
         canWaste={has(profile, "waste.record")}
         canCorrect={has(profile, "inventory.adjust.approve")}
         isOwner={profile.roles.includes("owner")}
+        lossLimit={profile.wasteApprovalOver}
+        lossWindow={profile.wasteApprovalWindow}
       />
 
       {seesCost &&

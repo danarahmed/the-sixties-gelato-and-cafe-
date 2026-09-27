@@ -109,6 +109,31 @@ Release N:
 - **The alert** reads each item's last two counts, the later in the last 14
   days, with two thresholds on Settings (10% and 5,000 IQD).
 
+Release O:
+
+- **The scopes are the café, a role, a kind of item and an item.** Items have
+  no categories of their own, so "category" is the kind of item (finished
+  good, sub-recipe, ingredient…). A branch's own rule is kept for release AB.
+- **The defaults are rows of their own.** Nobody's name is on them: the
+  business row's old columns while they last, and the owner's decisions of
+  §L.3 for the rest (refunds over 25,000; losses added up over the person's
+  session; made items refused below zero, the rest alerted). A rule set back
+  to its default keeps its row, with a null value, so its history stays.
+- **The history is written by the rule's own trigger,** before the row, in the
+  same statement; a rule is never deleted.
+- **Losses:** over the limit, a manager's PIN on the spot, or the person saves
+  it to wait; waiting, it is already in the stock and the books, and a manager
+  other than its recorder approves it or reverses it. The person's window is
+  their open cash session, or the day when they have none.
+- **Stock below zero** is judged by every function that takes stock out
+  today: sales and bills, losses, batches, corrections by hand and deliveries
+  corrected. Giveaways, transfers and returns will ask when they are built.
+- **The target margin** stays among the alert thresholds, which already have
+  their history on the audit trail.
+- **A cashier refunding with a manager's PIN** (decision 3) is not added:
+  refunds stay with managers, with the limit above which a second person
+  approves.
+
 **Basis:**
 
 - The code at `d17436e`: migrations `0001`–`0034` and the app.

@@ -18,8 +18,14 @@ export interface Profile {
   currencyDecimals: number;
   /** A percentage discount comes to the nearest multiple of this (500 IQD). */
   discountRoundTo: number;
-  /** Above this share of the bill a discount needs a manager's approval (0028). */
+  /** Above this share of the bill a discount needs a manager's approval (0028; per role, 0040). */
   discountCap: number;
+  /** A refund over this needs a second person (0040); null before the rules. */
+  refundApprovalOver: number | null;
+  /** A loss over this, alone or added up, needs a manager (0040); null before the rules. */
+  wasteApprovalOver: number | null;
+  /** What one person's losses are added up over: "entry", "session" or "day" (0040). */
+  wasteApprovalWindow: string | null;
   /** Whether they have set the PIN they approve with. */
   hasPin: boolean;
   roles: string[];
@@ -66,6 +72,9 @@ export const getSession = cache(async (): Promise<SessionState> => {
       discountRoundTo: Number(p.discount_round_to ?? 0),
       // Before 0028 there was no cap: every discount was the cashier's own.
       discountCap: p.discount_cap_percent == null ? 100 : Number(p.discount_cap_percent),
+      refundApprovalOver: p.refund_approval_over == null ? null : Number(p.refund_approval_over),
+      wasteApprovalOver: p.waste_approval_over == null ? null : Number(p.waste_approval_over),
+      wasteApprovalWindow: p.waste_approval_window == null ? null : String(p.waste_approval_window),
       hasPin: Boolean(p.has_pin),
       roles: Array.isArray(p.roles) ? p.roles.map(String) : [],
       permissions: Array.isArray(p.permissions) ? p.permissions.map(String) : [],

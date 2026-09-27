@@ -753,6 +753,68 @@ const phrases: PhraseBook = {
     ckb: "ژماردنێکی دووەم ئەوە دەردەخات کە بەکارهاتووە",
   },
   "Last 90 days": { ar: "آخر 90 يومًا", ckb: "دوایین 90 ڕۆژ" },
+
+  // Losses added up, approved or waiting, and reversed (0040).
+  "a loss": { ar: "خسارة", ckb: "زیانێک" },
+  "Saved. It waits for a manager's approval, under Needs you.": {
+    ar: "حُفظت. تنتظر موافقة مدير، تحت «يحتاج إليك».",
+    ckb: "پاشەکەوت کرا. لە ژێر «پێویستی بە تۆیە» چاوەڕێی ڕەزامەندی بەڕێوەبەرێکە.",
+  },
+  "Recorded, approved by {name} — {value} written off (journal {journal}).": {
+    ar: "سُجّلت بموافقة {name} — شُطب {value} (القيد {journal}).",
+    ckb: "تۆمارکرا بە ڕەزامەندیی {name} — {value} سڕایەوە (تۆماری {journal}).",
+  },
+  "Taken out at average cost: Dr 5300 Waste / Cr 1200 Inventory.": {
+    ar: "تُخرج بمتوسط التكلفة: مدين 5300 الهدر / دائن 1200 المخزون.",
+    ckb: "بە تێچووی ناوەند دەردەهێنرێت: قەرزار 5300 بەفیڕۆچوون / بەستانکار 1200 کۆگا.",
+  },
+  "A loss over {limit} needs a manager's approval.": {
+    ar: "تحتاج الخسارة التي تتجاوز {limit} إلى موافقة مدير.",
+    ckb: "زیانێک لە سەرووی {limit} پێویستی بە ڕەزامەندی بەڕێوەبەرێک هەیە.",
+  },
+  "A loss over {limit}, or that takes your losses today or the item's over it, needs a manager's approval.":
+    {
+      ar: "تحتاج إلى موافقة مدير الخسارةُ التي تتجاوز {limit}، أو التي تجعل خسائرك اليوم أو خسائر المادة تتجاوزه.",
+      ckb: "زیانێک لە سەرووی {limit}، یان زیانێک کە زیانەکانی ئەمڕۆت یان هی کاڵاکە لەوە تێدەپەڕێنێت، پێویستی بە ڕەزامەندی بەڕێوەبەرێک هەیە.",
+    },
+  "A loss over {limit}, or that takes your losses this session (or today) or the item's today over it, needs a manager's approval.":
+    {
+      ar: "تحتاج إلى موافقة مدير الخسارةُ التي تتجاوز {limit}، أو التي تجعل خسائرك في هذه الجلسة (أو اليوم) أو خسائر المادة اليوم تتجاوزه.",
+      ckb: "زیانێک لە سەرووی {limit}، یان زیانێک کە زیانەکانی ئەم شیفتەت (یان ئەمڕۆت) یان هی ئەمڕۆی کاڵاکە لەوە تێدەپەڕێنێت، پێویستی بە ڕەزامەندی بەڕێوەبەرێک هەیە.",
+    },
+  "A manager approves it now, with their PIN:": {
+    ar: "يوافق عليها مدير الآن، برمز PIN الخاص به:",
+    ckb: "بەڕێوەبەرێک ئێستا بە PIN ی خۆی ڕەزامەندی لەسەر دەدات:",
+  },
+  "A manager approves using more than the books hold, with their PIN:": {
+    ar: "يوافق مدير، برمز PIN الخاص به، على استخدام أكثر مما تحتفظ به الدفاتر:",
+    ckb: "بەڕێوەبەرێک بە PIN ی خۆی ڕەزامەندی لەسەر بەکارهێنانی زیاتر لەوەی لە دەفتەرەکاندایە دەدات:",
+  },
+  "Save it to wait for a manager's approval": {
+    ar: "احفظها لتنتظر موافقة مدير",
+    ckb: "پاشەکەوتی بکە بۆ ئەوەی چاوەڕێی ڕەزامەندی بەڕێوەبەرێک بکات",
+  },
+  "Approve each, or reverse one that did not happen": {
+    ar: "وافق على كل واحدة، أو اعكس ما لم يحدث",
+    ckb: "ڕەزامەندی لەسەر هەر یەکێک بدە، یان ئەوەی ڕووی نەداوە هەڵیبگەڕێنەوە",
+  },
+  "Recorded by": { ar: "سجّلها", ckb: "تۆمارکراوە لەلایەن" },
+  Approve: { ar: "موافقة", ckb: "ڕەزامەندی" },
+  "Reverse…": { ar: "عكس…", ckb: "هەڵگەڕاندنەوە…" },
+  "Why is it reversed? (required)": {
+    ar: "لماذا تُعكس؟ (مطلوب)",
+    ckb: "بۆچی هەڵدەگەڕێندرێتەوە؟ (پێویستە)",
+  },
+  "Reverse the loss: the stock goes back": {
+    ar: "اعكس الخسارة: يعود المخزون",
+    ckb: "زیانەکە هەڵبگەڕێنەوە: کۆگاکە دەگەڕێتەوە",
+  },
+  "Loss approved": { ar: "وُوفق على خسارة", ckb: "ڕەزامەندی لەسەر زیانێک درا" },
+  "Loss reversed": { ar: "عُكست خسارة", ckb: "زیانێک هەڵگەڕێندرایەوە" },
+  "Stock used beyond the books, approved": {
+    ar: "استُخدم مخزون يتجاوز الدفاتر، بموافقة",
+    ckb: "کۆگای زیاتر لە دەفتەرەکان بەکارهات، بە ڕەزامەندی",
+  },
 };
 
 export default phrases;

@@ -1130,9 +1130,9 @@ const phrases: PhraseBook = {
   "Member not found": { ar: "لم يُعثر على العضو", ckb: "ئەندامەکە نەدۆزرایەوە" },
 
   // People, roles, PINs and approvals: a manager's PIN, and the approvals given with it.
-  "Only those who approve discounts, voids or refunds have a PIN": {
-    ar: "لا يملك رمز PIN إلا من يوافق على الخصومات أو الإلغاءات أو الاستردادات",
-    ckb: "PIN تەنها بۆ ئەوانەیە کە ڕەزامەندی لەسەر داشکاندن، هەڵوەشاندنەوە یان گەڕاندنەوەی پارە دەدەن",
+  "Only those who approve discounts, voids, refunds, losses or stock below zero have a PIN": {
+    ar: "لا يملك رمز PIN إلا من يوافق على الخصومات أو الإلغاءات أو الاستردادات أو الخسائر أو المخزون دون الصفر",
+    ckb: "PIN تەنها بۆ ئەوانەیە کە ڕەزامەندی لەسەر داشکاندن، هەڵوەشاندنەوە، گەڕاندنەوەی پارە، زیان یان کۆگای خوار سفر دەدەن",
   },
   "Choose a PIN that is harder to guess": {
     ar: "اختر رمز PIN أصعب في التخمين",
@@ -1541,6 +1541,82 @@ const phrases: PhraseBook = {
   "The books had it below zero when it was counted: a delivery may not have been entered": {
     ar: "كانت الدفاتر تُظهره دون الصفر حين جُرد: ربما لم يُدخل توريد",
     ckb: "دەفتەرەکان کاتی ژماردن لە خوار سفرەوە پیشانیان دەدا: لەوانەیە بارێک تۆمار نەکرابێت",
+  },
+
+  // The rules on Settings, stock below zero, and losses added up (0040).
+  "A rule is never deleted: set it back to its default": {
+    ar: "لا تُحذف القاعدة أبدًا: أعدها إلى قيمتها الافتراضية",
+    ckb: "یاسا هەرگیز ناسڕدرێتەوە: بیگەڕێنەوە بۆ بنەڕەتەکەی",
+  },
+  "A rule keeps what it is for: set another one instead": {
+    ar: "تبقى القاعدة على ما وُضعت له: ضع قاعدة أخرى بدلًا من ذلك",
+    ckb: "یاسا بۆ ئەوە دەمێنێتەوە کە بۆی دانراوە: لەبری ئەوە یاسایەکی تر دابنێ",
+  },
+  "Unknown rule": { ar: "قاعدة غير معروفة", ckb: "یاسای نەناسراو" },
+  "Say why the rule is changing": { ar: "اذكر سبب تغيير القاعدة", ckb: "بڵێ بۆچی یاساکە دەگۆڕێت" },
+  "This rule is not set that way": {
+    ar: "لا تُضبط هذه القاعدة على هذا النحو",
+    ckb: "ئەم یاسایە بەو شێوەیە دانانرێت",
+  },
+  "Unknown role": { ar: "دور غير معروف", ckb: "ڕۆڵی نەناسراو" },
+  "Unknown kind of item": { ar: "نوع مادة غير معروف", ckb: "جۆری کاڵای نەناسراو" },
+  "Unknown location": { ar: "موقع غير معروف", ckb: "شوێنی نەناسراو" },
+  "That is not one of this rule's choices": {
+    ar: "هذا ليس من خيارات هذه القاعدة",
+    ckb: "ئەمە یەکێک نییە لە هەڵبژاردەکانی ئەم یاسایە",
+  },
+  "Using stock the books do not hold, with no alert, is for chosen items only": {
+    ar: "استخدام مخزون لا تحتفظ به الدفاتر، دون تنبيه، هو لمواد مختارة فقط",
+    ckb: "بەکارهێنانی کۆگایەک کە لە دەفتەرەکاندا نییە، بەبێ ئاگادارکردنەوە، تەنها بۆ کاڵا هەڵبژێردراوەکانە",
+  },
+  "Enter a number": { ar: "أدخل رقمًا", ckb: "ژمارەیەک بنووسە" },
+  "Enter a number from {1} to {2}": {
+    ar: "أدخل رقمًا من {1} إلى {2}",
+    ckb: "ژمارەیەک لە {1} تا {2} بنووسە",
+  },
+  "Enter a whole number": { ar: "أدخل رقمًا صحيحًا", ckb: "ژمارەیەکی تەواو بنووسە" },
+  "That is the rule already": { ar: "هذه هي القاعدة أصلًا", ckb: "یاساکە هەر ئەمەیە" },
+  "Only {1} {2} of {3} is in stock: record the delivery or the batch first, or count it": {
+    ar: "لا يوجد في المخزون سوى {1} {2} من {3}: سجّل التوريد أو الدفعة أولًا، أو اجرده",
+    ckb: "تەنها {1} {2} لە {3} لە کۆگادایە: سەرەتا بارەکە یان دەفعەکە تۆمار بکە، یان بیژمێرە",
+  },
+  "Only {1} {2} of {3} is in stock: a manager approves using more than that": {
+    ar: "لا يوجد في المخزون سوى {1} {2} من {3}: يوافق مدير على استخدام أكثر من ذلك",
+    ckb: "تەنها {1} {2} لە {3} لە کۆگادایە: بەڕێوەبەرێک ڕەزامەندی لەسەر بەکارهێنانی زیاتر لەوە دەدات",
+  },
+  "This leaves {1} below zero, which its rule refuses: count it, or correct less": {
+    ar: "هذا يترك {1} دون الصفر، وقاعدته ترفض ذلك: اجرده، أو صحّح بمقدار أقل",
+    ckb: "ئەمە {1} لە خوار سفرەوە دەهێڵێتەوە، کە یاساکەی ڕەتی دەکاتەوە: بیژمێرە، یان کەمتر ڕاست بکەرەوە",
+  },
+  "A refund over {1} needs a second person to approve it": {
+    ar: "يحتاج الاسترداد الذي يتجاوز {1} إلى موافقة شخص ثانٍ",
+    ckb: "گەڕاندنەوەی پارە لە سەرووی {1} پێویستی بە ڕەزامەندی کەسێکی دووەم هەیە",
+  },
+  "This loss needs a manager's approval: ask one to approve it now, or save it to wait for their approval":
+    {
+      ar: "تحتاج هذه الخسارة إلى موافقة مدير: اطلب من أحدهم الموافقة عليها الآن، أو احفظها لتنتظر موافقته",
+      ckb: "ئەم زیانە پێویستی بە ڕەزامەندی بەڕێوەبەرێک هەیە: داوا لە یەکێکیان بکە ئێستا ڕەزامەندی لەسەر بدات، یان پاشەکەوتی بکە بۆ ئەوەی چاوەڕێی ڕەزامەندییەکەی بکات",
+    },
+  "Approve the loss, or reverse it": {
+    ar: "وافق على الخسارة، أو اعكسها",
+    ckb: "ڕەزامەندی لەسەر زیانەکە بدە، یان هەڵیبگەڕێنەوە",
+  },
+  "Loss not found": { ar: "لم يُعثر على الخسارة", ckb: "زیانەکە نەدۆزرایەوە" },
+  "This loss has been looked at already": {
+    ar: "رُوجعت هذه الخسارة من قبل",
+    ckb: "ئەم زیانە پێشتر سەیر کراوە",
+  },
+  "This loss is not waiting for approval": {
+    ar: "هذه الخسارة لا تنتظر الموافقة",
+    ckb: "ئەم زیانە چاوەڕێی ڕەزامەندی نییە",
+  },
+  "Someone else approves a loss you recorded": {
+    ar: "يوافق شخص آخر على خسارة سجّلتها أنت",
+    ckb: "کەسێکی تر ڕەزامەندی لەسەر زیانێک دەدات کە تۆ تۆمارت کردووە",
+  },
+  "Say why the loss is reversed": {
+    ar: "اذكر سبب عكس الخسارة",
+    ckb: "بڵێ بۆچی زیانەکە هەڵدەگەڕێنرێتەوە",
   },
 };
 

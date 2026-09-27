@@ -145,6 +145,8 @@ const payInput = tabRef.extend({
   tender: z.enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" }),
   /** The total the till showed; the bill is not paid at another (0025). */
   expectedNet: optionalNonNegative("The total shown"),
+  /** A manager's approval of selling more than the books hold, when its rule asks (0040). */
+  stockApprovalId: z.string().uuid().nullish(),
 });
 
 /** Take the money: the bill becomes one sale. Paying twice returns the sale already recorded. */
@@ -159,6 +161,7 @@ export async function payBillAction(
     p_idempotency_key: v.data.key,
     p_tender: v.data.tender,
     p_expected_net: v.data.expectedNet,
+    p_stock_approval: v.data.stockApprovalId ?? null,
   });
   if (!r.ok) return r;
   refresh(...PAID_PATHS);

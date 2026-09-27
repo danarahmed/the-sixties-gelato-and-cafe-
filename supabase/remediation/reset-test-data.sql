@@ -55,7 +55,7 @@ insert into reset_keep values
   ('recipe'), ('recipe_version'), ('recipe_line'), ('variant_recipe'),
   ('item'), ('item_unit'), ('supplier'), ('dining_table'), ('expense_category'),
   ('delivery_platform'), ('platform_store_map'), ('platform_product_map'), ('promotion'),
-  ('reason_code'), ('app_language'), ('app_phrase'), ('audit_log');
+  ('reason_code'), ('app_language'), ('app_phrase'), ('business_rule'), ('business_rule_history'), ('audit_log');
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');
@@ -95,6 +95,7 @@ truncate table
   accounting_period, ai_insight, ai_interaction_log, alert, approval, card_settlement, cash_event, cash_transfer,
   document_counter,
   expense, goods_receipt, goods_receipt_line, inventory_movement, item_lot, journal_entry, journal_line,
+  loss_review,
   pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   production_batch,
   purchase_invoice, purchase_order, purchase_order_line, receipt_correction, reconciliation_issue, request_log,

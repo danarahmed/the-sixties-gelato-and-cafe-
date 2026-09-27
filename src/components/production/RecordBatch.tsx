@@ -20,6 +20,7 @@ import {
   type UnitsOf,
 } from "@/components/production/batchMath";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { ManagerApproval } from "@/components/ManagerApproval";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -59,6 +60,7 @@ export function RecordBatch({
   const [outUnit, setOutUnit] = useState(recipes[0]?.yieldUnit ?? "");
   const [note, setNote] = useState("");
   const [msg, setMsg] = useState<Msg>(null);
+  const [needsManager, setNeedsManager] = useState(false);
 
   const byId = new Map(items.map((i) => [i.id, i]));
   const recipe = recipes.find((r) => r.id === recipeId);
@@ -90,7 +92,7 @@ export function RecordBatch({
     setMsg(null);
   }
 
-  function submit() {
+  function submit(stockApprovalId: string | null = null) {
     if (!recipe) return;
     setMsg(null);
     start(async () => {
@@ -102,10 +104,13 @@ export function RecordBatch({
             outputQty: outQty.trim() === "" ? null : outQty,
             outputUnit: outQty.trim() === "" ? null : outUnit,
             note,
+            stockApprovalId,
           },
           key,
         ),
       );
+      // An ingredient whose rule asks for a manager to use more than the books hold (0040).
+      setNeedsManager(!r.ok && NEEDS_STOCK_APPROVAL.test(r.error));
       if (r.ok) {
         const made = showIn(new Decimal(r.data.actual), output, shownUnit);
         setMsg({
@@ -279,12 +284,27 @@ export function RecordBatch({
       )}
 
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-        <button className="btn-primary" onClick={submit} disabled={busy || !recipe || !b}>
+        <button className="btn-primary" onClick={() => submit()} disabled={busy || !recipe || !b}>
           {busy ? t("Recording…") : t("Record batch")}
         </button>
         <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
+      {needsManager && recipe && (
+        <div className="card grid" style={{ gap: 8 }} data-testid="batch-approval">
+          <b style={{ fontSize: ".9rem" }}>
+            {t("A manager approves using more than the books hold, with their PIN:")}
+          </b>
+          <ManagerApproval
+            kind="negative_stock"
+            items={`${recipe.name} ×${batches}`}
+            onApproved={(a) => submit(a.id)}
+          />
+        </div>
+      )}
     </div>
   );
 }
+
+/** The database's answer when an ingredient's rule asks for a manager (0040). */
+const NEEDS_STOCK_APPROVAL = /is in stock: a manager approves using more than that/;

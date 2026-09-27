@@ -12,6 +12,7 @@ import { BUILT_IN_LANGUAGES, type Msg, type T } from "@/lib/i18n/core";
 import { itemTypeLabel, movementLabel, roleLabel } from "@/lib/format";
 import { SHOP_CHANNELS, channelName } from "@/lib/channels";
 import { RULE_LABEL, THRESHOLD_LABEL, ruleLabel } from "@/lib/alerts";
+import { CHOICE_LABEL, RULE_LABEL as BUSINESS_RULE_LABEL } from "@/lib/rules";
 
 /** A stored JSON value, as the database wrote it. */
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
@@ -41,7 +42,14 @@ export const AUDIT_GROUPS = [
   {
     key: "stock",
     label: "Counts, corrections & batches", // i18n-ignore
-    prefixes: ["inventory.adjust", "inventory.waste", "inventory.count.", "production."],
+    prefixes: [
+      "inventory.adjust",
+      "inventory.waste",
+      "inventory.loss_",
+      "inventory.count.",
+      "production.",
+      "stock.",
+    ],
   },
   {
     key: "sales",
@@ -65,6 +73,7 @@ export const AUDIT_GROUPS = [
     label: "Settings, places, platforms & people", // i18n-ignore
     prefixes: [
       "business.",
+      "rule.",
       "location.",
       "member.",
       "table.",
@@ -99,6 +108,10 @@ const ACTION_LABEL: Record<string, string> = {
   "inventory.count.approve": "Stock count approved",
   "inventory.count.cancel": "Stock count cancelled",
   "inventory.waste": "Loss recorded",
+  "inventory.loss_approve": "Loss approved",
+  "inventory.loss_reverse": "Loss reversed",
+  "stock.below_zero": "Stock used beyond the books, approved",
+  "rule.set": "Rule changed",
   "production.record": "Batch recorded",
   "production.cancel": "Batch cancelled",
   "purchase.receive": "Delivery received",
@@ -291,6 +304,9 @@ const FIELD_LABEL: Record<string, string> = {
   stock_change: "Stock value changed by",
   grni_change: "Owed for it (2050) changed by",
   price_variance: "Price variance (5050)",
+  business_rule: "Rule",
+  applies_to: "Applies to",
+  approved_by: "Approved by",
 };
 
 /** What a delivery's correction changed (0038), as the trail names it. */
@@ -330,6 +346,11 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
     if (key === "rule") return ruleLabel(v);
     if (key === "item_type") return itemTypeLabel(v);
     if (key === "movement") return movementLabel(v);
+    // A rule of the café (0040): its name, what it applies to, a choice's words.
+    if (key === "business_rule")
+      return BUSINESS_RULE_LABEL[v as keyof typeof BUSINESS_RULE_LABEL] ?? v;
+    if (key === "applies_to") return roleLabel(v) !== v ? roleLabel(v) : itemTypeLabel(v);
+    if (key === "value" && CHOICE_LABEL[v]) return CHOICE_LABEL[v];
     return v;
   }
   if (Array.isArray(v)) {
@@ -454,6 +475,15 @@ export function subjectOf(
     }
     case "business":
       return "Business settings";
+    case "business_rule": {
+      // "Discounts a manager approves: Cashier"; the whole café's has nothing after it.
+      const rule = pick("business_rule");
+      const what = rule ? showValue(rule, "business_rule", names) : "A rule";
+      const to = pick("applies_to");
+      return to ? `${what}: ${showValue(to, "applies_to", names)}` : what;
+    }
+    case "stock":
+      return "Stock";
     case "inventory_movement":
       return named(pick("item")) ?? "Stock";
     case "expense":
@@ -551,6 +581,11 @@ function channelIn(name: string, t: T): string {
 export function subjectIn(subject: string, action: string, t: T, msg: Msg): string {
   if (SUBJECT_WORDS.has(subject)) return t(subject);
   if (action.startsWith("alert.")) return msg(subject);
+  // A rule (0040): its name, then a role or a kind of item (phrases), or an item's name.
+  if (action === "rule.set") {
+    const at = subject.indexOf(": ");
+    return at < 0 ? t(subject) : `${t(subject.slice(0, at))}: ${t(subject.slice(at + 2))}`;
+  }
   for (const [re, phrase, keys] of SUBJECTS) {
     const m = re.exec(subject);
     if (m) return t(phrase, Object.fromEntries(keys.map((k, i) => [k, m[i + 1] ?? ""])));
@@ -585,6 +620,7 @@ export function subjectIn(subject: string, action: string, t: T, msg: Msg): stri
 
 const RULES = new Set(Object.values(RULE_LABEL));
 const THRESHOLDS = Object.values(THRESHOLD_LABEL);
+const CHOICES = new Set(Object.values(CHOICE_LABEL));
 
 /**
  * A value as the screen shows it: the words this file writes (yes and no, an
@@ -612,6 +648,11 @@ export function valueIn(value: string, field: string, t: T, msg: Msg): string {
         .join(", ");
     case FIELD_LABEL.rule:
       return RULES.has(value) ? msg(value) : value;
+    case FIELD_LABEL.business_rule:
+    case FIELD_LABEL.applies_to:
+      return t(value);
+    case FIELD_LABEL.value:
+      return CHOICES.has(value) ? t(value) : value;
     case FIELD_LABEL.channel:
       return channelIn(value, t);
     case FIELD_LABEL.timezone:

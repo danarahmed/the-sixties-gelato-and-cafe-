@@ -37,6 +37,14 @@ import { deliveryLineCost, needsPriceConfirmation, packCode, priceGap } from "@/
 import { lookAlike, lookAlikes, nameKey, slips } from "@/lib/names";
 import { REASONS, noteIsEnough, reasonKey, reasonMissing, type ReasonKind } from "@/lib/reasons";
 import { LOCALES, builtInWords, getDictionary } from "@/lib/i18n/dictionaries";
+import {
+  CHOICE_LABEL,
+  RULE_ORDER,
+  SCOPE_LABEL,
+  parseBusinessRules,
+  typedRuleValue,
+  type ScopeType,
+} from "@/lib/rules";
 import { translator } from "@/lib/i18n/core";
 import {
   RULE_LABEL,
@@ -1934,5 +1942,99 @@ describe("refunds by the item (0037), as the database works them out", () => {
     expect(allThatIsLeft([espresso(3, 7000)])).toEqual({ e: "" });
     const all = refundPlan([espresso(1, 2333), water], allThatIsLeft([espresso(1, 2333), water]));
     expect(all.total).toBe(7000 - 2333 + 2000);
+  });
+});
+
+describe("the café's rules on Settings (0040, release O)", () => {
+  // The rules as the latest migration to define them has them.
+  const dir = join(__dirname, "../supabase/migrations");
+  const sql =
+    readdirSync(dir)
+      .sort()
+      .map((f) => readFileSync(join(dir, f), "utf8"))
+      .filter((s) => s.includes("create or replace function rule_definitions("))
+      .at(-1) ?? "";
+  const body = sql.slice(sql.indexOf("create or replace function rule_definitions("));
+  const json = body.match(/select '(\{[\s\S]*?\})'::jsonb/)?.[1] ?? "{}";
+  const defs = JSON.parse(json.replace(/''/g, "'")) as Record<
+    string,
+    { kind: string; choices?: string[]; scopes: string[] }
+  >;
+
+  it("the screen knows every rule the database keeps, and every way each is set", () => {
+    expect(Object.keys(defs).sort()).toEqual([...RULE_ORDER].sort());
+    for (const [k, d] of Object.entries(defs)) {
+      for (const c of d.choices ?? []) expect(CHOICE_LABEL[c], `${k}: ${c}`).toBeTruthy();
+      for (const s of d.scopes) expect(SCOPE_LABEL[s as ScopeType], `${k}: ${s}`).toBeTruthy();
+    }
+  });
+
+  it("reads a value typed for a rule as the database checks it", () => {
+    const parsed = parseBusinessRules({ definitions: defs, rows: [], history: [] });
+    const def = (k: string) => parsed.definitions.find((d) => d.key === k)!;
+    expect(typedRuleValue(def("discount_cap_percent"), "12.5")).toEqual({ ok: true, value: 12.5 });
+    expect(typedRuleValue(def("discount_cap_percent"), "101").ok).toBe(false);
+    expect(typedRuleValue(def("discount_cap_percent"), "x")).toEqual({
+      ok: false,
+      error: "Enter a number",
+    });
+    expect(typedRuleValue(def("discount_round_to"), "12.5")).toEqual({
+      ok: false,
+      error: "Enter a whole number",
+    });
+    expect(typedRuleValue(def("discount_round_to"), "1,000")).toEqual({ ok: true, value: 1000 });
+    expect(typedRuleValue(def("negative_stock"), "approve")).toEqual({
+      ok: true,
+      value: "approve",
+    });
+    expect(typedRuleValue(def("negative_stock"), "maybe").ok).toBe(false);
+  });
+
+  it("reads the rows and the changes as the database lists them, in the screen's order", () => {
+    const r = parseBusinessRules({
+      definitions: defs,
+      rows: [
+        {
+          key: "negative_stock",
+          scope_type: "item_type",
+          scope_id: "finished_good",
+          value: "block",
+          is_default: true,
+        },
+        { key: "no_such_rule", scope_type: "business", scope_id: "", value: 1 },
+      ],
+      history: [
+        {
+          key: "discount_cap_percent",
+          scope_type: "role",
+          scope_id: "cashier",
+          old_value: null,
+          new_value: 5,
+          reason: "Cashiers give 5% at most",
+          changed_by: "Demo Owner",
+          changed_at: "2026-09-27T10:00:00Z",
+        },
+      ],
+    });
+    expect(r.definitions.map((d) => d.key)).toEqual([...RULE_ORDER]);
+    expect(r.rows).toEqual([
+      {
+        key: "negative_stock",
+        scopeType: "item_type",
+        scopeId: "finished_good",
+        scopeName: null,
+        value: "block",
+        isDefault: true,
+        reason: null,
+        setBy: null,
+        setAt: null,
+      },
+    ]);
+    expect(r.history[0]).toMatchObject({
+      scopeType: "role",
+      oldValue: null,
+      newValue: 5,
+      changedBy: "Demo Owner",
+    });
   });
 });
