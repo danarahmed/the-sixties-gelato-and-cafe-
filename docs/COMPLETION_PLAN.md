@@ -1,9 +1,9 @@
 # Completing the operations system: implementation analysis
 
 **Status:** analysis finished on 27 September 2026, before any change was made.
-Release J (duplicate protection, `0035`) and release K (cash sessions, `0036`)
-are live since 27 September 2026. Release L (refunds by the item, `0037`) is
-built and tested. What was built differs from the plan below in these ways.
+Release J (duplicate protection, `0035`), release K (cash sessions, `0036`)
+and release L (refunds by the item, `0037`) are live since 27 September 2026.
+What was built differs from the plan below in these ways.
 
 Release J:
 

@@ -417,7 +417,35 @@ browser tests through the real app, or both.
   The old drawer count, `count_drawer`, kept through the update to `0036`, is
   closed. Built and tested: a new SQL suite, a race of ten refunds of one
   espresso each from a sale of three (three go through), a new browser suite,
-  and a refund whose answer is lost given once.
+  and a refund whose answer is lost given once. The migration was applied to
+  the live database on 27 September 2026: the text stored there is the file
+  byte for byte, and it matches the tested build object by object,
+  permissions included (the one difference, as before, is the schema `citext`
+  lives in). It was checked as the owner in a transaction that was rolled
+  back: the old drawer count could no longer be called; the drawer, opened for
+  the check, took over from the books as release K's check showed; a cash sale
+  of three espressos (2,000 each) and two americanos (3,000 each, each with a
+  bottle of water) named its line on all four of its stock movements; one of
+  each refunded gave back 5,000 out of the drawer's session and put a bottle
+  back on the shelf at its cost (212): refund 1, the sale part-refunded, its
+  journal 1000 Cr 5,000, 4200 Dr 5,000, 1200 Dr 212, 5000 Cr 212; sent twice
+  with one key, it was given once; three more espressos, a void and the
+  cashier's refund were refused; the cashier read no refunds and the branch
+  manager read it; the rest, refunded whole through the old call, was refund 2
+  of 7,000, the two adding up to the sale's 12,000 with both bottles back; one
+  espresso of a card sale went back to the card (1010) and nothing left the
+  drawer; one americano of a Talabat order came off what Talabat owes, which
+  then owed the 3,000 left; a sale from before `0037` was refused in part, and
+  another was refunded whole (2,500, its bottle back on the shelf); every
+  reconciliation check read as before; the five refunds were numbered 1 to 5,
+  each its sale's adjustment with its payment; the audit trail gained the five
+  refunds and the opening; and nothing was kept (still 40 sales, 4 voids and
+  refunds, no refund documents, journals to 1091 and no stored answers). The
+  security advisors add only `refund_sale_lines`, which signed-in users may
+  call (it checks `sale.refund`), and no longer list `count_drawer`; the
+  performance advisors add only the refund tables' links without an index of
+  their own (a refund's approval, approver, journal, location, requester and
+  session; the business of a refund's line and of its payment).
 
 ## The August 2026 audit, finding by finding
 
