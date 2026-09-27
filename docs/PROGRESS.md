@@ -479,7 +479,36 @@ browser tests through the real app, or both.
   the records to look into listed under the table, each with a link. Built and
   tested: two new SQL suites, a race of ten corrections of one delivery (one
   goes through), a new browser suite, and a correction whose answer is lost
-  made once.
+  made once. The migration was applied to the live database on 27 September
+  2026: the text stored there is the file byte for byte, and it matches the
+  tested build object by object, permissions included (the one difference, as
+  before, is the schema `citext` lives in). Beforehand a read-only check
+  predicted each new check at zero on the live records, and after it all nine
+  read zero: card takings 19,000 as 1010 holds; the platforms owing 34,500 as
+  1100 holds, the two Talabat sales from before order numbers (11,000 and
+  5,250) explained as far as the payout of 11,000 typed by hand goes; the
+  drawers not yet counted in a session; the safe at nothing; no record to look
+  into. It was checked as the owner in a transaction that was rolled back: 10
+  g of coffee beans received at 29 a gram and corrected to 8 g — shown first
+  (stock and what is owed 58 less, all of it still on the shelf), then
+  correction 1, 1200 Cr 58, 2050 Dr 58, made once though sent twice with one
+  key; its price corrected to 30, correction 2, 1200 Dr 8, 2050 Cr 8, the
+  12,898 g on the shelf revalued as a pair, and its journal refused for
+  reversal (correct the delivery again on Purchasing); a second delivery
+  reversed, correction 3, 1200 Cr 145, 2050 Dr 145, with nothing owed and
+  nothing to bill; the first billed at 240, then corrected no more; a manual
+  journal to the safe, and the barista's preview and reading of the records,
+  refused; the branch manager read the three corrections; the price history
+  showed the delivery as corrected; every check's difference was unchanged and
+  the month's checklist listed the nine, each passing and blocking; and nothing
+  was kept (still 9 deliveries, no corrections, 9 bills, journals to 1091, 286
+  stock movements, 35 audit rows, no stored answers). The security advisors add
+  only the four functions signed-in users may call (the corrections check
+  `inventory.adjust.approve`, the records to look into `cost.view`), and
+  `receipt_grni_value` no longer has a mutable search path; the performance
+  advisors add only the correction table's links to its journal and its author
+  without an index of their own. The screens went live with
+  [pull request #27](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/27).
 
 ## The August 2026 audit, finding by finding
 
