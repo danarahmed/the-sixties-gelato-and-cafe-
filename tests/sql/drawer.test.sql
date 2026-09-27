@@ -1,8 +1,10 @@
 -- =============================================================================
--- The drawer (0024, audit P0-2 and P0-3): a count covers every movement of cash
--- since the last one, whatever the day; money paid out says where it came
--- from; neither the till nor the safe goes below zero in the books; and the
--- till's account (1000) always equals what the drawer should hold.
+-- The drawer (0024, audit P0-2 and P0-3; in sessions since 0036): a session
+-- holds every movement of cash from its opening count to its closing count,
+-- whatever the day; money paid out says where it came from; neither the till
+-- nor the safe goes below zero in the books; and the till's account (1000)
+-- always equals what the drawer should hold. Only the owner, general managers,
+-- accountants and auditors are shown what that is before it is counted.
 -- =============================================================================
 select test.golden_catalogue();
 select test.as_admin();
@@ -15,18 +17,26 @@ create function pg_temp.sell(p_qty int, p_tender text default 'cash') returns js
   select record_sale(gen_random_uuid(), 'dine_in', p_tender::tender_type,
     jsonb_build_array(jsonb_build_object('variant_id', 'd1000000-0000-0000-0000-000000000001', 'qty', p_qty)))
 $$;
-create function pg_temp.expected() returns numeric language sql as $$ select (drawer_status() ->> 'expected')::numeric $$;
+-- What the drawer should hold (the tests' own view: the till's is blind).
+create function pg_temp.expected() returns numeric language sql security definer as $$
+  select d.carry + d.moved from location l cross join lateral drawer_position(l.business_id, l.id) d
+   where l.business_id = '00000000-0000-0000-0000-0000000000b1' and l.kind = 'branch'
+$$;
 create function pg_temp.lines_of_journal(p_no int) returns text language sql as $$
   select test.lines_of(reference_id) from journal_entry
    where journal_no = p_no and business_id = '00000000-0000-0000-0000-0000000000b1'
 $$;
 
--- A new drawer starts from nothing; the cashier is not shown what it should hold.
+-- A new drawer starts from nothing (the cashier opened it counting nothing);
+-- neither the cashier nor the branch manager is shown what it should hold.
 select test.act_as('cashier@example.com');
 select test.throws($$select drawer_status()$$, '%permission%', 'a cashier is not shown what the drawer should hold');
+select test.eq((cash_session_status() ->> 'expected'), null, 'nor on the till');
 select test.act_as('manager@example.com');
-select test.eq((drawer_status() ->> 'needs_start')::boolean, false, 'a new drawer needs no starting cash: it starts from nothing');
-select test.eq(pg_temp.expected(), 0::numeric, 'and should hold nothing');
+select test.eq((drawer_status() ->> 'expected'), null, 'nor is a branch manager');
+select test.act_as('owner@example.com');
+select test.eq((drawer_status() ->> 'expected')::numeric, 0::numeric, 'the owner is: it should hold nothing');
+select test.act_as('manager@example.com');
 
 -- The owner puts in a float; cash sales go in, card sales do not.
 select test.throws($$select move_cash('owner', 'till', 25000)$$, '%Say what the money is for%', 'money from the owner says what it is for');
@@ -39,15 +49,19 @@ select pg_temp.sell(1);
 select pg_temp.sell(1, 'card');
 select test.act_as('manager@example.com');
 select test.eq(pg_temp.expected(), 30000::numeric, 'float 25,000 + two cash espressos; the card sale is not in the drawer');
-select test.eq((drawer_status() ->> 'card')::numeric, 2500::numeric, 'the card takings are shown beside it');
+select test.eq((drawer_status() ->> 'card')::numeric, 2500::numeric, 'the card takings are shown beside it, to the manager too');
 
 -- Paying out of the till lowers the drawer, and the drawer must hold the money.
 create temp table ice as select record_expense('Ice', 1000, '6900', 'till') as r;
 select test.eq(pg_temp.expected(), 29000::numeric, 'money paid out of the till leaves the drawer');
 select test.eq(pg_temp.lines_of_journal((select (r ->> 'journal_no')::int from ice)),
   '1000 Cr 1000 | 6900 Dr 1000', 'Dr the expense, Cr the till');
+select test.throws($$select record_expense('Rent', 400000, '6000', 'till')$$, '%drawer does not hold enough to pay 400000%',
+  'the till cannot pay more than it holds (and the manager is not told what it holds)');
+select test.act_as('owner@example.com');
 select test.throws($$select record_expense('Rent', 400000, '6000', 'till')$$, '%drawer should hold only 29000%',
-  'the till cannot pay more than it holds');
+  'the owner is told');
+select test.act_as('manager@example.com');
 select test.as_admin();
 select test.eq((select count(*) from expense where description = 'Rent')::int, 0, 'and the refused payment left nothing behind');
 select test.act_as('manager@example.com');
@@ -69,12 +83,14 @@ select test.eq(pg_temp.expected(), 31500::numeric, 'the sale is in the drawer');
 select void_sale((select (r ->> 'order_id')::uuid from v1), 'rang twice');
 select test.eq(pg_temp.expected(), 29000::numeric, 'and its void takes it out again');
 
--- The count: 500 short; 25,000 stays for tomorrow and the rest goes to the safe.
-select test.throws($$select count_drawer(28500, 25000)$$, '%the safe or the bank%', 'cash taken out needs a destination');
-select test.throws($$select count_drawer(28500, 30000, 'safe')$$, '%between 0 and the 28500 counted%',
+-- The close: 500 short; 25,000 stays for tomorrow and the rest goes to the safe.
+select test.act_as('cashier@example.com');
+select test.throws($$select close_cash_session(28500, null, 25000)$$, '%the safe or the bank%', 'cash taken out needs a destination');
+select test.throws($$select close_cash_session(28500, null, 30000, 'safe')$$, '%between 0 and the 28500 counted%',
   'no more can stay than was counted');
-create temp table c1 as select count_drawer(28500, 25000, 'safe') as r;
+create temp table c1 as select close_cash_session(28500, null, 25000, 'safe') as r;
 grant select on c1 to public;
+select test.act_as('manager@example.com');
 select test.eq((select (r ->> 'expected')::numeric from c1), 29000::numeric, 'expected: the float, the sales, less the paid-out and the void');
 select test.eq((select (r ->> 'variance')::numeric from c1), -500::numeric, '500 short');
 select test.eq((select (r ->> 'taken')::numeric from c1), 3500::numeric, '3,500 to the safe');
@@ -82,34 +98,46 @@ select test.eq((select (r ->> 'cash_sales')::numeric || '/' || (r ->> 'voids')::
                        || '/' || (r ->> 'cash_in')::numeric from c1),
   '7500/2500/1000/25000', 'the count shows what went in and out: sales, voids, paid out, put in');
 select test.as_admin();
-select test.eq(test.lines_of((select (r ->> 'shift_id')::uuid from c1)), '1000 Cr 500 | 6300 Dr 500', 'the shortage is expensed');
-select test.eq(test.lines_of((select id from cash_transfer where work_shift_id = (select (r ->> 'shift_id')::uuid from c1))),
+select test.eq(test.lines_of((select (r ->> 'session_id')::uuid from c1)), '1000 Cr 500 | 6300 Dr 500', 'the shortage is expensed');
+select test.eq(test.lines_of((select id from cash_transfer where work_shift_id = (select (r ->> 'session_id')::uuid from c1))),
   '1000 Cr 3500 | 1005 Dr 3500', 'the takings go from the till to the safe');
 select test.eq(test.balance('1000'), 25000::numeric, 'the till''s account holds exactly what stayed in the drawer');
 select test.eq(test.balance('1005'), 3500::numeric, 'and the safe what was taken to it');
 select test.act_as('manager@example.com');
-select test.eq(pg_temp.expected(), 25000::numeric, 'the next count starts from what stayed');
+select test.eq(pg_temp.expected(), 25000::numeric, 'the next session starts from what stayed');
 select test.eq((select count(*) from report_unclosed_days())::int, 0, 'every day''s cash is counted');
 
--- A sale after the count is never lost: it waits for the next count (the trial
--- of 24 September, where 7 sales went into a day already closed).
+-- After the close no cash comes in until the drawer is opened again (never
+-- into a count already made: the trial of 24 September, where 7 sales went
+-- into a day already closed).
 select test.act_as('cashier@example.com');
+select test.throws($$select pg_temp.sell(1)$$, 'Open the drawer first: on the till, count the cash in it',
+  'a cash sale waits for the drawer to open');
+select open_cash_session(25000);
 create temp table late as select pg_temp.sell(1) as r;
 grant select on late to public;
 select test.act_as('manager@example.com');
-select test.eq(pg_temp.expected(), 27500::numeric, 'the sale after the count is in the next one');
+select test.eq(pg_temp.expected(), 27500::numeric, 'the sale is in the new session');
 select test.eq((select string_agg(day::text, ',') from report_unclosed_days()), (select d::text from today),
-  'and its day is uncounted again until then');
+  'and its day is uncounted again until it closes');
 select test.throws(format('select void_sale(%L, %L)',
   (select o.id from sales_order o join sales_tender t on t.sales_order_id = o.id and t.tender_type = 'cash'
     where o.status = 'completed' order by o.created_at limit 1), 'too late'),
   '%counted since this sale; refund it%', 'a sale in a counted drawer is refunded, not voided');
 
 -- Refunds in cash come out of the drawer, which must hold them.
-create temp table c2 as select count_drawer(27500, 1000, 'safe') as r;
+select test.act_as('cashier@example.com');
+create temp table c2 as select close_cash_session(27500, null, 1000, 'safe') as r;
+grant select on c2 to public;
 select test.eq((select (r ->> 'variance')::numeric from c2), 0::numeric, 'counted exactly');
+select test.act_as('manager@example.com');
 select test.throws(format('select refund_sale(%L, %L, %L)', (select r ->> 'order_id' from late), 'cold', 'quality'),
-  '%drawer should hold only 1000%', 'a cash refund bigger than the drawer is refused');
+  'Open the drawer first: on the till, count the cash in it', 'a cash refund needs the drawer open');
+select test.act_as('cashier@example.com');
+select open_cash_session(1000);
+select test.act_as('manager@example.com');
+select test.throws(format('select refund_sale(%L, %L, %L)', (select r ->> 'order_id' from late), 'cold', 'quality'),
+  '%drawer does not hold enough to pay 2500%', 'a cash refund bigger than the drawer is refused');
 select move_cash('safe', 'till', 2000, 'Change for a refund');
 select refund_sale((select (r ->> 'order_id')::uuid from late), 'cold', 'quality');
 select test.eq(pg_temp.expected(), 500::numeric, 'the cash put in, less the refund paid out');
@@ -148,13 +176,15 @@ select test.throws($$select save_journal((select d from today), 'fudge', '[{"cod
 select test.as_admin();
 select test.eq(test.balance('1000'), 1100::numeric, 'between counts, the till''s account is what the drawer should hold');
 
--- A month locks only when its cash is counted: money paid out of the till
--- since the last count keeps the day open until the next count.
+-- A month locks only when its cash is counted: money moved in an open
+-- session keeps the day open until the session closes.
 select test.act_as('manager@example.com');
 select test.eq((select string_agg(day::text, ',') from report_unclosed_days()), (select d::text from today),
-  'cash moved since the count keeps today uncounted');
-select count_drawer(1100);
-select test.eq((select count(*) from report_unclosed_days())::int, 0, 'until the drawer is counted');
+  'cash moved in the open session keeps today uncounted');
+select test.act_as('cashier@example.com');
+select close_cash_session(1100);
+select test.act_as('manager@example.com');
+select test.eq((select count(*) from report_unclosed_days())::int, 0, 'until the session closes');
 select test.act_as('owner@example.com');
 select test.ok((select ok from period_close_checklist((select id from accounting_period
                  where business_id = '00000000-0000-0000-0000-0000000000b1' and (select d from today) between starts_on and ends_on))
@@ -165,4 +195,4 @@ select test.as_admin();
 select test.throws($$update cash_event set amount = 1 where kind = 'sale'$$, '%cannot change%', 'a movement of cash cannot be edited');
 select test.throws($$delete from cash_event$$, '%never deleted%', 'nor deleted');
 select test.throws($$delete from cash_transfer$$, '%cannot change or be deleted%', 'nor a transfer');
-select test.eq((select count(*) from cash_event where work_shift_id is null)::int, 0, 'every movement is in exactly one count');
+select test.eq((select count(*) from cash_event where work_shift_id is null)::int, 0, 'every movement is in exactly one session');

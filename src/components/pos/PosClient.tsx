@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { DiningTable, OpenBill, PosItem } from "@/lib/db/pos";
@@ -14,16 +15,25 @@ import {
   splitBillAction,
 } from "@/lib/actions/pos";
 import { fmtIQD } from "@/lib/format";
+import type { DrawerState } from "@/lib/cash";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { useOnline } from "@/components/AppShell";
 import { useChannels } from "@/components/ChannelsProvider";
 import { CHECKING_MESSAGE, useOperation } from "@/components/useOperation";
+import { DrawerPanel } from "@/components/cash/DrawerPanel";
 import { ProductPicker } from "./ProductPicker";
 import { ChooseBill, FloorView } from "./FloorView";
 import { OrderPanel, type Receipt } from "./OrderPanel";
 import { PayDialog } from "./PayDialog";
 import { SplitDialog } from "./SplitDialog";
-import { ApproveDialog, CancelDialog, KeepDialog, MoveDialog, PrintingDialog } from "./Dialogs";
+import {
+  ApproveDialog,
+  CancelDialog,
+  KeepDialog,
+  Modal,
+  MoveDialog,
+  PrintingDialog,
+} from "./Dialogs";
 import { TablesEditor } from "./TablesEditor";
 import {
   PrintSlip,
@@ -193,7 +203,9 @@ type Dialog =
     }
   | { kind: "choose"; table: DiningTable }
   | { kind: "tables" }
-  | { kind: "printing" };
+  | { kind: "printing" }
+  /** The drawer (0036): opened, closed, handed over; `why` when cash was refused for it. */
+  | { kind: "drawer"; why: string | null };
 
 /**
  * The till. Two kinds of order share one screen: a quick sale at the counter,
@@ -215,6 +227,7 @@ export function PosClient({
   canDiscount,
   discountRules,
   money,
+  initialDrawer,
 }: {
   items: PosItem[];
   tables: DiningTable[];
@@ -231,8 +244,13 @@ export function PosClient({
   discountRules: DiscountRules;
   /** How the business rounds money and discounts, as the database does. */
   money: MoneyRules;
+  /** The drawer (0036): cash is taken only while it is open. */
+  initialDrawer: DrawerState;
 }) {
   const { t, locale } = useT();
+  const router = useRouter();
+  // The drawer as the page last read it: each change to it reloads the page's reading.
+  const drawer = initialDrawer;
   const { set: channelSet, name: channelName } = useChannels();
   const online = useOnline();
   // The menu as the page loaded it, then as fetched again while the till stays open.
@@ -908,6 +926,14 @@ export function PosClient({
       setMsg({ ok: false, text: t("pos.offlineBlocked") });
       return;
     }
+    // Cash goes only into an open drawer (0036); a card needs none.
+    if (tender === "cash" && !drawer.open) {
+      setDialog({
+        kind: "drawer",
+        why: t("Open the drawer first: count the cash in it. A card sale needs no drawer."),
+      });
+      return;
+    }
     let o = order;
     if (o.kind === "bill") {
       const saved = await current();
@@ -1006,6 +1032,8 @@ export function PosClient({
         setPending(null);
         savePending(null);
         if (approvalRefused(r.error)) dropApproval();
+        // The drawer was closed on another till: read it again.
+        if (r.error.startsWith("Open the drawer first")) router.refresh();
         if (dialogRef.current?.kind === "pay") setDialog({ ...dialogRef.current, error: r.error });
         else setMsg({ ok: false, text: r.error });
         // A price, or the bill, may have changed since this till last looked.
@@ -1215,6 +1243,11 @@ export function PosClient({
   const blocked = pending !== null || busy !== null;
   const total = orderDue(order, byId, money);
 
+  const drawerLabel =
+    drawer.open && drawer.session
+      ? t("Session {no}", { no: drawer.session.no })
+      : t("Open the drawer");
+
   return (
     <div className="pos">
       <div className="pos-top">
@@ -1261,6 +1294,15 @@ export function PosClient({
             </button>
           ))}
         </div>
+        <button
+          className={`strip-chip drawer-chip${drawer.open ? "" : " waiting"}`}
+          onClick={() => setDialog({ kind: "drawer", why: null })}
+          title={t("The drawer")}
+          aria-label={drawerLabel}
+          data-testid="drawer-button"
+        >
+          {drawer.open ? "🔓" : "🔒"} <span className="drawer-chip-label">{drawerLabel}</span>
+        </button>
         <button
           className={`icon-btn print-btn${autoPrint ? " on" : ""}`}
           onClick={() => setDialog({ kind: "printing" })}
@@ -1362,8 +1404,20 @@ export function PosClient({
           title={dialog.title}
           total={orderDue(dialog.order, byId, money).toNumber()}
           note={discountNote(dialog.order)}
-          tenders={isPlatform(dialog.order.channel) ? ["platform_paid"] : ["cash", "card"]}
-          initialTender={isPlatform(dialog.order.channel) ? "platform_paid" : dialog.tender}
+          tenders={
+            isPlatform(dialog.order.channel)
+              ? ["platform_paid"]
+              : drawer.open
+                ? ["cash", "card"]
+                : ["card"]
+          }
+          initialTender={
+            isPlatform(dialog.order.channel)
+              ? "platform_paid"
+              : drawer.open
+                ? dialog.tender
+                : "card"
+          }
           platform={isPlatform(dialog.order.channel) ? channelName(dialog.order.channel) : null}
           busy={busy === "pay"}
           error={dialog.error}
@@ -1451,6 +1505,21 @@ export function PosClient({
       )}
       {dialog?.kind === "tables" && (
         <TablesEditor tables={tables} onClose={() => setDialog(null)} />
+      )}
+      {dialog?.kind === "drawer" && (
+        <Modal label={t("The drawer")} onClose={() => setDialog(null)}>
+          <h3 style={{ marginTop: 0 }}>{t("The drawer")}</h3>
+          {dialog.why && (
+            <p className="red" style={{ marginTop: 0 }}>
+              {dialog.why}
+            </p>
+          )}
+          {/* The bills open now, not when the page loaded: they are no cash yet. */}
+          <DrawerPanel state={{ ...drawer, openBills: bills.length }} timezone={timezone} />
+          <div style={{ marginBlockStart: 12 }}>
+            <button onClick={() => setDialog(null)}>{t("pos.close")}</button>
+          </div>
+        </Modal>
       )}
       {dialog?.kind === "printing" && (
         <PrintingDialog

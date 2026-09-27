@@ -170,61 +170,6 @@ export async function refundSaleAction(
   };
 }
 
-const countInput = z.object({
-  counted: nonNegative("Cash counted"),
-  /** What stays in the drawer for the next session; empty keeps it all. */
-  left: optionalNonNegative("What stays in the drawer"),
-  takeTo: z.enum(["safe", "bank"]).nullable(),
-  /** Only for the first count after days closed the old way. */
-  startCash: optionalNonNegative("Cash when trading began"),
-});
-
-export interface DrawerCountResult {
-  expected: number;
-  counted: number;
-  variance: number;
-  left: number;
-  taken: number;
-  takenTo: string | null;
-  journalNo: number | null;
-}
-
-/**
- * Count the drawer: everything since the last count, whatever the day. The
- * difference posts to 6300; what does not stay in the drawer goes to the safe
- * or the bank (0024).
- */
-export async function countDrawerAction(
-  input: z.input<typeof countInput>,
-  key: string,
-): Promise<ActionResult<DrawerCountResult>> {
-  const bad = badKey(key);
-  if (bad) return bad;
-  const v = parse(countInput, input);
-  if (!v.ok) return v;
-  const r = await callRpc<Record<string, unknown>>("count_drawer", {
-    p_counted: v.data.counted,
-    p_left_in_drawer: v.data.left,
-    p_take_to: v.data.takeTo,
-    p_start_cash: v.data.startCash,
-    p_idempotency_key: key,
-  });
-  if (!r.ok) return r;
-  refresh("/sales", "/journals", "/accounting", "/reports", "/orders", "/dashboard");
-  return {
-    ok: true,
-    data: {
-      expected: Number(r.data.expected ?? 0),
-      counted: Number(r.data.counted ?? 0),
-      variance: Number(r.data.variance ?? 0),
-      left: Number(r.data.left ?? 0),
-      taken: Number(r.data.taken ?? 0),
-      takenTo: r.data.taken_to == null ? null : String(r.data.taken_to),
-      journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
-    },
-  };
-}
-
 const PLACES = ["till", "safe", "bank", "owner"] as const;
 const moveInput = z.object({
   from: z.enum(PLACES, { message: "Choose where the cash comes from" }),

@@ -4,7 +4,8 @@
 -- expects it. Before 0024 the till's cash was account 1000; each published
 -- movement of it since that day becomes an event, as its record writes one
 -- today. Here the old app's day is replayed with the drawer's triggers off —
--- the old app wrote no events — and then carried.
+-- the old app wrote no events — and then carried, as 0024 did before sessions
+-- (0036) began. The first session then takes over from it.
 -- =============================================================================
 select test.golden_catalogue();
 select test.as_admin();
@@ -12,6 +13,10 @@ create temp table loc as select default_location('00000000-0000-0000-0000-000000
 create temp table ctx as select test.today() as today;
 grant select on loc, ctx to public;
 select test.eq((select count(*) from cash_event)::int, 0, 'a new database starts with no drawer events');
+-- Before sessions: the fixtures' open session is taken away.
+alter table work_shift disable trigger work_shift_guard;
+delete from work_shift;
+alter table work_shift enable trigger work_shift_guard;
 
 -- Yesterday was closed the old way, one day at a time; its cash is not carried.
 insert into work_shift (business_id, location_id, opened_at, closed_at, opening_float, expected_cash, counted_cash,
@@ -61,6 +66,7 @@ alter table sale_adjustment enable trigger sale_adjustment_cash;
 select test.eq((select count(*) from cash_event)::int, 0, 'the old app''s day left no drawer events');
 
 -- Carried: three cash sales in, the void and the refund out, the expense out.
+alter table cash_event disable trigger cash_event_session;
 select test.eq(carry_cash_since_last_close(), 6, 'six movements of the till since yesterday''s close are carried');
 select test.eq((select string_agg(kind || ' ' || trim_scale(amount), ', ' order by created_at, kind) from cash_event),
   'sale 2500, sale 5000, sale 2500, void -2500, refund -2500, paid_out -1000',
@@ -69,15 +75,31 @@ select test.eq((select string_agg(distinct reference_type, ',' order by referenc
   'expense,sale_adjustment,sales_order', 'referring to the sale, the void or refund, and the expense');
 select test.eq((select count(*) from cash_event where location_id <> (select id from loc))::int, 0, 'all at the sale''s location');
 select test.eq(carry_cash_since_last_close(), 0, 'carried once only: a second run adds nothing');
+alter table cash_event enable trigger cash_event_session;
 
--- The first count is told what the drawer began with, and expects the rest.
-select test.act_as('manager@example.com');
-select test.eq((drawer_status() ->> 'needs_start')::boolean, true, 'after a day closed the old way, the start is asked for');
+-- The first session takes over. After a day closed the old way, the drawer's
+-- start is not known, but the books know what the till holds: yesterday's
+-- float of 7,000 and today's 4,000 (the three cash sales, less the void, the
+-- refund and the ice). The opening count settles the difference.
+select test.act_as('owner@example.com');
+select test.eq((drawer_status() ->> 'needs_start')::boolean, true, 'after a day closed the old way, the start is not known');
 select test.eq((drawer_status() ->> 'moved')::numeric, 4000::numeric, 'and the cash taken since that close is already in');
-create temp table c1 as select count_drawer(24000, null, null, 20000) as r;
-grant select on c1 to public;
-select test.eq((select (r ->> 'expected')::numeric || '/' || (r ->> 'variance')::numeric from c1), '24000/0',
-  'began with 20,000, took 4,000 since: 24,000, and it counts true');
+select test.act_as('cashier@example.com');
+create temp table o1 as select open_cash_session(12000) as r;
+grant select on o1 to public;
+select test.eq((select (r ->> 'expected') || '/' || (r ->> 'variance') || '/' || (r ->> 'took_over') from o1), '11000/1000/true',
+  'the books said 11,000; 12,000 was counted: 1,000 over, shown once the count is in');
+select test.as_admin();
+select test.eq((select kind || ' ' || trim_scale(expected_cash) || '/' || trim_scale(counted_cash) || '/' || trim_scale(variance)
+                  || ' ' || test.lines_of(id)
+                  from work_shift where id = (select opened_from from work_shift where id = (select (r ->> 'session_id')::uuid from o1))),
+  'drawer 11000/12000/1000 1000 Dr 1000 | 6300 Cr 1000',
+  'a drawer count of its own takes in the carried cash, and posts the difference');
+select test.eq((select trim_scale(opening_counted) || '/' || trim_scale(opening_expected) || '/' || trim_scale(opening_variance)
+                  from work_shift where id = (select (r ->> 'session_id')::uuid from o1)),
+  '12000/12000/0', 'the session opens where that count closed');
+select test.eq((select count(*) from cash_event where work_shift_id is null)::int, 0, 'every carried movement is counted');
+select test.eq(test.balance('1000'), 12000::numeric, 'and the till''s account is what was counted');
 
 -- Nobody can run it by hand.
 select test.act_as('owner@example.com');

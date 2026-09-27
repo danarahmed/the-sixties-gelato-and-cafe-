@@ -3,8 +3,9 @@
 -- write; a retry after a lost answer sends the same key and gets the first
 -- answer back, marked "replayed", with nothing recorded twice. A key cannot be
 -- reused for other details, another operation or by another person, and a
--- refused call leaves its key free. The browser suite (retry-everywhere) loses
--- the answer for real; here each operation is simply sent twice.
+-- refused call leaves its key free. The browser suite (resend) loses the
+-- answer for real; here each operation is simply sent twice. Since 0036 a
+-- keyed write called through the API without its key is refused.
 -- =============================================================================
 select test.golden_catalogue();
 select test.as_admin();
@@ -61,6 +62,18 @@ select test.eq((select string_agg(name, ', ') from shape where keyed_ok is not t
   'each takes the key last, checks it first and stores its answer, then does the work, open to signed-in people');
 select test.eq((select string_agg(name, ', ') from shape where run_closed is not true), null,
   'the work itself cannot be called from outside the database');
+-- The drawer's sessions (0036) take their key the same way, doing the work themselves.
+select test.eq((select string_agg(k.name, ', ' order by k.name)
+                  from unnest(array['open_cash_session', 'close_cash_session', 'hand_over_session', 'force_close_session']) k(name)
+                 where not exists (
+                   select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                    where n.nspname = 'public' and p.proname = k.name
+                      and p.proargnames[array_length(p.proargnames, 1)] = 'p_idempotency_key' and p.pronargdefaults > 0
+                      and p.prosrc like '%idem_begin(v_business, p_idempotency_key, ''' || k.name || '''%'
+                      and p.prosrc like '%idem_finish(v_business, p_idempotency_key, ''' || k.name || '''%'
+                      and has_function_privilege('authenticated', p.oid, 'execute')
+                      and not has_function_privilege('anon', p.oid, 'execute'))), null,
+  'the drawer''s sessions take their key the same way');
 select test.act_as('owner@example.com');
 select test.throws($$select * from request_log$$, '%permission denied%', 'the log of answers is nobody''s to read');
 select test.throws($$select idem_begin(current_business_id(), gen_random_uuid(), 'x', '{}')$$, '%permission denied%',
@@ -146,16 +159,18 @@ select test.eq((select count(*) from audit_log where action in ('purchase.bill',
 
 -- ------------------------------------------------------------------ the drawer
 -- The worst case before 0035: a count sent again compared the count with what
--- was left in the drawer, booked a false difference and moved the takings again.
+-- was left in the drawer, booked a false difference and moved the takings
+-- again. Now the count closes the drawer's session (0036), and is keyed too.
 select test.act_as('cashier@example.com');
 select pg_temp.sell();
 select pg_temp.sell();
 select test.act_as('manager@example.com');
-create temp table cnt1 as select count_drawer(5000, 0, 'safe', null, null, pg_temp.k(20)) r;
-create temp table cnt2 as select count_drawer(5000, 0, 'safe', null, null, pg_temp.k(20)) r;
+create temp table cnt1 as select close_cash_session(5000, null, 0, 'safe', null, null, pg_temp.k(20)) r;
+create temp table cnt2 as select close_cash_session(5000, null, 0, 'safe', null, null, pg_temp.k(20)) r;
 grant select on cnt1, cnt2 to public;
 select test.as_admin();
-select test.eq((select count(*) from work_shift where kind = 'drawer')::int, 1, 'a count sent twice is one count');
+select test.eq((select count(*) from work_shift where kind = 'session' and closed_at is not null)::int, 1,
+  'a close sent twice closes once');
 select test.eq((select count(*) from cash_transfer)::int, 1, 'the takings go to the safe once');
 select test.eq(test.balance('1005'), 5000::numeric, 'the safe holds 5,000, not 10,000');
 select test.eq((select r ->> 'variance' from cnt2), (select r ->> 'variance' from cnt1), 'the retry shows the same difference');
@@ -262,10 +277,28 @@ select test.eq((select count(*) from audit_log where action = 'journal.save')::i
 select test.eq((select id from su2), (select id from su1), 'a supplier added twice is one supplier, and the retry names it');
 select test.eq((select count(*) from channel_price where price = 2750)::int, 1, 'a price set twice is one price');
 
+-- ------------------------------------------------------------------ keys required from the API (0036)
+-- PostgREST names the function it serves in request.path. Through it, a keyed
+-- write with no key is refused; a write's own inner calls, and SQL, are not.
+select test.act_as('owner@example.com');
+select set_config('request.path', '/rpc/record_expense', false);
+select test.throws($$select record_expense('Gas', 1000, '6200', 'owner')$$,
+  'This screen sent no retry key: reload the page and try again', 'through the API, a keyed write without its key is refused');
+select test.succeeds($$select record_expense('Gas', 1000, '6200', 'owner', null, gen_random_uuid())$$,
+  'with its key it goes through');
+select set_config('request.path', '/rpc/open_tab', false);
+select test.succeeds($$select open_tab('dine_in', null, 'Corner seat', null,
+    '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, null, null, null, null, gen_random_uuid())$$,
+  'a bill opened with its lines: open_tab''s own save_tab needs no key of its own');
+select set_config('request.path', '', false);
+select test.succeeds($$select record_expense('Gas', 500, '6200', 'owner')$$, 'from SQL, without a key, it runs as before');
+select test.as_admin();
+select test.eq((select count(*) from expense where description = 'Gas')::int, 2, 'two gas bills: the one refused left nothing');
+
 -- ------------------------------------------------------------------ nothing left over
 select test.act_as('manager@example.com');
 select test.eq((select string_agg(check_key || '=' || difference, ', ' order by check_key)
                   from report_reconciliation(test.today()) where difference <> 0), null,
   'every subledger still agrees with its account');
 select test.as_admin();
-select test.eq((select count(*) from request_log)::int, 18, 'one stored answer for each first call with a key');
+select test.eq((select count(*) from request_log)::int, 20, 'one stored answer for each first call with a key');

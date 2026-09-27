@@ -793,6 +793,47 @@ const phrases: PhraseBook = {
   mass: { ar: "بالوزن", ckb: "بە کێش" },
   volume: { ar: "بالحجم", ckb: "بە قەبارە" },
   count: { ar: "بالعدد", ckb: "بە ژمارە" },
+  // The audit trail of cash sessions (0036).
+  "Drawer opened": {
+    ar: "فتح درج النقد",
+    ckb: "کردنەوەی دەخیلە",
+  },
+  "Drawer closed": {
+    ar: "إغلاق درج النقد",
+    ckb: "داخستنی دەخیلە",
+  },
+  "Drawer handed over": {
+    ar: "تسليم درج النقد",
+    ckb: "ڕادەستکردنی دەخیلە",
+  },
+  "Drawer closed by a manager": {
+    ar: "إغلاق درج النقد من قِبل مدير",
+    ckb: "داخستنی دەخیلە لەلایەن بەڕێوەبەرەوە",
+  },
+  "Took over from the drawer counts": {
+    ar: "استلمت من عدّات الدرج السابقة",
+    ckb: "لە ژماردنەکانی پێشووی دەخیلەوە وەرگیرا",
+  },
+  "Put in from the safe": {
+    ar: "وُضع من الخزنة",
+    ckb: "لە قاسەوە دانرا",
+  },
+  "Notes counted": {
+    ar: "الأوراق النقدية المعدودة",
+    ckb: "پارە کاغەزییە ژمێردراوەکان",
+  },
+  "Next session": {
+    ar: "الوردية التالية",
+    ckb: "شیفتی داهاتوو",
+  },
+  "Taken over by": {
+    ar: "استلمها",
+    ckb: "وەریگرت",
+  },
+  "A drawer count": {
+    ar: "عدّ لدرج النقد",
+    ckb: "ژماردنێکی دەخیلە",
+  },
 };
 
 export default phrases;

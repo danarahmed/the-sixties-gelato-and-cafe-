@@ -22,6 +22,8 @@ app's menu. Along the top:
 - **⚡ Quick sale** and one chip for every **open bill**: tap a chip to open
   that bill. A **🧾** on a chip means its bill has been printed and handed to
   the customer, and the money is still to come.
+- **🔒 Open the drawer** or **🔓 Session 12**: the cash drawer, closed or
+  open (on a phone, the lock alone). See [The drawer](#the-drawer).
 - **🖨** sets how this till prints (see [Printing](#printing)); a green dot on
   it means it prints by itself. **⛶** makes the browser full screen.
 
@@ -39,6 +41,34 @@ by, and the one on the barista's ticket.
   match.
 - A number on a tile is how many are already in the order. A product sold in
   several sizes asks which one.
+
+## The drawer
+
+The cash drawer is opened with a count and closed with a count, and the till
+takes cash only while it is open. Tap the drawer's chip at the top of the till.
+
+- **Opening.** **Open the drawer**, count the cash in it **before putting
+  anything in**, and type the total, or choose **Count note by note** and type
+  how many of each note (the till adds them up). Then **Open the drawer**. The
+  till tells you whether your count agrees with what the last session left in
+  it. A manager can put a float in from the safe in the same step.
+- **While it is closed**, **💵 Cash** opens the drawer instead of the payment.
+  A card sale needs no drawer.
+- **Closing.** At the end of your shift, **Close the drawer** and count the
+  cash. You are not shown what the drawer should hold until your count is in:
+  count what is there, not what you expect. Type what **stays in the drawer**
+  for the next session (left empty, it all stays) and choose where the rest
+  goes: the safe or the bank. **Close the drawer** then shows what it should
+  have held, what you counted and whether it was over or short. A difference
+  is recorded against your session.
+- **Handing over.** When someone takes the drawer from you, **Hand over**:
+  count it, choose who takes it and what stays, and one step closes your
+  session and opens theirs on what you leave.
+- **Bills still open** do not stop you closing: they are no cash yet, and are
+  paid in the next session.
+- **Forgot to close?** A manager closes it for you, with a reason, counted or
+  not. Not counted, what it should hold stays in the drawer for the next
+  opening count.
 
 ## A sale paid now (counter, takeaway)
 
@@ -223,9 +253,9 @@ items off it.
 
 A finished sale cannot be edited. Tell a manager:
 
-- **until the drawer is counted**, they can **void** it: everything comes back
-  exactly, and its cash leaves what the drawer should hold;
-- **after the count**, they **refund** it.
+- **until the drawer's session closes**, they can **void** it: everything comes
+  back exactly, and its cash leaves what the drawer should hold;
+- **after it closes**, they **refund** it.
 
 Both are done on **Orders**, with a reason from the list. Another manager (or
 the owner) may approve it there with their name and PIN; without a second
@@ -247,9 +277,9 @@ Recorded the wrong thing? Tell a manager: they cancel the batch, with the reason
 
 ## End of the day
 
-A manager counts the drawer and closes the day on **Sales**. **The day cannot
-close while any bill is still open**: every table must pay, or have its bill
-cancelled by a manager, first.
+Close the drawer, counted (see [The drawer](#the-drawer)). A bill still open
+is paid in the next session; one that will not be paid is cancelled by a
+manager, with the reason.
 
 ## Settings in the top bar
 

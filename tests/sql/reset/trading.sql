@@ -1,11 +1,12 @@
 -- =============================================================================
 -- A day of test trading, touching every kind of record the reset clears
--- (scripts/test-sql.sh, phase "reset"): a float, cash and card sales, a void
+-- (scripts/test-sql.sh, phase "reset"): the drawer open, a float, cash and
+-- card sales, a void
 -- approved by the owner's PIN (after a wrong one) and a refund, a delivery
 -- billed and paid, a bill for a service under the
--- café's own number, an expense, waste, a blind count, a production batch, a
--- drawer count with the takings to the safe, cash banked, a manual journal and
--- its reversal, and a bill left open. Set-up made along the way (a table, a
+-- café's own number, an expense, waste, a blind count, a production batch,
+-- the drawer's session closed with the takings to the safe, cash banked, a
+-- manual journal and its reversal, and a bill left open. Set-up made along the way (a table, a
 -- batch recipe) is set-up, and stays.
 -- =============================================================================
 \set ON_ERROR_STOP 1
@@ -67,7 +68,7 @@ grant select on syrup to public;
 select record_production((select (r ->> 'recipe_id')::uuid from syrup), 1);
 
 select test.act_as('manager@example.com');
-select count_drawer(25000, 20000, 'safe');
+select close_cash_session(25000, null, 20000, 'safe');
 select move_cash('safe', 'bank', 5000, 'Deposit');
 
 select test.act_as('owner@example.com');

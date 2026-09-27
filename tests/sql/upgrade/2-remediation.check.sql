@@ -89,13 +89,23 @@ select test.eq((select count(*) from audit_log where action in ('journal.reverse
                                                               'legacy.post_unposted'))::int,
   6, 'and every correction is on the audit trail');
 
--- Drawer counts begin (0024). The old app counted by day, so the first drawer
--- count is told what the drawer held when it began; from then on each count
--- starts from what the last one left.
-select test.act_as('manager@example.com');
+-- Sessions begin (0036). The old app closed the drawer by day, so what it held
+-- when drawer counts began is not known: the first session takes over from the
+-- books, which say what the till holds, and its opening count settles the
+-- difference. From then on each session starts from what the last one left.
+select test.act_as('owner@example.com');
 select test.eq((drawer_status() ->> 'needs_start')::boolean, true, 'after days closed the old way, the drawer''s start is not known');
-select test.throws($$select count_drawer(10000)$$, '%Enter the cash that was in the drawer%', 'so the first count asks for it');
-create temp table first_count as select count_drawer(10000, null, null, 10000) as r;
-select test.eq((select (r ->> 'variance')::numeric from first_count), 0::numeric, 'and counts against what it began with');
-select test.eq((drawer_status() ->> 'needs_start')::boolean, false, 'from then on, each count starts from the last');
-select test.eq((drawer_status() ->> 'expected')::numeric, 10000::numeric, 'with what it left in the drawer');
+select test.as_admin();
+create temp table till_books as select test.balance('1000') b;
+grant select on till_books to public;
+select test.act_as('manager@example.com');
+create temp table first_open as select open_cash_session(10000) as r;
+grant select on first_open to public;
+select test.eq((select (r ->> 'took_over')::boolean from first_open), true, 'the first session takes over from the drawer counts');
+select test.eq((select (r ->> 'expected')::numeric from first_open), (select b from till_books),
+  'against what the books say the till holds');
+select test.as_admin();
+select test.eq(test.balance('1000'), 10000::numeric, 'after which the till''s account is what was counted');
+select test.act_as('owner@example.com');
+select test.eq((drawer_status() ->> 'needs_start')::boolean, false, 'from then on, each session starts from the last');
+select test.eq((drawer_status() ->> 'expected')::numeric, 10000::numeric, 'with what is in the drawer');

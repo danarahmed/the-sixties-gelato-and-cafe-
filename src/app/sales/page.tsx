@@ -1,17 +1,14 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
-import {
-  getDailySales,
-  getDrawerCounts,
-  getDrawerStatus,
-  getUnclosedDays,
-  salesTotals,
-} from "@/lib/db/books";
+import { getDailySales, getDrawerStatus, getUnclosedDays, salesTotals } from "@/lib/db/books";
+import { getCashSessions, getDrawerState } from "@/lib/db/cash";
 import { fmtIQD } from "@/lib/format";
 import { getChannelNames } from "@/lib/db/channels";
 import { addDays, businessToday, dateTimeIn } from "@/lib/dates";
-import { DrawerCount, MoveCash } from "@/components/books/DrawerCount";
+import { MoveCash } from "@/components/books/MoveCash";
+import { DrawerPanel } from "@/components/cash/DrawerPanel";
+import { SessionsTable } from "@/components/cash/SessionsTable";
 import { CardTakingsPanel } from "@/components/books/CardTakings";
 import { getCardTakings } from "@/lib/db/settlements";
 import { EmptyState } from "@/components/ui";
@@ -23,18 +20,23 @@ export default async function SalesPage() {
   const t = await getT();
   const today = businessToday(profile.timezone);
   const from = addDays(today, -29);
-  const canCount = has(profile, "day.close");
-  const canMove = canCount || has(profile, "accounting.post");
-  const [rows, counts, uncounted, drawer, card, channels] = await Promise.all([
+  // The drawer in sessions (0036): opened and closed with a count, blind.
+  const canDrawer = has(profile, "cash.session") || has(profile, "cash.session.force");
+  const canSessions =
+    has(profile, "day.close") || has(profile, "cash.view_expected") || has(profile, "audit.view");
+  const canMove = has(profile, "day.close") || has(profile, "accounting.post");
+  const [rows, sessions, uncounted, drawer, till, card, channels] = await Promise.all([
     getDailySales(from, today),
-    getDrawerCounts(),
+    canSessions ? getCashSessions(from, today) : Promise.resolve([]),
     getUnclosedDays(),
-    canCount || canMove ? getDrawerStatus() : Promise.resolve(null),
+    canMove ? getDrawerStatus() : Promise.resolve(null),
+    canDrawer ? getDrawerState() : Promise.resolve(null),
     getCardTakings(),
     getChannelNames(),
   ]);
-  // A day is counted once a drawer count follows its last sale: the café
-  // trades past midnight, so one night's count may cover two calendar days.
+  const lastCount = sessions.find((s) => s.closedAt !== null) ?? null;
+  // A day is counted once a session closes after its last sale: the café
+  // trades past midnight, so one night's session may cover two calendar days.
   const notCounted = new Set(uncounted);
   const overdue = uncounted.filter((d) => d < today).length;
   const at = (ts: string | null) => (ts ? dateTimeIn(profile.timezone, ts) : null);
@@ -88,8 +90,8 @@ export default async function SalesPage() {
             {uncounted.length}
           </div>
           <div className="m">
-            {counts[0]
-              ? t("Drawer last counted {when}", { when: String(at(counts[0].at)) })
+            {lastCount
+              ? t("Drawer last counted {when}", { when: String(at(lastCount.closedAt)) })
               : t("The drawer has not been counted yet")}
             {overdue > 0 ? ` · ${t("{n} before today", { n: overdue })}` : ""}
           </div>
@@ -157,15 +159,19 @@ export default async function SalesPage() {
         )}
       </section>
 
-      {canCount && drawer && (
-        <section className="panel">
+      {till && (
+        <section className="panel" id="drawer">
           <div className="panel-h">
-            <h3>{t("Count the Drawer")}</h3>
+            <h3>{t("The Drawer")}</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              {t("Everything since the last count, whatever the day")}
+              {t(
+                "Opened and closed with a count · what it should hold is shown once the count is in",
+              )}
             </span>
           </div>
-          <DrawerCount status={drawer} since={at(drawer.since)} />
+          <div className="panel-b">
+            <DrawerPanel state={till} timezone={profile.timezone} />
+          </div>
         </section>
       )}
 
@@ -195,59 +201,20 @@ export default async function SalesPage() {
         />
       </section>
 
-      {counts.length > 0 && (
+      {canSessions && sessions.length > 0 && (
         <section className="panel">
           <div className="panel-h">
-            <h3>{t("Drawer Counts")}</h3>
+            <h3>{t("Cash Sessions")}</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              {t("Each covers the cash since the one before · over / short history")}
+              {t("Each from its opening count to its closing count · over / short history")}
             </span>
+            <div className="sp">
+              <Link className="drill" href="/sales/sessions">
+                {t("All sessions")}
+              </Link>
+            </div>
           </div>
-          <div className="tw">
-            <table>
-              <thead>
-                <tr>
-                  <th>{t("Counted")}</th>
-                  <th className="right">{t("Started with")}</th>
-                  <th className="right">{t("Should hold")}</th>
-                  <th className="right">{t("Counted")}</th>
-                  <th className="right">{t("Over / short")}</th>
-                  <th className="right">{t("Stayed")}</th>
-                  <th className="right">{t("Taken out")}</th>
-                  <th>{t("By")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {counts.map((c) => (
-                  <tr key={c.id}>
-                    <td className="mono" style={{ fontSize: ".8rem" }}>
-                      {c.byDay ? t("{day} (by day)", { day: String(c.day) }) : at(c.at)}
-                      {!c.byDay && c.from && (
-                        <div className="muted">
-                          {t("since {when}", { when: String(at(c.from)) })}
-                        </div>
-                      )}
-                    </td>
-                    <td className="right money">{fmtIQD(c.start)}</td>
-                    <td className="right money">{fmtIQD(c.expected)}</td>
-                    <td className="right money">{fmtIQD(c.counted)}</td>
-                    <td
-                      className="right money"
-                      style={{ color: c.variance === 0 ? "var(--ok)" : "var(--err)" }}
-                    >
-                      {c.variance > 0 ? "+" : ""}
-                      {fmtIQD(c.variance)}
-                    </td>
-                    <td className="right money">{c.left === null ? "—" : fmtIQD(c.left)}</td>
-                    <td className="right money">
-                      {c.taken ? `${fmtIQD(c.taken)} → ${t(String(c.takenTo))}` : "—"}
-                    </td>
-                    <td className="muted">{c.by ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <SessionsTable rows={sessions.slice(0, 20)} timezone={profile.timezone} />
         </section>
       )}
     </div>

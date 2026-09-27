@@ -809,6 +809,15 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   border-color: var(--warn);
   background: color-mix(in srgb, var(--warn) 10%, var(--surface));
 }
+/* On a phone the drawer's chip is its lock alone; its words are its name. */
+@media (max-width: 599px) {
+  .drawer-chip {
+    padding: 0 11px;
+  }
+  .drawer-chip-label {
+    display: none;
+  }
+}
 .chip.active {
   background: var(--text);
   color: var(--surface);

@@ -29,9 +29,10 @@ records"). Then enter your opening balances before the first sale:
   trail. Until an item has it, its sales are costed at nothing.
 - Stock not yet paid for: as a delivery and its bill (**Purchasing**,
   **Vendors**).
-- **Sales → Move Cash:** the float you put in the till, and any cash in the
-  safe, from the owner. Money already in the bank: a journal, Dr 1020 Bank,
-  Cr 3000 Owner equity.
+- **The drawer:** open it on the till, counting what is in it (nothing, the
+  first time). Then **Sales → Move Cash:** the float you put in the till, and
+  any cash in the safe, from the owner. Money already in the bank: a journal,
+  Dr 1020 Bank, Cr 3000 Owner equity.
 
 Then **Reports → Do the books tie?** shows ✅ on every line.
 
@@ -49,17 +50,17 @@ unverified until it is corrected ([`../REMEDIATION.md`](../REMEDIATION.md)).
 - Only you can make someone an owner or general manager, or take their access
   away, and the business always keeps at least one active owner.
 
-| Role              | Typically does                                                                                |
-| ----------------- | --------------------------------------------------------------------------------------------- |
-| Owner             | Everything, including reopening a locked month and control corrections                        |
-| General manager   | Everything except reopening a locked month                                                    |
-| Branch manager    | Sells, voids and refunds, counts the drawer, receives stock, reviews counts, records expenses |
-| Cashier           | Sells                                                                                         |
-| Barista           | Sells and records waste                                                                       |
-| Inventory counter | Counts stock, blind                                                                           |
-| Purchasing        | Adds suppliers, receives goods, records bills                                                 |
-| Accountant        | Expenses, journals, locking months, the reports                                               |
-| Auditor           | Reads everything with a cost on it; changes nothing                                           |
+| Role              | Typically does                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------- |
+| Owner             | Everything, including reopening a locked month and control corrections                                  |
+| General manager   | Everything except reopening a locked month                                                              |
+| Branch manager    | Sells, voids and refunds, opens and closes the drawer, receives stock, reviews counts, records expenses |
+| Cashier           | Sells; opens and closes the drawer                                                                      |
+| Barista           | Sells, opens and closes the drawer, records waste                                                       |
+| Inventory counter | Counts stock, blind                                                                                     |
+| Purchasing        | Adds suppliers, receives goods, records bills                                                           |
+| Accountant        | Expenses, journals, locking months, the reports                                                         |
+| Auditor           | Reads everything with a cost on it; changes nothing                                                     |
 
 The exact matrix is under **Settings → Roles & what they may do**.
 
@@ -217,13 +218,29 @@ discount, why and who approved it. The 10% is a business setting (shown on
   **yesterday's brief** — what happened, what follows from it, and what to do,
   kept apart — then today's revenue, gross profit, orders, stock value, low
   and negative stock, and whether the books reconcile.
-- **Sales → Count the Drawer**, when the till closes — after midnight too: a
-  count covers everything since the last one, whatever the date, so one
-  night's count takes in both calendar days. Enter the cash counted and how
-  much stays in the drawer for next time; the rest goes to the safe or the
-  bank. Any difference posts to 6300 Cash over / short. Every bill kept open on
-  the till must be paid or cancelled first. Sales shows every day whose cash
-  is not yet counted, however old; a month cannot lock until each is.
+- **The drawer, in sessions.** Whoever works the drawer opens it on the till
+  by counting what is in it, and closes it at the end of their shift by
+  counting again ([cashier's guide](cashier-quickstart.md#the-drawer)); the
+  till takes cash only while it is open. The count is blind: the cashier, the
+  barista and the branch manager are shown what the drawer should hold only
+  once their count is in, so they count what is there. You, the general
+  manager, the accountant and the auditor see it at any time on **Sales → The
+  Drawer**. A session covers everything from its opening count to its closing
+  count, past midnight too. Each difference posts to 6300 Cash over / short
+  for its session: at the close against what it should have held, and at the
+  opening against what the last session left (cash that went missing between
+  shifts shows there). What stays in the drawer is chosen at the close; the
+  rest goes to the safe or the bank. A bill still open is paid in the next
+  session. When the drawer changes hands, **Hand over** closes one session and
+  opens the next on what was left, in one step. A session left open is closed
+  on **Sales → The Drawer → Close it for them** by you or a manager, with the
+  reason, counted or not. Opening the drawer, a manager can put a float in from
+  the safe. **Sales → Cash Sessions** lists every session with what it opened
+  with, what it should have held, what was counted and the difference; each
+  opens its statement, every movement of its cash. Sales also shows every day
+  whose cash no closed session has covered; a month cannot lock until each is.
+  The dashboard warns of a session open too long, one short by the limit or
+  more (at its opening or its close), and one a manager closed.
 - **Paying for something:** always say where the money came from — the till,
   the safe, the bank, a card (which the bank pays), or you personally. From
   the till it comes out of
@@ -231,16 +248,17 @@ discount, why and who approved it. The 10% is a business setting (shown on
   more than the books say it holds. Put money into the till (a float), take
   takings to the safe, or bank them with **Sales → Move Cash**; only you can
   take money out for yourself.
-- **Orders:** a sale rung in error is **voided** until the drawer holding its
-  cash is counted; after that, it is **refunded**.
+- **Orders:** a sale rung in error is **voided** until the session holding
+  its cash is closed; after that, it is **refunded**.
 - **Reports → Exceptions:** every void, refund, discount, cancelled bill, item
   taken off a bill and wrong PIN, by person, with the reason and who approved
   it. Those marked **review** are yours to look at: a void or refund nobody
   else approved, or a wrong PIN. It downloads as CSV.
 - **The alerts' thresholds** are yours (and the general manager's): on
   **Settings → Alerts**, the margin you aim for (70%), how long a count may
-  stay open (8 hours), how many days card and platform money take to arrive
-  (3 and 7), and the rest; an empty box follows its default, and every change
+  stay open (8 hours), how long a drawer's session may stay open (14 hours)
+  and how short a session must be to warn (5,000 IQD), how many days
+  card and platform money take to arrive (3 and 7), and the rest; an empty box follows its default, and every change
   is on the audit trail. On **Vendors → Edit vendor**, say how many days each
   supplier takes to deliver: running out warns that much sooner for what they
   supply.
@@ -301,8 +319,8 @@ discount, why and who approved it. The 10% is a business setting (shown on
 
 ## Every month
 
-1. Count the cash of every trading day, approve or reject any pending count,
-   and publish or discard any draft journal.
+1. Close the drawer's session after the month's last sale, approve or reject
+   any pending count, and publish or discard any draft journal.
 2. **Reports → Do the books tie?**, as at the last day of the month: every line
    should show ✅.
 3. **Chart of Accounts:** choose the month and read its checklist. When every
@@ -329,7 +347,7 @@ line (CSV)** gives your accountant the whole ledger.
 
 | The mistake                                                              | Correct it with                                                                                                                  |
 | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| A sale rung wrongly                                                      | **Orders → Void** (until the drawer is counted) or **Refund**                                                                    |
+| A sale rung wrongly                                                      | **Orders → Void** (until its session closes) or **Refund**                                                                       |
 | A bill entered twice or wrongly                                          | **Vendors → Cancel** (only if nothing was paid on it), then enter it correctly                                                   |
 | Stock that is wrong                                                      | a **count**, or **Inventory → Correct stock** (manager), with the reason                                                         |
 | An item or a vendor named, typed or levelled wrongly                     | its card on **Inventory → Correct this item**, or **Vendors → Edit vendor**, with the reason; take one no longer used out of use |

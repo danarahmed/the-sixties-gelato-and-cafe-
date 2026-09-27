@@ -1251,6 +1251,80 @@ const phrases: PhraseBook = {
   // "{1}: enter a {2} from {3} to {4}" asks for a "whole number" or a "number".
   "whole number": { ar: "عدد صحيح", ckb: "ژمارەی تەواو" },
   number: { ar: "رقم", ckb: "ژمارە" },
+  // The drawer in sessions (0036), and a key required through the API.
+  "Open the drawer first: on the till, count the cash in it": {
+    ar: "افتح درج النقد أولًا: في نقطة البيع، عُدّ النقد الذي فيه",
+    ckb: "سەرەتا دەخیلەکە بکەرەوە: لە خاڵی فرۆشتن، پارەی ناوی بژمێرە",
+  },
+  "The drawer does not hold enough to pay {1}. Move cash into the till first, or pay from the safe, the bank or the owner":
+    {
+      ar: "لا يحوي درج النقد ما يكفي لدفع {1}. انقل نقدًا إلى درج النقد أولًا، أو ادفع من الخزنة أو البنك أو المالك",
+      ckb: "دەخیلەکە پارەی پێویستی تێدا نییە بۆ دانی {1}. سەرەتا پارە بگوازەرەوە بۆ دەخیلەکە، یان لە قاسە، بانک یان خاوەنەوە بیدە",
+    },
+  "This screen sent no retry key: reload the page and try again": {
+    ar: "لم ترسل هذه الشاشة مفتاح إعادة المحاولة: أعد تحميل الصفحة وحاول مجددًا",
+    ckb: "ئەم شاشەیە کلیلی دووبارە هەوڵدانی نەنارد: پەڕەکە نوێ بکەرەوە و دووبارە هەوڵ بدەوە",
+  },
+  "The notes counted cannot be read": {
+    ar: "لا يمكن قراءة الأوراق النقدية المعدودة",
+    ckb: "پارە کاغەزییە ژمێردراوەکان ناخوێندرێنەوە",
+  },
+  "The notes counted come to {1}, not the {2} entered": {
+    ar: "مجموع الأوراق المعدودة {1}، لا {2} كما أُدخل",
+    ckb: "کۆی پارە کاغەزییە ژمێردراوەکان {1}ە، نەک ئەو {2}ـەی نووسرا",
+  },
+  "This branch has no drawer": {
+    ar: "لا يوجد درج نقد لهذا الفرع",
+    ckb: "ئەم لقە دەخیلەی نییە",
+  },
+  "The drawer is already open: session {1} since {2}, with {3}": {
+    ar: "درج النقد مفتوح بالفعل: الوردية {1} منذ {2}، مع {3}",
+    ckb: "دەخیلەکە پێشتر کراوەتەوە: شیفتی {1} لە {2}ەوە، لای {3}",
+  },
+  "Session not found": {
+    ar: "لم يُعثر على الوردية",
+    ckb: "شیفتەکە نەدۆزرایەوە",
+  },
+  "Session {1} is already closed": {
+    ar: "الوردية {1} مغلقة بالفعل",
+    ckb: "شیفتی {1} پێشتر داخراوە",
+  },
+  "Enter the cash put in from the safe, or leave it empty": {
+    ar: "أدخل النقد الموضوع من الخزنة، أو اتركه فارغًا",
+    ckb: "ئەو پارەیەی لە قاسەوە دادەنرێت بنووسە، یان بە بەتاڵی جێی بهێڵە",
+  },
+  "Only a manager puts cash in from the safe": {
+    ar: "المدير وحده يضع نقدًا من الخزنة",
+    ckb: "تەنها بەڕێوەبەر پارە لە قاسەوە دادەنێت",
+  },
+  "The drawer is not open": {
+    ar: "درج النقد غير مفتوح",
+    ckb: "دەخیلەکە کراوە نییە",
+  },
+  "Only {1} or a manager closes this session": {
+    ar: "لا يغلق هذه الوردية إلا {1} أو مدير",
+    ckb: "تەنها {1} یان بەڕێوەبەرێک ئەم شیفتە دادەخات",
+  },
+  "Choose someone who may take the drawer": {
+    ar: "اختر شخصًا يحقّ له استلام درج النقد",
+    ckb: "کەسێک هەڵبژێرە کە دەتوانێت دەخیلەکە وەربگرێت",
+  },
+  "Hand the drawer to someone else": {
+    ar: "سلّم درج النقد لشخص آخر",
+    ckb: "دەخیلەکە ڕادەستی کەسێکی تر بکە",
+  },
+  "Say why the session is being closed": {
+    ar: "اذكر سبب إغلاق الوردية",
+    ckb: "بڵێ بۆچی شیفتەکە دادەخرێت",
+  },
+  "What an open drawer should hold is shown once it is counted": {
+    ar: "ما يجب أن يحويه درج نقد مفتوح يظهر بعد عدّه",
+    ckb: "ئەوەی دەبێت لە دەخیلەیەکی کراوەدا بێت دوای ژماردنی پیشان دەدرێت",
+  },
+  "Open the drawer on the till first: counting it now closes its session": {
+    ar: "افتح درج النقد في نقطة البيع أولًا: عدّه الآن يُغلق ورديته",
+    ckb: "سەرەتا دەخیلەکە لە خاڵی فرۆشتن بکەرەوە: ژماردنی ئێستا شیفتەکەی دادەخات",
+  },
 };
 
 export default phrases;

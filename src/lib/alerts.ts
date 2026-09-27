@@ -32,6 +32,9 @@ export const RULE_LABEL: Record<string, string> = {
   bill_due: "Supplier bill due",
   price_typo: "Possible price typo",
   duplicate_payment: "Possible duplicate payment",
+  session_open_long: "Cash session left open",
+  session_short: "Cash session short",
+  session_forced: "Cash session closed by a manager",
 };
 
 export function ruleLabel(rule: string): string {
@@ -135,6 +138,8 @@ export const THRESHOLD_ORDER = [
   "margin_target_percent",
   "lead_time_days",
   "count_stale_hours",
+  "session_open_hours",
+  "session_short_min",
   "card_days",
   "platform_days",
   "bill_due_days",
@@ -158,6 +163,8 @@ export const THRESHOLD_LABEL: Record<string, string> = {
   platform_days: "Days a delivery platform takes to pay",
   bill_due_days: "Days before a bill is due to warn",
   price_typo_factor: "Price typo: times another channel's price",
+  session_open_hours: "Hours a cash session may stay open",
+  session_short_min: "A cash session short by at least (IQD)",
 };
 
 const n = (v: unknown): number => {

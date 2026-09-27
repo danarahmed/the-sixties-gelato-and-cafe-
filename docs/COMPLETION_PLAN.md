@@ -1,8 +1,11 @@
 # Completing the operations system: implementation analysis
 
 **Status:** analysis finished on 27 September 2026, before any change was made.
-Release J (duplicate protection, `0035`) is built and tested. Two changes from the
-plan below:
+Release J (duplicate protection, `0035`) and release K (cash sessions, `0036`)
+are live since 27 September 2026. What was built differs from the plan below
+in these ways.
+
+Release J:
 
 - **Keys.** The key is the last parameter, and the original is renamed
   `<name>__run`, instead of a second function under the same name, which made
@@ -11,7 +14,30 @@ plan below:
   release K, a call through the API without a key is refused.
 - **Location on the audit trail.** `audit_log.location_id` waits for tills with a
   branch (release AB), since nothing can fill it until then.
-  **Basis:**
+
+Release K:
+
+- **Location on journal lines** moves to release AB with the audit trail's: with
+  one branch trading, nothing but that branch could fill it. The over/short and
+  takings journals name their session instead.
+- **The opening's difference** posts with reference `session_opening`, and the
+  close's with `work_shift`: each source is posted once
+  (`journal_entry_one_per_source`), and a session can have both.
+- **Taking over.** The first session on a drawer opens against what the drawer
+  counts before sessions left, plus the cash since; on a drawer never counted,
+  against what the books say the till holds. A closed `drawer` record is
+  written for it first, so the take-over is on record.
+- **A float at the opening.** A manager opening the drawer can put cash in from
+  the safe in the same step (Dr 1000, Cr 1005).
+- **No `status` column.** A session is open while `closed_at` is null, as the
+  drawer counts were; `opened_from` records a hand-over.
+- **`count_drawer`** closes the open session, counted, and is revoked in release
+  L; the screen that called it is gone.
+- **Keys from the API.** The refusal applies to the function the API called
+  (`request.path` ends in `/rpc/<name>`), so the writes a keyed write makes
+  inside it are not refused.
+
+**Basis:**
 
 - The code at `d17436e`: migrations `0001`–`0034` and the app.
 - The live database, read only (one branch, a central kitchen, one person per role, test records).

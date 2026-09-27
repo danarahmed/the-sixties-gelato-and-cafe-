@@ -346,18 +346,26 @@ corrections are new entries. What each record posts (migration `0015`):
 - Opening stock: Dr 1200 / Cr 3000 Owner equity — for a new item, or (`0024`)
   for an item with no stock history yet, at the cost typed; once an item's
   stock has moved it changes only through its own records.
-- Drawer count (`0024`, replacing the day close): a count covers every
-  movement of cash at the location since the last count, whatever the date —
-  the café trades past midnight, so one night's count covers two calendar
-  days. `expected = start + Σ cash events`, where `start` is what the last
-  count left in the drawer (for the first count after days closed the old
-  way, the cash typed in — the cash taken since the last such close was
-  carried in as events when `0024` went in) and the events are: cash sales +, cash refunds −,
-  voids of cash sales −, paid out of the till −, cash put into the till +,
-  cash taken out −. `variance = counted − expected`, posted Dr 6300 Cash over
-  / short / Cr 1000 when short, the reverse when over. What does not stay in
-  the drawer goes to the safe (Dr 1005) or the bank (Dr 1020), Cr 1000. A
-  sale recorded after the count is in the next one.
+- Cash session (`0036`, replacing the drawer count of `0024`, which replaced
+  the day close): a session covers every movement of cash at its drawer from
+  its opening count to its closing count, whatever the date — the café trades
+  past midnight, so one night's session covers two calendar days. At the
+  opening, `opening_variance = opening_counted − opening_expected`, where
+  `opening_expected` is what the last session left in the drawer. At the
+  close, `expected = opening_counted + Σ cash events in the session`, the
+  events being: cash sales +, cash refunds −, voids of cash sales −, paid out
+  of the till −, cash put into the till +, cash taken out −; and
+  `variance = counted − expected`. Each variance posts Dr 6300 Cash over /
+  short / Cr 1000 when short, the reverse when over. What does not stay in the drawer goes to
+  the safe (Dr 1005) or the bank (Dr 1020), Cr 1000. A session a manager
+  closes without a count posts nothing: all of `expected` stays, for the next
+  opening count. A float from the safe at the opening is Dr 1000 / Cr 1005,
+  after the count. The first session on a drawer takes over from what came
+  before: `opening_expected` is what the last drawer count left plus the cash
+  events since (the cash taken since the last day closed the old way was
+  carried in as events when `0024` went in), or, for a drawer never counted,
+  the balance of 1000 less the cash the other locations' drawers are known to
+  hold. A sale recorded after the close is in the next session.
 - Moving cash between the till, the safe (1005), the bank (1020) and the
   owner: Dr where it goes / Cr where it came from; money the owner takes for
   themselves is Dr 3200 Owner drawings, and only the owner may take it.
@@ -377,9 +385,15 @@ shown).
 
 - **Cash below zero** (🔴): the balance of 1000 (till), 1005 (safe) or 1020
   (bank) under 0.
-- **Drawer not counted:** days before today with cash no drawer count has
-  taken in (sales after the last count, or cash moved since); 🟠 for one day,
-  🔴 for two or more.
+- **Drawer not counted:** days before today with cash no closed session (or
+  drawer count) has taken in; 🟠 for one day, 🔴 for two or more.
+- **Session open too long** (`0036`): a session open longer than _14 hours_;
+  🔴 at twice that.
+- **Session short** (`0036`): in the last 7 days, a session that closed short
+  of what it should have held, or opened short of what the last one left, by
+  _5,000 IQD_ or more; 🔴 at five times that.
+- **Session closed by a manager** (`0036`, 🟠): in the last 7 days, with the
+  reason and whether it was counted.
 - **Stock count left open** (🟠): open longer than _8 hours_.
 - **Running out:** `daily use = use over the last 14 days ÷ min(14, days of
 history)`, where use is what sales, production, waste and spoilage took off
@@ -435,8 +449,8 @@ daily use`; it fires when that is under `lead + 1` days, the lead being the
 - _Facts:_ sales (not voided, bills paid), net sales (the revenue accounts,
   credit less debit, as the P&L has them — after voids, refunds and
   discounts), voids and refunds made that day and their amounts, discounts
-  and their amounts, waste (5300), drawer counts and the sum of their
-  differences, sales costed at nothing.
+  and their amounts, waste (5300), the drawer's closes (sessions since `0036`,
+  counts before) and the sum of their differences, sales costed at nothing.
 - _Calculations:_ `cost of goods` (5000) and its share of net sales; `gross
 profit = net sales − every 5xxx account` (waste, count differences, price
   differences and platform fees included) and its share; the same weekday a

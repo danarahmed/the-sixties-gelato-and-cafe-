@@ -66,8 +66,8 @@ ok "$(sql "select count(*) from supplier_payment where purchase_invoice_id = '$B
 ok "$(sql "select paid_amount from purchase_invoice where id = '$BILL'")" "20000" "the bill is paid once, never overpaid"
 
 # 0035 — ten sessions send the same delivery, the same expense and the same
-# drawer count with one key at the same instant: each is recorded once, and the
-# other nine are told it already was.
+# close of the drawer with one key at the same instant: each is recorded once,
+# and the other nine are told it already was.
 RECEIPTS=$(sql "select count(*) from goods_receipt")
 race 10 manager@example.com "select receive_goods((select id from supplier order by name limit 1),
   '[{\"item_id\":\"c0000000-0000-0000-0000-000000000002\",\"qty\":4,\"goods_value\":8000}]',
@@ -79,10 +79,17 @@ race 10 manager@example.com "select record_expense('Race ice', 1000, '6900', 'ow
 ok "$(sql "select count(*) from expense where description = 'Race ice'")" "1" "10 simultaneous sends of one expense record it once"
 sql "select test.act_as('cashier@example.com');
      select record_sale(gen_random_uuid(),'dine_in','cash','[{\"variant_id\":\"d1000000-0000-0000-0000-000000000001\",\"qty\":3}]');" >/dev/null
-SHIFTS=$(sql "select count(*) from work_shift")
-race 10 manager@example.com "select count_drawer(5000, 0, 'safe', null, null, '88888888-0000-0000-0000-000000000003')"
-ok "$(( $(sql "select count(*) from work_shift") - SHIFTS ))" "1" "10 simultaneous sends of one drawer count count it once"
+race 10 manager@example.com "select close_cash_session(5000, null, 0, 'safe', p_idempotency_key => '88888888-0000-0000-0000-000000000003')"
+ok "$(sql "select count(*) from work_shift where kind = 'session' and closed_at is not null")" "1" \
+   "10 simultaneous sends of one close of the drawer close it once"
 ok "$(sql "select count(*) from cash_transfer")" "1" "and move the takings to the safe once"
+
+# 0036 — ten people open the one drawer at the same moment: one session opens,
+# and the other nine are told it is open already.
+race 10 cashier@example.com "select open_cash_session(0)"
+ok "$(sql "select count(*) from work_shift where kind = 'session' and closed_at is null")" "1" \
+   "10 people opening the drawer at once open one session"
+ok "$(grep -l 'The drawer is already open' "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and the other nine are told it is open"
 
 # H-10 — five bottles, prevention on, ten simultaneous sales of one each.
 # Through record_waste, which journals it: a raw ledger insert here would be
@@ -124,10 +131,12 @@ ok "$(grep -l 'changed on another till' "$WORK"/*.out | wc -l | tr -d ' ')" "9" 
    "10 tills saving one bill at once: one change wins, nine are refused"
 ok "$(sql "select version from pos_tab where id = '$TAB'")" "2" "and the bill moved on by exactly one version"
 
-# 0024 — ten cash sales racing a drawer count: each is counted once, in this
-# count or the next; none falls between two counts, and nothing deadlocks.
+# 0036 — ten cash sales racing the close of the drawer's session: each goes
+# into the session before the close counts it, or is refused once it has
+# closed; none falls outside a session, and nothing deadlocks.
 sql "select test.act_as('manager@example.com'); select cancel_tab('$TAB', 2, 'Party left')" >/dev/null
 SOLD=$(sql "select count(*) from sales_order where status = 'completed'")
+SESSION=$(sql "select id from work_shift where kind = 'session' and closed_at is null")
 rm -f "$WORK"/*.out
 "${PSQL[@]}" -d "$DB" -c "select pg_advisory_lock(424242), pg_sleep(1.5)" >/dev/null &
 sleep 0.4
@@ -137,17 +146,19 @@ for i in $(seq 1 10); do
       >"$WORK/$i.out" 2>&1 || true ) &
 done
 ( "${PSQL[@]}" -d "$DB" -c "select test.act_as('manager@example.com')" -c "select pg_advisory_lock_shared(424242)" \
-    -c "select count_drawer(0) ->> 'shift_id'" >"$WORK/count.out" 2>&1 || true ) &
+    -c "select close_cash_session(0) ->> 'session_id'" >"$WORK/count.out" 2>&1 || true ) &
 wait
-ok "$(sql "select count(*) - $SOLD from sales_order where status = 'completed'")" "10" \
-   "ten cash sales race a drawer count, and all ten are recorded"
-ok "$(grep -c 'ERROR' "$WORK/count.out" || true)" "0" "the count goes through beside them"
-sql "select test.act_as('manager@example.com'); select count_drawer((drawer_status() ->> 'expected')::numeric)" >/dev/null
-ok "$(sql "select count(*) from cash_event where work_shift_id is null")" "0" \
-   "after the next count every sale's cash has been counted"
+RECORDED=$(sql "select count(*) - $SOLD from sales_order where status = 'completed'")
+ok "$(( RECORDED + $(grep -l 'Open the drawer first' "$WORK"/[0-9]*.out | wc -l | tr -d ' ') ))" "10" \
+   "ten cash sales race the close of the drawer: each is recorded, or refused once it has closed"
+ok "$(grep -c 'ERROR' "$WORK/count.out" || true)" "0" "the close goes through beside them"
+ok "$(sql "select expected_cash = opening_counted + (select coalesce(sum(amount), 0) from cash_event where work_shift_id = w.id)
+             from work_shift w where id = '$SESSION'")" "t" \
+   "the session closed on exactly the cash that came in before it"
+ok "$(sql "select count(*) from cash_event where work_shift_id is null")" "0" "no sale's cash falls outside a session"
 ok "$(sql "select (select sum(amount) from cash_event where kind = 'sale')
                = (select sum(t.amount) from sales_tender t where t.tender_type = 'cash')")" "t" \
-   "exactly once: the counted cash equals the cash taken"
+   "exactly once: the cash in the sessions equals the cash taken"
 
 # 0034 — through every race above, each order took a turn number of its own:
 # none shared, and none skipped, though sales were refused and payments replayed.

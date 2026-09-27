@@ -9,7 +9,7 @@ import { useChannels } from "@/components/ChannelsProvider";
 import { REASONS, reasonKey, reasonMissing } from "@/lib/reasons";
 import { normaliseNumber } from "@/lib/validation";
 
-function Modal({
+export function Modal({
   label,
   busy,
   onClose,

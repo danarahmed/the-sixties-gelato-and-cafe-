@@ -129,6 +129,35 @@ const phrases: PhraseBook = {
     ar: "المقبوضات بعد عدّ الدرج",
     ckb: "داهات دوای ژماردنی دەخیلە",
   },
+  // The drawer in sessions (0036).
+  "Cash over/short — session {1} opened": {
+    ar: "زيادة/عجز النقد — فتح الوردية {1}",
+    ckb: "زیادە/کەمی پارە — کردنەوەی شیفتی {1}",
+  },
+  "Cash over/short — session {1} closed": {
+    ar: "زيادة/عجز النقد — إغلاق الوردية {1}",
+    ckb: "زیادە/کەمی پارە — داخستنی شیفتی {1}",
+  },
+  "Cash over/short — the drawer counted as sessions began": {
+    ar: "زيادة/عجز النقد — عدّ الدرج عند بدء الورديات",
+    ckb: "زیادە/کەمی پارە — ژماردنی دەخیلە لە سەرەتای شیفتەکان",
+  },
+  "Takings to the {1} after session {2}": {
+    ar: "المقبوضات إلى {1} بعد الوردية {2}",
+    ckb: "داهات بۆ {1} دوای شیفتی {2}",
+  },
+  "Takings after session {1}": {
+    ar: "المقبوضات بعد الوردية {1}",
+    ckb: "داهات دوای شیفتی {1}",
+  },
+  "Float from the safe into the till, session {1}": {
+    ar: "فكّة من الخزنة إلى الدرج، الوردية {1}",
+    ckb: "پارەی ورد لە قاسەوە بۆ دەخیلە، شیفتی {1}",
+  },
+  "Float at the opening of session {1}": {
+    ar: "فكّة عند فتح الوردية {1}",
+    ckb: "پارەی ورد لە کردنەوەی شیفتی {1}",
+  },
   "Cash from the {1} to the {2}": { ar: "نقد من {1} إلى {2}", ckb: "پارە لە {1}ەوە بۆ {2}" },
   "Cash from the {1} to the {2}: {3}": {
     ar: "نقد من {1} إلى {2}: {3}",

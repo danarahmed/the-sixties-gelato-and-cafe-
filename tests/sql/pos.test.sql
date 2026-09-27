@@ -296,16 +296,27 @@ select test.throws(format('insert into pos_tab_line (tab_id, business_id, produc
 select test.throws($$update product_image set content_type = 'image/png'$$, '%permission denied%', 'nor to photos');
 
 -- ------------------------------------------------------------------ the day
--- Table 2 still owes 5,000: the drawer is not counted until it is paid or cancelled.
+-- Table 2 still owes 5,000. A bill not yet paid is no cash yet: the drawer's
+-- session closes around it, and the bill is paid in the next session.
 select test.as_admin();
 create temp table today as select business_local_date('00000000-0000-0000-0000-0000000000b1', now()) as d;
 grant all on today to public;
 select test.act_as('manager@example.com');
 select test.eq((drawer_status() ->> 'open_bills')::int, 1, 'the drawer shows the open bills');
-select test.throws('select count_drawer(0)',
-  '%1 bill(s) are still open%', 'the drawer is not counted with a bill still open');
+select test.eq((cash_session_status() ->> 'open_bills')::int, 1, 'and so does the till');
+select test.act_as('owner@example.com');
+create temp table closed as select close_cash_session((cash_session_status() ->> 'expected')::numeric) as r;
+grant select on closed to public;
+select test.eq((select (r ->> 'variance')::numeric from closed), 0::numeric, 'the session closes with the bill still open');
+select test.act_as('manager@example.com');
+select test.throws(format('select settle_tab(%L, 3, gen_random_uuid(), %L)', pg_temp.id('b2'), 'cash'),
+  'Open the drawer first%', 'paid in cash, the bill waits for the drawer to open');
+select test.act_as('cashier@example.com');
+select open_cash_session((select (r ->> 'left')::numeric from closed));
+select test.act_as('manager@example.com');
 select settle_tab(pg_temp.id('b2'), 3, gen_random_uuid(), 'cash');
-select test.succeeds(format('select count_drawer(%s)', drawer_status() ->> 'expected'),
+select test.act_as('owner@example.com');
+select test.succeeds(format('select close_cash_session(%s)', cash_session_status() ->> 'expected'),
   'once every bill is settled, the drawer is counted');
 select test.as_admin();
 select test.eq((select count(*) from sales_order)::int, 5, 'four bills and one counter sale: five sales');

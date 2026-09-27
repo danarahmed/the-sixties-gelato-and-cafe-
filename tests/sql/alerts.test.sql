@@ -40,6 +40,10 @@ $$;
 create or replace function pg_temp.day(p_offset int default 0) returns text language sql as $$
   select to_char(test.today() + p_offset, 'DD Mon')
 $$;
+-- What the drawer should hold now (the tests' own view: the till's is blind).
+create or replace function pg_temp.drawer() returns numeric language sql security definer as $$
+  select d.carry + d.moved from drawer_position('00000000-0000-0000-0000-0000000000b1', pg_temp.id('loc')) d
+$$;
 create or replace function pg_temp.said(a audit_log) returns text language sql as $$
   select coalesce(a.before_state::text, '-') || ' → ' || coalesce(a.after_state::text, '-') || ' by '
          || coalesce((select email::text from app_user where id = a.app_user_id), 'no one')
@@ -55,7 +59,7 @@ select test.eq((select count(*) from alert_conditions('00000000-0000-0000-0000-0
 
 -- ----------------------------------------------------------- the daily brief
 -- A day: three sales, one voided, one refunded, one discounted; some beans
--- wasted; the drawer counted 500 short.
+-- wasted; the drawer's session closed 500 short.
 select test.act_as('cashier@example.com');
 insert into s select 'a', record_sale(gen_random_uuid(), 'dine_in', 'cash', pg_temp.espressos(2));
 insert into s select 'b', record_sale(gen_random_uuid(), 'takeaway', 'card', pg_temp.espressos(1));
@@ -65,7 +69,7 @@ select test.act_as('manager@example.com');
 select void_sale(pg_temp.order_of('b'), null, 'rang_twice');
 select refund_sale(pg_temp.order_of('c'), 'the bottle was warm', 'quality');
 select record_waste('c0000000-0000-0000-0000-000000000001', 100, 'g', 'waste', 'spilled');
-select count_drawer(4500);
+select close_cash_session(4500);
 
 select test.act_as('cashier@example.com');
 select test.throws(format('select daily_brief(%L)', test.today()), '%permission%', 'a cashier is not given the brief');
@@ -183,14 +187,15 @@ select test.as_admin();
 select test.eq(pg_temp.found('drawer_uncounted', null, now() + interval '1 day'), null,
   'counted after the last sale: nothing to say, even tomorrow');
 select test.act_as('cashier@example.com');
+select open_cash_session(4500);
 insert into s select 'd1', record_sale(gen_random_uuid(), 'dine_in', 'cash', pg_temp.espressos(1));
 select test.as_admin();
 select test.eq(pg_temp.found('drawer_uncounted'), null, 'today''s takings are counted tonight: nothing yet');
 select test.eq(pg_temp.found('drawer_uncounted', null, now() + interval '1 day'),
   format('orange high: The drawer at Main Branch has not been counted for %s', pg_temp.day()),
   'tomorrow, a day not counted: orange');
--- Cash that came in the day before, not counted either (with its journal, so
--- the till's account still matches the drawer).
+-- Cash that came in the day before, in the same open session (with its
+-- journal, so the till's account still matches the drawer).
 insert into cash_event (id, business_id, location_id, kind, amount, reference_type, reference_id, created_at)
 values ('e0000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b1', pg_temp.id('loc'), 'cash_in', 1000,
         'cash_transfer', gen_random_uuid(), now() - interval '1 day');
@@ -199,10 +204,12 @@ select post_journal('00000000-0000-0000-0000-0000000000b1', now() - interval '1 
 select test.eq(pg_temp.found('drawer_uncounted', null, now() + interval '1 day'),
   format('red high: The drawer at Main Branch has not been counted for 2 days, since %s', pg_temp.day(-1)),
   'two days: red');
-select test.act_as('manager@example.com');
-select count_drawer((drawer_status() ->> 'expected')::numeric);
+select test.act_as('owner@example.com');
+select close_cash_session((cash_session_status() ->> 'expected')::numeric);
 select test.as_admin();
 select test.eq(pg_temp.found('drawer_uncounted', null, now() + interval '1 day'), null, 'counted: nothing to say');
+select test.act_as('cashier@example.com');
+select open_cash_session(pg_temp.drawer());
 
 -- ------------------------------------------------ a count left open; thresholds
 select test.act_as('counter@example.com');
@@ -222,7 +229,7 @@ select test.act_as('owner@example.com');
 select test.eq(alert_thresholds() -> 'count_stale_hours',
   '{"default": 8, "min": 1, "max": 72, "whole": true, "label": "Hours a stock count may stay open", "value": 8}'::jsonb,
   'each threshold with its default, its limits, and the value in force');
-select test.eq((select count(*) from jsonb_object_keys(alert_thresholds()))::int, 11, 'eleven of them');
+select test.eq((select count(*) from jsonb_object_keys(alert_thresholds()))::int, 13, 'thirteen of them');
 select test.throws($$select set_alert_thresholds('{"count_stale_hours": 0}')$$,
   'Hours a stock count may stay open: enter a whole number from 1 to 72', 'within its limits');
 select test.throws($$select set_alert_thresholds('{"count_stale_hours": 2.5}')$$,
@@ -535,6 +542,63 @@ select reverse_journal((select id from journal_entry where journal_no = (pg_temp
                           and business_id = '00000000-0000-0000-0000-0000000000b1'), 'entered twice');
 select test.as_admin();
 select test.eq(pg_temp.found('duplicate_payment'), null, 'one reversed: nothing to say');
+
+-- ------------------------------------------- sessions: open long, short, forced
+select test.act_as('cashier@example.com');
+select close_cash_session(pg_temp.drawer());
+insert into s select 'sess1', open_cash_session(pg_temp.drawer());
+select test.as_admin();
+select test.eq(pg_temp.found('session_open_long'), null, 'a session just opened: nothing to say');
+select test.eq(pg_temp.found('session_open_long', null, now() + interval '15 hours'),
+  format('orange high: Session %s at Main Branch has been open since %s', pg_temp.r('sess1') ->> 'session_no',
+         to_char(now() at time zone 'Asia/Baghdad', 'DD Mon HH24:MI')),
+  'open more than 14 hours: orange');
+select test.eq(split_part(pg_temp.found('session_open_long', null, now() + interval '29 hours'), ' ', 1), 'red',
+  'twice as long: red');
+select test.act_as('owner@example.com');
+select set_alert_thresholds('{"session_open_hours": 20}');
+select test.as_admin();
+select test.eq(pg_temp.found('session_open_long', null, now() + interval '15 hours'), null,
+  'the owner sets how long a session may stay open');
+-- The owner puts 30,000 in for the evening; the cashier counts 6,000 short:
+-- orange (25,000 short would be red).
+select test.act_as('owner@example.com');
+select move_cash('owner', 'till', 30000, 'Float for the evening');
+select test.act_as('cashier@example.com');
+insert into s select 'sess1c', close_cash_session(pg_temp.drawer() - 6000);
+select test.as_admin();
+select test.eq(pg_temp.found('session_short'),
+  format('orange high: Session %s at Main Branch closed 6,000 IQD short', pg_temp.r('sess1') ->> 'session_no'),
+  'a session 6,000 short: orange');
+select test.eq(pg_temp.found('session_open_long', null, now() + interval '29 hours'), null, 'closed: no longer open too long');
+-- Opened with nothing where 30,000 and more were left (a float gone overnight): red.
+select test.act_as('cashier@example.com');
+insert into s select 'sess2', open_cash_session(0);
+select test.as_admin();
+select test.eq(pg_temp.found('session_short', 'opening:' || (pg_temp.r('sess2') ->> 'session_id')),
+  format('red high: Session %s at Main Branch opened %s IQD short of what the last session left',
+         pg_temp.r('sess2') ->> 'session_no', alert_money(-(pg_temp.r('sess2') ->> 'variance')::numeric)),
+  'the next session opened short of what the last one left');
+select test.act_as('owner@example.com');
+select set_alert_thresholds('{"session_short_min": 7000}');
+select test.as_admin();
+select test.eq(pg_temp.found('session_short', pg_temp.r('sess1') ->> 'session_id'), null,
+  'below the threshold the owner sets: nothing to say');
+select test.eq(pg_temp.found('session_short', null, now() + interval '8 days'), null, 'a week later: nothing to say');
+-- A manager closes the session the cashier left open, without counting it.
+select test.act_as('manager@example.com');
+select force_close_session((pg_temp.r('sess2') ->> 'session_id')::uuid, 'The cashier went home');
+select test.as_admin();
+select test.eq(pg_temp.found('session_forced'),
+  format('orange high: Session %s at Main Branch was closed by Demo Manager: The cashier went home',
+         pg_temp.r('sess2') ->> 'session_no'),
+  'a session closed by a manager: orange, to check with its cashier');
+select test.eq((select why from alert_conditions('00000000-0000-0000-0000-0000000000b1', now()) where rule = 'session_forced'),
+  'It was closed without a count: what it held is counted when the drawer next opens.', 'uncounted, it says so');
+select test.act_as('owner@example.com');
+select set_alert_thresholds('{"session_open_hours": null, "session_short_min": null}');
+select test.act_as('cashier@example.com');
+select open_cash_session(pg_temp.drawer());
 
 -- ---------------------------------------------------- and all of them, once
 select test.act_as('owner@example.com');
