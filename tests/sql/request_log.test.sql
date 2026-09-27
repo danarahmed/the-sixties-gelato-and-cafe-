@@ -29,7 +29,7 @@ insert into keyed values
   ('add_delivery_platform'), ('add_item_unit'), ('adjust_stock'), ('approve_stock_count'), ('cancel_bill'),
   ('cancel_card_settlement'), ('cancel_platform_settlement'), ('cancel_production'), ('cancel_scheduled_price'),
   ('cancel_scheduled_recipe'), ('cancel_stock_count'), ('cancel_tab'), ('change_product_recipe'),
-  ('copy_platform_setup'), ('count_drawer'), ('create_item'), ('create_product'), ('create_supplier'),
+  ('copy_platform_setup'), ('create_item'), ('create_product'), ('create_supplier'),
   ('discard_journal'), ('invite_member'), ('lock_period'), ('mark_bill_printed'), ('move_cash'), ('open_tab'),
   ('pay_bill'), ('post_control_correction'), ('post_legacy_unposted'), ('post_platform_settlement'),
   ('publish_journal'), ('receive_goods'), ('record_bill'), ('record_card_settlement'), ('record_expense'),
@@ -37,7 +37,13 @@ insert into keyed values
   ('reverse_journal'), ('save_batch_recipe'), ('save_category'), ('save_journal'), ('save_tab'), ('save_table'),
   ('set_price'), ('split_tab'), ('start_stock_count'), ('submit_stock_count'), ('unlock_period'), ('void_sale');
 grant select on keyed to public;
-select test.eq((select count(*) from keyed)::int, 50, 'fifty kinds of write are keyed');
+select test.eq((select count(*) from keyed)::int, 49,
+  'fifty kinds of write are keyed: forty-nine open, the old drawer count closed since 0037');
+select test.eq((select string_agg(p.proname, ', ') from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                 where n.nspname = 'public' and p.proname in ('count_drawer', 'count_drawer__run')
+                   and (has_function_privilege('authenticated', p.oid, 'execute')
+                        or has_function_privilege('anon', p.oid, 'execute'))), null,
+  'the old drawer count cannot be called');
 create temp table shape as
 select k.name,
        (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -62,9 +68,11 @@ select test.eq((select string_agg(name, ', ') from shape where keyed_ok is not t
   'each takes the key last, checks it first and stores its answer, then does the work, open to signed-in people');
 select test.eq((select string_agg(name, ', ') from shape where run_closed is not true), null,
   'the work itself cannot be called from outside the database');
--- The drawer's sessions (0036) take their key the same way, doing the work themselves.
+-- The drawer's sessions (0036) and refunds by the item (0037) take their key
+-- the same way, doing the work themselves.
 select test.eq((select string_agg(k.name, ', ' order by k.name)
-                  from unnest(array['open_cash_session', 'close_cash_session', 'hand_over_session', 'force_close_session']) k(name)
+                  from unnest(array['open_cash_session', 'close_cash_session', 'hand_over_session', 'force_close_session',
+                                    'refund_sale_lines']) k(name)
                  where not exists (
                    select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                     where n.nspname = 'public' and p.proname = k.name

@@ -346,10 +346,10 @@ const phrases: PhraseBook = {
   },
 
   // -------------------------------------------------------------- Orders
-  "A sale is never edited. A sale rung in error is <b>voided</b> until the drawer holding it is counted — revenue, payment, cost and stock all come back exactly. After that, money goes back to the customer by a <b>refund</b>, through Sales returns (4200); only goods that can go back on the shelf return to stock. Both take a reason from the list and are on the audit trail; one approved by a second person (their name and PIN) is marked so, and one without waits for the owner on the exceptions report.":
+  "A sale is never edited. A sale rung in error is <b>voided</b> until the drawer's session holding it closes — revenue, payment, cost and stock all come back exactly. After that, money goes back to the customer by a <b>refund</b> of some of its items or all of them, through Sales returns (4200), the way it was paid; only goods that can go back on the shelf return to stock. Both take a reason from the list and are on the audit trail; one approved by a second person (their name and PIN) is marked so, and one without waits for the owner on the exceptions report.":
     {
-      ar: "لا يُعدَّل البيع أبدًا. البيع المسجَّل خطأً <b>يُلغى</b> ما دام درج النقد الذي يحويه لم يُعدّ بعد — فتعود الإيرادات والدفعة والكلفة والمخزون كما كانت تمامًا. بعد ذلك يعود المال إلى الزبون عبر <b>الاسترداد</b>، من خلال مردودات المبيعات (4200)؛ ولا يعود إلى المخزون إلا ما يمكن إرجاعه إلى الرف. كلاهما يأخذ سببًا من القائمة ويُسجَّل في سجل التدقيق؛ وما وافق عليه شخص ثانٍ (باسمه ورمز PIN الخاص به) يُعلَّم بذلك، وما لم يوافق عليه أحد ينتظر المالك في تقرير الاستثناءات.",
-      ckb: "فرۆشتن هەرگیز دەستکاری ناکرێت. فرۆشتنێک کە بە هەڵە تۆمار کراوە <b>هەڵدەوەشێنرێتەوە</b> تا ئەو دەخیلەیەی تێیدایە نەژمێردرێت — داهات، پارەدان، تێچوو و کۆگا هەموویان ڕێک وەک خۆیان دەگەڕێنەوە. دوای ئەوە، پارە بە <b>گەڕاندنەوەی پارە</b> دەدرێتەوە بە کڕیار، لە ڕێگەی گەڕاوەکانی فرۆشتن (4200)؛ تەنها ئەو کاڵایانە دەگەڕێنەوە کۆگا کە دەتوانرێت بخرێنەوە سەر ڕەفە. هەردووکیان هۆکارێک لە لیستەکە وەردەگرن و لە تۆماری گۆڕانکارییەکاندا دەنووسرێن؛ ئەوەی کەسێکی دووەم (بە ناو و PIN ی خۆی) ڕەزامەندی لەسەر دابێت ئەمەی لەسەر دەنووسرێت، و ئەوەی بێ ئەوە بێت لە ڕاپۆرتی ئاوارتەکاندا چاوەڕێی خاوەن دەکات.",
+      ar: "لا يُعدَّل البيع أبدًا. البيع المسجَّل خطأً <b>يُلغى</b> ما دامت وردية الدرج التي تحويه لم تُغلق بعد — فتعود الإيرادات والدفعة والكلفة والمخزون كما كانت تمامًا. بعد ذلك يعود المال إلى الزبون عبر <b>استرداد</b> بعض مواده أو كلها، من خلال مردودات المبيعات (4200) وبالطريقة التي دُفع بها؛ ولا يعود إلى المخزون إلا ما يمكن إرجاعه إلى الرف. كلاهما يأخذ سببًا من القائمة ويُسجَّل في سجل التدقيق؛ وما وافق عليه شخص ثانٍ (باسمه ورمز PIN الخاص به) يُعلَّم بذلك، وما لم يوافق عليه أحد ينتظر المالك في تقرير الاستثناءات.",
+      ckb: "فرۆشتن هەرگیز دەستکاری ناکرێت. فرۆشتنێک کە بە هەڵە تۆمار کراوە <b>هەڵدەوەشێنرێتەوە</b> تا ئەو شیفتەی دەخیلەکە کە تێیدایە دانەخرێت — داهات، پارەدان، تێچوو و کۆگا هەموویان ڕێک وەک خۆیان دەگەڕێنەوە. دوای ئەوە، پارە بە <b>گەڕاندنەوەی پارەی</b> هەندێک یان هەموو کاڵاکانی دەدرێتەوە بە کڕیار، لە ڕێگەی گەڕاوەکانی فرۆشتن (4200) و بەو شێوەیەی پارەکەی پێدرابوو؛ تەنها ئەو کاڵایانە دەگەڕێنەوە کۆگا کە دەتوانرێت بخرێنەوە سەر ڕەفە. هەردووکیان هۆکارێک لە لیستەکە وەردەگرن و لە تۆماری گۆڕانکارییەکاندا دەنووسرێن؛ ئەوەی کەسێکی دووەم (بە ناو و PIN ی خۆی) ڕەزامەندی لەسەر دابێت ئەمەی لەسەر دەنووسرێت، و ئەوەی بێ ئەوە بێت لە ڕاپۆرتی ئاوارتەکاندا چاوەڕێی خاوەن دەکات.",
     },
   "Every channel": { ar: "كل القنوات", ckb: "هەموو کەناڵەکان" },
   "The latest 300": { ar: "آخر 300", ckb: "دوایین 300" },
@@ -414,6 +414,55 @@ const phrases: PhraseBook = {
   "Their PIN": { ar: "رمز PIN الخاص به", ckb: "PIN ی ئەو" },
   "Confirm void": { ar: "تأكيد إلغاء البيع", ckb: "دڵنیاکردنەوەی هەڵوەشاندنەوە" },
   "Confirm refund": { ar: "تأكيد الاسترداد", ckb: "دڵنیاکردنەوەی گەڕاندنەوەی پارە" },
+
+  // Refunds by the item (RefundDialog, 0037)
+  "Refund {no}: {amount} for {items}": {
+    ar: "الاسترداد {no}: {amount} عن {items}",
+    ckb: "گەڕاندنەوەی {no}: {amount} بۆ {items}",
+  },
+  "Refund sale {sale}": { ar: "استرداد البيع {sale}", ckb: "گەڕاندنەوەی پارەی فرۆشتنی {sale}" },
+  "On the sale": { ar: "في البيع", ckb: "لەسەر فرۆشتنەکە" },
+  "Given back": { ar: "ما أُعيد", ckb: "گەڕێندراوە" },
+  "Refund now": { ar: "يُسترد الآن", ckb: "ئێستا دەگەڕێندرێتەوە" },
+  "Gives back": { ar: "يُعيد", ckb: "دەگەڕێنێتەوە" },
+  "How many of {name} go back": { ar: "كم من {name} يُعاد", ckb: "چەند دانە لە {name} دەگەڕێتەوە" },
+  "all given back": { ar: "أُعيد كله", ckb: "هەمووی گەڕێندراوەتەوە" },
+  "Gives back {amount} {how}": { ar: "يُعيد {amount} {how}", ckb: "{amount} دەگەڕێنێتەوە {how}" },
+  "in cash, from the drawer": { ar: "نقدًا، من الدرج", ckb: "بە نەختینە، لە دەخیلەکەوە" },
+  "to the card it was paid with": {
+    ar: "إلى البطاقة التي دُفع بها",
+    ckb: "بۆ ئەو کارتەی پارەکەی پێدرابوو",
+  },
+  "off what the platform owes": {
+    ar: "خصمًا مما تدين به المنصة",
+    ckb: "لەوەی پلاتفۆرمەکە قەرزارە کەم دەکرێتەوە",
+  },
+  "Only {left} of {name} is left to refund": {
+    ar: "لم يبقَ من {name} للاسترداد إلا {left}",
+    ckb: "تەنها {left} لە {name} ماوە بۆ گەڕاندنەوە",
+  },
+  "Type how many of {name} go back": {
+    ar: "اكتب كم من {name} يُعاد",
+    ckb: "بنووسە چەند دانە لە {name} دەگەڕێتەوە",
+  },
+  "Refund {no}: {amount} given back {how} (journal {journal}).": {
+    ar: "الاسترداد {no}: أُعيد {amount} {how} (القيد {journal}).",
+    ckb: "گەڕاندنەوەی {no}: {amount} گەڕێندرایەوە {how} (تۆماری {journal}).",
+  },
+  "Nothing of the sale is left to refund.": {
+    ar: "لم يبقَ من البيع شيء للاسترداد.",
+    ckb: "هیچ شتێک لە فرۆشتنەکە بۆ گەڕاندنەوە نەماوە.",
+  },
+  "The rest of the sale can still be refunded.": {
+    ar: "ما زال بالإمكان استرداد بقية البيع.",
+    ckb: "هێشتا دەتوانرێت پارەی ئەوەی لە فرۆشتنەکە ماوە بگەڕێندرێتەوە.",
+  },
+  "Print the refund slip": { ar: "اطبع قسيمة الاسترداد", ckb: "پسووڵەی گەڕاندنەوەی پارە چاپ بکە" },
+  "Refunded so far": { ar: "المسترد حتى الآن", ckb: "تا ئێستا گەڕێندراوە" },
+  "Back on the shelf, at cost": {
+    ar: "أُعيد إلى الرف، بالكلفة",
+    ckb: "گەڕایەوە سەر ڕەفە، بە تێچوو",
+  },
 
   // ------------------------------------------------------- The audit trail
   "Who changed what, with the values before and after": {

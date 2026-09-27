@@ -445,7 +445,30 @@ export interface OrderRow {
   placedAt: string;
   tenders: string[];
   cashier: string | null;
-  lines: { name: string; qty: number; unitPrice: number; lineNet: number }[];
+  lines: {
+    id: string;
+    name: string;
+    qty: number;
+    unitPrice: number;
+    lineNet: number;
+    /** Given back by refunds by the item (0037). */
+    refundedQty: number;
+    refundedAmount: number;
+  }[];
+  /** Every refund, and the cost of what went back on the shelf. */
+  refunded: number;
+  costReturned: number;
+  /** Refunds by the item (0037), in order. */
+  refunds: {
+    no: number;
+    amount: number;
+    at: string;
+    reason: string | null;
+    tender: string | null;
+    by: string | null;
+    approvedBy: string | null;
+    lines: { name: string; qty: number; amount: number }[];
+  }[];
   adjustments: {
     kind: string;
     amount: number;
@@ -476,20 +499,37 @@ export async function getSalesOrders(
   const orders = rows(await q.order("placed_at", { ascending: false }).limit(limit), "sales");
   if (orders.length === 0) return [];
   const ids = orders.map((o) => str(o.id));
-  const [lines, tenders, adjustments, variants, products, people] = await Promise.all([
+  const [lines, tenders, adjustments, variants, products, people, refunds] = await Promise.all([
     c
       .from("sales_order_line")
-      .select("sales_order_id,product_variant_id,product_name,quantity,unit_price,line_net")
+      .select("id,sales_order_id,product_variant_id,product_name,quantity,unit_price,line_net")
       .in("sales_order_id", ids),
     c.from("sales_tender").select("sales_order_id,tender_type").in("sales_order_id", ids),
     c
       .from("sale_adjustment")
-      .select("sales_order_id,kind,amount,reason,created_at,requested_by,approved_by")
+      .select("id,sales_order_id,kind,amount,reason,created_at,requested_by,approved_by")
       .in("sales_order_id", ids),
     c.from("product_variant").select("id,product_id,name"),
     c.from("product").select("id,name"),
     c.from("app_user").select("id,full_name"),
+    c
+      .from("sale_refund")
+      .select(
+        "id,refund_no,sales_order_id,amount,cost_returned,reason,created_at,requested_by,approved_by",
+      )
+      .in("sales_order_id", ids),
   ]);
+  const refundRows = rows(refunds, "refunds");
+  const refundIds = refundRows.map((r) => str(r.id));
+  const [refundLines, refundTenders] = refundIds.length
+    ? await Promise.all([
+        c
+          .from("sale_refund_line")
+          .select("refund_id,sales_order_line_id,qty,amount")
+          .in("refund_id", refundIds),
+        c.from("sale_refund_tender").select("refund_id,tender_type").in("refund_id", refundIds),
+      ])
+    : [null, null];
   const productName = new Map(rows(products, "products").map((p) => [str(p.id), str(p.name)]));
   const variantLabel = new Map<string, string>();
   for (const v of rows(variants, "product variants")) {
@@ -503,11 +543,34 @@ export async function getSalesOrders(
     for (const x of list) m.set(key(x), [...(m.get(key(x)) ?? []), x]);
     return m;
   };
-  const linesBy = group(rows(lines, "sale lines"), (l) => str(l.sales_order_id));
+  const saleLines = rows(lines, "sale lines");
+  const linesBy = group(saleLines, (l) => str(l.sales_order_id));
+  const lineName = new Map(
+    saleLines.map((l) => [
+      str(l.id),
+      // The name it was sold under (0027); older lines, the product's name now.
+      strOrNull(l.product_name) ?? variantLabel.get(str(l.product_variant_id)) ?? "—",
+    ]),
+  );
   const tendersBy = group(rows(tenders, "tenders"), (t) => str(t.sales_order_id));
   const adjBy = group(rows(adjustments, "voids and refunds"), (a) => str(a.sales_order_id));
+  const rLines = refundLines ? rows(refundLines, "refund lines") : [];
+  const rLinesBy = group(rLines, (l) => str(l.refund_id));
+  const rLinesByLine = group(rLines, (l) => str(l.sales_order_line_id));
+  const rTender = new Map(
+    (refundTenders ? rows(refundTenders, "refund payments") : []).map((t) => [
+      str(t.refund_id),
+      str(t.tender_type),
+    ]),
+  );
+  const refundsBy = group(refundRows, (r) => str(r.sales_order_id));
+  const who = (id: unknown) => (id ? (person.get(str(id)) ?? null) : null);
   return orders.map((o) => {
     const id = str(o.id);
+    const adj = adjBy.get(id) ?? [];
+    const docs = refundsBy.get(id) ?? [];
+    // A refund by the item is shown as a refund; the adjustment it also is, once.
+    const docIds = new Set(docs.map((r) => str(r.id)));
     return {
       id,
       channel: str(o.channel),
@@ -517,24 +580,49 @@ export async function getSalesOrders(
       placedAt: str(o.placed_at),
       tenders: (tendersBy.get(id) ?? []).map((t) => str(t.tender_type)),
       cashier: o.cashier_id ? (person.get(str(o.cashier_id)) ?? null) : null,
-      lines: (linesBy.get(id) ?? []).map((l) => ({
-        // The name it was sold under (0027); older lines, the product's name now.
-        name: strOrNull(l.product_name) ?? variantLabel.get(str(l.product_variant_id)) ?? "—",
-        qty: num(l.quantity),
-        unitPrice: num(l.unit_price),
-        lineNet: num(l.line_net),
-      })),
-      adjustments: (adjBy.get(id) ?? []).map((a) => ({
-        kind: str(a.kind),
-        amount: num(a.amount),
-        reason: strOrNull(a.reason),
-        at: str(a.created_at),
-        by: a.requested_by ? (person.get(str(a.requested_by)) ?? null) : null,
-        approvedBy:
-          a.approved_by && a.approved_by !== a.requested_by
-            ? (person.get(str(a.approved_by)) ?? null)
-            : null,
-      })),
+      lines: (linesBy.get(id) ?? []).map((l) => {
+        const back = rLinesByLine.get(str(l.id)) ?? [];
+        return {
+          id: str(l.id),
+          name: lineName.get(str(l.id)) ?? "—",
+          qty: num(l.quantity),
+          unitPrice: num(l.unit_price),
+          lineNet: num(l.line_net),
+          refundedQty: back.reduce((s, x) => s + num(x.qty), 0),
+          refundedAmount: back.reduce((s, x) => s + num(x.amount), 0),
+        };
+      }),
+      refunded: adj.filter((a) => str(a.kind) === "refund").reduce((s, a) => s + num(a.amount), 0),
+      costReturned: docs.reduce((s, r) => s + num(r.cost_returned), 0),
+      refunds: docs
+        .sort((x, y) => num(x.refund_no) - num(y.refund_no))
+        .map((r) => ({
+          no: num(r.refund_no),
+          amount: num(r.amount),
+          at: str(r.created_at),
+          reason: strOrNull(r.reason),
+          tender: rTender.get(str(r.id)) ?? null,
+          by: who(r.requested_by),
+          approvedBy: r.approved_by && r.approved_by !== r.requested_by ? who(r.approved_by) : null,
+          lines: (rLinesBy.get(str(r.id)) ?? []).map((x) => ({
+            name: lineName.get(str(x.sales_order_line_id)) ?? "—",
+            qty: num(x.qty),
+            amount: num(x.amount),
+          })),
+        })),
+      adjustments: adj
+        .filter((a) => !docIds.has(str(a.id)))
+        .map((a) => ({
+          kind: str(a.kind),
+          amount: num(a.amount),
+          reason: strOrNull(a.reason),
+          at: str(a.created_at),
+          by: a.requested_by ? (person.get(str(a.requested_by)) ?? null) : null,
+          approvedBy:
+            a.approved_by && a.approved_by !== a.requested_by
+              ? (person.get(str(a.approved_by)) ?? null)
+              : null,
+        })),
     };
   });
 }

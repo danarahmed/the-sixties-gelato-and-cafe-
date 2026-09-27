@@ -279,6 +279,9 @@ const FIELD_LABEL: Record<string, string> = {
   notes: "Notes counted",
   next_session_no: "Next session",
   next_cashier: "Taken over by",
+  refund_no: "Refund",
+  refunded: "Refunded so far",
+  returned_to_stock: "Back on the shelf, at cost",
 };
 
 /**

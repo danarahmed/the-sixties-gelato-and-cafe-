@@ -7,11 +7,11 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0036` and the rebuilt app. The SQL
-  checks (37, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (15, every role, every screen in
+- **Built and verified:** migrations `0014`–`0037` and the rebuilt app. The SQL
+  checks (38, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (16, every role, every screen in
   Arabic and Kurdish, and a lost answer on each kind of screen), the unit and
-  contract tests (295) and a production build all pass.
+  contract tests (299) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -392,6 +392,60 @@ browser tests through the real app, or both.
   site, the same happens for real: the count is compared with the −320,000
   the test records leave in 1000, and the count plus 320,000 is posted to
   6300 as over, a test record like the rest.
+- **Refunds by the item (release L, migration `0037`, the third step of
+  [`COMPLETION_PLAN.md`](COMPLETION_PLAN.md)).** Until now a refund gave back
+  the whole sale, so a customer bringing back one bottle of three was
+  refunded everything and sold the rest again. Now **Refund** on Orders
+  lists the sale's items, each with how many were sold and how many have gone
+  back already, and gives back as many of each as are typed (all that is
+  left, to begin with). Before anything is refunded it shows what each gives
+  back: its share of what it was sold for after the bill's discount, in whole
+  dinars, the last of an item giving back exactly what is left of it, so a
+  sale's refunds always add up to the sale (three espressos with 500 off, 7,000,
+  refunded one at a time: 2,333, 2,333 and 2,334). More than is left is
+  refused. Each refund is a document of its own, numbered, with its items,
+  the payment it went back to (cash from the drawer's open session, a card to
+  1010, a platform's order off what it owes), its reason, who approved it,
+  its journal (4200 against the payment's account; 1200 and 5000 for what
+  went back on the shelf) and a slip printed on the till's printer. What can
+  go back on the shelf does, at its own line's cost: every stock movement a
+  sale makes now names its line. A sale is **Part-refunded** until nothing of
+  it is left, lists its refunds on Orders, and can no longer be voided; what
+  a platform owes for it is what is left of it. A second person's approval
+  stays optional, as before (the limit that will require one is release O).
+  A sale recorded before `0037` that took stock is refunded whole, as before.
+  The old drawer count, `count_drawer`, kept through the update to `0036`, is
+  closed. Built and tested: a new SQL suite, a race of ten refunds of one
+  espresso each from a sale of three (three go through), a new browser suite,
+  and a refund whose answer is lost given once. The migration was applied to
+  the live database on 27 September 2026: the text stored there is the file
+  byte for byte, and it matches the tested build object by object,
+  permissions included (the one difference, as before, is the schema `citext`
+  lives in). It was checked as the owner in a transaction that was rolled
+  back: the old drawer count could no longer be called; the drawer, opened for
+  the check, took over from the books as release K's check showed; a cash sale
+  of three espressos (2,000 each) and two americanos (3,000 each, each with a
+  bottle of water) named its line on all four of its stock movements; one of
+  each refunded gave back 5,000 out of the drawer's session and put a bottle
+  back on the shelf at its cost (212): refund 1, the sale part-refunded, its
+  journal 1000 Cr 5,000, 4200 Dr 5,000, 1200 Dr 212, 5000 Cr 212; sent twice
+  with one key, it was given once; three more espressos, a void and the
+  cashier's refund were refused; the cashier read no refunds and the branch
+  manager read it; the rest, refunded whole through the old call, was refund 2
+  of 7,000, the two adding up to the sale's 12,000 with both bottles back; one
+  espresso of a card sale went back to the card (1010) and nothing left the
+  drawer; one americano of a Talabat order came off what Talabat owes, which
+  then owed the 3,000 left; a sale from before `0037` was refused in part, and
+  another was refunded whole (2,500, its bottle back on the shelf); every
+  reconciliation check read as before; the five refunds were numbered 1 to 5,
+  each its sale's adjustment with its payment; the audit trail gained the five
+  refunds and the opening; and nothing was kept (still 40 sales, 4 voids and
+  refunds, no refund documents, journals to 1091 and no stored answers). The
+  security advisors add only `refund_sale_lines`, which signed-in users may
+  call (it checks `sale.refund`), and no longer list `count_drawer`; the
+  performance advisors add only the refund tables' links without an index of
+  their own (a refund's approval, approver, journal, location, requester and
+  session; the business of a refund's line and of its payment).
 
 ## The August 2026 audit, finding by finding
 
@@ -410,7 +464,7 @@ browser tests through the real app, or both.
 | H-02 | Journal numbering broken                       |   ✅   | Gapless numbers from the database, tested under 20 concurrent posts                                                                                              |
 | H-03 | Card sales posted to Cash                      |   ✅   | Each tender posts to its own account (1000 / 1010 / 1100)                                                                                                        |
 | H-04 | Offline advertised, not built                  |   ✅   | Honest instead: offline, the till says so and refuses the sale. A queue is not built (roadmap)                                                                   |
-| H-05 | No voids or refunds                            |   ✅   | Void until the session holding its cash closes; refund after, through 4200. Whole-sale refunds only                                                              |
+| H-05 | No voids or refunds                            |   ✅   | Void until the session holding its cash closes; refund after, whole or by the item, through 4200 (`0037`)                                                        |
 | H-06 | Child tables readable across businesses        |   ✅   | `business_id` on every child table, row-level security on each                                                                                                   |
 | H-07 | Floating-point posting                         |   ✅   | Exact decimal strings in, `NUMERIC` in the database                                                                                                              |
 | H-08 | Period close checks nothing                    |   ✅   | Closing checklist; the lock refuses until it passes; year end closes to 3100                                                                                     |

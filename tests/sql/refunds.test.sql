@@ -61,8 +61,10 @@ grant select on s3 to public;
 select test.as_admin();
 create temp table today as select business_local_date('00000000-0000-0000-0000-0000000000b1', now()) d;
 grant select on today to public;
+-- The owner, who sees what it should hold, closes the drawer's session counted.
+select test.act_as('owner@example.com');
+select close_cash_session((cash_session_status() ->> 'expected')::numeric);
 select test.act_as('manager@example.com');
-select count_drawer((drawer_status() ->> 'expected')::numeric);
 select test.throws($$select void_sale((select (r->>'order_id')::uuid from s3), 'too late')$$,
   '%counted since this sale; refund%', 'a sale in a counted drawer cannot be voided');
 

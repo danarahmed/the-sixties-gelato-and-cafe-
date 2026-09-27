@@ -91,6 +91,19 @@ ok "$(sql "select count(*) from work_shift where kind = 'session' and closed_at 
    "10 people opening the drawer at once open one session"
 ok "$(grep -l 'The drawer is already open' "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and the other nine are told it is open"
 
+# 0037 — ten managers each refund one espresso of a sale of three, at once:
+# three go through, and never more is given back than was sold.
+REFUND_SALE=$(sql "select test.act_as('cashier@example.com');
+  select record_sale(gen_random_uuid(),'dine_in','cash','[{\"variant_id\":\"d1000000-0000-0000-0000-000000000001\",\"qty\":3}]') ->> 'order_id';" | tail -n 1)
+REFUND_LINE=$(sql "select id from sales_order_line where sales_order_id = '$REFUND_SALE'")
+race 10 manager@example.com "select refund_sale_lines('$REFUND_SALE', '[{\"line_id\":\"$REFUND_LINE\",\"qty\":1}]', 'changed_mind')"
+ok "$(grep -l '"refund_no"' "$WORK"/*.out | wc -l | tr -d ' ')" "3" \
+   "ten refunds of one espresso each, from a sale of three: three go through"
+ok "$(sql "select trim_scale(sum(qty)) || ' ' || trim_scale(sum(amount)) from sale_refund_line
+            where sales_order_line_id = '$REFUND_LINE'")" "3 7500" \
+   "and never more is given back than was sold: three, 7,500"
+ok "$(sql "select status from sales_order where id = '$REFUND_SALE'")" "refunded" "the sale is refunded in full, once"
+
 # H-10 — five bottles, prevention on, ten simultaneous sales of one each.
 # Through record_waste, which journals it: a raw ledger insert here would be
 # exactly the unjournaled movement the reconciliation below exists to catch.

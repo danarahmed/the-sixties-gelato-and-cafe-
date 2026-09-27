@@ -6,10 +6,10 @@ import { fmtQty } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { Tender } from "./model";
 
-/** The check: a bill handed over before payment, or the receipt after it. */
+/** The check: a bill handed over before payment, the receipt after it, or a refund's slip (0037). */
 export interface PrintJob {
-  /** A bill is handed over before payment; a receipt after it. */
-  kind: "bill" | "receipt";
+  /** A bill is handed over before payment; a receipt after it; a refund's slip when money goes back. */
+  kind: "bill" | "receipt" | "refund";
   title: string;
   channelLabel: string;
   /** Each item: how many, at what price each, and what they come to. */
@@ -35,6 +35,8 @@ export interface PrintJob {
   /** A delivery platform's order number (0030). */
   platformOrderNo?: string | null;
   journalNo?: number | null;
+  /** Why a refund was made. */
+  note?: string | null;
   /** The second and later prints of a bill say so. */
   printCount?: number;
   /** The order's turn number (0034): the customer is called by it. */
@@ -223,7 +225,13 @@ function CheckSlip({
         <Emblem />
         <div className="sl-brand">{businessName}</div>
         <div className="sl-kind">
-          <span>{job.kind === "bill" ? t("print.bill") : t("print.receipt")}</span>
+          <span>
+            {job.kind === "bill"
+              ? t("print.bill")
+              : job.kind === "refund"
+                ? t("print.refund")
+                : t("print.receipt")}
+          </span>
         </div>
         {job.kind === "bill" && (job.printCount ?? 1) > 1 && (
           <div className="sl-copy">
@@ -307,12 +315,12 @@ function CheckSlip({
           </div>
         )}
         <div className="sl-total">
-          <span>{t("pos.total")}</span>
+          <span>{job.kind === "refund" ? t("print.refunded") : t("pos.total")}</span>
           <span>
             {money(job.total)} <small>IQD</small>
           </span>
         </div>
-        {job.kind === "receipt" && job.tender && (
+        {job.kind !== "bill" && job.tender && (
           <>
             <div className="sl-row">
               <span>{t(`pos.tender.${job.tender}`)}</span>
@@ -329,11 +337,12 @@ function CheckSlip({
       </div>
 
       <footer className="sl-foot">
-        {job.kind === "receipt" ? (
-          reference && <div>{reference}</div>
-        ) : (
+        {job.kind === "bill" ? (
           <div className="sl-unpaid">{t("print.notPaid")}</div>
+        ) : (
+          reference && <div>{reference}</div>
         )}
+        {job.kind === "refund" && job.note && <div>{job.note}</div>}
         <div className="sl-thanks">{t("print.thanks")}</div>
         <Ornament />
       </footer>

@@ -34,6 +34,7 @@ Plan a short window when the café is closed.
 | Card and platform money (`0030`)        | ✅ Migration applied on 25 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0030`](#after-0030)). The screens were merged ([pull request #16](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/16)) and deployed                                  |
 | Platforms to retry keys (`0031`–`0035`) | ✅ Migrations applied between 25 and 27 September, each compared object by object with its tested build and checked in a transaction that was rolled back; the screens deployed with each (see [`../PROGRESS.md`](../PROGRESS.md))                                                                                                                                                       |
 | Cash sessions (`0036`)                  | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0036`](#after-0036)). The screens were merged ([pull request #25](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/25)) and deployed                                  |
+| Refunds by the item (`0037`)            | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0037`](#after-0037)). The screens were merged ([pull request #26](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/26)) and deployed                                  |
 
 ## 0. Before you start
 
@@ -786,6 +787,64 @@ and three older functions now set their search path; the performance advisor
 adds only the new links without an index of their own and the new index on a
 sale's session, not yet used.
 
+## After `0037`
+
+Migration `0037` (release L) refunds by the item:
+
+- **A refund gives back some of a sale's items, or all that is left of it.**
+  Each item gives back its share of what it was sold for after the bill's
+  discount; the last of an item gives back exactly what is left of it.
+- **Each refund is a document**: numbered, with its items, the payment it went
+  back to (the sale's), its reason, who approved it, its journal and its
+  slip. A sale is **part-refunded** until nothing of it is left, and a sale
+  part-refunded is not voided.
+- **What can go back on the shelf does**, at what it cost when sold: every
+  stock movement a sale makes now names its line. A sale recorded before
+  `0037` that took stock is refunded whole.
+- **What a platform owes** for an order part-refunded is what is left of it.
+- **`count_drawer`**, kept through the deploy of `0036`, is closed.
+
+It adds a column on `inventory_movement`, three tables (`sale_refund`,
+`sale_refund_line`, `sale_refund_tender`, read only with `cost.view`, never
+changed) and one function signed-in users may call, `refund_sale_lines`
+(`sale.refund`, keyed). It goes in before the screens: the Orders screen
+deployed before it keeps refunding whole sales through `refund_sale`, which
+now does its work through the new refund, and the new screens need the new
+tables.
+
+It was applied on 27 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0036` build. The text stored there
+is the file byte for byte, and it was then compared with the tested build,
+object by object, the role permissions and column grants included: identical,
+but for the schema `citext` lives in, as before. A check as the owner, in a
+transaction that was rolled back:
+
+- the old drawer count could no longer be called; the drawer, opened for the
+  check, took over from the books as release K's check showed;
+- a cash sale of three espressos and two americanos named its line on all
+  four of its stock movements; one of each refunded gave back 5,000 out of
+  the drawer's session and put a bottle of water back on the shelf at its
+  cost (212): refund 1, the sale part-refunded, 1000 Cr 5,000, 4200 Dr 5,000,
+  1200 Dr 212, 5000 Cr 212; sent twice with one key, it was given once;
+- more than was left, a void and the cashier's refund were refused; the
+  cashier read no refunds and the branch manager read it;
+- the rest, through the old call, was refund 2 of 7,000: the two added up to
+  the sale's 12,000, both bottles back;
+- one espresso of a card sale went back to the card (1010), nothing out of the
+  drawer; one americano of a Talabat order came off what Talabat owes, which
+  then owed the 3,000 left;
+- a sale from before `0037` was refused in part, and another was refunded
+  whole (2,500, its bottle back on the shelf);
+- every reconciliation check read as before, and the refunds were numbered 1
+  to 5, each its sale's adjustment with its payment.
+
+Nothing was kept: still 40 sales, 4 voids and refunds, no refund documents,
+journals to 1091 and no stored answers. The security advisor adds only
+`refund_sale_lines`, which signed-in users may call (it checks
+`sale.refund`), and no longer lists `count_drawer`; the performance advisor
+adds only the refund tables' links without an index of their own.
+
 ## Clearing the test records
 
 Every record of trading in the live database so far is a test (the owner, 25
@@ -800,7 +859,7 @@ with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/res
    counts and cash moved (each branch keeps its drawer), stock movements, counts and batches, deliveries, supplier bills and
    payments, expenses, every journal and period, and the document numbers
    (journals start again at 1001, the café's bill numbers at 0001, the cash
-   sessions at 1).
+   sessions and refunds at 1).
 3. Run it in the SQL editor with the confirmation set in the same session:
    `set sixties.reset = 'dry run';` first — it clears, checks, reports what it
    would clear and changes nothing — then

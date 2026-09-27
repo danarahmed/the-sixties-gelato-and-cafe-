@@ -22,7 +22,15 @@ import {
 
 // Not /pos: the till keeps itself current from each action's answer, and
 // re-rendering it after every sale would only slow the cashier down.
-const SALE_PATHS = ["/orders", "/sales", "/dashboard", "/inventory", "/reports", "/journals"];
+const SALE_PATHS = [
+  "/orders",
+  "/sales",
+  "/dashboard",
+  "/inventory",
+  "/reports",
+  "/journals",
+  "/platforms",
+];
 
 const saleInput = z.object({
   /** Minted by the till when payment starts, reused on every retry (H-01, P0-4). */
@@ -143,29 +151,71 @@ export async function voidSaleAction(
   };
 }
 
-/** Money back to the customer, through Sales returns; returnable goods go back on the shelf. */
-export async function refundSaleAction(
-  input: z.input<typeof correction>,
+const refundInput = correction.extend({
+  /** How many of each of the sale's lines go back (0037). */
+  lines: z
+    .array(
+      z.object({
+        lineId: id("an item of the sale"),
+        qty: z.number().positive("Refund at least one"),
+      }),
+    )
+    .min(1, "Choose what to refund"),
+});
+
+/** What a refund by the item did, as the database reported it. */
+export interface RefundResult {
+  refundNo: number;
+  refunded: number;
+  tender: string;
+  status: string;
+  whole: boolean;
+  journalNo: number | null;
+  lines: { lineId: string; name: string; qty: number; amount: number }[];
+  replayed: boolean;
+}
+
+/**
+ * Money back to the customer for some of a sale's items, or all that is left
+ * of it, through Sales returns (0037); what can go back on the shelf does.
+ */
+export async function refundLinesAction(
+  input: z.input<typeof refundInput>,
   key: string,
-): Promise<ActionResult<{ refunded: number; journalNo: number | null }>> {
+): Promise<ActionResult<RefundResult>> {
   const bad = badKey(key);
   if (bad) return bad;
-  const v = parse(correction, input);
+  const v = parse(refundInput, input);
   if (!v.ok) return v;
-  const r = await callRpc<Record<string, unknown>>("refund_sale", {
+  const r = await callRpc<Record<string, unknown>>("refund_sale_lines", {
     p_order: v.data.orderId,
-    p_reason: v.data.note,
+    p_lines: v.data.lines.map((l) => ({ line_id: l.lineId, qty: l.qty })),
     p_reason_code: v.data.reasonCode,
+    p_reason: v.data.note,
     p_approval: v.data.approvalId ?? null,
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...SALE_PATHS);
+  const d = r.data;
   return {
     ok: true,
     data: {
-      refunded: Number(r.data.refunded ?? 0),
-      journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
+      refundNo: Number(d.refund_no ?? 0),
+      refunded: Number(d.refunded ?? 0),
+      tender: String(d.tender ?? ""),
+      status: String(d.status ?? ""),
+      whole: Boolean(d.whole),
+      journalNo: d.journal_no == null ? null : Number(d.journal_no),
+      lines: Array.isArray(d.lines)
+        ? (d.lines as Record<string, unknown>[]).map((l) => ({
+            lineId: String(l.line_id),
+            name: String(l.name ?? ""),
+            qty: Number(l.qty ?? 0),
+            amount: Number(l.amount ?? 0),
+          }))
+        : [],
+      replayed: Boolean(d.replayed),
     },
   };
 }

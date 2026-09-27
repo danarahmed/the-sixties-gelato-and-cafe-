@@ -255,7 +255,9 @@ A finished sale cannot be edited. Tell a manager:
 
 - **until the drawer's session closes**, they can **void** it: everything comes
   back exactly, and its cash leaves what the drawer should hold;
-- **after it closes**, they **refund** it.
+- **after it closes**, they **refund** it: all of it, or only what the
+  customer brought back (one coffee of three, say). A cash refund comes out
+  of the drawer, so the drawer must be open.
 
 Both are done on **Orders**, with a reason from the list. Another manager (or
 the owner) may approve it there with their name and PIN; without a second

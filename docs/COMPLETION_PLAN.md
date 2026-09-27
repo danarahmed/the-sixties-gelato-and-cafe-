@@ -1,9 +1,9 @@
 # Completing the operations system: implementation analysis
 
 **Status:** analysis finished on 27 September 2026, before any change was made.
-Release J (duplicate protection, `0035`) and release K (cash sessions, `0036`)
-are live since 27 September 2026. What was built differs from the plan below
-in these ways.
+Release J (duplicate protection, `0035`), release K (cash sessions, `0036`)
+and release L (refunds by the item, `0037`) are live since 27 September 2026.
+What was built differs from the plan below in these ways.
 
 Release J:
 
@@ -36,6 +36,30 @@ Release K:
 - **Keys from the API.** The refusal applies to the function the API called
   (`request.path` ends in `/rpc/<name>`), so the writes a keyed write makes
   inside it are not refused.
+
+Release L:
+
+- **A refund is the sale's adjustment.** `sale_refund` takes the id of the
+  `sale_adjustment` of kind `refund` it is. The cash-refund trigger, the
+  reports, the exceptions and the daily brief read refunds as before, and
+  none of them needed changing: with one payment per sale, the cash part of a
+  refund is all of it. Allocating a refund among payments comes with split
+  payments (release Q), and so does the `tenders` parameter:
+  `refund_sale_lines` gives the money back to the sale's one payment.
+- **No `idempotency_key` column.** The refund is keyed like every write since
+  release J, in `request_log`.
+- **The movement's line is not a foreign key.** `post_sale` writes a line after
+  the movements that cost it; the SQL suite checks that every movement names a
+  line of its own sale.
+- **Sales from before `0037`** that took stock are refunded whole: their
+  movements name no line.
+- **Approval stays optional**, as the owner decided: a second person's PIN,
+  or the refund waits for the owner's review on the Exceptions report. The
+  limit above which a refund needs one is a rule on Settings, in release O.
+- **What a platform owes.** `platform_money` and the statement match read what
+  is left of an order part-refunded; card takings, daily sales and the
+  exceptions already read the refund adjustments.
+- **`count_drawer`** is revoked, as release K planned.
 
 **Basis:**
 

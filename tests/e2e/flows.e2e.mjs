@@ -107,27 +107,36 @@ sql(`select test.act_as('owner@example.com'); select set_my_pin('13579');`);
     .first()
     .getByRole("button", { name: "Refund" })
     .click();
-  await fix.getByLabel("Why refund it?").selectOption("other");
-  await fix.getByLabel("In a few words").fill("hjjjhjjk");
+  // Refunds by the item (0037): everything that is left, to begin with.
+  const refund = page.getByTestId("refund-dialog");
+  await refund.getByLabel("Why refund it?").selectOption("other");
+  await refund.getByLabel("In a few words").fill("hjjjhjjk");
   check(
-    await fix.getByRole("button", { name: "Confirm refund" }).isDisabled(),
+    await refund.getByRole("button", { name: "Confirm refund" }).isDisabled(),
     '"Other" takes a few real words, not a key held down',
   );
-  await fix.getByLabel("In a few words").fill("customer did not like it");
-  await fix.getByLabel("Approved by").selectOption({ label: "Approved by Demo Owner" });
-  await fix.getByLabel("Their PIN").fill("97531");
-  await fix.getByRole("button", { name: "Confirm refund" }).click();
-  await fix.getByText("That PIN is not right").waitFor({ timeout: 10000 });
+  await refund.getByLabel("In a few words").fill("customer did not like it");
+  await refund.getByLabel("Approved by").selectOption({ label: "Approved by Demo Owner" });
+  await refund.getByLabel("Their PIN").fill("97531");
+  await refund.getByRole("button", { name: "Confirm refund" }).click();
+  await refund.getByText("That PIN is not right").waitFor({ timeout: 10000 });
   ok("a wrong PIN is refused, and nothing is refunded");
-  await fix.getByLabel("Their PIN").fill("13579");
-  await fix.getByRole("button", { name: "Confirm refund" }).click();
-  await page.getByText(/^Refunded/).waitFor({ timeout: 10000 });
-  ok("refunded, approved by the owner");
+  await refund.getByLabel("Their PIN").fill("13579");
+  await refund.getByRole("button", { name: "Confirm refund" }).click();
+  const answer = refund.getByTestId("refund-answer");
+  await answer.waitFor({ timeout: 10000 });
+  check(
+    /Refund 1: 2,500 IQD given back in cash, from the drawer \(journal \d+\)\. Nothing of the sale is left to refund\./.test(
+      await answer.textContent(),
+    ),
+    "refunded whole, approved by the owner: refund 1, 2,500 back in cash",
+  );
+  await refund.getByRole("button", { name: "Close", exact: true }).click();
   await open(page, "/orders");
   check(
     (await page.getByText("Rang twice · Demo Manager, no second person").count()) === 1 &&
       (await page
-        .getByText("customer did not like it · Demo Manager, approved by Demo Owner")
+        .getByText(/customer did not like it · Demo Manager, approved by Demo Owner/)
         .count()) === 1,
     "Orders says why, who asked, and who approved each",
   );

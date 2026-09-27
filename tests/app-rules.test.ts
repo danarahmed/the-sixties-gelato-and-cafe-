@@ -16,6 +16,14 @@ import { normaliseNumber, positive, signedNonZero } from "@/lib/validation";
 import { getBookkeeper } from "@/lib/bookkeeping/rules";
 import { isUncertainFailure } from "@/lib/db/rpcOutcome";
 import { closeSplit, countResult, drawerStateFrom, notesCounted, notesTotal } from "@/lib/cash";
+import {
+  allThatIsLeft,
+  refundLineAmount,
+  refundPlan,
+  roundMoney,
+  shareOf,
+  type RefundableLine,
+} from "@/lib/refunds";
 import { salesTotals } from "@/lib/db/salesTotals";
 import {
   AUDIT_GROUPS,
@@ -1860,5 +1868,71 @@ describe("the barista's ticket (release I)", () => {
         },
       ]),
     ).toEqual([l("latte", 2, "oat milk")]);
+  });
+});
+
+describe("refunds by the item (0037), as the database works them out", () => {
+  const espresso = (refundedQty = 0, refundedAmount = 0): RefundableLine => ({
+    id: "e",
+    name: "Golden espresso — Single",
+    qty: 3,
+    lineNet: 7000,
+    refundedQty,
+    refundedAmount,
+  });
+  const water: RefundableLine = {
+    id: "w",
+    name: "Golden water — Bottle",
+    qty: 2,
+    lineNet: 2000,
+    refundedQty: 0,
+    refundedAmount: 0,
+  };
+
+  it("rounds to whole dinars, half to even, as money_round does", () => {
+    expect([roundMoney(2333.33), roundMoney(2.5), roundMoney(3.5), roundMoney(1062.5)]).toEqual([
+      2333, 2, 4, 1062,
+    ]);
+    expect([
+      shareOf(7000, 1, 3),
+      shareOf(7000, 2, 3),
+      shareOf(4250, 1, 4),
+      shareOf(4750, 1, 4),
+    ]).toEqual([2333, 4667, 1062, 1188]);
+  });
+
+  it("gives each its share of the net, and the last of a line all that is left", () => {
+    expect(refundLineAmount(espresso(), 1)).toBe(2333);
+    expect(refundLineAmount(espresso(1, 2333), 1)).toBe(2333);
+    expect(refundLineAmount(espresso(2, 4666), 1)).toBe(2334);
+    expect(refundLineAmount(espresso(), 3)).toBe(7000);
+    expect(refundLineAmount(espresso(), 0)).toBe(0);
+  });
+
+  it("plans the refund the screen sends, checked as the database checks it", () => {
+    expect(refundPlan([espresso(), water], { e: "1", w: "" })).toEqual({
+      lines: [{ lineId: "e", qty: 1, amount: 2333 }],
+      total: 2333,
+      problem: null,
+    });
+    // Arabic-Indic digits are counted too.
+    expect(refundPlan([espresso(), water], { e: "", w: "١" }).total).toBe(1000);
+    expect(refundPlan([espresso(1, 2333), water], { e: "3" }).problem).toEqual({
+      kind: "tooMany",
+      name: "Golden espresso — Single",
+      left: 2,
+    });
+    expect(refundPlan([espresso(), water], { e: "x" }).problem).toEqual({
+      kind: "notNumber",
+      name: "Golden espresso — Single",
+    });
+    expect(refundPlan([espresso(), water], { e: "", w: "0" }).problem).toEqual({ kind: "nothing" });
+  });
+
+  it("starts from all that is left of the sale", () => {
+    expect(allThatIsLeft([espresso(1, 2333), water])).toEqual({ e: "2", w: "2" });
+    expect(allThatIsLeft([espresso(3, 7000)])).toEqual({ e: "" });
+    const all = refundPlan([espresso(1, 2333), water], allThatIsLeft([espresso(1, 2333), water]));
+    expect(all.total).toBe(7000 - 2333 + 2000);
   });
 });

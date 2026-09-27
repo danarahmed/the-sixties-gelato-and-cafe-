@@ -37,6 +37,10 @@ erDiagram
   sales_order ||--o{ sales_order_line : has
   sales_order ||--o{ sales_tender : "paid by"
   sales_order ||--o{ sale_adjustment : "discount/void/refund"
+  sale_adjustment ||--o| sale_refund : "a refund's document"
+  sale_refund ||--o{ sale_refund_line : "gives back"
+  sales_order_line ||--o{ sale_refund_line : "given back by"
+  sale_refund ||--o{ sale_refund_tender : "paid back to"
   sales_order ||--o| platform_order : "from platform"
 
   delivery_platform ||--o{ platform_order : receives
@@ -701,9 +705,51 @@ location)` gives the open one.
   (every movement of a session's cash; an open one's only with
   `cash.view_expected`). `drawer_position`, `assert_drawer_can_pay`,
   `uncounted_days`, the void rule, the alerts and the daily brief know
-  sessions. `count_drawer` closes the open session until it is withdrawn;
+  sessions. `count_drawer` closed the open session until `0037` withdrew it;
   `drawer_status` shows cash figures only with `cash.view_expected`.
 - **Permissions.** `cash.session` (owner, general manager, branch manager,
   cashier, barista), `cash.view_expected` (owner, general manager,
   accountant, auditor), `cash.session.force` (owner, general manager, branch
   manager).
+
+### Refunds by the item (`0037`)
+
+- **`inventory_movement.sales_order_line_id`** names the sale's line that took
+  the stock, written by `post_sale` for every sale since `0037` (not a foreign
+  key: the line is written after the movements that cost it; the test suite
+  checks every one names a line of its own sale). A sale whose
+  `sale_consumption` movements name no line was recorded before, and is
+  refunded whole.
+- **`sale_refund`** (`id` = the `sale_adjustment` of kind `refund` it is,
+  `refund_no` numbered per business from `document_counter`, `refund`,
+  `sales_order_id`, `location_id`, `work_shift_id` (the drawer's session open
+  when it was made), `amount`, `cost_returned`, `reason_code`, `reason`,
+  `requested_by`, `approved_by`, `approval_id`, `journal_entry_id`, `whole`
+  (it took all that was left of the sale), `created_at`): the refund as a
+  document. Because it is also the sale's adjustment, with the same id, the
+  drawer (a cash refund's `cash_event`), the reports, the exceptions and the
+  daily brief read it as before.
+- **`sale_refund_line`** (`refund_id`, `sales_order_line_id`, `qty`, `amount`,
+  `cost_returned`, `restocked`; one per line of a refund) and
+  **`sale_refund_tender`** (`refund_id`, `tender_type`, `amount`): what each
+  refund gave back and where the money went (the sale's own payment).
+- The three are append-only (`forbid_mutation`), row security forced, and read
+  only with `cost.view`, like the sale they belong to.
+- **`refund_sale_lines(order, lines, reason_code, reason, approval, key)`**
+  (`sale.refund`, keyed): `lines` is `[{"line_id", "qty"}]`. It refuses a line
+  not on the sale or named twice, more than is left of a line, and a refund of
+  nothing; then writes the adjustment (a cash refund's `cash_event` joins the
+  open session, or is refused with none open), the refund, its lines, its
+  tender, the stock back on the shelf (`refund_return_to_stock`, reference
+  `sale_refund`, naming the line) and its journal (reference `sale_refund`),
+  and moves the sale to `partially_refunded` or `refunded`. Audited
+  `sale.refund` with the refund's number, what it gave back, the items, the
+  cost returned, who approved it and the sale's status before and after.
+- **`refund_sale`** (`0028`, keyed since `0035`) now refunds all that is left
+  of a sale through the same work (`refund_lines_internal`), so a sale
+  part-refunded can be refunded whole.
+- **`sale_refunded(order)`** is what every refund of a sale has given back,
+  before `0037` too. `platform_money` and the statement match read an order's
+  net less it, so a platform is owed what is left of an order part-refunded.
+- **`count_drawer`**, kept through the deploy of `0036`, can no longer be
+  called.
