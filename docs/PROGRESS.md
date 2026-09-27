@@ -1,6 +1,6 @@
 # Progress & Status
 
-_Last updated: 2026-09-26._ This is the one place that says what works and what
+_Last updated: 2026-09-27._ This is the one place that says what works and what
 does not. A feature is marked done only when it runs on the real database path
 and is tested. Tested means the SQL suites on real PostgreSQL 16 and 17, the
 browser tests through the real app, or both.
@@ -324,7 +324,22 @@ browser tests through the real app, or both.
   they set a new one; `close_day`, dead since `0024`, is closed; a loss valued
   at nothing is recorded instead of failing; a batch whose output has been used
   can no longer be cancelled; and the Expenses screen shows a card payment
-  coming from the bank (1020), as the books record it.
+  coming from the bank (1020), as the books record it. Built and tested. The
+  migration was applied to the live database on 27 September 2026: the text
+  stored there is the file byte for byte, and it matches the tested build
+  object by object, permissions included (the one difference, as before, is
+  the schema `citext` lives in). It was checked as the owner in a transaction
+  that was rolled back: an expense sent twice with one key was recorded once,
+  and the second answer said it was a replay; the same key with another amount
+  was refused; cash moved twice with one key moved once; a bill opened twice
+  with one key was one bill; nobody signed in could read the stored answers,
+  call `record_expense__run` or call `close_day`; the audit trail gained the
+  expense and the cash move; and nothing was kept (still 40 sales, 18 bills,
+  4 expenses, journals to 1091, and no stored answers). The security advisors
+  list the new table as function-only, as intended, and `close_day` as no
+  longer callable; the performance advisors add only that `request_log`'s link
+  to the person who sent it has no index, like 124 other such links (people
+  are deactivated, never deleted).
 
 ## The August 2026 audit, finding by finding
 
