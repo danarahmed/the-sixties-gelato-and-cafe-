@@ -81,7 +81,7 @@ select test.eq((select sum(value * sign(base_quantity_signed)) from inventory_mo
 update business set prevent_negative_stock = true where id = '00000000-0000-0000-0000-0000000000b1';
 select test.act_as('cashier@example.com');
 select test.throws($$select record_sale(gen_random_uuid(), 'dine_in', 'cash', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":100}]')$$,
-  '%Not enough Golden beans%', 'selling beyond stock is refused when prevention is on');
+  '%of Golden beans is in stock%', 'selling beyond stock is refused when prevention is on');
 select test.as_admin();
 update business set prevent_negative_stock = false where id = '00000000-0000-0000-0000-0000000000b1';
 select test.act_as('cashier@example.com');

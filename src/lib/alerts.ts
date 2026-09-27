@@ -36,6 +36,8 @@ export const RULE_LABEL: Record<string, string> = {
   session_short: "Cash session short",
   session_forced: "Cash session closed by a manager",
   usage_variance: "Usage unlike the recipes",
+  stock_below_zero: "Stock below zero",
+  losses_waiting: "Losses waiting for approval",
 };
 
 export function ruleLabel(rule: string): string {

@@ -7,11 +7,11 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0039` and the rebuilt app. The SQL
-  checks (41, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (18, every role, every screen in
+- **Built and verified:** migrations `0014`–`0040` and the rebuilt app. The SQL
+  checks (42, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (19, every role, every screen in
   Arabic and Kurdish, and a lost answer on each kind of screen), the unit and
-  contract tests (305) and a production build all pass.
+  contract tests (313) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -548,6 +548,61 @@ browser tests through the real app, or both.
   advisors add only `report_usage_variance`, which checks `cost.view`; the
   performance advisors add nothing. The screen went live with
   [pull request #28](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/28).
+- **The café's rules (release O, migration `0040`, the first step of P1 in
+  [`COMPLETION_PLAN.md`](COMPLETION_PLAN.md)).** The rules sat in four columns
+  of the business row, changed only in the database. Now **Settings → Rules**
+  shows each rule, who set it, when and why, and every change, each with a
+  reason: the discount a cashier gives without a manager (per role), the step
+  a percentage is rounded to, the refund above which a second person approves
+  it (per role, 25,000 IQD by default), the loss above which a manager
+  approves it (per role, 50,000 IQD) and what one person's losses are added up
+  over, and what happens when more stock is used than the books hold —
+  refused, a manager's PIN, or allowed with a red alert, for the café, a kind
+  of item or one item (made items refused and the rest alerted by default).
+  Sales and bills, losses, batches, corrections by hand and corrected
+  deliveries all ask the stock rule, under the items' locks. Losses are added
+  up by person and by item; over the limit a manager types their PIN, or the
+  loss waits for their approval under Needs you and on Inventory, where a
+  manager approves it or reverses it (the stock back, its journal reversed).
+  The till asks a manager when an item's rule does; a refund over the limit
+  asks for a second person. Built and tested: a new SQL suite, two races (two
+  losses at once, the last bottle sold by ten tills), a new browser suite,
+  and every new text in Arabic and Kurdish. The migration was applied to the
+  live database on 27 September 2026. The text stored there is the file byte
+  for byte, and it matches the tested build object by object, permissions
+  included (the one difference, as before, is the schema `citext` lives in).
+  Nobody has set a rule on live yet, so each is at its default:
+  - made items are refused below zero (the caramel gelato has 3,000 g in the
+    books), and the rest alert;
+  - refunds over 25,000 IQD need a second person;
+  - losses over 50,000 IQD need a manager, added up over the person's session;
+  - discounts over 10% need a manager, and are rounded to 250.
+
+  It was checked as the owner, the branch manager and the barista, in a
+  transaction that was rolled back:
+  - a cap of 5% for cashiers was set beside the café's 10%, with its history,
+    and the branch manager was refused;
+  - bottled water set to refuse said "Only 59 each of Bottled water is in
+    stock". Set to ask a manager, it was sold with the branch manager's PIN:
+    −1 in the books, a red alert, and the approver on the audit trail;
+  - with losses limited to 1,000 IQD:
+    - the barista's first loss of beans needed no approval;
+    - the second was refused on its own;
+    - two were saved to wait, with an orange alert (2,299 IQD);
+    - the manager approved one and reversed the other (1200 Dr 1,437, 5300 Cr
+      1,437), leaving none waiting;
+  - a refund of ten lattes (35,000 IQD) was refused as the manager's alone,
+    then given with the owner's PIN;
+  - the barista's profile carried the rules;
+  - all nine checks stayed at zero.
+
+  Nothing was kept: 286 stock movements, journals to 1091, 35 audit rows, 18
+  alerts, no PIN and no rule. The security advisors add the four functions
+  the screens call, each checking its permission, and list four more under
+  their new signatures. The performance advisors add six notes that the new
+  tables' links to their authors, journals and reversals have no index of
+  their own. The screens went live with
+  [pull request #29](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/29).
 
 ## The August 2026 audit, finding by finding
 

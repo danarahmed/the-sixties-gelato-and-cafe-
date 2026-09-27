@@ -241,6 +241,7 @@ export default async function OrdersPage({
                             lines: o.lines,
                             tender: o.tenders[0] ?? "cash",
                             channelLabel: channels.name(o.channel),
+                            approvalOver: profile.refundApprovalOver,
                           }}
                           businessName={profile.businessName}
                           timezone={profile.timezone}

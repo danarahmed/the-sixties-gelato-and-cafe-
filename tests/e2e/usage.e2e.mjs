@@ -4,7 +4,7 @@
 // and what may explain them; with the owner's thresholds low enough, the
 // dashboard names them. Earlier suites count and sell too: whatever came
 // between, the difference is what the later counts found short.
-import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { BASE, TODAY, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const last = (q) => sql(q).split("\n").pop();
@@ -34,7 +34,7 @@ sql(`select test.act_as('cashier@example.com');
 count(onHand() - 2);
 const truth = JSON.parse(
   last(`select test.act_as('owner@example.com');
-        select row_to_json(r) from report_usage_variance(current_date, current_date) r
+        select row_to_json(r) from report_usage_variance(${TODAY}, ${TODAY}) r
          where item_id = '${CUP}'`),
 );
 check(Number(truth.variance) === 2, "the database finds the two cups the counts are short");

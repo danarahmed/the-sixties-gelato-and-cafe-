@@ -12,6 +12,7 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { NewItemForm } from "@/components/NewItemForm";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { ManagerApproval } from "@/components/ManagerApproval";
 
 interface ItemOpt {
   id: string;
@@ -32,6 +33,8 @@ export function InventoryForms({
   canWaste,
   canCorrect,
   isOwner,
+  lossLimit = null,
+  lossWindow = null,
 }: {
   items: ItemOpt[];
   /** Items with no stock history yet: they can be given their opening stock. */
@@ -41,6 +44,9 @@ export function InventoryForms({
   canCorrect: boolean;
   /** Opening stock is capital the owner puts in: the owner's alone (0027). */
   isOwner: boolean;
+  /** The loss a manager approves over, as it applies to the person, and what it is added up over (0040). */
+  lossLimit?: number | null;
+  lossWindow?: string | null;
 }) {
   if (!canAddItem && !canWaste && !canCorrect) return null;
   return (
@@ -50,7 +56,7 @@ export function InventoryForms({
     >
       {isOwner && unstocked.length > 0 && <OpeningStock items={unstocked} />}
       {canAddItem && <AddItem isOwner={isOwner} items={items} />}
-      {canWaste && <RecordWaste items={items} />}
+      {canWaste && <RecordWaste items={items} lossLimit={lossLimit} lossWindow={lossWindow} />}
       {canCorrect && <CorrectStock items={items} />}
     </div>
   );
@@ -226,7 +232,19 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
   );
 }
 
-function RecordWaste({ items }: { items: ItemOpt[] }) {
+/** The database's answers the loss form acts on (0040). */
+const NEEDS_APPROVAL = /needs a manager's approval: ask one to approve it now/;
+const NEEDS_STOCK_APPROVAL = /is in stock: a manager approves using more than that/;
+
+function RecordWaste({
+  items,
+  lossLimit,
+  lossWindow,
+}: {
+  items: ItemOpt[];
+  lossLimit: number | null;
+  lossWindow: string | null;
+}) {
   const op = useOperation();
   const { t } = useT();
   const router = useRouter();
@@ -238,34 +256,55 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
   const [type, setType] = useState<(typeof WASTE_TYPES)[number]>("waste");
   const [qty, setQty] = useState("");
   const [reason, setReason] = useState("");
+  // What the database asked for: a manager now, or the choice to wait for one (0040).
+  const [need, setNeed] = useState<"approval" | "stock" | null>(null);
 
-  function submit() {
+  function submit(extra: { approvalId?: string; wait?: boolean } = {}) {
     setMsg(null);
     start(async () => {
       const r = await op.run("recordWaste", (key) =>
-        recordWasteAction({ itemId, qty, unitCode: unit || null, type, reason }, key),
+        recordWasteAction({ itemId, qty, unitCode: unit || null, type, reason, ...extra }, key),
       );
       if (r.ok) {
+        setNeed(null);
+        const journal = r.data.journalNo ?? "—";
         setMsg({
           ok: true,
           text:
-            r.data.value !== undefined
-              ? t("Recorded — {value} written off (journal {journal}).", {
-                  value: fmtIQD(r.data.value),
-                  journal: r.data.journalNo ?? "—",
-                })
-              : t("Recorded (journal {journal}).", { journal: r.data.journalNo ?? "—" }),
+            r.data.status === "pending"
+              ? t("Saved. It waits for a manager's approval, under Needs you.")
+              : r.data.value !== undefined
+                ? r.data.approvedBy
+                  ? t("Recorded, approved by {name} — {value} written off (journal {journal}).", {
+                      name: r.data.approvedBy,
+                      value: fmtIQD(r.data.value),
+                      journal,
+                    })
+                  : t("Recorded — {value} written off (journal {journal}).", {
+                      value: fmtIQD(r.data.value),
+                      journal,
+                    })
+                : t("Recorded (journal {journal}).", { journal }),
         });
         setQty("");
         setReason("");
         router.refresh();
-      } else setMsg({ ok: false, text: r.error });
+      } else {
+        if (NEEDS_APPROVAL.test(r.error)) setNeed("approval");
+        else if (NEEDS_STOCK_APPROVAL.test(r.error)) setNeed("stock");
+        else setNeed(null);
+        setMsg({ ok: false, text: r.error });
+      }
     });
   }
 
   if (items.length === 0) return null;
   return (
-    <div className="card grid" style={{ gap: 10, alignContent: "start" }}>
+    <div
+      className="card grid"
+      style={{ gap: 10, alignContent: "start" }}
+      data-testid="record-waste"
+    >
       <h3 style={{ margin: 0 }}>🗑️ {t("Record waste")}</h3>
       <Field label={t("Item")}>
         <select
@@ -274,6 +313,7 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
           onChange={(e) => {
             setItemId(e.target.value);
             setUnit(items.find((i) => i.id === e.target.value)?.baseUnit ?? "");
+            setNeed(null);
           }}
         >
           {items.map((i) => (
@@ -301,7 +341,10 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
           <input
             style={inputStyle}
             value={qty}
-            onChange={(e) => setQty(e.target.value)}
+            onChange={(e) => {
+              setQty(e.target.value);
+              setNeed(null);
+            }}
             inputMode="decimal"
           />
         </Field>
@@ -318,14 +361,21 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
         />
       </Field>
       <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
-        {t(
-          "Taken out at average cost: Dr 5300 Waste / Cr 1200 Inventory. Large write-offs need a manager.",
-        )}
+        {t("Taken out at average cost: Dr 5300 Waste / Cr 1200 Inventory.")}{" "}
+        {lossLimit !== null &&
+          t(
+            lossWindow === "entry"
+              ? "A loss over {limit} needs a manager's approval."
+              : lossWindow === "day"
+                ? "A loss over {limit}, or that takes your losses today or the item's over it, needs a manager's approval."
+                : "A loss over {limit}, or that takes your losses this session (or today) or the item's today over it, needs a manager's approval.",
+            { limit: fmtIQD(lossLimit) },
+          )}
       </p>
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <button
           className="btn-primary"
-          onClick={submit}
+          onClick={() => submit()}
           disabled={pending || !qty || !reason.trim()}
         >
           {pending ? t("Recording…") : t("Record waste")}
@@ -333,6 +383,27 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
         <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
+      {need && (
+        <div className="card grid" style={{ gap: 8 }} data-testid="waste-approval">
+          <b style={{ fontSize: ".9rem" }}>
+            {need === "approval"
+              ? t("A manager approves it now, with their PIN:")
+              : t("A manager approves using more than the books hold, with their PIN:")}
+          </b>
+          <ManagerApproval
+            kind="waste"
+            items={`${item?.name ?? ""} ${qty} ${unit}`}
+            onApproved={(a) => submit({ approvalId: a.id })}
+          />
+          {need === "approval" && (
+            <div>
+              <button type="button" onClick={() => submit({ wait: true })} disabled={pending}>
+                {t("Save it to wait for a manager's approval")}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

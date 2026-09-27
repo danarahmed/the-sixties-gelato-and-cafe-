@@ -3,7 +3,7 @@
 // with what it does shown first and its history kept under it; a delivery
 // that should never have been entered, reversed; one billed, no longer
 // corrected here; a journal whose record does not exist, found on Reports.
-import { chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { TODAY, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const last = (q) => sql(q).split("\n").pop();
@@ -29,7 +29,7 @@ const row = (page, no) => page.locator(`[data-testid="receipt-row"][data-receipt
 const differences = () =>
   JSON.parse(
     last(`select test.act_as('owner@example.com');
-          select json_object_agg(check_key, difference) from report_reconciliation(current_date)`),
+          select json_object_agg(check_key, difference) from report_reconciliation(${TODAY})`),
   );
 const differencesBefore = differences();
 /** A delivery's latest correction's number: corrections are numbered across the business. */
@@ -156,7 +156,7 @@ const cupsBefore = onHand(CUP);
 console.log("▸ a billed delivery is corrected only after its bill is cancelled");
 {
   sql(`select test.act_as('owner@example.com');
-       select record_bill('${supplier()}', 'E2E-CORR-1', current_date, 2400, 0, '${water.id}', null)`);
+       select record_bill('${supplier()}', 'E2E-CORR-1', ${TODAY}, 2400, 0, '${water.id}', null)`);
   const { ctx, page } = await signIn(browser, "manager");
   await open(page, "/purchasing");
   const r = row(page, water.no);

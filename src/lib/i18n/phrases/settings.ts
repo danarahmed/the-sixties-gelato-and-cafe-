@@ -300,6 +300,105 @@ const phrases: PhraseBook = {
     ar: "تم تغيير كلمة المرور.",
     ckb: "وشەی نهێنییەکەت گۆڕدرا.",
   },
+
+  // The rules on Settings (0040).
+  Rules: { ar: "القواعد", ckb: "یاساکان" },
+  "Back to Settings": { ar: "العودة إلى الإعدادات", ckb: "گەڕانەوە بۆ ڕێکخستنەکان" },
+  "The discount a cashier gives without a manager, the refunds and losses a second person approves, and what happens when more stock is used than the books hold. Each is changed on Rules, with a reason, and every change is kept.":
+    {
+      ar: "الخصم الذي يعطيه الكاشير دون مدير، والاستردادات والخسائر التي يوافق عليها شخص ثانٍ، وما يحدث حين يُستخدم مخزون أكثر مما تحتفظ به الدفاتر. يُغيَّر كل منها من «القواعد» مع ذكر السبب، ويُحفظ كل تغيير.",
+      ckb: "ئەو داشکاندنەی کاشێر بەبێ بەڕێوەبەر دەیدات، ئەو گەڕاندنەوەی پارە و زیانانەی کەسێکی دووەم ڕەزامەندییان لەسەر دەدات، و ئەوەی ڕوودەدات کاتێک کۆگایەکی زیاتر لەوەی لە دەفتەرەکاندایە بەکاردەهێنرێت. هەر یەکەیان لە «یاساکان» بە هۆکارەوە دەگۆڕدرێت، و هەموو گۆڕانکارییەک دەپارێزرێت.",
+    },
+  "{n} more for roles or items": { ar: "و{n} أخرى لأدوار أو مواد", ckb: "{n}ی تر بۆ ڕۆڵ یان کاڵا" },
+  "Open Rules →": { ar: "افتح القواعد ←", ckb: "یاساکان بکەرەوە ←" },
+  "How the café works: the discount a cashier gives without a manager, the refunds and losses a second person approves, and what happens when more stock is used than the books hold. A rule set for a role, a kind of item or one item is used before the whole café's. Every change takes a reason, and is kept below and on the audit trail.":
+    {
+      ar: "كيف يعمل المقهى: الخصم الذي يعطيه الكاشير دون مدير، والاستردادات والخسائر التي يوافق عليها شخص ثانٍ، وما يحدث حين يُستخدم مخزون أكثر مما تحتفظ به الدفاتر. القاعدة الموضوعة لدور أو لنوع من المواد أو لمادة واحدة تسبق قاعدة المقهى كله. كل تغيير يحتاج إلى سبب، ويُحفظ أدناه وفي سجل التدقيق.",
+      ckb: "کافێکە چۆن کار دەکات: ئەو داشکاندنەی کاشێر بەبێ بەڕێوەبەر دەیدات، ئەو گەڕاندنەوەی پارە و زیانانەی کەسێکی دووەم ڕەزامەندییان لەسەر دەدات، و ئەوەی ڕوودەدات کاتێک کۆگایەکی زیاتر لەوەی لە دەفتەرەکاندایە بەکاردەهێنرێت. یاسایەک کە بۆ ڕۆڵێک، جۆرێک لە کاڵا یان یەک کاڵا دانرابێت پێش یاسای هەموو کافێکە بەکاردێت. هەموو گۆڕانکارییەک هۆکاری دەوێت، و لە خوارەوە و لە تۆماری گۆڕانکارییەکاندا دەپارێزرێت.",
+    },
+  Default: { ar: "الافتراضي", ckb: "بنەڕەت" },
+  Rule: { ar: "القاعدة", ckb: "یاسا" },
+  Set: { ar: "وُضعت", ckb: "دانرا" },
+  "No rule has been changed yet.": {
+    ar: "لم تُغيَّر أي قاعدة بعد.",
+    ckb: "هێشتا هیچ یاسایەک نەگۆڕدراوە.",
+  },
+  "{who}, {when}": { ar: "{who}، {when}", ckb: "{who}، {when}" },
+  Change: { ar: "تغيير", ckb: "گۆڕین" },
+  "Back to default": { ar: "إعادة إلى الافتراضي", ckb: "گەڕاندنەوە بۆ بنەڕەت" },
+  "+ Set it for {what}": { ar: "+ ضعها لـ{what}", ckb: "+ دایبنێ بۆ {what}" },
+  "Set it back to the default": { ar: "أعدها إلى الافتراضي", ckb: "بیگەڕێنەوە بۆ بنەڕەت" },
+  "Enter a number within the rule's limits": {
+    ar: "أدخل رقمًا ضمن حدود القاعدة",
+    ckb: "ژمارەیەک لە ناو سنوورەکانی یاساکە بنووسە",
+  },
+  "Discounts rounded to": { ar: "تُقرَّب الخصومات إلى", ckb: "داشکاندنەکان بازنە دەکرێن بۆ" },
+  "Refunds a second person approves": {
+    ar: "استردادات يوافق عليها شخص ثانٍ",
+    ckb: "ئەو گەڕاندنەوەی پارانەی کەسێکی دووەم ڕەزامەندییان لەسەر دەدات",
+  },
+  "Losses a manager approves": {
+    ar: "خسائر يوافق عليها مدير",
+    ckb: "ئەو زیانانەی بەڕێوەبەر ڕەزامەندییان لەسەر دەدات",
+  },
+  "One person's losses are added up over": {
+    ar: "تُجمع خسائر الشخص الواحد على مدى",
+    ckb: "زیانەکانی یەک کەس کۆدەکرێنەوە لە ماوەی",
+  },
+  "Using more stock than the books hold": {
+    ar: "استخدام مخزون أكثر مما تحتفظ به الدفاتر",
+    ckb: "بەکارهێنانی کۆگای زیاتر لەوەی لە دەفتەرەکاندایە",
+  },
+  "Over this share of the bill, a discount needs a manager's name and PIN on the till; a manager gives it themselves. Set it for a role to let that role give more, or less.":
+    {
+      ar: "فوق هذه النسبة من الفاتورة يحتاج الخصم إلى اسم مدير ورمز PIN على نقطة البيع؛ والمدير يعطيه بنفسه. ضعها لدور لتسمح لذلك الدور بأن يعطي أكثر أو أقل.",
+      ckb: "لە سەرووی ئەم بەشەی پسووڵەکەوە، داشکاندن پێویستی بە ناو و PIN ی بەڕێوەبەرێک هەیە لەسەر خاڵی فرۆشتن؛ بەڕێوەبەر خۆی دەیدات. بۆ ڕۆڵێک دایبنێ بۆ ئەوەی ئەو ڕۆڵە زیاتر یان کەمتر بدات.",
+    },
+  "A discount given as a percentage is rounded to the nearest step (half-way rounds up); an amount is taken as typed.":
+    {
+      ar: "يُقرَّب الخصم المعطى نسبةً مئوية إلى أقرب خطوة (والنصف يُقرَّب إلى الأعلى)؛ أما المبلغ فيؤخذ كما كُتب.",
+      ckb: "داشکاندنێک کە بە ڕێژەی سەدی درابێت بۆ نزیکترین هەنگاو بازنە دەکرێت (نیوە بۆ سەرەوە دەچێت)؛ بڕیش وەک نووسراوە وەردەگیرێت.",
+    },
+  "A refund of more than this needs a second person's name and PIN. Set it for a role to trust that role with more.":
+    {
+      ar: "يحتاج الاسترداد الذي يزيد على هذا إلى اسم شخص ثانٍ ورمز PIN الخاص به. ضعها لدور لتأتمن ذلك الدور على أكثر.",
+      ckb: "گەڕاندنەوەی پارە کە لەمە زیاتر بێت پێویستی بە ناو و PIN ی کەسێکی دووەم هەیە. بۆ ڕۆڵێک دایبنێ بۆ ئەوەی متمانەی زیاتر بەو ڕۆڵە بدەیت.",
+    },
+  "A loss over this — on its own, added to the person's other losses, or to the item's losses today — needs a manager: their PIN on the spot, or it waits for their approval under Needs you.":
+    {
+      ar: "الخسارة التي تتجاوز هذا — وحدها، أو مضافةً إلى خسائر الشخص الأخرى، أو إلى خسائر المادة اليوم — تحتاج إلى مدير: رمز PIN الخاص به في الحال، أو تنتظر موافقته تحت «يحتاج إليك».",
+      ckb: "زیانێک لە سەرووی ئەمەوە — بە تەنها، یان لەگەڵ زیانەکانی تری ئەو کەسە، یان لەگەڵ زیانەکانی ئەمڕۆی کاڵاکە — پێویستی بە بەڕێوەبەرێک هەیە: PIN ی ئەو لە هەمان کاتدا، یان لە ژێر «پێویستی بە تۆیە» چاوەڕێی ڕەزامەندییەکەی دەکات.",
+    },
+  "An item's losses by anyone are always added up over the day. A person's are added up as chosen here.":
+    {
+      ar: "تُجمع خسائر المادة من أي شخص دائمًا على مدى اليوم. أما خسائر الشخص فتُجمع كما يُختار هنا.",
+      ckb: "زیانەکانی کاڵایەک لەلایەن هەر کەسێکەوە هەمیشە لە ماوەی ڕۆژەکەدا کۆدەکرێنەوە. هی کەسێکیش وەک لێرە هەڵدەبژێردرێت کۆدەکرێنەوە.",
+    },
+  "When a sale, a loss, a batch or a correction would use more than the books hold. By default, what is made here is refused and everything else is allowed with a red alert. “Allowed, with no alert” is for chosen items only.":
+    {
+      ar: "حين يستخدم بيع أو خسارة أو دفعة أو تصحيح أكثر مما تحتفظ به الدفاتر. افتراضيًا يُرفض ما يُصنع هنا، ويُسمح بكل ما سواه مع تنبيه أحمر. «مسموح، دون تنبيه» لمواد مختارة فقط.",
+      ckb: "کاتێک فرۆشتنێک، زیانێک، دەفعەیەک یان ڕاستکردنەوەیەک زیاتر لەوەی لە دەفتەرەکاندایە بەکاردەهێنێت. بە شێوەی بنەڕەت، ئەوەی لێرە دروستدەکرێت ڕەتدەکرێتەوە و هەموو شتێکی تر بە ئاگادارکردنەوەیەکی سوور ڕێگەی پێدەدرێت. «ڕێگەپێدراو، بەبێ ئاگادارکردنەوە» تەنها بۆ کاڵا هەڵبژێردراوەکانە.",
+    },
+  Refused: { ar: "مرفوض", ckb: "ڕەتکراوە" },
+  "A manager approves it": { ar: "يوافق عليه مدير", ckb: "بەڕێوەبەرێک ڕەزامەندی لەسەر دەدات" },
+  "Allowed, with a red alert": {
+    ar: "مسموح، مع تنبيه أحمر",
+    ckb: "ڕێگەپێدراو، بە ئاگادارکردنەوەیەکی سوور",
+  },
+  "Allowed, with no alert": { ar: "مسموح، دون تنبيه", ckb: "ڕێگەپێدراو، بەبێ ئاگادارکردنەوە" },
+  "Each loss on its own": { ar: "كل خسارة وحدها", ckb: "هەر زیانێک بە تەنها" },
+  "Their cash session, or their day": {
+    ar: "جلسة صندوقه، أو يومه",
+    ckb: "شیفتی پارەکەی، یان ڕۆژەکەی",
+  },
+  "The day": { ar: "اليوم", ckb: "ڕۆژەکە" },
+  "The whole café": { ar: "المقهى كله", ckb: "هەموو کافێکە" },
+  "A role": { ar: "دور", ckb: "ڕۆڵێک" },
+  "A branch": { ar: "فرع", ckb: "لقێک" },
+  "A kind of item": { ar: "نوع من المواد", ckb: "جۆرێک لە کاڵا" },
+  "One item": { ar: "مادة واحدة", ckb: "یەک کاڵا" },
+  "A rule": { ar: "قاعدة", ckb: "یاسایەک" },
+  "Rule changed": { ar: "تغيّرت قاعدة", ckb: "یاسایەک گۆڕدرا" },
 };
 
 export default phrases;

@@ -97,6 +97,29 @@ trail. The names of products, items and categories are typed by the café in
 English, Arabic and Kurdish; in a language you add they show their English
 name.
 
+## The café's rules
+
+**Settings → Open Rules →** (the owner and the general manager, `0040`). Each
+rule shows what it does, who set it, when and why, and every change is kept:
+
+- **Discounts a manager approves**: over 10% of the bill by default. Set it for
+  a role to let that role give more, or less, without a manager.
+- **Refunds a second person approves**: over 25,000 IQD by default; a manager's
+  refund over it needs your PIN, or another manager's.
+- **Losses a manager approves**: over 50,000 IQD by default, on their own or
+  added up — one person's over their cash session (or their day), and an
+  item's over the day by anyone, so small losses cannot slip through one at a
+  time. Over it, a manager types their PIN, or the loss waits for one under
+  **Needs you**.
+- **Using more stock than the books hold**: what is made here is refused by
+  default, and everything else is sold with a red alert on the dashboard. Set
+  an item, or a kind of item, to **Refused** once it is counted reliably, or
+  to **A manager approves it** to have a manager decide each time.
+
+A change takes a reason; set a rule back to its default the same way. Nothing
+else changes them: the business row's old settings are the defaults until they
+are retired.
+
 ## Setting up the till
 
 A café with a hundred products and twenty tables needs a till that finds things
@@ -316,6 +339,9 @@ discount, why and who approved it. The 10% is a business setting (shown on
   [Adding a platform](talabat.md#adding-a-platform)).
 - **Stock Count:** have a counter count, then review and approve it yourself (see
   the [counting guide](counting-guide.md)).
+- **Losses waiting for approval:** a loss over the limit that a barista saved
+  to wait is on the dashboard and on **Inventory**. Approve it, or reverse one
+  that did not happen, with a reason.
 - **Usage:** after the count, open **Usage** for what each item used since the
   last count against what its recipes say. Red is stock gone that nothing
   explains; look at what may explain it beside each item, and at the item's

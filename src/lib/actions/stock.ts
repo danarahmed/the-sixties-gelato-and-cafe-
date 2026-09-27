@@ -103,12 +103,23 @@ const wasteInput = z.object({
   unitCode: z.string().min(1).nullable(),
   type: z.enum(WASTE_TYPES, { message: "Choose what happened" }),
   reason: text("What happened", 300),
+  /** A manager's approval with their PIN, when the loss needs one (0040). */
+  approvalId: z.string().uuid().nullish(),
+  /** Or: save it to wait for a manager's approval. */
+  wait: z.boolean().optional(),
 });
 
 export async function recordWasteAction(
   input: z.input<typeof wasteInput>,
   key: string,
-): Promise<ActionResult<{ value?: number; journalNo: number | null }>> {
+): Promise<
+  ActionResult<{
+    value?: number;
+    journalNo: number | null;
+    status: LossStatus;
+    approvedBy: string | null;
+  }>
+> {
   const bad = badKey(key);
   if (bad) return bad;
   const v = parse(wasteInput, input);
@@ -119,6 +130,8 @@ export async function recordWasteAction(
     p_unit_code: v.data.unitCode,
     p_type: v.data.type,
     p_reason: v.data.reason,
+    p_approval: v.data.approvalId ?? null,
+    p_wait: v.data.wait ?? false,
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
@@ -127,6 +140,46 @@ export async function recordWasteAction(
     ok: true,
     data: {
       ...(r.data.value !== undefined ? { value: Number(r.data.value) } : {}),
+      journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
+      status: String(r.data.status ?? "not_required") as LossStatus,
+      approvedBy: r.data.approved_by == null ? null : String(r.data.approved_by),
+    },
+  };
+}
+
+/** How a loss stands once recorded (0040). */
+export type LossStatus = "not_required" | "approved" | "pending";
+
+const reviewInput = z.object({
+  movementId: id("a loss"),
+  decision: z.enum(["approve", "reverse"], { message: "Approve the loss, or reverse it" }),
+  reason: optionalText(300),
+});
+
+/**
+ * A manager's look at a loss that waited for approval (0040): approved, or
+ * reversed because it did not happen — the stock back, its journal reversed.
+ */
+export async function reviewLossAction(
+  input: z.input<typeof reviewInput>,
+  key: string,
+): Promise<ActionResult<{ decision: string; journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(reviewInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("review_loss", {
+    p_movement: v.data.movementId,
+    p_decision: v.data.decision,
+    p_reason: v.data.reason,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...STOCK_PATHS);
+  return {
+    ok: true,
+    data: {
+      decision: String(r.data.decision),
       journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
     },
   };

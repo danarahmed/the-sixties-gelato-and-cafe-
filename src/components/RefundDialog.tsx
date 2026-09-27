@@ -19,6 +19,8 @@ export interface RefundableSale {
   /** How it was paid: the money goes back the same way. */
   tender: string;
   channelLabel: string;
+  /** Over this, the refunder's limit, a second person approves it (0040); null: no limit known. */
+  approvalOver?: number | null;
 }
 
 /**
@@ -58,6 +60,9 @@ export function RefundDialog({
   const [slip, setSlip] = useState<PrintJob[] | null>(null);
   const plan = refundPlan(sale.lines, wants);
   const missing = reasonMissing(code || null, note);
+  // Over the limit of the refunder's roles, a second person is not optional (0040).
+  const needsSecond =
+    sale.approvalOver !== null && sale.approvalOver !== undefined && plan.total > sale.approvalOver;
 
   useEffect(() => {
     void listApproversAction("refund").then((r) => setApprovers(r.ok ? r.data : []));
@@ -287,6 +292,20 @@ export function RefundDialog({
                 />
               )}
             </div>
+            {needsSecond && (
+              <span
+                className={approver ? "muted" : "red"}
+                style={{ fontSize: ".85rem" }}
+                data-testid="refund-needs-second"
+              >
+                {t(
+                  "Over {limit}, a second person approves it: choose who, and they type their PIN.",
+                  {
+                    limit: fmtIQD(sale.approvalOver ?? 0),
+                  },
+                )}
+              </span>
+            )}
             {missing === "say" && note.trim() !== "" && (
               <span className="muted" style={{ fontSize: ".8rem" }}>
                 {t("pos.sayWhat")}
@@ -305,6 +324,7 @@ export function RefundDialog({
                   busy ||
                   plan.problem !== null ||
                   missing !== null ||
+                  (needsSecond && approver === "") ||
                   (approver !== "" && approval?.approver !== approver && !/^\d{4,8}$/.test(pin))
                 }
               >

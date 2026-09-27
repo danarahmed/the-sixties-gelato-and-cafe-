@@ -109,7 +109,8 @@ select test.eq((select after_state ->> 'description' || ', ' || (after_state ->>
 select test.act_as('manager@example.com');
 select test.throws($$select record_expense('Ice', 2000, '6900', 'owner', null, pg_temp.k(1))$$,
   '%does not match what was first sent%', 'the same key with another amount is refused');
-select test.throws($$select record_waste('c0000000-0000-0000-0000-000000000001', 5, 'g', 'waste', 'spilt', null, pg_temp.k(1))$$,
+select test.throws($$select record_waste('c0000000-0000-0000-0000-000000000001', 5, 'g', 'waste', 'spilt', null,
+                                        p_idempotency_key => pg_temp.k(1))$$,
   '%does not match what was first sent%', 'and so is the same key for another operation');
 -- Nor can another person replay it.
 select test.act_as('owner@example.com');
@@ -189,8 +190,10 @@ select test.eq(test.balance('1005'), 3000::numeric, 'money moved twice is moved 
 
 -- ------------------------------------------------------------------ stock
 select test.act_as('manager@example.com');
-select record_waste('c0000000-0000-0000-0000-000000000001', 5, 'g', 'spoilage', 'spilt', null, pg_temp.k(30));
-select record_waste('c0000000-0000-0000-0000-000000000001', 5, 'g', 'spoilage', 'spilt', null, pg_temp.k(30));
+select record_waste('c0000000-0000-0000-0000-000000000001', 5, 'g', 'spoilage', 'spilt', null,
+                    p_idempotency_key => pg_temp.k(30));
+select record_waste('c0000000-0000-0000-0000-000000000001', 5, 'g', 'spoilage', 'spilt', null,
+                    p_idempotency_key => pg_temp.k(30));
 select adjust_stock('c0000000-0000-0000-0000-000000000002', -2, 'each', 'broken', null, null, pg_temp.k(31));
 select adjust_stock('c0000000-0000-0000-0000-000000000002', -2, 'each', 'broken', null, null, pg_temp.k(31));
 select test.as_admin();

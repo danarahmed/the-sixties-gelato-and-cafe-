@@ -823,3 +823,56 @@ line)`** (internal) works out one item between two lines of approved counts:
 - **Alerts:** `alert_conditions` becomes `alert_conditions_0036` and the new
   one adds `usage_variance`; `alert_threshold_rules` adds
   `usage_variance_percent` (10) and `usage_variance_min` (5,000 IQD).
+
+### Business rules, stock below zero, losses added up (`0040`)
+
+- **`business_rule`**: `key`, `scope_type` (`business`, `role`, `location`,
+  `item_type`, `item`), `scope_id` (empty for the café; a role, a kind of
+  item, or an item's or a branch's id), `value` (jsonb; null: back to the
+  default), `reason` (required), `set_by`, `set_at`; one row per key and
+  scope. Never deleted; read with `settings.manage`.
+- **`business_rule_history`**: every change, `old_value` → `new_value`, with
+  the reason, who and when; written by the rule's own trigger, append-only.
+- **`loss_review`**: one per loss looked at by a manager: `decision`
+  (`approved`, `reversed`), `reason`, `decided_by`, and for a reversal the
+  movement that put the stock back and the journal that reversed the loss's.
+  Append-only; read with `waste.approve`. A loss waiting is a movement with
+  `approval_status = 'pending'` and no review.
+- **`rule_definitions()`**: each rule, its kind (percent, amount, choice), its
+  limits or choices, and the scopes it may be set for:
+  `discount_cap_percent` and `refund_approval_over` and `waste_approval_over`
+  (café, role), `discount_round_to` and `waste_approval_window` (café),
+  `negative_stock` (café, kind of item, item). **`rule_defaults(business)`**:
+  the business row's old columns (`discount_cap_percent`, `discount_round_to`,
+  `waste_approval_threshold`, and `prevent_negative_stock` as `block` or
+  `alert`), 25,000 for refunds, `session` for the window, and `block` for
+  finished goods and sub-recipes. **`rule_value(business, key, item, roles,
+location)`**: the item's own row, its kind's, the location's, the most any
+  of the roles allows, the café's; **`member_rule_number`**: a number rule
+  through a person's roles.
+- **`set_business_rule(key, scope_type, scope_id, value, reason, key)`**
+  (`settings.manage`, keyed): checks the rule, the scope and the value (`allow`
+  only for an item), writes the row and the audit event `rule.set`;
+  **`list_business_rules()`**: the definitions, every row as it stands (set or
+  default, with who, when and why) and the last 200 changes.
+- **Stock below zero:** `stock_shortfalls(business, location, needs)` and
+  `stock_rules(…)`, called under the items' locks by `post_sale` (so by
+  `record_sale` and `settle_tab`, which take `p_stock_approval`),
+  `record_waste`, `record_production` (`p_stock_approval`), `adjust_stock` and
+  `correct_receipt`. An approval is used once (`use_approval`) and the audit
+  event `stock.below_zero` keeps what and who.
+- **Losses:** `record_waste(…, p_approval, p_wait)` adds up the person's losses
+  over the window and the item's over the day (`losses_since`, reversed ones
+  left out), under a lock per person; **`review_loss(movement, approve |
+reverse, reason, key)`** (`waste.approve`, not the recorder);
+  **`losses_waiting()`** (`waste.approve`).
+- **Approvals:** `approval.kind` adds `waste` (approved with `waste.approve`)
+  and `negative_stock` (`inventory.adjust.approve`); those who record losses
+  or batches may ask for one.
+- **Also changed:** `discount_approver`, `save_tab`, `report_exceptions` read
+  the giver's cap; `sale_discount` the step; `refund_lines_internal` refuses a
+  refund over the refunder's limit without a second person; `my_profile` gives
+  the person's cap, refund and loss limits and the window; `stock_card_kind`
+  names a loss reversed a loss taken back.
+- **Alerts:** `alert_conditions` becomes `alert_conditions_0039`, and the new
+  one adds `stock_below_zero` and `losses_waiting`.

@@ -288,6 +288,7 @@ export function CancelDialog({
  * wrong one; five in fifteen minutes stop that manager's approvals for a while.
  */
 export function ApproveDialog({
+  title,
   what,
   approvers,
   busy,
@@ -295,6 +296,8 @@ export function ApproveDialog({
   onConfirm,
   onClose,
 }: {
+  /** What the manager approves; a discount unless it says otherwise. */
+  title?: string;
   /** What is asked for, as the manager reads it: "20% off · −1,000 IQD · Regular customer". */
   what: string;
   /** Who may approve it; null while the list is on its way. */
@@ -311,8 +314,8 @@ export function ApproveDialog({
   const chosen = who || only;
   const ok = chosen !== "" && /^\d{4,8}$/.test(pin);
   return (
-    <Modal label={t("pos.approveTitle")} busy={busy} onClose={onClose}>
-      <h3 style={{ marginTop: 0 }}>{t("pos.approveTitle")}</h3>
+    <Modal label={title ?? t("pos.approveTitle")} busy={busy} onClose={onClose}>
+      <h3 style={{ marginTop: 0 }}>{title ?? t("pos.approveTitle")}</h3>
       <p style={{ marginTop: 0 }}>
         <strong>{what}</strong>
       </p>

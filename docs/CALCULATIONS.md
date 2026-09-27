@@ -213,6 +213,53 @@ after it.
   Only one count is open at a location at a time; a count still being counted
   can be cancelled, with a reason, by its counter or a manager.
 
+### Stock below zero, as the rules say (`0040`)
+
+When a sale, a bill paid, a loss, a batch's inputs, a correction by hand or a
+delivery corrected would take an item beyond what the books hold at the
+location, the item's rule decides (Settings → Rules; the item's own, then its
+kind's, then the café's):
+
+- **refused**: nothing is recorded, and the answer says how much is there:
+  "Only 0 g of Golden gelato is in stock: record the delivery or the batch
+  first, or count it";
+- **a manager approves it**: someone who approves stock corrections uses it
+  themselves; anyone else needs one to type their PIN, and the approval is
+  kept with the record and on the audit trail;
+- **allowed, with a red alert**: recorded; the dashboard shows the item below
+  zero until a delivery, a batch or a count puts it right;
+- **allowed, with no alert**: for chosen items only.
+
+By default what is made here (finished goods and sub-recipes) is refused, and
+everything else is allowed with a red alert. The quantity short is judged
+under the item's lock, so two tills selling the last unit at once sell it
+once. A delivery corrected keeps its own confirmation for stock left below
+zero; under a refusing rule the correction is refused.
+
+### Losses, added up (`0040`)
+
+A loss is valued as before, at the item's average cost. It needs a manager's
+approval when, over the limit of the recorder's roles (_50,000 IQD_ by
+default):
+
+- the loss alone is over it; or
+- the person's losses over the window, with this one, are over it — the
+  window being each loss alone, the person's open cash session (the day, when
+  they have none; _the default_), or the day; or
+- the item's losses today by anyone, with this one, are over it.
+
+A loss reversed on review is left out of every sum. A manager's own loss is
+approved as it is recorded. Anyone else's loss over the limit is refused
+unless a manager types their PIN, or the person saves it to wait: then it is
+recorded at once (the stock is gone either way) and waits under **Needs you**
+until a manager other than its recorder approves it, or reverses it (the stock
+back at the loss's own value, its journal reversed, with a reason).
+
+Worked example (the SQL test, a limit of 500): a barista's first 30 g of beans
+(300) is under it; a second 30 g makes their day 600, so it waits; a second
+barista's 20 g (200) is under the limit alone, but the beans' losses today
+would be 800, so a manager approves it with their PIN.
+
 ### Usage against the recipes (`0039`)
 
 Between two approved counts of an item at a location — from its line in the
@@ -349,10 +396,21 @@ sales margin 1,800.
   percent (1,000 off 6,000 is 16.67%, asked as 17%).
 - Worked examples (the SQL test): 300 off 2,500 is 12%, over the cap; 250 off
   2,500 is exactly 10%, within it; an approval of 20% does not cover 25%.
+- The cap is a rule on Settings (`0040`): the café's, or one set for a role,
+  the most any of the giver's roles allows. The step a percentage is rounded
+  to is a rule too.
 - An amount stays as it was given while a bill changes. Taken down from four
   espressos (10,000) to one (2,500), 1,000 off would be 40% of the bill:
   refused for a cashier, who takes the discount off or makes it fit (750 off
   three espressos, 10%).
+
+### A refund a second person approves (`0040`)
+
+A refund of more than the limit of the refunder's roles (_25,000 IQD_ by
+default, the most any of their roles allows) needs a second person's name and
+PIN; at or under it, a second person is optional, and a refund without one
+waits for the owner on the exceptions report, as before. The amount judged
+is what the refund gives back: 30,000 back is over the default; 25,000 is not.
 
 ### Sales costed at nothing (`0025`)
 
@@ -564,6 +622,13 @@ daily use`; it fires when that is under `lead + 1` days, the lead being the
   difference (see §7) of at least _10%_ of what the recipes say and at least
   _5,000 IQD_; 🟠, or 🔴 at five times the amount. An item no recipe uses has
   no share, and is left to the Usage screen.
+- **Stock below zero** (`0040`, 🔴, sure): an item the books hold less than
+  nothing of at a location, unless its rule allows that with no alert. It
+  clears when a delivery, a batch or a count puts the item back at zero or
+  more.
+- **Losses waiting for approval** (`0040`, 🟠, sure): losses saved to wait for
+  a manager, with how many and what they are worth; 🔴 once one has waited
+  two days.
 
 **The brief** of a day (midnight to midnight, Baghdad time):
 

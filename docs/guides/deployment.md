@@ -37,6 +37,7 @@ Plan a short window when the café is closed.
 | Refunds by the item (`0037`)            | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0037`](#after-0037)). The screens were merged ([pull request #26](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/26)) and deployed                                  |
 | Delivery corrections (`0038`)           | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0038`](#after-0038)). The screens were merged ([pull request #27](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/27)) and deployed                                  |
 | Usage against the recipes (`0039`)      | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0039`](#after-0039)). The screen was merged ([pull request #28](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/28)) and deployed                                    |
+| The café's rules (`0040`)               | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0040`](#after-0040)). The screens were merged ([pull request #29](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/29)) and deployed                                  |
 
 ## 0. Before you start
 
@@ -969,6 +970,105 @@ stock movements, journals to 1091, 35 audit rows, 18 alerts and the thresholds
 as they were. The security advisor adds only `report_usage_variance`; the
 performance advisor adds nothing.
 
+## After `0040`
+
+Migration `0040` (release O) puts the café's rules on Settings, each with who
+set it, when and why:
+
+- **Settings → Rules** (`settings.manage`) holds these rules:
+  - the discount a cashier gives without a manager, for the café or a role;
+  - the step a percentage discount is rounded to;
+  - the refund above which a second person approves it, for the café or a
+    role (25,000 IQD by default);
+  - the loss above which a manager approves it, for the café or a role, and
+    what one person's losses are added up over (their session by default);
+  - what happens when more stock is used than the books hold, for the café, a
+    kind of item or one item. It is refused, needs a manager's PIN, or is
+    allowed with a red alert; for chosen items it can be allowed with no
+    alert.
+
+  Every change is kept, from what to what, with its reason, and on the audit
+  trail.
+
+- **Stock below zero** is checked on every sale and bill, loss, batch,
+  correction by hand and corrected delivery. By default made items (finished
+  goods and sub-recipes) are refused, and everything else is allowed with a
+  red alert.
+- **Losses are added up**: one person's over their session (or the day), and
+  an item's by anyone over the day. Over the limit, a manager types their PIN,
+  or the loss is saved to wait. A manager then approves it or reverses it on
+  Inventory, under **Losses waiting for approval**, and an alert names them.
+- **Refunds** over the limit of the refunder's roles need a second person's
+  PIN.
+
+What it adds:
+
+- three tables: the rules, their history, and the managers' reviews of losses;
+- four functions signed-in users may call: `set_business_rule` and
+  `list_business_rules` (`settings.manage`), and `review_loss` and
+  `losses_waiting` (`waste.approve`);
+- a new parameter, with a default, on `record_sale`, `settle_tab`,
+  `record_waste` and `record_production`;
+- two alert rules. The alerts of `0039` are unchanged, kept as
+  `alert_conditions_0039`.
+
+The four columns of the business row stay, as the defaults, until they are
+retired. It goes in before the screens: those deployed before it keep working
+(every new parameter has a default), and the new ones need the new functions.
+
+It was applied on 27 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0039` build. The text stored there
+is the file byte for byte. It was then compared with the tested build, object
+by object, the role permissions and column grants included: identical, but
+for the schema `citext` lives in, as before.
+
+Nobody has set a rule on live yet, so each is at its default:
+
+- made items are refused below zero (the caramel gelato has 3,000 g in the
+  books), and the rest are alerted;
+- refunds over 25,000 IQD need a second person;
+- losses over 50,000 IQD need a manager, added up over the person's session;
+- discounts over 10% need a manager, and are rounded to 250.
+
+A check as the owner, the branch manager and the barista, in a transaction
+that was rolled back:
+
+- **The rules:** all at their defaults to start. A cap of 5% for cashiers was
+  set beside the café's 10%, with its history. The branch manager was refused
+  ("needs settings.manage").
+- **Bottled water set to refuse:** "Only 59 each of Bottled water is in
+  stock: record the delivery or the batch first, or count it".
+- **Bottled water set to ask a manager:** refused without one, then sold with
+  the branch manager's PIN. It went to −1 in the books, with "red: Bottled
+  water is below zero in the books: -1 each" and the approver on the audit
+  trail.
+- **Losses limited to 1,000 IQD:**
+  - the barista's first loss of coffee beans (10 g) was recorded with no
+    approval;
+  - the second (30 g) was refused on its own, the two together being over the
+    limit;
+  - it and a third (50 g) were saved to wait: "orange: 2 loss(es) waiting for
+    a manager's approval (2,299 IQD)";
+  - the manager approved one and reversed the other. The beans came back by
+    50 g and its journal was reversed (1200 Dr 1,437, 5300 Cr 1,437), leaving
+    none waiting.
+- **A refund of ten lattes (35,000 IQD, by card):** the branch manager's
+  refund was refused alone ("A refund over 25,000 needs a second person to
+  approve it"), then given with the owner's PIN.
+- **The barista's profile:** a cap of 10%, a step of 250, losses 1,000,
+  refunds 25,000, added up over the session.
+- **The books:** all nine checks at zero.
+
+Nothing was kept: 286 stock movements, journals to 1091, 35 audit rows, 18
+alerts, and no PIN, rule or review.
+
+The security advisor adds only the four functions above, each checking its
+permission, and lists `record_sale`, `settle_tab`, `record_waste` and
+`record_production` under their new signatures. The performance advisor adds
+only notes that the new tables' links to their authors, journals and
+reversals have no index of their own.
+
 ## Clearing the test records
 
 Every record of trading in the live database so far is a test (the owner, 25
@@ -977,10 +1077,12 @@ with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/res
 
 1. It keeps the business and its locations, the chart of accounts, the people
    and their roles, the menu (products, variants, categories, photos, prices,
-   recipes), the stock items and their units, suppliers, tables, and the audit
-   trail, which gains one line saying what was cleared.
+   recipes), the stock items and their units, suppliers, tables, the café's
+   rules and their history, and the audit trail, which gains one line saying
+   what was cleared.
 2. It clears sales, open bills, voids and refunds, cash sessions, drawer
-   counts and cash moved (each branch keeps its drawer), stock movements, counts and batches, deliveries, supplier bills and
+   counts and cash moved (each branch keeps its drawer), stock movements and
+   the reviews of losses, counts and batches, deliveries, supplier bills and
    payments, expenses, every journal and period, and the document numbers
    (journals start again at 1001, the café's bill numbers at 0001, the cash
    sessions and refunds at 1).

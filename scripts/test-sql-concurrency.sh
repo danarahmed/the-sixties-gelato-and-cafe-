@@ -209,6 +209,58 @@ ok "$(sql "select count(*) from alert where resolved_at is null")" \
    "$(sql "select count(*) from alert_conditions('00000000-0000-0000-0000-0000000000b1', now())")" \
    "one for every condition the rules find"
 
+# 0040 — two baristas lose the same cream at the same instant: each loss is
+# under the limit alone, the two together over it. The item's losses today are
+# added up one at a time: one is recorded, the other is told a manager
+# approves it. And ten tills sell the last bottle at once, under a rule that
+# refuses stock below zero: one sells it, nine are told there is none.
+sql "insert into auth.users (id, email) values ('a0000000-0000-0000-0000-00000000002a', 'racer1@example.com'),
+                                               ('a0000000-0000-0000-0000-00000000002b', 'racer2@example.com');
+     insert into app_user (business_id, full_name, email, auth_user_id) values
+       ('00000000-0000-0000-0000-0000000000b1', 'Racer One', 'racer1@example.com', 'a0000000-0000-0000-0000-00000000002a'),
+       ('00000000-0000-0000-0000-0000000000b1', 'Racer Two', 'racer2@example.com', 'a0000000-0000-0000-0000-00000000002b');
+     insert into user_role (app_user_id, role) select id, 'barista' from app_user where email like 'racer%@example.com';
+     insert into item (id, business_id, sku, name, item_type, base_unit_code, dimension) values
+       ('c0000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b1', 'RACE-CREAM', 'Race cream',
+        'ingredient', 'ml', 'volume'),
+       ('c0000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-0000000000b1', 'RACE-BOTTLE', 'Race bottle',
+        'resale', 'each', 'count');
+     insert into product (id, business_id, name) values
+       ('d0000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-0000000000b1', 'Race bottle');
+     insert into product_variant (id, product_id, name, resale_item_id) values
+       ('d1000000-0000-0000-0000-0000000000c2', 'd0000000-0000-0000-0000-0000000000c2', 'Bottle',
+        'c0000000-0000-0000-0000-0000000000c2');
+     insert into channel_price (business_id, product_variant_id, channel, price, effective_from) values
+       ('00000000-0000-0000-0000-0000000000b1', 'd1000000-0000-0000-0000-0000000000c2', 'dine_in', 1000, '2020-01-01');
+     select test.act_as('owner@example.com');
+     select record_opening_stock('c0000000-0000-0000-0000-0000000000c1', 1000, 'ml', 1, 'race');
+     select record_opening_stock('c0000000-0000-0000-0000-0000000000c2', 1, 'each', 500, 'race');
+     select set_business_rule('waste_approval_over', 'business', null, '500', 'race');
+     select set_business_rule('waste_approval_window', 'business', null, '\"day\"', 'race');
+     select set_business_rule('negative_stock', 'item', 'c0000000-0000-0000-0000-0000000000c2', '\"block\"', 'race');" >/dev/null
+rm -f "$WORK"/*.out
+"${PSQL[@]}" -d "$DB" -c "select pg_advisory_lock(424242), pg_sleep(1.5)" >/dev/null &
+sleep 0.4
+for who in racer1 racer2; do
+  ( "${PSQL[@]}" -d "$DB" -c "select test.act_as('$who@example.com')" -c "select pg_advisory_lock_shared(424242)" \
+      -c "select record_waste('c0000000-0000-0000-0000-0000000000c1', 300, 'ml', 'spoilage', 'race') ->> 'status'" \
+      >"$WORK/$who.out" 2>&1 || true ) &
+done
+wait
+ok "$(cat "$WORK"/racer*.out | grep -c 'not_required' || true)" "1" \
+   "two baristas lose the same cream at once, each under the limit: one loss is recorded"
+ok "$(cat "$WORK"/racer*.out | grep -c "needs a manager's approval" || true)" "1" \
+   "and the other is told a manager approves it: the cream's losses today are added up one at a time"
+race 10 cashier@example.com "select record_sale(gen_random_uuid(), 'dine_in', 'card',
+  '[{\"variant_id\":\"d1000000-0000-0000-0000-0000000000c2\",\"qty\":1}]') ->> 'order_id'"
+ok "$(sql "select count(*) from sales_order_line where product_variant_id = 'd1000000-0000-0000-0000-0000000000c2'")" "1" \
+   "ten tills sell the last bottle at once, under a rule that refuses stock below zero: one sells it"
+ok "$(grep -l 'Only 0 each of Race bottle is in stock' "$WORK"/*.out | wc -l | tr -d ' ')" "9" \
+   "and nine are told there is none left"
+ok "$(sql "select trim_scale((item_position('00000000-0000-0000-0000-0000000000b1', 'c0000000-0000-0000-0000-0000000000c2',
+                                             default_location('00000000-0000-0000-0000-0000000000b1'))).qty)")" "0" \
+   "the books hold none of it, not less"
+
 # The books still tie after all of it.
 ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(test.today())")" \
    "0,0,0,0,0,0,0,0,0" "every subledger still reconciles to its control account"

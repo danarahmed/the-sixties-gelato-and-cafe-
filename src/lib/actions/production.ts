@@ -91,6 +91,8 @@ const recordInput = z.object({
   outputQty: z.union([positive("What came out"), z.null()]),
   outputUnit: z.string().nullable(),
   note: optionalText(300),
+  /** A manager's approval of using more than the books hold (0040). */
+  stockApprovalId: z.string().uuid().nullish(),
 });
 
 export async function recordProductionAction(
@@ -107,6 +109,7 @@ export async function recordProductionAction(
     p_output_qty: v.data.outputQty,
     p_output_unit: v.data.outputQty === null ? null : v.data.outputUnit,
     p_note: v.data.note,
+    p_stock_approval: v.data.stockApprovalId ?? null,
     p_idempotency_key: key,
   });
   if (!r.ok) return r;

@@ -7,6 +7,11 @@ const pw = await import(process.env.PLAYWRIGHT_MJS || "playwright");
 export const chromium = pw.chromium;
 export const BASE = process.env.E2E_BASE || "http://127.0.0.1:3100";
 export const PASSWORD = "password123";
+/** The café's day, as the app and the database's functions count it: in its
+ *  own time zone, Baghdad's. `current_date` is the scratch database's, in UTC:
+ *  from 21:00 to midnight UTC it is still yesterday there. Written out, so it
+ *  also works once a query has signed in as someone (test.act_as). */
+export const TODAY = "(now() at time zone 'Asia/Baghdad')::date";
 
 let failures = 0;
 export function check(cond, message) {

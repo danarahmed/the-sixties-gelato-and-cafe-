@@ -55,6 +55,8 @@ const saleInput = z.object({
   expectedNet: optionalNonNegative("The total shown"),
   /** A delivery platform's sale: its order number, which its payout is matched by (0030). */
   platformOrderNo,
+  /** A manager's approval of selling more than the books hold, when its rule asks (0040). */
+  stockApprovalId: id("an approval").nullish(),
 });
 
 export interface SaleReceipt {
@@ -96,6 +98,7 @@ export async function recordSaleAction(
     p_discount_note: v.data.discountNote,
     p_approval: v.data.approvalId ?? null,
     p_platform_order_no: orderNo,
+    p_stock_approval: v.data.stockApprovalId ?? null,
   });
   if (!r.ok) return r;
   refresh(...SALE_PATHS, "/platforms");

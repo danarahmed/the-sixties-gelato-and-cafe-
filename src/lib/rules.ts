@@ -1,0 +1,182 @@
+/**
+ * The café's rules (0040, release O), as Settings → Rules shows them: what
+ * each is for, in the café's words, and how a value typed for one is read.
+ * The database keeps the rules, checks every value again, and applies them.
+ */
+
+export const RULE_ORDER = [
+  "discount_cap_percent",
+  "discount_round_to",
+  "refund_approval_over",
+  "waste_approval_over",
+  "waste_approval_window",
+  "negative_stock",
+] as const;
+export type RuleKey = (typeof RULE_ORDER)[number];
+export type ScopeType = "business" | "role" | "location" | "item_type" | "item";
+
+/** Each rule's name: a phrase, shown through t(). */
+export const RULE_LABEL: Record<RuleKey, string> = {
+  discount_cap_percent: "Discounts a manager approves",
+  discount_round_to: "Discounts rounded to",
+  refund_approval_over: "Refunds a second person approves",
+  waste_approval_over: "Losses a manager approves",
+  waste_approval_window: "One person's losses are added up over",
+  negative_stock: "Using more stock than the books hold",
+};
+
+/** What each rule does: a phrase, shown through t(). */
+export const RULE_HELP: Record<RuleKey, string> = {
+  discount_cap_percent:
+    "Over this share of the bill, a discount needs a manager's name and PIN on the till; a manager gives it themselves. Set it for a role to let that role give more, or less.",
+  discount_round_to:
+    "A discount given as a percentage is rounded to the nearest step (half-way rounds up); an amount is taken as typed.",
+  refund_approval_over:
+    "A refund of more than this needs a second person's name and PIN. Set it for a role to trust that role with more.",
+  waste_approval_over:
+    "A loss over this — on its own, added to the person's other losses, or to the item's losses today — needs a manager: their PIN on the spot, or it waits for their approval under Needs you.",
+  waste_approval_window:
+    "An item's losses by anyone are always added up over the day. A person's are added up as chosen here.",
+  negative_stock:
+    "When a sale, a loss, a batch or a correction would use more than the books hold. By default, what is made here is refused and everything else is allowed with a red alert. “Allowed, with no alert” is for chosen items only.",
+};
+
+/** The choices of a choice rule: phrases, shown through t(). */
+export const CHOICE_LABEL: Record<string, string> = {
+  block: "Refused",
+  approve: "A manager approves it",
+  alert: "Allowed, with a red alert",
+  allow: "Allowed, with no alert",
+  entry: "Each loss on its own",
+  session: "Their cash session, or their day",
+  day: "The day",
+};
+
+/** What a row of a rule applies to: phrases, shown through t(). */
+export const SCOPE_LABEL: Record<ScopeType, string> = {
+  business: "The whole café",
+  role: "A role",
+  location: "A branch",
+  item_type: "A kind of item",
+  item: "One item",
+};
+
+/** Every phrase above, for the check that each is in every language. */
+export const RULE_PHRASES: readonly string[] = [
+  ...Object.values(RULE_LABEL),
+  ...Object.values(RULE_HELP),
+  ...Object.values(CHOICE_LABEL),
+  ...Object.values(SCOPE_LABEL),
+];
+
+export interface RuleDefinition {
+  key: RuleKey;
+  kind: "percent" | "amount" | "choice";
+  min: number | null;
+  max: number | null;
+  whole: boolean;
+  choices: string[];
+  scopes: ScopeType[];
+}
+
+export interface RuleRow {
+  key: RuleKey;
+  scopeType: ScopeType;
+  scopeId: string;
+  /** An item's or a branch's name; a role and a kind of item are named by the screen. */
+  scopeName: string | null;
+  value: number | string;
+  /** Nobody has set it: the café's default. */
+  isDefault: boolean;
+  reason: string | null;
+  setBy: string | null;
+  setAt: string | null;
+}
+
+export interface RuleChange {
+  key: RuleKey;
+  scopeType: ScopeType;
+  scopeId: string;
+  scopeName: string | null;
+  /** Null: it was not set before. */
+  oldValue: number | string | null;
+  /** Null: back to the default. */
+  newValue: number | string | null;
+  reason: string;
+  changedBy: string | null;
+  changedAt: string;
+}
+
+export interface BusinessRules {
+  definitions: RuleDefinition[];
+  rows: RuleRow[];
+  history: RuleChange[];
+}
+
+const isKey = (k: unknown): k is RuleKey => RULE_ORDER.includes(k as RuleKey);
+const scalar = (v: unknown): number | string | null =>
+  v === null || v === undefined ? null : typeof v === "number" ? v : String(v);
+
+/** The rules as list_business_rules returns them, in the order the screen shows them. */
+export function parseBusinessRules(raw: unknown): BusinessRules {
+  const d = (raw ?? {}) as Record<string, unknown>;
+  const defs = (d.definitions ?? {}) as Record<string, Record<string, unknown>>;
+  const definitions: RuleDefinition[] = RULE_ORDER.filter((k) => defs[k]).map((key) => {
+    const x = defs[key] ?? {};
+    return {
+      key,
+      kind: x.kind === "percent" || x.kind === "choice" ? x.kind : "amount",
+      min: x.min == null ? null : Number(x.min),
+      max: x.max == null ? null : Number(x.max),
+      whole: Boolean(x.whole),
+      choices: Array.isArray(x.choices) ? x.choices.map(String) : [],
+      scopes: Array.isArray(x.scopes) ? (x.scopes.map(String) as ScopeType[]) : ["business"],
+    };
+  });
+  const rows: RuleRow[] = ((d.rows ?? []) as Record<string, unknown>[])
+    .filter((r) => isKey(r.key))
+    .map((r) => ({
+      key: r.key as RuleKey,
+      scopeType: String(r.scope_type) as ScopeType,
+      scopeId: String(r.scope_id ?? ""),
+      scopeName: r.scope_name == null ? null : String(r.scope_name),
+      value: scalar(r.value) ?? "",
+      isDefault: Boolean(r.is_default),
+      reason: r.reason == null ? null : String(r.reason),
+      setBy: r.set_by == null ? null : String(r.set_by),
+      setAt: r.set_at == null ? null : String(r.set_at),
+    }));
+  const history: RuleChange[] = ((d.history ?? []) as Record<string, unknown>[])
+    .filter((r) => isKey(r.key))
+    .map((r) => ({
+      key: r.key as RuleKey,
+      scopeType: String(r.scope_type) as ScopeType,
+      scopeId: String(r.scope_id ?? ""),
+      scopeName: r.scope_name == null ? null : String(r.scope_name),
+      oldValue: scalar(r.old_value),
+      newValue: scalar(r.new_value),
+      reason: String(r.reason ?? ""),
+      changedBy: r.changed_by == null ? null : String(r.changed_by),
+      changedAt: String(r.changed_at),
+    }));
+  return { definitions, rows, history };
+}
+
+/** A value typed for a rule, as the database takes it, or what is wrong with it. */
+export function typedRuleValue(
+  def: RuleDefinition,
+  typed: string,
+): { ok: true; value: number | string } | { ok: false; error: string } {
+  const s = typed.trim();
+  if (def.kind === "choice") {
+    return def.choices.includes(s)
+      ? { ok: true, value: s }
+      : { ok: false, error: "That is not one of this rule's choices" };
+  }
+  const n = Number(s.replace(/,/g, ""));
+  if (s === "" || !Number.isFinite(n)) return { ok: false, error: "Enter a number" };
+  if ((def.min !== null && n < def.min) || (def.max !== null && n > def.max))
+    return { ok: false, error: "Enter a number within the rule's limits" };
+  if (def.whole && !Number.isInteger(n)) return { ok: false, error: "Enter a whole number" };
+  return { ok: true, value: n };
+}
