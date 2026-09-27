@@ -883,6 +883,39 @@ const phrases: PhraseBook = {
     ar: "عدّ لدرج النقد",
     ckb: "ژماردنێکی دەخیلە",
   },
+
+  // The books checked account by account, and the records to look into (0038).
+  "Card takings not yet settled vs Card clearing (1010)": {
+    ar: "مقبوضات البطاقات غير المسوّاة مقابل مقاصّة البطاقات (1010)",
+    ckb: "داهاتی کارتی یەکلانەکراوە بەرامبەر پاکتاوی کارت (1010)",
+  },
+  "Orders the platforms owe vs Receivable from platforms (1100)": {
+    ar: "الطلبات المستحقة على المنصات مقابل ذمم المنصات (1100)",
+    ckb: "ئەو داواکارییانەی پلاتفۆرمەکان قەرزارن بەرامبەر قەرزی پلاتفۆرمەکان (1100)",
+  },
+  "What the drawers should hold vs Cash in the till (1000)": {
+    ar: "ما يجب أن تحويه الأدراج مقابل نقد درج الصندوق (1000)",
+    ckb: "ئەوەی دەبێت لە دەخیلەکاندا بێت بەرامبەر پارەی نەختینەی ناو دەخیلە (1000)",
+  },
+  "What the drawers should hold vs Cash in the till (1000): not yet counted, the first opening settles it":
+    {
+      ar: "ما يجب أن تحويه الأدراج مقابل نقد درج الصندوق (1000): لم يُعدّ بعد، وأول فتح يسوّي الفرق",
+      ckb: "ئەوەی دەبێت لە دەخیلەکاندا بێت بەرامبەر پارەی نەختینەی ناو دەخیلە (1000): هێشتا نەژمێردراوە، یەکەم کردنەوە جیاوازییەکە یەکلا دەکاتەوە",
+    },
+  "Cash moved in and out of the safe vs Safe (1005)": {
+    ar: "النقد المنقول إلى الخزنة ومنها مقابل النقد في الخزنة (1005)",
+    ckb: "پارەی گوازراوە بۆ ناو قاسە و لێیەوە بەرامبەر پارەی نەختینەی ناو قاسە (1005)",
+  },
+  "Every record has its one journal, and every automatic journal its record": {
+    ar: "لكل سجل قيده الواحد، ولكل قيد آلي سجله",
+    ckb: "هەر بەڵگەیەک یەک تۆماری هەیە، و هەر تۆمارێکی خۆکار بەڵگەی خۆی هەیە",
+  },
+  "Delivery correction": { ar: "تصحيح توريد", ckb: "ڕاستکردنەوەی بار" },
+  "Drawer session": { ar: "وردية الدرج", ckb: "شیفتی دەخیلە" },
+  "Platform statement": { ar: "كشف المنصة", ckb: "کەشفی پلاتفۆرم" },
+  "What is wrong": { ar: "ما الخطأ", ckb: "چی هەڵەیە" },
+  none: { ar: "لا شيء", ckb: "هیچ" },
+  "Records to look into": { ar: "سجلات تحتاج إلى مراجعة", ckb: "بەڵگەکان بۆ سەرنجدان" },
 };
 
 export default phrases;

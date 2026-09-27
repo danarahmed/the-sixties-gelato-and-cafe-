@@ -4,6 +4,7 @@ import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getDailySales, getVendorBook, ageBills, salesTotals } from "@/lib/db/books";
 import {
+  getDocumentProblems,
   getExceptions,
   getLegacyUnposted,
   getMenuCosting,
@@ -19,6 +20,7 @@ import { getChannelNames } from "@/lib/db/channels";
 import {
   addDays,
   businessToday,
+  dateIn,
   dateTimeIn,
   monthEnd,
   monthStart,
@@ -66,6 +68,10 @@ export default async function ReportsPage({
   const totals = pnlTotals(pnl);
   const ageing = ageBills(book.openBills);
   const unreconciled = rec.filter((r) => r.difference !== 0);
+  // The records the last check counts, each to be looked into (0038).
+  const problems = rec.some((r) => r.key === "documents" && r.difference !== 0)
+    ? await getDocumentProblems(to)
+    : [];
 
   const byChannel = new Map<string, typeof sales>();
   for (const r of sales) byChannel.set(r.channel, [...(byChannel.get(r.channel) ?? []), r]);
@@ -76,6 +82,59 @@ export default async function ReportsPage({
     payables: { records: "/vendors", accounts: "2000" },
     grni: { records: "/purchasing", accounts: "2050" },
     sales: { records: `/orders?from=${monthStart(to)}&to=${to}`, accounts: "4000,4100,4200" },
+    card: { records: "/sales#card", accounts: "1010" },
+    platform: { records: "/platforms#owed", accounts: "1100" },
+    drawer: { records: "/sales/sessions", accounts: "1000" },
+    safe: { records: "/sales", accounts: "1005" },
+  };
+  // Where each kind of record is found, to look into it.
+  const problemLink = (p: { kind: string; recordId: string; at: string }) => {
+    const day = dateIn(profile.timezone, new Date(p.at));
+    switch (p.kind) {
+      case "sale":
+      case "void":
+      case "refund":
+        return `/orders?from=${day}&to=${day}`;
+      case "delivery":
+      case "correction":
+        return "/purchasing";
+      case "bill":
+      case "payment":
+        return "/vendors";
+      case "expense":
+        return "/expenses";
+      case "stock":
+        return "/inventory";
+      case "count":
+        return "/count";
+      case "cash":
+        return "/sales";
+      case "session":
+        return `/sales/sessions/${p.recordId}`;
+      case "card":
+        return "/sales#card";
+      case "platform":
+        return "/platforms#statement";
+      default:
+        return `/journals?from=${day}&to=${day}`;
+    }
+  };
+  const problemKind: Record<string, string> = {
+    sale: t("Sale"),
+    void: t("Void"),
+    refund: t("Refund"),
+    delivery: t("Delivery"),
+    correction: t("Delivery correction"),
+    bill: t("Bill"),
+    payment: t("Payment"),
+    expense: t("Expense"),
+    stock: t("Stock"),
+    count: t("Stock count"),
+    cash: t("Cash moved"),
+    session: t("Drawer session"),
+    card: t("Card settlement"),
+    platform: t("Platform statement"),
+    journal: t("Journal"),
   };
   const ledger = (accounts: string, f: string, tt: string, pnl = false) =>
     `/journals?account=${accounts}&from=${f}&to=${tt}${pnl ? "&pnl=1" : ""}`;
@@ -156,41 +215,93 @@ export default async function ReportsPage({
               </tr>
             </thead>
             <tbody>
-              {rec.map((r) => (
-                <tr key={r.key}>
-                  <td>
-                    {r.difference === 0 ? "✅ " : "⛔ "}
-                    {msg(r.label)}
-                  </td>
-                  <td className="right money">
-                    {recLinks[r.key] ? (
-                      <Link className="drill" href={recLinks[r.key]!.records}>
-                        {fmtIQD(r.subledger)}
-                      </Link>
-                    ) : (
-                      fmtIQD(r.subledger)
-                    )}
-                  </td>
-                  <td className="right money">
-                    {recLinks[r.key] ? (
-                      <Link
-                        className="drill"
-                        href={ledger(recLinks[r.key]!.accounts, monthStart(to), to)}
-                      >
-                        {fmtIQD(r.ledger)}
-                      </Link>
-                    ) : (
-                      fmtIQD(r.ledger)
-                    )}
-                  </td>
-                  <td className={`right money ${r.difference !== 0 ? "red" : ""}`}>
-                    {fmtIQD(r.difference)}
-                  </td>
-                </tr>
-              ))}
+              {rec.map((r) =>
+                r.key === "documents" ? (
+                  // A count of records, not money.
+                  <tr key={r.key} data-testid="rec-documents">
+                    <td>
+                      {r.difference === 0 ? "✅ " : "⛔ "}
+                      {msg(r.label)}
+                    </td>
+                    <td className="right mono">
+                      {r.subledger === 0 ? (
+                        t("none")
+                      ) : (
+                        <a className="drill" href="#documents">
+                          {t("{n} record(s)", { n: r.subledger })}
+                        </a>
+                      )}
+                    </td>
+                    <td className="right mono">—</td>
+                    <td className={`right mono ${r.difference !== 0 ? "red" : ""}`}>
+                      {r.difference}
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={r.key} data-testid={`rec-${r.key}`}>
+                    <td>
+                      {r.difference === 0 ? "✅ " : "⛔ "}
+                      {msg(r.label)}
+                    </td>
+                    <td className="right money">
+                      {recLinks[r.key] ? (
+                        <Link className="drill" href={recLinks[r.key]!.records}>
+                          {fmtIQD(r.subledger)}
+                        </Link>
+                      ) : (
+                        fmtIQD(r.subledger)
+                      )}
+                    </td>
+                    <td className="right money">
+                      {recLinks[r.key] ? (
+                        <Link
+                          className="drill"
+                          href={ledger(recLinks[r.key]!.accounts, monthStart(to), to)}
+                        >
+                          {fmtIQD(r.ledger)}
+                        </Link>
+                      ) : (
+                        fmtIQD(r.ledger)
+                      )}
+                    </td>
+                    <td className={`right money ${r.difference !== 0 ? "red" : ""}`}>
+                      {fmtIQD(r.difference)}
+                    </td>
+                  </tr>
+                ),
+              )}
             </tbody>
           </table>
         </div>
+        {problems.length > 0 && (
+          <div className="tw" id="documents" style={{ padding: "0 16px" }}>
+            <h4 style={{ margin: "12px 0 6px" }}>{t("Records to look into")}</h4>
+            <table data-testid="document-problems">
+              <thead>
+                <tr>
+                  <th>{t("When")}</th>
+                  <th>{t("Record")}</th>
+                  <th>{t("What is wrong")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {problems.map((p) => (
+                  <tr key={`${p.kind}-${p.recordId}-${p.problem}`}>
+                    <td className="muted mono" style={{ fontSize: ".8rem" }}>
+                      {dateTimeIn(profile.timezone, p.at)}
+                    </td>
+                    <td>
+                      <Link className="drill" href={problemLink(p)}>
+                        {problemKind[p.kind] ?? p.kind}
+                      </Link>
+                    </td>
+                    <td>{msg(p.problem)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         <p
           className="muted"
           style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}

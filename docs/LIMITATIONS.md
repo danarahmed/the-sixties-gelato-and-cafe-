@@ -106,6 +106,35 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     made to order), at what it cost when it was sold.
   - A delivery platform's refund is taken off what the platform owes for the
     order; what the platform itself refunds its customer is not read from it.
+- **Delivery corrections, what they do not do (release M, `0038`).** A
+  delivery not yet billed is corrected on Purchasing, or reversed. But:
+  - A billed delivery is not corrected: its bill is cancelled on Vendors
+    first, the delivery corrected, and the bill recorded again. Credit notes
+    and returns to the supplier are release S.
+  - A date is corrected within the month the delivery was entered, and not
+    after today. One entered in the wrong month is reversed and received
+    again.
+  - Freight, other costs and rebates are not corrected: they are shared out
+    again over the corrected lines, by value, as when it was received.
+  - The quantity of an item counted after the delivery is not corrected (the
+    count set its stock); its price is.
+  - A price corrected after some of the stock was used revalues only what is
+    still on the shelf. The rest of the difference goes to purchase price
+    variance (5050): the cost of what was already sold is not restated.
+  - A delivery received before the controls is corrected by the owner, as in
+    [`REMEDIATION.md`](REMEDIATION.md), not on Purchasing.
+- **The books checked account by account, what they do not check (`0038`).**
+  - The drawers are held to 1000 once a drawer has been counted in a session
+    (0036). Before that the books are all there is, and the check says so.
+  - The safe is held to what was moved in and out of it, and to the expenses
+    and bills paid from it. Since `0038`, 1005 takes no manual journal: cash
+    for the safe is moved in from the owner on Sales.
+  - The platform sales from before order numbers are on no statement: a
+    payout typed by hand into 1100 is taken to explain them, as far as they
+    go. A payout typed by hand beyond them is flagged.
+  - The check that every record has its journal covers what was recorded
+    since the business's first journal of its own. What came before is the
+    remediation's ([`REMEDIATION.md`](REMEDIATION.md)).
 - **One cap for everyone.** Since `0028` every discount has a reason, and one
   over the business's cap (10%) needs a manager's approval; the cap is the
   same for every role that may give discounts, and it is changed in the

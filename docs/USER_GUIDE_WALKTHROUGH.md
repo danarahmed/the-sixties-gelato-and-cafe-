@@ -438,7 +438,33 @@ costs; receiving: purchasing, managers
 
 - **Recent goods receipts:** each receipt's supplier, lines, goods, landed extras,
   value into stock, and bill status: **Billed**, **Awaiting bill**, **Not
-  journaled** (from the previous app; see Reports) or **Before controls**.
+  journaled** (from the previous app; see Reports), **Before controls** or
+  **Reversed**. A delivery that was corrected shows as it stands now, its
+  corrections listed under it: when, by whom, what changed, why, and what each
+  posted.
+- **✏️ Correct a delivery** (those who approve stock adjustments: owner,
+  managers): on a delivery not yet billed, **Correct** opens its lines as they
+  stand, with its supplier and the day it came. Change what is wrong, as the
+  invoice has it: a quantity, a price, a unit, an item; add a line, or take one
+  off. **Show what it would do** lists, item by item, the delivery before and
+  after, the stock on hand before and after, and what changes in the stock's
+  value, in what is owed for it (2050) and in purchase price variance (5050) —
+  nothing is done yet. Say why, and **Confirm the correction**. The answer names
+  the correction and its journal.
+  - Units that come off the shelf leave at the price they came in at, as far as
+    that delivery's stock is still there. A price corrected after some of the
+    stock was used changes the value of what is left; the part already used
+    goes to 5050.
+  - The day is corrected within the month the delivery was entered, and not
+    after today.
+  - Refused: a delivery already billed (cancel its bill on **Vendors** first,
+    then correct it, then record the bill again); the quantity of an item
+    counted since (its price can still be corrected); a delivery in a locked
+    month. Stock left below zero is asked about first.
+- **↩️ Reverse a delivery:** for one that should never have been entered.
+  **Reverse** shows what it takes off, then, with a reason, takes all of its
+  stock off the shelf and nothing is owed for it. It stays on the list, marked
+  **Reversed**, and cannot be billed.
 
 ## 12. Products & Recipes
 
@@ -682,10 +708,20 @@ accountant's own tools.
   - unpaid bills (and deliveries the previous app posted to payables) vs
     Accounts payable;
   - deliveries not yet billed vs Goods received not invoiced;
-  - sales vs revenue.
+  - sales vs revenue;
+  - card takings not yet settled vs Card clearing (1010);
+  - the orders the platforms owe vs what they owe in the books (1100);
+  - what the drawers should hold vs Cash in the till (1000), once a drawer has
+    been counted in a session;
+  - the cash moved in and out of the safe vs the Safe (1005);
+  - every record with its one journal, and every automatic journal with its
+    record: a count, and **Records to look into** below lists each one, with a
+    link to where it is.
 
-  ✅ means they agree. Each side opens what is behind it: the records (stock,
-  unpaid bills, deliveries, orders) and the account's journal lines. Below it,
+  ✅ means they agree; a month is locked only when every one does. Each side
+  opens what is behind it: the records (stock, unpaid bills, deliveries,
+  orders, card takings, what the platforms owe, the drawer's sessions, cash
+  moved) and the account's journal lines. Below it,
   **Stock the old app never journaled** lists any
   stock the previous app moved without a journal, each with the entry it would
   post. The owner reviews them and posts them in one step, with a reason (see

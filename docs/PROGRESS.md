@@ -7,11 +7,11 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0037` and the rebuilt app. The SQL
-  checks (38, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (16, every role, every screen in
+- **Built and verified:** migrations `0014`–`0038` and the rebuilt app. The SQL
+  checks (40, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (17, every role, every screen in
   Arabic and Kurdish, and a lost answer on each kind of screen), the unit and
-  contract tests (299) and a production build all pass.
+  contract tests (304) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -446,6 +446,69 @@ browser tests through the real app, or both.
   performance advisors add only the refund tables' links without an index of
   their own (a refund's approval, approver, journal, location, requester and
   session; the business of a refund's line and of its payment).
+- **Delivery corrections, and the books checked account by account (release
+  M, migration `0038`, the fourth step of
+  [`COMPLETION_PLAN.md`](COMPLETION_PLAN.md)).** Until now a delivery entered
+  wrong — two bottles fewer than came, a price typed wrong, the wrong item,
+  supplier or day — could not be put right: a journal typed by hand left the
+  stock, the delivery and its bill disagreeing. Now a delivery not yet billed
+  has **Correct** and **Reverse** on Purchasing, for those who approve stock
+  adjustments. Its lines, supplier and day are corrected as the invoice has
+  them, and before anything is done the screen shows, item by item, what the
+  correction does: the stock and its value, what is owed for it (2050) and the
+  purchase price variance (5050). What was entered first is kept; each
+  correction is a document of its own, numbered, with its before and after,
+  its reason, who made it, its journal and its stock movements, listed under
+  the delivery and on the audit trail. Units that come off or go on the shelf
+  move at the delivery's own price as far as its stock is still there, and at
+  the average cost for the rest; a price corrected revalues what is still on
+  the shelf (a revaluation on the stock card) and puts the difference on what
+  was already used to 5050, so the cost of what was sold is not restated. A
+  reversal takes all of it off. Refused: once billed (cancel the bill first);
+  the quantity of an item counted since; in a locked month; a delivery
+  reversed or from before the controls; below zero until confirmed; a date
+  outside the month it was entered, or after today. The bill is recorded for
+  the delivery as it stands, and a reversed one has nothing to bill. **Do the
+  books tie?** on Reports gains five checks, each blocking the month's lock
+  too: the card takings not yet settled against 1010; the orders the platforms
+  owe against 1100 (sales from before order numbers owed too, less the payouts
+  typed by hand, as far as they go); what the drawers should hold against 1000
+  (once a drawer has been counted in a session); the cash moved in and out of
+  the safe against 1005, which no longer takes a manual journal; and every
+  record with its one journal and every automatic journal with its record,
+  the records to look into listed under the table, each with a link. Built and
+  tested: two new SQL suites, a race of ten corrections of one delivery (one
+  goes through), a new browser suite, and a correction whose answer is lost
+  made once. The migration was applied to the live database on 27 September
+  2026: the text stored there is the file byte for byte, and it matches the
+  tested build object by object, permissions included (the one difference, as
+  before, is the schema `citext` lives in). Beforehand a read-only check
+  predicted each new check at zero on the live records, and after it all nine
+  read zero: card takings 19,000 as 1010 holds; the platforms owing 34,500 as
+  1100 holds, the two Talabat sales from before order numbers (11,000 and
+  5,250) explained as far as the payout of 11,000 typed by hand goes; the
+  drawers not yet counted in a session; the safe at nothing; no record to look
+  into. It was checked as the owner in a transaction that was rolled back: 10
+  g of coffee beans received at 29 a gram and corrected to 8 g — shown first
+  (stock and what is owed 58 less, all of it still on the shelf), then
+  correction 1, 1200 Cr 58, 2050 Dr 58, made once though sent twice with one
+  key; its price corrected to 30, correction 2, 1200 Dr 8, 2050 Cr 8, the
+  12,898 g on the shelf revalued as a pair, and its journal refused for
+  reversal (correct the delivery again on Purchasing); a second delivery
+  reversed, correction 3, 1200 Cr 145, 2050 Dr 145, with nothing owed and
+  nothing to bill; the first billed at 240, then corrected no more; a manual
+  journal to the safe, and the barista's preview and reading of the records,
+  refused; the branch manager read the three corrections; the price history
+  showed the delivery as corrected; every check's difference was unchanged and
+  the month's checklist listed the nine, each passing and blocking; and nothing
+  was kept (still 9 deliveries, no corrections, 9 bills, journals to 1091, 286
+  stock movements, 35 audit rows, no stored answers). The security advisors add
+  only the four functions signed-in users may call (the corrections check
+  `inventory.adjust.approve`, the records to look into `cost.view`), and
+  `receipt_grni_value` no longer has a mutable search path; the performance
+  advisors add only the correction table's links to its journal and its author
+  without an index of their own. The screens went live with
+  [pull request #27](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/27).
 
 ## The August 2026 audit, finding by finding
 

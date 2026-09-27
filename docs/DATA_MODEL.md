@@ -31,6 +31,7 @@ erDiagram
   purchase_order ||--o{ purchase_order_line : has
   goods_receipt ||--o{ goods_receipt_line : receives
   goods_receipt_line ||--o| inventory_movement : posts
+  goods_receipt ||--o{ receipt_correction : "corrected by"
   recipe ||--o{ production_batch : produces
   stock_count ||--o{ stock_count_line : counts
 
@@ -753,3 +754,51 @@ location)` gives the open one.
   net less it, so a platform is owed what is left of an order part-refunded.
 - **`count_drawer`**, kept through the deploy of `0036`, can no longer be
   called.
+
+### Delivery corrections, and the books checked account by account (`0038`)
+
+- **Movement types `receipt_correction` and `cost_adjustment`.** A
+  correction's change in quantity is a `receipt_correction` movement (in or
+  out); a change in price revalues the stock still on the shelf as a pair of
+  `cost_adjustment` movements, the stock out at its value and back in at the
+  corrected one, so the quantity never moves and the value does. Both carry
+  the reference `receipt_correction` and the correction's id. On the stock
+  card the first reads as received, the second as revalued.
+- **`receipt_correction`** (`correction_no` numbered per business from
+  `document_counter`, `goods_receipt_id`, `kinds` (quantity, price, item,
+  supplier, date, reversed), `reason`, `before_state` and `after_state` (the
+  delivery's supplier, day, freight, other costs, rebate and lines, each line
+  with its item, quantity, unit, base quantity, goods value and landed cost),
+  `effects` (per item: the quantity and value before and after, what was on
+  hand, how much of the delivery's value was still on it, the change to
+  stock, to GRNI and to price variance, and the movements), `journal_entry_id`,
+  `created_by`, `created_at`): a correction as a document. Append-only
+  (`forbid_mutation`), row security forced, read with `cost.view`. What was
+  received first stays as it was: `goods_receipt_line` is never changed.
+- **`receipt_state(receipt)`** is the delivery as it stands: its latest
+  correction's `after_state`, or `receipt_original_state` as received.
+  `receipt_grni_value(receipt)` and `receipt_grni_value_at(receipt, at)` add
+  the corrections' 2050 to what the receipt credited. The bill, the price
+  history (`item_price_history`) and an item's reference cost
+  (`item_reference_cost`) read the delivery as it stands; `record_bill`
+  refuses a reversed delivery and checks the supplier it has now.
+- **`preview_receipt_correction(receipt, lines, supplier, received_on,
+reverse)`** (`inventory.adjust.approve`) says, writing nothing, what a
+  correction would do and why it cannot be made (`blocked`).
+  **`correct_receipt(receipt, lines, supplier, received_on, reason, confirm,
+key)`** and **`reverse_receipt(receipt, reason, confirm, key)`**
+  (`inventory.adjust.approve`, keyed) make it: `lines` is `[{"line_id",
+"item_id", "qty", "unit_code", "unit_price" | "goods_value"}]`, a line
+  without `line_id` is added and one left out is taken off. Audited
+  `purchase.correct` or `purchase.reverse` with the delivery's lines, supplier
+  and day before and after, and what the correction changed.
+- **`reconciliation_checks(business, as_of)`** (behind `report_reconciliation`,
+  `cost.view`) gains `card` (1010), `platform` (1100), `drawer` (1000), `safe`
+  (1005) and `documents`; `drawer_position_at(business, location, at)` is what
+  a drawer should have held at a moment, if it is known;
+  `document_problems(business, before)` (behind
+  `report_document_problems(as_of)`, `cost.view`) lists each record without
+  its one journal and each automatic journal without its record.
+  `period_close_checklist` blocks on all nine.
+- **`manual_journal_blocked`** adds 1005: the safe's cash moves only as cash
+  moved, an expense or a bill paid.

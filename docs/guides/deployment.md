@@ -35,6 +35,7 @@ Plan a short window when the café is closed.
 | Platforms to retry keys (`0031`–`0035`) | ✅ Migrations applied between 25 and 27 September, each compared object by object with its tested build and checked in a transaction that was rolled back; the screens deployed with each (see [`../PROGRESS.md`](../PROGRESS.md))                                                                                                                                                       |
 | Cash sessions (`0036`)                  | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0036`](#after-0036)). The screens were merged ([pull request #25](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/25)) and deployed                                  |
 | Refunds by the item (`0037`)            | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0037`](#after-0037)). The screens were merged ([pull request #26](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/26)) and deployed                                  |
+| Delivery corrections (`0038`)           | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0038`](#after-0038)). The screens were merged ([pull request #27](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/27)) and deployed                                  |
 
 ## 0. Before you start
 
@@ -844,6 +845,74 @@ journals to 1091 and no stored answers. The security advisor adds only
 `refund_sale_lines`, which signed-in users may call (it checks
 `sale.refund`), and no longer lists `count_drawer`; the performance advisor
 adds only the refund tables' links without an index of their own.
+
+## After `0038`
+
+Migration `0038` (release M) corrects a delivery, and checks the books account
+by account:
+
+- **A delivery not yet billed is corrected, or reversed**, by a document of its
+  own: numbered, with the delivery before and after, the reason, what it moved
+  and its journal. What was entered first is never changed. Units move at the
+  delivery's own price as far as its stock is still on the shelf; a price
+  corrected revalues what is still there and puts the rest to 5050.
+- **Refused:** once billed (cancel the bill first), the quantity of an item
+  counted since, in a locked month, a delivery reversed or from before the
+  controls, a date outside the month it was entered or after today; below zero
+  until confirmed.
+- **The bill** is for the delivery as it stands; a reversed one has nothing to
+  bill.
+- **Do the books tie?** gains card takings (1010), what the platforms owe
+  (1100), the drawers (1000), the safe (1005, which no longer takes a manual
+  journal) and every record with its journal. The month's lock waits on all
+  nine.
+
+It adds two movement types, a table (`receipt_correction`, read only with
+`cost.view`, never changed) and four functions signed-in users may call:
+`preview_receipt_correction`, `correct_receipt` and `reverse_receipt`
+(`inventory.adjust.approve`, the last two keyed) and `report_document_problems`
+(`cost.view`). It goes in before the screens: the screens deployed before it
+keep working (Purchasing lists deliveries as before, Reports shows the nine
+checks, the journal form still offers the safe, which the database refuses),
+and the new screens need the new table.
+
+It was applied on 27 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0037` build and that each new check
+would read zero on the live records. The text stored there is the file byte
+for byte, and it was then compared with the tested build, object by object,
+the role permissions and column grants included: identical, but for the
+schema `citext` lives in, as before. All nine checks read zero: card takings
+19,000 as 1010 holds; the platforms owing 34,500 as 1100 holds (two Talabat
+sales from before order numbers, explained by the payout typed by hand as far
+as it goes); the drawers not yet counted in a session; the safe at nothing; no
+record to look into. A check as the owner, in a transaction that was rolled
+back:
+
+- 10 g of coffee beans received at 29 a gram and corrected to 8 g: the preview
+  first, writing nothing (58 less in stock and owed, all of it still on the
+  shelf), then correction 1, 1200 Cr 58, 2050 Dr 58; sent twice with one key,
+  it was made once;
+- its price corrected to 30: correction 2, 1200 Dr 8, 2050 Cr 8, the 12,898 g
+  on the shelf revalued as a pair; its journal was refused for reversal, with
+  where to correct it instead;
+- a second delivery reversed: correction 3, 1200 Cr 145, 2050 Dr 145, nothing
+  owed, and its bill refused;
+- the first billed at 240, no variance, then corrected no more;
+- a manual journal to the safe, and the barista's preview and reading of the
+  records to look into, were refused; the branch manager read the three
+  corrections;
+- the price history showed the delivery as corrected; every check's difference
+  was unchanged; the month's checklist listed the nine checks, each passing
+  and blocking (September's lock still waits, as before, on three days' cash
+  not counted and a count awaiting approval).
+
+Nothing was kept: still 9 deliveries, no corrections, 9 bills, journals to
+1091, 286 stock movements, 35 audit rows and no stored answers. The security
+advisor adds only the four functions signed-in users may call, and no longer
+lists `receipt_grni_value`'s search path; the performance advisor adds only
+the correction table's links to its journal and its author without an index of
+their own.
 
 ## Clearing the test records
 

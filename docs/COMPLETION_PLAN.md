@@ -1,8 +1,9 @@
 # Completing the operations system: implementation analysis
 
 **Status:** analysis finished on 27 September 2026, before any change was made.
-Release J (duplicate protection, `0035`), release K (cash sessions, `0036`)
-and release L (refunds by the item, `0037`) are live since 27 September 2026.
+Release J (duplicate protection, `0035`), release K (cash sessions, `0036`),
+release L (refunds by the item, `0037`) and release M (delivery corrections and
+the books checked account by account, `0038`) are live since 27 September 2026.
 What was built differs from the plan below in these ways.
 
 Release J:
@@ -60,6 +61,36 @@ Release L:
   is left of an order part-refunded; card takings, daily sales and the
   exceptions already read the refund adjustments.
 - **`count_drawer`** is revoked, as release K planned.
+
+Release M:
+
+- **A correction's kinds are a list.** One correction may change several
+  things at once (the quantity of one line and the price of another), so
+  `receipt_correction.kinds` lists them, and the delivery's before and after
+  are kept whole, not line by line.
+- **A price is corrected as a pair of movements.** The stock still on the
+  shelf goes out at its value and comes back in at the corrected one (two
+  `cost_adjustment` movements), instead of one movement of no quantity, which
+  the stock ledger's value-per-unit rules refuse.
+- **What is still on the shelf** is the delivery's share of the stock after
+  every use since (average cost spreads each use over all of it): a price
+  corrected revalues that share, and the rest goes to 5050.
+- **The date** is corrected within the month the delivery was entered, and
+  never after today; its stock's own date does not move. One entered in the
+  wrong month is reversed and received again.
+- **The permission** is `inventory.adjust.approve` (who approves stock
+  adjustments), not a new one.
+- **Supplier balances against 2000** were already the payables check; it is
+  kept as it was.
+- **The safe (1005) takes no manual journal** from `0038`, like the till's
+  cash: otherwise its check could never hold.
+- **Platform sales from before order numbers** are owed too, explained by
+  payouts typed by hand as far as they go, as `LIMITATIONS.md` said they
+  would be; the live database has two.
+- **The drawers' check** holds the books to the drawers only once a drawer has
+  been counted in a session, as the first opening settles what came before.
+- **No `idempotency_key` column.** Corrections are keyed in `request_log`,
+  like every write since release J.
 
 **Basis:**
 

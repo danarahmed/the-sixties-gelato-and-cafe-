@@ -327,7 +327,10 @@ discount, why and who approved it. The 10% is a business setting (shown on
 1. Close the drawer's session after the month's last sale, approve or reject
    any pending count, and publish or discard any draft journal.
 2. **Reports → Do the books tie?**, as at the last day of the month: every line
-   should show ✅.
+   should show ✅ — the stock, payables, deliveries not billed, sales, card
+   takings, what the platforms owe, the drawers, the safe, and every record
+   with its journal. A ⛔ says which account and by how much, and opens both
+   sides; a record without its journal is listed under the table.
 3. **Chart of Accounts:** choose the month and read its checklist. When every
    check passes, **Lock** it. The last month of the year also closes the year
    into 3100 Retained earnings. A ⚠️ line (sales costed at nothing) is a
@@ -354,6 +357,7 @@ line (CSV)** gives your accountant the whole ledger.
 | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
 | A sale rung wrongly, or some of it brought back                          | **Orders → Void** (until its session closes) or **Refund**, all of it or the items brought back                                  |
 | A bill entered twice or wrongly                                          | **Vendors → Cancel** (only if nothing was paid on it), then enter it correctly                                                   |
+| A delivery entered wrongly (not yet billed)                              | **Purchasing → Correct** (quantity, price, item, supplier, day) or **Reverse** (never came), with the reason                     |
 | Stock that is wrong                                                      | a **count**, or **Inventory → Correct stock** (manager), with the reason                                                         |
 | An item or a vendor named, typed or levelled wrongly                     | its card on **Inventory → Correct this item**, or **Vendors → Edit vendor**, with the reason; take one no longer used out of use |
 | A manual journal or an expense                                           | **Journals → Reverse**, dated in the month it corrects                                                                           |

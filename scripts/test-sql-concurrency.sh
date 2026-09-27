@@ -104,6 +104,24 @@ ok "$(sql "select trim_scale(sum(qty)) || ' ' || trim_scale(sum(amount)) from sa
    "and never more is given back than was sold: three, 7,500"
 ok "$(sql "select status from sales_order where id = '$REFUND_SALE'")" "refunded" "the sale is refunded in full, once"
 
+# 0038 — ten managers correct the same delivery at once, 10 sleeves of cups to 8:
+# one correction is made; the other nine find nothing left to change.
+CORR_RECEIPT=$(sql "select test.act_as('manager@example.com');
+  select receive_goods((select id from supplier order by name limit 1),
+    '[{\"item_id\":\"c0000000-0000-0000-0000-000000000002\",\"qty\":10,\"unit_code\":\"sleeve_50\",\"unit_price\":2500}]',
+    p_confirm => true) ->> 'receipt_id';" | tail -n 1)
+CORR_LINE=$(sql "select id from goods_receipt_line where goods_receipt_id = '$CORR_RECEIPT'")
+race 10 manager@example.com "select correct_receipt('$CORR_RECEIPT',
+  '[{\"line_id\":\"$CORR_LINE\",\"item_id\":\"c0000000-0000-0000-0000-000000000002\",\"qty\":8,\"unit_code\":\"sleeve_50\",\"unit_price\":2500}]',
+  null, null, 'Only 8 came')"
+ok "$(grep -l '"correction_no"' "$WORK"/*.out | wc -l | tr -d ' ')" "1" \
+   "ten corrections of one delivery at once: one is made"
+ok "$(grep -l 'Nothing was changed' "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and the other nine find nothing left to change"
+ok "$(sql "select count(*) || ' ' || trim_scale(sum(base_quantity_signed)) from inventory_movement
+            where reference_type = 'receipt_correction'
+              and reference_id in (select id from receipt_correction where goods_receipt_id = '$CORR_RECEIPT')")" "1 -100" \
+   "two sleeves, 100 cups, out of stock once"
+
 # H-10 — five bottles, prevention on, ten simultaneous sales of one each.
 # Through record_waste, which journals it: a raw ledger insert here would be
 # exactly the unjournaled movement the reconciliation below exists to catch.
@@ -193,6 +211,6 @@ ok "$(sql "select count(*) from alert where resolved_at is null")" \
 
 # The books still tie after all of it.
 ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(test.today())")" \
-   "0,0,0,0" "every subledger still reconciles to its control account"
+   "0,0,0,0,0,0,0,0,0" "every subledger still reconciles to its control account"
 
 [ "$FAILED" -eq 0 ]

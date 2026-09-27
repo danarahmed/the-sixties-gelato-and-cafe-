@@ -1360,6 +1360,150 @@ const phrases: PhraseBook = {
     ar: "افتح درج النقد في نقطة البيع أولًا: عدّه الآن يُغلق ورديته",
     ckb: "سەرەتا دەخیلەکە لە خاڵی فرۆشتن بکەرەوە: ژماردنی ئێستا شیفتەکەی دادەخات",
   },
+
+  // A delivery corrected or reversed (0038).
+  "A delivery keeps at least one line: to undo all of it, reverse it": {
+    ar: "يبقى في التوريد سطر واحد على الأقل: لإلغائه كله، اعكسه",
+    ckb: "بار لانیکەم یەک هێڵی تێدا دەمێنێتەوە: بۆ لابردنی هەمووی، هەڵیبگەڕێنەوە",
+  },
+  "A delivery cannot have arrived after today": {
+    ar: "لا يمكن أن يكون التوريد قد وصل بعد اليوم",
+    ckb: "بار ناتوانێت دوای ئەمڕۆ گەیشتبێت",
+  },
+  "A delivery's date is corrected within the month it was entered ({1}): one from another month is reversed and received again":
+    {
+      ar: "يُصحَّح تاريخ التوريد ضمن الشهر الذي أُدخل فيه ({1}): وتوريد شهر آخر يُعكس ويُستلم من جديد",
+      ckb: "بەرواری بار لە ناو ئەو مانگەدا ڕاست دەکرێتەوە کە تێیدا تۆمار کرا ({1}): باری مانگێکی تر هەڵدەگەڕێندرێتەوە و دووبارە وەردەگیرێتەوە",
+    },
+  "The lines cannot be read": { ar: "تعذّرت قراءة السطور", ckb: "هێڵەکان ناخوێندرێنەوە" },
+  "Unknown item on the delivery": {
+    ar: "مادة غير معروفة في التوريد",
+    ckb: "کاڵایەکی نەناسراو لەسەر بارەکە",
+  },
+  "That line is not on this delivery": {
+    ar: "هذا السطر ليس في هذا التوريد",
+    ckb: "ئەو هێڵە لەسەر ئەم بارە نییە",
+  },
+  "A line is named twice": { ar: "ذُكر سطر مرتين", ckb: "هێڵێک دوو جار ناوی هاتووە" },
+  "Every line needs a quantity: to take a line off, leave it out": {
+    ar: "كل سطر يحتاج إلى كمية: لحذف سطر، اتركه",
+    ckb: "هەموو هێڵێک بڕێکی پێویستە: بۆ لابردنی هێڵێک، دەری بهێنە",
+  },
+  "Every line needs a price": { ar: "كل سطر يحتاج إلى سعر", ckb: "هەموو هێڵێک نرخێکی پێویستە" },
+  "Say why the delivery is being corrected": {
+    ar: "اذكر سبب تصحيح التوريد",
+    ckb: "بڵێ بۆچی بارەکە ڕاست دەکرێتەوە",
+  },
+  "Delivery not found": { ar: "لم يُعثر على التوريد", ckb: "بارەکە نەدۆزرایەوە" },
+  "Delivery {1} was received before the controls: the owner corrects it on Reports": {
+    ar: "استُلم التوريد {1} قبل الضوابط: يصحّحه المالك من التقارير",
+    ckb: "باری {1} پێش کۆنترۆڵەکان وەرگیراوە: خاوەن لە ڕاپۆرتەکان ڕاستی دەکاتەوە",
+  },
+  "Delivery {1} has been billed: cancel its bill on Vendors first, then correct the delivery": {
+    ar: "سُجّلت فاتورة التوريد {1}: ألغِ فاتورته من شاشة «المورّدون» أولًا، ثم صحّح التوريد",
+    ckb: "پسووڵەی باری {1} تۆمار کراوە: سەرەتا لە شاشەی «دابینکەران» پسووڵەکەی هەڵبوەشێنەوە، پاشان بارەکە ڕاست بکەرەوە",
+  },
+  "Delivery {1} is in {2}, a locked month: it is no longer corrected": {
+    ar: "التوريد {1} في {2}، وهو شهر مقفل: لم يعد يُصحَّح",
+    ckb: "باری {1} لە {2}دایە، مانگێکی داخراو: چیتر ڕاست ناکرێتەوە",
+  },
+  "Delivery {1} was reversed: receive it again instead": {
+    ar: "عُكس التوريد {1}: استلمه من جديد بدلًا من ذلك",
+    ckb: "باری {1} هەڵگەڕێندراوەتەوە: لە جیاتی ئەوە دووبارە وەری بگرەوە",
+  },
+  "Nothing was changed": { ar: "لم يتغيّر شيء", ckb: "هیچ شتێک نەگۆڕا" },
+  "{1} counted after this delivery, and the count set its stock: correct only its price": {
+    ar: "جُرد {1} بعد هذا التوريد، والجرد حدّد مخزونه: صحّح سعره فقط",
+    ckb: "{1} دوای ئەم بارە ژمێردراوە، و ژماردنەکە کۆگاکەی دیاری کرد: تەنها نرخەکەی ڕاست بکەرەوە",
+  },
+  "This leaves {1} below zero: confirm to correct it all the same": {
+    ar: "هذا يترك {1} دون الصفر: أكّد لتصحيحه مع ذلك",
+    ckb: "ئەمە {1} دەباتە ژێر سفر: پشتڕاستی بکەرەوە بۆ ئەوەی هەر ڕاست بکرێتەوە",
+  },
+  "That delivery was reversed: there is nothing to bill": {
+    ar: "عُكس ذلك التوريد: لا شيء فيه للفوترة",
+    ckb: "ئەو بارە هەڵگەڕێندراوەتەوە: هیچ شتێک نییە بۆ پسووڵە",
+  },
+  "Received before the controls: the owner corrects it on Reports": {
+    ar: "استُلم قبل الضوابط: يصحّحه المالك من التقارير",
+    ckb: "پێش کۆنترۆڵەکان وەرگیراوە: خاوەن لە ڕاپۆرتەکان ڕاستی دەکاتەوە",
+  },
+  "Billed: cancel its bill on Vendors first, then correct the delivery": {
+    ar: "مفوتَر: ألغِ فاتورته من شاشة «المورّدون» أولًا، ثم صحّح التوريد",
+    ckb: "پسووڵەی بۆ تۆمار کراوە: سەرەتا لە شاشەی «دابینکەران» پسووڵەکەی هەڵبوەشێنەوە، پاشان بارەکە ڕاست بکەرەوە",
+  },
+  "Reversed: receive it again instead": {
+    ar: "معكوس: استلمه من جديد بدلًا من ذلك",
+    ckb: "هەڵگەڕێندراوەتەوە: لە جیاتی ئەوە دووبارە وەری بگرەوە",
+  },
+  "In a locked month: it is no longer corrected": {
+    ar: "في شهر مقفل: لم يعد يُصحَّح",
+    ckb: "لە مانگێکی داخراودایە: چیتر ڕاست ناکرێتەوە",
+  },
+  "a goods receipt (correct it on Purchasing)": {
+    ar: "وصل استلام بضاعة (صحّحه من شاشة «المشتريات»)",
+    ckb: "وەسڵی وەرگرتنی کاڵا (لە شاشەی «کڕین» ڕاستی بکەرەوە)",
+  },
+  "a delivery's correction (correct the delivery again on Purchasing)": {
+    ar: "تصحيح توريد (صحّح التوريد مرة أخرى من شاشة «المشتريات»)",
+    ckb: "ڕاستکردنەوەی بارێک (لە شاشەی «کڕین» بارەکە دووبارە ڕاست بکەرەوە)",
+  },
+  "A sale with no journal": { ar: "بيع بلا قيد", ckb: "فرۆشتنێک بێ تۆمار" },
+  "A void whose sale's journal was not reversed": {
+    ar: "إلغاء بيع لم يُعكس قيد بيعه",
+    ckb: "هەڵوەشاندنەوەیەک کە تۆماری فرۆشتنەکەی هەڵنەگەڕێندراوەتەوە",
+  },
+  "A refund with no journal": { ar: "استرداد بلا قيد", ckb: "گەڕاندنەوەی پارەیەک بێ تۆمار" },
+  "A delivery with no journal": { ar: "توريد بلا قيد", ckb: "بارێک بێ تۆمار" },
+  "A delivery's correction with no journal": {
+    ar: "تصحيح توريد بلا قيد",
+    ckb: "ڕاستکردنەوەی بارێک بێ تۆمار",
+  },
+  "A bill with no journal": { ar: "فاتورة بلا قيد", ckb: "پسووڵەیەک بێ تۆمار" },
+  "A payment with no journal": { ar: "دفعة بلا قيد", ckb: "پارەدانێک بێ تۆمار" },
+  "An expense with no journal": { ar: "مصروف بلا قيد", ckb: "خەرجییەک بێ تۆمار" },
+  "A loss, stock correction or opening stock with no journal": {
+    ar: "هدر أو تصحيح مخزون أو مخزون افتتاحي بلا قيد",
+    ckb: "بەفیڕۆچوون، ڕاستکردنەوەی کۆگا یان کۆگای سەرەتا بێ تۆمار",
+  },
+  "An approved count with no journal": {
+    ar: "جرد معتمد بلا قيد",
+    ckb: "ژماردنێکی پەسەندکراو بێ تۆمار",
+  },
+  "Cash moved with no journal": { ar: "نقل نقد بلا قيد", ckb: "گواستنەوەی پارە بێ تۆمار" },
+  "A drawer counted over or short with no journal": {
+    ar: "درج عُدّ بزيادة أو عجز بلا قيد",
+    ckb: "دەخیلەیەک بە زیادە یان کەمی ژمێردرا بێ تۆمار",
+  },
+  "A drawer opened over or short with no journal": {
+    ar: "درج فُتح بزيادة أو عجز بلا قيد",
+    ckb: "دەخیلەیەک بە زیادە یان کەمی کرایەوە بێ تۆمار",
+  },
+  "A card settlement with no journal": {
+    ar: "تسوية بطاقات بلا قيد",
+    ckb: "یەکلاکردنەوەی کارت بێ تۆمار",
+  },
+  "A platform statement posted with no journal": {
+    ar: "كشف منصة مُرحَّل بلا قيد",
+    ckb: "کەشفی پلاتفۆرمێک تۆمار کرا بێ تۆمار",
+  },
+  "A journal whose {1} does not exist": {
+    ar: "قيد لا يوجد سجله ({1})",
+    ckb: "تۆمارێک کە بەڵگەکەی ({1}) بوونی نییە",
+  },
+  sale: { ar: "البيع", ckb: "فرۆشتن" },
+  delivery: { ar: "التوريد", ckb: "بار" },
+  "delivery correction": { ar: "تصحيح التوريد", ckb: "ڕاستکردنەوەی بار" },
+  bill: { ar: "الفاتورة", ckb: "پسووڵە" },
+  payment: { ar: "الدفعة", ckb: "پارەدان" },
+  expense: { ar: "المصروف", ckb: "خەرجی" },
+  "stock movement": { ar: "حركة المخزون", ckb: "جووڵەی کۆگا" },
+  "stock count": { ar: "جرد المخزون", ckb: "ژماردنی کۆگا" },
+  "cash movement": { ar: "نقل النقد", ckb: "گواستنەوەی پارە" },
+  "drawer count": { ar: "جرد الدرج", ckb: "ژماردنی دەخیلە" },
+  "drawer opening": { ar: "فتح الدرج", ckb: "کردنەوەی دەخیلە" },
+  "card settlement": { ar: "تسوية البطاقات", ckb: "یەکلاکردنەوەی کارت" },
+  "platform statement": { ar: "كشف المنصة", ckb: "کەشفی پلاتفۆرم" },
 };
 
 export default phrases;

@@ -72,6 +72,44 @@ quantity`.
 - Each item's **price history** lists its deliveries, newest first, with the
   supplier, what was paid a base unit and what it cost landed.
 
+### A delivery corrected (`0038`)
+
+A correction compares the delivery as it stands with the delivery as it
+should be, item by item, and moves only the difference. What was entered
+first is never changed.
+
+- **How much of the delivery is still on the shelf**, `σ`, from 0 to 1: at the
+  delivery it is 1; each use of the item since (a sale, a batch, a loss, a
+  count) leaves `after ÷ before` of it, as average cost spreads every use over
+  all the stock. Corrections and revaluations are not uses.
+- **A price corrected**: `Δp = the line's corrected goods value − its value as
+it stands` (freight and rebates shared out again by value, as on receipt).
+  The part still on the shelf revalues the stock: `round(Δp × σ)`, as a pair
+  of `cost_adjustment` movements (the stock out at its value, back in at the
+  corrected value), so its quantity does not move. The rest, what was already
+  used at the old price, goes to 5050 Purchase price variance; the cost of
+  what was sold is not restated.
+- **A quantity corrected**: the units that come off (or go on) the shelf move
+  at `σ × the delivery's price + (1 − σ) × the average cost now`: at the price
+  they came in at, as far as the delivery's stock is still there, and at the
+  average for the rest. The stock left is never valued below zero: with
+  nothing left its value is nothing, and below zero it is valued at the
+  corrected price.
+- **An item changed** is the old item's quantity off and the new one's on; a
+  **reversal** is every line off. A supplier or a date changes the document
+  only.
+- **The journal**: Dr/Cr 1200 by the change in stock value, Cr/Dr 2050 by the
+  change in what is owed (the corrected goods value less what it was), and
+  5050 the difference between the two. With nothing to post, no journal.
+- **Worked example** (the SQL test): beans 1,000 g at 10 a gram; 2 kg received
+  at 6,000 a kilogram (12,000), 3,000 g now worth 22,000; fifty espressos use
+  1,000 g, leaving 2,000 g and `σ = 2,000 ÷ 3,000`. The invoice says 12,000 a
+  kilogram: `Δp = 24,000 − 12,000 = 12,000`, of which `round(12,000 × ⅔) =
+8,000` revalues the 2,000 g on the shelf (14,667 → 22,667) and 4,000 goes to 5050. The journal: Dr 1200 8,000, Dr 5050 4,000, Cr 2050 12,000.
+- Ten bottles entered at 300 of which eight came, nothing used since (`σ = 1`):
+  the two go out at 300: Cr 1200 600, Dr 2050 600, exactly as if eight had
+  been entered.
+
 ### FIFO (optional)
 
 Where lot costing is required, issues consume oldest lots first at their lot
@@ -400,6 +438,26 @@ corrections are new entries. What each record posts (migration `0015`):
   books say it holds.
 - Card settlement and a platform's payout (`0030`): see §9. Cancelling one
   reverses its journal exactly.
+- A delivery's correction (`0038`): see §4, _A delivery corrected_. One
+  journal per correction, reference `receipt_correction`, narrated
+  _"Correction 3 of delivery 12: Two bottles short on the invoice"_.
+- **Do the books tie?** (`0019`, `0038`) Each subledger against its account,
+  as at the end of a day; every one must be zero to lock the month:
+  - the stock ledger's value against 1200;
+  - the bills not yet paid against 2000;
+  - what is owed for deliveries not yet billed (as corrected) against 2050;
+  - the sales less their refunds against 4000 less 4100 and 4200;
+  - the card takings of the days not yet settled against 1010;
+  - the orders the platforms owe, less what was refunded and what a statement
+    paid out, against 1100 (the sales from before order numbers owed too,
+    less the payouts typed by hand, as far as they go);
+  - what each drawer should hold (its session's opening count and cash since,
+    or what its last count left and the cash since) against 1000, once a
+    drawer has been counted in a session;
+  - the cash moved in and out of the safe, and the expenses and bills paid
+    from it, against 1005;
+  - the records without their one journal, and the automatic journals
+    without their record: a count, which must be nothing.
 - Year end: revenue and expense accounts closed to 3100 Retained earnings.
 
 ## 12. Alerts and the daily brief (`0029`, audit P1-8)

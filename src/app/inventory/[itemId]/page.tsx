@@ -21,6 +21,7 @@ const LINES = (t: T): { kind: StockCardKind; label: string }[] => [
   { kind: "wasted", label: t("Wasted, spoiled, given away") },
   { kind: "counted", label: t("Stock counts") },
   { kind: "corrected", label: t("Corrections") },
+  { kind: "revalued", label: t("Revalued: a delivery's price corrected") },
   { kind: "transferred", label: t("Moved between locations") },
 ];
 

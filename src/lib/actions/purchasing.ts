@@ -144,6 +144,213 @@ export async function receiveGoodsAction(
   };
 }
 
+/** What a correction does to one item (0038), as the database works it out. */
+export interface CorrectionEffect {
+  itemId: string;
+  name: string;
+  unit: string;
+  qtyBefore: number;
+  qtyAfter: number;
+  onHand: number;
+  onHandAfter: number;
+  stockValue: number;
+  stockValueAfter: number;
+  /** How much of the delivery's value is still on the shelf, 0 to 1. */
+  stillOnHand: number;
+  stockChange: number;
+  grniChange: number;
+  variance: number;
+}
+
+export interface CorrectionPlan {
+  items: CorrectionEffect[];
+  stock: number;
+  grni: number;
+  variance: number;
+  kinds: string[];
+  belowZero: { name: string; onHandAfter: number; unit: string }[];
+  countedSince: string[];
+  /** Why the delivery cannot be corrected at all, if it cannot. */
+  blocked: string | null;
+}
+
+export interface CorrectionResult {
+  correctionNo: number;
+  receiptNo: number;
+  kinds: string[];
+  reversed: boolean;
+  stock: number;
+  grni: number;
+  variance: number;
+  journalNo: number | null;
+  replayed: boolean;
+}
+
+const effects = (raw: unknown): CorrectionEffect[] =>
+  Array.isArray(raw)
+    ? (raw as Record<string, unknown>[]).map((e) => ({
+        itemId: String(e.item_id),
+        name: String(e.name ?? ""),
+        unit: String(e.unit ?? ""),
+        qtyBefore: Number(e.qty_before ?? 0),
+        qtyAfter: Number(e.qty_after ?? 0),
+        onHand: Number(e.on_hand ?? 0),
+        onHandAfter: Number(e.on_hand_after ?? 0),
+        stockValue: Number(e.stock_value ?? 0),
+        stockValueAfter: Number(e.stock_value_after ?? 0),
+        stillOnHand: Number(e.still_on_hand ?? 0),
+        stockChange: Number(e.stock_change ?? 0),
+        grniChange: Number(e.grni_change ?? 0),
+        variance: Number(e.variance ?? 0),
+      }))
+    : [];
+
+const correctionLines = z
+  .array(
+    z.object({
+      /** The delivery's own line, or none for a line added. */
+      lineId: z.string().uuid().nullable(),
+      itemId: id("an item"),
+      qty: positive("Quantity"),
+      unitCode: z.string().min(1, "Choose a unit"),
+      unitPrice: nonNegative("Price per unit"),
+    }),
+  )
+  .min(1, "A delivery keeps at least one line: to undo all of it, reverse it");
+
+const correctionInput = z.object({
+  receiptId: id("a delivery"),
+  lines: correctionLines,
+  supplierId: id("the supplier"),
+  receivedOn: day("The date it came"),
+});
+
+// As parse() types what it checked: the numbers, as exact strings, are typed as they came.
+const toLines = (lines: z.input<typeof correctionLines>) =>
+  lines.map((l) => ({
+    line_id: l.lineId,
+    item_id: l.itemId,
+    qty: l.qty,
+    unit_code: l.unitCode,
+    unit_price: l.unitPrice,
+  }));
+
+const toPlan = (d: Record<string, unknown>): CorrectionPlan => ({
+  items: effects(d.items),
+  stock: Number(d.stock ?? 0),
+  grni: Number(d.grni ?? 0),
+  variance: Number(d.variance ?? 0),
+  kinds: Array.isArray(d.kinds) ? (d.kinds as unknown[]).map(String) : [],
+  belowZero: Array.isArray(d.below_zero)
+    ? (d.below_zero as Record<string, unknown>[]).map((b) => ({
+        name: String(b.name ?? ""),
+        onHandAfter: Number(b.on_hand_after ?? 0),
+        unit: String(b.unit ?? ""),
+      }))
+    : [],
+  countedSince: Array.isArray(d.counted_since)
+    ? (d.counted_since as Record<string, unknown>[]).map((c) => String(c.name ?? ""))
+    : [],
+  blocked: d.blocked == null ? null : String(d.blocked),
+});
+
+const toResult = (d: Record<string, unknown>): CorrectionResult => ({
+  correctionNo: Number(d.correction_no ?? 0),
+  receiptNo: Number(d.receipt_no ?? 0),
+  kinds: Array.isArray(d.kinds) ? (d.kinds as unknown[]).map(String) : [],
+  reversed: Boolean(d.reversed),
+  stock: Number(d.stock ?? 0),
+  grni: Number(d.grni ?? 0),
+  variance: Number(d.variance ?? 0),
+  journalNo: d.journal_no == null ? null : Number(d.journal_no),
+  replayed: Boolean(d.replayed),
+});
+
+/**
+ * What correcting a delivery would do (0038), before anything is done: item by
+ * item, the stock and its value, what is owed for it (2050) and what goes to
+ * purchase price variance (5050). With `reverse`, what reversing it would do.
+ */
+export async function previewReceiptCorrectionAction(
+  input: z.input<typeof correctionInput> | { receiptId: string; reverse: true },
+): Promise<ActionResult<CorrectionPlan>> {
+  if ("reverse" in input) {
+    const v = parse(z.object({ receiptId: id("a delivery") }), input);
+    if (!v.ok) return v;
+    const r = await callRpc<Record<string, unknown>>("preview_receipt_correction", {
+      p_receipt: v.data.receiptId,
+      p_reverse: true,
+    });
+    if (!r.ok) return r;
+    return { ok: true, data: toPlan(r.data) };
+  }
+  const v = parse(correctionInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("preview_receipt_correction", {
+    p_receipt: v.data.receiptId,
+    p_lines: toLines(v.data.lines),
+    p_supplier: v.data.supplierId,
+    p_received_on: v.data.receivedOn,
+  });
+  if (!r.ok) return r;
+  return { ok: true, data: toPlan(r.data) };
+}
+
+const correctInput = correctionInput.extend({
+  reason: text("Why it is corrected", 300),
+  /** The person has seen that it leaves stock below zero, and says it is right. */
+  confirm: z.boolean().default(false),
+});
+
+/** Correct a delivery (0038): its lines, its supplier, its date. Keyed (0035). */
+export async function correctReceiptAction(
+  input: z.input<typeof correctInput>,
+  key: string,
+): Promise<ActionResult<CorrectionResult>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(correctInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("correct_receipt", {
+    p_receipt: v.data.receiptId,
+    p_lines: toLines(v.data.lines),
+    p_supplier: v.data.supplierId,
+    p_received_on: v.data.receivedOn,
+    p_reason: v.data.reason,
+    p_confirm: v.data.confirm,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...BUY_PATHS);
+  return { ok: true, data: toResult(r.data) };
+}
+
+const reverseInput = z.object({
+  receiptId: id("a delivery"),
+  reason: text("Why it is reversed", 300),
+  confirm: z.boolean().default(false),
+});
+
+/** Reverse a delivery that should not exist (0038). Keyed (0035). */
+export async function reverseReceiptAction(
+  input: z.input<typeof reverseInput>,
+  key: string,
+): Promise<ActionResult<CorrectionResult>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(reverseInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("reverse_receipt", {
+    p_receipt: v.data.receiptId,
+    p_reason: v.data.reason,
+    p_confirm: v.data.confirm,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...BUY_PATHS);
+  return { ok: true, data: toResult(r.data) };
+}
+
 const billInput = z
   .object({
     supplierId: id("the vendor"),

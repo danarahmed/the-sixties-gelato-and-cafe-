@@ -65,6 +65,8 @@ const MOVEMENT_LABEL: Record<string, string> = {
   transfer_out: "Transfer out",
   refund_return_to_stock: "Refund return",
   reversal: "Reversal",
+  receipt_correction: "Delivery corrected",
+  cost_adjustment: "Revalued",
 };
 export function movementLabel(t: string): string {
   return MOVEMENT_LABEL[t] ?? t.replace(/_/g, " ");
