@@ -8,6 +8,7 @@ import { dateTimeIn } from "@/lib/dates";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import type { PlatformSettlement } from "@/lib/settlements";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 /**
  * The statements posted, newest first (0030). One posted by mistake is
@@ -24,6 +25,7 @@ export function PlatformSettlements({
   canCancel: boolean;
   timezone: string;
 }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -34,7 +36,9 @@ export function PlatformSettlements({
   function cancel(id: string) {
     setMsg(null);
     start(async () => {
-      const r = await cancelPlatformSettlementAction({ id, reason });
+      const r = await op.run("cancelPlatformSettlement", (key) =>
+        cancelPlatformSettlementAction({ id, reason }, key),
+      );
       if (!r.ok) {
         setMsg({ ok: false, text: r.error });
         return;
@@ -51,6 +55,7 @@ export function PlatformSettlements({
 
   return (
     <div className="panel-b">
+      <OperationStatus op={op} />
       <Notice msg={msg} />
       <div className="tw">
         <table>

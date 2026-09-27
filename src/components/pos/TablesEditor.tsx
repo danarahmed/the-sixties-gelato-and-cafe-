@@ -5,6 +5,7 @@ import type { DiningTable } from "@/lib/db/pos";
 import { saveTableAction } from "@/lib/actions/pos";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 interface Draft {
   name: string;
@@ -40,6 +41,7 @@ function input(d: Draft, id: string | null) {
  * of use (not while it has an open bill).
  */
 export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClose: () => void }) {
+  const op = useOperation();
   const { t } = useT();
   const [edits, setEdits] = useState<Record<string, Draft>>({});
   const [busy, setBusy] = useState(false);
@@ -63,7 +65,7 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
     setEdits((e) => ({ ...e, [tb.id]: { ...draftOf(tb), ...patch } }));
 
   async function save(id: string | null, d: Draft): Promise<boolean> {
-    const r = await saveTableAction(input(d, id));
+    const r = await op.run("saveTable", (key) => saveTableAction(input(d, id), key));
     if (!r.ok) setMsg({ ok: false, text: r.error });
     return r.ok;
   }
@@ -264,6 +266,7 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
         </div>
 
         <div style={{ marginTop: 8 }}>
+          <OperationStatus op={op} />
           <Notice msg={msg} />
         </div>
         <div className="pay-actions">

@@ -130,6 +130,11 @@ describe("app ↔ database function contract", () => {
       for (const p of fn!.params.filter((x) => x.required)) {
         expect(c.keys, `${c.fn} is called without its required ${p.name}`).toContain(p.name);
       }
+      // A write that can be recorded once (0035) is always sent with its key:
+      // without one, a retry after a lost answer would record it twice.
+      if (names.includes("p_idempotency_key")) {
+        expect(c.keys, `${c.fn} is called without its retry key`).toContain("p_idempotency_key");
+      }
     });
   }
 });

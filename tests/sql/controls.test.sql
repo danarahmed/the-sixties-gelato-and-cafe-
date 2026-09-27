@@ -137,7 +137,7 @@ select test.eq((
   'acknowledge_alert,add_delivery_platform,add_item_unit,adjust_stock,alert_thresholds,app_words,approve_stock_count,cancel_bill,cancel_card_settlement,'
   'cancel_platform_settlement,cancel_production,cancel_scheduled_price,cancel_scheduled_recipe,'
   'cancel_stock_count,cancel_tab,card_takings,change_product_recipe,'
-  'clear_product_image,close_day,copy_platform_setup,count_drawer,create_item,create_product,'
+  'clear_product_image,copy_platform_setup,count_drawer,create_item,create_product,'
   'create_supplier,current_alerts,current_app_user_id,'
   'current_business_id,current_can_view_costs,current_has_permission,current_has_role,daily_brief,dashboard_summary,'
   'discard_journal,drawer_status,invite_member,item_costs,item_price_history,language_settings,legacy_unposted,list_approvers,list_members,'

@@ -8,6 +8,7 @@ import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import type { UnpostedRecord } from "@/lib/db/reports";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 /** What kind of record it is, in words: phrases, shown through t(). */
 const KIND_LABEL: Record<string, string> = {
@@ -33,6 +34,7 @@ export function LegacyPostings({
   canPost: boolean;
   timezone: string;
 }) {
+  const op = useOperation();
   // say: a record's description as the database words it, in the reader's language.
   const { t, msg: say } = useT();
   const router = useRouter();
@@ -44,7 +46,9 @@ export function LegacyPostings({
   function post() {
     setMsg(null);
     start(async () => {
-      const r = await postLegacyUnpostedAction({ reason });
+      const r = await op.run("postLegacyUnposted", (key) =>
+        postLegacyUnpostedAction({ reason }, key),
+      );
       if (r.ok) {
         setMsg({
           ok: true,
@@ -132,6 +136,7 @@ export function LegacyPostings({
         </p>
       )}
       <div style={{ marginTop: 8 }}>
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>

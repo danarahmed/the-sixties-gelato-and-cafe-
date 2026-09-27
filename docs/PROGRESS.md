@@ -7,10 +7,10 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0034` and the rebuilt app. The SQL
-  checks (35, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (13, every role, every screen in
-  Arabic and Kurdish), the unit and contract tests (287) and a production
+- **Built and verified:** migrations `0014`–`0035` and the rebuilt app. The SQL
+  checks (36, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (14, every role, every screen in
+  Arabic and Kurdish, and a lost answer on each kind of screen), the unit and contract tests (287) and a production
   build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
@@ -301,6 +301,30 @@ browser tests through the real app, or both.
   receipt show the price of one as well as what the line comes to: the check
   and the bill printed before payment now read Qty · Item · Price · Amount
   (2 × 5,000 = 10,000).
+- **Every write recorded once (release J, migration `0035`, the first step of
+  [`COMPLETION_PLAN.md`](COMPLETION_PLAN.md)).** Until now only a quick sale and
+  a bill's payment were safe against a lost answer; a delivery, a bill, a
+  payment, an expense, a loss, a batch, a count, a cash move, a journal, a
+  table's bill, a void or a refund sent again after a dropped connection was
+  recorded again (a drawer count sent twice even moved the takings to the safe
+  twice). Now all fifty such writes take a key: the screen makes it when the
+  person submits, and the database stores its answer with the work, in the same
+  transaction. With no answer the screen says _"Your previous submission may
+  already have been saved. Checking…"_, sends it again with the same key, and
+  shows what was done; the database answers a retry with what it did the first
+  time, and refuses a key used for other details, another operation or by
+  another person. Each function keeps its name and parameters; the key is its
+  last, and the work itself, unchanged, is `<name>__run`, which only the
+  database can call. The contract test fails any call from the app that does
+  not send a key. Also: deliveries, supplier bills and payments, expenses,
+  losses, batches, journals, count steps and tables are on the audit trail;
+  only the owner may take away an owner's or a general manager's access; wrong
+  PINs stop the person typing them (three in fifteen minutes), not the manager
+  they name, and twenty in a day pause that manager's approvals by PIN until
+  they set a new one; `close_day`, dead since `0024`, is closed; a loss valued
+  at nothing is recorded instead of failing; a batch whose output has been used
+  can no longer be cancelled; and the Expenses screen shows a card payment
+  coming from the bank (1020), as the books record it.
 
 ## The August 2026 audit, finding by finding
 

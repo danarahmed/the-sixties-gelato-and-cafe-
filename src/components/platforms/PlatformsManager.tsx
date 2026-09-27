@@ -17,6 +17,7 @@ import type { PlatformInfo } from "@/lib/settlements";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { useChannels } from "@/components/ChannelsProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 type Msg = { ok: boolean; text: string } | null;
 type Names = Record<string, string>;
@@ -108,6 +109,7 @@ function PlatformRow({
   canManage: boolean;
   onDone: (m: Msg) => void;
 }) {
+  const op = useOperation();
   const { t } = useT();
   const { set, name: channelName } = useChannels();
   const router = useRouter();
@@ -138,7 +140,9 @@ function PlatformRow({
   function copy() {
     onDone(null);
     start(async () => {
-      const r = await copyPlatformSetupAction({ code: p.code, like, copyPrices });
+      const r = await op.run("copyPlatformSetup", (key) =>
+        copyPlatformSetupAction({ code: p.code, like, copyPrices }, key),
+      );
       if (!r.ok) return onDone({ ok: false, text: r.error });
       onDone({
         ok: true,
@@ -308,11 +312,13 @@ function PlatformRow({
         )}
       </td>
       <td className="right mono">{p.waiting}</td>
+      <OperationStatus op={op} />
     </tr>
   );
 }
 
 function AddPlatform({ onDone }: { onDone: (m: Msg) => void }) {
+  const op = useOperation();
   const { t, msg: say } = useT();
   const { set, name: channelName } = useChannels();
   const router = useRouter();
@@ -327,7 +333,9 @@ function AddPlatform({ onDone }: { onDone: (m: Msg) => void }) {
   function add() {
     onDone(null);
     start(async () => {
-      const r = await addPlatformAction({ name, names, code, like: like || null, copyPrices });
+      const r = await op.run("addPlatform", (key) =>
+        addPlatformAction({ name, names, code, like: like || null, copyPrices }, key),
+      );
       if (!r.ok) return onDone({ ok: false, text: r.error });
       const d = r.data;
       const parts = [t("plat.added").replace("{name}", d.name)];
@@ -428,6 +436,7 @@ function AddPlatform({ onDone }: { onDone: (m: Msg) => void }) {
           {t("plat.cancel")}
         </button>
       </div>
+      <OperationStatus op={op} />
     </div>
   );
 }

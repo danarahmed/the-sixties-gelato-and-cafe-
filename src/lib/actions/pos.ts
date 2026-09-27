@@ -10,7 +10,7 @@
  * shows the same thing.
  */
 import { z } from "zod";
-import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { parseOpenBills, type OpenBill } from "@/lib/db/pos";
 import {
   discountAmount,
@@ -73,7 +73,10 @@ const saveInput = z.object({
 /** Open a bill with its first order, or save what is on one already open. */
 export async function saveBillAction(
   input: z.input<typeof saveInput>,
+  key: string,
 ): Promise<ActionResult<{ tabId: string; version: number; bills: OpenBill[] | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(saveInput, input);
   if (!v.ok) return v;
   const d = v.data;
@@ -97,6 +100,7 @@ export async function saveBillAction(
           p_discount_reason: d.discountReason,
           p_discount_note: d.discountNote,
           p_approval: d.approvalId ?? null,
+          p_idempotency_key: key,
         })
       : await callRpc<Record<string, unknown>>("save_tab", {
           p_tab: d.tabId,
@@ -109,6 +113,7 @@ export async function saveBillAction(
           p_discount_reason: d.discountReason,
           p_discount_note: d.discountNote,
           p_approval: d.approvalId ?? null,
+          p_idempotency_key: key,
         });
   if (!r.ok) return r;
   return withBills({ tabId: String(r.data.tab_id), version: Number(r.data.version) });
@@ -119,12 +124,16 @@ const tabRef = z.object({ tabId: id("a bill"), version });
 /** Printing the bill for the customer is recorded: from then on, taking items off needs a manager. */
 export async function printBillAction(
   input: z.input<typeof tabRef>,
+  key: string,
 ): Promise<ActionResult<{ printCount: number; bills: OpenBill[] | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(tabRef, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("mark_bill_printed", {
     p_tab: v.data.tabId,
     p_version: v.data.version,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   return withBills({ printCount: Number(r.data.print_count ?? 1) });
@@ -179,7 +188,10 @@ const splitInput = tabRef.extend({
 /** Part of a table pays now: move it onto a bill of its own. */
 export async function splitBillAction(
   input: z.input<typeof splitInput>,
+  key: string,
 ): Promise<ActionResult<{ tabId: string; bills: OpenBill[] | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(splitInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("split_tab", {
@@ -187,6 +199,7 @@ export async function splitBillAction(
     p_version: v.data.version,
     p_move: v.data.move.map((m) => ({ line_id: m.lineId, qty: m.qty })),
     p_label: v.data.label,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   return withBills({ tabId: String(r.data.tab_id) });
@@ -201,7 +214,10 @@ const cancelInput = tabRef.extend({
 /** An empty bill can be cancelled by anyone; one with items on it needs a manager and a reason. */
 export async function cancelBillAction(
   input: z.input<typeof cancelInput>,
+  key: string,
 ): Promise<ActionResult<{ bills: OpenBill[] | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(cancelInput, input);
   if (!v.ok) return v;
   const r = await callRpc("cancel_tab", {
@@ -209,6 +225,7 @@ export async function cancelBillAction(
     p_version: v.data.version,
     p_reason: v.data.note,
     p_reason_code: v.data.reasonCode,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   return withBills({});
@@ -231,7 +248,10 @@ const tableInput = z.object({
 /** Add a table, rename or reorder one, or take it out of use. */
 export async function saveTableAction(
   input: z.input<typeof tableInput>,
+  key: string,
 ): Promise<ActionResult<{ id: string }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(tableInput, input);
   if (!v.ok) return v;
   const r = await callRpc<string>("save_table", {
@@ -241,6 +261,7 @@ export async function saveTableAction(
     p_seats: v.data.seats,
     p_sort_order: v.data.sortOrder,
     p_is_active: v.data.isActive,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh("/pos");

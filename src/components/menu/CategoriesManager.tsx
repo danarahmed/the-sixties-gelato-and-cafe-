@@ -5,6 +5,7 @@ import { saveCategoryAction } from "@/lib/actions/menu";
 import type { MenuCategory } from "@/lib/db/menu";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 interface Draft {
   name: string;
@@ -36,6 +37,7 @@ export function CategoriesManager({
   counts: Map<string, number>;
   canEdit: boolean;
 }) {
+  const op = useOperation();
   const { t } = useT();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -55,14 +57,19 @@ export function CategoriesManager({
   function save(id: string | null, d: Draft, after: () => void) {
     setMsg(null);
     start(async () => {
-      const r = await saveCategoryAction({
-        id,
-        name: d.name,
-        nameAr: d.nameAr || null,
-        nameCkb: d.nameCkb || null,
-        sortOrder: Math.trunc(Number(d.sortOrder) || 0),
-        isActive: d.isActive,
-      });
+      const r = await op.run("saveCategory", (key) =>
+        saveCategoryAction(
+          {
+            id,
+            name: d.name,
+            nameAr: d.nameAr || null,
+            nameCkb: d.nameCkb || null,
+            sortOrder: Math.trunc(Number(d.sortOrder) || 0),
+            isActive: d.isActive,
+          },
+          key,
+        ),
+      );
       if (!r.ok) setMsg({ ok: false, text: r.error });
       else {
         setMsg({ ok: true, text: t("Saved “{name}”.", { name: d.name.trim() }) });
@@ -224,6 +231,7 @@ export function CategoriesManager({
           </tbody>
         </table>
       </div>
+      <OperationStatus op={op} />
       <Notice msg={msg} />
     </div>
   );

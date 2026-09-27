@@ -171,10 +171,15 @@ const phrases: PhraseBook = {
 
   // A manager's PIN, as the database answers a request for approval.
   "That PIN is not right": { ar: "رمز PIN هذا غير صحيح", ckb: "ئەم PIN ـە ڕاست نییە" },
-  "Too many wrong PINs for {1}: try again in 15 minutes": {
-    ar: "رموز PIN خاطئة كثيرة لـ{1}: حاول مجددًا بعد 15 دقيقة",
-    ckb: "PIN ی هەڵەی زۆر بۆ {1}: دوای 15 خولەک دووبارە هەوڵ بدەوە",
+  "Too many wrong PINs from this login: try again in 15 minutes": {
+    ar: "رموز PIN خاطئة كثيرة من هذا الحساب: حاول مجددًا بعد 15 دقيقة",
+    ckb: "PIN ی هەڵەی زۆر لەم هەژمارەوە: دوای 15 خولەک دووبارە هەوڵ بدەوە",
   },
+  "Approvals by PIN are paused for {1} after too many wrong PINs today: {2} can set a new PIN on My account":
+    {
+      ar: "توقفت الموافقات برمز PIN لـ{1} بعد رموز خاطئة كثيرة اليوم: يستطيع {2} تعيين رمز PIN جديد من «حسابي»",
+      ckb: "ڕەزامەندی بە PIN بۆ {1} ڕاگیراوە دوای PIN ی هەڵەی زۆر ئەمڕۆ: {2} دەتوانێت لە «هەژمارەکەم» PIN ێکی نوێ دابنێت",
+    },
   "{1} has not set a PIN yet (My account)": {
     ar: "لم يضع {1} رمز PIN بعد (حسابي)",
     ckb: "{1} هێشتا PIN ی دانەناوە (هەژمارەکەم)",

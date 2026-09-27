@@ -58,8 +58,14 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   made (not backdated).
 - **Offline selling (H-04).** The till needs a connection. Offline, it says so
   and refuses the sale. A sale whose confirmation was lost is retried with the
-  same key and recorded once. An offline queue would need its own design for
-  stock and prices that change while the till is offline.
+  same key and recorded once, and since `0035` so is every other write from the
+  app. An offline queue would need its own design for stock and prices that
+  change while the till is offline.
+- **Retry keys, what they do not cover (`0035`).** A screen keeps the key of an
+  unanswered submission while it stays open; reloaded, it forgets it (only the
+  till keeps its unanswered payment across a reload), so after a reload look
+  before entering it again. SQL typed by hand without a key is done as before,
+  unprotected.
 - **Partial refunds.** A refund returns the whole sale. A partial refund is a
   refund of the sale followed by a new sale for what was kept.
 - **One cap for everyone.** Since `0028` every discount has a reason, and one

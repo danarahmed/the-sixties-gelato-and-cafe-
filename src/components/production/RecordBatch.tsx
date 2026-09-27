@@ -19,6 +19,7 @@ import {
   unitLabel,
   type UnitsOf,
 } from "@/components/production/batchMath";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -48,6 +49,7 @@ export function RecordBatch({
   seesCost: boolean;
   decimals: number;
 }) {
+  const op = useOperation();
   const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -92,13 +94,18 @@ export function RecordBatch({
     if (!recipe) return;
     setMsg(null);
     start(async () => {
-      const r = await recordProductionAction({
-        recipeId: recipe.id,
-        batches,
-        outputQty: outQty.trim() === "" ? null : outQty,
-        outputUnit: outQty.trim() === "" ? null : outUnit,
-        note,
-      });
+      const r = await op.run("recordProduction", (key) =>
+        recordProductionAction(
+          {
+            recipeId: recipe.id,
+            batches,
+            outputQty: outQty.trim() === "" ? null : outQty,
+            outputUnit: outQty.trim() === "" ? null : outUnit,
+            note,
+          },
+          key,
+        ),
+      );
       if (r.ok) {
         const made = showIn(new Decimal(r.data.actual), output, shownUnit);
         setMsg({
@@ -275,6 +282,7 @@ export function RecordBatch({
         <button className="btn-primary" onClick={submit} disabled={busy || !recipe || !b}>
           {busy ? t("Recording…") : t("Record batch")}
         </button>
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>

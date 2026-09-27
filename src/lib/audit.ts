@@ -9,7 +9,7 @@
  * language through t(), subjectIn() and valueIn().
  */
 import { BUILT_IN_LANGUAGES, type Msg, type T } from "@/lib/i18n/core";
-import { itemTypeLabel, roleLabel } from "@/lib/format";
+import { itemTypeLabel, movementLabel, roleLabel } from "@/lib/format";
 import { SHOP_CHANNELS, channelName } from "@/lib/channels";
 import { RULE_LABEL, THRESHOLD_LABEL, ruleLabel } from "@/lib/alerts";
 
@@ -41,7 +41,7 @@ export const AUDIT_GROUPS = [
   {
     key: "stock",
     label: "Counts, corrections & batches", // i18n-ignore
-    prefixes: ["inventory.adjust", "inventory.count.", "production."],
+    prefixes: ["inventory.adjust", "inventory.waste", "inventory.count.", "production."],
   },
   {
     key: "sales",
@@ -54,7 +54,11 @@ export const AUDIT_GROUPS = [
     label: "Card & platform settlements", // i18n-ignore
     prefixes: ["card.", "platform.settlement", "platform.settlement_cancel"],
   },
-  { key: "books", label: "Books & periods", prefixes: ["journal.", "period.", "legacy."] }, // i18n-ignore
+  {
+    key: "books",
+    label: "Books & periods", // i18n-ignore
+    prefixes: ["journal.", "period.", "legacy.", "expense."],
+  },
   { key: "alerts", label: "Alerts answered", prefixes: ["alert."] }, // i18n-ignore
   {
     key: "settings",
@@ -63,6 +67,7 @@ export const AUDIT_GROUPS = [
       "business.",
       "location.",
       "member.",
+      "table.",
       "platform.create",
       "platform.setup",
       "platform.update",
@@ -88,9 +93,19 @@ const ACTION_LABEL: Record<string, string> = {
   "recipe.batch.change": "Batch recipe changed",
   "inventory.opening": "Opening stock recorded",
   "inventory.adjust": "Stock corrected",
+  "inventory.count.start": "Stock count started",
+  "inventory.count.submit": "Stock count handed in",
+  "inventory.count.reject": "Stock count sent back",
   "inventory.count.approve": "Stock count approved",
   "inventory.count.cancel": "Stock count cancelled",
+  "inventory.waste": "Loss recorded",
+  "production.record": "Batch recorded",
   "production.cancel": "Batch cancelled",
+  "purchase.receive": "Delivery received",
+  "purchase.bill": "Supplier bill recorded",
+  "purchase.pay": "Supplier bill paid",
+  "expense.record": "Expense recorded",
+  "table.save": "Table saved",
   "purchase.price_confirmed": "Delivery price confirmed",
   "sale.void": "Sale voided",
   "sale.refund": "Sale refunded",
@@ -114,6 +129,9 @@ const ACTION_LABEL: Record<string, string> = {
   "language.add": "Language added",
   "language.update": "Language changed",
   "language.words": "The café's words for phrases changed",
+  "journal.save": "Journal saved",
+  "journal.publish": "Journal published",
+  "journal.discard": "Draft journal discarded",
   "journal.reverse": "Journal reversed",
   "journal.control_correction": "Owner's correction posted",
   "legacy.post_unposted": "Old record posted",
@@ -196,6 +214,19 @@ const FIELD_LABEL: Record<string, string> = {
   qty: "Quantity",
   value: "Value",
   receipt_no: "Receipt",
+  supplier: "Supplier",
+  items: "Items",
+  amount: "Amount",
+  account: "Account",
+  paid_from: "Paid from",
+  journal_no: "Journal",
+  invoice_no: "Bill",
+  recipe: "Batch recipe",
+  batches: "Batches",
+  note: "Note",
+  area: "Area",
+  seats: "Seats",
+  movement: "Kind of loss",
   discount_round_to: "Round % discounts to",
   discount_cap_percent: "Discounts a manager approves, over (%)",
   bill_prefix: "Bill numbers start",
@@ -260,6 +291,7 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
     if (key === "channel") return names.get(`channel:${v}`) ?? channelName([], v);
     if (key === "rule") return ruleLabel(v);
     if (key === "item_type") return itemTypeLabel(v);
+    if (key === "movement") return movementLabel(v);
     return v;
   }
   if (Array.isArray(v)) {
@@ -373,6 +405,14 @@ export function subjectOf(
       return "Business settings";
     case "inventory_movement":
       return named(pick("item")) ?? "Stock";
+    case "expense":
+      return pick("description") ?? "An expense";
+    case "production_batch":
+      return pick("recipe") ?? "A batch";
+    case "stock_count":
+      return "A stock count";
+    case "dining_table":
+      return pick("name") ?? "A table";
     case "goods_receipt":
       return pick("receipt_no") ? `Receipt ${pick("receipt_no")}` : "A delivery";
     case "recipe_version":
@@ -419,6 +459,10 @@ const SUBJECT_WORDS = new Set([
   "An alert",
   "Card takings",
   "A platform statement",
+  "An expense",
+  "A batch",
+  "A stock count",
+  "A table",
 ]);
 
 /** An id shown short, as subjectOf shows it: "1a2b3c4d…". */
@@ -498,6 +542,7 @@ export function valueIn(value: string, field: string, t: T, msg: Msg): string {
   if (value === "yes" || value === "no") return t(value);
   switch (field) {
     case FIELD_LABEL.item_type:
+    case FIELD_LABEL.movement:
     case FIELD_LABEL.kind:
     case FIELD_LABEL.dimension:
     case fieldLabel("status"):

@@ -2,6 +2,7 @@ import "server-only";
 import { revalidatePath } from "next/cache";
 import type { PostgrestError } from "@supabase/supabase-js";
 import type { ZodType } from "zod";
+import { v5 as uuidv5 } from "uuid";
 import { createServerSupabase, NotConfiguredError } from "@/lib/supabase/server";
 import { UNCERTAIN_MESSAGE, isUncertainFailure } from "./rpcOutcome";
 
@@ -76,4 +77,25 @@ export function parse<T>(schema: ZodType<T>, input: unknown): ActionResult<T> {
 /** Refresh the screens a change affects. */
 export function refresh(...paths: string[]): void {
   for (const p of paths) revalidatePath(p);
+}
+
+const KEY = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Every write carries the key of the submission it belongs to (0035): the
+ * screen makes it when the person submits and sends it again with every retry,
+ * so the database records the write once. A write without one is refused here.
+ */
+export function badKey(key: unknown): { ok: false; error: string } | null {
+  return typeof key === "string" && KEY.test(key)
+    ? null
+    : { ok: false, error: "This screen sent no retry key: reload the page and try again." };
+}
+
+/**
+ * The key of a second write made by the same submission: always the same for
+ * that submission and that write, and never the key of the first.
+ */
+export function subKey(key: string, step: string): string {
+  return uuidv5(step, key);
 }

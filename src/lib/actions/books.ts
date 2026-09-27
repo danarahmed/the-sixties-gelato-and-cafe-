@@ -7,7 +7,7 @@
  */
 import { z } from "zod";
 import { getBookkeeper, type ExpenseCategorization } from "@/lib/bookkeeping/rules";
-import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import {
   day,
   id,
@@ -42,7 +42,10 @@ const expenseInput = z.object({
 /** Dr the confirmed expense account / Cr where the money came from — one step. */
 export async function recordExpenseAction(
   input: z.input<typeof expenseInput>,
+  key: string,
 ): Promise<ActionResult<{ journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(expenseInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("record_expense", {
@@ -51,6 +54,7 @@ export async function recordExpenseAction(
     p_account_code: v.data.accountCode,
     p_paid_from: v.data.paidFrom,
     p_date: v.data.date,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh("/expenses", "/sales", ...BOOK_PATHS);
@@ -80,7 +84,10 @@ const journalInput = z.object({
 
 export async function saveJournalAction(
   input: z.input<typeof journalInput>,
+  key: string,
 ): Promise<ActionResult<{ status: string; journalNo: number | null; reversalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(journalInput, input);
   if (!v.ok) return v;
   const lines = v.data.lines.filter((l) => Number(l.debit) > 0 || Number(l.credit) > 0);
@@ -99,6 +106,7 @@ export async function saveJournalAction(
     p_publish: v.data.publish,
     p_reference_no: v.data.referenceNo,
     p_reverse_on: v.data.reverseOn,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...BOOK_PATHS);
@@ -116,10 +124,16 @@ const entryInput = z.object({ entryId: id("a journal") });
 
 export async function publishJournalAction(
   input: z.input<typeof entryInput>,
+  key: string,
 ): Promise<ActionResult<{ journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(entryInput, input);
   if (!v.ok) return v;
-  const r = await callRpc<Record<string, unknown>>("publish_journal", { p_entry: v.data.entryId });
+  const r = await callRpc<Record<string, unknown>>("publish_journal", {
+    p_entry: v.data.entryId,
+    p_idempotency_key: key,
+  });
   if (!r.ok) return r;
   refresh(...BOOK_PATHS);
   return {
@@ -131,10 +145,13 @@ export async function publishJournalAction(
 /** Only a draft can be discarded — and failure is reported, never passed off as done (M-09). */
 export async function discardJournalAction(
   input: z.input<typeof entryInput>,
+  key: string,
 ): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(entryInput, input);
   if (!v.ok) return v;
-  const r = await callRpc("discard_journal", { p_entry: v.data.entryId });
+  const r = await callRpc("discard_journal", { p_entry: v.data.entryId, p_idempotency_key: key });
   if (!r.ok) return r;
   refresh(...BOOK_PATHS);
   return { ok: true, data: null };
@@ -149,13 +166,17 @@ const reverseInput = z.object({
 /** The one way to correct a published journal: a mirror entry, dated when the correction is made. */
 export async function reverseJournalAction(
   input: z.input<typeof reverseInput>,
+  key: string,
 ): Promise<ActionResult<{ journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(reverseInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("reverse_journal", {
     p_entry: v.data.entryId,
     p_reason: v.data.reason,
     p_date: v.data.date,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...BOOK_PATHS, "/vendors", "/expenses", "/sales");
@@ -170,12 +191,16 @@ const lockInput = z.object({ periodId: id("a period"), reason: optionalText(300)
 /** Locks only if every closing check passes — the database re-runs them all as it locks. */
 export async function lockPeriodAction(
   input: z.input<typeof lockInput>,
+  key: string,
 ): Promise<ActionResult<{ period: string; yearEndJournalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(lockInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("lock_period", {
     p_period: v.data.periodId,
     p_reason: v.data.reason,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...BOOK_PATHS, "/journals", "/expenses");
@@ -194,10 +219,17 @@ const unlockInput = z.object({ periodId: id("a period"), reason: text("A reason"
 /** Exceptional: the owner only, with a reason that goes on the audit trail. */
 export async function unlockPeriodAction(
   input: z.input<typeof unlockInput>,
+  key: string,
 ): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(unlockInput, input);
   if (!v.ok) return v;
-  const r = await callRpc("unlock_period", { p_period: v.data.periodId, p_reason: v.data.reason });
+  const r = await callRpc("unlock_period", {
+    p_period: v.data.periodId,
+    p_reason: v.data.reason,
+    p_idempotency_key: key,
+  });
   if (!r.ok) return r;
   refresh(...BOOK_PATHS);
   return { ok: true, data: null };
@@ -228,11 +260,15 @@ const legacyInput = z.object({ reason: text("A reason", 300) });
  */
 export async function postLegacyUnpostedAction(
   input: z.input<typeof legacyInput>,
+  key: string,
 ): Promise<ActionResult<{ posted: number; total: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(legacyInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("post_legacy_unposted", {
     p_reason: v.data.reason,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...BOOK_PATHS, "/inventory", "/vendors", "/purchasing");
@@ -249,7 +285,10 @@ export async function postLegacyUnpostedAction(
  */
 export async function postControlCorrectionAction(
   input: z.input<typeof correctionInput>,
+  key: string,
 ): Promise<ActionResult<{ journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(correctionInput, input);
   if (!v.ok) return v;
   const lines = v.data.lines.filter((l) => Number(l.debit) > 0 || Number(l.credit) > 0);
@@ -263,6 +302,7 @@ export async function postControlCorrectionAction(
       memo: l.memo ?? "",
     })),
     p_reason: v.data.reason,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...BOOK_PATHS, "/inventory", "/vendors");

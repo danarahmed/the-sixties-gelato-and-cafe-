@@ -5,7 +5,7 @@
  * decide what they can see and do, everywhere, enforced by the database.
  */
 import { z } from "zod";
-import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { id, text } from "@/lib/validation";
 
 const ROLES = [
@@ -28,13 +28,17 @@ const inviteInput = z.object({
 
 export async function inviteMemberAction(
   input: z.input<typeof inviteInput>,
+  key: string,
 ): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(inviteInput, input);
   if (!v.ok) return v;
   const r = await callRpc("invite_member", {
     p_email: v.data.email,
     p_name: v.data.name,
     p_roles: v.data.roles,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh("/settings");

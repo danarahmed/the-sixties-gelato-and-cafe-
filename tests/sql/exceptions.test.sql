@@ -149,19 +149,42 @@ insert into s select 'd50', record_sale(gen_random_uuid(), 'dine_in', 'cash', pg
   p_discount_reason => 'staff_meal');
 select test.eq(pg_temp.r('d50') ->> 'discount', '2500', 'a manager gives more on their own authority');
 
--- Five wrong PINs in fifteen minutes lock that manager's approvals.
-select test.act_as('cashier@example.com');
-select request_approval('discount', pg_temp.id('manager'), '1470', '{}') from generate_series(1, 4);
-select test.eq(request_approval('discount', pg_temp.id('manager'), '2580', '{"percent": 15}') ->> 'error',
-  'Too many wrong PINs for Demo Manager: try again in 15 minutes',
-  'five wrong PINs lock the manager''s approvals, even with the right one');
+-- Wrong PINs stop the person typing them, not the manager they name (0035):
+-- three in fifteen minutes stop that login for the rest of the fifteen.
 select test.as_admin();
-select test.eq((select count(*) filter (where not ok) || '/' || count(*) from pin_attempt), '5/7',
-  'every PIN typed is counted: five wrong, two right, none while locked');
+update pin_attempt set at = at - interval '15 minutes';
+select test.act_as('cashier@example.com');
+select request_approval('discount', pg_temp.id('manager'), '1470', '{}') from generate_series(1, 3);
+select test.eq(request_approval('discount', pg_temp.id('manager'), '2580', '{"percent": 15}') ->> 'error',
+  'Too many wrong PINs from this login: try again in 15 minutes',
+  'three wrong PINs stop the person typing them, even with the right one');
+select test.act_as('owner@example.com');
+select test.eq((request_approval('discount', pg_temp.id('manager'), '2580', '{"percent": 15}') ->> 'ok')::boolean, true,
+  'but the manager is not locked out: someone else still gets their approval');
+select test.as_admin();
+select test.eq((select count(*) filter (where not ok) || '/' || count(*) from pin_attempt), '4/7',
+  'every PIN typed is counted: four wrong, three right, none while stopped');
 update pin_attempt set at = at - interval '15 minutes';
 select test.act_as('cashier@example.com');
 select test.eq((request_approval('discount', pg_temp.id('manager'), '2580', '{"percent": 15}') ->> 'ok')::boolean, true,
-  'fifteen minutes on, the manager approves again');
+  'fifteen minutes on, the cashier may ask again');
+
+-- Twenty wrong PINs for one manager in a day, from anyone, pause their
+-- approvals by PIN until they set a new one: a PIN cannot be guessed slowly.
+select test.as_admin();
+insert into pin_attempt (business_id, approver_id, requested_by, ok)
+select '00000000-0000-0000-0000-0000000000b1', pg_temp.id('manager'), null, false from generate_series(1, 20);
+select test.act_as('cashier@example.com');
+select test.eq(request_approval('discount', pg_temp.id('manager'), '2580', '{"percent": 15}') ->> 'error',
+  'Approvals by PIN are paused for Demo Manager after too many wrong PINs today: Demo Manager can set a new PIN on My account',
+  'twenty wrong PINs in a day pause that manager''s approvals by PIN');
+select test.act_as('manager@example.com');
+select set_my_pin('3691');
+select test.act_as('cashier@example.com');
+select test.eq((request_approval('discount', pg_temp.id('manager'), '3691', '{"percent": 15}') ->> 'ok')::boolean, true,
+  'a new PIN starts the count again');
+select test.act_as('manager@example.com');
+select set_my_pin('2580');
 select test.act_as('manager@example.com');
 select test.throws($$select * from approval$$, '%permission denied%', 'approvals are read only through the till''s functions');
 select test.throws($$select * from pin_attempt$$, '%permission denied%', 'as are the PINs typed');
@@ -256,7 +279,7 @@ select test.act_as('owner@example.com');
 select test.eq((select string_agg(kind || '=' || n || '/' || r, ', ' order by kind)
                   from (select kind, count(*) n, count(*) filter (where needs_review) r
                           from report_exceptions(test.today(), test.today()) group by kind) x),
-  'bill_cancel=1/0, discount=5/0, line_removed=2/0, refund=1/1, void=3/2, wrong_pin=5/5',
+  'bill_cancel=1/0, discount=5/0, line_removed=2/0, refund=1/1, void=3/2, wrong_pin=4/4',
   'every exception of the day, and what waits for the owner''s review');
 select test.eq((select string_agg(person || ', approved by ' || coalesce(approved_by, 'nobody else'), '; ' order by at)
                   from report_exceptions(test.today(), test.today()) where kind = 'void'),
@@ -269,5 +292,5 @@ select test.eq((select string_agg(amount::text || ' ' || person || ' ' || coales
   '3750 Demo Cashier Demo Manager 30% asked, 30% of 12500',
   'each discount: how much, who gave it, who approved it');
 select test.eq((select count(*) from report_exceptions(test.today(), test.today())
-                 where kind = 'wrong_pin' and person = 'Demo Cashier' and reference = 'Approval by Demo Manager')::int, 5,
+                 where kind = 'wrong_pin' and person = 'Demo Cashier' and reference = 'Approval by Demo Manager')::int, 4,
   'every wrong PIN, whose it was and who typed it');

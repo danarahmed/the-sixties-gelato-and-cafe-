@@ -46,8 +46,8 @@ unverified until it is corrected ([`../REMEDIATION.md`](../REMEDIATION.md)).
   login with that email, and see only what their roles allow.
 - **Change roles** or **Deactivate** someone the day they leave. A deactivated
   person keeps their login but can no longer see or do anything in the books.
-- Only you can make someone an owner or general manager, and the business always
-  keeps at least one active owner.
+- Only you can make someone an owner or general manager, or take their access
+  away, and the business always keeps at least one active owner.
 
 | Role              | Typically does                                                                                |
 | ----------------- | --------------------------------------------------------------------------------------------- |

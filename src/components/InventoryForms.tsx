@@ -11,6 +11,7 @@ import { WASTE_TYPES, fmtIQD, movementLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { NewItemForm } from "@/components/NewItemForm";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 interface ItemOpt {
   id: string;
@@ -92,6 +93,7 @@ function UnitSelect({
  * added without it — at what it cost, so its sales are costed from the start.
  */
 function OpeningStock({ items }: { items: ItemOpt[] }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -112,13 +114,18 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
     if (!item) return;
     setMsg(null);
     start(async () => {
-      const r = await recordOpeningStockAction({
-        itemId: item.id,
-        qty,
-        unitCode: unit || null,
-        unitCost,
-        reason,
-      });
+      const r = await op.run("recordOpeningStock", (key) =>
+        recordOpeningStockAction(
+          {
+            itemId: item.id,
+            qty,
+            unitCode: unit || null,
+            unitCost,
+            reason,
+          },
+          key,
+        ),
+      );
       if (r.ok) {
         setMsg({
           ok: true,
@@ -212,6 +219,7 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
         >
           {pending ? t("Recording…") : t("Record opening stock")}
         </button>
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>
@@ -219,6 +227,7 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
 }
 
 function RecordWaste({ items }: { items: ItemOpt[] }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -233,7 +242,9 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
   function submit() {
     setMsg(null);
     start(async () => {
-      const r = await recordWasteAction({ itemId, qty, unitCode: unit || null, type, reason });
+      const r = await op.run("recordWaste", (key) =>
+        recordWasteAction({ itemId, qty, unitCode: unit || null, type, reason }, key),
+      );
       if (r.ok) {
         setMsg({
           ok: true,
@@ -319,6 +330,7 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
         >
           {pending ? t("Recording…") : t("Record waste")}
         </button>
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>
@@ -326,6 +338,7 @@ function RecordWaste({ items }: { items: ItemOpt[] }) {
 }
 
 function CorrectStock({ items }: { items: ItemOpt[] }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -341,13 +354,18 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
   function submit() {
     setMsg(null);
     start(async () => {
-      const r = await adjustStockAction({
-        itemId,
-        delta,
-        unitCode: unit || null,
-        reason,
-        unitCost: adding && unitCost ? unitCost : null,
-      });
+      const r = await op.run("adjustStock", (key) =>
+        adjustStockAction(
+          {
+            itemId,
+            delta,
+            unitCode: unit || null,
+            reason,
+            unitCost: adding && unitCost ? unitCost : null,
+          },
+          key,
+        ),
+      );
       if (r.ok) {
         setMsg({
           ok: true,
@@ -429,6 +447,7 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
         >
           {pending ? t("Posting…") : t("Post correction")}
         </button>
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>

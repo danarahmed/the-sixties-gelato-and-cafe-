@@ -17,6 +17,7 @@ import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { useOnline } from "@/components/AppShell";
 import { useChannels } from "@/components/ChannelsProvider";
+import { CHECKING_MESSAGE, useOperation } from "@/components/useOperation";
 import { ProductPicker } from "./ProductPicker";
 import { ChooseBill, FloorView } from "./FloorView";
 import { OrderPanel, type Receipt } from "./OrderPanel";
@@ -69,7 +70,7 @@ import {
 } from "./model";
 import { reasonKey } from "@/lib/reasons";
 
-type Result<T> = { ok: true; data: T } | { ok: false; error: string };
+type Result<T> = { ok: true; data: T } | { ok: false; error: string; uncertain?: boolean };
 type Msg = { ok: boolean; text: string } | null;
 
 /** A payment the till sent but never heard back about. */
@@ -257,6 +258,8 @@ export function PosClient({
   const [bill, setBill] = useState<Order | null>(null);
   const [showBill, setShowBill] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+  /** Bill changes recorded once, whatever the connection does (0035). */
+  const op = useOperation();
   const [msg, setMsg] = useState<Msg>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
@@ -396,7 +399,12 @@ export function PosClient({
   }, [bill]);
 
   // ------------------------------------------------------------ running an action
-  async function run<T>(label: string, fn: () => Promise<Result<T>>): Promise<T | null> {
+  /**
+   * One change to a bill, recorded once (0035): `fn` gets the key of this
+   * submission; with no answer it is sent again, with the same key, and a
+   * change the database already made is answered, not made twice.
+   */
+  async function run<T>(label: string, fn: (key: string) => Promise<Result<T>>): Promise<T | null> {
     if (!navigator.onLine) {
       setMsg({ ok: false, text: t("pos.offlineBlocked") });
       return null;
@@ -405,7 +413,7 @@ export function PosClient({
     setMsg(null);
     generation.current++;
     try {
-      const r = await fn();
+      const r = await op.run(label, fn);
       if (!r.ok) {
         setMsg({ ok: false, text: r.error });
         if (approvalRefused(r.error)) dropApproval();
@@ -603,17 +611,20 @@ export function PosClient({
    * changed, unless the caller prints it (the Barista ticket button).
    */
   async function saveBill(o: Order, tellBar = true): Promise<Order | null> {
-    const data = await run("save", () =>
-      saveBillAction({
-        tabId: o.tabId,
-        version: o.version,
-        channel: o.channel,
-        tableId: o.tableId,
-        label: o.label?.trim() || null,
-        lines: o.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty), note: l.note })),
-        ...discountParams(o.discount),
-        ...discountWhy(o.discount),
-      }),
+    const data = await run(`save:${o.tabId ?? "new"}`, (key) =>
+      saveBillAction(
+        {
+          tabId: o.tabId,
+          version: o.version,
+          channel: o.channel,
+          tableId: o.tableId,
+          label: o.label?.trim() || null,
+          lines: o.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty), note: l.note })),
+          ...discountParams(o.discount),
+          ...discountWhy(o.discount),
+        },
+        key,
+      ),
     );
     if (!data) return null;
     const fresh = data.bills?.find((b) => b.tabId === data.tabId);
@@ -705,17 +716,20 @@ export function PosClient({
   /** A quick sale the customer will pay for later: kept open under their name or at a table. */
   async function keepForLater(choice: { label: string | null; tableId: string | null }) {
     const o = quick;
-    const data = await run("save", () =>
-      saveBillAction({
-        tabId: null,
-        version: null,
-        channel: o.channel,
-        tableId: choice.tableId,
-        label: choice.label,
-        lines: o.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty), note: l.note })),
-        ...discountParams(o.discount),
-        ...discountWhy(o.discount),
-      }),
+    const data = await run("save:new", (key) =>
+      saveBillAction(
+        {
+          tabId: null,
+          version: null,
+          channel: o.channel,
+          tableId: choice.tableId,
+          label: choice.label,
+          lines: o.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty), note: l.note })),
+          ...discountParams(o.discount),
+          ...discountWhy(o.discount),
+        },
+        key,
+      ),
     );
     setDialog(null);
     if (!data) return;
@@ -763,8 +777,8 @@ export function PosClient({
   async function printBill() {
     const o = await current();
     if (!o || o.tabId === null || o.version === null) return;
-    const data = await run("print", () =>
-      printBillAction({ tabId: o.tabId!, version: o.version! }),
+    const data = await run(`print:${o.tabId}`, (key) =>
+      printBillAction({ tabId: o.tabId!, version: o.version! }, key),
     );
     if (!data) return;
     if (data.bills) applyBills(data.bills);
@@ -809,13 +823,16 @@ export function PosClient({
   async function confirmSplit(move: { lineId: string; qty: number }[], label: string) {
     if (dialog?.kind !== "split") return;
     const o = dialog.order;
-    const data = await run("split", () =>
-      splitBillAction({
-        tabId: o.tabId!,
-        version: o.version!,
-        move: move.map((m) => ({ lineId: m.lineId, qty: String(m.qty) })),
-        label: label || null,
-      }),
+    const data = await run(`split:${o.tabId}`, (key) =>
+      splitBillAction(
+        {
+          tabId: o.tabId!,
+          version: o.version!,
+          move: move.map((m) => ({ lineId: m.lineId, qty: String(m.qty) })),
+          label: label || null,
+        },
+        key,
+      ),
     );
     setDialog(null);
     if (!data) return;
@@ -861,12 +878,11 @@ export function PosClient({
     setBusy("cancel");
     generation.current++;
     try {
-      const r = await cancelBillAction({
-        tabId: cur.tabId,
-        version: cur.version,
-        reasonCode: reason.code,
-        note: reason.note,
-      });
+      const tabId = cur.tabId;
+      const version = cur.version;
+      const r = await op.run(`cancel:${tabId}`, (key: string) =>
+        cancelBillAction({ tabId, version, reasonCode: reason.code, note: reason.note }, key),
+      );
       if (!r.ok) {
         setDialog({ kind: "cancel", error: r.error });
         return;
@@ -1299,7 +1315,7 @@ export function PosClient({
             canSeeCost={canSeeCost}
             hasTables={floorTables.length > 0}
             receipt={receipt}
-            msg={msg}
+            msg={op.checking ? { ok: false, text: CHECKING_MESSAGE } : msg}
             channels={channelChoice}
             onChannel={setChannel}
             ticketOn={ticketOn}

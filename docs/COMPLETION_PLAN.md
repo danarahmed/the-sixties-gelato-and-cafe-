@@ -1,7 +1,17 @@
 # Completing the operations system: implementation analysis
 
 **Status:** analysis finished on 27 September 2026, before any change was made.
-**Basis:**
+Release J (duplicate protection, `0035`) is built and tested. Two changes from the
+plan below:
+
+- **Keys.** The key is the last parameter, and the original is renamed
+  `<name>__run`, instead of a second function under the same name, which made
+  SQL calls ambiguous. The database protects every call that carries a key; the
+  app sends one on every call (the contract test fails a call without one); from
+  release K, a call through the API without a key is refused.
+- **Location on the audit trail.** `audit_log.location_id` waits for tills with a
+  branch (release AB), since nothing can fill it until then.
+  **Basis:**
 
 - The code at `d17436e`: migrations `0001`–`0034` and the app.
 - The live database, read only (one branch, a central kitchen, one person per role, test records).
@@ -159,7 +169,7 @@ New features must use these as they are. Where a line says "extend", the extensi
 
 | #   | Conflict                                                                                                                                                                                                                                                                                                                                   | Evidence                                                                                                                                              | Resolution                                                                                                                                                                                                                | Release       |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| D1  | **Only sales and bill payments are protected against double recording.** About 45 functions insert new records on every call. `open_tab` opens a second bill. `count_drawer` retried after a lost answer compares the count with what was left in the drawer: it books a false over/short and moves the takings to the safe a second time. | `record_sale` is the only function with a key; `settle_tab` replays by bill status                                                                    | A **request log**: each write takes a key; the first call stores its answer in the same transaction; a retry returns it. Keys become mandatory once the app sends them.                                                   | J, K          |
+| D1  | **Only sales and bill payments are protected against double recording.** About 45 functions insert new records on every call. `open_tab` opens a second bill. `count_drawer` retried after a lost answer compares the count with what was left in the drawer: it books a false over/short and moves the takings to the safe a second time. | `record_sale` is the only function with a key; `settle_tab` replays by bill status                                                                    | A **request log**: each write takes a key; the first call stores its answer in the same transaction; a retry returns it. The app always sends a key; from K, an API call without one is refused.                          | J, K          |
 | D2  | **The drawer belongs to a location, not a person.** A count sweeps every uncounted event and opens and closes the shift in one call. The expected amount is shown first.                                                                                                                                                                   | `count_drawer`, `drawer_status`, `DrawerCount.tsx`                                                                                                    | Sessions on `work_shift` with a cashier, an opening count and a closing count. Events attach to the open session as they happen. `expected` is returned only after the count, or to holders of `cash.view_expected`.      | K             |
 | D3  | **One payment per sale everywhere.** The cash-refund trigger removes the whole refund if any payment was cash. The drawer report joins sales to payments. Refunds read the first payment.                                                                                                                                                  | `post_sale`, `refund_sale`, drawer triggers, `drawer_status`                                                                                          | Payments as a list. Each cash payment is an event of its own amount. Refunds allocate to payments. Reports count orders, not payment rows.                                                                                | L, Q          |
 | D4  | **Refunds are all or nothing, and stock movements point to the order, not the line**                                                                                                                                                                                                                                                       | `refund_sale`; movements `reference = sales_order`                                                                                                    | Refund documents with lines. `post_sale` writes the sale line on each movement from release L on. Sales recorded before that can only be refunded whole (all are test records).                                           | L             |
@@ -211,7 +221,7 @@ Every migration follows the existing pattern:
   - Journals and periods: `save_journal`, `publish_journal`, `reverse_journal`, `discard_journal`, `post_control_correction`, `lock_period`, `unlock_period`.
   - Master data: `create_item`, `create_product`, `create_supplier`, `add_delivery_platform`, `set_price`, `change_product_recipe`, `save_batch_recipe`, `save_category`, `save_table`, `invite_member`.
 - **Not keyed**, because repeating them changes nothing: `record_count`, `update_*`, `set_*` switches, `save_language`, `save_phrases`, `acknowledge_alert`, `snooze_alert`, `request_approval`.
-- **`audit_log.location_id`**. Audit events added to `receive_goods`, `record_bill`, `pay_bill`, `record_expense`, `record_waste`, `record_production`, the journal functions, the count steps and `save_table`.
+- **Audit events** added to `receive_goods`, `record_bill`, `pay_bill`, `record_expense`, `record_waste`, `record_production`, the journal functions, the count steps and `save_table`.
 - **Fixes (D15, D16):**
   - `set_member_active`: only the owner may change an owner or a general manager.
   - `request_approval`: wrong PINs counted per requester, with an alert.
@@ -242,7 +252,7 @@ Every migration follows the existing pattern:
   - `cash.session` — owner, general manager, branch manager, cashier, barista;
   - `cash.view_expected` — owner, general manager, accountant, auditor;
   - `cash.session.force` — owner, general manager, branch manager.
-- **Keys become mandatory** on the app-facing write functions.
+- **Keys required from the API:** a keyed write called through the API (PostgREST sets `request.path`) with no key is refused; SQL callers are not affected.
 
 ### Release L — `0037_partial_refunds.sql`
 

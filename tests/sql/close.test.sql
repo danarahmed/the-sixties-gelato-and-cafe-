@@ -46,7 +46,8 @@ select test.eq(test.lines_of((select (r->>'shift_id')::uuid from cl)),
 select test.act_as('manager@example.com');
 select test.eq((count_drawer(3000) ->> 'variance')::numeric, 0::numeric,
   'counting again at once finds nothing new — no double-posted shortage');
-select test.throws($$select close_day((select d from today), 3000)$$, '%now a drawer count%', 'the old day close says what replaced it');
+select test.throws($$select close_day((select d from today), 3000)$$, '%permission denied%',
+  'the old day close, replaced by the drawer count, cannot be called at all (0035)');
 
 -- Resolve the blockers, then lock. Only someone with the lock permission may.
 select test.act_as('owner@example.com');

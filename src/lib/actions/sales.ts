@@ -5,7 +5,7 @@
  * together or not at all (audit C-04, C-06).
  */
 import { z } from "zod";
-import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { isPlatformChannel } from "@/lib/channels";
 import {
   discountAmount,
@@ -122,7 +122,10 @@ const correction = z.object({
 /** Rung in error, before the drawer holding it is counted. Everything comes back. */
 export async function voidSaleAction(
   input: z.input<typeof correction>,
+  key: string,
 ): Promise<ActionResult<{ journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(correction, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("void_sale", {
@@ -130,6 +133,7 @@ export async function voidSaleAction(
     p_reason: v.data.note,
     p_reason_code: v.data.reasonCode,
     p_approval: v.data.approvalId ?? null,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...SALE_PATHS);
@@ -142,7 +146,10 @@ export async function voidSaleAction(
 /** Money back to the customer, through Sales returns; returnable goods go back on the shelf. */
 export async function refundSaleAction(
   input: z.input<typeof correction>,
+  key: string,
 ): Promise<ActionResult<{ refunded: number; journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(correction, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("refund_sale", {
@@ -150,6 +157,7 @@ export async function refundSaleAction(
     p_reason: v.data.note,
     p_reason_code: v.data.reasonCode,
     p_approval: v.data.approvalId ?? null,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...SALE_PATHS);
@@ -188,7 +196,10 @@ export interface DrawerCountResult {
  */
 export async function countDrawerAction(
   input: z.input<typeof countInput>,
+  key: string,
 ): Promise<ActionResult<DrawerCountResult>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(countInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("count_drawer", {
@@ -196,6 +207,7 @@ export async function countDrawerAction(
     p_left_in_drawer: v.data.left,
     p_take_to: v.data.takeTo,
     p_start_cash: v.data.startCash,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh("/sales", "/journals", "/accounting", "/reports", "/orders", "/dashboard");
@@ -224,7 +236,10 @@ const moveInput = z.object({
 /** Cash moved between the till, the safe, the bank and the owner. */
 export async function moveCashAction(
   input: z.input<typeof moveInput>,
+  key: string,
 ): Promise<ActionResult<{ journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(moveInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("move_cash", {
@@ -232,6 +247,7 @@ export async function moveCashAction(
     p_to: v.data.to,
     p_amount: v.data.amount,
     p_note: v.data.note,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh("/sales", "/journals", "/accounting", "/reports", "/dashboard");

@@ -65,6 +65,25 @@ ok "$(sql "select count(*) from supplier_payment where purchase_invoice_id = '$B
    "10 simultaneous full payments of one bill: exactly one goes through"
 ok "$(sql "select paid_amount from purchase_invoice where id = '$BILL'")" "20000" "the bill is paid once, never overpaid"
 
+# 0035 — ten sessions send the same delivery, the same expense and the same
+# drawer count with one key at the same instant: each is recorded once, and the
+# other nine are told it already was.
+RECEIPTS=$(sql "select count(*) from goods_receipt")
+race 10 manager@example.com "select receive_goods((select id from supplier order by name limit 1),
+  '[{\"item_id\":\"c0000000-0000-0000-0000-000000000002\",\"qty\":4,\"goods_value\":8000}]',
+  p_confirm => true, p_idempotency_key => '88888888-0000-0000-0000-000000000001')"
+ok "$(( $(sql "select count(*) from goods_receipt") - RECEIPTS ))" "1" \
+   "10 simultaneous sends of one delivery with one key receive it once"
+ok "$(grep -l '"replayed": true' "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and the other nine are told it was already received"
+race 10 manager@example.com "select record_expense('Race ice', 1000, '6900', 'owner', null, '88888888-0000-0000-0000-000000000002')"
+ok "$(sql "select count(*) from expense where description = 'Race ice'")" "1" "10 simultaneous sends of one expense record it once"
+sql "select test.act_as('cashier@example.com');
+     select record_sale(gen_random_uuid(),'dine_in','cash','[{\"variant_id\":\"d1000000-0000-0000-0000-000000000001\",\"qty\":3}]');" >/dev/null
+SHIFTS=$(sql "select count(*) from work_shift")
+race 10 manager@example.com "select count_drawer(5000, 0, 'safe', null, null, '88888888-0000-0000-0000-000000000003')"
+ok "$(( $(sql "select count(*) from work_shift") - SHIFTS ))" "1" "10 simultaneous sends of one drawer count count it once"
+ok "$(sql "select count(*) from cash_transfer")" "1" "and move the takings to the safe once"
+
 # H-10 — five bottles, prevention on, ten simultaneous sales of one each.
 # Through record_waste, which journals it: a raw ledger insert here would be
 # exactly the unjournaled movement the reconciliation below exists to catch.

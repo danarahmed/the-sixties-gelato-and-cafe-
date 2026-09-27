@@ -14,6 +14,7 @@ import {
   type LineStatus,
   type StatementMatch,
 } from "@/lib/settlements";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -57,6 +58,7 @@ export function StatementMatcher({
   today: string;
   timezone: string;
 }) {
+  const op = useOperation();
   const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -96,13 +98,18 @@ export function StatementMatcher({
   function post() {
     setMsg(null);
     start(async () => {
-      const r = await postStatementAction({
-        platform,
-        lines: parsed.lines,
-        reference,
-        receivedOn,
-        note,
-      });
+      const r = await op.run("postStatement", (key) =>
+        postStatementAction(
+          {
+            platform,
+            lines: parsed.lines,
+            reference,
+            receivedOn,
+            note,
+          },
+          key,
+        ),
+      );
       if (!r.ok) {
         setMsg({ ok: false, text: r.error });
         return;
@@ -385,6 +392,7 @@ export function StatementMatcher({
       )}
 
       <div style={{ marginBlockStart: 12 }}>
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>

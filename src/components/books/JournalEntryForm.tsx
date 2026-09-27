@@ -8,6 +8,7 @@ import { fmtIQD } from "@/lib/format";
 import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 export interface AccountOption {
   code: string;
@@ -49,6 +50,7 @@ export function JournalEntryForm({
   today: string;
   currency: string;
 }) {
+  const op = useOperation();
   // say: an account's name as the database has it, in the reader's language.
   const { t, msg: say } = useT();
   const router = useRouter();
@@ -102,17 +104,22 @@ export function JournalEntryForm({
     setMsg(null);
     if (correction) {
       start(async () => {
-        const r = await postControlCorrectionAction({
-          date,
-          description: notes,
-          reason,
-          lines: usable.map((l) => ({
-            code: l.code,
-            memo: l.memo,
-            debit: l.debit || "0",
-            credit: l.credit || "0",
-          })),
-        });
+        const r = await op.run("postControlCorrection", (key) =>
+          postControlCorrectionAction(
+            {
+              date,
+              description: notes,
+              reason,
+              lines: usable.map((l) => ({
+                code: l.code,
+                memo: l.memo,
+                debit: l.debit || "0",
+                credit: l.credit || "0",
+              })),
+            },
+            key,
+          ),
+        );
         if (r.ok) {
           setMsg({
             ok: true,
@@ -127,19 +134,24 @@ export function JournalEntryForm({
       return;
     }
     start(async () => {
-      const r = await saveJournalAction({
-        date,
-        description: notes,
-        referenceNo,
-        reverseOn: reverseOn || null,
-        publish,
-        lines: usable.map((l) => ({
-          code: l.code,
-          memo: l.memo,
-          debit: l.debit || "0",
-          credit: l.credit || "0",
-        })),
-      });
+      const r = await op.run("saveJournal", (key) =>
+        saveJournalAction(
+          {
+            date,
+            description: notes,
+            referenceNo,
+            reverseOn: reverseOn || null,
+            publish,
+            lines: usable.map((l) => ({
+              code: l.code,
+              memo: l.memo,
+              debit: l.debit || "0",
+              credit: l.credit || "0",
+            })),
+          },
+          key,
+        ),
+      );
       if (r.ok) {
         setMsg({
           ok: true,
@@ -407,6 +419,7 @@ export function JournalEntryForm({
             {t("Debits and credits must agree before it can be published.")}
           </span>
         )}
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>

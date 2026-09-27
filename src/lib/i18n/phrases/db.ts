@@ -23,6 +23,22 @@ const phrases: PhraseBook = {
     ckb: "دۆخی فرۆشتن لە «{1}» بۆ «{2}» ناگۆڕدرێت",
   },
   "Sale not found": { ar: "لم يُعثر على البيع", ckb: "فرۆشتنەکە نەدۆزرایەوە" },
+  // A retry with its key (0035).
+  "This retry does not match what was first sent: reload the page and check before doing it again":
+    {
+      ar: "إعادة المحاولة هذه لا تطابق ما أُرسل أولًا: أعد تحميل الصفحة وتحقّق قبل تكرار العملية",
+      ckb: "ئەم دووبارە هەوڵدانە لەگەڵ ئەوەی یەکەمجار نێردرا ناگونجێت: پەڕەکە نوێ بکەرەوە و پێش دووبارەکردنەوە بپشکنە",
+    },
+  "This was sent by someone else": { ar: "أرسل هذا شخصٌ آخر", ckb: "ئەمە کەسێکی تر ناردوویەتی" },
+  "Only the owner can change the access of an owner or a general manager": {
+    ar: "المالك وحده يستطيع تغيير صلاحية دخول مالكٍ أو مديرٍ عام",
+    ckb: "تەنها خاوەن دەتوانێت دەستپێگەیشتنی خاوەنێک یان بەڕێوەبەرێکی گشتی بگۆڕێت",
+  },
+  "Some of what this batch made has already been used or sold: record a loss or a correction instead":
+    {
+      ar: "استُخدم بعض ما أنتجته هذه الدفعة أو بيع بالفعل: سجّل خسارة أو تصحيحًا بدلًا من ذلك",
+      ckb: "هەندێک لەوەی ئەم دەفعەیە دروستی کرد بەکارهاتووە یان فرۆشراوە: لەبری ئەوە زیان یان ڕاستکردنەوەیەک تۆمار بکە",
+    },
   "A sale needs its idempotency key": {
     ar: "يحتاج البيع إلى مفتاح منع التكرار الخاص به",
     ckb: "فرۆشتن پێویستی بە کلیلی ڕێگری لە دووبارەبوونەوە هەیە",

@@ -8,6 +8,7 @@ import { lookAlikes, type LookAlike, type NamedItem } from "@/lib/names";
 import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 type Msg = { ok: boolean; text: string } | null;
 type Dimension = "count" | "mass" | "volume";
@@ -50,6 +51,7 @@ export function NewItemForm({
   onCancel?: () => void;
   submitLabel?: string;
 }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -91,22 +93,27 @@ export function NewItemForm({
     const pack =
       f.packLabel.trim() && f.packHolds.trim() ? { label: f.packLabel, holds: f.packHolds } : null;
     start(async () => {
-      const r = await createItemAction({
-        name: f.name,
-        nameAr: f.nameAr,
-        nameCkb: f.nameCkb,
-        itemType: f.itemType as "ingredient",
-        baseUnit,
-        dimension,
-        minLevel: f.minLevel || null,
-        openingQty: isOwner ? f.openingQty || null : null,
-        openingUnitCost: isOwner ? f.openingUnitCost || null : null,
-        openingReason: isOwner ? f.openingReason || null : null,
-        returnable,
-        pack,
-        // The look-alikes are on the screen, and the person added it all the same.
-        acceptSimilar: similar.length > 0,
-      });
+      const r = await op.run("createItem", (key) =>
+        createItemAction(
+          {
+            name: f.name,
+            nameAr: f.nameAr,
+            nameCkb: f.nameCkb,
+            itemType: f.itemType as "ingredient",
+            baseUnit,
+            dimension,
+            minLevel: f.minLevel || null,
+            openingQty: isOwner ? f.openingQty || null : null,
+            openingUnitCost: isOwner ? f.openingUnitCost || null : null,
+            openingReason: isOwner ? f.openingReason || null : null,
+            returnable,
+            pack,
+            // The look-alikes are on the screen, and the person added it all the same.
+            acceptSimilar: similar.length > 0,
+          },
+          key,
+        ),
+      );
       if (r.ok) {
         onCreated?.({
           id: r.data.itemId,
@@ -338,6 +345,7 @@ export function NewItemForm({
             {t("Cancel")}
           </button>
         )}
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>

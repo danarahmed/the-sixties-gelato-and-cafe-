@@ -11,6 +11,7 @@ import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Rich } from "@/lib/i18n/Rich";
 import { Notice } from "@/components/ui";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 import { useChannels } from "@/components/ChannelsProvider";
 import type { ScheduledChange } from "@/lib/db/reports";
 
@@ -49,6 +50,7 @@ function ScheduledRow({ change, canEdit }: { change: ScheduledChange; canEdit: b
   const router = useRouter();
   const { name: channelName } = useChannels();
   const [busy, start] = useTransition();
+  const op = useOperation();
   const [asking, setAsking] = useState(false);
   const [reason, setReason] = useState("");
   const [msg, setMsg] = useState<Msg>(null);
@@ -65,7 +67,7 @@ function ScheduledRow({ change, canEdit }: { change: ScheduledChange; canEdit: b
     start(async () => {
       const act =
         change.kind === "price" ? cancelScheduledPriceAction : cancelScheduledRecipeAction;
-      const r = await act({ id: change.id, reason });
+      const r = await op.run(change.kind, (key) => act({ id: change.id, reason }, key));
       if (!r.ok) {
         setMsg({ ok: false, text: r.error });
         return;
@@ -104,6 +106,7 @@ function ScheduledRow({ change, canEdit }: { change: ScheduledChange; canEdit: b
           </button>
         </span>
       )}
+      <OperationStatus op={op} />
       <Notice msg={msg} />
     </li>
   );

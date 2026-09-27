@@ -14,6 +14,7 @@ import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import type { OpenBill, VendorRow } from "@/lib/db/books";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 export interface ReceiptOption {
   id: string;
@@ -288,6 +289,7 @@ function Bills({
   canPay: boolean;
   onDone: () => void;
 }) {
+  const op = useOperation();
   const { t, msg: say } = useT();
   const [busy, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -317,15 +319,20 @@ function Bills({
   function raise() {
     setMsg(null);
     start(async () => {
-      const r = await recordBillAction({
-        supplierId: vendor.id,
-        invoiceNo: ownNo ? null : typedNo,
-        invoiceDate: invDate,
-        amount,
-        termDays: Number(terms) || 0,
-        receiptId: kind === "receipt" ? receiptId || null : null,
-        accountCode: kind === "expense" ? accountCode || null : null,
-      });
+      const r = await op.run("recordBill", (key) =>
+        recordBillAction(
+          {
+            supplierId: vendor.id,
+            invoiceNo: ownNo ? null : typedNo,
+            invoiceDate: invDate,
+            amount,
+            termDays: Number(terms) || 0,
+            receiptId: kind === "receipt" ? receiptId || null : null,
+            accountCode: kind === "expense" ? accountCode || null : null,
+          },
+          key,
+        ),
+      );
       if (r.ok) {
         const pv = r.data.priceVariance;
         const vars = {
@@ -358,7 +365,9 @@ function Bills({
     setMsg(null);
     start(async () => {
       if (!method) return;
-      const r = await payBillAction({ billId: payFor, amount: payAmt, method });
+      const r = await op.run("payBill", (key) =>
+        payBillAction({ billId: payFor, amount: payAmt, method }, key),
+      );
       if (r.ok) {
         setMsg({
           ok: true,
@@ -627,12 +636,14 @@ function Bills({
           </div>
         )}
       </div>
+      <OperationStatus op={op} />
       <Notice msg={msg} />
     </div>
   );
 }
 
 function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: boolean }) {
+  const op = useOperation();
   const { t } = useT();
   const [busy, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -641,7 +652,7 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
   function submit() {
     setMsg(null);
     start(async () => {
-      const r = await createSupplierAction(f);
+      const r = await op.run("createSupplier", (key) => createSupplierAction(f, key));
       if (r.ok) {
         setMsg({ ok: true, text: t("Added {name}.", { name: f.name }) });
         setF({ name: "", contact: "", phone: "" });
@@ -695,6 +706,7 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
           </button>
         </div>
         <div style={{ marginBlockStart: 12 }}>
+          <OperationStatus op={op} />
           <Notice msg={msg} />
         </div>
       </div>
@@ -822,6 +834,7 @@ function CancelBill({
   today: string;
   onDone: () => void;
 }) {
+  const op = useOperation();
   const { t, msg } = useT();
   const [busy, start] = useTransition();
   const [open, setOpen] = useState(false);
@@ -875,7 +888,9 @@ function CancelBill({
         style={small}
         onClick={() =>
           start(async () => {
-            const r = await cancelBillAction({ billId, reason, date });
+            const r = await op.run("cancelBill", (key) =>
+              cancelBillAction({ billId, reason, date }, key),
+            );
             if (r.ok) {
               setOpen(false);
               onDone();
@@ -893,6 +908,7 @@ function CancelBill({
           {msg(err)}
         </span>
       )}
+      <OperationStatus op={op} />
     </span>
   );
 }
