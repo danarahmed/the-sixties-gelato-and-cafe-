@@ -786,6 +786,31 @@ and three older functions now set their search path; the performance advisor
 adds only the new links without an index of their own and the new index on a
 sale's session, not yet used.
 
+## After `0037`
+
+Migration `0037` (release L) refunds by the item:
+
+- **A refund gives back some of a sale's items, or all that is left of it.**
+  Each item gives back its share of what it was sold for after the bill's
+  discount; the last of an item gives back exactly what is left of it.
+- **Each refund is a document**: numbered, with its items, the payment it went
+  back to (the sale's), its reason, who approved it, its journal and its
+  slip. A sale is **part-refunded** until nothing of it is left, and a sale
+  part-refunded is not voided.
+- **What can go back on the shelf does**, at what it cost when sold: every
+  stock movement a sale makes now names its line. A sale recorded before
+  `0037` that took stock is refunded whole.
+- **What a platform owes** for an order part-refunded is what is left of it.
+- **`count_drawer`**, kept through the deploy of `0036`, is closed.
+
+It adds a column on `inventory_movement`, three tables (`sale_refund`,
+`sale_refund_line`, `sale_refund_tender`, read only with `cost.view`, never
+changed) and one function signed-in users may call, `refund_sale_lines`
+(`sale.refund`, keyed). It goes in before the screens: the Orders screen
+deployed before it keeps refunding whole sales through `refund_sale`, which
+now does its work through the new refund, and the new screens need the new
+tables.
+
 ## Clearing the test records
 
 Every record of trading in the live database so far is a test (the owner, 25
@@ -800,7 +825,7 @@ with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/res
    counts and cash moved (each branch keeps its drawer), stock movements, counts and batches, deliveries, supplier bills and
    payments, expenses, every journal and period, and the document numbers
    (journals start again at 1001, the café's bill numbers at 0001, the cash
-   sessions at 1).
+   sessions and refunds at 1).
 3. Run it in the SQL editor with the confirmation set in the same session:
    `set sixties.reset = 'dry run';` first — it clears, checks, reports what it
    would clear and changes nothing — then

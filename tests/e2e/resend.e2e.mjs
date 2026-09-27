@@ -99,6 +99,44 @@ console.log("▸ a void with its answer lost is voided once, not refused as done
   await ctx.close();
 }
 
+// ------------------------------------------------------------- a refund
+console.log("▸ a refund with its answer lost is given once, not refused as more than is left");
+{
+  const sale = sql(`select test.act_as('cashier@example.com');
+    select record_sale(gen_random_uuid(), 'dine_in', 'card',
+      '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]') ->> 'order_id'`)
+    .split("\n")
+    .pop();
+  // One of the two, at whatever an espresso costs by now (earlier suites change it).
+  const one = n(`select line_net / 2 from sales_order_line where sales_order_id = '${sale}'`);
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/orders");
+  await page
+    .locator("tbody tr", { hasText: sale.slice(0, 8) })
+    .getByRole("button", { name: "Refund" })
+    .click();
+  const dialog = page.getByTestId("refund-dialog");
+  await dialog.getByLabel("How many of Golden espresso — Single go back").fill("1");
+  await dialog.getByLabel("Why refund it?").selectOption("wrong_order");
+  await loseNextAnswer("refund_sale_lines");
+  await dialog.getByRole("button", { name: "Confirm refund" }).click();
+  check(await checking(page), "the refund checks too");
+  const answer = dialog.getByTestId("refund-answer");
+  await answer.waitFor({ timeout: 15000 });
+  check(
+    (await answer.textContent()).includes(
+      `${one.toLocaleString("en-US")} IQD given back to the card it was paid with`,
+    ),
+    "and shows the refund that was given",
+  );
+  check(
+    sql(`select status || ' ' || (select count(*) from sale_refund where sales_order_id = o.id)
+           from sales_order o where id = '${sale}'`) === "partially_refunded 1",
+    "one espresso refunded once, though it was sent twice",
+  );
+  await ctx.close();
+}
+
 // ------------------------------------------------------------- a journal
 console.log("▸ a journal saved with its answer lost is one journal");
 {

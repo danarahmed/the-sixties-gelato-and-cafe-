@@ -2,29 +2,39 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { refundSaleAction, voidSaleAction } from "@/lib/actions/sales";
+import { voidSaleAction } from "@/lib/actions/sales";
 import { listApproversAction, requestApprovalAction, type Approver } from "@/lib/actions/approvals";
-import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { REASONS, reasonKey, reasonMissing } from "@/lib/reasons";
 import { normaliseNumber } from "@/lib/validation";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { RefundDialog, type RefundableSale } from "@/components/RefundDialog";
 
 const small = { minHeight: 28, padding: "0 8px", fontSize: ".75rem" } as const;
 
 /**
  * Void or refund one sale, with a reason from the list the audit trail keeps
  * (0028). A second person may approve it there and then with their name and
- * PIN; without one it waits for the owner on the exceptions report.
+ * PIN; without one it waits for the owner on the exceptions report. A refund
+ * gives back some of the sale's items, or all that is left of it (0037).
  */
 export function OrderActions({
   orderId,
   canVoid,
   canRefund,
+  refund,
+  businessName,
+  timezone,
+  me,
 }: {
   orderId: string;
+  /** A void only while the sale is complete; a refund while anything of it is left. */
   canVoid: boolean;
   canRefund: boolean;
+  refund: RefundableSale;
+  businessName: string;
+  timezone: string;
+  me: string;
 }) {
   const op = useOperation();
   const router = useRouter();
@@ -43,6 +53,7 @@ export function OrderActions({
 
   function choose(m: "void" | "refund") {
     setMode(m);
+    if (m === "refund") return;
     setCode("");
     setNote("");
     setApprover("");
@@ -76,26 +87,12 @@ export function OrderActions({
         }
       }
       const input = { orderId, reasonCode: code, note: note.trim() || null, approvalId };
-      let text: string;
-      if (mode === "void") {
-        const r = await op.run("voidSale", (key) => voidSaleAction(input, key));
-        if (!r.ok) {
-          setMsg({ ok: false, text: r.error });
-          return;
-        }
-        text = t("Voided (journal {no}).", { no: r.data.journalNo ?? "—" });
-      } else {
-        const r = await op.run("refundSale", (key) => refundSaleAction(input, key));
-        if (!r.ok) {
-          setMsg({ ok: false, text: r.error });
-          return;
-        }
-        text = t("Refunded {amount} (journal {no}).", {
-          amount: fmtIQD(r.data.refunded),
-          no: r.data.journalNo ?? "—",
-        });
+      const r = await op.run("voidSale", (key) => voidSaleAction(input, key));
+      if (!r.ok) {
+        setMsg({ ok: false, text: r.error });
+        return;
       }
-      setMsg({ ok: true, text });
+      setMsg({ ok: true, text: t("Voided (journal {no}).", { no: r.data.journalNo ?? "—" }) });
       setMode(null);
       router.refresh();
     });
@@ -103,7 +100,20 @@ export function OrderActions({
 
   if (msg?.ok) return <span className="badge ok">{msg.text}</span>;
 
+  if (mode === "refund") {
+    return (
+      <RefundDialog
+        sale={refund}
+        businessName={businessName}
+        timezone={timezone}
+        me={me}
+        onClose={() => setMode(null)}
+      />
+    );
+  }
+
   if (!mode) {
+    if (!canVoid && !canRefund) return null;
     return (
       <span style={{ display: "inline-flex", gap: 6 }}>
         {canVoid && (
@@ -133,13 +143,13 @@ export function OrderActions({
       }}
     >
       <select
-        aria-label={mode === "void" ? t("Why void it?") : t("Why refund it?")}
+        aria-label={t("Why void it?")}
         value={code}
         onChange={(e) => setCode(e.target.value)}
         style={{ minHeight: 28, fontSize: ".8rem" }}
         autoFocus
       >
-        <option value="">{mode === "void" ? t("Why void it?") : t("Why refund it?")}</option>
+        <option value="">{t("Why void it?")}</option>
         {REASONS[mode].map((c) => (
           <option key={c} value={c}>
             {t(reasonKey(mode, c))}
@@ -201,7 +211,7 @@ export function OrderActions({
         }
         style={small}
       >
-        {busy ? "…" : mode === "void" ? t("Confirm void") : t("Confirm refund")}
+        {busy ? "…" : t("Confirm void")}
       </button>
       <button
         onClick={() => {

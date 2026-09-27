@@ -3,7 +3,7 @@ import { getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getSalesOrders } from "@/lib/db/read";
-import { fmtIQD, orderStatusLabel, tenderLabel } from "@/lib/format";
+import { fmtIQD, fmtQty, orderStatusLabel, tenderLabel } from "@/lib/format";
 import { getChannelNames } from "@/lib/db/channels";
 import { addDays, businessToday, dateTimeIn, dayStart, parseDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui";
@@ -43,9 +43,13 @@ export default async function OrdersPage({
         }
       : {},
   );
-  const live = orders.filter((o) => o.status === "completed");
-  const totalNet = live.reduce((s, o) => s + o.net, 0);
-  const totalMargin = live.reduce((s, o) => s + (o.net - o.cogs), 0);
+  // A sale part-refunded (0037) counts for what is left of it.
+  const live = orders.filter((o) => o.status === "completed" || o.status === "partially_refunded");
+  const totalNet = live.reduce((s, o) => s + o.net - o.refunded, 0);
+  const totalMargin = live.reduce(
+    (s, o) => s + (o.net - o.refunded) - (o.cogs - o.costReturned),
+    0,
+  );
   const canVoid = has(profile, "sale.void");
   const canRefund = has(profile, "sale.refund");
 
@@ -55,7 +59,7 @@ export default async function OrdersPage({
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
         <Rich
           text={t(
-            "A sale is never edited. A sale rung in error is <b>voided</b> until the drawer holding it is counted — revenue, payment, cost and stock all come back exactly. After that, money goes back to the customer by a <b>refund</b>, through Sales returns (4200); only goods that can go back on the shelf return to stock. Both take a reason from the list and are on the audit trail; one approved by a second person (their name and PIN) is marked so, and one without waits for the owner on the exceptions report.",
+            "A sale is never edited. A sale rung in error is <b>voided</b> until the drawer's session holding it closes — revenue, payment, cost and stock all come back exactly. After that, money goes back to the customer by a <b>refund</b> of some of its items or all of them, through Sales returns (4200), the way it was paid; only goods that can go back on the shelf return to stock. Both take a reason from the list and are on the audit trail; one approved by a second person (their name and PIN) is marked so, and one without waits for the owner on the exceptions report.",
           )}
         />
       </p>
@@ -170,6 +174,26 @@ export default async function OrdersPage({
                       <span className={`badge ${o.status === "completed" ? "ok" : "warn"}`}>
                         {t(orderStatusLabel(o.status))}
                       </span>
+                      {o.refunds.map((r) => (
+                        <div key={r.no} className="muted" style={{ fontSize: ".75rem" }}>
+                          {t("Refund {no}: {amount} for {items}", {
+                            no: r.no,
+                            amount: fmtIQD(r.amount),
+                            items: r.lines.map((l) => `${l.name} ×${fmtQty(l.qty)}`).join(", "),
+                          })}
+                          {" · "}
+                          {r.approvedBy
+                            ? t("{reason} · {by}, approved by {approver}", {
+                                reason: msg(r.reason ?? ""),
+                                by: r.by ?? "—",
+                                approver: r.approvedBy,
+                              })
+                            : t("{reason} · {by}, no second person", {
+                                reason: msg(r.reason ?? ""),
+                                by: r.by ?? "—",
+                              })}
+                        </div>
+                      ))}
                       {adj && (
                         <div className="muted" style={{ fontSize: ".75rem" }}>
                           {adj.by
@@ -187,7 +211,14 @@ export default async function OrdersPage({
                         </div>
                       )}
                     </td>
-                    <td className="right mono">{fmtIQD(o.net)}</td>
+                    <td className="right mono">
+                      {fmtIQD(o.net)}
+                      {o.refunded > 0 && (
+                        <div className="muted" style={{ fontSize: ".75rem" }}>
+                          −{fmtIQD(o.refunded)}
+                        </div>
+                      )}
+                    </td>
                     <td
                       className="right mono"
                       style={{ color: margin < 0 ? "var(--err)" : "var(--ok)" }}
@@ -195,8 +226,26 @@ export default async function OrdersPage({
                       {fmtIQD(margin)} ({pct}%)
                     </td>
                     <td className="right">
-                      {o.status === "completed" && (canVoid || canRefund) && (
-                        <OrderActions orderId={o.id} canVoid={canVoid} canRefund={canRefund} />
+                      {/* Kept for a sale refunded whole, with nothing to offer, so the
+                          refund's answer stays until it is closed. */}
+                      {o.status !== "voided" && (canVoid || canRefund) && (
+                        <OrderActions
+                          orderId={o.id}
+                          canVoid={canVoid && o.status === "completed"}
+                          canRefund={
+                            canRefund &&
+                            (o.status === "completed" || o.status === "partially_refunded")
+                          }
+                          refund={{
+                            orderId: o.id,
+                            lines: o.lines,
+                            tender: o.tenders[0] ?? "cash",
+                            channelLabel: channels.name(o.channel),
+                          }}
+                          businessName={profile.businessName}
+                          timezone={profile.timezone}
+                          me={profile.name}
+                        />
                       )}
                     </td>
                   </tr>

@@ -329,9 +329,34 @@ corrections are new entries. What each record posts (migration `0015`):
   taken as typed. Never more than the bill. Each line carries its share in proportion to its
   value, the shares adding up to the discount exactly, so a refund returns
   what was paid.
-- Void (before the drawer holding its cash is counted, `0024`): the sale's journal reversed exactly.
-- Refund: Dr 4200 Sales returns / Cr the tender's account; stock comes back
-  only for items that are `returnable_to_stock`.
+- Void (until the drawer's session holding its cash closes, `0036`, and never
+  once part-refunded, `0037`): the sale's journal reversed exactly.
+- Refund: Dr 4200 Sales returns / Cr the tender's account (1000 cash, from
+  the drawer's open session; 1010 card; 1100 what a platform owes); stock
+  comes back only for items that are `returnable_to_stock`, Dr 1200 / Cr 5000
+  at what it cost when it was sold. One journal per refund, reference
+  `sale_refund`, narrated _"Refund 3 of sale 1a2b3c4d: Customer changed their
+  mind"_.
+- Refund by the item (`0037`): a line gives back its share of what it was
+  sold for after the bill's discount (its `line_net`):
+
+  ```
+  gives back = money_round(line_net × how many ÷ how many were sold)
+  last of the line = line_net − what earlier refunds of it gave back
+  ```
+
+  `money_round` is to the whole dinar, half to even. Three espressos with 500
+  off the bill are 7,000; refunded one at a time they give back 2,333, 2,333
+  and the 2,334 left, so a sale's refunds always add up to the sale. The
+  stock a line took that can go back on the shelf comes back in the same
+  proportion (to six decimal places, at the value it went out at, rounded as
+  money), and the line's last refund takes exactly what is left of it. A
+  refund can never give back more than was paid, less what earlier refunds
+  gave. Worked example (the SQL test): 3 espressos at 2,500 and 2 bottles of
+  water at 1,000, in cash; one of each refunded gives back 3,500 and puts the
+  bottle (250) back on the shelf: 1000 Cr 3,500, 4200 Dr 3,500, 1200 Dr 250,
+  5000 Cr 250.
+
 - Goods receipt: Dr 1200 Inventory / Cr 2050 Goods received not invoiced.
 - Bill for a receipt: Dr 2050 (what the receipt raised), Dr/Cr 5050 Purchase
   price variance (the difference) / Cr 2000 Accounts payable. A bill for

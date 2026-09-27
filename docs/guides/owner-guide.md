@@ -249,7 +249,12 @@ discount, why and who approved it. The 10% is a business setting (shown on
   takings to the safe, or bank them with **Sales → Move Cash**; only you can
   take money out for yourself.
 - **Orders:** a sale rung in error is **voided** until the session holding
-  its cash is closed; after that, it is **refunded**.
+  its cash is closed; after that, it is **refunded**, whole or only some of
+  its items: a customer who brings back one bottle of three gets one bottle's
+  share back, and the rest of the sale stands. Each refund has its own
+  number, goes back the way the sale was paid (cash from the open drawer, a
+  card to the card, a platform's order off what it owes) and prints its own
+  slip.
 - **Reports → Exceptions:** every void, refund, discount, cancelled bill, item
   taken off a bill and wrong PIN, by person, with the reason and who approved
   it. Those marked **review** are yours to look at: a void or refund nobody
@@ -347,7 +352,7 @@ line (CSV)** gives your accountant the whole ledger.
 
 | The mistake                                                              | Correct it with                                                                                                                  |
 | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| A sale rung wrongly                                                      | **Orders → Void** (until its session closes) or **Refund**                                                                       |
+| A sale rung wrongly, or some of it brought back                          | **Orders → Void** (until its session closes) or **Refund**, all of it or the items brought back                                  |
 | A bill entered twice or wrongly                                          | **Vendors → Cancel** (only if nothing was paid on it), then enter it correctly                                                   |
 | Stock that is wrong                                                      | a **count**, or **Inventory → Correct stock** (manager), with the reason                                                         |
 | An item or a vendor named, typed or levelled wrongly                     | its card on **Inventory → Correct this item**, or **Vendors → Edit vendor**, with the reason; take one no longer used out of use |

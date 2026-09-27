@@ -49,8 +49,8 @@ select test.eq(test.lines_of((select (r->>'session_id')::uuid from cl)),
 select test.act_as('manager@example.com');
 select test.throws($$select close_cash_session(3000)$$, '%The drawer is not open%',
   'closing again finds nothing to close — no double-posted shortage');
-select test.throws($$select count_drawer(3000)$$, '%Open the drawer on the till first%',
-  'nor does the old count, which now closes the open session');
+select test.throws($$select count_drawer(3000)$$, '%permission denied%',
+  'nor does the old count, closed since 0037');
 select test.throws($$select close_day((select d from today), 3000)$$, '%permission denied%',
   'the old day close, replaced by the drawer count, cannot be called at all (0035)');
 

@@ -83,16 +83,29 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - The count is in Iraqi dinars, typed as a total or counted in notes of 250
     to 50,000. Foreign cash is not counted (US dollars at the till are release
     R).
-  - The Sales screen's old **Count the drawer** is gone. The database function
-    behind it, `count_drawer`, now closes the open session, counted, so a
-    screen left open during the update keeps working; it is withdrawn in
-    release L.
+  - The Sales screen's old **Count the drawer** is gone, and since `0037` so
+    is the database function behind it, `count_drawer`, which closed the open
+    session during the update to `0036`.
   - The first opening takes over from the counts before sessions. On a drawer
     never counted, what it should hold is what the books say the till holds
     (1000 Cash in the till), so the first count is compared with the books,
     whatever they say.
-- **Partial refunds.** A refund returns the whole sale. A partial refund is a
-  refund of the sale followed by a new sale for what was kept.
+- **Refunds, what they do not do (release L, `0037`).** A refund gives back
+  some of a sale's items or all that is left of it. But:
+  - The money goes back the way the sale was paid. A sale has one payment
+    until split payments (release Q), so a refund has one too; a cash refund
+    needs the drawer open, as since `0036`.
+  - A sale recorded before `0037` that took stock is refunded whole, as
+    before: its stock records do not say which of its lines took what.
+  - A second person's approval is still optional: a refund nobody else
+    approved waits for the owner on the Exceptions report. A limit above which
+    a refund needs one is among the rules on Settings (release O).
+  - A refund is never cancelled. One made by mistake is put right by selling
+    the items again.
+  - Only what can go back on the shelf does (a bottle of water, not a coffee
+    made to order), at what it cost when it was sold.
+  - A delivery platform's refund is taken off what the platform owes for the
+    order; what the platform itself refunds its customer is not read from it.
 - **One cap for everyone.** Since `0028` every discount has a reason, and one
   over the business's cap (10%) needs a manager's approval; the cap is the
   same for every role that may give discounts, and it is changed in the
