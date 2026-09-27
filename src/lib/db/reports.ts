@@ -91,6 +91,31 @@ export async function getReconciliation(asOf: string): Promise<ReconciliationRow
   );
 }
 
+export interface DocumentProblem {
+  /** sale, void, refund, delivery, correction, bill, payment, expense, stock, count, cash, session, card, platform, journal */
+  kind: string;
+  recordId: string;
+  at: string;
+  problem: string;
+}
+
+/**
+ * The records the reconciliation's last check counts (0038): each without its
+ * one journal, or an automatic journal without its record, as at the end of a day.
+ */
+export async function getDocumentProblems(asOf: string): Promise<DocumentProblem[]> {
+  const c = await db();
+  return rows(
+    await c.rpc("report_document_problems", { p_as_of: asOf }),
+    "the records to look into",
+  ).map((r: Record<string, unknown>) => ({
+    kind: str(r.kind),
+    recordId: str(r.record_id),
+    at: str(r.at),
+    problem: str(r.problem),
+  }));
+}
+
 export interface UnpostedRecord {
   kind: string;
   refId: string;
@@ -364,6 +389,7 @@ export type StockCardKind =
   | "wasted"
   | "counted"
   | "corrected"
+  | "revalued"
   | "transferred";
 
 export async function getStockCard(

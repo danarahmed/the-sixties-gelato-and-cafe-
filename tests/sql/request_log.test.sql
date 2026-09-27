@@ -68,11 +68,11 @@ select test.eq((select string_agg(name, ', ') from shape where keyed_ok is not t
   'each takes the key last, checks it first and stores its answer, then does the work, open to signed-in people');
 select test.eq((select string_agg(name, ', ') from shape where run_closed is not true), null,
   'the work itself cannot be called from outside the database');
--- The drawer's sessions (0036) and refunds by the item (0037) take their key
--- the same way, doing the work themselves.
+-- The drawer's sessions (0036), refunds by the item (0037) and a delivery's
+-- correction and reversal (0038) take their key the same way.
 select test.eq((select string_agg(k.name, ', ' order by k.name)
                   from unnest(array['open_cash_session', 'close_cash_session', 'hand_over_session', 'force_close_session',
-                                    'refund_sale_lines']) k(name)
+                                    'refund_sale_lines', 'correct_receipt', 'reverse_receipt']) k(name)
                  where not exists (
                    select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                     where n.nspname = 'public' and p.proname = k.name
@@ -81,7 +81,7 @@ select test.eq((select string_agg(k.name, ', ' order by k.name)
                       and p.prosrc like '%idem_finish(v_business, p_idempotency_key, ''' || k.name || '''%'
                       and has_function_privilege('authenticated', p.oid, 'execute')
                       and not has_function_privilege('anon', p.oid, 'execute'))), null,
-  'the drawer''s sessions take their key the same way');
+  'the drawer''s sessions, refunds and corrections take their key the same way');
 select test.act_as('owner@example.com');
 select test.throws($$select * from request_log$$, '%permission denied%', 'the log of answers is nobody''s to read');
 select test.throws($$select idem_begin(current_business_id(), gen_random_uuid(), 'x', '{}')$$, '%permission denied%',

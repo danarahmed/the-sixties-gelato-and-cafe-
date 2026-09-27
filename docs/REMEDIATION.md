@@ -44,6 +44,16 @@ account:
 | GRNI      | deliveries received but not yet billed                                             | 2050 Goods received not invoiced                                  |
 | Sales     | recorded sales, less refunds                                                       | 4000 Sales revenue less 4100 Discounts and 4200 Returns & refunds |
 
+Since `0038` five more checks hold, each also blocking the lock: the card
+takings not yet settled against 1010 Card clearing; the orders the platforms
+owe against 1100 Platform receivable; what the drawers should hold against
+1000, once a drawer has been counted in a session; the cash moved in and out
+of the safe against 1005; and every record with its one journal. None reaches
+back before the controls: the records check starts at the business's first
+journal of its own, and the drawers' at the first session, whose opening
+count settles what came before. The rehearsal below ends with them at zero
+too.
+
 **Chart of Accounts** shows the closing checklist for each period. A period
 locks only when every check passes, earlier periods are locked, every trading
 day is closed, no draft journal is left and no count awaits approval.

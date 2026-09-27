@@ -586,6 +586,105 @@ const phrases: PhraseBook = {
   },
   "a bill": { ar: "فاتورة", ckb: "پسووڵەیەک" },
   "The date": { ar: "التاريخ", ckb: "بەروار" },
+
+  // A delivery corrected or reversed on Purchasing (0038).
+  "the quantity": { ar: "الكمية", ckb: "بڕەکە" },
+  "the price": { ar: "السعر", ckb: "نرخەکە" },
+  "the item": { ar: "المادة", ckb: "کاڵاکە" },
+  "the date": { ar: "التاريخ", ckb: "بەروارەکە" },
+  reversed: { ar: "معكوس", ckb: "هەڵگەڕێندراوەتەوە" },
+  "A delivery entered wrong is corrected here until it is billed: its quantities, prices, items, supplier or date, or all of it reversed. What was entered first is kept, and each correction is a document of its own, with its journal.":
+    {
+      ar: "التوريد المُدخل خطأً يُصحَّح هنا ما دامت فاتورته لم تُسجَّل: كمياته أو أسعاره أو مواده أو مورّده أو تاريخه، أو يُعكس كله. يبقى ما أُدخل أولًا محفوظًا، وكل تصحيح مستند قائم بذاته، له قيده.",
+      ckb: "بارێک کە بە هەڵە تۆمار کرابێت لێرە ڕاست دەکرێتەوە تا پسووڵەکەی تۆمار نەکرابێت: بڕەکان، نرخەکان، کاڵاکان، دابینکەر یان بەروارەکەی، یان هەمووی هەڵدەگەڕێندرێتەوە. ئەوەی سەرەتا تۆمار کرابوو دەمێنێتەوە، و هەر ڕاستکردنەوەیەک بەڵگەیەکی سەربەخۆیە، لەگەڵ تۆمارەکەی.",
+    },
+  "Entered {when}": { ar: "أُدخل {when}", ckb: "تۆمار کرا {when}" },
+  Reversed: { ar: "معكوس", ckb: "هەڵگەڕێندراوە" },
+  "Correction {no}": { ar: "التصحيح {no}", ckb: "ڕاستکردنەوەی {no}" },
+  "stock {stock}, owed for it {grni}, price variance {variance} (journal {journal})": {
+    ar: "المخزون {stock}، المستحق عنه {grni}، فرق السعر {variance} (القيد {journal})",
+    ckb: "کۆگا {stock}، قەرزی ئەوە {grni}، جیاوازی نرخ {variance} (تۆماری {journal})",
+  },
+  "nothing to post": { ar: "لا شيء للترحيل", ckb: "هیچ شتێک بۆ تۆمارکردن نییە" },
+  Correct: { ar: "صحّح", ckb: "ڕاستکردنەوە" },
+  "{items} counted after this delivery, and the count set its stock: correct only its price": {
+    ar: "جُرد {items} بعد هذا التوريد، والجرد حدّد مخزونه: صحّح سعره فقط",
+    ckb: "{items} دوای ئەم بارە ژمێردراوە، و ژماردنەکە کۆگاکەی دیاری کرد: تەنها نرخەکەی ڕاست بکەرەوە",
+  },
+  "Reverse the delivery": { ar: "اعكس التوريد", ckb: "بارەکە هەڵبگەڕێنەوە" },
+  "Correct the delivery": { ar: "صحّح التوريد", ckb: "بارەکە ڕاست بکەرەوە" },
+  "Reverse delivery {no}": { ar: "عكس التوريد {no}", ckb: "هەڵگەڕاندنەوەی باری {no}" },
+  "Correct delivery {no}": { ar: "تصحيح التوريد {no}", ckb: "ڕاستکردنەوەی باری {no}" },
+  "Delivery {receipt} reversed (correction {no}).": {
+    ar: "عُكس التوريد {receipt} (التصحيح {no}).",
+    ckb: "باری {receipt} هەڵگەڕێندرایەوە (ڕاستکردنەوەی {no}).",
+  },
+  "Correction {no} of delivery {receipt}: {what}.": {
+    ar: "التصحيح {no} للتوريد {receipt}: {what}.",
+    ckb: "ڕاستکردنەوەی {no} بۆ باری {receipt}: {what}.",
+  },
+  "Stock {stock}, owed for it {grni}, price variance {variance} (journal {journal}).": {
+    ar: "المخزون {stock}، المستحق عنه {grni}، فرق السعر {variance} (القيد {journal}).",
+    ckb: "کۆگا {stock}، قەرزی ئەوە {grni}، جیاوازی نرخ {variance} (تۆماری {journal}).",
+  },
+  "Nothing to post.": { ar: "لا شيء للترحيل.", ckb: "هیچ شتێک بۆ تۆمارکردن نییە." },
+  "Change what is wrong, as the invoice has it. A line left out is taken off. What was entered first is kept, and the correction is on the audit trail.":
+    {
+      ar: "غيّر ما هو خطأ كما تذكره الفاتورة. السطر المتروك يُحذف. يبقى ما أُدخل أولًا محفوظًا، والتصحيح مسجّل في سجل التدقيق.",
+      ckb: "ئەوەی هەڵەیە بیگۆڕە، وەک لە پسووڵەکەدایە. هێڵێک کە لابرابێت دەسڕدرێتەوە. ئەوەی سەرەتا تۆمار کرابوو دەمێنێتەوە، و ڕاستکردنەوەکە لە تۆماری گۆڕانکارییەکاندایە.",
+    },
+  "The day it came": { ar: "يوم وصوله", ckb: "ئەو ڕۆژەی گەیشت" },
+  "Quantity of {item}": { ar: "كمية {item}", ckb: "بڕی {item}" },
+  "Price of {item}": { ar: "سعر {item}", ckb: "نرخی {item}" },
+  "Take the line off": { ar: "احذف السطر", ckb: "هێڵەکە لابە" },
+  "For a delivery that should never have been entered: its stock goes out and nothing is owed for it. What was entered is kept, marked reversed.":
+    {
+      ar: "لتوريد ما كان ينبغي إدخاله أصلًا: يخرج مخزونه ولا يُستحق عنه شيء. يبقى ما أُدخل محفوظًا، مُعلَّمًا بأنه معكوس.",
+      ckb: "بۆ بارێک کە هەرگیز نەدەبوو تۆمار بکرێت: کۆگاکەی دەردەچێت و هیچ قەرزێکی لەسەر نامێنێت. ئەوەی تۆمار کرابوو دەمێنێتەوە، وەک هەڵگەڕێندراوە نیشانە دەکرێت.",
+    },
+  "On the delivery": { ar: "في التوريد", ckb: "لەسەر بارەکە" },
+  "In stock": { ar: "في المخزون", ckb: "لە کۆگادا" },
+  "Stock value": { ar: "قيمة المخزون", ckb: "بەهای کۆگا" },
+  "Owed for it (2050)": { ar: "المستحق عنه (2050)", ckb: "قەرزی ئەوە (2050)" },
+  "Price variance (5050)": { ar: "فرق السعر (5050)", ckb: "جیاوازی نرخ (5050)" },
+  "Stock {stock} · owed for it {grni} · price variance {variance}": {
+    ar: "المخزون {stock} · المستحق عنه {grni} · فرق السعر {variance}",
+    ckb: "کۆگا {stock} · قەرزی ئەوە {grni} · جیاوازی نرخ {variance}",
+  },
+  "Part of its stock has been used already, at the price it came in at: that part of the difference goes to purchase price variance (5050).":
+    {
+      ar: "استُخدم جزء من مخزونه بالسعر الذي دخل به: وذلك الجزء من الفرق يذهب إلى فرق أسعار الشراء (5050).",
+      ckb: "بەشێک لە کۆگاکەی پێشتر بەکارهاتووە، بەو نرخەی پێی هاتبوو: ئەو بەشەی جیاوازییەکە دەچێتە سەر جیاوازی نرخی کڕین (5050).",
+    },
+  "This leaves {items} below zero: correct it all the same": {
+    ar: "هذا يترك {items} دون الصفر: صحّحه مع ذلك",
+    ckb: "ئەمە {items} دەباتە ژێر سفر: هەر ڕاستی بکەرەوە",
+  },
+  "Why it is corrected": { ar: "سبب التصحيح", ckb: "هۆی ڕاستکردنەوە" },
+  "Why it is reversed": { ar: "سبب العكس", ckb: "هۆی هەڵگەڕاندنەوە" },
+  "Why it is reversed, in a few words": {
+    ar: "سبب العكس، في كلمات قليلة",
+    ckb: "هۆی هەڵگەڕاندنەوە، بە چەند وشەیەک",
+  },
+  "Why it is corrected, in a few words": {
+    ar: "سبب التصحيح، في كلمات قليلة",
+    ckb: "هۆی ڕاستکردنەوە، بە چەند وشەیەک",
+  },
+  "Show what it would do": { ar: "اعرض ما سيفعله", ckb: "پیشانی بدە چی دەکات" },
+  "Confirm the correction": { ar: "أكّد التصحيح", ckb: "ڕاستکردنەوەکە پشتڕاست بکەرەوە" },
+  "Revalued: a delivery's price corrected": {
+    ar: "أُعيد تقييمه: صُحّح سعر توريد",
+    ckb: "دووبارە نرخێندرا: نرخی بارێک ڕاست کرایەوە",
+  },
+  "a delivery": { ar: "توريدًا", ckb: "بارێک" },
+  "The date it came": { ar: "تاريخ وصوله", ckb: "بەرواری گەیشتنی" },
+  "Delivery reversed": { ar: "عكس توريد", ckb: "هەڵگەڕاندنەوەی بار" },
+  "What was corrected": { ar: "ما صُحّح", ckb: "ئەوەی ڕاست کرایەوە" },
+  "Stock value changed by": { ar: "تغيّرت قيمة المخزون بمقدار", ckb: "بەهای کۆگا گۆڕا بە" },
+  "Owed for it (2050) changed by": {
+    ar: "تغيّر المستحق عنه (2050) بمقدار",
+    ckb: "قەرزی ئەوە (2050) گۆڕا بە",
+  },
 };
 
 export default phrases;

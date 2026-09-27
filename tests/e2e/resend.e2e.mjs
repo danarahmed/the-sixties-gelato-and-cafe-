@@ -214,6 +214,44 @@ console.log("▸ a delivery received with its answer lost is received once");
   await ctx.close();
 }
 
+// ------------------------------------------------------------- a delivery's correction
+console.log("▸ a delivery corrected with its answer lost is corrected once");
+{
+  const id = sql(`select test.act_as('manager@example.com');
+    select receive_goods((select id from supplier where business_id = '00000000-0000-0000-0000-0000000000b1'
+                           and is_active order by name, id limit 1),
+      '[{"item_id":"c0000000-0000-0000-0000-000000000002","qty":4,"unit_price":50}]', p_confirm => true) ->> 'receipt_id'`)
+    .split("\n")
+    .pop();
+  const no = sql(`select receipt_no from goods_receipt where id = '${id}'`);
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/purchasing");
+  await page
+    .locator(`[data-testid="receipt-row"][data-receipt="${no}"]`)
+    .getByRole("button", { name: "Correct", exact: true })
+    .click();
+  const dialog = page.getByTestId("receipt-correction");
+  await dialog.getByLabel("Quantity of Golden cup").fill("3");
+  await dialog.getByRole("button", { name: "Show what it would do" }).click();
+  await dialog.getByTestId("correction-plan").waitFor({ timeout: 10000 });
+  await dialog.getByLabel("Why it is corrected").fill("One cup short, resent");
+  await loseNextAnswer("correct_receipt");
+  await dialog.getByRole("button", { name: "Confirm the correction" }).click();
+  check(await checking(page), "the correction checks too");
+  await dialog.getByTestId("correction-answer").waitFor({ timeout: 15000 });
+  check(
+    n(`select count(*) from receipt_correction where goods_receipt_id = '${id}'`) === 1,
+    "one correction, though it was sent twice",
+  );
+  check(
+    n(`select count(*) from journal_entry where reference_type = 'receipt_correction'
+         and reference_id in (select id from receipt_correction where goods_receipt_id = '${id}')`) ===
+      1,
+    "with one journal",
+  );
+  await ctx.close();
+}
+
 check(
   differences() === differencesBefore,
   "and no subledger moved away from its account through all of it",

@@ -245,6 +245,10 @@ const phrases: PhraseBook = {
   Voided: { ar: "ملغى", ckb: "هەڵوەشێنراوە" },
   Refunded: { ar: "مسترد", ckb: "پارەی گەڕێندراوەتەوە" },
   "Part-refunded": { ar: "مسترد جزئيًا", ckb: "بەشێکی گەڕێندراوەتەوە" },
+
+  // Movements of a delivery's correction (0038).
+  "Delivery corrected": { ar: "تصحيح توريد", ckb: "ڕاستکردنەوەی بار" },
+  Revalued: { ar: "إعادة تقييم", ckb: "دووبارە نرخاندن" },
 };
 
 export default phrases;

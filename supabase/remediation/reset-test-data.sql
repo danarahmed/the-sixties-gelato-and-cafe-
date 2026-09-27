@@ -18,12 +18,13 @@
 --            and PIN attempts, cash sessions and drawer counts, cash events
 --            and cash moved, the answers kept for retries, card settlements,
 --            stock movements and lots, stock counts, production batches,
---            purchase orders, deliveries, supplier bills and payments,
---            expenses, every journal and accounting period, platform orders and
---            settlements, reconciliation and sync logs, AI notes, the alerts
---            raised on all of it (they rise again from what is recorded next),
---            and the document numbers (journals start again at 1001, the café's
---            own bill numbers at 0001, cash sessions and refunds at 1)
+--            purchase orders, deliveries and their corrections, supplier bills
+--            and payments, expenses, every journal and accounting period,
+--            platform orders and settlements, reconciliation and sync logs, AI
+--            notes, the alerts raised on all of it (they rise again from what
+--            is recorded next), and the document numbers (journals start again
+--            at 1001, the café's own bill numbers at 0001, cash sessions,
+--            refunds and delivery corrections at 1)
 --
 -- Afterwards no item has stock. Before the first sale, give each item its
 -- opening stock (Inventory → Opening stock): what is on the shelf, at what it
@@ -96,7 +97,8 @@ truncate table
   expense, goods_receipt, goods_receipt_line, inventory_movement, item_lot, journal_entry, journal_line,
   pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   production_batch,
-  purchase_invoice, purchase_order, purchase_order_line, reconciliation_issue, request_log, sale_adjustment,
+  purchase_invoice, purchase_order, purchase_order_line, receipt_correction, reconciliation_issue, request_log,
+  sale_adjustment,
   sale_refund, sale_refund_line, sale_refund_tender,
   sales_order, sales_order_line, sales_tender, stock_count, stock_count_line, supplier_payment, sync_log,
   work_shift

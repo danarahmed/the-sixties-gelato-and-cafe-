@@ -341,6 +341,24 @@ export interface ReceiptRow {
   /** Received before the controls and never journaled: the owner posts it from Reports. */
   unjournaled: boolean;
   note: string | null;
+  /** The day it came, as a correction set it (0038); null: the day it was entered. */
+  receivedOn: string | null;
+  /** Reversed: it should never have been entered (0038). */
+  reversed: boolean;
+  /** Its lines as they stand now, corrected or not. */
+  lines: { lineId: string; itemId: string; qty: number; unitCode: string; goodsValue: number }[];
+  /** Its corrections (0038), in order. */
+  corrections: {
+    no: number;
+    kinds: string[];
+    reason: string;
+    by: string | null;
+    at: string;
+    journalNo: number | null;
+    stock: number;
+    grni: number;
+    variance: number;
+  }[];
 }
 
 export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
@@ -357,8 +375,11 @@ export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
   );
   if (receipts.length === 0) return [];
   const ids = receipts.map((r) => str(r.id));
-  const [lines, moves, bills, journals, suppliers] = await Promise.all([
-    c.from("goods_receipt_line").select("goods_receipt_id,goods_value").in("goods_receipt_id", ids),
+  const [lines, moves, bills, journals, suppliers, corrections, people] = await Promise.all([
+    c
+      .from("goods_receipt_line")
+      .select("id,goods_receipt_id,item_id,received_qty,received_unit_code,goods_value")
+      .in("goods_receipt_id", ids),
     c
       .from("inventory_movement")
       .select("reference_id,value")
@@ -377,6 +398,14 @@ export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
       .eq("status", "published")
       .in("reference_id", ids),
     c.from("supplier").select("id,name"),
+    c
+      .from("receipt_correction")
+      .select(
+        "goods_receipt_id,correction_no,kinds,reason,after_state,effects,journal_entry_id,created_by,created_at",
+      )
+      .in("goods_receipt_id", ids)
+      .order("correction_no", { ascending: true }),
+    c.from("app_user").select("id,full_name"),
   ]);
   const receiptJournals = rows(journals, "receipt journals");
   const reversedIds = new Set(
@@ -394,11 +423,43 @@ export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
     ).map((r) => str(r.reverses_entry)),
   );
   const goods = new Map<string, { value: number; count: number }>();
+  const originalLines = new Map<string, ReceiptRow["lines"]>();
   for (const l of rows(lines, "receipt lines")) {
     const k = str(l.goods_receipt_id);
     const cur = goods.get(k) ?? { value: 0, count: 0 };
     goods.set(k, { value: cur.value + num(l.goods_value), count: cur.count + 1 });
+    originalLines.set(k, [
+      ...(originalLines.get(k) ?? []),
+      {
+        lineId: str(l.id),
+        itemId: str(l.item_id),
+        qty: num(l.received_qty),
+        unitCode: str(l.received_unit_code),
+        goodsValue: num(l.goods_value),
+      },
+    ]);
   }
+  const correctionRows = rows(corrections, "delivery corrections");
+  const person = new Map(rows(people, "people").map((p) => [str(p.id), str(p.full_name)]));
+  const journalNos = new Map<string, number>();
+  const correctionJournals = correctionRows.map((x) => x.journal_entry_id).filter(Boolean);
+  if (correctionJournals.length > 0) {
+    for (const j of rows(
+      await c.from("journal_entry").select("id,journal_no").in("id", correctionJournals),
+      "correction journals",
+    )) {
+      journalNos.set(str(j.id), num(j.journal_no));
+    }
+  }
+  const correctedBy = new Map<string, Record<string, unknown>[]>();
+  for (const x of correctionRows) {
+    const k = str(x.goods_receipt_id);
+    correctedBy.set(k, [...(correctedBy.get(k) ?? []), x]);
+  }
+  const sumOf = (effects: unknown, field: string) =>
+    Array.isArray(effects)
+      ? (effects as Record<string, unknown>[]).reduce((t, e) => t + num(e[field]), 0)
+      : 0;
   const valued = new Map<string, number>();
   for (const m of rows(moves, "receipt movements")) {
     valued.set(str(m.reference_id), (valued.get(str(m.reference_id)) ?? 0) + num(m.value));
@@ -417,21 +478,51 @@ export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
   return receipts.map((r) => {
     const id = str(r.id);
     const g = goods.get(id) ?? { value: 0, count: 0 };
+    const history = correctedBy.get(id) ?? [];
+    // As its latest correction left it (0038), or as it was received.
+    const state = (history.at(-1)?.after_state ?? null) as Record<string, unknown> | null;
+    const stateLines = Array.isArray(state?.lines)
+      ? (state.lines as Record<string, unknown>[])
+      : [];
+    const supplierId = state ? strOrNull(state.supplier_id) : strOrNull(r.supplier_id);
+    const reversed = Boolean(state?.reversed);
     return {
       id,
       receiptNo: numOrNull(r.receipt_no),
       receivedAt: str(r.received_at),
-      supplierId: strOrNull(r.supplier_id),
-      supplierName: r.supplier_id ? (supplierName.get(str(r.supplier_id)) ?? null) : null,
-      goodsValue: g.value,
+      supplierId,
+      supplierName: supplierId ? (supplierName.get(supplierId) ?? null) : null,
+      goodsValue: state ? stateLines.reduce((t, l) => t + num(l.goods_value), 0) : g.value,
       landedExtras: num(r.freight_total) + num(r.other_landed_total) - num(r.rebate_total),
-      value: valued.get(id) ?? 0,
-      lineCount: g.count,
+      value: state ? stateLines.reduce((t, l) => t + num(l.landed), 0) : (valued.get(id) ?? 0),
+      lineCount: state ? stateLines.length : g.count,
       billed: billed.has(id),
-      billable: (controlled.has(id) || legacyPosted.has(id)) && !billed.has(id),
+      billable: (controlled.has(id) || legacyPosted.has(id)) && !billed.has(id) && !reversed,
       legacy: !controlled.has(id),
       unjournaled: !journaled.has(id),
       note: strOrNull(r.note),
+      receivedOn: state ? strOrNull(state.received_on) : null,
+      reversed,
+      lines: state
+        ? stateLines.map((l) => ({
+            lineId: str(l.line_id),
+            itemId: str(l.item_id),
+            qty: num(l.qty),
+            unitCode: str(l.unit_code),
+            goodsValue: num(l.goods_value),
+          }))
+        : (originalLines.get(id) ?? []),
+      corrections: history.map((x) => ({
+        no: num(x.correction_no),
+        kinds: Array.isArray(x.kinds) ? (x.kinds as unknown[]).map(String) : [],
+        reason: str(x.reason),
+        by: x.created_by ? (person.get(str(x.created_by)) ?? null) : null,
+        at: str(x.created_at),
+        journalNo: x.journal_entry_id ? (journalNos.get(str(x.journal_entry_id)) ?? null) : null,
+        stock: sumOf(x.effects, "stock_change"),
+        grni: sumOf(x.effects, "grni_change"),
+        variance: sumOf(x.effects, "variance"),
+      })),
     };
   });
 }
@@ -604,11 +695,14 @@ export async function getSalesOrders(
           tender: rTender.get(str(r.id)) ?? null,
           by: who(r.requested_by),
           approvedBy: r.approved_by && r.approved_by !== r.requested_by ? who(r.approved_by) : null,
-          lines: (rLinesBy.get(str(r.id)) ?? []).map((x) => ({
-            name: lineName.get(str(x.sales_order_line_id)) ?? "—",
-            qty: num(x.qty),
-            amount: num(x.amount),
-          })),
+          // By name: the database returns a refund's lines in no set order.
+          lines: (rLinesBy.get(str(r.id)) ?? [])
+            .map((x) => ({
+              name: lineName.get(str(x.sales_order_line_id)) ?? "—",
+              qty: num(x.qty),
+              amount: num(x.amount),
+            }))
+            .sort((x, y) => x.name.localeCompare(y.name) || x.qty - y.qty),
         })),
       adjustments: adj
         .filter((a) => !docIds.has(str(a.id)))

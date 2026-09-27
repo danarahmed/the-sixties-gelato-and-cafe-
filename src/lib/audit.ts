@@ -107,6 +107,8 @@ const ACTION_LABEL: Record<string, string> = {
   "expense.record": "Expense recorded",
   "table.save": "Table saved",
   "purchase.price_confirmed": "Delivery price confirmed",
+  "purchase.correct": "Delivery corrected",
+  "purchase.reverse": "Delivery reversed",
   "sale.void": "Sale voided",
   "sale.refund": "Sale refunded",
   "sale.discount": "Discount given",
@@ -282,6 +284,23 @@ const FIELD_LABEL: Record<string, string> = {
   refund_no: "Refund",
   refunded: "Refunded so far",
   returned_to_stock: "Back on the shelf, at cost",
+  correction_no: "Correction",
+  kinds: "What was corrected",
+  received_on: "The day it came",
+  delivery_lines: "On the delivery",
+  stock_change: "Stock value changed by",
+  grni_change: "Owed for it (2050) changed by",
+  price_variance: "Price variance (5050)",
+};
+
+/** What a delivery's correction changed (0038), as the trail names it. */
+const CORRECTION_KIND: Record<string, string> = {
+  quantity: "the quantity",
+  price: "the price",
+  item: "the item",
+  supplier: "the supplier",
+  date: "the date",
+  reversed: "reversed",
 };
 
 /**
@@ -326,11 +345,17 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
           const only = Array.isArray(o.channels)
             ? ` (${o.channels.map((c) => showValue(c, "channel", names)).join(", ")})`
             : "";
-          return `${item} ${showValue(qty, "qty", names)}${unit}${only}`;
+          // A delivery's line (0038): what it cost, too.
+          const cost =
+            typeof o.goods_value === "number"
+              ? ` (${showValue(o.goods_value, "value", names)})`
+              : "";
+          return `${item} ${showValue(qty, "qty", names)}${unit}${only}${cost}`;
         })
         .join(", ");
     }
     if (key === "roles") return v.map((r) => roleLabel(String(r))).join(", ");
+    if (key === "kinds") return v.map((k) => CORRECTION_KIND[String(k)] ?? String(k)).join(", ");
     return v.map((x) => showValue(x, key, names)).join(", ");
   }
   // The notes counted in the drawer (0036): "25,000 × 2, 1,000 × 3".
@@ -580,6 +605,7 @@ export function valueIn(value: string, field: string, t: T, msg: Msg): string {
     case FIELD_LABEL.title:
       return msg(value);
     case FIELD_LABEL.roles:
+    case FIELD_LABEL.kinds:
       return value
         .split(", ")
         .map((r) => t(r))
