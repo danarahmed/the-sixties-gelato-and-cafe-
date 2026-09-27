@@ -3,7 +3,7 @@
 // back (the gateway drops it). The screen says it is checking, sends it again
 // with the same key, and shows what was done — and the database holds it once.
 // The quick sale's own version of this is tested in retry.
-import { chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { TODAY, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const gateway = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321");
@@ -16,7 +16,7 @@ const logged = (fn) => n(`select count(*) from request_log where operation = '${
 const differences = () =>
   sql(`select test.act_as('owner@example.com');
        select string_agg(check_key || '=' || difference, ',' order by check_key)
-         from report_reconciliation(current_date)`)
+         from report_reconciliation(${TODAY})`)
     .split("\n")
     .pop();
 const differencesBefore = differences();
