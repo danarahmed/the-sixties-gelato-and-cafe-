@@ -7,7 +7,7 @@
  * itself on the audit trail.
  */
 import { z } from "zod";
-import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { badKey, callRpc, parse, refresh, subKey, type ActionResult } from "@/lib/db/rpc";
 import { CHANNEL_CODE } from "@/lib/channels";
 import { salesChannel } from "@/lib/validation";
 
@@ -72,13 +72,17 @@ export interface PlatformAdded {
  */
 export async function addPlatformAction(
   input: z.input<typeof addInput>,
+  key: string,
 ): Promise<ActionResult<PlatformAdded>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(addInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("add_delivery_platform", {
     p_name: v.data.name,
     p_code: v.data.code || null,
     p_names: v.data.names,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   const code = String(r.data.code);
@@ -94,6 +98,7 @@ export async function addPlatformAction(
       p_platform: code,
       p_like: v.data.like,
       p_prices: v.data.copyPrices,
+      p_idempotency_key: subKey(key, "copy_platform_setup"),
     });
     if (s.ok) {
       added.lines = Number(s.data.lines ?? 0);
@@ -113,13 +118,17 @@ const setupInput = z.object({
 /** A platform given the packaging, and the prices it has none of, of a channel it works like. */
 export async function copyPlatformSetupAction(
   input: z.input<typeof setupInput>,
+  key: string,
 ): Promise<ActionResult<{ lines: number; prices: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(setupInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("copy_platform_setup", {
     p_platform: v.data.code,
     p_like: v.data.like,
     p_prices: v.data.copyPrices,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...PLATFORM_PATHS);

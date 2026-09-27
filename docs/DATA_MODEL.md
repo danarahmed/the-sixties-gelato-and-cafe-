@@ -264,7 +264,7 @@ through the functions in `0018`.
   owner). `drawer_status` (what the drawer should hold now, and what moved
   since the last count). `record_expense` and `pay_bill` take where the money
   came from; paying from the till or the safe is refused beyond what the books
-  say it holds. `close_day` now only tells an open page to refresh.
+  say it holds. `close_day` has been closed since `0035`.
   `uncounted_days` lists the trading days whose cash no count has covered;
   `report_unclosed_days` and the period checklist use it.
 - **Opening stock.** `record_opening_stock` (as `create_item`): an item with no

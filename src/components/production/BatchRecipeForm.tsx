@@ -21,6 +21,7 @@ import {
   type LineDraft,
 } from "@/components/menu/RecipeLines";
 import { batchCost, perUnit, unitFactor } from "@/components/production/batchMath";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 type Msg = { ok: boolean; text: string } | null;
 type Measure = "weight" | "volume" | "pieces";
@@ -45,6 +46,7 @@ export function BatchRecipeForm({
   seesCost: boolean;
   onClose?: () => void;
 }) {
+  const op = useOperation();
   const { t, msg: say } = useT();
   const MEASURES: { value: Measure; label: string; units: { code: string; label: string }[] }[] = [
     {
@@ -164,29 +166,34 @@ export function BatchRecipeForm({
       return;
     }
     start(async () => {
-      const r = await saveBatchRecipeAction({
-        recipeId: recipe?.id ?? null,
-        name,
-        output: recipe
-          ? null
-          : makes === "existing"
-            ? { itemId: existingId }
-            : {
-                measure,
-                container: container.trim() || null,
-                containerQty: container.trim() ? containerQty : null,
-                containerUnit: container.trim() ? containerUnit : null,
-              },
-        yieldQty,
-        yieldUnit,
-        lines: filledLines(lines, NO_CHANNELS).map((l) => ({
-          itemId: l.itemId,
-          qty: l.qty,
-          unitCode: l.unitCode,
-        })),
-        instructions,
-        isActive: recipe?.isActive ?? true,
-      });
+      const r = await op.run("saveBatchRecipe", (key) =>
+        saveBatchRecipeAction(
+          {
+            recipeId: recipe?.id ?? null,
+            name,
+            output: recipe
+              ? null
+              : makes === "existing"
+                ? { itemId: existingId }
+                : {
+                    measure,
+                    container: container.trim() || null,
+                    containerQty: container.trim() ? containerQty : null,
+                    containerUnit: container.trim() ? containerUnit : null,
+                  },
+            yieldQty,
+            yieldUnit,
+            lines: filledLines(lines, NO_CHANNELS).map((l) => ({
+              itemId: l.itemId,
+              qty: l.qty,
+              unitCode: l.unitCode,
+            })),
+            instructions,
+            isActive: recipe?.isActive ?? true,
+          },
+          key,
+        ),
+      );
       if (r.ok) {
         setMsg({
           ok: true,
@@ -392,6 +399,7 @@ export function BatchRecipeForm({
             {t("Cancel")}
           </button>
         )}
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>

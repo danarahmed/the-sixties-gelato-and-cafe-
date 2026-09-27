@@ -24,6 +24,7 @@ import {
   type ItemOpt,
   type LineDraft,
 } from "@/components/menu/RecipeLines";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -45,6 +46,7 @@ export function AddProductForm({
   /** The currency's decimals, and the step suggested prices are rounded up to (250 IQD). */
   money: { decimals: number; priceStep: number };
 }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const { set, name: channelName } = useChannels();
@@ -89,17 +91,22 @@ export function AddProductForm({
       return;
     }
     start(async () => {
-      const r = await createProductAction({
-        name,
-        nameAr,
-        nameCkb,
-        categoryId: categoryId || null,
-        prices: Object.fromEntries(
-          set.inUse.map((c) => [c, (prices[c] ?? "").trim()]).filter(([, p]) => p !== ""),
+      const r = await op.run("createProduct", (key) =>
+        createProductAction(
+          {
+            name,
+            nameAr,
+            nameCkb,
+            categoryId: categoryId || null,
+            prices: Object.fromEntries(
+              set.inUse.map((c) => [c, (prices[c] ?? "").trim()]).filter(([, p]) => p !== ""),
+            ),
+            recipe: filledLines(lines, set),
+            noStockReason: noRecipe ? noStock : null,
+          },
+          key,
         ),
-        recipe: filledLines(lines, set),
-        noStockReason: noRecipe ? noStock : null,
-      });
+      );
       if (r.ok) {
         setMsg({ ok: true, text: t("Created “{name}”.", { name }) });
         setName("");
@@ -298,6 +305,7 @@ export function AddProductForm({
             <button className="btn-primary" onClick={submit} disabled={pending || !name.trim()}>
               {pending ? t("Saving…") : t("Create product")}
             </button>
+            <OperationStatus op={op} />
             <Notice msg={msg} />
           </div>
         </div>
@@ -308,6 +316,7 @@ export function AddProductForm({
 
 /** A new price from a date. The old price stays in force until then; history is kept. */
 export function PriceChange({ variantId, today }: { variantId: string; today: string }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const { set, name: channelName } = useChannels();
@@ -369,7 +378,9 @@ export function PriceChange({ variantId, today }: { variantId: string; today: st
         disabled={busy || !price.trim()}
         onClick={() =>
           start(async () => {
-            const r = await setPriceAction({ variantId, channel, price, effectiveFrom: from });
+            const r = await op.run("setPrice", (key) =>
+              setPriceAction({ variantId, channel, price, effectiveFrom: from }, key),
+            );
             if (r.ok) {
               setMsg({
                 ok: true,
@@ -386,6 +397,7 @@ export function PriceChange({ variantId, today }: { variantId: string; today: st
       >
         {busy ? "…" : t("Set price")}
       </button>
+      <OperationStatus op={op} />
       <Notice msg={msg} />
     </div>
   );

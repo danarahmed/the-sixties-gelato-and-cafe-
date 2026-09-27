@@ -7,7 +7,7 @@
  * the owner personally.
  */
 import { z } from "zod";
-import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import {
   day,
   id,
@@ -29,13 +29,17 @@ const supplierInput = z.object({
 /** A new supplier, its name unlike any other supplier in use (0027). */
 export async function createSupplierAction(
   input: z.input<typeof supplierInput>,
+  key: string,
 ): Promise<ActionResult<{ id: string }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(supplierInput, input);
   if (!v.ok) return v;
   const r = await callRpc<string>("create_supplier", {
     p_name: v.data.name,
     p_contact: v.data.contact,
     p_phone: v.data.phone,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh("/purchasing", "/vendors");
@@ -111,7 +115,10 @@ const receiveInput = z.object({
  */
 export async function receiveGoodsAction(
   input: z.input<typeof receiveInput>,
+  key: string,
 ): Promise<ActionResult<{ receiptNo: number; value: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(receiveInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("receive_goods", {
@@ -127,6 +134,7 @@ export async function receiveGoodsAction(
     p_rebate: v.data.rebate,
     p_note: v.data.note,
     p_confirm: v.data.confirm,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...BUY_PATHS);
@@ -156,7 +164,10 @@ const billInput = z
 
 export async function recordBillAction(
   input: z.input<typeof billInput>,
+  key: string,
 ): Promise<ActionResult<{ invoiceNo: string; journalNo: number | null; priceVariance: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(billInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("record_bill", {
@@ -167,6 +178,7 @@ export async function recordBillAction(
     p_term_days: v.data.termDays,
     p_receipt: v.data.receiptId,
     p_account_code: v.data.accountCode,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...BUY_PATHS, "/expenses");
@@ -188,13 +200,17 @@ const payInput = z.object({
 
 export async function payBillAction(
   input: z.input<typeof payInput>,
+  key: string,
 ): Promise<ActionResult<{ outstanding: number; journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(payInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("pay_bill", {
     p_bill: v.data.billId,
     p_amount: v.data.amount,
     p_method: v.data.method,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh("/sales", ...BUY_PATHS);
@@ -216,13 +232,17 @@ const cancelInput = z.object({
 /** A bill entered in error: kept on record, its journal reversed, no longer owed. */
 export async function cancelBillAction(
   input: z.input<typeof cancelInput>,
+  key: string,
 ): Promise<ActionResult<{ journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(cancelInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("cancel_bill", {
     p_bill: v.data.billId,
     p_reason: v.data.reason,
     p_date: v.data.date,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...BUY_PATHS);

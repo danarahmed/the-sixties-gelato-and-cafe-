@@ -9,6 +9,7 @@ import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { NewItemForm, type CreatedItem } from "@/components/NewItemForm";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 interface ItemOpt {
   id: string;
@@ -63,6 +64,7 @@ export function ReceiveStockForm({
 }
 
 function AddSupplier() {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -72,7 +74,7 @@ function AddSupplier() {
   function submit() {
     setMsg(null);
     start(async () => {
-      const r = await createSupplierAction(f);
+      const r = await op.run("createSupplier", (key) => createSupplierAction(f, key));
       if (r.ok) {
         setMsg({ ok: true, text: t("Supplier added.") });
         setF({ name: "", contact: "", phone: "" });
@@ -109,6 +111,7 @@ function AddSupplier() {
         <button className="btn-primary" onClick={submit} disabled={pending || !f.name.trim()}>
           {pending ? "…" : t("Add")}
         </button>
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>
@@ -124,6 +127,7 @@ function Receive({
   suppliers: SupplierOpt[];
   canAddItem: boolean;
 }) {
+  const op = useOperation();
   const { t, msg: say } = useT();
   // Items added on this receipt, until the page's list brings them.
   const [added, setAdded] = useState<ItemOpt[]>([]);
@@ -183,22 +187,27 @@ function Receive({
   function submit(confirm: boolean) {
     setMsg(null);
     start(async () => {
-      const r = await receiveGoodsAction({
-        supplierId: supplier,
-        freight: freight || "0",
-        other: other || "0",
-        rebate: rebate || "0",
-        note,
-        confirm,
-        lines: lines
-          .filter((l) => l.itemId && l.itemId !== NEW_ITEM && l.qty.trim() !== "")
-          .map((l) => ({
-            itemId: l.itemId,
-            qty: l.qty,
-            unitCode: l.unit,
-            unitPrice: l.unitPrice,
-          })),
-      });
+      const r = await op.run("receiveGoods", (key) =>
+        receiveGoodsAction(
+          {
+            supplierId: supplier,
+            freight: freight || "0",
+            other: other || "0",
+            rebate: rebate || "0",
+            note,
+            confirm,
+            lines: lines
+              .filter((l) => l.itemId && l.itemId !== NEW_ITEM && l.qty.trim() !== "")
+              .map((l) => ({
+                itemId: l.itemId,
+                qty: l.qty,
+                unitCode: l.unit,
+                unitPrice: l.unitPrice,
+              })),
+          },
+          key,
+        ),
+      );
       if (r.ok) {
         setCheck(null);
         setMsg({
@@ -484,6 +493,7 @@ function Receive({
             {t("Goods {value}", { value: fmtIQD(goods) })}
           </span>
         )}
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>

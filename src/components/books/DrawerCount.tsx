@@ -10,6 +10,7 @@ import { Rich } from "@/lib/i18n/Rich";
 import { Notice } from "@/components/ui";
 import type { DrawerStatus } from "@/lib/db/books";
 import { drawerPreview } from "./drawerMath";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -21,6 +22,7 @@ type Msg = { ok: boolean; text: string } | null;
  * count starts from what stayed.
  */
 export function DrawerCount({ status, since }: { status: DrawerStatus; since: string | null }) {
+  const op = useOperation();
   const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -43,12 +45,17 @@ export function DrawerCount({ status, since }: { status: DrawerStatus; since: st
   function submit() {
     setMsg(null);
     start(async () => {
-      const r = await countDrawerAction({
-        counted,
-        left: left.trim() === "" ? null : left,
-        takeTo: p.taken && p.taken > 0 ? takeTo : null,
-        startCash: status.needsStart ? startCash : null,
-      });
+      const r = await op.run("countDrawer", (key) =>
+        countDrawerAction(
+          {
+            counted,
+            left: left.trim() === "" ? null : left,
+            takeTo: p.taken && p.taken > 0 ? takeTo : null,
+            startCash: status.needsStart ? startCash : null,
+          },
+          key,
+        ),
+      );
       if (!r.ok) {
         setMsg({ ok: false, text: r.error });
         return;
@@ -240,6 +247,7 @@ export function DrawerCount({ status, since }: { status: DrawerStatus; since: st
         )}
       </p>
       <div style={{ marginBlockStart: 12 }}>
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>
@@ -260,6 +268,7 @@ type Place = keyof typeof PLACES;
  * owner puts in or takes out (only the owner takes money for themselves).
  */
 export function MoveCash({ isOwner, safe }: { isOwner: boolean; safe: number }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -273,7 +282,7 @@ export function MoveCash({ isOwner, safe }: { isOwner: boolean; safe: number }) 
   function submit() {
     setMsg(null);
     start(async () => {
-      const r = await moveCashAction({ from, to, amount, note });
+      const r = await op.run("moveCash", (key) => moveCashAction({ from, to, amount, note }, key));
       if (!r.ok) {
         setMsg({ ok: false, text: r.error });
         return;
@@ -362,6 +371,7 @@ export function MoveCash({ isOwner, safe }: { isOwner: boolean; safe: number }) 
         )}
       </p>
       <div style={{ marginBlockStart: 12 }}>
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>

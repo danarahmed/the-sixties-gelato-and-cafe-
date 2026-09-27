@@ -11,6 +11,7 @@ import { roleLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import type { MemberRow } from "@/lib/db/reports";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 const ROLES = [
   "owner",
@@ -77,6 +78,7 @@ export function PeopleManager({
   myId: string;
   isOwner: boolean;
 }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -230,7 +232,9 @@ export function PeopleManager({
             onClick={() =>
               run(
                 async () => {
-                  const r = await inviteMemberAction({ email, name, roles });
+                  const r = await op.run("inviteMember", (key) =>
+                    inviteMemberAction({ email, name, roles }, key),
+                  );
                   if (r.ok) {
                     setEmail("");
                     setName("");
@@ -248,6 +252,7 @@ export function PeopleManager({
           </button>
         </div>
       </div>
+      <OperationStatus op={op} />
       <Notice msg={msg} />
     </div>
   );

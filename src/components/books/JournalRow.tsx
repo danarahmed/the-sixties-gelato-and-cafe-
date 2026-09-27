@@ -11,6 +11,7 @@ import { fmtIQD } from "@/lib/format";
 import { dateIn } from "@/lib/dates";
 import type { JournalRegisterRow } from "@/lib/db/books";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 /** Where a journal came from, in words: phrases, shown through t(). */
 const SOURCE: Record<string, string> = {
@@ -47,6 +48,7 @@ export function JournalRow({
   const { t, msg } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
+  const op = useOperation();
   const [open, setOpen] = useState(false);
   const [reversing, setReversing] = useState(false);
   const [reason, setReason] = useState("");
@@ -59,10 +61,13 @@ export function JournalRow({
   const difference = Math.round(debit - credit);
   const canReverse = canPost && !isDraft && entry.reversedByNo === null && entry.reversibleByHand;
 
-  function run(fn: () => Promise<{ ok: true } | { ok: false; error: string }>) {
+  function run(
+    name: string,
+    fn: (key: string) => Promise<{ ok: true } | { ok: false; error: string; uncertain?: boolean }>,
+  ) {
     setErr(null);
     start(async () => {
-      const r = await fn();
+      const r = await op.run(name, fn);
       if (r.ok) {
         setReversing(false);
         setReason("");
@@ -127,7 +132,9 @@ export function JournalRow({
           {canPost && isDraft && (
             <span style={{ display: "inline-flex", gap: 6 }}>
               <button
-                onClick={() => run(() => publishJournalAction({ entryId: entry.id }))}
+                onClick={() =>
+                  run("publishJournal", (key) => publishJournalAction({ entryId: entry.id }, key))
+                }
                 disabled={busy || difference !== 0}
                 title={difference === 0 ? t("Publish to the books") : t("Does not balance")}
                 style={small}
@@ -135,13 +142,21 @@ export function JournalRow({
                 {t("Publish")}
               </button>
               <button
-                onClick={() => run(() => discardJournalAction({ entryId: entry.id }))}
+                onClick={() =>
+                  run("discardJournal", (key) => discardJournalAction({ entryId: entry.id }, key))
+                }
                 disabled={busy}
                 style={small}
               >
                 {t("Discard")}
               </button>
             </span>
+          )}
+          <OperationStatus op={op} />
+          {!reversing && err && (
+            <div className="red" style={{ fontSize: ".72rem" }}>
+              {msg(err)}
+            </div>
           )}
           {canReverse && !reversing && (
             <button onClick={() => setReversing(true)} style={small}>
@@ -189,7 +204,9 @@ export function JournalRow({
                 className="btn-primary"
                 disabled={busy || !reason.trim()}
                 onClick={() =>
-                  run(() => reverseJournalAction({ entryId: entry.id, reason, date: revDate }))
+                  run("reverseJournal", (key) =>
+                    reverseJournalAction({ entryId: entry.id, reason, date: revDate }, key),
+                  )
                 }
                 style={small}
               >

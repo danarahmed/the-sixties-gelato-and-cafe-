@@ -7,6 +7,7 @@ import { fmtIQD } from "@/lib/format";
 import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 interface Suggestion {
   accountCode: string;
@@ -23,7 +24,8 @@ const PAID_FROM = {
   till: { code: "1000", name: "Cash in the till", label: "The till (today's drawer)" }, // i18n-ignore: shown through t()
   safe: { code: "1005", name: "Cash in the safe", label: "The safe" }, // i18n-ignore: shown through t()
   bank: { code: "1020", name: "Bank", label: "The bank" }, // i18n-ignore: shown through t()
-  card: { code: "1010", name: "Card clearing", label: "A card" }, // i18n-ignore: shown through t()
+  // A card payment comes out of the bank (0030): 1010 holds only the till's card takings.
+  card: { code: "1020", name: "Bank", label: "A card" }, // i18n-ignore: shown through t()
   owner: { code: "3000", name: "Owner equity", label: "The owner, personally" }, // i18n-ignore: shown through t()
 } as const;
 type PaidFrom = keyof typeof PAID_FROM;
@@ -40,6 +42,7 @@ export function ExpenseEntry({
   accounts: { code: string; name: string }[];
   today: string;
 }) {
+  const op = useOperation();
   // say: what the server answers (an account's name, the house rules' reason), in the reader's language.
   const { t, msg: say } = useT();
   const router = useRouter();
@@ -78,13 +81,18 @@ export function ExpenseEntry({
     setMsg(null);
     start(async () => {
       if (!paidFrom) return;
-      const r = await recordExpenseAction({
-        description: desc,
-        amount,
-        accountCode: account,
-        paidFrom,
-        date,
-      });
+      const r = await op.run("recordExpense", (key) =>
+        recordExpenseAction(
+          {
+            description: desc,
+            amount,
+            accountCode: account,
+            paidFrom,
+            date,
+          },
+          key,
+        ),
+      );
       if (r.ok) {
         setMsg({
           ok: true,
@@ -240,6 +248,7 @@ export function ExpenseEntry({
             {busy ? t("Posting…") : t("Post expense")}
           </button>
           <div style={{ marginBlockStart: 12 }}>
+            <OperationStatus op={op} />
             <Notice msg={msg} />
           </div>
         </div>

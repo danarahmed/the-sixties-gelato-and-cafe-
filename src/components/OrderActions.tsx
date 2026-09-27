@@ -8,6 +8,7 @@ import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { REASONS, reasonKey, reasonMissing } from "@/lib/reasons";
 import { normaliseNumber } from "@/lib/validation";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 const small = { minHeight: 28, padding: "0 8px", fontSize: ".75rem" } as const;
 
@@ -25,6 +26,7 @@ export function OrderActions({
   canVoid: boolean;
   canRefund: boolean;
 }) {
+  const op = useOperation();
   const router = useRouter();
   const { t, msg: say } = useT();
   const [busy, start] = useTransition();
@@ -76,14 +78,14 @@ export function OrderActions({
       const input = { orderId, reasonCode: code, note: note.trim() || null, approvalId };
       let text: string;
       if (mode === "void") {
-        const r = await voidSaleAction(input);
+        const r = await op.run("voidSale", (key) => voidSaleAction(input, key));
         if (!r.ok) {
           setMsg({ ok: false, text: r.error });
           return;
         }
         text = t("Voided (journal {no}).", { no: r.data.journalNo ?? "—" });
       } else {
-        const r = await refundSaleAction(input);
+        const r = await op.run("refundSale", (key) => refundSaleAction(input, key));
         if (!r.ok) {
           setMsg({ ok: false, text: r.error });
           return;
@@ -221,6 +223,7 @@ export function OrderActions({
           {say(msg.text)}
         </span>
       )}
+      <OperationStatus op={op} />
     </span>
   );
 }

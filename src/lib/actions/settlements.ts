@@ -5,7 +5,7 @@
  * written together or not at all, and the function checks the person may.
  */
 import { z } from "zod";
-import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { day, id, nonNegative, optionalText, text } from "@/lib/validation";
 import { parseMatch, type StatementMatch } from "@/lib/settlements";
 
@@ -24,7 +24,10 @@ const cardInput = z.object({
 /** The card takings up to a day, against the terminal's report and what reached the bank. */
 export async function recordCardSettlementAction(
   input: z.input<typeof cardInput>,
+  key: string,
 ): Promise<ActionResult<{ fee: number; difference: number; journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(cardInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("record_card_settlement", {
@@ -34,6 +37,7 @@ export async function recordCardSettlementAction(
     p_received_on: v.data.receivedOn ?? null,
     p_reference: v.data.reference,
     p_note: v.data.note,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...MONEY_PATHS);
@@ -55,12 +59,16 @@ const cancelInput = z.object({
 /** The latest card settlement undone: its journal reversed, its days waiting again. */
 export async function cancelCardSettlementAction(
   input: z.input<typeof cancelInput>,
+  key: string,
 ): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(cancelInput, input);
   if (!v.ok) return v;
   const r = await callRpc("cancel_card_settlement", {
     p_settlement: v.data.id,
     p_reason: v.data.reason,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...MONEY_PATHS);
@@ -115,7 +123,10 @@ const postInput = matchInput.extend({
 /** Post what the match proposes: the payout in, commission and fees, the orders out of 1100. */
 export async function postStatementAction(
   input: z.input<typeof postInput>,
+  key: string,
 ): Promise<ActionResult<{ orders: number; issues: number; journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(postInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("post_platform_settlement", {
@@ -124,6 +135,7 @@ export async function postStatementAction(
     p_lines: toRpcLines(v.data.lines),
     p_received_on: v.data.receivedOn ?? null,
     p_note: v.data.note,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...MONEY_PATHS);
@@ -140,12 +152,16 @@ export async function postStatementAction(
 /** A platform payout undone: its journal reversed, its orders waiting again. */
 export async function cancelPlatformSettlementAction(
   input: z.input<typeof cancelInput>,
+  key: string,
 ): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(cancelInput, input);
   if (!v.ok) return v;
   const r = await callRpc("cancel_platform_settlement", {
     p_settlement: v.data.id,
     p_reason: v.data.reason,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...MONEY_PATHS);

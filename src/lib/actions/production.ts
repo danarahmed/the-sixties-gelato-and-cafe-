@@ -5,7 +5,7 @@
  * ingredients cost, in one database call (migration 0023).
  */
 import { z } from "zod";
-import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { id, optionalText, positive, text } from "@/lib/validation";
 
 const PATHS = ["/production", "/inventory", "/products"];
@@ -45,7 +45,10 @@ const batchRecipeInput = z.object({
 
 export async function saveBatchRecipeAction(
   input: z.input<typeof batchRecipeInput>,
+  key: string,
 ): Promise<ActionResult<{ recipeId: string }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(batchRecipeInput, input);
   if (!v.ok) return v;
   const d = v.data;
@@ -74,6 +77,7 @@ export async function saveBatchRecipeAction(
       d.lines?.map((l) => ({ item_id: l.itemId, qty: l.qty, unit_code: l.unitCode })) ?? null,
     p_instructions: d.instructions,
     p_is_active: d.isActive,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...PATHS);
@@ -91,7 +95,10 @@ const recordInput = z.object({
 
 export async function recordProductionAction(
   input: z.input<typeof recordInput>,
+  key: string,
 ): Promise<ActionResult<{ batchId: string; actual: number; value: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(recordInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("record_production", {
@@ -100,6 +107,7 @@ export async function recordProductionAction(
     p_output_qty: v.data.outputQty,
     p_output_unit: v.data.outputQty === null ? null : v.data.outputUnit,
     p_note: v.data.note,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...PATHS);
@@ -120,12 +128,16 @@ const cancelInput = z.object({
 
 export async function cancelProductionAction(
   input: z.input<typeof cancelInput>,
+  key: string,
 ): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(cancelInput, input);
   if (!v.ok) return v;
   const r = await callRpc("cancel_production", {
     p_batch: v.data.batchId,
     p_reason: v.data.reason,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...PATHS);

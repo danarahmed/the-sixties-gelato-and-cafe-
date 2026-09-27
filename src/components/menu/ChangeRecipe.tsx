@@ -16,6 +16,7 @@ import {
   type ItemOpt,
   type LineDraft,
 } from "@/components/menu/RecipeLines";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -42,6 +43,7 @@ export function ChangeRecipe({
   decimals: number;
   today: string;
 }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const { set } = useChannels();
@@ -78,11 +80,16 @@ export function ChangeRecipe({
       return;
     }
     start(async () => {
-      const r = await changeProductRecipeAction({
-        variantId,
-        lines: filledLines(lines, set),
-        effectiveFrom: from,
-      });
+      const r = await op.run("changeProductRecipe", (key) =>
+        changeProductRecipeAction(
+          {
+            variantId,
+            lines: filledLines(lines, set),
+            effectiveFrom: from,
+          },
+          key,
+        ),
+      );
       if (r.ok) {
         setOpen(false);
         setMsg({
@@ -103,6 +110,7 @@ export function ChangeRecipe({
         <button onClick={begin} style={{ marginBlockStart: 8, fontSize: ".8rem" }}>
           {t("Change the recipe…")}
         </button>
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     );
@@ -136,6 +144,7 @@ export function ChangeRecipe({
         <button onClick={() => setOpen(false)} disabled={busy}>
           {t("Cancel")}
         </button>
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>

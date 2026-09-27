@@ -6,7 +6,7 @@
  * price in force on its own day (audit M-04).
  */
 import { z } from "zod";
-import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { day, id, optionalText, positive, salesChannel, text } from "@/lib/validation";
 
 const MENU_PATHS = ["/products", "/pos", "/reports"];
@@ -31,7 +31,10 @@ const productInput = z.object({
 
 export async function createProductAction(
   input: z.input<typeof productInput>,
+  key: string,
 ): Promise<ActionResult<{ productId: string }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(productInput, input);
   if (!v.ok) return v;
   if (Object.keys(v.data.prices).length === 0)
@@ -49,6 +52,7 @@ export async function createProductAction(
     p_name_ckb: v.data.nameCkb,
     p_category: v.data.categoryId ?? null,
     p_no_stock_reason: v.data.recipe.length === 0 ? v.data.noStockReason : null,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...MENU_PATHS);
@@ -63,12 +67,16 @@ const cancelInput = z.object({
 /** A price set for a later date, withdrawn before it starts (0025). */
 export async function cancelScheduledPriceAction(
   input: z.input<typeof cancelInput>,
+  key: string,
 ): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(cancelInput, input);
   if (!v.ok) return v;
   const r = await callRpc("cancel_scheduled_price", {
     p_price: v.data.id,
     p_reason: v.data.reason,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...MENU_PATHS);
@@ -78,12 +86,16 @@ export async function cancelScheduledPriceAction(
 /** A recipe set for a later date, withdrawn before it starts (0025). */
 export async function cancelScheduledRecipeAction(
   input: z.input<typeof cancelInput>,
+  key: string,
 ): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(cancelInput, input);
   if (!v.ok) return v;
   const r = await callRpc("cancel_scheduled_recipe", {
     p_version: v.data.id,
     p_reason: v.data.reason,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...MENU_PATHS);
@@ -116,7 +128,10 @@ const priceInput = z.object({
 
 export async function setPriceAction(
   input: z.input<typeof priceInput>,
+  key: string,
 ): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(priceInput, input);
   if (!v.ok) return v;
   const r = await callRpc("set_price", {
@@ -124,6 +139,7 @@ export async function setPriceAction(
     p_channel: v.data.channel,
     p_price: v.data.price,
     p_effective_from: v.data.effectiveFrom,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...MENU_PATHS);
@@ -151,7 +167,10 @@ const recipeInput = z.object({
  */
 export async function changeProductRecipeAction(
   input: z.input<typeof recipeInput>,
+  key: string,
 ): Promise<ActionResult<{ effectiveFrom: string }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(recipeInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("change_product_recipe", {
@@ -163,6 +182,7 @@ export async function changeProductRecipeAction(
       channels: l.channels,
     })),
     p_effective_from: v.data.effectiveFrom,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...MENU_PATHS);
@@ -181,7 +201,10 @@ const categoryInput = z.object({
 /** Add or change a category: its names, its place on the till, and whether the till shows it. */
 export async function saveCategoryAction(
   input: z.input<typeof categoryInput>,
+  key: string,
 ): Promise<ActionResult<{ id: string }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(categoryInput, input);
   if (!v.ok) return v;
   const r = await callRpc<string>("save_category", {
@@ -191,6 +214,7 @@ export async function saveCategoryAction(
     p_name_ckb: v.data.nameCkb,
     p_sort_order: v.data.sortOrder,
     p_is_active: v.data.isActive,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...MENU_PATHS);

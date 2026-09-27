@@ -7,6 +7,7 @@ import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import { cancellableCard, cardMath, tillThrough, type CardTakings } from "@/lib/settlements";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -28,6 +29,7 @@ export function CardTakingsPanel({
   canSettle: boolean;
   today: string;
 }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -57,14 +59,19 @@ export function CardTakingsPanel({
   function submit() {
     setMsg(null);
     start(async () => {
-      const r = await recordCardSettlementAction({
-        through: upTo,
-        terminalTotal: terminal,
-        received,
-        receivedOn,
-        reference,
-        note,
-      });
+      const r = await op.run("recordCardSettlement", (key) =>
+        recordCardSettlementAction(
+          {
+            through: upTo,
+            terminalTotal: terminal,
+            received,
+            receivedOn,
+            reference,
+            note,
+          },
+          key,
+        ),
+      );
       if (!r.ok) {
         setMsg({ ok: false, text: r.error });
         return;
@@ -104,7 +111,9 @@ export function CardTakingsPanel({
   function cancel(id: string) {
     setMsg(null);
     start(async () => {
-      const r = await cancelCardSettlementAction({ id, reason });
+      const r = await op.run("cancelCardSettlement", (key) =>
+        cancelCardSettlementAction({ id, reason }, key),
+      );
       if (!r.ok) {
         setMsg({ ok: false, text: r.error });
         return;
@@ -307,6 +316,7 @@ export function CardTakingsPanel({
       )}
 
       <div style={{ marginBlockStart: 12 }}>
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
 

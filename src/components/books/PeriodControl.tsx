@@ -7,6 +7,7 @@ import { dateTimeIn } from "@/lib/dates";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import type { CheckRow } from "@/lib/db/books";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 /**
  * Closing a period. Every check must pass before the lock is offered, and the
@@ -35,6 +36,7 @@ export function PeriodControl({
   canUnlock: boolean;
   timezone: string;
 }) {
+  const op = useOperation();
   // say: a closing check as the database words it, in the reader's language.
   const { t, msg: say } = useT();
   const router = useRouter();
@@ -47,7 +49,9 @@ export function PeriodControl({
   function lock() {
     setMsg(null);
     start(async () => {
-      const r = await lockPeriodAction({ periodId: period.id, reason });
+      const r = await op.run("lockPeriod", (key) =>
+        lockPeriodAction({ periodId: period.id, reason }, key),
+      );
       if (r.ok) {
         setMsg({
           ok: true,
@@ -67,7 +71,9 @@ export function PeriodControl({
   function unlock() {
     setMsg(null);
     start(async () => {
-      const r = await unlockPeriodAction({ periodId: period.id, reason });
+      const r = await op.run("unlockPeriod", (key) =>
+        unlockPeriodAction({ periodId: period.id, reason }, key),
+      );
       if (r.ok) {
         setMsg({
           ok: true,
@@ -162,6 +168,7 @@ export function PeriodControl({
             {t("Only the owner can reopen a locked period.")}
           </p>
         )}
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </section>

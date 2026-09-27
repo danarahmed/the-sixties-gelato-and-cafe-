@@ -10,6 +10,7 @@ import type { BatchRecipe } from "@/lib/db/production";
 import type { ItemOpt } from "@/components/menu/RecipeLines";
 import { BatchRecipeForm } from "@/components/production/BatchRecipeForm";
 import { unitFactor } from "@/components/production/batchMath";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -23,6 +24,7 @@ export function RecipeActions({
   items: ItemOpt[];
   decimals: number;
 }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -34,16 +36,21 @@ export function RecipeActions({
     const output = items.find((i) => i.id === recipe.outputItemId);
     const f = unitFactor(output, recipe.yieldUnit) ?? 1;
     start(async () => {
-      const r = await saveBatchRecipeAction({
-        recipeId: recipe.id,
-        name: recipe.name,
-        output: null,
-        yieldQty: new Decimal(recipe.yieldBase).div(f).toString(),
-        yieldUnit: recipe.yieldUnit,
-        lines: null,
-        instructions: recipe.instructions,
-        isActive,
-      });
+      const r = await op.run("saveBatchRecipe", (key) =>
+        saveBatchRecipeAction(
+          {
+            recipeId: recipe.id,
+            name: recipe.name,
+            output: null,
+            yieldQty: new Decimal(recipe.yieldBase).div(f).toString(),
+            yieldUnit: recipe.yieldUnit,
+            lines: null,
+            instructions: recipe.instructions,
+            isActive,
+          },
+          key,
+        ),
+      );
       if (r.ok) router.refresh();
       else setMsg({ ok: false, text: r.error });
     });
@@ -74,6 +81,7 @@ export function RecipeActions({
           {t("Make it again")}
         </button>
       )}
+      <OperationStatus op={op} />
       <Notice msg={msg} />
     </div>
   );
@@ -81,6 +89,7 @@ export function RecipeActions({
 
 /** A batch recorded in error, cancelled by a manager with the reason. */
 export function CancelBatch({ batchId, label }: { batchId: string; label: string }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -113,7 +122,9 @@ export function CancelBatch({ batchId, label }: { batchId: string; label: string
         disabled={busy || !reason.trim()}
         onClick={() =>
           start(async () => {
-            const r = await cancelProductionAction({ batchId, reason });
+            const r = await op.run("cancelProduction", (key) =>
+              cancelProductionAction({ batchId, reason }, key),
+            );
             if (r.ok) {
               setOpen(false);
               router.refresh();
@@ -126,6 +137,7 @@ export function CancelBatch({ batchId, label }: { batchId: string; label: string
       <button onClick={() => setOpen(false)} disabled={busy}>
         {t("Keep it")}
       </button>
+      <OperationStatus op={op} />
       <Notice msg={msg} />
     </div>
   );

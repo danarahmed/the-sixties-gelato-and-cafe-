@@ -13,10 +13,12 @@ import {
 import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice, inputStyle } from "@/components/ui";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 type Msg = { ok: boolean; text: string } | null;
 
 export function StartCount() {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -39,7 +41,7 @@ export function StartCount() {
         disabled={busy}
         onClick={() =>
           start(async () => {
-            const r = await startCountAction();
+            const r = await op.run("startCount", (key) => startCountAction(key));
             if (r.ok) router.refresh();
             else setMsg({ ok: false, text: r.error });
           })
@@ -47,6 +49,7 @@ export function StartCount() {
       >
         {busy ? t("Opening…") : t("Start count")}
       </button>
+      <OperationStatus op={op} />
       <Notice msg={msg} />
     </div>
   );
@@ -61,6 +64,7 @@ interface SheetLine {
 
 /** The counter's sheet: names and their own entries — never what the ledger expects. */
 export function CountSheet({ countId, lines }: { countId: string; lines: SheetLine[] }) {
+  const op = useOperation();
   const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -90,7 +94,7 @@ export function CountSheet({ countId, lines }: { countId: string; lines: SheetLi
   function submit() {
     setMsg(null);
     start(async () => {
-      const r = await submitCountAction({ countId });
+      const r = await op.run("submitCount", (key) => submitCountAction({ countId }, key));
       if (r.ok) {
         setMsg({ ok: true, text: t("Count submitted for a manager to review.") });
         router.refresh();
@@ -163,6 +167,7 @@ export function CountSheet({ countId, lines }: { countId: string; lines: SheetLi
             {t("Count every item before submitting — enter 0 for anything not there.")}
           </span>
         )}
+        <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
     </div>
@@ -171,6 +176,7 @@ export function CountSheet({ countId, lines }: { countId: string; lines: SheetLi
 
 /** Approve or reject a submitted count — by someone other than the counter. */
 export function ReviewActions({ countId, countedByMe }: { countId: string; countedByMe: boolean }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -191,7 +197,7 @@ export function ReviewActions({ countId, countedByMe }: { countId: string; count
         disabled={busy}
         onClick={() =>
           start(async () => {
-            const r = await approveCountAction({ countId });
+            const r = await op.run("approveCount", (key) => approveCountAction({ countId }, key));
             if (r.ok) {
               setMsg({
                 ok: true,
@@ -224,7 +230,9 @@ export function ReviewActions({ countId, countedByMe }: { countId: string; count
         disabled={busy || !reason.trim()}
         onClick={() =>
           start(async () => {
-            const r = await rejectCountAction({ countId, reason });
+            const r = await op.run("rejectCount", (key) =>
+              rejectCountAction({ countId, reason }, key),
+            );
             if (r.ok) {
               setMsg({ ok: true, text: t("Rejected — nothing was posted.") });
               router.refresh();
@@ -234,6 +242,7 @@ export function ReviewActions({ countId, countedByMe }: { countId: string; count
       >
         {t("Reject")}
       </button>
+      <OperationStatus op={op} />
       <Notice msg={msg} />
     </div>
   );
@@ -241,6 +250,7 @@ export function ReviewActions({ countId, countedByMe }: { countId: string; count
 
 /** An open count cancelled, with the reason, by its counter or a manager. Nothing was posted. */
 export function CancelCount({ countId, label }: { countId: string; label: string }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -268,7 +278,9 @@ export function CancelCount({ countId, label }: { countId: string; label: string
         disabled={busy || !reason.trim()}
         onClick={() =>
           start(async () => {
-            const r = await cancelCountAction({ countId, reason });
+            const r = await op.run("cancelCount", (key) =>
+              cancelCountAction({ countId, reason }, key),
+            );
             if (r.ok) {
               setOpen(false);
               router.refresh();
@@ -281,6 +293,7 @@ export function CancelCount({ countId, label }: { countId: string; label: string
       <button onClick={() => setOpen(false)} disabled={busy}>
         {t("Keep it")}
       </button>
+      <OperationStatus op={op} />
       <Notice msg={msg} />
     </div>
   );

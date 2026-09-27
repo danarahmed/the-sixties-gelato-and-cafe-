@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { addItemUnitAction, updateItemAction } from "@/lib/actions/stock";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 type Msg = { ok: boolean; text: string } | null;
 type ItemType = "ingredient" | "packaging" | "consumable" | "finished_good" | "resale";
@@ -187,6 +188,7 @@ export function EditItem({ item }: { item: EditableItem }) {
  * that size: a different size is a new unit, under its own name.
  */
 export function PackUnits({ item, canAdd }: { item: EditableItem; canAdd: boolean }) {
+  const op = useOperation();
   const { t } = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -196,7 +198,9 @@ export function PackUnits({ item, canAdd }: { item: EditableItem; canAdd: boolea
   function add() {
     setMsg(null);
     start(async () => {
-      const r = await addItemUnitAction({ itemId: item.id, ...f });
+      const r = await op.run("addItemUnit", (key) =>
+        addItemUnitAction({ itemId: item.id, ...f }, key),
+      );
       if (r.ok) {
         setMsg({ ok: true, text: t("Added {name}.", { name: f.label || f.code }) });
         setF({ code: "", label: "", factor: "" });
@@ -278,6 +282,7 @@ export function PackUnits({ item, canAdd }: { item: EditableItem; canAdd: boolea
             >
               {pending ? t("Adding…") : t("Add unit")}
             </button>
+            <OperationStatus op={op} />
             <Notice msg={msg} />
           </div>
         </div>

@@ -216,6 +216,20 @@ const phrases: PhraseBook = {
     ar: "راجع النموذج وحاول مرة أخرى.",
     ckb: "فۆڕمەکە بپشکنە و دووبارە هەوڵ بدەوە.",
   },
+  // A submission sent again with its key (0035): checked, never recorded twice.
+  "Your previous submission may already have been saved. Checking…": {
+    ar: "ربما حُفظ ما أرسلته سابقًا. جارٍ التحقق…",
+    ckb: "لەوانەیە ئەوەی پێشتر ناردت پاشەکەوت کرابێت. پشکنین دەکرێت…",
+  },
+  "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.":
+    {
+      ar: "لا يوجد رد بعد. ربما حُفظ: اضغط الزر نفسه مرة أخرى للتحقق. لن يُسجَّل مرتين.",
+      ckb: "هێشتا وەڵام نییە. لەوانەیە پاشەکەوت کرابێت: بۆ پشکنین هەمان دوگمە دووبارە دابگرە. دوو جار تۆمار ناکرێت.",
+    },
+  "This screen sent no retry key: reload the page and try again.": {
+    ar: "لم ترسل هذه الشاشة مفتاح إعادة المحاولة: أعد تحميل الصفحة وحاول مجددًا.",
+    ckb: "ئەم شاشەیە کلیلی دووبارە هەوڵدانی نەنارد: پەڕەکە نوێ بکەرەوە و دووبارە هەوڵ بدەوە.",
+  },
   "The database did not answer, so this may have been saved. Check before trying again.": {
     ar: "لم تُجب قاعدة البيانات، فربما حُفظ هذا. تحقّق قبل المحاولة مرة أخرى.",
     ckb: "بنکەدراوەکە وەڵامی نەدایەوە، بۆیە لەوانەیە ئەمە پاشەکەوت کرابێت. پێش دووبارە هەوڵدانەوە بپشکنە.",

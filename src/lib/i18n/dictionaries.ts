@@ -312,7 +312,7 @@ const en: Dict = {
   "pos.noApprovers": "No manager has set a PIN yet: they set one on My account.",
   "account.pinTitle": "Your approval PIN",
   "account.pinHint":
-    "On the till you approve discounts over the cap, voids and refunds with your name and this PIN. Four to eight digits: not one digit over and over, nor a run like 1234. Five wrong PINs in fifteen minutes stop your approvals for fifteen minutes.",
+    "On the till you approve discounts over the cap, voids and refunds with your name and this PIN. Four to eight digits: not one digit over and over, nor a run like 1234. Three wrong PINs in fifteen minutes stop the person typing them for fifteen minutes; twenty wrong PINs for you in a day pause your approvals by PIN until you set a new one here.",
   "account.pinSet": "You have a PIN. Setting a new one replaces it.",
   "account.pinNone": "You have not set a PIN yet.",
   "account.newPin": "New PIN",
@@ -657,7 +657,7 @@ const ar: Dict = {
   "pos.noApprovers": "لم يضع أي مدير رمزًا سريًا بعد: يضعه من صفحة حسابي.",
   "account.pinTitle": "رمز الموافقة الخاص بك",
   "account.pinHint":
-    "على نقطة البيع توافق على الخصومات التي تتجاوز الحد، وعلى الإلغاء والاسترجاع، باسمك وبهذا الرمز. من أربعة إلى ثمانية أرقام: لا رقمًا واحدًا مكررًا ولا تسلسلًا مثل 1234. خمسة رموز خاطئة خلال خمس عشرة دقيقة توقف موافقاتك خمس عشرة دقيقة.",
+    "على نقطة البيع توافق على الخصومات التي تتجاوز الحد، وعلى الإلغاء والاسترجاع، باسمك وبهذا الرمز. من أربعة إلى ثمانية أرقام: لا رقمًا واحدًا مكررًا ولا تسلسلًا مثل 1234. ثلاثة رموز خاطئة خلال خمس عشرة دقيقة توقف من يكتبها خمس عشرة دقيقة؛ وعشرون رمزًا خاطئًا باسمك في يوم واحد توقف موافقاتك بالرمز حتى تعيّن رمزًا جديدًا هنا.",
   "account.pinSet": "لديك رمز سري. وضع رمز جديد يستبدله.",
   "account.pinNone": "لم تضع رمزًا سريًا بعد.",
   "account.newPin": "رمز سري جديد",
@@ -1008,7 +1008,7 @@ const ckb: Dict = {
   "pos.noApprovers": "هیچ بەڕێوەبەرێک هێشتا PIN ی دانەناوە: لە هەژمارەکەم دایدەنێن.",
   "account.pinTitle": "PIN ی ڕەزامەندییەکەت",
   "account.pinHint":
-    "لەسەر خاڵی فرۆشتن بە ناوەکەت و ئەم PIN ـە ڕەزامەندی لەسەر داشکاندنی سەرووی سنوور و هەڵوەشاندنەوە و گەڕاندنەوەی پارە دەدەیت. چوار بۆ هەشت ژمارە: نە یەک ژمارەی دووبارە، نە زنجیرەیەکی وەک 1234. پێنج PIN ی هەڵە لە پازدە خولەکدا ڕەزامەندییەکانت بۆ پازدە خولەک ڕادەگرێت.",
+    "لەسەر خاڵی فرۆشتن بە ناوەکەت و ئەم PIN ـە ڕەزامەندی لەسەر داشکاندنی سەرووی سنوور و هەڵوەشاندنەوە و گەڕاندنەوەی پارە دەدەیت. چوار بۆ هەشت ژمارە: نە یەک ژمارەی دووبارە، نە زنجیرەیەکی وەک 1234. سێ PIN ی هەڵە لە پازدە خولەکدا ئەو کەسەی دەینووسێت بۆ پازدە خولەک ڕادەگرێت؛ بیست PIN ی هەڵە بۆ تۆ لە یەک ڕۆژدا ڕەزامەندییەکانت بە PIN ڕادەگرێت هەتا لێرە PIN ێکی نوێ دادەنێیت.",
   "account.pinSet": "PIN ت هەیە. دانانی نوێیەک جێگەی دەگرێتەوە.",
   "account.pinNone": "هێشتا PIN ت دانەناوە.",
   "account.newPin": "PIN ی نوێ",

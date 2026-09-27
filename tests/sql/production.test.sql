@@ -180,6 +180,12 @@ select test.throws($$select cancel_production((select (r->>'batch_id')::uuid fro
 select test.act_as('manager@example.com');
 select test.throws($$select cancel_production((select (r->>'batch_id')::uuid from b2), ' ')$$,
   '%why%', 'a cancellation needs a reason');
+-- Some of its gelato has been sold: taking the batch back would leave stock below
+-- zero, so it is refused (0035). The cup was rung by mistake and is voided, and
+-- the gelato is whole again.
+select test.throws($$select cancel_production((select (r->>'batch_id')::uuid from b2), 'recorded twice')$$,
+  '%already been used or sold%', 'a batch whose gelato has been sold is not taken back');
+select void_sale((select (r->>'order_id')::uuid from sale), 'Rang the wrong item', 'rang_wrong_item');
 select cancel_production((select (r->>'batch_id')::uuid from b2), 'recorded twice');
 select test.throws($$select cancel_production((select (r->>'batch_id')::uuid from b2), 'again')$$,
   '%already cancelled%', 'a batch is cancelled once');

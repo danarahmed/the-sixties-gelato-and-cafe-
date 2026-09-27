@@ -5,7 +5,7 @@
  * no cost or movement type is ever taken from the browser (audit M-13, H-12).
  */
 import { z } from "zod";
-import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { getItems } from "@/lib/db/read";
 import { WASTE_TYPES } from "@/lib/format";
 import { LOOKS_LIKE, lookAlikes, type LookAlike } from "@/lib/names";
@@ -55,7 +55,10 @@ export type LookAlikeRefusal = { ok: false; error: string; similar: LookAlike[] 
  */
 export async function createItemAction(
   input: z.input<typeof itemInput>,
+  key: string,
 ): Promise<ActionResult<{ itemId: string; unitCode: string | null }> | LookAlikeRefusal> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(itemInput, input);
   if (!v.ok) return v;
   const d = v.data;
@@ -87,6 +90,7 @@ export async function createItemAction(
     p_opening_unit_cost: d.openingUnitCost,
     p_returnable: d.returnable,
     p_opening_reason: d.openingReason,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...STOCK_PATHS, "/products", "/purchasing");
@@ -103,7 +107,10 @@ const wasteInput = z.object({
 
 export async function recordWasteAction(
   input: z.input<typeof wasteInput>,
+  key: string,
 ): Promise<ActionResult<{ value?: number; journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(wasteInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("record_waste", {
@@ -112,6 +119,7 @@ export async function recordWasteAction(
     p_unit_code: v.data.unitCode,
     p_type: v.data.type,
     p_reason: v.data.reason,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...STOCK_PATHS);
@@ -135,7 +143,10 @@ const adjustInput = z.object({
 /** A manager's correction outside a count, posted against 5400 Inventory count variance. */
 export async function adjustStockAction(
   input: z.input<typeof adjustInput>,
+  key: string,
 ): Promise<ActionResult<{ value: number; journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(adjustInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("adjust_stock", {
@@ -144,6 +155,7 @@ export async function adjustStockAction(
     p_unit_code: v.data.unitCode,
     p_reason: v.data.reason,
     p_unit_cost: v.data.unitCost,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...STOCK_PATHS);
@@ -171,7 +183,10 @@ const openingInput = z.object({
  */
 export async function recordOpeningStockAction(
   input: z.input<typeof openingInput>,
+  key: string,
 ): Promise<ActionResult<{ qty: number; value: number; journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(openingInput, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("record_opening_stock", {
@@ -180,6 +195,7 @@ export async function recordOpeningStockAction(
     p_unit_code: v.data.unitCode,
     p_unit_cost: v.data.unitCost,
     p_reason: v.data.reason,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...STOCK_PATHS, "/products");
@@ -254,7 +270,10 @@ const unitInput = z.object({
  */
 export async function addItemUnitAction(
   input: z.input<typeof unitInput>,
+  key: string,
 ): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(unitInput, input);
   if (!v.ok) return v;
   const r = await callRpc("add_item_unit", {
@@ -262,6 +281,7 @@ export async function addItemUnitAction(
     p_code: v.data.code,
     p_label: v.data.label,
     p_factor: v.data.factor,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh("/inventory", `/inventory/${v.data.itemId}`, "/purchasing", "/count", "/products");
@@ -271,8 +291,10 @@ export async function addItemUnitAction(
 /* --------------------------------------------------------------- counting */
 
 /** Opens a blind count; the database snapshots what it expects, out of sight. */
-export async function startCountAction(): Promise<ActionResult<{ countId: string }>> {
-  const r = await callRpc<string>("start_stock_count", { p_items: null });
+export async function startCountAction(key: string): Promise<ActionResult<{ countId: string }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const r = await callRpc<string>("start_stock_count", { p_items: null, p_idempotency_key: key });
   if (!r.ok) return r;
   refresh("/count");
   return { ok: true, data: { countId: String(r.data) } };
@@ -304,10 +326,16 @@ const countId = z.object({ countId: id("a count") });
 
 export async function submitCountAction(
   input: z.input<typeof countId>,
+  key: string,
 ): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(countId, input);
   if (!v.ok) return v;
-  const r = await callRpc("submit_stock_count", { p_count: v.data.countId });
+  const r = await callRpc("submit_stock_count", {
+    p_count: v.data.countId,
+    p_idempotency_key: key,
+  });
   if (!r.ok) return r;
   refresh("/count", "/accounting");
   return { ok: true, data: null };
@@ -321,12 +349,16 @@ const cancelCountInput = z.object({
 /** A count still being counted is cancelled by its counter or a manager, with a reason. */
 export async function cancelCountAction(
   input: z.input<typeof cancelCountInput>,
+  key: string,
 ): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(cancelCountInput, input);
   if (!v.ok) return v;
   const r = await callRpc("cancel_stock_count", {
     p_count: v.data.countId,
     p_reason: v.data.reason,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh("/count");
@@ -336,11 +368,15 @@ export async function cancelCountAction(
 /** A second person approves; variances post as of the moment the count was submitted. */
 export async function approveCountAction(
   input: z.input<typeof countId>,
+  key: string,
 ): Promise<ActionResult<{ loss: number; gain: number; journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(countId, input);
   if (!v.ok) return v;
   const r = await callRpc<Record<string, unknown>>("approve_stock_count", {
     p_count: v.data.countId,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh(...STOCK_PATHS, "/accounting");
@@ -358,12 +394,16 @@ const rejectInput = z.object({ countId: id("a count"), reason: text("A reason", 
 
 export async function rejectCountAction(
   input: z.input<typeof rejectInput>,
+  key: string,
 ): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
   const v = parse(rejectInput, input);
   if (!v.ok) return v;
   const r = await callRpc("reject_stock_count", {
     p_count: v.data.countId,
     p_reason: v.data.reason,
+    p_idempotency_key: key,
   });
   if (!r.ok) return r;
   refresh("/count", "/accounting");

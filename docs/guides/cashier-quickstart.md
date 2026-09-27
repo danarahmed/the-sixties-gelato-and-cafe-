@@ -178,6 +178,11 @@ own:
   payment went through, it is not recorded twice. **Never ring it up again.**
 - **Discard — a manager will check Orders** clears a frozen order from your
   till. Use it only if the customer left without paying, and tell a manager.
+- Everything else you save (a table's bill, a bill kept for later, a split, a
+  cancellation) works the same way: if no answer comes back, the till says
+  **"Your previous submission may already have been saved. Checking…"** and
+  sends it again by itself. It is never saved twice. If it still cannot tell,
+  it says so: press the same button again once you are back online.
 
 ## Giving a discount
 
@@ -199,8 +204,9 @@ with a few words of your own. The customer cannot pay until a reason is chosen.
 **Over 10%** of the bill, a manager approves it: the till says **"Over 10%: a
 manager approves it."** Tap **🔑 Ask a manager**; the manager chooses their
 name and types their PIN on your till, and the discount shows **✓ Approved by**
-their name. A wrong PIN is refused (and counted: five wrong in fifteen minutes
-stop that manager's approvals for a while). The approval is for that discount,
+their name. A wrong PIN is refused and counted: three wrong in fifteen minutes
+stop **your** login from asking for fifteen minutes (the manager can still
+approve for others). The approval is for that discount,
 once: change it and ask again. Owners and managers giving a discount
 themselves are not asked.
 
