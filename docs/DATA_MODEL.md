@@ -802,3 +802,24 @@ key)`** and **`reverse_receipt(receipt, reason, confirm, key)`**
   `period_close_checklist` blocks on all nine.
 - **`manual_journal_blocked`** adds 1005: the safe's cash moves only as cash
   moved, an expense or a bill paid.
+
+### Usage against the recipes (`0039`)
+
+Nothing new is stored: the report reads the counts and the stock ledger.
+
+- **`usage_variance_between(business, location, item, first line, last
+line)`** (internal) works out one item between two lines of approved counts:
+  the ledger's movements recorded after the first was counted and up to the
+  last, split by `stock_card_kind` into what came in, what the recipes used
+  (sales net of voids and refunds, and batches), what was lost by kind; what
+  the counts set, and revaluations, left out. It gives the used quantity, the
+  difference, its share and value, the products whose sale lines took it
+  (named on the movements since `0037`, voided sales left out), the batches,
+  and what may explain the difference.
+- **`report_usage_variance(from, to, location)`** (`cost.view`): each item
+  between its first and last approved count in the dates, at the location
+  (the default one when none is given); an item counted once is listed with
+  `counts = 1` and nothing else.
+- **Alerts:** `alert_conditions` becomes `alert_conditions_0036` and the new
+  one adds `usage_variance`; `alert_threshold_rules` adds
+  `usage_variance_percent` (10) and `usage_variance_min` (5,000 IQD).

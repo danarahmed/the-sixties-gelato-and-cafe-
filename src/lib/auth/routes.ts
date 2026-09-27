@@ -47,6 +47,8 @@ export const NAV: NavEntry[] = [
     key: "nav.count",
     anyOf: ["inventory.count", "inventory.count.view_expected", "inventory.adjust.approve"],
   },
+  // What each item used against its recipes, between two counts (0039).
+  { group: OPERATIONS, href: "/inventory/usage", key: "nav.usage", anyOf: ["cost.view"] },
   {
     group: OPERATIONS,
     href: "/production",

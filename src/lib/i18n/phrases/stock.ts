@@ -685,6 +685,74 @@ const phrases: PhraseBook = {
     ar: "تغيّر المستحق عنه (2050) بمقدار",
     ckb: "قەرزی ئەوە (2050) گۆڕا بە",
   },
+
+  // Usage against the recipes, between two counts (0039).
+  "<usage>Usage</usage> sets what each item used between two counts against what its recipes say.":
+    {
+      ar: "<usage>الاستهلاك</usage> يقارن ما استهلكته كل مادة بين جردين بما تقوله وصفاتها.",
+      ckb: "<usage>بەکارهێنان</usage> ئەوەی هەر کاڵایەک لە نێوان دوو ژماردندا بەکارهاتووە بەراورد دەکات لەگەڵ ئەوەی ڕەچەتەکانی دەڵێن.",
+    },
+  "{from} to {to} · between each item's counts": {
+    ar: "من {from} إلى {to} · بين جردَي كل مادة",
+    ckb: "لە {from} تا {to} · لە نێوان ژماردنەکانی هەر کاڵایەک",
+  },
+  "Between two approved counts of an item: what came in, what the recipes of what was sold and made say was used, and what was recorded as lost. <b>Used</b> is what the counts say went, less the losses recorded; the <b>difference</b> is what no recipe and no recorded loss explains. More used than the recipes is stock gone: bigger portions, waste not recorded, sales not rung up. Less is a smaller portion, or a delivery that was never entered. Count again on <count>Stock Count</count> to see the next stretch.":
+    {
+      ar: "بين جردين معتمدين لمادة: ما دخل، وما تقول وصفات ما بيع وصُنع إنه استُهلك، وما سُجّل هدرًا. <b>المستهلَك</b> هو ما يقول الجردان إنه خرج، مطروحًا منه الهدر المسجّل؛ و<b>الفرق</b> هو ما لا تفسّره وصفة ولا هدر مسجّل. استهلاك أكثر من الوصفات مخزون ضائع: حصص أكبر، أو هدر غير مسجّل، أو مبيعات لم تُسجَّل. والأقل حصة أصغر، أو توريد لم يُدخل قط. أعد الجرد من <count>جرد المخزون</count> لترى المدة التالية.",
+      ckb: "لە نێوان دوو ژماردنی پەسەندکراوی کاڵایەکدا: ئەوەی هاتە ژوورەوە، ئەوەی ڕەچەتەی ئەوەی فرۆشرا و دروستکرا دەڵێن بەکارهاتووە، و ئەوەی وەک بەفیڕۆچوون تۆمار کرا. <b>بەکارهاتوو</b> ئەوەیە کە ژماردنەکان دەڵێن ڕۆیشتووە، بە لابردنی بەفیڕۆچوونی تۆمارکراو؛ <b>جیاوازی</b> ئەوەیە کە هیچ ڕەچەتە و هیچ بەفیڕۆچوونێکی تۆمارکراو ڕوونی ناکاتەوە. زیاتر لە ڕەچەتەکان بەکارهاتن کۆگای ونبووە: بەشی گەورەتر، بەفیڕۆچوونی تۆمارنەکراو، یان فرۆشتنی تۆمارنەکراو. کەمتر بەشی بچووکترە، یان بارێکە کە هەرگیز تۆمار نەکرا. لە <count>ژماردنی کۆگا</count> دووبارە بژمێرە بۆ بینینی ماوەی دواتر.",
+    },
+  "No item was counted twice in these dates": {
+    ar: "لم تُجرد أي مادة مرتين في هذه التواريخ",
+    ckb: "هیچ کاڵایەک لەم بەروارانەدا دوو جار نەژمێردراوە",
+  },
+  "Usage is worked out between two approved counts of an item. Count again, or choose wider dates.":
+    {
+      ar: "يُحسب الاستهلاك بين جردين معتمدين لمادة. أعد الجرد، أو اختر تواريخ أوسع.",
+      ckb: "بەکارهێنان لە نێوان دوو ژماردنی پەسەندکراوی کاڵایەکدا هەژمار دەکرێت. دووبارە بژمێرە، یان بەرواری فراوانتر هەڵبژێرە.",
+    },
+  "Usage against the recipes": {
+    ar: "الاستهلاك مقابل الوصفات",
+    ckb: "بەکارهێنان بەرامبەر ڕەچەتەکان",
+  },
+  "Stock gone that nothing explains: {over} · less used than the recipes: {under}": {
+    ar: "مخزون خرج دون تفسير: {over} · استهلاك أقل من الوصفات: {under}",
+    ckb: "کۆگای ڕۆیشتوو کە هیچ شتێک ڕوونی ناکاتەوە: {over} · بەکارهێنانی کەمتر لە ڕەچەتەکان: {under}",
+  },
+  "Between the counts": { ar: "بين الجردين", ckb: "لە نێوان ژماردنەکاندا" },
+  "First count": { ar: "الجرد الأول", ckb: "یەکەم ژماردن" },
+  "Came in": { ar: "ما دخل", ckb: "هاتە ژوورەوە" },
+  "Last count": { ar: "الجرد الأخير", ckb: "دوایین ژماردن" },
+  Lost: { ar: "الهدر", ckb: "بەفیڕۆچوو" },
+  Used: { ar: "المستهلَك", ckb: "بەکارهاتوو" },
+  "The recipes say": { ar: "ما تقوله الوصفات", ckb: "ڕەچەتەکان دەڵێن" },
+  "What it is made of": { ar: "مما يتكوّن", ckb: "لە چی پێکهاتووە" },
+  "Came in: received {received}, made {made}, moved {moved}, opening stock {opening}, corrected by hand {corrected}":
+    {
+      ar: "ما دخل: مستلم {received}، مصنوع {made}، منقول {moved}، مخزون افتتاحي {opening}، مصحَّح يدويًا {corrected}",
+      ckb: "هاتە ژوورەوە: وەرگیراو {received}، دروستکراو {made}، گوازراوە {moved}، کۆگای سەرەتا {opening}، بە دەست ڕاستکراوە {corrected}",
+    },
+  "The recipes: sold {sold}, in batches {batches}": {
+    ar: "الوصفات: مبيع {sold}، في دفعات إنتاج {batches}",
+    ckb: "ڕەچەتەکان: فرۆشراو {sold}، لە دەستەکانی بەرهەمهێناندا {batches}",
+  },
+  "Lost: {losses}": { ar: "الهدر: {losses}", ckb: "بەفیڕۆچوو: {losses}" },
+  "{name}: {sold} sold, using {used}": {
+    ar: "{name}: بيع {sold}، استهلك {used}",
+    ckb: "{name}: {sold} فرۆشرا، {used} بەکارهات",
+  },
+  "{name}: {batches} batch(es), using {used}": {
+    ar: "{name}: {batches} دفعة، استهلكت {used}",
+    ckb: "{name}: {batches} دەستە، {used} بەکارهات",
+  },
+  "Counted once in these dates": {
+    ar: "جُردت مرة واحدة في هذه التواريخ",
+    ckb: "لەم بەروارانەدا یەک جار ژمێردراون",
+  },
+  "A second count gives what they used": {
+    ar: "جرد ثانٍ يبيّن ما استهلكته",
+    ckb: "ژماردنێکی دووەم ئەوە دەردەخات کە بەکارهاتووە",
+  },
+  "Last 90 days": { ar: "آخر 90 يومًا", ckb: "دوایین 90 ڕۆژ" },
 };
 
 export default phrases;

@@ -316,6 +316,10 @@ discount, why and who approved it. The 10% is a business setting (shown on
   [Adding a platform](talabat.md#adding-a-platform)).
 - **Stock Count:** have a counter count, then review and approve it yourself (see
   the [counting guide](counting-guide.md)).
+- **Usage:** after the count, open **Usage** for what each item used since the
+  last count against what its recipes say. Red is stock gone that nothing
+  explains; look at what may explain it beside each item, and at the item's
+  stock card.
 - **Audit trail:** read who changed what — prices, products, items, suppliers,
   settings — with each value before and after. Anything marked **No one signed
   in** was changed in the database itself: ask who did it, and why.

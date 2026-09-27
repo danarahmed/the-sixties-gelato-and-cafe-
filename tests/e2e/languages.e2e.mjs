@@ -135,6 +135,7 @@ const SCREENS = [
   "/orders",
   "/products",
   "/inventory",
+  "/inventory/usage",
   "/count",
   "/production",
   "/journals",
