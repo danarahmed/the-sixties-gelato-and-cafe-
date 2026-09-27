@@ -36,6 +36,7 @@ Plan a short window when the café is closed.
 | Cash sessions (`0036`)                  | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0036`](#after-0036)). The screens were merged ([pull request #25](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/25)) and deployed                                  |
 | Refunds by the item (`0037`)            | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0037`](#after-0037)). The screens were merged ([pull request #26](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/26)) and deployed                                  |
 | Delivery corrections (`0038`)           | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0038`](#after-0038)). The screens were merged ([pull request #27](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/27)) and deployed                                  |
+| Usage against the recipes (`0039`)      | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0039`](#after-0039)). The screen was merged ([pull request #28](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/28)) and deployed                                    |
 
 ## 0. Before you start
 
@@ -913,6 +914,60 @@ advisor adds only the four functions signed-in users may call, and no longer
 lists `receipt_grni_value`'s search path; the performance advisor adds only
 the correction table's links to its journal and its author without an index of
 their own.
+
+## After `0039`
+
+Migration `0039` (release N) sets what each item used against its recipes,
+between two counts:
+
+- **Usage**, under Operations (`cost.view`): each item between its first and
+  last approved count in the dates chosen. The first count, what came in, the
+  last count and what was recorded as lost give what was used; set against
+  what the recipes of what was sold and made say, the difference, its share
+  and its value at the stock's average cost; with what may explain it, and the
+  products and batches that used it. An item counted once waits for a second
+  count.
+- **An alert** names an item whose last two counts, the later in the last 14
+  days, differ from its recipes by at least 10% and 5,000 IQD; both thresholds
+  are on Settings.
+
+It records nothing new. It adds one function signed-in users may call,
+`report_usage_variance` (`cost.view`), one internal function, and the alert's
+rule and its two thresholds; the alerts of `0036` are unchanged, kept as
+`alert_conditions_0036`. It goes in before the screen: the screens deployed
+before it keep working (the alert has nothing to name until an item has two
+approved counts, and Settings lists the two thresholds last, under their
+English labels), and the new screen needs the new function.
+
+It was applied on 27 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0038` build. The text stored there
+is the file byte for byte, and it was then compared with the tested build,
+object by object, the role permissions and column grants included: identical,
+but for the schema `citext` lives in, as before. No count has been approved on
+live yet (one of 26 September, of 12 items, waits for review), so Usage is
+empty and the alert silent. A check as the owner, in a transaction that was
+rolled back:
+
+- the waiting count approved by the manager (the owner counted it): Coffee
+  beans and caramel gelato were then counted once, with no difference yet;
+- a second count, the beans 10 g short of the books and the gelato as they
+  say: the beans at 7,500 g at the first count, 2,000 g in, 9,472 g at the
+  last, 28 g used where the recipes say 18, a difference of 10 g (55.6%, 287
+  IQD) with "More was used than the recipes say"; the gelato at 1,000 g at
+  both, with no difference;
+- the alert silent at the default thresholds (287 IQD is under 5,000); lowered
+  to 1% and 1 IQD, "red: Coffee beans: 10 g more used than the recipes say
+  between the counts of 26 Sep and 27 Sep (55.6%, 287 IQD)", the other ten
+  alert rules still there;
+- the seller refused (it needs `cost.view`); the branch manager read the
+  report's 12 rows;
+- the two approvals' count journals left all nine checks at zero.
+
+Nothing was kept: still one count waiting and one rejected, 21 count lines, 286
+stock movements, journals to 1091, 35 audit rows, 18 alerts and the thresholds
+as they were. The security advisor adds only `report_usage_variance`; the
+performance advisor adds nothing.
 
 ## Clearing the test records
 

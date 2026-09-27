@@ -527,7 +527,27 @@ browser tests through the real app, or both.
   two counts, the later in the last fortnight, differ from its recipes by at
   least 10% and 5,000 IQD, both on Settings. Built and tested: a new SQL
   suite, a new browser suite, and the screen in every role and in Arabic and
-  Kurdish.
+  Kurdish. The migration was applied to the live database on 27 September
+  2026: the text stored there is the file byte for byte, and it matches the
+  tested build object by object, permissions included (the one difference, as
+  before, is the schema `citext` lives in). No count has been approved on live
+  yet (one of 26 September waits for review), so Usage is empty and the alert
+  silent. It was checked as the owner in a transaction that was rolled back:
+  the waiting count approved by the manager, after which Coffee beans and
+  caramel gelato were counted once, with no difference yet; a second count,
+  with the beans 10 g short of the books, showed them at 7,500 g at the first
+  count, 2,000 g in, 9,472 g at the last and 28 g used where the recipes say
+  18, a difference of 10 g (55.6%, 287 IQD) with more used than the recipes
+  say, and the gelato with none; the alert stayed silent at the default
+  thresholds and, lowered to 1% and 1 IQD, named the beans in red between the
+  counts of 26 and 27 September, the other ten alert rules still there; the
+  seller was refused and the branch manager read the report; the two
+  approvals' journals left all nine checks at zero; and nothing was kept
+  (still one count waiting and one rejected, 286 stock movements, journals to
+  1091, 35 audit rows, 18 alerts, the thresholds as they were). The security
+  advisors add only `report_usage_variance`, which checks `cost.view`; the
+  performance advisors add nothing. The screen went live with
+  [pull request #28](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/28).
 
 ## The August 2026 audit, finding by finding
 

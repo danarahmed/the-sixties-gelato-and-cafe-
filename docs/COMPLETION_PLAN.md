@@ -2,8 +2,9 @@
 
 **Status:** analysis finished on 27 September 2026, before any change was made.
 Release J (duplicate protection, `0035`), release K (cash sessions, `0036`),
-release L (refunds by the item, `0037`) and release M (delivery corrections and
-the books checked account by account, `0038`) are live since 27 September 2026.
+release L (refunds by the item, `0037`), release M (delivery corrections and
+the books checked account by account, `0038`) and release N (usage against the
+recipes, `0039`) are live since 27 September 2026.
 What was built differs from the plan below in these ways.
 
 Release J:
