@@ -567,7 +567,42 @@ browser tests through the real app, or both.
   The till asks a manager when an item's rule does; a refund over the limit
   asks for a second person. Built and tested: a new SQL suite, two races (two
   losses at once, the last bottle sold by ten tills), a new browser suite,
-  and every new text in Arabic and Kurdish.
+  and every new text in Arabic and Kurdish. The migration was applied to the
+  live database on 27 September 2026. The text stored there is the file byte
+  for byte, and it matches the tested build object by object, permissions
+  included (the one difference, as before, is the schema `citext` lives in).
+  Nobody has set a rule on live yet, so each is at its default:
+  - made items are refused below zero (the caramel gelato has 3,000 g in the
+    books), and the rest alert;
+  - refunds over 25,000 IQD need a second person;
+  - losses over 50,000 IQD need a manager, added up over the person's session;
+  - discounts over 10% need a manager, and are rounded to 250.
+
+  It was checked as the owner, the branch manager and the barista, in a
+  transaction that was rolled back:
+  - a cap of 5% for cashiers was set beside the café's 10%, with its history,
+    and the branch manager was refused;
+  - bottled water set to refuse said "Only 59 each of Bottled water is in
+    stock". Set to ask a manager, it was sold with the branch manager's PIN:
+    −1 in the books, a red alert, and the approver on the audit trail;
+  - with losses limited to 1,000 IQD:
+    - the barista's first loss of beans needed no approval;
+    - the second was refused on its own;
+    - two were saved to wait, with an orange alert (2,299 IQD);
+    - the manager approved one and reversed the other (1200 Dr 1,437, 5300 Cr
+      1,437), leaving none waiting;
+  - a refund of ten lattes (35,000 IQD) was refused as the manager's alone,
+    then given with the owner's PIN;
+  - the barista's profile carried the rules;
+  - all nine checks stayed at zero.
+
+  Nothing was kept: 286 stock movements, journals to 1091, 35 audit rows, 18
+  alerts, no PIN and no rule. The security advisors add the four functions
+  the screens call, each checking its permission, and list four more under
+  their new signatures. The performance advisors add six notes that the new
+  tables' links to their authors, journals and reversals have no index of
+  their own. The screens went live with
+  [pull request #29](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/29).
 
 ## The August 2026 audit, finding by finding
 
