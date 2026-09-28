@@ -5,7 +5,8 @@ Release J (duplicate protection, `0035`), release K (cash sessions, `0036`),
 release L (refunds by the item, `0037`), release M (delivery corrections and
 the books checked account by account, `0038`), release N (usage against the
 recipes, `0039`) and release O (the café's rules, `0040`) are live since 27
-September 2026, and release P (sizes and add-ons, `0041`) since 28 September.
+September 2026, and release P (sizes and add-ons, `0041`) and release Q (split
+payments, `0042`) since 28 September.
 What was built differs from the plan below in these ways.
 
 Release J:

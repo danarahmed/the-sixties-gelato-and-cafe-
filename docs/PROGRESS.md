@@ -1,6 +1,6 @@
 # Progress & Status
 
-_Last updated: 2026-09-27._ This is the one place that says what works and what
+_Last updated: 2026-09-28._ This is the one place that says what works and what
 does not. A feature is marked done only when it runs on the real database path
 and is tested. Tested means the SQL suites on real PostgreSQL 16 and 17, the
 browser tests through the real app, or both.
@@ -665,7 +665,28 @@ browser tests through the real app, or both.
   day's cash refunds. Built and tested: a new SQL suite, a new browser suite,
   unit tests of the split and of the refund's shares (checked against the
   database's own rounding on 400 random cases), and every new text in Arabic
-  and Kurdish.
+  and Kurdish. The migration was applied to the live database on 28 September 2026. The text stored there is the file byte for byte, and it matches the
+  tested build object by object, permissions included (the one difference, as
+  before, is the schema `citext` lives in). It was checked as the owner and
+  the barista, in a transaction that was rolled back:
+  - two lattes (7,000) paid 6,000 by card and 1,000 in cash, 5,000 handed
+    over: 4,000 change, the drawer taking 1,000, each account debited its
+    part;
+  - payments short of the total, a tender and a list together, and cash
+    handed over short of its part were refused;
+  - a sale sent the old way was one payment, and a bill was paid by two cards;
+  - a refund in proportion gave back 3,000 to the card and 500 in cash, only
+    the 500 from the drawer, and more cash than was paid was refused;
+  - a void took back only its 1,000 in cash;
+  - the report was right, and all nine checks stayed at zero.
+
+  Nothing was kept: every table's count as it was. The security advisors add
+  `report_payments` and list three functions under their new signatures, each
+  checking its permission; the performance advisors add nothing. No drawer is
+  open on live, and the test records leave the till's cash account at
+  −320,000: the first drawer opened will show that difference until the test
+  records are cleared. The screens went live with
+  [pull request #31](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/31).
 
 ## The August 2026 audit, finding by finding
 
