@@ -23,8 +23,10 @@ import {
   text,
   addonsToDb,
   lineAddons,
+  payments,
 } from "@/lib/validation";
 import type { SaleReceipt } from "@/lib/actions/sales";
+import { howPaid, saleReceipt } from "@/lib/payments";
 
 /** A paid bill changes these screens; the till itself is kept current by the action's answer. */
 const PAID_PATHS = ["/orders", "/sales", "/dashboard", "/inventory", "/reports", "/journals"];
@@ -158,7 +160,11 @@ export async function printBillAction(
 const payInput = tabRef.extend({
   /** Minted when the cashier starts taking payment, reused on every retry. */
   key: z.string().uuid("This payment has no idempotency key"),
-  tender: z.enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" }),
+  /** One way for all of it (a till loaded before 0042), or each part of it (0042). */
+  tender: z
+    .enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" })
+    .nullish(),
+  tenders: payments.nullish(),
   /** The total the till showed; the bill is not paid at another (0025). */
   expectedNet: optionalNonNegative("The total shown"),
   /** A manager's approval of selling more than the books hold, when its rule asks (0040). */
@@ -171,30 +177,21 @@ export async function payBillAction(
 ): Promise<ActionResult<SaleReceipt & { bills: OpenBill[] | null }>> {
   const v = parse(payInput, input);
   if (!v.ok) return v;
+  const paid = howPaid(v.data);
+  if (!paid) return { ok: false, error: "Choose how it was paid" };
   const r = await callRpc<Record<string, unknown>>("settle_tab", {
     p_tab: v.data.tabId,
     p_version: v.data.version,
     p_idempotency_key: v.data.key,
-    p_tender: v.data.tender,
+    p_tender: paid.p_tender,
+    p_tenders: paid.p_tenders,
     p_expected_net: v.data.expectedNet,
     p_stock_approval: v.data.stockApprovalId ?? null,
   });
   if (!r.ok) return r;
   refresh(...PAID_PATHS);
-  const d = r.data;
-  const net = Number(d.net ?? 0);
-  return withBills({
-    orderId: String(d.order_id),
-    gross: Number(d.gross ?? net),
-    discount: Number(d.discount ?? 0),
-    net,
-    ...(d.cogs !== undefined ? { cogs: Number(d.cogs) } : {}),
-    journalNo: d.journal_no == null ? null : Number(d.journal_no),
-    replayed: Boolean(d.replayed),
-    // A bill is never a delivery platform's: the database opens none for them.
-    platformOrderNo: null,
-    turnNo: d.turn_no == null ? null : Number(d.turn_no),
-  });
+  // A bill is never a delivery platform's: the database opens none for them.
+  return withBills({ ...saleReceipt(r.data), platformOrderNo: null });
 }
 
 const splitInput = tabRef.extend({

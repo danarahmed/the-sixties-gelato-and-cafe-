@@ -186,6 +186,18 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - An add-on on a platform's menu is priced for that platform like any
     channel; a platform whose own app sells add-ons still has them typed in
     at the till.
+- **Split payments, what they do not do (release Q, `0042`).**
+  - The till takes up to four payments, one of them in cash; the database
+    takes ten.
+  - The change is kept with the payment, not posted: it never stays in the
+    drawer.
+  - A refund gives back each way at most what that way paid: cash is not given
+    back for a card payment (the card is refunded on the terminal).
+  - A card slip's number is not recorded with its payment.
+  - A delivery platform's order is paid once, by the platform.
+  - US dollars come with release R.
+  - Reports → Sales by payment method covers the dates chosen, not each day or
+    each till.
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the

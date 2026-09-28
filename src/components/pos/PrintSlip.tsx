@@ -32,6 +32,11 @@ export interface PrintJob {
   total: number;
   tender?: Tender;
   received?: number | null;
+  /**
+   * Each payment (0042): its way and its part, and for cash what was handed
+   * over. A refund's say how it went back. None: the one tender pays it all.
+   */
+  payments?: { type: Tender; amount: number; received?: number | null }[];
   change?: number | null;
   reference?: string | null;
   /** A delivery platform's order number (0030). */
@@ -329,12 +334,21 @@ function CheckSlip({
             {money(job.total)} <small>IQD</small>
           </span>
         </div>
-        {job.kind !== "bill" && job.tender && (
+        {job.kind !== "bill" && (job.tender || job.payments?.length) && (
           <>
-            <div className="sl-row">
-              <span>{t(`pos.tender.${job.tender}`)}</span>
-              <span>{money(job.received ?? job.total)}</span>
-            </div>
+            {job.payments && job.payments.length > 0 ? (
+              job.payments.map((p, i) => (
+                <div className="sl-row" key={i} data-testid="slip-payment">
+                  <span>{t(`pos.tender.${p.type}`)}</span>
+                  <span>{money(p.received ?? p.amount)}</span>
+                </div>
+              ))
+            ) : (
+              <div className="sl-row">
+                <span>{t(`pos.tender.${job.tender}`)}</span>
+                <span>{money(job.received ?? job.total)}</span>
+              </div>
+            )}
             {job.change != null && job.change > 0 && (
               <div className="sl-row sl-strong">
                 <span>{t("pos.changeDue")}</span>

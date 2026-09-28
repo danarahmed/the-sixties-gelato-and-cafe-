@@ -173,6 +173,12 @@ fast. Set it up once, on **Products** and on the till itself:
   give each milk its own: every cup then counts the milk it was made with,
   and **Reports → Sizes and add-ons** shows which sizes and add-ons sell and
   what each leaves.
+- **Split payments** (the till, `0042`): **➗ Split** in the payment window
+  takes part in cash and part by card, or two cards. Each goes to its own
+  account; only the cash part goes into the drawer, and the change is worked
+  out from what was handed over. A refund of such a sale gives back each way
+  its share, or as the customer wants, never more than a way paid. **Reports
+  → Sales by payment method** shows what cash, card and the platforms took.
 - **Costed at nothing:** a product flagged this way on Products has no recipe,
   or uses an ingredient with no cost yet, so its sales show full profit. Give
   it its recipe (or say why it uses no stock), or give the ingredient its cost.

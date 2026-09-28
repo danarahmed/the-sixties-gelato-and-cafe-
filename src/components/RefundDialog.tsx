@@ -8,6 +8,12 @@ import { fmtIQD, fmtQty } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { REASONS, reasonKey, reasonMissing } from "@/lib/reasons";
 import { allThatIsLeft, leftOf, refundPlan, type RefundableLine } from "@/lib/refunds";
+import {
+  checkRefundSplit,
+  proportionalParts,
+  refundSplitMessage,
+  type LeftToGiveBack,
+} from "@/lib/payments";
 import { normaliseNumber } from "@/lib/validation";
 import { Modal } from "@/components/pos/Dialogs";
 import { PrintSlip, type PrintJob } from "@/components/pos/PrintSlip";
@@ -18,6 +24,8 @@ export interface RefundableSale {
   lines: RefundableLine[];
   /** How it was paid: the money goes back the same way. */
   tender: string;
+  /** What is left of each way it was paid (0042): a sale paid two ways gives back each its part. */
+  left?: LeftToGiveBack[];
   channelLabel: string;
   /** Over this, the refunder's limit, a second person approves it (0040); null: no limit known. */
   approvalOver?: number | null;
@@ -59,6 +67,19 @@ export function RefundDialog({
   const [done, setDone] = useState<RefundResult | null>(null);
   const [slip, setSlip] = useState<PrintJob[] | null>(null);
   const plan = refundPlan(sale.lines, wants);
+  // Paid more than one way (0042): each way gives back its part, in proportion
+  // to what is left of it unless the refunder types otherwise.
+  const ways = (sale.left ?? []).filter((l) => l.left > 0);
+  const splitting = ways.length > 1;
+  const [typed, setTyped] = useState<Record<string, string> | null>(null);
+  const shares = proportionalParts(
+    ways.map((w) => w.left),
+    plan.total,
+  );
+  const parts = typed ?? Object.fromEntries(ways.map((w, i) => [w.type, String(shares[i] ?? 0)]));
+  const split = splitting ? checkRefundSplit(ways, parts, plan.total) : null;
+  // A new refund amount starts again from the shares.
+  useEffect(() => setTyped(null), [plan.total]);
   const missing = reasonMissing(code || null, note);
   // Over the limit of the refunder's roles, a second person is not optional (0040).
   const needsSecond =
@@ -74,6 +95,9 @@ export function RefundDialog({
       : tender === "card"
         ? t("to the card it was paid with")
         : t("off what the platform owes");
+  /** Each way's part, as a phrase: "333 in cash, from the drawer; 667 to the card it was paid with". */
+  const howEach = (list: { type: string; amount: number }[]) =>
+    list.map((x) => `${fmtIQD(x.amount)} ${how(x.type)}`).join("; ");
 
   const problem = (() => {
     const p = plan.problem;
@@ -84,7 +108,7 @@ export function RefundDialog({
   })();
 
   function confirm() {
-    if (plan.problem || missing) return;
+    if (plan.problem || missing || split?.problem) return;
     setError(null);
     start(async () => {
       let approvalId: string | null = null;
@@ -110,6 +134,7 @@ export function RefundDialog({
           {
             orderId: sale.orderId,
             lines: plan.lines.map((l) => ({ lineId: l.lineId, qty: l.qty })),
+            tenders: split ? split.parts : null,
             reasonCode: code,
             note: note.trim() || null,
             approvalId,
@@ -136,6 +161,14 @@ export function RefundDialog({
         lines: r.lines.map((l) => ({ name: l.name, qty: l.qty, amount: l.amount, note: null })),
         total: r.refunded,
         tender: r.tender as PrintJob["tender"],
+        ...(r.tenders.length > 1
+          ? {
+              payments: r.tenders.map((x) => ({
+                type: x.type as NonNullable<PrintJob["tender"]>,
+                amount: x.amount,
+              })),
+            }
+          : {}),
         reference: sale.orderId.slice(0, 8),
         journalNo: r.journalNo,
         note: reason || null,
@@ -153,12 +186,19 @@ export function RefundDialog({
         {done ? (
           <>
             <div className="badge ok" style={{ whiteSpace: "normal" }} data-testid="refund-answer">
-              {t("Refund {no}: {amount} given back {how} (journal {journal}).", {
-                no: done.refundNo,
-                amount: fmtIQD(done.refunded),
-                how: how(done.tender),
-                journal: done.journalNo ?? "—",
-              })}{" "}
+              {done.tenders.length > 1
+                ? t("Refund {no}: {amount} given back: {parts} (journal {journal}).", {
+                    no: done.refundNo,
+                    amount: fmtIQD(done.refunded),
+                    parts: howEach(done.tenders),
+                    journal: done.journalNo ?? "—",
+                  })
+                : t("Refund {no}: {amount} given back {how} (journal {journal}).", {
+                    no: done.refundNo,
+                    amount: fmtIQD(done.refunded),
+                    how: how(done.tender),
+                    journal: done.journalNo ?? "—",
+                  })}{" "}
               {done.whole
                 ? t("Nothing of the sale is left to refund.")
                 : t("The rest of the sale can still be refunded.")}
@@ -222,11 +262,50 @@ export function RefundDialog({
             </div>
             <div data-testid="refund-total">
               <strong>
-                {t("Gives back {amount} {how}", {
-                  amount: fmtIQD(plan.total),
-                  how: how(sale.tender),
-                })}
+                {split
+                  ? t("Gives back {amount}: {parts}", {
+                      amount: fmtIQD(plan.total),
+                      parts: howEach(split.parts),
+                    })
+                  : t("Gives back {amount} {how}", {
+                      amount: fmtIQD(plan.total),
+                      how: how(sale.tender),
+                    })}
               </strong>
+              {split && (
+                <div
+                  style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}
+                  data-testid="refund-split"
+                >
+                  {ways.map((w) => (
+                    <label key={w.type} className="muted" style={{ fontSize: ".85rem" }}>
+                      {t("{way}, at most {left}", {
+                        way: t(`pos.tender.${w.type}`),
+                        left: fmtIQD(w.left),
+                      })}{" "}
+                      <input
+                        aria-label={t("Given back {way}", { way: t(`pos.tender.${w.type}`) })}
+                        className="amt"
+                        inputMode="numeric"
+                        style={{ width: 90, textAlign: "end" }}
+                        value={parts[w.type] ?? ""}
+                        onChange={(e) =>
+                          setTyped({ ...parts, [w.type]: normaliseNumber(e.target.value) })
+                        }
+                      />
+                    </label>
+                  ))}
+                </div>
+              )}
+              {split?.problem && (
+                <div
+                  className="red"
+                  style={{ fontSize: ".85rem" }}
+                  data-testid="refund-split-problem"
+                >
+                  {say(refundSplitMessage(split.problem, plan.total))}
+                </div>
+              )}
               {problem && (
                 <div className="red" style={{ fontSize: ".85rem" }}>
                   {problem}
@@ -323,6 +402,7 @@ export function RefundDialog({
                 disabled={
                   busy ||
                   plan.problem !== null ||
+                  (split !== null && split.problem !== null) ||
                   missing !== null ||
                   (needsSecond && approver === "") ||
                   (approver !== "" && approval?.approver !== approver && !/^\d{4,8}$/.test(pin))

@@ -11,12 +11,13 @@ import {
   getProfitAndLoss,
   getReconciliation,
   getSizesAndAddons,
+  getPaymentTakings,
   getUncostedSales,
   pnlTotals,
 } from "@/lib/db/reports";
 import { LegacyPostings } from "@/components/books/LegacyPostings";
 import { EXCEPTION_LABEL, NO_ONE, exceptionsByPerson, type ExceptionKind } from "@/lib/exceptions";
-import { fmtIQD } from "@/lib/format";
+import { fmtIQD, tenderLabel } from "@/lib/format";
 import { getChannelNames } from "@/lib/db/channels";
 import {
   addDays,
@@ -46,7 +47,7 @@ export default async function ReportsPage({
   const seesProfit = has(profile, "profit.view");
   const seesExceptions = has(profile, "audit.view");
 
-  const [pnl, rec, sales, book, allMenu, unposted, uncosted, exceptions, channels, sized] =
+  const [pnl, rec, sales, book, allMenu, unposted, uncosted, exceptions, channels, sized, takings] =
     await Promise.all([
       seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
       getReconciliation(to),
@@ -58,6 +59,7 @@ export default async function ReportsPage({
       seesExceptions ? getExceptions(from, to) : Promise.resolve([]),
       getChannelNames(),
       getSizesAndAddons(from, to),
+      getPaymentTakings(from, to),
     ]);
   // The menu as it sells today: a platform out of use sells nothing.
   const menu = allMenu.filter((m) =>
@@ -476,6 +478,82 @@ export default async function ReportsPage({
             >
               {t(
                 "Net sales are what the P&L shows as net revenue for the same dates (4000 less 4100 and 4200). The sales margin is net sales less the recipe cost of what was sold; the P&L's gross profit also takes off waste, count differences, purchase price differences and platform fees.",
+              )}
+            </p>
+          </div>
+        )}
+      </section>
+
+      {/* ---- Sales by payment method (0042) ---- */}
+      <section className="panel" id="payments" data-testid="payments-report">
+        <div className="panel-h">
+          <h3>{t("Sales by payment method")}</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            {t("Sales {from} to {to}, voids excluded; refunds on the day they were made", {
+              from,
+              to,
+            })}
+          </span>
+        </div>
+        {takings.length === 0 ? (
+          <div className="panel-b">
+            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+              {t("No sales in these dates.")}
+            </p>
+          </div>
+        ) : (
+          <div className="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>{t("Paid by")}</th>
+                  <th className="right">{t("Sales")}</th>
+                  <th className="right">{t("Takings")}</th>
+                  <th className="right">{t("Refunds")}</th>
+                  <th className="right">{t("Net")}</th>
+                  <th className="right">{t("Change given")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {takings.map((r) => (
+                  <tr key={r.method} data-testid={`payments-${r.method}`}>
+                    <td>{t(tenderLabel(r.method))}</td>
+                    <td className="right money">
+                      {r.sales}
+                      {r.splitSales > 0 && (
+                        <div className="muted" style={{ fontSize: ".72rem" }}>
+                          {t("{n} paid two ways", { n: r.splitSales })}
+                        </div>
+                      )}
+                    </td>
+                    <td className="right money">{fmtIQD(r.taken)}</td>
+                    <td className="right money">{r.refunded ? `(${fmtIQD(r.refunded)})` : "—"}</td>
+                    <td className="right money">{fmtIQD(r.net)}</td>
+                    <td className="right money">{r.changeGiven ? fmtIQD(r.changeGiven) : "—"}</td>
+                  </tr>
+                ))}
+                <tr className="grand">
+                  <td>{t("All payments")}</td>
+                  <td className="right money" />
+                  <td className="right money">
+                    {fmtIQD(takings.reduce((s, r) => s + r.taken, 0))}
+                  </td>
+                  <td className="right money">
+                    {takings.some((r) => r.refunded)
+                      ? `(${fmtIQD(takings.reduce((s, r) => s + r.refunded, 0))})`
+                      : "—"}
+                  </td>
+                  <td className="right money">{fmtIQD(takings.reduce((s, r) => s + r.net, 0))}</td>
+                  <td className="right money" />
+                </tr>
+              </tbody>
+            </table>
+            <p
+              className="muted"
+              style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
+            >
+              {t(
+                "A sale paid part in cash and part by card counts under each, for the part it paid. Cash is what the sale kept: the change went back to the customer. The net matches the sales by channel.",
               )}
             </p>
           </div>

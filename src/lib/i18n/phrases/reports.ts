@@ -953,6 +953,28 @@ const phrases: PhraseBook = {
   "Groups of add-ons": { ar: "مجموعات الإضافات", ckb: "کۆمەڵەکانی زیادە" },
   "Copied from": { ar: "منسوخة من", ckb: "لەبەرگیراوە لە" },
   "An add-on": { ar: "إضافة", ckb: "زیادەیەک" },
+
+  // Reports → Sales by payment method (0042).
+  "Sales by payment method": { ar: "المبيعات حسب طريقة الدفع", ckb: "فرۆشتن بەپێی شێوازی پارەدان" },
+  "Paid by": { ar: "مدفوع بـ", ckb: "پارەدراو بە" },
+  Takings: { ar: "المقبوضات", ckb: "پارەی وەرگیراو" },
+  "Change given": { ar: "الباقي المُعاد", ckb: "باقیی دراوە" },
+  "All payments": { ar: "كل الدفعات", ckb: "هەموو پارەدانەکان" },
+  "{n} paid two ways": { ar: "{n} دُفعت بطريقتين", ckb: "{n} بە دوو شێواز پارەیان دراوە" },
+  "A sale paid part in cash and part by card counts under each, for the part it paid. Cash is what the sale kept: the change went back to the customer. The net matches the sales by channel.":
+    {
+      ar: "البيعة المدفوع جزء منها نقدًا وجزء بالبطاقة تُحسب تحت كل منهما، بقدر الجزء الذي دفعه. النقد هو ما احتفظت به البيعة: الباقي أُعيد إلى الزبون. الصافي يطابق المبيعات حسب القناة.",
+      ckb: "فرۆشتنێک کە بەشێکی بە کاش و بەشێکی بە کارت پارەی دراوە، لە ژێر هەردووکیاندا دەژمێردرێت، بەپێی ئەو بەشەی دای. کاش ئەوەیە کە فرۆشتنەکە هێشتییەوە: باقییەکە بۆ کڕیار گەڕایەوە. پوختەکە لەگەڵ فرۆشتن بەپێی کەناڵ یەک دەگرێتەوە.",
+    },
+  // A refund of a sale paid more than one way (0042).
+  "Gives back {amount}: {parts}": {
+    ar: "يُعيد {amount}: {parts}",
+    ckb: "{amount} دەگەڕێنێتەوە: {parts}",
+  },
+  "Refund {no}: {amount} given back: {parts} (journal {journal}).": {
+    ar: "الاسترداد {no}: أُعيد {amount}: {parts} (القيد {journal}).",
+    ckb: "گەڕاندنەوەی {no}: {amount} گەڕێندرایەوە: {parts} (تۆماری {journal}).",
+  },
 };
 
 export default phrases;

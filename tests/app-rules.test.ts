@@ -26,6 +26,16 @@ import {
 } from "@/lib/refunds";
 import { salesTotals } from "@/lib/db/salesTotals";
 import {
+  changeGiven,
+  checkRefundSplit,
+  checkSplit,
+  howPaid,
+  leftToGiveBack,
+  proportionalParts,
+  refundSplitMessage,
+  saleReceipt,
+} from "@/lib/payments";
+import {
   AUDIT_GROUPS,
   actionLabel,
   auditGroup,
@@ -2257,5 +2267,163 @@ describe("sizes and add-ons at the till (0041)", () => {
     expect(signature(lines, null)).not.toBe(
       signature(addLine([], "v-reg", [{ modifierId: "m-oat", qty: 1 }]), null),
     );
+  });
+});
+
+describe("split payments (0042), as the database takes them", () => {
+  it("takes the rest in the last payment, left empty", () => {
+    const c = checkSplit(
+      6000,
+      [
+        { type: "card", amount: "4000" },
+        { type: "cash", amount: "" },
+      ],
+      "5000",
+    );
+    expect(c.problem).toBeNull();
+    expect(c.rest).toBe(2000);
+    expect(c.change).toBe(3000);
+    expect(c.payments).toEqual([
+      { type: "card", amount: 4000, received: null },
+      { type: "cash", amount: 2000, received: 5000 },
+    ]);
+  });
+
+  it("reads amounts typed in Arabic or Kurdish digits", () => {
+    const c = checkSplit(
+      3500,
+      [
+        { type: "cash", amount: "١٥٠٠" },
+        { type: "card", amount: "۲۰۰۰" },
+      ],
+      "",
+    );
+    expect(c.payments).toEqual([
+      { type: "cash", amount: 1500, received: null },
+      { type: "card", amount: 2000, received: null },
+    ]);
+  });
+
+  it("refuses what the database would", () => {
+    const two = (a: string, b: string) => [
+      { type: "card" as const, amount: a },
+      { type: "cash" as const, amount: b },
+    ];
+    expect(checkSplit(6000, two("7000", ""), "").problem).toBe("over");
+    expect(checkSplit(6000, two("7000", ""), "").rest).toBe(-1000);
+    expect(checkSplit(6000, two("1000", "4000"), "").problem).toBe("short");
+    expect(checkSplit(6000, two("1000", "4000"), "").short).toBe(1000);
+    expect(checkSplit(6000, two("5000", "2000"), "").over).toBe(1000);
+    expect(checkSplit(6000, two("6000", ""), "").problem).toBe("zero");
+    expect(checkSplit(6000, two("0", "6000"), "").problem).toBe("zero");
+    expect(checkSplit(6000, two("", "2000"), "").problem).toBe("missing");
+    expect(checkSplit(6000, two("40.5", ""), "").problem).toBe("notNumber");
+    expect(checkSplit(6000, two("4000", ""), "abc").problem).toBe("notNumber");
+    const short = checkSplit(6000, two("4000", ""), "1500");
+    expect(short.problem).toBe("cashShort");
+    expect(short.change).toBeNull();
+    expect(short.payments).toBeNull();
+  });
+
+  it("splits between two cards, with no cash to hand over", () => {
+    const c = checkSplit(
+      1000,
+      [
+        { type: "card", amount: "400" },
+        { type: "card", amount: "" },
+      ],
+      "",
+    );
+    expect(c.cash).toBeNull();
+    expect(c.payments?.map((p) => p.amount)).toEqual([400, 600]);
+  });
+
+  it("sends the list, or the one tender of a payment left waiting by an older till", () => {
+    expect(howPaid({ tenders: [{ type: "cash", amount: "2500", received: "10000" }] })).toEqual({
+      p_tender: null,
+      p_tenders: [{ type: "cash", amount: 2500, received: 10000 }],
+    });
+    expect(howPaid({ tender: "card" })).toEqual({ p_tender: "card", p_tenders: null });
+    expect(howPaid({})).toBeNull();
+  });
+
+  it("reads the recorded payments and the change they gave", () => {
+    const r = saleReceipt({
+      order_id: "o1",
+      net: 6000,
+      payments: [
+        { type: "cash", amount: 2000, received: 5000, change: 3000 },
+        { type: "card", amount: 4000, received: null, change: null },
+      ],
+    });
+    expect(r.payments[1]).toEqual({ type: "card", amount: 4000, received: null, change: null });
+    expect(changeGiven(r.payments)).toBe(3000);
+    expect(changeGiven([{ change: null }])).toBeNull();
+    expect(saleReceipt({ order_id: "o2", net: 1 }).payments).toEqual([]);
+  });
+
+  it("shares a refund over what is left of each payment, as allocate_landed does", () => {
+    expect(proportionalParts([2000, 4000], 1000)).toEqual([333, 667]);
+    expect(proportionalParts([2000, 4000], 6000)).toEqual([2000, 4000]);
+    expect(proportionalParts([0, 2500], 2500)).toEqual([0, 2500]);
+    // Equal remainders: the first takes the odd dinar.
+    expect(proportionalParts([1000, 1000], 1001)).toEqual([501, 500]);
+    expect(proportionalParts([3, 3, 3], 2)).toEqual([1, 1, 0]);
+    expect(proportionalParts([100, 200], 0)).toEqual([0, 0]);
+  });
+
+  it("knows what is left of each way a sale was paid", () => {
+    const left = leftToGiveBack(
+      [
+        { type: "cash", amount: 2000 },
+        { type: "card", amount: 4000 },
+      ],
+      [
+        { type: "cash", amount: 333 },
+        { type: "card", amount: 667 },
+      ],
+    );
+    expect(left).toEqual([
+      { type: "cash", paid: 2000, left: 1667 },
+      { type: "card", paid: 4000, left: 3333 },
+    ]);
+    // A refund from before 0037 took from the sale's one payment.
+    expect(leftToGiveBack([{ type: "cash", amount: 2500 }], [], 500)).toEqual([
+      { type: "cash", paid: 2500, left: 2000 },
+    ]);
+    // Two cards are one way to give back.
+    expect(
+      leftToGiveBack(
+        [
+          { type: "card", amount: 400 },
+          { type: "card", amount: 600 },
+        ],
+        [],
+      ),
+    ).toEqual([{ type: "card", paid: 1000, left: 1000 }]);
+  });
+
+  it("checks a refund's parts as the database does, and says it in its words", () => {
+    const left = [
+      { type: "cash" as const, paid: 2000, left: 1667 },
+      { type: "card" as const, paid: 4000, left: 3333 },
+    ];
+    expect(checkRefundSplit(left, { cash: "1667", card: "833" }, 2500)).toEqual({
+      parts: [
+        { type: "cash", amount: 1667 },
+        { type: "card", amount: 833 },
+      ],
+      problem: null,
+    });
+    const tooMuch = checkRefundSplit(left, { cash: "2500", card: "" }, 2500);
+    expect(tooMuch.problem).toEqual({ kind: "tooMuch", type: "cash", left: 1667 });
+    expect(refundSplitMessage(tooMuch.problem!, 2500)).toBe(
+      "Only 1667 of the cash paid is left to give back",
+    );
+    const sum = checkRefundSplit(left, { cash: "1000", card: "1000" }, 2500);
+    expect(refundSplitMessage(sum.problem!, 2500)).toBe(
+      "The refund is 2500, but the payments given back come to 2000",
+    );
+    expect(checkRefundSplit(left, { cash: "x" }, 2500).problem).toEqual({ kind: "notNumber" });
   });
 });

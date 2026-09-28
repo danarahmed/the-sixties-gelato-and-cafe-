@@ -5,6 +5,7 @@ import Decimal from "decimal.js";
 import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { cleanOrderNo, normaliseNumber, ORDER_NO } from "@/lib/validation";
+import { checkSplit, type Payment, type SplitRow } from "@/lib/payments";
 import type { Tender } from "./model";
 
 /** Notes a customer is likely to hand over for this total: the next round sums above it. */
@@ -17,12 +18,23 @@ export function suggestedCash(total: number): number[] {
   return [...out].sort((a, b) => a - b).slice(0, 4);
 }
 
+/** A split starts as part by card and the rest in cash (0042). */
+const SPLIT_START: SplitRow[] = [
+  { type: "card", amount: "" },
+  { type: "cash", amount: "" },
+];
+
 /**
  * Taking the money. For cash, the cashier enters what was handed over (or
  * taps a note) and the change is worked out; nothing is recorded until
  * Confirm, and Confirm records it once however often it is pressed. A
  * delivery platform's sale takes the order number its tablet shows: the
  * platform's payout is matched to the sale by it (0030).
+ *
+ * Split (0042): part by card and part in cash, or two cards. Each part is
+ * typed but the last, which takes what is left; the cash handed over for the
+ * cash part gives the change. Confirm stays off until the parts come to the
+ * total.
  */
 export function PayDialog({
   title,
@@ -47,12 +59,16 @@ export function PayDialog({
   platform?: string | null;
   busy: boolean;
   error: string | null;
-  onConfirm: (tender: Tender, received: number | null, orderNo: string | null) => void;
+  onConfirm: (payments: Payment[], orderNo: string | null) => void;
   onClose: () => void;
 }) {
   const { t, msg } = useT();
-  const [tender, setTender] = useState<Tender>(initialTender);
+  const [tender, setTender] = useState<Tender | "split">(initialTender);
   const [received, setReceived] = useState("");
+  const [rows, setRows] = useState<SplitRow[]>(SPLIT_START);
+  const [splitReceived, setSplitReceived] = useState("");
+  // Part in cash and part by card: only where both can be taken.
+  const canSplit = tenders.includes("cash") && tenders.includes("card");
   const [orderNo, setOrderNo] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const orderInput = useRef<HTMLInputElement>(null);
@@ -69,17 +85,50 @@ export function PayDialog({
   const number = cleanOrderNo(orderNo);
   const numberBad = number !== "" && !ORDER_NO.test(number);
   const needsNumber = tender === "platform_paid" && (number === "" || numberBad);
-  const canConfirm = !busy && !short && !needsNumber;
+  const split = tender === "split" ? checkSplit(total, rows, splitReceived) : null;
+  const canConfirm = !busy && (split ? split.payments !== null : !short && !needsNumber);
   const platformName = platform ?? t("pos.tender.platform_paid");
 
   function confirm() {
     if (!canConfirm) return;
+    if (split) {
+      if (split.payments) onConfirm(split.payments, null);
+      return;
+    }
+    const one = tender as Tender;
     onConfirm(
-      tender,
-      tender === "cash" && cash !== null ? cash.toNumber() : null,
-      tender === "platform_paid" ? number : null,
+      [
+        {
+          type: one,
+          amount: total,
+          received: one === "cash" && cash !== null ? cash.toNumber() : null,
+        },
+      ],
+      one === "platform_paid" ? number : null,
     );
   }
+
+  const setRow = (i: number, row: Partial<SplitRow>) =>
+    setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...row } : r)));
+  const splitProblem = (() => {
+    if (!split) return null;
+    switch (split.problem) {
+      case "notNumber":
+        return t("Amounts are whole dinars");
+      case "missing":
+        return t("Type how much each payment is");
+      case "zero":
+        return t("Each payment needs an amount more than 0");
+      case "over":
+        return t("The payments come to {amount} more than the total", {
+          amount: fmtIQD(split.over || -split.rest),
+        });
+      case "short":
+        return `${t("pos.stillOwed")} ${fmtIQD(split.short)}`;
+      default:
+        return null;
+    }
+  })();
 
   return (
     <div className="pos-modal-back" onClick={() => !busy && onClose()}>
@@ -118,6 +167,18 @@ export function PayDialog({
                 {t(`pos.tender.${x}`)}
               </button>
             ))}
+            {canSplit && (
+              <button
+                role="radio"
+                aria-checked={tender === "split"}
+                className={tender === "split" ? "active" : ""}
+                onClick={() => setTender("split")}
+                disabled={busy}
+                data-testid="pay-split"
+              >
+                ➗ {t("Split")}
+              </button>
+            )}
           </div>
         )}
 
@@ -167,6 +228,109 @@ export function PayDialog({
                 </>
               )}
             </div>
+          </div>
+        )}
+        {split && (
+          <div className="cash-box" data-testid="split-box">
+            {rows.map((r, i) => {
+              const last = i === rows.length - 1;
+              const cashElsewhere = rows.some((o, j) => j !== i && o.type === "cash");
+              return (
+                <div key={i} className="split-row" data-testid="split-row">
+                  <select
+                    aria-label={t("How payment {n} is made", { n: i + 1 })}
+                    value={r.type}
+                    onChange={(e) => setRow(i, { type: e.target.value as SplitRow["type"] })}
+                    disabled={busy}
+                  >
+                    {(["cash", "card"] as const).map((x) => (
+                      <option key={x} value={x} disabled={x === "cash" && cashElsewhere}>
+                        {t(`pos.tender.${x}`)}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    aria-label={t("Amount of payment {n}", { n: i + 1 })}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    className="mono"
+                    value={r.amount}
+                    placeholder={last && split.rest > 0 ? fmtIQD(split.rest) : ""}
+                    onChange={(e) => setRow(i, { amount: e.target.value })}
+                    disabled={busy}
+                  />
+                  {rows.length > 2 && (
+                    <button
+                      aria-label={t("Take off payment {n}", { n: i + 1 })}
+                      onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}
+                      disabled={busy}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+            {rows.length < 4 && (
+              <button
+                data-testid="split-add"
+                onClick={() => setRows((rs) => [...rs, { type: "card", amount: "" }])}
+                disabled={busy}
+                style={{ justifySelf: "start" }}
+              >
+                + {t("Add a payment")}
+              </button>
+            )}
+            <span className="muted" style={{ fontSize: ".85rem" }}>
+              {t("The last payment takes what is left.")}
+            </span>
+            {splitProblem && (
+              <span className="red" style={{ fontSize: ".85rem" }} data-testid="split-problem">
+                {splitProblem}
+              </span>
+            )}
+            {split.cash !== null && split.cash > 0 && (
+              <>
+                <label className="muted" htmlFor="split-received" style={{ fontSize: ".85rem" }}>
+                  {t("pos.cashReceived")} · {fmtIQD(split.cash)}
+                </label>
+                <input
+                  id="split-received"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  className="cash-input mono"
+                  placeholder={fmtIQD(split.cash)}
+                  value={splitReceived}
+                  onChange={(e) => setSplitReceived(e.target.value)}
+                  disabled={busy}
+                />
+                <div className="cash-quick">
+                  {suggestedCash(split.cash).map((n) => (
+                    <button
+                      key={n}
+                      className="mono"
+                      onClick={() => setSplitReceived(String(n))}
+                      disabled={busy}
+                    >
+                      {n.toLocaleString("en-US")}
+                    </button>
+                  ))}
+                </div>
+                <div className="change-row" data-testid="split-change">
+                  {split.problem === "cashShort" && split.received !== null ? (
+                    <span className="red">
+                      {t("pos.stillOwed")}{" "}
+                      <strong className="mono">{fmtIQD(split.cash - split.received)}</strong>
+                    </span>
+                  ) : (
+                    <>
+                      <span>{t("pos.changeDue")}</span>
+                      <strong className="mono change-amt">{fmtIQD(split.change ?? 0)}</strong>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
         {tender === "platform_paid" && (

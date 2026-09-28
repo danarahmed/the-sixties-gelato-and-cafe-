@@ -524,6 +524,28 @@ corrections are new entries. What each record posts (migration `0015`):
   bottle (250) back on the shelf: 1000 Cr 3,500, 4200 Dr 3,500, 1200 Dr 250,
   5000 Cr 250.
 
+- Split payment (`0042`): a sale paid in parts, each its own payment
+  (`amount`, and for cash `received`, what was handed over), together the net
+  exactly. The journal debits each payment's account with its parts, one line
+  per account (two cards are one 1010 line). The change is not in the books:
+  the cash line is the cash part, what was handed over less the change. Each
+  cash part is a drawer event. Worked example (the SQL test): two espressos
+  and a water, 6,000, paid 4,000 by card and 2,000 in cash with 5,000 handed
+  over: 1000 Dr 2,000, 1010 Dr 4,000, 4000 Cr 6,000, 5000 Dr 650, 1200 Cr 650;
+  the drawer takes 2,000 and the change is 3,000.
+- A void of a split sale reverses its journal and takes back from the drawer
+  what the sale put in it: its cash parts.
+- A refund of a split sale gives back each way at most what is left of it
+  (what it paid, less what earlier refunds gave back that way), together the
+  refund: as the refunder chooses, or in proportion to what is left of each,
+  in whole dinars adding up exactly (`allocate_landed`: the odd dinars to the
+  largest remainders, the first of equals first). Its journal credits each
+  way's account; only its cash leaves the drawer. Worked example (the SQL
+  test): of the sale above, the water (1,000) gives back 333 in cash and 667
+  to the card (2,000 : 4,000); an espresso, 1,667 in cash and 833 to the card,
+  as the manager chose; the last espresso, the 2,500 left, all to the card,
+  the only way something is left of.
+
 - Goods receipt: Dr 1200 Inventory / Cr 2050 Goods received not invoiced.
 - Bill for a receipt: Dr 2050 (what the receipt raised), Dr/Cr 5050 Purchase
   price variance (the difference) / Cr 2000 Accounts payable. A bill for
