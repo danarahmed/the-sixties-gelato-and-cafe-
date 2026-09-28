@@ -41,6 +41,7 @@ Plan a short window when the café is closed.
 | Sizes and add-ons (`0041`)              | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0041`](#after-0041)). The screens were merged ([pull request #30](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/30)) and deployed                                  |
 | Split payments (`0042`)                 | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0042`](#after-0042)). The screens were merged ([pull request #31](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/31)) and deployed                                  |
 | US dollars at the till (`0043`)         | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0043`](#after-0043)). The screens were merged ([pull request #32](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/32)) and deployed                  |
+| Purchasing (`0044`)                     | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0044`](#after-0044)). The screens were merged ([pull request #33](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/33)) and deployed                  |
 
 ## 0. Before you start
 
@@ -1311,6 +1312,96 @@ checking its permission. The performance advisor adds notes that ten of the
 new tables' links have no index of their own and that one new index is not
 used yet.
 
+## After `0044`
+
+Migration `0044` (release S) adds purchase orders, returns to a supplier and
+the supplier's credit notes:
+
+- **Purchase orders**: drafted by whoever buys; approved by the owner, the
+  general manager or a branch manager (a new permission) whose limit covers
+  the total, a rule on Settings (the café 250,000; the owner and the general
+  manager any order); sent, printed from the order's own page; closed when
+  all has come, or with a reason; cancelled while nothing has come. An
+  approved order changed is a draft again.
+- **Receiving against an order**: the delivery filled in with what is still
+  to come, at the order's prices; more than is still on order asked about
+  first, and the confirmation kept on the audit trail.
+- **Returns to a supplier**: the stock leaves at what it costs now; before the
+  delivery's bill, the return comes off what the bill will clear; after it,
+  the supplier owes it back as a credit, set against the bill.
+- **The supplier's credit notes** (Vendors → Credit notes): the note for a
+  return's credit, a lower price on a billed delivery (the stock of it still
+  on the shelf revalued), other (off an account chosen); set against bills. A
+  bill is paid by payments and credits; the payables check takes the credits
+  off.
+- **A supplier's statement between two dates**, to print, and **Reports →
+  Purchasing**.
+
+What it adds:
+
+- on `purchase_order` (empty on every database before it, which the
+  migration checks): its number, total, the day it is expected, and who
+  approved, sent, closed or cancelled it; its status becomes text with five
+  values, and the `po_status` type is dropped; on `purchase_order_line` the
+  line's number and its quantity in the item's base unit; on
+  `goods_receipt_line` the order line it came against;
+- the tables `supplier_return`, `supplier_return_line`, `supplier_credit` and
+  `supplier_credit_allocation`, each readable only by those who see costs,
+  and never changed but for a return's credit taking the supplier's note once;
+- `p_purchase_order` on `receive_goods` (a new signature);
+- the functions signed-in users may call: `save_po`, `approve_po`, `send_po`,
+  `close_po`, `cancel_po`, `purchase_orders`, `purchase_order`,
+  `return_to_supplier`, `record_supplier_credit`, `note_supplier_credit`,
+  `allocate_credit`, `supplier_statement` and `report_purchasing`, each
+  checking its permission;
+- the permission `purchase.approve` and the rule `po_approve_up_to`.
+
+It goes in before the screens: those deployed before it keep working (a
+delivery from them is the same request as before), and the new ones show the
+orders, the returns and the credits.
+
+It was applied on 28 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0043` build and that no purchase
+order existed. The text stored there is the file byte for byte (md5
+`ec1c556af3c1fe9d942364eff514d4c3`, 138,505 bytes). It was then compared with
+the tested build, object by object, the role permissions and column grants
+included: identical, but for the schema `citext` lives in, as before.
+
+It was checked as the owner and the barista, in a transaction that was rolled
+back:
+
+- **Refused:** the barista drafting an order; a delivery against a draft.
+- **An order:** 1,000 g of coffee beans at 28.73 and 10 bottles of water at
+  212.54 (30,855), approved and sent by the owner.
+- **Received against it:** 500 g and the water (16,490, partly received); then
+  700 g more, asked about first ("Check the quantity: Coffee beans: 1000 g
+  ordered, 1200 with this delivery"), confirmed (all received). The order
+  closed; a second order was cancelled.
+- **A return before the bill:** 100 g, 2,873 off what the delivery's bill
+  will clear (`1200 Cr 2873 | 2050 Dr 2873`); the delivery then owed 13,617.
+- **A return after the bill:** the second delivery billed at 20,111, then
+  200 g went back (`1200 Cr 5747 | 2000 Dr 5746 | 5050 Dr 1`), a credit set
+  against the bill; the supplier's note recorded once, a second refused.
+- **Credits:** one taken off the till was refused; 300 and 200 off 6900 (the
+  second left on the account, then set against the bill) and 150 for a lower
+  price (`1200 Cr 147 | 2000 Dr 150 | 5050 Cr 3`): the bill was paid 6,396 of
+  20,111 by credits, and cancelling it was refused.
+- **The statement** (13,715 owed at the end of the day) and **the report**
+  (2 orders, 2 returns, 4 credits); the barista could not read the orders.
+- **The books:** all ten checks at zero before and after, no record without
+  its journal.
+
+Nothing was kept: every table's count is as it was (9 deliveries, 9 bills,
+286 stock movements, journals to 1091, 35 audit rows), but the new permission
+for three roles (103 → 106); the four new tables are empty.
+
+The security advisor adds the thirteen functions above and lists
+`receive_goods` under its new signature, each checking its permission. The
+performance advisor adds notes that twenty of the new tables' links have no
+index of their own and that one new index is not used yet; three older notes
+are gone, the new indexes covering them.
+
 ## Clearing the test records
 
 Every record of trading in the live database so far is a test (the owner, 25
@@ -1325,10 +1416,11 @@ with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/res
    cleared.
 2. It clears sales (with their add-ons), open bills, voids and refunds, cash
    sessions, drawer counts and cash moved (each branch keeps its drawer), stock
-   movements and the reviews of losses, counts and batches, deliveries,
-   supplier bills and payments, expenses, every journal and period, and the
-   document numbers (journals start again at 1001, the café's bill numbers at
-   0001, the cash sessions and refunds at 1).
+   movements and the reviews of losses, counts and batches, purchase orders,
+   deliveries, returns to suppliers, supplier bills, payments and credits,
+   expenses, every journal and period, and the document numbers (journals
+   start again at 1001, the café's bill numbers at 0001, the cash sessions,
+   refunds, orders, returns and credits at 1).
 3. Run it in the SQL editor with the confirmation set in the same session:
    `set sixties.reset = 'dry run';` first — it clears, checks, reports what it
    would clear and changes nothing — then

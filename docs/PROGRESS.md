@@ -774,6 +774,32 @@ browser tests through the real app, or both.
   the real screens (orders, receiving against one, both returns, the credits,
   the statement, the report, the trail, the screens in Arabic and Kurdish, the
   books still tying), unit tests, and every new text in Arabic and Kurdish.
+  The migration was applied to the live database on 28 September 2026. The
+  text stored there is the file byte for byte, and it matches the tested
+  build object by object, permissions included (the one difference, as
+  before, is the schema `citext` lives in). It was checked as the owner and
+  the barista, in a transaction that was rolled back:
+  - the barista could not draft an order, and a draft could not be received
+    against;
+  - the owner drafted, approved and sent an order for 1,000 g of coffee beans
+    and 10 bottles of water (30,855); half the beans and the water came
+    against it; 700 g more was asked about, then confirmed; the order closed,
+    and a second one was cancelled;
+  - 100 g went back before the delivery's bill, 2,873 off what it will clear;
+    after the other delivery's bill, 200 g went back as a credit set against
+    it, the supplier's note recorded once;
+  - a credit off the till was refused; credits for other and for a lower price
+    (the stock on the shelf revalued by 147, 3 to the price variance) were set
+    against the bill, which could then not be cancelled;
+  - the statement and the report were right, the barista could not read the
+    orders, and all ten checks stayed at zero.
+
+  Nothing was kept: every table's count is as it was, but the approval
+  permission for three roles; the four new tables are empty. The security
+  advisors add the new functions a signed-in person calls, each checking its
+  permission; the performance advisors add notes on the new tables. The
+  screens went live with
+  [pull request #33](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/33).
 
 ## The August 2026 audit, finding by finding
 
