@@ -38,10 +38,10 @@ insert into keyed values
   ('publish_journal'), ('receive_goods'), ('record_bill'), ('record_card_settlement'), ('record_expense'),
   ('record_opening_stock'), ('record_production'), ('record_waste'), ('refund_sale'), ('reject_stock_count'),
   ('reverse_journal'), ('save_batch_recipe'), ('save_category'), ('save_journal'), ('save_tab'), ('save_table'),
-  ('set_fx_rate'), ('set_price'), ('split_tab'), ('start_stock_count'), ('submit_stock_count'), ('unlock_period'), ('void_sale');
+  ('set_batch_use_by'), ('set_fx_rate'), ('set_price'), ('split_tab'), ('start_stock_count'), ('submit_stock_count'), ('unlock_period'), ('void_sale');
 grant select on keyed to public;
-select test.eq((select count(*) from keyed)::int, 63,
-  'sixty-four kinds of write are keyed: sixty-three open, the old drawer count closed since 0037');
+select test.eq((select count(*) from keyed)::int, 64,
+  'sixty-five kinds of write are keyed: sixty-four open, the old drawer count closed since 0037');
 select test.eq((select string_agg(p.proname, ', ') from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                  where n.nspname = 'public' and p.proname in ('count_drawer', 'count_drawer__run')
                    and (has_function_privilege('authenticated', p.oid, 'execute')

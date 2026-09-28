@@ -102,7 +102,7 @@ truncate table
   document_counter,
   expense, fx_cash_event, fx_exchange, fx_rate, goods_receipt, goods_receipt_line, inventory_movement, item_lot,
   journal_entry, journal_line,
-  loss_review,
+  loss_review, lot_movement,
   pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   pos_tab_line_modifier,
   production_batch,

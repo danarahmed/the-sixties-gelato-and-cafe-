@@ -1,36 +1,55 @@
+import Link from "next/link";
 import Decimal from "decimal.js";
 import { getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems, getStockBoard } from "@/lib/db/read";
 import { getItemCosts } from "@/lib/db/reports";
-import { getBatchRecipes, getBatches, type BatchRecipe } from "@/lib/db/production";
+import {
+  getBatchRecipes,
+  getBatches,
+  getProductionLots,
+  getProductionPlan,
+  type BatchRecipe,
+} from "@/lib/db/production";
 import { fmtIQD, fmtQty } from "@/lib/format";
-import { dateTimeIn } from "@/lib/dates";
+import { addDays, businessToday, dateTimeIn, parseDay } from "@/lib/dates";
+import { PLAN_STATUS_LABEL, WEEKDAY_NAME, keepsLabel } from "@/lib/production";
 import { EmptyState } from "@/components/ui";
 import type { ItemOpt } from "@/components/menu/RecipeLines";
 import { RecordBatch } from "@/components/production/RecordBatch";
 import { BatchRecipeForm } from "@/components/production/BatchRecipeForm";
 import { CancelBatch, RecipeActions } from "@/components/production/RecipeActions";
-import { batchCost, perUnit, showIn, unitLabel } from "@/components/production/batchMath";
+import { ProductionLots } from "@/components/production/Lots";
+import { batchCost, perUnit, showIn, showNice, unitLabel } from "@/components/production/batchMath";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductionPage() {
+export default async function ProductionPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const profile = await requirePermission("cost.view", "production.record");
   const t = await getT();
   const msg = await getMsg();
+  const sp = await searchParams;
   const seesCost = has(profile, "cost.view");
   const canRecord = has(profile, "production.record");
   const canEdit = has(profile, "recipe.edit");
   const canCancel = has(profile, "inventory.adjust.approve");
   const decimals = profile.currencyDecimals;
-  const [recipes, batches, items, costs, board] = await Promise.all([
+  const today = businessToday(profile.timezone);
+  const tomorrow = addDays(today, 1);
+  const planDay = parseDay(sp.day, today) === tomorrow ? tomorrow : today;
+  const [recipes, batches, items, costs, board, plan, lots] = await Promise.all([
     getBatchRecipes(),
     getBatches(50),
     getItems(),
     seesCost ? getItemCosts() : Promise.resolve(new Map<string, string>()),
     seesCost ? getStockBoard() : Promise.resolve([]),
+    getProductionPlan(planDay),
+    getProductionLots(),
   ]);
 
   const itemOpts: ItemOpt[] = items.map((i) => ({
@@ -58,6 +77,7 @@ export default async function ProductionPage() {
       : [];
     const yieldBase = new Decimal(r.yieldBase);
     const f = output?.units.find((u) => u.code === r.yieldUnit)?.factor ?? 1;
+    const keeps = keepsLabel(r.shelfLifeHours);
     return (
       <div key={r.id} className="card pr-recipe">
         <div className="pr-recipe-head">
@@ -92,6 +112,11 @@ export default async function ProductionPage() {
           {missing.length > 0 && (
             <span className="pr-short pr-recipe-cost">
               {t("No cost yet for {names}: never bought or made", { names: missing.join(", ") })}
+            </span>
+          )}
+          {keeps && (
+            <span className="muted" data-testid="recipe-keeps">
+              {t(keeps.text, keeps.vars)}
             </span>
           )}
         </div>
@@ -129,9 +154,143 @@ export default async function ProductionPage() {
             onHand={onHand}
             seesCost={seesCost}
             decimals={decimals}
+            timezone={profile.timezone}
+            canRecordLate={canCancel}
           />
         </div>
       )}
+
+      {/* ---- The day's plan (0046) ---- */}
+      <section className="panel" id="plan" data-testid="plan">
+        <div className="panel-h">
+          <h3>
+            {t("What to make on {weekday}, {day}", {
+              weekday: t(WEEKDAY_NAME[plan.weekday - 1] ?? ""),
+              day: plan.day,
+            })}
+          </h3>
+          <span style={{ display: "flex", gap: 6 }}>
+            <Link className={planDay === today ? "badge ok" : "badge"} href="/production#plan">
+              {t("Today")}
+            </Link>
+            <Link
+              className={planDay === tomorrow ? "badge ok" : "badge"}
+              href={`/production?day=${tomorrow}#plan`}
+            >
+              {t("Tomorrow")}
+            </Link>
+          </span>
+        </div>
+        <div className="panel-b grid" style={{ gap: 10 }}>
+          <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+            {t(
+              "From what each was sold and used in batches on the same weekday over the last 4 to 8 weeks, on average, less what is on hand and still good at the end of the day: in whole batches.",
+            )}
+          </p>
+          {plan.recipes.length === 0 ? (
+            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+              {t("Nothing is made here yet.")}
+            </p>
+          ) : (
+            <div className="tw">
+              <table data-testid="plan-table">
+                <thead>
+                  <tr>
+                    <th>{t("What")}</th>
+                    <th className="right">{t("Used on the day, on average")}</th>
+                    <th className="right">{t("On hand")}</th>
+                    <th className="right">{t("Due before the day is out")}</th>
+                    <th className="right">{t("To make")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {plan.recipes.map((r) => {
+                    const it = byId.get(r.itemId);
+                    const q = (n: number) => showNice(new Decimal(n), it, r.baseUnit);
+                    return (
+                      <tr
+                        key={r.recipeId}
+                        data-testid="plan-row"
+                        data-recipe={r.recipe}
+                        data-status={r.status}
+                      >
+                        <td>{r.recipe}</td>
+                        <td className="right mono">
+                          {r.demand === null ? (
+                            <span className="muted" style={{ fontFamily: "inherit" }}>
+                              {t("{n} day(s) of history: 28 are needed", {
+                                n: r.historyDays ?? 0,
+                              })}
+                            </span>
+                          ) : (
+                            <>
+                              {q(r.demand)}
+                              <div className="muted" style={{ fontSize: ".72rem" }}>
+                                {t("over {n} weeks", { n: r.weeks ?? 0 })}
+                              </div>
+                            </>
+                          )}
+                        </td>
+                        <td className="right mono">{q(r.onHand)}</td>
+                        <td className="right mono">{r.due > 0 ? q(r.due) : "—"}</td>
+                        <td className="right">
+                          {r.status === "make" ? (
+                            <strong>
+                              {t("{n} batch(es): {qty}", { n: r.batches, qty: q(r.makes) })}
+                            </strong>
+                          ) : (
+                            <span className={r.status === "enough" ? "badge ok" : "badge"}>
+                              {t(PLAN_STATUS_LABEL[r.status])}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {plan.ingredients.some((i) => i.short > 0) && (
+            <p
+              className="pr-short"
+              style={{ margin: 0, fontSize: ".85rem" }}
+              data-testid="plan-short"
+            >
+              <Rich
+                text={t("Short for these batches: {list}. <buy>What to buy</buy>", {
+                  list: plan.ingredients
+                    .filter((i) => i.short > 0)
+                    .map(
+                      (i) =>
+                        `${i.item} ${showNice(new Decimal(i.short), byId.get(i.itemId), i.baseUnit)}`,
+                    )
+                    .join(", "),
+                })}
+                tags={{ buy: (c) => <Link href="/purchasing/buying-list">{c}</Link> }}
+              />
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* ---- What is in stock, batch by batch (0046) ---- */}
+      <section className="panel" id="lots" data-testid="lots-panel">
+        <div className="panel-h">
+          <h3>{t("In stock by batch")}</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            {t("Sales take the batch to be used first first; one past its use-by last.")}
+          </span>
+        </div>
+        <div className="panel-b">
+          <ProductionLots
+            lots={lots}
+            items={itemOpts}
+            timezone={profile.timezone}
+            canChange={canCancel}
+          />
+        </div>
+      </section>
 
       <section className="grid" style={{ gap: 10 }}>
         <h2 style={{ margin: "8px 0 0" }}>{t("What you make")}</h2>
@@ -177,10 +336,13 @@ export default async function ProductionPage() {
             <table className="pr-batches">
               <thead>
                 <tr>
+                  <th>{t("Batch")}</th>
                   <th>{t("Made")}</th>
                   <th>{t("What")}</th>
                   <th className="right">{t("Batches")}</th>
                   <th className="right">{t("Came out")}</th>
+                  <th className="right">{t("Still in stock")}</th>
+                  <th>{t("Use by")}</th>
                   {seesCost && <th className="right">{t("Cost")}</th>}
                   <th>{t("By")}</th>
                   <th />
@@ -194,9 +356,22 @@ export default async function ProductionPage() {
                   const f = output?.units.find((u) => u.code === b.enteredUnit)?.factor ?? 1;
                   const cancelled = b.status === "cancelled";
                   return (
-                    <tr key={b.id} className={cancelled ? "pr-cancelled" : undefined}>
+                    <tr
+                      key={b.id}
+                      className={cancelled ? "pr-cancelled" : undefined}
+                      data-testid="batch-row"
+                      data-batch={b.batchNo}
+                    >
+                      <td className="mono">
+                        <Link href={`/production/batches/${b.id}`}>{b.batchNo}</Link>
+                      </td>
                       <td className="muted mono" style={{ fontSize: ".8rem" }}>
                         {dateTimeIn(profile.timezone, b.producedAt)}
+                        {b.lateReason && (
+                          <div className="pr-note-cell" title={b.lateReason}>
+                            <span className="badge warn">{t("recorded late")}</span>
+                          </div>
+                        )}
                       </td>
                       <td>
                         {b.recipeName}
@@ -222,6 +397,14 @@ export default async function ProductionPage() {
                             })}
                           </div>
                         )}
+                      </td>
+                      <td className="right mono">
+                        {b.leftBase === null || cancelled
+                          ? "—"
+                          : showNice(new Decimal(b.leftBase), output, b.outputUnit)}
+                      </td>
+                      <td className="muted mono" style={{ fontSize: ".8rem" }}>
+                        {b.useBy ? dateTimeIn(profile.timezone, b.useBy) : "—"}
                       </td>
                       {seesCost && (
                         <td className="right mono">

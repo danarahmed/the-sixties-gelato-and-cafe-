@@ -1088,6 +1088,18 @@ const phrases: PhraseBook = {
   "Item's supplier set": { ar: "تحديد مورّد لمادة", ckb: "دیاریکردنی دابینکەری کاڵا" },
   "Item's supplier removed": { ar: "إزالة مورّد مادة", ckb: "لابردنی دابینکەری کاڵا" },
   "In place of": { ar: "بدلًا من", ckb: "لە جیاتی" },
+  // Reports → Production (0046).
+  Production: { ar: "الإنتاج", ckb: "بەرهەمهێنان" },
+  "Batches made {from} to {to}: what came out, and what became of it": {
+    ar: "الدفعات المصنوعة من {from} إلى {to}: ما نتج عنها وما آلت إليه",
+    ckb: "دەستە دروستکراوەکان لە {from} تا {to}: چی لێ دەرچوو و چی بەسەرهات",
+  },
+  "No batch was made in these dates.": {
+    ar: "لم تُصنع أي دفعة في هذه التواريخ.",
+    ckb: "لەم بەروارانەدا هیچ دەستەیەک دروست نەکرا.",
+  },
+  "Of the recipe": { ar: "من الوصفة", ckb: "لە ڕەسەتەکە" },
+  "Quantity sold": { ar: "الكمية المباعة", ckb: "بڕی فرۆشراو" },
 };
 
 export default phrases;

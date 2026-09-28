@@ -790,7 +790,8 @@ set on **Settings → Alerts**).
 
 **Location:** Sidebar → **Production** · `/production` · **Who:** anyone who sees
 costs, and baristas (who make the batches); setting up what is made: owner,
-general manager; cancelling a batch: owner, managers
+general manager; cancelling a batch, changing its use-by, recording one made
+earlier: owner, managers
 
 What the café makes in batches: gelato, a base, syrup, cold brew, dough.
 
@@ -801,7 +802,24 @@ What the café makes in batches: gelato, a base, syrup, cold brew, dough.
   what it makes and how that compares with the recipe, and, for those who see
   costs, what it costs and the cost per kg (or per pan, or per piece).
   Recording takes the ingredients out of stock at their average cost and puts
-  what came out in, at exactly that cost. Baristas are shown no costs.
+  what came out in, at exactly that cost, as a batch with its own number and
+  lot. Baristas are shown no costs. **Use by (optional):** left empty, the
+  batch is used by its recipe's shelf life from when it was made (the form
+  says how long), or not at all without one. A manager ticks **Made earlier**
+  for a batch made earlier today or yesterday, with when and why; it is
+  refused before the last approved count of its items.
+- **What to make on…:** the day's plan (today, or **Tomorrow**). For each thing
+  you make: what it sold and was used in batches on the same weekday over the
+  last four to eight weeks, on average; what is on hand, and what of it is due
+  before the day is out; and so how many batches to make, and what that makes.
+  Ingredients the batches need beyond what is in stock are listed, with a link
+  to What to buy. Under four weeks of history, it says how many days there are.
+- **In stock by batch:** every batch with something left, the one to be used
+  first first, with its use-by and whether it is past it, due today, due
+  within a day or good. Sales, losses and other batches take from them in
+  that order, one past its use-by last; what is thrown away as expired, or
+  found missing on a count, comes off one past its use-by first. A manager
+  **Change the use-by…** with why, on the audit trail.
 - **What you make:** each batch recipe, with what one batch makes, what goes
   into it, how to make it, and (for those who see costs) what a batch costs.
   **➕ Add something you make** sets one up:
@@ -814,14 +832,24 @@ What the café makes in batches: gelato, a base, syrup, cold brew, dough.
      does a dough, then the croissants baked from it.
   3. **How to make it** (optional): shown to whoever records a batch.
 
+  _What it makes keeps for_ (in days or hours, optional) sets each batch's
+  use-by, and the card says it: "keeps 3 day(s)".
+
   **Change…** changes it from today; **Stop making it** hides it (it comes back
   with **Make it again**).
 
-- **Batches:** every batch, newest first: when, what, how many, what came out
-  (against the recipe), its cost (for those who see costs) and who made it. A
-  batch recorded in error is **Cancel…**led by a manager with a reason: its
-  stock movements are reversed at the values they had, and it stays on the list,
-  struck through.
+- **Batches:** every batch, newest first: its number, when, what, how many,
+  what came out (against the recipe), what is left of it, its use-by, its cost
+  (for those who see costs) and who made it; one recorded late is marked. A
+  batch recorded in error is **Cancel…**led by a manager with a reason while
+  all it made is still there: its stock movements are reversed at the values
+  they had, and it stays on the list, struck through.
+- **A batch's page** (its number): when it was made and by whom, why it was
+  recorded late, what came out of what was planned, its use-by, and what
+  became of it — sold, used in other batches, lost, found or missing on a
+  count, still in stock — checked to add up to what was made, with every
+  movement of it. Reports → **Production** lists the batches made in the
+  dates.
 
 A made item is then used like any other: in another batch, or in a product's
 recipe on Products & Recipes (**Change the recipe…**), so a cup of gelato takes

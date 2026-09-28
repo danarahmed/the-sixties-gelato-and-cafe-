@@ -7,11 +7,11 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0045` and the rebuilt app. The SQL
-  checks (47, with the rehearsals of the upgrade, the clean start and clearing
+- **Built and verified:** migrations `0014`–`0046` and the rebuilt app. The SQL
+  checks (48, with the rehearsals of the upgrade, the clean start and clearing
   the test records), the browser suites (24, every role, every screen in
   Arabic and Kurdish, and a lost answer on each kind of screen), the unit and
-  contract tests (391) and a production build all pass.
+  contract tests (403) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -848,6 +848,68 @@ browser tests through the real app, or both.
   cashier kept out, the trail, the screens in Arabic and Kurdish, the books
   still tying), unit tests, and every new text in Arabic and Kurdish.
 
+- **Batches, use-by dates and the day's plan (release U, migration `0046`).**
+  A batch had no number and no use-by, and what it made was not told apart
+  from any other stock of the item: nobody could say how much of a batch was
+  sold, lost or left, nor what was about to go off. Now each batch is
+  numbered and has a use-by: its recipe's shelf life (set on the recipe, in
+  days or hours) from when it was made, or a date given; a manager changes it
+  later with a reason, on the audit trail. What a batch makes goes into a
+  lot of its own, and what leaves the item is taken from its lots: sales,
+  losses and other batches take the batch to be used first first, what is
+  past its use-by last; what is thrown away as expired, or found missing on a
+  count, comes off what is past its use-by first; a void, a refund back on
+  the shelf, a loss taken back and a batch cancelled put back in the lot it
+  came from; what was sold before its batch was recorded is taken from that
+  batch. **Production** lists what is in stock batch by batch, each with its
+  use-by (past it, due today, due within a day, good), and the day's plan:
+  for each recipe, what was sold and used on the same weekday over the last
+  4 to 8 weeks, on average, less what is on hand and still good at the end of
+  the day, in whole batches, with the ingredients short (today or tomorrow).
+  Each batch has a page: when it was made and by whom, what came out of what
+  was planned, and what became of it, made = sold + used + lost ± counts +
+  left, with every movement of its lot. A manager records a batch made
+  earlier today or yesterday, with why, not before the last approved count of
+  its items. A batch past its use-by with stock left is a red alert, one due
+  within a day an orange one. **Reports → Production** lists the batches made
+  in the dates. The migration was applied to the live database on 28
+  September 2026. The text stored there is the file byte for byte, and it
+  matches the tested build object by object, permissions included (the one
+  difference, as before, is the schema `citext` lives in). On applying, the
+  one item made in batches, the caramel gelato, began to be kept batch by
+  batch: its 3,000 g on hand became stock with no lot, the change on the audit
+  trail, and its three batches were numbered 1 to 3 in the order they were
+  made. It was checked as the owner and the barista, in a transaction that
+  was rolled back:
+  - the barista read the batches in stock, the day's plan (the caramel
+    gelato, with two days of history, too little to plan by) and batch 1's
+    page (made before `0046`, so with no story of its own), but could not
+    change a use-by, read Reports → Production or record a batch made earlier;
+  - the recipe set to keep 48 hours, its next batch was numbered 4, in lot B4,
+    used by two days after it was made; sent again with its key, the same
+    batch;
+  - the gelato then held 3,000 g with no lot and 1,000 g in B4, adding up to
+    its stock; the batch's page: made 1,000, left 1,000;
+  - its use-by changed to two hours on, with a reason: an orange alert, with
+    the 1,000 g left;
+  - a tenth of a batch recorded as made two hours before, with why: its stock
+    moved when it was made;
+  - no journal was written, and all ten checks stayed at zero.
+
+  Nothing was kept: every table's count is as it was, but for the audit row
+  of the gelato's tracking, the batch numbers' counter and the gelato's one
+  row of stock with no lot. The security advisors add the five new functions
+  a signed-in person calls and the two whose parameters changed, each
+  checking its permission; the performance advisors add notes on the new
+  tables. The screens went live with
+  [pull request #35](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/35). Built and tested: a new SQL suite (every rule above, the
+  plan, the alerts, who may, keys, and the lots adding up to the stock), a
+  concurrency case (ten tills selling a made gelato while a batch of it is
+  recorded), the production browser suite extended (a shelf life, a batch
+  used by it, one recorded late past its use-by, the alert, its use-by
+  changed, its page, the plan), unit tests, and every new text in Arabic and
+  Kurdish.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -883,7 +945,7 @@ browser tests through the real app, or both.
 | M-08 | Vendor balance and ageing disagree             |   ✅   | Both from the same bills and payments; payables reconciled to 2000                                                                                               |
 | M-09 | Discarding a published journal "succeeds"      |   ✅   | Refused with a clear message                                                                                                                                     |
 | M-10 | Platform reconciliation unreachable            |   ✅   | Each platform sale has its order number; a statement is matched order by order, and a person posts the payout (`0030`, [`guides/talabat.md`](guides/talabat.md)) |
-| M-11 | Production has no write path                   |   ✅   | Batches recorded, costed and cancelled (0023); planning, lots and moves between locations not built                                                              |
+| M-11 | Production has no write path                   |   ✅   | Batches recorded, costed and cancelled (0023); numbered, used by a date, kept batch by batch, and the day's plan (0046); moves between locations not built       |
 | M-12 | Movement value ≠ unit cost × quantity          |   ✅   | Enforced by a constraint                                                                                                                                         |
 | M-13 | Stock adjustments unchecked                    |   ✅   | Allowed types only, cost from the ledger, a reason, manager approval over the threshold, journal in the same transaction                                         |
 | M-14 | Documents contradict the code                  |   🟡   | Rewritten against the code; the September 2026 audit (Appendix B) found drift again, and `0024` fixes the lines it touches. No automated check                   |

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Decimal from "decimal.js";
 import { recordProductionAction } from "@/lib/actions/production";
 import { fmtIQD } from "@/lib/format";
+import { addDays, businessToday, dateTimeIn, localTimeToIso } from "@/lib/dates";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Rich } from "@/lib/i18n/Rich";
 import { Notice, inputStyle } from "@/components/ui";
@@ -34,7 +35,9 @@ export interface ProductionItem extends UnitsOf {
 /**
  * A batch made: which recipe, how many batches, and what came out — weighed,
  * counted in pans or pieces, or left as the recipe says. Before it is
- * recorded the form shows what it will take out of stock and put in.
+ * recorded the form shows what it will take out of stock and put in. It is
+ * used by its recipe's shelf life from when it was made, or by a date given;
+ * one made earlier is recorded by a manager, with why (0046).
  */
 export function RecordBatch({
   recipes,
@@ -42,6 +45,8 @@ export function RecordBatch({
   onHand,
   seesCost,
   decimals,
+  timezone,
+  canRecordLate,
 }: {
   recipes: BatchRecipe[];
   items: ProductionItem[];
@@ -49,6 +54,9 @@ export function RecordBatch({
   onHand: Record<string, number> | null;
   seesCost: boolean;
   decimals: number;
+  timezone: string;
+  /** A manager, who may record a batch made earlier today or yesterday. */
+  canRecordLate: boolean;
 }) {
   const op = useOperation();
   const { t, msg: say } = useT();
@@ -59,6 +67,10 @@ export function RecordBatch({
   const [outQty, setOutQty] = useState("");
   const [outUnit, setOutUnit] = useState(recipes[0]?.yieldUnit ?? "");
   const [note, setNote] = useState("");
+  const [useBy, setUseBy] = useState("");
+  const [late, setLate] = useState(false);
+  const [madeAt, setMadeAt] = useState("");
+  const [lateReason, setLateReason] = useState("");
   const [msg, setMsg] = useState<Msg>(null);
   const [needsManager, setNeedsManager] = useState(false);
 
@@ -95,6 +107,16 @@ export function RecordBatch({
   function submit(stockApprovalId: string | null = null) {
     if (!recipe) return;
     setMsg(null);
+    const producedAt = late ? localTimeToIso(madeAt, timezone) : null;
+    if (late && !producedAt) {
+      setMsg({ ok: false, text: t("Enter when it was made") });
+      return;
+    }
+    const givenUseBy = useBy.trim() ? localTimeToIso(useBy, timezone) : null;
+    if (useBy.trim() && !givenUseBy) {
+      setMsg({ ok: false, text: t("Enter a date and a time") });
+      return;
+    }
     start(async () => {
       const r = await op.run("recordProduction", (key) =>
         recordProductionAction(
@@ -105,6 +127,9 @@ export function RecordBatch({
             outputUnit: outQty.trim() === "" ? null : outUnit,
             note,
             stockApprovalId,
+            producedAt,
+            lateReason: late ? lateReason : null,
+            useBy: givenUseBy,
           },
           key,
         ),
@@ -113,24 +138,42 @@ export function RecordBatch({
       setNeedsManager(!r.ok && NEEDS_STOCK_APPROVAL.test(r.error));
       if (r.ok) {
         const made = showIn(new Decimal(r.data.actual), output, shownUnit);
+        const vars = { no: r.data.batchNo, made, output: recipe.outputName };
+        const recorded =
+          r.data.value === null
+            ? t("Recorded as batch {no}: {made} of {output} into stock.", vars)
+            : t(
+                "Recorded as batch {no}: {made} of {output} into stock. The ingredients cost {amount}.",
+                {
+                  ...vars,
+                  amount: fmtIQD(r.data.value),
+                },
+              );
         setMsg({
           ok: true,
-          text:
-            r.data.value === null
-              ? t("Recorded: {made} of {output} into stock.", { made, output: recipe.outputName })
-              : t("Recorded: {made} of {output} into stock. The ingredients cost {amount}.", {
-                  made,
-                  output: recipe.outputName,
-                  amount: fmtIQD(r.data.value),
-                }),
+          text: r.data.useBy
+            ? `${recorded} ${t("Use it by {when}.", { when: dateTimeIn(timezone, r.data.useBy) })}`
+            : recorded,
         });
         setBatches("1");
         setOutQty("");
         setNote("");
+        setUseBy("");
+        setLate(false);
+        setMadeAt("");
+        setLateReason("");
         router.refresh();
       } else setMsg({ ok: false, text: r.error });
     });
   }
+
+  // The use-by a batch gets when none is given: its recipe's shelf life.
+  const keeps = recipe?.shelfLifeHours ?? null;
+  const useByHint = !keeps
+    ? t("Left empty: no use-by, as its recipe keeps no shelf life.")
+    : keeps % 24 === 0
+      ? t("Left empty: {n} day(s) from when it is made, as its recipe keeps.", { n: keeps / 24 })
+      : t("Left empty: {n} hour(s) from when it is made, as its recipe keeps.", { n: keeps });
 
   const diff = planned && actual ? actual.minus(planned) : null;
   return (
@@ -199,7 +242,50 @@ export function RecordBatch({
             placeholder={t("e.g. a little thick, left to rest")}
           />
         </label>
+        <label>
+          <span>{t("Use by (optional)")}</span>
+          <input
+            type="datetime-local"
+            aria-label={t("Use by")}
+            style={inputStyle}
+            value={useBy}
+            onChange={(e) => setUseBy(e.target.value)}
+          />
+          <span className="muted" style={{ fontSize: ".75rem" }} data-testid="use-by-hint">
+            {useByHint}
+          </span>
+        </label>
       </div>
+      {canRecordLate && (
+        <div className="pr-late" data-testid="made-earlier">
+          <label style={{ display: "flex", gap: 6, alignItems: "center", fontSize: ".85rem" }}>
+            <input type="checkbox" checked={late} onChange={(e) => setLate(e.target.checked)} />
+            {t("Made earlier: yesterday or today, recorded now")}
+          </label>
+          {late && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <input
+                type="datetime-local"
+                aria-label={t("When it was made")}
+                style={inputStyle}
+                value={madeAt}
+                min={`${addDays(businessToday(timezone), -1)}T00:00`}
+                onChange={(e) => setMadeAt(e.target.value)}
+              />
+              <input
+                aria-label={t("Why it is recorded late")}
+                style={{ ...inputStyle, minWidth: 240 }}
+                value={lateReason}
+                onChange={(e) => setLateReason(e.target.value)}
+                placeholder={t("Why? e.g. made before opening, recorded now")}
+              />
+              <span className="muted" style={{ fontSize: ".75rem" }}>
+                {t("Not before the last approved count of its items.")}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {recipe && b && (
         <div className="pr-preview" data-testid="batch-preview">

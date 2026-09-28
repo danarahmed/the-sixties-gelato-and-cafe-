@@ -1,10 +1,21 @@
 import "server-only";
 /**
- * What the café makes in batches, and the batches made (migration 0023). Both
- * come from database functions that check the person's permission; a batch's
- * cost comes back only to those who may see costs.
+ * What the café makes in batches, and the batches made (migration 0023); their
+ * numbers, use-by dates and lots, what became of each, and the day's plan
+ * (0046). All come from database functions that check the person's
+ * permission; a batch's cost comes back only to those who may see costs.
  */
-import { db, num, numOrNull, rows, str, strOrNull } from "./client";
+import { db, num, numOrNull, one, rows, str, strOrNull } from "./client";
+import {
+  lotsFrom,
+  planFrom,
+  productionReportFrom,
+  reconciliationFrom,
+  type BatchReconciliation,
+  type ProductionLot,
+  type ProductionPlan,
+  type ReportBatch,
+} from "@/lib/production";
 
 export interface BatchRecipeLine {
   itemId: string;
@@ -29,6 +40,8 @@ export interface BatchRecipe {
   instructions: string | null;
   isActive: boolean;
   lines: BatchRecipeLine[];
+  /** How long what it makes keeps, in hours; null when it has no use-by (0046). */
+  shelfLifeHours: number | null;
 }
 
 export async function getBatchRecipes(): Promise<BatchRecipe[]> {
@@ -51,6 +64,7 @@ export async function getBatchRecipes(): Promise<BatchRecipe[]> {
         unitCode: str(l.unit_code),
         baseQty: num(l.base_qty),
       })),
+      shelfLifeHours: numOrNull(r.shelf_life_hours),
     }),
   );
 }
@@ -76,6 +90,13 @@ export interface BatchRow {
   cancelReason: string | null;
   /** What the ingredients cost; null for those who do not see costs. */
   value: number | null;
+  /** Its number, from the café's batch counter (0046). */
+  batchNo: number;
+  useBy: string | null;
+  /** What is left in its lot; null for a batch made before lots. */
+  leftBase: number | null;
+  /** Why it was recorded after it was made. */
+  lateReason: string | null;
 }
 
 export async function getBatches(limit = 50): Promise<BatchRow[]> {
@@ -100,6 +121,38 @@ export async function getBatches(limit = 50): Promise<BatchRow[]> {
       cancelledBy: strOrNull(r.cancelled_by),
       cancelReason: strOrNull(r.cancel_reason),
       value: numOrNull(r.value),
+      batchNo: num(r.batch_no),
+      useBy: strOrNull(r.use_by),
+      leftBase: numOrNull(r.left_base),
+      lateReason: strOrNull(r.late_reason),
     }),
+  );
+}
+
+/** What to make on a day, from what sold on that weekday in the weeks before. */
+export async function getProductionPlan(day?: string): Promise<ProductionPlan> {
+  const c = await db();
+  return planFrom(one(await c.rpc("production_plan", { p_day: day ?? null }), "the day's plan"));
+}
+
+/** The lots with stock left, the one used by first first. */
+export async function getProductionLots(): Promise<ProductionLot[]> {
+  const c = await db();
+  return lotsFrom(one(await c.rpc("production_lots", {}), "the batches in stock"));
+}
+
+/** One batch: what it made, and what became of it; null when there is no such batch. */
+export async function getBatchReconciliation(batchId: string): Promise<BatchReconciliation | null> {
+  const c = await db();
+  const res = await c.rpc("batch_reconciliation", { p_batch: batchId });
+  if (res.error?.message.includes("Batch not found")) return null;
+  return reconciliationFrom(one(res, "the batch"));
+}
+
+/** Reports → Production: the batches made in the dates. */
+export async function getProductionReport(from: string, to: string): Promise<ReportBatch[]> {
+  const c = await db();
+  return productionReportFrom(
+    one(await c.rpc("report_production", { p_from: from, p_to: to }), "the production report"),
   );
 }

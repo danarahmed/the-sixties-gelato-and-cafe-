@@ -319,6 +319,29 @@ discount, why and who approved it. The 10% is a business setting (shown on
   supplier takes to deliver: running out warns that much sooner for what they
   supply.
 
+## Every day, in the kitchen
+
+- **What to make** (**Production**): the day's plan says, for each thing you
+  make, what it sold and was used on this weekday over the last four to eight
+  weeks, what is on hand and still good at the end of the day, and so how
+  many batches to make, with the ingredients that will be short. **Tomorrow**
+  shows the next day. Until four weeks of history, it says there is not
+  enough to judge by.
+- **Use-by dates:** give each recipe how long it keeps (**Change…**, _What it
+  makes keeps for_), and every batch is used by then from when it was made,
+  unless a date is given when it is recorded. **In stock by batch** lists
+  every batch with something left, the one to use first first: sales take
+  it in that order, and one past its use-by last. A batch due within a day is
+  an orange alert; one past it, red: record what is left as expired on
+  **Inventory**, or, if the date was wrong, a manager changes it
+  (**Change the use-by…**, with why).
+- **A batch forgotten:** a manager records a batch made earlier today or
+  yesterday (**Made earlier**), with why; not before the last approved count
+  of its items.
+- **Each batch's page** (its number on Production, or Reports → Production)
+  says what came out and what became of it — sold, used in other batches,
+  lost, found or missing on a count, still in stock — every bit accounted for.
+
 ## Every week
 
 - **What to buy** (**Purchasing → Open What to buy**, or the dashboard's alert

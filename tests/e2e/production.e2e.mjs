@@ -1,9 +1,14 @@
 // Production through the real screens: the owner sets up a base and a
 // flavour made from it, kept in pans; a barista records two batches of the
 // base and is never shown a cost; the owner records a batch of the flavour,
-// weighed short, and sees what it cost; a manager cancels it; and a product's
-// recipe is changed from today on Products & Recipes. (Run last: it adds a
-// barista, and the espresso's costs are read as the other suites left them.)
+// weighed short, and sees what it cost; a manager cancels it. Then batches
+// and their use-by (0046): the base keeps three days, a barista's batch is
+// used by then, a manager records one made earlier and already past its
+// use-by, the dashboard says so, the manager changes it with a reason, a
+// batch's own page accounts for every litre, and the day's plan waits for
+// history. Last, a product's recipe is changed from today on Products &
+// Recipes. (Run last: it adds a barista, and the espresso's costs are read as
+// the other suites left them.)
 import { chromium, check, done, open, signIn, sql } from "./lib.mjs";
 
 const browser = await chromium.launch();
@@ -105,7 +110,9 @@ console.log("▸ a barista records two batches of the base, and is shown no cost
     "before recording, the barista sees what it will use: 8 L of milk, 1,600 g of sugar",
   );
   await page.getByRole("button", { name: "Record batch" }).click();
-  await page.getByText("Recorded: 10 L of E2E base into stock.").waitFor({ timeout: 10000 });
+  await page
+    .getByText(/Recorded as batch \d+: 10 L of E2E base into stock\.$/)
+    .waitFor({ timeout: 10000 });
   check(
     !(await page.locator("main").innerText()).includes("IQD"),
     "no cost anywhere on the barista's page",
@@ -138,7 +145,7 @@ console.log("▸ owner records a batch of the flavour, weighed short");
   await page.getByRole("button", { name: "Record batch" }).click();
   await page
     .getByText(
-      "Recorded: 4.6 kg of E2E pistachio gelato into stock. The ingredients cost 21,264 IQD.",
+      /Recorded as batch \d+: 4\.6 kg of E2E pistachio gelato into stock\. The ingredients cost 21,264 IQD\.$/,
     )
     .waitFor({ timeout: 10000 });
   const moved =
@@ -179,6 +186,175 @@ console.log("▸ a manager cancels the flavour's batch");
     "and the gelato it made is out of stock again",
   );
   check(inventoryGap() === gapBefore, "cancelling it leaves the reconciliation unmoved too");
+  await ctx.close();
+}
+
+// Times on the café's clock, as a date-and-time field takes them.
+const clock = (shift) =>
+  sql(
+    `select to_char((now() + interval '${shift}') at time zone timezone, 'YYYY-MM-DD"T"HH24:MI') from business where id = '${B}'`,
+  );
+const batchOf = (where) =>
+  sql(
+    `select b.id || ' ' || b.batch_no from production_batch b join recipe r on r.id = b.recipe_id
+      where r.name = 'E2E base' and ${where} order by b.batch_no desc limit 1`,
+  ).split(" ");
+
+console.log("▸ the base keeps three days; a barista's batch is used by then");
+{
+  // The base was set up weeks ago: a batch made yesterday is made by it.
+  sql(`update recipe_version set effective_from = current_date - 30
+        where recipe_id = (select id from recipe where name = 'E2E base')`);
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/production");
+  // The base's own card (the flavour's lists the base as an ingredient).
+  const baseCard = () =>
+    page
+      .locator(".pr-recipe")
+      .filter({ has: page.locator(".pr-recipe-head strong", { hasText: /^E2E base$/ }) });
+  const card = baseCard();
+  await card.getByRole("button", { name: "Change…" }).click();
+  await card.getByLabel("How long it keeps").fill("3");
+  await card.getByLabel("Days or hours").selectOption("days");
+  await card.getByRole("button", { name: "Save changes" }).click();
+  await page.getByTestId("recipe-keeps").first().waitFor({ timeout: 10000 });
+  check(
+    (await baseCard().innerText()).includes("keeps 3 day(s)"),
+    "the base keeps 3 days, as its card says",
+  );
+  check(
+    sql("select shelf_life_hours from recipe where name = 'E2E base'") === "72",
+    "72 hours, kept with its recipe",
+  );
+  await ctx.close();
+}
+{
+  const { ctx, page } = await signIn(browser, "barista");
+  await open(page, "/production");
+  await page.getByLabel("What did you make").selectOption({ label: "E2E base" });
+  check(
+    (await page.getByTestId("use-by-hint").innerText()) ===
+      "Left empty: 3 day(s) from when it is made, as its recipe keeps.",
+    "the form says the batch is used by three days on, unless a date is given",
+  );
+  check(
+    (await page.getByTestId("made-earlier").count()) === 0,
+    "a barista records a batch as it is made",
+  );
+  await page.getByRole("button", { name: "Record batch" }).click();
+  await page
+    .getByText(
+      /Recorded as batch \d+: 5 L of E2E base into stock\. Use it by \d{4}-\d{2}-\d{2} \d{2}:\d{2}\.$/,
+    )
+    .waitFor({ timeout: 10000 });
+  const [, no] = batchOf("b.late_reason is null");
+  check(
+    sql(`select use_by - produced_at from production_batch where batch_no = ${no}`) === "3 days",
+    "its use-by is three days after it was made",
+  );
+  const row = page.locator(`[data-testid="lot-row"][data-lot="B${no}"]`);
+  await row.waitFor({ timeout: 10000 });
+  check((await row.getAttribute("data-status")) === "good", "its batch is listed in stock, good");
+  await ctx.close();
+}
+
+console.log("▸ a manager records a batch made earlier, already past its use-by");
+let lateId;
+let lateNo;
+{
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/production");
+  const form = page.locator(".pr-record");
+  await form.getByLabel("What did you make").selectOption({ label: "E2E base" });
+  await form.getByLabel("Made earlier: yesterday or today, recorded now").check();
+  await form.getByLabel("When it was made").fill(clock("-2 hours"));
+  await form.getByLabel("Why it is recorded late").fill("Made before opening");
+  await form.getByLabel("Use by", { exact: true }).fill(clock("-1 hour"));
+  await form.getByRole("button", { name: "Record batch" }).click();
+  await page
+    .getByText(/Recorded as batch \d+: 5 L of E2E base into stock\./)
+    .waitFor({ timeout: 10000 });
+  [lateId, lateNo] = batchOf("b.late_reason = 'Made before opening'");
+  check(
+    sql(
+      `select produced_at < created_at - interval '90 minutes' from production_batch where id = '${lateId}'`,
+    ) === "t",
+    "it is kept as made two hours ago, with why",
+  );
+  const row = page.locator(`[data-testid="lot-row"][data-lot="B${lateNo}"]`);
+  await row.waitFor({ timeout: 10000 });
+  check((await row.getAttribute("data-status")) === "expired", "and listed as past its use-by");
+  check(
+    // Read as written: the badge's style shows it in capitals.
+    (
+      await page.locator(`[data-testid="batch-row"][data-batch="${lateNo}"]`).textContent()
+    ).includes("recorded late"),
+    "the batches list marks it recorded late",
+  );
+  await ctx.close();
+}
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/dashboard");
+  const alert = page.locator('[data-testid="alert"][data-rule="use_by"]', {
+    hasText: `E2E base, batch ${lateNo}, is past its use-by`,
+  });
+  await alert.waitFor({ timeout: 10000 });
+  check(
+    (await alert.getAttribute("data-urgency")) === "red" &&
+      (await alert.innerText()).includes("5000 ml left"),
+    "the dashboard says the batch is past its use-by, with what is left: red",
+  );
+  await ctx.close();
+}
+
+console.log("▸ the manager changes its use-by, with a reason; its page accounts for it");
+{
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/production");
+  const row = page.locator(`[data-testid="lot-row"][data-lot="B${lateNo}"]`);
+  await row.getByTestId("change-use-by").click();
+  await row.getByLabel("Use by", { exact: true }).fill(clock("5 hours"));
+  await row.getByLabel("Why the use-by changes").fill("Checked: still good");
+  await row.getByRole("button", { name: "Save the use-by" }).click();
+  await page
+    .locator(`[data-testid="lot-row"][data-lot="B${lateNo}"]:not([data-status="expired"])`)
+    .waitFor({ timeout: 10000 });
+  check(
+    sql(
+      `select count(*) || ' ' || max(reason) from audit_log where action = 'production.use_by' and entity_id = '${lateId}'`,
+    ) === "1 Checked: still good",
+    "the change is on the audit trail with its reason",
+  );
+  await open(page, `/production/batches/${lateId}`);
+  await page.getByTestId("batch-page").waitFor({ timeout: 10000 });
+  check(
+    (await page.locator("h1").innerText()) === `Batch ${lateNo}: E2E base`,
+    "a batch has a page of its own",
+  );
+  check(
+    (await page.getByTestId("story-made").innerText()) === "5 L" &&
+      (await page.getByTestId("story-check").innerText()).startsWith("Every bit accounted for"),
+    "made, and every litre of it accounted for",
+  );
+  check(
+    (await page.locator("main").innerText()).includes("Made before opening"),
+    "with why it was recorded late",
+  );
+  await ctx.close();
+}
+
+console.log("▸ the day's plan waits for four weeks of history");
+{
+  const { ctx, page } = await signIn(browser, "barista");
+  await open(page, "/production");
+  const row = page.locator('[data-testid="plan-row"][data-recipe="E2E base"]');
+  await row.waitFor({ timeout: 10000 });
+  check(
+    (await row.getAttribute("data-status")) === "no_history" &&
+      (await row.innerText()).includes("day(s) of history: 28 are needed"),
+    "a base first made today has too little history to plan by",
+  );
   await ctx.close();
 }
 

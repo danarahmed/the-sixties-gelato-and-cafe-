@@ -261,6 +261,54 @@ ok "$(sql "select trim_scale((item_position('00000000-0000-0000-0000-0000000000b
                                              default_location('00000000-0000-0000-0000-0000000000b1'))).qty)")" "0" \
    "the books hold none of it, not less"
 
+# 0046 — ten tills sell a cup of the gelato made here (200 g each) while a
+# second batch of it is recorded, all at the same instant, from a first batch
+# of 1 kg, under the rule that refuses a made item below zero: each sale is
+# recorded or told there is not enough, and every gram is taken from a lot one
+# sale at a time: no lot gives what another sale took, none goes below zero,
+# and the lots add up to the stock.
+sql "insert into item (id, business_id, sku, name, item_type, base_unit_code, dimension) values
+       ('c0000000-0000-0000-0000-0000000000c3', '00000000-0000-0000-0000-0000000000b1', 'RACE-MILK', 'Race milk',
+        'ingredient', 'ml', 'volume');
+     select test.act_as('owner@example.com');
+     select record_opening_stock('c0000000-0000-0000-0000-0000000000c3', 100000, 'ml', 1, 'race');" >/dev/null
+RECIPE=$(sql "select test.act_as('owner@example.com');
+              select save_batch_recipe(null, 'Race gelato', '{\"measure\":\"weight\"}', 1, 'kg',
+                '[{\"item_id\":\"c0000000-0000-0000-0000-0000000000c3\",\"qty\":1000,\"unit_code\":\"ml\"}]',
+                null, true, 48) ->> 'recipe_id'" | tail -1)
+GELATO=$(sql "select output_item_id from recipe where id = '$RECIPE'")
+CUP=$(sql "select test.act_as('owner@example.com');
+           select create_product('Race gelato cup', '{\"dine_in\": 1500}',
+             '[{\"item_id\":\"$GELATO\",\"qty\":200,\"unit_code\":\"g\"}]') ->> 'variant_id'" | tail -1)
+sql "select test.act_as('owner@example.com'); select record_production('$RECIPE', 1);" >/dev/null
+rm -f "$WORK"/*.out
+"${PSQL[@]}" -d "$DB" -c "select pg_advisory_lock(424242), pg_sleep(1.5)" >/dev/null &
+sleep 0.4
+for i in $(seq 1 10); do
+  ( "${PSQL[@]}" -d "$DB" -c "select test.act_as('cashier@example.com')" -c "select pg_advisory_lock_shared(424242)" \
+      -c "select record_sale(gen_random_uuid(), 'dine_in', 'card', '[{\"variant_id\":\"$CUP\",\"qty\":1}]') ->> 'order_id'" \
+      >"$WORK/$i.out" 2>&1 || true ) &
+done
+( "${PSQL[@]}" -d "$DB" -c "select test.act_as('owner@example.com')" -c "select pg_advisory_lock_shared(424242)" \
+    -c "select record_production('$RECIPE', 1) ->> 'batch_no'" >"$WORK/batch.out" 2>&1 || true ) &
+wait
+CUPS=$(sql "select count(*) from sales_order_line where product_variant_id = '$CUP'")
+ok "$(( CUPS + $(grep -l 'is in stock' "$WORK"/[0-9]*.out | wc -l | tr -d ' ') ))" "10" \
+   "ten tills sell the gelato while a batch of it is recorded: each sale is recorded, or told there is not enough"
+ok "$(grep -c 'ERROR' "$WORK/batch.out" || true)" "0" "the batch is recorded beside them"
+ok "$(sql "select trim_scale((item_position('00000000-0000-0000-0000-0000000000b1', '$GELATO',
+                                             default_location('00000000-0000-0000-0000-0000000000b1'))).qty)")" \
+   "$(( 2000 - 200 * CUPS ))" "the stock is the two batches less the cups sold, never below zero"
+ok "$(sql "select coalesce(sum(base_qty), 0) = (item_position('00000000-0000-0000-0000-0000000000b1', '$GELATO',
+                                                              default_location('00000000-0000-0000-0000-0000000000b1'))).qty
+             from lot_movement where item_id = '$GELATO'")" "t" "its lots add up to its stock"
+ok "$(sql "select count(*) from item_lot l where l.item_id = '$GELATO'
+             and (l.left_base < 0 or l.left_base <> (select coalesce(sum(base_qty), 0) from lot_movement where lot_id = l.id))")" \
+   "0" "no lot gives more than it holds, and each holds what its rows say"
+ok "$(sql "select count(*) from inventory_movement m where m.item_id = '$GELATO' and m.type = 'sale_consumption'
+             and (select sum(base_qty) from lot_movement where movement_id = m.id) <> m.base_quantity_signed")" \
+   "0" "each sale is split by lot exactly, gram for gram"
+
 # The books still tie after all of it.
 ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(test.today())")" \
    "0,0,0,0,0,0,0,0,0,0" "every subledger still reconciles to its control account"

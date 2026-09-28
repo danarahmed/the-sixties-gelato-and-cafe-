@@ -26,6 +26,9 @@ erDiagram
   item ||--o{ inventory_movement : "ledger (append-only)"
   location ||--o{ inventory_movement : at
   item ||--o{ item_lot : "lot/expiry"
+  production_batch ||--o| item_lot : "makes a lot"
+  item_lot ||--o{ lot_movement : "gives and takes"
+  inventory_movement ||--o{ lot_movement : "split by lot"
 
   supplier ||--o{ purchase_order : from
   item ||--o{ item_supplier : "bought from"
@@ -1180,3 +1183,39 @@ amount, key)` (`accounting.post`) sets what is left of a credit against a
 - **`alert_conditions`** wraps 0040's (`alert_conditions_0040`): running out
   and below the reorder level, for an item that no active batch recipe makes,
   link to `/purchasing/buying-list`; everything else is as it was.
+
+### Batches, use-by dates and lots (`0046`)
+
+- **`recipe.shelf_life_hours`** (1 to 8,760, or none): how long what it makes
+  keeps. **`production_batch`** gains `batch_no` (the café's `batch` counter;
+  the batches before numbered in the order they were made), `use_by` and
+  `late_reason`; `expiry_date` and `output_lot_id` are filled at last.
+- **`item_lot`** gains `use_by`, `production_batch_id` (one lot a batch),
+  `location_id`, `left_base` (what it holds, kept with its rows) and
+  `created_at`. `item.track_lot` is set by an item's first batch (and by
+  `0046` for the recipe outputs already there), on the audit trail with why.
+- **`lot_movement`** (movement, lot — none for stock with no lot —, item,
+  location, `base_qty`), append-only, readable by those who see costs, written
+  only by the trigger on `inventory_movement` (`allocate_lots`, the rules in
+  [`CALCULATIONS.md`](CALCULATIONS.md)); a row with no movement is what an
+  item had when it began to be tracked. Cleared with the test records.
+- **`record_production(…, produced_at, use_by, late_reason, key)`**: the
+  batch numbered, its use-by, its lot, its stock moved when it was made; one
+  made more than an hour ago by `inventory.adjust.approve` only, with a
+  reason, yesterday's at the earliest, not in a locked month and not before
+  the last approved count of its items. `production.record` on the trail
+  gains its number, use-by, and when it was made.
+- **`set_batch_use_by(batch, use_by, reason, key)`**
+  (`inventory.adjust.approve`): the batch's and its lot's; on the trail as
+  `production.use_by`. **`save_batch_recipe(…, shelf_life_hours, key)`**:
+  left out keeps it, 0 takes it away.
+- **Reads:** `production_batches` gains the number, use-by, what is left and
+  why it was late; `production_recipes` the shelf life;
+  `batch_reconciliation(batch)` and `production_lots(location)`
+  (`production.record` or `cost.view`); `production_plan(day, location)`
+  (the same); `report_production(from, to)` (`cost.view`).
+- **`alert_conditions`** wraps 0045's (`alert_conditions_0045`) and adds
+  `use_by`: a lot with stock left, orange within a day of its use-by, red past
+  it, linking to `/production#lots`.
+- `void_sale` locks its items before it gives them back, and `review_loss`
+  names the loss its reversal takes back, so each goes back to its lots.
