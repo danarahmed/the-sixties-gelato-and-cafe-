@@ -53,7 +53,7 @@ select test.eq((select closing from tb2 where code = '1010'), 2500::numeric, 'bu
 -- Every subledger reconciles; the unbilled receipt sits in GRNI.
 create temp table rec as select * from report_reconciliation((select d from today));
 select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from rec),
-  'card=0,documents=0,drawer=0,grni=0,inventory=0,payables=0,platform=0,safe=0,sales=0', 'every subledger agrees with its control account');
+  'card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,platform=0,safe=0,sales=0', 'every subledger agrees with its control account');
 select test.eq((select subledger from rec where check_key = 'grni'), 2500::numeric, 'the unbilled receipt is in GRNI');
 
 -- The dashboard is the ledger too.

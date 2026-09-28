@@ -8,9 +8,15 @@ import { VendorsClient } from "@/components/books/VendorsClient";
 
 export const dynamic = "force-dynamic";
 
-/** Accounts a non-stock bill may be charged to (the database enforces the same list). */
+/**
+ * Accounts a non-stock bill may not be charged to (the database refuses the
+ * same list): cash, in dinars and dollars, the card's and the bank's, and stock.
+ */
 const NOT_FOR_BILLS = new Set([
   "1000",
+  "1001",
+  "1005",
+  "1006",
   "1010",
   "1020",
   "1100",

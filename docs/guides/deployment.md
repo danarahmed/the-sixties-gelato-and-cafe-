@@ -40,6 +40,7 @@ Plan a short window when the café is closed.
 | The café's rules (`0040`)               | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0040`](#after-0040)). The screens were merged ([pull request #29](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/29)) and deployed                                  |
 | Sizes and add-ons (`0041`)              | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0041`](#after-0041)). The screens were merged ([pull request #30](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/30)) and deployed                                  |
 | Split payments (`0042`)                 | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0042`](#after-0042)). The screens were merged ([pull request #31](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/31)) and deployed                                  |
+| US dollars at the till (`0043`)         | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0043`](#after-0043)). The screens were merged ([pull request #32](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/32)) and deployed                  |
 
 ## 0. Before you start
 
@@ -1218,6 +1219,97 @@ The security advisor adds only `report_payments`, and lists `record_sale`,
 `settle_tab` and `refund_sale_lines` under their new signatures, each checking
 its permission. The performance advisor adds nothing, and drops its note that
 a sale's payments had no index by sale.
+
+## After `0043`
+
+Migration `0043` (release R) lets the till take US dollars:
+
+- **The rate**: a manager (owner, general manager, branch manager) sets the
+  day's rate on Sales → Dollars, saying where it comes from. Every rate is
+  kept. Dollars are refused with no rate, or with one older than the café's
+  rule (36 hours).
+- **A payment in dollars** is whole dollars at the rate the till showed,
+  which the database checks against the rate now. They are worth their
+  dinars to the nearest 250 (a rule too); the change is in dinars, from the
+  drawer. Dollars worth less than the bill pay their part, and the rest is
+  paid in dinars or by card.
+- **The dollars' own drawer**: the till's dollars and the safe's, beside the
+  dinars and never mixed with them. A void gives them back; a refund is in
+  dinars.
+- **Each close** counts the till's dollars, blind, and takes them all to the
+  safe; a difference goes to cash over and short at what they were taken at.
+- **Exchanging dollars** for dinars, from the safe or the till into the
+  till, the safe or the bank; the difference goes to 6950 Exchange
+  differences.
+- **Reports → Dollars**, and a tenth check of the books: the dollars held
+  against 1001 and 1006.
+- **No bill is charged to cash**: the bill form offered the safe first, so a
+  bill for a service left as it was would have put cash in the safe that
+  nobody moved there. The safe and the dollars' accounts are refused, as the
+  till's, the card's and the bank's were.
+
+What it adds:
+
+- the accounts 1001 Cash in the till — USD, 1006 Cash in the safe — USD and
+  6950 Exchange differences, for every café;
+- the tables `fx_rate`, `fx_cash_event`, `session_dollar_count` and
+  `fx_exchange`, each readable only by those who may, and never changed;
+- on `sales_tender`: the currency, the dollars (`foreign_amount`) and the
+  rate;
+- `p_usd_counted` and `p_usd_denominations` on `close_cash_session`,
+  `hand_over_session` and `force_close_session` (new signatures);
+- four functions signed-in users may call: `set_fx_rate` (`fx.rate`, a new
+  permission for the owner and the managers), `fx_status`, `exchange_dollars`
+  (managers and accountants) and `report_dollars` (`cost.view`);
+- two rules on Settings: `usd_rate_max_age_hours` and `usd_round_to`.
+
+It goes in before the screens: those deployed before it keep working (they
+send no dollars, and a close from them is the same request as before), and
+the new ones take dollars once a manager sets a rate.
+
+It was applied on 28 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0042` build and that nothing had
+been recorded since. The text stored there is the file byte for byte (md5
+`72e1ca11b203799a0c733f7e670eeaf9`, 114,883 bytes). It was then compared with
+the tested build, object by object, the role permissions and column grants
+included: identical, but for the schema `citext` lives in, as before.
+
+It was checked as the owner and the barista, in a transaction that was rolled
+back:
+
+- **Bills:** a bill charged to the safe (1005) or to the till's dollars (1001)
+  was refused.
+- **The rate:** with none, a sale in dollars was refused ("No dollar rate is
+  set"); the barista could not set one; the owner set 1,310.
+- **A sale in dollars:** a latte (3,500) paid with $3: 4,000 IQD, 500 change
+  from the drawer, the till's dollars +$3 at 4,000. Its journal:
+  `1000 Cr 500 | 1001 Dr 4000 | 1200 Cr 817 | 4000 Cr 3500 | 5000 Dr 817`.
+- **Refused:** a rate other than the rate now ("The dollar rate is now 1310,
+  not the 1300 shown"), $1 for a 3,500 latte, and dollars by card.
+- **Dollars and a card:** $1 (1,250) and 5,750 by card for two lattes.
+- **A void** gave the $3 back to the till's dollars and took the 500 change
+  back into the drawer; **a refund** of one of the two lattes was in dinars
+  and by card.
+- **The close** of the drawer (opened for the test at what it should hold)
+  counted the dinars true and $3 of the $4 the till held. Its journal:
+  `1001 Cr 5250 | 1006 Dr 3938 | 6300 Dr 1312`.
+- **The exchange:** more than the safe held was refused; its $3 went into the
+  bank for 4,188. Its journal: `1006 Cr 3938 | 1020 Dr 4188 | 6950 Cr 250`.
+- **The report** gave 2 sales, $4 worth 5,250, 500 change, and the two
+  differences.
+- **The books:** all ten checks at zero, no record without its journal.
+
+Nothing was kept: every table's count is as it was (40 sales, 40 payments, 20
+drawer events, 286 stock movements, journals to 1091, 35 audit rows), but the
+three new accounts (29 → 32) and the new permission for three roles (100 →
+103); the four new tables are empty.
+
+The security advisor adds `set_fx_rate`, `fx_status`, `exchange_dollars` and
+`report_dollars`, and lists the three closes under their new signatures, each
+checking its permission. The performance advisor adds notes that ten of the
+new tables' links have no index of their own and that one new index is not
+used yet.
 
 ## Clearing the test records
 

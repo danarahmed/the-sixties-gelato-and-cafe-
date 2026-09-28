@@ -167,6 +167,14 @@ owner
      four payments, one of them in cash), **✕** takes one off. Type the cash
      handed over for the cash part to see the change. **Confirm** waits
      until the payments come to the total;
+   - in US dollars (`0043`): **$ Dollars**, shown while a manager's rate is
+     recent enough (the window says the rate). Type the dollars handed over,
+     or tap one of the amounts suggested (the fewest that pay first): their
+     value in dinars is shown, to the nearest 250, and the change, given in
+     dinars. Dollars worth less than the total pay what they are worth: choose
+     how the rest is paid, cash or card. If the rate changed since the till
+     read it, the payment is refused and the till reads the new rate: confirm
+     again;
    - on Talabat: **🧾 Complete (paid through the platform)**, then type the
      **Talabat order number** from the tablet (the `#` can be left out).
      Nothing is recorded without it, and a number already recorded is
@@ -308,6 +316,20 @@ general manager and the accountant
   themselves (3200 Owner drawings), and money to or from the owner says what it
   is for. Neither the till nor the safe can pay out more than the books say it
   holds.
+- **Dollars** (`/sales#dollars`, `0043`): the dollar's rate, who set it, when
+  and why, and the rates before. A manager (the owner, a general or branch
+  manager) sets today's: **Today's rate: dinars a dollar**, **Where it comes
+  from**, **Set the rate**. The till takes dollars at it for 36 hours; older,
+  it says no dollars are taken until a new rate is set. Below, **Dollars
+  held**: the safe's, and a till's if a close left some uncounted, each with
+  what they were taken at. **Exchange dollars for dinars** (managers and
+  accountants): from the safe or the till, how many, the **Dinars received**,
+  and where they go (the till, the safe or the bank). The answer says what
+  they were taken at and the gain or loss, posted to 6950 Exchange
+  differences. When the till took dollars, closing the drawer asks for them
+  too (**Dollars in the till**), counted blind like the dinars, total or note
+  by note; they all go to the safe, and a dollar missing or found goes to
+  6300 at what they were taken at.
 - **Card Takings** (`/sales#card`): each day's card takings not yet settled,
   less card refunds and voids. When the bank pays them:
   1. Choose the last day the payment covers in **Settle the days up to**. Only
@@ -844,6 +866,11 @@ accountant's own tools.
   paid two ways), what it took, what refunds gave back that way, the net, and
   the change cash gave. A sale paid in cash and by card counts under each,
   for its part; the net of all of them is the net of Sales by Channel.
+- **Dollars** (`0043`): the sales paid in dollars in the dates, how many
+  dollars, what they were taken at, what they paid and the change given in
+  dinars; by rate; the exchanges with their differences; each close's count
+  of the dollars; the exchange differences (6950) and the dollars counted
+  over or short (6300); and what the tills and the safe hold now.
 
 ## 19. Audit trail
 

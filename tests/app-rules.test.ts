@@ -75,6 +75,18 @@ import {
 } from "@/lib/alerts";
 import { exceptionsByPerson, type ExceptionRow } from "@/lib/exceptions";
 import {
+  checkDollars,
+  dollarsFor,
+  dollarsReportFrom,
+  fmtUSD,
+  fxStatusFrom,
+  RATE_REFUSED,
+  suggestedDollars,
+  usdValue,
+} from "@/lib/fx";
+import { howPaid as howPaidUsd, paidPart as paidPartUsd } from "@/lib/payments";
+import { payments as paymentsSchema } from "@/lib/validation";
+import {
   cancellableCard,
   cardMath,
   matchIssues,
@@ -2425,5 +2437,257 @@ describe("split payments (0042), as the database takes them", () => {
       "The refund is 2500, but the payments given back come to 2000",
     );
     expect(checkRefundSplit(left, { cash: "x" }, 2500).problem).toEqual({ kind: "notNumber" });
+  });
+});
+
+describe("US dollars at the till (0043), as the database takes them", () => {
+  it("values dollars at the rate, to the café's step, half-way up", () => {
+    expect(usdValue(5, 1310, 250)).toBe(6500); // 6,550
+    expect(usdValue(2, 1310, 250)).toBe(2500); // 2,620
+    expect(usdValue(10, 1310, 250)).toBe(13000); // 13,100
+    expect(usdValue(20, 1310, 250)).toBe(26250); // 26,200
+    expect(usdValue(1, 1375, 250)).toBe(1500); // 1,375: half-way rounds up
+    expect(usdValue(7, 1310, 500)).toBe(9000); // 9,170
+    expect(usdValue(7, 1310, 250)).toBe(9250);
+  });
+
+  it("gives the till's value as the database works it out, on 60 cases", () => {
+    // [usd, rate, step, the database's usd_value]: floor(usd × rate / step + 0.5) × step.
+    const cases: [number, number, number, number][] = [
+      [38, 1053, 50, 40000],
+      [75, 1106, 100, 83000],
+      [112, 1159, 250, 129750],
+      [149, 1212, 500, 180500],
+      [186, 1265, 1000, 235000],
+      [23, 1318, 1, 30314],
+      [60, 1371, 50, 82250],
+      [97, 1424, 100, 138100],
+      [134, 1477, 250, 198000],
+      [171, 1530, 500, 261500],
+      [8, 1583, 1000, 13000],
+      [45, 1636, 1, 73620],
+      [82, 1039, 50, 85200],
+      [119, 1092, 100, 129900],
+      [156, 1145, 250, 178500],
+      [193, 1198, 500, 231000],
+      [30, 1251, 1000, 38000],
+      [67, 1304, 1, 87368],
+      [104, 1357, 50, 141150],
+      [141, 1410, 100, 198800],
+      [178, 1463, 250, 260500],
+      [15, 1516, 500, 22500],
+      [52, 1569, 1000, 82000],
+      [89, 1622, 1, 144358],
+      [126, 1025, 50, 129150],
+      [163, 1078, 100, 175700],
+      [200, 1131, 250, 226250],
+      [37, 1184, 500, 44000],
+      [74, 1237, 1000, 92000],
+      [111, 1290, 1, 143190],
+      [148, 1343, 50, 198750],
+      [185, 1396, 100, 258300],
+      [22, 1449, 250, 32000],
+      [59, 1502, 500, 88500],
+      [96, 1555, 1000, 149000],
+      [133, 1608, 1, 213864],
+      [170, 1011, 50, 171850],
+      [7, 1064, 100, 7400],
+      [44, 1117, 250, 49250],
+      [81, 1170, 500, 95000],
+      [118, 1223, 1000, 144000],
+      [155, 1276, 1, 197780],
+      [192, 1329, 50, 255150],
+      [29, 1382, 100, 40100],
+      [66, 1435, 250, 94750],
+      [103, 1488, 500, 153500],
+      [140, 1541, 1000, 216000],
+      [177, 1594, 1, 282138],
+      [14, 1647, 50, 23050],
+      [51, 1050, 100, 53600],
+      [88, 1103, 250, 97000],
+      [125, 1156, 500, 144500],
+      [162, 1209, 1000, 196000],
+      [199, 1262, 1, 251138],
+      [36, 1315, 50, 47350],
+      [73, 1368, 100, 99900],
+      [110, 1421, 250, 156250],
+      [147, 1474, 500, 216500],
+      [184, 1527, 1000, 281000],
+      [21, 1580, 1, 33180],
+    ];
+    for (const [usd, rate, step, value] of cases)
+      expect(usdValue(usd, rate, step), `${usd} at ${rate} to ${step}`).toBe(value);
+  });
+
+  it("suggests the fewest dollars that pay, then round notes above", () => {
+    expect(dollarsFor(2500, 1310, 250)).toBe(2); // $1 is 1,250; $2 is 2,500
+    expect(dollarsFor(5000, 1310, 250)).toBe(4); // $4 is 5,250 (5,240)
+    expect(dollarsFor(0, 1310, 250)).toBe(0);
+    expect(suggestedDollars(2500, 1310, 250)).toEqual([2, 5, 10, 20]);
+    expect(suggestedDollars(30000, 1310, 250)).toEqual([23, 25, 30, 40]);
+    expect(fmtUSD(1250)).toBe("$1,250");
+  });
+
+  it("takes dollars worth the total or more: the change in dinars", () => {
+    const c = checkDollars(2500, 1310, 250, "5", "cash", "");
+    expect(c).toMatchObject({ usd: 5, value: 6500, change: 4000, rest: 0, problem: null });
+    expect(c.payments).toEqual([
+      { type: "cash", currency: "USD", usd: 5, rate: 1310, received: null, amount: 2500 },
+    ]);
+  });
+
+  it("takes dollars worth less than the total: they pay what they are worth, the rest another way", () => {
+    const card = checkDollars(6000, 1310, 250, "2", "card", "");
+    expect(card).toMatchObject({ value: 2500, rest: 3500, problem: null });
+    expect(card.payments).toEqual([
+      { type: "cash", currency: "USD", usd: 2, rate: 1310, received: null, amount: 2500 },
+      { type: "card", amount: 3500, received: null },
+    ]);
+    const cash = checkDollars(6000, 1310, 250, "2", "cash", "5000");
+    expect(cash).toMatchObject({ rest: 3500, restReceived: 5000, restChange: 1500, problem: null });
+    expect(cash.payments?.[1]).toEqual({ type: "cash", amount: 3500, received: 5000 });
+    expect(checkDollars(6000, 1310, 250, "2", "cash", "3000").problem).toBe("restShort");
+    expect(checkDollars(6000, 1310, 250, "2.5", "cash", "").problem).toBe("notNumber");
+    expect(checkDollars(6000, 1310, 250, "", "cash", "").problem).toBe("none");
+    // Arabic and Kurdish digits are digits.
+    expect(checkDollars(2500, 1310, 250, "٥", "cash", "").usd).toBe(5);
+  });
+
+  it("sends the dollars and the rate shown, and reads them back as recorded", () => {
+    const sent = howPaidUsd({
+      tenders: [
+        { type: "cash", amount: "2500", currency: "USD", usd: 5, rate: 1310 },
+        { type: "card", amount: "1000" },
+      ],
+    });
+    expect(sent?.p_tenders).toEqual([
+      { type: "cash", amount: 2500, received: null, currency: "USD", usd: 5, rate: 1310 },
+      { type: "card", amount: 1000, received: null },
+    ]);
+    expect(
+      paidPartUsd({
+        type: "cash",
+        amount: 2500,
+        received: 6500,
+        change: 4000,
+        currency: "USD",
+        usd: 5,
+        rate: 1310,
+      }),
+    ).toEqual({
+      type: "cash",
+      amount: 2500,
+      received: 6500,
+      change: 4000,
+      currency: "USD",
+      usd: 5,
+      rate: 1310,
+    });
+    expect(paidPartUsd({ type: "card", amount: 1000, received: null, change: null })).toEqual({
+      type: "card",
+      amount: 1000,
+      received: null,
+      change: null,
+    });
+    const ok = paymentsSchema.safeParse([
+      { type: "cash", amount: 2500, currency: "USD", usd: 5, rate: 1310 },
+    ]);
+    expect(ok.success).toBe(true);
+    const half = paymentsSchema.safeParse([
+      { type: "cash", amount: 2500, currency: "USD", usd: 5.5, rate: 1310 },
+    ]);
+    expect(half.success ? null : half.error.issues[0]?.message).toBe(
+      "Dollars are taken in whole dollars",
+    );
+  });
+
+  it("reads the rate, the report and a close with dollars", () => {
+    const fx = fxStatusFrom({
+      rate: 1310,
+      set_at: "2026-09-28T06:00:00Z",
+      set_by: "Demo Manager",
+      reason: "Market",
+      age_hours: 3,
+      max_age_hours: 36,
+      usable: true,
+      round_to: 250,
+      may_set: false,
+      history: [
+        { rate: 1310, set_at: "2026-09-28T06:00:00Z", set_by: "Demo Manager", reason: "Market" },
+      ],
+    });
+    expect(fx).toMatchObject({ rate: 1310, usable: true, roundTo: 250, maxAgeHours: 36 });
+    expect(fx.history).toHaveLength(1);
+    expect(fxStatusFrom(null)).toMatchObject({ rate: null, usable: false, roundTo: 250 });
+    const r = dollarsReportFrom({
+      taken: { sales: 2, usd: 7, value: 9000, paid: 5000, change: 4000 },
+      held: {
+        tills: [{ location_id: "l", location: "Main", usd: 5, value: 6500 }],
+        safe: { usd: 1, value: 1294 },
+      },
+      counts: [
+        { session_id: "s", session_no: 4, at: "x", location: "Main", expected: 2, counted: null },
+      ],
+    });
+    expect(r.taken).toEqual({ sales: 2, usd: 7, value: 9000, paid: 5000, change: 4000 });
+    expect(r.held.safe).toEqual({ usd: 1, value: 1294 });
+    expect(r.counts[0]?.counted).toBeNull();
+    const closed = countResult({
+      session_no: 4,
+      usd_expected: 2,
+      usd_counted: 1,
+      usd_variance: -1,
+      usd_variance_value: -1294,
+      usd_taken: 1,
+      usd_taken_value: 1294,
+      usd_journal_no: 1050,
+    });
+    expect(closed.usd).toEqual({
+      expected: 2,
+      counted: 1,
+      variance: -1,
+      varianceValue: -1294,
+      taken: 1,
+      takenValue: 1294,
+      journalNo: 1050,
+    });
+    expect(countResult({ session_no: 5, usd_carried: 20 }).usdCarried).toBe(20);
+    expect(countResult({ session_no: 5 }).usd).toBeNull();
+    expect(drawerStateFrom({ dollars: { in_till: true, usd: null, value: null } }).dollars).toEqual(
+      {
+        inTill: true,
+        usd: null,
+        value: null,
+      },
+    );
+  });
+
+  it("knows the refusals that mean the till should read the rate again", () => {
+    expect(
+      RATE_REFUSED.test("No dollar rate is set: a manager sets today's on Sales → Dollars"),
+    ).toBe(true);
+    expect(
+      RATE_REFUSED.test(
+        "The dollar rate was set 40 hours ago: a manager sets today's before dollars are taken",
+      ),
+    ).toBe(true);
+    expect(
+      RATE_REFUSED.test("The dollar rate is now 1320, not the 1310 shown: take the payment again"),
+    ).toBe(true);
+    expect(RATE_REFUSED.test("The payments cannot be read")).toBe(false);
+  });
+
+  it("names the rate and an exchange on the audit trail, under cash", () => {
+    const migration = readFileSync(
+      join(__dirname, "../supabase/migrations/0043_foreign_cash.sql"),
+      "utf8",
+    );
+    for (const a of ["fx.rate.set", "fx.exchange"]) {
+      expect(migration).toContain(`'${a}'`);
+      expect(actionLabel(a)).not.toBe(a);
+      expect(
+        AUDIT_GROUPS.find((g) => g.key === "cash")?.prefixes.some((p) => a.startsWith(p)),
+      ).toBe(true);
+    }
   });
 });

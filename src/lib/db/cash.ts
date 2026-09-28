@@ -115,6 +115,29 @@ export interface SessionStatement {
   notes: { opening: Record<string, number> | null; closing: Record<string, number> | null };
   movements: SessionMovement[];
   takings: { at: string; to: string; amount: number; journalNo: number | null }[];
+  /**
+   * The till's dollars (0043): in and out during the session, and their count
+   * at its close (null when it held none; `counted` null when not counted).
+   */
+  dollars: {
+    expected: number;
+    counted: number | null;
+    variance: number | null;
+    varianceValue: number;
+    taken: number;
+    takenValue: number;
+    notes: Record<string, number> | null;
+    journalNo: number | null;
+  } | null;
+  dollarEvents: {
+    at: string;
+    kind: string;
+    usd: number;
+    value: number;
+    rate: number | null;
+    by: string | null;
+    turnNo: number | null;
+  }[];
 }
 
 export async function getSessionStatement(id: string): Promise<SessionStatement> {
@@ -142,6 +165,30 @@ export async function getSessionStatement(id: string): Promise<SessionStatement>
       to: str(t.to),
       amount: num(t.amount),
       journalNo: numOrNull(t.journal_no),
+    })),
+    dollars: s.dollars
+      ? (() => {
+          const d = s.dollars as Record<string, unknown>;
+          return {
+            expected: num(d.expected),
+            counted: numOrNull(d.counted),
+            variance: numOrNull(d.variance),
+            varianceValue: num(d.variance_value),
+            taken: num(d.taken),
+            takenValue: num(d.taken_value),
+            notes: (d.notes as Record<string, number> | null) ?? null,
+            journalNo: numOrNull(d.journal_no),
+          };
+        })()
+      : null,
+    dollarEvents: ((s.dollar_events as Record<string, unknown>[] | null) ?? []).map((e) => ({
+      at: str(e.at),
+      kind: str(e.kind),
+      usd: num(e.usd),
+      value: num(e.value),
+      rate: numOrNull(e.rate),
+      by: strOrNull(e.by),
+      turnNo: numOrNull(e.turn_no),
     })),
   };
 }

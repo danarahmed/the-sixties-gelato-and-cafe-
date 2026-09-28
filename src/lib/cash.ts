@@ -115,6 +115,11 @@ export interface DrawerState {
   openBills: number;
   /** Who may take the drawer over. */
   takers: { id: string; name: string }[];
+  /**
+   * The till's dollars (0043): whether it holds any, to count them at the
+   * close; how many and their value only for those who may see it.
+   */
+  dollars: { inTill: boolean; usd: number | null; value: number | null };
 }
 
 /** The answer to a count, shown once it is in. */
@@ -134,6 +139,21 @@ export interface CountResult {
   /** A handover: the session that opened next, and whose it is. */
   nextSessionNo: number | null;
   nextCashier: string | null;
+  /**
+   * The till's dollars at a close (0043): what it should have held, counted,
+   * the difference and its value, all taken to the safe. Null when none were
+   * counted; `usdCarried` when they were left in the till uncounted.
+   */
+  usd: {
+    expected: number;
+    counted: number;
+    variance: number;
+    varianceValue: number;
+    taken: number;
+    takenValue: number;
+    journalNo: number | null;
+  } | null;
+  usdCarried: number | null;
 }
 
 const num = (v: unknown): number => Number(v ?? 0);
@@ -171,6 +191,19 @@ export function countResult(r: Record<string, unknown>): CountResult {
     floatFromSafe: num(r.float_from_safe),
     nextSessionNo: r.next_session_no == null ? null : Number(r.next_session_no),
     nextCashier: r.next_cashier == null ? null : String(r.next_cashier),
+    usd:
+      r.usd_counted == null
+        ? null
+        : {
+            expected: num(r.usd_expected),
+            counted: num(r.usd_counted),
+            variance: num(r.usd_variance),
+            varianceValue: num(r.usd_variance_value),
+            taken: num(r.usd_taken),
+            takenValue: num(r.usd_taken_value),
+            journalNo: r.usd_journal_no == null ? null : Number(r.usd_journal_no),
+          },
+    usdCarried: r.usd_carried == null ? null : Number(r.usd_carried),
   };
 }
 
@@ -205,5 +238,10 @@ export function drawerStateFrom(t: Record<string, unknown> | null): DrawerState 
           name: String(p.name),
         }))
       : [],
+    dollars: {
+      inTill: (t?.dollars as Record<string, unknown> | undefined)?.in_till === true,
+      usd: numOrNull((t?.dollars as Record<string, unknown> | undefined)?.usd),
+      value: numOrNull((t?.dollars as Record<string, unknown> | undefined)?.value),
+    },
   };
 }

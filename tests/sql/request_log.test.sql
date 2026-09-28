@@ -30,15 +30,15 @@ insert into keyed values
   ('cancel_card_settlement'), ('cancel_platform_settlement'), ('cancel_production'), ('cancel_scheduled_price'),
   ('cancel_scheduled_recipe'), ('cancel_stock_count'), ('cancel_tab'), ('change_product_recipe'),
   ('copy_platform_setup'), ('create_item'), ('create_product'), ('create_supplier'),
-  ('discard_journal'), ('invite_member'), ('lock_period'), ('mark_bill_printed'), ('move_cash'), ('open_tab'),
+  ('discard_journal'), ('exchange_dollars'), ('invite_member'), ('lock_period'), ('mark_bill_printed'), ('move_cash'), ('open_tab'),
   ('pay_bill'), ('post_control_correction'), ('post_legacy_unposted'), ('post_platform_settlement'),
   ('publish_journal'), ('receive_goods'), ('record_bill'), ('record_card_settlement'), ('record_expense'),
   ('record_opening_stock'), ('record_production'), ('record_waste'), ('refund_sale'), ('reject_stock_count'),
   ('reverse_journal'), ('save_batch_recipe'), ('save_category'), ('save_journal'), ('save_tab'), ('save_table'),
-  ('set_price'), ('split_tab'), ('start_stock_count'), ('submit_stock_count'), ('unlock_period'), ('void_sale');
+  ('set_fx_rate'), ('set_price'), ('split_tab'), ('start_stock_count'), ('submit_stock_count'), ('unlock_period'), ('void_sale');
 grant select on keyed to public;
-select test.eq((select count(*) from keyed)::int, 49,
-  'fifty kinds of write are keyed: forty-nine open, the old drawer count closed since 0037');
+select test.eq((select count(*) from keyed)::int, 51,
+  'fifty-two kinds of write are keyed: fifty-one open, the old drawer count closed since 0037');
 select test.eq((select string_agg(p.proname, ', ') from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                  where n.nspname = 'public' and p.proname in ('count_drawer', 'count_drawer__run')
                    and (has_function_privilege('authenticated', p.oid, 'execute')
@@ -174,8 +174,8 @@ select test.act_as('cashier@example.com');
 select pg_temp.sell();
 select pg_temp.sell();
 select test.act_as('manager@example.com');
-create temp table cnt1 as select close_cash_session(5000, null, 0, 'safe', null, null, pg_temp.k(20)) r;
-create temp table cnt2 as select close_cash_session(5000, null, 0, 'safe', null, null, pg_temp.k(20)) r;
+create temp table cnt1 as select close_cash_session(5000, null, 0, 'safe', p_idempotency_key => pg_temp.k(20)) r;
+create temp table cnt2 as select close_cash_session(5000, null, 0, 'safe', p_idempotency_key => pg_temp.k(20)) r;
 grant select on cnt1, cnt2 to public;
 select test.as_admin();
 select test.eq((select count(*) from work_shift where kind = 'session' and closed_at is not null)::int, 1,

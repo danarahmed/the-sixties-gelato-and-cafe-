@@ -179,8 +179,8 @@ select test.eq(test.balance('1005') || '/' || test.balance('1000'), '3500/1800',
 
 -- ------------------------------------------------------------------ sent twice
 select test.act_as('manager@example.com');
-insert into res select 'k1', close_cash_session(1800, null, null, null, null, null, 'c0de0000-0000-0000-0000-000000000001');
-insert into res select 'k2', close_cash_session(1800, null, null, null, null, null, 'c0de0000-0000-0000-0000-000000000001');
+insert into res select 'k1', close_cash_session(1800, p_idempotency_key => 'c0de0000-0000-0000-0000-000000000001');
+insert into res select 'k2', close_cash_session(1800, p_idempotency_key => 'c0de0000-0000-0000-0000-000000000001');
 select test.eq((pg_temp.r('k2') ->> 'replayed')::boolean, true, 'a close sent twice is answered from the first');
 select test.act_as('cashier@example.com');
 insert into res select 'k3', open_cash_session(1800, null, null, null, 'c0de0000-0000-0000-0000-000000000002');

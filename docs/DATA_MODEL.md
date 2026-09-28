@@ -980,3 +980,70 @@ reason, approval, tenders, key)` take `p_tenders` (`[{type, amount}]`, each
   sales placed in the dates (voids left out): how many it paid for, how many
   of those were paid another way too, what it took, the change cash gave;
   what refunds made in the dates gave back that way; the net.
+
+### US dollars (`0043`)
+
+- **Accounts:** 1001 Cash in the till — USD and 1006 Cash in the safe — USD
+  (assets, in dinars at what the dollars were taken at), 6950 Exchange
+  differences (expense, either way). Provisioned for every café; no manual
+  journal to 1001 or 1006 (`manual_journal_blocked`).
+- **Rules:** `usd_rate_max_age_hours` (1–168, default 36: an older rate takes
+  no dollars) and `usd_round_to` (1–100,000, default 250: dollars' value in
+  dinars, to the nearest).
+- **`fx_rate`** (`currency` 'USD', `rate` whole dinars a dollar, 100–100,000,
+  `effective_from`, `set_by`, `reason`): append-only, read by the café's
+  members; the latest is the rate. `set_fx_rate(currency, rate, reason, key)`
+  (`fx.rate`: owner, general manager, branch manager; keyed; `fx.rate.set` on
+  the audit trail with the rate before). `fx_status()` (anyone at the till or
+  in the office): the rate, when, by whom and why, its age, the rules, whether
+  dollars are taken at it, whether the reader may set it, and the last 30.
+  `usd_rate_now(business)` refuses when there is none or it is too old;
+  `usd_value(business, usd, rate)` values dollars to the step.
+- **`sales_tender`** gains `currency` ('IQD' | 'USD'), `foreign_amount` (whole
+  dollars) and `rate`. A payment in dollars is cash; `received` is what the
+  dollars are worth, `amount` its part of the sale, `change_given` the change,
+  in dinars. `sale_payments` reads `{type: 'cash', currency: 'USD', usd, rate,
+amount}`; `sale_dollars` prices them once the sale is (after a retry is
+  recognised): at the rate now, which must be the rate sent, worth at least
+  their part. The journal nets each account: 1001 debited their value, 1000
+  credited the change. `order_payments` gives the dollars and the rate.
+- **`fx_cash_event`** (`place` 'till' | 'safe', `kind` sale | void | count |
+  take | exchange, `usd` signed whole dollars, `value` signed dinars, `rate`,
+  the record it comes from, `work_shift_id`): the dollars' own drawer, never
+  changed. A till's event needs the open session, or names the session a
+  close counts (`trg_fx_cash_event_session`). A sale's dollars go in by
+  `trg_cash_from_tender`, with the change out of the dinar drawer, which must
+  hold it; a void takes them out (`trg_cash_from_adjustment`), refused once
+  the till no longer holds them. `fx_place_balance(business, place, location)`
+  gives what a till (per branch) or the safe (the café's) holds and its value;
+  dollars leaving take their share of it (`fx_value_out`), the last of them
+  the rest. Moved one at a time (`lock_dollars`).
+- **`session_dollar_count`** (one per session that held dollars: `expected`,
+  `counted` — null when not counted —, `variance`, `variance_value`, `taken`,
+  `taken_value`, `denominations`, `journal_entry_id`): the dollars counted at a
+  close, by `close_session_dollars`, after the dinars. All counted go to the
+  safe (take events till − / safe +); one journal, reference
+  `session_dollars`, for the difference (6300) and the take (1006 / 1001).
+  `close_cash_session`, `hand_over_session` and `force_close_session` take
+  `p_usd_counted` and `p_usd_denominations` before the key, keyed only when
+  sent; the answer and the audit trail give the dollars, or `usd_carried`.
+  `cash_session_status` says whether the till holds dollars (how many only to
+  those who see what it should hold); `cash_session_statement` gives the
+  count and the till's dollar events.
+- **`fx_exchange`** (`from_place` till | safe, `to_place` till | safe | bank,
+  `usd`, `value` — what they were taken at —, `received`, `difference`
+  worked out, `note`, `journal_entry_id`): by `exchange_dollars(from, usd,
+received, to, note, location, key)` (`day.close` or `accounting.post`;
+  keyed): the dinars into the till (a drawer event), the safe (1005) or the
+  bank (1020), the dollars out of 1001 or 1006 at their value, the difference
+  to 6950; `fx.exchange` on the audit trail. Append-only, read with
+  `cost.view`.
+- **`report_dollars(from, to)`** (`cost.view`): the dollars taken (sales, usd,
+  value, what they paid, the change), by rate, the rates set, the exchanges,
+  the counts, the differences (6950 and 6300), and what the tills and the
+  safe hold now.
+- **The books:** `reconciliation_checks` gains `dollars` (every dollar event's
+  value against 1001 + 1006); the safe's check takes the dinars exchanged into
+  it. `document_problems` flags a close's dollars or an exchange with no
+  journal, and journals `session_dollars` or `fx_exchange` without their
+  record.

@@ -605,7 +605,9 @@ export async function getSalesOrders(
       .in("sales_order_id", ids),
     c
       .from("sales_tender")
-      .select("sales_order_id,tender_type,amount,received,change_given,position")
+      .select(
+        "sales_order_id,tender_type,amount,received,change_given,position,currency,foreign_amount,rate",
+      )
       .in("sales_order_id", ids)
       .order("position"),
     c
@@ -699,6 +701,10 @@ export async function getSalesOrders(
       amount: num(t.amount),
       received: t.received == null ? null : num(t.received),
       change: t.change_given == null ? null : num(t.change_given),
+      // Cash in dollars (0043): how many, at what rate.
+      ...(str(t.currency) === "USD"
+        ? { currency: "USD" as const, usd: num(t.foreign_amount), rate: num(t.rate) }
+        : {}),
     }));
     const refunded = adj
       .filter((a) => str(a.kind) === "refund")

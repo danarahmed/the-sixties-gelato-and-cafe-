@@ -545,6 +545,31 @@ corrections are new entries. What each record posts (migration `0015`):
   to the card (2,000 : 4,000); an espresso, 1,667 in cash and 833 to the card,
   as the manager chose; the last espresso, the 2,500 left, all to the card,
   the only way something is left of.
+- Payment in dollars (`0043`): dollars are worth `floor(usd × rate ÷ step +
+0.5) × step` dinars (the step is the café's rule, 250; half-way rounds up),
+  at the rate a manager set, which must be the rate the till showed and set
+  within the rule's hours (36). They pay at most what they are worth; the
+  rest of their value is the change, in dinars. The journal debits 1001 with
+  their value and credits 1000 with the change, netted with the sale's other
+  payments, one line per account. Worked example (the SQL test): an espresso,
+  2,500, paid with $5 at 1,310: 6,550, counted as 6,500; change 4,000: 1001 Dr
+  6,500, 1000 Cr 4,000, 4000 Cr 2,500, 5000 Dr 200, 1200 Cr 200. With 1,000 in
+  dinars and $5 for the other 5,000 of a 6,000 sale, 1000 nets to Cr 500.
+- The dollars held (a till's, or the safe's) are carried at what they were
+  taken at: their value over their number is their average. Dollars leaving
+  take their share, `value × usd out ÷ usd held`, rounded to the dinar; the
+  last of them take all that is left.
+- A close counts the till's dollars: a dollar short leaves at its share; one
+  over comes in at the till's average (or, if it held none, the rate), to the
+  dinar. The difference goes to 6300; all the dollars counted go to the safe:
+  Dr 1006 / Cr 1001 at their value. Worked example: the till held $2 at
+  2,588; $1 counted: the missing dollar 1,294 to 6300, the other 1,294 to the
+  safe.
+- An exchange: the dollars leave at their share of what the place holds; the
+  dinars received go to the till, the safe or the bank; received less value is
+  the difference, to 6950 (a gain credited, a loss debited). Worked example:
+  $10 of the safe's $23, held at 30,166: their share 13,116, exchanged for
+  12,500: 1005 Dr 12,500, 1006 Cr 13,116, 6950 Dr 616.
 
 - Goods receipt: Dr 1200 Inventory / Cr 2050 Goods received not invoiced.
 - Bill for a receipt: Dr 2050 (what the receipt raised), Dr/Cr 5050 Purchase

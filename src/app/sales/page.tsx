@@ -11,6 +11,8 @@ import { DrawerPanel } from "@/components/cash/DrawerPanel";
 import { SessionsTable } from "@/components/cash/SessionsTable";
 import { CardTakingsPanel } from "@/components/books/CardTakings";
 import { getCardTakings } from "@/lib/db/settlements";
+import { getDollarsReport, getFxStatus } from "@/lib/db/fx";
+import { DollarsPanel } from "@/components/cash/DollarsPanel";
 import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +27,7 @@ export default async function SalesPage() {
   const canSessions =
     has(profile, "day.close") || has(profile, "cash.view_expected") || has(profile, "audit.view");
   const canMove = has(profile, "day.close") || has(profile, "accounting.post");
-  const [rows, sessions, uncounted, drawer, till, card, channels] = await Promise.all([
+  const [rows, sessions, uncounted, drawer, till, card, channels, fx, dollars] = await Promise.all([
     getDailySales(from, today),
     canSessions ? getCashSessions(from, today) : Promise.resolve([]),
     getUnclosedDays(),
@@ -33,6 +35,9 @@ export default async function SalesPage() {
     canDrawer ? getDrawerState() : Promise.resolve(null),
     getCardTakings(),
     getChannelNames(),
+    // US dollars (0043): the rate, and what the tills and the safe hold.
+    getFxStatus(),
+    getDollarsReport(today, today),
   ]);
   const lastCount = sessions.find((s) => s.closedAt !== null) ?? null;
   // A day is counted once a session closes after its last sale: the café
@@ -186,6 +191,21 @@ export default async function SalesPage() {
           <MoveCash isOwner={profile.roles.includes("owner")} safe={drawer.safe} />
         </section>
       )}
+
+      <section className="panel" id="dollars" data-testid="dollars-panel">
+        <div className="panel-h">
+          <h3>{t("Dollars")}</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            {t("Taken at the rate a manager sets · counted at each close and kept in the safe")}
+          </span>
+        </div>
+        <DollarsPanel
+          fx={fx}
+          held={dollars.held}
+          canExchange={canMove}
+          timezone={profile.timezone}
+        />
+      </section>
 
       <section className="panel" id="card">
         <div className="panel-h">

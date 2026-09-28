@@ -359,6 +359,25 @@ const phrases: PhraseBook = {
     ar: "{1} من السجلات تحتاج إلى مراجعة: انظر التقارير، هل تتطابق الدفاتر؟",
     ckb: "{1} بەڵگە پێویستی بە سەرنجدانە: سەیری ڕاپۆرتەکان، ئایا دەفتەرەکان یەکدەگرنەوە؟ بکە",
   },
+
+  // US dollars (0043): their accounts, and the journals the database posts for them.
+  "Cash in the till — USD": {
+    ar: "نقد درج الصندوق — دولار",
+    ckb: "پارەی نەختینەی ناو دەخیلە — دۆلار",
+  },
+  "Cash in the safe — USD": {
+    ar: "النقد في الخزنة — دولار",
+    ckb: "پارەی نەختینەی ناو قاسە — دۆلار",
+  },
+  "Exchange differences": { ar: "فروق الصرف", ckb: "جیاوازی ئاڵوگۆڕ" },
+  "Dollars counted after session {1}, to the safe": {
+    ar: "دولارات عُدّت بعد الوردية {1}، إلى الخزنة",
+    ckb: "دۆلار دوای شیفتی {1} ژمێردرا، بۆ قاسە",
+  },
+  "Dollars exchanged: ${1} from the {2} for {3} into the {4}": {
+    ar: "صرف دولارات: ${1} من {2} مقابل {3} إلى {4}",
+    ckb: "گۆڕینەوەی دۆلار: ${1} لە {2}ەوە بە {3} بۆ {4}",
+  },
 };
 
 export default phrases;

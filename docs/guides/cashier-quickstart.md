@@ -85,6 +85,10 @@ takes cash only while it is open. Tap the drawer's chip at the top of the till.
      the cash takes the rest. Type what the customer handed over for the cash
      to see the change. Two cards work the same way: set the second payment
      to **Card**;
+   - in US dollars: **$ Dollars**. Type the dollars handed over, or tap an
+     amount. The change is given in **dinars**: the window shows it. If the
+     dollars are not enough, pay the rest in cash or by card there. No
+     **$ Dollars** button: no rate is set today, ask a manager;
    - **Confirm payment**. Pressing it twice never charges twice.
 4. **✅ Sale recorded** appears with the **customer's number** in large
    figures: tell the customer, and call it when the order is ready. Numbers

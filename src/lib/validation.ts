@@ -147,7 +147,9 @@ export const lineAddons = z
 
 /**
  * How a sale is paid (0042): each part of it, and for cash what was handed
- * over. Together the parts are the total; the database checks it.
+ * over. Together the parts are the total; the database checks it. Cash in
+ * dollars (0043) gives the dollars handed over and the rate the till showed,
+ * and no cash received: the database works out what the dollars are worth.
  */
 export const payments = z
   .array(
@@ -155,6 +157,15 @@ export const payments = z
       type: z.enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" }),
       amount: nonNegative("Amount"),
       received: optionalNonNegative("Cash received"),
+      currency: z
+        .enum(["IQD", "USD"], { message: "Payments are taken in dinars or dollars" })
+        .nullish(),
+      usd: z
+        .number()
+        .int("Dollars are taken in whole dollars")
+        .positive("Dollars are taken in whole dollars")
+        .nullish(),
+      rate: z.number().positive("The payments cannot be read").nullish(),
     }),
   )
   .min(1, "Choose how it was paid")

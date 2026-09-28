@@ -215,7 +215,7 @@ if [ $# -eq 0 ] && [ -f supabase/remediation/reset-test-data.sql ]; then
 
     if out=$(run_reset sixties_reset "dry run"); then
       reset_bad "a dry run committed: it must end in its report and undo everything"
-    elif grep -q "DRY RUN passed" <<<"$out" && grep -q "sales_order 4" <<<"$out" && [ "$(snap sixties_reset)" = "$before" ]; then
+    elif grep -q "DRY RUN passed" <<<"$out" && grep -q "sales_order 5," <<<"$out" && [ "$(snap sixties_reset)" = "$before" ]; then
       reset_ok "a dry run reports what it would clear, and changes nothing"
     else reset_bad "the dry run failed:" "$out"; fi
 

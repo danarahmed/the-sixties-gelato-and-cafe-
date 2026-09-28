@@ -860,6 +860,136 @@ const phrases: PhraseBook = {
   },
   "Given back {way}": { ar: "المُعاد: {way}", ckb: "گەڕێندراو: {way}" },
   "{way}, at most {left}": { ar: "{way}، {left} على الأكثر", ckb: "{way}، لانیزۆر {left}" },
+
+  // US dollars at the till, the drawer and on Sales (0043).
+  Dollars: { ar: "الدولار", ckb: "دۆلار" },
+  "Dollars handed over": { ar: "الدولارات المُسلَّمة", ckb: "ئەو دۆلارانەی دران" },
+  "{rate} dinars a dollar": { ar: "{rate} دينار للدولار", ckb: "{rate} دینار بۆ هەر دۆلارێک" },
+  "{usd} are {amount}": { ar: "{usd} تساوي {amount}", ckb: "{usd} دەکاتە {amount}" },
+  "Change, in dinars": { ar: "الباقي، بالدينار", ckb: "باقی، بە دینار" },
+  "The other {amount} is paid": {
+    ar: "المتبقي ({amount}) يُدفع",
+    ckb: "ئەوەی ماوە ({amount}) دەدرێت",
+  },
+  "The rest is paid": { ar: "طريقة دفع المتبقي", ckb: "شێوازی دانی ئەوەی ماوە" },
+  "No dollars now: the rate was set {n} hours ago. A manager sets today's on Sales → Dollars.": {
+    ar: "لا دولار الآن: حُدّد السعر قبل {n} ساعة. يحدد المدير سعر اليوم في شاشة «المبيعات»، قسم «الدولار».",
+    ckb: "ئێستا دۆلار وەرناگیرێت: نرخەکە {n} کاتژمێر لەمەوبەر دانرا. بەڕێوەبەرێک نرخی ئەمڕۆ لە شاشەی «فرۆشتن»، بەشی «دۆلار» دادەنێت.",
+  },
+  "{usd} at {rate} = {amount}": {
+    ar: "{usd} بسعر {rate} = {amount}",
+    ckb: "{usd} بە نرخی {rate} = {amount}",
+  },
+  "Dollars {usd} at {rate}": { ar: "دولار {usd} بسعر {rate}", ckb: "دۆلار {usd} بە نرخی {rate}" },
+  "Dollars in the till": { ar: "الدولارات في الدرج", ckb: "دۆلارەکانی ناو دەخیلە" },
+  "The till took dollars: count them too. They all go to the safe; what it should hold is shown once the count is in.":
+    {
+      ar: "أخذ الدرج دولارات: عُدّها أيضًا. تذهب كلها إلى الخزنة؛ ويظهر ما يجب أن يحويه بعد إدخال العدّ.",
+      ckb: "دەخیلەکە دۆلاری وەرگرتووە: ئەوانیش بژمێرە. هەموویان دەچنە قاسەکە؛ ئەوەی دەبێت تێیدا بێت دوای تۆمارکردنی ژماردنەکە پیشان دەدرێت.",
+    },
+  "Dollars: it should have held {expected}; counted {counted}: {difference}.": {
+    ar: "الدولار: كان يجب أن يحوي {expected}؛ عُدّ {counted}: {difference}.",
+    ckb: "دۆلار: دەبوو {expected} تێیدا بێت؛ {counted} ژمێردرا: {difference}.",
+  },
+  "{usd} short ({amount})": { ar: "عجز {usd} ({amount})", ckb: "{usd} کەمە ({amount})" },
+  "{usd} over ({amount})": { ar: "زيادة {usd} ({amount})", ckb: "{usd} زیادە ({amount})" },
+  "{usd} to the safe, at {amount}.": {
+    ar: "{usd} إلى الخزنة، بقيمة {amount}.",
+    ckb: "{usd} بۆ قاسەکە، بە بەهای {amount}.",
+  },
+  "The till's {usd} were not counted: they stay in it for the next count.": {
+    ar: "لم تُعدّ دولارات الدرج ({usd}): تبقى فيه حتى العدّ التالي.",
+    ckb: "{usd}ی ناو دەخیلەکە نەژمێردران: تێیدا دەمێننەوە بۆ ژماردنی داهاتوو.",
+  },
+  "Dollars counted ($), if counted": {
+    ar: "الدولارات المعدودة ($)، إن عُدّت",
+    ckb: "دۆلاری ژمێردراو ($)، ئەگەر ژمێردرا",
+  },
+  "Dollars counted ($)": { ar: "الدولارات المعدودة ($)", ckb: "دۆلاری ژمێردراو ($)" },
+  "Dollars counted": { ar: "الدولارات المعدودة", ckb: "دۆلاری ژمێردراو" },
+  "Taken at the rate a manager sets · counted at each close and kept in the safe": {
+    ar: "تؤخذ بالسعر الذي يحدده المدير · تُعدّ عند كل إغلاق وتُحفظ في الخزنة",
+    ckb: "بەو نرخە وەردەگیرێن کە بەڕێوەبەر دایدەنێت · لە هەر داخستنێکدا دەژمێردرێن و لە قاسەدا هەڵدەگیرێن",
+  },
+  "No dollar rate is set: dollars are not taken": {
+    ar: "لم يُحدَّد سعر للدولار: لا تُؤخذ الدولارات",
+    ckb: "هیچ نرخێکی دۆلار دانەنراوە: دۆلار وەرناگیرێت",
+  },
+  "too old: dollars are not taken": {
+    ar: "قديم: لا تُؤخذ الدولارات",
+    ckb: "کۆنە: دۆلار وەرناگیرێت",
+  },
+  "Set {when} by {who}: {reason}": {
+    ar: "حدّده {who} في {when}: {reason}",
+    ckb: "{who} لە {when} دایناوە: {reason}",
+  },
+  "A rate is used for {hours} hours; dollars are counted in dinars to the nearest {step}, and change is given in dinars.":
+    {
+      ar: "يُستخدم السعر لمدة {hours} ساعة؛ وتُحسب الدولارات بالدينار لأقرب {step}، ويُعطى الباقي بالدينار.",
+      ckb: "نرخێک بۆ ماوەی {hours} کاتژمێر بەکاردێت؛ دۆلار بە دینار بۆ نزیکترین {step} هەژمار دەکرێت، و باقی بە دینار دەدرێتەوە.",
+    },
+  "Dollars held": { ar: "الدولارات المحتفظ بها", ckb: "دۆلاری هەڵگیراو" },
+  "The safe: {usd} (taken at {amount})": {
+    ar: "الخزنة: {usd} (أُخذت بقيمة {amount})",
+    ckb: "قاسە: {usd} (بە بەهای {amount} وەرگیراون)",
+  },
+  "{place}'s till: {usd} (taken at {amount})": {
+    ar: "درج {place}: {usd} (أُخذت بقيمة {amount})",
+    ckb: "دەخیلەی {place}: {usd} (بە بەهای {amount} وەرگیراون)",
+  },
+  "Rates set before": { ar: "الأسعار المحددة سابقًا", ckb: "نرخە پێشووەکان" },
+  "Dinars a dollar": { ar: "دينار للدولار", ckb: "دینار بۆ هەر دۆلارێک" },
+  "The rate is {rate} dinars a dollar.": {
+    ar: "السعر {rate} دينار للدولار.",
+    ckb: "نرخەکە {rate} دینارە بۆ هەر دۆلارێک.",
+  },
+  "Today's rate: dinars a dollar": {
+    ar: "سعر اليوم: دينار للدولار",
+    ckb: "نرخی ئەمڕۆ: دینار بۆ هەر دۆلارێک",
+  },
+  "Where it comes from": { ar: "مصدره", ckb: "سەرچاوەکەی" },
+  "The exchange office's rate this morning": {
+    ar: "سعر مكتب الصرافة صباح اليوم",
+    ckb: "نرخی نووسینگەی ئاڵوگۆڕ ئەمڕۆ بەیانی",
+  },
+  "Set the rate": { ar: "حدّد السعر", ckb: "نرخەکە دابنێ" },
+  "{usd} exchanged for {received}: they were taken at {value}.": {
+    ar: "صُرفت {usd} مقابل {received}: وكانت قد أُخذت بقيمة {value}.",
+    ckb: "{usd} بە {received} گۆڕدرایەوە: بە بەهای {value} وەرگیرابوون.",
+  },
+  "A gain of {amount} (6950 Exchange differences, journal {journal}).": {
+    ar: "ربح {amount} (6950 فروق الصرف، القيد {journal}).",
+    ckb: "قازانجی {amount} (6950 جیاوازی ئاڵوگۆڕ، تۆماری {journal}).",
+  },
+  "A loss of {amount} (6950 Exchange differences, journal {journal}).": {
+    ar: "خسارة {amount} (6950 فروق الصرف، القيد {journal}).",
+    ckb: "زیانی {amount} (6950 جیاوازی ئاڵوگۆڕ، تۆماری {journal}).",
+  },
+  "Exchange dollars for dinars": { ar: "صرف الدولارات بالدينار", ckb: "گۆڕینەوەی دۆلار بە دینار" },
+  "Dollars from": { ar: "الدولارات من", ckb: "دۆلار لە" },
+  "Dollars exchanged": { ar: "الدولارات المصروفة", ckb: "دۆلاری گۆڕدراو" },
+  "Dinars received": { ar: "الدنانير المستلمة", ckb: "دیناری وەرگیراو" },
+  Into: { ar: "إلى", ckb: "بۆ" },
+  "Dinars into": { ar: "الدنانير إلى", ckb: "دینار بۆ" },
+  Exchange: { ar: "اصرف", ckb: "بیگۆڕەوە" },
+  "Dollars in and out": { ar: "الدولارات الداخلة والخارجة", ckb: "دۆلاری هاتوو و ڕۆیشتوو" },
+  "Not counted at the close: {usd} stayed in the till": {
+    ar: "لم تُعدّ عند الإغلاق: بقيت {usd} في الدرج",
+    ckb: "لە داخستندا نەژمێردران: {usd} لە دەخیلەکەدا مانەوە",
+  },
+  "Should have held {expected}; counted {counted}; {taken} to the safe": {
+    ar: "كان يجب أن يحوي {expected}؛ عُدّ {counted}؛ {taken} إلى الخزنة",
+    ckb: "دەبوو {expected} تێیدا بێت؛ {counted} ژمێردرا؛ {taken} بۆ قاسەکە",
+  },
+  "Taken at": { ar: "القيمة عند الأخذ", ckb: "بەهای وەرگرتن" },
+  "Paid in dollars": { ar: "دُفع بالدولار", ckb: "بە دۆلار درا" },
+  "Counted over or short": { ar: "عُدّ بزيادة أو عجز", ckb: "بە زیادە یان کەمی ژمێردرا" },
+  "Taken to the safe": { ar: "نُقل إلى الخزنة", ckb: "برا بۆ قاسە" },
+  "Exchanged for dinars": { ar: "صُرف بالدينار", ckb: "بە دینار گۆڕدرایەوە" },
+  "and {usd} in dollars, taken at {amount}": {
+    ar: "و{usd} بالدولار، أُخذت بقيمة {amount}",
+    ckb: "و {usd} بە دۆلار، بە بەهای {amount} وەرگیراون",
+  },
 };
 
 export default phrases;

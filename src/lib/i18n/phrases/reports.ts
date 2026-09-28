@@ -975,6 +975,42 @@ const phrases: PhraseBook = {
     ar: "الاسترداد {no}: أُعيد {amount}: {parts} (القيد {journal}).",
     ckb: "گەڕاندنەوەی {no}: {amount} گەڕێندرایەوە: {parts} (تۆماری {journal}).",
   },
+
+  // The dollars (0043): the report, the check against the books, the audit trail.
+  "Taken, counted and exchanged {from} to {to}; held now": {
+    ar: "المأخوذ والمعدود والمصروف من {from} إلى {to}؛ والمحتفظ به الآن",
+    ckb: "وەرگیراو، ژمێردراو و گۆڕدراو لە {from} تا {to}؛ و ئەوەی ئێستا هەیە",
+  },
+  "No sale was paid in dollars in these dates.": {
+    ar: "لم يُدفع أي بيع بالدولار في هذه التواريخ.",
+    ckb: "لەم بەروارانەدا هیچ فرۆشتنێک بە دۆلار نەدرا.",
+  },
+  "{sales} sale(s) paid in dollars: {usd}, taken at {value}; they paid {paid}, and {change} went back as change in dinars.":
+    {
+      ar: "{sales} بيع (بيوع) دُفعت بالدولار: {usd}، أُخذت بقيمة {value}؛ دفعت {paid}، وأُعيد {change} باقيًا بالدينار.",
+      ckb: "{sales} فرۆشتن بە دۆلار دران: {usd}، بە بەهای {value} وەرگیران؛ {paid}یان دا، و {change} وەک باقی بە دینار گەڕایەوە.",
+    },
+  "Should have held": { ar: "كان يجب أن يحوي", ckb: "دەبوو تێیدا بێت" },
+  "Exchange differences {exchanges} (6950) · dollars counted over or short {counts} (6300) · held now: the safe {safe}":
+    {
+      ar: "فروق الصرف {exchanges} (6950) · زيادة/عجز الدولارات المعدودة {counts} (6300) · المحتفظ به الآن: الخزنة {safe}",
+      ckb: "جیاوازی ئاڵوگۆڕ {exchanges} (6950) · زیادە/کەمی دۆلاری ژمێردراو {counts} (6300) · ئەوەی ئێستا هەیە: قاسە {safe}",
+    },
+  "Dollars held, at what they were taken at, vs Cash in dollars (1001 and 1006)": {
+    ar: "الدولارات المحتفظ بها، بقيمة أخذها، مقابل النقد بالدولار (1001 و1006)",
+    ckb: "دۆلاری هەڵگیراو، بە بەهای وەرگرتنیان، بەرامبەر پارەی نەختینەی دۆلار (1001 و 1006)",
+  },
+  "Dollar rate set": { ar: "تحديد سعر الدولار", ckb: "دانانی نرخی دۆلار" },
+  "Dollars exchanged for dinars": { ar: "صرف دولارات بالدينار", ckb: "گۆڕینەوەی دۆلار بە دینار" },
+  "The dollar rate": { ar: "سعر الدولار", ckb: "نرخی دۆلار" },
+  "An exchange of dollars": { ar: "صرف دولارات", ckb: "گۆڕینەوەی دۆلار" },
+  "Dollars it should hold": {
+    ar: "الدولارات التي يجب أن يحويها",
+    ckb: "ئەو دۆلارانەی دەبێت تێیدا بن",
+  },
+  "Dollars over / short": { ar: "زيادة / عجز الدولارات", ckb: "زیادە / کەمی دۆلار" },
+  "Dollars left uncounted": { ar: "دولارات تُركت بلا عدّ", ckb: "دۆلاری نەژمێردراو کە جێهێڵدرا" },
+  "Dollar notes counted": { ar: "أوراق الدولار المعدودة", ckb: "دراوە دۆلارییە ژمێردراوەکان" },
 };
 
 export default phrases;

@@ -42,7 +42,9 @@ export default async function SettingsPage() {
         ? `${r.value}%`
         : d.kind === "amount"
           ? fmtIQD(Number(r.value))
-          : t(CHOICE_LABEL[String(r.value)] ?? String(r.value));
+          : d.kind === "hours"
+            ? t("{n} hours", { n: String(r.value) })
+            : t(CHOICE_LABEL[String(r.value)] ?? String(r.value));
     const others = rules.rows.filter((x) => x.key === d.key && x.scopeType !== "business").length;
     return [{ key: d.key, value, others }];
   });

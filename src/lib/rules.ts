@@ -11,6 +11,8 @@ export const RULE_ORDER = [
   "waste_approval_over",
   "waste_approval_window",
   "negative_stock",
+  "usd_rate_max_age_hours",
+  "usd_round_to",
 ] as const;
 export type RuleKey = (typeof RULE_ORDER)[number];
 export type ScopeType = "business" | "role" | "location" | "item_type" | "item";
@@ -23,6 +25,8 @@ export const RULE_LABEL: Record<RuleKey, string> = {
   waste_approval_over: "Losses a manager approves",
   waste_approval_window: "One person's losses are added up over",
   negative_stock: "Using more stock than the books hold",
+  usd_rate_max_age_hours: "A dollar rate is used for",
+  usd_round_to: "Dollars are counted in dinars to the nearest",
 };
 
 /** What each rule does: a phrase, shown through t(). */
@@ -39,6 +43,10 @@ export const RULE_HELP: Record<RuleKey, string> = {
     "An item's losses by anyone are always added up over the day. A person's are added up as chosen here.",
   negative_stock:
     "When a sale, a loss, a batch or a correction would use more than the books hold. By default, what is made here is refused and everything else is allowed with a red alert. “Allowed, with no alert” is for chosen items only.",
+  usd_rate_max_age_hours:
+    "The till takes dollars at the rate a manager set, for this many hours after it was set. Older, dollars are refused until a manager sets today's on Sales → Dollars.",
+  usd_round_to:
+    "Dollars handed over are worth their number times the rate, rounded to the nearest step (half-way rounds up). The change is given in dinars.",
 };
 
 /** The choices of a choice rule: phrases, shown through t(). */
@@ -71,7 +79,8 @@ export const RULE_PHRASES: readonly string[] = [
 
 export interface RuleDefinition {
   key: RuleKey;
-  kind: "percent" | "amount" | "choice";
+  /** hours: how long something lasts (0043). */
+  kind: "percent" | "amount" | "choice" | "hours";
   min: number | null;
   max: number | null;
   whole: boolean;
@@ -125,7 +134,7 @@ export function parseBusinessRules(raw: unknown): BusinessRules {
     const x = defs[key] ?? {};
     return {
       key,
-      kind: x.kind === "percent" || x.kind === "choice" ? x.kind : "amount",
+      kind: x.kind === "percent" || x.kind === "choice" || x.kind === "hours" ? x.kind : "amount",
       min: x.min == null ? null : Number(x.min),
       max: x.max == null ? null : Number(x.max),
       whole: Boolean(x.whole),

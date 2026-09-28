@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { PosItem } from "@/lib/db/pos";
 import type { SaleReceipt } from "@/lib/actions/sales";
 import { fmtIQD, fmtQty } from "@/lib/format";
+import { fmtRate, fmtUSD } from "@/lib/fx";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import { useChannels } from "@/components/ChannelsProvider";
@@ -423,7 +424,9 @@ export function OrderPanel({
             {dirty && <span className="badge err">{t("pos.notSaved")}</span>}
           </div>
           {isBill && order.openedAt && (
-            <div className="order-opened muted">
+            // The minutes open are the browser's own clock's, which may have
+            // ticked since the server's rendered them.
+            <div className="order-opened muted" suppressHydrationWarning>
               {t("pos.openedBy")} {order.openedBy ?? "—"}
               {opened !== null ? ` · ${opened} ${t("pos.min")}` : ""}
             </div>
@@ -472,14 +475,20 @@ export function OrderPanel({
               <strong>
                 ✅ {t("pos.recorded")} · {receipt.orderId.slice(0, 8)}
               </strong>
-              {receipt.payments.length > 1 ? (
+              {receipt.payments.length > 1 || receipt.payments.some((p) => p.currency === "USD") ? (
                 <span
                   data-testid="receipt-payments"
                   style={{ display: "flex", gap: 4, flexWrap: "wrap" }}
                 >
                   {receipt.payments.map((p, i) => (
                     <span key={i} className="badge ok">
-                      {t(`pos.tender.${p.type}`)} {fmtIQD(p.amount)}
+                      {p.currency === "USD"
+                        ? t("{usd} at {rate} = {amount}", {
+                            usd: fmtUSD(p.usd ?? 0),
+                            rate: fmtRate(p.rate ?? 0),
+                            amount: fmtIQD(p.received ?? p.amount),
+                          })
+                        : `${t(`pos.tender.${p.type}`)} ${fmtIQD(p.amount)}`}
                     </span>
                   ))}
                 </span>

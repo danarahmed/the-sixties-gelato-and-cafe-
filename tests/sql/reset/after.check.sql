@@ -37,6 +37,9 @@ select test.eq((select count(*) from sales_order) + (select count(*) from journa
                + (select count(*) from accounting_period) + (select count(*) from document_counter)
                + (select count(*) from request_log), 0::bigint,
   'no sale, journal, stock movement, cash event, open bill, session, period, number or kept answer is left');
+select test.eq((select count(*) from fx_rate) + (select count(*) from fx_cash_event) + (select count(*) from fx_exchange)
+               + (select count(*) from session_dollar_count), 0::bigint,
+  'nor a dollar rate, or dollars taken, counted or exchanged');
 select test.eq((select count(*) from cash_drawer where business_id = '00000000-0000-0000-0000-0000000000b1')::int, 2,
   'each branch keeps its drawer');
 select test.eq((select count(*) from approval) + (select count(*) from pin_attempt), 0::bigint,
@@ -44,7 +47,7 @@ select test.eq((select count(*) from approval) + (select count(*) from pin_attem
 select test.eq((select count(*) from alert)::int, 0, 'nor the alerts raised on them: they rise again from what is recorded next');
 select test.eq((select alert_settings from business where id = '00000000-0000-0000-0000-0000000000b1'),
   '{"margin_target_percent": 65}'::jsonb, 'the alert thresholds are kept');
-select test.ok(exists (select 1 from audit_log where action = 'business.reset_test_data' and (after_state ->> 'sales_order')::int = 4),
+select test.ok(exists (select 1 from audit_log where action = 'business.reset_test_data' and (after_state ->> 'sales_order')::int = 5),
   'the audit trail records what was cleared');
 select test.ok(exists (select 1 from audit_log where action = 'cash.session.close'), 'and still holds what happened before it');
 

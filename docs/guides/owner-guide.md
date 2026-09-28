@@ -179,6 +179,16 @@ fast. Set it up once, on **Products** and on the till itself:
   out from what was handed over. A refund of such a sale gives back each way
   its share, or as the customer wants, never more than a way paid. **Reports
   → Sales by payment method** shows what cash, card and the platforms took.
+- **US dollars** (`0043`): each morning a manager sets the day's rate on
+  **Sales → Dollars**, saying where it comes from (an exchange office, the
+  market). The till takes dollars at it for 36 hours, valued to the nearest
+  250 and with the change in dinars (both rules on **Settings → Rules**).
+  At each close the dollars are counted with the dinars and all go to the
+  safe; a dollar missing or found is posted to 6300 at what the dollars were
+  taken at. When you change them, record it on **Sales → Dollars → Exchange
+  dollars for dinars**: what you received against what they were taken at
+  goes to 6950 Exchange differences. **Reports → Dollars** shows it all, and
+  the books check the dollars held against 1001 and 1006.
 - **Costed at nothing:** a product flagged this way on Products has no recipe,
   or uses an ingredient with no cost yet, so its sales show full profit. Give
   it its recipe (or say why it uses no stock), or give the ingredient its cost.
