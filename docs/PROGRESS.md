@@ -713,7 +713,32 @@ browser tests through the real app, or both.
   ever was). Built and tested: a new SQL suite, a new
   browser suite, unit tests of the dollars' value (the database's own on 60
   cases), the change and a payment partly in dollars, and every new text in
-  Arabic and Kurdish.
+  Arabic and Kurdish. The migration was applied to the live database on 28
+  September 2026. The text stored there is the file byte for byte, and it
+  matches the tested build object by object, permissions included (the one
+  difference, as before, is the schema `citext` lives in). It was checked as
+  the owner and the barista, in a transaction that was rolled back:
+  - a bill charged to the safe or to the dollars was refused;
+  - with no rate, dollars were refused; the barista could not set one; the
+    owner set 1,310;
+  - a latte (3,500) paid with $3: 4,000 IQD, 500 change from the drawer,
+    1001 debited 4,000 and 1000 credited 500;
+  - a rate other than the rate now, dollars worth less than their part, and
+    dollars by card were refused;
+  - $1 with the rest by card; a void gave the $3 back to the till's dollars;
+    a refund was in dinars;
+  - the close counted $3 of the $4 the till held: 3,938 to the safe, 1,312
+    to cash over and short;
+  - more dollars than the safe held were refused; its $3 exchanged into the
+    bank for 4,188, 250 to exchange differences;
+  - the report was right, and all ten checks stayed at zero.
+
+  Nothing was kept: every table's count as it was, but the three new accounts
+  and the rate's permission for three roles. The security advisors add the
+  four new functions and list the three closes under their new signatures,
+  each checking its permission; the performance advisors add notes on the new
+  tables. The screens went live with
+  [pull request #32](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/32).
 
 ## The August 2026 audit, finding by finding
 
