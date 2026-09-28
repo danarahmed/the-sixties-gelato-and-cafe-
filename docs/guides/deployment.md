@@ -43,6 +43,7 @@ Plan a short window when the café is closed.
 | US dollars at the till (`0043`)         | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0043`](#after-0043)). The screens were merged ([pull request #32](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/32)) and deployed                  |
 | Purchasing (`0044`)                     | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0044`](#after-0044)). The screens were merged ([pull request #33](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/33)) and deployed                  |
 | What to buy (`0045`)                    | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0045`](#after-0045)). The screens were merged ([pull request #34](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/34)) and deployed                  |
+| Batches and use-by dates (`0046`)       | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0046`](#after-0046)). The screens were merged ([pull request #35](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/35)) and deployed                  |
 
 ## 0. Before you start
 
@@ -1470,6 +1471,105 @@ The security advisor adds the four functions above, each checking its
 permission. The performance advisor adds a note that the new table's link to
 who changed it last has no index of its own, and that one new index is not
 used yet.
+
+## After `0046`
+
+Migration `0046` (release U) numbers each batch and gives it a use-by, keeps
+what is made batch by batch, and plans the day:
+
+- **A use-by for each batch**: the recipe's shelf life (**What it makes keeps
+  for**, in hours or days, on the batch recipe) from when the batch was made,
+  or a date given; a manager changes it later with a reason (**Change the
+  use-by…**), on the audit trail.
+- **In stock by batch** (Production): each batch of what is made here, what
+  is left of it and its use-by: past it, due today, due within a day, good.
+  What leaves such an item is taken from its batches, the one to be used
+  first first and one past its use-by last; what is thrown away as expired,
+  or found missing on a count, from what is past its use-by first; a void, a
+  refund back on the shelf, a loss taken back and a batch cancelled go back
+  to the batches they left.
+- **A batch's page** (its number, in the batches list): when it was made and
+  by whom, what came out against the recipe, and what became of it: made =
+  sold + used + lost ± counts + left, with each movement of the batch.
+- **A batch made earlier** (**Made earlier: yesterday or today, recorded
+  now**): recorded by a manager with why, not before the last approved count
+  of its items; its stock moves when it was made.
+- **What to make** (Production, today or tomorrow): what each recipe's output
+  sold and was used on the same weekday over the last 4 to 8 weeks, on
+  average, less what is on hand and good through the day, in whole batches,
+  with the ingredients short.
+- **Alerts**: a batch past its use-by with stock left is red; one due within
+  a day, orange.
+- **Reports → Production**: the batches made in the dates.
+
+What it adds:
+
+- columns: a batch's number, use-by and why it was recorded late; a batch
+  recipe's shelf life; a lot's use-by, batch, place and what is left;
+- the table `lot_movement`, each stock movement of an item kept batch by
+  batch split by batch, readable only by those who see costs, written only
+  by a trigger on stock movements, and never changed;
+- the functions signed-in users may call: `production_lots`,
+  `production_plan` and `batch_reconciliation` (`production.record` or
+  `cost.view`), `report_production` (`cost.view`) and `set_batch_use_by`
+  (`inventory.adjust.approve`, keyed), each checking its permission; and new
+  parameters for `record_production` (when it was made, the use-by, why late)
+  and `save_batch_recipe` (the shelf life), each left out as before;
+- `void_sale` locks its items first, and `review_loss` names the loss it
+  takes back;
+- `alert_conditions` wrapped (0045's kept as `alert_conditions_0045`, called
+  by nobody signed in): the use-by rule, whose link is `/production#lots`.
+
+It goes in before the screens: those deployed before it keep working, since
+what they call takes the same parameters as before, and the new ones show
+the batches, their use-by and the plan.
+
+It was applied on 28 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0045` build. The text stored there
+is the file byte for byte (md5 `f26ae0b4a88ea34a796efd12692436be`, 66,809
+bytes). It was then compared with the tested build, object by object, the role
+permissions and column grants included: identical, but for the schema `citext`
+lives in, as before.
+
+On applying, it found one item made in batches, the caramel gelato, and began
+to keep it batch by batch: its 3,000 g at Main Branch became stock with no
+lot (one row), the change on the audit trail. Its three batches were
+numbered 1 to 3 in the order they were made; the next is 4.
+
+It was checked as the owner and the barista, in a transaction that was rolled
+back:
+
+- **Refused:** the barista changing a use-by, reading Reports → Production,
+  and recording a batch made earlier ("A batch made earlier is recorded by a
+  manager").
+- **Read by the barista:** the batches in stock (none yet); the plan for
+  Monday 28 September (the caramel gelato, with two days of history: too
+  little to plan by); and batch 1's page, made before `0046`, so with no story
+  of its own.
+- **A shelf life:** the caramel gelato recipe set to keep 48 hours.
+- **A batch:** numbered 4, in lot B4, 1,000 g, used by two days after it was
+  made; sent again with the same key, the same batch. The gelato then held
+  3,000 g with no lot and 1,000 g in B4, the batches adding up to the stock;
+  listed first, with 1,000 g left; on its page, made 1,000, left 1,000.
+- **Its use-by** changed to two hours on, with a reason: an orange alert,
+  "caramel gelato, batch 4, is to be used by 29 Sep 01:37: 1000 g left".
+- **Made earlier:** a tenth of a batch, recorded as made two hours before,
+  with why: batch 5, its stock moved when it was made.
+- **The books:** no journal; eight stock movements (the two batches); all
+  ten checks at zero before and after; on the audit trail, the recipe's
+  change, the two batches and the use-by.
+
+Nothing was kept: every table's count is as it was (286 stock movements,
+journals to 1091, 3 batches, no lot), but for the audit row of the gelato's
+tracking, the batch numbers' counter and the gelato's one row of stock with
+no lot.
+
+The security advisor adds the five new functions above and the two whose
+parameters changed, each checking its permission. The performance advisor
+adds notes that three new links (a lot's place, and a lot movement's business
+and place) have no index of their own, and drops two that the new indexes
+cover.
 
 ## Clearing the test records
 
