@@ -44,6 +44,7 @@ Plan a short window when the café is closed.
 | Purchasing (`0044`)                     | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0044`](#after-0044)). The screens were merged ([pull request #33](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/33)) and deployed                  |
 | What to buy (`0045`)                    | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0045`](#after-0045)). The screens were merged ([pull request #34](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/34)) and deployed                  |
 | Batches and use-by dates (`0046`)       | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0046`](#after-0046)). The screens were merged ([pull request #35](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/35)) and deployed                  |
+| Losses and giveaways (`0047`–`0048`)    | ✅ Migrations applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in transactions that were rolled back (see [After `0048`](#after-0048)). The screens were merged ([pull request #36](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/36)) and deployed                 |
 
 ## 0. Before you start
 
@@ -1570,6 +1571,111 @@ parameters changed, each checking its permission. The performance advisor
 adds notes that three new links (a lot's place, and a lot movement's business
 and place) have no index of their own, and drops two that the new indexes
 cover.
+
+## After `0048`
+
+Migrations `0047` and `0048` (release V) give each kind of loss its own
+account, record a loss whole, give away at the till, and report what was
+lost:
+
+- **The accounts**: waste, spoilage, expired, damaged and melt stay on 5300
+  Waste & spoilage; what is lost making a batch or preparing to sell (two new
+  kinds, **Production waste** and **Preparation waste**) goes to 5310
+  Production and preparation loss; a staff meal to 6110 Staff meals, on the
+  house to 6610 Complimentary items, a sample to 6620 Marketing samples. 5310,
+  like 5300, takes no bill, expense or supplier's credit.
+- **Record a loss** (Inventory): the kind first, saying what it means and
+  where it is charged; then an item in any of its units (from the batch named,
+  for one kept batch by batch), or a product as its recipe makes it; and why.
+  The café's rules decide who approves it, as before; a loss that waits is
+  approved or reversed whole.
+- **Give away…** (the till): what is in the cart, with its add-ons, as a
+  staff meal, on the house or a sample, with why. No revenue and no payment:
+  its cost goes to its own account, it takes a turn number and prints the
+  bar's ticket, and over the limit a manager approves it on the spot with
+  their PIN. It is not an order: the sales, the drawer and the order counts
+  are as they were.
+- **Reports → Losses**: what was lost in the dates by kind with its account,
+  by item, by person and by day, the giveaways, and each loss, what waits and
+  what was reversed apart.
+- **Alerts**: waste well above its usual counts 5310 with 5300; running out
+  counts the new kinds as use; the losses waiting are counted a loss at a
+  time.
+
+What they add:
+
+- two kinds of stock movement, `production_waste` and `preparation_waste`
+  (`0047`, on its own: a new kind cannot be used in the transaction that adds
+  it);
+- four accounts in each café's chart: 5310, 6110, 6610 and 6620;
+- the tables `stock_loss` and `stock_loss_line`, a loss and what it took,
+  readable only by those who see costs, written only by the functions below,
+  and never changed;
+- the functions signed-in users may call: `record_loss` (`waste.record`,
+  keyed), `give_away` (`sale.create`, keyed) and `report_losses`
+  (`cost.view`), each checking its permission; `losses_waiting` answers with
+  each loss's number, account and batch too; `record_waste` writes its loss
+  the same way, answering as before with the loss's number added;
+- `review_loss` approves or reverses a loss whole; the records checked
+  (`document_problems`) include a loss with no journal and a journal whose
+  loss does not exist; bills, expenses and supplier's credits refuse 5310;
+- `alert_conditions_0031` and `alert_conditions_0040` (called by nobody
+  signed in) count the new kinds and 5310.
+
+They go in before the screens: those deployed before them keep working, since
+`record_waste` answers as before and `losses_waiting` gives the same columns
+with three more, and the new ones record a loss by kind, give away at the
+till and show the report.
+
+They were applied on 28 September 2026 with the Supabase connector (one
+`apply_migration` call each, one transaction each), after a read-only check
+that the live database still matched the verified `0046` build. The texts
+stored there are the files byte for byte (`0047`: md5
+`8255787cdf64516ecdaa8680e7a9a0b1`, 750 bytes; `0048`: md5
+`cae71a86a2056e955efef99081084a0f`, 120,679 bytes). They were then compared
+with the tested build, object by object, the role permissions and column
+grants included: identical, but for the schema `citext` lives in, as before.
+
+On applying, the four new accounts were added to the café's chart (36
+accounts); no record changed.
+
+They were checked as the owner and the barista, in two transactions that
+were rolled back (the live system has no cashier who has signed in; the
+barista, who sells too, gave away at the till):
+
+- **The barista's loss:** a millilitre of milk lost in preparation, under the
+  limit: Dr 5310 / Cr 1200, 2 IQD, its cost not shown to the barista; sent
+  again with the same key, the same loss.
+- **Refused:** the barista reading Reports → Losses ("needs cost.view") and
+  giving away an empty cart ("The cart is empty").
+- **Over the limit** (set to 1 for the check): the barista's dropped americano
+  was sent to a manager ("This loss needs a manager's approval: ask one to
+  approve it now, or save it to wait for their approval"), then saved to
+  wait: one loss waiting, "americano 1 damaged 5300"; the owner reversed it
+  whole, its three movements back and its one journal (806 IQD) reversed.
+- **A staff meal at the till:** the barista gave an americano away, eaten in:
+  turn 1, Dr 6110 / Cr 1200, 806 IQD; sent again with the same key, the same
+  giveaway. Waste given away, a delivery channel and no reason were refused;
+  over the limit, it asked for a manager. The owner gave one on the house,
+  taken away: turn 2, approved as given, Dr 6610 / Cr 1200, 788 IQD (the
+  americano's recipe takes a cup lid only when eaten in).
+- **The report:** the losses of the day, the reversed one apart, and the
+  giveaways by kind (one staff meal, one on the house).
+- **`record_waste`**, as the screens before these call it: a loss approved as
+  recorded, answering with its movement, its journal and the loss's number.
+- **The books:** no order, payment or drawer entry; all ten checks at zero
+  before and after; no record without its journal; nothing offered as stock
+  the old app did not journal; on the audit trail, the losses, the giveaways,
+  the reversal and the rule's changes.
+
+Nothing was kept: every table's count is as it was (286 stock movements,
+journals to 1091, no loss), but for the four new accounts.
+
+The security advisor adds the three new functions above (`record_loss`,
+`give_away` and `report_losses`), each checking its permission. The
+performance advisor adds notes that eight links of the two new tables (a
+loss's place, journal, recorder and approver; a line's business, item,
+product and batch) have no index of their own.
 
 ## Clearing the test records
 

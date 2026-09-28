@@ -8,8 +8,10 @@ recipes, `0039`) and release O (the café's rules, `0040`) are live since 27
 September 2026, and release P (sizes and add-ons, `0041`), release Q (split
 payments, `0042`), release R (US dollars at the till, `0043`), release S
 (purchase orders, returns to a supplier and their credit notes, `0044`),
-release T (the buying list, `0045`) and release U (batches, their use-by dates
-and lots, and the day's plan, `0046`) since 28 September.
+release T (the buying list, `0045`), release U (batches, their use-by dates
+and lots, and the day's plan, `0046`) and release V (losses by kind with their
+accounts, giveaways at the till and the loss report, `0047`–`0048`) since 28
+September.
 What was built differs from the plan below in these ways.
 
 Release J:

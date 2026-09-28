@@ -929,7 +929,36 @@ browser tests through the real app, or both.
   sales, the drawer and the order counts are as they were. **Reports → Losses**
   gives what was lost in the dates by kind with its account, by item and by
   person, the giveaways, and each loss, what waits and what was reversed
-  apart. The alerts count 5310 as waste and the new kinds as use. Built and
+  apart. The alerts count 5310 as waste and the new kinds as use. The
+  migrations were applied to the live database on 28 September 2026. The texts
+  stored there are the files byte for byte, and they match the tested build
+  object by object, permissions included (the one difference, as before, is
+  the schema `citext` lives in). On applying, the four new accounts joined the
+  café's chart; no record changed. They were checked as the owner and the
+  barista, in transactions that were rolled back (the live system has no
+  cashier who has signed in, so the barista, who sells too, gave away at the
+  till):
+  - the barista recorded a millilitre of milk lost in preparation: to 5310,
+    under the limit, its cost not shown to them; sent again with its key, the
+    same loss; but could not read Reports → Losses;
+  - over a limit of 1, the barista's dropped americano was sent to a manager,
+    then saved to wait: one loss waiting (damaged, to 5300), which the owner
+    reversed whole, its three movements back and its one journal reversed;
+  - the barista gave an americano away as a staff meal, eaten in: turn 1, to
+    6110; sent again with its key, the same giveaway; waste, a delivery
+    channel and no reason were refused, and over the limit it asked for a
+    manager; the owner gave one on the house, to 6610, approved as given;
+  - no order, payment or drawer entry was written; Reports → Losses counted
+    the losses, the reversed one apart, and the giveaways by kind;
+    `record_waste` answered as before, with the loss's number;
+  - all ten checks stayed at zero, and no record was left without its
+    journal.
+
+  Nothing was kept: every table's count is as it was, but for the four new
+  accounts. The security advisors add the three new functions a signed-in
+  person calls, each checking its permission; the performance advisors add
+  notes on the new tables' links. The screens went live with
+  [pull request #36](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/36). Built and
   tested: a new SQL suite (each kind to its account, a product lost as made, a
   batch named, the rules added up, a loss waiting approved and reversed whole,
   giveaways with add-ons and turn numbers, record_waste as before, the report,
