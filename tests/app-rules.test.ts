@@ -98,6 +98,23 @@ import {
   tillThrough,
 } from "@/lib/settlements";
 import { cleanOrderNo, platformOrderNo } from "@/lib/validation";
+import {
+  CREDIT_KIND_LABEL,
+  PURCHASING_PHRASES,
+  STAGE_LABEL,
+  differences,
+  inOrderUnit,
+  isOpen,
+  needsDeliveryConfirmation,
+  orderStage,
+  orderTotal,
+  prefillFromOrder,
+  purchaseOrderFrom,
+  purchaseOrdersFrom,
+  purchasingReportFrom,
+  statementFrom,
+  type PoLine,
+} from "@/lib/purchasing";
 import Decimal from "decimal.js";
 import {
   addLine,
@@ -2689,5 +2706,263 @@ describe("US dollars at the till (0043), as the database takes them", () => {
         AUDIT_GROUPS.find((g) => g.key === "cash")?.prefixes.some((p) => a.startsWith(p)),
       ).toBe(true);
     }
+  });
+});
+
+describe("purchasing: orders, returns and the suppliers' credits (0044)", () => {
+  const line = (over: Partial<PoLine> = {}): PoLine => ({
+    lineId: "l1",
+    lineNo: 1,
+    itemId: "beans",
+    item: "Golden beans",
+    qty: 6,
+    unitCode: "kg",
+    unitPrice: 9000,
+    amount: 54000,
+    baseQty: 6000,
+    baseUnit: "g",
+    receivedBase: 0,
+    outstandingBase: 6000,
+    ...over,
+  });
+
+  it("reads an order as the database gives it, and never a status it does not know", () => {
+    const o = purchaseOrderFrom({
+      id: "po-1",
+      po_no: 1,
+      status: "sent",
+      receiving: "part",
+      supplier_id: "kci",
+      supplier: "KCI",
+      location_id: "main",
+      location: "Main",
+      expected_on: "2026-10-01",
+      note: null,
+      total: "58000",
+      created_at: "2026-09-28T08:00:00Z",
+      created_by: "Demo Buyer",
+      approved_at: "2026-09-28T09:00:00Z",
+      approved_by: "Demo Manager",
+      lines: [
+        {
+          line_id: "l1",
+          line_no: 1,
+          item_id: "beans",
+          item: "Golden beans",
+          qty: 6,
+          unit_code: "kg",
+          unit_price: 9000,
+          amount: 54000,
+          base_qty: 6000,
+          base_unit: "g",
+          received_base: 4000,
+          outstanding_base: 2000,
+        },
+      ],
+      unexpected: [{ item_id: "milk", item: "Milk", base_qty: 2, base_unit: "l" }],
+      deliveries: [{ receipt_id: "r1", receipt_no: 7, received_at: "2026-09-29T10:00:00Z" }],
+      may_approve: "true",
+    });
+    expect(o.total).toBe(58000);
+    expect(o.lines[0]?.outstandingBase).toBe(2000);
+    expect(o.unexpected).toEqual([{ itemId: "milk", item: "Milk", baseQty: 2, baseUnit: "l" }]);
+    expect(o.deliveries[0]?.receiptNo).toBe(7);
+    expect(o.mayApprove).toBe(false);
+    expect(purchaseOrderFrom({ status: "lost", receiving: "some" })).toMatchObject({
+      status: "draft",
+      receiving: "none",
+      lines: [],
+    });
+    expect(purchaseOrdersFrom(null)).toEqual({ approveUpTo: null, orders: [] });
+    expect(purchaseOrdersFrom({ approve_up_to: 250000, orders: [{}] }).approveUpTo).toBe(250000);
+  });
+
+  it("names an order's stage from its status and what has come", () => {
+    expect(orderStage({ status: "approved", receiving: "none" })).toBe("approved");
+    expect(orderStage({ status: "sent", receiving: "part" })).toBe("part");
+    expect(orderStage({ status: "approved", receiving: "all" })).toBe("received");
+    expect(orderStage({ status: "closed", receiving: "part" })).toBe("closed");
+    expect(orderStage({ status: "draft", receiving: "none" })).toBe("draft");
+    expect(orderStage({ status: "cancelled", receiving: "none" })).toBe("cancelled");
+    expect(isOpen({ status: "sent" })).toBe(true);
+    expect(isOpen({ status: "draft" })).toBe(false);
+    expect(isOpen({ status: "closed" })).toBe(false);
+  });
+
+  it("says what has come in the unit each line was ordered in", () => {
+    expect(inOrderUnit(line(), 4000)).toBe(4);
+    expect(inOrderUnit(line({ qty: 2, baseQty: 100, unitCode: "sleeve_50" }), 50)).toBe(1);
+    expect(inOrderUnit(line({ qty: 3, baseQty: 3000 }), 1234.5678)).toBe(1.235);
+    expect(inOrderUnit(line({ baseQty: 0 }), 10)).toBe(0);
+  });
+
+  it("pre-fills a delivery with what is still to come, at the order's price", () => {
+    const o = {
+      lines: [
+        line({ receivedBase: 4000, outstandingBase: 2000 }),
+        line({
+          lineId: "l2",
+          itemId: "cups",
+          qty: 2,
+          unitCode: "sleeve_50",
+          unitPrice: 2000,
+          baseQty: 100,
+          receivedBase: 100,
+          outstandingBase: 0,
+        }),
+      ],
+    };
+    expect(prefillFromOrder(o)).toEqual([
+      { poLineId: "l1", itemId: "beans", qty: 2, unitCode: "kg", unitPrice: 9000 },
+    ]);
+  });
+
+  it("shows how a delivery line differs from its order", () => {
+    const o = { lines: [line({ receivedBase: 4000, outstandingBase: 2000 })] };
+    const at = (qty: number, unitPrice = 9000, unitCode = "kg", itemId = "beans") =>
+      differences(o, { itemId, qty, unitCode, unitPrice });
+    expect(at(2)).toEqual([]);
+    expect(at(3)).toEqual([{ kind: "more", ordered: 2, coming: 3 }]);
+    expect(at(1, 9500)).toEqual([
+      { kind: "less", ordered: 2, coming: 1 },
+      { kind: "price", ordered: 9000, now: 9500 },
+    ]);
+    expect(at(2, 9000, "kg", "milk")).toEqual([{ kind: "unexpected" }]);
+    // In another unit than the order's, the database's check in base units is the one.
+    expect(at(2500, 9, "g")).toEqual([]);
+  });
+
+  it("totals an order as the database does: each line to the dinar, half to even", () => {
+    expect(
+      orderTotal([
+        { qty: 6, unitPrice: 9000 },
+        { qty: 2, unitPrice: 2000 },
+      ]),
+    ).toBe(58000);
+    expect(orderTotal([{ qty: 2.5, unitPrice: 1 }])).toBe(2);
+    expect(orderTotal([{ qty: 3.5, unitPrice: 1 }])).toBe(4);
+    expect(orderTotal([{ qty: 0.1, unitPrice: 3 }])).toBe(0);
+    expect(orderTotal([])).toBe(0);
+  });
+
+  it("knows a delivery refused only to be confirmed from one refused outright", () => {
+    expect(needsDeliveryConfirmation("Check the price: Golden beans at 20000 is 122% above")).toBe(
+      true,
+    );
+    expect(
+      needsDeliveryConfirmation(
+        "Check the quantity: Golden beans: 2 kg ordered, 3 with this delivery",
+      ),
+    ).toBe(true);
+    expect(needsDeliveryConfirmation("Check the price and the quantity: …")).toBe(true);
+    expect(needsDeliveryConfirmation("Order 3 is not approved: it cannot be received")).toBe(false);
+  });
+
+  it("reads a supplier's statement and the purchasing report", () => {
+    const st = statementFrom({
+      supplier: { id: "kci", name: "KCI", contact: null, phone: "0750" },
+      from: "2026-09-01",
+      to: "2026-09-30",
+      opening: 0,
+      lines: [
+        { date: "2026-09-02", kind: "bill", id: "b1", ref: "INV-1", charge: 44000, balance: 44000 },
+        {
+          date: "2026-09-03",
+          kind: "credit",
+          id: "c1",
+          ref: null,
+          credit: 400,
+          balance: 43600,
+          credit_no: 1,
+          credit_kind: "goods_return",
+          return_no: 1,
+        },
+        { date: "2026-09-04", kind: "odd", id: "x" },
+      ],
+      closing: 43600,
+      open_credits: [{ credit_id: "c1", credit_no: 1, kind: "refund", amount: 400, left: 0 }],
+    });
+    expect(st.lines.map((l) => [l.kind, l.creditKind, l.returnNo])).toEqual([
+      ["bill", null, null],
+      ["credit", "goods_return", 1],
+      ["bill", null, null],
+    ]);
+    expect(st.closing).toBe(43600);
+    expect(st.openCredits[0]?.kind).toBe("other");
+    const r = purchasingReportFrom({
+      orders: [{ po_id: "p", po_no: 1, status: "closed", receiving: "part", ordered: 270000 }],
+      returns: [{ return_id: "x", return_no: 1, against: "delivery" }, { against: "?" }],
+      credits: [{ credit_id: "c", credit_no: 1, kind: "price", amount: 400, set_against: 400 }],
+      totals: { returned: 3400, credited: 3400, credits_left: 0 },
+    });
+    expect(r.orders[0]).toMatchObject({ status: "closed", receiving: "part", ordered: 270000 });
+    expect(r.returns.map((x) => x.against)).toEqual(["delivery", "account"]);
+    expect(r.credits[0]).toMatchObject({ kind: "price", setAgainst: 400, left: 0 });
+    expect(r.totals).toEqual({ returned: 3400, credited: 3400, creditsLeft: 0 });
+    expect(purchasingReportFrom(null).orders).toEqual([]);
+  });
+
+  it("has every stage and kind of credit in Arabic and Kurdish", () => {
+    expect(Object.keys(STAGE_LABEL)).toHaveLength(7);
+    expect(Object.keys(CREDIT_KIND_LABEL)).toEqual(["goods_return", "price", "other"]);
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        PURCHASING_PHRASES.filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
+  });
+
+  it("names each purchasing action on the audit trail, under suppliers and deliveries", () => {
+    const migration = readFileSync(
+      join(__dirname, "../supabase/migrations/0044_purchasing.sql"),
+      "utf8",
+    );
+    for (const a of [
+      "purchase.order.create",
+      "purchase.order.change",
+      "purchase.order.approve",
+      "purchase.order.send",
+      "purchase.order.close",
+      "purchase.order.cancel",
+      "purchase.quantity_confirmed",
+      "purchase.return",
+      "purchase.credit",
+      "purchase.credit.note",
+      "purchase.credit.allocate",
+    ]) {
+      expect(migration).toContain(`'${a}'`);
+      expect(actionLabel(a)).not.toBe(a);
+      expect(
+        AUDIT_GROUPS.find((g) => g.key === "suppliers")?.prefixes.some((p) => a.startsWith(p)),
+      ).toBe(true);
+    }
+    const none = new Map<string, string>();
+    expect(subjectOf("purchase_order", "x", null, { po_no: 3 }, none)).toBe("Purchase order 3");
+    expect(subjectOf("supplier_return", "x", null, { return_no: 1 }, none)).toBe("Return 1");
+    expect(subjectOf("supplier_credit", "x", null, { credit_no: 2 }, none)).toBe("Credit 2");
+  });
+
+  it("shows a return's and a credit's words on the trail, and a status as before", () => {
+    const none = new Map<string, string>();
+    expect(
+      describeChanges(null, { credit_kind: "price", against: "account", credit_no: 2 }, none),
+    ).toEqual([
+      { field: "For", before: "", after: "A lower price" },
+      { field: "Owed back", before: "", after: "On the account" },
+      { field: "Credit note", before: "", after: "2" },
+    ]);
+    expect(describeChanges({ status: "approved" }, { status: "draft" }, none)).toEqual([
+      { field: "Status", before: "approved", after: "draft" },
+    ]);
+  });
+
+  it("lets the managers approve orders, up to the limit a rule sets", () => {
+    expect(RULE_ORDER).toContain("po_approve_up_to");
+    for (const r of ["owner", "general_manager", "branch_manager"] as Role[])
+      expect(ROLE_PERMISSIONS[r].has("purchase.approve"), r).toBe(true);
+    for (const r of ["cashier", "purchasing"] as Role[])
+      expect(ROLE_PERMISSIONS[r].has("purchase.approve"), r).toBe(false);
   });
 });

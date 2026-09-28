@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   cancelBillAction,
@@ -12,6 +13,8 @@ import {
 import type { PaymentSource } from "@/lib/validation";
 import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
+import type { SupplierCredit } from "@/lib/purchasing";
+import { SupplierCredits } from "@/components/purchasing/SupplierCredits";
 import { Notice } from "@/components/ui";
 import type { OpenBill, VendorRow } from "@/lib/db/books";
 import { OperationStatus, useOperation } from "@/components/useOperation";
@@ -30,7 +33,7 @@ export interface AccountOption {
   name: string;
 }
 
-type Tab = "statement" | "bills" | "edit" | "new";
+type Tab = "statement" | "bills" | "credits" | "edit" | "new";
 type Msg = { ok: boolean; text: string } | null;
 
 export function VendorsClient({
@@ -44,6 +47,10 @@ export function VendorsClient({
   nextBillNo,
   canPay,
   canAddVendor,
+  credits = [],
+  billedReceipts = [],
+  creditAccounts = [],
+  canCredit = false,
 }: {
   vendors: VendorRow[];
   bills: OpenBill[];
@@ -56,6 +63,14 @@ export function VendorsClient({
   nextBillNo: string | null;
   canPay: boolean;
   canAddVendor: boolean;
+  /** The suppliers' credits (0044). */
+  credits?: SupplierCredit[];
+  /** Deliveries that were billed: a lower price is credited against one. */
+  billedReceipts?: { id: string; receiptNo: number | null; supplierId: string | null }[];
+  /** Accounts a credit other than for goods may be taken off. */
+  creditAccounts?: AccountOption[];
+  /** May record a supplier's credit note (purchase.create or accounting.post). */
+  canCredit?: boolean;
 }) {
   const { t } = useT();
   const router = useRouter();
@@ -75,6 +90,7 @@ export function VendorsClient({
   const tabs: [Tab, string][] = [
     ["statement", t("Statement")],
     ["bills", t("Bills & payments")],
+    ["credits", t("Credit notes")],
   ];
   if (canAddVendor) tabs.push(["edit", t("Edit vendor")], ["new", t("New vendor")]);
 
@@ -165,6 +181,25 @@ export function VendorsClient({
               onDone={() => router.refresh()}
             />
           )}
+          {tab === "credits" && vendor && (
+            <SupplierCredits
+              key={vendor.id}
+              supplierId={vendor.id}
+              credits={credits.filter((c) => c.supplierId === vendor.id)}
+              bills={bills
+                .filter((b) => b.supplierId === vendor.id)
+                .map((b) => ({
+                  id: b.id,
+                  invoiceNo: b.invoiceNo,
+                  outstanding: b.outstanding,
+                  accountCode: b.accountCode,
+                }))}
+              deliveries={billedReceipts.filter((r) => r.supplierId === vendor.id)}
+              accounts={creditAccounts}
+              canCredit={canCredit}
+              canAllocate={canPay}
+            />
+          )}
           {tab === "edit" && vendor && (
             <EditVendor key={vendor.id} vendor={vendor} onDone={() => router.refresh()} />
           )}
@@ -206,7 +241,12 @@ function Statement({ vendor, businessName }: { vendor: VendorRow; businessName: 
         <div className="doc" style={{ fontSize: "1.02rem", fontStyle: "normal", fontWeight: 600 }}>
           {t("Statement of Account")}
         </div>
-        <div className="period">{t("All transactions to date · IQD")}</div>
+        <div className="period">
+          {t("All transactions to date · IQD")} ·{" "}
+          <Link href={`/vendors/${vendor.id}/statement`} data-testid="statement-dates">
+            {t("A statement between two dates, to print")}
+          </Link>
+        </div>
       </div>
       <div className="rule-band" style={{ marginBlockEnd: 14 }} />
 
@@ -257,6 +297,12 @@ function Statement({ vendor, businessName }: { vendor: VendorRow; businessName: 
           <span>{t("Paid")}</span>
           <span className="money">({fmtIQD(vendor.paid)})</span>
         </div>
+        {vendor.credited > 0 && (
+          <div className="srow">
+            <span>{t("Credited")}</span>
+            <span className="money">({fmtIQD(vendor.credited)})</span>
+          </div>
+        )}
         <div className="srow tot">
           <span>{t("Balance due")}</span>
           <span className="money" style={{ color: vendor.balance > 0 ? "var(--err)" : undefined }}>
@@ -563,7 +609,7 @@ function Bills({
                     </td>
                     {canPay && (
                       <td className="right">
-                        {b.paid === 0 && (
+                        {b.paid === 0 && b.credited === 0 && (
                           <CancelBill
                             billId={b.id}
                             invoiceNo={b.invoiceNo}

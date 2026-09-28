@@ -5,8 +5,28 @@ import { getReceipts } from "@/lib/db/read";
 import { fmtIQD } from "@/lib/format";
 import { businessToday } from "@/lib/dates";
 import { VendorsClient } from "@/components/books/VendorsClient";
+import { getSupplierCredits } from "@/lib/db/purchasing";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Accounts a supplier's credit other than for goods may not be taken off (0044,
+ * the database refuses the same): cash, the card's and the bank's, and stock.
+ * A credit may come off the price variance (5050), which a bill may not.
+ */
+const NOT_FOR_CREDITS = new Set([
+  "1000",
+  "1001",
+  "1005",
+  "1006",
+  "1010",
+  "1020",
+  "1100",
+  "1200",
+  "5000",
+  "5300",
+  "5400",
+]);
 
 /**
  * Accounts a non-stock bill may not be charged to (the database refuses the
@@ -32,11 +52,12 @@ export default async function VendorsPage() {
   const t = await getT();
   const today = businessToday(profile.timezone);
   const canBill = has(profile, "purchase.create") || has(profile, "accounting.post");
-  const [{ vendors, openBills }, receipts, accounts, nextBillNo] = await Promise.all([
+  const [{ vendors, openBills }, receipts, accounts, nextBillNo, credits] = await Promise.all([
     getVendorBook(today),
     getReceipts(200),
     getGlAccounts(),
     canBill ? getNextBillNumber() : Promise.resolve(null),
+    getSupplierCredits(),
   ]);
   const ageing = ageBills(openBills);
 
@@ -110,6 +131,19 @@ export default async function VendorsPage() {
         nextBillNo={nextBillNo}
         canPay={has(profile, "accounting.post")}
         canAddVendor={has(profile, "purchase.create")}
+        credits={credits}
+        billedReceipts={receipts
+          .filter((r) => r.billed && !r.reversed && !r.legacy)
+          .map((r) => ({ id: r.id, receiptNo: r.receiptNo, supplierId: r.supplierId }))}
+        creditAccounts={accounts
+          .filter(
+            (a) =>
+              a.isActive &&
+              (a.type === "expense" || a.type === "asset") &&
+              !NOT_FOR_CREDITS.has(a.code),
+          )
+          .map((a) => ({ code: a.code, name: a.name }))}
+        canCredit={canBill}
       />
 
       <p className="muted" style={{ fontSize: ".76rem", lineHeight: 1.7, maxWidth: 780 }}>

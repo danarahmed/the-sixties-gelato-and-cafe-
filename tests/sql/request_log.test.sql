@@ -26,7 +26,9 @@ $$;
 -- signed in can call.
 create temp table keyed (name text primary key);
 insert into keyed values
-  ('add_delivery_platform'), ('add_item_unit'), ('adjust_stock'), ('approve_stock_count'), ('cancel_bill'),
+  ('add_delivery_platform'), ('add_item_unit'), ('adjust_stock'), ('allocate_credit'), ('approve_po'),
+  ('approve_stock_count'), ('cancel_bill'), ('cancel_po'), ('close_po'), ('note_supplier_credit'),
+  ('record_supplier_credit'), ('return_to_supplier'), ('save_po'), ('send_po'),
   ('cancel_card_settlement'), ('cancel_platform_settlement'), ('cancel_production'), ('cancel_scheduled_price'),
   ('cancel_scheduled_recipe'), ('cancel_stock_count'), ('cancel_tab'), ('change_product_recipe'),
   ('copy_platform_setup'), ('create_item'), ('create_product'), ('create_supplier'),
@@ -37,8 +39,8 @@ insert into keyed values
   ('reverse_journal'), ('save_batch_recipe'), ('save_category'), ('save_journal'), ('save_tab'), ('save_table'),
   ('set_fx_rate'), ('set_price'), ('split_tab'), ('start_stock_count'), ('submit_stock_count'), ('unlock_period'), ('void_sale');
 grant select on keyed to public;
-select test.eq((select count(*) from keyed)::int, 51,
-  'fifty-two kinds of write are keyed: fifty-one open, the old drawer count closed since 0037');
+select test.eq((select count(*) from keyed)::int, 60,
+  'sixty-one kinds of write are keyed: sixty open, the old drawer count closed since 0037');
 select test.eq((select string_agg(p.proname, ', ') from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                  where n.nspname = 'public' and p.proname in ('count_drawer', 'count_drawer__run')
                    and (has_function_privilege('authenticated', p.oid, 'execute')

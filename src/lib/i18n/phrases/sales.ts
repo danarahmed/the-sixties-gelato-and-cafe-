@@ -532,6 +532,38 @@ const phrases: PhraseBook = {
   // A vendor statement's notes (src/lib/db/books.ts).
   "Due {date}": { ar: "تستحق في {date}", ckb: "کاتی دانەوە {date}" },
   "was {amount}": { ar: "كانت {amount}", ckb: "پێشتر {amount} بوو" },
+  // …and a supplier's credit on it (0044), shown through msg() and t().
+  "Credit — goods returned": {
+    ar: "إشعار دائن — بضاعة مُرجَعة",
+    ckb: "پسووڵەی گەڕاندنەوە — کاڵای گەڕێندراوە",
+  },
+  "Credit — a lower price": {
+    ar: "إشعار دائن — سعر أقل",
+    ckb: "پسووڵەی گەڕاندنەوە — نرخێکی کەمتر",
+  },
+  "Credit — other": { ar: "إشعار دائن — غير ذلك", ckb: "پسووڵەی گەڕاندنەوە — هی تر" },
+  "Credit {no}, their note {ref}": {
+    ar: "الإشعار الدائن {no}، وإشعارهم {ref}",
+    ckb: "پسووڵەی گەڕاندنەوەی {no}، پسووڵەکەیان {ref}",
+  },
+  // A supplier's statement between two dates (0044, supplier_statement).
+  "A statement between two dates, to print": {
+    ar: "كشف بين تاريخين، للطباعة",
+    ckb: "کەشفێک لە نێوان دوو بەرواردا، بۆ چاپکردن",
+  },
+  "{from} to {to} · IQD": { ar: "من {from} إلى {to} · IQD", ckb: "لە {from} تا {to} · IQD" },
+  "Owed before {day}": { ar: "المستحق قبل {day}", ckb: "قەرز پێش {day}" },
+  "Owed on {day}": { ar: "المستحق في {day}", ckb: "قەرز لە {day}" },
+  "Billed {billed} · cancelled {cancelled} · paid {paid} · credited {credited}": {
+    ar: "المفوتَر {billed} · الملغى {cancelled} · المدفوع {paid} · المخصوم بإشعارات دائنة {credited}",
+    ckb: "پسووڵەکراو {billed} · هەڵوەشێنراوە {cancelled} · دراو {paid} · بڕدراو بە پسووڵەی گەڕاندنەوە {credited}",
+  },
+  "Credits not yet set against a bill": {
+    ar: "إشعارات دائنة لم تُخصم من فاتورة بعد",
+    ckb: "پسووڵەی گەڕاندنەوە کە هێشتا لە پسووڵەیەک نەبڕدراون",
+  },
+  "Print the statement": { ar: "اطبع الكشف", ckb: "کەشفەکە چاپ بکە" },
+  "Back to Vendors": { ar: "العودة إلى المورّدين", ckb: "گەڕانەوە بۆ دابینکەران" },
   // The drawer in sessions (0036): the till, Sales and the sessions' record.
   "The Drawer": {
     ar: "درج النقد",

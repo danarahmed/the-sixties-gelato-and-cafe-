@@ -5,10 +5,14 @@ import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems, getItemsOutOfUse, getReceipts, getSuppliers } from "@/lib/db/read";
 import { getItemCosts } from "@/lib/db/reports";
+import { getPurchaseOrders, getSupplierReturns } from "@/lib/db/purchasing";
+import { isOpen } from "@/lib/purchasing";
 import { fmtIQD } from "@/lib/format";
 import { businessToday, dateIn, dateTimeIn, monthEnd, monthStart } from "@/lib/dates";
 import { ReceiveStockForm } from "@/components/ReceiveStockForm";
 import { CorrectionCatalogue, ReceiptCorrection } from "@/components/ReceiptCorrection";
+import { PurchaseOrders } from "@/components/purchasing/PurchaseOrders";
+import { ReturnGoods } from "@/components/purchasing/ReturnGoods";
 
 export const dynamic = "force-dynamic";
 
@@ -17,13 +21,19 @@ export default async function PurchasingPage() {
   const t = await getT();
   // A delivery entered wrong is corrected, or reversed, by whoever approves stock adjustments (0038).
   const canCorrect = has(profile, "inventory.adjust.approve");
-  const [items, suppliers, receipts, costs, outOfUse] = await Promise.all([
-    getItems(),
-    getSuppliers(),
-    getReceipts(40),
-    getItemCosts(),
-    canCorrect ? getItemsOutOfUse() : Promise.resolve([]),
-  ]);
+  const canCreate = has(profile, "purchase.create");
+  const canApprove = has(profile, "purchase.approve");
+  const canReceive = has(profile, "purchase.receive");
+  const [items, suppliers, receipts, costs, outOfUse, { orders, approveUpTo }, returns] =
+    await Promise.all([
+      getItems(),
+      getSuppliers(),
+      getReceipts(40),
+      getItemCosts(),
+      canCorrect ? getItemsOutOfUse() : Promise.resolve([]),
+      getPurchaseOrders(),
+      getSupplierReturns(20),
+    ]);
   const today = businessToday(profile.timezone);
   const itemName = new Map([...items, ...outOfUse].map((i) => [i.id, i.name]));
   const kindLabel = (k: string) =>
@@ -50,7 +60,17 @@ export default async function PurchasingPage() {
         />
       </p>
 
+      <PurchaseOrders
+        orders={orders}
+        approveUpTo={approveUpTo}
+        items={items.map((i) => ({ id: i.id, name: i.name, baseUnit: i.baseUnit, units: i.units }))}
+        suppliers={suppliers.map((s) => ({ id: s.id, name: s.name }))}
+        canCreate={canCreate}
+        canApprove={canApprove}
+      />
+
       <ReceiveStockForm
+        orders={orders.filter(isOpen)}
         items={items.map((i) => ({
           id: i.id,
           name: i.name,
@@ -62,7 +82,7 @@ export default async function PurchasingPage() {
           costNow: Number(costs.get(i.id) ?? 0) || null,
         }))}
         suppliers={suppliers.map((s) => ({ id: s.id, name: s.name }))}
-        canReceive={has(profile, "purchase.receive")}
+        canReceive={canReceive}
         canAddSupplier={has(profile, "purchase.create")}
         // As on Inventory, and as create_item() allows (0027).
         canAddItem={
@@ -71,6 +91,74 @@ export default async function PurchasingPage() {
           has(profile, "inventory.adjust.approve")
         }
       />
+
+      {(canReceive || canCreate) && suppliers.length > 0 && (
+        <ReturnGoods
+          suppliers={suppliers.map((s) => ({ id: s.id, name: s.name }))}
+          items={items.map((i) => ({
+            id: i.id,
+            name: i.name,
+            baseUnit: i.baseUnit,
+            units: i.units,
+          }))}
+          deliveries={receipts.map((r) => ({
+            id: r.id,
+            receiptNo: r.receiptNo,
+            supplierId: r.supplierId,
+            receivedOn: r.receivedOn ?? dateIn(profile.timezone, new Date(r.receivedAt)),
+            billed: r.billed,
+            usable: !r.legacy && !r.reversed && !r.unjournaled,
+            itemIds: [...new Set(r.lines.map((l) => l.itemId))],
+          }))}
+        />
+      )}
+
+      {returns.length > 0 && (
+        <div className="card tw" data-testid="returns-list">
+          <h3 style={{ marginTop: 0 }}>{t("Recent returns to suppliers")}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>{t("No.")}</th>
+                <th>{t("When")}</th>
+                <th>{t("Supplier")}</th>
+                <th>{t("Delivery")}</th>
+                <th>{t("What went back")}</th>
+                <th className="right">{t("Owed back")}</th>
+                <th>{t("How")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {returns.map((x) => (
+                <tr key={x.id} data-testid="return-row" data-return={x.returnNo}>
+                  <td className="mono">{x.returnNo}</td>
+                  <td className="muted mono" style={{ fontSize: ".8rem" }}>
+                    {dateTimeIn(profile.timezone, x.createdAt)}
+                  </td>
+                  <td>{x.supplier}</td>
+                  <td className="mono">{x.receiptNo ?? "—"}</td>
+                  <td style={{ fontSize: ".8rem" }}>
+                    {x.lines.map((l, i) => (
+                      <div key={i}>
+                        {itemName.get(l.itemId) ?? "—"} {l.qty} {l.unitCode}
+                      </div>
+                    ))}
+                    <div className="muted">“{x.reason}”</div>
+                  </td>
+                  <td className="right mono">{fmtIQD(x.value)}</td>
+                  <td style={{ fontSize: ".8rem" }}>
+                    {x.against === "delivery"
+                      ? t("Off the delivery's bill")
+                      : x.creditNo !== null
+                        ? t("Credit {no} on the account", { no: x.creditNo })
+                        : t("On the account")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <CorrectionCatalogue
         items={

@@ -815,6 +815,273 @@ const phrases: PhraseBook = {
     ar: "استُخدم مخزون يتجاوز الدفاتر، بموافقة",
     ckb: "کۆگای زیاتر لە دەفتەرەکان بەکارهات، بە ڕەزامەندی",
   },
+
+  // Purchase orders, receiving against one, returns to a supplier and the
+  // suppliers' credit notes (0044).
+  "Purchase orders": { ar: "طلبيات الشراء", ckb: "داواکارییەکانی کڕین" },
+  "New order": { ar: "طلبية جديدة", ckb: "داواکاری نوێ" },
+  "A new order": { ar: "طلبية جديدة", ckb: "داواکارییەکی نوێ" },
+  "No purchase orders yet.": {
+    ar: "لا توجد طلبيات شراء بعد.",
+    ckb: "هێشتا هیچ داواکارییەکی کڕین نییە.",
+  },
+  "An order is drafted, then approved by a manager whose limit covers its total, sent to the supplier, and received against below. It closes when all has come, or with a reason when the rest is not coming.":
+    {
+      ar: "تُكتب الطلبية مسودةً، ثم يعتمدها مدير يغطي حدُّه مجموعَها، وتُرسَل إلى المورّد، ويُستلَم مقابلها في الأسفل. وتُغلَق حين يصل كل ما فيها، أو بسببٍ يُذكر حين لا يأتي الباقي.",
+      ckb: "داواکارییەک وەک ڕەشنووس دەنووسرێت، پاشان بەڕێوەبەرێک پەسەندی دەکات کە سنوورەکەی کۆی گشتییەکەی بگرێتەوە، بۆ دابینکەر دەنێردرێت، و لە خوارەوە بەرامبەری وەردەگیرێت. کاتێک هەمووی گەیشت دادەخرێت، یان بە هۆکارێک کاتێک ئەوەی ماوە نایەت.",
+    },
+  "An order is drafted, then approved by a manager whose limit covers its total — yours is {limit} — sent to the supplier, and received against below. It closes when all has come, or with a reason when the rest is not coming.":
+    {
+      ar: "تُكتب الطلبية مسودةً، ثم يعتمدها مدير يغطي حدُّه مجموعَها — وحدّك {limit} — وتُرسَل إلى المورّد، ويُستلَم مقابلها في الأسفل. وتُغلَق حين يصل كل ما فيها، أو بسببٍ يُذكر حين لا يأتي الباقي.",
+      ckb: "داواکارییەک وەک ڕەشنووس دەنووسرێت، پاشان بەڕێوەبەرێک پەسەندی دەکات کە سنوورەکەی کۆی گشتییەکەی بگرێتەوە — سنووری تۆ: {limit} — بۆ دابینکەر دەنێردرێت، و لە خوارەوە بەرامبەری وەردەگیرێت. کاتێک هەمووی گەیشت دادەخرێت، یان بە هۆکارێک کاتێک ئەوەی ماوە نایەت.",
+    },
+  Stage: { ar: "المرحلة", ckb: "قۆناغ" },
+  "What has come": { ar: "ما وصل", ckb: "ئەوەی گەیشتووە" },
+  "Mark as sent": { ar: "علّمها مُرسَلة", ckb: "وەک نێردراو نیشانەی بکە" },
+  "Over your limit: the owner or the general manager approves it": {
+    ar: "فوق حدّك: يعتمدها المالك أو المدير العام",
+    ckb: "سەرووی سنووری تۆیە: خاوەن یان بەڕێوەبەری گشتی پەسەندی دەکات",
+  },
+  "Order {no} approved.": { ar: "اعتُمدت الطلبية {no}.", ckb: "داواکاری {no} پەسەند کرا." },
+  "Order {no} marked as sent to the supplier.": {
+    ar: "عُلّمت الطلبية {no} مُرسَلةً إلى المورّد.",
+    ckb: "داواکاری {no} وەک نێردراو بۆ دابینکەر نیشانە کرا.",
+  },
+  "Order {no} cancelled.": { ar: "أُلغيت الطلبية {no}.", ckb: "داواکاری {no} هەڵوەشێنرایەوە." },
+  "Order {no} closed.": { ar: "أُغلقت الطلبية {no}.", ckb: "داواکاری {no} داخرا." },
+  "Why cancel it?": { ar: "لماذا تُلغى؟", ckb: "بۆچی هەڵدەوەشێنرێتەوە؟" },
+  "Why is the rest not coming?": { ar: "لماذا لن يأتي الباقي؟", ckb: "بۆچی ئەوەی ماوە نایەت؟" },
+  "Cancel the order": { ar: "ألغِ الطلبية", ckb: "داواکارییەکە هەڵبوەشێنەوە" },
+  "Close the order": { ar: "أغلق الطلبية", ckb: "داواکارییەکە دابخە" },
+  "Order {no} saved as a draft: {total}. A manager approves it next.": {
+    ar: "حُفظت الطلبية {no} مسودةً: {total}. ويعتمدها مدير بعد ذلك.",
+    ckb: "داواکاری {no} وەک ڕەشنووس پاشەکەوت کرا: {total}. دواتر بەڕێوەبەرێک پەسەندی دەکات.",
+  },
+  "Order {no}: changed, it is a draft again and is approved again": {
+    ar: "الطلبية {no}: إن غُيّرت عادت مسودةً وتُعتمد من جديد",
+    ckb: "داواکاری {no}: ئەگەر بگۆڕدرێت دەبێتەوە ڕەشنووس و دووبارە پەسەند دەکرێتەوە",
+  },
+  "Order {no}": { ar: "الطلبية {no}", ckb: "داواکاری {no}" },
+  "Note for the supplier": { ar: "ملاحظة للمورّد", ckb: "تێبینی بۆ دابینکەر" },
+  "Remove the line": { ar: "احذف السطر", ckb: "هێڵەکە لابە" },
+  "Add a line": { ar: "أضف سطرًا", ckb: "هێڵێک زیاد بکە" },
+  "Save the draft": { ar: "احفظ المسودة", ckb: "ڕەشنووسەکە پاشەکەوت بکە" },
+  "Purchase order {no}": { ar: "طلبية الشراء {no}", ckb: "داواکاری کڕینی {no}" },
+  "Ordered on {day}": { ar: "طُلبت في {day}", ckb: "لە {day} داوا کرا" },
+  "Expected by {day}": { ar: "متوقَّعة بحلول {day}", ckb: "چاوەڕوان دەکرێت تا {day}" },
+  "Deliver to {place}": { ar: "التسليم إلى {place}", ckb: "گەیاندن بۆ {place}" },
+  "Approved by {name} on {day}": {
+    ar: "اعتمدها {name} في {day}",
+    ckb: "{name} لە {day} پەسەندی کرد",
+  },
+  "Print the order": { ar: "اطبع الطلبية", ckb: "داواکارییەکە چاپ بکە" },
+  "Back to Purchasing": { ar: "العودة إلى المشتريات", ckb: "گەڕانەوە بۆ کڕین" },
+  "A draft is printed once a manager has approved it.": {
+    ar: "تُطبع المسودة بعد أن يعتمدها مدير.",
+    ckb: "ڕەشنووسەکە دوای ئەوەی بەڕێوەبەرێک پەسەندی کرد چاپ دەکرێت.",
+  },
+  "Drafted by {name}, {when}": {
+    ar: "كتب مسودتها {name}، {when}",
+    ckb: "{name} ڕەشنووسەکەی نووسی، {when}",
+  },
+  "Sent {when} by {name}": {
+    ar: "أُرسلت {when} بواسطة {name}",
+    ckb: "{when} لەلایەن {name} نێردرا",
+  },
+  "Closed {when} by {name}": {
+    ar: "أُغلقت {when} بواسطة {name}",
+    ckb: "{when} لەلایەن {name} داخرا",
+  },
+  "Cancelled {when} by {name}": {
+    ar: "أُلغيت {when} بواسطة {name}",
+    ckb: "{when} لەلایەن {name} هەڵوەشێنرایەوە",
+  },
+  Ordered: { ar: "المطلوب", ckb: "داواکراو" },
+  Come: { ar: "الواصل", ckb: "گەیشتوو" },
+  "Still to come": { ar: "المتبقي وصوله", ckb: "ماوە بگات" },
+  "Not on the order": { ar: "ليست في الطلبية", ckb: "لە داواکارییەکەدا نییە" },
+  "Nothing has come against it yet.": {
+    ar: "لم يصل شيء مقابلها بعد.",
+    ckb: "هێشتا هیچ شتێک بەرامبەری نەگەیشتووە.",
+  },
+  "Deliveries against it: {list}": {
+    ar: "التوريدات مقابلها: {list}",
+    ckb: "بارەکانی بەرامبەری: {list}",
+  },
+  "Against a purchase order": { ar: "مقابل طلبية شراء", ckb: "بەرامبەر داواکارییەکی کڕین" },
+  "No order": { ar: "بلا طلبية", ckb: "بێ داواکاری" },
+  "Order {no}: {supplier} ({stage})": {
+    ar: "الطلبية {no}: {supplier} ({stage})",
+    ckb: "داواکاری {no}: {supplier} ({stage})",
+  },
+  "It is right: receive it": { ar: "إنه صحيح: استلمه", ckb: "ڕاستە: وەریبگرە" },
+  "Receipt {no} — {value} into stock against order {po}, awaiting its bill.": {
+    ar: "الإيصال {no} — دخل المخزون {value} مقابل الطلبية {po}، بانتظار فاتورته.",
+    ckb: "وەسڵی {no} — {value} بەرامبەر داواکاری {po} چووە ناو کۆگا، چاوەڕێی پسووڵەکەیەتی.",
+  },
+  "As ordered: {qty} {unit} still to come": {
+    ar: "كما طُلب: يُنتظر بعدُ {qty} {unit}",
+    ckb: "وەک داواکراوە: {qty} {unit} هێشتا ماوە بگات",
+  },
+  "More than is still on order: {coming} of {ordered} {unit}": {
+    ar: "أكثر مما بقي في الطلبية: {coming} من {ordered} {unit}",
+    ckb: "زیاتر لەوەی لە داواکارییەکەدا ماوە: {coming} لە {ordered} {unit}",
+  },
+  "{ordered} {unit} still on order: {coming} coming now": {
+    ar: "لا يزال {ordered} {unit} في الطلبية: يصل الآن {coming}",
+    ckb: "{ordered} {unit} هێشتا لە داواکارییەکەدا ماوە: ئێستا {coming} دێت",
+  },
+  "The order's price: {price}": { ar: "سعر الطلبية: {price}", ckb: "نرخی داواکارییەکە: {price}" },
+  "More is coming than is still on the order. If the supplier sent it and it is being kept, receive it as it is: your confirmation goes on the audit trail.":
+    {
+      ar: "الوارد أكثر مما بقي في الطلبية. إن كان المورّد قد أرسله وسيُحتفظ به، فاستلمه كما هو: ويُسجَّل تأكيدك في سجل التدقيق.",
+      ckb: "ئەوەی دێت زیاترە لەوەی لە داواکارییەکەدا ماوە. ئەگەر دابینکەر ناردوویەتی و هەڵدەگیرێت، وەک خۆی وەریبگرە: پشتڕاستکردنەوەکەت لە تۆماری گۆڕانکارییەکاندا دەنووسرێت.",
+    },
+  "Return goods to a supplier": {
+    ar: "إرجاع بضاعة إلى مورّد",
+    ckb: "گەڕاندنەوەی کاڵا بۆ دابینکەرێک",
+  },
+  "Named against the delivery they came in, the supplier owes back what it charged for them: before its bill, the bill is for what was kept; after it, a credit on their account is set against the bill. The stock leaves at what it costs now.":
+    {
+      ar: "إذا ذُكر التوريد الذي جاءت فيه، ردّ المورّد ما تقاضاه عنها: قبل فاتورته تكون الفاتورة لما احتُفظ به؛ وبعدها يُخصم من الفاتورة إشعارٌ دائن على حسابه. ويخرج المخزون بكلفته الحالية.",
+      ckb: "ئەگەر ئەو بارەی تێیدا هاتوون دیاری بکرێت، دابینکەر ئەوەی بۆیانی وەرگرتووە دەیگەڕێنێتەوە: پێش پسووڵەکەی، پسووڵەکە بۆ ئەوەیە کە هەڵگیراوە؛ دوای ئەوە، پسووڵەیەکی گەڕاندنەوە لەسەر هەژمارەکەیان لە پسووڵەکە دەبڕدرێت. کۆگاکە بە تێچووی ئێستای دەردەچێت.",
+    },
+  "The delivery they came in": { ar: "التوريد الذي جاءت فيه", ckb: "ئەو بارەی تێیدا هاتوون" },
+  "Not named: at what they cost now": {
+    ar: "غير محدَّد: بكلفتها الحالية",
+    ckb: "دیاری نەکراو: بە تێچووی ئێستایان",
+  },
+  "Delivery {no} ({day}), {billed}": {
+    ar: "التوريد {no} ({day})، {billed}",
+    ckb: "باری {no} ({day})، {billed}",
+  },
+  billed: { ar: "مفوتَر", ckb: "پسووڵەی هەیە" },
+  "awaiting its bill": { ar: "بانتظار فاتورته", ckb: "چاوەڕێی پسووڵەکەیەتی" },
+  "Why they are going back": { ar: "سبب إرجاعها", ckb: "هۆی گەڕاندنەوەیان" },
+  "Damaged in delivery, out of date, the wrong size…": {
+    ar: "تالفة عند التوريد، منتهية الصلاحية، بمقاس خاطئ…",
+    ckb: "لە گەیاندندا تێکچووە، بەسەرچووە، قەبارەی هەڵە…",
+  },
+  "Return it all the same": { ar: "أرجعها مع ذلك", ckb: "هەر بیگەڕێنەوە" },
+  "Return them": { ar: "أرجعها", ckb: "بیانگەڕێنەوە" },
+  "Return {no}: {value} back to the supplier, off what the delivery's bill will clear.": {
+    ar: "المرتجع {no}: {value} يعود إلى المورّد، ويُطرح مما ستصفّيه فاتورة التوريد.",
+    ckb: "گەڕاندنەوەی {no}: {value} بۆ دابینکەر دەگەڕێتەوە، و لەوەی پسووڵەی بارەکە پاکی دەکاتەوە کەم دەکرێتەوە.",
+  },
+  "Return {no}: {value} owed back, as credit {credit} on the supplier's account.": {
+    ar: "المرتجع {no}: {value} مستحق الردّ، بالإشعار الدائن {credit} على حساب المورّد.",
+    ckb: "گەڕاندنەوەی {no}: {value} دەبێت بگەڕێندرێتەوە، وەک پسووڵەی گەڕاندنەوەی {credit} لەسەر هەژماری دابینکەر.",
+  },
+  "Return {no}: {value} owed back, as credit {credit} on the supplier's account; {set} of it set against the delivery's bill.":
+    {
+      ar: "المرتجع {no}: {value} مستحق الردّ، بالإشعار الدائن {credit} على حساب المورّد؛ وخُصم {set} منه من فاتورة التوريد.",
+      ckb: "گەڕاندنەوەی {no}: {value} دەبێت بگەڕێندرێتەوە، وەک پسووڵەی گەڕاندنەوەی {credit} لەسەر هەژماری دابینکەر؛ بڕی {set} لە پسووڵەی بارەکە بڕدرا.",
+    },
+  "Recent returns to suppliers": {
+    ar: "آخر المرتجعات إلى المورّدين",
+    ckb: "دوایین گەڕاندنەوەکان بۆ دابینکەران",
+  },
+  "What went back": { ar: "ما أُرجع", ckb: "ئەوەی گەڕایەوە" },
+  "Owed back": { ar: "المستحق ردّه", ckb: "ئەوەی دەگەڕێندرێتەوە" },
+  How: { ar: "الطريقة", ckb: "چۆن" },
+  "Off the delivery's bill": { ar: "من فاتورة التوريد", ckb: "لە پسووڵەی بارەکە" },
+  "On the account": { ar: "على الحساب", ckb: "لەسەر هەژمارەکە" },
+  "Credit {no} on the account": {
+    ar: "الإشعار الدائن {no} على الحساب",
+    ckb: "پسووڵەی گەڕاندنەوەی {no} لەسەر هەژمارەکە",
+  },
+  "Credit notes": { ar: "الإشعارات الدائنة", ckb: "پسووڵەکانی گەڕاندنەوە" },
+  Credited: { ar: "المخصوم بإشعارات دائنة", ckb: "بڕدراو بە پسووڵەی گەڕاندنەوە" },
+  "What this supplier owes back: goods returned after their bill, a lower price agreed on a delivery, or other. Each is set against their bills; what is left waits for the next one.":
+    {
+      ar: "ما على هذا المورّد ردّه: بضاعة أُرجعت بعد فاتورتها، أو سعر أقل اتُّفق عليه لتوريد، أو غير ذلك. يُخصم كلٌّ منها من فواتيره؛ وما يتبقّى ينتظر الفاتورة التالية.",
+      ckb: "ئەوەی ئەم دابینکەرە دەبێت بیگەڕێنێتەوە: کاڵای گەڕێندراوە دوای پسووڵەکەی، نرخێکی کەمتر کە لەسەر بارێک ڕێککەوتوون، یان هی تر. هەریەکەیان لە پسووڵەکانی دەبڕدرێت؛ ئەوەی دەمێنێتەوە چاوەڕێی پسووڵەی داهاتوو دەکات.",
+    },
+  "No credits from this supplier.": {
+    ar: "لا توجد إشعارات دائنة من هذا المورّد.",
+    ckb: "هیچ پسووڵەیەکی گەڕاندنەوە لەم دابینکەرەوە نییە.",
+  },
+  For: { ar: "عن", ckb: "بۆ" },
+  "Their note": { ar: "إشعارهم", ckb: "پسووڵەکەیان" },
+  "return {no}": { ar: "المرتجع {no}", ckb: "گەڕاندنەوەی {no}" },
+  "delivery {no}": { ar: "التوريد {no}", ckb: "باری {no}" },
+  "Awaiting their note": { ar: "بانتظار إشعارهم", ckb: "چاوەڕێی پسووڵەکەیان" },
+  "The number on their credit note": {
+    ar: "الرقم على إشعارهم الدائن",
+    ckb: "ژمارەی سەر پسووڵەی گەڕاندنەوەکەیان",
+  },
+  "Awaiting their note: its number": {
+    ar: "بانتظار إشعارهم: رقمه",
+    ckb: "چاوەڕێی پسووڵەکەیان: ژمارەکەی",
+  },
+  "Record it": { ar: "سجّله", ckb: "تۆماری بکە" },
+  "Set against the bill: {left} of the credit left.": {
+    ar: "خُصم من الفاتورة: وتبقّى {left} من الإشعار الدائن.",
+    ckb: "لە پسووڵەکە بڕدرا: {left} لە پسووڵەی گەڕاندنەوەکە ماوە.",
+  },
+  "Set it against": { ar: "اخصمه من", ckb: "بیبڕە لە" },
+  "Bill {no} ({owed} owed)": {
+    ar: "الفاتورة {no} (المستحق {owed})",
+    ckb: "پسووڵەی {no} ({owed} ماوە)",
+  },
+  "Set against it": { ar: "اخصمه منها", ckb: "لێی ببڕە" },
+  "Credit {no} recorded; {set} of it set against the bill.": {
+    ar: "سُجّل الإشعار الدائن {no}؛ وخُصم {set} منه من الفاتورة.",
+    ckb: "پسووڵەی گەڕاندنەوەی {no} تۆمار کرا؛ بڕی {set} لە پسووڵەکە بڕدرا.",
+  },
+  "Credit {no} recorded: set it against a bill when one is owed.": {
+    ar: "سُجّل الإشعار الدائن {no}: اخصمه من فاتورة حين تُستحق واحدة.",
+    ckb: "پسووڵەی گەڕاندنەوەی {no} تۆمار کرا: کاتێک پسووڵەیەک قەرز بوو لێی ببڕە.",
+  },
+  "Record their credit note": {
+    ar: "سجّل إشعارهم الدائن",
+    ckb: "پسووڵەی گەڕاندنەوەکەیان تۆمار بکە",
+  },
+  "A lower price on a delivery that was billed": {
+    ar: "سعر أقل لتوريد صدرت فاتورته",
+    ckb: "نرخێکی کەمتر بۆ بارێک کە پسووڵەکەی هاتووە",
+  },
+  "Other: a service, an overcharge": {
+    ar: "غير ذلك: خدمة، أو مبلغ زائد",
+    ckb: "هی تر: خزمەتگوزارییەک، یان زیادە وەرگرتنێک",
+  },
+  "The delivery": { ar: "التوريد", ckb: "بارەکە" },
+  "Delivery {no}": { ar: "التوريد {no}", ckb: "باری {no}" },
+  "Against a bill": { ar: "مقابل فاتورة", ckb: "بەرامبەر پسووڵەیەک" },
+  "None: left on the account": {
+    ar: "لا شيء: يبقى على الحساب",
+    ckb: "هیچ: لەسەر هەژمارەکە دەمێنێتەوە",
+  },
+  "Taken off the account": { ar: "يُطرح من الحساب", ckb: "لە هەژمار کەم دەکرێتەوە" },
+  "The bill's own ({code})": {
+    ar: "حساب الفاتورة نفسه ({code})",
+    ckb: "هەژماری خودی پسووڵەکە ({code})",
+  },
+  "What it is for": { ar: "الغرض", ckb: "بۆ چییە" },
+  "The stock of that delivery still on the shelf is revalued; what was used since goes to the price variance (5050). It is set against the delivery's bill.":
+    {
+      ar: "يُعاد تقييم ما بقي على الرف من مخزون ذلك التوريد؛ وما استُخدم منذئذٍ يذهب إلى فرق السعر (5050). ويُخصم من فاتورة التوريد.",
+      ckb: "ئەوەی لە کۆگای ئەو بارە هێشتا لەسەر ڕەفەکەیە دووبارە نرخێندرێت؛ ئەوەی لەو کاتەوە بەکارهاتووە دەچێتە سەر جیاوازی نرخ (5050). لە پسووڵەی بارەکە دەبڕدرێت.",
+    },
+  "It comes off the account chosen, and is set against the bill chosen as far as it is owed.": {
+    ar: "يُطرح من الحساب المختار، ويُخصم من الفاتورة المختارة بقدر ما بقي مستحقًّا عليها.",
+    ckb: "لە هەژمارە هەڵبژێردراوەکە کەم دەکرێتەوە، و تا ئەو ئەندازەیەی قەرزە لە پسووڵە هەڵبژێردراوەکە دەبڕدرێت.",
+  },
+  "Record the credit": { ar: "سجّل الإشعار الدائن", ckb: "پسووڵەی گەڕاندنەوەکە تۆمار بکە" },
+  "The day it is expected": { ar: "يوم وصولها المتوقَّع", ckb: "ئەو ڕۆژەی چاوەڕوان دەکرێت" },
+  "an order": { ar: "طلبية", ckb: "داواکارییەک" },
+  "The number on the supplier's credit note": {
+    ar: "الرقم على إشعار المورّد الدائن",
+    ckb: "ژمارەی سەر پسووڵەی گەڕاندنەوەی دابینکەر",
+  },
+  "a credit": { ar: "إشعارًا دائنًا", ckb: "پسووڵەیەکی گەڕاندنەوە" },
+  Approved: { ar: "مُعتمَد", ckb: "پەسەندکراو" },
+  Sent: { ar: "مُرسَل", ckb: "نێردراو" },
+  "Partly received": { ar: "مُستلَم جزئيًا", ckb: "بەشێکی وەرگیراوە" },
+  sent: { ar: "مُرسَل", ckb: "نێردراو" },
+  "Goods returned": { ar: "بضاعة مُرجَعة", ckb: "کاڵای گەڕێندراوە" },
+  "A lower price": { ar: "سعر أقل", ckb: "نرخێکی کەمتر" },
+  Other: { ar: "غير ذلك", ckb: "هی تر" },
 };
 
 export default phrases;

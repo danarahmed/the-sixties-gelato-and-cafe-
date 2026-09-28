@@ -1011,6 +1011,79 @@ const phrases: PhraseBook = {
   "Dollars over / short": { ar: "زيادة / عجز الدولارات", ckb: "زیادە / کەمی دۆلار" },
   "Dollars left uncounted": { ar: "دولارات تُركت بلا عدّ", ckb: "دۆلاری نەژمێردراو کە جێهێڵدرا" },
   "Dollar notes counted": { ar: "أوراق الدولار المعدودة", ckb: "دراوە دۆلارییە ژمێردراوەکان" },
+
+  // Purchasing (0044): the report, a record to look into, and the audit trail.
+  "Orders, prices, returns and credits, {from} to {to}": {
+    ar: "الطلبيات والأسعار والمرتجعات والإشعارات الدائنة، من {from} إلى {to}",
+    ckb: "داواکارییەکان، نرخەکان، گەڕاندنەوەکان و پسووڵەکانی گەڕاندنەوە، لە {from} تا {to}",
+  },
+  "No purchase order was made in these dates.": {
+    ar: "لم تُصدَر أي طلبية شراء في هذه التواريخ.",
+    ckb: "لەم بەروارانەدا هیچ داواکارییەکی کڕین نەکرا.",
+  },
+  "{n} order(s) open, waiting for goods: {list}": {
+    ar: "طلبيات مفتوحة بانتظار البضاعة ({n}): {list}",
+    ckb: "داواکاری کراوە کە چاوەڕێی کاڵان ({n}): {list}",
+  },
+  "Prices that changed from the supplier's delivery before": {
+    ar: "أسعار تغيّرت عن توريد المورّد السابق",
+    ckb: "ئەو نرخانەی لە باری پێشووی دابینکەرەکەوە گۆڕاون",
+  },
+  Before: { ar: "السابق", ckb: "پێشتر" },
+  Now: { ar: "الآن", ckb: "ئێستا" },
+  "{cost} a {unit}": { ar: "{cost} لكل {unit}", ckb: "{cost} بۆ هەر {unit}" },
+  "Returns to suppliers": { ar: "المرتجعات إلى المورّدين", ckb: "گەڕاندنەوەکان بۆ دابینکەران" },
+  "Suppliers' credits": {
+    ar: "الإشعارات الدائنة من المورّدين",
+    ckb: "پسووڵەکانی گەڕاندنەوەی دابینکەران",
+  },
+  "Returned {returned} · credited {credited} · credits not yet set against a bill {left}": {
+    ar: "المُرجَع {returned} · الإشعارات الدائنة {credited} · إشعارات لم تُخصم من فاتورة بعد {left}",
+    ckb: "گەڕێندراوە {returned} · پسووڵەی گەڕاندنەوە {credited} · ئەوانەی هێشتا لە پسووڵەیەک نەبڕدراون {left}",
+  },
+  "Return to a supplier": { ar: "مرتجع إلى مورّد", ckb: "گەڕاندنەوە بۆ دابینکەرێک" },
+  "Supplier's credit": { ar: "إشعار دائن من مورّد", ckb: "پسووڵەی گەڕاندنەوەی دابینکەر" },
+  "Purchase order drafted": { ar: "كتابة مسودة طلبية شراء", ckb: "نووسینی ڕەشنووسی داواکاری کڕین" },
+  "Purchase order changed": { ar: "تعديل طلبية شراء", ckb: "گۆڕینی داواکاری کڕین" },
+  "Purchase order approved": { ar: "اعتماد طلبية شراء", ckb: "پەسەندکردنی داواکاری کڕین" },
+  "Purchase order sent": { ar: "إرسال طلبية شراء", ckb: "ناردنی داواکاری کڕین" },
+  "Purchase order closed": { ar: "إغلاق طلبية شراء", ckb: "داخستنی داواکاری کڕین" },
+  "Purchase order cancelled": { ar: "إلغاء طلبية شراء", ckb: "هەڵوەشاندنەوەی داواکاری کڕین" },
+  "More than ordered, confirmed": {
+    ar: "تأكيد استلام أكثر من المطلوب",
+    ckb: "پشتڕاستکردنەوەی وەرگرتنی زیاتر لە داواکراو",
+  },
+  "Goods returned to a supplier": {
+    ar: "إرجاع بضاعة إلى مورّد",
+    ckb: "گەڕاندنەوەی کاڵا بۆ دابینکەرێک",
+  },
+  "Supplier's credit note recorded": {
+    ar: "تسجيل إشعار دائن من مورّد",
+    ckb: "تۆمارکردنی پسووڵەی گەڕاندنەوەی دابینکەر",
+  },
+  "Supplier's note matched to a credit": {
+    ar: "مطابقة إشعار المورّد مع إشعار دائن",
+    ckb: "یەکخستنی پسووڵەی دابینکەر لەگەڵ پسووڵەیەکی گەڕاندنەوە",
+  },
+  "Credit set against a bill": {
+    ar: "خصم إشعار دائن من فاتورة",
+    ckb: "بڕینی پسووڵەی گەڕاندنەوە لە پسووڵەیەک",
+  },
+  "A purchase order": { ar: "طلبية شراء", ckb: "داواکارییەکی کڕین" },
+  "A return to a supplier": { ar: "مرتجع إلى مورّد", ckb: "گەڕاندنەوەیەک بۆ دابینکەرێک" },
+  "A supplier's credit": { ar: "إشعار دائن من مورّد", ckb: "پسووڵەیەکی گەڕاندنەوەی دابینکەر" },
+  "Return {no}": { ar: "المرتجع {no}", ckb: "گەڕاندنەوەی {no}" },
+  "Credit {no}": { ar: "الإشعار الدائن {no}", ckb: "پسووڵەی گەڕاندنەوەی {no}" },
+  "Approves up to": { ar: "يعتمد حتى", ckb: "پەسەند دەکات تا" },
+  Return: { ar: "المرتجع", ckb: "گەڕاندنەوە" },
+  "Credit note": { ar: "الإشعار الدائن", ckb: "پسووڵەی گەڕاندنەوە" },
+  "Set against the bill": { ar: "المخصوم من الفاتورة", ckb: "بڕدراو لە پسووڵەکە" },
+  "Order lines": { ar: "سطور الطلبية", ckb: "هێڵەکانی داواکاری" },
+  "Closed short of the order": {
+    ar: "أُغلقت دون اكتمال الطلبية",
+    ckb: "پێش تەواوبوونی داواکارییەکە داخرا",
+  },
+  Returned: { ar: "المُرجَع", ckb: "گەڕێندراوە" },
 };
 
 export default phrases;

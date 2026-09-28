@@ -1922,7 +1922,8 @@ a.card.stat:focus-visible {
    starts a page of its own, so a printer that cuts after each page cuts the
    customer's check and the barista's ticket apart. Black only: a thermal
    printer has no grey. */
-.print-slip {
+.print-slip,
+.print-doc {
   display: none;
 }
 @media print {
@@ -1933,8 +1934,41 @@ a.card.stat:focus-visible {
   body {
     background: #fff !important;
   }
-  body > *:not(.print-slip) {
+  body > *:not(.print-slip):not(.print-doc) {
     display: none !important;
+  }
+  /* A document on a sheet of paper (a purchase order): black on white. */
+  .print-doc {
+    display: block;
+    color: #000;
+    padding: 6mm;
+    font:
+      12px/1.45 "Libre Franklin",
+      Arial,
+      "Noto Sans Arabic",
+      system-ui,
+      sans-serif;
+  }
+  .print-doc h1 {
+    font-size: 18px;
+    margin: 0 0 4px;
+  }
+  .print-doc table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+  }
+  .print-doc th,
+  .print-doc td {
+    border-bottom: 1px solid #000;
+    padding: 4px 6px;
+    text-align: start;
+  }
+  .print-doc .right {
+    text-align: end;
+  }
+  .print-doc .muted {
+    color: #000;
   }
   .print-slip {
     display: block;

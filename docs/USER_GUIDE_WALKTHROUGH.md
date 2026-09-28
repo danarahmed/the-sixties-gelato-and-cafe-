@@ -399,10 +399,15 @@ owner
 late.
 
 **Left:** every vendor with their balance; those taken out of use are listed
-last, marked, with their history. **Right,** four tabs:
+last, marked, with their history. **Right,** five tabs:
 
-- **Statement:** every bill and payment to date, with a running balance.
-  Cancelled bills stay on the statement, marked.
+- **Statement:** every bill, payment and credit to date, with a running
+  balance. Cancelled bills stay on the statement, marked. **A statement
+  between two dates, to print** opens the supplier's statement for the dates
+  you choose: what was owed before them, each bill, cancelled bill, payment
+  and credit with the balance after it, what was owed at the end, then the
+  bills still owed and the credits not yet all set against a bill. **Print
+  the statement** prints it alone, to send the supplier.
 - **Bills & payments:**
   - **Record a bill.** Choose one of two kinds:
     - **For goods received:** pick the delivery; the bill clears it, and any
@@ -421,8 +426,29 @@ last, marked, with their history. **Right,** four tabs:
   - **Open bills,** with **Pay bill**: amount, and where the money came from —
     the till, the safe, the bank, a card (paid by the bank, 1020) or the
     owner. You cannot pay more than is outstanding.
-  - **Cancel** a bill entered in error, if nothing was paid on it. Give a reason
-    and a date. The bill stays on record and its journal is reversed.
+  - **Cancel** a bill entered in error, if nothing was paid on it and no
+    credit was set against it. Give a reason and a date. The bill stays on
+    record and its journal is reversed.
+- **Credit notes:** what this supplier owes back, each credit with its number,
+  what it is for, the supplier's own note, its amount and what is left of it.
+  - A credit for **goods returned** after their bill is made by the return
+    (Purchasing). When the supplier's credit note comes, type its number and
+    **Record it**; until then it shows **Awaiting their note**.
+  - **Record their credit note** (purchasing, managers, accountant) for:
+    - **A lower price on a delivery that was billed:** choose the delivery;
+      the stock of it still on the shelf is revalued, what was used since goes
+      to the price variance (5050), and the credit is set against its bill.
+      A delivery not yet billed has its price corrected on Purchasing instead.
+    - **Other** (a service, an overcharge): the account it comes off (the
+      bill's own, for a bill for a service), and the bill to set it against,
+      or none, to leave it on the account.
+
+    Type the number on their credit note (each once for a supplier), the
+    amount and what it is for.
+
+  - **Set it against** a bill still owed (accountant, general manager, owner):
+    what is left of a credit, no more than the bill owes. A bill is paid by
+    payments and credits together.
 - **Edit vendor:** correct the name, what they supply and the phone, say how
   many **days a delivery takes** (the dashboard's "running out" warns that much
   sooner for what they supply; empty follows the café's default), or take them
@@ -463,11 +489,34 @@ through, and is left out of the totals: it is no longer spent.
 ## 11. Purchasing
 
 **Location:** Sidebar → **Purchasing** · `/purchasing` · **Who:** anyone who sees
-costs; receiving: purchasing, managers
+costs; orders and receiving: purchasing, managers; approving: owner, general
+manager, branch manager
 
+- **Purchase orders:** every order with its supplier, the day it is expected,
+  what has come of each line, its total and its stage: **Draft**,
+  **Approved**, **Sent**, **Partly received**, **Received**, **Closed** or
+  **Cancelled**.
+  1. **New order:** the supplier, the day it is expected, a note for the
+     supplier, and a line for each item: the quantity, the unit it is bought
+     in and the price of one. The total shows as you type. **Save the draft.**
+  2. **Approve** (owner, general manager, branch manager): an order whose
+     total is within your limit, a rule on Settings (a branch manager 250,000,
+     the owner and the general manager any order). Over it, the order says
+     **Over your limit** and waits for someone whose limit covers it.
+  3. **Change** a draft or an approved order: changed, an approved order is a
+     draft again and is approved again.
+  4. **Mark as sent** once it has gone to the supplier. The order number opens
+     its own page, with **Print the order**: the order as approved, to send.
+  5. Deliveries come against it (below). **Close** it when all has come, or
+     with a reason when the rest is not coming; **Cancel** it, with a reason,
+     while nothing has come.
 - **🏭 Add supplier:** name, what they supply, phone.
 - **📦 Receive stock (goods receipt):**
-  1. Choose the supplier.
+  1. Choose the supplier, and, when it comes against a purchase order, the
+     order under **Against a purchase order**: the delivery is filled in with
+     what is still to come, at the order's prices. Each line says how it
+     differs from the order: less than is still to come, more, another price,
+     or an item not on the order.
   2. Add a line for each item: the unit you bought it in, the quantity, and the
      **price of one unit** as the invoice gives it (a kilogram, a case of 24).
      The line shows its total, what that is a base unit (a gram, a bottle), and
@@ -478,7 +527,9 @@ costs; receiving: purchasing, managers
      50?" is asked before the stock is costed. **Let me correct it**, or, if the
      invoice really says so, **The price is right: receive it** — your
      confirmation goes on the audit trail. An item's first delivery has nothing
-     to compare with.
+     to compare with. More than is still on the order is asked about the same
+     way: **It is right: receive it** when the supplier sent it and it is being
+     kept.
 
   Stock goes up in base units, and the landed cost is spread over the lines to
   the dinar. The books post Dr Inventory, Cr Goods received not invoiced (2050),
@@ -512,7 +563,21 @@ costs; receiving: purchasing, managers
 - **↩️ Reverse a delivery:** for one that should never have been entered.
   **Reverse** shows what it takes off, then, with a reason, takes all of its
   stock off the shelf and nothing is owed for it. It stays on the list, marked
-  **Reversed**, and cannot be billed.
+  **Reversed**, and cannot be billed. A delivery goods went back from is no
+  longer corrected or reversed.
+- **↩️ Return goods to a supplier** (purchasing, managers): the supplier, the
+  delivery they came in (or none), the items and quantities, and why they are
+  going back. The stock leaves at what it costs now.
+  - Named against a delivery not yet billed, the return comes off what its bill
+    will clear: the bill is for what was kept.
+  - Named against a billed delivery, the supplier owes back what the delivery
+    charged for them, as a credit on their account, set against the bill as
+    far as it is still owed (see **Vendors → Credit notes**).
+  - Not named, the supplier owes back what they cost now, as a credit.
+
+  No more of an item goes back than came in the delivery, less what went back
+  before. **Recent returns to suppliers** lists each one and how it is owed
+  back.
 
 ## 12. Products & Recipes
 
@@ -871,6 +936,12 @@ accountant's own tools.
   dinars; by rate; the exchanges with their differences; each close's count
   of the dollars; the exchange differences (6950) and the dollars counted
   over or short (6300); and what the tills and the safe hold now.
+- **Purchasing** (`0044`): the purchase orders made in the dates, with their
+  stage, what was ordered and what has come; the orders still open, waiting
+  for goods; the prices that changed from each supplier's delivery before; the
+  returns to suppliers, why, what is owed back and how; the suppliers'
+  credits, with their note and what is left; and what was returned, credited,
+  and not yet set against a bill.
 
 ## 19. Audit trail
 
@@ -944,7 +1015,10 @@ why, or **Default**:
 - **Using more stock than the books hold**: **Refused**, **A manager approves
   it**, **Allowed, with a red alert**, or (for one item only) **Allowed, with
   no alert** — for the whole café, a kind of item or one item. By default what
-  is made here is refused and everything else alerts.
+  is made here is refused and everything else alerts;
+- **Purchase orders a manager approves, up to** (`0044`): 250,000 IQD for the
+  café by default, and any order for the owner and the general manager; per
+  role.
 
 **Change** a row, **Back to default**, or **+ Set it for** a role, a kind of
 item or an item: each takes a reason. **Every change** below lists them all,
@@ -975,6 +1049,8 @@ a person's roles allows, then the café's.
 | Vendor statements, bills, payments, cancel a bill, ageing; correct a vendor, take one out of use          | `/vendors`                               | cost viewers (by permission)                                                  |
 | Expenses with a proposed account                                                                          | `/expenses`                              | managers, accountant, owner                                                   |
 | Suppliers; receive goods at a price per unit, checked against the cost now; landed cost                   | `/purchasing`                            | purchasing, managers, owner                                                   |
+| Purchase orders: drafted, approved within a limit, sent, printed, received against, closed or cancelled   | `/purchasing`                            | purchasing, managers, owner; approving: owner, managers                       |
+| Return goods to a supplier; their credit notes, set against bills; a statement between two dates          | `/purchasing`, `/vendors`                | purchasing, managers, owner; setting against bills: accountant, owner         |
 | Products, recipes by channel, prices from a date, margins                                                 | `/products`                              | cost viewers; editing: owner, general manager                                 |
 | Sizes; add-ons in groups, priced by channel, with recipes; which sizes offer them                         | `/products`                              | cost viewers; editing: owner, general manager                                 |
 | Sell a size with its add-ons, in one sheet                                                                | `/pos`                                   | cashier, barista, managers, owner                                             |

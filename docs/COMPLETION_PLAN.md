@@ -6,8 +6,9 @@ release L (refunds by the item, `0037`), release M (delivery corrections and
 the books checked account by account, `0038`), release N (usage against the
 recipes, `0039`) and release O (the café's rules, `0040`) are live since 27
 September 2026, and release P (sizes and add-ons, `0041`), release Q (split
-payments, `0042`) and release R (US dollars at the till, `0043`) since 28
-September.
+payments, `0042`), release R (US dollars at the till, `0043`) and release S
+(purchase orders, returns to a supplier and their credit notes, `0044`) since
+28 September.
 What was built differs from the plan below in these ways.
 
 Release J:
@@ -216,6 +217,50 @@ rate, amount}`. The till sends the rate it showed; the database values the
   and the safe's check takes the dinars exchanged into it.
 - **Formats** still show dinars as IQD: the business has one currency; the
   dollars are shown as $.
+
+Release S:
+
+- **`save_po` instead of `create_po`:** one function drafts an order and
+  changes a draft. An approved order changed goes back to being a draft, to be
+  approved again; one sent is not changed (it is cancelled while nothing has
+  come, or closed).
+- **Five statuses, not seven:** `draft`, `approved`, `sent`, `closed`,
+  `cancelled` (text, not the old `po_status` type). "Partly received" and
+  "received" are what has come, worked out from the deliveries as they stand
+  after their corrections, so a delivery corrected or reversed moves its order
+  back. `purchase_order_line.received_base` is worked out the same way, not
+  stored. The screens show the seven stages.
+- **`expected_on`** (a day) instead of `expected_at`; sending, closing and
+  cancelling keep who and when, closing short and cancelling a reason.
+- **Approval by a rule:** `po_approve_up_to` (the café 250,000; the owner and
+  the general manager 1,000,000,000), set by role on Settings, and a new
+  permission `purchase.approve` (owner, general manager, branch manager). An
+  order over the approver's limit waits for someone whose limit covers it.
+- **Receiving against an order:** the order approved or sent, the delivery from
+  its supplier and for its place; each line may name its order line. More than
+  is still on order is asked about first, with the price check, and the
+  confirmation goes on the audit trail. An item not on the order is received,
+  and shown as such.
+- **A return's stock leaves at what it costs now,** not at the delivery's cost:
+  the average already moved when the delivery came. The supplier owes back
+  what the delivery charged for it (its landed share), or, with no delivery
+  named, its cost now; the difference goes to 5050. Before the delivery's bill,
+  the return comes off what the bill will clear (2050); after it, it is owed
+  back on the account (2000), as a credit of kind `goods_return` set against
+  the bill as far as the bill is owed. A delivery goods went back from is no
+  longer corrected, and one all of whose goods went back is not billed.
+- **A credit is dated the day it is recorded:** there are no back-dated
+  credits. A lower price revalues what is left on the shelf of the delivery it
+  names (cost adjustments), the rest to 5050, and is set against that
+  delivery's bill; "other" comes off an expense or asset account the owner
+  chooses (not cash, the card's, the bank's or stock). A return's credit waits
+  for the supplier's own note, whose number is then recorded against it.
+- **A bill is paid by payments and credits:** its paid amount is both, so a
+  bill can be settled by a credit alone, and a bill with a credit set against
+  it is not cancelled. The payables check takes the credits off.
+- **The statement** (`supplier_statement`) is on Vendors, between two dates, to
+  print; Reports → Purchasing has the orders, the prices that changed, the
+  returns and the credits.
 
 **Basis:**
 

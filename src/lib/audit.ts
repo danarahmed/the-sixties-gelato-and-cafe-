@@ -132,6 +132,18 @@ const ACTION_LABEL: Record<string, string> = {
   "purchase.price_confirmed": "Delivery price confirmed",
   "purchase.correct": "Delivery corrected",
   "purchase.reverse": "Delivery reversed",
+  // Purchasing (0044): orders, returns and the suppliers' credits.
+  "purchase.order.create": "Purchase order drafted",
+  "purchase.order.change": "Purchase order changed",
+  "purchase.order.approve": "Purchase order approved",
+  "purchase.order.send": "Purchase order sent",
+  "purchase.order.close": "Purchase order closed",
+  "purchase.order.cancel": "Purchase order cancelled",
+  "purchase.quantity_confirmed": "More than ordered, confirmed",
+  "purchase.return": "Goods returned to a supplier",
+  "purchase.credit": "Supplier's credit note recorded",
+  "purchase.credit.note": "Supplier's note matched to a credit",
+  "purchase.credit.allocate": "Credit set against a bill",
   "sale.void": "Sale voided",
   "sale.refund": "Sale refunded",
   "sale.discount": "Discount given",
@@ -339,6 +351,32 @@ const FIELD_LABEL: Record<string, string> = {
   usd_variance: "Dollars over / short",
   usd_carried: "Dollars left uncounted",
   usd_notes: "Dollar notes counted",
+  // Purchasing (0044).
+  po_no: "Order",
+  total: "Total",
+  expected_on: "Expected",
+  limit: "Approves up to",
+  return_no: "Return",
+  stock_value: "Stock value",
+  against: "Owed back",
+  credit_no: "Credit note",
+  set_against_bill: "Set against the bill",
+  supplier_ref: "Their note",
+  bill: "Bill",
+  order_lines: "Order lines",
+  short: "Closed short of the order",
+  returned: "Returned",
+  credit_kind: "For",
+};
+
+/**
+ * Words for the purchasing trail's values (0044): phrases, shown through t().
+ * An order's status keeps the trail's own "Status" and its words (draft,
+ * approved, sent), as a sale's does.
+ */
+const PURCHASING_VALUE: Record<string, Record<string, string>> = {
+  credit_kind: { goods_return: "Goods returned", price: "A lower price", other: "Other" },
+  against: { delivery: "Off the delivery's bill", account: "On the account" },
 };
 
 /** What a delivery's correction changed (0038), as the trail names it. */
@@ -383,6 +421,7 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
       return BUSINESS_RULE_LABEL[v as keyof typeof BUSINESS_RULE_LABEL] ?? v;
     if (key === "applies_to") return roleLabel(v) !== v ? roleLabel(v) : itemTypeLabel(v);
     if (key === "value" && CHOICE_LABEL[v]) return CHOICE_LABEL[v];
+    if (PURCHASING_VALUE[key]?.[v]) return PURCHASING_VALUE[key]![v]!;
     return v;
   }
   if (Array.isArray(v)) {
@@ -568,6 +607,12 @@ export function subjectOf(
       return "The dollar rate";
     case "fx_exchange":
       return "An exchange of dollars";
+    case "purchase_order":
+      return pick("po_no") ? `Purchase order ${pick("po_no")}` : "A purchase order";
+    case "supplier_return":
+      return pick("return_no") ? `Return ${pick("return_no")}` : "A return to a supplier";
+    case "supplier_credit":
+      return pick("credit_no") ? `Credit ${pick("credit_no")}` : "A supplier's credit";
     case "platform_settlement":
       return pick("reference")
         ? `${pick("platform") ?? "Platform"} statement ${pick("reference")}`
@@ -602,6 +647,9 @@ const SUBJECT_WORDS = new Set([
   "An add-on",
   "The dollar rate",
   "An exchange of dollars",
+  "A purchase order",
+  "A return to a supplier",
+  "A supplier's credit",
 ]);
 
 /** An id shown short, as subjectOf shows it: "1a2b3c4d…". */
@@ -616,6 +664,9 @@ const SUBJECTS: [RegExp, string, string[]][] = [
   [new RegExp(`^Journal (\\d+|${SHORT_ID})$`), "Journal {no}", ["no"]],
   [/^Language ([a-z]{2,3}(?:-[a-z0-9]{2,8})?)$/, "Language {code}", ["code"]],
   [/^Session (\d+)$/, "Session {no}", ["no"]],
+  [/^Purchase order (\d+)$/, "Purchase order {no}", ["no"]],
+  [/^Return (\d+)$/, "Return {no}", ["no"]],
+  [/^Credit (\d+)$/, "Credit {no}", ["no"]],
   [
     /^Card takings (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})$/,
     "Card takings {from} to {to}",
@@ -695,6 +746,8 @@ export function valueIn(value: string, field: string, t: T, msg: Msg): string {
     case FIELD_LABEL.kind:
     case FIELD_LABEL.dimension:
     case fieldLabel("status"):
+    case FIELD_LABEL.credit_kind:
+    case FIELD_LABEL.against:
       return t(value);
     case FIELD_LABEL.title:
       return msg(value);

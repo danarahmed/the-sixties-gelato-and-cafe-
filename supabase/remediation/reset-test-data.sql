@@ -21,13 +21,14 @@
 --            the dollars taken, counted and exchanged, the answers kept for
 --            retries, card settlements,
 --            stock movements and lots, stock counts, production batches,
---            purchase orders, deliveries and their corrections, supplier bills
---            and payments, expenses, every journal and accounting period,
+--            purchase orders, deliveries and their corrections, returns to
+--            suppliers, supplier bills, payments and credits, expenses, every
+--            journal and accounting period,
 --            platform orders and settlements, reconciliation and sync logs, AI
 --            notes, the alerts raised on all of it (they rise again from what
 --            is recorded next), and the document numbers (journals start again
 --            at 1001, the café's own bill numbers at 0001, cash sessions,
---            refunds and delivery corrections at 1)
+--            refunds, delivery corrections, orders, returns and credits at 1)
 --
 -- Afterwards no item has stock. Before the first sale, give each item its
 -- opening stock (Inventory → Opening stock): what is on the shelf, at what it
@@ -110,7 +111,7 @@ truncate table
   sale_refund, sale_refund_line, sale_refund_tender,
   sales_order, sales_order_line, sales_order_line_modifier, sales_tender, session_dollar_count, stock_count,
   stock_count_line,
-  supplier_payment, sync_log,
+  supplier_credit, supplier_credit_allocation, supplier_payment, supplier_return, supplier_return_line, sync_log,
   work_shift
   restart identity;
 

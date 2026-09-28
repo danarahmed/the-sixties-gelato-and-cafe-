@@ -91,6 +91,8 @@ const receiveInput = z.object({
   other: nonNegative("Other costs"),
   rebate: nonNegative("Rebate"),
   note: optionalText(300),
+  /** The purchase order it comes against (0044), if any. */
+  purchaseOrderId: z.string().uuid().nullable().default(null),
   lines: z
     .array(
       z.object({
@@ -99,10 +101,12 @@ const receiveInput = z.object({
         unitCode: z.string().min(1, "Choose a unit"),
         /** The price of one of the unit received, as the invoice gives it (0027). */
         unitPrice: nonNegative("Price per unit"),
+        /** Its line on the order, when it comes against one. */
+        poLineId: z.string().uuid().nullable().default(null),
       }),
     )
     .min(1, "Add at least one line"),
-  /** The person has seen a price far from the item's cost now, and says it is right. */
+  /** The person has seen a price far from the item's cost now, or more than was ordered, and says it is right. */
   confirm: z.boolean().default(false),
 });
 
@@ -116,7 +120,14 @@ const receiveInput = z.object({
 export async function receiveGoodsAction(
   input: z.input<typeof receiveInput>,
   key: string,
-): Promise<ActionResult<{ receiptNo: number; value: number }>> {
+): Promise<
+  ActionResult<{
+    receiptNo: number;
+    value: number;
+    poNo: number | null;
+    poReceiving: string | null;
+  }>
+> {
   const bad = badKey(key);
   if (bad) return bad;
   const v = parse(receiveInput, input);
@@ -128,11 +139,214 @@ export async function receiveGoodsAction(
       qty: l.qty,
       unit_code: l.unitCode,
       unit_price: l.unitPrice,
+      ...(l.poLineId ? { po_line_id: l.poLineId } : {}),
     })),
     p_freight: v.data.freight,
     p_other: v.data.other,
     p_rebate: v.data.rebate,
     p_note: v.data.note,
+    p_confirm: v.data.confirm,
+    ...(v.data.purchaseOrderId ? { p_purchase_order: v.data.purchaseOrderId } : {}),
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...BUY_PATHS);
+  return {
+    ok: true,
+    data: {
+      receiptNo: Number(r.data.receipt_no),
+      value: Number(r.data.value ?? 0),
+      poNo: r.data.po_no == null ? null : Number(r.data.po_no),
+      poReceiving: r.data.po_receiving == null ? null : String(r.data.po_receiving),
+    },
+  };
+}
+
+/* --------------------------------------------------------------- purchase orders (0044) */
+
+const poLines = z
+  .array(
+    z.object({
+      itemId: id("an item"),
+      qty: positive("Quantity"),
+      unitCode: z.string().min(1, "Choose a unit"),
+      unitPrice: nonNegative("Price per unit"),
+    }),
+  )
+  .min(1, "Add at least one line")
+  .max(100, "An order has at most 100 lines");
+
+const poInput = z.object({
+  /** The draft changed; none for a new order. */
+  poId: z.string().uuid().nullable().default(null),
+  supplierId: id("the supplier"),
+  expectedOn: day("The day it is expected").nullable().default(null),
+  note: optionalText(300),
+  lines: poLines,
+});
+
+/**
+ * A purchase order drafted, or a draft changed (0044). An approved order
+ * changed goes back to being a draft; one sent is not changed. Keyed.
+ */
+export async function savePurchaseOrderAction(
+  input: z.input<typeof poInput>,
+  key: string,
+): Promise<ActionResult<{ poId: string; poNo: number; total: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(poInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("save_po", {
+    p_po: v.data.poId,
+    p_supplier: v.data.supplierId,
+    p_lines: v.data.lines.map((l) => ({
+      item_id: l.itemId,
+      qty: l.qty,
+      unit_code: l.unitCode,
+      unit_price: l.unitPrice,
+    })),
+    p_expected_on: v.data.expectedOn,
+    p_note: v.data.note,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh("/purchasing", "/purchasing/orders", "/reports");
+  return {
+    ok: true,
+    data: {
+      poId: String(r.data.po_id),
+      poNo: Number(r.data.po_no),
+      total: Number(r.data.total ?? 0),
+    },
+  };
+}
+
+const poOnly = z.object({ poId: id("an order") });
+
+/** Approved, by someone whose limit covers it (0044). Keyed. */
+export async function approvePurchaseOrderAction(
+  input: z.input<typeof poOnly>,
+  key: string,
+): Promise<ActionResult<{ poNo: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(poOnly, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("approve_po", {
+    p_po: v.data.poId,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh("/purchasing", "/purchasing/orders", "/reports");
+  return { ok: true, data: { poNo: Number(r.data.po_no) } };
+}
+
+/** Sent to the supplier (0044). Keyed. */
+export async function sendPurchaseOrderAction(
+  input: z.input<typeof poOnly>,
+  key: string,
+): Promise<ActionResult<{ poNo: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(poOnly, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("send_po", {
+    p_po: v.data.poId,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh("/purchasing", "/purchasing/orders", "/reports");
+  return { ok: true, data: { poNo: Number(r.data.po_no) } };
+}
+
+const closeInput = poOnly.extend({ reason: optionalText(300) });
+
+/** Closed: nothing more is expected; short of the order, with a reason (0044). Keyed. */
+export async function closePurchaseOrderAction(
+  input: z.input<typeof closeInput>,
+  key: string,
+): Promise<ActionResult<{ poNo: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(closeInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("close_po", {
+    p_po: v.data.poId,
+    p_reason: v.data.reason,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh("/purchasing", "/purchasing/orders", "/reports");
+  return { ok: true, data: { poNo: Number(r.data.po_no) } };
+}
+
+const cancelPoInput = poOnly.extend({ reason: text("Why it is cancelled", 300) });
+
+/** Cancelled, while nothing has come against it (0044). Keyed. */
+export async function cancelPurchaseOrderAction(
+  input: z.input<typeof cancelPoInput>,
+  key: string,
+): Promise<ActionResult<{ poNo: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(cancelPoInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("cancel_po", {
+    p_po: v.data.poId,
+    p_reason: v.data.reason,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh("/purchasing", "/purchasing/orders", "/reports");
+  return { ok: true, data: { poNo: Number(r.data.po_no) } };
+}
+
+/* --------------------------------------------------------------- returns and credits (0044) */
+
+const returnInput = z.object({
+  supplierId: id("the supplier"),
+  /** The delivery the goods came in, if named. */
+  receiptId: z.string().uuid().nullable().default(null),
+  reason: text("Why they are going back", 300),
+  lines: z
+    .array(
+      z.object({
+        itemId: id("an item"),
+        qty: positive("Quantity"),
+        unitCode: z.string().min(1, "Choose a unit"),
+      }),
+    )
+    .min(1, "Add at least one line"),
+  /** The person has seen that it leaves stock below zero, and says it is right. */
+  confirm: z.boolean().default(false),
+});
+
+/**
+ * Goods sent back to a supplier (0044): before the delivery's bill, off what
+ * it will clear; after, a credit on the supplier's account. Keyed.
+ */
+export async function returnToSupplierAction(
+  input: z.input<typeof returnInput>,
+  key: string,
+): Promise<
+  ActionResult<{
+    returnNo: number;
+    value: number;
+    against: "delivery" | "account";
+    creditNo: number | null;
+    setAgainstBill: number;
+  }>
+> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(returnInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("return_to_supplier", {
+    p_supplier: v.data.supplierId,
+    p_lines: v.data.lines.map((l) => ({ item_id: l.itemId, qty: l.qty, unit_code: l.unitCode })),
+    p_reason: v.data.reason,
+    p_receipt: v.data.receiptId,
     p_confirm: v.data.confirm,
     p_idempotency_key: key,
   });
@@ -140,7 +354,124 @@ export async function receiveGoodsAction(
   refresh(...BUY_PATHS);
   return {
     ok: true,
-    data: { receiptNo: Number(r.data.receipt_no), value: Number(r.data.value ?? 0) },
+    data: {
+      returnNo: Number(r.data.return_no),
+      value: Number(r.data.value ?? 0),
+      against: r.data.against === "delivery" ? "delivery" : "account",
+      creditNo: r.data.credit_no == null ? null : Number(r.data.credit_no),
+      setAgainstBill: Number(r.data.set_against_bill ?? 0),
+    },
+  };
+}
+
+const creditInput = z
+  .object({
+    supplierId: id("the supplier"),
+    kind: z.enum(["price", "other"]),
+    amount: positive("The amount"),
+    supplierRef: text("The number on the supplier's credit note", 60),
+    reason: text("What it is for", 300),
+    receiptId: z.string().uuid().nullable().default(null),
+    billId: z.string().uuid().nullable().default(null),
+    accountCode: z
+      .string()
+      .regex(/^\d{4}$/)
+      .nullable()
+      .default(null),
+  })
+  .refine((c) => c.kind !== "price" || c.receiptId !== null, {
+    message: "Choose the delivery the price was for",
+  });
+
+/**
+ * The supplier's credit note (0044): for a price (against a delivery billed)
+ * or other (against an account, or a bill for a service). Set against the
+ * bill as far as it is still owed. Keyed.
+ */
+export async function recordSupplierCreditAction(
+  input: z.input<typeof creditInput>,
+  key: string,
+): Promise<ActionResult<{ creditNo: number; setAgainstBill: number; journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(creditInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("record_supplier_credit", {
+    p_supplier: v.data.supplierId,
+    p_kind: v.data.kind,
+    p_amount: v.data.amount,
+    p_supplier_ref: v.data.supplierRef,
+    p_reason: v.data.reason,
+    p_receipt: v.data.receiptId,
+    p_bill: v.data.billId,
+    p_account_code: v.data.accountCode,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...BUY_PATHS);
+  return {
+    ok: true,
+    data: {
+      creditNo: Number(r.data.credit_no),
+      setAgainstBill: Number(r.data.set_against_bill ?? 0),
+      journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
+    },
+  };
+}
+
+const noteInput = z.object({
+  creditId: id("a credit"),
+  supplierRef: text("The number on the supplier's credit note", 60),
+});
+
+/** The supplier's note for a return's credit: its number, matched; nothing posted again. Keyed. */
+export async function noteSupplierCreditAction(
+  input: z.input<typeof noteInput>,
+  key: string,
+): Promise<ActionResult<{ creditNo: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(noteInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("note_supplier_credit", {
+    p_credit: v.data.creditId,
+    p_supplier_ref: v.data.supplierRef,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh("/vendors", "/purchasing", "/reports");
+  return { ok: true, data: { creditNo: Number(r.data.credit_no) } };
+}
+
+const allocateInput = z.object({
+  creditId: id("a credit"),
+  billId: id("a bill"),
+  amount: positive("The amount"),
+});
+
+/** What is left of a credit, set against a bill of the same supplier. Keyed. */
+export async function allocateCreditAction(
+  input: z.input<typeof allocateInput>,
+  key: string,
+): Promise<ActionResult<{ creditLeft: number; billOutstanding: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(allocateInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("allocate_credit", {
+    p_credit: v.data.creditId,
+    p_bill: v.data.billId,
+    p_amount: v.data.amount,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...BUY_PATHS);
+  return {
+    ok: true,
+    data: {
+      creditLeft: Number(r.data.credit_left ?? 0),
+      billOutstanding: Number(r.data.bill_outstanding ?? 0),
+    },
   };
 }
 
