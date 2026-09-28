@@ -287,6 +287,16 @@ select pg_temp.moves('c0000000-0000-0000-0000-0000000000a2', 'opening_balance', 
 select pg_temp.moves('c0000000-0000-0000-0000-0000000000a2', 'sale_consumption', -500, 1, '{1,2,3,4,5,6}');
 select test.eq(pg_temp.found('running_out', 'c0000000-0000-0000-0000-0000000000a2'), null,
   'under 7 days of history there is not enough to judge by');
+-- Fruit trimmed away in preparing to sell is used too (0048): 3,000 g ten days
+-- ago, 260 g a day lost in preparation, and nothing sold.
+insert into item (id, business_id, sku, name, item_type, base_unit_code, dimension, returnable_to_stock) values
+  ('c0000000-0000-0000-0000-0000000000e5', '00000000-0000-0000-0000-0000000000b1', 'A-FRUIT', 'Alert fruit', 'ingredient',
+   'g', 'mass', false);
+select pg_temp.moves('c0000000-0000-0000-0000-0000000000e5', 'opening_balance', 3000, 1, '{10}');
+select pg_temp.moves('c0000000-0000-0000-0000-0000000000e5', 'preparation_waste', -260, 1, '{1,2,3,4,5,6,7,8,9,10}');
+select test.eq(pg_temp.found('running_out', 'c0000000-0000-0000-0000-0000000000e5'),
+  'orange low: Alert fruit runs out in 1.5 days: 400 g left, using about 260 a day',
+  'what is lost in preparation is counted as use');
 
 -- Answered while orange, it asks again once it turns red.
 select test.act_as('manager@example.com');
@@ -464,6 +474,11 @@ select test.eq(pg_temp.found('waste_spike'), null,
 select pg_temp.waste(20000, 2);
 select test.eq(pg_temp.found('waste_spike'), 'orange low: Waste of 25,000 IQD in the last 7 days, against about 3,231 in a usual week',
   '25,000: an alert, though with under four weeks to compare with, a less sure one');
+-- What is lost in making a batch or preparing to sell (5310, 0048) is waste too.
+select post_journal('00000000-0000-0000-0000-0000000000b1', pg_temp.noon(3), 'Production waste (fixture)', 'manual', null,
+  '[{"code": "5310", "debit": 5000}, {"code": "1200", "credit": 5000}]'::jsonb);
+select test.eq(pg_temp.found('waste_spike'), 'orange low: Waste of 30,000 IQD in the last 7 days, against about 3,231 in a usual week',
+  'and 5,000 lost in production counts with it');
 
 -- ------------------------------------------------ exceptions by one person
 select test.as_admin();
