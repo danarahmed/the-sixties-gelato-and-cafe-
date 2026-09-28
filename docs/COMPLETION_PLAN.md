@@ -8,8 +8,10 @@ recipes, `0039`) and release O (the café's rules, `0040`) are live since 27
 September 2026, and release P (sizes and add-ons, `0041`), release Q (split
 payments, `0042`), release R (US dollars at the till, `0043`), release S
 (purchase orders, returns to a supplier and their credit notes, `0044`),
-release T (the buying list, `0045`) and release U (batches, their use-by dates
-and lots, and the day's plan, `0046`) since 28 September.
+release T (the buying list, `0045`), release U (batches, their use-by dates
+and lots, and the day's plan, `0046`) and release V (losses by kind with their
+accounts, giveaways at the till and the loss report, `0047`–`0048`) since 28
+September.
 What was built differs from the plan below in these ways.
 
 Release J:
@@ -344,6 +346,48 @@ Release U:
   past it, and opens Production's list of what is in stock by batch.
 - **Reports → Production** lists the batches made in the dates, with what came
   out of what was planned and what became of each.
+
+Release V:
+
+- **Two migrations** (D14): `0047` adds the kinds `production_waste` and
+  `preparation_waste` alone, and `0048` uses them. The plan numbered release V
+  `0047`: release W and those after it move up by one (`0049` staff, `0050`
+  customers, and so on).
+- **A loss is a document** (`stock_loss` and its lines), not a movement: an
+  item in any of its units, or a product as its recipe makes it to eat in (at
+  the till, as the till's channel makes it, with its add-ons). One movement
+  for each item (and batch named), one journal for all of it: Dr the kind's
+  account, Cr 1200 Inventory. `record_waste` stays, writing its loss the same
+  way and answering as it did, its movement the loss's first.
+- **The accounts**: 5300 for waste, spoilage, expired, damaged and melt; 5310
+  Production and preparation loss, which, like 5300, takes no bill, expense
+  or supplier's credit; 6110 Staff meals, 6610 Complimentary items and 6620
+  Marketing samples, which are expenses a bill may be charged to too (a staff
+  meal bought outside, say).
+- **A giveaway is not an order.** The plan had `post_sale(… p_giveaway)`
+  record an order with no revenue. The sales reports, the drawer's figures,
+  the order counts and the average ticket count every order not voided, so an
+  order with no revenue would be counted in each of them. A giveaway is
+  instead a loss of its kind from the till, of what is in the cart with its
+  add-ons, with a turn number so the bar makes it from its ticket. Its
+  approval is the loss rules', with a manager's PIN at the till: nothing
+  waits there. It is not on Orders; Reports → Losses lists it.
+- **The rules** are 0040's, on the loss's whole value and on each of its
+  items': the limit, the person's window, the item's day. A loss that waits is
+  approved or reversed whole, by any of its movements; reversed, each movement
+  goes back to the batches it left and the one journal is reversed.
+- **A batch named**: the loss comes off it, and no more than it holds is
+  accepted; without one, the loss is taken as sales take stock.
+- **The report** (`report_losses`): by kind with its account, by item, by
+  person and by day, the giveaways by kind, and each loss (the latest 300),
+  what waits and what was reversed apart. A loss from before `0048` is one
+  movement, counted as it was posted, to 5300.
+- **The alerts**: waste well above its usual counts 5310 with 5300; running
+  out counts the new kinds as use; the losses waiting are counted a loss at a
+  time.
+- **The checks**: `document_problems` finds a loss worth something with no
+  journal, and a journal whose loss does not exist; a loss recorded whole is
+  never offered as stock the old app did not journal.
 
 **Basis:**
 

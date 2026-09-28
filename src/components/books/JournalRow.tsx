@@ -23,6 +23,7 @@ const SOURCE: Record<string, string> = {
   supplier_payment: "Payment",
   expense: "Expense",
   inventory_movement: "Stock",
+  stock_loss: "Loss",
   stock_count: "Count",
   work_shift: "Drawer count",
   session_opening: "Drawer opened",

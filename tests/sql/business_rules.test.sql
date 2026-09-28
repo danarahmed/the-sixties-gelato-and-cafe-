@@ -15,6 +15,8 @@ grant all on res to public;
 create function pg_temp.r(p text) returns jsonb language sql as $$ select v from res where k = p $$;
 create function pg_temp.sale(p text) returns uuid language sql as $$ select (v ->> 'order_id')::uuid from res where k = p $$;
 create function pg_temp.mv(p text) returns uuid language sql as $$ select (v ->> 'movement_id')::uuid from res where k = p $$;
+-- The loss a movement belongs to (0048): its journal is the loss's.
+create function pg_temp.loss(p text) returns uuid language sql as $$ select (v ->> 'loss_id')::uuid from res where k = p $$;
 create function pg_temp.on_hand(p_item text) returns numeric language sql security definer as $$
   select trim_scale((item_position('00000000-0000-0000-0000-0000000000b1', p_item::uuid,
                                    default_location('00000000-0000-0000-0000-0000000000b1'))).qty)
@@ -262,7 +264,7 @@ insert into res select 'L2', record_waste('c0000000-0000-0000-0000-000000000001'
   p_wait => true);
 select test.eq(pg_temp.status('L2') || ' ' || pg_temp.on_hand('c0000000-0000-0000-0000-000000000001'),
   'pending 340', 'saved to wait for a manager, the stock gone all the same (600 g went in espressos)');
-select test.eq(test.lines_of(pg_temp.mv('L2')), '1200 Cr 300 | 5300 Dr 300', 'and its journal posted');
+select test.eq(test.lines_of(pg_temp.loss('L2')), '1200 Cr 300 | 5300 Dr 300', 'and its journal posted');
 -- The item's losses by anyone today count too.
 select test.act_as('barista2@example.com');
 select test.throws($$select record_waste('c0000000-0000-0000-0000-000000000001', 20, 'g', 'spoilage', 'the rest')$$,
@@ -282,7 +284,7 @@ select test.act_as('owner@example.com');
 select set_business_rule('negative_stock', 'item', 'c0000000-0000-0000-0000-00000000000a', '"allow"', 'Never bought yet');
 select test.act_as('barista@example.com');
 insert into res select 'L4', record_waste('c0000000-0000-0000-0000-00000000000a', 50, 'ml', 'spoilage', 'a spill');
-select test.eq(pg_temp.status('L4') || ' ' || coalesce(test.lines_of(pg_temp.mv('L4')), 'no journal'),
+select test.eq(pg_temp.status('L4') || ' ' || coalesce(test.lines_of(pg_temp.loss('L4')), 'no journal'),
   'not_required no journal', 'a loss worth nothing needs no approval and posts nothing');
 -- Losses added up entry by entry only, when the rule says so.
 select test.act_as('owner@example.com');
@@ -325,7 +327,7 @@ select test.as_admin();
 select test.eq((select string_agg(a.code || case when l.debit > 0 then ' Dr ' || l.debit else ' Cr ' || l.credit end, ' | '
                                   order by a.code)
                   from journal_entry e join journal_line l on l.journal_entry_id = e.id join gl_account a on a.id = l.account_id
-                 where e.reverses_entry = (select id from journal_entry where reference_id = pg_temp.mv('L7')
+                 where e.reverses_entry = (select id from journal_entry where reference_id = pg_temp.loss('L7')
                                              and reverses_entry is null)),
   '1200 Dr 600 | 5300 Cr 600', 'its journal reversed: the stock and the loss put back');
 select test.eq(coalesce(pg_temp.alerts('losses_waiting'), 'none'), 'none', 'nothing waits any more');

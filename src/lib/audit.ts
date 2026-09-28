@@ -52,7 +52,7 @@ export const AUDIT_GROUPS = [
     prefixes: [
       "inventory.adjust",
       "inventory.waste",
-      "inventory.loss_",
+      "inventory.loss",
       "inventory.count.",
       "production.",
       "stock.",
@@ -118,6 +118,7 @@ const ACTION_LABEL: Record<string, string> = {
   "inventory.count.approve": "Stock count approved",
   "inventory.count.cancel": "Stock count cancelled",
   "inventory.waste": "Loss recorded",
+  "inventory.loss": "Loss recorded",
   "inventory.loss_approve": "Loss approved",
   "inventory.loss_reverse": "Loss reversed",
   "stock.below_zero": "Stock used beyond the books, approved",
@@ -151,6 +152,7 @@ const ACTION_LABEL: Record<string, string> = {
   "sale.void": "Sale voided",
   "sale.refund": "Sale refunded",
   "sale.discount": "Discount given",
+  "sale.giveaway": "Given away at the till",
   "bill.cancel": "Open bill cancelled",
   "bill.discount": "Discount on an open bill",
   "bill.reduce": "Printed bill reduced",
@@ -279,6 +281,10 @@ const FIELD_LABEL: Record<string, string> = {
   batches: "Batches",
   // Batches and their lots (0046).
   batch_no: "Batch",
+  // A giveaway at the till (0048): its number for the bar, how many products.
+  turn_no: "Number",
+  products: "Products",
+  what: "What",
   use_by: "Use by",
   made_at: "Made",
   keeps_hours: "Keeps (hours)",
@@ -588,6 +594,9 @@ export function subjectOf(
       return "Stock";
     case "inventory_movement":
       return named(pick("item")) ?? "Stock";
+    case "stock_loss":
+      // A loss recorded whole (0048): what was lost, when the trail says.
+      return pick("what") ?? named(pick("item")) ?? named(pick("product_variant_id")) ?? "A loss";
     case "expense":
       return pick("description") ?? "An expense";
     case "production_batch":

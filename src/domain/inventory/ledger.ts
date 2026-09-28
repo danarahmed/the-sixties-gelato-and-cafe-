@@ -34,6 +34,8 @@ export type MovementType =
   | "manual_correction"
   | "damaged"
   | "expired"
+  | "production_waste"
+  | "preparation_waste"
   | "reversal";
 
 /** +1 = increases stock, -1 = decreases stock. */
@@ -57,6 +59,8 @@ export const MOVEMENT_SIGN: Record<MovementType, 1 | -1> = {
   manual_correction: 1, // sign carried by the (possibly negative) magnitude
   damaged: -1,
   expired: -1,
+  production_waste: -1,
+  preparation_waste: -1,
   reversal: 1, // sign carried by the reversed magnitude
 };
 

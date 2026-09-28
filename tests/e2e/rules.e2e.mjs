@@ -176,12 +176,13 @@ rule("waste_approval_over", "business", null, 1);
 {
   const { ctx, page } = await signIn(browser, "barista");
   await open(page, "/inventory");
-  const form = page.getByTestId("record-waste");
-  await form.locator("select").first().selectOption({ label: "Golden beans" });
+  const form = page.getByTestId("record-loss");
+  await form.getByLabel("What kind of loss").selectOption("spoilage");
+  await form.getByLabel("Item").selectOption({ label: "Golden beans" });
   await form.getByLabel("Quantity lost").fill("50");
   await form.getByLabel("Why (required)").fill("Spilled the hopper");
-  await form.getByRole("button", { name: "Record waste" }).click();
-  const approval = form.getByTestId("waste-approval");
+  await form.getByRole("button", { name: "Record the loss" }).click();
+  const approval = form.getByTestId("loss-approval");
   await approval.waitFor({ timeout: 10000 });
   check(
     (await form.textContent()).includes("This loss needs a manager's approval"),

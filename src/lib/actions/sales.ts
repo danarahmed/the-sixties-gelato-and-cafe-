@@ -279,3 +279,68 @@ export async function moveCashAction(
     data: { journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no) },
   };
 }
+
+const giveAwayInput = z.object({
+  /** Minted when the cashier asks to give it away, reused on every retry. */
+  key: z.string().uuid("This giveaway has no idempotency key"),
+  kind: z.enum(["staff_consumption", "complimentary", "sampling"], {
+    message: "Give it away as a staff meal, on the house or a sample",
+  }),
+  channel: z.enum(["dine_in", "takeaway"], {
+    message: "What is given away is eaten in or taken away",
+  }),
+  lines: z
+    .array(z.object({ variantId: id("a product"), qty: positive("Quantity"), addons: lineAddons }))
+    .min(1, "The cart is empty"),
+  reason: text("Why it is given away", 300),
+  /** A manager's approval with their PIN, over the limit (0040): nothing waits at the till. */
+  approvalId: id("an approval").nullish(),
+});
+
+export interface Giveaway {
+  lossId: string;
+  /** The bar makes it by this number, as a sale's. */
+  turnNo: number | null;
+  status: string;
+  approvedBy: string | null;
+  /** Only for people allowed to see costs. */
+  value?: number;
+  replayed: boolean;
+}
+
+/**
+ * A staff meal, a drink on the house or a sample, given away from the till
+ * (0048): what is in the cart, with its add-ons, out of stock as a loss of that
+ * kind, to its own account. No revenue and no payment: it is not a sale.
+ */
+export async function giveAwayAction(
+  input: z.input<typeof giveAwayInput>,
+): Promise<ActionResult<Giveaway>> {
+  const v = parse(giveAwayInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("give_away", {
+    p_kind: v.data.kind,
+    p_channel: v.data.channel,
+    p_lines: v.data.lines.map((l) => ({
+      variant_id: l.variantId,
+      qty: l.qty,
+      modifiers: addonsToDb(l.addons),
+    })),
+    p_reason: v.data.reason,
+    p_approval: v.data.approvalId ?? null,
+    p_idempotency_key: v.data.key,
+  });
+  if (!r.ok) return r;
+  refresh("/inventory", "/reports", "/journals", "/dashboard");
+  return {
+    ok: true,
+    data: {
+      lossId: String(r.data.loss_id ?? ""),
+      turnNo: r.data.turn_no == null ? null : Number(r.data.turn_no),
+      status: String(r.data.status ?? "not_required"),
+      approvedBy: r.data.approved_by == null ? null : String(r.data.approved_by),
+      ...(r.data.value !== undefined ? { value: Number(r.data.value) } : {}),
+      replayed: r.data.replayed === true,
+    },
+  };
+}

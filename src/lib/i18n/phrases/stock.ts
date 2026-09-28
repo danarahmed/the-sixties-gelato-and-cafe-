@@ -1271,6 +1271,68 @@ const phrases: PhraseBook = {
   Enough: { ar: "يكفي", ckb: "بەسە" },
   "Not enough history": { ar: "سجلّ غير كافٍ", ckb: "مێژووی پێویست نییە" },
   "Not used lately": { ar: "لم تُستخدم مؤخرًا", ckb: "لەم دواییانەدا بەکارنەهاتووە" },
+  // Losses by kind, giveaways at the till, and the loss report (0048).
+  "Record a loss": { ar: "تسجيل خسارة", ckb: "تۆمارکردنی زیان" },
+  "Record the loss": { ar: "سجّل الخسارة", ckb: "زیانەکە تۆمار بکە" },
+  "What kind of loss": { ar: "نوع الخسارة", ckb: "جۆری زیان" },
+  "Charged to {code} {name}.": {
+    ar: "تُحمَّل على {code} {name}.",
+    ckb: "دەخرێتە سەر {code} {name}.",
+  },
+  "What was lost": { ar: "ما الذي فُقد", ckb: "چی لەدەستچوو" },
+  "A product, as made": { ar: "منتج، كما يُحضَّر", ckb: "بەرهەمێک، وەک دروست دەکرێت" },
+  "From batch": { ar: "من الدفعة", ckb: "لە دەستەی" },
+  "As sales take it: the batch to be used first": {
+    ar: "كما تأخذ المبيعات: الدفعة التي تُستعمل أولًا",
+    ckb: "وەک فرۆشتن دەیبات: ئەو دەستەیەی پێش هەموو بەکاردێت",
+  },
+  "Batch {n}": { ar: "الدفعة {n}", ckb: "دەستەی {n}" },
+  "How many": { ar: "كم", ckb: "چەند" },
+  "What its recipe uses to eat in comes out, without add-ons.": {
+    ar: "يخرج ما تستهلكه وصفته للأكل في المحل، من دون الإضافات.",
+    ckb: "ئەوەی ڕەسەتەکەی بۆ خواردن لە شوێن بەکاری دەهێنێت دەردەهێنرێت، بەبێ زیادەکان.",
+  },
+  "Taken out at what it costs now, in one journal: Dr {code} / Cr 1200 Inventory.": {
+    ar: "يُخرَج بكلفته الآن، في قيد واحد: مدين {code} / دائن 1200 المخزون.",
+    ckb: "بە تێچووی ئێستای دەردەهێنرێت، لە یەک تۆماردا: قەرزار {code} / بەستانکار 1200 کۆگا.",
+  },
+  "Thrown away: made wrong, or not fit to sell.": {
+    ar: "رُمي: صُنع خطأً، أو لا يصلح للبيع.",
+    ckb: "فڕێدرا: بە هەڵە دروستکرا، یان شیاوی فرۆشتن نییە.",
+  },
+  "Gone off before its time: milk turned, fruit bruised.": {
+    ar: "فسد قبل أوانه: حليب تخثّر، فاكهة تكدّمت.",
+    ckb: "پێش کاتی خۆی خراپ بوو: شیر ترش بوو، میوە لێدرا.",
+  },
+  "Past its use-by: it is not to be sold.": {
+    ar: "تجاوز تاريخ استعماله: لا يُباع.",
+    ckb: "بەسەرچووە: نابێت بفرۆشرێت.",
+  },
+  "Broken, spilt or dropped.": { ar: "انكسر أو انسكب أو سقط.", ckb: "شکا، ڕژا یان کەوت." },
+  "Melted in the display, or dried out.": {
+    ar: "ذاب في الواجهة، أو جفّ.",
+    ckb: "لە ڤیترینەکەدا توایەوە، یان وشک بوو.",
+  },
+  "Lost making a batch: a base spilt, a pan burnt.": {
+    ar: "فُقد أثناء إعداد دفعة: قاعدة انسكبت، قِدر احترق.",
+    ckb: "لە کاتی دروستکردنی دەستەیەکدا لەدەستچوو: بنەمایەک ڕژا، مەنجەڵێک سووتا.",
+  },
+  "Lost preparing to sell: fruit trimmed, milk left in the jug.": {
+    ar: "فُقد أثناء التحضير للبيع: فاكهة قُشِّرت، حليب بقي في الإبريق.",
+    ckb: "لە کاتی ئامادەکردن بۆ فرۆشتن لەدەستچوو: میوەی پاککراو، شیری ماوە لە جەگەکەدا.",
+  },
+  "Eaten or drunk by the staff.": {
+    ar: "أكله أو شربه الموظفون.",
+    ckb: "ستاف خواردی یان خواردییەوە.",
+  },
+  "Given to a customer free, on the house.": {
+    ar: "قُدّم لزبون مجانًا، ضيافة من المحل.",
+    ckb: "بە خۆڕایی درا بە کڕیارێک، میوانداری.",
+  },
+  "Given to taste, to sell more.": {
+    ar: "قُدّم للتذوّق، لبيع المزيد.",
+    ckb: "بۆ تامکردن درا، بۆ فرۆشتنی زیاتر.",
+  },
 };
 
 export default phrases;

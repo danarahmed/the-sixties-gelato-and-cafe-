@@ -8,6 +8,8 @@ import { dateTimeIn } from "@/lib/dates";
 import { InventoryForms } from "@/components/InventoryForms";
 import { LossesWaiting } from "@/components/LossesWaiting";
 import { getLossesWaiting } from "@/lib/db/rules";
+import { getPosCatalogue } from "@/lib/db/pos";
+import { getProductionLots } from "@/lib/db/production";
 import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -18,13 +20,28 @@ export default async function InventoryPage() {
   const msg = await getMsg();
   const seesCost = has(profile, "cost.view");
   const approvesLosses = has(profile, "waste.approve");
-  const [items, allBoard, movements, outOfUse, waiting] = await Promise.all([
+  const recordsLosses = has(profile, "waste.record");
+  const [items, allBoard, movements, outOfUse, waiting, catalogue, lots] = await Promise.all([
     getItems(),
     seesCost ? getStockBoard() : Promise.resolve([]),
     seesCost ? getMovements(60) : Promise.resolve([]),
     seesCost ? getItemsOutOfUse() : Promise.resolve([]),
     approvesLosses ? getLossesWaiting() : Promise.resolve([]),
+    // A product lost as made, and the batch an item is lost from (0048).
+    recordsLosses && has(profile, "sale.create") ? getPosCatalogue() : Promise.resolve([]),
+    recordsLosses && (has(profile, "production.record") || seesCost)
+      ? getProductionLots()
+      : Promise.resolve([]),
   ]);
+  const sizes = new Map<string, number>();
+  for (const p of catalogue) sizes.set(p.productId, (sizes.get(p.productId) ?? 0) + 1);
+  const products = catalogue
+    .map((p) => ({
+      variantId: p.variantId,
+      name:
+        (sizes.get(p.productId) ?? 0) > 1 ? `${p.productName} — ${p.variantName}` : p.productName,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
   // The board shows the items in use; one out of use has no stock left (0027).
   const inUse = new Set(items.map((i) => i.id));
   const board = allBoard.filter((r) => inUse.has(r.itemId));
@@ -108,7 +125,16 @@ export default async function InventoryPage() {
           has(profile, "purchase.create") ||
           has(profile, "inventory.adjust.approve")
         }
-        canWaste={has(profile, "waste.record")}
+        products={products}
+        lots={lots.map((l) => ({
+          lotId: l.lotId,
+          lot: l.lot,
+          itemId: l.itemId,
+          batchNo: l.batchNo,
+          left: l.left,
+          status: l.status,
+        }))}
+        canWaste={recordsLosses}
         canCorrect={has(profile, "inventory.adjust.approve")}
         isOwner={profile.roles.includes("owner")}
         lossLimit={profile.wasteApprovalOver}

@@ -2,12 +2,17 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { adjustStockAction, recordLossAction, recordOpeningStockAction } from "@/lib/actions/stock";
+import { fmtIQD, fmtQty } from "@/lib/format";
 import {
-  adjustStockAction,
-  recordOpeningStockAction,
-  recordWasteAction,
-} from "@/lib/actions/stock";
-import { WASTE_TYPES, fmtIQD, movementLabel } from "@/lib/format";
+  LOSS_ACCOUNT_NAME,
+  LOSS_KINDS,
+  NEEDS_APPROVAL,
+  NEEDS_STOCK_APPROVAL,
+  lossKind,
+  type LossKind,
+} from "@/lib/losses";
+import { LOT_STATUS_LABEL, type LotStatus } from "@/lib/production";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { NewItemForm } from "@/components/NewItemForm";
@@ -24,11 +29,29 @@ interface ItemOpt {
   units: { code: string; label: string; factor: number }[];
 }
 
+/** A product the café sells, by the size: its name, with the size when it has several. */
+export interface ProductOpt {
+  variantId: string;
+  name: string;
+}
+
+/** A batch in stock of an item kept by batch (0046). */
+export interface LotOpt {
+  lotId: string;
+  lot: string;
+  itemId: string;
+  batchNo: number | null;
+  left: number;
+  status: LotStatus;
+}
+
 type Msg = { ok: boolean; text: string } | null;
 
 export function InventoryForms({
   items,
   unstocked,
+  products = [],
+  lots = [],
   canAddItem,
   canWaste,
   canCorrect,
@@ -37,6 +60,10 @@ export function InventoryForms({
   lossWindow = null,
 }: {
   items: ItemOpt[];
+  /** The products sold, to record one lost as made (0048). */
+  products?: ProductOpt[];
+  /** The batches in stock, to lose from the one named (0048). */
+  lots?: LotOpt[];
   /** Items with no stock history yet: they can be given their opening stock. */
   unstocked: ItemOpt[];
   canAddItem: boolean;
@@ -56,7 +83,15 @@ export function InventoryForms({
     >
       {isOwner && unstocked.length > 0 && <OpeningStock items={unstocked} />}
       {canAddItem && <AddItem isOwner={isOwner} items={items} />}
-      {canWaste && <RecordWaste items={items} lossLimit={lossLimit} lossWindow={lossWindow} />}
+      {canWaste && (
+        <RecordLoss
+          items={items}
+          products={products}
+          lots={lots}
+          lossLimit={lossLimit}
+          lossWindow={lossWindow}
+        />
+      )}
       {canCorrect && <CorrectStock items={items} />}
     </div>
   );
@@ -232,16 +267,22 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
   );
 }
 
-/** The database's answers the loss form acts on (0040). */
-const NEEDS_APPROVAL = /needs a manager's approval: ask one to approve it now/;
-const NEEDS_STOCK_APPROVAL = /is in stock: a manager approves using more than that/;
-
-function RecordWaste({
+/**
+ * A loss (0048): its kind first, with what it means and the account it is
+ * charged to; then an item (from a batch, when it is kept by batch) or a
+ * product, as its recipe makes it to eat in; and why. Over the limit a
+ * manager approves it now, with their PIN, or it is saved to wait for one.
+ */
+function RecordLoss({
   items,
+  products,
+  lots,
   lossLimit,
   lossWindow,
 }: {
   items: ItemOpt[];
+  products: ProductOpt[];
+  lots: LotOpt[];
   lossLimit: number | null;
   lossWindow: string | null;
 }) {
@@ -250,20 +291,31 @@ function RecordWaste({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
+  const [kind, setKind] = useState<LossKind>("waste");
+  const [what, setWhat] = useState<"item" | "product">("item");
   const [itemId, setItemId] = useState(items[0]?.id ?? "");
   const item = items.find((i) => i.id === itemId);
   const [unit, setUnit] = useState(items[0]?.baseUnit ?? "");
-  const [type, setType] = useState<(typeof WASTE_TYPES)[number]>("waste");
+  const [lotId, setLotId] = useState("");
+  const [variantId, setVariantId] = useState(products[0]?.variantId ?? "");
   const [qty, setQty] = useState("");
   const [reason, setReason] = useState("");
   // What the database asked for: a manager now, or the choice to wait for one (0040).
   const [need, setNeed] = useState<"approval" | "stock" | null>(null);
+  const k = lossKind(kind) ?? LOSS_KINDS[0];
+  const itemLots = lots.filter((l) => l.itemId === itemId && l.left > 0);
+  const product = products.find((p) => p.variantId === variantId);
 
   function submit(extra: { approvalId?: string; wait?: boolean } = {}) {
     setMsg(null);
     start(async () => {
-      const r = await op.run("recordWaste", (key) =>
-        recordWasteAction({ itemId, qty, unitCode: unit || null, type, reason, ...extra }, key),
+      const r = await op.run("recordLoss", (key) =>
+        recordLossAction(
+          what === "item"
+            ? { kind, itemId, qty, unitCode: unit || null, lotId: lotId || null, reason, ...extra }
+            : { kind, variantId, qty, reason, ...extra },
+          key,
+        ),
       );
       if (r.ok) {
         setNeed(null);
@@ -288,6 +340,7 @@ function RecordWaste({
         });
         setQty("");
         setReason("");
+        setLotId("");
         router.refresh();
       } else {
         if (NEEDS_APPROVAL.test(r.error)) setNeed("approval");
@@ -298,60 +351,143 @@ function RecordWaste({
     });
   }
 
-  if (items.length === 0) return null;
+  if (items.length === 0 && products.length === 0) return null;
   return (
-    <div
-      className="card grid"
-      style={{ gap: 10, alignContent: "start" }}
-      data-testid="record-waste"
-    >
-      <h3 style={{ margin: 0 }}>🗑️ {t("Record waste")}</h3>
-      <Field label={t("Item")}>
+    <div className="card grid" style={{ gap: 10, alignContent: "start" }} data-testid="record-loss">
+      <h3 style={{ margin: 0 }}>🗑️ {t("Record a loss")}</h3>
+      <Field label={t("What kind of loss")}>
         <select
           style={inputStyle}
-          value={itemId}
+          value={kind}
           onChange={(e) => {
-            setItemId(e.target.value);
-            setUnit(items.find((i) => i.id === e.target.value)?.baseUnit ?? "");
+            setKind(e.target.value as LossKind);
             setNeed(null);
           }}
         >
-          {items.map((i) => (
-            <option key={i.id} value={i.id}>
-              {i.name}
+          {LOSS_KINDS.map((l) => (
+            <option key={l.kind} value={l.kind}>
+              {t(l.label)}
             </option>
           ))}
         </select>
       </Field>
-      <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <Field label={t("What happened")}>
-          <select
-            style={inputStyle}
-            value={type}
-            onChange={(e) => setType(e.target.value as typeof type)}
-          >
-            {WASTE_TYPES.map((w) => (
-              <option key={w} value={w}>
-                {t(movementLabel(w))}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label={t("Quantity lost")}>
-          <input
-            style={inputStyle}
-            value={qty}
-            onChange={(e) => {
-              setQty(e.target.value);
+      <p className="muted" style={{ fontSize: ".8rem", margin: 0 }} data-testid="loss-kind-explain">
+        {t(k.explain)}{" "}
+        {t("Charged to {code} {name}.", {
+          code: k.account,
+          name: t(LOSS_ACCOUNT_NAME[k.account] ?? ""),
+        })}
+      </p>
+      {products.length > 0 && (
+        <div style={{ display: "flex", gap: 6 }} role="group" aria-label={t("What was lost")}>
+          <button
+            type="button"
+            className={what === "item" ? "btn-primary" : undefined}
+            aria-pressed={what === "item"}
+            onClick={() => {
+              setWhat("item");
               setNeed(null);
             }}
-            inputMode="decimal"
-          />
-        </Field>
-        <Field label={t("Unit")}>
-          <UnitSelect item={item} value={unit} onChange={setUnit} />
-        </Field>
-      </div>
+          >
+            {t("An item")}
+          </button>
+          <button
+            type="button"
+            className={what === "product" ? "btn-primary" : undefined}
+            aria-pressed={what === "product"}
+            onClick={() => {
+              setWhat("product");
+              setNeed(null);
+            }}
+          >
+            {t("A product, as made")}
+          </button>
+        </div>
+      )}
+      {what === "item" ? (
+        <>
+          <Field label={t("Item")}>
+            <select
+              style={inputStyle}
+              value={itemId}
+              onChange={(e) => {
+                setItemId(e.target.value);
+                setUnit(items.find((i) => i.id === e.target.value)?.baseUnit ?? "");
+                setLotId("");
+                setNeed(null);
+              }}
+            >
+              {items.map((i) => (
+                <option key={i.id} value={i.id}>
+                  {i.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          {itemLots.length > 0 && (
+            <Field label={t("From batch")}>
+              <select style={inputStyle} value={lotId} onChange={(e) => setLotId(e.target.value)}>
+                <option value="">{t("As sales take it: the batch to be used first")}</option>
+                {itemLots.map((l) => (
+                  <option key={l.lotId} value={l.lotId}>
+                    {l.batchNo !== null ? t("Batch {n}", { n: l.batchNo }) : l.lot} —{" "}
+                    {fmtQty(l.left)} {item?.baseUnit} · {t(LOT_STATUS_LABEL[l.status])}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
+          <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <Field label={t("Quantity lost")}>
+              <input
+                style={inputStyle}
+                value={qty}
+                onChange={(e) => {
+                  setQty(e.target.value);
+                  setNeed(null);
+                }}
+                inputMode="decimal"
+              />
+            </Field>
+            <Field label={t("Unit")}>
+              <UnitSelect item={item} value={unit} onChange={setUnit} />
+            </Field>
+          </div>
+        </>
+      ) : (
+        <>
+          <Field label={t("Product")}>
+            <select
+              style={inputStyle}
+              value={variantId}
+              onChange={(e) => {
+                setVariantId(e.target.value);
+                setNeed(null);
+              }}
+            >
+              {products.map((p) => (
+                <option key={p.variantId} value={p.variantId}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label={t("How many")}>
+            <input
+              style={inputStyle}
+              value={qty}
+              onChange={(e) => {
+                setQty(e.target.value);
+                setNeed(null);
+              }}
+              inputMode="decimal"
+            />
+          </Field>
+          <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
+            {t("What its recipe uses to eat in comes out, without add-ons.")}
+          </p>
+        </>
+      )}
       <Field label={t("Why (required)")}>
         <input
           style={inputStyle}
@@ -361,7 +497,9 @@ function RecordWaste({
         />
       </Field>
       <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
-        {t("Taken out at average cost: Dr 5300 Waste / Cr 1200 Inventory.")}{" "}
+        {t("Taken out at what it costs now, in one journal: Dr {code} / Cr 1200 Inventory.", {
+          code: k.account,
+        })}{" "}
         {lossLimit !== null &&
           t(
             lossWindow === "entry"
@@ -376,15 +514,15 @@ function RecordWaste({
         <button
           className="btn-primary"
           onClick={() => submit()}
-          disabled={pending || !qty || !reason.trim()}
+          disabled={pending || !qty || !reason.trim() || (what === "product" && !product)}
         >
-          {pending ? t("Recording…") : t("Record waste")}
+          {pending ? t("Recording…") : t("Record the loss")}
         </button>
         <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
       {need && (
-        <div className="card grid" style={{ gap: 8 }} data-testid="waste-approval">
+        <div className="card grid" style={{ gap: 8 }} data-testid="loss-approval">
           <b style={{ fontSize: ".9rem" }}>
             {need === "approval"
               ? t("A manager approves it now, with their PIN:")
@@ -392,7 +530,11 @@ function RecordWaste({
           </b>
           <ManagerApproval
             kind="waste"
-            items={`${item?.name ?? ""} ${qty} ${unit}`}
+            items={
+              what === "item"
+                ? `${item?.name ?? ""} ${qty} ${unit}`
+                : `${product?.name ?? ""} ×${qty}`
+            }
             onApproved={(a) => submit({ approvalId: a.id })}
           />
           {need === "approval" && (

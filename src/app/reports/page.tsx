@@ -6,6 +6,7 @@ import { getDailySales, getVendorBook, ageBills, salesTotals } from "@/lib/db/bo
 import {
   getDocumentProblems,
   getExceptions,
+  getLossReport,
   getLegacyUnposted,
   getMenuCosting,
   getProfitAndLoss,
@@ -17,10 +18,11 @@ import {
 } from "@/lib/db/reports";
 import { LegacyPostings } from "@/components/books/LegacyPostings";
 import { EXCEPTION_LABEL, NO_ONE, exceptionsByPerson, type ExceptionKind } from "@/lib/exceptions";
-import { fmtIQD, fmtQty, tenderLabel } from "@/lib/format";
+import { fmtIQD, fmtQty, movementLabel, tenderLabel } from "@/lib/format";
 import { getDollarsReport } from "@/lib/db/fx";
 import { getPurchasingReport } from "@/lib/db/purchasing";
 import { getProductionReport } from "@/lib/db/production";
+import { LOSS_ACCOUNT_NAME, giveawayLabel, kindShare } from "@/lib/losses";
 import { CREDIT_KIND_LABEL, orderStage, STAGE_LABEL } from "@/lib/purchasing";
 import { fmtRate, fmtUSD } from "@/lib/fx";
 import { getChannelNames } from "@/lib/db/channels";
@@ -74,6 +76,7 @@ export default async function ReportsPage({
     dollars,
     buying,
     made,
+    lost,
   ] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
     getReconciliation(to),
@@ -89,6 +92,7 @@ export default async function ReportsPage({
     getDollarsReport(from, to),
     getPurchasingReport(from, to),
     getProductionReport(from, to),
+    getLossReport(from, to),
   ]);
   // The menu as it sells today: a platform out of use sells nothing.
   const menu = allMenu.filter((m) =>
@@ -966,6 +970,222 @@ export default async function ReportsPage({
               </tbody>
             </table>
           </div>
+        )}
+      </section>
+
+      {/* ---- Losses and giveaways (0048) ---- */}
+      <section className="panel" id="losses" data-testid="loss-report">
+        <div className="panel-h">
+          <h3>{t("Losses")}</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            {t("What was lost or given away {from} to {to}, and where it was charged", {
+              from,
+              to,
+            })}
+          </span>
+        </div>
+        {lost.total.count === 0 && lost.total.reversedCount === 0 ? (
+          <div className="panel-b">
+            <p className="muted" style={{ margin: 0, fontSize: ".9rem" }}>
+              {t("Nothing was lost in these dates.")}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="panel-b">
+              <p style={{ margin: 0 }} data-testid="loss-total">
+                {t("{n} loss(es), {value} in all.", {
+                  n: lost.total.count,
+                  value: fmtIQD(lost.total.value),
+                })}
+                {lost.total.pendingCount > 0 && (
+                  <>
+                    {" "}
+                    {t("{n} of them wait for a manager ({value}).", {
+                      n: lost.total.pendingCount,
+                      value: fmtIQD(lost.total.pendingValue),
+                    })}
+                  </>
+                )}
+                {lost.total.reversedCount > 0 && (
+                  <>
+                    {" "}
+                    {t("{n} reversed, as they did not happen ({value}): left out.", {
+                      n: lost.total.reversedCount,
+                      value: fmtIQD(lost.total.reversedValue),
+                    })}
+                  </>
+                )}
+              </p>
+            </div>
+            <div className="tw">
+              <table data-testid="loss-by-kind">
+                <thead>
+                  <tr>
+                    <th>{t("Kind")}</th>
+                    <th>{t("Account")}</th>
+                    <th className="right">{t("Losses")}</th>
+                    <th className="right">{t("Value")}</th>
+                    <th className="right">{t("Share")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lost.byKind.map((k) => (
+                    <tr key={`${k.kind}:${k.account}`}>
+                      <td>{t(movementLabel(k.kind))}</td>
+                      <td>
+                        <span className="mono">{k.account}</span>{" "}
+                        {msg(k.accountName ?? LOSS_ACCOUNT_NAME[k.account] ?? "")}
+                      </td>
+                      <td className="right mono">{k.count}</td>
+                      <td className="right money">{fmtIQD(k.value)}</td>
+                      <td className="right mono">{kindShare(k.value, lost.total.value)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {lost.giveaways.length > 0 && (
+              <div className="panel-b">
+                <p style={{ margin: 0 }} data-testid="loss-giveaways">
+                  <b>{t("Given away at the till")}:</b>{" "}
+                  {lost.giveaways
+                    .map((g) =>
+                      t("{what}: {n}, {value}", {
+                        what: t(giveawayLabel(g.kind)),
+                        n: g.count,
+                        value: fmtIQD(g.value),
+                      }),
+                    )
+                    .join(" · ")}
+                </p>
+              </div>
+            )}
+            <div
+              className="grid"
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 0 }}
+            >
+              <div className="tw">
+                <table data-testid="loss-by-item">
+                  <thead>
+                    <tr>
+                      <th>{t("Item")}</th>
+                      <th className="right">{t("Quantity lost")}</th>
+                      <th className="right">{t("Value")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lost.byItem.slice(0, 10).map((i) => (
+                      <tr key={i.itemId}>
+                        <td>
+                          <Link href={`/inventory/${i.itemId}`}>{i.item}</Link>
+                        </td>
+                        <td className="right mono">
+                          {fmtQty(i.qty)} {i.unit}
+                        </td>
+                        <td className="right money">{fmtIQD(i.value)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="tw">
+                <table data-testid="loss-by-person">
+                  <thead>
+                    <tr>
+                      <th>{t("Recorded by")}</th>
+                      <th className="right">{t("Losses")}</th>
+                      <th className="right">{t("Value")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lost.byPerson.map((p) => (
+                      <tr key={p.personId ?? "—"}>
+                        <td>{p.person ?? "—"}</td>
+                        <td className="right mono">{p.count}</td>
+                        <td className="right money">{fmtIQD(p.value)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="tw">
+              <table data-testid="loss-list">
+                <thead>
+                  <tr>
+                    <th>{t("When")}</th>
+                    <th>{t("Kind")}</th>
+                    <th>{t("What")}</th>
+                    <th className="right">{t("Value")}</th>
+                    <th>{t("Why")}</th>
+                    <th>{t("Recorded by")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lost.losses.slice(0, 50).map((l) => (
+                    <tr
+                      key={l.lossId ?? l.movementId ?? l.at}
+                      className={l.reversed ? "pr-cancelled" : undefined}
+                      data-testid="loss-row"
+                    >
+                      <td className="mono muted" style={{ fontSize: ".8rem" }}>
+                        {dateTimeIn(profile.timezone, l.at)}
+                      </td>
+                      <td>
+                        {t(movementLabel(l.kind))}
+                        {l.atTill && (
+                          <>
+                            {" "}
+                            <span className="badge">
+                              {l.turnNo !== null
+                                ? t("at the till, number {n}", { n: l.turnNo })
+                                : t("at the till")}
+                            </span>
+                          </>
+                        )}
+                        {l.pending && (
+                          <>
+                            {" "}
+                            <span className="badge warn">{t("waiting for a manager")}</span>
+                          </>
+                        )}
+                        {l.reversed && (
+                          <>
+                            {" "}
+                            <span className="badge warn">{t("reversed")}</span>
+                          </>
+                        )}
+                      </td>
+                      <td>
+                        {l.what
+                          .map(
+                            (w) =>
+                              `${w.unit ? `${fmtQty(w.qty)} ${w.unit}` : `${fmtQty(w.qty)} ×`} ${w.name}${
+                                w.size ? ` — ${w.size}` : ""
+                              }${w.addons.length > 0 ? ` (${w.addons.join(", ")})` : ""}${
+                                w.batchNo !== null ? ` · ${t("Batch {n}", { n: w.batchNo })}` : ""
+                              }`,
+                          )
+                          .join("; ")}
+                      </td>
+                      <td className="right money">{fmtIQD(l.value)}</td>
+                      <td>{l.reason ? msg(l.reason) : "—"}</td>
+                      <td>
+                        {l.person ?? "—"}
+                        {l.approvedBy && l.approvedBy !== l.person && (
+                          <span className="muted" style={{ fontSize: ".8rem" }}>
+                            {" "}
+                            · {t("approved by {name}", { name: l.approvedBy })}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </section>
 

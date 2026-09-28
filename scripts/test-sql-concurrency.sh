@@ -309,6 +309,32 @@ ok "$(sql "select count(*) from inventory_movement m where m.item_id = '$GELATO'
              and (select sum(base_qty) from lot_movement where movement_id = m.id) <> m.base_quantity_signed")" \
    "0" "each sale is split by lot exactly, gram for gram"
 
+# 0048 — ten tills give a biscuit away (150 each) at the same instant, all as
+# the one cashier, whose losses over the day are held to 500: three go through,
+# each with its own turn number, and seven are told a manager approves it —
+# the cashier's giveaways are added up one at a time.
+sql "insert into item (id, business_id, sku, name, item_type, base_unit_code, dimension) values
+       ('c0000000-0000-0000-0000-0000000000c4', '00000000-0000-0000-0000-0000000000b1', 'RACE-BISCUIT', 'Race biscuit',
+        'resale', 'each', 'count');
+     insert into product (id, business_id, name) values
+       ('d0000000-0000-0000-0000-0000000000c4', '00000000-0000-0000-0000-0000000000b1', 'Race biscuit');
+     insert into product_variant (id, product_id, name, resale_item_id) values
+       ('d1000000-0000-0000-0000-0000000000c4', 'd0000000-0000-0000-0000-0000000000c4', 'One',
+        'c0000000-0000-0000-0000-0000000000c4');
+     select test.act_as('owner@example.com');
+     select record_opening_stock('c0000000-0000-0000-0000-0000000000c4', 20, 'each', 150, 'race');" >/dev/null
+race 10 cashier@example.com "select give_away('staff_consumption', 'dine_in',
+  '[{\"variant_id\":\"d1000000-0000-0000-0000-0000000000c4\",\"qty\":1}]', 'race') ->> 'turn_no'"
+ok "$(sql "select count(*) || ' ' || count(distinct turn_no) from stock_loss s
+             where s.at_till and exists (select 1 from stock_loss_line l where l.stock_loss_id = s.id
+                                          and l.product_variant_id = 'd1000000-0000-0000-0000-0000000000c4')")" "3 3" \
+   "ten tills give a biscuit away at once, as the one cashier: three go through, each with its own turn number"
+ok "$(grep -l "needs a manager's approval" "$WORK"/*.out | wc -l | tr -d ' ')" "7" \
+   "and seven are told a manager approves it: the cashier's losses are added up one at a time"
+ok "$(sql "select trim_scale((item_position('00000000-0000-0000-0000-0000000000b1', 'c0000000-0000-0000-0000-0000000000c4',
+                                             default_location('00000000-0000-0000-0000-0000000000b1'))).qty)")" "17" \
+   "and three biscuits left the shelf"
+
 # The books still tie after all of it.
 ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(test.today())")" \
    "0,0,0,0,0,0,0,0,0,0" "every subledger still reconciles to its control account"

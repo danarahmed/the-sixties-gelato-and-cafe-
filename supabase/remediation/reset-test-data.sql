@@ -20,7 +20,8 @@
 --            counts, cash events and cash moved, the dollar rates set and
 --            the dollars taken, counted and exchanged, the answers kept for
 --            retries, card settlements,
---            stock movements and lots, stock counts, production batches,
+--            stock movements and lots, losses and giveaways, stock counts,
+--            production batches,
 --            purchase orders, deliveries and their corrections, returns to
 --            suppliers, supplier bills, payments and credits, expenses, every
 --            journal and accounting period,
@@ -110,7 +111,7 @@ truncate table
   sale_adjustment,
   sale_refund, sale_refund_line, sale_refund_tender,
   sales_order, sales_order_line, sales_order_line_modifier, sales_tender, session_dollar_count, stock_count,
-  stock_count_line,
+  stock_count_line, stock_loss, stock_loss_line,
   supplier_credit, supplier_credit_allocation, supplier_payment, supplier_return, supplier_return_line, sync_log,
   work_shift
   restart identity;

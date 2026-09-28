@@ -1,13 +1,13 @@
 "use server";
 /**
- * Stock: new items, waste, corrections and blind counts. The database values
+ * Stock: new items, losses, corrections and blind counts. The database values
  * every movement at its own average cost and journals it in the same step —
  * no cost or movement type is ever taken from the browser (audit M-13, H-12).
  */
 import { z } from "zod";
 import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { getItems } from "@/lib/db/read";
-import { WASTE_TYPES } from "@/lib/format";
+import { LOSS_KIND_KEYS } from "@/lib/losses";
 import { LOOKS_LIKE, lookAlikes, type LookAlike } from "@/lib/names";
 import { packCode } from "@/lib/receiving";
 import {
@@ -97,23 +97,38 @@ export async function createItemAction(
   return { ok: true, data: { itemId: String(r.data.item_id), unitCode } };
 }
 
-const wasteInput = z.object({
-  itemId: id("an item"),
-  qty: positive("Quantity"),
-  unitCode: z.string().min(1).nullable(),
-  type: z.enum(WASTE_TYPES, { message: "Choose what happened" }),
-  reason: text("What happened", 300),
-  /** A manager's approval with their PIN, when the loss needs one (0040). */
-  approvalId: z.string().uuid().nullish(),
-  /** Or: save it to wait for a manager's approval. */
-  wait: z.boolean().optional(),
-});
+const lossInput = z
+  .object({
+    /** Its kind, which decides the account it is charged to (0048). */
+    kind: z.enum(LOSS_KIND_KEYS, { message: "Choose what kind of loss it is" }),
+    /** An item, in one of its units, from the batch named when one is… */
+    itemId: id("an item").nullish(),
+    unitCode: z.string().min(1).nullish(),
+    lotId: id("a batch").nullish(),
+    /** …or a product, as its recipe makes it to eat in. */
+    variantId: id("a product").nullish(),
+    qty: positive("Quantity"),
+    reason: text("What happened", 300),
+    /** A manager's approval with their PIN, when the loss needs one (0040). */
+    approvalId: z.string().uuid().nullish(),
+    /** Or: save it to wait for a manager's approval. */
+    wait: z.boolean().optional(),
+  })
+  .refine((v) => !!v.itemId !== !!v.variantId, {
+    message: "Choose an item or a product that was lost",
+  });
 
-export async function recordWasteAction(
-  input: z.input<typeof wasteInput>,
+/**
+ * A loss of any kind (0048), recorded whole with its one journal: an item, or
+ * a product as made. The database values it at what it costs now and decides,
+ * by the café's rules, whether a manager approves it.
+ */
+export async function recordLossAction(
+  input: z.input<typeof lossInput>,
   key: string,
 ): Promise<
   ActionResult<{
+    lossId: string;
     value?: number;
     journalNo: number | null;
     status: LossStatus;
@@ -122,23 +137,26 @@ export async function recordWasteAction(
 > {
   const bad = badKey(key);
   if (bad) return bad;
-  const v = parse(wasteInput, input);
+  const v = parse(lossInput, input);
   if (!v.ok) return v;
-  const r = await callRpc<Record<string, unknown>>("record_waste", {
-    p_item: v.data.itemId,
+  const r = await callRpc<Record<string, unknown>>("record_loss", {
+    p_kind: v.data.kind,
+    p_item: v.data.itemId ?? null,
+    p_variant: v.data.variantId ?? null,
     p_qty: v.data.qty,
-    p_unit_code: v.data.unitCode,
-    p_type: v.data.type,
+    p_unit_code: v.data.itemId ? (v.data.unitCode ?? null) : null,
     p_reason: v.data.reason,
+    p_lot: v.data.itemId ? (v.data.lotId ?? null) : null,
     p_approval: v.data.approvalId ?? null,
     p_wait: v.data.wait ?? false,
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
-  refresh(...STOCK_PATHS);
+  refresh(...STOCK_PATHS, "/production");
   return {
     ok: true,
     data: {
+      lossId: String(r.data.loss_id ?? ""),
       ...(r.data.value !== undefined ? { value: Number(r.data.value) } : {}),
       journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
       status: String(r.data.status ?? "not_required") as LossStatus,
@@ -159,6 +177,7 @@ const reviewInput = z.object({
 /**
  * A manager's look at a loss that waited for approval (0040): approved, or
  * reversed because it did not happen — the stock back, its journal reversed.
+ * A loss recorded whole (0048) is looked at whole, by any of its movements.
  */
 export async function reviewLossAction(
   input: z.input<typeof reviewInput>,

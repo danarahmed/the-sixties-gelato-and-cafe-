@@ -96,7 +96,7 @@ export class RuleBookkeeper implements Bookkeeper {
         accountCode: FALLBACK.accountCode,
         accountName: FALLBACK.accountName,
         confidence: 0.2,
-        explanation: `“${loss}” sounds like stock that was lost. Record it on Inventory → Record waste instead, so the stock and its cost come out together. Only post it here if it really is a bought-in service.`,
+        explanation: `“${loss}” sounds like stock that was lost. Record it on Inventory → Record a loss instead, so the stock and its cost come out together. Only post it here if it really is a bought-in service.`,
         needsReview: true,
       };
     }
