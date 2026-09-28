@@ -18,6 +18,7 @@ const SCREENS = [
   "/vendors",
   "/expenses",
   "/purchasing",
+  "/purchasing/buying-list",
   "/orders",
   "/products",
   "/inventory",

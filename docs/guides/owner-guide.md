@@ -321,6 +321,16 @@ discount, why and who approved it. The 10% is a business setting (shown on
 
 ## Every week
 
+- **What to buy** (**Purchasing → Open What to buy**, or the dashboard's alert
+  that something bought is running out): the list says, for each
+  item bought, what is on hand and coming, what it uses a day, and so whether
+  to order and how much, in whole packs, from its usual supplier, with why.
+  Give each item a reorder level and a par level on its page for the list to
+  follow your numbers rather than its own; an item with under a week of
+  history says so. Tick what to order, change what needs changing, and
+  **Create the orders**: a draft for each supplier, to approve as any order.
+  On an item's page, **Bought from** keeps who sells it, in what pack, at what
+  price, and the usual one.
 - **Purchase orders** (**Purchasing**): whoever buys drafts an order — the
   supplier, each item at the unit and price agreed, the day it is expected.
   A branch manager approves orders up to 250,000 IQD; above that, you or the

@@ -2133,6 +2133,21 @@ const phrases: PhraseBook = {
     ckb: "پسووڵەی گەڕاندنەوەی {1} پێشتر پسووڵەی {2}ی دابینکەری لەسەرە",
   },
   "Supplier not found": { ar: "لم يُعثر على المورّد", ckb: "دابینکەرەکە نەدۆزرایەوە" },
+  // The buying list (0045).
+  "Choose at least one item to order": {
+    ar: "اختر مادة واحدة على الأقل لطلبها",
+    ckb: "لانی کەم کاڵایەک هەڵبژێرە بۆ داواکردن",
+  },
+  "At most 300 lines at once": {
+    ar: "300 سطر على الأكثر في المرة الواحدة",
+    ckb: "لە یەک جاردا زۆرترین 300 هێڵ",
+  },
+  "Choose a supplier for {1}": { ar: "اختر مورّدًا لـ {1}", ckb: "دابینکەرێک بۆ {1} هەڵبژێرە" },
+  "A price is zero or more": { ar: "السعر صفر أو أكثر", ckb: "نرخ سفرە یان زیاتر" },
+  "That supplier is not one the item is bought from": {
+    ar: "هذه المادة لا تُشترى من ذلك المورّد",
+    ckb: "ئەم کاڵایە لەو دابینکەرە ناکڕدرێت",
+  },
 };
 
 export default phrases;

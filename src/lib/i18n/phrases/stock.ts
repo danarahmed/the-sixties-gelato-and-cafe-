@@ -1082,6 +1082,195 @@ const phrases: PhraseBook = {
   "Goods returned": { ar: "بضاعة مُرجَعة", ckb: "کاڵای گەڕێندراوە" },
   "A lower price": { ar: "سعر أقل", ckb: "نرخێکی کەمتر" },
   Other: { ar: "غير ذلك", ckb: "هی تر" },
+  // What to buy (0045): the buying list, and who an item is bought from.
+  "What to buy": { ar: "ما يجب شراؤه", ckb: "چی بکڕدرێت" },
+  "Open What to buy": { ar: "افتح «ما يجب شراؤه»", ckb: "«چی بکڕدرێت» بکەرەوە" },
+  "{place} · {day} · use judged over the last {days} days": {
+    ar: "{place} · {day} · يُحكم على الاستهلاك خلال آخر {days} يومًا",
+    ckb: "{place} · {day} · بەکارهێنان بەپێی دوایین {days} ڕۆژ دەخەمڵێندرێت",
+  },
+  "An item is to order when what it has on hand, on order and in draft orders is below its reorder level: its own, set on the item, or its use a day over the last 28 days for the days a delivery takes, and a day more. It is ordered up to its par level, or the reorder level and a week of use, in whole packs, from its usual supplier or the one its last delivery came from. Tick what to order, change what needs changing, and create the orders: a draft for each supplier, for a manager to approve.":
+    {
+      ar: "تُطلب المادة حين يكون ما لديها — المتوفّر وما في الطلبيات وما في مسودات الطلبيات — دون حدّ إعادة الطلب: حدّها الخاص المحدَّد على المادة، أو استهلاكها اليومي خلال آخر 28 يومًا عن الأيام التي يستغرقها التوريد ويومًا إضافيًا. وتُطلب حتى مستواها المستهدف، أو حتى حدّ إعادة الطلب واستهلاك أسبوع، بعبوات كاملة، من مورّدها المعتاد أو من المورّد الذي جاء منه آخر توريد لها. أشِّر على ما تريد طلبه، وعدِّل ما يلزم، ثم أنشئ الطلبيات: مسودة لكل مورّد، يعتمدها مدير.",
+      ckb: "کاڵایەک داوا دەکرێت کاتێک ئەوەی هەیەتی — بەردەست و ئەوەی لە داواکارییەکاندایە و ئەوەی لە ڕەشنووسی داواکارییەکاندایە — لە ئاستی داواکردنەوەکەی کەمتر بێت: ئاستی خۆی کە لەسەر کاڵاکە دانراوە، یان بەکارهێنانی ڕۆژانەی لە دوایین 28 ڕۆژدا بۆ ئەو ڕۆژانەی گەیاندنی بار دەیخایەنێت و ڕۆژێکی زیاتر. تا ئاستی ئامانجەکەی داوا دەکرێت، یان تا ئاستی داواکردنەوە و بەکارهێنانی هەفتەیەک، بە پاکەتی تەواو، لە دابینکەری هەمیشەیی خۆی یان لەو دابینکەرەی دوایین بارەکەی لێوە هات. ئەوەی دەتەوێت داوای بکەیت نیشانە بکە، ئەوەی پێویستە بیگۆڕە، و داواکارییەکان دروست بکە: ڕەشنووسێک بۆ هەر دابینکەرێک، بۆ ئەوەی بەڕێوەبەرێک پەسەندی بکات.",
+    },
+  "Each item's stock, use and orders, and so how much of it to order and from whom, with why: the lines chosen become a draft order for each supplier.":
+    {
+      ar: "مخزون كل مادة واستهلاكها وطلبياتها، ومن ثَمّ كم يُطلب منها ومن مَن، مع السبب: تصبح الأسطر المختارة مسودة طلبية لكل مورّد.",
+      ckb: "کۆگا و بەکارهێنان و داواکارییەکانی هەر کاڵایەک، و بەم پێیە چەندی لێ داوا بکرێت و لە کێ، لەگەڵ هۆکارەکەی: هێڵە هەڵبژێردراوەکان دەبنە ڕەشنووسی داواکارییەک بۆ هەر دابینکەرێک.",
+    },
+  "1 draft order made, for a manager to approve:": {
+    ar: "أُنشئت مسودة طلبية واحدة، يعتمدها مدير:",
+    ckb: "ڕەشنووسی یەک داواکاری دروست کرا، بۆ ئەوەی بەڕێوەبەرێک پەسەندی بکات:",
+  },
+  "{n} draft orders made, for a manager to approve:": {
+    ar: "أُنشئت {n} مسودات طلبيات، يعتمدها مدير:",
+    ckb: "ڕەشنووسی {n} داواکاری دروست کرا، بۆ ئەوەی بەڕێوەبەرێک پەسەندیان بکات:",
+  },
+  "{supplier}: {n} line(s), {total}, expected {day}": {
+    ar: "{supplier}: {n} سطر، {total}، متوقَّعة في {day}",
+    ckb: "{supplier}: {n} هێڵ، {total}، چاوەڕوان دەکرێت لە {day}",
+  },
+  "Nothing to order now.": { ar: "لا شيء يُطلب الآن.", ckb: "ئێستا هیچ شتێک داوا ناکرێت." },
+  "Every item has enough on hand and coming for its use. Any of them can still be added from the list below.":
+    {
+      ar: "لدى كل مادة ما يكفي استهلاكها من المتوفّر والقادم. ويمكن مع ذلك إضافة أيٍّ منها من القائمة أدناه.",
+      ckb: "هەر کاڵایەک بەشی بەکارهێنانی خۆی لە بەردەست و ئەوەی دێت هەیە. هێشتا دەتوانرێت هەر کامێکیان لە لیستەکەی خوارەوە زیاد بکرێت.",
+    },
+  "No supplier yet": { ar: "لا مورّد بعد", ckb: "هێشتا دابینکەر نییە" },
+  "Delivers in the café's {n} day(s)": {
+    ar: "يُسلِّم خلال {n} يوم (المدة العامة للمقهى)",
+    ckb: "لە {n} ڕۆژدا دەیگەیەنێت (ماوەی گشتیی کافێکە)",
+  },
+  "Delivers in {n} day(s)": { ar: "يُسلِّم خلال {n} يوم", ckb: "لە {n} ڕۆژدا دەیگەیەنێت" },
+  "Choose a supplier for each line": {
+    ar: "اختر مورّدًا لكل سطر",
+    ckb: "بۆ هەر هێڵێک دابینکەرێک هەڵبژێرە",
+  },
+  "{n} ticked · {total}": { ar: "{n} مؤشَّر · {total}", ckb: "{n} نیشانەکراو · {total}" },
+  Pack: { ar: "العبوة", ckb: "پاکەت" },
+  "Price of a pack": { ar: "سعر العبوة", ckb: "نرخی پاکەتێک" },
+  "Order {item}": { ar: "اطلب {item}", ckb: "{item} داوا بکە" },
+  "Added by hand": { ar: "أُضيف يدويًا", ckb: "بە دەست زیاد کرا" },
+  "The usual supplier": { ar: "المورّد المعتاد", ckb: "دابینکەری هەمیشەیی" },
+  "Make it the usual one": { ar: "اجعله المورّد المعتاد", ckb: "بیکە بە دابینکەری هەمیشەیی" },
+  "Tick what to order.": {
+    ar: "أشِّر على ما تريد طلبه.",
+    ckb: "ئەوەی دەتەوێت داوای بکەیت نیشانە بکە.",
+  },
+  "{lines} line(s) ticked: {orders} draft order(s), {total} in all.": {
+    ar: "{lines} سطر مؤشَّر: {orders} مسودة طلبية، {total} إجمالًا.",
+    ckb: "{lines} هێڵ نیشانە کراوە: {orders} ڕەشنووسی داواکاری، {total} بە گشتی.",
+  },
+  "Create the orders": { ar: "أنشئ الطلبيات", ckb: "داواکارییەکان دروست بکە" },
+  "Choose a supplier for every line ticked.": {
+    ar: "اختر مورّدًا لكل سطر مؤشَّر.",
+    ckb: "بۆ هەر هێڵێکی نیشانەکراو دابینکەرێک هەڵبژێرە.",
+  },
+  "Not to order now ({n})": { ar: "لا يُطلب الآن ({n})", ckb: "ئێستا داوا ناکرێت ({n})" },
+  "each with why; add any of them to an order": {
+    ar: "كلٌّ مع سببه؛ أضف أيًّا منها إلى طلبية",
+    ckb: "هەر یەکەیان لەگەڵ هۆکارەکەی؛ هەر کامێکیان زیاد بکە بۆ داواکارییەک",
+  },
+  "Every item bought is to order.": {
+    ar: "كل مادة تُشترى مطلوبة الآن.",
+    ckb: "هەموو ئەو کاڵایانەی دەکڕدرێن ئێستا داوا دەکرێن.",
+  },
+  "Add to an order": { ar: "أضِفها إلى طلبية", ckb: "زیادی بکە بۆ داواکارییەک" },
+  "Bought from": { ar: "يُشترى من", ckb: "دەکڕدرێت لە" },
+  "The pack each supplier sends it in and a pack's price; the usual one is suggested on What to buy":
+    {
+      ar: "العبوة التي يرسلها بها كل مورّد وسعر العبوة؛ ويُقترح المورّد المعتاد في «ما يجب شراؤه»",
+      ckb: "ئەو پاکەتەی هەر دابینکەرێک پێی دەینێرێت و نرخی پاکەتێک؛ دابینکەری هەمیشەیی لە «چی بکڕدرێت» پێشنیار دەکرێت",
+    },
+  "No supplier set yet: What to buy suggests the one its last delivery came from.": {
+    ar: "لم يُحدَّد مورّد بعد: تقترح «ما يجب شراؤه» المورّدَ الذي جاء منه آخر توريد.",
+    ckb: "هێشتا دابینکەر دیاری نەکراوە: «چی بکڕدرێت» ئەو دابینکەرە پێشنیار دەکات کە دوایین بارەکەی لێوە هات.",
+  },
+  Agreed: { ar: "تاريخ الاتفاق", ckb: "بەرواری ڕێککەوتن" },
+  "Removed, and on the audit trail.": {
+    ar: "أُزيل، وسُجّل في سجل التدقيق.",
+    ckb: "لابرا، و لە تۆماری گۆڕانکارییەکاندا نووسرا.",
+  },
+  "Save the supplier": { ar: "احفظ المورّد", ckb: "دابینکەرەکە پاشەکەوت بکە" },
+  "as it was": { ar: "كما كان", ckb: "وەک خۆی" },
+  "Never in stock here: there is no use to judge by.": {
+    ar: "لم تكن في المخزون هنا قطّ: لا استهلاك يُحكم به.",
+    ckb: "هەرگیز لێرە لە کۆگادا نەبووە: هیچ بەکارهێنانێک نییە بۆ خەمڵاندن.",
+  },
+  "Only {n} day(s) of history: 7 are needed to judge its use by.": {
+    ar: "سجلّها {n} يوم فقط: يلزم 7 أيام للحكم على استهلاكها.",
+    ckb: "تەنها {n} ڕۆژ مێژووی هەیە: 7 ڕۆژ پێویستە بۆ خەمڵاندنی بەکارهێنانەکەی.",
+  },
+  "Set a reorder level on the item, or add it to an order yourself.": {
+    ar: "حدِّد حدّ إعادة الطلب على المادة، أو أضفها إلى طلبية بنفسك.",
+    ckb: "ئاستی داواکردنەوە لەسەر کاڵاکە دابنێ، یان خۆت زیادی بکە بۆ داواکارییەک.",
+  },
+  "Not used in the last {n} days: nothing is needed.": {
+    ar: "لم تُستخدم خلال آخر {n} يومًا: لا حاجة إلى شيء.",
+    ckb: "لە دوایین {n} ڕۆژدا بەکارنەهاتووە: هیچ شتێک پێویست نییە.",
+  },
+  "{have} on hand.": { ar: "{have} متوفّر.", ckb: "{have} بەردەستە." },
+  "{have} on hand, {ordered} on order and {draft} in draft orders: {all} in all.": {
+    ar: "{have} متوفّر، و{ordered} في الطلبيات، و{draft} في مسودات الطلبيات: {all} إجمالًا.",
+    ckb: "{have} بەردەستە، {ordered} لە داواکارییەکاندایە و {draft} لە ڕەشنووسی داواکارییەکاندا: {all} بە گشتی.",
+  },
+  "Below its reorder level, set on the item: {level}.": {
+    ar: "دون حدّ إعادة الطلب المحدَّد على المادة: {level}.",
+    ckb: "لە خوار ئاستی داواکردنەوەی سەر کاڵاکەیە: {level}.",
+  },
+  "At or above its reorder level, set on the item: {level}.": {
+    ar: "عند حدّ إعادة الطلب المحدَّد على المادة أو فوقه: {level}.",
+    ckb: "لە ئاستی داواکردنەوەی سەر کاڵاکە یان سەرووترە: {level}.",
+  },
+  "About {daily} a day over the last {days} days; a delivery takes {lead} day(s), and a day more: {level} is its reorder level.":
+    {
+      ar: "نحو {daily} يوميًا خلال آخر {days} يومًا؛ يستغرق التوريد {lead} يوم، ويومًا إضافيًا: {level} هو حدّ إعادة الطلب.",
+      ckb: "نزیکەی {daily} لە ڕۆژێکدا لە دوایین {days} ڕۆژدا؛ گەیاندنی بار {lead} ڕۆژ دەخایەنێت، و ڕۆژێکی زیاتر: {level} ئاستی داواکردنەوەکەیەتی.",
+    },
+  "With a safety stock of {qty}.": {
+    ar: "مع مخزون أمان قدره {qty}.",
+    ckb: "لەگەڵ کۆگای یەدەگی {qty}.",
+  },
+  "Below it: to order.": { ar: "دونه: يُطلب.", ckb: "لە خوارییەوەیە: داوا دەکرێت." },
+  "At or above it: nothing to order yet.": {
+    ar: "عنده أو فوقه: لا شيء يُطلب بعد.",
+    ckb: "لەو ئاستەیە یان سەرووترە: هێشتا هیچ داوا ناکرێت.",
+  },
+  "Ordered up to its par level, {target}.": {
+    ar: "يُطلب حتى مستواه المستهدف، {target}.",
+    ckb: "تا ئاستی ئامانجەکەی داوا دەکرێت، {target}.",
+  },
+  "Ordered up to the most it holds, {target}.": {
+    ar: "يُطلب حتى أقصى ما يُحفظ منه، {target}.",
+    ckb: "تا زۆرترین بڕی هەڵگرتنی داوا دەکرێت، {target}.",
+  },
+  "Ordered up to the reorder level and a week of use: {target}.": {
+    ar: "يُطلب حتى حدّ إعادة الطلب واستهلاك أسبوع: {target}.",
+    ckb: "تا ئاستی داواکردنەوە و بەکارهێنانی هەفتەیەک داوا دەکرێت: {target}.",
+  },
+  "Ordered up to its reorder level, {target}: a par level on the item orders more at once.": {
+    ar: "يُطلب حتى حدّ إعادة الطلب، {target}: تحديد مستوى مستهدف على المادة يطلب أكثر في المرة الواحدة.",
+    ckb: "تا ئاستی داواکردنەوەکەی داوا دەکرێت، {target}: ئاستی ئامانج لەسەر کاڵاکە لە یەک جاردا زیاتر داوا دەکات.",
+  },
+  "{qty} to order.": { ar: "{qty} للطلب.", ckb: "{qty} بۆ داواکردن." },
+  "{packs} × {pack} ({qty}), rounded up to whole packs.": {
+    ar: "{packs} × {pack} ({qty})، مقرَّبة صعودًا إلى عبوات كاملة.",
+    ckb: "{packs} × {pack} ({qty})، بەرەو سەرەوە بۆ پاکەتی تەواو خڕ کراوەتەوە.",
+  },
+  "Its usual supplier.": { ar: "مورّدها المعتاد.", ckb: "دابینکەری هەمیشەیی خۆیەتی." },
+  "The supplier of its last delivery.": {
+    ar: "مورّد آخر توريد لها.",
+    ckb: "دابینکەری دوایین بارەکەی.",
+  },
+  "The supplier it was last set with.": {
+    ar: "المورّد الذي حُدِّد لها آخر مرة.",
+    ckb: "ئەو دابینکەرەی دوایین جار بۆی دیاری کرا.",
+  },
+  "No supplier yet: choose one.": {
+    ar: "لا مورّد بعد: اختر واحدًا.",
+    ckb: "هێشتا دابینکەر نییە: یەکێک هەڵبژێرە.",
+  },
+  "{price} a pack, agreed {day}.": {
+    ar: "{price} للعبوة، اتُّفق عليه في {day}.",
+    ckb: "{price} بۆ پاکەتێک، لە {day} ڕێککەوتن کرا.",
+  },
+  "{price} a pack, as delivered {day}.": {
+    ar: "{price} للعبوة، كما في توريد {day}.",
+    ckb: "{price} بۆ پاکەتێک، وەک باری {day}.",
+  },
+  "{price} a pack, from what it costs now: check it with the supplier.": {
+    ar: "{price} للعبوة، من كلفتها الحالية: تحقَّق منه مع المورّد.",
+    ckb: "{price} بۆ پاکەتێک، لە تێچووی ئێستای: لەگەڵ دابینکەر پشتڕاستی بکەرەوە.",
+  },
+  "No price yet: enter one.": {
+    ar: "لا سعر بعد: أدخِل سعرًا.",
+    ckb: "هێشتا نرخ نییە: نرخێک بنووسە.",
+  },
+  "To order": { ar: "للطلب", ckb: "بۆ داواکردن" },
+  Enough: { ar: "يكفي", ckb: "بەسە" },
+  "Not enough history": { ar: "سجلّ غير كافٍ", ckb: "مێژووی پێویست نییە" },
+  "Not used lately": { ar: "لم تُستخدم مؤخرًا", ckb: "لەم دواییانەدا بەکارنەهاتووە" },
 };
 
 export default phrases;

@@ -60,6 +60,38 @@ export default async function PurchasingPage() {
         />
       </p>
 
+      <div
+        className="card"
+        style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}
+        data-testid="buying-link"
+      >
+        <div style={{ flex: 1, minWidth: 240 }}>
+          <strong>{t("What to buy")}</strong>
+          <div className="muted" style={{ fontSize: ".85rem" }}>
+            {t(
+              "Each item's stock, use and orders, and so how much of it to order and from whom, with why: the lines chosen become a draft order for each supplier.",
+            )}
+          </div>
+        </div>
+        <Link
+          href="/purchasing/buying-list"
+          className="btn-primary"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            minHeight: 34,
+            padding: "0 13px",
+            borderRadius: "var(--radius)",
+            border: "1px solid var(--brand)",
+            fontWeight: 600,
+            fontSize: ".86rem",
+            textDecoration: "none",
+          }}
+        >
+          {t("Open What to buy")}
+        </Link>
+      </div>
+
       <PurchaseOrders
         orders={orders}
         approveUpTo={approveUpTo}

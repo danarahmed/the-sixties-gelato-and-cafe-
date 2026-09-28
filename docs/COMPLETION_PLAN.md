@@ -6,9 +6,9 @@ release L (refunds by the item, `0037`), release M (delivery corrections and
 the books checked account by account, `0038`), release N (usage against the
 recipes, `0039`) and release O (the café's rules, `0040`) are live since 27
 September 2026, and release P (sizes and add-ons, `0041`), release Q (split
-payments, `0042`), release R (US dollars at the till, `0043`) and release S
-(purchase orders, returns to a supplier and their credit notes, `0044`) since
-28 September.
+payments, `0042`), release R (US dollars at the till, `0043`), release S
+(purchase orders, returns to a supplier and their credit notes, `0044`) and
+release T (the buying list, `0045`) since 28 September.
 What was built differs from the plan below in these ways.
 
 Release J:
@@ -261,6 +261,47 @@ Release S:
 - **The statement** (`supplier_statement`) is on Vendors, between two dates, to
   print; Reports → Purchasing has the orders, the prices that changed, the
   returns and the credits.
+
+Release T:
+
+- **`item_supplier`** keeps the pack as one of the item's units and a pack's
+  price with the day it was agreed (`last_price`, `last_price_on`);
+  `preferred` is the item's usual supplier, one at most. It is set on the
+  item's page (`set_item_supplier`, `remove_item_supplier`, both
+  `purchase.create`, keyed) and remembered from the orders drafted from the
+  list. A supplier new to an item, one made or unmade its usual one, and
+  anything set by hand go on the audit trail (`item.supplier.set`,
+  `.remove`); a pack or price kept from an order is on that order's own trail.
+- **The list is for a location** (the first branch when none is named). What
+  an item has is what is on hand there, what its approved and sent orders
+  still wait for (from the deliveries as corrected), and what its draft orders
+  hold, so nothing drafted is suggested again.
+- **Use a day** is what the stock card counts as sold, used in batches, and
+  wasted or given away (voids, refunds back on the shelf and losses taken back
+  netted off) over the last 28 days, or the item's history there when
+  shorter. Under 7 days of history there is not enough to judge by, as running
+  out judges; an item not used in 28 days needs nothing.
+- **The reorder level** is the item's own when it has one; otherwise the use
+  until a delivery comes and a day more (running out's rule), and the safety
+  stock. An item is ordered when what it has is below it (as the alert says), up to its par
+  level, else the most it holds, else the reorder level and a week of use (the
+  alert's week), in whole packs, one at least.
+- **The supplier** is the usual one, else the one the item's last delivery in
+  the last year came from, else the one last set. **A pack's price** is the
+  newer of the one agreed and that supplier's last delivery's (the goods'
+  price, before freight), else what the item costs now, marked to be checked.
+  Every supplier the item came from or is set with is offered, each with its
+  own pack and price.
+- **`purchase_orders_from_list(lines, location)`** drafts through `save_po`,
+  one order for each supplier, expected in the supplier's own delivery days
+  (the café's when it has none), with no note: an order's note is printed for
+  its supplier. Lines may make a supplier the item's usual one.
+- **No separate report:** the list, each line with its reasons and numbers, is
+  the report. Items made here (an active batch recipe's output) are left to
+  Production.
+- **The alerts lead to it:** running out and below the reorder level, for an
+  item bought, link to What to buy instead of the item's card (0040's rules
+  wrapped, unchanged otherwise).
 
 **Basis:**
 

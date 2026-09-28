@@ -240,6 +240,24 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - A lower price revalues only what is still on the shelf of the delivery it
     names; what was used since goes to the price variance (5050), not back to
     the sales that used it.
+- **What to buy, what it does not do (release T, `0045`).**
+  - It is worked out when the page opens, for the café's first branch; there
+    is no choice of branch until branches come (release AB), and nothing is
+    sent to anyone.
+  - Use is judged on the last 28 days alone: no weekday or season, no demand
+    from the day's production plan (release U), and a week of use more as the
+    level to order up to when the item has no par level.
+  - Items made here are left to Production: what their batches will need of
+    each ingredient is not added until the day's plan is built (release U).
+  - Drafts count as coming: an item on a draft that is never approved is not
+    suggested again until the draft is changed or cancelled.
+  - The supplier suggested is the usual one, else the one the last delivery
+    in a year came from; the price is the newer of the one agreed and that
+    supplier's last delivery's. An order made on the purchase order form does
+    not change the price agreed; its delivery does, once it comes.
+  - One order is drafted for each supplier each time, even when a draft for
+    that supplier is already open; a note for the supplier is added on the
+    order itself.
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the
