@@ -164,6 +164,44 @@ cost. WAC is the default; FIFO is a per-item/business option.
   can be withdrawn (with a reason, on the audit trail) until it starts. A
   withdrawn recipe leaves the one it would have replaced in force.
 
+### A line with its size and add-ons (`0041`)
+
+A size is priced and costed as any product always was. A line's add-ons are
+priced on the line's channel, on the sale's day (the latest price in force,
+as for a product), and added to one of it:
+
+- **one of the line** = the size's price + Σ (add-on's price × how many of it
+  go into one); `sales_order_line.unit_price` is this.
+- **the line** = one of it × the line's quantity, rounded to the currency
+  unit; the sale's discount is spread over the lines as before.
+- **each add-on's amount** = its price × how many × the line's quantity,
+  rounded; the size's part is the line less its add-ons. A discounted line's
+  discount is shared over its size and its add-ons in proportion
+  (`allocate_landed`, the pennies to the largest), so each add-on keeps
+  what it made (`sales_order_line_modifier.net_amount`).
+- **what the line uses**: the size's recipe for the channel, and each
+  add-on's lines (the size's own when it has any, otherwise those for every
+  size; gated by channel as a recipe's are) × how many × the line's
+  quantity, all checked against the rules for stock below zero together and
+  costed at the average cost, as a recipe is. The line's cost includes them;
+  each add-on keeps its own.
+- **a printed bill** keeps each add-on at the price printed, as it keeps the
+  line's own: more of the same add-on on that bill, on any line, is at that
+  price too.
+
+Worked example (the SQL test): two Triples (5,000) with oat milk (500), an
+extra shot (750) and vanilla (500) are 6,750 each, 13,500; a Regular (2,500)
+with whole milk (free) is 2,500; 16,000 in all. A discount of 1,600 leaves
+12,150 on the Triples and 2,250 on the Regular; of the Triples' 1,350
+discount the extra shots (1,500) bear 150, the oat milk and the vanilla
+(1,000 each) 100 each, and the size's part (10,000) the other 1,000.
+
+**The report** (Reports → Sizes and add-ons) gives each size's quantity,
+sales and cost less its add-ons, and each add-on's own, from the sales
+themselves (voids left out, refunds not taken off). How often an add-on is
+taken is its lines out of the lines sold of the products that offer its
+group today.
+
 ## 6. Production
 
 - A batch consumes its recipe's ingredients (the version in force that day),

@@ -10,6 +10,7 @@ import {
   getMenuCosting,
   getProfitAndLoss,
   getReconciliation,
+  getSizesAndAddons,
   getUncostedSales,
   pnlTotals,
 } from "@/lib/db/reports";
@@ -45,7 +46,7 @@ export default async function ReportsPage({
   const seesProfit = has(profile, "profit.view");
   const seesExceptions = has(profile, "audit.view");
 
-  const [pnl, rec, sales, book, allMenu, unposted, uncosted, exceptions, channels] =
+  const [pnl, rec, sales, book, allMenu, unposted, uncosted, exceptions, channels, sized] =
     await Promise.all([
       seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
       getReconciliation(to),
@@ -56,6 +57,7 @@ export default async function ReportsPage({
       getUncostedSales(from, to),
       seesExceptions ? getExceptions(from, to) : Promise.resolve([]),
       getChannelNames(),
+      getSizesAndAddons(from, to),
     ]);
   // The menu as it sells today: a platform out of use sells nothing.
   const menu = allMenu.filter((m) =>
@@ -146,6 +148,14 @@ export default async function ReportsPage({
     ["This year", yearStart(today), today],
   ];
   const section = (s: string) => pnl.filter((r) => r.section === s && r.amount !== 0);
+  // Sizes of the products sold in more than one; then every add-on taken (0041).
+  const sizeCount = new Map<string, number>();
+  for (const r of sized)
+    if (r.kind === "size") sizeCount.set(r.parent, (sizeCount.get(r.parent) ?? 0) + 1);
+  const sizeRows = sized.filter((r) => r.kind === "size" && (sizeCount.get(r.parent) ?? 0) > 1);
+  const addonRows = sized.filter((r) => r.kind === "addon");
+  const pct = (part: number, whole: number) =>
+    whole > 0 ? `${((part / whole) * 100).toFixed(1)}%` : "—";
 
   return (
     <div className="grid" style={{ gap: 18 }}>
@@ -774,6 +784,105 @@ export default async function ReportsPage({
               </tbody>
             </table>
           </div>
+        )}
+      </section>
+
+      {/* ---- Sizes and add-ons (0041) ---- */}
+      <section className="panel" id="sizes" data-testid="sizes-report">
+        <div className="panel-h">
+          <h3>{t("Sizes and add-ons")}</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            {t("Sold {from} to {to}, at the prices and costs of each sale; voids left out", {
+              from,
+              to,
+            })}
+          </span>
+        </div>
+        {sizeRows.length === 0 && addonRows.length === 0 ? (
+          <div className="panel-b">
+            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+              {t(
+                "No product was sold in more than one size, and no add-on was taken, in these dates.",
+              )}
+            </p>
+          </div>
+        ) : (
+          <>
+            {sizeRows.length > 0 && (
+              <div className="tw">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>{t("Product")}</th>
+                      <th>{t("Size")}</th>
+                      <th className="right">{t("Qty")}</th>
+                      <th className="right">{t("Net sales")}</th>
+                      <th className="right">{t("Cost")}</th>
+                      <th className="right">{t("Margin")}</th>
+                      <th className="right">%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sizeRows.map((r, i) => (
+                      <tr key={i}>
+                        <td>{r.parent}</td>
+                        <td>{r.name}</td>
+                        <td className="right mono">{r.qty}</td>
+                        <td className="right money">{fmtIQD(r.sales)}</td>
+                        <td className="right money">{fmtIQD(r.cost)}</td>
+                        <td className={`right money ${r.margin < 0 ? "red" : ""}`}>
+                          {fmtIQD(r.margin)}
+                        </td>
+                        <td className="right money">{pct(r.margin, r.sales)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {addonRows.length > 0 && (
+              <div className="tw">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>{t("Group")}</th>
+                      <th>{t("Add-on")}</th>
+                      <th className="right">{t("Qty")}</th>
+                      <th className="right">{t("On lines")}</th>
+                      <th className="right">{t("Of the lines offered it")}</th>
+                      <th className="right">{t("Net sales")}</th>
+                      <th className="right">{t("Cost")}</th>
+                      <th className="right">{t("Margin")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {addonRows.map((r, i) => (
+                      <tr key={i}>
+                        <td>{r.parent}</td>
+                        <td>{r.name}</td>
+                        <td className="right mono">{r.qty}</td>
+                        <td className="right mono">{r.lines}</td>
+                        <td className="right mono">{pct(r.lines, r.offered ?? 0)}</td>
+                        <td className="right money">{fmtIQD(r.sales)}</td>
+                        <td className="right money">{fmtIQD(r.cost)}</td>
+                        <td className={`right money ${r.margin < 0 ? "red" : ""}`}>
+                          {fmtIQD(r.margin)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <p
+              className="muted"
+              style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
+            >
+              {t(
+                "A size's figures leave out its add-ons, which are counted on their own, each with its share of the line's discount. Refunds are not taken off here: Sales by Channel has them. How often an add-on is taken is out of the lines of the products that offer it today.",
+              )}
+            </p>
+          </>
         )}
       </section>
 

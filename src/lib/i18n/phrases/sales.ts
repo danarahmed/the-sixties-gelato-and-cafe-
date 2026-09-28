@@ -820,6 +820,26 @@ const phrases: PhraseBook = {
     ar: "يوافق مدير على بيع أكثر مما تحتفظ به الدفاتر",
     ckb: "بەڕێوەبەرێک ڕەزامەندی لەسەر فرۆشتنی زیاتر لەوەی لە دەفتەرەکاندایە دەدات",
   },
+
+  // The till's sizes and add-ons (0041): the options sheet, and a line's add-ons.
+  "Choose {n}": { ar: "اختر {n}", ckb: "{n} هەڵبژێرە" },
+  "As many as you like": { ar: "بقدر ما تشاء", ckb: "هەرچەندێک بتەوێت" },
+  "Up to {n}": { ar: "حتى {n}", ckb: "تا {n}" },
+  "At least {n}": { ar: "{n} على الأقل", ckb: "لانیکەم {n}" },
+  "{min} to {max}": { ar: "من {min} إلى {max}", ckb: "{min} تا {max}" },
+  Size: { ar: "الحجم", ckb: "قەبارە" },
+  free: { ar: "مجانًا", ckb: "بێبەرامبەر" },
+  "Choose {group}": { ar: "اختر {group}", ckb: "{group} هەڵبژێرە" },
+  "At most {n} from {group}": { ar: "{n} على الأكثر من {group}", ckb: "زۆرترین {n} لە {group}" },
+  "an add-on": { ar: "إضافة", ckb: "زیادەیەک" },
+  "A line takes at most 20 add-ons": {
+    ar: "يأخذ السطر 20 إضافة على الأكثر",
+    ckb: "هێڵێک زۆرترین 20 زیادە وەردەگرێت",
+  },
+  "Add an add-on 1 to 20 times": {
+    ar: "أضف الإضافة من 1 إلى 20 مرة",
+    ckb: "زیادەیەک 1 تا 20 جار زیاد بکە",
+  },
 };
 
 export default phrases;

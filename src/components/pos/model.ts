@@ -8,7 +8,15 @@
 import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { Locale } from "@/lib/i18n/core";
-import type { DiningTable, OpenBill, PosItem } from "@/lib/db/pos";
+import type {
+  DiningTable,
+  OpenBill,
+  OpenBillAddon,
+  PosAddon,
+  PosAddonGroup,
+  PosAddons,
+  PosItem,
+} from "@/lib/db/pos";
 import { isPlatformChannel } from "@/lib/channels";
 import { reasonMissing } from "@/lib/reasons";
 import { normaliseNumber } from "@/lib/validation";
@@ -31,6 +39,78 @@ export interface Line {
    * saved bill does not have it.
    */
   billPrice: number | null;
+  /** Its add-ons (0041), in the order they were chosen; none for most lines. */
+  addons: LineAddon[];
+}
+
+/** An add-on on a line: how many for each one of the line. */
+export interface LineAddon {
+  modifierId: string;
+  qty: number;
+  /** The price the saved bill carries for it, as for the line's own; null when not saved. */
+  billPrice: number | null;
+  /** Its name from the bill, for an add-on no longer on the menu. */
+  fallbackName?: string | null;
+}
+
+/** An add-on as it is chosen: which, and how many for each one of the line. */
+export interface AddonChoice {
+  modifierId: string;
+  qty: number;
+}
+
+/** The add-ons as the till looks them up (0041). */
+export interface AddonMenu {
+  byId: Map<string, PosAddon>;
+  /** The groups a size offers: those that ask for a choice first, then in the till's order. */
+  groupsFor(productId: string, variantId: string): PosAddonGroup[];
+}
+
+export function addonMenu(a: PosAddons): AddonMenu {
+  const byId = new Map<string, PosAddon>();
+  for (const g of a.groups) for (const m of g.addons) byId.set(m.id, m);
+  return {
+    byId,
+    groupsFor(productId, variantId) {
+      const offered = new Set(
+        a.offers
+          .filter((o) => o.productId === productId && (o.variantId ?? variantId) === variantId)
+          .map((o) => o.groupId),
+      );
+      const groups = a.groups.filter((g) => offered.has(g.id));
+      return [...groups.filter((g) => g.min > 0), ...groups.filter((g) => g.min === 0)];
+    },
+  };
+}
+
+/** A till with no add-ons set up. */
+export const NO_ADDONS_MENU: AddonMenu = addonMenu({ groups: [], offers: [] });
+
+/** The same add-ons, whatever the order they were chosen in. */
+export function addonsKey(addons: readonly AddonChoice[] | undefined): string {
+  return (addons ?? [])
+    .map((a) => `${a.modifierId}x${a.qty}`)
+    .sort()
+    .join(",");
+}
+
+/**
+ * What a size's groups still need before the line can be added: the first
+ * group given fewer than it asks for, or more; null when every group is
+ * satisfied.
+ */
+export function addonsMissing(
+  groups: PosAddonGroup[],
+  chosen: readonly AddonChoice[],
+): { group: PosAddonGroup; kind: "fewer" | "more" } | null {
+  for (const g of groups) {
+    const n = chosen
+      .filter((c) => g.addons.some((a) => a.id === c.modifierId))
+      .reduce((sum, c) => sum + c.qty, 0);
+    if (n < g.min) return { group: g, kind: "fewer" };
+    if (g.max !== null && n > g.max) return { group: g, kind: "more" };
+  }
+  return null;
 }
 
 /** A discount as the cashier gave it: a percentage of the bill, or an amount off it. */
@@ -93,6 +173,8 @@ export interface TicketLine {
   variantId: string;
   qty: number;
   note: string | null;
+  /** With what (0041). */
+  addons?: AddonChoice[];
 }
 
 /** A delivery platform's order: paid through the platform, with the number from its tablet. */
@@ -101,7 +183,7 @@ export const isPlatform = (c: SalesChannel) => isPlatformChannel(c);
 export function signature(lines: Line[], discount: Discount | null): string {
   const d = discount ? parseNumber(discount.value) : null;
   return JSON.stringify([
-    lines.map((l) => [l.variantId, l.qty, l.note ?? ""]),
+    lines.map((l) => [l.variantId, l.qty, l.note ?? "", addonsKey(l.addons)]),
     discount && d ? [discount.kind, d.toString()] : null,
   ]);
 }
@@ -162,6 +244,12 @@ export function orderFromBill(b: OpenBill): Order {
         ? `${l.productName} — ${l.variantName}`
         : l.productName,
     billPrice: l.price,
+    addons: (l.modifiers ?? []).map((m) => ({
+      modifierId: m.modifierId,
+      qty: m.qty,
+      billPrice: m.price,
+      fallbackName: m.name,
+    })),
   }));
   const kept: KeptDiscount = {
     reason: b.discountReason ?? null,
@@ -195,7 +283,12 @@ export function orderFromBill(b: OpenBill): Order {
 
 /** The lines as a ticket has them. */
 export function ticketLines(lines: Line[]): TicketLine[] {
-  return lines.map((l) => ({ variantId: l.variantId, qty: l.qty, note: l.note }));
+  return lines.map((l) => ({
+    variantId: l.variantId,
+    qty: l.qty,
+    note: l.note,
+    addons: l.addons.map((a) => ({ modifierId: a.modifierId, qty: a.qty })),
+  }));
 }
 
 /**
@@ -208,7 +301,8 @@ export function ticketChanges(
   before: TicketLine[],
   after: TicketLine[],
 ): { added: TicketLine[]; removed: TicketLine[] } {
-  const key = (l: TicketLine) => `${l.variantId}\u0000${(l.note ?? "").trim()}`;
+  const key = (l: TicketLine) =>
+    `${l.variantId}\u0000${(l.note ?? "").trim()}\u0000${addonsKey(l.addons)}`;
   const sum = (lines: TicketLine[]) => {
     const m = new Map<string, TicketLine>();
     for (const l of lines) {
@@ -234,14 +328,23 @@ export function ticketChanges(
 }
 
 /**
- * Add one of a product: onto a matching line without a note, or as a new line
- * at the price the bill already has for it (a printed bill keeps its price
- * for more of the same, as the database does).
+ * Add one of a product, with its add-ons: onto a line of the same product
+ * with the same add-ons and no note, or as a new line at the prices the bill
+ * already has for it and for each add-on (a printed bill keeps its prices for
+ * more of the same, as the database does).
  */
-export function addLine(lines: Line[], variantId: string): Line[] {
+export function addLine(lines: Line[], variantId: string, addons: AddonChoice[] = []): Line[] {
+  const key = addonsKey(addons);
   let i = lines.length - 1;
-  while (i >= 0 && !(lines[i]!.variantId === variantId && !lines[i]!.note)) i--;
+  while (
+    i >= 0 &&
+    !(lines[i]!.variantId === variantId && !lines[i]!.note && addonsKey(lines[i]!.addons) === key)
+  )
+    i--;
   if (i >= 0) return lines.map((l, j) => (j === i ? { ...l, qty: l.qty + 1 } : l));
+  const frozen = (modifierId: string) =>
+    lines.flatMap((l) => l.addons).find((a) => a.modifierId === modifierId && a.billPrice !== null)
+      ?.billPrice ?? null;
   return [
     ...lines,
     {
@@ -253,8 +356,27 @@ export function addLine(lines: Line[], variantId: string): Line[] {
       fallbackName: null,
       billPrice:
         lines.find((l) => l.variantId === variantId && l.billPrice !== null)?.billPrice ?? null,
+      addons: addons.map((a) => ({
+        modifierId: a.modifierId,
+        qty: a.qty,
+        billPrice: frozen(a.modifierId),
+      })),
     },
   ];
+}
+
+/** A bill's add-ons on a line as the database has them, and as the till shows them. */
+function sameAddons(fresh: OpenBillAddon[] | undefined, shown: LineAddon[]): boolean {
+  const f = fresh ?? [];
+  return (
+    f.length === shown.length &&
+    f.every(
+      (m, i) =>
+        m.modifierId === shown[i]!.modifierId &&
+        m.qty === shown[i]!.qty &&
+        m.price === shown[i]!.billPrice,
+    )
+  );
 }
 
 /**
@@ -268,7 +390,12 @@ export function billChanged(o: Order, b: OpenBill): boolean {
     b.billPrintedAt !== o.printedAt ||
     b.billPrintCount !== o.printCount ||
     b.lines.length !== o.lines.length ||
-    b.lines.some((l, i) => l.lineId !== o.lines[i]!.lineId || l.price !== o.lines[i]!.billPrice)
+    b.lines.some(
+      (l, i) =>
+        l.lineId !== o.lines[i]!.lineId ||
+        l.price !== o.lines[i]!.billPrice ||
+        !sameAddons(l.modifiers, o.lines[i]!.addons),
+    )
   );
 }
 
@@ -302,23 +429,61 @@ export function lineName(l: Line, byId: Map<string, PosItem>, locale: Locale): s
   return i ? itemName(i, locale) : (l.fallbackName ?? "—");
 }
 
-/** A saved bill's line at the bill's price (the printed one, once printed); otherwise the menu's. */
+/** An add-on's name in the reader's language. */
+export function addonName(a: PosAddon, locale: Locale): string {
+  return inLocale(a.name, a.nameAr, a.nameCkb, locale);
+}
+
+/** A group's name in the reader's language. */
+export function groupName(g: PosAddonGroup, locale: Locale): string {
+  return inLocale(g.name, g.nameAr, g.nameCkb, locale);
+}
+
+/** A line's add-ons as they are read out: "Oat milk", "Extra shot ×2". */
+export function addonNames(
+  addons: readonly AddonChoice[] | undefined,
+  menu: AddonMenu,
+  locale: Locale,
+  fallback: readonly LineAddon[] = [],
+): string[] {
+  return (addons ?? []).map((a) => {
+    const m = menu.byId.get(a.modifierId);
+    const name = m
+      ? addonName(m, locale)
+      : (fallback.find((f) => f.modifierId === a.modifierId)?.fallbackName ?? "—");
+    return a.qty > 1 ? `${name} ×${a.qty}` : name;
+  });
+}
+
+/**
+ * One of a line: its size at the bill's price (the printed one, once printed)
+ * or the menu's, and each add-on at the bill's price or the menu's, as many
+ * times as it is added. Null when any of them has no price on the channel.
+ */
 export function linePrice(
   l: Line,
   byId: Map<string, PosItem>,
   channel: SalesChannel,
+  menu: AddonMenu,
 ): number | null {
-  if (l.billPrice !== null) return l.billPrice;
-  const p = byId.get(l.variantId)?.prices[channel];
-  return p === undefined ? null : p;
+  const p = l.billPrice !== null ? l.billPrice : byId.get(l.variantId)?.prices[channel];
+  if (p === undefined || p === null) return null;
+  let unit = new Decimal(p);
+  for (const a of l.addons) {
+    const ap = a.billPrice !== null ? a.billPrice : menu.byId.get(a.modifierId)?.prices[channel];
+    if (ap === undefined || ap === null) return null;
+    unit = unit.plus(new Decimal(ap).times(a.qty));
+  }
+  return unit.toNumber();
 }
 
 export function lineAmount(
   l: Line,
   byId: Map<string, PosItem>,
   channel: SalesChannel,
+  menu: AddonMenu,
 ): Decimal | null {
-  const p = linePrice(l, byId, channel);
+  const p = linePrice(l, byId, channel, menu);
   return p === null ? null : new Decimal(p).times(l.qty);
 }
 
@@ -355,9 +520,14 @@ export function discountInvalid(d: Discount | null): boolean {
 }
 
 /** The bill before any discount, each line rounded as the database rounds it. */
-export function orderSubtotal(o: Order, byId: Map<string, PosItem>, money: MoneyRules): Decimal {
+export function orderSubtotal(
+  o: Order,
+  byId: Map<string, PosItem>,
+  money: MoneyRules,
+  menu: AddonMenu,
+): Decimal {
   return o.lines.reduce((sum, l) => {
-    const a = lineAmount(l, byId, o.channel);
+    const a = lineAmount(l, byId, o.channel, menu);
     return a === null ? sum : sum.plus(roundMoney(a, money.decimals));
   }, new Decimal(0));
 }
@@ -383,8 +553,13 @@ export function percentOf(amount: Decimal, subtotal: Decimal): string {
 }
 
 /** What the customer pays: the bill less its discount. */
-export function orderDue(o: Order, byId: Map<string, PosItem>, money: MoneyRules): Decimal {
-  const sub = orderSubtotal(o, byId, money);
+export function orderDue(
+  o: Order,
+  byId: Map<string, PosItem>,
+  money: MoneyRules,
+  menu: AddonMenu,
+): Decimal {
+  const sub = orderSubtotal(o, byId, money, menu);
   return sub.minus(discountAmount(o.discount, sub, money));
 }
 

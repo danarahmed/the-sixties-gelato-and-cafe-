@@ -129,3 +129,22 @@ export const platformOrderNo = z
     (v) => v === null || ORDER_NO.test(v),
     "An order number is letters and digits, as the platform's tablet shows it",
   );
+
+/** A line's add-ons (0041): which, and how many for each one of the line. */
+export const lineAddons = z
+  .array(
+    z.object({
+      modifierId: id("an add-on"),
+      qty: z
+        .number()
+        .int("Add an add-on 1 to 20 times")
+        .min(1, "Add an add-on 1 to 20 times")
+        .max(20, "Add an add-on 1 to 20 times"),
+    }),
+  )
+  .max(20, "A line takes at most 20 add-ons")
+  .optional();
+
+/** A line's add-ons as the database takes them. */
+export const addonsToDb = (addons: { modifierId: string; qty: number }[] | undefined) =>
+  (addons ?? []).map((a) => ({ modifier_id: a.modifierId, qty: a.qty }));

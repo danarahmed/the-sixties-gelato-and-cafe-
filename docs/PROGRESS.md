@@ -7,11 +7,11 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0040` and the rebuilt app. The SQL
-  checks (42, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (19, every role, every screen in
+- **Built and verified:** migrations `0014`–`0041` and the rebuilt app. The SQL
+  checks (43, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (20, every role, every screen in
   Arabic and Kurdish, and a lost answer on each kind of screen), the unit and
-  contract tests (313) and a production build all pass.
+  contract tests (331) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -604,6 +604,50 @@ browser tests through the real app, or both.
   their own. The screens went live with
   [pull request #29](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/29).
 
+- **Sizes and add-ons (release P, migration `0041`).** A product could have
+  sizes, but no screen added one, and the till had no add-ons. Now a product's
+  card adds a size with its prices and its recipe (another size's copied, its
+  own, or why it uses none), naming the one size in the same step (Latte
+  becomes Regular); renames one; and retires one with a reason, or brings it
+  back. **Add-ons** come in groups that say the fewest and the most a line
+  takes (Milk: one, which the till asks for; Extras: up to three), each add-on
+  with its price on every channel from a date and what one uses, for every
+  size or a size's own; each product offers the groups it chooses, with every
+  size or some. At the till a product with sizes or add-ons is one sheet, the
+  milk asked for first, and what one comes to shown as it is chosen; the line
+  is the size and its add-ons, priced, discounted, costed and taken from stock
+  as the database does it, each add-on kept with its share of the discount and
+  its cost. A printed bill keeps its add-ons' prices; splitting, paying,
+  refunds and voids carry them; the receipt, the barista's ticket and Orders
+  list them under the drink; **Reports → Sizes and add-ons** shows what each
+  size and add-on sold and left. Built and tested: a new SQL suite, a new
+  browser suite, unit tests of the till's arithmetic, and every new text in
+  Arabic and Kurdish. The migration was applied to the live database on 28
+  September 2026. The text stored there is the file byte for byte, and it
+  matches the tested build object by object, permissions included (the one
+  difference, as before, is the schema `citext` lives in). No group or add-on
+  exists on live yet, so the till sells exactly as before until the owner adds
+  some. It was checked as the owner and the barista, in a transaction that was
+  rolled back:
+  - the Latte was given a Large at 4,500, its recipe copied, and its one size
+    renamed Regular in the same step; the same name again was refused;
+  - a milk group the till asks for and an extras group for the Large only
+    were set up, and the barista's till read them;
+  - a Large without its milk was refused;
+  - a Large with oat milk and two shots and a Regular with whole milk came to
+    10,000, the total the till works out: 600 ml of milk and 72 g of beans
+    used, and a balanced journal;
+  - a bill printed at 4,000 was paid at 4,000 after the oat milk went up;
+  - the report gave each size and add-on; the last size on sale was kept;
+  - all nine checks stayed at zero.
+
+  Nothing was kept: 286 stock movements, journals to 1091, 35 audit rows, the
+  Latte's size still named Latte. The security advisors add the ten functions
+  the screens call, each checking its permission; the performance advisors
+  add notes that thirteen of the new tables' links have no index of their own.
+  The screens went live with
+  [pull request #30](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/30).
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -656,30 +700,30 @@ browser tests through the real app, or both.
 | ------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Sign-in, My account | everyone                                                   | Sign in, create a login for an invited email, reset and change password                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Dashboard           | owner, managers, accountant, auditor                       | What needs someone first: the alerts, red then orange, answered with a note or snoozed with a reason (owner, managers, accountant); yesterday's brief; then today from the books: net revenue, gross profit, orders, stock value, low and negative stock                                                                                                                                                                                                                                        |
-| POS                 | cashier, barista, managers                                 | Full-screen till: categories, search in three languages, photos, favourites; tables and bills paid later (print, split, move, cancel); cash with change (while the drawer is open), card, platform-paid with the platform's order number; the drawer opened, closed and handed over with a blind count; 80 mm bill and receipt printing; exactly-once payment and retry; honest offline                                                                                                         |
+| POS                 | cashier, barista, managers                                 | Full-screen till: categories, search in three languages, photos, favourites; tables and bills paid later (print, split, move, cancel); cash with change (while the drawer is open), card, platform-paid with the platform's order number; the drawer opened, closed and handed over with a blind count; 80 mm bill and receipt printing; exactly-once payment and retry; honest offline; a product\'s size and add-ons in one sheet                                                             |
 | Orders              | cost viewers                                               | Every sale; void (until its session closes) and refund (after), with reasons                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Sales               | cost viewers                                               | Daily summaries; the drawer: open, close or hand over a session with a blind count, keep a float and send the rest to the safe or the bank, close a session left open (managers), what an open drawer should hold (owner, general manager, accountant, auditor); the cash sessions, each with its statement and its over or short; move cash between the till, the safe, the bank and the owner; settle the card takings against the terminal and the bank (owner, general manager, accountant) |
 | Vendors             | cost viewers                                               | Statements, bills (for a receipt or an account), payments saying where the money came from, cancel a bill, payable ageing; each vendor's details and how many days a delivery takes                                                                                                                                                                                                                                                                                                             |
 | Expenses            | cost viewers (recording: managers, accountant)             | Proposed account from the narration, confirmed by the person; where the money came from, always said; posted in one step                                                                                                                                                                                                                                                                                                                                                                        |
 | Purchasing          | cost viewers (purchasing, managers)                        | Suppliers; receive goods with landed costs into stock and GRNI                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Products & Recipes  | cost viewers                                               | Create a product: its recipe costed as it is typed, prices with their margin and a suggested price; change a price or the recipe from a date; menu costing; photos, categories, favourites, show or hide on the till                                                                                                                                                                                                                                                                            |
+| Products & Recipes  | cost viewers                                               | Create a product: its recipe costed as it is typed, prices with their margin and a suggested price; change a price or the recipe from a date; menu costing; photos, categories, favourites, show or hide on the till; sizes added, renamed and retired; add-ons in groups, priced by channel, with recipes, offered by the sizes chosen                                                                                                                                                         |
 | Inventory           | cost viewers; waste for baristas                           | Stock board from the ledger, add items with opening stock, opening stock for items with none, record waste, manager corrections, movements                                                                                                                                                                                                                                                                                                                                                      |
 | Stock Count         | counter; reviewers                                         | Blind count while trading, one at a time; submit or cancel; second-person review and approval                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Delivery Platforms  | cost viewers                                               | What each platform owes, order by order, and what 1100 holds that no order explains; match a pasted statement and post the payout it proposes (owner, general manager, accountant); cancel a statement posted; platform sales and their margin                                                                                                                                                                                                                                                  |
 | Production          | cost viewers, baristas                                     | Record a batch with a preview of what it uses and makes; batch recipes (a base, then its flavours); batch history with cost per unit; cancel a batch                                                                                                                                                                                                                                                                                                                                            |
 | Journals            | cost viewers (posting: accountant, owner, general manager) | Register, manual journals (draft/publish), reversal, owner's control correction                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Chart of Accounts   | cost viewers                                               | Trial balance by period, closing checklist, lock and reopen, audit trail, CSV                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, payable ageing, product margin, CSV                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, payable ageing, product margin, sizes and add-ons, CSV                                                                                                                                                                                                                                                                                                                                                                                              |
 | Settings            | owner, general manager                                     | People and roles, business configuration, the alert thresholds, locations, the role matrix                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Tests
 
-| Layer                        | What                                                                                                                                                                                                                                                                                                    | Result      |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                                                                                                                                                           | 295 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 26 suites, concurrency (sales, bills, keys and the drawer racing)                                                                                                                     | 37 passing  |
-| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages | 15 passing  |
-| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                | green       |
+| Layer                        | What                                                                                                                                                                                                                                                                                                                                                           | Result      |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                                                                                                                                                                                                                  | 331 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 32 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing)                                                                                                                                                   | 43 passing  |
+| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons | 20 passing  |
+| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                       | green       |
 
 What is not built, and why, is in [`LIMITATIONS.md`](LIMITATIONS.md); the order
 of the next work is in [`ROADMAP.md`](ROADMAP.md).

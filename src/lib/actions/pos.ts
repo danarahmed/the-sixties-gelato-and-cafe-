@@ -21,6 +21,8 @@ import {
   positive,
   salesChannel,
   text,
+  addonsToDb,
+  lineAddons,
 } from "@/lib/validation";
 import type { SaleReceipt } from "@/lib/actions/sales";
 
@@ -33,10 +35,24 @@ const lines = z.array(
     variantId: id("a product"),
     qty: positive("Quantity"),
     note: optionalText(200),
+    /** Its add-ons (0041). */
+    addons: lineAddons,
   }),
 );
-const toDb = (ls: { variantId: string; qty: string | number; note?: string | null }[]) =>
-  ls.map((l) => ({ variant_id: l.variantId, qty: l.qty, ...(l.note ? { note: l.note } : {}) }));
+const toDb = (
+  ls: {
+    variantId: string;
+    qty: string | number;
+    note?: string | null;
+    addons?: { modifierId: string; qty: number }[];
+  }[],
+) =>
+  ls.map((l) => ({
+    variant_id: l.variantId,
+    qty: l.qty,
+    ...(l.note ? { note: l.note } : {}),
+    modifiers: addonsToDb(l.addons),
+  }));
 
 async function openBills(): Promise<ActionResult<OpenBill[]>> {
   const r = await callRpc<unknown>("pos_open_bills");

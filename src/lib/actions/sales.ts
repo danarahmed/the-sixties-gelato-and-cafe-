@@ -18,6 +18,8 @@ import {
   positive,
   salesChannel,
   text,
+  addonsToDb,
+  lineAddons,
 } from "@/lib/validation";
 
 // Not /pos: the till keeps itself current from each action's answer, and
@@ -38,7 +40,7 @@ const saleInput = z.object({
   channel: salesChannel,
   tender: z.enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" }),
   lines: z
-    .array(z.object({ variantId: id("a product"), qty: positive("Quantity") }))
+    .array(z.object({ variantId: id("a product"), qty: positive("Quantity"), addons: lineAddons }))
     .min(1, "The cart is empty"),
   /** At most one of the two: a percentage of the bill, or an amount off it. */
   discountPercent,
@@ -90,7 +92,11 @@ export async function recordSaleAction(
     p_idempotency_key: v.data.key,
     p_channel: v.data.channel,
     p_tender: v.data.tender,
-    p_lines: v.data.lines.map((l) => ({ variant_id: l.variantId, qty: l.qty })),
+    p_lines: v.data.lines.map((l) => ({
+      variant_id: l.variantId,
+      qty: l.qty,
+      modifiers: addonsToDb(l.addons),
+    })),
     p_discount_percent: v.data.discountPercent,
     p_discount_amount: v.data.discountAmount,
     p_expected_net: v.data.expectedNet,

@@ -20,6 +20,74 @@ export interface PosItem {
   prices: Record<string, number>;
 }
 
+/** An add-on on the till (0041): its names, and its price today on each channel it sells on. */
+export interface PosAddon {
+  id: string;
+  groupId: string;
+  name: string;
+  nameAr: string | null;
+  nameCkb: string | null;
+  prices: Record<string, number>;
+}
+
+/** A group of add-ons: the fewest and the most a line takes from it (Milk: one; Extras: up to three). */
+export interface PosAddonGroup {
+  id: string;
+  name: string;
+  nameAr: string | null;
+  nameCkb: string | null;
+  min: number;
+  max: number | null;
+  addons: PosAddon[];
+}
+
+/** The till's add-ons: each group in its order, and which products (or sizes) offer which. */
+export interface PosAddons {
+  groups: PosAddonGroup[];
+  offers: { productId: string; variantId: string | null; groupId: string }[];
+}
+
+export const NO_ADDONS: PosAddons = { groups: [], offers: [] };
+
+export function parsePosAddons(data: unknown): PosAddons {
+  const d = (data && typeof data === "object" ? data : {}) as Row;
+  const groups = (Array.isArray(d.groups) ? (d.groups as Row[]) : []).map((g) => ({
+    id: str(g.id),
+    name: str(g.name),
+    nameAr: strOrNull(g.name_ar),
+    nameCkb: strOrNull(g.name_ckb),
+    min: num(g.min),
+    max: numOrNull(g.max),
+    addons: (Array.isArray(g.modifiers) ? (g.modifiers as Row[]) : []).map((m) => {
+      const prices: Record<string, number> = {};
+      for (const [k, v] of Object.entries((m.prices as Record<string, unknown>) ?? {}))
+        prices[k] = num(v);
+      return {
+        id: str(m.id),
+        groupId: str(g.id),
+        name: str(m.name),
+        nameAr: strOrNull(m.name_ar),
+        nameCkb: strOrNull(m.name_ckb),
+        prices,
+      };
+    }),
+  }));
+  const offers = (Array.isArray(d.offers) ? (d.offers as Row[]) : []).map((o) => ({
+    productId: str(o.product_id),
+    variantId: strOrNull(o.variant_id),
+    groupId: str(o.group_id),
+  }));
+  return { groups, offers };
+}
+
+/** The till's add-ons at today's prices (0041) — never their cost. */
+export async function getPosAddons(): Promise<PosAddons> {
+  const c = await db();
+  const r = await c.rpc("pos_addons");
+  if (r.error) throw new Error(r.error.message);
+  return parsePosAddons(r.data);
+}
+
 /** The till's menu: categories in their order, then products by name. */
 export async function getPosCatalogue(): Promise<PosItem[]> {
   const c = await db();
@@ -82,6 +150,18 @@ export interface OpenBillLine {
   variantName: string;
   /** Today's price on the bill's channel; null if it no longer has one. */
   price: number | null;
+  /** Its add-ons (0041), each at the bill's price for it (frozen once printed). */
+  modifiers: OpenBillAddon[];
+}
+
+/** An add-on on a bill's line: how many for each one of the line, at what price. */
+export interface OpenBillAddon {
+  modifierId: string;
+  name: string;
+  nameAr: string | null;
+  nameCkb: string | null;
+  qty: number;
+  price: number | null;
 }
 
 /** A bill still waiting for its money. */
@@ -136,6 +216,14 @@ export function parseOpenBills(data: unknown): OpenBill[] {
       productName: str(l.product_name),
       variantName: str(l.variant_name),
       price: numOrNull(l.price),
+      modifiers: (Array.isArray(l.modifiers) ? (l.modifiers as Row[]) : []).map((m) => ({
+        modifierId: str(m.modifier_id),
+        name: str(m.name),
+        nameAr: strOrNull(m.name_ar),
+        nameCkb: strOrNull(m.name_ckb),
+        qty: num(m.qty),
+        price: numOrNull(m.price),
+      })),
     })),
     subtotal: num(r.subtotal),
     discount: num(r.discount),

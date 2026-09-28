@@ -2,7 +2,7 @@ import { getT } from "@/lib/i18n/server";
 import type { T } from "@/lib/i18n/core";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems } from "@/lib/db/read";
-import { getMenuSetup, type MenuProduct } from "@/lib/db/menu";
+import { getAddonSetup, getMenuSetup, type MenuProduct } from "@/lib/db/menu";
 import {
   getItemCosts,
   getMenuCosting,
@@ -22,6 +22,9 @@ import type { ItemOpt } from "@/components/menu/RecipeLines";
 import { CategoriesManager } from "@/components/menu/CategoriesManager";
 import { CostWarning, ScheduledChanges } from "@/components/menu/MenuChanges";
 import { ProductSetup } from "@/components/menu/ProductSetup";
+import { SizesPanel } from "@/components/menu/SizesPanel";
+import { ProductAddons } from "@/components/menu/ProductAddons";
+import { AddonsManager } from "@/components/menu/AddonsManager";
 import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -197,7 +200,7 @@ export default async function ProductsPage() {
   const t = await getT();
   const today = businessToday(profile.timezone);
   const canEdit = has(profile, "recipe.edit");
-  const [menu, lines, items, itemCosts, setup, scheduled, channels] = await Promise.all([
+  const [menu, lines, items, itemCosts, setup, scheduled, channels, addons] = await Promise.all([
     getMenuCosting(),
     getMenuRecipeLines(),
     canEdit ? getItems() : Promise.resolve([]),
@@ -205,6 +208,7 @@ export default async function ProductsPage() {
     getMenuSetup(),
     getMenuScheduled(),
     getChannelNames(),
+    getAddonSetup(today),
   ]);
 
   const inUse = new Set(channels.channels.filter((c) => c.active).map((c) => c.code));
@@ -248,16 +252,37 @@ export default async function ProductsPage() {
   ].filter((g) => g.products.length > 0);
   const hidden = products.filter((p) => !p.isActive);
 
+  // "Recipe, prices, sizes and add-ons · Regular, Large · + Milk, Extras": what the till asks for, at a glance.
+  const summaryOf = (p: MenuProduct) => {
+    const sizes = p.variants.filter((v) => v.isActive).map((v) => v.name);
+    const groupIds = new Set(
+      addons.offers.filter((o) => o.productId === p.id).map((o) => o.groupId),
+    );
+    const offered = addons.groups.filter((g) => groupIds.has(g.id)).map((g) => g.name);
+    return [
+      t("Recipe, prices, sizes and add-ons"),
+      ...(sizes.length > 1 ? [sizes.join(", ")] : []),
+      ...(offered.length > 0 ? [`+ ${offered.join(", ")}`] : []),
+    ].join(" · ");
+  };
+
   const card = (p: MenuProduct) => (
     <div key={p.id} className="card grid" style={{ gap: 8 }}>
       <ProductSetup product={p} categories={categories} canEdit={canEdit} />
       {p.isActive && (
-        <details>
+        <details data-testid="sizes-addons">
           <summary className="muted" style={{ fontSize: ".88rem" }}>
-            {p.variants.length > 1
-              ? t("Recipe, prices and margin · {n} sizes or flavours", { n: p.variants.length })
-              : t("Recipe, prices and margin")}
+            {summaryOf(p)}
           </summary>
+          <div className="grid" style={{ gap: 14, margin: "8px 0" }}>
+            <SizesPanel product={p} items={itemOpts} decimals={decimals} canEdit={canEdit} />
+            <ProductAddons
+              product={p}
+              groups={addons.groups}
+              offers={addons.offers}
+              canEdit={canEdit}
+            />
+          </div>
           {p.variants
             .filter((v) => v.isActive)
             .map((v) => (
@@ -304,6 +329,13 @@ export default async function ProductsPage() {
         )}
 
         <CategoriesManager categories={categories} counts={counts} canEdit={canEdit} />
+
+        <AddonsManager
+          groups={addons.groups}
+          products={products}
+          offers={addons.offers}
+          editor={canEdit ? { items: itemOpts, decimals, today } : null}
+        />
 
         {products.length === 0 ? (
           <EmptyState title={t("No products yet")} hint={t("Add the first one above.")} />

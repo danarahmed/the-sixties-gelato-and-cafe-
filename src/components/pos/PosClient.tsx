@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
-import type { DiningTable, OpenBill, PosItem } from "@/lib/db/pos";
+import type { DiningTable, OpenBill, PosAddons, PosItem } from "@/lib/db/pos";
 import { recordSaleAction } from "@/lib/actions/sales";
 import { listApproversAction, requestApprovalAction, type Approver } from "@/lib/actions/approvals";
 import {
@@ -45,6 +45,9 @@ import {
 } from "./PrintSlip";
 import {
   addLine,
+  addonMenu,
+  addonNames,
+  addonsKey,
   billChanged,
   billTitle,
   isDirty,
@@ -70,6 +73,7 @@ import {
   signature,
   ticketChanges,
   ticketLines,
+  type AddonChoice,
   type Discount,
   type DiscountRules,
   type MoneyRules,
@@ -90,7 +94,7 @@ interface Pending {
   key: string;
   tender: Tender;
   channel: SalesChannel;
-  lines: { variantId: string; qty: number; note: string | null }[];
+  lines: { variantId: string; qty: number; note: string | null; addons?: AddonChoice[] }[];
   tabId: string | null;
   version: number | null;
   title: string;
@@ -124,7 +128,12 @@ function loadPending(): Pending | null {
     const raw = sessionStorage.getItem(PENDING_KEY);
     if (!raw) return null;
     const p = JSON.parse(raw) as Partial<Pending> & {
-      lines?: { variantId: string; qty: number | string; note?: string | null }[];
+      lines?: {
+        variantId: string;
+        qty: number | string;
+        note?: string | null;
+        addons?: AddonChoice[];
+      }[];
     };
     if (!p.key || !p.tender || !p.channel || !Array.isArray(p.lines)) return null;
     // A sale left behind by the previous till screen is a quick sale.
@@ -137,6 +146,7 @@ function loadPending(): Pending | null {
         variantId: l.variantId,
         qty: Number(l.qty),
         note: l.note ?? null,
+        addons: Array.isArray(l.addons) ? l.addons : [],
       })),
       tabId: p.tabId ?? null,
       version: p.version ?? null,
@@ -181,10 +191,14 @@ async function fetchBills(): Promise<OpenBill[] | null> {
   return body?.ok && Array.isArray(body.bills) ? body.bills : null;
 }
 
-/** The menu at today's prices (0025): a till left open still sells at them. */
-async function fetchMenu(): Promise<PosItem[] | null> {
-  const body = await fetchJson<{ ok?: boolean; items?: PosItem[] }>("/api/pos/menu");
-  return body?.ok && Array.isArray(body.items) && body.items.length > 0 ? body.items : null;
+/** The menu and its add-ons at today's prices (0025, 0041): a till left open still sells at them. */
+async function fetchMenu(): Promise<{ items: PosItem[]; addons: PosAddons | null } | null> {
+  const body = await fetchJson<{ ok?: boolean; items?: PosItem[]; addons?: PosAddons }>(
+    "/api/pos/menu",
+  );
+  return body?.ok && Array.isArray(body.items) && body.items.length > 0
+    ? { items: body.items, addons: body.addons ?? null }
+    : null;
 }
 
 /** How often a till left open fetches today's prices, besides when it comes back to the front. */
@@ -230,6 +244,7 @@ type Dialog =
  */
 export function PosClient({
   items: initialItems,
+  addons: initialAddons,
   tables,
   initialBills,
   canSeeCost,
@@ -244,6 +259,8 @@ export function PosClient({
   initialDrawer,
 }: {
   items: PosItem[];
+  /** The add-ons, and which products offer them (0041). */
+  addons: PosAddons;
   tables: DiningTable[];
   initialBills: OpenBill[];
   canSeeCost: boolean;
@@ -270,6 +287,8 @@ export function PosClient({
   // The menu as the page loaded it, then as fetched again while the till stays open.
   const [items, setItems] = useState<PosItem[]>(initialItems);
   const byId = useMemo(() => new Map(items.map((i) => [i.variantId, i])), [items]);
+  const [addons, setAddons] = useState<PosAddons>(initialAddons);
+  const menu = useMemo(() => addonMenu(addons), [addons]);
   // The channels in use that sell something: a platform the café added is one more tab.
   const channels = useMemo(
     () => channelSet.inUse.filter((c) => items.some((i) => i.prices[c] !== undefined)),
@@ -357,7 +376,10 @@ export function PosClient({
     const menuTick = async () => {
       if (document.hidden || !navigator.onLine || !menuQuiet.current) return;
       const fresh = await fetchMenu();
-      if (fresh && menuQuiet.current) setItems(fresh);
+      if (fresh && menuQuiet.current) {
+        setItems(fresh.items);
+        if (fresh.addons) setAddons(fresh.addons);
+      }
     };
     const poll = window.setInterval(tick, 15000);
     const menuPoll = window.setInterval(menuTick, MENU_EVERY_MS);
@@ -394,6 +416,7 @@ export function PosClient({
       lineId: null,
       fallbackName: null,
       billPrice: null,
+      addons: (l.addons ?? []).map((a) => ({ ...a, billPrice: null })),
     }));
     setPending(p);
     if (p.kind === "quick") {
@@ -465,9 +488,10 @@ export function PosClient({
     o.lines.map((l) => ({
       name: lineName(l, byId, locale),
       qty: l.qty,
-      price: linePrice(l, byId, o.channel),
-      amount: lineAmount(l, byId, o.channel)?.toNumber() ?? null,
+      price: linePrice(l, byId, o.channel, menu),
+      amount: lineAmount(l, byId, o.channel, menu)?.toNumber() ?? null,
       note: l.note,
+      addons: addonNames(l.addons, menu, locale, l.addons),
     }));
 
   /** Send slips to the printer, after whatever is printing now. */
@@ -479,12 +503,16 @@ export function PosClient({
   /** Lines as the barista's ticket names them. */
   const ticketItems = (lines: TicketLine[], known: Line[]): TicketItem[] =>
     lines.map((l) => {
-      const line = known.find((k) => k.variantId === l.variantId);
+      const line =
+        known.find(
+          (k) => k.variantId === l.variantId && addonsKey(k.addons) === addonsKey(l.addons),
+        ) ?? known.find((k) => k.variantId === l.variantId);
       const item = byId.get(l.variantId);
       return {
         name: line ? lineName(line, byId, locale) : item ? itemName(item, locale) : "—",
         qty: l.qty,
         note: l.note,
+        addons: addonNames(l.addons, menu, locale, line?.addons ?? []),
       };
     });
 
@@ -521,7 +549,7 @@ export function PosClient({
 
   /** Subtotal, discount and what is due, for a printed bill or receipt. */
   const printTotals = (o: Order) => {
-    const subtotal = orderSubtotal(o, byId, money);
+    const subtotal = orderSubtotal(o, byId, money, menu);
     const discount = discountAmount(o.discount, subtotal, money);
     const pct = o.discount?.kind === "percent" ? parseNumber(o.discount.value) : null;
     return {
@@ -537,11 +565,11 @@ export function PosClient({
     if (showBill && billRef.current) putBill(fn(billRef.current));
     else setQuick(fn);
   }
-  function add(variantId: string) {
+  function add(variantId: string, chosen: AddonChoice[] = []) {
     if (pending || busy) return;
     setReceipt(null);
     setMsg(null);
-    patchOrder((o) => ({ ...o, lines: addLine(o.lines, variantId) }));
+    patchOrder((o) => ({ ...o, lines: addLine(o.lines, variantId, chosen) }));
   }
   function changeQty(key: string, delta: number) {
     patchOrder((o) => ({
@@ -617,7 +645,7 @@ export function PosClient({
     const o = showBill && billRef.current ? billRef.current : quick;
     const d = o.discount;
     if (!d || busy) return;
-    const subtotal = orderSubtotal(o, byId, money);
+    const subtotal = orderSubtotal(o, byId, money, menu);
     const percent = approvalPercent(d, subtotal);
     const what = [
       `${percent}%`,
@@ -687,7 +715,12 @@ export function PosClient({
           channel: o.channel,
           tableId: o.tableId,
           label: o.label?.trim() || null,
-          lines: o.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty), note: l.note })),
+          lines: o.lines.map((l) => ({
+            variantId: l.variantId,
+            qty: String(l.qty),
+            note: l.note,
+            addons: l.addons.map(({ modifierId, qty }) => ({ modifierId, qty })),
+          })),
           ...discountParams(o.discount),
           ...discountWhy(o.discount),
         },
@@ -792,7 +825,12 @@ export function PosClient({
           channel: o.channel,
           tableId: choice.tableId,
           label: choice.label,
-          lines: o.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty), note: l.note })),
+          lines: o.lines.map((l) => ({
+            variantId: l.variantId,
+            qty: String(l.qty),
+            note: l.note,
+            addons: l.addons.map(({ modifierId, qty }) => ({ modifierId, qty })),
+          })),
           ...discountParams(o.discount),
           ...discountWhy(o.discount),
         },
@@ -1008,7 +1046,12 @@ export function PosClient({
       key: dialog.key,
       tender,
       channel: o.channel,
-      lines: o.lines.map((l) => ({ variantId: l.variantId, qty: l.qty, note: l.note })),
+      lines: o.lines.map((l) => ({
+        variantId: l.variantId,
+        qty: l.qty,
+        note: l.note,
+        addons: l.addons.map(({ modifierId, qty }) => ({ modifierId, qty })),
+      })),
       tabId: o.tabId,
       version: o.version,
       title: dialog.title,
@@ -1023,7 +1066,7 @@ export function PosClient({
             approvalId: null,
           }),
       // What the dialog showed: the database takes the money only at this total.
-      expectedNet: orderDue(o, byId, money).toFixed(),
+      expectedNet: orderDue(o, byId, money, menu).toFixed(),
       platformOrderNo: isPlatform(o.channel) ? orderNo : null,
       job: {
         kind: "receipt",
@@ -1052,7 +1095,11 @@ export function PosClient({
               key: p.key,
               channel: p.channel,
               tender: p.tender,
-              lines: p.lines.map((l) => ({ variantId: l.variantId, qty: String(l.qty) })),
+              lines: p.lines.map((l) => ({
+                variantId: l.variantId,
+                qty: String(l.qty),
+                addons: l.addons ?? [],
+              })),
               discountPercent: p.discountPercent,
               discountAmount: p.discountAmount,
               discountReason: p.discountReason,
@@ -1169,7 +1216,10 @@ export function PosClient({
   async function catchUp(p: Pending): Promise<boolean> {
     try {
       const [fresh, list] = await Promise.all([fetchMenu(), fetchBills()]);
-      if (fresh) setItems(fresh);
+      if (fresh) {
+        setItems(fresh.items);
+        if (fresh.addons) setAddons(fresh.addons);
+      }
       if (list) applyRef.current(list);
       if (p.kind === "bill") {
         if (!list) return false;
@@ -1181,9 +1231,16 @@ export function PosClient({
         );
       }
       if (!fresh) return false;
-      const now = new Map(fresh.map((i) => [i.variantId, i]));
+      const now = new Map(fresh.items.map((i) => [i.variantId, i]));
+      const nowAddons = fresh.addons ? addonMenu(fresh.addons) : menu;
       return p.lines.some(
-        (l) => byId.get(l.variantId)?.prices[p.channel] !== now.get(l.variantId)?.prices[p.channel],
+        (l) =>
+          byId.get(l.variantId)?.prices[p.channel] !== now.get(l.variantId)?.prices[p.channel] ||
+          (l.addons ?? []).some(
+            (a) =>
+              menu.byId.get(a.modifierId)?.prices[p.channel] !==
+              nowAddons.byId.get(a.modifierId)?.prices[p.channel],
+          ),
       );
     } catch {
       // Catching up is a courtesy: the refusal stands, and is shown, either way.
@@ -1299,7 +1356,7 @@ export function PosClient({
         ? billChannels
         : null;
   const blocked = pending !== null || busy !== null;
-  const total = orderDue(order, byId, money);
+  const total = orderDue(order, byId, money, menu);
 
   const drawerLabel =
     drawer.open && drawer.session
@@ -1395,6 +1452,7 @@ export function PosClient({
           ) : (
             <ProductPicker
               items={items}
+              addons={menu}
               channel={order.channel}
               counts={counts}
               disabled={blocked}
@@ -1408,6 +1466,7 @@ export function PosClient({
             order={order}
             title={title(order)}
             byId={byId}
+            addons={menu}
             busy={busy}
             pending={pending !== null}
             online={online}
@@ -1460,7 +1519,7 @@ export function PosClient({
       {dialog?.kind === "pay" && (
         <PayDialog
           title={dialog.title}
-          total={orderDue(dialog.order, byId, money).toNumber()}
+          total={orderDue(dialog.order, byId, money, menu).toNumber()}
           note={discountNote(dialog.order)}
           tenders={
             isPlatform(dialog.order.channel)
@@ -1493,6 +1552,7 @@ export function PosClient({
               : `${dialog.order.label ?? ""} · 2`
           }
           byId={byId}
+          addons={menu}
           busy={busy !== null}
           onConfirm={confirmSplit}
           onClose={() => setDialog(null)}

@@ -79,6 +79,10 @@ import { cleanOrderNo, platformOrderNo } from "@/lib/validation";
 import Decimal from "decimal.js";
 import {
   addLine,
+  addonMenu,
+  addonNames,
+  addonsMissing,
+  linePrice,
   ticketChanges,
   ticketLines,
   approvalPercent,
@@ -91,6 +95,7 @@ import {
   discountShare,
   discountWhy,
   isDirty,
+  NO_ADDONS_MENU,
   orderDue,
   orderFromBill,
   orderSubtotal,
@@ -317,15 +322,16 @@ describe("a discount at the till: the percentage and the amount fill each other 
         lineId: null,
         fallbackName: null,
         billPrice: null,
+        addons: [],
       },
     ];
     const bill = { ...quickOrder("takeaway"), kind: "bill" as const, lines };
     bill.saved = signature(lines, null);
-    expect(orderSubtotal(bill, byId, to500).toString()).toBe("5000");
+    expect(orderSubtotal(bill, byId, to500, NO_ADDONS_MENU).toString()).toBe("5000");
     expect(isDirty(bill)).toBe(false);
 
     const discounted = { ...bill, discount: pct("10") };
-    expect(orderDue(discounted, byId, to500).toString()).toBe("4500");
+    expect(orderDue(discounted, byId, to500, NO_ADDONS_MENU).toString()).toBe("4500");
     expect(isDirty(discounted)).toBe(true);
 
     const saved = { ...discounted, saved: signature(lines, discounted.discount) };
@@ -375,6 +381,7 @@ describe("a printed bill is paid at the prices the customer was shown (0025)", (
         productName: "Latte",
         variantName: "Latte",
         price: 2500,
+        modifiers: [],
       },
     ],
     subtotal: 5000,
@@ -386,7 +393,7 @@ describe("a printed bill is paid at the prices the customer was shown (0025)", (
 
   it("the bill shows, and the till asks for, its printed total", () => {
     const o = orderFromBill(printed);
-    expect(orderDue(o, byId, money).toFixed()).toBe("5000");
+    expect(orderDue(o, byId, money, NO_ADDONS_MENU).toFixed()).toBe("5000");
   });
 
   it("one more of the same is at the printed price too, as the database adds it", () => {
@@ -394,7 +401,7 @@ describe("a printed bill is paid at the prices the customer was shown (0025)", (
     // The printed line has a note, so the new one is a line of its own.
     const more = { ...o, lines: addLine(o.lines, latte.variantId) };
     expect(more.lines).toHaveLength(2);
-    expect(orderDue(more, byId, money).toFixed()).toBe("7500");
+    expect(orderDue(more, byId, money, NO_ADDONS_MENU).toFixed()).toBe("7500");
   });
 
   it("a bill on screen is replaced when another till changed it, or a price on it did", () => {
@@ -407,7 +414,7 @@ describe("a printed bill is paid at the prices the customer was shown (0025)", (
     const shown = orderFromBill(open);
     const repriced = { ...open, lines: [{ ...open.lines[0]!, price: 3000 }] };
     expect(billChanged(shown, repriced)).toBe(true);
-    expect(orderDue(orderFromBill(repriced), byId, money).toFixed()).toBe("6000");
+    expect(orderDue(orderFromBill(repriced), byId, money, NO_ADDONS_MENU).toFixed()).toBe("6000");
   });
 });
 
@@ -946,7 +953,7 @@ describe("the audit trail in words (0027, the audit's P1-1)", () => {
   });
 
   it("narrows to a kind of change, and nothing unknown", () => {
-    expect(auditGroup("prices")?.prefixes).toEqual(["price."]);
+    expect(auditGroup("prices")?.prefixes).toEqual(["price.", "modifier_price."]);
     expect(auditGroup("nonsense")).toBeNull();
     expect(new Set(AUDIT_GROUPS.map((g) => g.key)).size).toBe(AUDIT_GROUPS.length);
   });
@@ -1823,6 +1830,7 @@ describe("the barista's ticket (release I)", () => {
     variantId,
     qty,
     note,
+    addons: [],
   });
 
   it("sends a new order whole, and what is added to it after", () => {
@@ -1873,6 +1881,7 @@ describe("the barista's ticket (release I)", () => {
           lineId: "l1",
           fallbackName: null,
           billPrice: 2500,
+          addons: [],
         },
       ]),
     ).toEqual([l("latte", 2, "oat milk")]);
@@ -2036,5 +2045,217 @@ describe("the café's rules on Settings (0040, release O)", () => {
       newValue: 5,
       changedBy: "Demo Owner",
     });
+  });
+});
+
+describe("sizes and add-ons at the till (0041)", () => {
+  const money: MoneyRules = { decimals: 0, discountStep: 500 };
+  const size = (variantId: string, variantName: string, price: number): PosItem => ({
+    variantId,
+    productId: "p-esp",
+    productName: "Espresso",
+    variantName,
+    nameAr: null,
+    nameCkb: null,
+    category: null,
+    categoryId: null,
+    categorySort: null,
+    categoryAr: null,
+    categoryCkb: null,
+    imageUrl: null,
+    isFavourite: false,
+    prices: { dine_in: price, takeaway: price },
+  });
+  const regular = size("v-reg", "Regular", 2500);
+  const triple = size("v-tri", "Triple", 4000);
+  const byId = new Map([regular, triple].map((i) => [i.variantId, i]));
+  const addon = (id: string, groupId: string, name: string, prices: Record<string, number>) => ({
+    id,
+    groupId,
+    name,
+    nameAr: name === "Oat milk" ? "حليب الشوفان" : null,
+    nameCkb: null,
+    prices,
+  });
+  const whole = addon("m-whole", "g-milk", "Whole milk", { dine_in: 0, takeaway: 0 });
+  const oat = addon("m-oat", "g-milk", "Oat milk", { dine_in: 500, takeaway: 500 });
+  const shot = addon("m-shot", "g-extra", "Extra shot", { dine_in: 750, takeaway: 750 });
+  // Sold at a table only: a takeaway cup has no room for it.
+  const cream = addon("m-cream", "g-top", "Whipped cream", { dine_in: 250 });
+  const group = (
+    id: string,
+    name: string,
+    min: number,
+    max: number | null,
+    addons: (typeof oat)[],
+  ) => ({
+    id,
+    name,
+    nameAr: null,
+    nameCkb: null,
+    min,
+    max,
+    addons,
+  });
+  const milk = group("g-milk", "Milk", 1, 1, [whole, oat]);
+  const extras = group("g-extra", "Extras", 0, 3, [shot]);
+  const toppings = group("g-top", "Toppings", 0, null, [cream]);
+  const menu = addonMenu({
+    // The till's order: extras first; the milk asks for a choice, so it comes first all the same.
+    groups: [extras, toppings, milk],
+    offers: [
+      { productId: "p-esp", variantId: null, groupId: "g-milk" },
+      { productId: "p-esp", variantId: "v-tri", groupId: "g-extra" },
+      { productId: "p-esp", variantId: null, groupId: "g-top" },
+    ],
+  });
+  const oatAndTwoShots = [
+    { modifierId: "m-oat", qty: 1 },
+    { modifierId: "m-shot", qty: 2 },
+  ];
+
+  it("asks for the groups a size offers, those that need a choice first", () => {
+    expect(menu.groupsFor("p-esp", "v-reg").map((g) => g.name)).toEqual(["Milk", "Toppings"]);
+    expect(menu.groupsFor("p-esp", "v-tri").map((g) => g.name)).toEqual([
+      "Milk",
+      "Extras",
+      "Toppings",
+    ]);
+    expect(menu.groupsFor("p-tea", "v-tea")).toEqual([]);
+  });
+
+  it("adds a line only when every group has what it asks for, and no more", () => {
+    const groups = menu.groupsFor("p-esp", "v-tri");
+    expect(addonsMissing(groups, [])).toEqual({ group: milk, kind: "fewer" });
+    expect(addonsMissing(groups, oatAndTwoShots)).toBeNull();
+    expect(
+      addonsMissing(groups, [
+        { modifierId: "m-oat", qty: 1 },
+        { modifierId: "m-shot", qty: 4 },
+      ]),
+    ).toEqual({ group: extras, kind: "more" });
+    expect(
+      addonsMissing(groups, [
+        { modifierId: "m-oat", qty: 1 },
+        { modifierId: "m-whole", qty: 1 },
+      ]),
+    ).toEqual({ group: milk, kind: "more" });
+  });
+
+  it("prices one of a line as the database does: the size, and each add-on as many times as it is added", () => {
+    const line = addLine([], "v-tri", oatAndTwoShots)[0]!;
+    // 4,000 + 500 + 750 × 2
+    expect(linePrice(line, byId, "dine_in", menu)).toBe(6000);
+    // No price on the channel for one of its add-ons: the line cannot be priced.
+    const withCream = addLine([], "v-reg", [
+      { modifierId: "m-whole", qty: 1 },
+      { modifierId: "m-cream", qty: 1 },
+    ])[0]!;
+    expect(linePrice(withCream, byId, "dine_in", menu)).toBe(2750);
+    expect(linePrice(withCream, byId, "takeaway", menu)).toBeNull();
+  });
+
+  it("puts one more on a line only with the same add-ons, in whatever order they were chosen", () => {
+    let lines = addLine([], "v-tri", oatAndTwoShots);
+    lines = addLine(lines, "v-tri", [...oatAndTwoShots].reverse());
+    expect(lines).toHaveLength(1);
+    expect(lines[0]!.qty).toBe(2);
+    lines = addLine(lines, "v-tri", [{ modifierId: "m-whole", qty: 1 }]);
+    expect(lines).toHaveLength(2);
+    const o = { ...quickOrder("dine_in"), lines };
+    // 2 × 6,000 + 4,000
+    expect(orderSubtotal(o, byId, money, menu).toFixed()).toBe("16000");
+  });
+
+  it("keeps a printed bill's price for an add-on, for more of it too", () => {
+    const printed: OpenBill = {
+      tabId: "t9",
+      version: 2,
+      tableId: null,
+      tableName: null,
+      label: "Table 9",
+      channel: "dine_in",
+      businessDay: "2026-09-25",
+      openedAt: "2026-09-25T18:00:00Z",
+      openedBy: null,
+      billPrintedAt: "2026-09-25T19:00:00Z",
+      billPrintCount: 1,
+      lines: [
+        {
+          lineId: "l9",
+          variantId: "v-reg",
+          qty: 1,
+          note: null,
+          productName: "Espresso",
+          variantName: "Regular",
+          price: 2500,
+          // Oat milk was 400 when the bill was printed; the menu has 500 now.
+          modifiers: [
+            {
+              modifierId: "m-oat",
+              name: "Oat milk",
+              nameAr: null,
+              nameCkb: null,
+              qty: 1,
+              price: 400,
+            },
+          ],
+        },
+      ],
+      subtotal: 2900,
+      discount: 0,
+      discountPercent: null,
+      discountAmount: null,
+      total: 2900,
+    };
+    const o = orderFromBill(printed);
+    expect(billChanged(o, printed)).toBe(false);
+    expect(orderDue(o, byId, money, menu).toFixed()).toBe("2900");
+    // Another oat-milk regular goes onto the line; a triple with oat milk is at the bill's 400 too.
+    const more = {
+      ...o,
+      lines: addLine(addLine(o.lines, "v-reg", [{ modifierId: "m-oat", qty: 1 }]), "v-tri", [
+        { modifierId: "m-oat", qty: 1 },
+      ]),
+    };
+    expect(more.lines.map((l) => l.qty)).toEqual([2, 1]);
+    expect(orderDue(more, byId, money, menu).toFixed()).toBe("10200");
+    // Another till took the oat milk off: the bill on screen is out of date.
+    const changed = { ...printed, lines: [{ ...printed.lines[0]!, modifiers: [] }] };
+    expect(billChanged(o, changed)).toBe(true);
+  });
+
+  it("names a line's add-ons in the reader's language, and one gone from the menu by its bill name", () => {
+    expect(addonNames(oatAndTwoShots, menu, "en")).toEqual(["Oat milk", "Extra shot ×2"]);
+    expect(addonNames([{ modifierId: "m-oat", qty: 1 }], menu, "ar")).toEqual(["حليب الشوفان"]);
+    expect(
+      addonNames([{ modifierId: "m-gone", qty: 1 }], menu, "en", [
+        { modifierId: "m-gone", qty: 1, billPrice: 300, fallbackName: "Hazelnut" },
+      ]),
+    ).toEqual(["Hazelnut"]);
+  });
+
+  it("tells the bar a line with other add-ons is another way to make it", () => {
+    const t = (addons: { modifierId: string; qty: number }[], qty = 1) => ({
+      variantId: "v-tri",
+      qty,
+      note: null,
+      addons,
+    });
+    expect(ticketChanges([t(oatAndTwoShots)], [t([...oatAndTwoShots].reverse(), 2)])).toEqual({
+      added: [t([...oatAndTwoShots].reverse(), 1)],
+      removed: [],
+    });
+    expect(ticketChanges([t(oatAndTwoShots)], [t([{ modifierId: "m-whole", qty: 1 }])])).toEqual({
+      added: [t([{ modifierId: "m-whole", qty: 1 }])],
+      removed: [t(oatAndTwoShots)],
+    });
+  });
+
+  it("marks a bill changed when a line's add-ons are", () => {
+    const lines = addLine([], "v-reg", [{ modifierId: "m-whole", qty: 1 }]);
+    expect(signature(lines, null)).not.toBe(
+      signature(addLine([], "v-reg", [{ modifierId: "m-oat", qty: 1 }]), null),
+    );
   });
 });

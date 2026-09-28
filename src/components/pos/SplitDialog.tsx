@@ -5,7 +5,7 @@ import Decimal from "decimal.js";
 import type { PosItem } from "@/lib/db/pos";
 import { fmtIQD, fmtQty } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
-import { lineName, linePrice, type Order } from "./model";
+import { addonNames, lineName, linePrice, type AddonMenu, type Order } from "./model";
 
 /**
  * One table, several payers: choose what moves to a bill of its own. That
@@ -16,6 +16,7 @@ export function SplitDialog({
   title,
   defaultLabel,
   byId,
+  addons,
   busy,
   onConfirm,
   onClose,
@@ -25,6 +26,7 @@ export function SplitDialog({
   /** What the new bill is called: "2" at a table (shown as "Table 5 · 2"), or "Ali · 2". */
   defaultLabel: string;
   byId: Map<string, PosItem>;
+  addons: AddonMenu;
   busy: boolean;
   onConfirm: (move: { lineId: string; qty: number }[], label: string) => void;
   onClose: () => void;
@@ -39,7 +41,9 @@ export function SplitDialog({
   const movesAll = chosen.length === lines.length && lines.every((l) => move[l.lineId!] === l.qty);
   const amount = chosen.reduce(
     (s, l) =>
-      s.plus(new Decimal(linePrice(l, byId, order.channel) ?? 0).times(move[l.lineId!] ?? 0)),
+      s.plus(
+        new Decimal(linePrice(l, byId, order.channel, addons) ?? 0).times(move[l.lineId!] ?? 0),
+      ),
     new Decimal(0),
   );
 
@@ -65,6 +69,12 @@ export function SplitDialog({
               <div key={l.key} className="split-line">
                 <span style={{ flex: 1 }}>
                   {lineName(l, byId, locale)}
+                  {l.addons.length > 0 && (
+                    <span className="muted">
+                      {" "}
+                      + {addonNames(l.addons, addons, locale, l.addons).join(", ")}
+                    </span>
+                  )}
                   {l.note && <em className="muted"> · {l.note}</em>}
                   <span className="muted"> × {fmtQty(l.qty)}</span>
                 </span>

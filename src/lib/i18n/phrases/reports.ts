@@ -916,6 +916,43 @@ const phrases: PhraseBook = {
   "What is wrong": { ar: "ما الخطأ", ckb: "چی هەڵەیە" },
   none: { ar: "لا شيء", ckb: "هیچ" },
   "Records to look into": { ar: "سجلات تحتاج إلى مراجعة", ckb: "بەڵگەکان بۆ سەرنجدان" },
+
+  // Sizes and add-ons (0041): the report, and their changes on the audit trail.
+  "Sold {from} to {to}, at the prices and costs of each sale; voids left out": {
+    ar: "المُباع من {from} إلى {to}، بأسعار كل بيع وكلفته؛ دون الملغاة",
+    ckb: "فرۆشراو لە {from} تا {to}، بە نرخ و تێچووی هەر فرۆشتنێک؛ هەڵوەشێنراوەکان لابراون",
+  },
+  "No product was sold in more than one size, and no add-on was taken, in these dates.": {
+    ar: "لم يُبع أي منتج بأكثر من حجم، ولم تؤخذ أي إضافة، في هذه التواريخ.",
+    ckb: "لەم بەروارانەدا هیچ بەرهەمێک بە زیاتر لە یەک قەبارە نەفرۆشرا، و هیچ زیادەیەک وەرنەگیرا.",
+  },
+  Group: { ar: "المجموعة", ckb: "کۆمەڵە" },
+  "Add-on": { ar: "الإضافة", ckb: "زیادە" },
+  "On lines": { ar: "على السطور", ckb: "لەسەر هێڵەکان" },
+  "Of the lines offered it": { ar: "من السطور التي عُرضت عليها", ckb: "لەو هێڵانەی پێشکەش کراوە" },
+  "A size's figures leave out its add-ons, which are counted on their own, each with its share of the line's discount. Refunds are not taken off here: Sales by Channel has them. How often an add-on is taken is out of the lines of the products that offer it today.":
+    {
+      ar: "أرقام الحجم لا تشمل إضافاته، فهي تُحتسب وحدها، ولكل منها حصتها من خصم السطر. المرتجعات لا تُطرح هنا: تجدها في المبيعات حسب القناة. نسبة أخذ الإضافة هي من سطور المنتجات التي تقدّمها اليوم.",
+      ckb: "ژمارەکانی قەبارەیەک زیادەکانی تێدا نییە، ئەوان بە جیا هەژمار دەکرێن، هەریەکە بە بەشی خۆی لە داشکاندنی هێڵەکە. گەڕاندنەوەکان لێرە کەم ناکرێنەوە: فرۆشتن بەپێی کەناڵ ئەوانی تێدایە. ڕێژەی وەرگرتنی زیادەیەک لە هێڵەکانی ئەو بەرهەمانەیە کە ئەمڕۆ پێشکەشی دەکەن.",
+    },
+  "Add-ons offered changed": { ar: "تغيير الإضافات المقدّمة", ckb: "گۆڕینی زیادە پێشکەشکراوەکان" },
+  "Add-on price set": { ar: "تحديد سعر إضافة", ckb: "دانانی نرخی زیادەیەک" },
+  "What an add-on uses changed": {
+    ar: "تغيير ما تستخدمه إضافة",
+    ckb: "گۆڕینی ئەوەی زیادەیەک بەکاری دەهێنێت",
+  },
+  "Group of add-ons added": { ar: "إنشاء مجموعة إضافات", ckb: "دروستکردنی کۆمەڵەیەکی زیادە" },
+  "Group of add-ons changed": { ar: "تغيير مجموعة إضافات", ckb: "گۆڕینی کۆمەڵەیەکی زیادە" },
+  "Group of add-ons deleted": { ar: "حذف مجموعة إضافات", ckb: "سڕینەوەی کۆمەڵەیەکی زیادە" },
+  "Add-on added": { ar: "إدراج إضافة", ckb: "دانانی زیادەیەک" },
+  "Add-on changed": { ar: "تغيير إضافة", ckb: "گۆڕینی زیادەیەک" },
+  "Add-on deleted": { ar: "حذف إضافة", ckb: "سڕینەوەی زیادەیەک" },
+  "Fewest to choose": { ar: "أقلّ عدد للاختيار", ckb: "کەمترین بۆ هەڵبژاردن" },
+  "Most to choose": { ar: "أكبر عدد للاختيار", ckb: "زۆرترین بۆ هەڵبژاردن" },
+  "Group of add-ons": { ar: "مجموعة الإضافات", ckb: "کۆمەڵەی زیادە" },
+  "Groups of add-ons": { ar: "مجموعات الإضافات", ckb: "کۆمەڵەکانی زیادە" },
+  "Copied from": { ar: "منسوخة من", ckb: "لەبەرگیراوە لە" },
+  "An add-on": { ar: "إضافة", ckb: "زیادەیەک" },
 };
 
 export default phrases;

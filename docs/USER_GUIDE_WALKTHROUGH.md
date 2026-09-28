@@ -149,7 +149,14 @@ owner
 1. **Channel.** Choose **Dine-in**, **Takeaway**, **Direct delivery** or
    **Talabat**. Prices on the tiles change with it.
 2. **Products.** Tap a tile to add it. A tile is greyed out when the product has
-   no price on that channel.
+   no price on that channel. A product with **sizes or add-ons** (`0041`)
+   opens one sheet: tap the size, then its add-ons — a group that asks for a
+   choice (the milk) comes first, and the drink is not added until it has
+   one; tap an add-on again to take it off, and **+** for another of it
+   (two extra shots). **Add · 6,000 IQD** says what one comes to. Each line
+   names its add-ons under it (**+ Oat milk, Extra shot ×2**); the same drink
+   with the same add-ons adds up on one line. The receipt and the barista's
+   ticket list them under the drink, and a printed bill keeps their prices.
 3. **Cart.** **−** / **+** change quantities; **Clear** empties it. The total is
    shown.
 4. **Pay:**
@@ -224,7 +231,8 @@ gave it and who approved it.
 Every sale: number, time, channel, items, how it was paid, status, net and
 margin (the sale's price less the recipe cost of what it used). Each item keeps
 the name it was sold under: renaming a product later does not relabel its past
-sales. Choose **From**, **To** and a **Channel** to see the sales of those days;
+sales. An item's add-ons follow it, in the order they were given: **Latte —
+Large (+ Oat milk, Extra shot ×2)**. Choose **From**, **To** and a **Channel** to see the sales of those days;
 a report's figures open here with them chosen.
 
 - **Void.** For a sale rung in error, until the drawer's session holding its
@@ -518,6 +526,31 @@ sees costs; creating and pricing: owner, general manager
 - **Costed at nothing** (a red badge): no recipe, or an ingredient with no cost
   yet, so its sales show full profit. A product that truly uses no stock says
   why (**Uses no stock**), and is not flagged.
+- **Sizes and add-ons** (on each card, at the top of **Recipe, prices, sizes
+  and add-ons**, `0041`):
+  - **Sizes:** **+ Add a size** gives it a name in the three languages, a
+    price per channel, and what one serving uses: **The recipe of** another
+    size (change it afterwards, below), **Its own recipe**, or **It uses no
+    stock, because…**. A product sold under its own name gets a name for the
+    size it already has in the same step (Latte becomes **Regular**).
+    **Rename…** a size, or **Retire…** it with a reason: it leaves the till
+    and stays on the sales it was in; **Bring it back** puts it on again. The
+    only size on sale is not retired: hide the product instead.
+  - **Add-ons offered:** **Choose the add-ons…** ticks the groups the product
+    offers, with **Every size** or **Only:** the sizes ticked (extra shots with
+    the Large only).
+- **Add-ons** (a section of its own): **+ New group of add-ons** — its name in
+  the three languages, the **fewest** a line takes (1 or more: the till asks
+  for it, as for the milk; 0: optional) and the **most** (empty: no limit);
+  the form says what the till will ask ("Choose 1", "Up to 3"). In each group,
+  **+ Add an add-on** with its price per channel (0 is free; empty, not sold
+  there) and what one uses for every size. Each add-on can be renamed,
+  repriced from a date (**Change a price…**), given **What it uses…** for
+  every size or a size's own (a Large's 200 ml of oat milk), or taken off the
+  till and brought back. For a choice such as the milk, take the milk out of
+  the sizes' recipes and give each milk its own, so every cup counts the milk
+  it was made with. Neither a group nor an add-on on an open bill is taken off
+  the till.
 
 ## 13. Inventory
 
@@ -792,6 +825,11 @@ accountant's own tools.
 - **Payable Ageing:** each unpaid bill by vendor, due date and days late.
 - **Product Margin by Channel:** price, cost and margin of every product on every
   channel.
+- **Sizes and add-ons** (`0041`): each size of the products sold in more than
+  one, and each add-on taken, in the dates: how many, net sales, cost and
+  margin; for an add-on, on how many lines, and how often it is taken out of
+  the lines of the products offering it. A size's figures leave out its
+  add-ons; refunds are not taken off here.
 
 ## 19. Audit trail
 
@@ -897,6 +935,9 @@ a person's roles allows, then the café's.
 | Expenses with a proposed account                                                                          | `/expenses`                              | managers, accountant, owner                                                   |
 | Suppliers; receive goods at a price per unit, checked against the cost now; landed cost                   | `/purchasing`                            | purchasing, managers, owner                                                   |
 | Products, recipes by channel, prices from a date, margins                                                 | `/products`                              | cost viewers; editing: owner, general manager                                 |
+| Sizes; add-ons in groups, priced by channel, with recipes; which sizes offer them                         | `/products`                              | cost viewers; editing: owner, general manager                                 |
+| Sell a size with its add-ons, in one sheet                                                                | `/pos`                                   | cashier, barista, managers, owner                                             |
+| Sizes and add-ons sold                                                                                    | `/reports`                               | cost viewers                                                                  |
 | Stock board, add and correct items, pack units, price history, opening stock (owner), waste, corrections  | `/inventory`                             | cost viewers; waste: baristas too                                             |
 | Blind count while trading, second-person approval, cancel a count                                         | `/count`                                 | counter; reviewers                                                            |
 | Journal register, manual journals, reversal                                                               | `/journals`                              | cost viewers; posting: accountant, general manager, owner                     |

@@ -612,6 +612,15 @@ export async function getSalesOrders(
   ]);
   const refundRows = rows(refunds, "refunds");
   const refundIds = refundRows.map((r) => str(r.id));
+  // Each line's add-ons (0041), named with it: "Latte — Large (+ Oat milk, Extra shot ×2)".
+  const addonRows = rows(
+    await c
+      .from("sales_order_line_modifier")
+      .select("sales_order_line_id,name,qty,position")
+      .in("sales_order_id", ids)
+      .order("position"),
+    "add-ons",
+  );
   const [refundLines, refundTenders] = refundIds.length
     ? await Promise.all([
         c
@@ -636,12 +645,18 @@ export async function getSalesOrders(
   };
   const saleLines = rows(lines, "sale lines");
   const linesBy = group(saleLines, (l) => str(l.sales_order_id));
+  const addonsBy = group(addonRows, (a) => str(a.sales_order_line_id));
   const lineName = new Map(
-    saleLines.map((l) => [
-      str(l.id),
+    saleLines.map((l) => {
       // The name it was sold under (0027); older lines, the product's name now.
-      strOrNull(l.product_name) ?? variantLabel.get(str(l.product_variant_id)) ?? "—",
-    ]),
+      const name = strOrNull(l.product_name) ?? variantLabel.get(str(l.product_variant_id)) ?? "—";
+      const each = num(l.quantity);
+      const addons = (addonsBy.get(str(l.id)) ?? []).map((a) => {
+        const n = each > 0 ? num(a.qty) / each : num(a.qty);
+        return n === 1 ? str(a.name) : `${str(a.name)} ×${n}`;
+      });
+      return [str(l.id), addons.length ? `${name} (+ ${addons.join(", ")})` : name];
+    }),
   );
   const tendersBy = group(rows(tenders, "tenders"), (t) => str(t.sales_order_id));
   const adjBy = group(rows(adjustments, "voids and refunds"), (a) => str(a.sales_order_id));

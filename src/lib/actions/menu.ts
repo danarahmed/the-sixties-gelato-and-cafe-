@@ -7,7 +7,7 @@
  */
 import { z } from "zod";
 import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
-import { day, id, optionalText, positive, salesChannel, text } from "@/lib/validation";
+import { day, id, nonNegative, optionalText, positive, salesChannel, text } from "@/lib/validation";
 
 const MENU_PATHS = ["/products", "/pos", "/reports"];
 
@@ -288,6 +288,282 @@ export async function clearProductImageAction(
   const v = parse(productRef, input);
   if (!v.ok) return v;
   const r = await callRpc("clear_product_image", { p_product: v.data.productId });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: null };
+}
+
+// ------------------------------------------------------------------ sizes (0041)
+const recipeLines = z.array(
+  z.object({
+    itemId: id("an ingredient"),
+    qty: positive("Quantity"),
+    unitCode: z.string().min(1),
+    channels: z.array(salesChannel),
+  }),
+);
+const recipeToDb = (
+  lines: { itemId: string; qty: string | number; unitCode: string; channels: string[] }[],
+) =>
+  lines.map((l) => ({
+    item_id: l.itemId,
+    qty: l.qty,
+    unit_code: l.unitCode,
+    channels: l.channels,
+  }));
+
+const sizeInput = z.object({
+  productId: id("a product"),
+  name: text("The size's name", 60),
+  nameAr: optionalText(60),
+  nameCkb: optionalText(60),
+  prices: z.record(salesChannel, positive("Price")),
+  /** One of the three: its own recipe, another size's copied, or why it uses no stock. */
+  recipe: recipeLines,
+  copyFrom: id("a size to copy").nullable(),
+  noStockReason: optionalText(200),
+  /** The product's one size, named in the same step (Latte becomes Regular). */
+  renameExisting: optionalText(60),
+});
+
+/** A size added to a product: its name, prices and recipe, in one step or not at all. */
+export async function addSizeAction(
+  input: z.input<typeof sizeInput>,
+  key: string,
+): Promise<ActionResult<{ variantId: string }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(sizeInput, input);
+  if (!v.ok) return v;
+  const own = v.data.recipe.length > 0;
+  const r = await callRpc<Record<string, unknown>>("add_variant", {
+    p_product: v.data.productId,
+    p_name: v.data.name,
+    p_prices: v.data.prices,
+    p_recipe: own ? recipeToDb(v.data.recipe) : null,
+    p_copy_from: own ? null : v.data.copyFrom,
+    p_no_stock_reason: own || v.data.copyFrom ? null : v.data.noStockReason,
+    p_name_ar: v.data.nameAr,
+    p_name_ckb: v.data.nameCkb,
+    p_rename_existing: v.data.renameExisting,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: { variantId: String(r.data.variant_id) } };
+}
+
+const renameSizeInput = z.object({
+  variantId: id("a size"),
+  name: text("The size's name", 60),
+  nameAr: optionalText(60),
+  nameCkb: optionalText(60),
+});
+
+/** A size renamed, in the three languages. */
+export async function renameSizeAction(
+  input: z.input<typeof renameSizeInput>,
+  key: string,
+): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(renameSizeInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("update_variant", {
+    p_variant: v.data.variantId,
+    p_name: v.data.name,
+    p_name_ar: v.data.nameAr,
+    p_name_ckb: v.data.nameCkb,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: null };
+}
+
+const retireSizeInput = z.object({
+  variantId: id("a size"),
+  retire: z.boolean(),
+  reason: optionalText(300),
+});
+
+/** A size taken off the till with a reason, or brought back. Past sales keep it. */
+export async function retireSizeAction(
+  input: z.input<typeof retireSizeInput>,
+  key: string,
+): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(retireSizeInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("retire_variant", {
+    p_variant: v.data.variantId,
+    p_retire: v.data.retire,
+    p_reason: v.data.reason,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: null };
+}
+
+// ------------------------------------------------------------------ add-ons (0041)
+const count = (label: string) =>
+  z.number({ invalid_type_error: label }).int(label).min(0, label).max(20, label);
+
+const groupInput = z.object({
+  groupId: id("a group of add-ons").nullable(),
+  name: text("The group's name", 60),
+  nameAr: optionalText(60),
+  nameCkb: optionalText(60),
+  min: count("The fewest to choose is a number from 0 to 20"),
+  max: count(
+    "The most to choose is a number from 1 to 20, and no fewer than the fewest",
+  ).nullable(),
+  sort: z.number().int().min(0).max(999),
+  isActive: z.boolean(),
+});
+
+/** A group of add-ons, new or changed: its names, the fewest and the most a line takes from it. */
+export async function saveAddonGroupAction(
+  input: z.input<typeof groupInput>,
+  key: string,
+): Promise<ActionResult<{ groupId: string }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(groupInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("save_modifier_group", {
+    p_group: v.data.groupId,
+    p_name: v.data.name,
+    p_min: v.data.min,
+    p_max: v.data.max,
+    p_sort: v.data.sort,
+    p_is_active: v.data.isActive,
+    p_name_ar: v.data.nameAr,
+    p_name_ckb: v.data.nameCkb,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: { groupId: String(r.data.group_id) } };
+}
+
+const addonInput = z.object({
+  modifierId: id("an add-on").nullable(),
+  groupId: id("a group of add-ons"),
+  name: text("The add-on's name", 60),
+  nameAr: optionalText(60),
+  nameCkb: optionalText(60),
+  sort: z.number().int().min(0).max(999),
+  isActive: z.boolean(),
+  /** A new add-on's prices by channel (0 when it costs nothing), and what it uses for every size. */
+  prices: z.record(salesChannel, nonNegative("Price")).optional(),
+  recipe: recipeLines.optional(),
+});
+
+/** An add-on, new or changed. */
+export async function saveAddonAction(
+  input: z.input<typeof addonInput>,
+  key: string,
+): Promise<ActionResult<{ modifierId: string }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(addonInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("save_modifier", {
+    p_modifier: v.data.modifierId,
+    p_group: v.data.groupId,
+    p_name: v.data.name,
+    p_sort: v.data.sort,
+    p_is_active: v.data.isActive,
+    p_prices: v.data.modifierId === null ? (v.data.prices ?? {}) : null,
+    p_recipe: v.data.modifierId === null && v.data.recipe ? recipeToDb(v.data.recipe) : null,
+    p_name_ar: v.data.nameAr,
+    p_name_ckb: v.data.nameCkb,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: { modifierId: String(r.data.modifier_id) } };
+}
+
+const addonPriceInput = z.object({
+  modifierId: id("an add-on"),
+  channel: salesChannel,
+  price: nonNegative("Price"),
+  effectiveFrom: day("The first day").nullable(),
+});
+
+/** An add-on's new price on a channel, from today or a later day. */
+export async function setAddonPriceAction(
+  input: z.input<typeof addonPriceInput>,
+  key: string,
+): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(addonPriceInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("set_modifier_price", {
+    p_modifier: v.data.modifierId,
+    p_channel: v.data.channel,
+    p_price: v.data.price,
+    p_effective_from: v.data.effectiveFrom,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: null };
+}
+
+const addonRecipeInput = z.object({
+  modifierId: id("an add-on"),
+  /** A size's own quantities; none for every size. */
+  variantId: id("a size").nullable(),
+  lines: recipeLines,
+});
+
+/** What an add-on uses from now on, for every size or one size's own. */
+export async function setAddonRecipeAction(
+  input: z.input<typeof addonRecipeInput>,
+  key: string,
+): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(addonRecipeInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("set_modifier_recipe", {
+    p_modifier: v.data.modifierId,
+    p_variant: v.data.variantId,
+    p_lines: recipeToDb(v.data.lines),
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: null };
+}
+
+const productAddonsInput = z.object({
+  productId: id("a product"),
+  groups: z.array(
+    z.object({ groupId: id("a group of add-ons"), variantId: id("a size").nullable() }),
+  ),
+});
+
+/** The groups of add-ons a product offers, for all its sizes or one. */
+export async function setProductAddonsAction(
+  input: z.input<typeof productAddonsInput>,
+  key: string,
+): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(productAddonsInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("set_product_modifiers", {
+    p_product: v.data.productId,
+    p_groups: v.data.groups.map((g) => ({ group_id: g.groupId, variant_id: g.variantId })),
+    p_idempotency_key: key,
+  });
   if (!r.ok) return r;
   refresh(...MENU_PATHS);
   return { ok: true, data: null };
