@@ -139,6 +139,9 @@ const ACTION_LABEL: Record<string, string> = {
   "purchase.order.send": "Purchase order sent",
   "purchase.order.close": "Purchase order closed",
   "purchase.order.cancel": "Purchase order cancelled",
+  // Who an item is bought from (0045).
+  "item.supplier.set": "Item's supplier set",
+  "item.supplier.remove": "Item's supplier removed",
   "purchase.quantity_confirmed": "More than ordered, confirmed",
   "purchase.return": "Goods returned to a supplier",
   "purchase.credit": "Supplier's credit note recorded",
@@ -239,6 +242,11 @@ const FIELD_LABEL: Record<string, string> = {
   par_level_base: "Par level",
   max_level_base: "Most to hold",
   safety_stock_base: "Safety stock",
+  // An item's supplier (0045): the pack it comes in, a pack's price, the usual one.
+  pack_unit: "Pack",
+  last_price: "Price of a pack",
+  usual: "The usual supplier",
+  instead_of: "In place of",
   returnable_to_stock: "Back on the shelf when refunded",
   contact: "What they supply",
   phone: "Phone",

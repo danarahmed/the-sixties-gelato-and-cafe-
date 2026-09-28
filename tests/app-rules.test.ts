@@ -115,6 +115,21 @@ import {
   statementFrom,
   type PoLine,
 } from "@/lib/purchasing";
+import {
+  BUYING_PHRASES,
+  STATUS_LABEL,
+  buyingListFrom,
+  bySupplier,
+  draftOf,
+  inPack,
+  listStamp,
+  needOf,
+  packsFor,
+  packsIn,
+  reasonsOf,
+  sourceOf,
+  withSupplier,
+} from "@/lib/buying";
 import Decimal from "decimal.js";
 import {
   addLine,
@@ -2964,5 +2979,286 @@ describe("purchasing: orders, returns and the suppliers' credits (0044)", () => 
       expect(ROLE_PERMISSIONS[r].has("purchase.approve"), r).toBe(true);
     for (const r of ["cashier", "purchasing"] as Role[])
       expect(ROLE_PERMISSIONS[r].has("purchase.approve"), r).toBe(false);
+  });
+});
+
+describe("the buying list (0045)", () => {
+  // Milk as buying_list() gives it in tests/sql/buying_list.test.sql: 2,000 ml
+  // on hand, 1,000 a day for 25 days, the dairy two days away, bought by the
+  // carton; and the usual supplier's terms beside the dairy's.
+  const payload = {
+    location_id: "loc",
+    location: "Main Branch",
+    as_of: "2026-09-28",
+    window_days: 28,
+    lead_time: 1,
+    items: [
+      {
+        item_id: "milk",
+        item: "List milk",
+        base_unit: "ml",
+        item_type: "ingredient",
+        status: "order",
+        on_hand: 2000,
+        on_order: 0,
+        in_draft: 0,
+        position: 2000,
+        orders: [],
+        history_days: 25,
+        days: 25,
+        used: 25000,
+        daily_use: 1000,
+        lead_time: 2,
+        lead_from: "supplier",
+        reorder_level: 3000,
+        reorder_from: "use",
+        safety_stock: null,
+        target_level: 10000,
+        target_from: "week",
+        supplier_id: "dairy",
+        supplier: "Sulaymaniyah Dairy Co.",
+        supplier_from: "last_delivery",
+        pack_unit: "carton_1l",
+        pack_factor: 1000,
+        packs: 8,
+        qty_base: 8000,
+        price: 1500,
+        price_from: "delivery",
+        price_on: "2026-09-28",
+        choices: [
+          {
+            supplier_id: "dairy",
+            supplier: "Sulaymaniyah Dairy Co.",
+            usual: false,
+            lead_time: 2,
+            pack_unit: "carton_1l",
+            pack_factor: 1000,
+            price: 1500,
+            price_from: "delivery",
+            price_on: "2026-09-28",
+          },
+          {
+            supplier_id: "city",
+            supplier: "City Packaging Supplies",
+            usual: false,
+            lead_time: null,
+            pack_unit: "ml",
+            pack_factor: 1,
+            price: 1.4,
+            price_from: "agreed",
+            price_on: "2026-09-20",
+          },
+        ],
+      },
+      {
+        item_id: "sugar",
+        item: "List sugar",
+        base_unit: "g",
+        item_type: "ingredient",
+        status: "no_history",
+        on_hand: 500,
+        on_order: 0,
+        in_draft: 0,
+        position: 500,
+        history_days: 5,
+        days: 5,
+        used: 2500,
+        daily_use: null,
+        lead_time: 1,
+        lead_from: "cafe",
+        reorder_level: null,
+        target_level: null,
+        supplier_id: null,
+        pack_unit: "g",
+        pack_factor: 1,
+        packs: 0,
+        qty_base: 0,
+        price: null,
+        choices: [],
+      },
+    ],
+  };
+  const list = buyingListFrom(payload);
+  const milk = list.items[0]!;
+  const sugar = list.items[1]!;
+
+  it("reads the list as the database gives it", () => {
+    expect(list).toMatchObject({ location: "Main Branch", windowDays: 28, leadTime: 1 });
+    expect(milk).toMatchObject({
+      status: "order",
+      dailyUse: 1000,
+      reorderFrom: "use",
+      targetFrom: "week",
+      supplierFrom: "last_delivery",
+      packs: 8,
+      qtyBase: 8000,
+      priceFrom: "delivery",
+    });
+    expect(milk.choices.map((c) => c.supplier)).toEqual([
+      "Sulaymaniyah Dairy Co.",
+      "City Packaging Supplies",
+    ]);
+    expect(sugar).toMatchObject({ status: "no_history", supplierId: null, reorderLevel: null });
+    expect(buyingListFrom(null).items).toEqual([]);
+  });
+
+  it("says why, with the numbers", () => {
+    expect(reasonsOf(milk, undefined, (c) => (c === "carton_1l" ? "Carton of 1 L" : c))).toEqual([
+      "2,000 ml on hand.",
+      "About 1,000 ml a day over the last 25 days; a delivery takes 2 day(s), and a day more: 3,000 ml is its reorder level.",
+      "Below it: to order.",
+      "Ordered up to the reorder level and a week of use: 10,000 ml.",
+      "8 × Carton of 1 L (8,000 ml), rounded up to whole packs.",
+    ]);
+    expect(sourceOf(milk)).toEqual([
+      "The supplier of its last delivery.",
+      "1,500 IQD a pack, as delivered 2026-09-28.",
+    ]);
+    expect(reasonsOf(sugar)).toEqual([
+      "Only 5 day(s) of history: 7 are needed to judge its use by.",
+      "Set a reorder level on the item, or add it to an order yourself.",
+    ]);
+    expect(sourceOf(sugar)).toEqual(["No supplier yet: choose one.", "No price yet: enter one."]);
+    const drafted = { ...milk, status: "enough" as const, inDraft: 7000, position: 9000 };
+    expect(reasonsOf(drafted)[0]).toBe(
+      "2,000 ml on hand, 0 ml on order and 7,000 ml in draft orders: 9,000 ml in all.",
+    );
+    expect(reasonsOf(drafted)[2]).toBe("At or above it: nothing to order yet.");
+    const own = {
+      ...milk,
+      reorderFrom: "item" as const,
+      reorderLevel: 2500,
+      targetFrom: "par" as const,
+    };
+    expect(reasonsOf(own).slice(1, 3)).toEqual([
+      "Below its reorder level, set on the item: 2,500 ml.",
+      "Ordered up to its par level, 10,000 ml.",
+    ]);
+  });
+
+  it("rounds what is needed up to whole packs, one at least", () => {
+    expect(needOf(milk)).toBe(8000);
+    expect(needOf({ targetLevel: 100, position: 150 })).toBe(0);
+    expect(needOf({ targetLevel: null, position: 0 })).toBe(0);
+    expect(packsFor(7500, 1000)).toBe(8);
+    expect(packsFor(8000, 1000)).toBe(8);
+    expect(packsFor(0, 1000)).toBe(1);
+    expect(packsFor(0.3, 0.1)).toBe(3);
+    expect(packsIn(milk, 1)).toBe(8000);
+    expect(packsIn(sugar, 1000)).toBe(1);
+  });
+
+  it("moves a line to another supplier's pack and price, and to another pack", () => {
+    const d = draftOf(milk);
+    expect(d).toEqual({
+      itemId: "milk",
+      include: true,
+      qty: "8",
+      unit: "carton_1l",
+      price: "1500",
+      supplierId: "dairy",
+      usual: false,
+    });
+    expect(draftOf(sugar)).toMatchObject({ include: false, qty: "1", price: "", supplierId: "" });
+    expect(withSupplier(milk, d, "city")).toMatchObject({
+      supplierId: "city",
+      unit: "ml",
+      qty: "8000",
+      price: "1.4",
+    });
+    // A supplier with no terms of its own: the line stays, its price to be checked.
+    expect(withSupplier(milk, d, "kci")).toEqual({ ...d, supplierId: "kci" });
+    const units = [
+      { code: "ml", factor: 1 },
+      { code: "carton_1l", factor: 1000 },
+    ];
+    expect(inPack(milk, d, "ml", units)).toMatchObject({ unit: "ml", qty: "8000", price: "1.5" });
+    // Added by hand: as much as before, in whole packs of the new size.
+    const byHand = { ...draftOf(sugar), unit: "ml", qty: "2500", price: "2" };
+    expect(inPack(sugar, byHand, "carton_1l", units)).toMatchObject({
+      unit: "carton_1l",
+      qty: "3",
+      price: "2000",
+    });
+  });
+
+  it("groups the lines ticked by supplier, those with none last", () => {
+    const names = new Map([
+      ["dairy", "Sulaymaniyah Dairy Co."],
+      ["city", "City Packaging Supplies"],
+    ]);
+    const groups = bySupplier(
+      [
+        { supplierId: "dairy", qty: 7, unitPrice: 1500 },
+        { supplierId: "", qty: 2, unitPrice: 5000 },
+        { supplierId: "city", qty: 2, unitPrice: 5000 },
+        { supplierId: "dairy", qty: 1, unitPrice: 250 },
+      ],
+      names,
+    );
+    expect(groups.map((g) => [g.supplier, g.lines.length, g.total])).toEqual([
+      ["City Packaging Supplies", 1, 10000],
+      ["Sulaymaniyah Dairy Co.", 2, 10750],
+      [null, 1, 10000],
+    ]);
+  });
+
+  it("starts the screen again when the list changes under it", () => {
+    const after = buyingListFrom({
+      ...payload,
+      items: [{ ...payload.items[0], status: "enough", in_draft: 8000, position: 10000, packs: 0 }],
+    });
+    expect(listStamp(after)).not.toBe(listStamp(list));
+    expect(listStamp(buyingListFrom(payload))).toBe(listStamp(list));
+  });
+
+  it("has every status in Arabic and Kurdish", () => {
+    expect(Object.keys(STATUS_LABEL)).toEqual(["order", "enough", "no_history", "not_used"]);
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        BUYING_PHRASES.filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
+  });
+
+  it("names an item's supplier set or removed on the audit trail, under stock items", () => {
+    const migration = readFileSync(
+      join(__dirname, "../supabase/migrations/0045_buying_list.sql"),
+      "utf8",
+    );
+    for (const a of ["item.supplier.set", "item.supplier.remove"]) {
+      expect(migration).toContain(`'${a}'`);
+      expect(actionLabel(a)).not.toBe(a);
+      expect(
+        AUDIT_GROUPS.find((g) => g.key === "items")?.prefixes.some((p) => a.startsWith(p)),
+      ).toBe(true);
+    }
+    const KCI = "5a000000-0000-4000-8000-000000000001";
+    const CITY = "5a000000-0000-4000-8000-000000000002";
+    const names = new Map([
+      [KCI, "Kurdistan Coffee Imports"],
+      [CITY, "City Packaging Supplies"],
+    ]);
+    expect(
+      describeChanges(
+        null,
+        {
+          supplier: CITY,
+          pack_unit: "sleeve_50",
+          last_price: 2000,
+          usual: true,
+          instead_of: KCI,
+        },
+        names,
+      ),
+    ).toEqual([
+      { field: "Supplier", before: "", after: "City Packaging Supplies" },
+      { field: "Pack", before: "", after: "sleeve_50" },
+      { field: "Price of a pack", before: "", after: "2,000" },
+      { field: "The usual supplier", before: "", after: "yes" },
+      { field: "In place of", before: "", after: "Kurdistan Coffee Imports" },
+    ]);
   });
 });

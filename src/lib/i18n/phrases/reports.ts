@@ -1084,6 +1084,10 @@ const phrases: PhraseBook = {
     ckb: "پێش تەواوبوونی داواکارییەکە داخرا",
   },
   Returned: { ar: "المُرجَع", ckb: "گەڕێندراوە" },
+  // The audit trail: an item's suppliers (0045).
+  "Item's supplier set": { ar: "تحديد مورّد لمادة", ckb: "دیاریکردنی دابینکەری کاڵا" },
+  "Item's supplier removed": { ar: "إزالة مورّد مادة", ckb: "لابردنی دابینکەری کاڵا" },
+  "In place of": { ar: "بدلًا من", ckb: "لە جیاتی" },
 };
 
 export default phrases;

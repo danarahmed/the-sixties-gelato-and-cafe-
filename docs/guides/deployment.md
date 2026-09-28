@@ -1411,9 +1411,9 @@ with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/res
 1. It keeps the business and its locations, the chart of accounts, the people
    and their roles, the menu (products, their sizes, categories, photos,
    prices, recipes, and the add-ons with their groups, prices and recipes),
-   the stock items and their units, suppliers, tables, the café's rules and
-   their history, and the audit trail, which gains one line saying what was
-   cleared.
+   the stock items and their units, suppliers and who each item is bought
+   from, tables, the café's rules and their history, and the audit trail,
+   which gains one line saying what was cleared.
 2. It clears sales (with their add-ons), open bills, voids and refunds, cash
    sessions, drawer counts and cash moved (each branch keeps its drawer), stock
    movements and the reviews of losses, counts and batches, purchase orders,

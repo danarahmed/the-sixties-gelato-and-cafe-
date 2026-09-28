@@ -9,12 +9,12 @@
 --            accounts, the people (with their roles and approval PINs), the
 --            menu (products, their sizes, categories, photos, prices, recipes
 --            and their versions, add-ons with their groups, prices and
---            recipes), the stock items and their units, suppliers,
---            dining tables, platform and promotion settings, expense
---            categories, the list of reasons for voids, refunds, discounts and
---            cancelled bills, the languages the café added and its own words
---            for phrases, and the audit trail (which gains one line saying the
---            test records were cleared, and when)
+--            recipes), the stock items and their units, suppliers and who
+--            each item is bought from, dining tables, platform and promotion
+--            settings, expense categories, the list of reasons for voids,
+--            refunds, discounts and cancelled bills, the languages the café
+--            added and its own words for phrases, and the audit trail (which
+--            gains one line saying the test records were cleared, and when)
 --   cleared  sales and their add-ons, bills kept open, voids and refunds,
 --            managers' approvals and PIN attempts, cash sessions and drawer
 --            counts, cash events and cash moved, the dollar rates set and
@@ -57,7 +57,7 @@ insert into reset_keep values
   ('business'), ('location'), ('cash_drawer'), ('gl_account'), ('app_user'), ('user_role'), ('role_permission'),
   ('product'), ('product_variant'), ('product_category'), ('product_image'), ('channel_price'),
   ('recipe'), ('recipe_version'), ('recipe_line'), ('variant_recipe'),
-  ('item'), ('item_unit'), ('supplier'), ('dining_table'), ('expense_category'),
+  ('item'), ('item_unit'), ('supplier'), ('item_supplier'), ('dining_table'), ('expense_category'),
   ('delivery_platform'), ('platform_store_map'), ('platform_product_map'), ('promotion'),
   ('reason_code'), ('app_language'), ('app_phrase'), ('business_rule'), ('business_rule_history'),
   ('modifier_group'), ('modifier'), ('modifier_price'), ('modifier_recipe_line'), ('product_modifier_group'),

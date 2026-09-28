@@ -7,11 +7,11 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0044` and the rebuilt app. The SQL
-  checks (46, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (23, every role, every screen in
+- **Built and verified:** migrations `0014`–`0045` and the rebuilt app. The SQL
+  checks (47, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (24, every role, every screen in
   Arabic and Kurdish, and a lost answer on each kind of screen), the unit and
-  contract tests (379) and a production build all pass.
+  contract tests (391) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -800,6 +800,31 @@ browser tests through the real app, or both.
   permission; the performance advisors add notes on the new tables. The
   screens went live with
   [pull request #33](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/33).
+
+- **What to buy (release T, migration `0045`).** The running-out and
+  reorder-level alerts named one item at a time, with no supplier, no pack,
+  and nothing already ordered counted, so buying was worked out by hand. Now
+  **Purchasing → What to buy** lists every item bought (those made here are
+  left to Production) with what it has on hand, on order and in draft orders,
+  its use a day over the last 28 days and the days a delivery takes, and so
+  its reorder level: its own, set on the item, or the use until a delivery
+  comes and a day more. An item below it is to order, up to its par
+  level (or the reorder level and a week of use), in whole packs, from its
+  usual supplier or the one its last delivery came from, at the price agreed
+  or last paid; each line says why, with its numbers. An item with under a
+  week of history says so, and one not used lately needs nothing; any of them
+  can be added by hand. The buyer ticks what to order, changes a quantity,
+  pack, price or supplier, can make a supplier the item's usual one, and
+  creates the orders: a draft for each supplier, expected in its own delivery
+  days, for a manager to approve as any order. Drafted, an item is not
+  suggested again. On an item's page, **Bought from** keeps its suppliers,
+  the pack each sends and a pack's price, and the usual one, each change on
+  the audit trail. The dashboard's alerts for an item bought that is running
+  out or below its reorder level now open What to buy. Built and tested: a new SQL suite, a new browser suite
+  through the real screens (the list and its reasons, suppliers and packs
+  chosen, two orders drafted once, the item's suppliers set and removed, a
+  cashier kept out, the trail, the screens in Arabic and Kurdish, the books
+  still tying), unit tests, and every new text in Arabic and Kurdish.
 
 ## The August 2026 audit, finding by finding
 

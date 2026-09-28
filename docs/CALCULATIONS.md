@@ -237,6 +237,41 @@ and a cancelled batch in "used in batches" or "made", so each line is what
 really happened. Every movement is listed with the quantity and value on hand
 after it.
 
+### What to buy (`0045`)
+
+For a location, each item bought (not an active batch recipe's output):
+
+```
+has        = on hand + on order (approved and sent orders, what they still wait for)
+             + in draft orders
+history    = days since the item was first at the location
+days       = min(28, history)
+used       = − Σ movements over the last 28 days that the stock card counts as
+             sold, used in batches, or wasted and given away (voids, refunds
+             back on the shelf and losses taken back net them off)
+use a day  = used ÷ days                       (none with under 7 days of history)
+lead       = the supplier's delivery days, else the café's (lead_time_days, 1)
+reorder    = the item's reorder level, when it has one
+             else use a day × (lead + 1) + safety stock
+up to      = par level, else the most it holds, else reorder + 7 × use a day,
+             else reorder; never below reorder
+to order   when has < reorder (below it, as the alert says; at it is enough):
+             packs = max(⌈(up to − has) ÷ pack⌉, 1)
+```
+
+With no reorder level of its own, an item with under 7 days of history has
+**not enough history**; one not used in 28 days needs nothing.
+
+Milk, 2,000 ml on hand, 1,000 ml a day for 25 days, a dairy two days away,
+by the litre carton: reorder = 1,000 × 3 = 3,000; up to = 3,000 + 7,000 =
+10,000; 2,000 < 3,000, so ⌈8,000 ÷ 1,000⌉ = 8 cartons.
+
+**A pack's price:** the newer of the price agreed with the supplier and their
+last delivery's (its goods' value ÷ its base quantity × the pack, before
+freight), else what the item costs now × the pack, to be checked. Changing a
+line's pack keeps its price per base unit (1.5 a millilitre is 1,500 a
+carton) and works its packs out again.
+
 ## 7. Counting & variance
 
 - `quantityVariance = counted − expected` (negative = shrinkage);

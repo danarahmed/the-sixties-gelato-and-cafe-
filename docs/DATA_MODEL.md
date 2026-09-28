@@ -28,6 +28,8 @@ erDiagram
   item ||--o{ item_lot : "lot/expiry"
 
   supplier ||--o{ purchase_order : from
+  item ||--o{ item_supplier : "bought from"
+  supplier ||--o{ item_supplier : "sells, by the pack"
   purchase_order ||--o{ purchase_order_line : has
   goods_receipt ||--o{ goods_receipt_line : receives
   goods_receipt_line ||--o| inventory_movement : posts
@@ -1140,3 +1142,41 @@ amount, key)` (`accounting.post`) sets what is left of a credit against a
   the orders made in the dates, those still open, the prices that changed
   from a supplier's delivery before, the returns and the credits, and their
   totals.
+
+### The buying list (`0045`)
+
+- **`item_supplier`** (item, supplier, `pack_unit_code` — one of the item's
+  units —, `last_price` a pack's and `last_price_on`, `preferred`,
+  `updated_by/at`): who an item is bought from; one row a supplier an item,
+  one `preferred` (the usual supplier) an item at most. Readable by those who
+  see costs; written only through the functions below. Kept when the test
+  records are cleared, as the suppliers and items are.
+- **`set_item_supplier(item, supplier, pack_unit, price, usual, key)`** and
+  **`remove_item_supplier(item, supplier, key)`** (`purchase.create`): a price
+  left out keeps the one agreed before; making one usual makes the one before
+  it not. On the trail: `item.supplier.set` (the supplier, pack, price and
+  whether usual, before and after, and whose place it took) and
+  `item.supplier.remove`, as the item's.
+- **`buying_list(location)`** (`cost.view`; the first branch when none is
+  named): each item in use that is not an active batch recipe's output, with
+  `on_hand`, `on_order` (what approved and sent orders for the location still
+  wait for), `in_draft`, `position` (their sum), the open orders it is on,
+  `history_days`, `days` and `used` (sold, used in batches, wasted, as
+  `stock_card_kind` counts them, over 28 days or the history when shorter),
+  `daily_use`, `lead_time` (the supplier's or the café's `lead_time_days`),
+  `reorder_level` (the item's `min_level_base`, or from the use),
+  `safety_stock`, `target_level` (par, max, the reorder level and a week of
+  use, or the reorder level), `status` (`order`, `enough`, `no_history`,
+  `not_used`), the supplier and why it is suggested, the pack and what it
+  holds, `packs` and `qty_base`, a pack's `price` and where it comes from
+  (`agreed`, `delivery`, `cost`), and `choices`: every supplier the item came
+  from in the last year or is set with, each with its pack and price.
+- **`purchase_orders_from_list(lines, location, key)`** (`purchase.create`):
+  lines `[{item_id, supplier_id, qty, unit_code, unit_price, usual}]`, at most
+  300: a draft order for each supplier through `save_po`, expected in the
+  supplier's delivery days, with no note; then each line's pack and price kept
+  in `item_supplier`, and the supplier made the item's usual one where the
+  line says so. Returns the orders drafted.
+- **`alert_conditions`** wraps 0040's (`alert_conditions_0040`): running out
+  and below the reorder level, for an item that no active batch recipe makes,
+  link to `/purchasing/buying-list`; everything else is as it was.

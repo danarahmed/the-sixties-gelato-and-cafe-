@@ -2,12 +2,14 @@ import Link from "next/link";
 import { getMsg, getT } from "@/lib/i18n/server";
 import type { T } from "@/lib/i18n/core";
 import { has, requirePermission } from "@/lib/auth/session";
-import { getItem, getItemPriceHistory } from "@/lib/db/read";
+import { getItem, getItemPriceHistory, getSuppliers } from "@/lib/db/read";
+import { getItemSuppliers } from "@/lib/db/buying";
 import { getStockCard, type StockCardKind, type StockCardRow } from "@/lib/db/reports";
 import { fmtIQD, fmtQty, itemTypeLabel, movementLabel } from "@/lib/format";
 import { businessToday, dateTimeIn, monthStart, parseDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui";
 import { EditItem, PackUnits } from "@/components/ItemEditor";
+import { ItemSuppliers } from "@/components/purchasing/ItemSuppliers";
 
 export const dynamic = "force-dynamic";
 
@@ -59,9 +61,11 @@ export default async function StockCardPage({
       </div>
     );
   }
-  const [card, prices] = await Promise.all([
+  const [card, prices, links, suppliers] = await Promise.all([
     getStockCard(item.id, from, to),
     getItemPriceHistory(item.id),
+    getItemSuppliers(item.id),
+    getSuppliers(),
   ]);
   const canEdit =
     has(profile, "settings.manage") ||
@@ -274,6 +278,14 @@ export default async function StockCardPage({
       </section>
 
       <PackUnits item={item} canAdd={canEdit} />
+      <ItemSuppliers
+        itemId={item.id}
+        units={item.units.map((u) => ({ code: u.code, label: u.label }))}
+        links={links}
+        suppliers={suppliers.map((s) => ({ id: s.id, name: s.name }))}
+        // Whoever drafts orders sets who an item is bought from (0045), while it is in use.
+        canEdit={item.isActive && has(profile, "purchase.create")}
+      />
       {canEdit && <EditItem item={item} />}
     </div>
   );
