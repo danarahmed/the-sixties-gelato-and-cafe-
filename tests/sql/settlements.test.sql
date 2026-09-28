@@ -227,5 +227,5 @@ select test.eq((select urgency || ' ' || confidence || ': ' || title from alert_
 select test.act_as('owner@example.com');
 select test.throws($$select * from card_settlement$$, '%permission denied%', 'card settlements are read through their functions');
 select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from report_reconciliation(test.today())),
-  'card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,platform=2000,safe=0,sales=0',
+  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=2000,safe=0,sales=0',
   'and the books tie but for the payout typed by hand: 1100 holds 2,000 less than the orders owed');

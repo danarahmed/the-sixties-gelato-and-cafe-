@@ -40,10 +40,14 @@ insert into keyed values
   ('record_loss'), ('record_opening_stock'), ('record_production'), ('record_waste'), ('refund_sale'),
   ('reject_stock_count'),
   ('reverse_journal'), ('save_batch_recipe'), ('save_category'), ('save_journal'), ('save_tab'), ('save_table'),
-  ('set_batch_use_by'), ('set_fx_rate'), ('set_price'), ('split_tab'), ('start_stock_count'), ('submit_stock_count'), ('unlock_period'), ('void_sale');
+  ('set_batch_use_by'), ('set_fx_rate'), ('set_price'), ('split_tab'), ('start_stock_count'), ('submit_stock_count'), ('unlock_period'), ('void_sale'),
+  ('add_attendance'), ('adjust_payroll_line'), ('approve_payroll'), ('cancel_advance'), ('cancel_attendance'),
+  ('cancel_salary_payment'), ('clock_in'), ('clock_out'), ('correct_attendance'), ('draft_payroll'), ('pay_payroll'),
+  ('pay_salary'), ('record_advance'), ('reopen_payroll'), ('save_employee'), ('save_schedule'), ('set_employee_left'),
+  ('set_employee_pay');
 grant select on keyed to public;
-select test.eq((select count(*) from keyed)::int, 66,
-  'sixty-seven kinds of write are keyed: sixty-six open, the old drawer count closed since 0037');
+select test.eq((select count(*) from keyed)::int, 84,
+  'eighty-five kinds of write are keyed: eighty-four open, the old drawer count closed since 0037');
 select test.eq((select string_agg(p.proname, ', ') from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                  where n.nspname = 'public' and p.proname in ('count_drawer', 'count_drawer__run')
                    and (has_function_privilege('authenticated', p.oid, 'execute')

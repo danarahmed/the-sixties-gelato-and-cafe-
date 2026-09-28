@@ -88,6 +88,30 @@ select test.act_as('cashier@example.com');
 select open_tab('dine_in', (select id from dining_table where name = 'Table 9'), 'Late customer', null,
   '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]'::jsonb, null, null);
 
+-- Someone who works here: their schedule and hours, a wrong PIN at the till,
+-- an advance, and last month's payroll approved and paid (0049).
+select test.act_as('owner@example.com');
+create temp table rana as select save_employee(null, 'Rana', null, 'Barista',
+  (select id from location where name = 'Main Branch'), (date_trunc('month', test.today()) - interval '1 month')::date, null) r;
+grant select on rana to public;
+select set_employee_pay((select (r ->> 'employee_id')::uuid from rana), 'monthly', 500000);
+select set_clock_pin((select (r ->> 'employee_id')::uuid from rana), '2580');
+select save_schedule(null, test.today(), test.today(), jsonb_build_array(jsonb_build_object(
+  'employee_id', (select (r ->> 'employee_id')::uuid from rana), 'day', test.today(), 'starts', '08:00', 'ends', '16:00')));
+select add_attendance((select (r ->> 'employee_id')::uuid from rana),
+  ((date_trunc('month', test.today()) - interval '1 month')::date + 2 + time '08:00') at time zone 'Asia/Baghdad',
+  ((date_trunc('month', test.today()) - interval '1 month')::date + 2 + time '16:00') at time zone 'Asia/Baghdad',
+  'the till was down');
+select test.act_as('cashier@example.com');
+select clock_in((select (r ->> 'employee_id')::uuid from rana), '2580');
+select clock_in((select (r ->> 'employee_id')::uuid from rana), '0000');
+select test.act_as('owner@example.com');
+select record_advance((select (r ->> 'employee_id')::uuid from rana), 20000, 'bank', 'rent');
+create temp table pr as select draft_payroll((date_trunc('month', test.today()) - interval '1 month')::date) r;
+grant select on pr to public;
+select approve_payroll((select (r ->> 'run_id')::uuid from pr));
+select pay_payroll((select (r ->> 'run_id')::uuid from pr), 'bank');
+
 -- The owner opens the dashboard: its alerts are kept, one acknowledged; and a
 -- threshold is changed.
 select test.act_as('owner@example.com');

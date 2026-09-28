@@ -335,8 +335,40 @@ ok "$(sql "select trim_scale((item_position('00000000-0000-0000-0000-0000000000b
                                              default_location('00000000-0000-0000-0000-0000000000b1'))).qty)")" "17" \
    "and three biscuits left the shelf"
 
+# 0049 — ten tills clock the same person in at the same instant: one record
+# of hours, and nine are told they are clocked in already.
+sql "insert into employee (id, business_id, location_id, full_name, hired_on, pay_basis, rate, standard_hours,
+                           clock_pin_hash, clock_pin_set_at)
+     values ('e0000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b1',
+             default_location('00000000-0000-0000-0000-0000000000b1'), 'Race Sara',
+             (date_trunc('month', test.today()) - interval '1 month')::date, 'monthly', 300000, 8,
+             extensions.crypt('2580', extensions.gen_salt('bf', 8)), now());" >/dev/null
+race 10 cashier@example.com "select clock_in('e0000000-0000-0000-0000-0000000000c1', '2580') ->> 'error'"
+ok "$(sql "select count(*) from attendance where employee_id = 'e0000000-0000-0000-0000-0000000000c1'")" "1" \
+   "ten tills clock the same person in at once: one record of hours"
+ok "$(grep -l "clocked in already" "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and nine are told they are clocked in already"
+
+# 0049 — ten people draft last month's payroll at the same instant: one
+# payroll, and each of them is given it.
+sql "select test.act_as('manager@example.com');
+     select add_attendance('e0000000-0000-0000-0000-0000000000c1',
+       (((date_trunc('month', test.today()) - interval '1 month')::date + 3) + time '08:00') at time zone 'Asia/Baghdad',
+       (((date_trunc('month', test.today()) - interval '1 month')::date + 3) + time '16:00') at time zone 'Asia/Baghdad',
+       'race');" >/dev/null
+race 10 owner@example.com "select draft_payroll((date_trunc('month', test.today()) - interval '1 month')::date) ->> 'run_no'"
+ok "$(sql "select count(*) || ' ' || max(run_no) from payroll_run")" "1 1" "ten people draft the same month at once: one payroll"
+ok "$(grep -lx "1" "$WORK"/*.out | wc -l | tr -d ' ')" "10" "and each of them is given it"
+
+# 0049 — approved, ten people pay the same salary in full at the same instant:
+# it is paid once, and nine are told it is paid in full already.
+sql "select test.act_as('owner@example.com'); select approve_payroll((select id from payroll_run));" >/dev/null
+race 10 owner@example.com "select pay_salary((select id from payroll_line), null, 'bank') ->> 'amount'"
+ok "$(sql "select count(*) || ' ' || sum(amount) from salary_payment")" "1 300000" \
+   "ten people pay the same salary at once: it is paid once, in full"
+ok "$(grep -l "paid in full already" "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and nine are told it is paid in full already"
+
 # The books still tie after all of it.
 ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(test.today())")" \
-   "0,0,0,0,0,0,0,0,0,0" "every subledger still reconciles to its control account"
+   "0,0,0,0,0,0,0,0,0,0,0,0" "every subledger still reconciles to its control account"
 
 [ "$FAILED" -eq 0 ]

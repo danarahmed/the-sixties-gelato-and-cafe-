@@ -63,8 +63,11 @@ select test.eq((select string_agg((x ->> 'key') || ' ' || (x ->> 'scope_type')
                                   order by x ->> 'key', x ->> 'scope_type', x ->> 'scope_id')
                   from jsonb_array_elements(list_business_rules() -> 'rows') x
                  where x ->> 'key' not in ('discount_round_to')),
-  'discount_cap_percent business = 10 (default); negative_stock business = alert (default); '
+  'clocked_in_alert_hours business = 16 (default); '
+  'discount_cap_percent business = 10 (default); late_after_minutes business = 5 (default); '
+  'negative_stock business = alert (default); '
   'negative_stock item_type finished_good = block (default); negative_stock item_type sub_recipe_output = block (default); '
+  'overtime_percent business = 150 (default); payday business = 1 (default); '
   'po_approve_up_to business = 250000 (default); po_approve_up_to role general_manager = 1000000000 (default); '
   'po_approve_up_to role owner = 1000000000 (default); '
   'refund_approval_over business = 25000 (default); usd_rate_max_age_hours business = 36 (default); '
