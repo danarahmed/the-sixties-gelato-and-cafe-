@@ -820,7 +820,29 @@ browser tests through the real app, or both.
   suggested again. On an item's page, **Bought from** keeps its suppliers,
   the pack each sends and a pack's price, and the usual one, each change on
   the audit trail. The dashboard's alerts for an item bought that is running
-  out or below its reorder level now open What to buy. Built and tested: a new SQL suite, a new browser suite
+  out or below its reorder level now open What to buy. The migration was
+  applied to the live database on 28 September 2026. The text stored there is
+  the file byte for byte, and it matches the tested build object by object,
+  permissions included (the one difference, as before, is the schema `citext`
+  lives in). It was checked as the owner and the barista, in a transaction
+  that was rolled back:
+  - the barista could not read the list, set an item's supplier or draft an
+    order from it;
+  - the list held the café's 11 bought items, the made ones left out: tea,
+    under its own reorder level with no supplier yet, was to order;
+  - the coffee beans, given a usual supplier by the kilo at 28,730 and levels
+    above what is on hand, were to order: 5 kg, up to the par level, from that
+    supplier at that price;
+  - drafted from the list, one order (143,650, expected the next day); sent
+    again with its key, none more; drafted, the beans had enough;
+  - the supplier removed, and not twice; no journal or stock movement was
+    written, and all ten checks stayed at zero.
+
+  Nothing was kept: every table's count is as it was, and the new table is
+  empty. The security advisors add the four new functions a signed-in person
+  calls, each checking its permission; the performance advisors add two notes
+  on the new table. The screens went live with
+  [pull request #34](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/34). Built and tested: a new SQL suite, a new browser suite
   through the real screens (the list and its reasons, suppliers and packs
   chosen, two orders drafted once, the item's suppliers set and removed, a
   cashier kept out, the trail, the screens in Arabic and Kurdish, the books

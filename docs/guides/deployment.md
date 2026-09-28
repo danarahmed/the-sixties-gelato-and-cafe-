@@ -42,6 +42,7 @@ Plan a short window when the café is closed.
 | Split payments (`0042`)                 | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0042`](#after-0042)). The screens were merged ([pull request #31](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/31)) and deployed                                  |
 | US dollars at the till (`0043`)         | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0043`](#after-0043)). The screens were merged ([pull request #32](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/32)) and deployed                  |
 | Purchasing (`0044`)                     | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0044`](#after-0044)). The screens were merged ([pull request #33](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/33)) and deployed                  |
+| What to buy (`0045`)                    | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0045`](#after-0045)). The screens were merged ([pull request #34](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/34)) and deployed                  |
 
 ## 0. Before you start
 
@@ -1401,6 +1402,74 @@ The security advisor adds the thirteen functions above and lists
 performance advisor adds notes that twenty of the new tables' links have no
 index of their own and that one new index is not used yet; three older notes
 are gone, the new indexes covering them.
+
+## After `0045`
+
+Migration `0045` (release T) adds the buying list:
+
+- **What to buy** (Purchasing → Open What to buy): every item bought, for the
+  branch, with what is on hand, on order and in draft orders, its use a day
+  over the last 28 days and the days a delivery takes, its reorder level (its
+  own, or the use until a delivery comes and a day more) and the level it is
+  ordered up to (its par level, or a week of use more); how much to order, in
+  whole packs, from its usual supplier or its last delivery's, at the price
+  agreed or last paid; each line saying why. An item below its reorder level
+  is to order; too little history, and not used lately, are said.
+- **Draft orders from it**, one for each supplier, expected in the supplier's
+  own delivery days; drafted, an item is not suggested again.
+- **Who an item is bought from** (**Bought from** on the item's page): the
+  pack each supplier sends, a pack's price, and the usual one.
+- The running-out and reorder-level alerts for an item bought open What to
+  buy.
+
+What it adds:
+
+- the table `item_supplier`, readable only by those who see costs and written
+  only through the functions below;
+- the functions signed-in users may call: `buying_list` (`cost.view`),
+  `set_item_supplier`, `remove_item_supplier` and `purchase_orders_from_list`
+  (`purchase.create`, each keyed), each checking its permission;
+- `alert_conditions` wrapped (0040's kept as `alert_conditions_0040`, called
+  by nobody signed in): the link of running out and below the reorder level,
+  for an item bought, is `/purchasing/buying-list`.
+
+It goes in before the screens: those deployed before it keep working, since
+nothing they call changes, and the new ones show What to buy.
+
+It was applied on 28 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0044` build. The text stored there
+is the file byte for byte (md5 `7e0bc92e7c4019f9f417bbbf235ff9a1`, 29,302
+bytes). It was then compared with the tested build, object by object, the role
+permissions and column grants included: identical, but for the schema `citext`
+lives in, as before.
+
+It was checked as the owner and the barista, in a transaction that was rolled
+back:
+
+- **Refused:** the barista reading the list, setting an item's supplier, and
+  drafting from the list.
+- **The list:** the café's 11 bought items (none made here among them); tea,
+  under its own reorder level of 5 with none on hand and no supplier yet, to
+  order; the rest enough.
+- **A supplier set:** the coffee beans by the kilo at 28,730 from the first
+  supplier, as the usual one; with a reorder level of 13,890 g and a par level
+  of 17,890 g against 12,890 g on hand, to order: 5 × kg up to the par level,
+  from that supplier at that price, the café's day for delivery.
+- **Drafted:** one order, 143,650, expected the next day; sent again with the
+  same key, the same answer and no second order; drafted, the beans had
+  enough (5,000 g in a draft).
+- **Removed:** the supplier, once; a second time refused.
+- **The books:** no journal, no stock movement; all ten checks at zero before
+  and after.
+
+Nothing was kept: every table's count is as it was (286 stock movements,
+journals to 1091, 35 audit rows, no purchase order); the new table is empty.
+
+The security advisor adds the four functions above, each checking its
+permission. The performance advisor adds a note that the new table's link to
+who changed it last has no index of its own, and that one new index is not
+used yet.
 
 ## Clearing the test records
 
