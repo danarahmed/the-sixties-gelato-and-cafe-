@@ -7,11 +7,11 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0046` and the rebuilt app. The SQL
-  checks (48, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (24, every role, every screen in
+- **Built and verified:** migrations `0014`–`0048` and the rebuilt app. The SQL
+  checks (49, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (25, every role, every screen in
   Arabic and Kurdish, and a lost answer on each kind of screen), the unit and
-  contract tests (403) and a production build all pass.
+  contract tests (412) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -909,6 +909,36 @@ browser tests through the real app, or both.
   used by it, one recorded late past its use-by, the alert, its use-by
   changed, its page, the plan), unit tests, and every new text in Arabic and
   Kurdish.
+
+- **Losses by kind, giveaways at the till, and the loss report (release V,
+  migrations `0047` and `0048`).** Every kind of loss went to 5300 Waste &
+  spoilage, a staff meal and a drink on the house as much as milk gone off,
+  and a staff meal at the till was a discount or nothing at all. Now each kind
+  of loss has its account: waste, spoilage, expired, damaged and melt to 5300;
+  what is lost making a batch or preparing to sell (two new kinds) to 5310
+  Production and preparation loss; a staff meal to 6110 Staff meals, on the
+  house to 6610 Complimentary items, a sample to 6620 Marketing samples.
+  **Inventory → Record a loss** asks the kind first, saying what it means and
+  where it is charged, then an item (from the batch named, for one kept by
+  batch) or a product as its recipe makes it, and why; the café's rules still
+  decide who approves it, and a loss that waits is approved or reversed whole.
+  **Give away** on the till gives what is in the cart, with its add-ons, as a
+  staff meal, on the house or a sample, with why: no revenue and no payment,
+  its cost to its own account, a turn number and the barista's ticket, a
+  manager's PIN on the spot over the limit. It is a loss, not a sale: the
+  sales, the drawer and the order counts are as they were. **Reports → Losses**
+  gives what was lost in the dates by kind with its account, by item and by
+  person, the giveaways, and each loss, what waits and what was reversed
+  apart. The alerts count 5310 as waste and the new kinds as use. Built and
+  tested: a new SQL suite (each kind to its account, a product lost as made, a
+  batch named, the rules added up, a loss waiting approved and reversed whole,
+  giveaways with add-ons and turn numbers, record_waste as before, the report,
+  the books and the records checked, 5310 closed to bills, expenses and
+  credits), a giveaway race in the concurrency script, the alerts suite
+  extended, a new browser suite (a product lost in preparation, a batch named,
+  a staff meal given away and printed for the bar, one over the limit with a
+  manager's PIN, the report, the screens in Arabic and Kurdish), unit tests,
+  and every new text in Arabic and Kurdish.
 
 ## The August 2026 audit, finding by finding
 

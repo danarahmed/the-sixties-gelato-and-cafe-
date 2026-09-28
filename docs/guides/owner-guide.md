@@ -56,7 +56,7 @@ unverified until it is corrected ([`../REMEDIATION.md`](../REMEDIATION.md)).
 | General manager   | Everything except reopening a locked month                                                                                                          |
 | Branch manager    | Sells, voids and refunds, opens and closes the drawer, receives stock, approves purchase orders up to their limit, reviews counts, records expenses |
 | Cashier           | Sells; opens and closes the drawer                                                                                                                  |
-| Barista           | Sells, opens and closes the drawer, records waste                                                                                                   |
+| Barista           | Sells, gives away, opens and closes the drawer, records losses                                                                                      |
 | Inventory counter | Counts stock, blind                                                                                                                                 |
 | Purchasing        | Adds suppliers, drafts purchase orders, receives goods and returns them, records bills and credit notes                                             |
 | Accountant        | Expenses, journals, locking months, the reports                                                                                                     |
@@ -110,7 +110,8 @@ rule shows what it does, who set it, when and why, and every change is kept:
   added up — one person's over their cash session (or their day), and an
   item's over the day by anyone, so small losses cannot slip through one at a
   time. Over it, a manager types their PIN, or the loss waits for one under
-  **Needs you**.
+  **Needs you**. The same limit holds for what is given away at the till,
+  where a manager's PIN is asked there and then.
 - **Using more stock than the books hold**: what is made here is refused by
   default, and everything else is sold with a red alert on the dashboard. Set
   an item, or a kind of item, to **Refused** once it is counted reliably, or
@@ -420,7 +421,18 @@ discount, why and who approved it. The 10% is a business setting (shown on
   the [counting guide](counting-guide.md)).
 - **Losses waiting for approval:** a loss over the limit that a barista saved
   to wait is on the dashboard and on **Inventory**. Approve it, or reverse one
-  that did not happen, with a reason.
+  that did not happen, with a reason; a product lost is approved or reversed
+  whole.
+- **What is lost, by kind (`0048`):** each loss is recorded as what it is, and
+  charged to its own account: waste, spoilage, expired, damaged and melt to
+  5300 Waste & spoilage; what is lost making a batch or preparing to sell to
+  5310 Production and preparation loss (both are cost of sales); a staff meal
+  to 6110 Staff meals, on the house to 6610 Complimentary items and a sample
+  to 6620 Marketing samples (expenses, below the gross profit). Staff meals,
+  drinks on the house and samples are given away at the till (**🎁 Give
+  away…**), with why; ingredients are recorded on **Inventory → Record a
+  loss**. **Reports → Losses** shows what was lost in any dates, by kind and
+  account, by item and by person, and every giveaway.
 - **Usage:** after the count, open **Usage** for what each item used since the
   last count against what its recipes say. Red is stock gone that nothing
   explains; look at what may explain it beside each item, and at the item's
@@ -474,7 +486,8 @@ line (CSV)** gives your accountant the whole ledger.
 
 ## Golden rules
 
-- Enter waste when it happens: it keeps stock and cost right.
+- Record a loss when it happens, as the kind it is, and give away at the till
+  rather than discount to nothing: it keeps stock, cost and each account right.
 - Ring each order on the right channel: the packaging depends on it.
 - Replace the example prices and costs with your own before relying on margins.
 - Give everyone their own login, and deactivate leavers the same day.

@@ -225,7 +225,7 @@ select test.eq((select string_agg(distinct (v ->> 'status'), ',') from res where
   'a manager''s own loss is approved as it is recorded');
 select test.eq((select count(*) || ' ' || string_agg(distinct entity_type, ',') from audit_log
                  where action = 'inventory.loss'), '6 stock_loss', 'each on the audit trail, as a loss');
-select test.eq((select after_state ->> 'kind' || ' ' || (after_state ->> 'account') from audit_log
+select test.eq((select after_state ->> 'movement' || ' ' || (after_state ->> 'account') from audit_log
                  where action = 'inventory.loss' and entity_id = pg_temp.r('K_preparation_waste') ->> 'loss_id'),
   'preparation_waste 5310', 'with its kind and its account');
 select test.act_as('manager@example.com');

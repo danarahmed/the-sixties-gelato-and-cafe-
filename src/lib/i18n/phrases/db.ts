@@ -2199,6 +2199,60 @@ const phrases: PhraseBook = {
     ar: "يُصنع على دفعات: يُحفظ مخزونه دفعةً دفعة ابتداءً من دفعته التالية",
     ckb: "بە دەستە دروست دەکرێت: کۆگاکەی لە دەستەی داهاتوویەوە دەستە بە دەستە هەڵدەگیرێت",
   },
+  // Losses by kind, giveaways at the till, and the loss report (0048).
+  "Choose what kind of loss it is": { ar: "اختر نوع الخسارة", ckb: "جۆری زیانەکە هەڵبژێرە" },
+  "At the till, a staff meal, on the house or a sample is given away": {
+    ar: "على نقطة البيع لا يُهدى إلا وجبة موظف أو ضيافة من المحل أو عيّنة",
+    ckb: "لەسەر خاڵی فرۆشتن تەنها خواردنی کارمەند، میوانداری یان نموونە دەبەخشرێت",
+  },
+  "Say why it is given away": { ar: "اذكر سبب الإهداء", ckb: "بڵێ بۆچی دەبەخشرێت" },
+  "Choose what was lost": { ar: "اختر ما فُقد", ckb: "ئەوەی لەدەستچووە هەڵبژێرە" },
+  "At most 50 lines at once": {
+    ar: "50 سطرًا على الأكثر في المرة الواحدة",
+    ckb: "لە یەک جاردا زۆرترین 50 دێڕ",
+  },
+  "Choose an item or a product that was lost": {
+    ar: "اختر مادة أو منتجًا فُقد",
+    ckb: "کاڵایەک یان بەرهەمێکی لەدەستچوو هەڵبژێرە",
+  },
+  "At the till, products are given away": {
+    ar: "على نقطة البيع تُهدى المنتجات",
+    ckb: "لەسەر خاڵی فرۆشتن بەرهەمەکان دەبەخشرێن",
+  },
+  "That batch is not of this item, here": {
+    ar: "هذه الدفعة ليست من هذه المادة، هنا",
+    ckb: "ئەو دەستەیە هی ئەم کاڵایە نییە، لێرە",
+  },
+  "A batch is named for an item, not a product": {
+    ar: "تُذكر الدفعة لمادة، لا لمنتج",
+    ckb: "دەستە بۆ کاڵایەک دیاری دەکرێت، نەک بۆ بەرهەمێک",
+  },
+  "{1} uses no stock: nothing is lost with it": {
+    ar: "{1} لا يستهلك مخزونًا: لا يُفقد معه شيء",
+    ckb: "{1} هیچ کۆگایەک بەکارناهێنێت: هیچی لەگەڵدا لەدەست ناچێت",
+  },
+  "Nothing given uses any stock: there is nothing to record": {
+    ar: "لا شيء مما قُدّم يستهلك مخزونًا: لا شيء يُسجَّل",
+    ckb: "هیچ شتێکی دراو کۆگا بەکارناهێنێت: هیچ نییە تۆمار بکرێت",
+  },
+  "Only {1} {2} of batch {3} is left": {
+    ar: "بقي {1} {2} فقط من الدفعة {3}",
+    ckb: "تەنها {1} {2} لە دەستەی {3} ماوە",
+  },
+  "Give it away as a staff meal, on the house or a sample": {
+    ar: "قدّمه وجبة موظف أو ضيافة من المحل أو عيّنة",
+    ckb: "وەک خواردنی کارمەند، میوانداری یان نموونە بیبەخشە",
+  },
+  "What is given away is eaten in or taken away": {
+    ar: "ما يُهدى يؤكل في المحل أو يؤخذ سفري",
+    ckb: "ئەوەی دەبەخشرێت لە شوێن دەخورێت یان دەبرێت",
+  },
+  "a loss (correct stock with a count or a stock correction)": {
+    ar: "خسارة (صحّح المخزون بجرد أو بتصحيح مخزون)",
+    ckb: "زیانێک (کۆگا بە ژماردن یان ڕاستکردنەوەی کۆگا ڕاست بکەرەوە)",
+  },
+  "A loss with no journal": { ar: "خسارة بلا قيد", ckb: "زیانێک بێ تۆمار" },
+  loss: { ar: "الخسارة", ckb: "زیان" },
 };
 
 export default phrases;

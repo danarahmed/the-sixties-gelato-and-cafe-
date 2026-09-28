@@ -1585,7 +1585,8 @@ with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/res
    which gains one line saying what was cleared.
 2. It clears sales (with their add-ons), open bills, voids and refunds, cash
    sessions, drawer counts and cash moved (each branch keeps its drawer), stock
-   movements and the reviews of losses, counts and batches with their lots
+   movements, losses and giveaways and their reviews, counts and batches with
+   their lots
    (what was made stays kept batch by batch, from nothing), purchase orders,
    deliveries, returns to suppliers, supplier bills, payments and credits,
    expenses, every journal and period, and the document numbers (journals

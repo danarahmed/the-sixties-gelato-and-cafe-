@@ -387,6 +387,40 @@ Worked example (the SQL test, a limit of 500): a barista's first 30 g of beans
 barista's 20 g (200) is under the limit alone, but the beans' losses today
 would be 800, so a manager approves it with their PIN.
 
+### Losses by kind, and giveaways (`0048`)
+
+A loss is recorded whole: an item in any of its units, or a product as its
+recipe makes it (to eat in on Inventory; at the till as the till's channel
+makes it, with its add-ons). What each line takes is added up item by item
+(and by batch, when one is named); each item's movement is valued once, at
+its average cost now, rounded to the dinar; the loss's value is the sum of its
+movements, and one journal carries it: Dr the kind's account, Cr 1200
+Inventory. Each line's share of it is its items' quantities at their costs,
+rounded, the largest line taking what rounding leaves, so the lines add up to
+the loss.
+
+| Kind                                                  | Account                              |
+| ----------------------------------------------------- | ------------------------------------ |
+| waste, spoilage, expired, damaged, melt / evaporation | 5300 Waste & spoilage                |
+| production waste, preparation waste                   | 5310 Production and preparation loss |
+| staff consumption (a staff meal)                      | 6110 Staff meals                     |
+| complimentary (on the house)                          | 6610 Complimentary items             |
+| sampling (a sample)                                   | 6620 Marketing samples               |
+
+5300 and 5310 are cost of sales, in the gross profit; 6110, 6610 and 6620 are
+expenses below it. The approval is as above, on the loss's whole value and on
+each of its items' day. A batch named gives what the loss takes, and no more
+than it holds.
+
+Worked example (the SQL test): two espressos given away as a staff meal, eaten
+in, are 40 g of beans at 10: 400 IQD, Dr 6110, Cr 1200. One on the house to
+take away is 20 g of beans and its cup: 200 + 50 = 250 IQD to 6610. A sample
+with a shot of syrup (10 ml of milk at 1.5) is 200 + 15 = 215 IQD to 6620.
+
+The report adds up the losses in the dates that were not reversed: by kind
+(with the account each went to; a loss from before `0048`, to 5300), by item,
+by person and by day; what waits for a manager is counted, and said apart.
+
 ### Usage against the recipes (`0039`)
 
 Between two approved counts of an item at a location — from its line in the

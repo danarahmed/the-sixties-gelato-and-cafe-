@@ -58,6 +58,8 @@ const MOVEMENT_LABEL: Record<string, string> = {
   expired: "Expired",
   damaged: "Damaged",
   melt_evaporation: "Melt / evaporation",
+  production_waste: "Production waste",
+  preparation_waste: "Preparation waste",
   staff_consumption: "Staff consumption",
   complimentary: "Complimentary",
   sampling: "Sampling",
@@ -71,18 +73,6 @@ const MOVEMENT_LABEL: Record<string, string> = {
 export function movementLabel(t: string): string {
   return MOVEMENT_LABEL[t] ?? t.replace(/_/g, " ");
 }
-
-/** Waste types a person may record (the database accepts exactly these). */
-export const WASTE_TYPES = [
-  "waste",
-  "spoilage",
-  "expired",
-  "damaged",
-  "melt_evaporation",
-  "staff_consumption",
-  "complimentary",
-  "sampling",
-] as const;
 
 const ORDER_STATUS_LABEL: Record<string, string> = {
   open: "Open",

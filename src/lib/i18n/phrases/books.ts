@@ -394,10 +394,10 @@ const phrases: PhraseBook = {
     ckb: "لە {account} {name} تۆمار کرا (تۆماری {no}).",
   },
   // The account the house rules propose (src/lib/bookkeeping/rules.ts), shown through msg().
-  "“{1}” sounds like stock that was lost. Record it on Inventory → Record waste instead, so the stock and its cost come out together. Only post it here if it really is a bought-in service.":
+  "“{1}” sounds like stock that was lost. Record it on Inventory → Record a loss instead, so the stock and its cost come out together. Only post it here if it really is a bought-in service.":
     {
-      ar: "يبدو أن «{1}» مخزون فُقد. سجّله بدلًا من ذلك في المخزون ← تسجيل هدر، ليخرج المخزون وكلفته معًا. لا ترحّله هنا إلا إذا كان فعلًا خدمة مشتراة.",
-      ckb: "«{1}» وەک کۆگایەکی لەدەستچوو دەردەکەوێت. لە جیاتی ئەوە لە کۆگا ← تۆمارکردنی بەفیڕۆچوون تۆماری بکە، بۆ ئەوەی کۆگاکە و تێچووەکەی پێکەوە دەربچن. تەنها ئەگەر بەڕاستی خزمەتگوزارییەکی کڕدراو بێت لێرە تۆماری بکە.",
+      ar: "يبدو أن «{1}» مخزون فُقد. سجّله بدلًا من ذلك في المخزون ← تسجيل خسارة، ليخرج المخزون وكلفته معًا. لا ترحّله هنا إلا إذا كان فعلًا خدمة مشتراة.",
+      ckb: "«{1}» وەک کۆگایەکی لەدەستچوو دەردەکەوێت. لە جیاتی ئەوە لە کۆگا ← تۆمارکردنی زیان تۆماری بکە، بۆ ئەوەی کۆگاکە و تێچووەکەی پێکەوە دەربچن. تەنها ئەگەر بەڕاستی خزمەتگوزارییەکی کڕدراو بێت لێرە تۆماری بکە.",
     },
   "Matched “{1}” → {2} {3} for {4} IQD. Change the account if this is wrong.": {
     ar: "الكلمة «{1}» تشير إلى الحساب {2} {3} بمبلغ {4} IQD. غيّر الحساب إن كان هذا خطأ.",

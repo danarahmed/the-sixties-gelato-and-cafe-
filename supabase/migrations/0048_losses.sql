@@ -387,10 +387,12 @@ begin
     raise exception 'At the till, a staff meal, on the house or a sample is given away';
   end if;
   if nullif(trim(p_reason), '') is null then
-    raise exception '%', case when p_at_till then 'Say why it is given away' else 'Say why the stock was lost' end;
+    if p_at_till then raise exception 'Say why it is given away'; end if;
+    raise exception 'Say why the stock was lost';
   end if;
   if p_lines is null or jsonb_typeof(p_lines) <> 'array' or jsonb_array_length(p_lines) = 0 then
-    raise exception '%', case when p_at_till then 'The cart is empty' else 'Choose what was lost' end;
+    if p_at_till then raise exception 'The cart is empty'; end if;
+    raise exception 'Choose what was lost';
   end if;
   if jsonb_array_length(p_lines) > 50 then raise exception 'At most 50 lines at once'; end if;
 
@@ -566,8 +568,8 @@ begin
                         p_unit_code => p_unit_code, p_reason => p_reason, p_lot => p_lot, p_location => p_location,
                         p_approval => p_approval, p_wait => p_wait);
   perform audit_event(v_business, 'inventory.loss', 'stock_loss', v ->> 'loss_id', p_reason, null,
-    jsonb_build_object('kind', p_kind, 'account', loss_account(p_kind), 'item', p_item, 'product', p_variant,
-                       'qty', p_qty, 'unit', p_unit_code,
+    jsonb_build_object('movement', p_kind, 'account', loss_account(p_kind), 'item', p_item,
+                       'product_variant_id', p_variant, 'qty', p_qty, 'unit', p_unit_code,
                        'batch_no', (select b.batch_no from item_lot l join production_batch b on b.id = l.production_batch_id
                                      where l.id = p_lot),
                        'value', v -> 'value', 'status', v ->> 'status', 'approved_by', v -> 'approver_id'));
@@ -631,8 +633,8 @@ begin
   v := give_away__run(p_kind => p_kind, p_channel => p_channel, p_lines => p_lines, p_reason => p_reason,
                       p_location => p_location, p_approval => p_approval);
   perform audit_event(v_business, 'sale.giveaway', 'stock_loss', v ->> 'loss_id', p_reason, null,
-    jsonb_build_object('kind', p_kind, 'account', loss_account(p_kind), 'channel', p_channel,
-                       'turn_no', v -> 'turn_no', 'lines', jsonb_array_length(p_lines), 'value', v -> 'value',
+    jsonb_build_object('movement', p_kind, 'account', loss_account(p_kind), 'channel', p_channel,
+                       'turn_no', v -> 'turn_no', 'products', jsonb_array_length(p_lines), 'value', v -> 'value',
                        'approved_by', v -> 'approver_id'));
   perform idem_finish(v_business, p_idempotency_key, 'give_away', v_req, v);
   return v;

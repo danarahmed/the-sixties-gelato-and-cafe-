@@ -34,6 +34,20 @@ import {
   storyAddsUp,
   storyFrom,
 } from "@/lib/production";
+import {
+  GIVEAWAY_KINDS,
+  LOSS_ACCOUNT_NAME,
+  LOSS_KINDS,
+  LOSS_PHRASES,
+  NEEDS_APPROVAL,
+  NEEDS_STOCK_APPROVAL,
+  giveawayLabel,
+  kindShare,
+  lossKind,
+  lossReportFrom,
+  lossesWaitingFrom,
+} from "@/lib/losses";
+import { movementLabel } from "@/lib/format";
 import { normaliseNumber, positive, signedNonZero } from "@/lib/validation";
 import { getBookkeeper } from "@/lib/bookkeeping/rules";
 import { isUncertainFailure } from "@/lib/db/rpcOutcome";
@@ -3440,5 +3454,194 @@ describe("batches, their use-by dates and lots, and the day's plan (0046, releas
     expect(
       describeChanges({ keeps_hours: 72 }, { keeps_hours: null }, new Map()).map((c) => c.field),
     ).toEqual(["Keeps (hours)"]);
+  });
+});
+
+describe("kinds of loss, giveaways at the till and the loss report (0048, release V)", () => {
+  const migration = readFileSync(join(__dirname, "../supabase/migrations/0048_losses.sql"), "utf8");
+
+  it("charges each kind of loss to the account the database charges it to", () => {
+    // loss_account in 0048, kind by kind.
+    const accountFor = (kind: string) => {
+      const body = migration.slice(migration.indexOf("function loss_account("));
+      for (const [code, kinds] of [
+        ["5310", ["production_waste", "preparation_waste"]],
+        ["6110", ["staff_consumption"]],
+        ["6610", ["complimentary"]],
+        ["6620", ["sampling"]],
+      ] as const)
+        if ((kinds as readonly string[]).includes(kind)) {
+          expect(body).toContain(`then '${code}'`);
+          return code;
+        }
+      return "5300";
+    };
+    for (const k of LOSS_KINDS) expect(k.account, k.kind).toBe(accountFor(k.kind));
+    // Every account a loss is charged to is in the chart the database sets up, by that name.
+    for (const [code, name] of Object.entries(LOSS_ACCOUNT_NAME))
+      if (code !== "5300") expect(migration).toContain(`('${code}','${name}'`);
+    expect(migration).toContain("('5300','Waste & spoilage'");
+  });
+
+  it("names each kind as the stock card does, and explains it", () => {
+    for (const k of LOSS_KINDS) {
+      expect(movementLabel(k.kind)).toBe(k.label);
+      expect(k.explain.length).toBeGreaterThan(10);
+    }
+    expect(lossKind("production_waste")?.account).toBe("5310");
+    expect(lossKind("sale_consumption")).toBeNull();
+    // The till gives away three of them, under their own names.
+    expect(GIVEAWAY_KINDS.map((g) => g.kind)).toEqual([
+      "staff_consumption",
+      "complimentary",
+      "sampling",
+    ]);
+    expect(giveawayLabel("complimentary")).toBe("On the house");
+    expect(giveawayLabel("something")).toBe("something");
+  });
+
+  it("knows when the database asks for a manager, and why", () => {
+    expect(
+      NEEDS_APPROVAL.test(
+        "This loss needs a manager's approval: ask one to approve it now, or save it to wait for their approval",
+      ),
+    ).toBe(true);
+    expect(
+      NEEDS_STOCK_APPROVAL.test(
+        "Only 190 g of Golden beans is in stock: a manager approves using more than that",
+      ),
+    ).toBe(true);
+    expect(NEEDS_APPROVAL.test("Say why the stock was lost")).toBe(false);
+  });
+
+  it("reads the losses waiting, an item's and a product's", () => {
+    const [item, product] = lossesWaitingFrom([
+      {
+        movement_id: "m1",
+        at: "2026-09-28T10:00:00Z",
+        item_id: "i1",
+        item: "Milk",
+        kind: "spoilage",
+        qty: "150",
+        unit: "ml",
+        value: "225",
+        reason: "Left out",
+        recorded_by_id: "u1",
+        recorded_by: "Sara",
+        loss_id: "l1",
+        account: "5300",
+        batch_no: null,
+      },
+      {
+        movement_id: "m2",
+        at: "2026-09-28T10:05:00Z",
+        item_id: null,
+        item: "Latte",
+        kind: "damaged",
+        qty: 2,
+        unit: null,
+        value: null,
+        reason: null,
+        recorded_by_id: null,
+        recorded_by: null,
+        loss_id: "l2",
+        account: "5300",
+        batch_no: 4,
+      },
+    ]);
+    expect(item).toMatchObject({ lossId: "l1", qty: 150, unit: "ml", value: 225, batchNo: null });
+    expect(product).toMatchObject({ itemId: null, unit: null, value: null, batchNo: 4 });
+  });
+
+  it("reads the loss report, and shares out what each kind lost", () => {
+    const r = lossReportFrom({
+      from: "2026-09-01",
+      to: "2026-09-28",
+      total: {
+        value: 6140,
+        count: 20,
+        pending_count: 0,
+        pending_value: 0,
+        reversed_count: 1,
+        reversed_value: 960,
+      },
+      by_kind: [
+        {
+          kind: "damaged",
+          account: "5300",
+          account_name: "Waste & spoilage",
+          count: 4,
+          value: 2150,
+        },
+      ],
+      by_item: [{ item_id: "i", item: "Beans", unit: "g", qty: 250, value: 2500, count: 7 }],
+      by_person: [{ person_id: null, person: null, count: 1, value: 100 }],
+      by_day: [{ day: "2026-09-28", count: 20, value: 6140 }],
+      giveaways: [{ kind: "staff_consumption", count: 2, value: 1000 }],
+      losses: [
+        {
+          loss_id: "l",
+          movement_id: "m",
+          at: "2026-09-28T10:00:00Z",
+          kind: "sampling",
+          account: "6620",
+          value: 215,
+          reason: "Tasting",
+          person: "Demo Cashier",
+          approved_by: null,
+          pending: false,
+          reversed: false,
+          at_till: true,
+          turn_no: 3,
+          what: [
+            { name: "Espresso", size: null, qty: 1, unit: null, batch_no: null, addons: ["Syrup"] },
+          ],
+        },
+      ],
+    });
+    expect(r.total).toEqual({
+      value: 6140,
+      count: 20,
+      pendingCount: 0,
+      pendingValue: 0,
+      reversedCount: 1,
+      reversedValue: 960,
+    });
+    expect(r.byKind[0]).toMatchObject({ kind: "damaged", account: "5300", count: 4, value: 2150 });
+    expect(r.losses[0]).toMatchObject({
+      atTill: true,
+      turnNo: 3,
+      what: [{ addons: ["Syrup"], unit: null }],
+    });
+    expect(kindShare(2150, 6140)).toBe(35);
+    expect(kindShare(0, 0)).toBe(0);
+    expect(lossReportFrom(null)).toMatchObject({ losses: [], byKind: [], total: { count: 0 } });
+  });
+
+  it("has every word of a loss, its account and a giveaway in Arabic and Kurdish", () => {
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        LOSS_PHRASES.filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
+  });
+
+  it("names a loss and a giveaway on the audit trail", () => {
+    expect(migration).toContain("'inventory.loss', 'stock_loss'");
+    expect(migration).toContain("'sale.giveaway', 'stock_loss'");
+    expect(actionLabel("inventory.loss")).toBe("Loss recorded");
+    expect(actionLabel("sale.giveaway")).toBe("Given away at the till");
+    expect(auditGroup("stock")?.prefixes.some((p) => "inventory.loss".startsWith(p))).toBe(true);
+    expect(auditGroup("sales")?.prefixes.some((p) => "sale.giveaway".startsWith(p))).toBe(true);
+    expect(subjectOf("stock_loss", "l", null, { what: "Loss latte" }, new Map())).toBe(
+      "Loss latte",
+    );
+    expect(subjectOf("stock_loss", "l", null, { item: "i1" }, new Map([["i1", "Milk"]]))).toBe(
+      "Milk",
+    );
+    expect(subjectOf("stock_loss", "l", null, {}, new Map())).toBe("A loss");
+    expect(showValue("preparation_waste", "movement", new Map())).toBe("Preparation waste");
   });
 });

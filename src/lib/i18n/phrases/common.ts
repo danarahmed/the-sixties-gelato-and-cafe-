@@ -249,6 +249,9 @@ const phrases: PhraseBook = {
   // Movements of a delivery's correction (0038).
   "Delivery corrected": { ar: "تصحيح توريد", ckb: "ڕاستکردنەوەی بار" },
   Revalued: { ar: "إعادة تقييم", ckb: "دووبارە نرخاندن" },
+  // Losses by kind, giveaways at the till, and the loss report (0048).
+  "Production waste": { ar: "هدر الإنتاج", ckb: "بەفیڕۆچوونی بەرهەمهێنان" },
+  "Preparation waste": { ar: "هدر التحضير", ckb: "بەفیڕۆچوونی ئامادەکردن" },
 };
 
 export default phrases;

@@ -181,8 +181,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - A loss saved to wait for approval is in the stock and the books at once:
     approving it changes only its record, and reversing it puts the stock
     back at the loss's own value.
-  - Giveaways, transfers between branches and returns to a supplier will ask
-    the stock rule when they are built (releases V, AB and S).
+  - Giveaways (release V) and returns to a supplier (release S) ask the stock
+    rule; transfers between branches will when they are built (release AB).
   - Refunds stay with managers (the owner's decision 3); what changed is the
     limit above which a second person approves one.
   - A delivery corrected keeps its own confirmation for stock left below
@@ -281,6 +281,24 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - One order is drafted for each supplier each time, even when a draft for
     that supplier is already open; a note for the supplier is added on the
     order itself.
+- **Losses and giveaways, what they do not do (release V, `0047`–`0048`).**
+  - A giveaway is given from a quick sale, not from a table's bill: to give
+    away what is on a bill, take it off the bill (a manager, once the bill is
+    printed) and give it away from a quick sale.
+  - A giveaway is not on Orders and is not voided: once given, as the rules
+    allow or with a manager's PIN, a mistake is corrected with a count or a
+    stock correction. Only a loss saved to wait is reversed, whole.
+  - A product recorded lost on Inventory comes out as its recipe makes it to
+    eat in, without add-ons; what an add-on used is recorded as an item's
+    loss. A product that uses no stock is refused there; at the till it is
+    given away with the rest, costing nothing.
+  - What is given away is costed at what its stock costs, not at the menu
+    price: the report does not say what it would have sold for.
+  - Reports → Losses lists the latest 300 losses in the dates; its totals
+    count them all. A loss from before `0048` is counted as it was posted, to
+    5300, whatever its kind.
+  - 6110, 6610 and 6620 take expenses and bills too (a staff meal bought
+    outside): Reports → Losses counts only what came out of stock.
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the

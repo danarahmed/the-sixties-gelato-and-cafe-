@@ -7,6 +7,7 @@ import "server-only";
  */
 import { db, num, numOrNull, rows, str, strOrNull, one } from "./client";
 import type { ExceptionKind, ExceptionRow } from "@/lib/exceptions";
+import { lossReportFrom, type LossReport } from "@/lib/losses";
 
 export interface TrialBalanceRow {
   code: string;
@@ -621,5 +622,13 @@ export async function getPaymentTakings(from: string, to: string): Promise<Payme
       refunded: num(r.refunded),
       net: num(r.net),
     }),
+  );
+}
+
+/** What was lost in the dates (0048): by kind and account, item, person and day, and each loss. */
+export async function getLossReport(from: string, to: string): Promise<LossReport> {
+  const c = await db();
+  return lossReportFrom(
+    one(await c.rpc("report_losses", { p_from: from, p_to: to }), "what was lost"),
   );
 }

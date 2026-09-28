@@ -327,6 +327,7 @@ export function OrderPanel({
   onMove,
   onCancelBill,
   onKeepForLater,
+  onGiveAway,
   onClear,
   onRetry,
   onDiscard,
@@ -369,6 +370,8 @@ export function OrderPanel({
   onMove: () => void;
   onCancelBill: () => void;
   onKeepForLater: () => void;
+  /** A staff meal, on the house or a sample (0048): offered for a quick sale eaten in or taken away. */
+  onGiveAway: (() => void) | null;
   onClear: () => void;
   onRetry: () => void;
   onDiscard: () => void;
@@ -691,6 +694,11 @@ export function OrderPanel({
                     {!isPlatform(order.channel) && (
                       <button onClick={onKeepForLater} disabled={blocked || !online || badDiscount}>
                         🕒 {t("pos.keepForLater")}
+                      </button>
+                    )}
+                    {onGiveAway && (
+                      <button onClick={onGiveAway} disabled={blocked || !online}>
+                        🎁 {t("Give away…")}
                       </button>
                     )}
                     <button onClick={onClear} disabled={blocked}>

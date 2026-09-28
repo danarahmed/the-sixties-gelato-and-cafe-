@@ -25,6 +25,8 @@ import { ProductPicker } from "./ProductPicker";
 import { ChooseBill, FloorView } from "./FloorView";
 import { OrderPanel, type Receipt } from "./OrderPanel";
 import { PayDialog } from "./PayDialog";
+import { GiveAwayDialog } from "./GiveAwayDialog";
+import { giveawayLabel } from "@/lib/losses";
 import { SplitDialog } from "./SplitDialog";
 import {
   ApproveDialog,
@@ -222,6 +224,7 @@ type Dialog =
   | { kind: "split"; order: Order; title: string }
   | { kind: "keep" }
   | { kind: "named" }
+  | { kind: "giveaway" }
   | { kind: "move" }
   | { kind: "cancel"; error: string | null }
   | {
@@ -1517,6 +1520,11 @@ export function PosClient({
             onMove={() => setDialog({ kind: "move" })}
             onCancelBill={askCancel}
             onKeepForLater={() => setDialog({ kind: "keep" })}
+            onGiveAway={
+              order.kind !== "bill" && (order.channel === "dine_in" || order.channel === "takeaway")
+                ? () => setDialog({ kind: "giveaway" })
+                : null
+            }
             onClear={() => setQuick((q) => quickOrder(q.channel))}
             onRetry={() => pending && sendPayment(pending)}
             onDiscard={discardPending}
@@ -1588,6 +1596,45 @@ export function PosClient({
           onClose={() => setDialog(null)}
         />
       )}
+      {dialog?.kind === "giveaway" &&
+        (quick.channel === "dine_in" || quick.channel === "takeaway") &&
+        quick.lines.length > 0 && (
+          <GiveAwayDialog
+            lines={quick.lines.map((l) => ({
+              variantId: l.variantId,
+              qty: l.qty,
+              addons: l.addons.map(({ modifierId, qty }) => ({ modifierId, qty })),
+            }))}
+            channel={quick.channel}
+            summary={quick.lines.map((l) => `${l.qty} × ${lineName(l, byId, locale)}`).join(", ")}
+            onDone={(g, kind) => {
+              const what = t(giveawayLabel(kind));
+              // The bar makes it from its ticket, by its number, as it makes a sale.
+              if (ticketOn)
+                print([
+                  {
+                    kind: "ticket",
+                    turnNo: g.turnNo,
+                    title: t("Given away: {what}", { what }),
+                    channelLabel: channelName(quick.channel),
+                    lines: ticketItems(ticketLines(quick.lines), quick.lines),
+                    at: new Date().toISOString(),
+                    by: cashierName,
+                  },
+                ]);
+              setQuick((q) => quickOrder(q.channel));
+              setDialog(null);
+              setMsg({
+                ok: true,
+                text:
+                  g.turnNo !== null
+                    ? t("Given away: {what}, number {n}.", { what, n: g.turnNo })
+                    : t("Given away: {what}.", { what }),
+              });
+            }}
+            onClose={() => setDialog(null)}
+          />
+        )}
       {dialog?.kind === "keep" && (
         <KeepDialog
           title={t("pos.keepForLater")}

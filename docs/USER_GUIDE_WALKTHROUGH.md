@@ -158,7 +158,13 @@ owner
    with the same add-ons adds up on one line. The receipt and the barista's
    ticket list them under the drink, and a printed bill keeps their prices.
 3. **Cart.** **−** / **+** change quantities; **Clear** empties it. The total is
-   shown.
+   shown. **🎁 Give away…** (a quick sale eaten in or taken away, `0048`)
+   gives what is in the cart away instead of selling it: choose **Staff
+   meal**, **On the house** or **Sample**, say why, and **Give it away**.
+   Nothing is charged and it is not a sale: its cost goes to its own account
+   (6110, 6610 or 6620), it takes the next number, and the barista's ticket
+   prints with it, saying what it is. Over the loss limit a manager chooses
+   their name and types their PIN there and then.
 4. **Pay:**
    - in the shop: **💵 Cash** or **💳 Card**;
    - part in cash and part by card (`0042`): **➗ Split**. Type what goes on
@@ -694,16 +700,24 @@ costs; baristas can record waste
   - the owner only: an opening quantity and cost, and where it came from,
     posted as Dr Inventory, Cr Owner equity. Anyone else's new item gets its
     stock from a delivery.
-- **🗑️ Record waste:** the item, what happened (waste, spoilage, expired,
-  damaged, melt, staff, complimentary, sampling), the quantity and unit, and
-  **why**. It is valued at average cost and posts to 5300. A loss over the
-  limit on **Settings → Rules** — on its own, added to your other losses this
-  session (or today), or to the item's losses today by anyone — needs a
-  manager (`0040`): they choose their name and type their **PIN** there and
-  then, or you **save it to wait for a manager's approval**. Either way the
-  stock comes off at once.
+- **🗑️ Record a loss** (`0048`): first **what kind of loss** — the form says
+  what each means and the account it is charged to: waste, spoilage,
+  expired, damaged and melt to 5300; production waste (lost making a batch)
+  and preparation waste (lost preparing to sell) to 5310; staff consumption
+  to 6110, complimentary to 6610, sampling to 6620. Then **an item** — its
+  quantity and unit, and for an item kept by batch, **from batch** (left as
+  it is, the loss is taken as sales take stock) — or **a product, as made**,
+  and how many: what its recipe uses to eat in comes out. And **why**. It is
+  valued at what it costs now, in one journal. A loss over the limit on
+  **Settings → Rules** — on its own, added to your other losses this session
+  (or today), or to an item's losses today by anyone — needs a manager
+  (`0040`): they choose their name and type their **PIN** there and then, or
+  you **save it to wait for a manager's approval**. Either way the stock comes
+  off at once.
 - **Losses waiting for approval** (managers, `0040`): each loss saved to wait,
-  oldest first, with who recorded it and why. **Approve** it, or **Reverse**
+  oldest first, with its kind and account, what was lost (a product by how
+  many, an item from the batch named), who recorded it and why; a loss is
+  approved or reversed whole. **Approve** it, or **Reverse**
   one that did not happen, with a reason: the stock goes back at the loss's
   own value and its journal is reversed. Nobody approves a loss they recorded.
   The dashboard names the losses waiting under **Needs you**.
@@ -966,6 +980,12 @@ accountant's own tools.
   sales, refunds made in the dates, **net sales** (the P&L's net revenue) and
   the **sales margin** (net sales less the recipe cost of what was sold, before
   waste and fees).
+- **Losses** (`0048`): what was lost or given away in the dates — how many
+  and their value, what waits for a manager and what was reversed apart; by
+  kind, with the account each is charged to and its share; the giveaways at
+  the till by kind; the items lost most and who recorded them; and each loss,
+  the latest first, a giveaway with its number, a loss from a batch with the
+  batch.
 - **Uncosted Sales:** each sale in the dates recorded with no cost, or part of
   it missing (no recipe, or an ingredient used before it had a cost), and why.
   Their profit is overstated; the fix is for the next sales.

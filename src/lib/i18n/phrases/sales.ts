@@ -1022,6 +1022,34 @@ const phrases: PhraseBook = {
     ar: "و{usd} بالدولار، أُخذت بقيمة {amount}",
     ckb: "و {usd} بە دۆلار، بە بەهای {amount} وەرگیراون",
   },
+  // Losses by kind, giveaways at the till, and the loss report (0048).
+  "Give away…": { ar: "إهداء…", ckb: "بەخشین…" },
+  "Give away": { ar: "إهداء", ckb: "بەخشین" },
+  "Give it away": { ar: "أهدِه", ckb: "بیبەخشە" },
+  "What is it?": { ar: "ما هو؟", ckb: "چییە؟" },
+  "Nothing is charged: it is not a sale. What it costs goes to its own account, and the bar makes it by its number.":
+    {
+      ar: "لا يُدفع شيء: ليس بيعًا. كلفته تُحمَّل على حسابها الخاص، والبار يحضّره برقمه.",
+      ckb: "هیچ پارەیەک وەرناگیرێت: فرۆشتن نییە. تێچووەکەی دەچێتە سەر هەژماری خۆی، و بار بە ژمارەکەی ئامادەی دەکات.",
+    },
+  "Given away: {what}": { ar: "أُهدي: {what}", ckb: "بەخشرا: {what}" },
+  "Given away: {what}, number {n}.": {
+    ar: "أُهدي: {what}، رقم {n}.",
+    ckb: "بەخشرا: {what}، ژمارە {n}.",
+  },
+  "Given away: {what}.": { ar: "أُهدي: {what}.", ckb: "بەخشرا: {what}." },
+  Sample: { ar: "عيّنة", ckb: "نموونە" },
+  "For the staff, eaten or drunk here.": {
+    ar: "للموظفين، يؤكل أو يُشرب هنا.",
+    ckb: "بۆ ستاف، لێرە دەخورێت یان دەخورێتەوە.",
+  },
+  "Free for a customer.": { ar: "مجانًا لزبون.", ckb: "بە خۆڕایی بۆ کڕیارێک." },
+  "A taste, to sell more.": { ar: "للتذوّق، لبيع المزيد.", ckb: "بۆ تامکردن، بۆ فرۆشتنی زیاتر." },
+  "This giveaway has no idempotency key": {
+    ar: "لا يحمل هذا الإهداء مفتاح منع التكرار",
+    ckb: "ئەم بەخشینە کلیلی ڕێگری لە دووبارەبوونەوەی نییە",
+  },
+  "Why it is given away": { ar: "سبب الإهداء", ckb: "هۆی بەخشین" },
 };
 
 export default phrases;

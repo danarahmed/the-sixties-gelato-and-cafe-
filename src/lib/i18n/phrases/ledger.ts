@@ -390,6 +390,20 @@ const phrases: PhraseBook = {
     ar: "أُعيد تقييمه: الإشعار الدائن {1} على التوريد {2}",
     ckb: "دووبارە نرخێندرا: پسووڵەی گەڕاندنەوەی {1} لەسەر باری {2}",
   },
+  // Losses by kind, giveaways at the till, and the loss report (0048).
+  "Production and preparation loss": {
+    ar: "خسائر الإنتاج والتحضير",
+    ckb: "زیانی بەرهەمهێنان و ئامادەکردن",
+  },
+  "Staff meals": { ar: "وجبات الموظفين", ckb: "خواردنی کارمەندان" },
+  "Complimentary items": { ar: "مواد الضيافة", ckb: "کاڵای میوانداری" },
+  "Marketing samples": { ar: "عيّنات تسويقية", ckb: "نموونەی بازاڕکردن" },
+  "Production Waste: {1}": { ar: "هدر الإنتاج: {1}", ckb: "بەفیڕۆچوونی بەرهەمهێنان: {1}" },
+  "Preparation Waste: {1}": { ar: "هدر التحضير: {1}", ckb: "بەفیڕۆچوونی ئامادەکردن: {1}" },
+  "Loss reversed: {1}: {2}": {
+    ar: "عُكست الخسارة: {1}: {2}",
+    ckb: "زیان هەڵگەڕێندرایەوە: {1}: {2}",
+  },
 };
 
 export default phrases;

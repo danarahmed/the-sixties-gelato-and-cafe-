@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { reviewLossAction } from "@/lib/actions/stock";
-import type { LossWaiting } from "@/lib/db/rules";
+import type { LossWaiting } from "@/lib/losses";
 import { fmtIQD, fmtQty, movementLabel } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
 import { useT } from "@/lib/i18n/I18nProvider";
@@ -13,7 +13,8 @@ import { OperationStatus, useOperation } from "@/components/useOperation";
 /**
  * The losses saved to wait for a manager (0040), oldest first. A manager other
  * than the one who recorded it approves each, or reverses one that did not
- * happen: the stock goes back and its journal is reversed, with a reason.
+ * happen: the stock goes back and its journal is reversed, with a reason. A
+ * loss recorded whole (0048) is one row, an item or a product as it was given.
  */
 export function LossesWaiting({
   losses,
@@ -96,11 +97,27 @@ function LossRow({ loss, mine, timezone }: { loss: LossWaiting; mine: boolean; t
         <td className="mono muted" style={{ fontSize: ".8rem" }}>
           {dateTimeIn(timezone, loss.at)}
         </td>
-        <td>{loss.item}</td>
-        <td className="right mono">
-          {fmtQty(loss.qty)} {loss.unit}
+        <td>
+          {loss.item}
+          {loss.batchNo !== null && (
+            <span className="muted" style={{ fontSize: ".8rem" }}>
+              {" "}
+              · {t("Batch {n}", { n: loss.batchNo })}
+            </span>
+          )}
         </td>
-        <td>{t(movementLabel(loss.kind))}</td>
+        <td className="right mono">
+          {loss.unit ? `${fmtQty(loss.qty)} ${loss.unit}` : `×${fmtQty(loss.qty)}`}
+        </td>
+        <td>
+          {t(movementLabel(loss.kind))}
+          {loss.account && (
+            <span className="muted mono" style={{ fontSize: ".75rem" }}>
+              {" "}
+              {loss.account}
+            </span>
+          )}
+        </td>
         <td className="right money">{loss.value === null ? "—" : fmtIQD(loss.value)}</td>
         <td>{loss.reason ? say(loss.reason) : "—"}</td>
         <td>{loss.recordedBy ?? "—"}</td>

@@ -1219,3 +1219,34 @@ amount, key)` (`accounting.post`) sets what is left of a credit against a
   it, linking to `/production#lots`.
 - `void_sale` locks its items before it gives them back, and `review_loss`
   names the loss its reversal takes back, so each goes back to its lots.
+
+### Losses by kind, giveaways, the loss report (`0047`–`0048`)
+
+- **`movement_type`** gains `production_waste` and `preparation_waste`
+  (`0047`, alone). **`gl_account`** gains, for every café, 5310 Production and
+  preparation loss, 6110 Staff meals, 6610 Complimentary items and 6620
+  Marketing samples; 5310 takes no bill, expense or supplier's credit.
+  `is_loss`, `loss_account(kind)` and `is_giveaway(kind)` say which kinds are
+  losses, where each is charged, and which the till gives away.
+- **`stock_loss`** (location, kind, reason, value, status as recorded — not
+  required, approved or pending —, who approved and recorded it, whether at
+  the till, its channel and turn number, its journal) and **`stock_loss_line`**
+  (an item with its unit and the batch named, or a product with its add-ons;
+  quantity; its share of the value), append-only, readable by those who see
+  costs, cleared with the test records. Each item's movement has the loss's
+  kind, reference `stock_loss`, and the batch named in `lot_id`; the journal's
+  reference is the loss.
+- **`record_loss(kind, item, product, qty, unit, reason, batch, location,
+approval, wait, key)`** (`waste.record`), on the trail as `inventory.loss`.
+  **`record_waste`** writes its loss the same way and answers as before.
+  **`give_away(kind, channel, lines, reason, location, approval, key)`**
+  (`sale.create`): a staff meal, on the house or a sample, eaten in or taken
+  away, with a turn number; on the trail as `sale.giveaway`.
+- **`review_loss`** approves or reverses a loss whole; **`losses_waiting()`**
+  gives each loss once, with its account and batch.
+  **`report_losses(from, to)`** (`cost.view`): totals, by kind with its
+  account, by item, by person, by day, the giveaways, and each loss.
+- The alerts: 0031's and 0040's rules replaced where they were kept (waste
+  well above its usual counts 5310; running out counts the new kinds; losses
+  waiting counted a loss at a time). `document_problems` and
+  `journal_source_hint` know a loss; `legacy_unposted` never offers one.

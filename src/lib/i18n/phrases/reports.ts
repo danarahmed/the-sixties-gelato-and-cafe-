@@ -1100,6 +1100,36 @@ const phrases: PhraseBook = {
   },
   "Of the recipe": { ar: "من الوصفة", ckb: "لە ڕەسەتەکە" },
   "Quantity sold": { ar: "الكمية المباعة", ckb: "بڕی فرۆشراو" },
+  // Losses by kind, giveaways at the till, and the loss report (0048).
+  Losses: { ar: "الخسائر", ckb: "زیانەکان" },
+  "What was lost or given away {from} to {to}, and where it was charged": {
+    ar: "ما فُقد أو أُهدي من {from} إلى {to}، وعلى أي حساب حُمِّل",
+    ckb: "ئەوەی لەدەستچوو یان بەخشرا لە {from} تا {to}، و خرایە سەر کام هەژمار",
+  },
+  "Nothing was lost in these dates.": {
+    ar: "لم يُفقد شيء في هذه التواريخ.",
+    ckb: "لەم ڕێکەوتانەدا هیچ لەدەست نەچوو.",
+  },
+  "{n} loss(es), {value} in all.": {
+    ar: "{n} خسارة، بقيمة {value} إجمالًا.",
+    ckb: "{n} زیان، بە کۆی {value}.",
+  },
+  "{n} of them wait for a manager ({value}).": {
+    ar: "{n} منها بانتظار مدير ({value}).",
+    ckb: "{n}یان چاوەڕێی بەڕێوەبەرێکن ({value}).",
+  },
+  "{n} reversed, as they did not happen ({value}): left out.": {
+    ar: "{n} معكوسة لأنها لم تحدث ({value}): مستبعدة.",
+    ckb: "{n} هەڵگەڕێندرانەوە چونکە ڕووینەدابوو ({value}): لەدەرەوە هێڵراون.",
+  },
+  Share: { ar: "النسبة", ckb: "بەش" },
+  "Given away at the till": { ar: "أُهدي على نقطة البيع", ckb: "لەسەر خاڵی فرۆشتن بەخشرا" },
+  "{what}: {n}, {value}": { ar: "{what}: {n}، {value}", ckb: "{what}: {n}، {value}" },
+  "at the till, number {n}": { ar: "على نقطة البيع، رقم {n}", ckb: "لەسەر خاڵی فرۆشتن، ژمارە {n}" },
+  "at the till": { ar: "على نقطة البيع", ckb: "لەسەر خاڵی فرۆشتن" },
+  "waiting for a manager": { ar: "بانتظار مدير", ckb: "چاوەڕێی بەڕێوەبەرێک" },
+  "approved by {name}": { ar: "وافق عليه {name}", ckb: "{name} پەسەندی کرد" },
+  Number: { ar: "الرقم", ckb: "ژمارە" },
 };
 
 export default phrases;

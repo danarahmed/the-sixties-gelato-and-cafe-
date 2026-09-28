@@ -257,6 +257,20 @@ order takes no discount at the till. **Once a table's bill has been printed,
 only a manager can change its discount**, just as only a manager can take
 items off it.
 
+## Giving something away
+
+A staff meal, a drink on the house or a sample is **given away**, not sold at
+a discount: ring it up as a quick sale (eaten in or taken away), then tap
+**🎁 Give away…** under the order. Choose **Staff meal**, **On the house** or
+**Sample**, say why in a few words, and tap **Give it away**. Nothing is
+charged and the drawer is not touched: the stock comes off, its cost goes to
+its own account, and the barista's ticket prints with the order's number,
+saying it is given away. Over the café's loss limit a manager chooses their
+name and types their PIN on your till; nothing waits.
+
+A customer who pays part of the price gets a **discount** instead (above): a
+giveaway is free.
+
 ## Mistakes
 
 A finished sale cannot be edited. Tell a manager:
