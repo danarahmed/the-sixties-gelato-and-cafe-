@@ -112,13 +112,13 @@ select test.throws($$select refund_sale_lines(pg_temp.sale('A'), pg_temp.items('
 
 -- ------------------------------------------------------------ sent twice
 insert into res select 'A2', refund_sale_lines(pg_temp.sale('A'), pg_temp.items('A', '{"E": 1}'), 'changed_mind',
-  null, null, '51000000-0000-0000-0000-000000000001');
+  null, null, p_idempotency_key => '51000000-0000-0000-0000-000000000001');
 insert into res select 'A2b', refund_sale_lines(pg_temp.sale('A'), pg_temp.items('A', '{"E": 1}'), 'changed_mind',
-  null, null, '51000000-0000-0000-0000-000000000001');
+  null, null, p_idempotency_key => '51000000-0000-0000-0000-000000000001');
 select test.eq((pg_temp.r('A2b') ->> 'replayed') || ' ' || (pg_temp.r('A2b') ->> 'refund_no') || '=' ||
                (pg_temp.r('A2') ->> 'refund_no'), 'true 2=2', 'sent twice with one key: refunded once, the retry told so');
 select test.throws($$select refund_sale_lines(pg_temp.sale('A'), pg_temp.items('A', '{"W": 1}'), 'changed_mind',
-                     null, null, '51000000-0000-0000-0000-000000000001')$$,
+                     null, null, p_idempotency_key => '51000000-0000-0000-0000-000000000001')$$,
   '%does not match what was first sent%', 'the same key for other items is refused');
 
 -- ------------------------------------------------------------ the rest of it

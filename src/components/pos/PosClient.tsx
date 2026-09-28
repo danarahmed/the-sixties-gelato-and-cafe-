@@ -83,6 +83,7 @@ import {
   type TicketLine,
 } from "./model";
 import { reasonKey } from "@/lib/reasons";
+import { changeGiven, type Payment } from "@/lib/payments";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string; uncertain?: boolean };
 type Msg = { ok: boolean; text: string } | null;
@@ -92,7 +93,9 @@ interface Pending {
   kind: "quick" | "bill";
   /** Sent with every attempt: the database records it once, whatever happens. */
   key: string;
+  /** The first payment's way; with `payments`, each part (0042). A till loaded before sends the one. */
   tender: Tender;
+  payments?: Payment[];
   channel: SalesChannel;
   lines: { variantId: string; qty: number; note: string | null; addons?: AddonChoice[] }[];
   tabId: string | null;
@@ -141,6 +144,7 @@ function loadPending(): Pending | null {
       kind: p.kind ?? "quick",
       key: p.key,
       tender: p.tender,
+      ...(Array.isArray(p.payments) && p.payments.length > 0 ? { payments: p.payments } : {}),
       channel: p.channel,
       lines: p.lines.map((l) => ({
         variantId: l.variantId,
@@ -173,6 +177,11 @@ function savePending(p: Pending | null) {
   } catch {
     /* private mode: the pending payment stays in memory only */
   }
+}
+
+/** How a waiting payment is sent: each part (0042), or the one way a till loaded before took. */
+function paidAs(p: Pending): { tender?: Tender; tenders?: Payment[] } {
+  return p.payments && p.payments.length > 0 ? { tenders: p.payments } : { tender: p.tender };
 }
 
 /** JSON from one of the till's own routes; null when offline, signed out or refused. */
@@ -1038,13 +1047,16 @@ export function PosClient({
     });
   }
 
-  async function confirmPay(tender: Tender, received: number | null, orderNo: string | null) {
-    if (dialog?.kind !== "pay" || busy) return;
+  async function confirmPay(payments: Payment[], orderNo: string | null) {
+    if (dialog?.kind !== "pay" || busy || payments.length === 0) return;
     const o = dialog.order;
+    const tender = payments[0]?.type ?? dialog.tender;
+    const received = payments.find((x) => x.type === "cash")?.received ?? null;
     await sendPayment({
       kind: o.kind,
       key: dialog.key,
       tender,
+      payments,
       channel: o.channel,
       lines: o.lines.map((l) => ({
         variantId: l.variantId,
@@ -1076,6 +1088,7 @@ export function PosClient({
         ...printTotals(o),
         tender,
         received,
+        payments,
         platformOrderNo: isPlatform(o.channel) ? orderNo : null,
         turnNo: o.turnNo,
         at: new Date().toISOString(),
@@ -1094,7 +1107,7 @@ export function PosClient({
           ? await recordSaleAction({
               key: p.key,
               channel: p.channel,
-              tender: p.tender,
+              ...paidAs(p),
               lines: p.lines.map((l) => ({
                 variantId: l.variantId,
                 qty: String(l.qty),
@@ -1113,7 +1126,7 @@ export function PosClient({
               tabId: p.tabId!,
               version: p.version!,
               key: p.key,
-              tender: p.tender,
+              ...paidAs(p),
               expectedNet: p.expectedNet,
               stockApprovalId: p.stockApprovalId ?? null,
             });
@@ -1151,8 +1164,13 @@ export function PosClient({
         return;
       }
       const net = r.data.net;
+      // The change as the database recorded it (0042); the till's own sum for a
+      // payment an older till left waiting, which sent no cash handed over.
       const change =
-        p.received !== null ? Decimal.max(0, new Decimal(p.received).minus(net)).toNumber() : null;
+        changeGiven(r.data.payments) ??
+        (p.received !== null
+          ? Decimal.max(0, new Decimal(p.received).minus(net)).toNumber()
+          : null);
       // The printed receipt shows what the database recorded, discount included.
       const job: PrintJob | null = p.job
         ? {
@@ -1161,6 +1179,7 @@ export function PosClient({
             subtotal: r.data.gross,
             discount: r.data.discount,
             change,
+            ...(r.data.payments.length > 0 ? { payments: r.data.payments } : {}),
             reference: r.data.orderId.slice(0, 8),
             platformOrderNo: r.data.platformOrderNo ?? p.platformOrderNo,
             journalNo: r.data.journalNo,

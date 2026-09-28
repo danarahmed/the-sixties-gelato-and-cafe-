@@ -1628,6 +1628,25 @@ input.check {
 .cash-quick button {
   min-height: 44px;
 }
+/* A split payment's parts (0042): how and how much, one to a line. */
+.split-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.split-row select,
+.split-row button {
+  min-height: 44px;
+}
+.split-row input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  font-size: 1.15rem;
+  text-align: end;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
 .pay-actions {
   display: flex;
   gap: 8px;

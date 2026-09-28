@@ -81,6 +81,10 @@ takes cash only while it is open. Tap the drawer's chip at the top of the till.
 3. **💵 Cash** or **💳 Card** opens the payment:
    - for cash, type what the customer handed over, or tap **Exact** or a note
      (5,000, 10,000…). The **change** is worked out for you;
+   - part in cash and part by card: **➗ Split**. Type what goes on the card;
+     the cash takes the rest. Type what the customer handed over for the cash
+     to see the change. Two cards work the same way: set the second payment
+     to **Card**;
    - **Confirm payment**. Pressing it twice never charges twice.
 4. **✅ Sale recorded** appears with the **customer's number** in large
    figures: tell the customer, and call it when the order is ready. Numbers

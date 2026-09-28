@@ -1,17 +1,17 @@
 # Progress & Status
 
-_Last updated: 2026-09-27._ This is the one place that says what works and what
+_Last updated: 2026-09-28._ This is the one place that says what works and what
 does not. A feature is marked done only when it runs on the real database path
 and is tested. Tested means the SQL suites on real PostgreSQL 16 and 17, the
 browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0041` and the rebuilt app. The SQL
-  checks (43, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (20, every role, every screen in
+- **Built and verified:** migrations `0014`–`0042` and the rebuilt app. The SQL
+  checks (44, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (21, every role, every screen in
   Arabic and Kurdish, and a lost answer on each kind of screen), the unit and
-  contract tests (331) and a production build all pass.
+  contract tests (341) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -648,6 +648,46 @@ browser tests through the real app, or both.
   The screens went live with
   [pull request #30](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/30).
 
+- **Split payments (release Q, migration `0042`).** A sale was paid one way:
+  the database wrote one payment for all of it, and the drawer, voids and
+  refunds assumed it. Now the till's **Split** takes part in cash and part by
+  card, or two cards: each part is typed but the last, which takes what is
+  left, and the cash handed over for the cash part gives the change. The
+  database checks the payments come to the total exactly, keeps each with the
+  cash handed over and the change, debits each payment's account with its
+  part, and puts only the cash part in the drawer. A void takes back the
+  sale's cash only. A refund of a sale paid two ways gives back each way its
+  share of what is left, or as the manager chooses, never more than a way
+  paid; only its cash leaves the drawer. The receipt, Orders and the refund
+  slip list each payment; **Reports → Sales by payment method** shows what
+  cash, card and the platforms took, gave back and kept. Two figures that
+  assumed one payment were put right: the drawer's count of orders and the
+  day's cash refunds. Built and tested: a new SQL suite, a new browser suite,
+  unit tests of the split and of the refund's shares (checked against the
+  database's own rounding on 400 random cases), and every new text in Arabic
+  and Kurdish. The migration was applied to the live database on 28 September 2026. The text stored there is the file byte for byte, and it matches the
+  tested build object by object, permissions included (the one difference, as
+  before, is the schema `citext` lives in). It was checked as the owner and
+  the barista, in a transaction that was rolled back:
+  - two lattes (7,000) paid 6,000 by card and 1,000 in cash, 5,000 handed
+    over: 4,000 change, the drawer taking 1,000, each account debited its
+    part;
+  - payments short of the total, a tender and a list together, and cash
+    handed over short of its part were refused;
+  - a sale sent the old way was one payment, and a bill was paid by two cards;
+  - a refund in proportion gave back 3,000 to the card and 500 in cash, only
+    the 500 from the drawer, and more cash than was paid was refused;
+  - a void took back only its 1,000 in cash;
+  - the report was right, and all nine checks stayed at zero.
+
+  Nothing was kept: every table's count as it was. The security advisors add
+  `report_payments` and list three functions under their new signatures, each
+  checking its permission; the performance advisors add nothing. No drawer is
+  open on live, and the test records leave the till's cash account at
+  −320,000: the first drawer opened will show that difference until the test
+  records are cleared. The screens went live with
+  [pull request #31](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/31).
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -713,17 +753,17 @@ browser tests through the real app, or both.
 | Production          | cost viewers, baristas                                     | Record a batch with a preview of what it uses and makes; batch recipes (a base, then its flavours); batch history with cost per unit; cancel a batch                                                                                                                                                                                                                                                                                                                                            |
 | Journals            | cost viewers (posting: accountant, owner, general manager) | Register, manual journals (draft/publish), reversal, owner's control correction                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Chart of Accounts   | cost viewers                                               | Trial balance by period, closing checklist, lock and reopen, audit trail, CSV                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, payable ageing, product margin, sizes and add-ons, CSV                                                                                                                                                                                                                                                                                                                                                                                              |
+| Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, sales by payment method, payable ageing, product margin, sizes and add-ons, CSV                                                                                                                                                                                                                                                                                                                                                                     |
 | Settings            | owner, general manager                                     | People and roles, business configuration, the alert thresholds, locations, the role matrix                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Tests
 
-| Layer                        | What                                                                                                                                                                                                                                                                                                                                                           | Result      |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                                                                                                                                                                                                                  | 331 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 32 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing)                                                                                                                                                   | 43 passing  |
-| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons | 20 passing  |
-| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                       | green       |
+| Layer                        | What                                                                                                                                                                                                                                                                                                                                                                           | Result      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                                                                                                                                                                                                                                  | 341 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 32 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing)                                                                                                                                                                   | 44 passing  |
+| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments | 21 passing  |
+| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                       | green       |
 
 What is not built, and why, is in [`LIMITATIONS.md`](LIMITATIONS.md); the order
 of the next work is in [`ROADMAP.md`](ROADMAP.md).

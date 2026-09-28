@@ -145,6 +145,21 @@ export const lineAddons = z
   .max(20, "A line takes at most 20 add-ons")
   .optional();
 
+/**
+ * How a sale is paid (0042): each part of it, and for cash what was handed
+ * over. Together the parts are the total; the database checks it.
+ */
+export const payments = z
+  .array(
+    z.object({
+      type: z.enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" }),
+      amount: nonNegative("Amount"),
+      received: optionalNonNegative("Cash received"),
+    }),
+  )
+  .min(1, "Choose how it was paid")
+  .max(10, "A sale is paid in at most 10 payments");
+
 /** A line's add-ons as the database takes them. */
 export const addonsToDb = (addons: { modifierId: string; qty: number }[] | undefined) =>
   (addons ?? []).map((a) => ({ modifier_id: a.modifierId, qty: a.qty }));

@@ -39,6 +39,7 @@ Plan a short window when the café is closed.
 | Usage against the recipes (`0039`)      | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0039`](#after-0039)). The screen was merged ([pull request #28](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/28)) and deployed                                    |
 | The café's rules (`0040`)               | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0040`](#after-0040)). The screens were merged ([pull request #29](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/29)) and deployed                                  |
 | Sizes and add-ons (`0041`)              | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0041`](#after-0041)). The screens were merged ([pull request #30](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/30)) and deployed                                  |
+| Split payments (`0042`)                 | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0042`](#after-0042)). The screens were merged ([pull request #31](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/31)) and deployed                                  |
 
 ## 0. Before you start
 
@@ -1147,6 +1148,76 @@ The security advisor adds only the ten functions above, each checking its
 permission. The performance advisor adds only notes that thirteen of the new
 tables' links have no index of their own, and that two new indexes are not
 used yet.
+
+## After `0042`
+
+Migration `0042` (release Q) lets a sale be paid in parts:
+
+- **At the till**: part in cash and part by card, or two cards, each its part
+  of the sale, together the sale exactly. The cash handed over is kept with
+  its payment, and the change worked out. Each payment goes to its own
+  account; only the cash part goes into the drawer.
+- **Voids** take back from the drawer what the sale put in it: its cash.
+- **Refunds** of a sale paid two ways give back each way its share of what
+  is left, or as the refunder chooses, never more than a way paid; only the
+  cash part leaves the drawer.
+- **Figures**: the day's cash refunds count each refund's cash part, and the
+  drawer counts a sale paid two ways as one order.
+- **Reports → Sales by payment method** (`cost.view`).
+
+What it adds:
+
+- on `sales_tender`: the cash handed over (`received`), the change
+  (`change_given`) and the order of the payments (`position`), with an index
+  by sale;
+- `p_tenders` on `record_sale`, `settle_tab` and `refund_sale_lines` (new
+  signatures; `p_tender` stays for a till loaded before), and on `post_sale`
+  and `refund_lines_internal`;
+- one function signed-in users may call: `report_payments` (`cost.view`);
+- a trigger that takes a refund's cash from the drawer.
+
+It goes in before the screens: those deployed before it keep working (they
+send one tender, as before), and the new ones send the list.
+
+It was applied on 28 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0041` build. The text stored there
+is the file byte for byte. It was then compared with the tested build, object
+by object, the role permissions and column grants included: identical, but
+for the schema `citext` lives in, as before.
+
+It was checked as the owner and the barista, in a transaction that was rolled
+back:
+
+- **A split sale:** two lattes (7,000), 6,000 by card and 1,000 in cash with
+  5,000 handed over: 4,000 change, 1000 Dr 1,000 and 1010 Dr 6,000, and the
+  drawer took 1,000.
+- **Refused:** payments short of the total ("The payments come to 3500, not
+  the 7000 to pay"), a tender and a list together, and cash handed over short
+  of its part.
+- **The old way:** a sale sent with one tender, as a till loaded before sends
+  it, was one card payment of 3,500.
+- **A bill** was paid by two cards, 1,000 and 2,500.
+- **A refund** of one latte in proportion gave back 3,000 to the card and 500
+  in cash, only the 500 from the drawer; more cash than was paid was refused.
+- **A void** of a sale paid 1,000 in cash and 2,500 by card took 1,000 out of
+  the drawer.
+- **The report** gave cash 1,000 taken, 500 back and 4,000 change; card 13,000
+  taken and 3,000 back.
+- **The books:** all nine checks at zero.
+
+Nothing was kept: every table's count is as it was (40 sales, 40 payments, 20
+drawer events, 286 stock movements, journals to 1091, 35 audit rows).
+
+No drawer is open on live, and the test records leave the till's cash
+account (1000) at −320,000, with no count since the old day close of 23
+September: the first drawer opened will show that difference until the test
+records are cleared.
+
+The security advisor adds only `report_payments`, and lists `record_sale`,
+`settle_tab` and `refund_sale_lines` under their new signatures, each checking
+its permission. The performance advisor adds nothing, and drops its note that
+a sale's payments had no index by sale.
 
 ## Clearing the test records
 

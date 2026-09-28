@@ -161,6 +161,12 @@ owner
    shown.
 4. **Pay:**
    - in the shop: **💵 Cash** or **💳 Card**;
+   - part in cash and part by card (`0042`): **➗ Split**. Type what goes on
+     the card; the last payment, left empty, takes what is left (its box
+     shows how much). **+ Add a payment** adds another (two cards, up to
+     four payments, one of them in cash), **✕** takes one off. Type the cash
+     handed over for the cash part to see the change. **Confirm** waits
+     until the payments come to the total;
    - on Talabat: **🧾 Complete (paid through the platform)**, then type the
      **Talabat order number** from the tablet (the `#` can be left out).
      Nothing is recorded without it, and a number already recorded is
@@ -245,7 +251,10 @@ a report's figures open here with them chosen.
   share of what it was sold for, after the bill's discount, the last of an
   item giving back exactly what is left of it. The money goes back the way the
   sale was paid: cash from the open drawer, a card sale to the card, a
-  platform's order off what the platform owes. It goes through 4200 Sales
+  platform's order off what the platform owes. A sale paid two ways
+  (`0042`) shows each way with what is left of it, filled in with its share
+  of the refund; change them (never more than is left of a way, together the
+  refund) to give it back as the customer wants. It goes through 4200 Sales
   returns. Only items marked returnable come back into stock, at what they
   cost when sold; a used cup does not. The answer gives the refund's number
   and journal, and **Print the refund slip** prints it on the till's printer.
@@ -830,6 +839,11 @@ accountant's own tools.
   margin; for an add-on, on how many lines, and how often it is taken out of
   the lines of the products offering it. A size's figures leave out its
   add-ons; refunds are not taken off here.
+- **Sales by payment method** (`0042`): cash, card and each platform's
+  payments in the dates: the sales each paid for (and how many of those were
+  paid two ways), what it took, what refunds gave back that way, the net, and
+  the change cash gave. A sale paid in cash and by card counts under each,
+  for its part; the net of all of them is the net of Sales by Channel.
 
 ## 19. Audit trail
 

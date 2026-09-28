@@ -10,6 +10,7 @@ import "server-only";
  * returns an empty list that would look like "nothing recorded yet".
  */
 import { db, num, numOrNull, rows, str, strOrNull, one } from "./client";
+import { leftToGiveBack, type LeftToGiveBack, type PaidPart, type PayType } from "@/lib/payments";
 
 export interface BusinessConfig {
   id: string;
@@ -534,7 +535,12 @@ export interface OrderRow {
   net: number;
   cogs: number;
   placedAt: string;
+  /** How it was paid: each way once, in the order paid. */
   tenders: string[];
+  /** Each payment (0042): its part, and for cash what was handed over and the change. */
+  payments: PaidPart[];
+  /** What is left of each way it was paid, for a refund to give back (0042). */
+  refundLeft: LeftToGiveBack[];
   cashier: string | null;
   lines: {
     id: string;
@@ -556,6 +562,8 @@ export interface OrderRow {
     at: string;
     reason: string | null;
     tender: string | null;
+    /** Each way it went back (0042). */
+    tenders: { type: string; amount: number }[];
     by: string | null;
     approvedBy: string | null;
     lines: { name: string; qty: number; amount: number }[];
@@ -595,7 +603,11 @@ export async function getSalesOrders(
       .from("sales_order_line")
       .select("id,sales_order_id,product_variant_id,product_name,quantity,unit_price,line_net")
       .in("sales_order_id", ids),
-    c.from("sales_tender").select("sales_order_id,tender_type").in("sales_order_id", ids),
+    c
+      .from("sales_tender")
+      .select("sales_order_id,tender_type,amount,received,change_given,position")
+      .in("sales_order_id", ids)
+      .order("position"),
     c
       .from("sale_adjustment")
       .select("id,sales_order_id,kind,amount,reason,created_at,requested_by,approved_by")
@@ -627,7 +639,10 @@ export async function getSalesOrders(
           .from("sale_refund_line")
           .select("refund_id,sales_order_line_id,qty,amount")
           .in("refund_id", refundIds),
-        c.from("sale_refund_tender").select("refund_id,tender_type").in("refund_id", refundIds),
+        c
+          .from("sale_refund_tender")
+          .select("refund_id,tender_type,amount")
+          .in("refund_id", refundIds),
       ])
     : [null, null];
   const productName = new Map(rows(products, "products").map((p) => [str(p.id), str(p.name)]));
@@ -663,11 +678,13 @@ export async function getSalesOrders(
   const rLines = refundLines ? rows(refundLines, "refund lines") : [];
   const rLinesBy = group(rLines, (l) => str(l.refund_id));
   const rLinesByLine = group(rLines, (l) => str(l.sales_order_line_id));
-  const rTender = new Map(
-    (refundTenders ? rows(refundTenders, "refund payments") : []).map((t) => [
-      str(t.refund_id),
-      str(t.tender_type),
-    ]),
+  const rTenders = group(
+    (refundTenders ? rows(refundTenders, "refund payments") : []).map((t) => ({
+      refundId: str(t.refund_id),
+      type: str(t.tender_type) as PayType,
+      amount: num(t.amount),
+    })),
+    (t) => t.refundId,
   );
   const refundsBy = group(refundRows, (r) => str(r.sales_order_id));
   const who = (id: unknown) => (id ? (person.get(str(id)) ?? null) : null);
@@ -677,6 +694,16 @@ export async function getSalesOrders(
     const docs = refundsBy.get(id) ?? [];
     // A refund by the item is shown as a refund; the adjustment it also is, once.
     const docIds = new Set(docs.map((r) => str(r.id)));
+    const payments = (tendersBy.get(id) ?? []).map((t) => ({
+      type: str(t.tender_type) as PayType,
+      amount: num(t.amount),
+      received: t.received == null ? null : num(t.received),
+      change: t.change_given == null ? null : num(t.change_given),
+    }));
+    const refunded = adj
+      .filter((a) => str(a.kind) === "refund")
+      .reduce((s, a) => s + num(a.amount), 0);
+    const named = docs.reduce((s, r) => s + num(r.amount), 0);
     return {
       id,
       channel: str(o.channel),
@@ -684,7 +711,14 @@ export async function getSalesOrders(
       net: num(o.net_amount),
       cogs: num(o.cogs_amount),
       placedAt: str(o.placed_at),
-      tenders: (tendersBy.get(id) ?? []).map((t) => str(t.tender_type)),
+      tenders: [...new Set(payments.map((p) => p.type))],
+      payments,
+      // A refund from before 0037 names no payment: it gave back the sale's one.
+      refundLeft: leftToGiveBack(
+        payments,
+        docs.flatMap((r) => rTenders.get(str(r.id)) ?? []),
+        Math.max(0, refunded - named),
+      ),
       cashier: o.cashier_id ? (person.get(str(o.cashier_id)) ?? null) : null,
       lines: (linesBy.get(id) ?? []).map((l) => {
         const back = rLinesByLine.get(str(l.id)) ?? [];
@@ -698,7 +732,7 @@ export async function getSalesOrders(
           refundedAmount: back.reduce((s, x) => s + num(x.amount), 0),
         };
       }),
-      refunded: adj.filter((a) => str(a.kind) === "refund").reduce((s, a) => s + num(a.amount), 0),
+      refunded,
       costReturned: docs.reduce((s, r) => s + num(r.cost_returned), 0),
       refunds: docs
         .sort((x, y) => num(x.refund_no) - num(y.refund_no))
@@ -707,7 +741,8 @@ export async function getSalesOrders(
           amount: num(r.amount),
           at: str(r.created_at),
           reason: strOrNull(r.reason),
-          tender: rTender.get(str(r.id)) ?? null,
+          tender: rTenders.get(str(r.id))?.[0]?.type ?? null,
+          tenders: (rTenders.get(str(r.id)) ?? []).map(({ type, amount }) => ({ type, amount })),
           by: who(r.requested_by),
           approvedBy: r.approved_by && r.approved_by !== r.requested_by ? who(r.approved_by) : null,
           // By name: the database returns a refund's lines in no set order.

@@ -595,3 +595,31 @@ export async function getSizesAndAddons(from: string, to: string): Promise<SizeA
     offered: numOrNull(r.offered),
   }));
 }
+
+/** One way of paying over some days (0042): what it took, what went back, the change it gave. */
+export interface PaymentMethodRow {
+  method: string;
+  /** The sales it paid for, and of those, how many were paid another way too. */
+  sales: number;
+  splitSales: number;
+  taken: number;
+  changeGiven: number;
+  /** Given back that way by the refunds made in the days. */
+  refunded: number;
+  net: number;
+}
+
+export async function getPaymentTakings(from: string, to: string): Promise<PaymentMethodRow[]> {
+  const c = await db();
+  return rows(await c.rpc("report_payments", { p_from: from, p_to: to }), "takings by payment").map(
+    (r: Record<string, unknown>) => ({
+      method: str(r.method),
+      sales: num(r.sales),
+      splitSales: num(r.split_sales),
+      taken: num(r.taken),
+      changeGiven: num(r.change_given),
+      refunded: num(r.refunded),
+      net: num(r.net),
+    }),
+  );
+}

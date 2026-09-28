@@ -840,6 +840,26 @@ const phrases: PhraseBook = {
     ar: "أضف الإضافة من 1 إلى 20 مرة",
     ckb: "زیادەیەک 1 تا 20 جار زیاد بکە",
   },
+
+  // Split payments at the till and in a refund (0042).
+  "Cash received": { ar: "المبلغ المستلم نقدًا", ckb: "پارەی کاشی وەرگیراو" },
+  Split: { ar: "تقسيم", ckb: "دابەشکردن" },
+  "Add a payment": { ar: "أضف دفعة", ckb: "پارەدانێک زیاد بکە" },
+  "Amount of payment {n}": { ar: "مبلغ الدفعة {n}", ckb: "بڕی پارەدانی {n}" },
+  "How payment {n} is made": { ar: "طريقة الدفعة {n}", ckb: "شێوازی پارەدانی {n}" },
+  "Take off payment {n}": { ar: "احذف الدفعة {n}", ckb: "پارەدانی {n} لاببە" },
+  "Amounts are whole dinars": { ar: "المبالغ بالدينار الكامل", ckb: "بڕەکان بە دیناری تەواون" },
+  "Type how much each payment is": { ar: "اكتب مبلغ كل دفعة", ckb: "بڕی هەر پارەدانێک بنووسە" },
+  "The last payment takes what is left.": {
+    ar: "الدفعة الأخيرة تدفع ما تبقّى.",
+    ckb: "دوایین پارەدان ئەوەی ماوە دەدات.",
+  },
+  "The payments come to {amount} more than the total": {
+    ar: "الدفعات تزيد على المجموع بمقدار {amount}",
+    ckb: "پارەدانەکان {amount} لە کۆی گشتی زیاترن",
+  },
+  "Given back {way}": { ar: "المُعاد: {way}", ckb: "گەڕێندراو: {way}" },
+  "{way}, at most {left}": { ar: "{way}، {left} على الأكثر", ckb: "{way}، لانیزۆر {left}" },
 };
 
 export default phrases;

@@ -20,7 +20,9 @@ import {
   text,
   addonsToDb,
   lineAddons,
+  payments,
 } from "@/lib/validation";
+import { howPaid, saleReceipt, type PaidPart } from "@/lib/payments";
 
 // Not /pos: the till keeps itself current from each action's answer, and
 // re-rendering it after every sale would only slow the cashier down.
@@ -38,7 +40,11 @@ const saleInput = z.object({
   /** Minted by the till when payment starts, reused on every retry (H-01, P0-4). */
   key: z.string().uuid("This sale has no idempotency key"),
   channel: salesChannel,
-  tender: z.enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" }),
+  /** How it was paid: one way for all of it (a till loaded before 0042), or each part of it (0042). */
+  tender: z
+    .enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" })
+    .nullish(),
+  tenders: payments.nullish(),
   lines: z
     .array(z.object({ variantId: id("a product"), qty: positive("Quantity"), addons: lineAddons }))
     .min(1, "The cart is empty"),
@@ -77,6 +83,8 @@ export interface SaleReceipt {
   platformOrderNo: string | null;
   /** The order's turn number, called out when it is ready (0034); none on a sale from before. */
   turnNo: number | null;
+  /** Each payment as recorded, with the change it gave (0042). */
+  payments: PaidPart[];
 }
 
 export async function recordSaleAction(
@@ -86,12 +94,15 @@ export async function recordSaleAction(
   if (!v.ok) return v;
   if (v.data.discountPercent !== null && v.data.discountAmount !== null)
     return { ok: false, error: "Give the discount as a percentage or as an amount, not both" };
+  const paid = howPaid(v.data);
+  if (!paid) return { ok: false, error: "Choose how it was paid" };
   // Only a delivery platform's sale has one; the database asks for it (0030).
   const orderNo = isPlatformChannel(v.data.channel) ? v.data.platformOrderNo : null;
   const r = await callRpc<Record<string, unknown>>("record_sale", {
     p_idempotency_key: v.data.key,
     p_channel: v.data.channel,
-    p_tender: v.data.tender,
+    p_tender: paid.p_tender,
+    p_tenders: paid.p_tenders,
     p_lines: v.data.lines.map((l) => ({
       variant_id: l.variantId,
       qty: l.qty,
@@ -109,22 +120,6 @@ export async function recordSaleAction(
   if (!r.ok) return r;
   refresh(...SALE_PATHS, "/platforms");
   return { ok: true, data: saleReceipt(r.data) };
-}
-
-/** A recorded sale, as the database reported it. */
-function saleReceipt(d: Record<string, unknown>): SaleReceipt {
-  const net = Number(d.net ?? 0);
-  return {
-    orderId: String(d.order_id),
-    gross: Number(d.gross ?? net),
-    discount: Number(d.discount ?? 0),
-    net,
-    ...(d.cogs !== undefined ? { cogs: Number(d.cogs) } : {}),
-    journalNo: d.journal_no == null ? null : Number(d.journal_no),
-    replayed: Boolean(d.replayed),
-    platformOrderNo: d.platform_order_no == null ? null : String(d.platform_order_no),
-    turnNo: d.turn_no == null ? null : Number(d.turn_no),
-  };
 }
 
 const correction = z.object({
@@ -170,6 +165,19 @@ const refundInput = correction.extend({
       }),
     )
     .min(1, "Choose what to refund"),
+  /**
+   * How the money goes back, for a sale paid more than one way (0042): each
+   * way's part. Left out, the database shares it in proportion.
+   */
+  tenders: z
+    .array(
+      z.object({
+        type: z.enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" }),
+        amount: positive("Amount"),
+      }),
+    )
+    .max(3, "The payments to give back cannot be read")
+    .nullish(),
 });
 
 /** What a refund by the item did, as the database reported it. */
@@ -177,6 +185,8 @@ export interface RefundResult {
   refundNo: number;
   refunded: number;
   tender: string;
+  /** Each way it went back (0042), in the order the sale was paid. */
+  tenders: { type: string; amount: number }[];
   status: string;
   whole: boolean;
   journalNo: number | null;
@@ -202,6 +212,9 @@ export async function refundLinesAction(
     p_reason_code: v.data.reasonCode,
     p_reason: v.data.note,
     p_approval: v.data.approvalId ?? null,
+    ...(v.data.tenders
+      ? { p_tenders: v.data.tenders.map((x) => ({ type: x.type, amount: Number(x.amount) })) }
+      : {}),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
@@ -213,6 +226,12 @@ export async function refundLinesAction(
       refundNo: Number(d.refund_no ?? 0),
       refunded: Number(d.refunded ?? 0),
       tender: String(d.tender ?? ""),
+      tenders: Array.isArray(d.tenders)
+        ? (d.tenders as Record<string, unknown>[]).map((x) => ({
+            type: String(x.type),
+            amount: Number(x.amount ?? 0),
+          }))
+        : [],
       status: String(d.status ?? ""),
       whole: Boolean(d.whole),
       journalNo: d.journal_no == null ? null : Number(d.journal_no),

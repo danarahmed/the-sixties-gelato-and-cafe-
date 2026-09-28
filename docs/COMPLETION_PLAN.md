@@ -5,7 +5,8 @@ Release J (duplicate protection, `0035`), release K (cash sessions, `0036`),
 release L (refunds by the item, `0037`), release M (delivery corrections and
 the books checked account by account, `0038`), release N (usage against the
 recipes, `0039`) and release O (the café's rules, `0040`) are live since 27
-September 2026, and release P (sizes and add-ons, `0041`) since 28 September.
+September 2026, and release P (sizes and add-ons, `0041`) and release Q (split
+payments, `0042`) since 28 September.
 What was built differs from the plan below in these ways.
 
 Release J:
@@ -156,6 +157,31 @@ Release P:
 - **The report** leaves refunds in (Sales by Channel takes them off), and
   counts how often an add-on is taken against the lines of the products that
   offer its group today.
+
+Release Q:
+
+- **A payment keeps the cash handed over.** Each payment is `{type, amount,
+received}`: `amount` is its part of the sale, `received` the cash handed
+  over for it, and the change (`change_given`) is worked out from the two.
+  The change is not in the books: the cash line is the cash part.
+- **One tender or the list, not both.** `p_tender` stays for a till loaded
+  before `0042`; the till sends the list, even for one payment, so the cash
+  handed over is kept.
+- **A void takes back what the sale put in the drawer:** its cash payments,
+  read from the drawer's own events, not its net.
+- **A refund of a sale paid two ways** gives back each way at most what is
+  left of it: as the refunder chooses, or, when not said, in proportion, with
+  the rounding the discount uses. Its cash part alone leaves the drawer: the
+  drawer's event moved from the refund's adjustment to its cash payment.
+  `refund_sale` gives back what is left of each way.
+- **Two figures that counted a sale's one payment** were put right: the
+  drawer's count of orders counted a split sale twice, and the day's cash
+  refunds counted a whole refund as cash when the sale had any.
+- **Limits:** ten payments at most, a platform's order paid once, amounts in
+  whole units. The till offers four payments and one cash part.
+- **Card takings** needed no change: 1010 now takes the card parts only.
+- **The report** is by way of paying over the dates (Reports → Sales by
+  payment method), not by day.
 
 **Basis:**
 

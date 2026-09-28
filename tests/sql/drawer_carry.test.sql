@@ -38,6 +38,7 @@ update journal_entry set status = 'published' where id = (select id from je);
 -- Today, as the old app recorded it: no drawer events.
 alter table sales_tender disable trigger sales_tender_cash;
 alter table sale_adjustment disable trigger sale_adjustment_cash;
+alter table sale_refund_tender disable trigger sale_refund_tender_cash;  -- a refund's cash, since 0042
 select test.act_as('cashier@example.com');
 create temp table s as
   select 1 n, record_sale(gen_random_uuid(), 'dine_in', 'cash', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]') r
@@ -63,6 +64,7 @@ select (select je from xp), id, case code when '6900' then 1000 else 0 end, case
 update journal_entry set status = 'published' where id = (select je from xp);
 alter table sales_tender enable trigger sales_tender_cash;
 alter table sale_adjustment enable trigger sale_adjustment_cash;
+alter table sale_refund_tender enable trigger sale_refund_tender_cash;
 select test.eq((select count(*) from cash_event)::int, 0, 'the old app''s day left no drawer events');
 
 -- Carried: three cash sales in, the void and the refund out, the expense out.

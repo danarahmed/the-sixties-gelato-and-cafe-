@@ -472,7 +472,20 @@ export function OrderPanel({
               <strong>
                 ✅ {t("pos.recorded")} · {receipt.orderId.slice(0, 8)}
               </strong>
-              <span className="badge ok">{t(`pos.tender.${receipt.tender}`)}</span>
+              {receipt.payments.length > 1 ? (
+                <span
+                  data-testid="receipt-payments"
+                  style={{ display: "flex", gap: 4, flexWrap: "wrap" }}
+                >
+                  {receipt.payments.map((p, i) => (
+                    <span key={i} className="badge ok">
+                      {t(`pos.tender.${p.type}`)} {fmtIQD(p.amount)}
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                <span className="badge ok">{t(`pos.tender.${receipt.tender}`)}</span>
+              )}
             </div>
             {receipt.turnNo !== null && (
               <div className="rc-turn">

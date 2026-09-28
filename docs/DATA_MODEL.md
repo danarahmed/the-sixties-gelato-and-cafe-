@@ -733,7 +733,8 @@ location)` gives the open one.
 - **`sale_refund_line`** (`refund_id`, `sales_order_line_id`, `qty`, `amount`,
   `cost_returned`, `restocked`; one per line of a refund) and
   **`sale_refund_tender`** (`refund_id`, `tender_type`, `amount`): what each
-  refund gave back and where the money went (the sale's own payment).
+  refund gave back and where the money went (each way the sale was paid, since
+  `0042`).
 - The three are append-only (`forbid_mutation`), row security forced, and read
   only with `cost.view`, like the sale they belong to.
 - **`refund_sale_lines(order, lines, reason_code, reason, approval, key)`**
@@ -944,3 +945,38 @@ no_stock_reason, name_ar, name_ckb, rename_existing, key)` (`recipe.edit`,
   quantity, lines, sales and cost less its add-ons), and each add-on (how many,
   on how many lines, its sales, cost and margin, and the lines of the products
   offering its group today). Voided sales left out; refunds not taken off.
+
+### Split payments (`0042`)
+
+- **`sales_tender`** gains `received` (the cash handed over for a cash
+  payment, when typed: at least its `amount`, and only for cash),
+  `change_given` (worked out: `received − amount`) and `position` (the order
+  it was taken in). `amount` stays what the payment pays of the sale; a
+  sale's payments come to its net exactly. Indexed by sale.
+- **`post_sale`, `record_sale` and `settle_tab`** take `p_tenders`
+  (`[{type, amount, received}]`), read by `sale_payments`: cash or card in the
+  café, platform-paid once for a platform's order, ten at most, each more than
+  nothing (a sale that comes to nothing takes one of nothing), in whole units;
+  `received` only for cash. `p_tender` stays for a till loaded before; one or
+  the other, not both. The total the till showed (`p_expected_net`) is
+  checked first, then the payments. Each payment is a row, each cash one a
+  drawer event (`trg_cash_from_tender`), and the journal debits each account
+  its parts. The answer lists the payments (`order_payments`), a replay too.
+- **Voids:** `trg_cash_from_adjustment` takes back the sale's cash drawer
+  events, and no longer handles refunds.
+- **Refunds:** `refundable_payments(order)` gives what is left of each way a
+  sale was paid (a refund from before `0037` taken off its one payment).
+  `refund_lines_internal` and `refund_sale_lines(order, lines, reason_code,
+reason, approval, tenders, key)` take `p_tenders` (`[{type, amount}]`, each
+  way once, each at most what is left of it, together the refund) or share
+  the refund in proportion (`allocate_landed`). One `sale_refund_tender` per
+  way; the journal credits each way's account; a cash part is a drawer event
+  by `trg_cash_from_refund_tender`, which checks the drawer holds it. A
+  request sent without `p_tenders` is keyed as before.
+- **Figures:** `day_cash_totals` counts each refund's cash part (a refund from
+  before `0037`: all of it, when the sale was paid in cash); `drawer_status`
+  counts a sale paid two ways once.
+- **`report_payments(from, to)`** (`cost.view`): each way of paying, for the
+  sales placed in the dates (voids left out): how many it paid for, how many
+  of those were paid another way too, what it took, the change cash gave;
+  what refunds made in the dates gave back that way; the net.

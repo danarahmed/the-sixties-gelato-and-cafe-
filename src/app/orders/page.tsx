@@ -169,7 +169,13 @@ export default async function OrdersPage({
                         </div>
                       )}
                     </td>
-                    <td className="muted">{o.tenders.map((x) => t(tenderLabel(x))).join(", ")}</td>
+                    <td className="muted" data-testid="order-payments">
+                      {o.payments.length > 1
+                        ? o.payments
+                            .map((p) => `${t(tenderLabel(p.type))} ${fmtIQD(p.amount)}`)
+                            .join(" + ")
+                        : o.tenders.map((x) => t(tenderLabel(x))).join(", ")}
+                    </td>
                     <td>
                       <span className={`badge ${o.status === "completed" ? "ok" : "warn"}`}>
                         {t(orderStatusLabel(o.status))}
@@ -181,6 +187,8 @@ export default async function OrdersPage({
                             amount: fmtIQD(r.amount),
                             items: r.lines.map((l) => `${l.name} ×${fmtQty(l.qty)}`).join(", "),
                           })}
+                          {r.tenders.length > 1 &&
+                            ` (${r.tenders.map((x) => `${t(tenderLabel(x.type))} ${fmtIQD(x.amount)}`).join(", ")})`}
                           {" · "}
                           {r.approvedBy
                             ? t("{reason} · {by}, approved by {approver}", {
@@ -240,6 +248,7 @@ export default async function OrdersPage({
                             orderId: o.id,
                             lines: o.lines,
                             tender: o.tenders[0] ?? "cash",
+                            left: o.refundLeft,
                             channelLabel: channels.name(o.channel),
                             approvalOver: profile.refundApprovalOver,
                           }}
