@@ -18,6 +18,8 @@ import {
   type SessionFigures,
 } from "@/lib/cash";
 import { fmtIQD } from "@/lib/format";
+import { USD_NOTES, fmtUSD } from "@/lib/fx";
+import { normaliseNumber } from "@/lib/validation";
 import { dateTimeIn } from "@/lib/dates";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
@@ -32,6 +34,8 @@ type Msg = { ok: boolean; text: string } | null;
  * by counting again, hand it to the next person, or — a manager — close one
  * left open. The count is blind: what the drawer should hold is shown only in
  * the answer, once the count is in (or, before, to those who may see it).
+ * When the till took dollars (0043), they are counted too, blind, and all go
+ * to the safe.
  */
 export function DrawerPanel({ state, timezone }: { state: DrawerState; timezone: string }) {
   const { t } = useT();
@@ -42,6 +46,7 @@ export function DrawerPanel({ state, timezone }: { state: DrawerState; timezone:
   const [done, setDone] = useState<Done | null>(null);
   const [msg, setMsg] = useState<Msg>(null);
   const [count, setCount] = useState<CountValue>(EMPTY_COUNT);
+  const [usdCount, setUsdCount] = useState<CountValue>(EMPTY_COUNT);
   const [left, setLeft] = useState("");
   const [takeTo, setTakeTo] = useState<"safe" | "bank">("safe");
   const [floatFromSafe, setFloatFromSafe] = useState("");
@@ -49,6 +54,9 @@ export function DrawerPanel({ state, timezone }: { state: DrawerState; timezone:
   const [reason, setReason] = useState("");
   const s = state.session;
   const counted = countedOf(count);
+  const usd = countedOf(usdCount, USD_NOTES);
+  // The till's dollars are counted at every close while it holds any (0043).
+  const countsDollars = mode !== "open" && state.dollars.inTill;
   const split = closeSplit(counted.total ?? "", left);
 
   function begin(m: Mode) {
@@ -56,6 +64,7 @@ export function DrawerPanel({ state, timezone }: { state: DrawerState; timezone:
     setDone(null);
     setMsg(null);
     setCount(EMPTY_COUNT);
+    setUsdCount(EMPTY_COUNT);
     setLeft("");
     setFloatFromSafe("");
     setTo(state.takers[0]?.id ?? "");
@@ -69,6 +78,10 @@ export function DrawerPanel({ state, timezone }: { state: DrawerState; timezone:
     start(async () => {
       const total = counted.total ?? "";
       const notes = counted.notes;
+      const dollars =
+        countsDollars && usd.total !== null
+          ? { usdCounted: Number(usd.total), usdNotes: usd.notes }
+          : {};
       const r =
         kind === "open"
           ? await op.run("open", (key) =>
@@ -83,6 +96,7 @@ export function DrawerPanel({ state, timezone }: { state: DrawerState; timezone:
                     left: left.trim() === "" ? null : left,
                     takeTo: split.taken && split.taken > 0 ? takeTo : null,
                     sessionId: s?.id ?? null,
+                    ...dollars,
                   },
                   key,
                 ),
@@ -96,6 +110,7 @@ export function DrawerPanel({ state, timezone }: { state: DrawerState; timezone:
                       left: left.trim() === "" ? null : left,
                       takeTo: split.taken && split.taken > 0 ? takeTo : null,
                       to,
+                      ...dollars,
                     },
                     key,
                   ),
@@ -107,6 +122,7 @@ export function DrawerPanel({ state, timezone }: { state: DrawerState; timezone:
                       reason,
                       counted: total === "" ? null : total,
                       notes,
+                      ...dollars,
                     },
                     key,
                   ),
@@ -130,7 +146,10 @@ export function DrawerPanel({ state, timezone }: { state: DrawerState; timezone:
     (mode === "force"
       ? reason.trim() !== ""
       : counted.total !== null && (mode === "open" || split.error === null)) &&
-    (mode !== "handover" || to !== "");
+    (mode !== "handover" || to !== "") &&
+    // Dollars are counted with the dinars; a manager's close may leave both uncounted.
+    (!countsDollars || usd.error === null) &&
+    (!countsDollars || mode === "force" || usd.total !== null);
 
   return (
     <div className="grid" style={{ gap: 12 }} data-testid="drawer-panel">
@@ -148,7 +167,11 @@ export function DrawerPanel({ state, timezone }: { state: DrawerState; timezone:
                 })}
               </strong>
               {state.seesExpected && state.expected !== null && (
-                <Expected expected={state.expected} figures={state.figures} />
+                <Expected
+                  expected={state.expected}
+                  figures={state.figures}
+                  dollars={state.dollars}
+                />
               )}
             </div>
           ) : (
@@ -221,6 +244,23 @@ export function DrawerPanel({ state, timezone }: { state: DrawerState; timezone:
           )}
 
           <CountInput value={count} onChange={setCount} optional={mode === "force"} />
+
+          {countsDollars && (
+            <div className="grid" style={{ gap: 6 }} data-testid="usd-count">
+              <strong style={{ fontSize: ".9rem" }}>{t("Dollars in the till")}</strong>
+              <span className="muted" style={{ fontSize: ".82rem" }}>
+                {t(
+                  "The till took dollars: count them too. They all go to the safe; what it should hold is shown once the count is in.",
+                )}
+              </span>
+              <CountInput
+                value={usdCount}
+                onChange={setUsdCount}
+                optional={mode === "force"}
+                dollars
+              />
+            </div>
+          )}
 
           {mode === "open" && state.mayAddFloat && (
             <label style={{ maxWidth: 260 }}>
@@ -332,7 +372,15 @@ export function DrawerPanel({ state, timezone }: { state: DrawerState; timezone:
 }
 
 /** What an open drawer should hold, for those who may see it. */
-function Expected({ expected, figures }: { expected: number; figures: SessionFigures | null }) {
+function Expected({
+  expected,
+  figures,
+  dollars,
+}: {
+  expected: number;
+  figures: SessionFigures | null;
+  dollars: DrawerState["dollars"];
+}) {
   const { t } = useT();
   return (
     <div className="muted" style={{ fontSize: ".85rem" }} data-testid="drawer-expected">
@@ -342,6 +390,12 @@ function Expected({ expected, figures }: { expected: number; figures: SessionFig
           sales: fmtIQD(figures.cashSales),
           card: fmtIQD(figures.card),
           orders: figures.orders,
+        })}`}
+      {dollars.usd !== null &&
+        dollars.usd !== 0 &&
+        ` · ${t("and {usd} in dollars, taken at {amount}", {
+          usd: fmtUSD(dollars.usd),
+          amount: fmtIQD(dollars.value ?? 0),
         })}`}
     </div>
   );
@@ -412,12 +466,37 @@ function Answer({ done }: { done: Done }) {
           })}`
         : ` ${t("{left} stays in the drawer.", { left: fmtIQD(r.left ?? 0) })}`;
   }
+  if (r.usd) {
+    const u = r.usd;
+    head += ` ${t("Dollars: it should have held {expected}; counted {counted}: {difference}.", {
+      expected: fmtUSD(u.expected),
+      counted: fmtUSD(u.counted),
+      difference:
+        u.variance === 0
+          ? t("it agrees exactly")
+          : u.variance < 0
+            ? t("{usd} short ({amount})", {
+                usd: fmtUSD(-u.variance),
+                amount: fmtIQD(-u.varianceValue),
+              })
+            : t("{usd} over ({amount})", {
+                usd: fmtUSD(u.variance),
+                amount: fmtIQD(u.varianceValue),
+              }),
+    })}`;
+    if (u.taken > 0)
+      head += ` ${t("{usd} to the safe, at {amount}.", { usd: fmtUSD(u.taken), amount: fmtIQD(u.takenValue) })}`;
+  } else if (r.usdCarried !== null && r.usdCarried > 0) {
+    head += ` ${t("The till's {usd} were not counted: they stay in it for the next count.", {
+      usd: fmtUSD(r.usdCarried),
+    })}`;
+  }
   if (done.kind === "handover" && r.nextSessionNo) {
     head += ` ${t("Session {no} is open for {name}.", { no: r.nextSessionNo, name: String(r.nextCashier) })}`;
   }
   return (
     <div
-      className={`badge ${r.variance === null || r.variance === 0 ? "ok" : "warn"}`}
+      className={`badge ${(r.variance === null || r.variance === 0) && (r.usd === null || r.usd.variance === 0) ? "ok" : "warn"}`}
       style={{ whiteSpace: "normal" }}
       data-testid="drawer-answer"
     >
@@ -458,13 +537,25 @@ interface CountValue {
 const EMPTY_COUNT: CountValue = { byNotes: false, total: "", notes: {} };
 
 /** The count as the database takes it: a total, and the notes when counted by note. */
-function countedOf(v: CountValue): {
+function countedOf(
+  v: CountValue,
+  wholeOnly: readonly number[] | null = null,
+): {
   total: string | null;
   notes: Record<string, number> | null;
   error: string | null;
 } {
-  if (!v.byNotes)
-    return { total: v.total.trim() === "" ? null : v.total, notes: null, error: null };
+  if (!v.byNotes) {
+    const total = v.total.trim() === "" ? null : v.total;
+    // Dollars are counted in whole dollars.
+    if (wholeOnly && total !== null && !/^\d+$/.test(normaliseNumber(total)))
+      return { total: null, notes: null, error: "Enter the dollars you counted, in whole dollars" };
+    return {
+      total: total === null ? null : wholeOnly ? normaliseNumber(total) : total,
+      notes: null,
+      error: null,
+    };
+  }
   const total = notesTotal(v.notes);
   if (total === null) return { total: null, notes: null, error: "Count whole notes." };
   const notes = notesCounted(v.notes);
@@ -479,24 +570,28 @@ function CountInput({
   value,
   onChange,
   optional,
+  dollars = false,
 }: {
   value: CountValue;
   onChange: (v: CountValue) => void;
   optional: boolean;
+  /** The till's dollars (0043), in dollar notes. */
+  dollars?: boolean;
 }) {
   const { t, msg } = useT();
-  const c = countedOf(value);
+  const c = countedOf(value, dollars ? USD_NOTES : null);
+  const noteName = (n: number) => (dollars ? fmtUSD(n) : fmtIQD(n));
   return (
     <div className="grid" style={{ gap: 8 }}>
       {value.byNotes ? (
-        <div className="note-grid" data-testid="note-counter">
-          {IQD_NOTES.map((n) => (
+        <div className="note-grid" data-testid={dollars ? "usd-note-counter" : "note-counter"}>
+          {(dollars ? USD_NOTES : IQD_NOTES).map((n) => (
             <label key={n} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span className="mono" style={{ minWidth: 70, textAlign: "end" }}>
-                {fmtIQD(n)} ×
+                {noteName(n)} ×
               </span>
               <input
-                aria-label={t("Notes of {note}", { note: fmtIQD(n) })}
+                aria-label={t("Notes of {note}", { note: noteName(n) })}
                 className="amt"
                 style={{ width: 70, textAlign: "end" }}
                 inputMode="numeric"
@@ -510,7 +605,7 @@ function CountInput({
           ))}
           <div className="sc" style={{ marginBlockStart: 4 }}>
             {t("Counted")}:{" "}
-            <strong className="mono">{c.total === null ? "—" : fmtIQD(Number(c.total))}</strong>
+            <strong className="mono">{c.total === null ? "—" : noteName(Number(c.total))}</strong>
           </div>
           {c.error && (
             <span className="red" style={{ fontSize: ".8rem" }}>
@@ -521,17 +616,28 @@ function CountInput({
       ) : (
         <label style={{ maxWidth: 260 }}>
           <div className="sc">
-            {optional ? t("Cash counted (IQD), if counted") : t("Cash counted (IQD)")}
+            {dollars
+              ? optional
+                ? t("Dollars counted ($), if counted")
+                : t("Dollars counted ($)")
+              : optional
+                ? t("Cash counted (IQD), if counted")
+                : t("Cash counted (IQD)")}
           </div>
           <input
-            aria-label={t("Cash counted")}
+            aria-label={dollars ? t("Dollars counted") : t("Cash counted")}
             className="amt"
             style={{ textAlign: "end" }}
-            inputMode="decimal"
+            inputMode={dollars ? "numeric" : "decimal"}
             value={value.total}
             onChange={(e) => onChange({ ...value, total: e.target.value })}
             placeholder="0"
           />
+          {c.error && (
+            <span className="red" style={{ fontSize: ".8rem" }}>
+              {msg(c.error)}
+            </span>
+          )}
         </label>
       )}
       <button

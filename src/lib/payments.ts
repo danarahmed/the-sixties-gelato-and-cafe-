@@ -1,7 +1,8 @@
 /**
  * Split payments (0042): a sale paid in parts, as the till takes it and a
  * refund gives it back, worked out as the database works it out. Amounts are
- * whole dinars.
+ * whole dinars. A cash payment may be in dollars (0043): its dollars and the
+ * rate shown go with it, and the database works out what they are worth.
  */
 import type { SaleReceipt } from "@/lib/actions/sales";
 import { normaliseNumber } from "@/lib/validation";
@@ -13,14 +14,23 @@ export interface Payment {
   type: PayType;
   amount: number;
   received: number | null;
+  /** Cash in dollars (0043): the dollars handed over and the rate the till showed. */
+  currency?: "USD";
+  usd?: number;
+  rate?: number;
 }
 
 /** A payment as the database recorded it, with the change it gave. */
 export interface PaidPart {
   type: PayType;
   amount: number;
+  /** In dinars; for dollars, what they were worth. */
   received: number | null;
   change: number | null;
+  /** Cash in dollars (0043): how many, at what rate. */
+  currency?: "USD";
+  usd?: number;
+  rate?: number;
 }
 
 /** A part of a split as the cashier typed it. The last one, left empty, takes what is left. */
@@ -133,6 +143,9 @@ export function paidPart(x: Record<string, unknown>): PaidPart {
     amount: Number(x.amount ?? 0),
     received: n(x.received),
     change: n(x.change),
+    ...(x.currency === "USD"
+      ? { currency: "USD" as const, usd: Number(x.usd ?? 0), rate: Number(x.rate ?? 0) }
+      : {}),
   };
 }
 
@@ -235,7 +248,15 @@ export function checkRefundSplit(
 export function howPaid(d: {
   tender?: PayType | null;
   tenders?:
-    readonly { type: PayType; amount: string | number; received?: string | number | null }[] | null;
+    | readonly {
+        type: PayType;
+        amount: string | number;
+        received?: string | number | null;
+        currency?: "IQD" | "USD" | null;
+        usd?: number | null;
+        rate?: number | null;
+      }[]
+    | null;
 }): { p_tender: PayType | null; p_tenders: Payment[] | null } | null {
   if (d.tenders)
     return {
@@ -247,6 +268,10 @@ export function howPaid(d: {
           x.received === null || x.received === undefined || x.received === ""
             ? null
             : Number(x.received),
+        // Dollars (0043): what was handed over and the rate shown; the database values them.
+        ...(x.currency === "USD"
+          ? { currency: "USD" as const, usd: Number(x.usd), rate: Number(x.rate) }
+          : {}),
       })),
     };
   if (d.tender) return { p_tender: d.tender, p_tenders: null };

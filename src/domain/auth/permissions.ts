@@ -40,6 +40,7 @@ export type Permission =
   | "cash.session"
   | "cash.view_expected"
   | "cash.session.force"
+  | "fx.rate"
   | "accounting.post"
   | "accounting.period.lock"
   | "accounting.period.unlock"
@@ -70,6 +71,7 @@ const ALL: Permission[] = [
   "cash.session",
   "cash.view_expected",
   "cash.session.force",
+  "fx.rate",
   "accounting.post",
   "accounting.period.lock",
   "accounting.period.unlock",
@@ -109,6 +111,7 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "day.close",
     "cash.session",
     "cash.session.force",
+    "fx.rate",
     "platform.reconcile",
     "ai.view",
     "audit.view",

@@ -36,7 +36,15 @@ export interface PrintJob {
    * Each payment (0042): its way and its part, and for cash what was handed
    * over. A refund's say how it went back. None: the one tender pays it all.
    */
-  payments?: { type: Tender; amount: number; received?: number | null }[];
+  payments?: {
+    type: Tender;
+    amount: number;
+    received?: number | null;
+    /** Cash in dollars (0043): how many, at what rate; `received` is what they were worth. */
+    currency?: "USD";
+    usd?: number;
+    rate?: number;
+  }[];
   change?: number | null;
   reference?: string | null;
   /** A delivery platform's order number (0030). */
@@ -339,7 +347,14 @@ function CheckSlip({
             {job.payments && job.payments.length > 0 ? (
               job.payments.map((p, i) => (
                 <div className="sl-row" key={i} data-testid="slip-payment">
-                  <span>{t(`pos.tender.${p.type}`)}</span>
+                  <span>
+                    {p.currency === "USD"
+                      ? t("Dollars {usd} at {rate}", {
+                          usd: `$${money(p.usd ?? 0)}`,
+                          rate: money(p.rate ?? 0),
+                        })
+                      : t(`pos.tender.${p.type}`)}
+                  </span>
                   <span>{money(p.received ?? p.amount)}</span>
                 </div>
               ))

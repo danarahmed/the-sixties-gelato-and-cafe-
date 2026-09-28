@@ -63,7 +63,8 @@ select test.eq((select string_agg((x ->> 'key') || ' ' || (x ->> 'scope_type')
                  where x ->> 'key' not in ('discount_round_to')),
   'discount_cap_percent business = 10 (default); negative_stock business = alert (default); '
   'negative_stock item_type finished_good = block (default); negative_stock item_type sub_recipe_output = block (default); '
-  'refund_approval_over business = 25000 (default); waste_approval_over business = 50000 (default); '
+  'refund_approval_over business = 25000 (default); usd_rate_max_age_hours business = 36 (default); '
+  'usd_round_to business = 250 (default); waste_approval_over business = 50000 (default); '
   'waste_approval_window business = session (default)',
   'every rule starts at its default: the business row''s columns, and the plan''s for the rest');
 

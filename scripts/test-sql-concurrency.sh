@@ -263,6 +263,6 @@ ok "$(sql "select trim_scale((item_position('00000000-0000-0000-0000-0000000000b
 
 # The books still tie after all of it.
 ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(test.today())")" \
-   "0,0,0,0,0,0,0,0,0" "every subledger still reconciles to its control account"
+   "0,0,0,0,0,0,0,0,0,0" "every subledger still reconciles to its control account"
 
 [ "$FAILED" -eq 0 ]

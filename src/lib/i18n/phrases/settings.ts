@@ -399,6 +399,28 @@ const phrases: PhraseBook = {
   "One item": { ar: "مادة واحدة", ckb: "یەک کاڵا" },
   "A rule": { ar: "قاعدة", ckb: "یاسایەک" },
   "Rule changed": { ar: "تغيّرت قاعدة", ckb: "یاسایەک گۆڕدرا" },
+
+  // The dollar's rules (0043).
+  "A dollar rate is used for": {
+    ar: "يُستخدم سعر الدولار لمدة",
+    ckb: "نرخی دۆلار بەکاردێت بۆ ماوەی",
+  },
+  "Dollars are counted in dinars to the nearest": {
+    ar: "تُحسب الدولارات بالدينار لأقرب",
+    ckb: "دۆلار بە دینار هەژمار دەکرێت بۆ نزیکترین",
+  },
+  "The till takes dollars at the rate a manager set, for this many hours after it was set. Older, dollars are refused until a manager sets today's on Sales → Dollars.":
+    {
+      ar: "يأخذ الدرج الدولارات بالسعر الذي حدده المدير، طوال هذه الساعات بعد تحديده. وبعدها تُرفض الدولارات حتى يحدد المدير سعر اليوم في شاشة «المبيعات»، قسم «الدولار».",
+      ckb: "دەخیلە دۆلار بەو نرخە وەردەگرێت کە بەڕێوەبەر داینا، بۆ ئەم ماوە کاتژمێرە دوای دانانی. دوای ئەوە دۆلار ڕەتدەکرێتەوە تا بەڕێوەبەرێک نرخی ئەمڕۆ لە شاشەی «فرۆشتن»، بەشی «دۆلار» دادەنێت.",
+    },
+  "Dollars handed over are worth their number times the rate, rounded to the nearest step (half-way rounds up). The change is given in dinars.":
+    {
+      ar: "قيمة الدولارات المُسلَّمة هي عددها مضروبًا في السعر، مقرّبة لأقرب خطوة (النصف يُقرَّب إلى الأعلى). ويُعطى الباقي بالدينار.",
+      ckb: "بەهای ئەو دۆلارانەی دەدرێن ژمارەکەیانە جارانی نرخەکە، بۆ نزیکترین هەنگاو خڕ دەکرێتەوە (نیوە بۆ سەرەوە). باقی بە دینار دەدرێتەوە.",
+    },
+  "{n} hours": { ar: "{n} ساعة", ckb: "{n} کاتژمێر" },
+  hours: { ar: "ساعات", ckb: "کاتژمێر" },
 };
 
 export default phrases;

@@ -3,6 +3,7 @@ import { getT } from "@/lib/i18n/server";
 import { requirePermission } from "@/lib/auth/session";
 import { getSessionStatement } from "@/lib/db/cash";
 import { fmtIQD } from "@/lib/format";
+import { fmtUSD } from "@/lib/fx";
 import { dateTimeIn } from "@/lib/dates";
 import { SessionsTable } from "@/components/cash/SessionsTable";
 
@@ -16,6 +17,15 @@ const MOVEMENT: Record<string, string> = {
   paid_out_reversed: "Paid out, reversed",
   cash_in: "Put in",
   cash_out: "Taken out",
+};
+
+// The till's dollars in and out (0043): phrases, shown through t().
+const DOLLAR_MOVEMENT: Record<string, string> = {
+  sale: "Paid in dollars",
+  void: "Void",
+  count: "Counted over or short",
+  take: "Taken to the safe",
+  exchange: "Exchanged for dinars",
 };
 
 /**
@@ -128,6 +138,59 @@ export default async function SessionStatementPage({
           </table>
         </div>
       </section>
+      {(st.dollars || st.dollarEvents.length > 0) && (
+        <section className="panel" data-testid="session-dollars">
+          <div className="panel-h">
+            <h3>{t("Dollars in and out")}</h3>
+            {st.dollars && (
+              <span className="muted" style={{ fontSize: ".78rem" }}>
+                {st.dollars.counted === null
+                  ? t("Not counted at the close: {usd} stayed in the till", {
+                      usd: fmtUSD(st.dollars.expected),
+                    })
+                  : t("Should have held {expected}; counted {counted}; {taken} to the safe", {
+                      expected: fmtUSD(st.dollars.expected),
+                      counted: fmtUSD(st.dollars.counted),
+                      taken: fmtUSD(st.dollars.taken),
+                    })}
+              </span>
+            )}
+          </div>
+          <div className="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>{t("When")}</th>
+                  <th>{t("What")}</th>
+                  <th>{t("Order")}</th>
+                  <th>{t("By")}</th>
+                  <th className="right">{t("Dollars")}</th>
+                  <th className="right">{t("Taken at")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {st.dollarEvents.map((e, i) => (
+                  <tr key={i}>
+                    <td className="mono" style={{ fontSize: ".8rem" }}>
+                      {at(e.at)}
+                    </td>
+                    <td>{t(DOLLAR_MOVEMENT[e.kind] ?? e.kind)}</td>
+                    <td className="mono">{e.turnNo === null ? "" : `#${e.turnNo}`}</td>
+                    <td className="muted">{e.by ?? "—"}</td>
+                    <td
+                      className="right money"
+                      style={{ color: e.usd < 0 ? "var(--err)" : undefined }}
+                    >
+                      {e.usd < 0 ? `−${fmtUSD(-e.usd)}` : fmtUSD(e.usd)}
+                    </td>
+                    <td className="right money">{fmtIQD(e.value)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

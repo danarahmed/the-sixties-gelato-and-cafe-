@@ -17,7 +17,8 @@
 --            test records were cleared, and when)
 --   cleared  sales and their add-ons, bills kept open, voids and refunds,
 --            managers' approvals and PIN attempts, cash sessions and drawer
---            counts, cash events and cash moved, the answers kept for
+--            counts, cash events and cash moved, the dollar rates set and
+--            the dollars taken, counted and exchanged, the answers kept for
 --            retries, card settlements,
 --            stock movements and lots, stock counts, production batches,
 --            purchase orders, deliveries and their corrections, supplier bills
@@ -98,7 +99,8 @@ end $$;
 truncate table
   accounting_period, ai_insight, ai_interaction_log, alert, approval, card_settlement, cash_event, cash_transfer,
   document_counter,
-  expense, goods_receipt, goods_receipt_line, inventory_movement, item_lot, journal_entry, journal_line,
+  expense, fx_cash_event, fx_exchange, fx_rate, goods_receipt, goods_receipt_line, inventory_movement, item_lot,
+  journal_entry, journal_line,
   loss_review,
   pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   pos_tab_line_modifier,
@@ -106,7 +108,8 @@ truncate table
   purchase_invoice, purchase_order, purchase_order_line, receipt_correction, reconciliation_issue, request_log,
   sale_adjustment,
   sale_refund, sale_refund_line, sale_refund_tender,
-  sales_order, sales_order_line, sales_order_line_modifier, sales_tender, stock_count, stock_count_line,
+  sales_order, sales_order_line, sales_order_line_modifier, sales_tender, session_dollar_count, stock_count,
+  stock_count_line,
   supplier_payment, sync_log,
   work_shift
   restart identity;

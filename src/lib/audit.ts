@@ -63,7 +63,7 @@ export const AUDIT_GROUPS = [
     label: "Sales, bills, discounts & approvals", // i18n-ignore
     prefixes: ["sale.", "bill.", "approval."],
   },
-  { key: "cash", label: "Cash & the drawer", prefixes: ["cash.", "drawer."] }, // i18n-ignore
+  { key: "cash", label: "Cash & the drawer", prefixes: ["cash.", "drawer.", "fx."] }, // i18n-ignore
   {
     key: "settlements",
     label: "Card & platform settlements", // i18n-ignore
@@ -148,6 +148,8 @@ const ACTION_LABEL: Record<string, string> = {
   "cash.session.close": "Drawer closed",
   "cash.session.hand_over": "Drawer handed over",
   "cash.session.force_close": "Drawer closed by a manager",
+  "fx.rate.set": "Dollar rate set",
+  "fx.exchange": "Dollars exchanged for dinars",
   "card.settlement": "Card takings settled",
   "card.settlement_cancel": "Card settlement cancelled",
   "platform.settlement": "Platform payout recorded",
@@ -326,6 +328,17 @@ const FIELD_LABEL: Record<string, string> = {
   size: "Size",
   groups: "Groups of add-ons",
   copied_from: "Copied from",
+  // US dollars (0043): the rate, an exchange, and the dollars counted at a close.
+  rate: "Dinars a dollar",
+  set_at: "Set",
+  currency: "Currency",
+  usd: "Dollars",
+  dinars: "Dinars received",
+  usd_expected: "Dollars it should hold",
+  usd_counted: "Dollars counted",
+  usd_variance: "Dollars over / short",
+  usd_carried: "Dollars left uncounted",
+  usd_notes: "Dollar notes counted",
 };
 
 /** What a delivery's correction changed (0038), as the trail names it. */
@@ -551,6 +564,10 @@ export function subjectOf(
       return pick("name") ?? `Language ${entityId ?? ""}`.trim();
     case "work_shift":
       return pick("session_no") ? `Session ${pick("session_no")}` : "A drawer count";
+    case "fx_rate":
+      return "The dollar rate";
+    case "fx_exchange":
+      return "An exchange of dollars";
     case "platform_settlement":
       return pick("reference")
         ? `${pick("platform") ?? "Platform"} statement ${pick("reference")}`
@@ -583,6 +600,8 @@ const SUBJECT_WORDS = new Set([
   "A table",
   "A drawer count",
   "An add-on",
+  "The dollar rate",
+  "An exchange of dollars",
 ]);
 
 /** An id shown short, as subjectOf shows it: "1a2b3c4d…". */

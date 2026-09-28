@@ -133,7 +133,7 @@ create temp table cancel_b4 as select record_bill((select id from sup), 'INV-777
 select test.eq(test.lines_of((select (r->>'bill_id')::uuid from cancel_b4)), '2000 Cr 500 | 2050 Dr 500',
   'the corrected bill takes the same invoice number and the same receipt');
 select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from report_reconciliation(test.today())),
-  'card=0,documents=0,drawer=0,grni=0,inventory=0,payables=0,platform=0,safe=0,sales=0', 'and the books still reconcile');
+  'card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,platform=0,safe=0,sales=0', 'and the books still reconcile');
 select test.act_as('owner@example.com');
 select test.eq((select count(*) from legacy_unposted())::int, 0,
   'everything the app records is journaled as it happens: nothing awaits a journal');
@@ -187,4 +187,4 @@ select test.eq(next_bill_number(), pg_temp.own(4), 'and uses none of the café''
 
 select test.act_as('owner@example.com');
 select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from report_reconciliation(test.today())),
-  'card=0,documents=0,drawer=0,grni=0,inventory=0,payables=0,platform=0,safe=0,sales=0', 'the books still reconcile');
+  'card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,platform=0,safe=0,sales=0', 'the books still reconcile');

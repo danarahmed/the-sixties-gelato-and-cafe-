@@ -4,6 +4,7 @@ import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getSalesOrders } from "@/lib/db/read";
 import { fmtIQD, fmtQty, orderStatusLabel, tenderLabel } from "@/lib/format";
+import { fmtRate, fmtUSD } from "@/lib/fx";
 import { getChannelNames } from "@/lib/db/channels";
 import { addDays, businessToday, dateTimeIn, dayStart, parseDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui";
@@ -170,9 +171,17 @@ export default async function OrdersPage({
                       )}
                     </td>
                     <td className="muted" data-testid="order-payments">
-                      {o.payments.length > 1
+                      {o.payments.length > 1 || o.payments.some((p) => p.currency === "USD")
                         ? o.payments
-                            .map((p) => `${t(tenderLabel(p.type))} ${fmtIQD(p.amount)}`)
+                            .map((p) =>
+                              p.currency === "USD"
+                                ? t("{usd} at {rate} = {amount}", {
+                                    usd: fmtUSD(p.usd ?? 0),
+                                    rate: fmtRate(p.rate ?? 0),
+                                    amount: fmtIQD(p.received ?? p.amount),
+                                  })
+                                : `${t(tenderLabel(p.type))} ${fmtIQD(p.amount)}`,
+                            )
                             .join(" + ")
                         : o.tenders.map((x) => t(tenderLabel(x))).join(", ")}
                     </td>

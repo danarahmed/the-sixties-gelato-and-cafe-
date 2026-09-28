@@ -183,6 +183,39 @@ received}`: `amount` is its part of the sale, `received` the cash handed
 - **The report** is by way of paying over the dates (Reports → Sales by
   payment method), not by day.
 
+Release R:
+
+- **The dollars have a drawer of their own** (`fx_cash_event`, the till's and
+  the safe's), beside the dinars' and never mixed with them. `cash_event`,
+  `cash_transfer` and the sessions' dinar figures did not gain a currency:
+  every reader of the dinar drawer reads as before.
+- **A payment in dollars is cash:** `{type: 'cash', currency: 'USD', usd,
+rate, amount}`. The till sends the rate it showed; the database values the
+  dollars at the rate now, to the nearest step of a rule (`usd_round_to`,
+  250), and refuses the payment when the rate changed or is older than a
+  second rule allows (`usd_rate_max_age_hours`, 36). `received` is what the
+  dollars are worth; the change is in dinars, out of the dinar drawer, which
+  must hold it. The rate is checked after a retry is recognised, so a sale
+  sent again after the rate changed is the sale recorded.
+- **No dollar float, and no opening count of dollars.** At every close the
+  till's dollars are counted, blind, and all go to the safe (Dr 1006 / Cr
+  1001), in one journal with any difference (6300). A close that does not
+  count them leaves them in the till for the next. The count is kept in
+  `session_dollar_count`, not on the session, so the dinar close is unchanged.
+- **Dollars are carried at what they were taken at** (a place's average), and
+  dollars leaving take their share of it, the last of them the rest.
+- **One exchange function** (`exchange_dollars`): from the till or the safe,
+  into the till, the safe or the bank, the difference to 6950. There is no
+  function to move dollars between the till and the safe: they go to the safe
+  at each close.
+- **The rate is set on Sales → Dollars,** where the managers who set it
+  (`fx.rate`: owner, general manager, branch manager) and the dollars held
+  are; Settings shows the two rules.
+- **The books** check the dollars held against 1001 and 1006 (a tenth check),
+  and the safe's check takes the dinars exchanged into it.
+- **Formats** still show dinars as IQD: the business has one currency; the
+  dollars are shown as $.
+
 **Basis:**
 
 - The code at `d17436e`: migrations `0001`–`0034` and the app.

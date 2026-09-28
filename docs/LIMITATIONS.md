@@ -195,9 +195,27 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     back for a card payment (the card is refunded on the terminal).
   - A card slip's number is not recorded with its payment.
   - A delivery platform's order is paid once, by the platform.
-  - US dollars come with release R.
   - Reports → Sales by payment method covers the dates chosen, not each day or
-    each till.
+    each till. A part paid in dollars counts as cash there, at its part of the
+    sale.
+- **US dollars, what they do not do (release R, `0043`).**
+  - One foreign currency, the US dollar, at the rate a manager sets: there is
+    no rate fetched from a bank or an exchange office.
+  - The till takes whole dollars, and the change is always given in dinars:
+    dollars are never given back as change, and there is no dollar float.
+  - A refund of a sale paid in dollars is given back in dinars.
+  - The till's **Split** is in dinars and by card; dollars pay in the
+    **$ Dollars** window, with the rest in dinars or by card.
+  - Dollars are carried at what they were taken at (their average). A new
+    rate does not revalue them; the difference shows when they are exchanged
+    (6950 Exchange differences).
+  - At each close all the till's dollars go to the safe. A close that does not
+    count them (a till loaded before `0043`, or a manager's close without a
+    count) leaves them in the till for the next count.
+  - The drawer's figures are dinars only: the change given for dollars is a
+    cash sale below nothing there. The day's cash sales count a part paid in
+    dollars as cash.
+  - Reports → Dollars shows what is held now, not as at the end of the dates.
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the

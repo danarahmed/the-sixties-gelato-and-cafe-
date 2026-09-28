@@ -6,6 +6,14 @@ import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { cleanOrderNo, normaliseNumber, ORDER_NO } from "@/lib/validation";
 import { checkSplit, type Payment, type SplitRow } from "@/lib/payments";
+import {
+  checkDollars,
+  dollarsFor,
+  fmtRate,
+  fmtUSD,
+  suggestedDollars,
+  type RestWay,
+} from "@/lib/fx";
 import type { Tender } from "./model";
 
 /** Notes a customer is likely to hand over for this total: the next round sums above it. */
@@ -35,6 +43,12 @@ const SPLIT_START: SplitRow[] = [
  * typed but the last, which takes what is left; the cash handed over for the
  * cash part gives the change. Confirm stays off until the parts come to the
  * total.
+ *
+ * Dollars (0043), while a manager's rate is recent enough: the dollars handed
+ * over, at that rate, rounded as the café counts them. Worth the total or
+ * more, the change is given in dinars; worth less, the rest is paid in dinars
+ * or by card. The database values them again at the rate now, and refuses the
+ * payment if the rate changed meanwhile.
  */
 export function PayDialog({
   title,
@@ -43,6 +57,8 @@ export function PayDialog({
   tenders,
   initialTender,
   platform,
+  fx = null,
+  dollarsOffHours = null,
   busy,
   error,
   onConfirm,
@@ -57,16 +73,26 @@ export function PayDialog({
   initialTender: Tender;
   /** The delivery platform's name, for its sale: "Talabat". */
   platform?: string | null;
+  /** The dollar's rate and the step dollars are counted to, when dollars may be taken (0043). */
+  fx?: { rate: number; roundTo: number } | null;
+  /** Dollars are not taken now: the rate is this many hours old. */
+  dollarsOffHours?: number | null;
   busy: boolean;
   error: string | null;
   onConfirm: (payments: Payment[], orderNo: string | null) => void;
   onClose: () => void;
 }) {
   const { t, msg } = useT();
-  const [tender, setTender] = useState<Tender | "split">(initialTender);
+  const [tender, setTender] = useState<Tender | "split" | "usd">(initialTender);
   const [received, setReceived] = useState("");
   const [rows, setRows] = useState<SplitRow[]>(SPLIT_START);
   const [splitReceived, setSplitReceived] = useState("");
+  const [usdText, setUsdText] = useState("");
+  const [restWay, setRestWay] = useState<RestWay>("cash");
+  const [restReceived, setRestReceived] = useState("");
+  // Dollars are cash: taken where cash is, at a rate recent enough.
+  const canDollars = fx !== null && tenders.includes("cash");
+  const usdInput = useRef<HTMLInputElement>(null);
   // Part in cash and part by card: only where both can be taken.
   const canSplit = tenders.includes("cash") && tenders.includes("card");
   const [orderNo, setOrderNo] = useState("");
@@ -76,6 +102,7 @@ export function PayDialog({
   useEffect(() => {
     if (tender === "cash") input.current?.focus();
     if (tender === "platform_paid") orderInput.current?.focus();
+    if (tender === "usd") usdInput.current?.focus();
   }, [tender]);
 
   const typed = normaliseNumber(received);
@@ -86,13 +113,27 @@ export function PayDialog({
   const numberBad = number !== "" && !ORDER_NO.test(number);
   const needsNumber = tender === "platform_paid" && (number === "" || numberBad);
   const split = tender === "split" ? checkSplit(total, rows, splitReceived) : null;
-  const canConfirm = !busy && (split ? split.payments !== null : !short && !needsNumber);
+  const dollars =
+    tender === "usd" && fx
+      ? checkDollars(total, fx.rate, fx.roundTo, usdText, restWay, restReceived)
+      : null;
+  const canConfirm =
+    !busy &&
+    (split
+      ? split.payments !== null
+      : dollars
+        ? dollars.payments !== null
+        : !short && !needsNumber);
   const platformName = platform ?? t("pos.tender.platform_paid");
 
   function confirm() {
     if (!canConfirm) return;
     if (split) {
       if (split.payments) onConfirm(split.payments, null);
+      return;
+    }
+    if (dollars) {
+      if (dollars.payments) onConfirm(dollars.payments, null);
       return;
     }
     const one = tender as Tender;
@@ -167,6 +208,18 @@ export function PayDialog({
                 {t(`pos.tender.${x}`)}
               </button>
             ))}
+            {canDollars && (
+              <button
+                role="radio"
+                aria-checked={tender === "usd"}
+                className={tender === "usd" ? "active" : ""}
+                onClick={() => setTender("usd")}
+                disabled={busy}
+                data-testid="pay-usd"
+              >
+                $ {t("Dollars")}
+              </button>
+            )}
             {canSplit && (
               <button
                 role="radio"
@@ -182,6 +235,14 @@ export function PayDialog({
           </div>
         )}
 
+        {dollarsOffHours !== null && tenders.includes("cash") && (
+          <p className="muted" style={{ fontSize: ".8rem", margin: 0 }} data-testid="usd-off">
+            {t(
+              "No dollars now: the rate was set {n} hours ago. A manager sets today's on Sales → Dollars.",
+              { n: dollarsOffHours },
+            )}
+          </p>
+        )}
         {tender === "cash" && (
           <div className="cash-box">
             <label className="muted" htmlFor="cash-received" style={{ fontSize: ".85rem" }}>
@@ -329,6 +390,115 @@ export function PayDialog({
                     </>
                   )}
                 </div>
+              </>
+            )}
+          </div>
+        )}
+        {dollars && fx && (
+          <div className="cash-box" data-testid="usd-box">
+            <label className="muted" htmlFor="usd-received" style={{ fontSize: ".85rem" }}>
+              {t("Dollars handed over")} · {t("{rate} dinars a dollar", { rate: fmtRate(fx.rate) })}
+            </label>
+            <input
+              id="usd-received"
+              ref={usdInput}
+              inputMode="numeric"
+              autoComplete="off"
+              className="cash-input mono"
+              placeholder={fmtUSD(dollarsFor(total, fx.rate, fx.roundTo))}
+              value={usdText}
+              onChange={(e) => setUsdText(e.target.value)}
+              disabled={busy}
+            />
+            <div className="cash-quick">
+              {suggestedDollars(total, fx.rate, fx.roundTo).map((n) => (
+                <button
+                  key={n}
+                  className="mono"
+                  onClick={() => setUsdText(String(n))}
+                  disabled={busy}
+                >
+                  {fmtUSD(n)}
+                </button>
+              ))}
+            </div>
+            {dollars.problem === "notNumber" && (
+              <span className="red" style={{ fontSize: ".85rem" }}>
+                {t("Dollars are taken in whole dollars")}
+              </span>
+            )}
+            {dollars.value !== null && dollars.usd !== null && (
+              <span className="muted" style={{ fontSize: ".85rem" }} data-testid="usd-value">
+                {t("{usd} are {amount}", {
+                  usd: fmtUSD(dollars.usd),
+                  amount: fmtIQD(dollars.value),
+                })}
+              </span>
+            )}
+            {dollars.value !== null && dollars.rest === 0 && (
+              <div className="change-row" data-testid="usd-change">
+                <span>{t("Change, in dinars")}</span>
+                <strong className="mono change-amt">{fmtIQD(dollars.change ?? 0)}</strong>
+              </div>
+            )}
+            {dollars.value !== null && dollars.rest > 0 && (
+              <>
+                <span style={{ fontSize: ".9rem" }} data-testid="usd-rest">
+                  {t("The other {amount} is paid", { amount: fmtIQD(dollars.rest) })}
+                </span>
+                <div className="seg" role="radiogroup" aria-label={t("The rest is paid")}>
+                  {(["cash", "card"] as const).map((x) => (
+                    <button
+                      key={x}
+                      role="radio"
+                      aria-checked={restWay === x}
+                      className={restWay === x ? "active" : ""}
+                      onClick={() => setRestWay(x)}
+                      disabled={busy}
+                    >
+                      {x === "cash" ? "💵 " : "💳 "}
+                      {t(`pos.tender.${x}`)}
+                    </button>
+                  ))}
+                </div>
+                {restWay === "cash" && (
+                  <>
+                    <label
+                      className="muted"
+                      htmlFor="usd-rest-received"
+                      style={{ fontSize: ".85rem" }}
+                    >
+                      {t("pos.cashReceived")} · {fmtIQD(dollars.rest)}
+                    </label>
+                    <input
+                      id="usd-rest-received"
+                      inputMode="decimal"
+                      autoComplete="off"
+                      className="cash-input mono"
+                      placeholder={fmtIQD(dollars.rest)}
+                      value={restReceived}
+                      onChange={(e) => setRestReceived(e.target.value)}
+                      disabled={busy}
+                    />
+                    <div className="change-row">
+                      {dollars.problem === "restShort" && dollars.restReceived !== null ? (
+                        <span className="red">
+                          {t("pos.stillOwed")}{" "}
+                          <strong className="mono">
+                            {fmtIQD(dollars.rest - dollars.restReceived)}
+                          </strong>
+                        </span>
+                      ) : (
+                        <>
+                          <span>{t("pos.changeDue")}</span>
+                          <strong className="mono change-amt">
+                            {fmtIQD(dollars.restChange ?? 0)}
+                          </strong>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
               </>
             )}
           </div>

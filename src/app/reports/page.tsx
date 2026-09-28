@@ -18,6 +18,8 @@ import {
 import { LegacyPostings } from "@/components/books/LegacyPostings";
 import { EXCEPTION_LABEL, NO_ONE, exceptionsByPerson, type ExceptionKind } from "@/lib/exceptions";
 import { fmtIQD, tenderLabel } from "@/lib/format";
+import { getDollarsReport } from "@/lib/db/fx";
+import { fmtRate, fmtUSD } from "@/lib/fx";
 import { getChannelNames } from "@/lib/db/channels";
 import {
   addDays,
@@ -31,6 +33,13 @@ import {
 } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
+
+// Where dollars were exchanged from and their dinars went (0043): phrases, shown through t().
+const PLACE_LABEL: Record<string, string> = {
+  till: "the till",
+  safe: "the safe",
+  bank: "the bank",
+};
 
 export default async function ReportsPage({
   searchParams,
@@ -47,20 +56,33 @@ export default async function ReportsPage({
   const seesProfit = has(profile, "profit.view");
   const seesExceptions = has(profile, "audit.view");
 
-  const [pnl, rec, sales, book, allMenu, unposted, uncosted, exceptions, channels, sized, takings] =
-    await Promise.all([
-      seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
-      getReconciliation(to),
-      getDailySales(from, to),
-      getVendorBook(today),
-      getMenuCosting(),
-      getLegacyUnposted(),
-      getUncostedSales(from, to),
-      seesExceptions ? getExceptions(from, to) : Promise.resolve([]),
-      getChannelNames(),
-      getSizesAndAddons(from, to),
-      getPaymentTakings(from, to),
-    ]);
+  const [
+    pnl,
+    rec,
+    sales,
+    book,
+    allMenu,
+    unposted,
+    uncosted,
+    exceptions,
+    channels,
+    sized,
+    takings,
+    dollars,
+  ] = await Promise.all([
+    seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
+    getReconciliation(to),
+    getDailySales(from, to),
+    getVendorBook(today),
+    getMenuCosting(),
+    getLegacyUnposted(),
+    getUncostedSales(from, to),
+    seesExceptions ? getExceptions(from, to) : Promise.resolve([]),
+    getChannelNames(),
+    getSizesAndAddons(from, to),
+    getPaymentTakings(from, to),
+    getDollarsReport(from, to),
+  ]);
   // The menu as it sells today: a platform out of use sells nothing.
   const menu = allMenu.filter((m) =>
     channels.channels.some((c) => c.code === m.channel && c.active),
@@ -136,6 +158,7 @@ export default async function ReportsPage({
     count: t("Stock count"),
     cash: t("Cash moved"),
     session: t("Drawer session"),
+    dollars: t("Dollars"),
     card: t("Card settlement"),
     platform: t("Platform statement"),
     journal: t("Journal"),
@@ -558,6 +581,144 @@ export default async function ReportsPage({
             </p>
           </div>
         )}
+      </section>
+
+      {/* ---- Dollars (0043) ---- */}
+      <section className="panel" id="dollars" data-testid="dollars-report">
+        <div className="panel-h">
+          <h3>{t("Dollars")}</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            {t("Taken, counted and exchanged {from} to {to}; held now", { from, to })}
+          </span>
+        </div>
+        <div className="panel-b grid" style={{ gap: 10 }}>
+          <p style={{ margin: 0, fontSize: ".9rem" }} data-testid="dollars-taken">
+            {dollars.taken.sales === 0
+              ? t("No sale was paid in dollars in these dates.")
+              : t(
+                  "{sales} sale(s) paid in dollars: {usd}, taken at {value}; they paid {paid}, and {change} went back as change in dinars.",
+                  {
+                    sales: dollars.taken.sales,
+                    usd: fmtUSD(dollars.taken.usd),
+                    value: fmtIQD(dollars.taken.value),
+                    paid: fmtIQD(dollars.taken.paid),
+                    change: fmtIQD(dollars.taken.change),
+                  },
+                )}
+          </p>
+          {dollars.byRate.length > 0 && (
+            <div className="tw">
+              <table>
+                <thead>
+                  <tr>
+                    <th className="right">{t("Dinars a dollar")}</th>
+                    <th className="right">{t("Sales")}</th>
+                    <th className="right">{t("Dollars")}</th>
+                    <th className="right">{t("Taken at")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dollars.byRate.map((r) => (
+                    <tr key={r.rate}>
+                      <td className="right money">{fmtRate(r.rate)}</td>
+                      <td className="right money">{r.sales}</td>
+                      <td className="right money">{fmtUSD(r.usd)}</td>
+                      <td className="right money">{fmtIQD(r.value)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {dollars.exchanges.length > 0 && (
+            <div className="tw">
+              <table data-testid="dollars-exchanges">
+                <thead>
+                  <tr>
+                    <th>{t("When")}</th>
+                    <th>{t("From")}</th>
+                    <th>{t("Into")}</th>
+                    <th className="right">{t("Dollars")}</th>
+                    <th className="right">{t("Taken at")}</th>
+                    <th className="right">{t("Dinars received")}</th>
+                    <th className="right">{t("Difference")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dollars.exchanges.map((x) => (
+                    <tr key={x.id}>
+                      <td>{dateTimeIn(profile.timezone, x.at)}</td>
+                      <td>{t(PLACE_LABEL[x.from] ?? x.from)}</td>
+                      <td>{t(PLACE_LABEL[x.to] ?? x.to)}</td>
+                      <td className="right money">{fmtUSD(x.usd)}</td>
+                      <td className="right money">{fmtIQD(x.value)}</td>
+                      <td className="right money">{fmtIQD(x.received)}</td>
+                      <td className={`right money ${x.difference < 0 ? "red" : ""}`}>
+                        {x.difference < 0 ? `(${fmtIQD(-x.difference)})` : fmtIQD(x.difference)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {dollars.counts.length > 0 && (
+            <div className="tw">
+              <table data-testid="dollars-counts">
+                <thead>
+                  <tr>
+                    <th>{t("Session")}</th>
+                    <th>{t("Branch")}</th>
+                    <th className="right">{t("Should have held")}</th>
+                    <th className="right">{t("Counted")}</th>
+                    <th className="right">{t("Difference")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dollars.counts.map((c) => (
+                    <tr key={c.sessionId}>
+                      <td>
+                        <Link className="drill" href={`/sales/sessions/${c.sessionId}`}>
+                          {c.sessionNo ?? "—"}
+                        </Link>
+                      </td>
+                      <td>{c.location}</td>
+                      <td className="right money">{fmtUSD(c.expected)}</td>
+                      <td className="right money">
+                        {c.counted === null ? t("Not counted") : fmtUSD(c.counted)}
+                      </td>
+                      <td className={`right money ${c.varianceValue < 0 ? "red" : ""}`}>
+                        {c.variance === null || c.variance === 0
+                          ? "—"
+                          : `${fmtUSD(c.variance)} (${fmtIQD(c.varianceValue)})`}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p className="muted" style={{ margin: 0, fontSize: ".82rem" }}>
+            {t(
+              "Exchange differences {exchanges} (6950) · dollars counted over or short {counts} (6300) · held now: the safe {safe}",
+              {
+                exchanges: fmtIQD(dollars.differences.exchanges),
+                counts: fmtIQD(dollars.differences.counts),
+                safe: fmtUSD(dollars.held.safe.usd),
+              },
+            )}
+            {dollars.held.tills.map((x) => (
+              <span key={x.locationId}>
+                {" · "}
+                {t("{place}'s till: {usd} (taken at {amount})", {
+                  place: x.location,
+                  usd: fmtUSD(x.usd),
+                  amount: fmtIQD(x.value),
+                })}
+              </span>
+            ))}
+          </p>
+        </div>
       </section>
 
       {/* ---- Sales costed at nothing (0025) ---- */}

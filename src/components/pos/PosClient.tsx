@@ -84,6 +84,7 @@ import {
 } from "./model";
 import { reasonKey } from "@/lib/reasons";
 import { changeGiven, type Payment } from "@/lib/payments";
+import { RATE_REFUSED } from "@/lib/fx";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string; uncertain?: boolean };
 type Msg = { ok: boolean; text: string } | null;
@@ -266,6 +267,8 @@ export function PosClient({
   discountRules,
   money,
   initialDrawer,
+  fx = null,
+  dollarsOffHours = null,
 }: {
   items: PosItem[];
   /** The add-ons, and which products offer them (0041). */
@@ -286,6 +289,10 @@ export function PosClient({
   money: MoneyRules;
   /** The drawer (0036): cash is taken only while it is open. */
   initialDrawer: DrawerState;
+  /** The dollar's rate, while dollars may be taken at it (0043); read again when refused. */
+  fx?: { rate: number; roundTo: number } | null;
+  /** The rate is this many hours old, too old to take dollars at: the till says so. */
+  dollarsOffHours?: number | null;
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -1152,6 +1159,8 @@ export function PosClient({
         if (approvalRefused(r.error)) dropApproval();
         // The drawer was closed on another till: read it again.
         if (r.error.startsWith("Open the drawer first")) router.refresh();
+        // The dollar's rate changed, or grew too old, since this till read it (0043).
+        if (RATE_REFUSED.test(r.error)) router.refresh();
         if (dialogRef.current?.kind === "pay") setDialog({ ...dialogRef.current, error: r.error });
         else setMsg({ ok: false, text: r.error });
         // A price, or the bill, may have changed since this till last looked.
@@ -1555,6 +1564,8 @@ export function PosClient({
                 : "card"
           }
           platform={isPlatform(dialog.order.channel) ? channelName(dialog.order.channel) : null}
+          fx={isPlatform(dialog.order.channel) ? null : fx}
+          dollarsOffHours={isPlatform(dialog.order.channel) ? null : dollarsOffHours}
           busy={busy === "pay"}
           error={dialog.error}
           onConfirm={confirmPay}

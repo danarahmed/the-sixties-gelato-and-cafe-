@@ -48,6 +48,7 @@ function shownValue(def: RuleDefinition, v: number | string | null, t: T): strin
   if (v === null || v === "") return t("Default");
   if (def.kind === "percent") return `${fmtQty(Number(v))}%`;
   if (def.kind === "amount") return fmtIQD(Number(v));
+  if (def.kind === "hours") return t("{n} hours", { n: fmtQty(Number(v)) });
   return t(CHOICE_LABEL[String(v)] ?? String(v));
 }
 
@@ -419,7 +420,7 @@ function RuleForm({
               inputMode="decimal"
               value={typed}
               onChange={(e) => setTyped(e.target.value)}
-              placeholder={def.kind === "percent" ? "%" : "IQD"}
+              placeholder={def.kind === "percent" ? "%" : def.kind === "hours" ? t("hours") : "IQD"}
             />
           ))}
         <input
