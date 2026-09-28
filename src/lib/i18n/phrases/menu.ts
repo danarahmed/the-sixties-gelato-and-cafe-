@@ -44,13 +44,9 @@ const phrases: PhraseBook = {
     ckb: "هێشتا نرخی نییە: خاڵی فرۆشتن ناتوانێت بیفرۆشێت تا نرخێکی نەبێت.",
   },
   "No category": { ar: "بلا فئة", ckb: "بێ پۆل" },
-  "Recipe, prices and margin": {
-    ar: "الوصفة والأسعار وهامش الربح",
-    ckb: "ڕەسەتە، نرخەکان و پەراوێزی قازانج",
-  },
-  "Recipe, prices and margin · {n} sizes or flavours": {
-    ar: "الوصفة والأسعار وهامش الربح · الأحجام أو النكهات: {n}",
-    ckb: "ڕەسەتە، نرخەکان و پەراوێزی قازانج · {n} قەبارە یان تام",
+  "Recipe, prices, sizes and add-ons": {
+    ar: "الوصفة والأسعار والأحجام والإضافات",
+    ckb: "ڕەسەتە، نرخەکان، قەبارەکان و زیادەکان",
   },
   "One recipe serves every channel; lines tagged to a channel deduct only there — that is how the cup and lid are used for takeaway and delivery but not at a table. Prices and recipes change from a date, so every sale uses the price and recipe in force on its own day. Costs shown are today's, worked out exactly as a sale posts them. A photo, a category and a ★ make a product quick to find on the till.":
     {
@@ -499,6 +495,132 @@ const phrases: PhraseBook = {
   "The number of batches": { ar: "عدد الدفعات", ckb: "ژمارەی دەستەکان" },
   "a batch": { ar: "دفعة", ckb: "دەستەیەک" },
   "The reason": { ar: "السبب", ckb: "هۆکار" },
+
+  // Sizes and add-ons (0041): a product's sizes, the groups of add-ons, and the add-ons.
+  "Sizes and add-ons": { ar: "الأحجام والإضافات", ckb: "قەبارە و زیادەکان" },
+  Sizes: { ar: "الأحجام", ckb: "قەبارەکان" },
+  "Every size": { ar: "كل الأحجام", ckb: "هەموو قەبارەکان" },
+  "A size": { ar: "حجم", ckb: "قەبارەیەک" },
+  Retired: { ar: "موقوف", ckb: "وەستێنراو" },
+  "Rename…": { ar: "إعادة التسمية…", ckb: "ناوگۆڕین…" },
+  "Retire…": { ar: "إيقاف…", ckb: "وەستاندن…" },
+  "Bring it back": { ar: "أعِده", ckb: "بیگەڕێنەرەوە" },
+  "The size's name": { ar: "اسم الحجم", ckb: "ناوی قەبارە" },
+  "Why it is retired": { ar: "سبب إيقافه", ckb: "بۆچی وەستێنراوە" },
+  "Retire it": { ar: "أوقِفه", ckb: "بیوەستێنە" },
+  Regular: { ar: "عادي", ckb: "ئاسایی" },
+  "Added the size “{name}”.": { ar: "أُضيف الحجم «{name}».", ckb: "قەبارەی «{name}» زیاد کرا." },
+  "Sold as bought: another size is a product of its own, with its own stock item.": {
+    ar: "يُباع كما اشتُري: الحجم الآخر منتج مستقل بمادة مخزون خاصة به.",
+    ckb: "وەک کڕدراوە دەفرۆشرێت: قەبارەیەکی تر بەرهەمێکی سەربەخۆیە، بە کاڵای کۆگای تایبەتی خۆی.",
+  },
+  "+ Add a size": { ar: "+ أضف حجمًا", ckb: "+ قەبارەیەک زیاد بکە" },
+  "The size sold now is called": {
+    ar: "اسم الحجم المُباع الآن",
+    ckb: "ناوی ئەو قەبارەیەی ئێستا دەفرۆشرێت",
+  },
+  "New size (English)": { ar: "الحجم الجديد (بالإنجليزية)", ckb: "قەبارەی نوێ (بە ئینگلیزی)" },
+  "e.g. Large": { ar: "مثلًا: كبير", ckb: "بۆ نموونە: گەورە" },
+  "What one serving of the size uses": {
+    ar: "ما تستخدمه الحصة الواحدة من الحجم",
+    ckb: "ئەوەی یەک بەشی ئەم قەبارەیە بەکاری دەهێنێت",
+  },
+  "The recipe of": { ar: "وصفة", ckb: "ڕەسەتەی" },
+  "(change it afterwards, below)": {
+    ar: "(غيّرها بعد ذلك، في الأسفل)",
+    ckb: "(دواتر لە خوارەوە بیگۆڕە)",
+  },
+  "Its own recipe": { ar: "وصفة خاصة به", ckb: "ڕەسەتەی تایبەتی خۆی" },
+  "It uses no stock, because": {
+    ar: "لا يستخدم شيئًا من المخزون، لأن",
+    ckb: "هیچ لە کۆگا بەکارناهێنێت، چونکە",
+  },
+  "Add the size": { ar: "أضف الحجم", ckb: "قەبارەکە زیاد بکە" },
+  "a size to copy": { ar: "حجمًا لنسخ وصفته", ckb: "قەبارەیەک بۆ لەبەرگرتنەوە" },
+  "a size": { ar: "حجمًا", ckb: "قەبارەیەک" },
+  "Add-ons": { ar: "الإضافات", ckb: "زیادەکان" },
+  "Choices the till offers with a product: the milk, an extra shot, a topping. A group says how many a line takes; each add-on has its price on every channel and what one uses. A product offers a group on its own card, under Add-ons offered.":
+    {
+      ar: "اختيارات تقدّمها نقطة البيع مع المنتج: الحليب، جرعة إضافية، إضافة على الوجه. تحدّد المجموعة كم يأخذ السطر منها؛ ولكل إضافة سعرها في كل قناة وما تستخدمه الواحدة منها. يقدّم المنتج مجموعة من بطاقته، تحت الإضافات المقدّمة.",
+      ckb: "ئەو هەڵبژاردنانەی خاڵی فرۆشتن لەگەڵ بەرهەمێک پێشکەشیان دەکات: شیر، شۆتێکی زیادە، ڕووپۆشێک. کۆمەڵەیەک دەڵێت هێڵێک چەندی لێ وەردەگرێت؛ هەر زیادەیەک نرخی خۆی لە هەموو کەناڵێک و ئەوەی یەکێکی بەکاری دەهێنێت هەیە. بەرهەمێک لە کارتی خۆیدا، لە ژێر زیادە پێشکەشکراوەکان، کۆمەڵەیەک پێشکەش دەکات.",
+    },
+  "+ New group of add-ons": { ar: "+ مجموعة إضافات جديدة", ckb: "+ کۆمەڵەیەکی نوێی زیادە" },
+  "Group name (English)": { ar: "اسم المجموعة (بالإنجليزية)", ckb: "ناوی کۆمەڵە (بە ئینگلیزی)" },
+  "Fewest a line takes": { ar: "أقلّ ما يأخذه السطر", ckb: "کەمترین کە هێڵێک وەری دەگرێت" },
+  "Most a line takes": { ar: "أكثر ما يأخذه السطر", ckb: "زۆرترین کە هێڵێک وەری دەگرێت" },
+  "no limit": { ar: "بلا حدّ", ckb: "بێ سنوور" },
+  "1 or more makes it a choice the till asks for (the milk, say); 0 makes it optional (extras). Leave the most empty for no limit.":
+    {
+      ar: "1 أو أكثر يجعلها اختيارًا تطلبه نقطة البيع (الحليب مثلًا)؛ و0 يجعلها اختيارية (الإضافات). اترك خانة الأكثر فارغة ليكون بلا حدّ.",
+      ckb: "1 یان زیاتر دەیکات بە هەڵبژاردنێک کە خاڵی فرۆشتن داوای دەکات (بۆ نموونە شیر)؛ 0 دەیکات بە ئارەزوومەندانە (زیادەکان). خانەی زۆرترین بەتاڵ بهێڵە بۆ بێ سنوور.",
+    },
+  "The till says: {asks}": { ar: "تقول نقطة البيع: {asks}", ckb: "خاڵی فرۆشتن دەڵێت: {asks}" },
+  "Add the group": { ar: "أضف المجموعة", ckb: "کۆمەڵەکە زیاد بکە" },
+  "Change the group…": { ar: "تغيير المجموعة…", ckb: "گۆڕینی کۆمەڵەکە…" },
+  "No product offers it yet: choose it on a product's card, under Add-ons offered.": {
+    ar: "لا يقدّمها أي منتج بعد: اخترها في بطاقة المنتج، تحت الإضافات المقدّمة.",
+    ckb: "هێشتا هیچ بەرهەمێک پێشکەشی ناکات: لە کارتی بەرهەمێکدا هەڵیبژێرە، لە ژێر زیادە پێشکەشکراوەکان.",
+  },
+  "Offered with {products}": { ar: "تُقدَّم مع {products}", ckb: "لەگەڵ {products} پێشکەش دەکرێت" },
+  "No add-ons in it yet.": { ar: "لا إضافات فيها بعد.", ckb: "هێشتا هیچ زیادەیەکی تێدا نییە." },
+  "+ Add an add-on to {group}": {
+    ar: "+ أضف إضافة إلى {group}",
+    ckb: "+ زیادەیەک بۆ {group} زیاد بکە",
+  },
+  "Add-on name (English)": { ar: "اسم الإضافة (بالإنجليزية)", ckb: "ناوی زیادە (بە ئینگلیزی)" },
+  "e.g. Oat milk": { ar: "مثلًا: حليب الشوفان", ckb: "بۆ نموونە: شیری جۆ" },
+  "0 makes it free. A channel left empty does not offer it; give it a price later to offer it there.":
+    {
+      ar: "0 يجعلها مجانية. القناة المتروكة فارغة لا تقدّمها؛ حدّد لها سعرًا لاحقًا لتقدّمها فيها.",
+      ckb: "0 دەیکات بە بێبەرامبەر. کەناڵێک کە بەتاڵ بهێڵرێت پێشکەشی ناکات؛ دواتر نرخێکی بۆ دابنێ بۆ ئەوەی لەوێ پێشکەش بکرێت.",
+    },
+  "What one uses, for every size": {
+    ar: "ما تستخدمه الواحدة منها، لكل الأحجام",
+    ckb: "ئەوەی یەکێکی بەکاری دەهێنێت، بۆ هەموو قەبارەکان",
+  },
+  "For a choice such as the milk, take the milk out of the sizes' recipes and give each choice its own: then every cup counts the milk it was made with. Leave it empty if it uses no stock.":
+    {
+      ar: "لاختيار مثل الحليب، أخرِج الحليب من وصفات الأحجام وأعطِ كل اختيار حليبه: عندها يُحتسب لكل كوب الحليب الذي صُنع به. اتركها فارغة إن لم تستخدم شيئًا من المخزون.",
+      ckb: "بۆ هەڵبژاردنێکی وەک شیر، شیرەکە لە ڕەسەتەی قەبارەکان دەربهێنە و بە هەر هەڵبژاردنێک شیری خۆی بدە: ئەو کاتە هەر کوپێک ئەو شیرەی بۆ هەژمار دەکرێت کە پێی دروستکراوە. بەتاڵی بهێڵە ئەگەر هیچ لە کۆگا بەکارنەهێنێت.",
+    },
+  "Add the add-on": { ar: "أضف الإضافة", ckb: "زیادەکە زیاد بکە" },
+  "Off the till": { ar: "خارج نقطة البيع", ckb: "لە خاڵی فرۆشتن لابراوە" },
+  "{channel}: {price} from {date}": {
+    ar: "{channel}: {price} ابتداءً من {date}",
+    ckb: "{channel}: {price} لە {date} ـەوە",
+  },
+  "What it uses…": { ar: "ما تستخدمه…", ckb: "ئەوەی بەکاری دەهێنێت…" },
+  "Take it off the till": { ar: "أزِلها من نقطة البيع", ckb: "لە خاڵی فرۆشتن لای ببە" },
+  "This size's own quantities, in place of those for every size (a bigger cup takes more syrup, say). Leave it empty to use those for every size.":
+    {
+      ar: "كميات هذا الحجم الخاصة، بدل كميات كل الأحجام (الكوب الأكبر يأخذ شرابًا أكثر مثلًا). اتركها فارغة لاستخدام كميات كل الأحجام.",
+      ckb: "بڕەکانی تایبەت بەم قەبارەیە، لە جیاتی ئەوانەی هەموو قەبارەکان (بۆ نموونە کوپی گەورەتر شەربەتی زیاتر دەبات). بەتاڵی بهێڵە بۆ بەکارهێنانی ئەوانەی هەموو قەبارەکان.",
+    },
+  "What one of it uses, for every size that has no quantities of its own. From the next sale on: sales already made keep what they used.":
+    {
+      ar: "ما تستخدمه الواحدة منها، لكل حجم ليست له كميات خاصة. من البيع التالي فصاعدًا: المبيعات السابقة تحتفظ بما استخدمته.",
+      ckb: "ئەوەی یەکێکی بەکاری دەهێنێت، بۆ هەر قەبارەیەک کە بڕی تایبەتی خۆی نییە. لە فرۆشتنی داهاتووەوە: ئەو فرۆشتنانەی پێشتر کراون ئەوەی بەکاریان هێناوە دەیهێڵنەوە.",
+    },
+  "Add-ons offered": { ar: "الإضافات المقدّمة", ckb: "زیادە پێشکەشکراوەکان" },
+  "None: the till adds it as it is.": {
+    ar: "لا شيء: تضيفه نقطة البيع كما هو.",
+    ckb: "هیچ: خاڵی فرۆشتن وەک خۆی زیادی دەکات.",
+  },
+  "Choose the add-ons…": { ar: "اختر الإضافات…", ckb: "زیادەکان هەڵبژێرە…" },
+  "Make a group of add-ons below first.": {
+    ar: "أنشئ مجموعة إضافات في الأسفل أولًا.",
+    ckb: "سەرەتا لە خوارەوە کۆمەڵەیەکی زیادە دروست بکە.",
+  },
+  "{group} with {product}": { ar: "{group} مع {product}", ckb: "{group} لەگەڵ {product}" },
+  "Only:": { ar: "فقط:", ckb: "تەنها:" },
+  "Tick the sizes that offer {group}, or choose every size.": {
+    ar: "علّم الأحجام التي تقدّم {group}، أو اختر كل الأحجام.",
+    ckb: "ئەو قەبارانە نیشانە بکە کە {group} پێشکەش دەکەن، یان هەموو قەبارەکان هەڵبژێرە.",
+  },
+  "a group of add-ons": { ar: "مجموعة إضافات", ckb: "کۆمەڵەیەکی زیادە" },
+  "The group's name": { ar: "اسم المجموعة", ckb: "ناوی کۆمەڵەکە" },
+  "The add-on's name": { ar: "اسم الإضافة", ckb: "ناوی زیادەکە" },
+  "The first day": { ar: "اليوم الأول", ckb: "یەکەم ڕۆژ" },
 };
 
 export default phrases;

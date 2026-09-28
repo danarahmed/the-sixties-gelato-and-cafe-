@@ -166,6 +166,26 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     zero; a rule that refuses it refuses the correction.
   - The business row's old columns stay, as the defaults, until they are
     retired. A journal's narration is still free text.
+- **Sizes and add-ons, what they do not do (release P, `0041`).**
+  - A new product starts with one size; the others are added on its card
+    (the plan had them all on the new-product form).
+  - An add-on adds what it uses; it does not take away what the size's own
+    recipe uses. For a choice such as the milk, the milk comes out of the
+    sizes' recipes and each choice carries its own (a group that asks for
+    one), so every cup counts the milk it was made with.
+  - An add-on's recipe changes from the next sale, not from a date, and is
+    not versioned as a product's is: the audit trail keeps each change, and
+    every sale keeps what it used.
+  - An add-on's price is the same at every branch until the branches come
+    (release AB).
+  - The report does not take refunds off (Sales by Channel has them). How
+    often an add-on is taken is counted against the products that offer its
+    group today.
+  - A group's fewest or most changed while a bill is open applies to that
+    bill when it is next saved or paid: the till asks for the choice then.
+  - An add-on on a platform's menu is priced for that platform like any
+    channel; a platform whose own app sells add-ons still has them typed in
+    at the till.
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the

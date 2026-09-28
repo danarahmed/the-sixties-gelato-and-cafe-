@@ -560,3 +560,38 @@ export async function getExceptions(
   }
   return out;
 }
+
+/** What each size and each add-on sold, cost and made over some days (0041). */
+export interface SizeAddonRow {
+  kind: "size" | "addon";
+  /** The product, for a size; the group, for an add-on. */
+  parent: string;
+  name: string;
+  /** How many were sold: sizes by the line, add-ons by the one. */
+  qty: number;
+  /** The lines they were on. */
+  lines: number;
+  sales: number;
+  cost: number;
+  margin: number;
+  /** For an add-on: the lines of the products that offer it now, to say how often it is taken. */
+  offered: number | null;
+}
+
+export async function getSizesAndAddons(from: string, to: string): Promise<SizeAddonRow[]> {
+  const c = await db();
+  return rows(
+    await c.rpc("report_sizes_and_addons", { p_from: from, p_to: to }),
+    "sizes and add-ons",
+  ).map((r: Record<string, unknown>) => ({
+    kind: str(r.kind) === "addon" ? "addon" : "size",
+    parent: str(r.product),
+    name: str(r.name),
+    qty: num(r.qty),
+    lines: num(r.lines),
+    sales: num(r.sales),
+    cost: num(r.cost),
+    margin: num(r.margin),
+    offered: numOrNull(r.offered),
+  }));
+}

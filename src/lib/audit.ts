@@ -27,11 +27,18 @@ export type Names = ReadonlyMap<string, string>;
  * checker would take it for English written into a screen).
  */
 export const AUDIT_GROUPS = [
-  { key: "prices", label: "Prices", prefixes: ["price."] }, // i18n-ignore
+  { key: "prices", label: "Prices", prefixes: ["price.", "modifier_price."] }, // i18n-ignore
   {
     key: "menu",
     label: "Products & recipes", // i18n-ignore
-    prefixes: ["product.", "product_variant.", "product_category.", "recipe."],
+    prefixes: [
+      "product.",
+      "product_variant.",
+      "product_category.",
+      "recipe.",
+      "modifier_group.",
+      "modifier.",
+    ],
   },
   {
     key: "items",
@@ -96,6 +103,9 @@ const ACTION_LABEL: Record<string, string> = {
   "price.update": "Price changed in the database",
   "price.cancel": "Scheduled price withdrawn",
   "product.no_stock": "Marked as using no stock",
+  "product.modifiers": "Add-ons offered changed",
+  "modifier_price.set": "Add-on price set",
+  "modifier.recipe": "What an add-on uses changed",
   "recipe.change": "Recipe changed",
   "recipe.cancel": "Scheduled recipe withdrawn",
   "recipe.batch.create": "Batch recipe added",
@@ -175,6 +185,8 @@ const TABLE_LABEL: Record<string, string> = {
   product: "Product",
   product_variant: "What the till sells",
   product_category: "Category",
+  modifier_group: "Group of add-ons",
+  modifier: "Add-on",
   item: "Stock item",
   item_unit: "Pack unit",
   supplier: "Supplier",
@@ -307,6 +319,13 @@ const FIELD_LABEL: Record<string, string> = {
   business_rule: "Rule",
   applies_to: "Applies to",
   approved_by: "Approved by",
+  min_select: "Fewest to choose",
+  max_select: "Most to choose",
+  group_id: "Group of add-ons",
+  modifier: "Add-on",
+  size: "Size",
+  groups: "Groups of add-ons",
+  copied_from: "Copied from",
 };
 
 /** What a delivery's correction changed (0038), as the trail names it. */
@@ -375,6 +394,16 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
         })
         .join(", ");
     }
+    // The groups of add-ons a product offers (0041): "Milk, Extras (Double)".
+    if (key === "groups" && v.every(isObj))
+      return (
+        v
+          .map((x) => {
+            const o = x as Obj;
+            return typeof o.size === "string" ? `${String(o.group)} (${o.size})` : String(o.group);
+          })
+          .join(", ") || "—"
+      );
     if (key === "roles") return v.map((r) => roleLabel(String(r))).join(", ");
     if (key === "kinds") return v.map((k) => CORRECTION_KIND[String(k)] ?? String(k)).join(", ");
     return v.map((x) => showValue(x, key, names)).join(", ");
@@ -469,6 +498,12 @@ export function subjectOf(
       const what = named(variant) ?? "A price";
       return channel ? `${what}, ${showValue(channel, "channel", names)}` : what;
     }
+    case "modifier_price": {
+      // An add-on's price (0041): the add-on and the channel.
+      const channel = pick("channel");
+      const what = named(pick("modifier")) ?? "An add-on";
+      return channel ? `${what}, ${showValue(channel, "channel", names)}` : what;
+    }
     case "item_unit": {
       const item = named(pick("item_id")) ?? "An item";
       return `${item}: ${pick("code") ?? "a unit"}`;
@@ -547,6 +582,7 @@ const SUBJECT_WORDS = new Set([
   "A stock count",
   "A table",
   "A drawer count",
+  "An add-on",
 ]);
 
 /** An id shown short, as subjectOf shows it: "1a2b3c4d…". */
@@ -599,11 +635,14 @@ export function subjectIn(subject: string, action: string, t: T, msg: Msg): stri
         reference: m[2]!,
       });
   }
-  // A price: the product (or "A price") and the channel.
-  if (action.startsWith("price.") && subject.includes(", ")) {
+  // A price: the product or the add-on (or "A price", "An add-on") and the channel.
+  if (
+    (action.startsWith("price.") || action.startsWith("modifier_price.")) &&
+    subject.includes(", ")
+  ) {
     const at = subject.lastIndexOf(", ");
     const what = subject.slice(0, at);
-    return `${what === "A price" ? t(what) : what}, ${channelIn(subject.slice(at + 2), t)}`;
+    return `${SUBJECT_WORDS.has(what) ? t(what) : what}, ${channelIn(subject.slice(at + 2), t)}`;
   }
   // A pack unit: the item (or "An item") and its code (or "a unit").
   if (action.startsWith("item_unit.") && subject.includes(": ")) {

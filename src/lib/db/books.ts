@@ -608,8 +608,8 @@ const AUDIT_PAGE = 1000;
 
 /**
  * The names the trail refers to: stock items, products and what the till
- * sells, suppliers, categories, places, recipes, delivery platforms and
- * people; and each channel's, under "channel:" and its code.
+ * sells, suppliers, categories, places, recipes, delivery platforms, add-ons
+ * and their groups, and people; and each channel's, under "channel:" and its code.
  */
 async function auditNames(): Promise<{ names: Map<string, string>; people: Map<string, string> }> {
   const c = await db();
@@ -624,6 +624,8 @@ async function auditNames(): Promise<{ names: Map<string, string>; people: Map<s
     platforms,
     people,
     channels,
+    addonGroups,
+    addons,
   ] = await Promise.all([
     c.from("item").select("id,name"),
     c.from("product").select("id,name"),
@@ -635,6 +637,8 @@ async function auditNames(): Promise<{ names: Map<string, string>; people: Map<s
     c.from("delivery_platform").select("id,name"),
     c.from("app_user").select("id,full_name"),
     getChannels(),
+    c.from("modifier_group").select("id,name"),
+    c.from("modifier").select("id,name"),
   ]);
   const names = new Map<string, string>();
   for (const [res, what] of [
@@ -645,6 +649,8 @@ async function auditNames(): Promise<{ names: Map<string, string>; people: Map<s
     [locations, "locations"],
     [recipes, "recipes"],
     [platforms, "delivery platforms"],
+    [addonGroups, "groups of add-ons"],
+    [addons, "add-ons"],
   ] as const) {
     for (const r of rows(res, what)) names.set(str(r.id), str(r.name));
   }

@@ -7,16 +7,18 @@
 --
 --   kept     the business, its locations and their drawers, the chart of
 --            accounts, the people (with their roles and approval PINs), the
---            menu (products, variants, categories, photos, prices, recipes and
---            their versions), the stock items and their units, suppliers,
+--            menu (products, their sizes, categories, photos, prices, recipes
+--            and their versions, add-ons with their groups, prices and
+--            recipes), the stock items and their units, suppliers,
 --            dining tables, platform and promotion settings, expense
 --            categories, the list of reasons for voids, refunds, discounts and
 --            cancelled bills, the languages the café added and its own words
 --            for phrases, and the audit trail (which gains one line saying the
 --            test records were cleared, and when)
---   cleared  sales, bills kept open, voids and refunds, managers' approvals
---            and PIN attempts, cash sessions and drawer counts, cash events
---            and cash moved, the answers kept for retries, card settlements,
+--   cleared  sales and their add-ons, bills kept open, voids and refunds,
+--            managers' approvals and PIN attempts, cash sessions and drawer
+--            counts, cash events and cash moved, the answers kept for
+--            retries, card settlements,
 --            stock movements and lots, stock counts, production batches,
 --            purchase orders, deliveries and their corrections, supplier bills
 --            and payments, expenses, every journal and accounting period,
@@ -55,7 +57,9 @@ insert into reset_keep values
   ('recipe'), ('recipe_version'), ('recipe_line'), ('variant_recipe'),
   ('item'), ('item_unit'), ('supplier'), ('dining_table'), ('expense_category'),
   ('delivery_platform'), ('platform_store_map'), ('platform_product_map'), ('promotion'),
-  ('reason_code'), ('app_language'), ('app_phrase'), ('business_rule'), ('business_rule_history'), ('audit_log');
+  ('reason_code'), ('app_language'), ('app_phrase'), ('business_rule'), ('business_rule_history'),
+  ('modifier_group'), ('modifier'), ('modifier_price'), ('modifier_recipe_line'), ('product_modifier_group'),
+  ('audit_log');
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');
@@ -97,11 +101,13 @@ truncate table
   expense, goods_receipt, goods_receipt_line, inventory_movement, item_lot, journal_entry, journal_line,
   loss_review,
   pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
+  pos_tab_line_modifier,
   production_batch,
   purchase_invoice, purchase_order, purchase_order_line, receipt_correction, reconciliation_issue, request_log,
   sale_adjustment,
   sale_refund, sale_refund_line, sale_refund_tender,
-  sales_order, sales_order_line, sales_tender, stock_count, stock_count_line, supplier_payment, sync_log,
+  sales_order, sales_order_line, sales_order_line_modifier, sales_tender, stock_count, stock_count_line,
+  supplier_payment, sync_log,
   work_shift
   restart identity;
 

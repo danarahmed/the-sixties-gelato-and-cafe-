@@ -20,6 +20,8 @@ export interface PrintJob {
     price?: number | null;
     amount: number | null;
     note: string | null;
+    /** Its add-ons (0041), under it: "Oat milk", "Extra shot ×2". Their prices are in its own. */
+    addons?: string[];
   }[];
   /** Before the discount. */
   subtotal?: number;
@@ -49,6 +51,8 @@ export interface TicketItem {
   name: string;
   qty: number;
   note: string | null;
+  /** What goes into it besides (0041): made as it says. */
+  addons?: string[];
 }
 
 /** The barista's copy: the order's number and what to make, without the money. */
@@ -81,7 +85,7 @@ export function ticketFor(job: PrintJob): BaristaTicket {
     title: job.title,
     channelLabel: job.channelLabel,
     platformOrderNo: job.platformOrderNo ?? null,
-    lines: job.lines.map(({ name, qty, note }) => ({ name, qty, note })),
+    lines: job.lines.map(({ name, qty, note, addons }) => ({ name, qty, note, addons })),
     at: job.at,
     by: job.by,
   };
@@ -288,6 +292,11 @@ function CheckSlip({
                 <td className="q">{fmtQty(l.qty)}</td>
                 <td className="n">
                   {l.name}
+                  {(l.addons ?? []).map((a, j) => (
+                    <span key={j} className="sl-addon">
+                      + {a}
+                    </span>
+                  ))}
                   {l.note && <span className="sl-note">{l.note}</span>}
                 </td>
                 <td className="p">{price === null ? "—" : money(price)}</td>
@@ -361,6 +370,11 @@ function TicketSlip({ ticket, time }: { ticket: BaristaTicket; time: string }) {
           <span className="tk-q">{fmtQty(l.qty)}</span>
           <span className="tk-n">
             {l.name}
+            {(l.addons ?? []).map((a, j) => (
+              <span key={j} className="tk-addon">
+                + {a}
+              </span>
+            ))}
             {l.note && <span className="tk-note">{l.note}</span>}
           </span>
         </li>

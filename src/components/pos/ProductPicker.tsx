@@ -5,7 +5,8 @@ import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { PosItem } from "@/lib/db/pos";
 import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
-import { categoryName, fold, productName, variantLabel } from "./model";
+import { categoryName, fold, productName, type AddonChoice, type AddonMenu } from "./model";
+import { OptionsSheet } from "./OptionsSheet";
 
 const ALL = "all";
 const FAVOURITES = "fav";
@@ -66,17 +67,20 @@ export function ProductThumb({
  */
 export function ProductPicker({
   items,
+  addons,
   channel,
   counts,
   disabled,
   onAdd,
 }: {
   items: PosItem[];
+  /** The add-ons, and which sizes offer them (0041). */
+  addons: AddonMenu;
   channel: SalesChannel;
   /** How many of each product the order already holds, shown on its tile. */
   counts: Map<string, number>;
   disabled: boolean;
-  onAdd: (variantId: string) => void;
+  onAdd: (variantId: string, addons: AddonChoice[]) => void;
 }) {
   const { t, locale } = useT();
   const [query, setQuery] = useState("");
@@ -158,7 +162,10 @@ export function ProductPicker({
 
   function pick(p: Product) {
     if (disabled) return;
-    if (p.variants.length === 1) onAdd(p.variants[0]!.variantId);
+    const only = p.variants.length === 1 ? p.variants[0]! : null;
+    // One size and nothing to add to it: added as it is tapped.
+    if (only && addons.groupsFor(only.productId, only.variantId).length === 0)
+      onAdd(only.variantId, []);
     else setChoosing(p);
   }
 
@@ -300,35 +307,16 @@ export function ProductPicker({
       </div>
 
       {choosing && (
-        <div className="pos-modal-back" onClick={() => setChoosing(null)}>
-          <div
-            className="pos-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label={productName(choosing.item, locale)}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ marginTop: 0 }}>{productName(choosing.item, locale)}</h3>
-            <div className="variant-list">
-              {choosing.variants.map((v) => (
-                <button
-                  key={v.variantId}
-                  className="variant-btn"
-                  onClick={() => {
-                    onAdd(v.variantId);
-                    setChoosing(null);
-                  }}
-                >
-                  <span>{variantLabel(v) ?? productName(v, locale)}</span>
-                  <span className="price mono">{fmtIQD(v.prices[channel]!)}</span>
-                </button>
-              ))}
-            </div>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
-              <button onClick={() => setChoosing(null)}>{t("pos.close")}</button>
-            </div>
-          </div>
-        </div>
+        <OptionsSheet
+          variants={choosing.variants}
+          channel={channel}
+          addons={addons}
+          onAdd={(variantId, chosen) => {
+            onAdd(variantId, chosen);
+            setChoosing(null);
+          }}
+          onClose={() => setChoosing(null)}
+        />
       )}
     </div>
   );

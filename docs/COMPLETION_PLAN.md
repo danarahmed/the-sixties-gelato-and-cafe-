@@ -135,6 +135,28 @@ Release O:
   refunds stay with managers, with the limit above which a second person
   approves.
 
+Release P:
+
+- **Sizes are added on the product's card,** not on the new-product form:
+  `create_product` keeps its signature. `add_variant` adds a size with its
+  prices and one of: its own recipe, the recipe another size has in force
+  today, or why it uses no stock; the product's one size is named in the same
+  step (Latte becomes Regular).
+- **A size is retired with a reason,** kept on the audit trail; the last size
+  on sale is not retired (the product is hidden instead), nor one on an open
+  bill.
+- **An add-on's recipe is not dated:** a change applies from the next sale,
+  and the audit trail keeps it before and after. Every sale keeps what it
+  used.
+- **An add-on's stock movements** name the sale's line, with the add-on's name
+  in their reason, rather than an add-on of their own.
+- **A group taken off the till** stays with the products that already offer it
+  until they are changed; the till no longer offers it, and no product takes
+  it up anew.
+- **The report** leaves refunds in (Sales by Channel takes them off), and
+  counts how often an add-on is taken against the lines of the products that
+  offer its group today.
+
 **Basis:**
 
 - The code at `d17436e`: migrations `0001`–`0034` and the app.

@@ -17,6 +17,7 @@ import {
   isDirty,
   isPlatform,
   itemCount,
+  addonNames,
   lineAmount,
   lineName,
   linePrice,
@@ -24,6 +25,7 @@ import {
   orderSubtotal,
   percentOf,
   savedHasItems,
+  type AddonMenu,
   type Discount,
   type DiscountRules,
   type Line,
@@ -46,6 +48,7 @@ function OrderLine({
   line,
   order,
   byId,
+  addons,
   locked,
   onQty,
   onNote,
@@ -53,6 +56,7 @@ function OrderLine({
   line: Line;
   order: Order;
   byId: Map<string, PosItem>;
+  addons: AddonMenu;
   locked: boolean;
   onQty: (key: string, delta: number) => void;
   onNote: (key: string, note: string | null) => void;
@@ -60,8 +64,9 @@ function OrderLine({
   const { t, locale } = useT();
   const [editing, setEditing] = useState(false);
   const [note, setNote] = useState(line.note ?? "");
-  const price = linePrice(line, byId, order.channel);
-  const amount = lineAmount(line, byId, order.channel);
+  const price = linePrice(line, byId, order.channel, addons);
+  const amount = lineAmount(line, byId, order.channel, addons);
+  const withAddons = addonNames(line.addons, addons, locale, line.addons);
   const save = () => {
     onNote(line.key, note.trim() || null);
     setEditing(false);
@@ -71,6 +76,11 @@ function OrderLine({
       <div className="ol-row">
         <div className="ol-main">
           <span className="ol-name">{lineName(line, byId, locale)}</span>
+          {withAddons.length > 0 && (
+            <span className="ol-addons" data-testid="line-addons">
+              + {withAddons.join(", ")}
+            </span>
+          )}
           <span className="ol-sub muted">
             {price === null ? t("pos.noPrice") : fmtIQD(price)}
             {line.note && <em className="ol-note"> · {line.note}</em>}
@@ -293,6 +303,7 @@ export function OrderPanel({
   order,
   title,
   byId,
+  addons,
   busy,
   pending,
   online,
@@ -330,6 +341,8 @@ export function OrderPanel({
   order: Order;
   title: string;
   byId: Map<string, PosItem>;
+  /** The add-ons, to price and name a line's (0041). */
+  addons: AddonMenu;
   busy: string | null;
   pending: boolean;
   online: boolean;
@@ -376,7 +389,7 @@ export function OrderPanel({
   const blocked = busy !== null || pending;
   const empty = order.lines.length === 0;
   const dirty = isDirty(order);
-  const subtotal = orderSubtotal(order, byId, money);
+  const subtotal = orderSubtotal(order, byId, money, addons);
   const discount = discountAmount(order.discount, subtotal, money);
   const due = subtotal.minus(discount);
   // Not given until it has its reason and, over the cap, a manager's approval (0028).
@@ -509,6 +522,7 @@ export function OrderPanel({
               line={l}
               order={order}
               byId={byId}
+              addons={addons}
               locked={blocked}
               onQty={onQty}
               onNote={onNote}

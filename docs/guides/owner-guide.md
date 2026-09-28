@@ -151,8 +151,8 @@ fast. Set it up once, on **Products** and on the till itself:
   (a service charge, say) needs a reason for using no stock; without a recipe
   or a reason it is not created, since every sale of it would show full
   profit.
-- **Changing a price or a recipe** (Products, open **Recipe, prices and
-  margin**): **Change a price…** starts today or on a later date, never an
+- **Changing a price or a recipe** (Products, open **Recipe, prices, sizes and
+  add-ons**): **Change a price…** starts today or on a later date, never an
   earlier one, so every sale keeps the price it was made at; each change is on
   the audit trail (**price.set**). A change for a later date is listed under
   **Scheduled** on the product, and can be withdrawn with a reason until it
@@ -161,6 +161,18 @@ fast. Set it up once, on **Products** and on the till itself:
   minutes, or at once when its screen comes back to the front; a till that has
   not caught up yet is stopped at payment and fetches it then. A bill already
   printed is paid at the prices printed on it.
+- **Sizes and add-ons** (Products, `0041`): open **Recipe, prices, sizes and
+  add-ons** on a product's card. **+ Add a size** adds a Large beside the
+  Regular, at its own prices, copying the Regular's recipe to change
+  afterwards, or with its own.
+  Under **Add-ons** (a section of its own) make the groups the till asks for:
+  **Milk**, the fewest 1 and the most 1, so no latte is rung up without its
+  milk; **Extras**, the fewest 0 and the most 3. Give each add-on its price
+  per channel and what one uses. Then tick, on each product, the groups it
+  offers, with every size or some. Take the milk out of a latte's recipe and
+  give each milk its own: every cup then counts the milk it was made with,
+  and **Reports → Sizes and add-ons** shows which sizes and add-ons sell and
+  what each leaves.
 - **Costed at nothing:** a product flagged this way on Products has no recipe,
   or uses an ingredient with no cost yet, so its sales show full profit. Give
   it its recipe (or say why it uses no stock), or give the ingredient its cost.

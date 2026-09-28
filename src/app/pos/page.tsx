@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
-import { getOpenBills, getPosCatalogue, getTables } from "@/lib/db/pos";
+import { getOpenBills, getPosAddons, getPosCatalogue, getTables } from "@/lib/db/pos";
 import { getChannels } from "@/lib/db/channels";
 import { getDrawerState } from "@/lib/db/cash";
 import { PosClient } from "@/components/pos/PosClient";
@@ -13,8 +13,9 @@ export const dynamic = "force-dynamic";
 export default async function PosPage() {
   const profile = await requirePermission("sale.create");
   const t = await getT();
-  const [items, tables, bills, channels, drawer] = await Promise.all([
+  const [items, addons, tables, bills, channels, drawer] = await Promise.all([
     getPosCatalogue(),
+    getPosAddons(),
     getTables(),
     getOpenBills(),
     getChannels(),
@@ -39,6 +40,7 @@ export default async function PosPage() {
     <ChannelsProvider channels={channels}>
       <PosClient
         items={items}
+        addons={addons}
         tables={tables}
         initialBills={bills}
         canSeeCost={has(profile, "cost.view")}

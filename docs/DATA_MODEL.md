@@ -876,3 +876,71 @@ reverse, reason, key)`** (`waste.approve`, not the recorder);
   names a loss reversed a loss taken back.
 - **Alerts:** `alert_conditions` becomes `alert_conditions_0039`, and the new
   one adds `stock_below_zero` and `losses_waiting`.
+
+### Sizes and add-ons (`0041`)
+
+A size is a `product_variant`, as it always was; nothing about sizes is new
+in the tables. The add-ons are:
+
+- **`modifier_group`**: a group of choices (Milk, Extras, Toppings), its name
+  in the three languages, `min_select` (0–20: 1 or more makes the till ask
+  for it) and `max_select` (1–20, no fewer than the fewest; empty for no
+  limit), `sort_order`, `is_active`. One group in use per name
+  (`name_key`).
+- **`modifier`**: an add-on in a group, its names, `sort_order`, `is_active`;
+  one in use per name in its group. It stays in its group.
+- **`modifier_price`**: an add-on's price on a channel (`location_id` empty
+  for every place), 0 or more, from `effective_from`; the newest row in force
+  on the day wins, as `channel_price` does. A channel with no row does not
+  offer the add-on.
+- **`modifier_recipe_line`**: what one of the add-on uses (item, quantity,
+  unit, channels), for every size (`product_variant_id` empty) or one size's
+  own, which then replace those for every size. Read with `cost.view`.
+- **`product_modifier_group`**: the groups a product offers, for every size
+  (`product_variant_id` empty) or for the sizes named; a group once per
+  product for every size, or once per size.
+- **`pos_tab_line_modifier`**: a bill line's add-ons, how many for each one of
+  the line (1–20), and their price once the bill is printed; deleted with its
+  line.
+- **`sales_order_line_modifier`**: an add-on as it was sold: its group, its
+  name then, how many in all (per one × the line's quantity), its price, its
+  amount, its share of the line's discount (`net_amount`), what it cost, and
+  its place on the line. Append-only; read with `cost.view`.
+- Groups and add-ons are audited by row (`modifier_group.*`, `modifier.*`);
+  prices by `modifier_price.set` (was and now), recipes by `modifier.recipe`
+  (before and after, for every size or the size named), the groups a product
+  offers by `product.modifiers`. Writes go through the functions only.
+- **Sizes:** `add_variant(product, name, prices, recipe, copy_from,
+no_stock_reason, name_ar, name_ckb, rename_existing, key)` (`recipe.edit`,
+  keyed) adds a size with its prices and exactly one of: its own recipe, the
+  recipe another of the product's sizes has in force today, or why it uses
+  no stock; `rename_existing` names the product's one size in the same step
+  (Latte becomes Regular). A name is the product's once, retired sizes
+  included; a product sold as bought takes no second size. It writes
+  `recipe.change`. `update_variant(variant, name, name_ar, name_ckb, key)`
+  renames; `retire_variant(variant, retire, reason, key)` takes a size off
+  the till with a reason (not the last on sale, not while on an open bill) or
+  brings it back; the reason is kept on `product_variant.update`.
+- **Add-ons:** `save_modifier_group(…)` and `save_modifier(…)` (a new add-on
+  with its first prices and recipe; neither taken off the till while on an
+  open bill),
+  `set_modifier_price(modifier, channel, price, from, key)` (not before
+  today), `set_modifier_recipe(modifier, variant, lines, key)` and
+  `set_product_modifiers(product, [{group_id, variant_id}], key)` (a group in
+  use; one already offered may stay when it is taken off the till; one whose
+  add-ons are on an open bill of the product stays). All `recipe.edit`,
+  keyed. `pos_addons()` (`sale.create`) gives the till the groups in use,
+  their add-ons with today's prices, and which products and sizes offer them
+  — never their cost.
+- **Selling:** `post_sale` keeps its signature: each line may carry
+  `modifiers` ([{modifier_id, qty, price?}]), read by `line_modifiers` (known,
+  in use, offered with the size, once each, 1–20, priced on the channel, and
+  every group of the size given its fewest and no more than its most, in
+  order). `expand_modifier(modifier, variant, channel, qty)` gives what they
+  use, locked and checked with the line's own items. `save_tab`,
+  `split_tab`, `mark_bill_printed`, `settle_tab` and `pos_open_bills` carry a
+  line's add-ons, frozen at the printed price by add-on.
+- **`report_sizes_and_addons(from, to)`** (`cost.view`): each size sold (its
+  quantity, lines, sales and cost less its add-ons), and each add-on (how many,
+  on how many lines, its sales, cost and margin, and the lines of the products
+  offering its group today). Voided sales left out; refunds not taken off.
