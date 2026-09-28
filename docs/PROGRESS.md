@@ -706,7 +706,11 @@ browser tests through the real app, or both.
   6950 Exchange differences. The books check the dollars held against 1001
   and 1006 (Cash in dollars, in the till and in the safe). **Reports →
   Dollars** shows the dollars taken, at which rates, the change, the counts,
-  the exchanges and what is held. Built and tested: a new SQL suite, a new
+  the exchanges and what is held. The dollars' check found an older gap: a
+  bill for a service or an asset could be charged to the safe, which the bill
+  form offered first, putting cash in the safe that nobody had moved there.
+  No bill may now be charged to cash, in dinars or dollars (no bill on live
+  ever was). Built and tested: a new SQL suite, a new
   browser suite, unit tests of the dollars' value (the database's own on 60
   cases), the change and a payment partly in dollars, and every new text in
   Arabic and Kurdish.

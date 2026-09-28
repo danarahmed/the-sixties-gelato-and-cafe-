@@ -14,7 +14,13 @@ function Elapsed({ at, now }: { at: string | null; now: number }) {
     m < 60
       ? `${m} ${t("pos.min")}`
       : `${Math.floor(m / 60)} ${t("pos.hr")} ${m % 60} ${t("pos.min")}`;
-  return <span className="muted">{text}</span>;
+  // The server and the browser each read their own clock: a minute may tick
+  // between the page and its hydration. The browser's clock updates it.
+  return (
+    <span className="muted" suppressHydrationWarning>
+      {text}
+    </span>
+  );
 }
 
 /** Printed and handed over: the customer has the bill, the till waits for the money. */

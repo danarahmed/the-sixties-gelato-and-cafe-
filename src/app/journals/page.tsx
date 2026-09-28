@@ -21,10 +21,10 @@ export const dynamic = "force-dynamic";
 /**
  * Accounts with a subledger behind them take no manual journal (the database
  * refuses them too): the till's cash (every movement of it is a drawer event,
- * 0024), the safe (every movement of it is cash moved, 0038), stock, payables,
- * goods received and retained earnings.
+ * 0024), the safe (every movement of it is cash moved, 0038), the dollars in
+ * both (0043), stock, payables, goods received and retained earnings.
  */
-const BLOCKED = new Set(["1000", "1005", "1200", "2000", "2050", "3100"]);
+const BLOCKED = new Set(["1000", "1001", "1005", "1006", "1200", "2000", "2050", "3100"]);
 
 export default async function JournalsPage({
   searchParams,

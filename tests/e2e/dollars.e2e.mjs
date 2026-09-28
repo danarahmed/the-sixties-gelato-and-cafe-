@@ -352,10 +352,23 @@ console.log("▸ Reports → Dollars; the books tie");
 }
 {
   const after = differences();
-  check(
-    after === differencesBefore && /(^|,)dollars=0(,|$)/.test(after),
-    `the books tie as they did, the dollars' check at zero (${after})`,
-  );
+  const tie = after === differencesBefore && /(^|,)dollars=0(,|$)/.test(after);
+  check(tie, `the books tie as they did, the dollars' check at zero (${after})`);
+  if (!tie) {
+    // What the dollar accounts and the dollars' records hold, to see where they part.
+    console.log(`    before: ${differencesBefore}`);
+    console.log(
+      sql(`select e.reference_type || ' ' || coalesce(e.description, '') || ': ' || a.code || ' '
+                  || trim_scale(l.debit - l.credit)
+             from journal_line l join journal_entry e on e.id = l.journal_entry_id
+             join gl_account a on a.id = l.account_id
+            where a.code in ('1001', '1006') order by e.created_at, a.code`),
+    );
+    console.log(
+      sql(`select place || ' ' || kind || ' ' || trim_scale(usd) || ' ' || trim_scale(value) || ' '
+                  || reference_type from fx_cash_event order by created_at, place desc, kind`),
+    );
+  }
 }
 
 // ------------------------------------------------------------ the rules

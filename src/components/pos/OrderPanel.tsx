@@ -424,7 +424,9 @@ export function OrderPanel({
             {dirty && <span className="badge err">{t("pos.notSaved")}</span>}
           </div>
           {isBill && order.openedAt && (
-            <div className="order-opened muted">
+            // The minutes open are the browser's own clock's, which may have
+            // ticked since the server's rendered them.
+            <div className="order-opened muted" suppressHydrationWarning>
               {t("pos.openedBy")} {order.openedBy ?? "—"}
               {opened !== null ? ` · ${opened} ${t("pos.min")}` : ""}
             </div>

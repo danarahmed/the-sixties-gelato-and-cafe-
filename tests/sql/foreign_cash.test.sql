@@ -423,6 +423,10 @@ select test.throws(format('select save_journal(%L, %L, %L, true)', test.today(),
 select test.throws(format('select save_journal(%L, %L, %L, true)', test.today(), 'fudge',
                           '[{"code":"1006","debit":5},{"code":"1020","credit":5}]'),
   '%subledger%', 'nor to the safe''s');
+select test.throws(format('select record_bill(%L, %L, %L, 5, 0, null, %L)',
+                          (select id from supplier where name = 'City Packaging Supplies'), 'FX-' || c, test.today(), c),
+  '%cannot take a bill%', 'no bill is charged to ' || c)
+  from unnest(array['1001', '1006', '1005']) c;
 
 -- ------------------------------------------------------------ a bill in dollars; a sale sent again later
 select test.act_as('cashier@example.com');
