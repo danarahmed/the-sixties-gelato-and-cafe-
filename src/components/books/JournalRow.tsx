@@ -33,6 +33,9 @@ const SOURCE: Record<string, string> = {
   card_settlement: "Card settlement",
   platform_settlement: "Platform settlement",
   year_end_close: "Year end",
+  payroll_approval: "Payroll",
+  employee_advance: "Advance",
+  salary_payment: "Salaries",
 };
 
 /** One entry of the register; expands to show its lines as they were written. */

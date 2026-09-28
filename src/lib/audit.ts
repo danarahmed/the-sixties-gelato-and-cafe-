@@ -13,6 +13,7 @@ import { itemTypeLabel, movementLabel, roleLabel } from "@/lib/format";
 import { SHOP_CHANNELS, channelName } from "@/lib/channels";
 import { RULE_LABEL, THRESHOLD_LABEL, ruleLabel } from "@/lib/alerts";
 import { CHOICE_LABEL, RULE_LABEL as BUSINESS_RULE_LABEL } from "@/lib/rules";
+import { PAY_BASIS_LABEL } from "@/lib/staff";
 
 /** A stored JSON value, as the database wrote it. */
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
@@ -75,6 +76,11 @@ export const AUDIT_GROUPS = [
     prefixes: ["journal.", "period.", "legacy.", "expense."],
   },
   { key: "alerts", label: "Alerts answered", prefixes: ["alert."] }, // i18n-ignore
+  {
+    key: "staff",
+    label: "Staff, hours & payroll", // i18n-ignore
+    prefixes: ["staff.", "attendance.", "payroll."],
+  },
   {
     key: "settings",
     label: "Settings, places, platforms & people", // i18n-ignore
@@ -195,6 +201,24 @@ const ACTION_LABEL: Record<string, string> = {
   "alert.snooze": "Alert snoozed",
   "business.clean_start": "Trial records cleared (clean start)",
   "business.reset_test_data": "Test records cleared",
+  // Staff, their hours and their pay (0049).
+  "staff.save": "Person who works here saved",
+  "staff.pay": "Pay set",
+  "staff.left": "Last day set",
+  "staff.clock_pin": "Clock-in PIN set",
+  "staff.schedule": "Schedule saved",
+  "attendance.correct": "Hours corrected",
+  "attendance.add": "Hours added",
+  "attendance.cancel": "Hours cancelled",
+  "payroll.draft": "Payroll drafted",
+  "payroll.adjust": "Payroll adjusted",
+  "payroll.approve": "Payroll approved",
+  "payroll.reopen": "Payroll reopened",
+  "payroll.pay": "Salary paid",
+  "payroll.pay_all": "Salaries paid",
+  "payroll.advance": "Advance given",
+  "payroll.advance_cancel": "Advance cancelled",
+  "payroll.payment_cancel": "Salary payment cancelled",
 };
 
 /**
@@ -388,6 +412,32 @@ const FIELD_LABEL: Record<string, string> = {
   short: "Closed short of the order",
   returned: "Returned",
   credit_kind: "For",
+  // Staff, their hours and their pay (0049).
+  job_title: "Job",
+  location: "Branch",
+  hired_on: "Started",
+  login: "Their login",
+  pay_basis: "How they are paid",
+  pay_rate: "Pay",
+  standard_hours: "Hours in a day",
+  overtime_percent: "Overtime (% of an hour's pay)",
+  left_on: "Last day",
+  shifts_removed: "Shifts taken off",
+  shifts: "Shifts",
+  clock_in: "Clocked in",
+  clock_out: "Clocked out",
+  run_no: "Payroll",
+  month: "Month",
+  people: "People",
+  gross: "Gross pay",
+  net: "To be paid",
+  advances_recovered: "Advances taken back",
+  advance_recovered: "Advance taken back",
+  additions: "Added",
+  additions_note: "What was added for",
+  deductions: "Deducted",
+  deductions_note: "What was deducted for",
+  owed: "Still owed",
 };
 
 /**
@@ -398,6 +448,8 @@ const FIELD_LABEL: Record<string, string> = {
 const PURCHASING_VALUE: Record<string, Record<string, string>> = {
   credit_kind: { goods_return: "Goods returned", price: "A lower price", other: "Other" },
   against: { delivery: "Off the delivery's bill", account: "On the account" },
+  // How someone is paid (0049).
+  pay_basis: PAY_BASIS_LABEL,
 };
 
 /** What a delivery's correction changed (0038), as the trail names it. */
@@ -637,6 +689,17 @@ export function subjectOf(
       return pick("return_no") ? `Return ${pick("return_no")}` : "A return to a supplier";
     case "supplier_credit":
       return pick("credit_no") ? `Credit ${pick("credit_no")}` : "A supplier's credit";
+    // Staff, their hours and their pay (0049): the person, or the payroll by its number.
+    case "employee":
+      return pick("name") ?? "Someone who works here";
+    case "attendance":
+      return pick("name") ?? "A record of hours";
+    case "employee_advance":
+      return pick("name") ?? "An advance";
+    case "payroll_run":
+      return pick("run_no") ? `Payroll ${pick("run_no")}` : (pick("name") ?? "A payroll");
+    case "salary_payment":
+      return pick("name") ?? (pick("run_no") ? `Payroll ${pick("run_no")}` : "A salary payment");
     case "platform_settlement":
       return pick("reference")
         ? `${pick("platform") ?? "Platform"} statement ${pick("reference")}`
@@ -674,6 +737,11 @@ const SUBJECT_WORDS = new Set([
   "A purchase order",
   "A return to a supplier",
   "A supplier's credit",
+  "Someone who works here",
+  "A record of hours",
+  "An advance",
+  "A payroll",
+  "A salary payment",
 ]);
 
 /** An id shown short, as subjectOf shows it: "1a2b3c4d…". */
@@ -691,6 +759,7 @@ const SUBJECTS: [RegExp, string, string[]][] = [
   [/^Purchase order (\d+)$/, "Purchase order {no}", ["no"]],
   [/^Return (\d+)$/, "Return {no}", ["no"]],
   [/^Credit (\d+)$/, "Credit {no}", ["no"]],
+  [/^Payroll (\d+)$/, "Payroll {no}", ["no"]],
   [
     /^Card takings (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})$/,
     "Card takings {from} to {to}",
@@ -772,6 +841,7 @@ export function valueIn(value: string, field: string, t: T, msg: Msg): string {
     case fieldLabel("status"):
     case FIELD_LABEL.credit_kind:
     case FIELD_LABEL.against:
+    case FIELD_LABEL.pay_basis:
       return t(value);
     case FIELD_LABEL.title:
       return msg(value);

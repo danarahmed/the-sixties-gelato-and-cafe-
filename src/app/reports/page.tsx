@@ -22,6 +22,8 @@ import { fmtIQD, fmtQty, movementLabel, tenderLabel } from "@/lib/format";
 import { getDollarsReport } from "@/lib/db/fx";
 import { getPurchasingReport } from "@/lib/db/purchasing";
 import { getProductionReport } from "@/lib/db/production";
+import { getStaffReport } from "@/lib/db/staff";
+import { monthText, splitMinutes } from "@/lib/staff";
 import { LOSS_ACCOUNT_NAME, giveawayLabel, kindShare } from "@/lib/losses";
 import { CREDIT_KIND_LABEL, orderStage, STAGE_LABEL } from "@/lib/purchasing";
 import { fmtRate, fmtUSD } from "@/lib/fx";
@@ -31,6 +33,7 @@ import {
   businessToday,
   dateIn,
   dateTimeIn,
+  daysBetween,
   monthEnd,
   monthStart,
   parseDay,
@@ -60,6 +63,10 @@ export default async function ReportsPage({
   const to = parseDay(sp.to, today);
   const seesProfit = has(profile, "profit.view");
   const seesExceptions = has(profile, "audit.view");
+  // The hours (0049): for those who keep the staff, their hours or their pay, a year at most.
+  const seesStaff =
+    has(profile, "staff.manage") || has(profile, "attendance.edit") || has(profile, "payroll.view");
+  const staffDates = from <= to && daysBetween(from, to) <= 366;
 
   const [
     pnl,
@@ -77,6 +84,7 @@ export default async function ReportsPage({
     buying,
     made,
     lost,
+    staff,
   ] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
     getReconciliation(to),
@@ -93,6 +101,7 @@ export default async function ReportsPage({
     getPurchasingReport(from, to),
     getProductionReport(from, to),
     getLossReport(from, to),
+    seesStaff && staffDates ? getStaffReport(from, to) : Promise.resolve(null),
   ]);
   // The menu as it sells today: a platform out of use sells nothing.
   const menu = allMenu.filter((m) =>
@@ -1188,6 +1197,115 @@ export default async function ReportsPage({
           </>
         )}
       </section>
+
+      {/* ---- Staff: their hours, and what they cost (0049) ---- */}
+      {seesStaff && (
+        <section className="panel" id="staff" data-testid="staff-report">
+          <div className="panel-h">
+            <h3>{t("Staff")}</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              {t("The hours worked {from} to {to}, lateness, leaving early and absence", {
+                from,
+                to,
+              })}
+            </span>
+          </div>
+          {staff === null ? (
+            <div className="panel-b">
+              <p className="muted" style={{ margin: 0, fontSize: ".9rem" }}>
+                {t("Choose up to a year to see the hours.")}
+              </p>
+            </div>
+          ) : staff.people.length === 0 ? (
+            <div className="panel-b">
+              <p className="muted" style={{ margin: 0, fontSize: ".9rem" }}>
+                {t("Nobody worked or was on the schedule in these dates.")}
+              </p>
+            </div>
+          ) : (
+            <div className="tw">
+              <table data-testid="staff-hours">
+                <thead>
+                  <tr>
+                    <th>{t("Who")}</th>
+                    <th className="right">{t("Days on the schedule")}</th>
+                    <th className="right">{t("Days worked")}</th>
+                    <th className="right">{t("Hours")}</th>
+                    <th className="right">{t("Overtime")}</th>
+                    <th className="right">{t("Lateness")}</th>
+                    <th className="right">{t("Left early")}</th>
+                    <th className="right">{t("Absent")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staff.people.map((p) => {
+                    const hours = (minutes: number) => {
+                      const { h, m } = splitMinutes(minutes);
+                      return m === 0
+                        ? t("{h} h", { h: String(h) })
+                        : t("{h} h {m} min", { h: String(h), m: String(m) });
+                    };
+                    const times = (n: number, minutes: number) =>
+                      n === 0
+                        ? "—"
+                        : t("{n} times, {minutes} min", { n: String(n), minutes: String(minutes) });
+                    return (
+                      <tr key={p.employeeId} data-testid="staff-hours-row" data-name={p.name}>
+                        <td>
+                          {p.name}
+                          {p.title && (
+                            <div className="muted" style={{ fontSize: ".8rem" }}>
+                              {p.title}
+                            </div>
+                          )}
+                        </td>
+                        <td className="right mono">{p.daysScheduled}</td>
+                        <td className="right mono">{p.daysWorked}</td>
+                        <td className="right mono">{hours(p.minutes)}</td>
+                        <td className="right mono">
+                          {p.overtimeMinutes ? hours(p.overtimeMinutes) : "—"}
+                        </td>
+                        <td className="right mono">{times(p.timesLate, p.minutesLate)}</td>
+                        <td className="right mono">{times(p.timesEarly, p.minutesEarly)}</td>
+                        <td className="right mono">{p.daysAbsent || "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {staff?.labour && staff.labour.length > 0 && (
+            <div className="tw">
+              <table data-testid="staff-labour">
+                <thead>
+                  <tr>
+                    <th>{t("Month")}</th>
+                    <th className="right">{t("Salaries (6100)")}</th>
+                    <th className="right">{t("Sales")}</th>
+                    <th className="right">{t("Of sales")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staff.labour.map((m) => (
+                    <tr key={m.month}>
+                      <td className="mono">{monthText(m.month)}</td>
+                      <td className="right money">{fmtIQD(m.cost)}</td>
+                      <td className="right money">{fmtIQD(m.sales)}</td>
+                      <td className="right mono">{m.percent === null ? "—" : `${m.percent}%`}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="muted" style={{ margin: "6px 16px", fontSize: ".8rem" }}>
+                {t(
+                  "What staff cost is what 6100 Salaries holds for the month: the payroll approved for it, and any salary recorded as an expense. The sales are the month's, less refunds.",
+                )}
+              </p>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* ---- Sales costed at nothing (0025) ---- */}
       <section className="panel" id="uncosted">

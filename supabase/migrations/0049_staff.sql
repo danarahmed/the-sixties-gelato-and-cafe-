@@ -319,14 +319,15 @@ begin
     if e.left_on is not null and e.left_on < p_hired_on then
       raise exception 'They cannot start after their last day (%)', e.left_on;
     end if;
-    v_before := jsonb_build_object('name', e.full_name, 'phone', e.phone, 'title', e.title, 'location', e.location_id,
-                                   'hired_on', e.hired_on, 'login', e.app_user_id);
+    v_before := jsonb_build_object('name', e.full_name, 'phone', e.phone, 'job_title', e.title,
+                                   'location', e.location_id, 'hired_on', e.hired_on, 'login', e.app_user_id);
     update employee set full_name = v_name, phone = nullif(trim(p_phone), ''), title = nullif(trim(p_title), ''),
                         location_id = v_loc, hired_on = p_hired_on, app_user_id = p_app_user
      where id = e.id;
   end if;
   return jsonb_build_object('employee_id', v_id, 'before', v_before,
-    'after', jsonb_build_object('name', v_name, 'phone', nullif(trim(p_phone), ''), 'title', nullif(trim(p_title), ''),
+    'after', jsonb_build_object('name', v_name, 'phone', nullif(trim(p_phone), ''),
+                                'job_title', nullif(trim(p_title), ''),
                                 'location', v_loc, 'hired_on', p_hired_on, 'login', p_app_user));
 end $$;
 
@@ -374,10 +375,10 @@ begin
                       overtime_percent = p_overtime_percent
    where id = e.id;
   return jsonb_build_object('employee_id', e.id,
-    'before', case when e.rate is not null then jsonb_build_object('pay_basis', e.pay_basis, 'rate', e.rate,
+    'before', case when e.rate is not null then jsonb_build_object('pay_basis', e.pay_basis, 'pay_rate', e.rate,
                                                                    'standard_hours', e.standard_hours,
                                                                    'overtime_percent', e.overtime_percent) end,
-    'after', jsonb_build_object('pay_basis', p_pay_basis, 'rate', v_rate, 'standard_hours', p_standard_hours,
+    'after', jsonb_build_object('pay_basis', p_pay_basis, 'pay_rate', v_rate, 'standard_hours', p_standard_hours,
                                 'overtime_percent', p_overtime_percent, 'name', e.full_name));
 end $$;
 

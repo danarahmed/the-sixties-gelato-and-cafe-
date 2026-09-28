@@ -22,6 +22,9 @@ const SOURCE: Record<string, string> = {
   cash_transfer: "Cash moved",
   year_end_close: "Year-end close",
   correction: "Owner's correction",
+  payroll_approval: "Payroll",
+  employee_advance: "Advance",
+  salary_payment: "Salaries",
 };
 
 function signed(n: number): string {

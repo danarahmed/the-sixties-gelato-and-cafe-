@@ -48,7 +48,11 @@ export type Permission =
   | "platform.reconcile"
   | "ai.view"
   | "audit.view"
-  | "settings.manage";
+  | "settings.manage"
+  | "staff.manage"
+  | "attendance.edit"
+  | "payroll.view"
+  | "payroll.run";
 
 const ALL: Permission[] = [
   "sale.create",
@@ -81,6 +85,10 @@ const ALL: Permission[] = [
   "ai.view",
   "audit.view",
   "settings.manage",
+  "staff.manage",
+  "attendance.edit",
+  "payroll.view",
+  "payroll.run",
 ];
 
 /**
@@ -118,6 +126,8 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "platform.reconcile",
     "ai.view",
     "audit.view",
+    "staff.manage",
+    "attendance.edit",
   ]),
   cashier: new Set<Permission>(["sale.create", "discount.apply", "cash.session"]),
   barista: new Set<Permission>([
@@ -137,8 +147,16 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "platform.reconcile",
     "audit.view",
     "cash.view_expected",
+    "payroll.view",
+    "payroll.run",
   ]),
-  auditor: new Set<Permission>(["cost.view", "profit.view", "audit.view", "cash.view_expected"]),
+  auditor: new Set<Permission>([
+    "cost.view",
+    "profit.view",
+    "audit.view",
+    "cash.view_expected",
+    "payroll.view",
+  ]),
 };
 
 export function can(role: Role, permission: Permission): boolean {

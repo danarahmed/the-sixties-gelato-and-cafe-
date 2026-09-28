@@ -221,6 +221,24 @@ import {
   unitFactor,
 } from "@/components/production/batchMath";
 import { filledLines, halfFilled, linesFrom, newLine } from "@/components/menu/RecipeLines";
+import {
+  STAFF_PHRASES,
+  advancesFrom,
+  clockAnswerFrom,
+  clockTime,
+  monthText,
+  payrollDetailFrom,
+  payrollTotals,
+  splitMinutes,
+  staffFrom,
+  staffReportFrom,
+  typedHours,
+  typedTime,
+  weekDays,
+  weekStart,
+  worksOn,
+} from "@/lib/staff";
+import { fieldLabel } from "@/lib/audit";
 
 const perms = (role: Role) => [...ROLE_PERMISSIONS[role]];
 
@@ -1278,8 +1296,12 @@ describe("the system speaks: alerts and the daily brief (0029, the audit's P1-8)
   };
   // The thresholds as the latest migration to redefine them has them.
   const migration = defining("alert_threshold_rules").at(-1) ?? "";
-  // The rules, as every migration that added to them wrote them (none is taken away).
-  const rules = defining("alert_conditions").join("\n");
+  // The rules, as every migration that added to them wrote them (none is taken away):
+  // each definition of the function, not the rest of its migration.
+  const rules = defining("alert_conditions")
+    .flatMap((sql) => sql.split("create or replace function alert_conditions(").slice(1))
+    .map((body) => body.slice(0, body.indexOf("$$;")))
+    .join("\n");
   const alert = (over: Partial<Alert>): Alert => ({
     id: "a",
     rule: "margin",
@@ -3643,5 +3665,275 @@ describe("kinds of loss, giveaways at the till and the loss report (0048, releas
     );
     expect(subjectOf("stock_loss", "l", null, {}, new Map())).toBe("A loss");
     expect(showValue("preparation_waste", "movement", new Map())).toBe("Preparation waste");
+  });
+});
+
+describe("staff, their hours and their pay (0049, release W)", () => {
+  const migration = readFileSync(join(__dirname, "../supabase/migrations/0049_staff.sql"), "utf8");
+
+  it("reads hours as they are typed, in any digits", () => {
+    expect(typedTime("8")).toBe("08:00");
+    expect(typedTime("8:30")).toBe("08:30");
+    expect(typedTime("0830")).toBe("08:30");
+    expect(typedTime("٨:٣٠")).toBe("08:30");
+    expect(typedTime("24")).toBeNull();
+    expect(typedTime("8:60")).toBeNull();
+    expect(typedTime("eight")).toBeNull();
+    expect(typedHours("08:00-16:00")).toEqual({ starts: "08:00", ends: "16:00" });
+    expect(typedHours("8 to 16")).toEqual({ starts: "08:00", ends: "16:00" });
+    // Ending before it starts: it ends the next day, as the database reads it.
+    expect(typedHours("22:00 – 02:00")).toEqual({ starts: "22:00", ends: "02:00" });
+    expect(typedHours("16-16")).toBeNull();
+    expect(typedHours("8")).toBeNull();
+  });
+
+  it("starts the café's week on a Saturday", () => {
+    expect(weekStart("2026-09-28")).toBe("2026-09-26"); // a Monday
+    expect(weekStart("2026-09-26")).toBe("2026-09-26"); // the Saturday itself
+    expect(weekStart("2026-10-02")).toBe("2026-09-26"); // the Friday after
+    expect(weekDays("2026-09-30")).toEqual([
+      "2026-09-26",
+      "2026-09-27",
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30",
+      "2026-10-01",
+      "2026-10-02",
+    ]);
+  });
+
+  it("shows hours, months and the café's clock as the screens do", () => {
+    expect(splitMinutes(135)).toEqual({ h: 2, m: 15 });
+    expect(splitMinutes(-5)).toEqual({ h: 0, m: 0 });
+    expect(monthText("2026-09-01")).toBe("2026-09");
+    expect(clockTime("2026-09-28T05:00:00Z", "Asia/Baghdad")).toBe("08:00");
+    expect(clockTime(null, "Asia/Baghdad")).toBe("");
+    const rana = { hiredOn: "2026-09-01", leftOn: "2026-09-30" };
+    expect(worksOn(rana, "2026-08-31")).toBe(false);
+    expect(worksOn(rana, "2026-09-01")).toBe(true);
+    expect(worksOn(rana, "2026-09-30")).toBe(true);
+    expect(worksOn(rana, "2026-10-01")).toBe(false);
+    expect(worksOn({ hiredOn: "2026-09-01", leftOn: null }, "2030-01-01")).toBe(true);
+  });
+
+  it("gives the pay only to those who see payroll", () => {
+    const [withPay, withoutPay] = staffFrom([
+      {
+        id: "e1",
+        name: "Rana",
+        location_id: "l1",
+        location: "Main",
+        hired_on: "2026-09-01",
+        has_pin: true,
+        in_since: "2026-09-28T05:00:00Z",
+        pay_set: true,
+        pay_basis: "monthly",
+        rate: "600000",
+        standard_hours: 8,
+        overtime_percent: null,
+        advance_owed: 50000,
+      },
+      {
+        id: "e2",
+        name: "Omar",
+        location_id: "l1",
+        location: "Main",
+        hired_on: "2026-09-01",
+        pay_set: false,
+      },
+    ]);
+    expect(withPay).toMatchObject({
+      name: "Rana",
+      hasPin: true,
+      inSince: "2026-09-28T05:00:00Z",
+      pay: {
+        basis: "monthly",
+        rate: 600000,
+        standardHours: 8,
+        overtimePercent: null,
+        advanceOwed: 50000,
+      },
+    });
+    expect(withoutPay).toMatchObject({ name: "Omar", hasPin: false, paySet: false, pay: null });
+    expect(staffFrom(null)).toEqual([]);
+  });
+
+  it("adds up a payroll: what is owed is what is to be paid less what was paid", () => {
+    const run = payrollDetailFrom({
+      id: "r",
+      run_no: 3,
+      month: "2026-08-01",
+      status: "approved",
+      current: null,
+      month_over: true,
+      lines: [
+        {
+          id: "a",
+          name: "Rana",
+          pay_basis: "monthly",
+          rate: 600000,
+          gross: 650000,
+          net: 600000,
+          advance_recovered: 50000,
+          paid: 600000,
+        },
+        {
+          id: "b",
+          name: "Omar",
+          pay_basis: "hourly",
+          rate: 3000,
+          gross: 240000,
+          net: 240000,
+          advance_recovered: 0,
+          paid: 0,
+        },
+        { id: "c", name: "Sara", pay_basis: "bogus", rate: null, gross: 0, net: 0, paid: 0 },
+      ],
+      approvals: [
+        {
+          approved_at: "2026-09-01T09:00:00Z",
+          approved_by: "Demo Owner",
+          net: 840000,
+          journal_no: 41,
+        },
+      ],
+      payments: [
+        {
+          id: "p",
+          paid_from: "bank",
+          amount: 600000,
+          paid_on: "2026-09-01",
+          people: [{ employee_id: "e1", name: "Rana", amount: 600000 }],
+        },
+      ],
+    });
+    expect(run).toMatchObject({ runNo: 3, status: "approved", current: null, monthOver: true });
+    expect(run.lines.map((l) => l.payBasis)).toEqual(["monthly", "hourly", null]);
+    expect(run.approvals[0]).toMatchObject({
+      approvedBy: "Demo Owner",
+      net: 840000,
+      journalNo: 41,
+    });
+    expect(run.payments[0]?.people).toEqual([{ employeeId: "e1", name: "Rana", amount: 600000 }]);
+    expect(payrollTotals(run.lines)).toEqual({
+      gross: 890000,
+      net: 840000,
+      recovered: 50000,
+      paid: 600000,
+      owed: 240000,
+    });
+    // A draft says whether it is still what the hours and the pay say.
+    expect(payrollDetailFrom({ status: "draft", current: false }).current).toBe(false);
+    expect(payrollDetailFrom({ status: "draft", current: true }).current).toBe(true);
+  });
+
+  it("reads the till's answer to a clock-in, done or refused", () => {
+    expect(
+      clockAnswerFrom({
+        ok: true,
+        name: "Rana",
+        clock_in: "2026-09-28T05:10:00Z",
+        late_minutes: 10,
+      }),
+    ).toMatchObject({ ok: true, error: null, name: "Rana", lateMinutes: 10, earlyMinutes: null });
+    expect(clockAnswerFrom({ ok: false, error: "That PIN is not right" })).toMatchObject({
+      ok: false,
+      error: "That PIN is not right",
+    });
+    expect(clockAnswerFrom(null)).toMatchObject({ ok: false, error: null });
+  });
+
+  it("reads the advances, and the hours' report with what staff cost only for payroll", () => {
+    const a = advancesFrom({
+      advances: [
+        {
+          id: "x",
+          employee_id: "e1",
+          name: "Rana",
+          amount: "50000",
+          paid_from: "safe",
+          reason: "Rent",
+        },
+      ],
+      owed: [{ employee_id: "e1", name: "Rana", owed: 50000 }],
+    });
+    expect(a.advances[0]).toMatchObject({ amount: 50000, paidFrom: "safe", cancelledAt: null });
+    expect(a.owed).toEqual([{ employeeId: "e1", name: "Rana", owed: 50000 }]);
+    const people = [
+      { employee_id: "e1", name: "Rana", days_worked: 20, minutes: 9600, times_late: 2 },
+    ];
+    expect(staffReportFrom({ people, labour: null }).labour).toBeNull();
+    expect(
+      staffReportFrom({
+        people,
+        labour: [{ month: "2026-09-01", cost: 800000, sales: 4000000, percent: 20 }],
+      }).labour,
+    ).toEqual([{ month: "2026-09-01", cost: 800000, sales: 4000000, percent: 20 }]);
+    expect(staffReportFrom({ people }).people[0]).toMatchObject({
+      daysWorked: 20,
+      minutes: 9600,
+      timesLate: 2,
+    });
+  });
+
+  it("has every word of the staff screens in Arabic and Kurdish", () => {
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        STAFF_PHRASES.filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
+  });
+
+  it("reads the staff rules as the database checks them", () => {
+    const body = migration.slice(migration.indexOf("create or replace function rule_definitions("));
+    const json = body.match(/select '(\{[\s\S]*?\})'::jsonb/)?.[1] ?? "{}";
+    const parsed = parseBusinessRules({
+      definitions: JSON.parse(json.replace(/''/g, "'")),
+      rows: [],
+      history: [],
+    });
+    const def = (k: string) => parsed.definitions.find((d) => d.key === k)!;
+    expect(def("late_after_minutes").kind).toBe("minutes");
+    expect(def("payday").kind).toBe("day");
+    expect(def("clocked_in_alert_hours").kind).toBe("hours");
+    expect(def("overtime_percent").kind).toBe("percent");
+    expect(typedRuleValue(def("late_after_minutes"), "10")).toEqual({ ok: true, value: 10 });
+    expect(typedRuleValue(def("late_after_minutes"), "121").ok).toBe(false);
+    expect(typedRuleValue(def("payday"), "29").ok).toBe(false);
+    expect(typedRuleValue(def("payday"), "1.5")).toEqual({
+      ok: false,
+      error: "Enter a whole number",
+    });
+    expect(typedRuleValue(def("overtime_percent"), "99").ok).toBe(false);
+    expect(typedRuleValue(def("overtime_percent"), "175")).toEqual({ ok: true, value: 175 });
+  });
+
+  it("names every staff and payroll change on the audit trail", () => {
+    const actions = [
+      ...new Set(
+        [...migration.matchAll(/audit_event\(v_business, '([a-z_.]+)'/g)].map((m) => m[1]!),
+      ),
+    ].filter((a) => /^(staff|attendance|payroll)\./.test(a));
+    expect(actions.length).toBe(17);
+    for (const a of actions) {
+      expect(actionLabel(a), a).not.toBe(a);
+      expect(
+        auditGroup("staff")?.prefixes.some((p) => a.startsWith(p)),
+        a,
+      ).toBe(true);
+    }
+    expect(fieldLabel("pay_rate")).toBe("Pay");
+    expect(fieldLabel("job_title")).toBe("Job");
+    expect(showValue("monthly", "pay_basis", new Map())).toBe("By the month");
+    expect(subjectOf("employee", "e", null, { name: "Rana" }, new Map())).toBe("Rana");
+    expect(subjectOf("payroll_run", "r", null, { run_no: 3, month: "2026-08-01" }, new Map())).toBe(
+      "Payroll 3",
+    );
+    expect(subjectOf("salary_payment", "p", null, { month: "2026-08-01" }, new Map())).toBe(
+      "A salary payment",
+    );
+    expect(subjectOf("attendance", "a", { name: "Omar" }, null, new Map())).toBe("Omar");
   });
 });

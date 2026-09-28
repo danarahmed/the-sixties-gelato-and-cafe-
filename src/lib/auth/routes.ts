@@ -31,6 +31,8 @@ export const NAV: NavEntry[] = [
   { group: SPENDING, href: "/vendors", key: "nav.vendors", anyOf: ["cost.view"] },
   { group: SPENDING, href: "/expenses", key: "nav.expenses", anyOf: ["cost.view"] },
   { group: SPENDING, href: "/purchasing", key: "nav.purchasing", anyOf: ["cost.view"] },
+  // Salaries, a month at a time, and advances (0049).
+  { group: SPENDING, href: "/payroll", key: "nav.payroll", anyOf: ["payroll.view"] },
 
   { group: OPERATIONS, href: "/pos", key: "nav.pos", anyOf: ["sale.create"] },
   { group: OPERATIONS, href: "/orders", key: "nav.orders", anyOf: ["cost.view"] },
@@ -54,6 +56,13 @@ export const NAV: NavEntry[] = [
     href: "/production",
     key: "nav.production",
     anyOf: ["cost.view", "production.record"],
+  },
+  // Who works here, the schedule and the hours (0049).
+  {
+    group: OPERATIONS,
+    href: "/staff",
+    key: "nav.staff",
+    anyOf: ["staff.manage", "attendance.edit", "payroll.view"],
   },
 
   { group: BOOKS, href: "/journals", key: "nav.journals", anyOf: ["cost.view"] },

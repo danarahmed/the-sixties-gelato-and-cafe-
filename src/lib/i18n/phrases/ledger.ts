@@ -404,6 +404,54 @@ const phrases: PhraseBook = {
     ar: "عُكست الخسارة: {1}: {2}",
     ckb: "زیان هەڵگەڕێندرایەوە: {1}: {2}",
   },
+
+  // Staff, their hours and their pay (0049): the accounts, the narrations, the checks and the month's close.
+  "Employee advances": { ar: "سلف الموظفين", ckb: "پێشەکی کارمەندان" },
+  "Salaries payable": { ar: "رواتب مستحقة الدفع", ckb: "مووچەی قەرز" },
+  "Advance to {1}: {2}": { ar: "سلفة لـ{1}: {2}", ckb: "پێشەکی بۆ {1}: {2}" },
+  "Advance cancelled: {1}": { ar: "أُلغيت السلفة: {1}", ckb: "پێشەکی هەڵوەشێنرایەوە: {1}" },
+  "Payroll {1} ({2})": { ar: "كشف الرواتب {1} ({2})", ckb: "لیستی مووچەی {1} ({2})" },
+  "Payroll reopened: {1}": {
+    ar: "أُعيد فتح كشف الرواتب: {1}",
+    ckb: "لیستی مووچە دووبارە کرایەوە: {1}",
+  },
+  "Salaries {1}: {2}": { ar: "رواتب {1}: {2}", ckb: "مووچەی {1}: {2}" },
+  "Salary payment cancelled: {1}": {
+    ar: "أُلغيت دفعة الراتب: {1}",
+    ckb: "پارەدانی مووچە هەڵوەشێنرایەوە: {1}",
+  },
+  "Salaries owed vs Salaries payable (2100)": {
+    ar: "الرواتب المستحقة مقابل رواتب مستحقة الدفع (2100)",
+    ckb: "مووچەی قەرز بەرامبەر هەژماری مووچەی قەرز (2100)",
+  },
+  "Advances not yet taken back vs Employee advances (1300)": {
+    ar: "السلف غير المستردة بعد مقابل سلف الموظفين (1300)",
+    ckb: "پێشەکییە نەگەڕێندراوەکان بەرامبەر پێشەکی کارمەندان (1300)",
+  },
+  "Salaries owed agree with Salaries payable (2100)": {
+    ar: "الرواتب المستحقة تطابق رواتب مستحقة الدفع (2100)",
+    ckb: "مووچەی قەرز لەگەڵ هەژماری مووچەی قەرز (2100) یەکدەگرێتەوە",
+  },
+  "Advances not yet taken back agree with Employee advances (1300)": {
+    ar: "السلف غير المستردة بعد تطابق سلف الموظفين (1300)",
+    ckb: "پێشەکییە نەگەڕێندراوەکان لەگەڵ پێشەکی کارمەندان (1300) یەکدەگرنەوە",
+  },
+  "salaries owed {1}, account 2100 {2}, difference {3}": {
+    ar: "الرواتب المستحقة {1}، الحساب 2100 {2}، الفرق {3}",
+    ckb: "مووچەی قەرز {1}، هەژماری 2100 {2}، جیاوازی {3}",
+  },
+  "advances owed {1}, account 1300 {2}, difference {3}": {
+    ar: "السلف المستحقة {1}، الحساب 1300 {2}، الفرق {3}",
+    ckb: "پێشەکی قەرز {1}، هەژماری 1300 {2}، جیاوازی {3}",
+  },
+  "The month's payroll is approved": {
+    ar: "كشف رواتب الشهر معتمد",
+    ckb: "لیستی مووچەی مانگەکە پەسەند کراوە",
+  },
+  "The payroll for {1} is not approved: after the lock it cannot be posted into this month": {
+    ar: "كشف رواتب {1} غير معتمد: بعد القفل لا يمكن ترحيله إلى هذا الشهر",
+    ckb: "لیستی مووچەی {1} پەسەند نەکراوە: دوای قفڵکردن ناتوانرێت لەم مانگەدا تۆمار بکرێت",
+  },
 };
 
 export default phrases;

@@ -110,7 +110,14 @@ export default async function SessionStatementPage({
                   </td>
                   <td>{t(MOVEMENT[m.kind] ?? m.kind)}</td>
                   <td className="mono">{m.turnNo === null ? "" : `#${m.turnNo}`}</td>
-                  <td className="muted">{m.note ?? ""}</td>
+                  <td className="muted">
+                    {/* An advance or a salary paid from the drawer (0049): for whom. */}
+                    {m.referenceType === "employee_advance"
+                      ? t("Advance: {name}", { name: m.note ?? "" })
+                      : m.referenceType === "salary_payment"
+                        ? t("Salaries: {name}", { name: m.note ?? "" })
+                        : (m.note ?? "")}
+                  </td>
                   <td className="muted">{m.by ?? "—"}</td>
                   <td
                     className="right money"

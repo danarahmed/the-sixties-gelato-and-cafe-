@@ -39,6 +39,8 @@ export const RULE_LABEL: Record<string, string> = {
   stock_below_zero: "Stock below zero",
   losses_waiting: "Losses waiting for approval",
   use_by: "Use-by date",
+  clocked_in_long: "Clocked in a long time",
+  payroll_due: "Salaries due",
 };
 
 export function ruleLabel(rule: string): string {

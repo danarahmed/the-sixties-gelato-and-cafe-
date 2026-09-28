@@ -612,6 +612,47 @@ const phrases: PhraseBook = {
     ar: "اعرضها قبل الدفعات الأحدث: البيع يأخذ منها أولًا.",
     ckb: "پێش دەستە نوێیەکان دایبنێ: فرۆشتن سەرەتا لەوە دەبات.",
   },
+
+  // Staff, their hours and their pay (0049): the rules, and the alerts as the database writes them.
+  "Clocked in a long time": {
+    ar: "مسجَّل الحضور منذ وقت طويل",
+    ckb: "ماوەیەکی زۆرە هاتنی تۆمار کراوە",
+  },
+  "Salaries due": { ar: "رواتب مستحقة", ckb: "مووچەی کاتی هاتوو" },
+  "{1} has been clocked in for {2} hours, since {3}": {
+    ar: "{1} مسجَّل الحضور منذ {2} ساعة، منذ {3}",
+    ckb: "هاتنی {1} بۆ {2} کاتژمێرە تۆمار کراوە، لە {3}ەوە",
+  },
+  "Hours left open are paid as worked: a clock-out forgotten becomes overtime.": {
+    ar: "الساعات المفتوحة تُدفع كأنها عُملت: الانصراف المنسيّ يصبح عملًا إضافيًا.",
+    ckb: "کاتژمێرە کراوەکان وەک کارکردوو دەدرێن: ڕۆیشتنێکی لەبیرکراو دەبێتە کاتی زیادە.",
+  },
+  "Clock them out on the till, or correct the hours on Staff.": {
+    ar: "سجّل انصرافه على نقطة البيع، أو صحّح الساعات في شاشة «الموظفون».",
+    ckb: "لەسەر خاڵی فرۆشتن ڕۆیشتنی تۆمار بکە، یان لە شاشەی «کارمەندان» کاتژمێرەکان ڕاست بکەرەوە.",
+  },
+  "The payroll for {1} is not approved: salaries were due on {2}": {
+    ar: "كشف رواتب {1} غير معتمد: كانت الرواتب مستحقة في {2}",
+    ckb: "لیستی مووچەی {1} پەسەند نەکراوە: مووچەکان لە {2} کاتیان هاتبوو",
+  },
+  "Salaries for {1}: {2} IQD not paid yet": {
+    ar: "رواتب {1}: {2} IQD لم تُدفع بعد",
+    ckb: "مووچەی {1}: {2} IQD هێشتا نەدراوە",
+  },
+  "Until the payroll is approved, the month's salaries are not in the books and nobody can be paid.":
+    {
+      ar: "حتى يُعتمد كشف الرواتب، لا تكون رواتب الشهر في الدفاتر ولا يمكن الدفع لأحد.",
+      ckb: "تا لیستی مووچە پەسەند نەکرێت، مووچەی مانگەکە لە دەفتەرەکاندا نییە و ناتوانرێت بە کەس بدرێت.",
+    },
+  "Salaries owed and not paid are owed to people who have done the work.": {
+    ar: "الرواتب المستحقة غير المدفوعة هي حقّ لأشخاص أنجزوا العمل.",
+    ckb: "مووچەی قەرز و نەدراو مافی ئەو کەسانەیە کە کارەکەیان کردووە.",
+  },
+  "Draft it on Payroll, check it, and approve it.": {
+    ar: "أعدّه في شاشة «الرواتب»، وراجعه، واعتمده.",
+    ckb: "لە شاشەی «مووچە» ئامادەی بکە، بیپشکنە و پەسەندی بکە.",
+  },
+  "Pay them on Payroll.": { ar: "ادفعها في شاشة «الرواتب».", ckb: "لە شاشەی «مووچە» بیاندە." },
 };
 
 export default phrases;
