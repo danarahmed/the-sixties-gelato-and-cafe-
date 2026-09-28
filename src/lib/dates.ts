@@ -55,6 +55,32 @@ export function dayStart(day: string, timezone: string): string {
   return new Date(t).toISOString();
 }
 
+/**
+ * The instant a time on the business's clock names — "2026-09-28T14:30", as a
+ * date-and-time field gives it — as an ISO string; null when it is not one.
+ */
+export function localTimeToIso(local: string, timezone: string): string | null {
+  const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/.exec(local.trim());
+  if (!m) return null;
+  const wall = Date.parse(`${m[1]}T${m[2]}:${m[3]}:00Z`);
+  if (Number.isNaN(wall)) return null;
+  let t = wall;
+  // Twice: the zone's offset can differ either side of a change of clocks.
+  for (let i = 0; i < 2; i++) {
+    const shown = Date.parse(
+      `${dateTimeIn(timezone, new Date(t).toISOString()).replace(" ", "T")}:00Z`,
+    );
+    t -= shown - wall;
+  }
+  return new Date(t).toISOString();
+}
+
+/** A stored timestamp as a date-and-time field shows it, on the business's clock. */
+export function isoToLocalTime(iso: string, timezone: string): string {
+  const s = dateTimeIn(timezone, iso);
+  return s === "—" ? "" : s.replace(" ", "T");
+}
+
 /** Calendar arithmetic on YYYY-MM-DD strings (no timezone involved). */
 export function addDays(day: string, n: number): string {
   const d = new Date(`${day}T00:00:00Z`);

@@ -11,7 +11,29 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
 import { NAV, holdsAny, homeFor, isPublicPath } from "@/lib/auth/routes";
-import { addDays, dateIn, dayStart, monthEnd, monthStart, parseDay } from "@/lib/dates";
+import {
+  addDays,
+  dateIn,
+  dayStart,
+  isoToLocalTime,
+  localTimeToIso,
+  monthEnd,
+  monthStart,
+  parseDay,
+} from "@/lib/dates";
+import {
+  PRODUCTION_PHRASES,
+  keepsFields,
+  keepsHours,
+  keepsLabel,
+  lotMovementLabel,
+  lotsFrom,
+  planFrom,
+  productionReportFrom,
+  reconciliationFrom,
+  storyAddsUp,
+  storyFrom,
+} from "@/lib/production";
 import { normaliseNumber, positive, signedNonZero } from "@/lib/validation";
 import { getBookkeeper } from "@/lib/bookkeeping/rules";
 import { isUncertainFailure } from "@/lib/db/rpcOutcome";
@@ -3260,5 +3282,163 @@ describe("the buying list (0045)", () => {
       { field: "The usual supplier", before: "", after: "yes" },
       { field: "In place of", before: "", after: "Kurdistan Coffee Imports" },
     ]);
+  });
+});
+
+describe("batches, their use-by dates and lots, and the day's plan (0046, release U)", () => {
+  it("reads a time on the café's clock, and gives it back as the form shows it", () => {
+    // Baghdad is three hours ahead of UTC all year.
+    expect(localTimeToIso("2026-09-28T14:30", "Asia/Baghdad")).toBe("2026-09-28T11:30:00.000Z");
+    expect(localTimeToIso("2026-09-28T01:15", "Asia/Baghdad")).toBe("2026-09-27T22:15:00.000Z");
+    expect(isoToLocalTime("2026-09-27T22:15:00.000Z", "Asia/Baghdad")).toBe("2026-09-28T01:15");
+    expect(localTimeToIso("", "Asia/Baghdad")).toBeNull();
+    expect(localTimeToIso("2026-09-28", "Asia/Baghdad")).toBeNull();
+    expect(isoToLocalTime("not a time", "Asia/Baghdad")).toBe("");
+  });
+
+  it("takes a shelf life in days or hours, an hour to a year", () => {
+    expect(keepsHours("3", "days")).toBe(72);
+    expect(keepsHours("36", "hours")).toBe(36);
+    expect(keepsHours(" ", "days")).toBeNull();
+    expect(keepsHours("0", "hours")).toBe("bad");
+    expect(keepsHours("1.5", "hours")).toBe("bad");
+    expect(keepsHours("366", "days")).toBe("bad");
+    expect(keepsHours("365", "days")).toBe(8760);
+    expect(keepsFields(72)).toEqual({ qty: "3", unit: "days" });
+    expect(keepsFields(36)).toEqual({ qty: "36", unit: "hours" });
+    expect(keepsFields(null)).toEqual({ qty: "", unit: "days" });
+    expect(keepsLabel(48)).toEqual({ text: "keeps {n} day(s)", vars: { n: 2 } });
+    expect(keepsLabel(5)).toEqual({ text: "keeps {n} hour(s)", vars: { n: 5 } });
+    expect(keepsLabel(null)).toBeNull();
+  });
+
+  it("accounts for a batch: made = sold + used + lost ± counts + left", () => {
+    // Batch 3 of the SQL test: 1 kg made, 100 g sold, 400 g lost, 500 g missing on a count.
+    const three = storyFrom({ made: 1000, sold: 100, lost: 400, counted: -500, left: 0 })!;
+    expect(storyAddsUp(three)).toBe(true);
+    expect(storyAddsUp({ ...three, left: 50 })).toBe(false);
+    const two = storyFrom({ made: 4800, sold: 4500, used: 0, lost: 300, left: 0 })!;
+    expect(storyAddsUp(two)).toBe(true);
+    expect(storyFrom(null)).toBeNull();
+  });
+
+  it("names each movement of a lot by what it was and which way it went", () => {
+    expect(lotMovementLabel("sold", -200)).toBe("Sale");
+    expect(lotMovementLabel("sold", 300)).toBe("Back from a sale (void or refund)");
+    expect(lotMovementLabel("made", -5000)).toBe("Batch cancelled");
+    expect(lotMovementLabel("wasted", 200)).toBe("Loss taken back");
+    expect(lotMovementLabel("counted", -500)).toBe("Missing on a count");
+    expect(lotMovementLabel("counted", 200)).toBe("Found on a count");
+    expect(lotMovementLabel("revalued", 1)).toBe("Corrected");
+  });
+
+  it("reads the plan, the lots, a batch and the report as the database gives them", () => {
+    const plan = planFrom({
+      day: "2026-09-28",
+      weekday: 1,
+      location: "Main Branch",
+      recipes: [
+        {
+          recipe_id: "r",
+          recipe: "Chocolate gelato",
+          item_id: "i",
+          item: "Chocolate gelato",
+          base_unit: "g",
+          batch_yield: 4000,
+          yield_unit: "kg",
+          status: "make",
+          history_days: 43,
+          weeks: 6,
+          days: [{ day: "2026-09-21", used: 1000 }],
+          demand: 2000,
+          on_hand: 5000,
+          due: 4000,
+          good: 1000,
+          to_make: 1000,
+          batches: 1,
+          makes: 4000,
+          ingredients: [],
+        },
+        { recipe_id: "v", recipe: "Vanilla gelato", status: "no_history", history_days: 0 },
+        { recipe_id: "x", recipe: "Odd", status: "something else" },
+      ],
+      ingredients: [
+        { item_id: "c", item: "Cocoa", base_unit: "g", needed: 500, on_hand: 300, short: 200 },
+      ],
+    });
+    expect(plan.recipes.map((r) => r.status)).toEqual(["make", "no_history", "no_history"]);
+    expect(plan.recipes[0]).toMatchObject({ weeks: 6, demand: 2000, good: 1000, batches: 1 });
+    expect(plan.recipes[1]).toMatchObject({ demand: null, weeks: null, historyDays: 0 });
+    expect(plan.ingredients[0]).toMatchObject({ item: "Cocoa", short: 200 });
+
+    const lots = lotsFrom([
+      {
+        lot_id: "l",
+        lot: "B3",
+        item_id: "i",
+        item: "Vanilla",
+        base_unit: "g",
+        batch_id: "b",
+        batch_no: 3,
+        use_by: "2026-09-28T08:00:00Z",
+        left: 100,
+        status: "expired",
+      },
+    ]);
+    expect(lots[0]).toMatchObject({ batchNo: 3, left: 100, status: "expired" });
+
+    const b = reconciliationFrom({
+      batch_id: "b",
+      batch_no: 3,
+      status: "completed",
+      recipe: "Vanilla",
+      item: "Vanilla",
+      base_unit: "g",
+      entered_unit: null,
+      actual: 1000,
+      planned: 5000,
+      made_at: "t",
+      late_reason: "Made this morning",
+      story: { made: 1000, sold: 100, lost: 400, counted: -500, left: 0 },
+      movements: [{ at: "t", kind: "wasted", qty: -400, reason: "Past its use-by" }],
+    });
+    expect(b).toMatchObject({ batchNo: 3, enteredUnit: "g", lateReason: "Made this morning" });
+    expect(b.story && storyAddsUp(b.story)).toBe(true);
+    expect(b.movements[0]).toMatchObject({ kind: "wasted", qty: -400, by: null });
+    expect(reconciliationFrom({ batch_no: 1 }).story).toBeNull();
+
+    const report = productionReportFrom({
+      batches: [
+        { batch_id: "b", batch_no: 2, yield_pct: 96.0, planned: 5000, actual: 4800, story: null },
+      ],
+    });
+    expect(report[0]).toMatchObject({ batchNo: 2, yieldPct: 96, story: null });
+  });
+
+  it("has every word Production gives a batch, a lot and the plan in Arabic and Kurdish", () => {
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        PRODUCTION_PHRASES.filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
+  });
+
+  it("names a batch's use-by changed on the audit trail, under stock", () => {
+    const migration = readFileSync(
+      join(__dirname, "../supabase/migrations/0046_production_lots.sql"),
+      "utf8",
+    );
+    expect(migration).toContain("'production.use_by'");
+    expect(actionLabel("production.use_by")).toBe("Batch use-by changed");
+    expect(
+      AUDIT_GROUPS.find((g) => g.key === "stock")?.prefixes.some((p) =>
+        "production.use_by".startsWith(p),
+      ),
+    ).toBe(true);
+    expect(
+      describeChanges({ keeps_hours: 72 }, { keeps_hours: null }, new Map()).map((c) => c.field),
+    ).toEqual(["Keeps (hours)"]);
   });
 });

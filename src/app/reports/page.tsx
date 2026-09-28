@@ -17,9 +17,10 @@ import {
 } from "@/lib/db/reports";
 import { LegacyPostings } from "@/components/books/LegacyPostings";
 import { EXCEPTION_LABEL, NO_ONE, exceptionsByPerson, type ExceptionKind } from "@/lib/exceptions";
-import { fmtIQD, tenderLabel } from "@/lib/format";
+import { fmtIQD, fmtQty, tenderLabel } from "@/lib/format";
 import { getDollarsReport } from "@/lib/db/fx";
 import { getPurchasingReport } from "@/lib/db/purchasing";
+import { getProductionReport } from "@/lib/db/production";
 import { CREDIT_KIND_LABEL, orderStage, STAGE_LABEL } from "@/lib/purchasing";
 import { fmtRate, fmtUSD } from "@/lib/fx";
 import { getChannelNames } from "@/lib/db/channels";
@@ -72,6 +73,7 @@ export default async function ReportsPage({
     takings,
     dollars,
     buying,
+    made,
   ] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
     getReconciliation(to),
@@ -86,6 +88,7 @@ export default async function ReportsPage({
     getPaymentTakings(from, to),
     getDollarsReport(from, to),
     getPurchasingReport(from, to),
+    getProductionReport(from, to),
   ]);
   // The menu as it sells today: a platform out of use sells nothing.
   const menu = allMenu.filter((m) =>
@@ -900,6 +903,70 @@ export default async function ReportsPage({
             )}
           </p>
         </div>
+      </section>
+
+      {/* ---- Production (0046) ---- */}
+      <section className="panel" id="production" data-testid="production-report">
+        <div className="panel-h">
+          <h3>{t("Production")}</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            {t("Batches made {from} to {to}: what came out, and what became of it", { from, to })}
+          </span>
+        </div>
+        {made.length === 0 ? (
+          <div className="panel-b">
+            <p className="muted" style={{ margin: 0, fontSize: ".9rem" }}>
+              {t("No batch was made in these dates.")}
+            </p>
+          </div>
+        ) : (
+          <div className="tw">
+            <table data-testid="production-batches">
+              <thead>
+                <tr>
+                  <th>{t("Batch")}</th>
+                  <th>{t("What")}</th>
+                  <th className="right">{t("Came out")}</th>
+                  <th className="right">{t("Of the recipe")}</th>
+                  <th className="right">{t("Quantity sold")}</th>
+                  <th className="right">{t("Lost")}</th>
+                  <th className="right">{t("Still in stock")}</th>
+                  <th className="right">{t("Cost")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {made.map((b) => {
+                  const q = (n: number) => `${fmtQty(n)} ${b.baseUnit}`;
+                  return (
+                    <tr
+                      key={b.batchId}
+                      className={b.status === "cancelled" ? "pr-cancelled" : undefined}
+                    >
+                      <td className="mono">
+                        <Link href={`/production/batches/${b.batchId}`}>{b.batchNo}</Link>
+                      </td>
+                      <td>
+                        {b.recipe}
+                        {b.status === "cancelled" && (
+                          <>
+                            {" "}
+                            <span className="badge warn">{t("cancelled")}</span>
+                          </>
+                        )}
+                      </td>
+                      <td className="right mono">{q(b.actual)}</td>
+                      <td className="right mono">{b.yieldPct === null ? "—" : `${b.yieldPct}%`}</td>
+                      <td className="right mono">{b.story ? q(b.story.sold) : "—"}</td>
+                      <td className="right mono">{b.story ? q(b.story.lost) : "—"}</td>
+                      <td className="right mono">{b.story ? q(b.story.left) : "—"}</td>
+                      <td className="right money">{fmtIQD(b.value)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       {/* ---- Sales costed at nothing (0025) ---- */}

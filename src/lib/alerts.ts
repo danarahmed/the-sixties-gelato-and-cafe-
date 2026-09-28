@@ -38,6 +38,7 @@ export const RULE_LABEL: Record<string, string> = {
   usage_variance: "Usage unlike the recipes",
   stock_below_zero: "Stock below zero",
   losses_waiting: "Losses waiting for approval",
+  use_by: "Use-by date",
 };
 
 export function ruleLabel(rule: string): string {

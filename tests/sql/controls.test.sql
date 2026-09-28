@@ -134,7 +134,7 @@ select test.eq((
   select string_agg(p.proname, ',' order by p.proname)
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'execute')),
-  'acknowledge_alert,add_delivery_platform,add_item_unit,add_variant,adjust_stock,alert_thresholds,allocate_credit,app_words,approve_po,approve_stock_count,buying_list,cancel_bill,cancel_card_settlement,'
+  'acknowledge_alert,add_delivery_platform,add_item_unit,add_variant,adjust_stock,alert_thresholds,allocate_credit,app_words,approve_po,approve_stock_count,batch_reconciliation,buying_list,cancel_bill,cancel_card_settlement,'
   'cancel_platform_settlement,cancel_po,cancel_production,cancel_scheduled_price,cancel_scheduled_recipe,'
   'cancel_stock_count,cancel_tab,card_takings,cash_session_statement,cash_session_status,cash_sessions,change_product_recipe,'
   'clear_product_image,close_cash_session,close_po,copy_platform_setup,correct_receipt,create_item,create_product,'
@@ -146,15 +146,15 @@ select test.eq((
   'menu_costing,menu_recipe_lines,menu_scheduled,move_cash,my_profile,'
   'next_bill_number,note_supplier_credit,open_cash_session,open_tab,pay_bill,period_close_checklist,'
   'platform_money,pos_addons,pos_catalogue,pos_open_bills,post_control_correction,post_legacy_unposted,post_platform_settlement,preview_receipt_correction,production_batches,'
-  'production_recipes,publish_journal,purchase_order,purchase_orders,purchase_orders_from_list,receive_goods,record_bill,record_card_settlement,'
+  'production_lots,production_plan,production_recipes,publish_journal,purchase_order,purchase_orders,purchase_orders_from_list,receive_goods,record_bill,record_card_settlement,'
   'record_count,record_expense,record_opening_stock,record_production,'
   'record_sale,record_supplier_credit,record_waste,'
   'refund_sale,refund_sale_lines,reject_stock_count,remove_item_supplier,report_daily_sales,report_day_totals,report_document_problems,report_dollars,report_exceptions,report_journal_lines,report_payments,'
-  'report_profit_and_loss,report_purchasing,report_reconciliation,report_sizes_and_addons,report_trial_balance,report_unclosed_days,report_uncosted_sales,report_usage_variance,'
+  'report_production,report_profit_and_loss,report_purchasing,report_reconciliation,report_sizes_and_addons,report_trial_balance,report_unclosed_days,report_uncosted_sales,report_usage_variance,'
   'request_approval,retire_variant,return_to_supplier,reverse_journal,reverse_receipt,review_loss,review_stock_count,sales_channels,'
   'save_batch_recipe,save_category,'
   'save_journal,save_language,save_modifier,save_modifier_group,save_phrases,save_po,save_tab,save_table,send_po,'
-  'set_alert_thresholds,set_business_rule,set_fx_rate,set_item_supplier,set_member_active,set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_price,set_product_details,set_product_image,set_product_modifiers,settle_tab,'
+  'set_alert_thresholds,set_batch_use_by,set_business_rule,set_fx_rate,set_item_supplier,set_member_active,set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_price,set_product_details,set_product_image,set_product_modifiers,settle_tab,'
   'snooze_alert,split_tab,'
   'start_stock_count,stock_card,submit_stock_count,supplier_statement,unlock_period,update_delivery_platform,update_item,update_supplier,update_variant,void_sale',
   'signed-in users can call exactly the intended API');

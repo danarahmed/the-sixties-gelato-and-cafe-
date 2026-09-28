@@ -276,6 +276,12 @@ describe("what the café is told without asking", () => {
       ["Golden cup"],
     ],
     ["Golden water is below zero in the books: -2 each", ["Golden water"]],
+    // A batch past, or near, its use-by (0046).
+    ["Golden vanilla gelato, batch 3, is past its use-by: 100 g left", ["Golden vanilla gelato"]],
+    [
+      "Golden vanilla gelato, batch 2, is to be used by 28 Sep 16:30: 4300 g left",
+      ["Golden vanilla gelato"],
+    ],
     ["2 loss(es) waiting for a manager's approval (900 IQD)", []],
     [
       "Costed at nothing: Alert vanilla, Alert cream; Used before it had a cost: Alert milk",

@@ -67,3 +67,14 @@ export function perUnit(total: Decimal, amount: Decimal, label: string): string 
     ? `${fmtIQD(each.toNumber())} per ${label}`
     : `${fmtQty(each.toDecimalPlaces(2).toNumber())} IQD per ${label}`;
 }
+
+/**
+ * A base quantity in kg or L once it is a thousand or more (and the item has
+ * them), else in its base unit.
+ */
+export function showNice(base: Decimal, item: UnitsOf | undefined, baseUnit: string): string {
+  const big = item?.units.find((u) => (u.code === "kg" || u.code === "L") && u.factor === 1000);
+  return big && base.abs().gte(1000)
+    ? showIn(base, item, big.code)
+    : `${fmtQty(base.toDecimalPlaces(3).toNumber())} ${item?.baseUnit ?? baseUnit}`;
+}

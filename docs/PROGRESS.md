@@ -7,11 +7,11 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0045` and the rebuilt app. The SQL
-  checks (47, with the rehearsals of the upgrade, the clean start and clearing
+- **Built and verified:** migrations `0014`–`0046` and the rebuilt app. The SQL
+  checks (48, with the rehearsals of the upgrade, the clean start and clearing
   the test records), the browser suites (24, every role, every screen in
   Arabic and Kurdish, and a lost answer on each kind of screen), the unit and
-  contract tests (391) and a production build all pass.
+  contract tests (403) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -847,6 +847,38 @@ browser tests through the real app, or both.
   chosen, two orders drafted once, the item's suppliers set and removed, a
   cashier kept out, the trail, the screens in Arabic and Kurdish, the books
   still tying), unit tests, and every new text in Arabic and Kurdish.
+
+- **Batches, use-by dates and the day's plan (release U, migration `0046`).**
+  A batch had no number and no use-by, and what it made was not told apart
+  from any other stock of the item: nobody could say how much of a batch was
+  sold, lost or left, nor what was about to go off. Now each batch is
+  numbered and has a use-by: its recipe's shelf life (set on the recipe, in
+  days or hours) from when it was made, or a date given; a manager changes it
+  later with a reason, on the audit trail. What a batch makes goes into a
+  lot of its own, and what leaves the item is taken from its lots: sales,
+  losses and other batches take the batch to be used first first, what is
+  past its use-by last; what is thrown away as expired, or found missing on a
+  count, comes off what is past its use-by first; a void, a refund back on
+  the shelf, a loss taken back and a batch cancelled put back in the lot it
+  came from; what was sold before its batch was recorded is taken from that
+  batch. **Production** lists what is in stock batch by batch, each with its
+  use-by (past it, due today, due within a day, good), and the day's plan:
+  for each recipe, what was sold and used on the same weekday over the last
+  4 to 8 weeks, on average, less what is on hand and still good at the end of
+  the day, in whole batches, with the ingredients short (today or tomorrow).
+  Each batch has a page: when it was made and by whom, what came out of what
+  was planned, and what became of it, made = sold + used + lost ± counts +
+  left, with every movement of its lot. A manager records a batch made
+  earlier today or yesterday, with why, not before the last approved count of
+  its items. A batch past its use-by with stock left is a red alert, one due
+  within a day an orange one. **Reports → Production** lists the batches made
+  in the dates. Built and tested: a new SQL suite (every rule above, the
+  plan, the alerts, who may, keys, and the lots adding up to the stock), a
+  concurrency case (ten tills selling a made gelato while a batch of it is
+  recorded), the production browser suite extended (a shelf life, a batch
+  used by it, one recorded late past its use-by, the alert, its use-by
+  changed, its page, the plan), unit tests, and every new text in Arabic and
+  Kurdish.
 
 ## The August 2026 audit, finding by finding
 

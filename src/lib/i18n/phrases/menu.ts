@@ -621,6 +621,166 @@ const phrases: PhraseBook = {
   "The group's name": { ar: "اسم المجموعة", ckb: "ناوی کۆمەڵەکە" },
   "The add-on's name": { ar: "اسم الإضافة", ckb: "ناوی زیادەکە" },
   "The first day": { ar: "اليوم الأول", ckb: "یەکەم ڕۆژ" },
+  // Batches, their use-by dates and lots, and the day's plan (0046).
+  "Enter when it was made": { ar: "أدخل متى صُنعت", ckb: "بنووسە کەی دروستکرا" },
+  "Enter a date and a time": { ar: "أدخل تاريخًا ووقتًا", ckb: "بەروار و کاتێک بنووسە" },
+  "Recorded as batch {no}: {made} of {output} into stock.": {
+    ar: "سُجّلت الدفعة {no}: {made} من {output} دخلت المخزون.",
+    ckb: "وەک دەستەی {no} تۆمارکرا: {made} {output} چووە کۆگاوە.",
+  },
+  "Recorded as batch {no}: {made} of {output} into stock. The ingredients cost {amount}.": {
+    ar: "سُجّلت الدفعة {no}: {made} من {output} دخلت المخزون. كلّفت المكوّنات {amount}.",
+    ckb: "وەک دەستەی {no} تۆمارکرا: {made} {output} چووە کۆگاوە. تێچووی پێکهاتەکان {amount} بوو.",
+  },
+  "Use it by {when}.": { ar: "استعملها قبل {when}.", ckb: "پێش {when} بەکاری بهێنە." },
+  "Left empty: no use-by, as its recipe keeps no shelf life.": {
+    ar: "إن بقيت فارغة: لا موعد استعمال، إذ لا مدة صلاحية في وصفتها.",
+    ckb: "ئەگەر بەتاڵ بمێنێتەوە: کاتی بەکارهێنانی نییە، چونکە ڕەسەتەکەی ماوەی بەکارهێنانی بۆ دانەنراوە.",
+  },
+  "Left empty: {n} day(s) from when it is made, as its recipe keeps.": {
+    ar: "إن بقيت فارغة: {n} يوم/أيام من وقت صنعها، كما تحدّد وصفتها.",
+    ckb: "ئەگەر بەتاڵ بمێنێتەوە: {n} ڕۆژ لە کاتی دروستکردنییەوە، وەک ڕەسەتەکەی دیاری دەکات.",
+  },
+  "Left empty: {n} hour(s) from when it is made, as its recipe keeps.": {
+    ar: "إن بقيت فارغة: {n} ساعة من وقت صنعها، كما تحدّد وصفتها.",
+    ckb: "ئەگەر بەتاڵ بمێنێتەوە: {n} کاتژمێر لە کاتی دروستکردنییەوە، وەک ڕەسەتەکەی دیاری دەکات.",
+  },
+  "Use by (optional)": { ar: "يُستعمل قبل (اختياري)", ckb: "بەکاربهێنرێت پێش (ئارەزوومەندانە)" },
+  "Use by": { ar: "يُستعمل قبل", ckb: "بەکاربهێنرێت پێش" },
+  "Made earlier: yesterday or today, recorded now": {
+    ar: "صُنعت في وقت سابق: أمس أو اليوم، وتُسجَّل الآن",
+    ckb: "پێشتر دروستکراوە: دوێنێ یان ئەمڕۆ، ئێستا تۆمار دەکرێت",
+  },
+  "When it was made": { ar: "متى صُنعت", ckb: "کەی دروستکرا" },
+  "Why it is recorded late": { ar: "سبب التسجيل المتأخر", ckb: "هۆی دواکەوتنی تۆمارکردن" },
+  "Why? e.g. made before opening, recorded now": {
+    ar: "لماذا؟ مثلًا صُنعت قبل الافتتاح وتُسجَّل الآن",
+    ckb: "بۆچی؟ بۆ نموونە پێش کردنەوە دروستکرا، ئێستا تۆمار دەکرێت",
+  },
+  "Not before the last approved count of its items.": {
+    ar: "ليس قبل آخر جرد معتمد لموادها.",
+    ckb: "نەک پێش دوایین ژماردنی پەسەندکراوی کاڵاکانی.",
+  },
+  "What it makes keeps for": {
+    ar: "يبقى ما تُنتجه صالحًا لمدة",
+    ckb: "ئەوەی بەرهەمی دەهێنێت بۆ ئەم ماوەیە دەمێنێتەوە",
+  },
+  "How long it keeps": { ar: "مدة صلاحيته", ckb: "ماوەی مانەوەی" },
+  "Days or hours": { ar: "أيام أو ساعات", ckb: "ڕۆژ یان کاتژمێر" },
+  days: { ar: "أيام", ckb: "ڕۆژ" },
+  "— optional: each batch is to be used by then, from when it is made.": {
+    ar: "— اختياري: تُستعمل كل دفعة قبل انتهاء هذه المدة من وقت صنعها.",
+    ckb: "— ئارەزوومەندانە: هەر دەستەیەک پێش تەواوبوونی ئەم ماوەیە لە کاتی دروستکردنییەوە بەکاردەهێنرێت.",
+  },
+  "keeps {n} day(s)": { ar: "يبقى صالحًا {n} يوم/أيام", ckb: "{n} ڕۆژ دەمێنێتەوە" },
+  "keeps {n} hour(s)": { ar: "يبقى صالحًا {n} ساعة", ckb: "{n} کاتژمێر دەمێنێتەوە" },
+  "No batch has anything left in stock.": {
+    ar: "لم يبقَ في المخزون شيء من أي دفعة.",
+    ckb: "هیچ دەستەیەک هیچی لێ لە کۆگادا نەماوە.",
+  },
+  Batch: { ar: "الدفعة", ckb: "دەستە" },
+  "Still in stock": { ar: "المتبقي في المخزون", ckb: "هێشتا لە کۆگادا" },
+  "Change the use-by…": { ar: "تغيير موعد الاستعمال…", ckb: "گۆڕینی کاتی بەکارهێنان…" },
+  "Why the use-by changes": { ar: "سبب تغيير موعد الاستعمال", ckb: "هۆی گۆڕینی کاتی بەکارهێنان" },
+  "Why? e.g. it set soft, sell it today": {
+    ar: "لماذا؟ مثلًا صار طريًّا، بِعه اليوم",
+    ckb: "بۆچی؟ بۆ نموونە نەرم بووە، ئەمڕۆ بیفرۆشە",
+  },
+  "Save the use-by": { ar: "احفظ موعد الاستعمال", ckb: "کاتی بەکارهێنان پاشەکەوت بکە" },
+  "Past its use-by": { ar: "تجاوز موعد استعماله", ckb: "کاتی بەکارهێنانی بەسەرچووە" },
+  "Due today": { ar: "يُستعمل اليوم", ckb: "دەبێت ئەمڕۆ بەکاربهێنرێت" },
+  "Due within a day": { ar: "يُستعمل خلال يوم", ckb: "دەبێت لە ماوەی ڕۆژێکدا بەکاربهێنرێت" },
+  Good: { ar: "صالح", ckb: "باشە" },
+  "What to make on {weekday}, {day}": {
+    ar: "ما يُصنع يوم {weekday}، {day}",
+    ckb: "چی دروست بکرێت ڕۆژی {weekday}، {day}",
+  },
+  Tomorrow: { ar: "غدًا", ckb: "سبەینێ" },
+  "From what each was sold and used in batches on the same weekday over the last 4 to 8 weeks, on average, less what is on hand and still good at the end of the day: in whole batches.":
+    {
+      ar: "من متوسط ما بيع من كلٍّ منها وما استُعمل في الدفعات في اليوم نفسه من الأسبوع خلال آخر 4 إلى 8 أسابيع، مطروحًا منه ما هو متوفّر وما زال صالحًا حتى نهاية اليوم: بدفعات كاملة.",
+      ckb: "لە تێکڕای ئەوەی لە هەر یەکێکیان فرۆشراوە و لە دەستەکاندا بەکارهاتووە لە هەمان ڕۆژی هەفتە لە 4 تا 8 هەفتەی ڕابردوودا، کەمکراوە لەوەی بەردەستە و تا کۆتایی ڕۆژ هێشتا باشە: بە دەستەی تەواو.",
+    },
+  "Nothing is made here yet.": {
+    ar: "لا يُصنع شيء هنا بعد.",
+    ckb: "هێشتا هیچ شتێک لێرە دروست ناکرێت.",
+  },
+  "Used on the day, on average": {
+    ar: "المستعمل في هذا اليوم، في المتوسط",
+    ckb: "بەکارهاتوو لەم ڕۆژەدا، بە تێکڕا",
+  },
+  "Due before the day is out": {
+    ar: "يُستعمل قبل نهاية اليوم",
+    ckb: "دەبێت پێش کۆتایی ڕۆژ بەکاربهێنرێت",
+  },
+  "To make": { ar: "للصنع", ckb: "بۆ دروستکردن" },
+  "{n} day(s) of history: 28 are needed": {
+    ar: "سجلّ {n} يوم/أيام: يلزم 28",
+    ckb: "مێژووی {n} ڕۆژ: 28 پێویستە",
+  },
+  "over {n} weeks": { ar: "خلال {n} أسابيع", ckb: "لە ماوەی {n} هەفتەدا" },
+  "{n} batch(es): {qty}": { ar: "{n} دفعة: {qty}", ckb: "{n} دەستە: {qty}" },
+  "Enough on hand": { ar: "المتوفّر يكفي", ckb: "بەردەست بەسە" },
+  "Short for these batches: {list}. <buy>What to buy</buy>": {
+    ar: "ينقص لهذه الدفعات: {list}. <buy>ما يجب شراؤه</buy>",
+    ckb: "بۆ ئەم دەستانە کەمە: {list}. <buy>چی بکڕدرێت</buy>",
+  },
+  "In stock by batch": { ar: "المخزون حسب الدفعة", ckb: "کۆگا بەپێی دەستە" },
+  "Sales take the batch to be used first first; one past its use-by last.": {
+    ar: "يُؤخذ للبيع أولًا من الدفعة التي يحين موعد استعمالها أولًا، ومن التي تجاوزت موعدها أخيرًا.",
+    ckb: "فرۆشتن سەرەتا لەو دەستەیە دەبات کە زووتر دەبێت بەکاربهێنرێت، ئەوەی کاتی بەسەرچووە لە کۆتاییدا.",
+  },
+  "recorded late": { ar: "سُجّلت متأخرة", ckb: "بە دواکەوتوویی تۆمارکرا" },
+  "Batch {no}: {recipe}": { ar: "الدفعة {no}: {recipe}", ckb: "دەستەی {no}: {recipe}" },
+  "Made {when} by {who}": { ar: "صُنعت {when} على يد {who}", ckb: "{when} لەلایەن {who} دروستکرا" },
+  "recorded {when}: {why}": { ar: "سُجّلت {when}: {why}", ckb: "{when} تۆمارکرا: {why}" },
+  "Came out: {actual} of the {planned} its recipe makes": {
+    ar: "الناتج: {actual} من {planned} تُنتجها وصفتها",
+    ckb: "دەرچوو: {actual} لەو {planned}ەی ڕەسەتەکەی بەرهەمی دەهێنێت",
+  },
+  "To be used by {when}": { ar: "يُستعمل قبل {when}", ckb: "دەبێت پێش {when} بەکاربهێنرێت" },
+  "No use-by: its recipe keeps no shelf life.": {
+    ar: "لا موعد استعمال: لا مدة صلاحية في وصفتها.",
+    ckb: "کاتی بەکارهێنانی نییە: ڕەسەتەکەی ماوەی بەکارهێنانی بۆ دانەنراوە.",
+  },
+  "What became of it": { ar: "ما آلت إليه", ckb: "چی بەسەرهات" },
+  "Made before batches were kept apart in stock: what became of it is not known batch by batch.": {
+    ar: "صُنعت قبل أن تُحفظ الدفعات منفصلة في المخزون: لا يُعرف ما آلت إليه دفعةً دفعة.",
+    ckb: "پێش ئەوەی دەستەکان لە کۆگادا جیا بکرێنەوە دروستکراوە: نازانرێت دەستە بە دەستە چی بەسەرهات.",
+  },
+  "Used in other batches": { ar: "استُعمل في دفعات أخرى", ckb: "لە دەستەکانی تردا بەکارهات" },
+  "Found or missing on a count": {
+    ar: "زاد أو نقص في جرد",
+    ckb: "لە ژماردنێکدا زیاد یان کەم دەرچوو",
+  },
+  Corrected: { ar: "صُحّح", ckb: "ڕاستکرایەوە" },
+  "Every bit accounted for: made = sold + used + lost ± counts + left.": {
+    ar: "كل الكمية معروفة المصير: المصنوع = المباع + المستعمل + الهدر ± الجرد + المتبقي.",
+    ckb: "هەموو بڕەکە دیارە: دروستکراو = فرۆشراو + بەکارهاتوو + بەفیڕۆچوو ± ژماردن + ماوە.",
+  },
+  "It does not add up: tell the owner.": {
+    ar: "الأرقام لا تتطابق: أبلغ المالك.",
+    ckb: "ژمارەکان یەک ناگرنەوە: بە خاوەنەکە بڵێ.",
+  },
+  "Each movement of the batch": { ar: "كل حركة للدفعة", ckb: "هەموو جووڵەکانی دەستەکە" },
+  "Back from a sale (void or refund)": {
+    ar: "عاد من بيع (إلغاء أو استرجاع)",
+    ckb: "لە فرۆشتنێکەوە گەڕایەوە (هەڵوەشاندنەوە یان گەڕاندنەوە)",
+  },
+  "Used in a batch": { ar: "استُعمل في دفعة", ckb: "لە دەستەیەکدا بەکارهات" },
+  "Back from a batch cancelled": {
+    ar: "عاد من دفعة ملغاة",
+    ckb: "لە دەستەیەکی هەڵوەشاوەوە گەڕایەوە",
+  },
+  "Loss taken back": { ar: "هدرٌ أُلغي", ckb: "بەفیڕۆچوونێک گەڕێندرایەوە" },
+  "Missing on a count": { ar: "ناقص في جرد", ckb: "لە ژماردنێکدا کەم دەرچوو" },
+  "Found on a count": { ar: "زائد في جرد", ckb: "لە ژماردنێکدا زیاد دەرچوو" },
+  "Batch use-by changed": {
+    ar: "تغيّر موعد استعمال دفعة",
+    ckb: "کاتی بەکارهێنانی دەستەیەک گۆڕدرا",
+  },
+  "Keeps (hours)": { ar: "مدة الصلاحية (ساعات)", ckb: "ماوەی مانەوە (کاتژمێر)" },
+  "Kept apart by batch": { ar: "يُحفظ منفصلًا حسب الدفعة", ckb: "بەپێی دەستە جیا دەکرێتەوە" },
 };
 
 export default phrases;

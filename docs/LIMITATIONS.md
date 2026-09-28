@@ -51,11 +51,34 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   cancelled bill prints nothing for the bar. Turn numbers start again at
   midnight, the café's day, and are printed and shown on the till, not on the
   Sales and Orders screens.
-- **Production (M-11), what it does not do.** Batches are recorded, costed and
-  cancelled, and made items are kept and sold (see the walkthrough). It does not
-  plan batches ahead, track lots or expiry dates, or move stock between the
-  branch and the central kitchen; a batch is recorded at the branch, when it is
-  made (not backdated).
+- **Production (M-11), what it does not do.** Batches are recorded, costed,
+  numbered, used by a date and cancelled; made items are kept batch by batch
+  and sold; the day's plan says what to make (see the walkthrough, and
+  release U below). It does not move stock between the branch and the
+  central kitchen; a batch is recorded at the branch, when it is made, or by
+  a manager up to a day late.
+- **Batches, use-by dates and the plan, what they do not do (release U,
+  `0046`).**
+  - Stock is counted by item, not by batch: what a count finds missing comes
+    off what is past its use-by first, then the stock with no lot, then the
+    batch used by first; what it finds over is stock with no lot.
+  - A batch past its use-by is sold last, not refused: its alert stays until
+    what is left is recorded as expired (or counted, or its use-by changed).
+  - What comes back to stock (a refund back on the shelf, a loss taken back)
+    goes to the lots it left, the earliest use-by first, so a partial refund
+    is taken to be the oldest of it; what a sale took beyond the stock is
+    taken from the next batch that comes in, the latest sale first.
+  - An item is kept batch by batch from its first batch after `0046`: what it
+    had before is stock with no lot, and batches made before `0046` have no
+    story of their own.
+  - A batch is recorded late by a day at most, by a manager, and not before
+    the last approved count of its items.
+  - The plan judges by the same weekday over the last 4 to 8 weeks alone: no
+    season or holiday, and what is on hand now, so tomorrow's plan does not
+    take off what today will still sell. A base is not planned for the
+    flavours to be made from it, and the plan is for the café's first branch.
+  - Moving stock between places (release AB) will have to carry its lots; for
+    now nothing moves stock between places.
 - **Offline selling (H-04).** The till needs a connection. Offline, it says so
   and refuses the sale. A sale whose confirmation was lost is retried with the
   same key and recorded once, and since `0035` so is every other write from the
@@ -244,11 +267,11 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - It is worked out when the page opens, for the café's first branch; there
     is no choice of branch until branches come (release AB), and nothing is
     sent to anyone.
-  - Use is judged on the last 28 days alone: no weekday or season, no demand
-    from the day's production plan (release U), and a week of use more as the
-    level to order up to when the item has no par level.
-  - Items made here are left to Production: what their batches will need of
-    each ingredient is not added until the day's plan is built (release U).
+  - Use is judged on the last 28 days alone: no weekday or season, and a week
+    of use more as the level to order up to when the item has no par level.
+  - Items made here are left to Production. What their batches use is in each
+    ingredient's use; what the day's plan will need (release U) is shown on
+    Production, with what is short, and not added to the list.
   - Drafts count as coming: an item on a draft that is never approved is not
     suggested again until the draft is changed or cancelled.
   - The supplier suggested is the usual one, else the one the last delivery

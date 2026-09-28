@@ -272,6 +272,60 @@ freight), else what the item costs now × the pack, to be checked. Changing a
 line's pack keeps its price per base unit (1.5 a millilitre is 1,500 a
 carton) and works its packs out again.
 
+### Batches by lot, and the day's plan (`0046`)
+
+**A batch's use-by** = the use-by given, else when it was made + its recipe's
+shelf life (none without one). A lot is made for each batch; the item is
+kept batch by batch from then on.
+
+**Which lot a movement takes from or gives to** (`lot_movement`, one row a
+lot):
+
+```
+out      stock with no lot, then the lots by the earliest use-by, a lot past
+         its use-by (at the movement's time) last;
+         an "expired" loss, or a count's shortfall: past its use-by first,
+         then stock with no lot, then the rest by the earliest use-by;
+         beyond all of them: below zero, with no lot
+a batch  its own lot; then what was taken beyond the stock before it came
+         (stock with no lot below zero) is taken from it, the latest sale first
+a return back to the lots it left, as far as they gave it, the earliest use-by
+         first (a void: the sale; a refund back on the shelf: its line; a loss
+         taken back: the loss; a batch cancelled: its batch, its output out of
+         its own lot); the rest as stock with no lot
+else in  stock with no lot (a count's surplus, a delivery)
+```
+
+At every place, Σ an item's rows = its stock; a lot's `left_base` = Σ its rows.
+
+**What became of a batch** (`batch_reconciliation`), each from its lot's rows
+by the kind the stock card gives their movement:
+
+```
+made = sold + used in batches + lost − counted − moved − corrected + left
+```
+
+(counted, moved and corrected are signed: 500 g missing on a count is −500).
+Batch 3 of the SQL suite: 1,000 made = 100 sold + 400 lost − (−500) counted + 0
+left.
+
+**The day's plan** (`production_plan(day)`), for each batch recipe in use:
+
+```
+weeks    = min(8, ⌊days of history ÷ 7⌋)       (under 4: not enough history)
+demand   = average over those weeks of what was sold and used in batches on
+           the same weekday (voids and refunds netted off)
+good     = max(on hand now − what is in lots due before the day is out, 0)
+to make  = max(demand − good, 0)
+batches  = ⌈to make ÷ a batch's yield⌉
+short    = for each ingredient of those batches: max(needed − on hand, 0),
+           for each recipe and for all of them together
+```
+
+Chocolate, 6 weeks of Mondays selling 1, 2, 3, 1, 2 and 3 kg (2 kg on
+average), 1 kg good on a Monday: 1 kg to make, one batch of 4 kg; its 500 g
+of cocoa against 300 g on hand: 200 g short.
+
 ## 7. Counting & variance
 
 - `quantityVariance = counted − expected` (negative = shrinkage);

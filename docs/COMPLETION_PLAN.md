@@ -303,6 +303,47 @@ Release T:
   item bought, link to What to buy instead of the item's card (0040's rules
   wrapped, unchanged otherwise).
 
+Release U:
+
+- **Split, not new movements.** A movement of an item tracked by lot is split
+  by lot in `lot_movement`, by a trigger on `inventory_movement`, instead of
+  one movement per lot: every writer of stock stays as it was, and the stock
+  card, the books and the reports read the movements as before. Each lot
+  keeps what it holds (`item_lot.left_base`) with its rows, and an item's rows
+  at a place add up to its stock there.
+- **Tracked from its first batch.** An item made in batches is tracked by lot
+  (`track_lot`) from its first batch after `0046` (the recipe outputs already
+  there from the migration itself); what it had then is stock with no lot,
+  which leaves before any lot.
+- **The order.** Out: stock with no lot first, then the lots by the earliest
+  use-by, a lot past its use-by last (it is not to be sold); what is thrown
+  away as expired, or found missing on a count, from what is past its use-by
+  first. In: a batch's output to its own lot, which takes over what was sold
+  beyond the stock before it came (the latest sale first); a return (a void,
+  a refund back on the shelf, a loss taken back, a batch cancelled) back to
+  the lots it left, the earliest use-by first; anything else (a count that
+  finds more, a delivery) as stock with no lot. A revaluation is not split.
+- **Counts are by item**, not by lot: the difference is allocated by the same
+  order.
+- **Returns name their source**: the sale, its line, the batch or the loss.
+  `void_sale` now locks its items first, as every other writer of stock does,
+  and `review_loss` names the loss its reversal takes back.
+- **A batch made earlier** (more than an hour before it is recorded) is
+  recorded by a manager (`inventory.adjust.approve`), with a reason,
+  yesterday's at the earliest, not in a locked month, and not before the last
+  approved count of its items there; its stock moves when it was made, by the
+  recipe in force that day.
+- **The plan's demand** is what the stock card counts as sold or used in
+  batches, of what the recipe makes, on the same weekday over the last 4 to 8
+  weeks there were (fewer than 4: not enough to judge by), on average; what is
+  due before the day is out is not good for it; the batches are whole; the
+  ingredients short are given for each recipe and for all together. A base is
+  not planned for the flavours to be made from it.
+- **The alert** (`use_by`) is orange within a day of the use-by and red once
+  past it, and opens Production's list of what is in stock by batch.
+- **Reports → Production** lists the batches made in the dates, with what came
+  out of what was planned and what became of each.
+
 **Basis:**
 
 - The code at `d17436e`: migrations `0001`–`0034` and the app.

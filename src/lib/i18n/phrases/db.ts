@@ -2148,6 +2148,57 @@ const phrases: PhraseBook = {
     ar: "هذه المادة لا تُشترى من ذلك المورّد",
     ckb: "ئەم کاڵایە لەو دابینکەرە ناکڕدرێت",
   },
+  // Batches, their use-by dates and lots (0046).
+  "What it makes keeps for an hour to a year": {
+    ar: "ما تُنتجه يبقى صالحًا من ساعة إلى سنة",
+    ckb: "ئەوەی بەرهەمی دەهێنێت لە کاتژمێرێکەوە تا ساڵێک دەمێنێتەوە",
+  },
+  "A batch is recorded once it is made, not before": {
+    ar: "تُسجَّل الدفعة بعد صنعها، لا قبل ذلك",
+    ckb: "دەستە دوای دروستکردنی تۆمار دەکرێت، نەک پێشتر",
+  },
+  "A batch made earlier is recorded by a manager": {
+    ar: "الدفعة المصنوعة في وقت سابق يسجّلها مدير",
+    ckb: "دەستەیەک کە پێشتر دروستکراوە بەڕێوەبەرێک تۆماری دەکات",
+  },
+  "Say why the batch is recorded late": {
+    ar: "اذكر سبب تسجيل الدفعة متأخرة",
+    ckb: "بڵێ بۆچی دەستەکە بە دواکەوتوویی تۆمار دەکرێت",
+  },
+  "A batch is recorded late by a day at most: yesterday's, not before": {
+    ar: "تُسجَّل الدفعة متأخرة بيوم واحد على الأكثر: دفعة الأمس، لا ما قبلها",
+    ckb: "دەستە زۆرترین بە ڕۆژێک دواکەوتوو تۆمار دەکرێت: هی دوێنێ، نەک پێشتر",
+  },
+  "That day is in a locked month: nothing is recorded in it": {
+    ar: "ذلك اليوم في شهر مُقفل: لا يُسجَّل فيه شيء",
+    ckb: "ئەو ڕۆژە لە مانگێکی داخراودایە: هیچی تێدا تۆمار ناکرێت",
+  },
+  "{1} has no ingredients in force that day": {
+    ar: "ليس لـ{1} مكوّنات سارية في ذلك اليوم",
+    ckb: "{1} لەو ڕۆژەدا هیچ پێکهاتەیەکی بەرکاری نییە",
+  },
+  "The use-by is after the batch was made": {
+    ar: "موعد الاستعمال يكون بعد صنع الدفعة",
+    ckb: "کاتی بەکارهێنان دوای دروستکردنی دەستەکەیە",
+  },
+  "A count of its items was approved after that time: a batch made before the count is not recorded now":
+    {
+      ar: "اعتُمد جرد لموادها بعد ذلك الوقت: لا تُسجَّل الآن دفعة صُنعت قبل الجرد",
+      ckb: "دوای ئەو کاتە ژماردنێکی کاڵاکانی پەسەندکرا: دەستەیەک کە پێش ژماردنەکە دروستکرابێت ئێستا تۆمار ناکرێت",
+    },
+  "Say why the use-by changes": {
+    ar: "اذكر سبب تغيير موعد الاستعمال",
+    ckb: "بڵێ بۆچی کاتی بەکارهێنان دەگۆڕێت",
+  },
+  "This batch is cancelled": { ar: "هذه الدفعة ملغاة", ckb: "ئەم دەستەیە هەڵوەشێنراوەتەوە" },
+  "Made in batches: its stock is kept batch by batch from this batch on": {
+    ar: "يُصنع على دفعات: يُحفظ مخزونه دفعةً دفعة ابتداءً من هذه الدفعة",
+    ckb: "بە دەستە دروست دەکرێت: کۆگاکەی لەم دەستەیەوە دەستە بە دەستە هەڵدەگیرێت",
+  },
+  "Made in batches: its stock is kept batch by batch from its next batch on": {
+    ar: "يُصنع على دفعات: يُحفظ مخزونه دفعةً دفعة ابتداءً من دفعته التالية",
+    ckb: "بە دەستە دروست دەکرێت: کۆگاکەی لە دەستەی داهاتوویەوە دەستە بە دەستە هەڵدەگیرێت",
+  },
 };
 
 export default phrases;
