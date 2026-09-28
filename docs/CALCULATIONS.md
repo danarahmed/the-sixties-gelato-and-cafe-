@@ -575,6 +575,41 @@ corrections are new entries. What each record posts (migration `0015`):
 - Bill for a receipt: Dr 2050 (what the receipt raised), Dr/Cr 5050 Purchase
   price variance (the difference) / Cr 2000 Accounts payable. A bill for
   anything else: Dr its account / Cr 2000.
+- A purchase order (`0044`) posts nothing. Its total is each line's quantity
+  times its price, rounded to the dinar (half to even), added up; the
+  approver's limit is compared with it. What has come of a line is the base
+  quantity of its item in the deliveries against the order, as they stand
+  after their corrections, reversed ones left out; still to come is the line's
+  base quantity less that, never below zero; in the unit ordered it is `base ×
+qty ordered ÷ base ordered`, to three places.
+- A return to a supplier (`0044`): each line leaves stock at the item's cost
+  now (the last of it with all that is left of its value). The supplier owes
+  back the line's share of what the delivery named charged for that item,
+  `landed × base returned ÷ base received`, rounded to the dinar, the last of
+  it the rest of what the delivery charged less what went back before; with no
+  delivery named, the stock value. Journal: Dr 2050 (the delivery not yet
+  billed) or Dr 2000 (billed, or no delivery named) with what is owed back,
+  Cr 1200 the stock value, the difference to 5050 (Dr when the stock was worth
+  more). A delivery's goods received not invoiced is its landed value less
+  what went back from it. Worked example (the SQL test): a delivery of 3,000
+  in stock since used at a lower average, returned after the bill: 1200 Cr
+  2,778, 2000 Dr 3,000, 5050 Cr 222, and credit 3,000 set against its bill.
+- A supplier's credit (`0044`) for a lower price on a delivery: no more than
+  the delivery is still worth to the supplier (its landed value less what went
+  back and earlier price credits). It is shared over the delivery's items by
+  their value; of each item's share, the part still on the shelf (reckoned as
+  a delivery's correction reckons it, `0038`) comes off the item's stock value
+  (a pair of cost adjustments), and the rest, for what was used since, goes
+  to 5050: Dr 2000 the credit / Cr 1200 the share / Cr 5050 the rest. For
+  other: Dr 2000 / Cr the account chosen. Set against a bill, a credit counts as paid: a bill's paid
+  amount is its payments plus the credits set against it; a credit is set
+  against a bill no more than the bill still owes and no more than is left of
+  the credit. What a supplier is owed is their bills less their payments less
+  their credits, whether set against a bill or not.
+- A supplier's statement (`0044`): what was owed before the first day
+  (bills, less payments, less credits, a cancelled bill's charge taken back
+  on the day it was cancelled), then each record in date order with the
+  balance after it; what was owed at the end is the last balance.
 - Payment of a bill: Dr 2000 / Cr where the money came from (`0024`): 1000
   the till, 1005 the safe, 1020 the bank or a card (a card paid from 1010
   until `0030`), or 3000 Owner equity when the owner paid personally (capital

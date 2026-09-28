@@ -4,7 +4,16 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createSupplierAction, receiveGoodsAction } from "@/lib/actions/purchasing";
 import { fmtIQD, fmtQty } from "@/lib/format";
-import { deliveryLineCost, needsPriceConfirmation, priceGap } from "@/lib/receiving";
+import { deliveryLineCost, priceGap } from "@/lib/receiving";
+import {
+  differences,
+  inOrderUnit,
+  needsDeliveryConfirmation,
+  orderStage,
+  prefillFromOrder,
+  STAGE_LABEL,
+  type PurchaseOrder,
+} from "@/lib/purchasing";
 import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
@@ -32,6 +41,8 @@ interface LineDraft {
   unit: string;
   /** The price of one of the unit received, as the invoice has it. */
   unitPrice: string;
+  /** Its line on the order it comes against (0044). */
+  poLineId?: string;
 }
 type Msg = { ok: boolean; text: string } | null;
 /** A line whose item is being added (release H): not yet an item to receive. */
@@ -40,12 +51,15 @@ const NEW_ITEM = "__new__";
 export function ReceiveStockForm({
   items,
   suppliers,
+  orders = [],
   canReceive,
   canAddSupplier,
   canAddItem,
 }: {
   items: ItemOpt[];
   suppliers: SupplierOpt[];
+  /** The purchase orders open to receive against (0044). */
+  orders?: PurchaseOrder[];
   canReceive: boolean;
   canAddSupplier: boolean;
   /** An item not in Inventory yet can be added from the receipt itself (release H). */
@@ -58,7 +72,9 @@ export function ReceiveStockForm({
       style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}
     >
       {canAddSupplier && <AddSupplier />}
-      {canReceive && <Receive items={items} suppliers={suppliers} canAddItem={canAddItem} />}
+      {canReceive && (
+        <Receive items={items} suppliers={suppliers} orders={orders} canAddItem={canAddItem} />
+      )}
     </div>
   );
 }
@@ -121,10 +137,12 @@ function AddSupplier() {
 function Receive({
   items: listed,
   suppliers,
+  orders,
   canAddItem,
 }: {
   items: ItemOpt[];
   suppliers: SupplierOpt[];
+  orders: PurchaseOrder[];
   canAddItem: boolean;
 }) {
   const op = useOperation();
@@ -142,6 +160,10 @@ function Receive({
   const [other, setOther] = useState("");
   const [rebate, setRebate] = useState("");
   const [note, setNote] = useState("");
+  // The order it comes against (0044), and what it still has to come.
+  const [orderId, setOrderId] = useState("");
+  const order = orders.find((o) => o.id === orderId) ?? null;
+  const supplierOrders = orders.filter((o) => o.supplierId === supplier);
   const blank = (): LineDraft => ({
     itemId: items[0]?.id ?? (canAddItem ? NEW_ITEM : ""),
     qty: "",
@@ -184,6 +206,27 @@ function Receive({
     });
   }
 
+  /** Against an order: its supplier, and its lines still to come, at the order's prices. */
+  function chooseOrder(id: string) {
+    setCheck(null);
+    setOrderId(id);
+    const o = orders.find((x) => x.id === id);
+    if (!o) return;
+    setSupplier(o.supplierId);
+    const still = prefillFromOrder(o);
+    if (still.length > 0) {
+      setLines(
+        still.map((l) => ({
+          itemId: l.itemId,
+          qty: String(l.qty),
+          unit: l.unitCode,
+          unitPrice: String(l.unitPrice),
+          poLineId: l.poLineId,
+        })),
+      );
+    }
+  }
+
   function submit(confirm: boolean) {
     setMsg(null);
     start(async () => {
@@ -196,6 +239,7 @@ function Receive({
             rebate: rebate || "0",
             note,
             confirm,
+            purchaseOrderId: order?.id ?? null,
             lines: lines
               .filter((l) => l.itemId && l.itemId !== NEW_ITEM && l.qty.trim() !== "")
               .map((l) => ({
@@ -203,6 +247,13 @@ function Receive({
                 qty: l.qty,
                 unitCode: l.unit,
                 unitPrice: l.unitPrice,
+                // Its order line, while it is still that line's item.
+                poLineId:
+                  order &&
+                  l.poLineId &&
+                  order.lines.some((x) => x.lineId === l.poLineId && x.itemId === l.itemId)
+                    ? l.poLineId
+                    : null,
               })),
           },
           key,
@@ -212,18 +263,26 @@ function Receive({
         setCheck(null);
         setMsg({
           ok: true,
-          text: t("Receipt {no} — {value} into stock, awaiting its bill.", {
-            no: r.data.receiptNo,
-            value: fmtIQD(r.data.value),
-          }),
+          text:
+            r.data.poNo === null
+              ? t("Receipt {no} — {value} into stock, awaiting its bill.", {
+                  no: r.data.receiptNo,
+                  value: fmtIQD(r.data.value),
+                })
+              : t("Receipt {no} — {value} into stock against order {po}, awaiting its bill.", {
+                  no: r.data.receiptNo,
+                  value: fmtIQD(r.data.value),
+                  po: r.data.poNo,
+                }),
         });
+        setOrderId("");
         setLines([blank()]);
         setFreight("");
         setOther("");
         setRebate("");
         setNote("");
         router.refresh();
-      } else if (!confirm && needsPriceConfirmation(r.error)) {
+      } else if (!confirm && needsDeliveryConfirmation(r.error)) {
         setCheck(r.error);
       } else setMsg({ ok: false, text: r.error });
     });
@@ -253,6 +312,7 @@ function Receive({
             onChange={(e) => {
               setCheck(null);
               setSupplier(e.target.value);
+              if (order && order.supplierId !== e.target.value) setOrderId("");
             }}
           >
             {suppliers.map((s) => (
@@ -287,6 +347,28 @@ function Receive({
           />
         </Field>
       </div>
+
+      {orders.length > 0 && (
+        <Field label={t("Against a purchase order")}>
+          <select
+            style={inputStyle}
+            value={orderId}
+            data-testid="receive-order"
+            onChange={(e) => chooseOrder(e.target.value)}
+          >
+            <option value="">{t("No order")}</option>
+            {(supplierOrders.length > 0 ? supplierOrders : orders).map((o) => (
+              <option key={o.id} value={o.id}>
+                {t("Order {no}: {supplier} ({stage})", {
+                  no: o.poNo,
+                  supplier: o.supplier,
+                  stage: t(STAGE_LABEL[orderStage(o)]),
+                })}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
 
       <div className="grid" style={{ gap: 10 }}>
         {lines.map((l, idx) => {
@@ -399,6 +481,17 @@ function Receive({
                   />
                 </div>
               )}
+              {order && l.itemId && l.itemId !== NEW_ITEM && (
+                <OrderDifferences
+                  order={order}
+                  line={{
+                    itemId: l.itemId,
+                    qty: n(l.qty),
+                    unitCode: l.unit,
+                    unitPrice: n(l.unitPrice),
+                  }}
+                />
+              )}
               {l.qty.trim() !== "" && l.unitPrice.trim() !== "" && l.itemId !== NEW_ITEM && (
                 <div
                   className="muted"
@@ -461,13 +554,21 @@ function Receive({
             </strong>
           </p>
           <p className="muted" style={{ fontSize: ".8rem" }}>
-            {t(
-              "A price typed per gram instead of per kilogram, or a digit too many, would cost every sale of it wrongly. If the invoice says so, receive it as it is: your confirmation goes on the audit trail.",
-            )}
+            {check.startsWith("Check the price:")
+              ? t(
+                  "A price typed per gram instead of per kilogram, or a digit too many, would cost every sale of it wrongly. If the invoice says so, receive it as it is: your confirmation goes on the audit trail.",
+                )
+              : t(
+                  "More is coming than is still on the order. If the supplier sent it and it is being kept, receive it as it is: your confirmation goes on the audit trail.",
+                )}
           </p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button className="btn-primary" onClick={() => submit(true)} disabled={pending}>
-              {pending ? t("Receiving…") : t("The price is right: receive it")}
+              {pending
+                ? t("Receiving…")
+                : check.startsWith("Check the price:")
+                  ? t("The price is right: receive it")
+                  : t("It is right: receive it")}
             </button>
             <button onClick={() => setCheck(null)} disabled={pending}>
               {t("Let me correct it")}
@@ -496,6 +597,63 @@ function Receive({
         <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
+    </div>
+  );
+}
+
+/** How a line differs from the order it comes against: shown, and asked about if more is coming. */
+function OrderDifferences({
+  order,
+  line,
+}: {
+  order: PurchaseOrder;
+  line: { itemId: string; qty: number; unitCode: string; unitPrice: number };
+}) {
+  const { t } = useT();
+  const d = differences(order, line);
+  const ordered = order.lines.find((l) => l.itemId === line.itemId);
+  if (d.length === 0) {
+    return ordered ? (
+      <div className="muted" style={{ fontSize: ".78rem" }} data-testid="receive-diff">
+        {t("As ordered: {qty} {unit} still to come", {
+          qty: fmtQty(inOrderUnit(ordered, ordered.outstandingBase)),
+          unit: ordered.unitCode,
+        })}
+      </div>
+    ) : null;
+  }
+  return (
+    <div
+      style={{ fontSize: ".78rem", display: "flex", gap: 8, flexWrap: "wrap" }}
+      data-testid="receive-diff"
+    >
+      {d.map((x) =>
+        x.kind === "unexpected" ? (
+          <span key="u" className="badge warn">
+            {t("Not on the order")}
+          </span>
+        ) : x.kind === "more" ? (
+          <span key="m" className="badge warn">
+            {t("More than is still on order: {coming} of {ordered} {unit}", {
+              coming: fmtQty(x.coming),
+              ordered: fmtQty(x.ordered),
+              unit: line.unitCode,
+            })}
+          </span>
+        ) : x.kind === "less" ? (
+          <span key="l" className="badge">
+            {t("{ordered} {unit} still on order: {coming} coming now", {
+              coming: fmtQty(x.coming),
+              ordered: fmtQty(x.ordered),
+              unit: line.unitCode,
+            })}
+          </span>
+        ) : (
+          <span key="p" className="badge warn">
+            {t("The order's price: {price}", { price: fmtQty(x.ordered) })}
+          </span>
+        ),
+      )}
     </div>
   );
 }

@@ -35,6 +35,7 @@ export type Permission =
   | "production.record"
   | "purchase.create"
   | "purchase.receive"
+  | "purchase.approve"
   | "expense.record"
   | "day.close"
   | "cash.session"
@@ -66,6 +67,7 @@ const ALL: Permission[] = [
   "production.record",
   "purchase.create",
   "purchase.receive",
+  "purchase.approve",
   "expense.record",
   "day.close",
   "cash.session",
@@ -107,6 +109,7 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "production.record",
     "purchase.create",
     "purchase.receive",
+    "purchase.approve",
     "expense.record",
     "day.close",
     "cash.session",

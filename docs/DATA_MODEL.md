@@ -1047,3 +1047,96 @@ received, to, note, location, key)` (`day.close` or `accounting.post`;
   it. `document_problems` flags a close's dollars or an exchange with no
   journal, and journals `session_dollars` or `fx_exchange` without their
   record.
+
+### Purchasing: orders, returns and credits (`0044`)
+
+- **Rule and permission:** `po_approve_up_to` (amount, 0–1,000,000,000, by the
+  café or a role; the café 250,000, the owner and the general manager
+  1,000,000,000) and `purchase.approve` (owner, general manager, branch
+  manager).
+- **`purchase_order`** (empty on every database before `0044`, which refuses
+  to run otherwise): `status` is text, `draft` | `approved` | `sent` | `closed`
+  | `cancelled` (the `po_status` type is dropped); `po_no` (the café's
+  `purchase_order` number), `expected_on` (a day; `expected_at` dropped),
+  `total` (each line to the dinar, added up), `approved_by/at`, `sent_by/at`,
+  `closed_by/at`, `close_reason`, `cancelled_by/at`, `cancel_reason` (needed),
+  `updated_at`; `purchase_order_steps` holds each status to its dates.
+  **`purchase_order_line`** gains `line_no` and `base_qty` (the quantity in the
+  item's base unit), an item once per order, and changes only while its order
+  is a draft (`trg_po_line_draft`). **`goods_receipt_line`** gains
+  `purchase_order_line_id`.
+- **What has come** is never stored: `po_received(order)` reads each delivery
+  against the order as it stands after its corrections (`receipt_state`),
+  reversed ones left out, item by item in base units; `receiving` is `none`,
+  `part` or `all`. `po_view(order)` is an order as the screens show it: its
+  lines with what has come and what is still to come, items that came but
+  were not on it, its deliveries, and whether the reader may approve it.
+  `purchase_orders()` (`cost.view`) gives the reader's limit and the orders;
+  `purchase_order(order)` one.
+- **Writes, each keyed:** `save_po(order, supplier, lines, expected_on, note,
+location, key)` (`purchase.create`; a new order, or a draft or an approved
+  order changed, which is a draft again; lines `[{item_id, qty, unit_code,
+unit_price}]`, at most 100); `approve_po(order, key)` (`purchase.approve`,
+  a draft, its total within the approver's `po_approve_up_to`);
+  `send_po(order, key)`; `close_po(order, reason, key)` (an approved or sent
+  order; a reason when part is still to come; an order nothing came against is
+  cancelled instead); `cancel_po(order, reason, key)` (nothing came against
+  it). On the audit trail: `purchase.order.create` and `.change` (the order
+  before and after: `po_snapshot`), `.approve` (with the limit), `.send`,
+  `.close` (whether short), `.cancel`.
+- **`receive_goods`** gains `p_purchase_order` (the order approved or sent,
+  from the delivery's supplier, for its place, locked while received against)
+  and a line's `po_line_id` (a line of that order, of the same item). More of
+  an item than is still on the order is refused with "Check the quantity: …"
+  (with the price check: "Check the price and the quantity: …") until
+  confirmed; the confirmation is `purchase.quantity_confirmed` on the trail.
+- **`supplier_return`** (`return_no`, supplier, optional `goods_receipt_id`,
+  location, `reason`, `value` owed back, `stock_value` out of stock, `against`
+  `delivery` | `account`, `journal_entry_id`) and **`supplier_return_line`**
+  (item, `qty`, `unit_code`, `base_qty`, `value`, `stock_value`,
+  `movement_id`): append-only. `return_to_supplier(supplier, lines, reason,
+receipt, location, confirm, key)` (`purchase.receive` or `purchase.create`):
+  a line no more than came in the delivery named less what went back from it;
+  a `supplier_return` movement at the cost now (the last of an item with what
+  is left of its value); what is owed back is the delivery's landed share, or
+  with no delivery the cost now. The journal: Dr 2050 (the delivery not
+  billed) or 2000 (billed, or none named) / Cr 1200, the difference to 5050.
+  Against the account, a `goods_return` credit is made and set against the
+  delivery's bill as far as it is owed. Stock below zero is asked about by the
+  item's rule. `receipt_grni_value_at` takes the returns off what a delivery
+  is owed for; `correct_receipt` refuses a delivery goods went back from, and
+  `record_bill` one all of whose goods went back.
+- **`supplier_credit`** (`credit_no`, supplier, `kind` `goods_return` |
+  `price` | `other`, `amount`, `credit_date` — the day it is recorded —,
+  `supplier_ref` their note's number, unique per supplier whatever its
+  capitals, `reason`, the delivery, bill or return it is for, `account_code`,
+  `journal_entry_id`, `matched_at/by`): never deleted, and changed only to
+  record the note of a return's credit (`trg_supplier_credit_guard`).
+  **`supplier_credit_allocation`** (credit, bill, `amount`): append-only;
+  never more than the credit (`trg_supplier_credit_allocation`), and each
+  re-totals its bill.
+- **`record_supplier_credit(supplier, kind, amount, supplier_ref, reason,
+receipt, bill, account_code, key)`** (`purchase.create` or
+  `accounting.post`): `price`, against a billed delivery of theirs: what is
+  still on the shelf of it revalued by its share (two `cost_adjustment`
+  movements an item), Dr 2000 / Cr 1200 / 5050 the rest, set against that
+  delivery's bill; `other`: Dr 2000 / Cr the account (an expense or an asset,
+  not cash, the card's, the bank's or stock; the bill's own by default), set
+  against the bill named. `note_supplier_credit(credit, supplier_ref, key)`
+  records the note of a return's credit; `allocate_credit(credit, bill,
+amount, key)` (`accounting.post`) sets what is left of a credit against a
+  bill of the same supplier, no more than it owes. On the trail:
+  `purchase.return`, `purchase.credit`, `purchase.credit.note`,
+  `purchase.credit.allocate`.
+- **Bills:** `purchase_invoice.paid_amount` is its payments and the credits set
+  against it (`trg_purchase_invoice_guard`); a bill with either is not
+  cancelled. `reconciliation_checks` takes the credits off the payables;
+  `document_problems` adds a return, or a credit other than a return's, with
+  no journal.
+- **Reads (`cost.view`):** `supplier_statement(supplier, from, to)`: what was
+  owed before, each bill, cancelled bill, payment and credit with the balance
+  after it, what was owed at the end, and as of now the bills still owed and
+  the credits not yet all set against a bill. `report_purchasing(from, to)`:
+  the orders made in the dates, those still open, the prices that changed
+  from a supplier's delivery before, the returns and the credits, and their
+  totals.

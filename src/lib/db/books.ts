@@ -122,6 +122,13 @@ const PAID_BY: Record<string, string> = {
   owner: "paid by the owner",
 };
 
+/** What a supplier's credit was for (0044), in English: the screen shows it through msg(). */
+const CREDIT_FOR: Record<string, string> = {
+  goods_return: "Credit — goods returned",
+  price: "Credit — a lower price",
+  other: "Credit — other",
+};
+
 export interface VendorLine {
   date: string;
   /** What the line is, in English: the screen shows it through msg(). */
@@ -143,6 +150,8 @@ export interface VendorRow {
   leadTimeDays: number | null;
   billed: number;
   paid: number;
+  /** What the supplier owes back (0044): their credits, set against bills or not. */
+  credited: number;
   balance: number;
   overdue: number;
   lines: VendorLine[];
@@ -157,8 +166,12 @@ export interface OpenBill {
   dueDate: string | null;
   total: number;
   paid: number;
+  /** Credits set against it (0044). */
+  credited: number;
   outstanding: number;
   daysOverdue: number;
+  /** A bill for a service: the account it was charged to. */
+  accountCode: string | null;
 }
 
 /**
@@ -171,18 +184,23 @@ export async function getVendorBook(
   today: string,
 ): Promise<{ vendors: VendorRow[]; openBills: OpenBill[] }> {
   const c = await db();
-  const [suppliers, bills, payments] = await Promise.all([
+  const [suppliers, bills, payments, credits, allocations] = await Promise.all([
     c.from("supplier").select("id,name,contact,phone,is_active,lead_time_days").order("name"),
     c
       .from("purchase_invoice")
       .select(
-        "id,supplier_id,invoice_no,invoice_date,due_date,amount_total,paid_amount,legacy,cancelled_at,cancel_reason",
+        "id,supplier_id,invoice_no,invoice_date,due_date,amount_total,paid_amount,legacy,cancelled_at,cancel_reason,expense_account_code",
       )
       .order("invoice_date"),
     c
       .from("supplier_payment")
       .select("id,supplier_id,purchase_invoice_id,amount,paid_on,method")
       .order("paid_on"),
+    c
+      .from("supplier_credit")
+      .select("id,supplier_id,credit_no,kind,amount,credit_date,supplier_ref")
+      .order("credit_no"),
+    c.from("supplier_credit_allocation").select("purchase_invoice_id,amount"),
   ]);
   const allBills = rows(bills, "bills");
   // A cancelled bill stays on the statement for the record, but is not owed.
@@ -198,11 +216,18 @@ export async function getVendorBook(
       paidByBill.set(k, (paidByBill.get(k) ?? 0) + num(p.amount));
     }
   }
+  const creditRows = rows(credits, "supplier credits");
+  const creditedByBill = new Map<string, number>();
+  for (const a of rows(allocations, "credits set against bills")) {
+    const k = str(a.purchase_invoice_id);
+    creditedByBill.set(k, (creditedByBill.get(k) ?? 0) + num(a.amount));
+  }
 
   const openBills: OpenBill[] = billRows
     .map((b) => {
       const total = num(b.amount_total);
       const paid = paidByBill.get(str(b.id)) ?? 0;
+      const credited = creditedByBill.get(str(b.id)) ?? 0;
       const due = strOrNull(b.due_date);
       return {
         id: str(b.id),
@@ -213,8 +238,10 @@ export async function getVendorBook(
         dueDate: due,
         total,
         paid,
-        outstanding: total - paid,
+        credited,
+        outstanding: total - paid - credited,
         daysOverdue: due ? Math.max(0, daysBetween(due, today)) : 0,
+        accountCode: strOrNull(b.expense_account_code),
       };
     })
     .filter((b) => b.outstanding > 0)
@@ -225,6 +252,7 @@ export async function getVendorBook(
     const mine = billRows.filter((b) => str(b.supplier_id) === id);
     const cancelled = allBills.filter((b) => b.cancelled_at && str(b.supplier_id) === id);
     const pays = payRows.filter((p) => str(p.supplier_id) === id);
+    const theirCredits = creditRows.filter((x) => str(x.supplier_id) === id);
     const lines: VendorLine[] = [
       ...mine.map((b) => ({
         date: str(b.invoice_date),
@@ -250,9 +278,23 @@ export async function getVendorBook(
         charge: 0,
         payment: num(p.amount),
       })),
+      // Their credits (0044): goods returned after the bill, a lower price, other.
+      ...theirCredits.map((x) => ({
+        date: str(x.credit_date),
+        particulars: CREDIT_FOR[str(x.kind)] ?? "Credit — other",
+        ref: x.supplier_ref
+          ? {
+              text: "Credit {no}, their note {ref}",
+              vars: { no: str(x.credit_no), ref: str(x.supplier_ref) } as Record<string, string>,
+            }
+          : { text: "Credit {no}", vars: { no: str(x.credit_no) } as Record<string, string> },
+        charge: 0,
+        payment: num(x.amount),
+      })),
     ].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
     const billed = mine.reduce((t, b) => t + num(b.amount_total), 0);
     const paid = pays.reduce((t, p) => t + num(p.amount), 0);
+    const credited = theirCredits.reduce((t, x) => t + num(x.amount), 0);
     const overdue = openBills
       .filter((b) => b.supplierId === id && b.daysOverdue > 0)
       .reduce((t, b) => t + b.outstanding, 0);
@@ -265,7 +307,8 @@ export async function getVendorBook(
       leadTimeDays: s.lead_time_days == null ? null : num(s.lead_time_days),
       billed,
       paid,
-      balance: billed - paid,
+      credited,
+      balance: billed - paid - credited,
       overdue,
       lines,
     };

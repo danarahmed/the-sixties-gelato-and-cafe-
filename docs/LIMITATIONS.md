@@ -216,6 +216,30 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     cash sale below nothing there. The day's cash sales count a part paid in
     dollars as cash.
   - Reports → Dollars shows what is held now, not as at the end of the dates.
+- **Purchasing, what it does not do (release S, `0044`).**
+  - An order is not sent to the supplier by the app: it is printed from its
+    own page (or saved as a PDF from the print window) and sent by hand, then
+    marked sent. There is no supplier portal and no email.
+  - An order is for one supplier and one place. A delivery comes against one
+    order at most; goods for two orders come as two deliveries. An order is
+    not split, and a sent order is not changed (it is cancelled while nothing
+    has come, or closed).
+  - What has come of an order is counted by the item: a delivery's line of an
+    item on the order counts against that order line, in its base unit.
+  - The approval limit is on the order's total: there is no limit by supplier,
+    by item or by month, and no second approver.
+  - A credit is dated the day it is recorded; there are no back-dated credits.
+    A credit that is never set against a bill stays on the supplier's account:
+    the supplier refunding it in cash is not recorded here (a journal does it).
+  - A return's credit is matched to the supplier's note at the return's own
+    value: a note for another amount is recorded as the note it is, and the
+    difference as a credit of its own (or a bill).
+  - A return is not reversed or corrected: goods sent back by mistake come in
+    again as a delivery. Nothing stops an item made here being returned
+    without naming a delivery, at what it costs now.
+  - A lower price revalues only what is still on the shelf of the delivery it
+    names; what was used since goes to the price variance (5050), not back to
+    the sales that used it.
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the

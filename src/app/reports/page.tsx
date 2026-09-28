@@ -19,6 +19,8 @@ import { LegacyPostings } from "@/components/books/LegacyPostings";
 import { EXCEPTION_LABEL, NO_ONE, exceptionsByPerson, type ExceptionKind } from "@/lib/exceptions";
 import { fmtIQD, tenderLabel } from "@/lib/format";
 import { getDollarsReport } from "@/lib/db/fx";
+import { getPurchasingReport } from "@/lib/db/purchasing";
+import { CREDIT_KIND_LABEL, orderStage, STAGE_LABEL } from "@/lib/purchasing";
 import { fmtRate, fmtUSD } from "@/lib/fx";
 import { getChannelNames } from "@/lib/db/channels";
 import {
@@ -69,6 +71,7 @@ export default async function ReportsPage({
     sized,
     takings,
     dollars,
+    buying,
   ] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
     getReconciliation(to),
@@ -82,6 +85,7 @@ export default async function ReportsPage({
     getSizesAndAddons(from, to),
     getPaymentTakings(from, to),
     getDollarsReport(from, to),
+    getPurchasingReport(from, to),
   ]);
   // The menu as it sells today: a platform out of use sells nothing.
   const menu = allMenu.filter((m) =>
@@ -123,9 +127,11 @@ export default async function ReportsPage({
         return `/orders?from=${day}&to=${day}`;
       case "delivery":
       case "correction":
+      case "return":
         return "/purchasing";
       case "bill":
       case "payment":
+      case "credit":
         return "/vendors";
       case "expense":
         return "/expenses";
@@ -159,6 +165,8 @@ export default async function ReportsPage({
     cash: t("Cash moved"),
     session: t("Drawer session"),
     dollars: t("Dollars"),
+    return: t("Return to a supplier"),
+    credit: t("Supplier's credit"),
     card: t("Card settlement"),
     platform: t("Platform statement"),
     journal: t("Journal"),
@@ -717,6 +725,179 @@ export default async function ReportsPage({
                 })}
               </span>
             ))}
+          </p>
+        </div>
+      </section>
+
+      {/* ---- Purchasing (0044) ---- */}
+      <section className="panel" id="purchasing" data-testid="purchasing-report">
+        <div className="panel-h">
+          <h3>{t("Purchasing")}</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            {t("Orders, prices, returns and credits, {from} to {to}", { from, to })}
+          </span>
+        </div>
+        <div className="panel-b grid" style={{ gap: 12 }}>
+          {buying.orders.length === 0 ? (
+            <p className="muted" style={{ margin: 0, fontSize: ".9rem" }}>
+              {t("No purchase order was made in these dates.")}
+            </p>
+          ) : (
+            <div className="tw">
+              <table data-testid="purchasing-orders">
+                <thead>
+                  <tr>
+                    <th>{t("Order")}</th>
+                    <th>{t("Supplier")}</th>
+                    <th>{t("Stage")}</th>
+                    <th className="right">{t("Ordered")}</th>
+                    <th className="right">{t("Received")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {buying.orders.map((o) => (
+                    <tr key={o.poId}>
+                      <td className="mono">
+                        <Link href={`/purchasing/orders/${o.poId}`}>{o.poNo}</Link>
+                      </td>
+                      <td>{o.supplier}</td>
+                      <td>{t(STAGE_LABEL[orderStage(o)])}</td>
+                      <td className="right money">{fmtIQD(o.ordered)}</td>
+                      <td className="right money">{fmtIQD(o.received)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {buying.open.length > 0 && (
+            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+              {t("{n} order(s) open, waiting for goods: {list}", {
+                n: buying.open.length,
+                list: buying.open.map((o) => `${o.poNo} (${o.supplier})`).join(", "),
+              })}
+            </p>
+          )}
+          {buying.priceChanges.length > 0 && (
+            <div className="tw">
+              <div className="sc">
+                {t("Prices that changed from the supplier's delivery before")}
+              </div>
+              <table data-testid="purchasing-prices">
+                <thead>
+                  <tr>
+                    <th>{t("Delivery")}</th>
+                    <th>{t("Supplier")}</th>
+                    <th>{t("Item")}</th>
+                    <th className="right">{t("Before")}</th>
+                    <th className="right">{t("Now")}</th>
+                    <th className="right">{t("Change")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {buying.priceChanges.map((p, i) => (
+                    <tr key={i}>
+                      <td className="mono">{p.receiptNo ?? "—"}</td>
+                      <td>{p.supplier}</td>
+                      <td>{p.item}</td>
+                      <td className="right mono">
+                        {t("{cost} a {unit}", { cost: p.before, unit: p.unit })}
+                      </td>
+                      <td className="right mono">
+                        {t("{cost} a {unit}", { cost: p.now, unit: p.unit })}
+                      </td>
+                      <td
+                        className="right mono"
+                        style={{ color: p.changePercent > 0 ? "var(--err)" : undefined }}
+                      >
+                        {p.changePercent > 0 ? "+" : ""}
+                        {p.changePercent}%
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {buying.returns.length > 0 && (
+            <div className="tw">
+              <div className="sc">{t("Returns to suppliers")}</div>
+              <table data-testid="purchasing-returns">
+                <thead>
+                  <tr>
+                    <th>{t("No.")}</th>
+                    <th>{t("Supplier")}</th>
+                    <th>{t("Delivery")}</th>
+                    <th>{t("Why")}</th>
+                    <th className="right">{t("Owed back")}</th>
+                    <th className="right">{t("Stock value")}</th>
+                    <th>{t("How")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {buying.returns.map((x) => (
+                    <tr key={x.returnId}>
+                      <td className="mono">{x.returnNo}</td>
+                      <td>{x.supplier}</td>
+                      <td className="mono">{x.receiptNo ?? "—"}</td>
+                      <td>{x.reason}</td>
+                      <td className="right money">{fmtIQD(x.value)}</td>
+                      <td className="right money">{fmtIQD(x.stockValue)}</td>
+                      <td>
+                        {x.against === "delivery"
+                          ? t("Off the delivery's bill")
+                          : x.creditNo !== null
+                            ? t("Credit {no} on the account", { no: x.creditNo })
+                            : t("On the account")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {buying.credits.length > 0 && (
+            <div className="tw">
+              <div className="sc">{t("Suppliers' credits")}</div>
+              <table data-testid="purchasing-credits">
+                <thead>
+                  <tr>
+                    <th>{t("No.")}</th>
+                    <th>{t("Supplier")}</th>
+                    <th>{t("For")}</th>
+                    <th>{t("Their note")}</th>
+                    <th className="right">{t("Amount")}</th>
+                    <th className="right">{t("Left")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {buying.credits.map((c) => (
+                    <tr key={c.creditId}>
+                      <td className="mono">{c.creditNo}</td>
+                      <td>{c.supplier}</td>
+                      <td>{t(CREDIT_KIND_LABEL[c.kind])}</td>
+                      <td>{c.supplierRef ?? t("Awaiting their note")}</td>
+                      <td className="right money">{fmtIQD(c.amount)}</td>
+                      <td className="right money">{fmtIQD(c.left)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p
+            className="muted"
+            style={{ margin: 0, fontSize: ".82rem" }}
+            data-testid="purchasing-totals"
+          >
+            {t(
+              "Returned {returned} · credited {credited} · credits not yet set against a bill {left}",
+              {
+                returned: fmtIQD(buying.totals.returned),
+                credited: fmtIQD(buying.totals.credited),
+                left: fmtIQD(buying.totals.creditsLeft),
+              },
+            )}
           </p>
         </div>
       </section>

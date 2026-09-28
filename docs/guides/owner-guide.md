@@ -50,17 +50,17 @@ unverified until it is corrected ([`../REMEDIATION.md`](../REMEDIATION.md)).
 - Only you can make someone an owner or general manager, or take their access
   away, and the business always keeps at least one active owner.
 
-| Role              | Typically does                                                                                          |
-| ----------------- | ------------------------------------------------------------------------------------------------------- |
-| Owner             | Everything, including reopening a locked month and control corrections                                  |
-| General manager   | Everything except reopening a locked month                                                              |
-| Branch manager    | Sells, voids and refunds, opens and closes the drawer, receives stock, reviews counts, records expenses |
-| Cashier           | Sells; opens and closes the drawer                                                                      |
-| Barista           | Sells, opens and closes the drawer, records waste                                                       |
-| Inventory counter | Counts stock, blind                                                                                     |
-| Purchasing        | Adds suppliers, receives goods, records bills                                                           |
-| Accountant        | Expenses, journals, locking months, the reports                                                         |
-| Auditor           | Reads everything with a cost on it; changes nothing                                                     |
+| Role              | Typically does                                                                                                                                      |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Owner             | Everything, including reopening a locked month and control corrections                                                                              |
+| General manager   | Everything except reopening a locked month                                                                                                          |
+| Branch manager    | Sells, voids and refunds, opens and closes the drawer, receives stock, approves purchase orders up to their limit, reviews counts, records expenses |
+| Cashier           | Sells; opens and closes the drawer                                                                                                                  |
+| Barista           | Sells, opens and closes the drawer, records waste                                                                                                   |
+| Inventory counter | Counts stock, blind                                                                                                                                 |
+| Purchasing        | Adds suppliers, drafts purchase orders, receives goods and returns them, records bills and credit notes                                             |
+| Accountant        | Expenses, journals, locking months, the reports                                                                                                     |
+| Auditor           | Reads everything with a cost on it; changes nothing                                                                                                 |
 
 The exact matrix is under **Settings → Roles & what they may do**.
 
@@ -321,6 +321,24 @@ discount, why and who approved it. The 10% is a business setting (shown on
 
 ## Every week
 
+- **Purchase orders** (**Purchasing**): whoever buys drafts an order — the
+  supplier, each item at the unit and price agreed, the day it is expected.
+  A branch manager approves orders up to 250,000 IQD; above that, you or the
+  general manager do (change the limit on **Settings → Rules → Purchase orders
+  a manager approves, up to**, for a role). Mark it sent and print it from its
+  page for the supplier. When the delivery comes, choose the order on the
+  receiving form: what is still to come is filled in, at the order's prices,
+  and anything different — less, more, another price, an item not ordered —
+  is shown before it is received; more than ordered is confirmed on the audit
+  trail. Close an order when all has come, or say why the rest is not coming.
+- **Goods going back** (**Purchasing → Return goods to a supplier**): name the
+  delivery they came in and why. Before its bill, the bill is then for what
+  was kept; after it, the supplier owes the goods back as a credit, set
+  against the bill. When the supplier's credit note comes, record its number
+  on **Vendors → Credit notes**, where you also record their credit notes for
+  a lower price or an overcharge, and set what is left of a credit against
+  their next bill. Each supplier's statement between two dates is printed from
+  their **Statement** tab, to agree the account with them.
 - **Purchasing:** receive deliveries as they arrive, each line at its price
   per unit as the invoice gives it. A price more than 25% above or below what
   the item costs now is asked about before anything is received ("2.5 or

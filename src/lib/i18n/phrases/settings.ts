@@ -421,6 +421,17 @@ const phrases: PhraseBook = {
     },
   "{n} hours": { ar: "{n} ساعة", ckb: "{n} کاتژمێر" },
   hours: { ar: "ساعات", ckb: "کاتژمێر" },
+
+  // The purchase orders' rule (0044).
+  "Purchase orders a manager approves, up to": {
+    ar: "طلبيات الشراء التي يعتمدها مدير، حتى",
+    ckb: "ئەو داواکارییانەی کڕین کە بەڕێوەبەرێک پەسەندیان دەکات، تا",
+  },
+  "A purchase order is approved by an owner or manager whose limit covers its total. Set it for a role: by default a branch manager approves up to 250,000, and the owner and the general manager any order.":
+    {
+      ar: "يعتمد طلبيةَ الشراء المالكُ أو مديرٌ يغطي حدُّه مجموعَها. حدّده لكل دور: افتراضيًا يعتمد مدير الفرع حتى 250,000، والمالك والمدير العام أي طلبية.",
+      ckb: "داواکاری کڕین لەلایەن خاوەن یان بەڕێوەبەرێکەوە پەسەند دەکرێت کە سنوورەکەی کۆی گشتییەکەی بگرێتەوە. بۆ هەر ڕۆڵێک دایبنێ: بە شێوەی بنەڕەتی بەڕێوەبەری لق تا 250,000 پەسەند دەکات، و خاوەن و بەڕێوەبەری گشتی هەر داواکارییەک.",
+    },
 };
 
 export default phrases;
