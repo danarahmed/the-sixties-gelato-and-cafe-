@@ -38,6 +38,7 @@ Plan a short window when the café is closed.
 | Delivery corrections (`0038`)           | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0038`](#after-0038)). The screens were merged ([pull request #27](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/27)) and deployed                                  |
 | Usage against the recipes (`0039`)      | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0039`](#after-0039)). The screen was merged ([pull request #28](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/28)) and deployed                                    |
 | The café's rules (`0040`)               | ✅ Migration applied on 27 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0040`](#after-0040)). The screens were merged ([pull request #29](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/29)) and deployed                                  |
+| Sizes and add-ons (`0041`)              | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner in a transaction that was rolled back (see [After `0041`](#after-0041)). The screens were merged ([pull request #30](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/30)) and deployed                                  |
 
 ## 0. Before you start
 
@@ -1068,6 +1069,84 @@ permission, and lists `record_sale`, `settle_tab`, `record_waste` and
 `record_production` under their new signatures. The performance advisor adds
 only notes that the new tables' links to their authors, journals and
 reversals have no index of their own.
+
+## After `0041`
+
+Migration `0041` (release P) lets a product have sizes added on its card, and
+the till sell add-ons:
+
+- **Sizes** (`recipe.edit`): a size is added with its prices and one of: its
+  own recipe, the recipe another size has in force today, or why it uses no
+  stock; the product's one size is named in the same step (Latte becomes
+  Regular). A size is renamed, retired with a reason, or brought back; the
+  last size on sale and one on an open bill stay on sale.
+- **Add-ons** (`recipe.edit`): groups that say the fewest and the most a line
+  takes (1 or more: the till asks for it), add-ons with a price per channel
+  from a date and what one uses (for every size, or a size's own), and the
+  groups each product offers, with every size or some.
+- **Selling**: a line carries its add-ons: priced with it, its discount shared
+  over them, what they use taken from stock under the stock rules and costed
+  with it. A printed bill keeps its add-ons' prices; splitting, paying,
+  refunds and voids carry them.
+- **Reports → Sizes and add-ons** (`cost.view`).
+
+What it adds:
+
+- seven tables: the groups, the add-ons, their prices, their recipes, the
+  groups each product offers, a bill line's add-ons and a sale line's add-ons
+  (append-only);
+- ten functions signed-in users may call: `add_variant`, `update_variant`,
+  `retire_variant`, `save_modifier_group`, `save_modifier`,
+  `set_modifier_price`, `set_modifier_recipe` and `set_product_modifiers`
+  (`recipe.edit`, keyed), `pos_addons` (`sale.create`) and
+  `report_sizes_and_addons` (`cost.view`);
+- add-ons on `post_sale`, `save_tab`, `split_tab`, `mark_bill_printed`,
+  `settle_tab` and `pos_open_bills`, each keeping its signature.
+
+It goes in before the screens: those deployed before it keep working (a line
+with no add-ons is sold as before, and the open bills gain a field the old
+till ignores), and the new ones need the new functions.
+
+It was applied on 28 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0040` build. The text stored there
+is the file byte for byte. It was then compared with the tested build, object
+by object, the role permissions and column grants included: identical, but
+for the schema `citext` lives in, as before.
+
+No group or add-on exists on live yet, and the menu is as it was: the till
+sells exactly as before until the owner adds some.
+
+It was checked as the owner and the barista, in a transaction that was rolled
+back:
+
+- **Sizes:** the Latte, one size named like the product, was given a Large at
+  4,500, its recipe copied and its one size renamed Regular in the same step.
+  The same name again was refused.
+- **Add-ons:** a milk group (whole, free; oat, 500, with its milk, and the
+  Large's own 200 ml) and an extras group (a shot at 750, 18 g of beans),
+  offered with every size and with the Large only. The barista's till read
+  both groups and the two offers.
+- **A Large without its milk** was refused: "Choose Smoke milk for Latte —
+  Smoke large".
+- **A sale** of a Large with oat milk and two shots and a Regular with whole
+  milk came to 10,000, the total the till works out. The lines were 6,500 and
+  3,500, costing 2,151 and 817, each add-on with its price and cost. It used
+  600 ml of milk and 72 g of beans, and its journal balanced.
+- **A bill** printed at 4,000 was paid at 4,000 after the oat milk went up to
+  700: the oat milk at 500.
+- **The report** gave each size and add-on its sales and cost.
+- **Retiring:** the Large was retired with a reason; the last size on sale was
+  kept.
+- **The books:** all nine checks at zero.
+
+Nothing was kept: 286 stock movements, journals to 1091, 35 audit rows, the
+Latte's size still named Latte, and the seven new tables empty.
+
+The security advisor adds only the ten functions above, each checking its
+permission. The performance advisor adds only notes that thirteen of the new
+tables' links have no index of their own, and that two new indexes are not
+used yet.
 
 ## Clearing the test records
 

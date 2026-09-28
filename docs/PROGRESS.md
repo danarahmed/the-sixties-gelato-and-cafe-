@@ -622,7 +622,31 @@ browser tests through the real app, or both.
   list them under the drink; **Reports → Sizes and add-ons** shows what each
   size and add-on sold and left. Built and tested: a new SQL suite, a new
   browser suite, unit tests of the till's arithmetic, and every new text in
-  Arabic and Kurdish.
+  Arabic and Kurdish. The migration was applied to the live database on 28
+  September 2026. The text stored there is the file byte for byte, and it
+  matches the tested build object by object, permissions included (the one
+  difference, as before, is the schema `citext` lives in). No group or add-on
+  exists on live yet, so the till sells exactly as before until the owner adds
+  some. It was checked as the owner and the barista, in a transaction that was
+  rolled back:
+  - the Latte was given a Large at 4,500, its recipe copied, and its one size
+    renamed Regular in the same step; the same name again was refused;
+  - a milk group the till asks for and an extras group for the Large only
+    were set up, and the barista's till read them;
+  - a Large without its milk was refused;
+  - a Large with oat milk and two shots and a Regular with whole milk came to
+    10,000, the total the till works out: 600 ml of milk and 72 g of beans
+    used, and a balanced journal;
+  - a bill printed at 4,000 was paid at 4,000 after the oat milk went up;
+  - the report gave each size and add-on; the last size on sale was kept;
+  - all nine checks stayed at zero.
+
+  Nothing was kept: 286 stock movements, journals to 1091, 35 audit rows, the
+  Latte's size still named Latte. The security advisors add the ten functions
+  the screens call, each checking its permission; the performance advisors
+  add notes that thirteen of the new tables' links have no index of their own.
+  The screens went live with
+  [pull request #30](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/30).
 
 ## The August 2026 audit, finding by finding
 
