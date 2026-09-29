@@ -144,6 +144,20 @@ export interface KeptDiscount {
   approvedBy: string | null;
 }
 
+/** The customer on an order (0050): who, their points when last read, and where a delivery goes. */
+export interface OrderCustomer {
+  id: string;
+  name: string;
+  phone: string;
+  points: number | null;
+  addressId: string | null;
+  address: string | null;
+}
+
+/** The customer as a bill keeps them: who, and which address. */
+export const customerKey = (c: OrderCustomer | null): string =>
+  c ? `${c.id}|${c.addressId ?? ""}` : "";
+
 export interface Order {
   kind: "quick" | "bill";
   tabId: string | null;
@@ -166,6 +180,9 @@ export interface Order {
    * tickets have gone out for. Saving prints a ticket for what changed.
    */
   sent: TicketLine[];
+  /** Its customer (0050), and the one the bill was last saved with (customerKey). */
+  customer: OrderCustomer | null;
+  savedCustomer: string;
 }
 
 /** A line as the barista's ticket has it: what to make, how many, and how. */
@@ -198,7 +215,9 @@ export function savedHasItems(o: Order): boolean {
 /** A bill with changes the database does not have yet. */
 export function isDirty(o: Order): boolean {
   if (o.kind !== "bill") return false;
-  return o.saved === null ? o.lines.length > 0 : signature(o.lines, o.discount) !== o.saved;
+  return o.saved === null
+    ? o.lines.length > 0
+    : signature(o.lines, o.discount) !== o.saved || customerKey(o.customer) !== o.savedCustomer;
 }
 
 let seq = 0;
@@ -221,6 +240,8 @@ export function quickOrder(channel: SalesChannel): Order {
     openedBy: null,
     turnNo: null,
     sent: [],
+    customer: null,
+    savedCustomer: "",
   };
 }
 
@@ -262,6 +283,16 @@ export function orderFromBill(b: OpenBill): Order {
       : b.discountAmount !== null
         ? { kind: "amount", value: String(b.discountAmount), kept }
         : null;
+  const customer: OrderCustomer | null = b.customer
+    ? {
+        id: b.customer.id,
+        name: b.customer.name,
+        phone: b.customer.phone,
+        points: b.customer.points,
+        addressId: b.customer.addressId,
+        address: b.customer.address,
+      }
+    : null;
   return {
     kind: "bill",
     tabId: b.tabId,
@@ -278,6 +309,8 @@ export function orderFromBill(b: OpenBill): Order {
     openedBy: b.openedBy,
     turnNo: b.turnNo ?? null,
     sent: ticketLines(lines),
+    customer,
+    savedCustomer: customerKey(customer),
   };
 }
 

@@ -18,6 +18,10 @@ export const RULE_ORDER = [
   "late_after_minutes",
   "clocked_in_alert_hours",
   "payday",
+  "loyalty",
+  "loyalty_point_per",
+  "loyalty_reward_points",
+  "loyalty_reward_value",
 ] as const;
 export type RuleKey = (typeof RULE_ORDER)[number];
 export type ScopeType = "business" | "role" | "location" | "item_type" | "item";
@@ -37,6 +41,10 @@ export const RULE_LABEL: Record<RuleKey, string> = {
   late_after_minutes: "Late, or leaving early, by more than",
   clocked_in_alert_hours: "Someone still clocked in after",
   payday: "Salaries are paid on the day of the month",
+  loyalty: "Customers earn points, and take rewards",
+  loyalty_point_per: "A customer earns a point for every",
+  loyalty_reward_points: "A reward takes",
+  loyalty_reward_value: "A reward is worth",
 };
 
 /** What each rule does: a phrase, shown through t(). */
@@ -67,6 +75,14 @@ export const RULE_HELP: Record<RuleKey, string> = {
     "Someone still clocked in after this many hours is an alert: they may have forgotten to clock out. A manager corrects the hours on Staff.",
   payday:
     "The day of the month salaries are due for the month before. From then, a payroll not approved or not paid is an alert, and red a week later.",
+  loyalty:
+    "A customer on a sale earns points on what it comes to, once paid, and takes a reward off a bill at the till. Off, customers are still kept, and their points too, but none are earned or taken.",
+  loyalty_point_per:
+    "A point for every this many dinars a sale comes to, after its discount; a void takes them back, and a refund those of what it gives back.",
+  loyalty_reward_points:
+    "The points one reward takes. A customer takes as many rewards as their points come to, if the bill comes to at least what they take off.",
+  loyalty_reward_value:
+    "What one reward takes off a bill: it is the bill's discount (4100), taken whole.",
 };
 
 /** The choices of a choice rule: phrases, shown through t(). */
@@ -78,6 +94,8 @@ export const CHOICE_LABEL: Record<string, string> = {
   entry: "Each loss on its own",
   session: "Their cash session, or their day",
   day: "The day",
+  on: "On",
+  off: "Off",
 };
 
 /** What a row of a rule applies to: phrases, shown through t(). */
@@ -99,8 +117,8 @@ export const RULE_PHRASES: readonly string[] = [
 
 export interface RuleDefinition {
   key: RuleKey;
-  /** hours: how long something lasts (0043); minutes, and a day of the month (0049). */
-  kind: "percent" | "amount" | "choice" | "hours" | "minutes" | "day";
+  /** hours: how long something lasts (0043); minutes, and a day of the month (0049); points (0050). */
+  kind: "percent" | "amount" | "choice" | "hours" | "minutes" | "day" | "points";
   min: number | null;
   max: number | null;
   whole: boolean;
@@ -150,6 +168,7 @@ const RULE_KINDS: readonly RuleDefinition["kind"][] = [
   "hours",
   "minutes",
   "day",
+  "points",
 ];
 const scalar = (v: unknown): number | string | null =>
   v === null || v === undefined ? null : typeof v === "number" ? v : String(v);

@@ -27,6 +27,8 @@ export const NAV: NavEntry[] = [
 
   { group: REVENUE, href: "/sales", key: "nav.sales", anyOf: ["cost.view"] },
   { group: REVENUE, href: "/platforms", key: "nav.platforms", anyOf: ["cost.view"] },
+  // Who buys from the café, and their points (0050).
+  { group: REVENUE, href: "/customers", key: "nav.customers", anyOf: ["customer.view"] },
 
   { group: SPENDING, href: "/vendors", key: "nav.vendors", anyOf: ["cost.view"] },
   { group: SPENDING, href: "/expenses", key: "nav.expenses", anyOf: ["cost.view"] },

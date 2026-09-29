@@ -51,6 +51,7 @@ function shownValue(def: RuleDefinition, v: number | string | null, t: T): strin
   if (def.kind === "hours") return t("{n} hours", { n: fmtQty(Number(v)) });
   if (def.kind === "minutes") return t("{n} minutes", { n: fmtQty(Number(v)) });
   if (def.kind === "day") return t("Day {n} of the month", { n: fmtQty(Number(v)) });
+  if (def.kind === "points") return t("{n} points", { n: fmtQty(Number(v)) });
   return t(CHOICE_LABEL[String(v)] ?? String(v));
 }
 
@@ -431,7 +432,9 @@ function RuleForm({
                       ? t("minutes")
                       : def.kind === "day"
                         ? t("day")
-                        : "IQD"
+                        : def.kind === "points"
+                          ? t("points")
+                          : "IQD"
               }
             />
           ))}

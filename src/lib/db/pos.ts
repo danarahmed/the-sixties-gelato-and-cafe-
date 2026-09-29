@@ -193,6 +193,19 @@ export interface OpenBill {
   total: number;
   /** Its turn number, for the barista's ticket (0034); none on a bill opened before. */
   turnNo?: number | null;
+  /** Its customer, their points, and where its delivery goes (0050). */
+  customer?: BillCustomer | null;
+}
+
+/** A bill's customer as the till shows them. */
+export interface BillCustomer {
+  id: string;
+  name: string;
+  phone: string;
+  points: number;
+  addressId: string | null;
+  /** The address as the bill was saved with it. */
+  address: string | null;
 }
 
 export function parseOpenBills(data: unknown): OpenBill[] {
@@ -234,6 +247,16 @@ export function parseOpenBills(data: unknown): OpenBill[] {
     discountApprovedBy: strOrNull(r.discount_approved_by),
     total: num(r.total),
     turnNo: numOrNull(r.turn_no),
+    customer: r.customer_id
+      ? {
+          id: str(r.customer_id),
+          name: str(r.customer_name),
+          phone: str(r.customer_phone),
+          points: num(r.customer_points),
+          addressId: strOrNull(r.customer_address_id),
+          address: strOrNull(r.delivery_address),
+        }
+      : null,
   }));
 }
 

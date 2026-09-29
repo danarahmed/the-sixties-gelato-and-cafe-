@@ -24,6 +24,7 @@ import {
   addonsToDb,
   lineAddons,
   payments,
+  rewardsTaken,
 } from "@/lib/validation";
 import type { SaleReceipt } from "@/lib/actions/sales";
 import { howPaid, saleReceipt } from "@/lib/payments";
@@ -86,6 +87,14 @@ const saveInput = z.object({
   discountReason: optionalText(40),
   discountNote: optionalText(300),
   approvalId: id("an approval").nullish(),
+  /**
+   * The bill's customer, and where its delivery goes (0050): null takes them
+   * off; left out, the bill's stays as it is.
+   */
+  customer: z
+    .object({ id: id("the customer"), addressId: id("the address").nullish() })
+    .nullable()
+    .optional(),
 });
 
 /** Open a bill with its first order, or save what is on one already open. */
@@ -106,6 +115,12 @@ export async function saveBillAction(
     return { ok: false, error: "Give the bill a table or a name" };
   if (d.discountPercent !== null && d.discountAmount !== null)
     return { ok: false, error: "Give the discount as a percentage or as an amount, not both" };
+  const customer =
+    d.customer === undefined
+      ? null
+      : d.customer === null
+        ? {}
+        : { id: d.customer.id, address_id: d.customer.addressId ?? null };
   const r =
     d.tabId === null
       ? await callRpc<Record<string, unknown>>("open_tab", {
@@ -118,6 +133,7 @@ export async function saveBillAction(
           p_discount_reason: d.discountReason,
           p_discount_note: d.discountNote,
           p_approval: d.approvalId ?? null,
+          p_customer: customer,
           p_idempotency_key: key,
         })
       : await callRpc<Record<string, unknown>>("save_tab", {
@@ -131,6 +147,7 @@ export async function saveBillAction(
           p_discount_reason: d.discountReason,
           p_discount_note: d.discountNote,
           p_approval: d.approvalId ?? null,
+          p_customer: customer,
           p_idempotency_key: key,
         });
   if (!r.ok) return r;
@@ -169,6 +186,10 @@ const payInput = tabRef.extend({
   expectedNet: optionalNonNegative("The total shown"),
   /** A manager's approval of selling more than the books hold, when its rule asks (0040). */
   stockApprovalId: z.string().uuid().nullish(),
+  /** A customer named as it is paid, where its delivery goes, and the rewards taken (0050). */
+  customerId: id("the customer").nullish(),
+  addressId: id("the address").nullish(),
+  rewards: rewardsTaken,
 });
 
 /** Take the money: the bill becomes one sale. Paying twice returns the sale already recorded. */
@@ -187,6 +208,9 @@ export async function payBillAction(
     p_tenders: paid.p_tenders,
     p_expected_net: v.data.expectedNet,
     p_stock_approval: v.data.stockApprovalId ?? null,
+    p_customer: v.data.customerId ?? null,
+    p_address: v.data.addressId ?? null,
+    p_rewards: v.data.rewards,
   });
   if (!r.ok) return r;
   refresh(...PAID_PATHS);

@@ -339,6 +339,7 @@ export function OrderPanel({
   discountRules,
   onDiscount,
   onAskApproval,
+  onCustomer = null,
 }: {
   order: Order;
   title: string;
@@ -386,6 +387,8 @@ export function OrderPanel({
   discountRules: DiscountRules;
   onDiscount: (d: Discount | null) => void;
   onAskApproval: () => void;
+  /** The order's customer (0050): found by their number, or added. */
+  onCustomer?: (() => void) | null;
 }) {
   const { t } = useT();
   const { name: channelName } = useChannels();
@@ -471,6 +474,39 @@ export function OrderPanel({
         </label>
       )}
 
+      {onCustomer && !isPlatform(order.channel) && (
+        <div
+          className="order-customer muted"
+          style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
+          data-testid="order-customer"
+        >
+          {order.customer ? (
+            <>
+              <span>
+                👤 <b data-testid="order-customer-name">{order.customer.name}</b>
+                {order.customer.points !== null &&
+                  ` · ${t("{n} points", { n: String(order.customer.points) })}`}
+              </span>
+              {order.customer.address && (
+                <span data-testid="order-customer-address">→ {order.customer.address}</span>
+              )}
+              <button type="button" className="linklike" onClick={onCustomer} disabled={blocked}>
+                {t("Change")}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={onCustomer}
+              disabled={blocked}
+              data-testid="order-customer-add"
+            >
+              👤 {t("Customer")}
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="order-lines">
         {empty && receipt ? (
           <div className="receipt-card">
@@ -504,6 +540,16 @@ export function OrderPanel({
                 <span>{t("pos.customerNumber")}</span>
                 <strong>{receipt.turnNo}</strong>
               </div>
+            )}
+            {receipt.customer && (
+              <p className="rc-facts" data-testid="receipt-points">
+                👤 {receipt.customer.name}
+                {receipt.customer.earned > 0 &&
+                  ` · ${t("Points earned: {n}", { n: String(receipt.customer.earned) })}`}
+                {receipt.customer.spent > 0 &&
+                  ` · ${t("Points spent: {n}", { n: String(receipt.customer.spent) })}`}
+                {` · ${t("{n} points now", { n: String(receipt.customer.points) })}`}
+              </p>
             )}
             <p className="rc-facts muted">
               {fmtIQD(receipt.net)}

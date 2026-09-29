@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { fmtQty } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { Tender } from "./model";
+import { phoneText } from "@/lib/customers";
 
 /** The check: a bill handed over before payment, the receipt after it, or a refund's slip (0037). */
 export interface PrintJob {
@@ -56,6 +57,18 @@ export interface PrintJob {
   printCount?: number;
   /** The order's turn number (0034): the customer is called by it. */
   turnNo?: number | null;
+  /**
+   * The order's customer (0050): on a delivery's bill, who and where it goes;
+   * on a receipt, the points it earned and spent, and theirs now.
+   */
+  customer?: {
+    name: string;
+    phone?: string | null;
+    address?: string | null;
+    earned?: number;
+    spent?: number;
+    points?: number;
+  } | null;
   at: string;
   by: string;
 }
@@ -278,6 +291,23 @@ function CheckSlip({
             <strong>{t("print.orderNo").replace("{no}", job.platformOrderNo)}</strong>
           </div>
         )}
+        {job.customer && (
+          <div className="sl-wide" data-testid="slip-customer">
+            <span>{t("Customer")}</span>
+            <strong>
+              {job.customer.name}
+              {job.customer.address && job.customer.phone
+                ? ` · ${phoneText(job.customer.phone)}`
+                : ""}
+            </strong>
+          </div>
+        )}
+        {job.customer?.address && (
+          <div className="sl-wide" data-testid="slip-address">
+            <span>{t("Deliver to")}</span>
+            <strong>{job.customer.address}</strong>
+          </div>
+        )}
         <div>
           <span>{t("print.date")}</span>
           <strong>{when}</strong>
@@ -371,6 +401,19 @@ function CheckSlip({
               </div>
             )}
           </>
+        )}
+        {job.kind === "receipt" && job.customer?.points !== undefined && (
+          <div className="sl-row sl-small" data-testid="slip-points">
+            <span>
+              {job.customer.earned
+                ? t("Points earned: {n}", { n: String(job.customer.earned) })
+                : ""}
+              {job.customer.spent
+                ? ` ${t("Points spent: {n}", { n: String(job.customer.spent) })}`
+                : ""}
+            </span>
+            <span>{t("{n} points now", { n: String(job.customer.points) })}</span>
+          </div>
         )}
       </div>
 

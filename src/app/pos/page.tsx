@@ -52,6 +52,7 @@ export default async function PosPage() {
         cashierName={profile.name}
         timezone={profile.timezone}
         canDiscount={has(profile, "discount.apply")}
+        canAddCustomer={has(profile, "customer.edit")}
         discountRules={{ cap: profile.discountCap, canApprove: has(profile, "discount.approve") }}
         money={{ decimals: profile.currencyDecimals, discountStep: profile.discountRoundTo }}
         initialDrawer={drawer}

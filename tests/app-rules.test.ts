@@ -85,6 +85,8 @@ import { REASONS, noteIsEnough, reasonKey, reasonMissing, type ReasonKind } from
 import { LOCALES, builtInWords, getDictionary } from "@/lib/i18n/dictionaries";
 import {
   CHOICE_LABEL,
+  RULE_HELP as SETTINGS_RULE_HELP,
+  RULE_LABEL as SETTINGS_RULE_LABEL,
   RULE_ORDER,
   SCOPE_LABEL,
   parseBusinessRules,
@@ -239,6 +241,15 @@ import {
   worksOn,
 } from "@/lib/staff";
 import { fieldLabel } from "@/lib/audit";
+import {
+  CUSTOMER_PHRASES,
+  addressText,
+  customerReportFrom,
+  phoneText,
+  rewardOff,
+  saleCustomerFrom,
+  tillCustomerFrom,
+} from "@/lib/customers";
 
 const perms = (role: Role) => [...ROLE_PERMISSIONS[role]];
 
@@ -3935,5 +3946,132 @@ describe("staff, their hours and their pay (0049, release W)", () => {
       "A salary payment",
     );
     expect(subjectOf("attendance", "a", { name: "Omar" }, null, new Map())).toBe("Omar");
+  });
+});
+
+describe("customers and loyalty (0050, release X)", () => {
+  it("reads a phone number as the café does", () => {
+    expect(phoneText("+9647701234567")).toBe("0770 123 4567");
+    expect(phoneText("+964531234567")).toBe("053 123 4567");
+    expect(phoneText("+442079460958")).toBe("+442079460958");
+    expect(addressText({ address: "Salim Street, house 12", directions: "the blue door" })).toBe(
+      "Salim Street, house 12 (the blue door)",
+    );
+    expect(addressText({ address: "Salim Street", directions: null })).toBe("Salim Street");
+  });
+
+  it("takes a reward whole, never more than the bill comes to", () => {
+    expect(rewardOff(7500, 1, 5000)).toEqual({ off: 5000, ok: true });
+    expect(rewardOff(5000, 1, 5000)).toEqual({ off: 5000, ok: true });
+    expect(rewardOff(1000, 1, 5000)).toEqual({ off: 5000, ok: false });
+    expect(rewardOff(20000, 3, 5000)).toEqual({ off: 15000, ok: true });
+    expect(rewardOff(7500, 0, 5000)).toEqual({ off: 0, ok: true });
+  });
+
+  it("reads a customer at the till, and what a sale did for them", () => {
+    const c = tillCustomerFrom({
+      id: "c1",
+      name: "Hawre",
+      phone: "+9647701234567",
+      notes: null,
+      active: true,
+      points: 107,
+      rewards: 1,
+      reward_points: 100,
+      reward_value: 5000,
+      loyalty: true,
+      addresses: [{ id: "a1", label: "Home", address: "Salim Street", directions: null }],
+    });
+    expect(c?.rewards).toBe(1);
+    expect(c?.addresses[0]?.active).toBe(true);
+    expect(tillCustomerFrom(null)).toBeNull();
+    expect(
+      saleCustomerFrom({ customer_id: "c1", name: "Hawre", earned: 2, spent: 100, points: 9 }),
+    ).toEqual({
+      customerId: "c1",
+      name: "Hawre",
+      earned: 2,
+      spent: 100,
+      points: 9,
+    });
+    expect(saleCustomerFrom(null)).toBeNull();
+    expect(
+      customerReportFrom({ points: { earned: 35, rewards_value: 20000 }, outstanding: 203 }).points
+        .rewardsValue,
+    ).toBe(20000);
+  });
+
+  it("saves a bill whose customer changed", () => {
+    const bill = {
+      tabId: "t1",
+      version: 3,
+      tableId: null,
+      tableName: null,
+      label: "Hawre",
+      channel: "dine_in" as const,
+      businessDay: "2026-09-29",
+      openedAt: "2026-09-29T08:00:00Z",
+      openedBy: "Sara",
+      billPrintedAt: null,
+      billPrintCount: 0,
+      lines: [],
+      subtotal: 0,
+      discount: 0,
+      discountPercent: null,
+      discountAmount: null,
+      total: 0,
+      customer: {
+        id: "c1",
+        name: "Hawre",
+        phone: "+9647701234567",
+        points: 107,
+        addressId: null,
+        address: null,
+      },
+    };
+    const o = orderFromBill(bill);
+    expect(o.customer?.name).toBe("Hawre");
+    expect(isDirty(o)).toBe(false);
+    expect(isDirty({ ...o, customer: null })).toBe(true);
+    expect(isDirty({ ...o, customer: { ...o.customer!, addressId: "a1", address: "Home" } })).toBe(
+      true,
+    );
+    expect(quickOrder("dine_in").customer).toBeNull();
+  });
+
+  it("names the loyalty rules on Settings, in the order the café reads them", () => {
+    expect(RULE_ORDER.slice(-4)).toEqual([
+      "loyalty",
+      "loyalty_point_per",
+      "loyalty_reward_points",
+      "loyalty_reward_value",
+    ]);
+    for (const k of RULE_ORDER) {
+      expect(SETTINGS_RULE_LABEL[k]).toBeTruthy();
+      expect(SETTINGS_RULE_HELP[k]).toBeTruthy();
+    }
+    // A rule of points is read as one.
+    const r = parseBusinessRules({
+      definitions: { loyalty_reward_points: { kind: "points", min: 1, max: 100000, whole: true } },
+      rows: [],
+    });
+    expect(r.definitions[0]?.kind).toBe("points");
+  });
+
+  it("has every word of the customer screens in Arabic and Kurdish", () => {
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        CUSTOMER_PHRASES.filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
+  });
+
+  it("names a customer on the audit trail", () => {
+    expect(subjectOf("customer", "c1", null, { name: "Hawre" }, new Map())).toBe("Hawre");
+    expect(subjectOf("customer", "c1", { customer: "Hawre" }, null, new Map())).toBe("Hawre");
+    expect(subjectOf("customer", "c1", null, null, new Map())).toBe("A customer");
+    expect(fieldLabel("customer_notes")).toBe("Notes about them");
   });
 });

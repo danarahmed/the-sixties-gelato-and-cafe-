@@ -5,6 +5,7 @@
  * rate shown go with it, and the database works out what they are worth.
  */
 import type { SaleReceipt } from "@/lib/actions/sales";
+import { saleCustomerFrom } from "@/lib/customers";
 import { normaliseNumber } from "@/lib/validation";
 
 export type PayType = "cash" | "card" | "platform_paid";
@@ -294,6 +295,7 @@ export function saleReceipt(d: Record<string, unknown>): SaleReceipt {
     payments: Array.isArray(d.payments)
       ? (d.payments as Record<string, unknown>[]).map(paidPart)
       : [],
+    customer: saleCustomerFrom(d.customer),
   };
 }
 

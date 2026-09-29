@@ -58,6 +58,15 @@ export const signedNonZero = (label: string) =>
 
 export const id = (label: string) => z.string().uuid(`Choose ${label}`);
 
+/** Rewards a customer takes off a sale (0050): none, or a whole number up to 20. */
+export const rewardsTaken = z
+  .number()
+  .int("A sale takes from 1 to 20 rewards")
+  .min(0, "A sale takes from 1 to 20 rewards")
+  .max(20, "A sale takes from 1 to 20 rewards")
+  .nullish()
+  .transform((n) => (n ? n : null));
+
 /** A discount given as a percentage: more than 0 and no more than 100, or none (null). */
 export const discountPercent = z
   .union([z.string(), z.number(), z.null(), z.undefined()])

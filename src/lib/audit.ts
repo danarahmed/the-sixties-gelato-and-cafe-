@@ -82,6 +82,11 @@ export const AUDIT_GROUPS = [
     prefixes: ["staff.", "attendance.", "payroll."],
   },
   {
+    key: "customers",
+    label: "Customers and points", // i18n-ignore
+    prefixes: ["customer.", "loyalty."],
+  },
+  {
     key: "settings",
     label: "Settings, places, platforms & people", // i18n-ignore
     prefixes: [
@@ -219,6 +224,10 @@ const ACTION_LABEL: Record<string, string> = {
   "payroll.advance": "Advance given",
   "payroll.advance_cancel": "Advance cancelled",
   "payroll.payment_cancel": "Salary payment cancelled",
+  // Customers and their points (0050).
+  "customer.save": "Customer saved",
+  "customer.address": "Customer's address saved",
+  "loyalty.adjust": "Points given or taken by hand",
 };
 
 /**
@@ -277,6 +286,15 @@ const FIELD_LABEL: Record<string, string> = {
   returnable_to_stock: "Back on the shelf when refunded",
   contact: "What they supply",
   phone: "Phone",
+  // A customer and their points (0050).
+  customer: "Customer",
+  customer_notes: "Notes about them",
+  kept_as_customer: "Kept as a customer",
+  address: "Address",
+  directions: "How to find it",
+  put_away: "Put away",
+  points: "Points",
+  change: "Change in points",
   code: "Unit",
   label: "Label", // i18n-ignore: a phrase, like every field's name here
   factor_to_base: "Holds (base units)",
@@ -700,6 +718,9 @@ export function subjectOf(
       return pick("run_no") ? `Payroll ${pick("run_no")}` : (pick("name") ?? "A payroll");
     case "salary_payment":
       return pick("name") ?? (pick("run_no") ? `Payroll ${pick("run_no")}` : "A salary payment");
+    // A customer (0050): by name, as their details, address or points say.
+    case "customer":
+      return pick("name") ?? pick("customer") ?? "A customer";
     case "platform_settlement":
       return pick("reference")
         ? `${pick("platform") ?? "Platform"} statement ${pick("reference")}`
@@ -717,6 +738,7 @@ export function subjectOf(
 
 /** What subjectOf says where it has no name to give. */
 const SUBJECT_WORDS = new Set([
+  "A customer",
   "A price",
   "An item",
   "Business settings",
