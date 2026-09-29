@@ -1471,6 +1471,29 @@ browser tests through the real app, or both.
     statements, the journals, the payables, the menu's costing, the dollar
     rates and the safe, the customers themselves and the daily brief.
 
+  The migration was applied to the live database on 29 September 2026. The
+  text stored there is the file byte for byte, and it matches the tested
+  build object by object, permissions included (the one difference, as
+  before, is the schema `citext` lives in). Nothing recorded changed.
+
+  It was checked on the live records as the owner, the branch manager and the
+  barista, in one transaction that was rolled back, nothing recorded in
+  between:
+  - all sixteen reports the café reads returned exactly what they returned
+    before `0057`;
+  - the month's sales, losses, deliveries, batches and the stock's value are
+    Main Branch's, and the Central Kitchen's nothing, adding up to the
+    café's;
+  - the branch manager, put at the kitchen, read the kitchen's reports and
+    dashboard and was refused Main Branch's, and was put back everywhere; the
+    barista was refused;
+  - the thirteen checks were at nothing before and after.
+
+  Nothing was kept. The security advisors list the twelve reports made anew
+  with a place in place of the old ones; the performance advisors add
+  nothing. The screens went live with
+  [pull request #46](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/46).
+
   Built and tested:
   - a new SQL suite: two branches and the kitchen trading, a void, a
     discount and a refund, a delivery and its return, a batch, a spill, an
