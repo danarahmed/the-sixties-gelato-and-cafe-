@@ -77,9 +77,12 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - The plan judges by the same weekday over the last 4 to 8 weeks alone: no
     season or holiday, and what is on hand now, so tomorrow's plan does not
     take off what today will still sell. A base is not planned for the
-    flavours to be made from it, and the plan is for the café's first branch.
-  - Moving stock between places (release AB) will have to carry its lots; for
-    now nothing moves stock between places.
+    flavours to be made from it.
+  - The plan is for the place the device works at, judged by what was sold
+    and made with there. What a place sends to another is not counted as its
+    demand, so the central kitchen's plan does not yet see what the branch
+    sells. Until it does, the branch's plan (**Stock at**: the branch) says
+    what to make for it.
 - **Offline selling (H-04).** The till needs a connection. Offline, it says so
   and refuses the sale. A sale whose confirmation was lost is retried with the
   same key and recorded once, and since `0035` so is every other write from the
