@@ -227,10 +227,10 @@ console.log("▸ the books by place: each place's profit and loss, side by side 
   const cells = (await panel.getByTestId("pnl-places-4000").locator("td").allTextContents()).map(
     (c) => c.trim(),
   );
+  const secondCell = cells[heads.indexOf("Second Branch")];
   check(
-    secondSales > 0 &&
-      cells[heads.indexOf("Second Branch")] === secondSales.toLocaleString("en-US"),
-    `the second branch's column: its own sales, ${secondSales.toLocaleString("en-US")}`,
+    secondSales > 0 && secondCell === `${secondSales.toLocaleString("en-US")} IQD`,
+    `the second branch's column: its own sales, ${secondSales.toLocaleString("en-US")} IQD (shown: ${secondCell})`,
   );
   const cafeRevenue = (
     await panel.getByTestId("pnl-places-revenue").locator("td").last().textContent()
