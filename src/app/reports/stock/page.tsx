@@ -7,6 +7,7 @@ import { getStockValue } from "@/lib/db/analysis";
 import { itemNameIn } from "@/lib/analysis";
 import { fmtIQD, fmtQty, itemTypeLabel } from "@/lib/format";
 import { businessToday, parseDay } from "@/lib/dates";
+import { getCafePlaces } from "@/lib/place";
 
 export const dynamic = "force-dynamic";
 
@@ -25,18 +26,35 @@ export default async function StockValuePage({
   const today = businessToday(profile.timezone);
   const asOf = parseDay(sp.on, today);
   const later = asOf > today;
-  const v = later ? null : await getStockValue(asOf, null);
+  // The place (0057): someone who works at one place reads theirs; someone who
+  // works everywhere, the café's or the one chosen.
+  const cafePlaces = await getCafePlaces();
+  const place =
+    profile.worksAt ??
+    (typeof sp.place === "string" && cafePlaces.some((p) => p.id === sp.place) ? sp.place : null);
+  const placeName = cafePlaces.find((p) => p.id === place)?.name ?? profile.worksAtName;
+  const choosesPlace = profile.worksAt === null && cafePlaces.length > 1;
+  const withPlace = place && profile.worksAt === null ? `&place=${place}` : "";
+  const v = later ? null : await getStockValue(asOf, place);
 
   return (
     <div className="grid" style={{ gap: 16 }}>
       <PrintHead
         business={profile.businessName}
         title={t("Stock value on a day")}
-        period={t("End of {day}", { day: asOf })}
+        period={t("End of {day}", { day: asOf }) + (placeName ? ` · ${placeName}` : "")}
         timezone={profile.timezone}
       />
       <div className="phead">
-        <h1>{t("Stock value on a day")}</h1>
+        <h1>
+          {t("Stock value on a day")}
+          {placeName && (
+            <span className="muted" data-testid="stock-at">
+              {" "}
+              · {placeName}
+            </span>
+          )}
+        </h1>
         <PrintButton />
         <span className="sc">
           <Link className="drill" href="/reports">
@@ -45,9 +63,14 @@ export default async function StockValuePage({
         </span>
       </div>
       <p className="muted" style={{ margin: 0, fontSize: ".85rem", lineHeight: 1.6 }}>
-        {t(
-          "What every item in stock was worth when the day ended, from the stock ledger, beside what 1200 Inventory held then. The two agree when the books tie.",
-        )}
+        {placeName
+          ? t(
+              "What every item in stock at {place} was worth when the day ended, from the stock ledger. 1200 Inventory is the café's, so it is set beside the café's stock, not a place's.",
+              { place: placeName },
+            )
+          : t(
+              "What every item in stock was worth when the day ended, from the stock ledger, beside what 1200 Inventory held then. The two agree when the books tie.",
+            )}
       </p>
       <form
         className="card"
@@ -57,6 +80,19 @@ export default async function StockValuePage({
           <div className="sc">{t("On")}</div>
           <input type="date" name="on" defaultValue={asOf} max={today} />
         </label>
+        {choosesPlace && (
+          <label>
+            <div className="sc">{t("Place")}</div>
+            <select name="place" defaultValue={place ?? ""} data-testid="stock-place">
+              <option value="">{t("The whole café")}</option>
+              {cafePlaces.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <button type="submit">{t("Show")}</button>
       </form>
 
@@ -100,7 +136,7 @@ export default async function StockValuePage({
             <div className="panel-h">
               <h3>{t("Item by item")}</h3>
               <span className="muted" style={{ fontSize: ".74rem" }}>
-                <a href={`/reports/export?report=stock_value&on=${asOf}`}>{t("CSV")}</a>
+                <a href={`/reports/export?report=stock_value&on=${asOf}${withPlace}`}>{t("CSV")}</a>
               </span>
             </div>
             {v.items.length === 0 ? (

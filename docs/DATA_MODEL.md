@@ -1546,3 +1546,34 @@ approval, wait, key)`** (`waste.record`), on the trail as `inventory.loss`.
   lines; before, a reversed close counted the year again.
 - **Helpers nobody calls:** `pnl_by_place`, `report_place`, `journal_origin`,
   `year_end_entry`, `payroll_gross_by_place` and the trigger.
+
+### Every report at a place (`0057`)
+
+- **A place on every report that reads what was recorded at one:**
+  `report_daily_sales`, `report_payments`, `report_uncosted_sales`,
+  `report_losses`, `report_sizes_and_addons`, `report_exceptions`,
+  `report_purchases`, `report_dollars`, `report_purchasing`,
+  `report_production`, `report_staff` and `report_customers` take
+  `(from, to, location)`. No place named: the café's, as before. Each reads
+  through `report_place`, so someone who works at one place gets theirs and
+  is refused another.
+  - A sale's figures, its refunds and its discounts are its branch's; a
+    bill's change, its branch's; a loss, a delivery, a return, an order and a
+    batch, their place's; a supplier's credit, its delivery's, its return's
+    or its bill's (`supplier_credit_place`).
+  - The staff: the people who work at the place, and its share of each
+    payroll (`0056`) against its sales.
+  - The dollars: the sales, exchanges, counts and tills at the place; the
+    rates and the safe stay the café's. The customers: the points and sales
+    on the place's sales; the customers and the points they hold stay the
+    café's.
+- **The reports that already took a place** — `report_sales_analysis`,
+  `inventory_valuation`, `report_usage_variance` — keep their bodies as
+  `report_sales_analysis_0051`, `inventory_valuation_0051` and
+  `report_usage_variance_0039`, and apply the one-place rule to the place
+  asked for.
+- **The dashboard** (`dashboard_summary`) of someone who works at one place is
+  that place's day: its sales and their costs, its orders, the stock it
+  holds, its items low or below zero, and `location`, its name.
+- **`customer_sales(business, from, to, location)`**: a customer's sales at a
+  place (none: every place's).

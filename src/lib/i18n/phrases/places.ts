@@ -201,6 +201,14 @@ const phrases: PhraseBook = {
   },
   Shared: { ar: "مشترك", ckb: "هاوبەش" },
   "Café total": { ar: "مجموع المقهى", ckb: "کۆی کافێکە" },
+  // Every report at a place (0057).
+  "The whole café": { ar: "المقهى كله", ckb: "هەموو کافێکە" },
+  "What every item in stock at {place} was worth when the day ended, from the stock ledger. 1200 Inventory is the café's, so it is set beside the café's stock, not a place's.":
+    {
+      ar: "قيمة كل صنف في المخزون في {place} عند نهاية اليوم، من سجل المخزون. حساب 1200 المخزون للمقهى كله، فيُقارن بمخزون المقهى كله لا بمخزون مكان واحد.",
+      ckb: "بەهای هەر کاڵایەک لە کۆگای {place} لە کۆتایی ڕۆژەکەدا، لە تۆماری کۆگاوە. ژمارە 1200 کۆگا هی هەموو کافێکەیە، بۆیە لەگەڵ کۆگای هەموو کافێکە بەراورد دەکرێت، نەک کۆگای یەک شوێن.",
+    },
+  "Stock at {place}": { ar: "المخزون في {place}", ckb: "کۆگا لە {place}" },
   "Each line is at the place of its record: a sale at the branch that sold it, a loss where the stock was, an expense where it was recorded. A platform's payout is shared out by the branch of each order, a payroll by where each person works. Shared: what belongs to no one place, such as the bank's card fees and journals by hand.":
     {
       ar: "كل سطر في مكان سجلّه: البيع في الفرع الذي باعه، والخسارة حيث كان المخزون، والمصروف حيث سُجّل. وتُوزَّع دفعة المنصة حسب فرع كل طلب، والرواتب حسب مكان عمل كل شخص. المشترك: ما لا يخص مكانًا واحدًا، مثل رسوم البطاقات لدى البنك والقيود اليدوية.",

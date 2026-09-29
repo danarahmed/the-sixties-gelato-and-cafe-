@@ -54,6 +54,7 @@ Plan a short window when the café is closed.
 | Stock sent between places (`0054`)      | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0054`](#after-0054)). The screens were merged ([pull request #43](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/43)) and deployed            |
 | The tills at each branch (`0055`)       | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0055`](#after-0055)). The screens were merged ([pull request #44](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/44)) and deployed              |
 | The books by place (`0056`)             | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0056`](#after-0056)). The screens were merged ([pull request #45](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/45)) and deployed            |
+| Every report at a place (`0057`)        | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0057`](#after-0057)). The screens were merged ([pull request #46](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/46)) and deployed            |
 
 ## 0. Before you start
 
@@ -2398,6 +2399,88 @@ The security advisor lists the two reports a signed-in person calls,
 `report_profit_and_loss` made anew with a place and
 `report_profit_and_loss_by_place`, each checking `profit.view`, in place of
 the old one. The performance advisor's notes are unchanged.
+
+## After `0057`
+
+Migration `0057` (release AB, its fourth part) reads every other report by
+place.
+
+- **Each report that reads what was recorded at a place** is read for the café
+  (no place named, as before) or for one of its places:
+  - the day's sales, the payments, the sales costed at nothing, the losses,
+    the sizes and add-ons, and the exceptions, by the sale's, the loss's or
+    the bill's place;
+  - what was bought, purchasing and production, by the delivery's, the
+    order's, the return's or the batch's place. A supplier's credit goes by
+    its delivery's, its return's or its bill's place;
+  - the dollars: the sales, exchanges, counts and tills at the place. The
+    rates and the safe stay the café's;
+  - the staff: the people who work at the place, and its share of each
+    payroll against its sales;
+  - the customers: the points and sales on the place's sales. The café's
+    customers, and the points they hold, stay the café's.
+- **Someone who works at one place** reads their place's, whichever they ask
+  for: the reports, the sales analysis, the stock's value, the usage against
+  the recipes and the dashboard.
+
+What it adds:
+
+- **The functions signed-in users may call**, each checking its permission:
+  the twelve reports above, made anew with a place. With none named they are
+  the café's, as before, so the screens deployed before it call them as they
+  did. `report_sales_analysis`, `inventory_valuation` and
+  `report_usage_variance` apply the one-place rule to the place they already
+  took, and `dashboard_summary` gives someone at one place that place's day.
+- **Helpers nobody calls:** `supplier_credit_place`, `customer_sales` (now
+  at a place), and the three reports kept under their release's name
+  (`report_sales_analysis_0051`, `inventory_valuation_0051`,
+  `report_usage_variance_0039`).
+
+It goes in before the screens: those deployed before it call nothing it takes
+away.
+
+It was applied on 29 September 2026 with the Supabase connector: one
+`apply_migration` call, one transaction. Before it, a read-only check showed
+the live database still matched the verified `0056` build, and each report
+the café reads was fingerprinted as it returned the month so far.
+
+The text stored there is the file byte for byte (md5
+`72a37bbec3425350714b634fd8f1a52a`, 60,984 bytes). It was then compared with
+the tested build, object by object, the role permissions and column grants
+included. It is identical, but for the schema `citext` lives in, as before.
+Nothing recorded changed.
+
+It was checked on the live records as the owner, the branch manager and the
+barista, in one transaction that was rolled back, with nothing recorded in
+between (the records' counts and the last journal and audit numbers were as
+before it).
+
+- **The café's reports as before:** all sixteen the café reads (the day's
+  sales, the payments, the sales costed at nothing, the losses, the sizes and
+  add-ons, the exceptions, what was bought, the dollars, purchasing,
+  production, the staff, the customers, the sales analysis, the stock's
+  value, the usage against the recipes and the dashboard) returned exactly
+  what they returned before `0057`.
+- **The places add up:** the month's sales at Main Branch are the café's
+  (374,750 IQD in 42 sales) and the Central Kitchen's nothing; so are the
+  losses (2), the deliveries (9), the batches (3) and the stock's value
+  (666,317 IQD).
+- **The branch manager, put at the Central Kitchen,** read the kitchen's day,
+  losses and stock, and their dashboard was the kitchen's; Main Branch's
+  reports and sales analysis were refused ("You work at Central Kitchen, not
+  at Main Branch"). They were put back everywhere, and the audit trail has
+  both moves.
+- **The barista** was refused ("needs cost.view").
+- **The books:** each of the thirteen checks was at nothing before and after,
+  with no document out of step.
+
+Nothing was kept: every table's count is as it was after applying (journals to
+1100, the audit trail to 252).
+
+The security advisor lists the twelve reports made anew with a place in place
+of the old ones, each checking its permission; the helpers and the reports
+kept under their release's name are not callable. The performance advisor
+adds nothing, and two indexes it called unused are used now.
 
 ## Clearing the test records
 

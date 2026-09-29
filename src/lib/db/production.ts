@@ -163,9 +163,16 @@ export async function getBatchReconciliation(batchId: string): Promise<BatchReco
 }
 
 /** Reports → Production: the batches made in the dates. */
-export async function getProductionReport(from: string, to: string): Promise<ReportBatch[]> {
+export async function getProductionReport(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<ReportBatch[]> {
   const c = await db();
   return productionReportFrom(
-    one(await c.rpc("report_production", { p_from: from, p_to: to }), "the production report"),
+    one(
+      await c.rpc("report_production", { p_from: from, p_to: to, p_location: place }),
+      "the production report",
+    ),
   );
 }

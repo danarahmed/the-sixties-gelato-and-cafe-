@@ -14,12 +14,16 @@ export async function getFxStatus(): Promise<FxStatus> {
   );
 }
 
-export async function getDollarsReport(from: string, to: string): Promise<DollarsReport> {
+export async function getDollarsReport(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<DollarsReport> {
   const c = await db();
   return dollarsReportFrom(
-    one(await c.rpc("report_dollars", { p_from: from, p_to: to }), "the dollars") as Record<
-      string,
-      unknown
-    > | null,
+    one(
+      await c.rpc("report_dollars", { p_from: from, p_to: to, p_location: place }),
+      "the dollars",
+    ) as Record<string, unknown> | null,
   );
 }

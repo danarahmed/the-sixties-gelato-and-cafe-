@@ -50,13 +50,17 @@ export async function getSupplierStatement(
   );
 }
 
-export async function getPurchasingReport(from: string, to: string): Promise<PurchasingReport> {
+export async function getPurchasingReport(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<PurchasingReport> {
   const c = await db();
   return purchasingReportFrom(
-    one(await c.rpc("report_purchasing", { p_from: from, p_to: to }), "purchasing") as Record<
-      string,
-      unknown
-    > | null,
+    one(
+      await c.rpc("report_purchasing", { p_from: from, p_to: to, p_location: place }),
+      "purchasing",
+    ) as Record<string, unknown> | null,
   );
 }
 

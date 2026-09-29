@@ -79,6 +79,15 @@ export default async function ReportsPage({
   const staffDates = from <= to && daysBetween(from, to) <= 366;
   // Customers and their points (0050): for those who see customers.
   const seesCustomers = has(profile, "customer.view");
+  // The place the reports are read for (0057): someone who works at one place
+  // reads theirs; someone who works everywhere, the café's or the one chosen.
+  const cafePlaces = await getCafePlaces();
+  const place =
+    profile.worksAt ??
+    (typeof sp.place === "string" && cafePlaces.some((p) => p.id === sp.place) ? sp.place : null);
+  const placeName = cafePlaces.find((p) => p.id === place)?.name ?? profile.worksAtName;
+  const choosesPlace = profile.worksAt === null && cafePlaces.length > 1;
+  const withPlace = place && profile.worksAt === null ? `&place=${place}` : "";
 
   const [
     pnl,
@@ -100,32 +109,28 @@ export default async function ReportsPage({
     loyalty,
     bought,
     byPlaceRows,
-    cafePlaces,
   ] = await Promise.all([
-    seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
+    seesProfit ? getProfitAndLoss(from, to, place) : Promise.resolve([]),
     getReconciliation(to),
-    getDailySales(from, to),
+    getDailySales(from, to, place),
     getVendorBook(today),
     getMenuCosting(),
     getLegacyUnposted(),
-    getUncostedSales(from, to),
-    seesExceptions ? getExceptions(from, to) : Promise.resolve([]),
+    getUncostedSales(from, to, place),
+    seesExceptions ? getExceptions(from, to, 20_000, place) : Promise.resolve([]),
     getChannelNames(),
-    getSizesAndAddons(from, to),
-    getPaymentTakings(from, to),
-    getDollarsReport(from, to),
-    getPurchasingReport(from, to),
-    getProductionReport(from, to),
-    getLossReport(from, to),
-    seesStaff && staffDates ? getStaffReport(from, to) : Promise.resolve(null),
-    seesCustomers && from <= to ? getCustomerReport(from, to) : Promise.resolve(null),
+    getSizesAndAddons(from, to, place),
+    getPaymentTakings(from, to, place),
+    getDollarsReport(from, to, place),
+    getPurchasingReport(from, to, place),
+    getProductionReport(from, to, place),
+    getLossReport(from, to, place),
+    seesStaff && staffDates ? getStaffReport(from, to, place) : Promise.resolve(null),
+    seesCustomers && from <= to ? getCustomerReport(from, to, place) : Promise.resolve(null),
     // What came in, by supplier and by item (0051).
-    from <= to ? getPurchases(from, to) : Promise.resolve(null),
-    // Each place's profit and loss side by side (0056), for those who work everywhere.
-    seesProfit && profile.worksAt === null
-      ? getProfitAndLossByPlace(from, to)
-      : Promise.resolve([]),
-    getCafePlaces(),
+    from <= to ? getPurchases(from, to, place) : Promise.resolve(null),
+    // Each place's profit and loss side by side (0056), when the café's is read.
+    seesProfit && place === null ? getProfitAndLossByPlace(from, to) : Promise.resolve([]),
   ]);
   // The menu as it sells today: a platform out of use sells nothing.
   const menu = allMenu.filter((m) =>
@@ -138,9 +143,7 @@ export default async function ReportsPage({
   const totals = pnlTotals(pnl);
   // With more than one place, each one's column, the shared and the café's.
   const byPlace =
-    seesProfit && profile.worksAt === null && cafePlaces.length > 1
-      ? pnlByPlace(byPlaceRows, cafePlaces)
-      : null;
+    seesProfit && place === null && choosesPlace ? pnlByPlace(byPlaceRows, cafePlaces) : null;
   const ageing = ageBills(book.openBills);
   const unreconciled = rec.filter((r) => r.difference !== 0);
   // The records the last check counts, each to be looked into (0038).
@@ -244,11 +247,19 @@ export default async function ReportsPage({
       <PrintHead
         business={profile.businessName}
         title={t("nav.reports")}
-        period={t("{from} to {to}", { from, to })}
+        period={t("{from} to {to}", { from, to }) + (placeName ? ` · ${placeName}` : "")}
         timezone={profile.timezone}
       />
       <div className="phead">
-        <h1>{t("nav.reports")}</h1>
+        <h1>
+          {t("nav.reports")}
+          {placeName && (
+            <span className="muted" data-testid="reports-at">
+              {" "}
+              · {placeName}
+            </span>
+          )}
+        </h1>
         <PrintButton />
         <span className="sc">
           <Rich
@@ -277,10 +288,23 @@ export default async function ReportsPage({
           <div className="sc">{t("To")}</div>
           <input type="date" name="to" defaultValue={to} />
         </label>
+        {choosesPlace && (
+          <label>
+            <div className="sc">{t("Place")}</div>
+            <select name="place" defaultValue={place ?? ""} data-testid="reports-place">
+              <option value="">{t("The whole café")}</option>
+              {cafePlaces.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <button type="submit">{t("Show")}</button>
         <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {ranges.map(([label, f, tt]) => (
-            <Link key={label} className="badge" href={`/reports?from=${f}&to=${tt}`}>
+            <Link key={label} className="badge" href={`/reports?from=${f}&to=${tt}${withPlace}`}>
               {t(label)}
             </Link>
           ))}
@@ -295,12 +319,16 @@ export default async function ReportsPage({
       >
         <Link
           className="drill"
-          href={`/reports/sales?from=${from}&to=${to}`}
+          href={`/reports/sales?from=${from}&to=${to}${place && profile.worksAt === null ? `&location=${place}` : ""}`}
           data-testid="to-analysis"
         >
           {t("Sales analysis: by hour, day, product, person, payment… →")}
         </Link>
-        <Link className="drill" href={`/reports/stock?on=${to}`} data-testid="to-stock-value">
+        <Link
+          className="drill"
+          href={`/reports/stock?on=${to}${withPlace}`}
+          data-testid="to-stock-value"
+        >
           {t("Stock value on a day →")}
         </Link>
         {seesProfit && (
@@ -451,15 +479,15 @@ export default async function ReportsPage({
         <section className="panel" id="pnl">
           <div className="panel-h">
             <h3>
-              {profile.worksAtName
-                ? t("Profit & Loss at {place}", { place: profile.worksAtName })
-                : t("Profit & Loss")}
+              {placeName ? t("Profit & Loss at {place}", { place: placeName }) : t("Profit & Loss")}
             </h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
               <Rich
                 text={t("Published journal lines, {from} to {to} · <csv>CSV</csv>", { from, to })}
                 tags={{
-                  csv: (c) => <a href={`/reports/export?report=pnl&from=${from}&to=${to}`}>{c}</a>,
+                  csv: (c) => (
+                    <a href={`/reports/export?report=pnl&from=${from}&to=${to}${withPlace}`}>{c}</a>
+                  ),
                 }}
               />
             </span>
@@ -1171,7 +1199,9 @@ export default async function ReportsPage({
                 {t(
                   "The deliveries received in the dates, as their corrections left them, their landed costs shared in; what went back to the suppliers in the dates, at what they owe back; the credits suppliers gave for price; and the bills dated in the dates.",
                 )}{" "}
-                <a href={`/reports/export?report=purchases&from=${from}&to=${to}`}>{t("CSV")}</a>
+                <a href={`/reports/export?report=purchases&from=${from}&to=${to}${withPlace}`}>
+                  {t("CSV")}
+                </a>
               </p>
             </>
           )}
@@ -1734,7 +1764,9 @@ export default async function ReportsPage({
                 )}
                 tags={{
                   csv: (c) => (
-                    <a href={`/reports/export?report=exceptions&from=${from}&to=${to}`}>{c}</a>
+                    <a href={`/reports/export?report=exceptions&from=${from}&to=${to}${withPlace}`}>
+                      {c}
+                    </a>
                   ),
                 }}
               />

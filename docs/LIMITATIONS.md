@@ -489,11 +489,14 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     and the branch's what it sells, so both may show a batch to make for the
     same sales. The kitchen makes; the branch's plan is for the branch to see.
 - **The books by place, what they do not do (release AB, `0056`).**
-  - Only the profit and loss is read by place. The other reports, the
-    dashboard and the daily brief are the café's; each report narrowed to a
-    place comes next.
-  - Someone who works at one place reads that place's profit and loss only;
-    the other reports still show them the café's.
+  - Since `0057` every report that reads what was recorded at a place is
+    read by place, and someone who works at one place reads theirs. What
+    belongs to the café as a whole stays the café's: "Do the books tie?", the
+    trial balance, the balance sheet and the cash flow, the journals, the
+    payables and their ageing, the menu's costing, the dollar rates and the
+    safe, the customers and the points they hold, and the daily brief.
+  - A refused manager's approval (a wrong PIN) has no place: it is on the
+    café's exceptions, not a place's.
   - The bank's card fees and journals by hand are shared: no one place's. So
     is a bill charged to an expense account with no delivery, and a supplier's
     credit on none.

@@ -46,7 +46,11 @@ export default async function DashboardPage() {
     },
     { label: t("dash.orders"), value: String(d.orders), href: `/orders?${day}` },
     { label: t("dash.avgOrder"), value: fmtIQD(d.averageOrder), href: `/orders?${day}` },
-    { label: t("Inventory (1200)"), value: fmtIQD(d.inventoryValue), href: "/inventory" },
+    {
+      label: d.location ? t("Stock at {place}", { place: d.location }) : t("Inventory (1200)"),
+      value: fmtIQD(d.inventoryValue),
+      href: "/inventory",
+    },
     {
       label: t("dash.lowStock"),
       value: String(d.lowStock),
@@ -58,7 +62,15 @@ export default async function DashboardPage() {
   return (
     <div className="grid" style={{ gap: 20 }}>
       <div className="phead">
-        <h1>{t("dash.title")}</h1>
+        <h1>
+          {t("dash.title")}
+          {d.location && (
+            <span className="muted" data-testid="dashboard-at">
+              {" "}
+              · {d.location}
+            </span>
+          )}
+        </h1>
         <span className="sc">
           {today} · {t(profile.timezone)}
         </span>

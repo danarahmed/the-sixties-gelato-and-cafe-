@@ -38,19 +38,24 @@ export interface DailySalesRow {
 export { salesTotals } from "./salesTotals";
 
 /** One row per trading day and channel, in the business's own timezone (H-09). */
-export async function getDailySales(from: string, to: string): Promise<DailySalesRow[]> {
+export async function getDailySales(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<DailySalesRow[]> {
   const c = await db();
-  return rows(await c.rpc("report_daily_sales", { p_from: from, p_to: to }), "daily sales").map(
-    (r: Record<string, unknown>) => ({
-      day: str(r.day),
-      channel: str(r.channel),
-      orders: num(r.orders),
-      net: num(r.net),
-      cogs: num(r.cogs),
-      refunds: num(r.refunds),
-      returnedCost: num(r.returned_cost),
-    }),
-  );
+  return rows(
+    await c.rpc("report_daily_sales", { p_from: from, p_to: to, p_location: place }),
+    "daily sales",
+  ).map((r: Record<string, unknown>) => ({
+    day: str(r.day),
+    channel: str(r.channel),
+    orders: num(r.orders),
+    net: num(r.net),
+    cogs: num(r.cogs),
+    refunds: num(r.refunds),
+    returnedCost: num(r.returned_cost),
+  }));
 }
 
 /** Trading days whose cash has not been counted, oldest first, however long ago. */
