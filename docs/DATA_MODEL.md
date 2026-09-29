@@ -1510,3 +1510,39 @@ approval, wait, key)`** (`waste.record`), on the trail as `inventory.loss`.
   `assert_works_at`, `take_turn_no`, `sent_away`, and the `__run` functions of
   `invite_member`, `set_price`, `record_expense`, `pay_bill` and
   `record_advance`.
+
+### The books by place (`0056`)
+
+- **Each line of the profit and loss at a place, read from its record:**
+  nothing is written to the journals. `pnl_by_place(business, from, to)`
+  puts each published line on a revenue or expense account at the place of
+  the record it was posted for:
+  - a sale, its void and its refund at the branch that sold it;
+  - a delivery, its bill, its corrections, returns and credits where it came
+    in (a bill or a credit with no delivery: no place);
+  - a stock movement, a count or a loss where the stock was; what did not
+    arrive of a transfer, at the place that sent it;
+  - a drawer's session at its branch; a dollar exchange, an expense and an
+    advance where they were recorded;
+  - a platform's payout shared out order by order at each sale's branch (5100
+    its commission, 5200 what else it kept), and a payroll's 6100 by
+    `payroll_approval.gross_by_place`;
+  - a reversal at the place of what it reverses.
+    What belongs to no place (card settlements, journals by hand, corrections)
+    is shared. The places and the shared always add up to the café, account by
+    account.
+- **`payroll_approval.gross_by_place`:** each place's share of an approved
+  payroll's gross, `{place: amount}`, as the people it paid worked when it was
+  approved. A trigger fills it as the payroll is approved; those approved
+  before were filled from their lines.
+- **`report_place(business, location)`:** the place a report is read for.
+  Someone who works at one place gets theirs, and is refused another.
+- **`report_profit_and_loss(from, to, location)`:** the café's (no place named)
+  or one place's. `report_profit_and_loss_by_place(from, to)`: each account at
+  each place that has an amount. Both need `profit.view`.
+- **A year-end close and its reversal:** `year_end_entry(entry)` is a close or
+  the reversal of one (a close can be reversed by hand). Both are left out of
+  the profit and loss, the dashboard, the daily brief and the P&L's journal
+  lines; before, a reversed close counted the year again.
+- **Helpers nobody calls:** `pnl_by_place`, `report_place`, `journal_origin`,
+  `year_end_entry`, `payroll_gross_by_place` and the trigger.

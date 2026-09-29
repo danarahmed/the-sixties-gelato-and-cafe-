@@ -8,6 +8,7 @@ import "server-only";
 import { db, num, numOrNull, rows, str, strOrNull, one } from "./client";
 import type { ExceptionKind, ExceptionRow } from "@/lib/exceptions";
 import { lossReportFrom, type LossReport } from "@/lib/losses";
+import type { PnlPlaceRow } from "@/lib/pnl";
 
 export interface TrialBalanceRow {
   code: string;
@@ -42,15 +43,42 @@ export interface PnlRow {
   amount: number;
 }
 
-export async function getProfitAndLoss(from: string, to: string): Promise<PnlRow[]> {
+/**
+ * The café's profit and loss, or one place's (0056). Someone who works at one
+ * place is given theirs, whichever they ask for.
+ */
+export async function getProfitAndLoss(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<PnlRow[]> {
   const c = await db();
   return rows(
-    await c.rpc("report_profit_and_loss", { p_from: from, p_to: to }),
+    await c.rpc("report_profit_and_loss", { p_from: from, p_to: to, p_location: place }),
     "the profit and loss",
   ).map((r: Record<string, unknown>) => ({
     code: str(r.code),
     name: str(r.name),
     section: str(r.section) as PnlRow["section"],
+    amount: num(r.amount),
+  }));
+}
+
+/**
+ * Each account at each of the café's places, and what belongs to none of
+ * them (0056): only those with an amount.
+ */
+export async function getProfitAndLossByPlace(from: string, to: string): Promise<PnlPlaceRow[]> {
+  const c = await db();
+  return rows(
+    await c.rpc("report_profit_and_loss_by_place", { p_from: from, p_to: to }),
+    "the profit and loss by place",
+  ).map((r: Record<string, unknown>) => ({
+    code: str(r.code),
+    name: str(r.name),
+    section: str(r.section) as PnlPlaceRow["section"],
+    placeId: strOrNull(r.location_id),
+    place: strOrNull(r.location),
     amount: num(r.amount),
   }));
 }

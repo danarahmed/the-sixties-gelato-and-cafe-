@@ -4,6 +4,7 @@ import {
   getExceptions,
   getJournalLines,
   getProfitAndLoss,
+  getProfitAndLossByPlace,
   getReconciliation,
   getTrialBalance,
 } from "@/lib/db/reports";
@@ -58,6 +59,14 @@ export async function GET(request: NextRequest) {
         rows.map((r) => [r.code, r.name, r.section, r.amount]),
       );
       name = `profit-and-loss_${from}_${to}.csv`;
+    } else if (report === "pnl_by_place") {
+      // Each account at each place (0056); "shared" what belongs to none of them.
+      const rows = await getProfitAndLossByPlace(from, to);
+      body = csv(
+        ["code", "account", "section", "place", "amount"],
+        rows.map((r) => [r.code, r.name, r.section, r.place ?? "shared", r.amount]),
+      );
+      name = `profit-and-loss-by-place_${from}_${to}.csv`;
     } else if (report === "journal_lines") {
       // Every published line in the dates, or an account's (0026): the whole
       // ledger for the accountant's own tools.

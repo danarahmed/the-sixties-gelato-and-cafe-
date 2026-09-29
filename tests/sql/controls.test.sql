@@ -164,7 +164,7 @@ select test.eq((
   'reject_stock_count,remove_item_supplier,reopen_payroll,report_balance_sheet,report_cash_flow,'
   'report_customers,report_daily_sales,'
   'report_day_totals,report_document_problems,report_dollars,report_exceptions,report_journal_lines,'
-  'report_losses,report_payments,report_production,report_profit_and_loss,report_purchases,report_purchasing,'
+  'report_losses,report_payments,report_production,report_profit_and_loss,report_profit_and_loss_by_place,report_purchases,report_purchasing,'
   'report_reconciliation,report_sales_analysis,report_sizes_and_addons,report_staff,report_trial_balance,'
   'report_unclosed_days,'
   'report_uncosted_sales,report_usage_variance,request_approval,retire_variant,return_to_supplier,'

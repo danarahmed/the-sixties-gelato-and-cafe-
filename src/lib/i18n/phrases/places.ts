@@ -192,6 +192,20 @@ const phrases: PhraseBook = {
       ar: "{have} متوفّر، و{ordered} في الطلبيات، و{draft} في مسودات الطلبيات، و{way} في الطريق من مكان آخر: {all} إجمالًا.",
       ckb: "{have} بەردەستە، {ordered} لە داواکارییەکاندایە، {draft} لە ڕەشنووسی داواکارییەکاندا و {way} لە ڕێگادایە لە شوێنێکی ترەوە: {all} بە گشتی.",
     },
+
+  // The books by place (0056): each place's profit and loss, side by side.
+  "Profit & Loss by place": { ar: "الأرباح والخسائر حسب المكان", ckb: "قازانج و زیان بەپێی شوێن" },
+  "Profit & Loss at {place}": {
+    ar: "الأرباح والخسائر في {place}",
+    ckb: "قازانج و زیان لە {place}",
+  },
+  Shared: { ar: "مشترك", ckb: "هاوبەش" },
+  "Café total": { ar: "مجموع المقهى", ckb: "کۆی کافێکە" },
+  "Each line is at the place of its record: a sale at the branch that sold it, a loss where the stock was, an expense where it was recorded. A platform's payout is shared out by the branch of each order, a payroll by where each person works. Shared: what belongs to no one place, such as the bank's card fees and journals by hand.":
+    {
+      ar: "كل سطر في مكان سجلّه: البيع في الفرع الذي باعه، والخسارة حيث كان المخزون، والمصروف حيث سُجّل. وتُوزَّع دفعة المنصة حسب فرع كل طلب، والرواتب حسب مكان عمل كل شخص. المشترك: ما لا يخص مكانًا واحدًا، مثل رسوم البطاقات لدى البنك والقيود اليدوية.",
+      ckb: "هەر هێڵێک لە شوێنی تۆمارەکەی خۆیەتی: فرۆشتن لەو لقەی فرۆشتی، زیان لەو شوێنەی کۆگاکەی لێ بوو، خەرجی لەو شوێنەی تۆمار کرا. پارەدانی پلاتفۆرم بەپێی لقی هەر داواکارییەک دابەش دەکرێت، و مووچە بەپێی ئەو شوێنەی هەر کەسێک کاری تێدا دەکات. هاوبەش: ئەوەی هی یەک شوێن نییە، وەک کرێی کارتەکانی بانک و تۆمارە دەستییەکان.",
+    },
 };
 
 export default phrases;
