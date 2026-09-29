@@ -27,6 +27,7 @@ const SCREENS = [
   "/production",
   "/staff",
   "/payroll",
+  "/customers",
   "/journals",
   "/accounting",
   "/reports",
