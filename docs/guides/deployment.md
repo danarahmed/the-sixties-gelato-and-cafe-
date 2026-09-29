@@ -53,6 +53,7 @@ Plan a short window when the café is closed.
 | Documents with the records (`0053`)     | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, the bucket and its rules too) and checked on the live records as three roles in a transaction that was rolled back (see [After `0053`](#after-0053)). The screens were merged ([pull request #42](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/42)) and deployed    |
 | Stock sent between places (`0054`)      | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0054`](#after-0054)). The screens were merged ([pull request #43](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/43)) and deployed            |
 | The tills at each branch (`0055`)       | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0055`](#after-0055)). The screens were merged ([pull request #44](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/44)) and deployed              |
+| The books by place (`0056`)             | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0056`](#after-0056)). The screens were merged ([pull request #45](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/45)) and deployed            |
 
 ## 0. Before you start
 
@@ -2321,6 +2322,82 @@ The security advisor adds the two new functions a signed-in person calls,
 lists the eight made anew with a place again. It notes that `sent_away` names
 no search path, like 39 helpers before it; it is called only inside functions
 that name theirs. The performance advisor's notes are unchanged.
+
+## After `0056`
+
+Migration `0056` (release AB, its third part) reads the books by place.
+
+- **Each line of the profit and loss is at the place of its record:** a sale,
+  its void and its refund at the branch that sold it; a delivery's price
+  difference where it came in; a loss or a count where the stock was; a
+  drawer's difference at its branch; an expense where it was recorded. What
+  did not arrive of a transfer is the loss of the place that sent it.
+- **What spans places is shared out:** a platform's payout by the branch of
+  each order it paid, a payroll by where each person it paid works.
+- **Shared:** what belongs to no one place, such as the bank's card fees and
+  journals by hand.
+- **Read by place:** the profit and loss for the café, for one place, or each
+  side by side. Someone who works at one place reads theirs.
+- **A year-end close reversed by hand** is left out of the profit and loss with
+  the close; before, it counted the year again.
+
+Nothing is written to the journals: each line's place is read from its
+record, which never moves once posted.
+
+What it adds:
+
+- **`payroll_approval.gross_by_place`:** each place's share of an approved
+  payroll's gross, filled as it is approved.
+- **The functions signed-in users may call**, each checking `profit.view`:
+  `report_profit_and_loss_by_place`, new; `report_profit_and_loss`, made anew
+  with a place. With none named it is the café's, as before, so the screens
+  deployed before it call it as they did.
+- **Copies with changes:** the dashboard, the daily brief and the P&L's
+  journal lines leave out a reversed year-end close too.
+- **Helpers nobody calls:** `pnl_by_place`, `report_place`, `journal_origin`,
+  `year_end_entry`, `payroll_gross_by_place` and the trigger.
+
+It goes in before the screens: those deployed before it call nothing it takes
+away.
+
+It was applied on 29 September 2026 with the Supabase connector: one
+`apply_migration` call, one transaction. Before it, a read-only check showed
+the live database still matched the verified `0055` build.
+
+The text stored there is the file byte for byte (md5
+`e2a04b698eb3a4573e2bc27c2fb9dafa`, 25,775 bytes). It was then compared with
+the tested build, object by object, the role permissions and column grants
+included. It is identical, but for the schema `citext` lives in, as before.
+
+On applying, nothing recorded changed: no payroll had been approved, so none
+had a share to fill, and every table's count is as it was.
+
+It was checked on the live records as the owner, the branch manager and the
+barista, in one transaction that was rolled back.
+
+- **The month and the year:** each place's profit and loss adds up to the
+  café's, account by account. This month Main Branch has the sales (356,500
+  IQD), their refunds and discounts, their cost, the platform commission paid
+  from its till, its losses and its drawers' difference. Shared: three
+  expenses recorded before an expense had a place, and two journals by hand.
+- **Main Branch's own profit and loss** is its column.
+- **The branch manager, put at the Central Kitchen,** read the kitchen's
+  (nothing yet) and was refused Main Branch's ("You work at Central Kitchen,
+  not at Main Branch"). They were put back everywhere, and the audit trail has
+  both moves.
+- **The barista** was refused ("needs profit.view").
+- **A year-end close**, posted and reversed by hand, left the year's profit
+  and loss and the dashboard as they were.
+- **The books:** each of the thirteen checks was at nothing before and after,
+  with no document out of step.
+
+Nothing was kept: every table's count is as it was after applying (journals to
+1093, the audit trail to 245).
+
+The security advisor lists the two reports a signed-in person calls,
+`report_profit_and_loss` made anew with a place and
+`report_profit_and_loss_by_place`, each checking `profit.view`, in place of
+the old one. The performance advisor's notes are unchanged.
 
 ## Clearing the test records
 

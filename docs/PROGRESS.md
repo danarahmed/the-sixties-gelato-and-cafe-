@@ -1419,6 +1419,29 @@ browser tests through the real app, or both.
   - **A year-end close reversed by hand** is left out of the profit and loss
     with the close; before, it counted the year again.
 
+  The migration was applied to the live database on 29 September 2026. The
+  text stored there is the file byte for byte, and it matches the tested
+  build object by object, permissions included (the one difference, as
+  before, is the schema `citext` lives in). Nothing recorded changed.
+
+  It was checked on the live records as the owner, the branch manager and the
+  barista, in one transaction that was rolled back:
+  - each place's profit and loss adds up to the café's, account by account,
+    for the month and the year; Main Branch's own is its column; three
+    expenses recorded before an expense had a place, and two journals by
+    hand, are shared;
+  - the branch manager, put at the kitchen, read the kitchen's and was
+    refused Main Branch's, and was put back everywhere; the barista was
+    refused;
+  - a year-end close posted and reversed by hand left the year's profit and
+    loss and the dashboard as they were;
+  - the thirteen checks were at nothing before and after.
+
+  Nothing was kept. The security advisors list the two reports a signed-in
+  person calls, each checking `profit.view`, in place of the old one; the
+  performance advisors' notes are unchanged. The screens went live with
+  [pull request #45](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/45).
+
   Built and tested:
   - a new SQL suite: two branches and the kitchen trading, a void, a refund, a
     transfer short, a spill, an expense, a journal by hand, a platform payout

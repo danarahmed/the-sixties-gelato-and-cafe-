@@ -500,6 +500,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - An expense is the place's it was recorded at, the device's. A cost the
     café shares (one rent for all) is recorded at one place, or as a journal
     by hand, shared.
+  - An expense kept without a place, from before expenses kept one, is
+    shared (three on the live books when `0056` was applied).
   - A payroll is shared out by where each person works when it is approved,
     not by the hours they worked at each place.
   - What did not arrive of a transfer is the loss of the place that sent it.

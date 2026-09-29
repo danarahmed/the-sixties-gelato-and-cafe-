@@ -16,9 +16,9 @@ release X (customers and their points, `0050`), release Y (the sales
 analysis, the stock's value on a day and what was bought, `0051`), release Z
 (the balance sheet and the cash-flow statement, `0052`), release AA (every
 report printed or saved as a PDF, and the documents kept with the records,
-`0053`) and the first two parts of release AB (the stock sent between the
-café's places, `0054`, and the tills at each branch and who works where,
-`0055`) since 29 September.
+`0053`) and the first three parts of release AB (the stock sent between the
+café's places, `0054`, the tills at each branch and who works where, `0055`,
+and the books by place, `0056`) since 29 September.
 What was built differs from the plan below in these ways.
 
 Release J:
