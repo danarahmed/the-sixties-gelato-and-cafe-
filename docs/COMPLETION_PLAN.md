@@ -11,6 +11,7 @@ payments, `0042`), release R (US dollars at the till, `0043`), release S
 release T (the buying list, `0045`), release U (batches, their use-by dates
 and lots, and the day's plan, `0046`) and release V (losses by kind with their
 accounts, giveaways at the till and the loss report, `0047`–`0048`) since 28
+September, and release W (staff, their hours and their pay, `0049`) since 29
 September.
 What was built differs from the plan below in these ways.
 

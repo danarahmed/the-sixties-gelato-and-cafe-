@@ -45,6 +45,7 @@ Plan a short window when the café is closed.
 | What to buy (`0045`)                    | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0045`](#after-0045)). The screens were merged ([pull request #34](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/34)) and deployed                  |
 | Batches and use-by dates (`0046`)       | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0046`](#after-0046)). The screens were merged ([pull request #35](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/35)) and deployed                  |
 | Losses and giveaways (`0047`–`0048`)    | ✅ Migrations applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in transactions that were rolled back (see [After `0048`](#after-0048)). The screens were merged ([pull request #36](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/36)) and deployed                 |
+| Staff and pay (`0049`)                  | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked as four roles in a transaction that was rolled back (see [After `0049`](#after-0049)). The screens were merged ([pull request #37](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/37)) and deployed                                 |
 
 ## 0. Before you start
 
@@ -1676,6 +1677,143 @@ The security advisor adds the three new functions above (`record_loss`,
 performance advisor adds notes that eight links of the two new tables (a
 loss's place, journal, recorder and approver; a line's business, item,
 product and batch) have no index of their own.
+
+## After `0049`
+
+Migration `0049` (release W) keeps who works here, their hours and their
+pay:
+
+- **Staff** (kept by the owner and the managers; read by the accountant and
+  the auditor too): everyone who works here, with a login or without: what
+  they do, their branch, when they started and their last day; the PIN each clocks in with (one too easy to guess is refused);
+  and the week's schedule, one stretch of hours a person a day. Their pay (by
+  the month, the day or the hour, a day's hours, and what overtime is paid
+  at) is set by those who run payroll and seen only by the owner, the general
+  manager, the accountant and the auditor.
+- **Clocking in and out at the till** (🕐): a name and a PIN. Three wrong PINs
+  from one login wait 15 minutes; twenty for one person in a day pause their
+  clocking for the day, or until a manager sets them a new PIN.
+- **The hours** (Staff): day by day, with lateness, leaving early, absence
+  and overtime, counted and never deducted by themselves; a manager adds,
+  corrects or cancels a record, always with why.
+- **Payroll** (the owner, the general manager and the accountant): a month
+  drafted from the pay and the hours; additions and deductions, each with
+  why; advances taken back; approved once the month is over (Dr 6100
+  Salaries, Cr 2100 Salaries payable and 1300 Employee advances, on the
+  month's last day); reopened while nothing is paid from it; paid to one
+  person or to everyone at once from the till, the safe, the bank or the owner
+  (Dr 2100). Advances are given from the same places (Dr 1300), and cancelled
+  while none of them is taken back.
+- **Reports → Staff**: the hours, person by person; and, for those who see
+  payroll, what staff cost against the sales, month by month.
+- **The books**: two new checks, the salaries owed against 2100 and the
+  advances against 1300; the safe and the drawer count what advances and
+  salaries took from them; the close warns when the month's payroll is not
+  approved; 1300 and 2100 move only through their records.
+- **Alerts**: someone still clocked in after the rule's hours (orange, red
+  after a day); last month's payroll not approved, or not all paid, by
+  payday.
+- **The café's rules** (Settings): overtime paid at 150%, late after 5
+  minutes, still clocked in after 16 hours, payday the 1st, each changed
+  there.
+
+What it adds:
+
+- two accounts in each café's chart, 1300 Employee advances and 2100
+  Salaries payable (6100 Salaries was there);
+- four permissions, in 13 role rows: `staff.manage` and `attendance.edit`
+  (owner, general manager, branch manager), `payroll.view` (owner, general
+  manager, accountant, auditor) and `payroll.run` (owner, general manager,
+  accountant);
+- the tables `employee`, `shift_schedule`, `attendance`, `clock_attempt`,
+  `employee_advance`, `payroll_run`, `payroll_line`, `payroll_approval`,
+  `salary_payment` and `salary_payment_line`. The people and their hours are
+  readable by whoever looks after staff, their hours or their pay; pay,
+  payrolls, advances and salaries paid only by those who see payroll; a
+  person's pay and PIN are never read straight from the table, and the PINs
+  typed at the till by no one. Each is written only by the functions below;
+- the functions signed-in users may call, each checking its permission:
+  `save_employee`, `set_employee_left` and `save_schedule` (`staff.manage`,
+  keyed); `set_clock_pin` (`staff.manage`, or the person for their own);
+  `staff_list`, `staff_schedule`, `attendance_list` and `report_staff`
+  (`staff.manage`, `attendance.edit` or `payroll.view`, the pay only with
+  `payroll.view`); `clock_board`, `clock_in` and `clock_out` (`sale.create`,
+  `staff.manage` or `attendance.edit`, the last two keyed); `add_attendance`,
+  `correct_attendance` and `cancel_attendance` (`attendance.edit`, keyed);
+  `set_employee_pay`, `record_advance`, `cancel_advance`, `draft_payroll`,
+  `adjust_payroll_line`, `approve_payroll`, `reopen_payroll`, `pay_salary`,
+  `pay_payroll` and `cancel_salary_payment` (`payroll.run`, keyed); and
+  `employee_advances`, `payroll_runs` and `payroll_detail` (`payroll.view`);
+- the audit trail's record of pay and payroll, read only by those who see
+  payroll;
+- `reconciliation_checks` with the two new checks (twelve in all);
+  `period_close_checklist` with the warning; `document_problems` with the
+  payrolls, advances and salaries paid; the drawer's statement naming whom an
+  advance or a salary was paid to; bills and supplier's credits refusing
+  1300;
+- `alert_conditions` wrapped (0046's kept as `alert_conditions_0046`, called
+  by nobody signed in): the two staff alerts, linked to `/staff#attendance`
+  and `/payroll`.
+
+It goes in before the screens: those deployed before it keep working, since
+nothing they call changed its parameters, and the two new checks come with
+their names; the new screens keep the people, the hours and the payroll.
+
+It was applied on 29 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0048` build. The text stored there
+is the file byte for byte (md5 `2a3e0d98d0c0a8e93b50126f356de806`, 196,190
+bytes). It was then compared with the tested build, object by object, the role
+permissions and column grants included: identical, but for the schema `citext`
+lives in, as before.
+
+On applying, the two new accounts were added to the café's chart (38
+accounts) and the 13 role rows to the permissions; no record changed.
+
+It was checked as the owner, a branch manager, the barista and the accountant,
+in one transaction that was rolled back:
+
+- **The branch manager** added someone who works here, starting on 1 August;
+  sent again with the same key, the same person. A PIN of 1234 was refused
+  ("Choose a PIN that is harder to guess"), another was set; the list showed
+  them no pay, and setting it was refused ("needs payroll.run"). They put the
+  person on today's schedule, 08:00 to 16:00.
+- **The owner** set the pay: 600,000 IQD a month, 8 hours a day; sent again
+  with the same key, one change.
+- **The barista, at the till:** the person on the board with their shift at
+  08:00; a wrong PIN refused ("That PIN is not right"); clocked in; clocking
+  in again refused ("… is clocked in already, since 29 Sep 10:50"); clocked
+  out. Reading the staff list and the payrolls was refused.
+- **The branch manager** added ten hours nobody clocked on 10 August, with
+  why. Payroll was refused ("needs payroll.view"); the audit trail showed
+  them no record of pay (the owner saw one), and the staff report no cost.
+- **The alert:** red, "The payroll for 2026-08 is not approved: salaries
+  were due on 01 Sep".
+- **An advance:** the owner gave 50,000 IQD from the bank (Dr 1300 / Cr 1020);
+  sent again with the same key, the same advance.
+- **The accountant's payroll for August:** drafted at 600,000 + 7,500
+  overtime (two hours over the day, at 150%) − 50,000 advance = 557,500; a
+  25,000 Eid bonus added, with why; approved, journal dated 31 August (Dr
+  6100 632,500 / Cr 2100 582,500 / Cr 1300 50,000); paid to everyone from
+  the bank, 582,500 (Dr 2100 / Cr 1020), the payroll paid. The advance owed
+  came back to 0, and the alert cleared.
+- **The report:** the person's day of 600 minutes; August's staff cost of
+  632,500.
+- **The books:** three journals; all twelve checks at zero before and after;
+  no record without its journal; on the audit trail, the person, their PIN,
+  the schedule, the pay, the hours added, the advance, and the payroll's
+  draft, adjustment, approval and payment.
+
+Nothing was kept: every table's count is as it was (journals to 1091, the
+audit trail to 195), but for the two new accounts and the 13 role rows; the
+new tables are empty.
+
+The security advisor adds the 27 new functions above, each checking its
+permission; three small helpers with no fixed search path, like the 36 before
+them; and `clock_attempt`, readable by no one, like `pin_attempt`. The
+performance advisor adds notes that 30 links of the new tables have no index
+of their own, and that two new indexes are not used yet (their tables are
+empty).
 
 ## Clearing the test records
 

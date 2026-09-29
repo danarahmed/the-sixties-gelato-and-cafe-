@@ -1,17 +1,17 @@
 # Progress & Status
 
-_Last updated: 2026-09-28._ This is the one place that says what works and what
+_Last updated: 2026-09-29._ This is the one place that says what works and what
 does not. A feature is marked done only when it runs on the real database path
 and is tested. Tested means the SQL suites on real PostgreSQL 16 and 17, the
 browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0048` and the rebuilt app. The SQL
-  checks (49, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (25, every role, every screen in
+- **Built and verified:** migrations `0014`–`0049` and the rebuilt app. The SQL
+  checks (50, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (26, every role, every screen in
   Arabic and Kurdish, and a lost answer on each kind of screen), the unit and
-  contract tests (412) and a production build all pass.
+  contract tests (450) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -969,6 +969,69 @@ browser tests through the real app, or both.
   manager's PIN, the report, the screens in Arabic and Kurdish), unit tests,
   and every new text in Arabic and Kurdish.
 
+- **Staff, their hours and their pay (release W, migration `0049`).** The
+  café's people had logins and roles and nothing else: no record of who works
+  here, their hours, or what they are paid, and salaries were an expense typed
+  by hand. Now **Staff** keeps everyone who works here (with or without a
+  login), the PIN each clocks in with, and the week's schedule; the hours are
+  shown day by day with lateness, leaving early, absence and overtime, and a
+  manager corrects, adds or cancels a record, always with why. Everyone clocks
+  in and out at the till (**🕐**) with their name and PIN; wrong PINs are
+  counted and too many pause clocking. **Payroll** drafts a month from the pay
+  and the hours, takes additions and deductions with why, takes advances back,
+  is approved once the month is over (Dr 6100 Salaries, Cr 2100 Salaries
+  payable, Cr 1300 Employee advances, on the month's last day), is reopened
+  while nothing is paid, and is paid to one person or everyone from the bank,
+  the safe, the till or the owner. Pay is seen only by the owner, the general
+  manager, the accountant and the auditor. **Reports → Staff** gives the
+  hours, and what staff cost against sales for those who see payroll; two new
+  checks tie salaries owed to 2100 and advances to 1300; the close warns when
+  a month's payroll is not approved; two alerts watch someone clocked in too
+  long and salaries due. The migration was applied to the live database on
+  29 September 2026. The text stored there is the file byte for byte, and it
+  matches the tested build object by object, permissions included (the one
+  difference, as before, is the schema `citext` lives in). On applying, the
+  two new accounts (1300 and 2100) joined the café's chart and the four new
+  permissions their 13 role rows; no record changed. It was checked as the owner,
+  a branch manager, the barista and the accountant, in one transaction that
+  was rolled back:
+  - the branch manager added someone who works here (sent again with its
+    key, the same person), was refused a PIN of 1234 and set another, saw no
+    pay and could not set it, and put them on today's schedule; the owner
+    set their pay, 600,000 IQD a month;
+  - at the till, the barista saw them on the board with their shift, was
+    refused a wrong PIN, clocked them in, was refused clocking them in again,
+    and clocked them out; but could not read the staff list or the payrolls;
+  - the branch manager added ten hours nobody clocked on 10 August, with
+    why; could not open payroll; and saw no record of pay on the audit trail
+    and no staff cost in the report;
+  - the salaries-due alert was red for August; the owner gave a 50,000 IQD
+    advance from the bank (sent again with its key, the same advance);
+  - the accountant drafted August (600,000 + 7,500 overtime − 50,000 advance
+    = 557,500), added a 25,000 bonus with why, approved it (Dr 6100 632,500,
+    Cr 2100 582,500 and 1300 50,000, dated 31 August) and paid everyone from
+    the bank, 582,500; the advance owed came back to zero and the alert
+    cleared;
+  - all twelve checks stayed at zero, and no record was left without its
+    journal.
+
+  Nothing was kept: every table's count is as it was, but for the two new
+  accounts and the 13 role rows. The security advisors add the 27 new
+  functions a signed-in person calls, each checking its permission; the
+  performance advisors add notes on the new tables' links. The screens went
+  live with
+  [pull request #37](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/37). Built and
+  tested: a new SQL suite (the people, PINs, the schedule, clocking and its
+  limits, the hours corrected, added and cancelled, pay by the month, the day
+  and the hour, overtime and lateness, advances, payroll drafted, adjusted,
+  approved, reopened and paid, the books, the alerts, the report, who may
+  and keys), races in the concurrency script (the same person clocked in at
+  once, the same month drafted and the same salary paid by ten people), a new
+  browser suite (a person added with a PIN and a schedule, clocked in and out
+  at the till, the hours corrected, an advance, a month's payroll drafted,
+  adjusted, approved and paid, the journals, the report, and who sees the
+  pay), unit tests, and every new text in Arabic and Kurdish.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -1021,7 +1084,7 @@ browser tests through the real app, or both.
 | ------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Sign-in, My account | everyone                                                   | Sign in, create a login for an invited email, reset and change password                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | Dashboard           | owner, managers, accountant, auditor                       | What needs someone first: the alerts, red then orange, answered with a note or snoozed with a reason (owner, managers, accountant); yesterday's brief; then today from the books: net revenue, gross profit, orders, stock value, low and negative stock                                                                                                                                                                                                                                                                                                                                                       |
-| POS                 | cashier, barista, managers                                 | Full-screen till: categories, search in three languages, photos, favourites; tables and bills paid later (print, split, move, cancel); cash with change (while the drawer is open), card, platform-paid with the platform's order number; the drawer opened, closed and handed over with a blind count; 80 mm bill and receipt printing; exactly-once payment and retry; honest offline; a product\'s size and add-ons in one sheet                                                                                                                                                                            |
+| POS                 | cashier, barista, managers                                 | Full-screen till: categories, search in three languages, photos, favourites; tables and bills paid later (print, split, move, cancel); cash with change (while the drawer is open), card, platform-paid with the platform's order number; the drawer opened, closed and handed over with a blind count; 80 mm bill and receipt printing; exactly-once payment and retry; honest offline; a product\'s size and add-ons in one sheet; clocking in and out with a name and a PIN                                                                                                                                 |
 | Orders              | cost viewers                                               | Every sale; void (until its session closes) and refund (after), with reasons                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Sales               | cost viewers                                               | Daily summaries; the drawer: open, close or hand over a session with a blind count, keep a float and send the rest to the safe or the bank, close a session left open (managers), what an open drawer should hold (owner, general manager, accountant, auditor); the cash sessions, each with its statement and its over or short; move cash between the till, the safe, the bank and the owner; settle the card takings against the terminal and the bank (owner, general manager, accountant); the dollar's rate (managers set it), the dollars held, and exchanging them for dinars (managers, accountants) |
 | Vendors             | cost viewers                                               | Statements, and a statement between two dates to print; bills (for a receipt or an account), payments saying where the money came from, cancel a bill, payable ageing; the supplier's credit notes, recorded (purchasing, managers, accountant) and set against bills (owner, general manager, accountant); each vendor's details and how many days a delivery takes                                                                                                                                                                                                                                           |
@@ -1032,19 +1095,21 @@ browser tests through the real app, or both.
 | Stock Count         | counter; reviewers                                         | Blind count while trading, one at a time; submit or cancel; second-person review and approval                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Delivery Platforms  | cost viewers                                               | What each platform owes, order by order, and what 1100 holds that no order explains; match a pasted statement and post the payout it proposes (owner, general manager, accountant); cancel a statement posted; platform sales and their margin                                                                                                                                                                                                                                                                                                                                                                 |
 | Production          | cost viewers, baristas                                     | Record a batch with a preview of what it uses and makes; batch recipes (a base, then its flavours); batch history with cost per unit; cancel a batch                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Staff               | owner, managers; accountant, auditor (reading)             | Everyone who works here, with or without a login: their job, branch, start and last day, and the PIN they clock in with; the week's schedule; the hours day by day with lateness, leaving early, absence and overtime, corrected, added or cancelled with why (managers); pay by the month, the day or the hour, set by those who run payroll and seen only by those who see it                                                                                                                                                                                                                                |
+| Payroll             | owner, general manager, accountant; auditor (reading)      | A month drafted from the pay and the hours; additions and deductions with why; advances given, taken back and cancelled; approved once the month is over (6100, 2100, 1300), reopened while nothing is paid, and paid to one person or everyone from the till, the safe, the bank or the owner; each payroll with its lines, payments and journals                                                                                                                                                                                                                                                             |
 | Journals            | cost viewers (posting: accountant, owner, general manager) | Register, manual journals (draft/publish), reversal, owner's control correction                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | Chart of Accounts   | cost viewers                                               | Trial balance by period, closing checklist, lock and reopen, audit trail, CSV                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, sales by payment method, dollars, purchasing, payable ageing, product margin, sizes and add-ons, CSV                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| Settings            | owner, general manager                                     | People and roles, business configuration, the alert thresholds, locations, the role matrix                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, sales by payment method, dollars, purchasing, payable ageing, product margin, sizes and add-ons, losses, staff hours and what staff cost, CSV                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Settings            | owner, general manager                                     | People and roles, business configuration, the alert thresholds, the café's rules, locations, the role matrix                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ## Tests
 
-| Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                | Result      |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                                                                                                                                                                                                                                                       | 379 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 34 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing)                                                                                                                                                                                        | 46 passing  |
-| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing | 23 passing  |
-| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                            | green       |
+| Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Result      |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                                                                                                                                                                                                                                                                                                        | 450 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 39 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll)                                                                                                                                                                                    | 50 passing  |
+| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll | 26 passing  |
+| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                             | green       |
 
 What is not built, and why, is in [`LIMITATIONS.md`](LIMITATIONS.md); the order
 of the next work is in [`ROADMAP.md`](ROADMAP.md).
