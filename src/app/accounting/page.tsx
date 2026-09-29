@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PrintButton } from "@/components/PrintButton";
+import { PrintHead } from "@/components/PrintHead";
 import { getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
@@ -51,8 +53,15 @@ export default async function AccountingPage({
 
   return (
     <div className="grid" style={{ gap: 18 }}>
+      <PrintHead
+        business={profile.businessName}
+        title={t("Trial balance")}
+        period={t("{from} to {to}", { from, to })}
+        timezone={profile.timezone}
+      />
       <div className="phead">
         <h1>{t("nav.chart")}</h1>
+        <PrintButton />
         <span className="sc">{t("Trial balance & closing the period")}</span>
         <div className="sp">
           <span className={`badge ${totalDebit === totalCredit ? "ok" : "err"}`}>

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PrintButton } from "@/components/PrintButton";
+import { PrintHead } from "@/components/PrintHead";
 import { getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { requirePermission } from "@/lib/auth/session";
@@ -48,8 +50,15 @@ export default async function UsagePage({
 
   return (
     <div className="grid" style={{ gap: 16 }}>
+      <PrintHead
+        business={profile.businessName}
+        title={t("nav.usage")}
+        period={t("{from} to {to}", { from, to })}
+        timezone={profile.timezone}
+      />
       <div className="phead">
         <h1>{t("nav.usage")}</h1>
+        <PrintButton />
         <span className="sc">{t("{from} to {to} · between each item's counts", { from, to })}</span>
       </div>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>

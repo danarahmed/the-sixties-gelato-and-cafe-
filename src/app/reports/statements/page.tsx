@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PrintButton } from "@/components/PrintButton";
+import { PrintHead } from "@/components/PrintHead";
 import { getMsg, getT } from "@/lib/i18n/server";
 import { requirePermission } from "@/lib/auth/session";
 import { getBalanceSheet, getCashFlow } from "@/lib/db/statements";
@@ -135,8 +137,15 @@ export default async function StatementsPage({
 
   return (
     <div className="grid" style={{ gap: 16 }}>
+      <PrintHead
+        business={profile.businessName}
+        title={t("Balance sheet and cash flow")}
+        period={t("{from} to {to}", { from, to })}
+        timezone={profile.timezone}
+      />
       <div className="phead">
         <h1>{t("Balance sheet and cash flow")}</h1>
+        <PrintButton />
         <span className="sc">
           <Link className="drill" href={`/reports?from=${from}&to=${to}`}>
             {t("← Reports")}

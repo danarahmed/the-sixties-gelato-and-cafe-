@@ -13,8 +13,9 @@ and lots, and the day's plan, `0046`) and release V (losses by kind with their
 accounts, giveaways at the till and the loss report, `0047`–`0048`) since 28
 September, and release W (staff, their hours and their pay, `0049`),
 release X (customers and their points, `0050`), release Y (the sales
-analysis, the stock's value on a day and what was bought, `0051`) and release
-Z (the balance sheet and the cash-flow statement, `0052`) since 29 September.
+analysis, the stock's value on a day and what was bought, `0051`), release Z
+(the balance sheet and the cash-flow statement, `0052`) and the first part of
+release AA (every report printed or saved as a PDF) since 29 September.
 What was built differs from the plan below in these ways.
 
 Release J:
@@ -558,6 +559,24 @@ Release Z:
   sheet at the end of the day before the dates and at their end, side by
   side, and the cash flow of the dates between them, checked against each
   other. A year of dates at most; CSV; a PDF waits for release AA.
+
+Release AA:
+
+- **In two parts.** The print layouts need no migration and went live first;
+  the documents kept with the records (`0053`) follow.
+- **The browser's own PDF,** as D17 proposed: **Print or save as PDF** readies
+  the page for paper and opens the print window, where **Save as PDF** keeps
+  it. The Arabic and Kurdish are shaped by the browser, right to left, as on
+  the screen, and nothing is added to the app.
+- **On paper** the menu, the top bar, the forms, the buttons and the links in
+  the page's heading are left out; the tables print black on white, their
+  headings repeated on each page, their cells closer, so that every report
+  fits the width of A4 upright in each language; and a heading prints the
+  café, the report, its dates and when it was read.
+- **Every report:** Reports and its three pages, the trial balance, the audit
+  trail, Journals and an account's ledger, the usage report, an item's
+  movements, a cash session's statement and a payroll. The till's bills and
+  receipts, a purchase order and a vendor's statement keep their own print.
 
 **Basis:**
 

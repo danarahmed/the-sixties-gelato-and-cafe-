@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PrintButton } from "@/components/PrintButton";
+import { PrintHead } from "@/components/PrintHead";
 import { getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { requirePermission } from "@/lib/auth/session";
@@ -68,8 +70,15 @@ export default async function AuditPage({
 
   return (
     <div className="grid" style={{ gap: 16 }}>
+      <PrintHead
+        business={profile.businessName}
+        title={t("nav.audit")}
+        period={t("{from} to {to}", { from, to })}
+        timezone={profile.timezone}
+      />
       <div className="phead">
         <h1>{t("nav.audit")}</h1>
+        <PrintButton />
         <span className="sc">{t("Who changed what, with the values before and after")}</span>
       </div>
 
@@ -154,7 +163,7 @@ export default async function AuditPage({
                     <td>{e.by ?? <span className="badge warn">{t("No one signed in")}</span>}</td>
                     <td>{t(e.label)}</td>
                     <td>{subjectIn(e.subject, e.action, t, msg)}</td>
-                    <td style={{ fontSize: ".84rem" }}>
+                    <td className="changes" style={{ fontSize: ".84rem" }}>
                       {e.changes.length === 0 ? (
                         <span className="muted">—</span>
                       ) : (

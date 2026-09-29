@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PrintButton } from "@/components/PrintButton";
+import { PrintHead } from "@/components/PrintHead";
 import { getMsg, getT } from "@/lib/i18n/server";
 import type { T } from "@/lib/i18n/core";
 import { has, requirePermission } from "@/lib/auth/session";
@@ -84,8 +86,15 @@ export default async function StockCardPage({
 
   return (
     <div className="grid" style={{ gap: 16 }}>
+      <PrintHead
+        business={profile.businessName}
+        title={t("Stock card: {name}", { name: item.name })}
+        period={t("{from} to {to}", { from, to })}
+        timezone={profile.timezone}
+      />
       <div className="phead">
         <h1>{t("Stock card: {name}", { name: item.name })}</h1>
+        <PrintButton />
         <span className="sc">
           {t("{type} · {from} to {to} · in {unit}", {
             type: t(itemTypeLabel(item.itemType)),

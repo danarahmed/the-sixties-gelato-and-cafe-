@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PrintButton } from "@/components/PrintButton";
+import { PrintHead } from "@/components/PrintHead";
 import { getT } from "@/lib/i18n/server";
 import { requirePermission } from "@/lib/auth/session";
 import { getSessionStatement } from "@/lib/db/cash";
@@ -54,10 +56,16 @@ export default async function SessionStatementPage({
 
   return (
     <div className="grid" style={{ gap: 16 }}>
+      <PrintHead
+        business={profile.businessName}
+        title={s.kind === "session" ? t("Session {no}", { no: String(s.no) }) : t("Drawer count")}
+        timezone={profile.timezone}
+      />
       <div className="phead">
         <h1>
           {s.kind === "session" ? t("Session {no}", { no: String(s.no) }) : t("Drawer count")}
         </h1>
+        <PrintButton />
         <span className="sc">
           <Link className="drill" href="/sales/sessions">
             {t("Cash sessions")}

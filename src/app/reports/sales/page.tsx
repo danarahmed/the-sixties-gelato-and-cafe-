@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PrintButton } from "@/components/PrintButton";
+import { PrintHead } from "@/components/PrintHead";
 import { getLocale, getMsg, getT } from "@/lib/i18n/server";
 import { requirePermission } from "@/lib/auth/session";
 import { getSalesAnalysis } from "@/lib/db/analysis";
@@ -104,8 +106,15 @@ export default async function SalesAnalysisPage({
 
   return (
     <div className="grid" style={{ gap: 16 }}>
+      <PrintHead
+        business={profile.businessName}
+        title={t("Sales analysis")}
+        period={t("{from} to {to}", { from, to })}
+        timezone={profile.timezone}
+      />
       <div className="phead">
         <h1>{t("Sales analysis")}</h1>
+        <PrintButton />
         <span className="sc">
           <Link className="drill" href={`/reports?from=${from}&to=${to}`}>
             {t("← Reports")}

@@ -38,7 +38,8 @@ procedure, and export for an external accountant.
 
 - **CSV from the app:** the trial balance (Chart of Accounts), the P&L and the
   reconciliation (Reports), each for the dates chosen. Only people who may see
-  costs can download them. PDF export is not built yet.
+  costs can download them. Every report also prints, or saves as a PDF,
+  from its **Print or save as PDF** button.
 - Raw export any time:
   ```bash
   psql "$DATABASE_URL" -c "\copy (select * from sales_order) to 'sales.csv' csv header"
