@@ -1022,3 +1022,60 @@ spends 100, leaving 5. Two espressos given back are 2,500: the 2,500 kept earns
 2, so 3 are taken back, and half the 100 spent (50) comes back: 52. The other
 two given back take back the last 2 and give back the other 50: 100, as before
 the sale.
+
+## 15. The sales analysis, the stock's value on a day, and what was bought (`0051`)
+
+**The sales of the dates** are those paid in them by the café's clock, voided
+ones left out. Seen by the lines they sold (every way but the add-ons and the
+payments), each line counts as it was sold, its add-ons with it:
+
+```
+sold for   = what the line came to before the discount (quantity × unit price, add-ons in)
+discount   = its share of the sale's discount
+net        = sold for − discount                  (the lines of a sale add up to it)
+cost       = what it used, at the cost it was sold at
+margin     = net − cost
+given back = what the sale's refunds gave back of the line, whenever they were made
+kept       = net − given back
+margin kept = kept − (cost − the cost the refunds put back)
+```
+
+So the products, the categories, the sizes, the hours, the days, the people,
+the channels and the branches all add up to the same sales. An order is
+counted once in a row however many of its lines are in it, so the rows' orders
+can add up to more than the total's. A refund from before refunds by the item
+(`0037`) gave back the whole sale; the cost it put back is shared over the
+sale's lines by their cost.
+
+**The hour and the weekday** are the café's clock's: the hour 00 to 23, and
+the weekday from Saturday (0) to Friday (6).
+
+**The add-ons** are each as sold on its line, its share of the line's
+discount taken off (as on the receipt); refunds are not taken off them.
+
+**The payments** are what each way of paying took of the sales, their refunds
+given back the same way (a refund from before refunds by the item, by its
+sale's first payment): paid − given back = kept, and all the ways come to the
+sales' net.
+
+**The stock's value at the end of a day**, item by item and in all:
+
+```
+in stock = Σ quantity of every movement before the day's end
+value    = Σ value × sign(quantity) of the same movements
+```
+
+— the stock ledger side of the books check, set against what 1200 held then
+(`gl_balance_at`); the two agree when the books tie.
+
+**What was bought in the dates:** each delivery received in them, as its
+latest correction left it (a delivery reversed whole counts nothing), its
+landed costs shared in; by supplier, less what went back to them in the dates
+(at what they owe back) and the credits they gave for price; and by item, what
+a unit came to (received ÷ quantity).
+
+Worked example (the SQL test): four sales of a day come to 17,300 (17,750 less
+a 450 discount) and used 1,750: a margin of 15,550. One espresso of a sale
+given back, 2,500, leaves 14,800 kept and a margin kept of 13,050. By product,
+the espressos come to 15,500 and the waters 1,800; by payment, the card took
+11,250 (2,500 given back that way) and the cash 6,050, together the 17,300.

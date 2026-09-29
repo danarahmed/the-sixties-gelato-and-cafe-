@@ -1339,3 +1339,20 @@ approval, wait, key)`** (`waste.record`), on the trail as `inventory.loss`.
 - **Row security:** the customers, their addresses and their points are read
   with `customer.view`; the till reads a customer through `find_customer` and
   `customer_at_till` only.
+
+### The sales analysis, the stock's value on a day, and what was bought (`0051`)
+
+- **No table changes.** Three functions, each needing `cost.view`:
+  `report_sales_analysis` (the dates, `p_by` and `p_then`, and `p_channel`,
+  `p_location`, `p_category` and `p_cashier` to narrow it; the ways: `hour`,
+  `weekday`, `date`, `product`, `category`, `size`, `addon`, `employee`,
+  `payment`, `channel`, `branch`),
+  `inventory_valuation(as_of, location)` and `report_purchases(from, to)`.
+- **Helpers nobody calls:** `sales_dim_key` (a sale's key by each way),
+  `sales_dim_names` (a key's name in the three languages) and
+  `sales_analysis_row` (a row with its names and figures).
+- **What they read:** the sales, their lines and add-ons, their payments, the
+  refunds by the item and their payments (and, before them, the whole refunds
+  on `sale_adjustment`), the bills cancelled; the stock ledger and 1200; the
+  deliveries as `receipt_state` gives them, the returns to suppliers, the
+  suppliers' credits for price and the bills.
