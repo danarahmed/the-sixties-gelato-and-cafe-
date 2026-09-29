@@ -188,6 +188,24 @@ asks for on one page:
 Each account opens its journals, and **CSV** takes either statement to a
 spreadsheet. Pick **This year** for the year so far.
 
+## Keeping the paper with the record
+
+A delivery note, a supplier's bill or credit note, a return slip and the
+receipt for an expense can be kept with their record, as a photo or a PDF.
+**📎** by the record's number opens them: on Purchasing (deliveries and
+returns), Vendors (bills, credit notes, and each supplier's statement) and
+Expenses. The number beside it says how many are kept.
+
+- On a phone, **📷 Take a photo** opens the camera. On a computer, **📄
+  Choose a picture or a PDF** takes the scan or the supplier's email
+  attachment.
+- A large photo is made smaller before it is sent, and stays readable.
+- A wrong one is **taken off**, saying why. It is never deleted: the page
+  lists it apart, and the audit trail says who took it off and why.
+
+Whoever records that kind of record attaches its papers. Whoever sees costs,
+you and the accountant among them, sees them.
+
 **Print or save as PDF**, at the top of this page and of every other report,
 prints it headed with the café, the report and its dates, without the menu.
 In the print window, choose **Save as PDF** to keep it as a file or send it

@@ -6,6 +6,7 @@ import { fmtIQD } from "@/lib/format";
 import { businessToday } from "@/lib/dates";
 import { VendorsClient } from "@/components/books/VendorsClient";
 import { getSupplierCredits } from "@/lib/db/purchasing";
+import { getDocumentCounts } from "@/lib/db/documents";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +67,17 @@ export default async function VendorsPage() {
     getSupplierCredits(),
   ]);
   const ageing = ageBills(openBills);
+  // The documents kept with each bill and credit note (0053).
+  const [billDocs, creditDocs] = await Promise.all([
+    getDocumentCounts(
+      "purchase_invoice",
+      openBills.map((b) => b.id),
+    ),
+    getDocumentCounts(
+      "supplier_credit",
+      credits.map((c) => c.id),
+    ),
+  ]);
 
   return (
     <div className="grid" style={{ gap: 18 }}>
@@ -150,6 +162,7 @@ export default async function VendorsPage() {
           )
           .map((a) => ({ code: a.code, name: a.name }))}
         canCredit={canBill}
+        docs={{ ...billDocs, ...creditDocs }}
       />
 
       <p className="muted" style={{ fontSize: ".76rem", lineHeight: 1.7, maxWidth: 780 }}>

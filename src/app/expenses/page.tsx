@@ -5,6 +5,8 @@ import { fmtIQD } from "@/lib/format";
 import { businessToday } from "@/lib/dates";
 import { ExpenseEntry } from "@/components/books/ExpenseEntry";
 import { EmptyState } from "@/components/ui";
+import { DocumentsLink } from "@/components/documents/DocumentsLink";
+import { getDocumentCounts } from "@/lib/db/documents";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,11 @@ export default async function ExpensesPage() {
     getGlAccounts(),
     getPeriods(),
   ]);
+  // The receipts kept with each expense (0053).
+  const docs = await getDocumentCounts(
+    "expense",
+    rows.map((r) => r.id),
+  );
   const period = periodFor(periods, today);
   const locked = period?.status === "locked";
   // A reversed expense stays listed, marked, but is no longer spent (audit P1-2).
@@ -93,6 +100,7 @@ export default async function ExpensesPage() {
                     <td>{r.date}</td>
                     <td>
                       {r.description}
+                      <DocumentsLink kind="expense" id={r.id} count={docs[r.id] ?? 0} />
                       {r.reversedBy !== null && (
                         <span className="badge warn" style={{ marginInlineStart: 6 }}>
                           {t("reversed by #{no}", { no: r.reversedBy })}

@@ -40,6 +40,13 @@ procedure, and export for an external accountant.
   reconciliation (Reports), each for the dates chosen. Only people who may see
   costs can download them. Every report also prints, or saves as a PDF,
   from its **Print or save as PDF** button.
+- **The documents kept with the records** (release AA, `0053`): the photos
+  and PDFs of delivery notes, bills, credit notes, return slips and receipts
+  are files in Supabase Storage, in the private bucket `documents`, not rows
+  of the database. A copy of the database keeps which file goes with which
+  record (`document_attachment`), not the files. Copy the bucket as well
+  (Supabase dashboard → Storage, or its S3 access) when the database is
+  copied.
 - Raw export any time:
   ```bash
   psql "$DATABASE_URL" -c "\copy (select * from sales_order) to 'sales.csv' csv header"

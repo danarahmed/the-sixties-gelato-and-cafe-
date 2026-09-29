@@ -659,6 +659,30 @@ manager, branch manager
   before. **Recent returns to suppliers** lists each one and how it is owed
   back.
 
+### The papers kept with a record (`0053`)
+
+A delivery, a return, a bill, a supplier's credit note and an expense each keep
+their papers: a photo or a PDF of the delivery note, the supplier's bill or
+credit note, the return slip, or the receipt. **📎** by the record's number
+opens them. It is on Purchasing's deliveries and returns, Vendors' bills,
+credit notes and statements, and Expenses; its number says how many are kept.
+
+- **📷 Take a photo** opens the phone's camera. **📄 Choose a picture or a
+  PDF** takes a file.
+- Give it a name if you like (the file's own is used otherwise) and a note,
+  then **Attach**.
+- A picture (JPEG, PNG or WebP) or a PDF, 10 MB at most, 20 to a record. A
+  photo over 1.5 MB is made smaller before it is sent, and stays readable.
+- A document opens in a new tab through a link that lasts a minute.
+  **Download** saves it under its name.
+- **Take off**, saying why, removes one that is wrong. It is never deleted: it
+  is listed under **Taken off**, with who took it off and why, and the audit
+  trail keeps both.
+
+Whoever may record that kind of record attaches its papers: receiving for a
+delivery, buying for a return, a bill or a credit, the accountant for a bill,
+a credit or an expense. Whoever sees costs sees them.
+
 ## 13. Products & Recipes
 
 **Location:** Sidebar → **Products & Recipes** · `/products` · **Who:** anyone who
@@ -1329,4 +1353,5 @@ a person's roles allows, then the café's.
 | Sales by hour, day, date, product, category, size, add-on, person, payment, channel or branch, and a second way; CSV | `/reports/sales`                         | cost viewers                                                                          |
 | The stock's value on a day against 1200; what came in by supplier and by item                                        | `/reports/stock`, `/reports`             | cost viewers                                                                          |
 | The balance sheet at the start and the end of the dates; the cash flow between; CSV                                  | `/reports/statements`                    | profit viewers                                                                        |
-| **Not built:** offline selling, attachments                                                                          | [`LIMITATIONS.md`](LIMITATIONS.md)       | —                                                                                     |
+| Photos and PDFs of a delivery note, a bill, a credit note, a return slip or a receipt, kept with its record (📎)     | `/purchasing`, `/vendors`, `/expenses`   | cost viewers; attaching: whoever records it                                           |
+| **Not built:** offline selling                                                                                       | [`LIMITATIONS.md`](LIMITATIONS.md)       | —                                                                                     |

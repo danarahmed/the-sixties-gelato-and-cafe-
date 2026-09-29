@@ -270,6 +270,19 @@ import {
   cashFlowLabel,
   STATEMENT_PHRASES,
 } from "@/lib/statements";
+import {
+  DOCUMENT_KINDS,
+  DOCUMENT_PERMISSIONS,
+  DOCUMENT_PHRASES,
+  documentCountsFrom,
+  documentName,
+  documentPath,
+  documentRecordFrom,
+  fileProblem,
+  shouldShrink,
+  shrunkSize,
+  sizeLabel,
+} from "@/lib/documents";
 
 const perms = (role: Role) => [...ROLE_PERMISSIONS[role]];
 
@@ -4404,6 +4417,172 @@ describe("the balance sheet and the cash flow (0052, release Z)", () => {
       const words = builtInWords(locale);
       expect(
         STATEMENT_PHRASES.filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
+  });
+});
+
+describe("documents kept with the records (0053, release AA)", () => {
+  const migration = readFileSync(
+    join(__dirname, "../supabase/migrations/0053_attachments.sql"),
+    "utf8",
+  );
+
+  it("knows the records that keep documents, and who attaches them, as the database does", () => {
+    const fn = migration.slice(migration.indexOf("function document_permissions("));
+    const cases = [
+      ...fn.slice(0, fn.indexOf("$$;")).matchAll(/when '([a-z_]+)' then array\[([^\]]*)\]/g),
+    ].map((m) => [m[1]!, m[2]!.split(",").map((p) => p.trim().replace(/'/g, ""))]);
+    expect(Object.fromEntries(cases)).toEqual(DOCUMENT_PERMISSIONS);
+    expect([...DOCUMENT_KINDS]).toEqual(Object.keys(DOCUMENT_PERMISSIONS));
+  });
+
+  it("keeps a file under the café, the kind of record and the record, by a name of its own", () => {
+    expect(documentPath("b1", "expense", "e1", "f1", "application/pdf")).toBe(
+      "b1/expense/e1/f1.pdf",
+    );
+    expect(documentPath("b1", "goods_receipt", "r1", "f2", "image/jpeg")).toBe(
+      "b1/goods_receipt/r1/f2.jpg",
+    );
+    expect(documentPath("b1", "supplier_credit", "c1", "f3", "image/webp")).toMatch(/\.webp$/);
+  });
+
+  it("names a document as typed, or by its file's own name; 200 letters at most", () => {
+    expect(documentName("  Delivery   note ", "IMG_1024.jpg")).toBe("Delivery note");
+    expect(documentName("", "IMG_1024.jpg")).toBe("IMG_1024.jpg");
+    expect(documentName("پسووڵەی گەیاندن", "x.jpg")).toBe("پسووڵەی گەیاندن");
+    expect([...documentName("ا".repeat(250), "x.pdf")].length).toBe(200);
+  });
+
+  it("takes a picture or a PDF, 10 MB at most, and says why not in words", () => {
+    expect(fileProblem("text/plain", 20)).toBe(
+      "A document is a picture (JPEG, PNG or WebP) or a PDF",
+    );
+    expect(fileProblem("image/heic", 20)).not.toBeNull();
+    expect(fileProblem("application/pdf", 0)).toBe("That file is empty");
+    expect(fileProblem("image/png", 10 * 1024 * 1024 + 1)).toBe("A document is at most 10 MB");
+    expect(fileProblem("image/webp", 10 * 1024 * 1024)).toBeNull();
+    expect(fileProblem("application/pdf", 80_000)).toBeNull();
+  });
+
+  it("makes a large photo smaller before it is sent, and never a small one bigger", () => {
+    expect(shouldShrink("image/jpeg", 3_000_000)).toBe(true);
+    expect(shouldShrink("image/jpeg", 1_000_000)).toBe(false);
+    expect(shouldShrink("application/pdf", 9_000_000)).toBe(false);
+    expect(shrunkSize(4000, 3000)).toEqual({ width: 2000, height: 1500 });
+    expect(shrunkSize(3024, 4032)).toEqual({ width: 1500, height: 2000 });
+    expect(shrunkSize(800, 600)).toEqual({ width: 800, height: 600 });
+  });
+
+  it("says a file's size as a person reads it", () => {
+    expect(sizeLabel(820)).toEqual({ phrase: "{n} bytes", n: "820" });
+    expect(sizeLabel(348_160)).toEqual({ phrase: "{n} KB", n: "340" });
+    expect(sizeLabel(2.4 * 1024 * 1024)).toEqual({ phrase: "{n} MB", n: "2.4" });
+  });
+
+  it("reads a record's page as the database gives it", () => {
+    const r = documentRecordFrom({
+      kind: "purchase_invoice",
+      record_id: "b1",
+      no: "KC-7",
+      supplier: "Kurdistan Coffee Imports",
+      date: "2026-09-29",
+      amount: 18000,
+      may_attach: true,
+      documents: [
+        {
+          id: "d2",
+          file_name: "KC-7.pdf",
+          content_type: "application/pdf",
+          size: 80000,
+          note: null,
+          attached_at: "2026-09-29T10:00:00Z",
+          attached_by: "Demo Accountant",
+        },
+      ],
+      removed: [
+        {
+          id: "d1",
+          file_name: "old.jpg",
+          content_type: "image/jpeg",
+          size: 150000,
+          attached_at: "2026-09-29T09:00:00Z",
+          attached_by: "Demo Manager",
+          removed_at: "2026-09-29T09:30:00Z",
+          removed_by: "Demo Manager",
+          removed_reason: "The wrong bill",
+        },
+      ],
+    });
+    expect(r?.no).toBe("KC-7");
+    expect(r?.amount).toBe(18000);
+    expect(r?.text).toBeNull();
+    expect(r?.mayAttach).toBe(true);
+    expect(r?.documents.map((d) => `${d.fileName} ${d.size} ${d.attachedBy}`)).toEqual([
+      "KC-7.pdf 80000 Demo Accountant",
+    ]);
+    expect(r?.removed.map((d) => `${d.fileName}: ${d.reason} (${d.removedBy})`)).toEqual([
+      "old.jpg: The wrong bill (Demo Manager)",
+    ]);
+    expect(documentRecordFrom({ kind: "stock_count", record_id: "x" })).toBeNull();
+    expect(documentRecordFrom(null)).toBeNull();
+  });
+
+  it("counts the records that keep documents", () => {
+    expect(documentCountsFrom({ r1: 2, r2: 0, r3: "3" })).toEqual({ r1: 2, r3: 3 });
+    expect(documentCountsFrom(null)).toEqual({});
+  });
+
+  it("names each document attached or taken off on the audit trail, by its record", () => {
+    const actions = [
+      ...new Set(
+        [...migration.matchAll(/audit_event\(v_business, '([a-z_.]+)'/g)].map((m) => m[1]!),
+      ),
+    ];
+    expect(actions).toEqual(["document.attach", "document.detach"]);
+    for (const a of actions) {
+      expect(actionLabel(a), a).not.toBe(a);
+      expect(auditGroup("documents")?.prefixes.some((p) => a.startsWith(p))).toBe(true);
+    }
+    const names = new Map<string, string>();
+    expect(
+      subjectOf(
+        "goods_receipt",
+        "r",
+        { receipt_no: 12 },
+        { receipt_no: 12, document: "a.jpg" },
+        names,
+      ),
+    ).toBe("Receipt 12");
+    expect(subjectOf("purchase_invoice", "b", { invoice_no: "KC-7" }, null, names)).toBe(
+      "Supplier bill KC-7",
+    );
+    expect(subjectOf("supplier_return", "x", { return_no: 3 }, null, names)).toBe("Return 3");
+    expect(subjectOf("supplier_credit", "c", { credit_no: 2 }, null, names)).toBe("Credit 2");
+    expect(subjectOf("expense", "e", { description: "Cleaning cloths" }, null, names)).toBe(
+      "Cleaning cloths",
+    );
+    // What changed is the document; the record's number is the same before and after.
+    expect(
+      describeChanges({ receipt_no: 12 }, { receipt_no: 12, document: "Delivery note.jpg" }, names),
+    ).toEqual([{ field: "Document", before: "—", after: "Delivery note.jpg" }]);
+    expect(
+      describeChanges({ invoice_no: "KC-7", document: "KC-7.pdf" }, { invoice_no: "KC-7" }, names),
+    ).toEqual([{ field: "Document", before: "KC-7.pdf", after: "—" }]);
+  });
+
+  it("has every word of the documents in Arabic and Kurdish", () => {
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        [
+          ...DOCUMENT_PHRASES,
+          "Document attached",
+          "Document taken off",
+          "Documents kept with records",
+          "Document",
+        ].filter((p) => !words[p]),
         locale,
       ).toEqual([]);
     }

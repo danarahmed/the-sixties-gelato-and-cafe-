@@ -75,3 +75,58 @@ language sql stable as $$
 $$;
 
 grant execute on function auth.uid(), auth.role() to public;
+
+-- Supabase Storage, as far as the migrations use it (0053): the buckets and
+-- the objects in them, owned by the storage service's own role with row-level
+-- security on, and the helper its rules use to read a path's folders. The
+-- files themselves live outside the database; here only their rows. On
+-- Supabase the migrations' role may add rules to storage.objects and buckets
+-- to storage.buckets; the membership below gives sb_admin the same.
+do $$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'supabase_storage_admin') then
+    create role supabase_storage_admin nologin noinherit bypassrls;
+  end if;
+end $$;
+create schema if not exists storage authorization supabase_storage_admin;
+grant usage on schema storage to anon, authenticated, service_role, sb_admin;
+create table if not exists storage.buckets (
+  id                 text primary key,
+  name               text not null unique,
+  owner              uuid,
+  public             boolean default false,
+  file_size_limit    bigint,
+  allowed_mime_types text[],
+  created_at         timestamptz default now(),
+  updated_at         timestamptz default now()
+);
+create table if not exists storage.objects (
+  id               uuid primary key default gen_random_uuid(),
+  bucket_id        text references storage.buckets (id),
+  name             text,
+  owner            uuid,
+  owner_id         text,
+  metadata         jsonb,
+  user_metadata    jsonb,
+  version          text,
+  created_at       timestamptz default now(),
+  updated_at       timestamptz default now(),
+  last_accessed_at timestamptz default now(),
+  unique (bucket_id, name)
+);
+alter table storage.buckets owner to supabase_storage_admin;
+alter table storage.objects owner to supabase_storage_admin;
+alter table storage.buckets enable row level security;
+alter table storage.objects enable row level security;
+grant select on storage.buckets to anon, authenticated, service_role;
+grant select, insert, update, delete on storage.objects to anon, authenticated, service_role;
+create or replace function storage.foldername(name text) returns text[]
+language plpgsql immutable as $$
+declare _parts text[];
+begin
+  select string_to_array(name, '/') into _parts;
+  return _parts[1:array_length(_parts, 1) - 1];
+end $$;
+alter function storage.foldername(text) owner to supabase_storage_admin;
+grant execute on function storage.foldername(text) to public;
+grant supabase_storage_admin to sb_admin;

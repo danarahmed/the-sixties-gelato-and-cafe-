@@ -13,6 +13,7 @@ import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { DocumentsLink } from "@/components/documents/DocumentsLink";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -38,6 +39,7 @@ export function SupplierCredits({
   accounts,
   canCredit,
   canAllocate,
+  docs = {},
 }: {
   supplierId: string;
   credits: SupplierCredit[];
@@ -49,6 +51,8 @@ export function SupplierCredits({
   accounts: { code: string; name: string }[];
   canCredit: boolean;
   canAllocate: boolean;
+  /** How many documents each credit note keeps (0053), by its id. */
+  docs?: Record<string, number>;
 }) {
   const { t } = useT();
   return (
@@ -80,7 +84,10 @@ export function SupplierCredits({
             <tbody>
               {credits.map((c) => (
                 <tr key={c.id} data-testid="credit-row" data-credit={c.creditNo}>
-                  <td className="mono">{c.creditNo}</td>
+                  <td className="mono">
+                    {c.creditNo}
+                    <DocumentsLink kind="supplier_credit" id={c.id} count={docs[c.id] ?? 0} />
+                  </td>
                   <td className="mono muted" style={{ fontSize: ".8rem" }}>
                     {c.creditDate}
                   </td>

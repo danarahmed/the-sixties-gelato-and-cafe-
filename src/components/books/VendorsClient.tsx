@@ -15,6 +15,7 @@ import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { SupplierCredit } from "@/lib/purchasing";
 import { SupplierCredits } from "@/components/purchasing/SupplierCredits";
+import { DocumentsLink } from "@/components/documents/DocumentsLink";
 import { Notice } from "@/components/ui";
 import type { OpenBill, VendorRow } from "@/lib/db/books";
 import { OperationStatus, useOperation } from "@/components/useOperation";
@@ -51,6 +52,7 @@ export function VendorsClient({
   billedReceipts = [],
   creditAccounts = [],
   canCredit = false,
+  docs = {},
 }: {
   vendors: VendorRow[];
   bills: OpenBill[];
@@ -71,6 +73,8 @@ export function VendorsClient({
   creditAccounts?: AccountOption[];
   /** May record a supplier's credit note (purchase.create or accounting.post). */
   canCredit?: boolean;
+  /** How many documents each bill and credit note keeps (0053), by its id. */
+  docs?: Record<string, number>;
 }) {
   const { t } = useT();
   const router = useRouter();
@@ -179,6 +183,7 @@ export function VendorsClient({
               nextBillNo={nextBillNo}
               canPay={canPay}
               onDone={() => router.refresh()}
+              docs={docs}
             />
           )}
           {tab === "credits" && vendor && (
@@ -198,6 +203,7 @@ export function VendorsClient({
               accounts={creditAccounts}
               canCredit={canCredit}
               canAllocate={canPay}
+              docs={docs}
             />
           )}
           {tab === "edit" && vendor && (
@@ -324,6 +330,7 @@ function Bills({
   nextBillNo,
   canPay,
   onDone,
+  docs,
 }: {
   vendor: VendorRow;
   bills: OpenBill[];
@@ -334,6 +341,8 @@ function Bills({
   nextBillNo: string | null;
   canPay: boolean;
   onDone: () => void;
+  /** How many documents each bill keeps (0053), by its id. */
+  docs: Record<string, number>;
 }) {
   const op = useOperation();
   const { t, msg: say } = useT();
@@ -596,8 +605,11 @@ function Bills({
                 </tr>
               ) : (
                 bills.map((b) => (
-                  <tr key={b.id}>
-                    <td>{b.invoiceNo || "—"}</td>
+                  <tr key={b.id} data-testid="bill-row" data-bill={b.invoiceNo}>
+                    <td>
+                      {b.invoiceNo || "—"}
+                      <DocumentsLink kind="purchase_invoice" id={b.id} count={docs[b.id] ?? 0} />
+                    </td>
                     <td>{b.invoiceDate}</td>
                     <td>{b.dueDate ?? "—"}</td>
                     <td className="right money">{fmtIQD(b.total)}</td>
