@@ -1210,7 +1210,15 @@ report, an item's movements, a cash session's statement and a payroll.
 
 - **Profit & Loss:** income, cost of sales, **gross profit after waste & fees**,
   operating expenses and net, from published entries, with **CSV**. Each line
-  opens its journal lines, which add up to it.
+  opens its journal lines, which add up to it. Someone who works at one place
+  reads **Profit & Loss at** their place (`0056`).
+- **Profit & Loss by place** (`0056`, with more than one place, for those who
+  work everywhere): the same lines, a column for each of the café's places,
+  **Shared** for what is no one place's (the bank's card fees, journals by
+  hand) and **Café total**, with **CSV**. A sale is at the branch that sold
+  it, a loss where the stock was, an expense where it was recorded; a
+  platform's payout is shared out by each order's branch, and a payroll by
+  where each person works.
 - **Sales by Channel:** per channel and in all, the orders (opening them),
   sales, refunds made in the dates, **net sales** (the P&L's net revenue) and
   the **sales margin** (net sales less the recipe cost of what was sold, before

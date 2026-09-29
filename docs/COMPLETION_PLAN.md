@@ -604,12 +604,12 @@ Release AA:
 
 Release AB:
 
-- **In three steps.** The first (`0054`, the plan's `0053` having gone to the
+- **In four steps.** The first (`0054`, the plan's `0053` having gone to the
   documents): the stock sent between the café's places, and where each
   device does its stock work. The second (`0055`): tills at each branch, who
-  works where, and numbers and prices by branch. The third (`0056`): the
-  place on journal lines, each branch's profit and loss, and a branch to
-  narrow the reports to.
+  works where, and numbers and prices by branch. The third (`0056`): each
+  place's profit and loss. The fourth: every other report narrowed to a
+  place.
 - **Transfers as planned:** `stock_transfer` and its lines, sent, then
   received or cancelled while on their way, through 1210 Stock in transit,
   which only a transfer moves. What did not arrive is lost to 5300 as it is
@@ -641,6 +641,22 @@ Release AB:
 - **What a place sends is its demand and its use:** the kitchen's day's plan
   counts what it sends the branch, and the buying list what a place sent, and
   what is on its way to it as coming.
+- **A journal line's place is read from its record, not stored on it**
+  (`0056`, rather than `journal_line.location_id` filled by `post_journal`).
+  A published line never changes, several records are written after their
+  journal, and each record's place never moves once posted, so the place is
+  read when the report is: exact for every journal ever posted, with nothing
+  to backfill. The places always add up to the café.
+- **What spans places is shared out where the records say how:** a platform's
+  payout by each order's branch, a payroll by where each person works when it
+  is approved (kept with the approval, so one reopened keeps each approval's
+  own). What did not arrive of a transfer is the loss of the place that sent
+  it. The bank's card fees and journals by hand are shared, no one place's.
+- **Someone who works at one place reads that place's profit and loss.** The
+  other reports stay the café's until the fourth step.
+- **Found on the way:** a year-end close reversed by hand was left in the
+  profit and loss (only the close itself was left out), counting the year
+  again. `0056` leaves out both, there, on the dashboard and in the brief.
 
 **Basis:**
 

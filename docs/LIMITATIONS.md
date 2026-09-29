@@ -100,9 +100,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     sales (Orders, the daily summaries: a branch manager, say) can still add
     up the cash sales for themselves; a cashier and a barista may not read
     them.
-  - Over and short is posted to 6300 with the session named on the journal,
-    but not the branch: the place on journal lines comes with the books by
-    branch (`0056`). The session names its branch.
+  - Over and short is posted to 6300 with the session named on the journal;
+    the profit and loss by place reads it at the session's branch (`0056`).
   - A session is never closed on its own. One left open stays open until its
     cashier or a manager closes it; the dashboard warns of it after 14 hours.
   - The count is in Iraqi dinars, typed as a total or counted in notes of 250
@@ -356,9 +355,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     analysis of past dates changes when an old sale is refunded, and its
     total can differ from the P&L's for the same dates, which counts a refund
     on the day it was made. The add-ons are shown without their refunds.
-  - The bars are the only picture: there are no charts. Every branch's sales
-    are analysed together: a branch to narrow to comes with the books by
-    branch (`0056`).
+  - The bars are the only picture: there are no charts. With more than one
+    branch, the analysis can be narrowed to one.
   - The stock's value on a day is the stock ledger's, at the costs it
     carried; it is not a count, and it does not revalue stock at today's
     prices.
@@ -380,8 +378,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     no comparison with the same dates of an earlier year: the balance sheet
     shows the start and the end of the dates side by side.
   - A year of dates at most for the cash flow; the balance sheet for any day
-    up to today. They are the café's as a whole: each branch's profit and
-    loss comes with the books by branch (`0056`).
+    up to today. They are the café's as a whole; each place's profit and loss
+    is on Reports (`0056`).
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the
@@ -449,8 +447,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - A device chooses where it does its **stock** work: deliveries without an
     order, new orders, returns not named against a delivery, batches, losses,
     corrections, opening stock and counts, and the stock screens. Since `0055`
-    its till sells at it when it is a branch; each branch's own profit and
-    loss comes with the books by branch (`0056`).
+    its till sells at it when it is a branch; since `0056` each place's profit
+    and loss is read on Reports.
   - The place is kept on the device. Someone who works at one place (`0055`)
     works there whatever the device says; someone who works everywhere may
     change it.
@@ -490,6 +488,22 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - The day's plan is each place's own: the kitchen's counts what it sends,
     and the branch's what it sells, so both may show a batch to make for the
     same sales. The kitchen makes; the branch's plan is for the branch to see.
+- **The books by place, what they do not do (release AB, `0056`).**
+  - Only the profit and loss is read by place. The other reports, the
+    dashboard and the daily brief are the café's; each report narrowed to a
+    place comes next.
+  - Someone who works at one place reads that place's profit and loss only;
+    the other reports still show them the café's.
+  - The bank's card fees and journals by hand are shared: no one place's. So
+    is a bill charged to an expense account with no delivery, and a supplier's
+    credit on none.
+  - An expense is the place's it was recorded at, the device's. A cost the
+    café shares (one rent for all) is recorded at one place, or as a journal
+    by hand, shared.
+  - A payroll is shared out by where each person works when it is approved,
+    not by the hours they worked at each place.
+  - What did not arrive of a transfer is the loss of the place that sent it.
+  - The balance sheet and the cash flow are the café's.
 - **Tax.** Out of scope by request. If the business is VAT-registered, that is a
   structural addition, not a setting.
 

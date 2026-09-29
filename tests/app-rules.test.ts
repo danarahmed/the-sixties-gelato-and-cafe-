@@ -242,6 +242,7 @@ import {
   worksOn,
 } from "@/lib/staff";
 import { fieldLabel } from "@/lib/audit";
+import { pnlByPlace, type PnlPlaceRow } from "@/lib/pnl";
 import {
   CUSTOMER_PHRASES,
   addressText,
@@ -4627,5 +4628,60 @@ describe("the audit trail in the reader's language", () => {
         locale,
       ).toEqual([]);
     }
+  });
+});
+
+describe("the books by place (0056, release AB)", () => {
+  it("lays each place's profit and loss beside the shared and the café's", () => {
+    const row = (
+      code: string,
+      section: PnlPlaceRow["section"],
+      placeId: string | null,
+      place: string | null,
+      amount: number,
+    ): PnlPlaceRow => ({ code, name: `Account ${code}`, section, placeId, place, amount });
+    const rows = [
+      row("4000", "revenue", "m", "Main Branch", 8000),
+      row("4000", "revenue", "s", "Second Branch", 5500),
+      row("5000", "cost_of_sales", "m", "Main Branch", 650),
+      row("5300", "cost_of_sales", "k", "Central Kitchen", 500),
+      row("6900", "operating_expenses", null, null, 1000),
+      row("6900", "operating_expenses", "old", "Old Branch", 200),
+    ];
+    const places = [
+      { id: "m", name: "Main Branch" },
+      { id: "s", name: "Second Branch" },
+      { id: "k", name: "Central Kitchen" },
+    ];
+    const table = pnlByPlace(rows, places);
+    // The café's places in order, one since closed that has an amount, then the shared.
+    expect(table.columns.map((c) => c.name)).toEqual([
+      "Main Branch",
+      "Second Branch",
+      "Central Kitchen",
+      "Old Branch",
+      "Shared",
+    ]);
+    expect(table.lines.map((l) => [l.code, ...l.amounts, l.total])).toEqual([
+      ["4000", 8000, 5500, 0, 0, 0, 13500],
+      ["5000", 650, 0, 0, 0, 0, 650],
+      ["5300", 0, 0, 500, 0, 0, 500],
+      ["6900", 0, 0, 0, 200, 1000, 1200],
+    ]);
+    expect(table.totals.map((x) => x.net)).toEqual([7350, 5500, -500, -200, -1000]);
+    expect(table.total).toEqual({
+      revenue: 13500,
+      costOfSales: 1150,
+      grossProfit: 12350,
+      operating: 1200,
+      net: 11150,
+    });
+    // Each column's net adds up to the café's.
+    expect(table.totals.reduce((t, x) => t + x.net, 0)).toBe(table.total.net);
+    // Nothing shared, no shared column.
+    expect(pnlByPlace(rows.slice(0, 2), places.slice(0, 1)).columns.map((c) => c.id)).toEqual([
+      "m",
+      "s",
+    ]);
   });
 });

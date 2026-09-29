@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import { PrintButton } from "@/components/PrintButton";
 import { PrintHead } from "@/components/PrintHead";
 import { getLocale, getMsg, getT } from "@/lib/i18n/server";
@@ -12,6 +13,7 @@ import {
   getLegacyUnposted,
   getMenuCosting,
   getProfitAndLoss,
+  getProfitAndLossByPlace,
   getReconciliation,
   getSizesAndAddons,
   getPaymentTakings,
@@ -33,6 +35,8 @@ import { LOSS_ACCOUNT_NAME, giveawayLabel, kindShare } from "@/lib/losses";
 import { CREDIT_KIND_LABEL, orderStage, STAGE_LABEL } from "@/lib/purchasing";
 import { fmtRate, fmtUSD } from "@/lib/fx";
 import { getChannelNames } from "@/lib/db/channels";
+import { getCafePlaces } from "@/lib/place";
+import { pnlByPlace } from "@/lib/pnl";
 import {
   addDays,
   businessToday,
@@ -95,6 +99,8 @@ export default async function ReportsPage({
     staff,
     loyalty,
     bought,
+    byPlaceRows,
+    cafePlaces,
   ] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
     getReconciliation(to),
@@ -115,6 +121,11 @@ export default async function ReportsPage({
     seesCustomers && from <= to ? getCustomerReport(from, to) : Promise.resolve(null),
     // What came in, by supplier and by item (0051).
     from <= to ? getPurchases(from, to) : Promise.resolve(null),
+    // Each place's profit and loss side by side (0056), for those who work everywhere.
+    seesProfit && profile.worksAt === null
+      ? getProfitAndLossByPlace(from, to)
+      : Promise.resolve([]),
+    getCafePlaces(),
   ]);
   // The menu as it sells today: a platform out of use sells nothing.
   const menu = allMenu.filter((m) =>
@@ -125,6 +136,11 @@ export default async function ReportsPage({
   const kinds = Object.keys(EXCEPTION_LABEL) as ExceptionKind[];
   const uncostedNet = uncosted.reduce((sum, u) => sum + u.net, 0);
   const totals = pnlTotals(pnl);
+  // With more than one place, each one's column, the shared and the café's.
+  const byPlace =
+    seesProfit && profile.worksAt === null && cafePlaces.length > 1
+      ? pnlByPlace(byPlaceRows, cafePlaces)
+      : null;
   const ageing = ageBills(book.openBills);
   const unreconciled = rec.filter((r) => r.difference !== 0);
   // The records the last check counts, each to be looked into (0038).
@@ -434,7 +450,11 @@ export default async function ReportsPage({
       {seesProfit && (
         <section className="panel" id="pnl">
           <div className="panel-h">
-            <h3>{t("Profit & Loss")}</h3>
+            <h3>
+              {profile.worksAtName
+                ? t("Profit & Loss at {place}", { place: profile.worksAtName })
+                : t("Profit & Loss")}
+            </h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
               <Rich
                 text={t("Published journal lines, {from} to {to} · <csv>CSV</csv>", { from, to })}
@@ -501,6 +521,95 @@ export default async function ReportsPage({
               <span className={`amt ${totals.net < 0 ? "red" : ""}`}>{fmtIQD(totals.net)}</span>
             </div>
             <div className="rule-double" />
+          </div>
+        </section>
+      )}
+
+      {/* ---- The profit and loss by place (0056) ---- */}
+      {byPlace && (
+        <section className="panel" id="pnl-places" data-testid="pnl-places">
+          <div className="panel-h">
+            <h3>{t("Profit & Loss by place")}</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              <Rich
+                text={t("Published journal lines, {from} to {to} · <csv>CSV</csv>", { from, to })}
+                tags={{
+                  csv: (c) => (
+                    <a href={`/reports/export?report=pnl_by_place&from=${from}&to=${to}`}>{c}</a>
+                  ),
+                }}
+              />
+            </span>
+          </div>
+          <div className="panel-b">
+            <p className="muted" style={{ fontSize: ".78rem", marginBlockStart: 0 }}>
+              {t(
+                "Each line is at the place of its record: a sale at the branch that sold it, a loss where the stock was, an expense where it was recorded. A platform's payout is shared out by the branch of each order, a payroll by where each person works. Shared: what belongs to no one place, such as the bank's card fees and journals by hand.",
+              )}
+            </p>
+            <div className="tw">
+              <table className="pnl-places">
+                <thead>
+                  <tr>
+                    <th>{t("Account")}</th>
+                    {byPlace.columns.map((c) => (
+                      <th key={c.id ?? "shared"} className="right">
+                        {c.id === null ? t("Shared") : c.name}
+                      </th>
+                    ))}
+                    <th className="right">{t("Café total")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(
+                    [
+                      ["revenue", "Income", "revenue", "Net revenue"],
+                      ["cost_of_sales", "Cost of sales", "grossProfit", "dash.grossProfit"],
+                      ["operating_expenses", "Operating expenses", "net", ""],
+                    ] as const
+                  ).map(([sec, head, key, label]) => (
+                    <Fragment key={sec}>
+                      <tr className="group">
+                        <td colSpan={byPlace.columns.length + 2}>{t(head)}</td>
+                      </tr>
+                      {byPlace.lines
+                        .filter((l) => l.section === sec)
+                        .map((l) => (
+                          <tr key={l.code} data-testid={`pnl-places-${l.code}`}>
+                            <td>
+                              <Link className="drill" href={ledger(l.code, from, to, true)}>
+                                {l.code} {msg(l.name)}
+                              </Link>
+                            </td>
+                            {[...l.amounts, l.total].map((a, i) => (
+                              <td
+                                key={i}
+                                className={`right money ${sec !== "revenue" || a < 0 ? "red" : ""}`}
+                              >
+                                {a === 0 ? "—" : sec === "revenue" ? fmtIQD(a) : `(${fmtIQD(a)})`}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      <tr className="total" data-testid={`pnl-places-${key}`}>
+                        <td>
+                          {key === "net"
+                            ? byPlace.total.net < 0
+                              ? t("Net loss")
+                              : t("Net profit")
+                            : t(label)}
+                        </td>
+                        {[...byPlace.totals, byPlace.total].map((x, i) => (
+                          <td key={i} className={`right money ${x[key] < 0 ? "red" : ""}`}>
+                            {fmtIQD(x[key])}
+                          </td>
+                        ))}
+                      </tr>
+                    </Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
       )}

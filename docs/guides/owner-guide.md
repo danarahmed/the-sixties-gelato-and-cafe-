@@ -645,6 +645,13 @@ discount, why and who approved it. The 10% is a business setting (shown on
    Uncosted Sales** lists them and what to fix.
 4. A locked month refuses every posting. Only you can reopen it, with a reason
    on the audit trail. Reopen the most recent locked month first.
+5. With more than one place, read **Reports → Profit & Loss by place**: each
+   branch's and the kitchen's column beside the café's. A sale is the branch's
+   that sold it, a loss the place's where the stock was, an expense the place's
+   where it was recorded; Talabat's payout is shared out by each order's branch
+   and the payroll by where each person works. **Shared** is what belongs to no
+   one place: the bank's card fees and journals by hand. The columns add up to
+   the café's total.
 
 ## Why is a number what it is?
 

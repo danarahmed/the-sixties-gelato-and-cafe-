@@ -207,12 +207,70 @@ console.log("▸ Settings: where each person works; the product card: each branc
   await ctx.close();
 }
 
+console.log("▸ the books by place: each place's profit and loss, side by side (0056)");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/reports");
+  const panel = page.getByTestId("pnl-places");
+  const heads = (await panel.locator("thead th").allTextContents()).map((h) => h.trim());
+  check(
+    heads.slice(1, 4).join("|") === "Main Branch|Central Kitchen|Second Branch" &&
+      heads.at(-1) === "Café total",
+    "the owner reads a column for each of the café's places, and the café's total",
+  );
+  // The second branch's sales this month, as the database keeps them.
+  const secondSales = Number(
+    last(`select coalesce(sum(gross_amount), 0) from sales_order
+           where location_id = '${second}' and status = 'completed'
+             and business_local_date(business_id, placed_at) >= date_trunc('month', ${TODAY})::date`),
+  );
+  const cells = (await panel.getByTestId("pnl-places-4000").locator("td").allTextContents()).map(
+    (c) => c.trim(),
+  );
+  check(
+    secondSales > 0 &&
+      cells[heads.indexOf("Second Branch")] === secondSales.toLocaleString("en-US"),
+    `the second branch's column: its own sales, ${secondSales.toLocaleString("en-US")}`,
+  );
+  const cafeRevenue = (
+    await panel.getByTestId("pnl-places-revenue").locator("td").last().textContent()
+  )?.trim();
+  const pnlRevenue = (await page.locator("#pnl .st-row.total .amt").first().textContent())?.trim();
+  check(
+    !!cafeRevenue && cafeRevenue === pnlRevenue,
+    "the places add up to the café's net revenue, as the profit and loss has it",
+  );
+  const res = await page.request.get(`${BASE}/reports/export?report=pnl_by_place`);
+  const csv = await res.text();
+  check(
+    res.ok() &&
+      csv.startsWith("code,account,section,place,amount") &&
+      csv.includes(`,revenue,Second Branch,${secondSales}`),
+    "and downloads as a CSV, place by place",
+  );
+  await ctx.close();
+}
+sql(`update user_role set location_id = '${main}'
+      where app_user_id = (select id from app_user where email = 'manager@example.com')`);
+{
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/reports");
+  check(
+    (await page.locator("#pnl h3").textContent())?.trim() === "Profit & Loss at Main Branch" &&
+      (await page.getByTestId("pnl-places").count()) === 0,
+    "the first branch's manager reads the first branch's profit and loss, and no other place's",
+  );
+  await ctx.close();
+}
+sql(`update user_role set location_id = null
+      where app_user_id = (select id from app_user where email = 'manager@example.com')`);
+
 console.log("▸ in Arabic and in Kurdish");
 for (const locale of ["ar", "ckb"]) {
   const { ctx, page } = await signIn(browser, "owner");
   await ctx.addCookies([{ name: "locale", value: locale, url: BASE }]);
   const words = [];
-  for (const path of ["/pos", "/settings", "/products", "/audit"]) {
+  for (const path of ["/pos", "/settings", "/products", "/audit", "/reports"]) {
     await open(page, path);
     words.push(...(await english(page, path)));
   }

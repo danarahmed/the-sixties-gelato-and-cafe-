@@ -362,6 +362,19 @@ select {
 .tw {
   overflow-x: auto;
 }
+
+/* The profit and loss by place (0056): a column for each place. */
+.pnl-places tr.group td {
+  font-weight: 600;
+  padding-block-start: 12px;
+}
+.pnl-places tr.total td {
+  font-weight: 700;
+  border-block-start: 1px solid var(--border);
+}
+.pnl-places td.money {
+  white-space: nowrap;
+}
 table {
   width: 100%;
   border-collapse: collapse;

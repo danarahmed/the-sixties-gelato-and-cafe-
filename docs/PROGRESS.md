@@ -7,13 +7,13 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0055` and the rebuilt app. The SQL
-  checks (56, with the rehearsals of the upgrade, the clean start and clearing
+- **Built and verified:** migrations `0014`–`0056` and the rebuilt app. The SQL
+  checks (57, with the rehearsals of the upgrade, the clean start and clearing
   the test records), the browser suites (33, every role, every screen in
   Arabic and Kurdish, a lost answer on each kind of screen, every report on A4
   paper, documents kept with the records, stock sent between the café's
-  places, and the tills at each branch), the unit and contract tests (503)
-  and a production build all pass.
+  places, the tills at each branch and the books by place), the unit and
+  contract tests (505) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -1405,6 +1405,31 @@ browser tests through the real app, or both.
     product card; Arabic and Kurdish;
   - unit tests, and every new text in Arabic and Kurdish.
 
+- **The books by place (release AB, third part, migration `0056`).** The books
+  added the café up as one.
+  - **Each place's profit and loss** (Reports → **Profit & Loss by place**): a
+    column for each branch and the kitchen, **Shared** for what belongs to no
+    one place (the bank's card fees, journals by hand), and the café's total,
+    with a CSV. A sale is the branch's that sold it, a loss the place's where
+    the stock was, an expense the place's where it was recorded; what did not
+    arrive of a transfer is the loss of the place that sent it.
+  - **What spans places is shared out:** a platform's payout by each order's
+    branch, a payroll by where each person works when it is approved.
+  - **Someone who works at one place** reads that place's profit and loss.
+  - **A year-end close reversed by hand** is left out of the profit and loss
+    with the close; before, it counted the year again.
+
+  Built and tested:
+  - a new SQL suite: two branches and the kitchen trading, a void, a refund, a
+    transfer short, a spill, an expense, a journal by hand, a platform payout
+    across both branches, a payroll approved, reopened and approved again;
+    each place's figures, the places adding up to the café account by
+    account; the one-place rule; the year-end close and its reversal;
+  - the browser: the owner's P&L by place, its columns, its CSV and the
+    café's total; the first branch's manager reading only theirs; Arabic and
+    Kurdish;
+  - unit tests, and every new text in Arabic and Kurdish.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -1473,7 +1498,7 @@ browser tests through the real app, or both.
 | Payroll             | owner, general manager, accountant; auditor (reading)      | A month drafted from the pay and the hours; additions and deductions with why; advances given, taken back and cancelled; approved once the month is over (6100, 2100, 1300), reopened while nothing is paid, and paid to one person or everyone from the till, the safe, the bank or the owner; each payroll with its lines, payments and journals                                                                                                                                                                                                                                                                                                                                                                                                        |
 | Journals            | cost viewers (posting: accountant, owner, general manager) | Register, manual journals (draft/publish), reversal, owner's control correction                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Chart of Accounts   | cost viewers                                               | Trial balance by period, closing checklist, lock and reopen, audit trail, CSV                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, sales by payment method, dollars, purchasing, payable ageing, product margin, sizes and add-ons, losses, staff hours and what staff cost, customers and their points, what came in by supplier and by item, CSV; the sales analysis (by hour, day, date, product, category, size, add-on, person, payment, channel or branch, and a second way; narrowed; CSV); the stock's value on a day against 1200; the balance sheet at the start and the end of the dates and the cash flow between (profit viewers); each printed or saved as a PDF                                                                                                                                                                   |
+| Reports             | cost viewers                                               | P&L, the P&L by place (0056), "Do the books tie?", sales by channel, sales by payment method, dollars, purchasing, payable ageing, product margin, sizes and add-ons, losses, staff hours and what staff cost, customers and their points, what came in by supplier and by item, CSV; the sales analysis (by hour, day, date, product, category, size, add-on, person, payment, channel or branch, and a second way; narrowed; CSV); the stock's value on a day against 1200; the balance sheet at the start and the end of the dates and the cash flow between (profit viewers); each printed or saved as a PDF                                                                                                                                          |
 | Documents           | cost viewers (attaching: whoever records it)               | A record's photos and PDFs, opened from 📎 on Purchasing, Vendors and Expenses: taken with the camera or chosen, a large photo made smaller; opened through a link that lasts a minute; taken off with why, kept apart                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Settings            | owner, general manager                                     | People, their roles and where each works, business configuration, the alert thresholds, the café's rules, locations, the role matrix                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
