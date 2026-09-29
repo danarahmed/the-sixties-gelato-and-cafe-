@@ -31,7 +31,9 @@ app's menu. Along the top:
 
 The order shows who it is for, its channel, and, once it has one, its
 **number** (the big figure in the corner): the number the customer is called
-by, and the one on the barista's ticket.
+by, and the one on the barista's ticket. **👤 Customer** under it puts a
+customer on the order (see
+[A customer and their points](#a-customer-and-their-points)).
 
 ### Finding a product
 
@@ -122,6 +124,10 @@ takes cash only while it is open. Tap the drawer's chip at the top of the till.
    the receipt alone, and **☕ Barista ticket** the bar's copy alone, marked
    **Copy** so nothing is made twice.
 
+A **Direct delivery** (the café's own driver) needs the customer and their
+address: the till asks for them before it takes the money (see
+[A customer and their points](#a-customer-and-their-points)).
+
 A **Talabat** order has one button, **🧾 Complete (paid through the
 platform)**: Talabat collects the money. Type the **Talabat order number**
 from the tablet (the `#` before it can be left out), then **Confirm
@@ -178,6 +184,39 @@ anything on it needs a manager**, who chooses the reason from a list ("Customer
 left without ordering", "Opened by mistake", "Moved to another bill", or
 "Other" with a few words); it is kept on the audit trail. Taking an item off a
 bill is on the audit trail too, printed or not.
+
+### A customer and their points
+
+Customers who come back are kept by their **phone number**, and earn a point
+for every 1,000 IQD they pay; 100 points take 5,000 IQD off a bill (the café
+sets these on **Settings**).
+
+1. Under the order, tap **👤 Customer** and type their number, any way they
+   say it (0770 123 4567, with +964, or in Arabic digits), then **Find**.
+2. Found: their name, their points and the rewards they can take. Tap **Put
+   them on the order**. Nobody has that number yet: **Add them as a
+   customer**, type their name (and notes about them, if they like something a
+   certain way), and **Add the customer**.
+3. The order shows **👤** their name and points; **Change** puts someone else
+   on it or takes them off. A bill kept for later keeps its customer, and is
+   named after them.
+4. When they pay, the payment shows their points. To take a reward, tap **+**:
+   each takes its amount off, whole, and the **Total** is what is left to pay.
+   A reward is the bill's discount, so a bill with another discount takes
+   none, and a bill smaller than a reward cannot take it: keep the points for
+   later.
+5. The receipt says the points the sale earned and spent, and how many they
+   have now.
+
+**A delivery by the café's own driver** needs the customer and **where it
+goes**: choose one of their addresses, or **+ Add an address** (the address,
+and how to find it: "the blue door"). The bill and the receipt print it, and
+the sale keeps it as it was.
+
+A Talabat order takes no customer: Talabat's customers are its own. A bill
+split in two leaves the new bill with no customer. A sale already paid cannot
+be given a customer afterwards, and points given back or taken by hand are a
+manager's, on **Customers**.
 
 ### Two tills, one bill
 

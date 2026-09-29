@@ -1298,3 +1298,44 @@ approval, wait, key)`** (`waste.record`), on the trail as `inventory.loss`.
   the month's payroll is not approved; `document_problems` and
   `journal_source_hint` know an approval, an advance and a salary payment. The
   alerts add `clocked_in_long` and `payroll_due`.
+
+### Customers and their points (`0050`)
+
+- **`role_permission`** gains `customer.edit` (owner, general and branch
+  managers, cashier, barista), `customer.view` (owner, general and branch
+  managers, accountant, auditor) and `loyalty.adjust` (owner, general and
+  branch managers). Four rules join `business_rule`: `loyalty` (on or off),
+  `loyalty_point_per`, `loyalty_reward_points` and `loyalty_reward_value`,
+  read by `loyalty_rule(business, key)` and `loyalty_is_on(business)`.
+- **`customer`**: name (1–80 letters), phone number kept one way by
+  `normalise_phone` (`+964…`, unique per café), notes (500 letters at most),
+  active or put away, and who added them. **`customer_address`**: a name for it
+  (Home, work), the address and how to find it, active or put away, 10 active
+  at most a customer. Neither is deleted.
+- **`loyalty_ledger`**: every point earned (`earn`, with the rate), spent
+  (`redeem`, with what the reward took off), taken back (`earn_back`), given
+  back (`redeem_back`) or given or taken by hand (`adjust`, with the reason),
+  with its sale or refund, who and when. Never changed; once per sale and
+  kind, and once per refund and kind (`loyalty_ledger_once_per_sale`,
+  `loyalty_ledger_once_per_refund`). A customer's points are the sum
+  (`customer_points`).
+- **`pos_tab`** and **`sales_order`** gain `customer_id`,
+  `customer_address_id` and `delivery_address` (the address as it was when
+  the bill was saved, kept on the sale). A sale's are written with it by
+  `post_sale`, since a paid sale never changes.
+- **Functions:** `save_customer` and `save_customer_address`
+  (`customer.edit`); `find_customer(phone)` and `customer_at_till(customer)`
+  (`sale.create`, `customer.edit` or `customer.view`); `record_sale` and
+  `settle_tab` take the customer, the address and the rewards (`p_customer`,
+  `p_address`, `p_rewards`), `open_tab` and `save_tab` the bill's customer
+  (`p_customer`, `{"id", "address_id"}`, `{}` to take them off), and
+  `pos_open_bills` shows it; `adjust_points` (`loyalty.adjust`);
+  `customer_list()`, `customer_detail(customer)` and
+  `report_customers(from, to)` (`customer.view`). Every write takes a key; the
+  trail's rows are `customer.save`, `customer.address` and `loyalty.adjust`.
+- **Voids and refunds:** the triggers `sales_order_loyalty_void` (a sale
+  voided) and `sale_refund_loyalty` (a refund written) call
+  `loyalty_take_back(sale, refund)`.
+- **Row security:** the customers, their addresses and their points are read
+  with `customer.view`; the till reads a customer through `find_customer` and
+  `customer_at_till` only.

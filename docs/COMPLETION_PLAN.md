@@ -11,8 +11,8 @@ payments, `0042`), release R (US dollars at the till, `0043`), release S
 release T (the buying list, `0045`), release U (batches, their use-by dates
 and lots, and the day's plan, `0046`) and release V (losses by kind with their
 accounts, giveaways at the till and the loss report, `0047`–`0048`) since 28
-September, and release W (staff, their hours and their pay, `0049`) since 29
-September.
+September, and release W (staff, their hours and their pay, `0049`) and
+release X (customers and their points, `0050`) since 29 September.
 What was built differs from the plan below in these ways.
 
 Release J:
@@ -444,6 +444,52 @@ Release W:
   against the month's sales.
 - **Clearing the test records** keeps the people, and clears their hours,
   schedules, advances and payrolls.
+
+Release X:
+
+- **Numbered `0050`**, since release V took two migrations.
+- **Who may:** `customer.edit` (a customer added at the till or on Customers,
+  their details and addresses) for those who take orders and the managers;
+  `customer.view`, a permission the plan did not have (the customers, what each
+  bought, their points and the customer report), for the owner, the managers,
+  the accountant and the auditor; `loyalty.adjust` (points given or taken by
+  hand) for the owner and the managers. Without `customer.view` the till finds
+  a customer by their number only: nobody at the till reads the list.
+- **A phone number is kept one way** (`+964…`): 0770 123 4567, +964 770 123
+  4567 and the same in Arabic digits are one number, and one customer. Notes
+  about the customer take the place of preferences. A customer is put away,
+  never deleted, and keeps what they bought; so is an address, which a
+  delivery keeps as it was.
+- **On a sale:** the till puts a customer on a bill or a sale, by their number,
+  and adds one nobody has yet. A delivery by the café's own driver needs the
+  customer and their address. A delivery platform's customers are its own:
+  none is put on its sales. A bill split in two leaves the new bill with no
+  customer.
+- **Loyalty is by the dinar only** (decision 12's default): a point for every
+  1,000 IQD a sale comes to after its discount, earned once it is paid, and
+  100 points a reward of 5,000 IQD off. There is no loyalty by visits, and
+  points do not expire. The rules are on Settings, and loyalty can be turned
+  off there: points already held are kept, and none are earned or taken.
+- **A reward is the bill's only discount**, taken whole: never with another
+  discount, never cut to what the bill comes to, and taken by the person at
+  the till without a manager (Dr 4100, reason "Loyalty reward"). No liability
+  is kept; the customer report shows the points outstanding and what they
+  would take off.
+- **Every point is a row, never changed** (`loyalty_ledger`): earned, spent,
+  taken back and given back once per sale and once per refund. A void takes
+  back all the sale earned and gives back all it spent; a refund does so for
+  what it gives back, all of it once the sale is refunded in full. Points by
+  hand are 10,000 at most at a time, with a reason, never below nothing.
+- **The customer is written with the sale**, since a paid sale never changes;
+  a till loaded before `0050` still records its sales, and its retries are
+  still answered.
+- **Customers** lists who buys, with their points, orders and what they spent;
+  each customer's page gives their details, addresses, orders and points.
+  **Reports → Customers** gives the points earned, spent, taken back and given
+  by hand in the dates, the rewards taken, the points outstanding, and who
+  bought the most.
+- **Clearing the test records** keeps the customers and their addresses, and
+  clears their points.
 
 **Basis:**
 

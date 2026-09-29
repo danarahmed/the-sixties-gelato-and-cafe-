@@ -46,6 +46,7 @@ Plan a short window when the café is closed.
 | Batches and use-by dates (`0046`)       | ✅ Migration applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in a transaction that was rolled back (see [After `0046`](#after-0046)). The screens were merged ([pull request #35](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/35)) and deployed                  |
 | Losses and giveaways (`0047`–`0048`)    | ✅ Migrations applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in transactions that were rolled back (see [After `0048`](#after-0048)). The screens were merged ([pull request #36](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/36)) and deployed                 |
 | Staff and pay (`0049`)                  | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked as four roles in a transaction that was rolled back (see [After `0049`](#after-0049)). The screens were merged ([pull request #37](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/37)) and deployed                                 |
+| Customers and points (`0050`)           | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked as four roles in a transaction that was rolled back (see [After `0050`](#after-0050)). The screens were merged ([pull request #38](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/38)) and deployed                                 |
 
 ## 0. Before you start
 
@@ -1815,6 +1816,113 @@ performance advisor adds notes that 30 links of the new tables have no index
 of their own, and that two new indexes are not used yet (their tables are
 empty).
 
+## After `0050`
+
+Migration `0050` (release X) keeps who buys from the café, and their points:
+
+- **Customers** (read by the owner, the managers, the accountant and the
+  auditor; kept by them and, at the till, by those who sell): a name, a phone
+  number kept one way (0770 123 4567, +964 770 123 4567 and the same in Arabic
+  digits are one number, and one customer), notes about them, and addresses
+  for the café's own deliveries; put away, never deleted. The list, each
+  customer's orders and their points.
+- **At the till** (👤): a customer found by their number, or added, put on a
+  bill or a sale; a delivery by the café's own driver needs the customer and
+  their address, which the sale keeps as it was. A delivery platform's sales
+  take no customer.
+- **Points** (the café's rules on Settings, loyalty on by default): a point
+  for every 1,000 IQD a sale comes to once paid; 100 points a reward of 5,000
+  IQD off, the bill's only discount, taken whole (Dr 4100, "Loyalty reward").
+  A void takes back what the sale earned and gives back what it spent; a
+  refund does so for what it gives back. Points by hand (the owner and the
+  managers) take a reason, 10,000 at most at a time.
+- **Reports → Customers**: the points earned, spent, taken back and given by
+  hand, the rewards taken, the points outstanding and their worth, and who
+  bought the most.
+
+What it adds:
+
+- three permissions, in 13 role rows: `customer.edit` (owner, general and
+  branch managers, cashier, barista), `customer.view` (owner, general and
+  branch managers, accountant, auditor) and `loyalty.adjust` (owner, general
+  and branch managers);
+- four rules, read at their defaults until changed: `loyalty` (on),
+  `loyalty_point_per` (1,000), `loyalty_reward_points` (100) and
+  `loyalty_reward_value` (5,000);
+- the tables `customer`, `customer_address` and `loyalty_ledger` (never
+  changed once written, once per sale and once per refund), read only with
+  `customer.view` and written only by the functions below; and the customer,
+  their address and where a delivery goes on `pos_tab` and `sales_order`;
+- the functions signed-in users may call, each checking its permission:
+  `save_customer` and `save_customer_address` (`customer.edit`, keyed);
+  `find_customer` and `customer_at_till` (`sale.create`, `customer.edit` or
+  `customer.view`); `adjust_points` (`loyalty.adjust`, keyed); and
+  `customer_list`, `customer_detail` and `report_customers`
+  (`customer.view`). `record_sale`, `settle_tab`, `open_tab`, `save_tab` and
+  `pos_open_bills` take or give the customer;
+- the triggers that take points back on a void and a refund.
+
+It goes in before the screens: those deployed before it keep working, since
+every new parameter has a default and a bill saved without a customer is
+fingerprinted as before; the new screens find, add and show the customers.
+
+It was applied on 29 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0049` build. The text stored there
+is the file byte for byte (md5 `b4ecfa7574f73a44b1449af2a2f80abe`, 86,427
+bytes). It was then compared with the tested build, object by object, the role
+permissions and column grants included: identical, but for the schema `citext`
+lives in, as before.
+
+On applying, the 13 role rows were added to the permissions; no record
+changed.
+
+It was checked as the owner, a branch manager, the barista and the accountant,
+in one transaction that was rolled back:
+
+- **The barista, at the till:** nobody had the number; the customer added
+  (sent again with the same key, the same customer, kept as +964…); the same
+  number for someone else refused ("That number is … already"); found by the
+  number typed in Arabic digits; an address added. The list of customers and
+  points by hand were refused ("needs customer.view", "needs
+  loyalty.adjust"), and the table read no rows.
+- **A sale by card:** two lattes, 7,000, earned 7 points; sent again with the
+  same key, the same sale, earned once. A reward was refused ("Not enough
+  points: … has 7, and this takes 100").
+- **The branch manager** gave 100 points by hand, with why (sent again with
+  the same key, one entry): 107. Taking 100,000 was refused ("10,000 at most
+  at a time").
+- **A reward:** three lattes, 10,500, less the reward's 5,000: 5,500 paid, 100
+  points spent and 5 earned (Dr 1010 5,500 / Dr 4100 5,000 / Cr 4000 10,500,
+  and the cost), a loyalty reward given by the barista with no second person.
+- **A bill** for the customer, named after them with their points, paid by
+  card: 3 points. **A delivery by the café's own driver** was refused without
+  the customer and without their address, and recorded with them, the sale
+  keeping "Smoke Street 1 (smoke: the blue door)". A Talabat sale with a
+  customer was refused.
+- **The owner:** a reward with another discount refused ("A reward is the
+  bill's discount"); the first sale voided (its 7 points taken back); one of
+  the three lattes given back, 1,833: the 3,667 kept earns 3, so 2 were taken
+  back, and 33 of the 100 spent given back: 42 points. Changing a row of
+  points was refused ("append-only").
+- **The accountant** read the list (42 points, 3 orders, 10,167 spent, the
+  void left out and the refund taken off), the customer's orders, and the
+  report (18 earned, 100 spent, 9 taken back, 33 given back, 100 by hand, one
+  reward of 5,000; 42 outstanding, worth 2,100); adding a customer was refused
+  ("needs customer.edit").
+- **Put away** by the branch manager, the customer was refused on a sale.
+- **The books:** six journals; all twelve checks at zero before and after;
+  no record without its journal; on the audit trail, the customer, the
+  address, the points by hand, the discount, the void and the refund.
+
+Nothing was kept: every table's count is as it was (journals to 1091, the
+audit trail to 195), but for the 13 role rows; the new tables are empty.
+
+The security advisor adds the 8 new functions above, each checking its
+permission, and names `record_sale`, `settle_tab`, `open_tab` and `save_tab`
+again with their new parameters. The performance advisor adds notes that 8
+links of the new tables and columns have no index of their own.
+
 ## Clearing the test records
 
 Every record of trading in the live database so far is a test (the owner, 25
@@ -1826,8 +1934,8 @@ with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/res
    prices, recipes, and the add-ons with their groups, prices and recipes),
    the stock items and their units, suppliers and who each item is bought
    from, tables, the café's rules and their history, the people who work here
-   (with their pay and PINs), and the audit trail, which gains one line saying
-   what was cleared.
+   (with their pay and PINs), the customers and their addresses, and the audit
+   trail, which gains one line saying what was cleared.
 2. It clears sales (with their add-ons), open bills, voids and refunds, cash
    sessions, drawer counts and cash moved (each branch keeps its drawer), stock
    movements, losses and giveaways and their reviews, counts and batches with
@@ -1835,7 +1943,8 @@ with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/res
    (what was made stays kept batch by batch, from nothing), purchase orders,
    deliveries, returns to suppliers, supplier bills, payments and credits,
    expenses, the schedule, the hours and every PIN typed at the till,
-   advances, payrolls and salary payments, every journal and period, and the
+   advances, payrolls and salary payments, the customers' points, every
+   journal and period, and the
    document numbers (journals start again at 1001, the café's bill numbers at
    0001, the cash sessions, refunds, orders, returns, credits and payrolls at
    1).

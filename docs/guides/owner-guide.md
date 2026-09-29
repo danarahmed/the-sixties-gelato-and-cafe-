@@ -111,6 +111,38 @@ itself.
 the owner) and taken back by the next payroll. An advance given by mistake is
 cancelled while none of it has been taken back.
 
+## Customers and their points
+
+**Customers** (you, the managers; the accountant and the auditor read it)
+lists **who buys from the café**, found by name or part of their number, with
+their points, how many times they bought and what they spent. Customers are
+added at the till by their phone number, or here with **+ Add a customer**; a
+number typed any way (0770 123 4567, +964 770 123 4567, Arabic digits) is one
+number, and one customer.
+
+A customer's page gives their details and **notes about them** (what they like,
+what to leave out), their **addresses** for the café's own deliveries, **what
+they bought** (a delivery with the address it went to), and **how their points
+moved**. **Change their details** or **Put them away** (someone added twice, or
+who asked to be): a customer put away keeps what they bought, and is no longer
+put on a sale until brought back. An address put away stays on the orders
+delivered to it.
+
+**Points** (the rules are under **Settings → Open Rules →**): a point for every 1,000 IQD a
+sale comes to, after its discount, once paid; 100 points are a reward of
+5,000 IQD off, taken at the till as the bill's discount (posted to 4100, like
+any discount, with the reason "Loyalty reward"). A void takes back what the
+sale earned and gives back what it spent; a refund does so for what it gives
+back. Points owed or given by mistake are put right with **Give or take
+points** (you and the managers): a minus takes them, always with why, on the
+audit trail.
+
+**Reports → Customers** gives the points earned, spent, taken back and given
+by hand in the dates, the rewards taken and what they took off, the points
+customers hold now and what they would take off, and who bought the most.
+Points are not a debt in the books: their worth reaches them only as rewards
+are taken.
+
 ## Languages
 
 Every screen is in **English, Arabic and Kurdish (Sorani)**: its headings,
@@ -171,6 +203,13 @@ rule shows what it does, who set it, when and why, and every change is kept:
 - **Salaries are paid on the day of the month**: the 1st by default. From
   then, last month's payroll not approved or not paid is an alert, red a week
   later.
+- **Customers earn points, and take rewards**: on by default. Off, nothing is
+  earned or taken, and the points customers hold are kept for when it is on
+  again.
+- **A customer earns a point for every**: 1,000 IQD by default, of what a sale
+  comes to after its discount.
+- **A reward takes**: 100 points by default; **A reward is worth**: 5,000 IQD
+  off by default, taken whole: a bill smaller than a reward cannot take it.
 
 A change takes a reason; set a rule back to its default the same way. Nothing
 else changes them: the business row's old settings are the defaults until they
