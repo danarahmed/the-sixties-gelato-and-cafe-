@@ -8,6 +8,7 @@
 import { z } from "zod";
 import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { id, optionalText, positive, text } from "@/lib/validation";
+import { placeForWrite } from "@/lib/place";
 
 const PATHS = ["/production", "/inventory", "/products"];
 
@@ -141,6 +142,7 @@ export async function recordProductionAction(
     p_output_qty: v.data.outputQty,
     p_output_unit: v.data.outputQty === null ? null : v.data.outputUnit,
     p_note: v.data.note,
+    p_location: await placeForWrite(),
     p_stock_approval: v.data.stockApprovalId ?? null,
     p_produced_at: v.data.producedAt ?? null,
     p_use_by: v.data.useBy ?? null,

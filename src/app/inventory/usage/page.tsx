@@ -8,6 +8,8 @@ import { getUsageVariance, type UsageRow } from "@/lib/db/reports";
 import { fmtIQD, fmtQty, movementLabel } from "@/lib/format";
 import { addDays, businessToday, dateTimeIn, monthEnd, monthStart, parseDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui";
+import { PlaceSwitch } from "@/components/PlaceSwitch";
+import { placeChoice } from "@/lib/place";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +31,8 @@ export default async function UsagePage({
   const today = businessToday(profile.timezone);
   const from = parseDay(sp.from, monthStart(today));
   const to = parseDay(sp.to, today);
-  const rows = to < from ? [] : await getUsageVariance(from, to);
+  const { places, place, at } = await placeChoice();
+  const rows = to < from ? [] : await getUsageVariance(from, to, at);
   const pairs = rows.filter((r) => r.counts >= 2);
   const once = rows.filter((r) => r.counts < 2);
   const over = pairs.filter((r) => r.varianceValue > 0).reduce((s, r) => s + r.varianceValue, 0);
@@ -58,6 +61,7 @@ export default async function UsagePage({
       />
       <div className="phead">
         <h1>{t("nav.usage")}</h1>
+        <PlaceSwitch places={places} current={place?.id ?? null} />
         <PrintButton />
         <span className="sc">{t("{from} to {to} · between each item's counts", { from, to })}</span>
       </div>

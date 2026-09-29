@@ -19,7 +19,7 @@ import { showIn, showNice } from "@/components/production/batchMath";
 export const dynamic = "force-dynamic";
 
 /** The parts of a batch's story that are signed: a count or a correction may add or take away. */
-const SIGNED: readonly StoryPart[] = ["counted", "moved", "corrected"];
+const SIGNED: readonly StoryPart[] = ["counted", "corrected"];
 
 /**
  * One batch (0046): when it was made and by whom, what was planned and what
@@ -41,6 +41,8 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
   const signed = (n: number) => (n > 0 ? `+${q(n)}` : q(n));
   const cancelled = b.status === "cancelled";
   const at = (iso: string) => dateTimeIn(profile.timezone, iso);
+  // A batch sent from the kitchen to the branch is at two places (0054).
+  const places = new Set(b.movements.map((m) => m.place));
 
   return (
     <div className="grid" style={{ gap: 16 }} data-testid="batch-page">
@@ -132,9 +134,13 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
                 style={{ margin: 0, fontSize: ".8rem" }}
                 data-testid="story-check"
               >
-                {storyAddsUp(b.story)
-                  ? t("Every bit accounted for: made = sold + used + lost ± counts + left.")
-                  : t("It does not add up: tell the owner.")}
+                {!storyAddsUp(b.story)
+                  ? t("It does not add up: tell the owner.")
+                  : b.story.moved !== 0
+                    ? t(
+                        "Every bit accounted for: made = sold + used + lost + on its way ± counts + left.",
+                      )
+                    : t("Every bit accounted for: made = sold + used + lost ± counts + left.")}
               </p>
             </>
           )}
@@ -151,6 +157,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
               <thead>
                 <tr>
                   <th>{t("When")}</th>
+                  {places.size > 1 && <th>{t("Place")}</th>}
                   <th>{t("What")}</th>
                   <th className="right">{t("Quantity")}</th>
                   <th>{t("By")}</th>
@@ -163,7 +170,8 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
                     <td className="muted mono" style={{ fontSize: ".8rem" }}>
                       {at(m.at)}
                     </td>
-                    <td>{t(lotMovementLabel(m.kind, m.qty))}</td>
+                    {places.size > 1 && <td>{m.place ?? "—"}</td>}
+                    <td>{t(lotMovementLabel(m.kind, m.qty, m.referenceType))}</td>
                     <td className="right mono">{signed(m.qty)}</td>
                     <td className="muted">{m.by ?? "—"}</td>
                     <td className="muted" style={{ fontSize: ".8rem" }}>

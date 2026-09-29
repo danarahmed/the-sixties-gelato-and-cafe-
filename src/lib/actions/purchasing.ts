@@ -8,6 +8,8 @@
  */
 import { z } from "zod";
 import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { db } from "@/lib/db/client";
+import { placeForWrite } from "@/lib/place";
 import {
   day,
   id,
@@ -25,6 +27,17 @@ const supplierInput = z.object({
   contact: optionalText(120),
   phone: optionalText(40),
 });
+
+/** Where an order is for: a change to it keeps it there. */
+async function orderPlace(poId: string): Promise<string | null> {
+  const c = await db();
+  const { data } = await c
+    .from("purchase_order")
+    .select("location_id")
+    .eq("id", poId)
+    .maybeSingle();
+  return data?.location_id ? String(data.location_id) : null;
+}
 
 /** A new supplier, its name unlike any other supplier in use (0027). */
 export async function createSupplierAction(
@@ -146,7 +159,10 @@ export async function receiveGoodsAction(
     p_rebate: v.data.rebate,
     p_note: v.data.note,
     p_confirm: v.data.confirm,
-    ...(v.data.purchaseOrderId ? { p_purchase_order: v.data.purchaseOrderId } : {}),
+    // Against an order, the goods come in where it was for; else, here.
+    ...(v.data.purchaseOrderId
+      ? { p_purchase_order: v.data.purchaseOrderId }
+      : { p_location: await placeForWrite() }),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
@@ -208,6 +224,8 @@ export async function savePurchaseOrderAction(
     })),
     p_expected_on: v.data.expectedOn,
     p_note: v.data.note,
+    // A new order is for here; one changed stays for where it was.
+    p_location: v.data.poId ? await orderPlace(v.data.poId) : await placeForWrite(),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
@@ -347,6 +365,8 @@ export async function returnToSupplierAction(
     p_lines: v.data.lines.map((l) => ({ item_id: l.itemId, qty: l.qty, unit_code: l.unitCode })),
     p_reason: v.data.reason,
     p_receipt: v.data.receiptId,
+    // Named against a delivery, the goods leave where it came in; else, here.
+    p_location: v.data.receiptId ? null : await placeForWrite(),
     p_confirm: v.data.confirm,
     p_idempotency_key: key,
   });

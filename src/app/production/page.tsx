@@ -16,6 +16,8 @@ import { fmtIQD, fmtQty } from "@/lib/format";
 import { addDays, businessToday, dateTimeIn, parseDay } from "@/lib/dates";
 import { PLAN_STATUS_LABEL, WEEKDAY_NAME, keepsLabel } from "@/lib/production";
 import { EmptyState } from "@/components/ui";
+import { PlaceSwitch } from "@/components/PlaceSwitch";
+import { placeChoice } from "@/lib/place";
 import type { ItemOpt } from "@/components/menu/RecipeLines";
 import { RecordBatch } from "@/components/production/RecordBatch";
 import { BatchRecipeForm } from "@/components/production/BatchRecipeForm";
@@ -42,14 +44,16 @@ export default async function ProductionPage({
   const today = businessToday(profile.timezone);
   const tomorrow = addDays(today, 1);
   const planDay = parseDay(sp.day, today) === tomorrow ? tomorrow : today;
+  // Batches are made, planned and kept at this device's place (AB).
+  const { places, place, at } = await placeChoice();
   const [recipes, batches, items, costs, board, plan, lots] = await Promise.all([
     getBatchRecipes(),
     getBatches(50),
     getItems(),
     seesCost ? getItemCosts() : Promise.resolve(new Map<string, string>()),
-    seesCost ? getStockBoard() : Promise.resolve([]),
-    getProductionPlan(planDay),
-    getProductionLots(),
+    seesCost ? getStockBoard(at) : Promise.resolve([]),
+    getProductionPlan(planDay, at),
+    getProductionLots(at),
   ]);
 
   const itemOpts: ItemOpt[] = items.map((i) => ({
@@ -138,7 +142,10 @@ export default async function ProductionPage({
 
   return (
     <div className="grid" style={{ gap: 16 }}>
-      <h1 style={{ margin: 0 }}>{t("nav.production")}</h1>
+      <div className="title-row">
+        <h1>{t("nav.production")}</h1>
+        <PlaceSwitch places={places} current={place?.id ?? null} />
+      </div>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
         {t(
           "What you make in batches: gelato, a base, syrup, dough. Recording a batch takes its ingredients out of stock and puts what came out in, valued at what the ingredients cost. Made items are then used like any other: in another batch (a base, then its flavours) or in a product's recipe on Products & Recipes (a cup of gelato).",

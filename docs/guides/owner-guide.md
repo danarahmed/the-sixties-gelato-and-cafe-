@@ -504,6 +504,16 @@ discount, why and who approved it. The 10% is a business setting (shown on
 - **Each batch's page** (its number on Production, or Reports → Production)
   says what came out and what became of it — sold, used in other batches,
   lost, found or missing on a count, still in stock — every bit accounted for.
+- **The central kitchen:** set the kitchen's tablet once to **Stock at:
+  Central Kitchen** (beside the title of Inventory, Production and the other
+  stock screens). What it records — batches, losses, counts, deliveries — is
+  then the kitchen's, and its screens show the kitchen's stock.
+- **Sending stock between them** (**Inventory → Transfers**): the branch sends
+  the kitchen its milk and sugar, the kitchen sends the branch its gelato. It
+  is on its way until the other place receives it: **Received: all of it**, or
+  **Not all of it arrived…** with what did, the rest written off as lost. A
+  batch keeps its number and use-by at the branch. One sent by mistake is
+  cancelled while on its way, and goes back.
 
 ## Every week
 

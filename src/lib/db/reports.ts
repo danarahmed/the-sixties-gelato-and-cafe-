@@ -151,11 +151,15 @@ export interface UsageRow {
  * Usage against the recipes (0039): each item between its first and last
  * approved count in the dates, at the location.
  */
-export async function getUsageVariance(from: string, to: string): Promise<UsageRow[]> {
+export async function getUsageVariance(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<UsageRow[]> {
   const c = await db();
   const list = (v: unknown) => (Array.isArray(v) ? (v as Record<string, unknown>[]) : []);
   return rows(
-    await c.rpc("report_usage_variance", { p_from: from, p_to: to }),
+    await c.rpc("report_usage_variance", { p_from: from, p_to: to, p_location: place }),
     "usage against the recipes",
   ).map((r: Record<string, unknown>) => ({
     itemId: str(r.item_id),

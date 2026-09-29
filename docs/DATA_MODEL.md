@@ -1410,3 +1410,60 @@ approval, wait, key)`** (`waste.record`), on the trail as `inventory.loss`.
     lists show.
 - **Helpers nobody calls:** `document_record_exists`, `document_record_ref`,
   `attach_document__run` and `detach_document__run`.
+
+### Stock sent between the café's places (`0054`)
+
+- **1210 Stock in transit**, an asset, in every café's chart. Only a transfer
+  moves it: a trigger on `journal_line` refuses any other journal on it, and it
+  takes no manual journal, bill or credit.
+- **`stock.transfer`**: the owner, the general manager, the branch manager and
+  purchasing send, receive and cancel transfers.
+- **A batch at each place:** `item_lot` is unique by item, code and place, and a
+  production batch has one lot at each place it is at. What the kitchen made and
+  sent is the same batch at the branch, with the same code and use-by.
+- **`stock_transfer`**: its number (`next_document_no('transfer')`), the place it
+  leaves and the one it goes to (never the same), `sent`, `received` or
+  `cancelled`, the note, what it was worth as it left (`value_sent`), and who and
+  when for each step: `value_received` and `value_short` once received, with what
+  was said; the reason once cancelled.
+- **`stock_transfer_line`**: the item, the quantity and unit as sent and in the
+  base unit, its value, the `transfer_out` movement that took it, and once
+  received what arrived and its value. One line an item.
+- Triggers refuse deleting a transfer, changing what was sent, changing one
+  settled, and changing what arrived. Those who see costs or may send stock
+  read both.
+- **Functions:**
+  - `send_stock_transfer(from, to, lines, note, confirm, key)`: from this
+    device's place when none is named. Each line leaves at its cost there (the
+    last of an item with the rest of its value), the batch with the earliest
+    use-by first, as `transfer_out` movements. It asks the stock rule: below
+    zero is refused, or asked about and sent once confirmed. Journal
+    `stock_transfer`: Dr 1210 / Cr 1200.
+  - `receive_stock_transfer(transfer, lines, note, key)`: all of it, or what
+    arrived of each line in the unit it was sent in. What arrived comes in as
+    `transfer_in` movements, from the batches it left, kept as those batches
+    at the place it went to. Journal `stock_transfer_receipt`: Dr 1200 what
+    arrived, Dr 5300 what did not, Cr 1210 what was sent.
+  - `cancel_stock_transfer(transfer, reason, key)`: while on its way, back
+    where it was, to the batches it left, as `reversal` movements. Journal
+    `stock_transfer_cancel`: Dr 1200 / Cr 1210.
+  - All three are keyed, lock the transfer, and write the trail
+    (`stock.transfer_send`, `stock.transfer_receive`, `stock.transfer_cancel`).
+  - `stock_transfers(limit)`: the latest first, with their lines and what
+    arrived of each. `stock_places()`: the places in use, the branches first.
+- **The books:** `reconciliation_checks` has a `transit` check, what is on its
+  way at its value as it left against 1210; the month's close names it. A
+  transfer lacking a journal, and a transfer journal lacking its transfer, are
+  on `document_problems`. The stock card calls each movement `transferred`.
+- **A batch at every place it is at:** `batch_story(batch)` adds up all the
+  batch's lots: made = sold + used + lost + on its way ± counted ± corrected +
+  left. Sent between its own places, it has not moved at all; what did not
+  arrive is lost; what is on its way stays apart until it arrives.
+  `batch_reconciliation` (the batch's page) and `report_production` tell it
+  so, and each movement of the batch names its place.
+- **Also changed:** `create_item` takes the place a new item's opening stock is
+  at; `dashboard_summary` counts an item low when all the café holds of it is
+  under its reorder level, and below zero when it is below zero anywhere.
+- **Helpers nobody calls:** `send_stock_transfer__run`,
+  `receive_stock_transfer__run`, `cancel_stock_transfer__run`,
+  `create_item__run`, `batch_story` and the triggers.

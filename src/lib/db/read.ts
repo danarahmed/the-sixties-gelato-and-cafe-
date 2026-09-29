@@ -236,18 +236,20 @@ export interface StockRow {
   isNegative: boolean;
 }
 
-/** Stock on hand, derived from the movement ledger (needs cost.view). */
-export async function getStockBoard(): Promise<StockRow[]> {
+/**
+ * Stock on hand, derived from the movement ledger (needs cost.view): at one
+ * place, or — no place named — all the café holds of each item, one row an
+ * item, below zero when it is below zero anywhere (release AB).
+ */
+export async function getStockBoard(place: string | null = null): Promise<StockRow[]> {
   const c = await db();
-  return rows(
-    await c
-      .from("stock_board")
-      .select(
-        "item_id,name,item_type,base_unit_code,quantity_base,value,unit_cost,min_level_base,is_low,is_negative",
-      )
-      .order("name"),
-    "stock on hand",
-  ).map((r) => ({
+  let q = c
+    .from("stock_board")
+    .select(
+      "item_id,location_id,name,item_type,base_unit_code,quantity_base,value,unit_cost,min_level_base,is_low,is_negative",
+    );
+  if (place) q = q.eq("location_id", place);
+  const list = rows(await q.order("name"), "stock on hand").map((r) => ({
     itemId: str(r.item_id),
     name: str(r.name),
     itemType: str(r.item_type),
@@ -258,6 +260,23 @@ export async function getStockBoard(): Promise<StockRow[]> {
     reorderBase: numOrNull(r.min_level_base),
     isLow: Boolean(r.is_low),
     isNegative: Boolean(r.is_negative),
+  }));
+  if (place) return list;
+  const byItem = new Map<string, StockRow>();
+  for (const r of list) {
+    const was = byItem.get(r.itemId);
+    if (!was) {
+      byItem.set(r.itemId, { ...r });
+      continue;
+    }
+    was.onHandBase += r.onHandBase;
+    was.value += r.value;
+    was.isNegative ||= r.isNegative;
+  }
+  return [...byItem.values()].map((r) => ({
+    ...r,
+    unitCost: r.onHandBase > 0 ? Math.round((r.value / r.onHandBase) * 10000) / 10000 : null,
+    isLow: r.onHandBase < (r.reorderBase ?? 0),
   }));
 }
 
@@ -273,14 +292,18 @@ export interface MovementRow {
   by: string | null;
 }
 
-export async function getMovements(limit = 100): Promise<MovementRow[]> {
+/** The latest stock movements, at one place or at all of them. */
+export async function getMovements(
+  limit = 100,
+  place: string | null = null,
+): Promise<MovementRow[]> {
   const c = await db();
+  let q = c
+    .from("inventory_movement")
+    .select("id,item_id,type,base_quantity_signed,unit_cost,value,reason,occurred_at,app_user_id");
+  if (place) q = q.eq("location_id", place);
   const [moves, items, people] = await Promise.all([
-    c
-      .from("inventory_movement")
-      .select("id,item_id,type,base_quantity_signed,unit_cost,value,reason,occurred_at,app_user_id")
-      .order("occurred_at", { ascending: false })
-      .limit(limit),
+    q.order("occurred_at", { ascending: false }).limit(limit),
     c.from("item").select("id,name"),
     c.from("app_user").select("id,full_name"),
   ]);
@@ -790,6 +813,8 @@ export interface CountSummary {
   rejectedReason: string | null;
   lines: number;
   counted: number;
+  /** Where the count is of (release AB). */
+  placeId: string | null;
 }
 
 /** Stock counts, newest first. Never includes what the ledger expected. */
@@ -799,7 +824,7 @@ export async function getStockCounts(limit = 30): Promise<CountSummary[]> {
     c
       .from("stock_count")
       .select(
-        "id,status,count_type,started_at,submitted_at,approved_at,counted_by,approved_by,rejected_reason",
+        "id,status,count_type,started_at,submitted_at,approved_at,counted_by,approved_by,rejected_reason,location_id",
       )
       .eq("legacy", false)
       .order("started_at", { ascending: false })
@@ -844,6 +869,7 @@ export async function getStockCounts(limit = 30): Promise<CountSummary[]> {
       rejectedReason: strOrNull(x.rejected_reason),
       lines: t.lines,
       counted: t.counted,
+      placeId: strOrNull(x.location_id),
     };
   });
 }

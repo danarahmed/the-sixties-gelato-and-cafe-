@@ -58,6 +58,9 @@ const typed = () =>
     -- Documents kept with the records (0053): their names, notes and why one was taken off.
     union select file_name from document_attachment union select coalesce(note, '') from document_attachment
     union select coalesce(removed_reason, '') from document_attachment
+    -- Stock sent between places (0054): the notes and reasons typed.
+    union select coalesce(note, '') from stock_transfer union select coalesce(receive_note, '') from stock_transfer
+    union select coalesce(cancel_reason, '') from stock_transfer
   ) x where n is not null`);
 const own = () =>
   new Set(

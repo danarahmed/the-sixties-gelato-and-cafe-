@@ -51,6 +51,7 @@ Plan a short window when the café is closed.
 | Balance sheet and cash flow (`0052`)    | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0052`](#after-0052)). The screens were merged ([pull request #40](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/40)) and deployed            |
 | Reports printed as PDF                  | ✅ No migration. The screens were merged ([pull request #41](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/41)) and deployed on 29 September                                                                                                                                                                                                                           |
 | Documents with the records (`0053`)     | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, the bucket and its rules too) and checked on the live records as three roles in a transaction that was rolled back (see [After `0053`](#after-0053)). The screens were merged ([pull request #42](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/42)) and deployed    |
+| Stock sent between places (`0054`)      | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0054`](#after-0054)). The screens were merged ([pull request #43](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/43)) and deployed            |
 
 ## 0. Before you start
 
@@ -2147,6 +2148,94 @@ checking its permission. The performance advisor adds two notes: who attached
 a document and who took it off are not indexed, like the other tables'
 who-columns. The table is small.
 
+## After `0054`
+
+Migration `0054` (release AB, its first part) sends stock between the café's
+places: the branch sends the kitchen what it makes with, and the kitchen sends
+the branch what it made.
+
+- **Sent:** the stock leaves the place it is sent from at its cost there, the
+  earliest use-by first, into **1210 Stock in transit**.
+- **Received:** what arrived comes into the other place, each batch kept as
+  that batch there with its use-by. What did not arrive goes to **5300 Waste &
+  spoilage**.
+- **Cancelled** while on its way: it goes back where it came from, to the
+  batches it left.
+
+What it adds:
+
+- **1210 Stock in transit** in every café's chart. Like 1200, it takes no
+  journal by hand, and only a transfer's journals may touch it.
+- **The permission `stock.transfer`** for the owner, the general manager, the
+  branch manager and purchasing. Whoever sees costs may see the transfers.
+- **The tables `stock_transfer` and `stock_transfer_line`,** numbered from 1.
+  What was sent never changes, and a transfer is never deleted; it is received
+  or cancelled once. Row-level security lets whoever may see them read them.
+- **The functions signed-in users may call**, each checking its permission:
+  `send_stock_transfer`, `receive_stock_transfer` and `cancel_stock_transfer`,
+  keyed and on the audit trail; `stock_transfers` and `stock_places` to read.
+- **A batch kept at each place it is at:** the same batch, with the same
+  use-by, at the kitchen and at the branch. The batch's page adds up all of
+  them, and says what is on its way.
+- **`create_item`** takes the place an item's opening stock is at. Named no
+  place, it is the first branch, as before, so the screens deployed before it
+  still call it as they did.
+- **A new check on "Do the books tie?"**, and in the month's close: what is on
+  its way against 1210.
+
+It was applied on 29 September 2026 with the Supabase connector: one
+`apply_migration` call, one transaction. Before it, a read-only check showed
+the live database still matched the verified `0053` build.
+
+The text stored there is the file byte for byte (md5
+`8a79cb2514afb4794795c9e3de1597f3`, 90,128 bytes). It was then compared with
+the tested build, object by object, the role permissions and column grants
+included. It is identical, but for the schema `citext` lives in, as before.
+
+On applying, two things changed and nothing else:
+
+- the chart gained 1210 (38 accounts to 39);
+- the four roles gained `stock.transfer` (132 permissions to 136).
+
+The café kept no batch lots yet, so changing their keys touched no row.
+
+It was checked on the live records as the owner, the accountant and the
+barista, in one transaction that was rolled back.
+
+- **The owner** sent half the branch's coffee beans (6,445 g) and half its
+  caramel gelato to the Central Kitchen: transfer 1, 210,862 IQD at its cost
+  at the branch. Sent twice with one key, it was sent once.
+  - 1210 then held 210,862, and the new check agreed with it.
+  - A journal by hand on 1210 was refused ("Account 1210 has a subledger and
+    cannot take a manual journal").
+- **The barista** saw no transfer, and receiving it was refused ("needs
+  stock.transfer").
+- **The accountant** read it, and sending was refused ("needs
+  stock.transfer").
+- **The owner received it** with half the coffee arrived: 118,263 came into
+  the kitchen and 92,599 went to 5300, and all 210,862 left 1210. Received
+  again, it was refused ("Transfer 1 was received already").
+- **Transfer 2** was sent and cancelled with why. The coffee went back to the
+  branch, which held its 6,445 g again, at the same value.
+- **An item added at the kitchen** opened there.
+- **The books:** each of the thirteen checks was at nothing before and after,
+  with no document out of step. The month's close named the new check, "Stock
+  on its way agrees with Stock in transit (1210)", and it passed.
+- **The audit trail** named each transfer by its number: sent, received with
+  what was lost, sent, and cancelled with why.
+
+Nothing was kept:
+
+- every table's count is as it was (journals to 1091, the audit trail to 195);
+- the new tables hold no row.
+
+The security advisor adds the five functions a signed-in person calls, each
+checking its permission. `create_item` is listed again, with the place added.
+The performance advisor adds eight notes, for columns not indexed: a
+transfer's two places and who sent, received or cancelled it; a line's café,
+item and movement. The other tables' who-columns are the same. The tables are
+small.
+
 ## Clearing the test records
 
 Every record of trading in the live database so far is a test (the owner, 25
@@ -2162,8 +2251,8 @@ with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/res
    trail, which gains one line saying what was cleared.
 2. It clears sales (with their add-ons), open bills, voids and refunds, cash
    sessions, drawer counts and cash moved (each branch keeps its drawer), stock
-   movements, losses and giveaways and their reviews, counts and batches with
-   their lots
+   movements, the stock sent between places, losses and giveaways and their
+   reviews, counts and batches with their lots
    (what was made stays kept batch by batch, from nothing), purchase orders,
    deliveries, returns to suppliers, supplier bills, payments and credits,
    expenses, the schedule, the hours and every PIN typed at the till,
@@ -2172,8 +2261,8 @@ with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/res
    bucket: remove them there if they should go too), every journal and
    period, and the
    document numbers (journals start again at 1001, the café's bill numbers at
-   0001, the cash sessions, refunds, orders, returns, credits and payrolls at
-   1).
+   0001, the cash sessions, refunds, orders, returns, credits, payrolls and
+   transfers at 1).
 3. Run it in the SQL editor with the confirmation set in the same session:
    `set sixties.reset = 'dry run';` first — it clears, checks, reports what it
    would clear and changes nothing — then

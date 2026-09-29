@@ -7,12 +7,12 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0053` and the rebuilt app. The SQL
-  checks (54, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (31, every role, every screen in
+- **Built and verified:** migrations `0014`–`0054` and the rebuilt app. The SQL
+  checks (55, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (32, every role, every screen in
   Arabic and Kurdish, a lost answer on each kind of screen, every report on A4
-  paper, and documents kept with the records), the unit and contract tests
-  (496) and a production build all pass.
+  paper, documents kept with the records, and stock sent between the café's
+  places), the unit and contract tests (500) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -1270,6 +1270,77 @@ browser tests through the real app, or both.
     Kurdish;
   - unit tests, and every new text in Arabic and Kurdish.
 
+- **The café's places, and the stock sent between them (release AB, first
+  part, migration `0054`).** The branch and the central kitchen each kept
+  their own stock, but nothing moved it from one to the other, and the app
+  recorded everything at the branch.
+  - **Where this device works:** once the café has a second place, **Stock
+    at** beside the title of Inventory, Stock Count, Usage, Production,
+    Purchasing and What to buy chooses it, and the device keeps it. Its
+    deliveries without an order, new orders, returns not named against a
+    delivery, batches, losses, corrections, opening stock (a new item's too)
+    and counts are recorded there, and its stock screens show that place's
+    stock. The till still sells at the first branch.
+  - **Transfers** (Inventory → Transfers): stock sent from one place to
+    another leaves at its cost there, the batch with the earliest use-by
+    first, into 1210 Stock in transit. The other place receives all of it,
+    or what arrived, the rest lost to 5300; one sent by mistake is cancelled
+    while on its way, back where it was. Sending more than a place holds is
+    asked about first, as the stock rule says. Numbered, keyed, on the audit
+    trail, and in Arabic and Kurdish.
+  - **A batch at each place:** the kitchen's batch keeps its number and use-by
+    at the branch, and its page follows it to every place: what was sold at
+    the branch counts, what did not arrive is lost, what is on its way is
+    shown apart.
+  - **The books:** "Do the books tie?" checks what is on its way against
+    1210, and the month's close names it; 1210 takes no bill, credit or
+    journal by hand. The dashboard counts an item low only when all the café
+    holds of it is.
+
+  The migration was applied to the live database on 29 September 2026. The
+  text stored there is the file byte for byte, and it matches the tested
+  build object by object, permissions included (the one difference, as
+  before, is the schema `citext` lives in). On applying, the chart gained
+  1210 and four roles gained `stock.transfer`; no other record changed.
+
+  It was checked on the live records as the owner, the accountant and the
+  barista, in one transaction that was rolled back:
+  - the owner sent half the branch's coffee beans and caramel gelato to the
+    Central Kitchen, 210,862 IQD at its cost there, sent twice and sent
+    once; 1210 and the new check agreed, and a journal by hand on 1210 was
+    refused;
+  - the barista saw no transfer and could not receive it; the accountant
+    read it and could not send one;
+  - the owner received it with half the coffee arrived, the rest lost to
+    5300, and it could not be received twice; a second, cancelled on its
+    way, put the coffee back at the branch;
+  - an item added at the kitchen opened there;
+  - the thirteen checks were at nothing before and after, the month's close
+    named the new one, and the audit trail named each transfer by its
+    number.
+
+  Nothing was kept. The security advisors add the five functions a signed-in
+  person calls, each checking its permission, and `create_item` with its
+  place; the performance advisors note eight unindexed columns on the two
+  new, small tables. The screens went live with
+  [pull request #43](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/43).
+
+  Built and tested:
+  - a new SQL suite: sending, receiving what arrived and cancelling, each at
+    its cost through 1210; a batch kept as that batch at the branch, with its
+    use-by, and its page adding up every place; refused in words; keyed; for
+    those who may; the audit trail; an item opened at the kitchen; the books;
+  - races: ten people sending one transfer with one key, receiving it, or
+    cancelling another, all at once: each happens once;
+  - every other SQL suite's checks, the rehearsals of the upgrade and of
+    clearing the test records, with the new check;
+  - a new browser suite: milk and cones sent from the branch to the kitchen,
+    received with half a litre lost; the device then working at the
+    kitchen, its stock and a loss there; cones sent back and cancelled; more
+    than the kitchen holds asked about first; a cashier sent away; the books,
+    the journals and the audit trail; Arabic and Kurdish;
+  - unit tests, and every new text in Arabic and Kurdish.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -1329,11 +1400,11 @@ browser tests through the real app, or both.
 | Expenses            | cost viewers (recording: managers, accountant)             | Proposed account from the narration, confirmed by the person; where the money came from, always said; posted in one step                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Purchasing          | cost viewers (purchasing, managers)                        | Suppliers; purchase orders drafted, approved within a limit (managers), sent, printed, closed or cancelled; receive goods with landed costs into stock and GRNI, against an order or not; correct or reverse a delivery; return goods to a supplier                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Products & Recipes  | cost viewers                                               | Create a product: its recipe costed as it is typed, prices with their margin and a suggested price; change a price or the recipe from a date; menu costing; photos, categories, favourites, show or hide on the till; sizes added, renamed and retired; add-ons in groups, priced by channel, with recipes, offered by the sizes chosen                                                                                                                                                                                                                                                                                                                             |
-| Inventory           | cost viewers; waste for baristas                           | Stock board from the ledger, add items with opening stock, opening stock for items with none, record waste, manager corrections, movements                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Stock Count         | counter; reviewers                                         | Blind count while trading, one at a time; submit or cancel; second-person review and approval                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Inventory           | cost viewers; waste for baristas                           | Stock board from the ledger, at this device's place once the café has two; add items with opening stock, opening stock for items with none, record waste, manager corrections, movements; transfers between places: sent, received (what did not arrive lost) or cancelled on their way                                                                                                                                                                                                                                                                                                                                                                             |
+| Stock Count         | counter; reviewers                                         | Blind count while trading, one at a time at each place, of this device's place; submit or cancel; second-person review and approval                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Delivery Platforms  | cost viewers                                               | What each platform owes, order by order, and what 1100 holds that no order explains; match a pasted statement and post the payout it proposes (owner, general manager, accountant); cancel a statement posted; platform sales and their margin                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Customers           | owner, managers; accountant, auditor (reading)             | Who buys, found by name or part of their number, with their points, orders and what they spent; a customer's details, notes and addresses, put away and brought back; what they bought and how their points moved; points given or taken by hand with why (owner, managers)                                                                                                                                                                                                                                                                                                                                                                                         |
-| Production          | cost viewers, baristas                                     | Record a batch with a preview of what it uses and makes; batch recipes (a base, then its flavours); batch history with cost per unit; cancel a batch                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Production          | cost viewers, baristas                                     | Record a batch at this device's place with a preview of what it uses and makes; batch recipes (a base, then its flavours); batch history with cost per unit; a batch's page at every place it is at; cancel a batch                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Staff               | owner, managers; accountant, auditor (reading)             | Everyone who works here, with or without a login: their job, branch, start and last day, and the PIN they clock in with; the week's schedule; the hours day by day with lateness, leaving early, absence and overtime, corrected, added or cancelled with why (managers); pay by the month, the day or the hour, set by those who run payroll and seen only by those who see it                                                                                                                                                                                                                                                                                     |
 | Payroll             | owner, general manager, accountant; auditor (reading)      | A month drafted from the pay and the hours; additions and deductions with why; advances given, taken back and cancelled; approved once the month is over (6100, 2100, 1300), reopened while nothing is paid, and paid to one person or everyone from the till, the safe, the bank or the owner; each payroll with its lines, payments and journals                                                                                                                                                                                                                                                                                                                  |
 | Journals            | cost viewers (posting: accountant, owner, general manager) | Register, manual journals (draft/publish), reversal, owner's control correction                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -1344,12 +1415,12 @@ browser tests through the real app, or both.
 
 ## Tests
 
-| Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Result      |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | 496 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 42 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward)                                                                                                                                                                                                                                                                                                                         | 54 passing  |
-| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers and loyalty, the sales analysis and the stock's value, the balance sheet and the cash flow, every report on paper, documents kept with the records | 31 passing  |
-| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | green       |
+| Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Result      |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 500 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 43 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward, a transfer sent, received and cancelled at once)                                                                                                                                                                                                                                                                       | 55 passing  |
+| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers, loyalty, the sales analysis and the stock's value, the balance sheet and cash flow, every report on paper, documents with the records, transfers | 32 passing  |
+| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | green       |
 
 What is not built, and why, is in [`LIMITATIONS.md`](LIMITATIONS.md); the order
 of the next work is in [`ROADMAP.md`](ROADMAP.md).

@@ -5,7 +5,7 @@
 -- approved by the owner's PIN (after a wrong one) and a refund, a delivery
 -- billed and paid, a bill for a service under the
 -- café's own number, an expense, waste, a blind count, a production batch,
--- the drawer's session closed with the takings to the safe and its dollars
+-- stock sent to the central kitchen (one received, one on its way), the drawer's session closed with the takings to the safe and its dollars
 -- counted, the dollars exchanged into the bank, cash banked, a
 -- manual journal and its reversal, and a bill left open. Set-up made along the way (a table, a
 -- batch recipe) is set-up, and stays.
@@ -72,6 +72,15 @@ create temp table syrup as select save_batch_recipe(null, 'Golden syrup', '{"mea
   '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":50,"unit_code":"g"}]'::jsonb) r;
 grant select on syrup to public;
 select record_production((select (r ->> 'recipe_id')::uuid from syrup), 1);
+-- Cups sent to the central kitchen and received there, and beans still on
+-- their way (0054).
+select test.act_as('manager@example.com');
+create temp table sent as select send_stock_transfer(null, (select id from location where name = 'Central Kitchen'),
+  '[{"item_id":"c0000000-0000-0000-0000-000000000002","qty":5}]'::jsonb) r;
+grant select on sent to public;
+select receive_stock_transfer((select (r ->> 'transfer_id')::uuid from sent));
+select send_stock_transfer(null, (select id from location where name = 'Central Kitchen'),
+  '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":100,"unit_code":"g"}]'::jsonb);
 
 select test.act_as('manager@example.com');
 select close_cash_session(25000, null, 20000, 'safe', p_usd_counted => 2);

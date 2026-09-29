@@ -14,9 +14,10 @@ accounts, giveaways at the till and the loss report, `0047`–`0048`) since 28
 September, and release W (staff, their hours and their pay, `0049`),
 release X (customers and their points, `0050`), release Y (the sales
 analysis, the stock's value on a day and what was bought, `0051`), release Z
-(the balance sheet and the cash-flow statement, `0052`) and release AA (every
+(the balance sheet and the cash-flow statement, `0052`), release AA (every
 report printed or saved as a PDF, and the documents kept with the records,
-`0053`) since 29 September.
+`0053`) and the first part of release AB (the stock sent between the café's
+places, `0054`) since 29 September.
 What was built differs from the plan below in these ways.
 
 Release J:
@@ -599,6 +600,28 @@ Release AA:
   read the file. The file is never served from the app's own address.
 - **Not built:** reading the bill's numbers from its photo, thumbnails, and
   documents on other records (sales, counts, payroll).
+
+Release AB:
+
+- **In two parts.** The first (`0054`, the plan's `0053` having gone to the
+  documents): the stock sent between the café's places, and where each
+  device does its stock work. The second: tills of their own at each branch,
+  roles bound to a branch, numbers and prices by branch, the place on journal
+  lines, and each branch's profit and loss.
+- **Transfers as planned:** `stock_transfer` and its lines, sent, then
+  received or cancelled while on their way, through 1210 Stock in transit,
+  which only a transfer moves. What did not arrive is lost to 5300 as it is
+  received. The books check what is on its way against 1210, and the month's
+  close names it.
+- **A batch at each place:** a lot is kept apart at each place it is at, so a
+  batch the kitchen made and sent keeps its code and use-by at the branch, and
+  its page follows it to every place.
+- **A place for each device before the tills.** Every stock function already
+  took a place, and the app named none. Now a device chooses where it does its
+  stock work (kept on the device, shown on the stock screens once the café has
+  a second place), and its deliveries without an order, new orders, returns,
+  batches, losses, corrections, opening stock and counts are recorded there.
+  The till still sells at the first branch until the second part.
 
 **Basis:**
 

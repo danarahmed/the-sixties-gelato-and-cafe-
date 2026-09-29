@@ -28,8 +28,8 @@ export const STORY_PARTS = [
   "sold",
   "used",
   "lost",
-  "counted",
   "moved",
+  "counted",
   "corrected",
   "left",
 ] as const;
@@ -42,7 +42,8 @@ export const STORY_LABEL: Record<StoryPart | "made", string> = {
   used: "Used in other batches",
   lost: "Lost",
   counted: "Found or missing on a count",
-  moved: "Moved",
+  // Sent to another of the café's places and not yet arrived (0054).
+  moved: "On its way to another place",
   corrected: "Corrected",
   left: "Still in stock",
 };
@@ -70,7 +71,7 @@ export function storyFrom(v: unknown): Story | null {
  * found some missing is negative).
  */
 export function storyAddsUp(s: Story): boolean {
-  const out = s.sold + s.used + s.lost - s.counted - s.moved - s.corrected + s.left;
+  const out = s.sold + s.used + s.lost + s.moved - s.counted - s.corrected + s.left;
   return Math.abs(s.made - out) < 1e-6;
 }
 
@@ -125,11 +126,18 @@ export const LOT_MOVEMENT_LABEL = {
   missing: "Missing on a count",
   found: "Found on a count",
   moved: "Moved",
+  // Between the café's places (0054).
+  sent: "Sent to another place",
+  arrived: "Arrived from another place",
+  returned: "Back from a transfer cancelled",
   corrected: "Corrected",
 } as const;
 
-/** What a movement of a lot was, from the kind the stock card gives it and which way it went. */
-export function lotMovementLabel(kind: string, qty: number): string {
+/**
+ * What a movement of a lot was, from the kind the stock card gives it, which
+ * way it went, and what it was for.
+ */
+export function lotMovementLabel(kind: string, qty: number, referenceType?: string | null): string {
   const out = qty < 0;
   switch (kind) {
     case "made":
@@ -143,6 +151,9 @@ export function lotMovementLabel(kind: string, qty: number): string {
     case "counted":
       return out ? LOT_MOVEMENT_LABEL.missing : LOT_MOVEMENT_LABEL.found;
     case "transferred":
+      if (referenceType === "stock_transfer_cancel") return LOT_MOVEMENT_LABEL.returned;
+      if (referenceType === "stock_transfer")
+        return out ? LOT_MOVEMENT_LABEL.sent : LOT_MOVEMENT_LABEL.arrived;
       return LOT_MOVEMENT_LABEL.moved;
     default:
       return LOT_MOVEMENT_LABEL.corrected;
@@ -286,6 +297,8 @@ export interface LotMovement {
   referenceId: string | null;
   reason: string | null;
   by: string | null;
+  /** Where it happened (0054). */
+  place: string | null;
 }
 
 export interface BatchReconciliation {
@@ -348,6 +361,7 @@ export function reconciliationFrom(v: unknown): BatchReconciliation {
       referenceId: strOrNull(m.reference_id),
       reason: strOrNull(m.reason),
       by: strOrNull(m.by),
+      place: strOrNull(m.place),
     })),
   };
 }
