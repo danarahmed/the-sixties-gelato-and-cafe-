@@ -28,6 +28,7 @@ import {
 } from "@/lib/validation";
 import type { SaleReceipt } from "@/lib/actions/sales";
 import { howPaid, saleReceipt } from "@/lib/payments";
+import { tillForWrite } from "@/lib/place";
 
 /** A paid bill changes these screens; the till itself is kept current by the action's answer. */
 const PAID_PATHS = ["/orders", "/sales", "/dashboard", "/inventory", "/reports", "/journals"];
@@ -134,6 +135,7 @@ export async function saveBillAction(
           p_discount_note: d.discountNote,
           p_approval: d.approvalId ?? null,
           p_customer: customer,
+          p_location: await tillForWrite(),
           p_idempotency_key: key,
         })
       : await callRpc<Record<string, unknown>>("save_tab", {
@@ -301,6 +303,7 @@ export async function saveTableAction(
     p_seats: v.data.seats,
     p_sort_order: v.data.sortOrder,
     p_is_active: v.data.isActive,
+    p_location: await tillForWrite(),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;

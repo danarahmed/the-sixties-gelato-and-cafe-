@@ -45,7 +45,9 @@ export interface BuyingLine {
   onHand: number;
   onOrder: number;
   inDraft: number;
-  /** On hand, on order and in draft: what the item has and has coming. */
+  /** Sent here from another of the café's places, on its way (0055). */
+  onWay: number;
+  /** On hand, on order, in draft and on its way: what the item has and has coming. */
   position: number;
   /** The open orders it is on, with what each still waits for (base unit). */
   orders: { poId: string; poNo: number; status: string; baseQty: number }[];
@@ -138,6 +140,7 @@ export function buyingLineFrom(r: Record<string, unknown>): BuyingLine {
     onHand: num(r.on_hand),
     onOrder: num(r.on_order),
     inDraft: num(r.in_draft),
+    onWay: num(r.on_way),
     position: num(r.position),
     orders: list(r.orders).map((o) => ({
       poId: str(o.po_id),
@@ -306,14 +309,25 @@ export function reasonsOf(
     return out;
   }
   out.push(
-    line.onOrder === 0 && line.inDraft === 0
-      ? t("{have} on hand.", { have: q(line.onHand) })
-      : t("{have} on hand, {ordered} on order and {draft} in draft orders: {all} in all.", {
-          have: q(line.onHand),
-          ordered: q(line.onOrder),
-          draft: q(line.inDraft),
-          all: q(line.position),
-        }),
+    line.onWay > 0
+      ? t(
+          "{have} on hand, {ordered} on order, {draft} in draft orders and {way} on its way from another place: {all} in all.",
+          {
+            have: q(line.onHand),
+            ordered: q(line.onOrder),
+            draft: q(line.inDraft),
+            way: q(line.onWay),
+            all: q(line.position),
+          },
+        )
+      : line.onOrder === 0 && line.inDraft === 0
+        ? t("{have} on hand.", { have: q(line.onHand) })
+        : t("{have} on hand, {ordered} on order and {draft} in draft orders: {all} in all.", {
+            have: q(line.onHand),
+            ordered: q(line.onOrder),
+            draft: q(line.inDraft),
+            all: q(line.position),
+          }),
   );
   const level = q(line.reorderLevel ?? 0);
   if (line.reorderFrom === "item")

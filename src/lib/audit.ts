@@ -9,7 +9,7 @@
  * language through t(), subjectIn() and valueIn().
  */
 import { BUILT_IN_LANGUAGES, type Msg, type T } from "@/lib/i18n/core";
-import { itemTypeLabel, movementLabel, roleLabel } from "@/lib/format";
+import { itemTypeLabel, movementLabel, roleLabel, tenderLabel } from "@/lib/format";
 import { SHOP_CHANNELS, channelName } from "@/lib/channels";
 import { RULE_LABEL, THRESHOLD_LABEL, ruleLabel } from "@/lib/alerts";
 import { CHOICE_LABEL, RULE_LABEL as BUSINESS_RULE_LABEL } from "@/lib/rules";
@@ -204,6 +204,7 @@ const ACTION_LABEL: Record<string, string> = {
   "period.open": "Period reopened",
   "member.invite": "Person invited",
   "member.roles": "Roles changed",
+  "member.place": "Where a person works changed",
   "member.activate": "Person given access again",
   "member.deactivate": "Person's access removed",
   "member.pin_set": "Approval PIN set",
@@ -440,11 +441,17 @@ const FIELD_LABEL: Record<string, string> = {
   bill: "Bill",
   order_lines: "Order lines",
   short: "Closed short of the order",
-  // Stock sent between the café's places (0054).
+  // Stock sent between the café's places (0054); where a person works (0055).
   transfer_no: "Transfer",
+  place: "Place",
   lost: "Lost on the way",
   returned: "Returned",
   credit_kind: "For",
+  // A language: how it is written, and its words cleared (0032); a refund paid
+  // back in more than one way (0042).
+  dir: "Writing direction",
+  cleared: "Cleared",
+  tenders: "Paid back",
   // Staff, their hours and their pay (0049).
   job_title: "Job",
   location: "Branch",
@@ -527,6 +534,7 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
       return BUSINESS_RULE_LABEL[v as keyof typeof BUSINESS_RULE_LABEL] ?? v;
     if (key === "applies_to") return roleLabel(v) !== v ? roleLabel(v) : itemTypeLabel(v);
     if (key === "value" && CHOICE_LABEL[v]) return CHOICE_LABEL[v];
+    if (key === "dir") return v === "rtl" ? "Right to left" : v === "ltr" ? "Left to right" : v;
     if (PURCHASING_VALUE[key]?.[v]) return PURCHASING_VALUE[key]![v]!;
     return v;
   }
@@ -563,6 +571,14 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
           .join(", ") || "—"
       );
     if (key === "roles") return v.map((r) => roleLabel(String(r))).join(", ");
+    // A refund paid back in more than one way (0042): "Card 2,000, Cash 500".
+    if (key === "tenders" && v.every(isObj))
+      return v
+        .map((x) => {
+          const o = x as Obj;
+          return `${tenderLabel(String(o.type))} ${showValue(o.amount, "amount", names)}`;
+        })
+        .join(", ");
     if (key === "kinds") return v.map((k) => CORRECTION_KIND[String(k)] ?? String(k)).join(", ");
     return v.map((x) => showValue(x, key, names)).join(", ");
   }
@@ -887,6 +903,19 @@ export function valueIn(value: string, field: string, t: T, msg: Msg): string {
       return t(value);
     case FIELD_LABEL.title:
       return msg(value);
+    case FIELD_LABEL.place:
+      return value === "everywhere" ? t("Everywhere") : value;
+    case FIELD_LABEL.dir:
+      return t(value);
+    case FIELD_LABEL.tenders:
+      // Each payment's way in the reader's language, its amount as it is.
+      return value
+        .split(", ")
+        .map((s) => {
+          const at = s.lastIndexOf(" ");
+          return at > 0 ? `${t(s.slice(0, at))}${s.slice(at)}` : s;
+        })
+        .join(", ");
     case FIELD_LABEL.roles:
     case FIELD_LABEL.kinds:
       return value

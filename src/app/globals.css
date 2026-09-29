@@ -433,6 +433,12 @@ tr.grand td {
   width: auto;
   min-height: 40px;
 }
+/* The branch the till sells at, above it, when the café has more than one (0055). */
+.till-at {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-end: 8px;
+}
 .phead {
   display: flex;
   align-items: center;

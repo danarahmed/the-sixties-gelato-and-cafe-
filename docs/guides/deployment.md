@@ -52,6 +52,7 @@ Plan a short window when the café is closed.
 | Reports printed as PDF                  | ✅ No migration. The screens were merged ([pull request #41](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/41)) and deployed on 29 September                                                                                                                                                                                                                           |
 | Documents with the records (`0053`)     | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, the bucket and its rules too) and checked on the live records as three roles in a transaction that was rolled back (see [After `0053`](#after-0053)). The screens were merged ([pull request #42](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/42)) and deployed    |
 | Stock sent between places (`0054`)      | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0054`](#after-0054)). The screens were merged ([pull request #43](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/43)) and deployed            |
+| The tills at each branch (`0055`)       | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0055`](#after-0055)). The screens were merged ([pull request #44](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/44)) and deployed              |
 
 ## 0. Before you start
 
@@ -2235,6 +2236,91 @@ The performance advisor adds eight notes, for columns not indexed: a
 transfer's two places and who sent, received or cancelled it; a line's café,
 item and movement. The other tables' who-columns are the same. The tables are
 small.
+
+## After `0055`
+
+Migration `0055` (release AB, its second part) puts a till at each branch and
+says who works where.
+
+- **The till sells at its device's branch:** at that branch's prices, from
+  its own turn numbers (1 each day), with its drawer, tables and open bills.
+  Only a branch sells: a sale, a bill, a table or a cash session anywhere
+  else is refused.
+- **Who works where:** everywhere, or one of the café's places, all of a
+  person's roles at it. Nothing is recorded at a place by someone who works at
+  another: a trigger on every table that records something at a place refuses
+  it, whichever function it comes through.
+- **A branch's own price**, set on the product, before the café's there.
+- **Paid from the till:** an expense, a supplier's bill or an advance comes out
+  of the drawer at the device's branch.
+- **What a place sends** is its demand in the day's plan and its use in the
+  buying list; what is on its way to a place is coming.
+
+What it adds:
+
+- **Two triggers on `user_role`:** a person's roles at one place, and the owner
+  and the general manager everywhere.
+- **`works_here`** on 24 tables and **`sold_at_a_branch`** on four.
+- **The functions signed-in users may call**, each checking its permission:
+  - `set_member_place` and `menu_branch_prices`, new;
+  - `invite_member`, `set_price`, `record_expense`, `pay_bill`,
+    `record_advance`, `pos_catalogue`, `pos_addons`, `pos_open_bills`,
+    `list_members` and `menu_scheduled`, made anew with a place. With none
+    named they are as before, so the screens deployed before it call them as
+    they did.
+- **Copies with changes:** `post_sale` and `write_loss` (the branch's turn
+  number), `production_plan` and `buying_list` (what a place sends),
+  `my_profile`, `set_member_roles` and the price audit.
+- **Helpers nobody calls:** the triggers, `member_place`,
+  `current_work_place`, `assert_works_at`, `take_turn_no`, `sent_away` and the
+  `__run` functions.
+
+It goes in before the screens: those deployed before it call nothing it takes
+away.
+
+It was applied on 29 September 2026 with the Supabase connector: one
+`apply_migration` call, one transaction. Before it, a read-only check showed
+the live database still matched the verified `0054` build.
+
+The text stored there is the file byte for byte (md5
+`828b483fb8f696fa3a98a3ecf009ed74`, 91,327 bytes). It was then compared with
+the tested build, object by object, the role permissions and column grants
+included. It is identical, but for the schema `citext` lives in, as before.
+
+On applying, one thing changed and nothing else: the café's turn numbers of
+26 September, at 15, carried over to Main Branch's, so no number of a day is
+given twice. Everyone works everywhere, as before.
+
+It was checked on the live records as the owner and the barista, in one
+transaction that was rolled back.
+
+- **Where each works:** all seven people work everywhere.
+- **The owner sold an espresso** at Main Branch by card: number 1 of the day
+  there, 2,000 IQD.
+- **The Central Kitchen sells nothing:** a sale and a bill there were refused
+  ("Central Kitchen does not sell: the till is at a branch").
+- **The barista, put at the Central Kitchen,** had it on their profile, and a
+  sale at Main Branch was refused ("You work at Central Kitchen, not at Main
+  Branch"). They were put back everywhere, and the audit trail has both moves.
+- **The owner** was not put at a place ("The owner and the general manager
+  work everywhere").
+- **Main Branch's own price** for an espresso, 2,250 from the day, was on the
+  till's menu there and on the product card, and the audit trail named the
+  branch.
+- **An expense** the owner paid, named the kitchen's, was the kitchen's.
+- **Read at their places:** Main Branch's two open bills, its buying list with
+  what is on its way to it (nothing yet), and the kitchen's day's plan.
+- **The books:** each of the thirteen checks was at nothing before and after,
+  with no document out of step.
+
+Nothing was kept: every table's count is as it was after applying (journals to
+1091, the audit trail to 195).
+
+The security advisor adds the two new functions a signed-in person calls,
+`set_member_place` and `menu_branch_prices`, each checking its permission, and
+lists the eight made anew with a place again. It notes that `sent_away` names
+no search path, like 39 helpers before it; it is called only inside functions
+that name theirs. The performance advisor's notes are unchanged.
 
 ## Clearing the test records
 

@@ -75,7 +75,7 @@ race 10 manager@example.com "select receive_goods((select id from supplier order
 ok "$(( $(sql "select count(*) from goods_receipt") - RECEIPTS ))" "1" \
    "10 simultaneous sends of one delivery with one key receive it once"
 ok "$(grep -l '"replayed": true' "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and the other nine are told it was already received"
-race 10 manager@example.com "select record_expense('Race ice', 1000, '6900', 'owner', null, '88888888-0000-0000-0000-000000000002')"
+race 10 manager@example.com "select record_expense('Race ice', 1000, '6900', 'owner', null, null, '88888888-0000-0000-0000-000000000002')"
 ok "$(sql "select count(*) from expense where description = 'Race ice'")" "1" "10 simultaneous sends of one expense record it once"
 sql "select test.act_as('cashier@example.com');
      select record_sale(gen_random_uuid(),'dine_in','cash','[{\"variant_id\":\"d1000000-0000-0000-0000-000000000001\",\"qty\":3}]');" >/dev/null
@@ -404,6 +404,27 @@ race 10 manager@example.com "select cancel_stock_transfer('$TRANSFER', 'Sent by 
 ok "$(sql "select count(*) from inventory_movement where reference_type = 'stock_transfer_cancel' and reference_id = '$TRANSFER'")" "1" \
    "10 people cancel one transfer at once: its cups come back once"
 ok "$(grep -l "was cancelled already" "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and the other nine are told it was cancelled already"
+
+# 0055 — ten tills at two branches sell at once, five at each: each branch
+# gives out its own numbers, from 1 at the new one, none twice and none skipped.
+sql "insert into location (business_id, kind, name) values ('00000000-0000-0000-0000-0000000000b1', 'branch', 'Race Branch');
+     create sequence race_till; grant usage on sequence race_till to authenticated;
+     select test.act_as('owner@example.com');
+     select adjust_stock('c0000000-0000-0000-0000-000000000001', 1000, 'g', 'beans for the race', 10,
+                         (select id from location where name = l), gen_random_uuid())
+       from unnest(array['Main Branch', 'Race Branch']) l" >/dev/null
+race 10 cashier@example.com "select record_sale(gen_random_uuid(), 'dine_in', 'card',
+  '[{\"variant_id\":\"d1000000-0000-0000-0000-000000000001\",\"qty\":1}]',
+  p_location => (select id from location
+                  where name = case when nextval('race_till') % 2 = 0 then 'Race Branch' else 'Main Branch' end))"
+ok "$(grep -l '"order_id"' "$WORK"/*.out | wc -l | tr -d ' ')" "10" "ten tills at two branches all sell"
+{ grep -h ERROR "$WORK"/*.out || true; } | sort | uniq -c | sed 's/^/      /'
+ok "$(sql "select count(*) || ' ' || (count(distinct turn_no) = count(*) and max(turn_no) = count(*)) from sales_order
+             where location_id = (select id from location where name = 'Race Branch')")" "5 true" \
+   "the new branch's five sales are numbered 1 to 5, none twice and none skipped"
+ok "$(sql "select count(distinct turn_no) = count(*) from sales_order
+             where location_id = (select id from location where name = 'Main Branch') and turn_no is not null")" "t" \
+   "and the first branch's numbers go on beside them, none twice"
 
 # The books still tie after all of it.
 ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(test.today())")" \

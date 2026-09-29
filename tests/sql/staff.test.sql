@@ -399,26 +399,26 @@ select test.eq((select count(*)::int from jsonb_array_elements(attendance_list((
 -- 7. Advances
 -- =============================================================================
 select test.act_as('manager@example.com');
-select test.throws($$select record_advance(pg_temp.person('Sara'), 50000, 'bank', 'rent', gen_random_uuid())$$,
+select test.throws($$select record_advance(pg_temp.person('Sara'), 50000, 'bank', 'rent', null, gen_random_uuid())$$,
                    '%needs payroll.run%', 'a branch manager gives no advance');
 select test.act_as('owner@example.com');
-select test.throws($$select record_advance(pg_temp.person('Sara'), 0, 'bank', 'rent', gen_random_uuid())$$,
+select test.throws($$select record_advance(pg_temp.person('Sara'), 0, 'bank', 'rent', null, gen_random_uuid())$$,
                    'Enter an amount greater than zero', 'an advance is money');
-select test.throws($$select record_advance(pg_temp.person('Sara'), 50000, 'bank', ' ', gen_random_uuid())$$,
+select test.throws($$select record_advance(pg_temp.person('Sara'), 50000, 'bank', ' ', null, gen_random_uuid())$$,
                    'Say what the advance is for', 'an advance has a why');
-select test.throws($$select record_advance(pg_temp.person('Sara'), 50000, 'card', 'rent', gen_random_uuid())$$,
+select test.throws($$select record_advance(pg_temp.person('Sara'), 50000, 'card', 'rent', null, gen_random_uuid())$$,
                    'Say where the money came from: the till, the safe, the bank or the owner', 'from a place money is kept');
-select test.throws($$select record_advance(pg_temp.person('Sara'), 50000, 'safe', 'rent', gen_random_uuid())$$,
+select test.throws($$select record_advance(pg_temp.person('Sara'), 50000, 'safe', 'rent', null, gen_random_uuid())$$,
                    'The safe holds only%', 'not from an empty safe');
-insert into res select 'adv_bank', record_advance(pg_temp.person('Sara'), 100000, 'bank', 'rent', 'b0000000-0000-0000-0000-000000000002');
-select test.eq((record_advance(pg_temp.person('Sara'), 100000, 'bank', 'rent', 'b0000000-0000-0000-0000-000000000002')
+insert into res select 'adv_bank', record_advance(pg_temp.person('Sara'), 100000, 'bank', 'rent', null, 'b0000000-0000-0000-0000-000000000002');
+select test.eq((record_advance(pg_temp.person('Sara'), 100000, 'bank', 'rent', null, 'b0000000-0000-0000-0000-000000000002')
                 ->> 'advance_id')::uuid, pg_temp.id('adv_bank', 'advance_id'), 'sent twice, given once');
 select test.eq(pg_temp.journal('employee_advance', pg_temp.id('adv_bank', 'advance_id')), '1020 Cr 100000 | 1300 Dr 100000',
                'an advance from the bank: Dr 1300, Cr 1020');
 -- From the till: the drawer holds what the owner put in it.
 select move_cash('owner', 'till', 200000, 'float', null, gen_random_uuid());
 select test.eq(pg_temp.drawer(), 200000::numeric, 'the drawer holds 200,000');
-insert into res select 'adv_till', record_advance(pg_temp.person('Sara'), 50000, 'till', 'doctor', gen_random_uuid());
+insert into res select 'adv_till', record_advance(pg_temp.person('Sara'), 50000, 'till', 'doctor', null, gen_random_uuid());
 select test.eq(pg_temp.drawer(), 150000::numeric, 'an advance from the till leaves the drawer');
 select test.eq((pg_temp.r('adv_till') ->> 'owed')::numeric, 150000::numeric, 'Sara owes 150,000 of advances');
 select test.throws(format($$select cancel_advance(%L, '', gen_random_uuid())$$, pg_temp.id('adv_till', 'advance_id')),
@@ -436,7 +436,7 @@ select test.throws(format($$update employee_advance set amount = 1 where id = %L
 select test.act_as('auditor@example.com');
 select test.eq((select string_agg(x ->> 'name' || ' ' || (x ->> 'owed'), ',') from jsonb_array_elements(employee_advances() -> 'owed') x),
                'Sara 100000', 'the auditor reads the advances');
-select test.throws($$select record_advance(pg_temp.person('Sara'), 1000, 'bank', 'x', gen_random_uuid())$$,
+select test.throws($$select record_advance(pg_temp.person('Sara'), 1000, 'bank', 'x', null, gen_random_uuid())$$,
                    '%needs payroll.run%', 'and gives none');
 
 -- =============================================================================
@@ -693,7 +693,7 @@ select test.eq(test.balance('1300'), (select 100000 - back from totals), 'the ad
 -- The safe: an advance from it is counted with it.
 select test.act_as('owner@example.com');
 select move_cash('owner', 'safe', 80000, 'for the week', null, gen_random_uuid());
-select record_advance(pg_temp.person('Ali'), 30000, 'safe', 'bus fare', gen_random_uuid());
+select record_advance(pg_temp.person('Ali'), 30000, 'safe', 'bus fare', null, gen_random_uuid());
 select test.as_admin();
 select test.ok(pg_temp.checks() like '%,safe=0,%' and pg_temp.checks() like 'advances=0,%', 'the safe and the advances agree');
 select test.eq((select count(*)::int from document_problems('00000000-0000-0000-0000-0000000000b1', now() + interval '1 minute')), 0,

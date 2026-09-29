@@ -8,10 +8,14 @@ import "server-only";
 import { drawerStateFrom, type DrawerState } from "@/lib/cash";
 import { db, num, numOrNull, one, rows, str, strOrNull } from "./client";
 
-export async function getDrawerState(): Promise<DrawerState> {
+/** The drawer at the till's branch (0055; none named: the first branch's). */
+export async function getDrawerState(place: string | null = null): Promise<DrawerState> {
   const c = await db();
   return drawerStateFrom(
-    one(await c.rpc("cash_session_status"), "the drawer") as Record<string, unknown> | null,
+    one(await c.rpc("cash_session_status", { p_location: place }), "the drawer") as Record<
+      string,
+      unknown
+    > | null,
   );
 }
 

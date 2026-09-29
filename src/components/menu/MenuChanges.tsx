@@ -56,10 +56,16 @@ function ScheduledRow({ change, canEdit }: { change: ScheduledChange; canEdit: b
   const [msg, setMsg] = useState<Msg>(null);
   const what =
     change.kind === "price"
-      ? t("{channel} at {price}", {
-          channel: channelName(change.channel ?? ""),
-          price: fmtIQD(change.price ?? 0),
-        })
+      ? change.location
+        ? t("{channel} at {price}, at {place}", {
+            channel: channelName(change.channel ?? ""),
+            price: fmtIQD(change.price ?? 0),
+            place: change.location,
+          })
+        : t("{channel} at {price}", {
+            channel: channelName(change.channel ?? ""),
+            price: fmtIQD(change.price ?? 0),
+          })
       : t("a new recipe (version {version})", { version: String(change.versionNo) });
 
   function withdraw() {

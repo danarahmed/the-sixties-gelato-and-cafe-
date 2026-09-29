@@ -5,13 +5,16 @@ import { getItems } from "@/lib/db/read";
 import { getAddonSetup, getMenuSetup, type MenuProduct } from "@/lib/db/menu";
 import {
   getItemCosts,
+  getMenuBranchPrices,
   getMenuCosting,
   getMenuRecipeLines,
   getMenuScheduled,
+  type BranchPrice,
   type MenuCostRow,
   type RecipeLineRow,
   type ScheduledChange,
 } from "@/lib/db/reports";
+import { getCafePlaces } from "@/lib/place";
 import { fmtIQD, fmtQty } from "@/lib/format";
 import { getChannelNames } from "@/lib/db/channels";
 import { ChannelsProvider } from "@/components/ChannelsProvider";
@@ -48,6 +51,8 @@ function RecipeAndPrices({
   scheduled,
   channelName,
   inUse,
+  branchPrices,
+  branches,
 }: {
   /** The reader's words, from the page. */
   t: T;
@@ -67,6 +72,10 @@ function RecipeAndPrices({
   channelName: (code: string) => string;
   /** The channels in use. */
   inUse: ReadonlySet<string>;
+  /** Each branch's own price in force today (0055). */
+  branchPrices: BranchPrice[];
+  /** The café's branches, when it has more than one (0055). */
+  branches: { id: string; name: string }[];
 }) {
   const recipe = costing?.recipe ?? [];
   // Priced where it sells today: a platform out of use sells nothing.
@@ -173,7 +182,24 @@ function RecipeAndPrices({
               </tbody>
             </table>
           )}
-          {canEdit && <PriceChange variantId={variantId} today={today} />}
+          {branchPrices.length > 0 && (
+            <ul
+              className="muted"
+              style={{ margin: "6px 0 0", paddingInlineStart: 18, fontSize: ".85rem" }}
+              data-testid="branch-prices"
+            >
+              {branchPrices.map((b) => (
+                <li key={`${b.channel}-${b.locationId}`}>
+                  {t("At {place}: {channel} {price}", {
+                    place: b.location,
+                    channel: channelName(b.channel),
+                    price: fmtIQD(b.price),
+                  })}
+                </li>
+              ))}
+            </ul>
+          )}
+          {canEdit && <PriceChange variantId={variantId} today={today} branches={branches} />}
         </div>
       </div>
       <ScheduledChanges changes={scheduled} canEdit={canEdit} />
@@ -200,16 +226,22 @@ export default async function ProductsPage() {
   const t = await getT();
   const today = businessToday(profile.timezone);
   const canEdit = has(profile, "recipe.edit");
-  const [menu, lines, items, itemCosts, setup, scheduled, channels, addons] = await Promise.all([
-    getMenuCosting(),
-    getMenuRecipeLines(),
-    canEdit ? getItems() : Promise.resolve([]),
-    getItemCosts(),
-    getMenuSetup(),
-    getMenuScheduled(),
-    getChannelNames(),
-    getAddonSetup(today),
-  ]);
+  const [menu, lines, items, itemCosts, setup, scheduled, channels, addons, branchPrices, places] =
+    await Promise.all([
+      getMenuCosting(),
+      getMenuRecipeLines(),
+      canEdit ? getItems() : Promise.resolve([]),
+      getItemCosts(),
+      getMenuSetup(),
+      getMenuScheduled(),
+      getChannelNames(),
+      getAddonSetup(today),
+      getMenuBranchPrices(),
+      getCafePlaces(),
+    ]);
+  // A price can be one branch's own once the café has more than one (0055).
+  const branches = places.filter((p) => p.kind === "branch");
+  const branchChoice = branches.length > 1 ? branches.map((b) => ({ id: b.id, name: b.name })) : [];
 
   const inUse = new Set(channels.channels.filter((c) => c.active).map((c) => c.code));
   const costing = new Map<string, Costing>();
@@ -301,6 +333,10 @@ export default async function ProductsPage() {
                 scheduled={scheduled.filter((s) => s.variantId === v.id)}
                 channelName={channels.name}
                 inUse={inUse}
+                branchPrices={branchPrices.filter(
+                  (b) => b.variantId === v.id && inUse.has(b.channel),
+                )}
+                branches={branchChoice}
               />
             ))}
         </details>

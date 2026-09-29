@@ -16,8 +16,9 @@ release X (customers and their points, `0050`), release Y (the sales
 analysis, the stock's value on a day and what was bought, `0051`), release Z
 (the balance sheet and the cash-flow statement, `0052`), release AA (every
 report printed or saved as a PDF, and the documents kept with the records,
-`0053`) and the first part of release AB (the stock sent between the café's
-places, `0054`) since 29 September.
+`0053`) and the first two parts of release AB (the stock sent between the
+café's places, `0054`, and the tills at each branch and who works where,
+`0055`) since 29 September.
 What was built differs from the plan below in these ways.
 
 Release J:
@@ -603,11 +604,12 @@ Release AA:
 
 Release AB:
 
-- **In two parts.** The first (`0054`, the plan's `0053` having gone to the
+- **In three steps.** The first (`0054`, the plan's `0053` having gone to the
   documents): the stock sent between the café's places, and where each
-  device does its stock work. The second: tills of their own at each branch,
-  roles bound to a branch, numbers and prices by branch, the place on journal
-  lines, and each branch's profit and loss.
+  device does its stock work. The second (`0055`): tills at each branch, who
+  works where, and numbers and prices by branch. The third (`0056`): the
+  place on journal lines, each branch's profit and loss, and a branch to
+  narrow the reports to.
 - **Transfers as planned:** `stock_transfer` and its lines, sent, then
   received or cancelled while on their way, through 1210 Stock in transit,
   which only a transfer moves. What did not arrive is lost to 5300 as it is
@@ -622,6 +624,23 @@ Release AB:
   a second place), and its deliveries without an order, new orders, returns,
   batches, losses, corrections, opening stock and counts are recorded there.
   The till still sells at the first branch until the second part.
+- **A till is its branch's drawer** (the owner's decision 1: one drawer per
+  branch), not a table of its own: the device's place is the branch its till
+  sells at, its bills, tables, sessions and turn numbers that branch's. Only a
+  branch sells; the kitchen's till asks which branch it is at.
+- **Who works where, rather than a permission per branch.** A person works
+  everywhere or at one place, all their roles at it, and a trigger on every
+  table that records something at a place refuses a row at another: so every
+  function, old or new, is covered without each checking, and "a role for A
+  acting in B" is refused whichever way it is tried. Someone who works at two
+  branches works everywhere. What such a person reads is not narrowed.
+- **Numbers by branch are the turn numbers.** Bills, receipts, refunds,
+  orders, transfers and journals keep the café's numbers, each one record.
+- **Prices by branch** through `channel_price.location_id`, set on the
+  product; an add-on's price stays the café's.
+- **What a place sends is its demand and its use:** the kitchen's day's plan
+  counts what it sends the branch, and the buying list what a place sent, and
+  what is on its way to it as coming.
 
 **Basis:**
 

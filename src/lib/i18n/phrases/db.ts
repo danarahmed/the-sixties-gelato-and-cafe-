@@ -1099,6 +1099,31 @@ const phrases: PhraseBook = {
   // People, roles, PINs and approvals: signing in, and who may do what.
   "Sign in to continue": { ar: "سجّل الدخول للمتابعة", ckb: "بۆ بەردەوامبوون بچۆ ژوورەوە" },
   "Sign in first": { ar: "سجّل الدخول أولًا", ckb: "سەرەتا بچۆ ژوورەوە" },
+  // Who works where, and only a branch sells (0055).
+  "You work at {1}, not at {2}": {
+    ar: "أنت تعمل في {1}، لا في {2}",
+    ckb: "تۆ لە {1} کار دەکەیت، نەک لە {2}",
+  },
+  "{1} does not sell: the till is at a branch": {
+    ar: "{1} لا يبيع: نقطة البيع في فرع",
+    ckb: "{1} نافرۆشێت: خاڵی فرۆشتن لە لقێکدایە",
+  },
+  "The owner and the general manager work everywhere": {
+    ar: "المالك والمدير العام يعملان في كل مكان",
+    ckb: "خاوەن و بەڕێوەبەری گشتی لە هەموو شوێنێک کار دەکەن",
+  },
+  "Choose one of the café's places": {
+    ar: "اختر أحد أماكن المقهى",
+    ckb: "یەکێک لە شوێنەکانی کافێکە هەڵبژێرە",
+  },
+  "Choose one of the café's branches": {
+    ar: "اختر أحد فروع المقهى",
+    ckb: "یەکێک لە لقەکانی کافێکە هەڵبژێرە",
+  },
+  "A person works everywhere or at one place: all their roles are at that place": {
+    ar: "يعمل الشخص في كل مكان أو في مكان واحد: كل أدواره في ذلك المكان",
+    ckb: "کەسێک لە هەموو شوێنێک یان لە یەک شوێن کار دەکات: هەموو ڕۆڵەکانی لەو شوێنەدان",
+  },
   "You do not have permission to do this (needs {1})": {
     ar: "ليست لديك صلاحية للقيام بهذا (يتطلب {1})",
     ckb: "مۆڵەتی ئەم کارەت نییە (پێویستی بە {1} هەیە)",

@@ -78,11 +78,9 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     season or holiday, and what is on hand now, so tomorrow's plan does not
     take off what today will still sell. A base is not planned for the
     flavours to be made from it.
-  - The plan is for the place the device works at, judged by what was sold
-    and made with there. What a place sends to another is not counted as its
-    demand, so the central kitchen's plan does not yet see what the branch
-    sells. Until it does, the branch's plan (**Stock at**: the branch) says
-    what to make for it.
+  - The plan is for the place the device works at, judged by what was sold,
+    made with and, since `0055`, sent to another place there: the central
+    kitchen plans by what it sends the branch.
 - **Offline selling (H-04).** The till needs a connection. Offline, it says so
   and refuses the sale. A sale whose confirmation was lost is retried with the
   same key and recorded once, and since `0035` so is every other write from the
@@ -95,16 +93,16 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   a key is refused; SQL typed by hand without a key is done as before,
   unprotected.
 - **Cash sessions, what they do not do (release K, `0036`).**
-  - Each location has one drawer, with one session open on it at a time: two
-    tills in one branch would share it. A drawer for each till comes with the
-    branches (release AB).
+  - Each branch has one drawer (the owner's decision 1), with one session open
+    on it at a time: two tills in one branch share it. Each branch's till
+    counts its own drawer (`0055`).
   - The count is blind on the drawer's own screens. Someone who may read the
     sales (Orders, the daily summaries: a branch manager, say) can still add
     up the cash sales for themselves; a cashier and a barista may not read
     them.
   - Over and short is posted to 6300 with the session named on the journal,
-    but not the branch: the location on journal lines comes with the branches
-    (release AB). With one branch trading, every session is that branch's.
+    but not the branch: the place on journal lines comes with the books by
+    branch (`0056`). The session names its branch.
   - A session is never closed on its own. One left open stays open until its
     cashier or a manager closes it; the dashboard warns of it after 14 hours.
   - The count is in Iraqi dinars, typed as a total or counted in notes of 250
@@ -178,7 +176,7 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     last 14 days, and only at items a recipe uses.
 - **The café's rules, what they do not do (release O, `0040`).**
   - A rule is set for the whole café, a role, a kind of item or one item. A
-    rule for a branch waits for the branches (release AB).
+    rule for one branch is not built: the café's rules apply at every branch.
   - The margin target stays among the alert thresholds on Settings, where
     its history already is; a target per category comes with the reports
     (release Y).
@@ -203,8 +201,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - An add-on's recipe changes from the next sale, not from a date, and is
     not versioned as a product's is: the audit trail keeps each change, and
     every sale keeps what it used.
-  - An add-on's price is the same at every branch until the branches come
-    (release AB).
+  - An add-on's price is the same at every branch: the till reads a branch's
+    own add-on price (`0055`), but none can be set yet.
   - The report does not take refunds off (Sales by Channel has them). How
     often an add-on is taken is counted against the products that offer its
     group today.
@@ -268,9 +266,9 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     names; what was used since goes to the price variance (5050), not back to
     the sales that used it.
 - **What to buy, what it does not do (release T, `0045`).**
-  - It is worked out when the page opens, for the place the device works at
-    (the first branch until another is chosen: release AB), and nothing is
-    sent to anyone. Stock a place sends to another is not counted as its use.
+  - It is worked out when the page opens, for the place the device works at,
+    and nothing is sent to anyone. What a place sends to another counts as its
+    use, and what is on its way to it as coming (`0055`).
   - Use is judged on the last 28 days alone: no weekday or season, and a week
     of use more as the level to order up to when the item has no par level.
   - Items made here are left to Production. What their batches use is in each
@@ -358,8 +356,9 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     analysis of past dates changes when an old sale is refunded, and its
     total can differ from the P&L's for the same dates, which counts a refund
     on the day it was made. The add-ons are shown without their refunds.
-  - The bars are the only picture: there are no charts. The branch is one
-    branch until release AB.
+  - The bars are the only picture: there are no charts. Every branch's sales
+    are analysed together: a branch to narrow to comes with the books by
+    branch (`0056`).
   - The stock's value on a day is the stock ledger's, at the costs it
     carried; it is not a count, and it does not revalue stock at today's
     prices.
@@ -381,7 +380,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     no comparison with the same dates of an earlier year: the balance sheet
     shows the start and the end of the dates side by side.
   - A year of dates at most for the cash flow; the balance sheet for any day
-    up to today. One branch until release AB.
+    up to today. They are the café's as a whole: each branch's profit and
+    loss comes with the books by branch (`0056`).
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the
@@ -448,24 +448,48 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   the branches does not do (release AB, `0054`).**
   - A device chooses where it does its **stock** work: deliveries without an
     order, new orders, returns not named against a delivery, batches, losses,
-    corrections, opening stock and counts, and the stock screens. The till
-    still sells, and the drawer still counts, at the first branch: tills of
-    their own at each branch, roles bound to a branch, numbers and prices by
-    branch, and each branch's own profit and loss come with the second part.
-  - The place is kept on the device, not with the person: whoever signs in
-    there works at that place until it is changed, and anyone may change it.
+    corrections, opening stock and counts, and the stock screens. Since `0055`
+    its till sells at it when it is a branch; each branch's own profit and
+    loss comes with the books by branch (`0056`).
+  - The place is kept on the device. Someone who works at one place (`0055`)
+    works there whatever the device says; someone who works everywhere may
+    change it.
   - A transfer goes whole: it cannot be received in two goes, or sent on from
     where it is going. What did not arrive is lost (5300) as it is received;
     finding it later is a correction at that place.
-  - Anyone who may send stock may receive a transfer or cancel one, wherever
-    they are; the screen does not check that they are at the place it is
-    going to.
-  - Stock on its way is in neither place: the stock board, the buying list
-    and the running-out alerts do not count it until it arrives.
+  - Since `0055`, a transfer is received only by someone who works at the
+    place it goes to, or everywhere, and cancelled only by someone who works
+    at the place it left, or everywhere.
+  - Stock on its way is in neither place: the stock board and the
+    running-out alerts do not count it until it arrives. The buying list
+    counts it as coming (`0055`).
   - A batch keeps its number and use-by at the place it goes to; stock with no
     batch goes at the average cost where it left.
   - One stock count is open at a time at each place; the count screen shows
     the one at the device's place, and one's own wherever it is.
+- **The tills at each branch and who works where, what they do not do
+  (release AB, `0055`).**
+  - A person works everywhere or at one place, all their roles at it: someone
+    who works at two branches works everywhere. The owner and the general
+    manager work everywhere.
+  - Where a person works narrows what they record, not what they read: they
+    see the café's records as their role allows, and record nothing at
+    another place.
+  - Only the turn numbers are each branch's. Bills, receipts, refunds,
+    orders, transfers, sessions and journals keep the café's numbers, so each
+    number is still one record.
+  - An expense, a supplier's bill or an advance paid from the till comes out
+    of the drawer at the device's branch; salaries paid from the till, out of
+    the first branch's.
+  - The alerts, the menu's costing and each item's cost now are judged at the
+    first branch.
+  - A branch's own price is for a product's size and channel; an add-on's
+    price is the café's.
+  - Someone clocked in at one branch clocks out there: a till whose person
+    works only at another branch cannot clock them out.
+  - The day's plan is each place's own: the kitchen's counts what it sends,
+    and the branch's what it sells, so both may show a batch to make for the
+    same sales. The kitchen makes; the branch's plan is for the branch to see.
 - **Tax.** Out of scope by request. If the business is VAT-registered, that is a
   structural addition, not a setting.
 

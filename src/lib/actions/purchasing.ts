@@ -9,7 +9,7 @@
 import { z } from "zod";
 import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { db } from "@/lib/db/client";
-import { placeForWrite } from "@/lib/place";
+import { placeForWrite, tillForWrite } from "@/lib/place";
 import {
   day,
   id,
@@ -768,6 +768,7 @@ export async function payBillAction(
     p_bill: v.data.billId,
     p_amount: v.data.amount,
     p_method: v.data.method,
+    p_location: await tillForWrite(),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;

@@ -1084,6 +1084,11 @@ const phrases: PhraseBook = {
   "Item's supplier set": { ar: "تحديد مورّد لمادة", ckb: "دیاریکردنی دابینکەری کاڵا" },
   "Item's supplier removed": { ar: "إزالة مورّد مادة", ckb: "لابردنی دابینکەری کاڵا" },
   "In place of": { ar: "بدلًا من", ckb: "لە جیاتی" },
+  // The audit trail: a language's writing and its words cleared (0032); a
+  // refund paid back in more than one way (0042).
+  "Writing direction": { ar: "اتجاه الكتابة", ckb: "ئاراستەی نووسین" },
+  Cleared: { ar: "مُسحت", ckb: "سڕانەوە" },
+  "Paid back": { ar: "المبالغ المُعادة", ckb: "بڕە گەڕێندراوەکان" },
   // Reports → Production (0046).
   Production: { ar: "الإنتاج", ckb: "بەرهەمهێنان" },
   "Batches made {from} to {to}: what came out, and what became of it": {

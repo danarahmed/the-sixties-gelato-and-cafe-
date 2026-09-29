@@ -336,6 +336,8 @@ export interface ScheduledChange {
   price: number | null;
   effectiveFrom: string;
   versionNo: number | null;
+  /** The branch a price is its own (0055); null for every branch's. */
+  location: string | null;
 }
 
 export async function getMenuScheduled(): Promise<ScheduledChange[]> {
@@ -349,6 +351,31 @@ export async function getMenuScheduled(): Promise<ScheduledChange[]> {
       price: numOrNull(r.price),
       effectiveFrom: str(r.effective_from),
       versionNo: r.version_no == null ? null : num(r.version_no),
+      location: strOrNull(r.location),
+    }),
+  );
+}
+
+/** A branch's own price in force today (0055), beside the café's. */
+export interface BranchPrice {
+  variantId: string;
+  channel: string;
+  locationId: string;
+  location: string;
+  price: number;
+  effectiveFrom: string;
+}
+
+export async function getMenuBranchPrices(): Promise<BranchPrice[]> {
+  const c = await db();
+  return rows(await c.rpc("menu_branch_prices"), "each branch's prices").map(
+    (r: Record<string, unknown>) => ({
+      variantId: str(r.variant_id),
+      channel: str(r.channel),
+      locationId: str(r.location_id),
+      location: str(r.location),
+      price: num(r.price),
+      effectiveFrom: str(r.effective_from),
     }),
   );
 }
@@ -518,6 +545,9 @@ export interface MemberRow {
   roles: string[];
   isActive: boolean;
   linked: boolean;
+  /** The place they work at (0055); null when they work everywhere. */
+  worksAt: string | null;
+  worksAtName: string | null;
 }
 
 export async function getMembers(): Promise<MemberRow[]> {
@@ -529,6 +559,8 @@ export async function getMembers(): Promise<MemberRow[]> {
     roles: Array.isArray(r.roles) ? r.roles.map(String) : [],
     isActive: Boolean(r.is_active),
     linked: Boolean(r.linked),
+    worksAt: strOrNull(r.works_at),
+    worksAtName: strOrNull(r.works_at_name),
   }));
 }
 

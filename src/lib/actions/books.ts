@@ -17,6 +17,7 @@ import {
   positive,
   text,
 } from "@/lib/validation";
+import { placeForWrite, tillForWrite } from "@/lib/place";
 
 const BOOK_PATHS = ["/journals", "/accounting", "/reports", "/dashboard"];
 
@@ -54,6 +55,8 @@ export async function recordExpenseAction(
     p_account_code: v.data.accountCode,
     p_paid_from: v.data.paidFrom,
     p_date: v.data.date,
+    // Paid from the till: that till's branch; else where this device works (0055).
+    p_location: v.data.paidFrom === "till" ? await tillForWrite() : await placeForWrite(),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;

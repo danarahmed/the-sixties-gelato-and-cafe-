@@ -25,6 +25,7 @@ import {
 } from "@/lib/validation";
 import { howPaid, saleReceipt, type PaidPart } from "@/lib/payments";
 import type { SaleCustomer } from "@/lib/customers";
+import { tillForWrite } from "@/lib/place";
 
 // Not /pos: the till keeps itself current from each action's answer, and
 // re-rendering it after every sale would only slow the cashier down.
@@ -107,6 +108,7 @@ export async function recordSaleAction(
   // Only a delivery platform's sale has one; the database asks for it (0030).
   const orderNo = isPlatformChannel(v.data.channel) ? v.data.platformOrderNo : null;
   const r = await callRpc<Record<string, unknown>>("record_sale", {
+    p_location: await tillForWrite(),
     p_idempotency_key: v.data.key,
     p_channel: v.data.channel,
     p_tender: paid.p_tender,
@@ -281,6 +283,7 @@ export async function moveCashAction(
     p_to: v.data.to,
     p_amount: v.data.amount,
     p_note: v.data.note,
+    p_location: await tillForWrite(),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
@@ -339,6 +342,7 @@ export async function giveAwayAction(
     })),
     p_reason: v.data.reason,
     p_approval: v.data.approvalId ?? null,
+    p_location: await tillForWrite(),
     p_idempotency_key: v.data.key,
   });
   if (!r.ok) return r;

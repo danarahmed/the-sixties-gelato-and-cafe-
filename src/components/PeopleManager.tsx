@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   inviteMemberAction,
   setMemberActiveAction,
+  setMemberPlaceAction,
   setMemberRolesAction,
 } from "@/lib/actions/people";
 import { roleLabel } from "@/lib/format";
@@ -69,14 +70,53 @@ function RolePicker({
   );
 }
 
+/**
+ * Where a person works (0055): everywhere, or one of the café's places. The
+ * owner and the general manager work everywhere.
+ */
+function WorksAt({
+  value,
+  places,
+  onChange,
+  disabled,
+  label,
+}: {
+  value: string | null;
+  places: { id: string; name: string }[];
+  onChange: (v: string | null) => void;
+  disabled?: boolean;
+  label: string;
+}) {
+  const { t } = useT();
+  return (
+    <select
+      aria-label={label}
+      value={value ?? ""}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.value || null)}
+      style={{ width: "auto", minHeight: 32, fontSize: ".8rem" }}
+    >
+      <option value="">{t("Everywhere")}</option>
+      {places.map((p) => (
+        <option key={p.id} value={p.id}>
+          {p.name}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 export function PeopleManager({
   members,
   myId,
   isOwner,
+  places,
 }: {
   members: MemberRow[];
   myId: string;
   isOwner: boolean;
+  /** The café's places in use; with one, everyone works there and nothing is asked. */
+  places: { id: string; name: string }[];
 }) {
   const op = useOperation();
   const { t } = useT();
@@ -86,6 +126,9 @@ export function PeopleManager({
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [roles, setRoles] = useState<RoleName[]>(["cashier"]);
+  const [placeId, setPlaceId] = useState<string | null>(null);
+  const manyPlaces = places.length > 1;
+  const everywhereOnly = (rs: string[]) => rs.includes("owner") || rs.includes("general_manager");
   const [editing, setEditing] = useState<string | null>(null);
   const [editRoles, setEditRoles] = useState<RoleName[]>([]);
 
@@ -110,6 +153,7 @@ export function PeopleManager({
               <th>{t("Name")}</th>
               <th>{t("Email")}</th>
               <th>{t("Roles")}</th>
+              {manyPlaces && <th>{t("Works at")}</th>}
               <th>{t("Login")}</th>
               <th />
             </tr>
@@ -131,6 +175,27 @@ export function PeopleManager({
                     m.roles.map((r) => t(roleLabel(r))).join(", ")
                   )}
                 </td>
+                {manyPlaces && (
+                  <td data-testid={`works-at-${m.id}`}>
+                    <WorksAt
+                      value={m.worksAt}
+                      places={places}
+                      label={t("Where {name} works", { name: m.name })}
+                      disabled={busy || !m.isActive || everywhereOnly(m.roles)}
+                      onChange={(v) =>
+                        run(
+                          () => setMemberPlaceAction({ memberId: m.id, placeId: v }),
+                          v
+                            ? t("{name} works at {place}.", {
+                                name: m.name,
+                                place: places.find((p) => p.id === v)?.name ?? "",
+                              })
+                            : t("{name} works everywhere.", { name: m.name }),
+                        )
+                      }
+                    />
+                  </td>
+                )}
                 <td>
                   {!m.isActive ? (
                     <span className="badge">{t("deactivated")}</span>
@@ -225,6 +290,18 @@ export function PeopleManager({
           </label>
         </div>
         <RolePicker value={roles} onChange={setRoles} isOwner={isOwner} />
+        {manyPlaces && (
+          <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: ".85rem" }}>
+            <span className="sc">{t("Works at")}</span>
+            <WorksAt
+              value={everywhereOnly(roles) ? null : placeId}
+              places={places}
+              label={t("Works at")}
+              disabled={busy || everywhereOnly(roles)}
+              onChange={setPlaceId}
+            />
+          </label>
+        )}
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button
             className="btn-primary"
@@ -233,12 +310,16 @@ export function PeopleManager({
               run(
                 async () => {
                   const r = await op.run("inviteMember", (key) =>
-                    inviteMemberAction({ email, name, roles }, key),
+                    inviteMemberAction(
+                      { email, name, roles, placeId: everywhereOnly(roles) ? null : placeId },
+                      key,
+                    ),
                   );
                   if (r.ok) {
                     setEmail("");
                     setName("");
                     setRoles(["cashier"]);
+                    setPlaceId(null);
                   }
                   return r;
                 },

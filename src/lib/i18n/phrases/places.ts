@@ -1,8 +1,9 @@
 import type { PhraseBook } from "./types";
 
 /**
- * The café's places (release AB): where a device does its stock work, and the
- * stock sent from one place to another.
+ * The café's places (release AB): where a device does its stock work, the
+ * stock sent from one place to another, the till at each branch and where
+ * each person works.
  */
 const phrases: PhraseBook = {
   // Where this device does its stock work, on the stock screens.
@@ -135,6 +136,62 @@ const phrases: PhraseBook = {
     ar: "كل الكمية معروفة المصير: المصنوع = المباع + المستعمل + الهدر + ما في الطريق ± الجرد + المتبقي.",
     ckb: "هەموو بڕەکە دیارە: دروستکراو = فرۆشراو + بەکارهاتوو + بەفیڕۆچوو + لە ڕێگادا ± ژماردن + ماوە.",
   },
+
+  // The till at its branch (0055).
+  "Till at": { ar: "نقطة البيع في", ckb: "خاڵی فرۆشتن لە" },
+  "Sell at {place}": { ar: "البيع في {place}", ckb: "فرۆشتن لە {place}" },
+  "{place} does not sell: the till is at a branch": {
+    ar: "{place} لا يبيع: نقطة البيع في فرع",
+    ckb: "{place} نافرۆشێت: خاڵی فرۆشتن لە لقێکدایە",
+  },
+  "This place": { ar: "هذا المكان", ckb: "ئەم شوێنە" },
+  "Choose the branch this till is at.": {
+    ar: "اختر الفرع الذي فيه نقطة البيع هذه.",
+    ckb: "ئەو لقە هەڵبژێرە کە ئەم خاڵی فرۆشتنەی تێدایە.",
+  },
+
+  // Where each person works, on Settings (0055).
+  "Works at": { ar: "يعمل في", ckb: "کار دەکات لە" },
+  Everywhere: { ar: "في كل مكان", ckb: "لە هەموو شوێنێک" },
+  "Where {name} works": { ar: "أين يعمل {name}", ckb: "{name} لە کوێ کار دەکات" },
+  "{name} works at {place}.": {
+    ar: "{name} يعمل في {place}.",
+    ckb: "{name} لە {place} کار دەکات.",
+  },
+  "Where a person works changed": {
+    ar: "تغيّر مكان عمل شخص",
+    ckb: "شوێنی کارکردنی کەسێک گۆڕا",
+  },
+  "{name} works everywhere.": {
+    ar: "{name} يعمل في كل مكان.",
+    ckb: "{name} لە هەموو شوێنێک کار دەکات.",
+  },
+
+  // A branch's own prices, on Products & Recipes (0055).
+  At: { ar: "في", ckb: "لە" },
+  "Price at {place} changed from today.": {
+    ar: "تغيّر السعر في {place} اعتبارًا من اليوم.",
+    ckb: "نرخ لە {place} لە ئەمڕۆوە گۆڕا.",
+  },
+  "New price at {place} takes effect on {date}.": {
+    ar: "يسري السعر الجديد في {place} من {date}.",
+    ckb: "نرخی نوێ لە {place} لە {date}ەوە جێبەجێ دەبێت.",
+  },
+  "At {place}: {channel} {price}": {
+    ar: "في {place}: {channel} {price}",
+    ckb: "لە {place}: {channel} {price}",
+  },
+  "{channel} at {price}, at {place}": {
+    ar: "{channel} بسعر {price}، في {place}",
+    ckb: "{channel} بە نرخی {price}، لە {place}",
+  },
+
+  // What a place sends, and what is on its way to it (0055).
+  "{have} on hand, {ordered} on order, {draft} in draft orders and {way} on its way from another place: {all} in all.":
+    {
+      ar: "{have} متوفّر، و{ordered} في الطلبيات، و{draft} في مسودات الطلبيات، و{way} في الطريق من مكان آخر: {all} إجمالًا.",
+      ckb: "{have} بەردەستە، {ordered} لە داواکارییەکاندایە، {draft} لە ڕەشنووسی داواکارییەکاندا و {way} لە ڕێگادایە لە شوێنێکی ترەوە: {all} بە گشتی.",
+    },
 };
 
 export default phrases;

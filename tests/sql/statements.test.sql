@@ -103,26 +103,26 @@ select refund_sale_lines((pg_temp.r('S1') ->> 'order_id')::uuid,
   (select jsonb_build_array(jsonb_build_object('line_id', l.id, 'qty', 1))
      from sales_order_line l where l.sales_order_id = (pg_temp.r('S1') ->> 'order_id')::uuid), 'changed_mind');
 select test.act_as('owner@example.com');
-select record_expense('Cleaning cloths', 1000, '6900', 'cash', null, gen_random_uuid());
+select record_expense('Cleaning cloths', 1000, '6900', 'cash', null, null, gen_random_uuid());
 select move_cash('till', 'safe', 1500, null, null, gen_random_uuid());
 select move_cash('safe', 'owner', 20000, 'For the owner', null, gen_random_uuid());
 insert into res select 'EQ', record_bill(pg_temp.supplier('Kurdistan Coffee Imports'), 'EQ-1', test.today(), 150000, 0,
                                          null, '1500', gen_random_uuid());
-select pay_bill((pg_temp.r('EQ') ->> 'bill_id')::uuid, 150000, 'bank', gen_random_uuid());
+select pay_bill((pg_temp.r('EQ') ->> 'bill_id')::uuid, 150000, 'bank', null, gen_random_uuid());
 insert into res select 'R1', receive_goods(pg_temp.supplier('Kurdistan Coffee Imports'),
   jsonb_build_array(jsonb_build_object('item_id', 'c0000000-0000-0000-0000-000000000001', 'qty', 2, 'unit_code', 'kg',
                                        'unit_price', 9000)),
   p_idempotency_key => gen_random_uuid());
 insert into res select 'KC', record_bill(pg_temp.supplier('Kurdistan Coffee Imports'), 'KC-1', test.today(), 18000, 0,
                                          (pg_temp.r('R1') ->> 'receipt_id')::uuid, null, gen_random_uuid());
-select pay_bill((pg_temp.r('KC') ->> 'bill_id')::uuid, 10000, 'bank', gen_random_uuid());
+select pay_bill((pg_temp.r('KC') ->> 'bill_id')::uuid, 10000, 'bank', null, gen_random_uuid());
 insert into res select 'EL', record_bill(pg_temp.supplier('Kurdistan Coffee Imports'), 'EL-1', test.today(), 20000, 0,
                                          null, '6200', gen_random_uuid());
-select pay_bill((pg_temp.r('EL') ->> 'bill_id')::uuid, 20000, 'safe', gen_random_uuid());
+select pay_bill((pg_temp.r('EL') ->> 'bill_id')::uuid, 20000, 'safe', null, gen_random_uuid());
 select test.act_as('manager@example.com');
 select save_employee(null, 'Sara', null, 'Barista', pg_temp.main(), test.today(), null, gen_random_uuid());
 select test.act_as('owner@example.com');
-select record_advance(pg_temp.person('Sara'), 5000, 'safe', 'Rent due', gen_random_uuid());
+select record_advance(pg_temp.person('Sara'), 5000, 'safe', 'Rent due', null, gen_random_uuid());
 select test.act_as('accountant@example.com');
 select save_journal(test.today(), 'Bank charge', '[{"code": "6500", "debit": 100}, {"code": "1020", "credit": 100}]', false);
 insert into res select 'J1', save_journal(test.today(), 'Cleaning', '[{"code": "6900", "debit": 700}, {"code": "1020", "credit": 700}]', true);

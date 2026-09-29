@@ -98,8 +98,8 @@ select test.throws($$select idem_begin(current_business_id(), gen_random_uuid(),
 
 -- ------------------------------------------------------------------ an expense, sent twice
 select test.act_as('manager@example.com');
-create temp table e1 as select record_expense('Ice', 1000, '6900', 'owner', null, pg_temp.k(1)) r;
-create temp table e2 as select record_expense('Ice', 1000, '6900', 'owner', null, pg_temp.k(1)) r;
+create temp table e1 as select record_expense('Ice', 1000, '6900', 'owner', null, null, pg_temp.k(1)) r;
+create temp table e2 as select record_expense('Ice', 1000, '6900', 'owner', null, null, pg_temp.k(1)) r;
 grant select on e1, e2 to public;
 select test.as_admin();
 select test.eq((select count(*) from expense where description = 'Ice')::int, 1, 'an expense sent twice is recorded once');
@@ -116,20 +116,20 @@ select test.eq((select after_state ->> 'description' || ', ' || (after_state ->>
 
 -- The same key with other details, or for another operation, is refused.
 select test.act_as('manager@example.com');
-select test.throws($$select record_expense('Ice', 2000, '6900', 'owner', null, pg_temp.k(1))$$,
+select test.throws($$select record_expense('Ice', 2000, '6900', 'owner', null, null, pg_temp.k(1))$$,
   '%does not match what was first sent%', 'the same key with another amount is refused');
 select test.throws($$select record_waste('c0000000-0000-0000-0000-000000000001', 5, 'g', 'waste', 'spilt', null,
                                         p_idempotency_key => pg_temp.k(1))$$,
   '%does not match what was first sent%', 'and so is the same key for another operation');
 -- Nor can another person replay it.
 select test.act_as('owner@example.com');
-select test.throws($$select record_expense('Ice', 1000, '6900', 'owner', null, pg_temp.k(1))$$,
+select test.throws($$select record_expense('Ice', 1000, '6900', 'owner', null, null, pg_temp.k(1))$$,
   '%sent by someone else%', 'another person cannot use someone''s key');
 -- A refused call stores nothing: the corrected retry, with the same key, is recorded.
 select test.act_as('manager@example.com');
-select test.throws($$select record_expense('Tea', 0, '6900', 'owner', null, pg_temp.k(2))$$,
+select test.throws($$select record_expense('Tea', 0, '6900', 'owner', null, null, pg_temp.k(2))$$,
   'Enter an amount greater than zero', 'a refused expense');
-select record_expense('Tea', 1000, '6900', 'owner', null, pg_temp.k(2));
+select record_expense('Tea', 1000, '6900', 'owner', null, null, pg_temp.k(2));
 select test.as_admin();
 select test.eq((select count(*) from expense where description = 'Tea')::int, 1,
   'leaves its key free: the corrected one is recorded');
@@ -164,8 +164,8 @@ select record_bill((select id from sup), 'INV-77', test.today(), 10000, 0,
   (select (r ->> 'receipt_id')::uuid from rcv), null, pg_temp.k(11));
 grant select on bill to public;
 select test.act_as('owner@example.com');
-select pay_bill((select (r ->> 'bill_id')::uuid from bill), 4000, 'owner', pg_temp.k(12));
-create temp table pay2 as select pay_bill((select (r ->> 'bill_id')::uuid from bill), 4000, 'owner', pg_temp.k(12)) r;
+select pay_bill((select (r ->> 'bill_id')::uuid from bill), 4000, 'owner', null, pg_temp.k(12));
+create temp table pay2 as select pay_bill((select (r ->> 'bill_id')::uuid from bill), 4000, 'owner', null, pg_temp.k(12)) r;
 grant select on pay2 to public;
 select test.as_admin();
 select test.eq((select count(*) from purchase_invoice where invoice_no = 'INV-77')::int, 1, 'the bill is recorded once');
@@ -288,8 +288,8 @@ select save_journal(test.today(), 'Owner loan', '[{"code":"1020","debit":100000}
   null, null, pg_temp.k(60));
 create temp table su1 as select create_supplier('Fresh Farm', null, null, pg_temp.k(61)) id;
 create temp table su2 as select create_supplier('Fresh Farm', null, null, pg_temp.k(61)) id;
-select set_price('d1000000-0000-0000-0000-000000000001', 'takeaway', 2750, test.today() + 1, pg_temp.k(62));
-select set_price('d1000000-0000-0000-0000-000000000001', 'takeaway', 2750, test.today() + 1, pg_temp.k(62));
+select set_price('d1000000-0000-0000-0000-000000000001', 'takeaway', 2750, test.today() + 1, null, pg_temp.k(62));
+select set_price('d1000000-0000-0000-0000-000000000001', 'takeaway', 2750, test.today() + 1, null, pg_temp.k(62));
 grant select on su1, su2 to public;
 select test.as_admin();
 select test.eq((select count(*) from journal_entry where description = 'Owner loan')::int, 1, 'a journal sent twice is one journal');
@@ -304,7 +304,7 @@ select test.act_as('owner@example.com');
 select set_config('request.path', '/rpc/record_expense', false);
 select test.throws($$select record_expense('Gas', 1000, '6200', 'owner')$$,
   'This screen sent no retry key: reload the page and try again', 'through the API, a keyed write without its key is refused');
-select test.succeeds($$select record_expense('Gas', 1000, '6200', 'owner', null, gen_random_uuid())$$,
+select test.succeeds($$select record_expense('Gas', 1000, '6200', 'owner', null, null, gen_random_uuid())$$,
   'with its key it goes through');
 select set_config('request.path', '/rpc/open_tab', false);
 select test.succeeds($$select open_tab('dine_in', null, 'Corner seat', null,

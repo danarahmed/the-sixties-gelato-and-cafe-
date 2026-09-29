@@ -1467,3 +1467,46 @@ approval, wait, key)`** (`waste.record`), on the trail as `inventory.loss`.
 - **Helpers nobody calls:** `send_stock_transfer__run`,
   `receive_stock_transfer__run`, `cancel_stock_transfer__run`,
   `create_item__run`, `batch_story` and the triggers.
+
+### The tills at each branch, and who works where (`0055`)
+
+- **Where a person works:** `user_role.location_id`, null for everywhere. A
+  person works everywhere or at one of the café's places, all their roles at
+  it: a deferred trigger refuses one person's roles at two places, and another
+  refuses the owner and the general manager at a place (they work
+  everywhere). `member_place(person)` and `current_work_place()` read it.
+- **Nothing recorded at a place by someone who works at another:** a trigger,
+  `works_here`, on every table that records something at a place (sales,
+  bills, tables, refunds, platform orders, sessions, cash events and moves,
+  dollars, stock movements, orders, deliveries, returns, batches, counts,
+  losses, expenses, the staff, their schedules, hours, advances and salary
+  payments) refuses a row, new or changed, whose place the signed-in person
+  does not work at: "You work at Main Branch, not at Second Branch". No one
+  signed in (the database's own jobs, SQL by hand): nothing is checked.
+- **Only a branch sells:** a trigger, `sold_at_a_branch`, refuses a new sale,
+  bill, table or cash session anywhere else.
+- **Turn numbers are each branch's:** `take_turn_no(business, day, location)`,
+  counted as `turn:<location>:<day>`; the café's counters of 0034 were carried
+  over to the first branch's, so its numbers of the day went on.
+- **A branch's own price:** `set_price(… , location, key)` sets one for a
+  branch (a branch in use), `price_on` has always put it before the café's;
+  its audit names the branch. `menu_branch_prices()` lists each branch's own
+  in force; `menu_scheduled()` names the branch of one to come.
+- **At the till's branch:** `pos_catalogue(location)` and `pos_addons(location)`
+  price the menu and its add-ons there; `pos_open_bills(location)` lists its
+  bills (none named: every branch's).
+- **Paid from a branch's till:** `record_expense`, `pay_bill` and
+  `record_advance` take the branch (none: the first branch); the expense is
+  that branch's.
+- **People:** `invite_member(… , location, key)` invites to a place;
+  `set_member_place(person, location)` moves a person (on the audit trail as
+  `member.place`); `set_member_roles` keeps their place, but for the owner and
+  the general manager; `list_members()` and `my_profile()` say where each
+  works.
+- **What a place sends:** `sent_away(movement)` — a `transfer_out`, or its
+  cancel — is demand in `production_plan` and use in `buying_list`, which also
+  counts what is on its way to the place (`on_way`) as coming.
+- **Helpers nobody calls:** the triggers, `member_place`, `current_work_place`,
+  `assert_works_at`, `take_turn_no`, `sent_away`, and the `__run` functions of
+  `invite_member`, `set_price`, `record_expense`, `pay_bill` and
+  `record_advance`.

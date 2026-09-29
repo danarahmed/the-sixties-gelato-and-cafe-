@@ -108,19 +108,24 @@ select test.eq((settle_tab(pg_temp.id('b2'), 2, gen_random_uuid(), 'cash') ->> '
   'a bill from before numbers takes the next one when paid');
 
 -- ----------------------------------------------------------- days, businesses
--- Each day starts again at 1, and each business has its own numbers.
+-- Each day starts again at 1, and each business has its own numbers (each
+-- branch its own since 0055: tills.test.sql).
 select test.as_admin();
-select test.eq(take_turn_no('00000000-0000-0000-0000-0000000000b1', test.today() + 1), 1,
+select test.eq(take_turn_no('00000000-0000-0000-0000-0000000000b1', test.today() + 1,
+                            default_location('00000000-0000-0000-0000-0000000000b1')), 1,
   'tomorrow starts again at 1');
-select test.eq(take_turn_no('00000000-0000-0000-0000-0000000000b1', test.today()), 10,
+select test.eq(take_turn_no('00000000-0000-0000-0000-0000000000b1', test.today(),
+                            default_location('00000000-0000-0000-0000-0000000000b1')), 10,
   'while today goes on from where it was');
-select test.eq(take_turn_no('00000000-0000-0000-0000-0000000000b2', test.today()), 1,
+select test.eq(take_turn_no('00000000-0000-0000-0000-0000000000b2', test.today(),
+                            'f0000000-0000-0000-0000-0000000000b2'), 1,
   'another business has numbers of its own');
 
 -- --------------------------------------------------------------------- access
 -- Numbers are taken by the till's own functions, never by hand.
 select test.act_as('owner@example.com');
-select test.throws($$select take_turn_no('00000000-0000-0000-0000-0000000000b1', current_date)$$, '%permission denied%',
+select test.throws($$select take_turn_no('00000000-0000-0000-0000-0000000000b1', current_date, null)$$,
+  '%permission denied%',
   'not even the owner takes a number by hand');
 select test.act_as_anon();
 select test.throws($$select * from pos_open_bills()$$, '%permission denied%', 'the public cannot read open bills');

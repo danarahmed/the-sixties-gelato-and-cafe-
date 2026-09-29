@@ -8,19 +8,40 @@ import { getFxStatus } from "@/lib/db/fx";
 import { PosClient } from "@/components/pos/PosClient";
 import { ChannelsProvider } from "@/components/ChannelsProvider";
 import { EmptyState } from "@/components/ui";
+import { BranchPicker, PlaceSwitch } from "@/components/PlaceSwitch";
+import { getPlace, tillChoice } from "@/lib/place";
 
 export const dynamic = "force-dynamic";
 
 export default async function PosPage() {
   const profile = await requirePermission("sale.create");
   const t = await getT();
+  // The till sells at its branch (0055): the device's place when it is a
+  // branch, the café's only branch when there is one. A device at the central
+  // kitchen, with more than one branch to sell at, is asked which.
+  const { branches, branch, at } = await tillChoice();
+  if (!branch) {
+    const place = await getPlace();
+    return (
+      <div className="grid" style={{ gap: 16 }} data-testid="till-no-branch">
+        <h1 style={{ margin: 0 }}>{t("pos.title")}</h1>
+        <EmptyState
+          title={t("{place} does not sell: the till is at a branch", {
+            place: place?.name ?? t("This place"),
+          })}
+          hint={branches.length > 0 ? t("Choose the branch this till is at.") : undefined}
+        />
+        {branches.length > 0 && <BranchPicker branches={branches} />}
+      </div>
+    );
+  }
   const [items, addons, tables, bills, channels, drawer, fx] = await Promise.all([
-    getPosCatalogue(),
-    getPosAddons(),
-    getTables(),
-    getOpenBills(),
+    getPosCatalogue(at),
+    getPosAddons(at),
+    getTables(at),
+    getOpenBills(at),
     getChannels(),
-    getDrawerState(),
+    getDrawerState(at),
     getFxStatus(),
   ]);
 
@@ -40,6 +61,11 @@ export default async function PosPage() {
 
   return (
     <ChannelsProvider channels={channels}>
+      {branches.length > 1 && (
+        <div className="till-at" data-testid="till-at">
+          <PlaceSwitch places={branches} current={branch.id} kind="till" />
+        </div>
+      )}
       <PosClient
         items={items}
         addons={addons}

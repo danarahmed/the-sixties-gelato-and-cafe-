@@ -7,6 +7,7 @@
  */
 import { z } from "zod";
 import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { tillForWrite } from "@/lib/place";
 
 const rateInput = z.object({
   rate: z
@@ -88,6 +89,7 @@ export async function exchangeDollarsAction(
     p_received: v.data.received,
     p_to: v.data.to,
     p_note: v.data.note?.trim() || null,
+    p_location: await tillForWrite(),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
