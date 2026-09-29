@@ -33,6 +33,7 @@ const SCREENS = [
   "/reports",
   "/reports/sales",
   "/reports/stock",
+  "/reports/statements",
   "/audit",
   "/settings",
   "/settings/rules",
