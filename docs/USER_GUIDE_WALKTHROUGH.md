@@ -1077,6 +1077,18 @@ accountant's own tools. Two pages open from the top (`0051`):
   when the day ended, from the stock ledger, beside what 1200 Inventory held
   then (**They agree** when the books tie), by kind and item by item, with
   **CSV**.
+- **Balance sheet and cash flow** (`/reports/statements`, for those who see
+  profit, `0052`): what the café owned and owed at the end of the day before
+  the dates and at their end, side by side (the cash, the rest of the current
+  assets, the equipment; what it owes; the owner's, with the profit not yet
+  closed), and whether it balances; then the cash flow of the dates: the cash
+  at the start, what came from sales, what was paid for stock and to
+  suppliers, to staff, for running costs, what the drawer counted over or
+  short, equipment, the owner's money in and out, and dollars changed at
+  another rate, each with the accounts that moved it, and the cash at the
+  end, the till, the safe and the bank each; **It adds up** when the cash at
+  the start and the end are the balance sheet's. Each account opens its
+  journals; each statement has **CSV**.
 
 - **Do the books tie?** Each subledger against its control account, as at the
   **To** date, with **CSV**:
@@ -1308,4 +1320,5 @@ a person's roles allows, then the café's.
 | Points earned, spent and outstanding; rewards taken; who bought the most                                             | `/reports`                               | owner, managers, accountant, auditor                                                  |
 | Sales by hour, day, date, product, category, size, add-on, person, payment, channel or branch, and a second way; CSV | `/reports/sales`                         | cost viewers                                                                          |
 | The stock's value on a day against 1200; what came in by supplier and by item                                        | `/reports/stock`, `/reports`             | cost viewers                                                                          |
-| **Not built:** offline selling, balance sheet, PDF, attachments                                                      | [`LIMITATIONS.md`](LIMITATIONS.md)       | —                                                                                     |
+| The balance sheet at the start and the end of the dates; the cash flow between; CSV                                  | `/reports/statements`                    | profit viewers                                                                        |
+| **Not built:** offline selling, PDF, attachments                                                                     | [`LIMITATIONS.md`](LIMITATIONS.md)       | —                                                                                     |

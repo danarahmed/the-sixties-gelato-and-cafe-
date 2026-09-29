@@ -258,7 +258,7 @@ export default async function ReportsPage({
         </span>
       </form>
 
-      {/* ---- The analysis and the stock's value on a day (0051) ---- */}
+      {/* ---- The analysis and the stock's value on a day (0051); the statements (0052) ---- */}
       <div
         className="card"
         style={{ display: "flex", gap: 16, flexWrap: "wrap" }}
@@ -274,6 +274,15 @@ export default async function ReportsPage({
         <Link className="drill" href={`/reports/stock?on=${to}`} data-testid="to-stock-value">
           {t("Stock value on a day →")}
         </Link>
+        {seesProfit && (
+          <Link
+            className="drill"
+            href={`/reports/statements?from=${from}&to=${to}`}
+            data-testid="to-statements"
+          >
+            {t("Balance sheet and cash flow →")}
+          </Link>
+        )}
       </div>
 
       {/* ---- Reconciliation ---- */}

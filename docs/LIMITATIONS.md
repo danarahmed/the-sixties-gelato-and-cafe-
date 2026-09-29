@@ -359,6 +359,25 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - The stock's value on a day is the stock ledger's, at the costs it
     carried; it is not a count, and it does not revalue stock at today's
     prices.
+- **The balance sheet and the cash flow, what they do not do (release Z,
+  `0052`).**
+  - They are the books' own figures: the published journals, as the trial
+    balance has them. A draft is not in them; a journal published later for a
+    day in the dates is in them from then on.
+  - Where an account's cash goes is read from its code, so a manual journal
+    that moves cash is read by its other accounts, whatever it was for. A
+    bill paid is read by the one account it was charged to; a bill for goods
+    delivered counts as paid to a supplier.
+  - Card takings become cash when they reach the bank (1010 is not cash), and
+    a platform's when it pays out (1100).
+  - Dollars stay at the value they were kept at: the statements do not
+    revalue them at today's rate. What changing them gained or lost is a line
+    of its own.
+  - There is no indirect method (from the profit to the cash), no notes, and
+    no comparison with the same dates of an earlier year: the balance sheet
+    shows the start and the end of the dates side by side.
+  - A year of dates at most for the cash flow; the balance sheet for any day
+    up to today. One branch until release AB; no PDF until release AA.
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the

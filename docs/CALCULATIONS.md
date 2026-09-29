@@ -1079,3 +1079,84 @@ a 450 discount) and used 1,750: a margin of 15,550. One espresso of a sale
 given back, 2,500, leaves 14,800 kept and a margin kept of 13,050. By product,
 the espressos come to 15,500 and the waters 1,800; by payment, the card took
 11,250 (2,500 given back that way) and the cash 6,050, together the 17,300.
+
+## 16. The balance sheet and the cash-flow statement (`0052`)
+
+**The balance sheet at the end of a day** reads every published journal dated
+before the day ended by the café's clock:
+
+```
+an asset                 = its debits − its credits   (accumulated depreciation, 1590, is negative)
+a liability, the equity  = its credits − its debits   (the owner's drawings, 3200, are negative)
+profit this year         = revenue − expenses from 1 January to the day's end, not yet closed
+profit of earlier years  = revenue − expenses before 1 January, not yet closed
+equity in all            = the equity accounts + profit this year + profit of earlier years
+difference               = assets − liabilities − equity in all        (nought: it balances)
+```
+
+The cash is 1000, 1001, 1005, 1006 and 1020; the fixed assets 15xx; the other
+assets are current. The year-end close (on locking December) moves the year's
+revenue and expenses into 3100 Retained earnings, dated the year's last
+minute: after it, that year's profit is in 3100 and nowhere else.
+
+**The cash flow of the dates**, by the direct method. The cash at the start is
+the cash accounts' balance when the day before the dates ended; at the end,
+when their last day ended. Every published journal of the dates with a line on
+a cash account is read by its other lines,
+
+```
+each other line = its credits − its debits: cash came from it (+), or went to it (−)
+```
+
+summed, journal by journal, by the line of the statement its account is on:
+
+| Line                            | Accounts                                 | Section   |
+| ------------------------------- | ---------------------------------------- | --------- |
+| Received from sales             | 4xxx, 1010, 1100, 5100, 5200, 6500       | operating |
+| Paid for stock and to suppliers | 12xx, 2000, 2050, the rest of 5xxx       | operating |
+| Paid to staff, and advances     | 1300, 2100, 61xx                         | operating |
+| Running costs                   | every other account (6000, 6200, 6900 …) | operating |
+| The drawer counted over/short   | 6300                                     | operating |
+| Equipment bought or sold        | 15xx                                     | investing |
+| The owner's money in and out    | 3xxx                                     | financing |
+| Dollars changed at another rate | 6950                                     | exchange  |
+
+A line whose accounts cancel in a journal (a sale's cost, 5000, and the stock
+it used, 1200) is no flow. A bill paid (Dr 2000) is read as the account the
+bill was charged to, when it was charged to one: a grinder's bill, paid, is
+equipment; a bill for goods delivered stays paid to a supplier. Money moved
+between cash accounts has no other line, and is no flow.
+
+```
+cash at the start + every line = cash at the end        (the difference nought)
+```
+
+Worked example (the SQL test). Two days ago the owner put 400,000 in the bank
+and 50,000 in the safe; yesterday the card takings of 3,000 reached the bank,
+less a 60 fee. Today: 5,000 of sales in cash; 4,500 by card; 5,000 split,
+2,000 in cash and 3,000 by card; an espresso paid with $5 (kept at 6,500,
+4,000 change in dinars), the $5 then changed for 6,700; 2,500 refunded in
+cash; 1,000 of cloths from the till; 1,500 from the till to the safe; 20,000
+to the owner; a 150,000 grinder, billed and paid from the bank; 10,000 paid of
+an 18,000 bill for beans; a 20,000 electricity bill paid from the safe; 5,000
+advanced to someone who works here; 700 of cleaning paid from the bank and
+reversed; and the drawer counted 500 short. Today's cash flow:
+
+```
+received from sales          7,000   (5,000 + 2,000 + 2,500 − 2,500 refunded)
+paid to suppliers          −10,000
+paid to staff               −5,000
+running costs              −21,000   (the cloths and the electricity; the cleaning came back)
+the drawer short              −500
+from running the café      −29,500
+the grinder               −150,000
+the owner                  −20,000
+dollars changed               +200
+net                       −199,300   452,940 at the start → 253,640 at the end
+```
+
+The balance sheet that evening: 453,440 of assets (253,640 of cash, 7,500 of
+card takings not yet in the bank, 37,300 of stock, the 5,000 advance and the
+150,000 grinder) = 8,000 owed for the beans + the owner's 451,000 (471,000 put
+in, the stock included, less the 20,000 taken) − the 5,560 lost so far this
+year.

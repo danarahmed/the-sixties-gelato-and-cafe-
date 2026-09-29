@@ -446,8 +446,16 @@ select test.act_as('manager@example.com');
 insert into res select 'long', add_attendance(pg_temp.person('Dana'), greatest(now() - interval '17 hours', pg_temp.at(test.today(), '00:00')),
                                               null, 'came in early', null, gen_random_uuid());
 select test.as_admin();
-select test.ok(coalesce(pg_temp.alerts('clocked_in_long'), '') like case when now() - interval '17 hours' >= pg_temp.at(test.today(), '00:00')
-                                                                    then 'orange: Dana has been clocked in for 17 hours, since %' else '' end,
+-- In since 17 hours ago, or since midnight when that was later: an alert once
+-- in for the rule's 16 hours (after 16:00 by the café's clock, even from midnight).
+create temp table long_in as
+  select floor(extract(epoch from now() - greatest(now() - interval '17 hours', pg_temp.at(test.today(), '00:00')))
+               / 3600)::int as hours;
+grant select on long_in to public;
+select test.ok(coalesce(pg_temp.alerts('clocked_in_long'), '') like case when (select hours from long_in) >= 16
+                                                                    then 'orange: Dana has been clocked in for '
+                                                                         || (select hours from long_in) || ' hours, since %'
+                                                                    else '' end,
                'someone clocked in for 17 hours is an alert');
 select test.act_as('manager@example.com');
 select cancel_attendance(pg_temp.id('long', 'attendance_id'), 'a test', gen_random_uuid());

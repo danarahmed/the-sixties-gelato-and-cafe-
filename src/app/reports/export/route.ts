@@ -12,6 +12,7 @@ import { auditGroup } from "@/lib/audit";
 import { EXCEPTION_LABEL } from "@/lib/exceptions";
 import { getPurchases, getSalesAnalysis, getStockValue } from "@/lib/db/analysis";
 import { isSalesDimension, type SalesDimension } from "@/lib/analysis";
+import { getBalanceSheet, getCashFlow } from "@/lib/db/statements";
 import { addDays, businessToday, dateTimeIn, dayStart, monthStart, parseDay } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
@@ -322,6 +323,46 @@ export async function GET(request: NextRequest) {
         ],
       );
       name = `purchases_${from}_${to}.csv`;
+    } else if (report === "balance_sheet") {
+      // The balance sheet at the end of a day (0052): each account, then the totals.
+      const on = parseDay(q.get("on") ?? undefined, today);
+      const b = await getBalanceSheet(on);
+      body = csv(
+        ["section", "group", "code", "account", "amount"],
+        [
+          ...b.lines.map((l) => [l.section, l.group, l.code, l.name, l.amount]),
+          ["total", "assets", "", "Total assets", b.assets],
+          ["total", "liabilities", "", "Total owed", b.liabilities],
+          [
+            "equity",
+            "profit_earlier",
+            "",
+            "Profit of earlier years, not yet closed",
+            b.profitEarlier,
+          ],
+          ["equity", "profit_this_year", "", "Profit this year, not yet closed", b.profitThisYear],
+          ["total", "equity", "", "Total equity", b.equityTotal],
+          ["total", "difference", "", "Difference", b.difference],
+        ],
+      );
+      name = `balance-sheet_${on}.csv`;
+    } else if (report === "cash_flow") {
+      // The cash flow of the dates (0052): each line with the accounts that moved its cash.
+      const f = await getCashFlow(from, to);
+      body = csv(
+        ["section", "line", "code", "account", "in", "out", "amount"],
+        [
+          ["cash", "opening", "", "Cash at the start", "", "", f.opening],
+          ...f.lines.flatMap((l) => [
+            [l.section, l.line, "", "", l.cameIn, l.wentOut, l.amount],
+            ...l.accounts.map((a) => [l.section, l.line, a.code, a.name, "", "", a.amount]),
+          ]),
+          ["cash", "net", "", "Net change in cash", "", "", f.net],
+          ["cash", "closing", "", "Cash at the end", "", "", f.closing],
+          ["cash", "difference", "", "Difference", "", "", f.difference],
+        ],
+      );
+      name = `cash-flow_${from}_${to}.csv`;
     } else {
       return NextResponse.json({ error: "Unknown report" }, { status: 400 });
     }
