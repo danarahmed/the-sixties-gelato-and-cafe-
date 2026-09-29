@@ -367,6 +367,22 @@ ok "$(sql "select count(*) || ' ' || sum(amount) from salary_payment")" "1 30000
    "ten people pay the same salary at once: it is paid once, in full"
 ok "$(grep -l "paid in full already" "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and nine are told it is paid in full already"
 
+# 0050 — ten tills take the same customer's one reward at the same instant:
+# one sale takes it (the customer is locked while their points are spent), and
+# nine are told there are not enough points.
+sql "insert into customer (id, business_id, full_name, phone)
+     values ('c5000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b1', 'Race Hawre', '+9647700000001');
+     insert into loyalty_ledger (business_id, customer_id, kind, points, reason)
+     values ('00000000-0000-0000-0000-0000000000b1', 'c5000000-0000-0000-0000-0000000000c1', 'adjust', 100, 'race');" >/dev/null
+race 10 cashier@example.com "select record_sale(gen_random_uuid(), 'dine_in', 'card',
+  '[{\"variant_id\":\"d1000000-0000-0000-0000-000000000001\",\"qty\":3}]',
+  p_customer => 'c5000000-0000-0000-0000-0000000000c1', p_rewards => 1) ->> 'net'"
+ok "$(sql "select count(*) from loyalty_ledger where customer_id = 'c5000000-0000-0000-0000-0000000000c1' and kind = 'redeem'")" "1" \
+   "ten tills take the same customer's one reward at once: one takes it"
+ok "$(grep -l "Not enough points" "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and nine are told there are not enough points"
+ok "$(sql "select customer_points('c5000000-0000-0000-0000-0000000000c1')")" "2" \
+   "the customer's points: 100 spent, 2 earned on the 2,500 paid"
+
 # The books still tie after all of it.
 ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(test.today())")" \
    "0,0,0,0,0,0,0,0,0,0,0,0" "every subledger still reconciles to its control account"

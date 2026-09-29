@@ -21,8 +21,10 @@ import {
   addonsToDb,
   lineAddons,
   payments,
+  rewardsTaken,
 } from "@/lib/validation";
 import { howPaid, saleReceipt, type PaidPart } from "@/lib/payments";
+import type { SaleCustomer } from "@/lib/customers";
 
 // Not /pos: the till keeps itself current from each action's answer, and
 // re-rendering it after every sale would only slow the cashier down.
@@ -65,6 +67,10 @@ const saleInput = z.object({
   platformOrderNo,
   /** A manager's approval of selling more than the books hold, when its rule asks (0040). */
   stockApprovalId: id("an approval").nullish(),
+  /** The customer, where a delivery goes, and the rewards they take off it (0050). */
+  customerId: id("the customer").nullish(),
+  addressId: id("the address").nullish(),
+  rewards: rewardsTaken,
 });
 
 export interface SaleReceipt {
@@ -85,6 +91,8 @@ export interface SaleReceipt {
   turnNo: number | null;
   /** Each payment as recorded, with the change it gave (0042). */
   payments: PaidPart[];
+  /** What the sale did for its customer: points earned and spent, and theirs now (0050). */
+  customer?: SaleCustomer | null;
 }
 
 export async function recordSaleAction(
@@ -116,6 +124,9 @@ export async function recordSaleAction(
     p_approval: v.data.approvalId ?? null,
     p_platform_order_no: orderNo,
     p_stock_approval: v.data.stockApprovalId ?? null,
+    p_customer: v.data.customerId ?? null,
+    p_address: v.data.addressId ?? null,
+    p_rewards: v.data.rewards,
   });
   if (!r.ok) return r;
   refresh(...SALE_PATHS, "/platforms");

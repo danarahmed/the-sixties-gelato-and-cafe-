@@ -965,3 +965,60 @@ Omar, 3,000 an hour, works 6 hours. An hour of Rana's pay is 600,000 ÷ 30 ÷ 8 
 her gross is 632,500, and she is paid 582,500 after the advance. Omar's gross
 is 18,000. The payroll posts Dr 6100 650,500, Cr 2100 600,500, Cr 1300 50,000,
 and paying everyone from the bank Dr 2100 600,500, Cr 1020 600,500.
+
+## 14. Customers and their points (`0050`)
+
+**A phone number** is kept one way, so a customer is found however it is
+typed: Arabic and Persian digits become 0–9; spaces, dashes, dots and brackets
+go; `00` becomes `+`; a number starting `964` gains its `+`, one starting `0`
+loses the 0 for `+964`, and ten digits starting 7 gain `+964`. What is left is
+a number when it is `+` and 8 to 15 digits, and an Iraqi one (`+964`) has 8 to
+10 digits after the code. `0770 123 4567`, `+964 770 123 4567` and
+`٠٧٧٠١٢٣٤٥٦٧` are all `+9647701234567`, one customer.
+
+**Points.** Every point is a row that never changes; a customer's points are
+the sum of theirs. With the rules (_1 point per 1,000 IQD, 100 points a reward
+of 5,000 IQD_, both on Settings):
+
+```
+earned     = floor(what the sale comes to, after its discount ÷ 1,000)
+             once, when the sale is paid; the rate is kept on the row
+rewards    = floor(points ÷ 100)          what a customer can take now
+a reward   = 5,000 off the bill, whole, for 100 points
+             no more rewards than the bill comes to, 20 at most
+```
+
+A reward is the bill's discount (Dr 4100, reason "Loyalty reward"), so a bill
+with another discount takes none, and a sale with a reward earns on what is
+left to pay. Nothing is kept as a liability; the report's points outstanding
+are what customers hold:
+
+```
+outstanding       = the sum over customers of max(their points, 0)
+outstanding value = money_round(outstanding ÷ 100 × 5,000)
+```
+
+**A void** takes back all the sale earned and gives back all it spent.
+**A refund** does so for what it gives back:
+
+```
+kept        = floor((what the sale came to − all given back so far) ÷ the rate it earned at)
+taken back  = what it earned − kept − what refunds took back before
+given back  = floor(points spent × all given back so far ÷ what the sale came to)
+              − what refunds gave back before
+```
+
+Once the sale is refunded in full, all it earned is taken back and all it spent
+given back. Points by hand (`loyalty.adjust`) are 10,000 at most at a time,
+with a reason, and never take a customer below nothing.
+
+**What a customer bought** (Customers, the report): their sales paid (in full
+or refunded in part or whole), each at what it came to less what was given
+back; a voided sale counts nothing.
+
+Worked example (the SQL test): Rozh has 100 points and buys four espressos,
+10,000, taking a reward: the sale comes to 5,000 and earns 5, and the reward
+spends 100, leaving 5. Two espressos given back are 2,500: the 2,500 kept earns
+2, so 3 are taken back, and half the 100 spent (50) comes back: 52. The other
+two given back take back the last 2 and give back the other 50: 100, as before
+the sale.

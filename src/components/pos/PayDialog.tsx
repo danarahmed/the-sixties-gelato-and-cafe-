@@ -52,7 +52,7 @@ const SPLIT_START: SplitRow[] = [
  */
 export function PayDialog({
   title,
-  total,
+  total: billed,
   note,
   tenders,
   initialTender,
@@ -61,6 +61,7 @@ export function PayDialog({
   dollarsOffHours = null,
   busy,
   error,
+  reward = null,
   onConfirm,
   onClose,
 }: {
@@ -79,10 +80,35 @@ export function PayDialog({
   dollarsOffHours?: number | null;
   busy: boolean;
   error: string | null;
-  onConfirm: (payments: Payment[], orderNo: string | null) => void;
+  /**
+   * The order's customer and the rewards their points come to (0050): each
+   * takes its value off, whole; a reward is the bill's only discount, so
+   * `blocked` says why none can be taken (another discount on the bill).
+   */
+  reward?: {
+    name: string;
+    /** Their points now. */
+    points: number;
+    /** The rewards those come to. */
+    available: number;
+    /** What one reward takes off, and the points it takes. */
+    value: number;
+    each: number;
+    blocked: string | null;
+  } | null;
+  onConfirm: (payments: Payment[], orderNo: string | null, rewards: number) => void;
   onClose: () => void;
 }) {
   const { t, msg } = useT();
+  const [rewards, setRewards] = useState(0);
+  // Rewards the bill can take, whole: never more than it comes to.
+  const maxRewards =
+    reward && !reward.blocked && reward.value > 0
+      ? Math.min(reward.available, Math.floor(billed / reward.value))
+      : 0;
+  const taken = Math.min(rewards, maxRewards);
+  const off = taken * (reward?.value ?? 0);
+  const total = billed - off;
   const [tender, setTender] = useState<Tender | "split" | "usd">(initialTender);
   const [received, setReceived] = useState("");
   const [rows, setRows] = useState<SplitRow[]>(SPLIT_START);
@@ -129,11 +155,11 @@ export function PayDialog({
   function confirm() {
     if (!canConfirm) return;
     if (split) {
-      if (split.payments) onConfirm(split.payments, null);
+      if (split.payments) onConfirm(split.payments, null, taken);
       return;
     }
     if (dollars) {
-      if (dollars.payments) onConfirm(dollars.payments, null);
+      if (dollars.payments) onConfirm(dollars.payments, null, taken);
       return;
     }
     const one = tender as Tender;
@@ -146,6 +172,7 @@ export function PayDialog({
         },
       ],
       one === "platform_paid" ? number : null,
+      taken,
     );
   }
 
@@ -189,9 +216,67 @@ export function PayDialog({
       >
         <div className="pay-head">
           <span className="muted">{title}</span>
-          <span className="pay-total mono">{fmtIQD(total)}</span>
+          <span className="pay-total mono" data-testid="pay-total">
+            {fmtIQD(total)}
+          </span>
           {note && <span className="muted pay-note">{note}</span>}
+          {taken > 0 && (
+            <span className="muted pay-note" data-testid="pay-reward-note">
+              {t("{n} reward(s): {amount} off, {points} points", {
+                n: String(taken),
+                amount: fmtIQD(off),
+                points: String(taken * (reward?.each ?? 0)),
+              })}
+            </span>
+          )}
         </div>
+
+        {reward && (
+          <div className="card grid" style={{ gap: 6, padding: 10 }} data-testid="pay-reward">
+            <span>
+              {t("{name} has {n} points.", { name: reward.name, n: String(reward.points) })}
+            </span>
+            {reward.blocked ? (
+              <span className="muted" style={{ fontSize: ".85rem" }}>
+                {msg(reward.blocked)}
+              </span>
+            ) : maxRewards === 0 ? (
+              <span className="muted" style={{ fontSize: ".85rem" }}>
+                {reward.available === 0
+                  ? t("Not enough for a reward yet.")
+                  : t("A reward takes {amount} off, whole: the bill comes to less.", {
+                      amount: fmtIQD(reward.value),
+                    })}
+              </span>
+            ) : (
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => setRewards(Math.max(0, taken - 1))}
+                  disabled={busy || taken === 0}
+                  aria-label={t("pos.less")}
+                >
+                  −
+                </button>
+                <span className="mono" data-testid="pay-rewards">
+                  {taken}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setRewards(Math.min(maxRewards, taken + 1))}
+                  disabled={busy || taken >= maxRewards}
+                  aria-label={t("pos.more")}
+                  data-testid="pay-reward-more"
+                >
+                  +
+                </button>
+                <span className="muted" style={{ fontSize: ".85rem" }}>
+                  {t("rewards taken, {amount} off each", { amount: fmtIQD(reward.value) })}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {tenders.length > 1 && (
           <div className="seg" role="radiogroup" aria-label={t("pos.howPaid")}>

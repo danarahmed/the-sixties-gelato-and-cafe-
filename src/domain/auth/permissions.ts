@@ -52,7 +52,10 @@ export type Permission =
   | "staff.manage"
   | "attendance.edit"
   | "payroll.view"
-  | "payroll.run";
+  | "payroll.run"
+  | "customer.edit"
+  | "customer.view"
+  | "loyalty.adjust";
 
 const ALL: Permission[] = [
   "sale.create",
@@ -89,6 +92,9 @@ const ALL: Permission[] = [
   "attendance.edit",
   "payroll.view",
   "payroll.run",
+  "customer.edit",
+  "customer.view",
+  "loyalty.adjust",
 ];
 
 /**
@@ -128,13 +134,17 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "audit.view",
     "staff.manage",
     "attendance.edit",
+    "customer.edit",
+    "customer.view",
+    "loyalty.adjust",
   ]),
-  cashier: new Set<Permission>(["sale.create", "discount.apply", "cash.session"]),
+  cashier: new Set<Permission>(["sale.create", "discount.apply", "cash.session", "customer.edit"]),
   barista: new Set<Permission>([
     "sale.create",
     "waste.record",
     "production.record",
     "cash.session",
+    "customer.edit",
   ]),
   inventory_counter: new Set<Permission>(["inventory.count"]),
   purchasing: new Set<Permission>(["purchase.create", "purchase.receive", "cost.view"]),
@@ -149,6 +159,7 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "cash.view_expected",
     "payroll.view",
     "payroll.run",
+    "customer.view",
   ]),
   auditor: new Set<Permission>([
     "cost.view",
@@ -156,6 +167,7 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "audit.view",
     "cash.view_expected",
     "payroll.view",
+    "customer.view",
   ]),
 };
 

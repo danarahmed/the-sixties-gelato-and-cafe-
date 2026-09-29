@@ -323,6 +323,26 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     approved.
   - The people are kept when the test records are cleared; there is no
     screen to delete someone, only a last day.
+- **Customers and their points, what they do not do (release X, `0050`).**
+  - A customer is found at the till by their whole phone number: whoever sells
+    can learn, number by number, who is a customer and their points, though
+    not the list. The list, and a search by name or part of a number, are on
+    Customers, for those who see customers.
+  - Loyalty is by the dinar only: there is no loyalty by visits, no tiers, and
+    points do not expire. A reward is a fixed amount off, taken whole; there is
+    no free item, and a reward cannot join another discount on one bill.
+  - Nothing is sent to a customer: there is no SMS, WhatsApp or email, no
+    birthday offer, and no receipt by message. A customer's points are on
+    their printed receipt.
+  - A reward is a discount, not a liability: the points outstanding are shown
+    on Reports → Customers, and their worth reaches the books only as rewards
+    are taken.
+  - A delivery platform's customers are its own and are not kept here; a bill
+    split in two leaves the new bill with no customer; a sale already paid
+    cannot be given a customer afterwards.
+  - Customers are kept, and their points cleared, when the test records are
+    cleared; a customer is put away, never deleted, and there is no merging
+    of two customers into one.
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the

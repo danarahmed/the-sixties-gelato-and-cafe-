@@ -23,6 +23,7 @@ import { getDollarsReport } from "@/lib/db/fx";
 import { getPurchasingReport } from "@/lib/db/purchasing";
 import { getProductionReport } from "@/lib/db/production";
 import { getStaffReport } from "@/lib/db/staff";
+import { getCustomerReport } from "@/lib/db/customers";
 import { monthText, splitMinutes } from "@/lib/staff";
 import { LOSS_ACCOUNT_NAME, giveawayLabel, kindShare } from "@/lib/losses";
 import { CREDIT_KIND_LABEL, orderStage, STAGE_LABEL } from "@/lib/purchasing";
@@ -67,6 +68,8 @@ export default async function ReportsPage({
   const seesStaff =
     has(profile, "staff.manage") || has(profile, "attendance.edit") || has(profile, "payroll.view");
   const staffDates = from <= to && daysBetween(from, to) <= 366;
+  // Customers and their points (0050): for those who see customers.
+  const seesCustomers = has(profile, "customer.view");
 
   const [
     pnl,
@@ -85,6 +88,7 @@ export default async function ReportsPage({
     made,
     lost,
     staff,
+    loyalty,
   ] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
     getReconciliation(to),
@@ -102,6 +106,7 @@ export default async function ReportsPage({
     getProductionReport(from, to),
     getLossReport(from, to),
     seesStaff && staffDates ? getStaffReport(from, to) : Promise.resolve(null),
+    seesCustomers && from <= to ? getCustomerReport(from, to) : Promise.resolve(null),
   ]);
   // The menu as it sells today: a platform out of use sells nothing.
   const menu = allMenu.filter((m) =>
@@ -1302,6 +1307,94 @@ export default async function ReportsPage({
                   "What staff cost is what 6100 Salaries holds for the month: the payroll approved for it, and any salary recorded as an expense. The sales are the month's, less refunds.",
                 )}
               </p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ---- Customers and their points (0050) ---- */}
+      {seesCustomers && loyalty && (
+        <section className="panel" id="customers" data-testid="customer-report">
+          <div className="panel-h">
+            <h3>{t("Customers and loyalty")}</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              {t("Points earned and spent {from} to {to}, and who bought the most", { from, to })}
+            </span>
+          </div>
+          <div className="panel-b grid" style={{ gap: 6 }}>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <span data-testid="loyalty-earned">
+                {t("Points earned: {n}", { n: String(loyalty.points.earned) })}
+              </span>
+              <span data-testid="loyalty-rewards">
+                {t("Rewards taken: {n}, {amount} off", {
+                  n: String(loyalty.points.rewards),
+                  amount: fmtIQD(loyalty.points.rewardsValue),
+                })}
+              </span>
+              <span>
+                {t("Taken back on voids and refunds: {n}; given back: {m}", {
+                  n: String(loyalty.points.takenBack),
+                  m: String(loyalty.points.givenBack),
+                })}
+              </span>
+              <span>
+                {t("By hand: {plus} given, {minus} taken", {
+                  plus: String(loyalty.points.givenByHand),
+                  minus: String(loyalty.points.takenByHand),
+                })}
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <span data-testid="loyalty-outstanding">
+                {t("Customers hold {n} points now, worth {amount} in rewards", {
+                  n: String(loyalty.outstanding),
+                  amount: fmtIQD(loyalty.outstandingValue),
+                })}
+              </span>
+              <span>
+                {t("{n} customers, {m} new in these dates", {
+                  n: String(loyalty.customers),
+                  m: String(loyalty.newCustomers),
+                })}
+              </span>
+              <span>
+                {t("Their sales: {n}, {amount}", {
+                  n: String(loyalty.sales.orders),
+                  amount: fmtIQD(loyalty.sales.net),
+                })}
+              </span>
+            </div>
+            <p className="muted" style={{ margin: 0, fontSize: ".8rem" }}>
+              {t(
+                "A reward is a discount on 4100, like any other: the points are no liability in the books, only what customers hold here.",
+              )}
+            </p>
+          </div>
+          {loyalty.top.length > 0 && (
+            <div className="tw">
+              <table data-testid="customer-top">
+                <thead>
+                  <tr>
+                    <th>{t("Customer")}</th>
+                    <th className="right">{t("Orders")}</th>
+                    <th className="right">{t("Bought")}</th>
+                    <th className="right">{t("Points")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loyalty.top.map((c) => (
+                    <tr key={c.customerId} data-testid="customer-top-row" data-name={c.name}>
+                      <td>
+                        <Link href={`/customers/${c.customerId}`}>{c.name}</Link>
+                      </td>
+                      <td className="right mono">{c.orders}</td>
+                      <td className="right mono">{fmtIQD(c.spent)}</td>
+                      <td className="right mono">{c.points}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </section>

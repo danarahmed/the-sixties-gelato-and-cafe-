@@ -8,6 +8,7 @@ const PAGES = [
   "/dashboard",
   "/sales",
   "/platforms",
+  "/customers",
   "/vendors",
   "/expenses",
   "/purchasing",

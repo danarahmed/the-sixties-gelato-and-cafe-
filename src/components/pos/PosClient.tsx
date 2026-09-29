@@ -53,6 +53,7 @@ import {
   addonsKey,
   billChanged,
   billTitle,
+  customerKey,
   isDirty,
   isPlatform,
   itemCount,
@@ -82,9 +83,12 @@ import {
   type MoneyRules,
   type Line,
   type Order,
+  type OrderCustomer,
   type Tender,
   type TicketLine,
 } from "./model";
+import { CustomerDialog } from "./CustomerDialog";
+import { customerAtTillAction } from "@/lib/actions/customers";
 import { reasonKey } from "@/lib/reasons";
 import { changeGiven, type Payment } from "@/lib/payments";
 import { RATE_REFUSED } from "@/lib/fx";
@@ -123,6 +127,10 @@ interface Pending {
   platformOrderNo: string | null;
   /** A manager's approval of selling more than the books hold, when its rule asks (0040). */
   stockApprovalId?: string | null;
+  /** A quick sale's customer and where its delivery goes; the rewards taken off (0050). */
+  customerId?: string | null;
+  addressId?: string | null;
+  rewards?: number | null;
 }
 
 const PENDING_KEY = "sixties.pos.pending";
@@ -221,7 +229,16 @@ const MENU_EVERY_MS = 10 * 60 * 1000;
 const NEEDS_STOCK_APPROVAL = /is in stock: a manager approves using more than that/;
 
 type Dialog =
-  | { kind: "pay"; key: string; tender: Tender; order: Order; title: string; error: string | null }
+  | {
+      kind: "pay";
+      key: string;
+      tender: Tender;
+      order: Order;
+      title: string;
+      error: string | null;
+      /** The order's customer and the rewards they could take (0050). */
+      reward: PayReward | null;
+    }
   | { kind: "split"; order: Order; title: string }
   | { kind: "keep" }
   | { kind: "named" }
@@ -249,7 +266,18 @@ type Dialog =
   /** The drawer (0036): opened, closed, handed over; `why` when cash was refused for it. */
   | { kind: "drawer"; why: string | null }
   /** Clocking in and out (0049): a name and a PIN. */
-  | { kind: "clock" };
+  | { kind: "clock" }
+  /** The order's customer (0050); `why` when a delivery needs one. */
+  | { kind: "customer"; why: string | null };
+
+type PayReward = {
+  name: string;
+  points: number;
+  available: number;
+  value: number;
+  each: number;
+  blocked: string | null;
+};
 
 /**
  * The till. Two kinds of order share one screen: a quick sale at the counter,
@@ -275,6 +303,7 @@ export function PosClient({
   initialDrawer,
   fx = null,
   dollarsOffHours = null,
+  canAddCustomer = false,
 }: {
   items: PosItem[];
   /** The add-ons, and which products offer them (0041). */
@@ -297,6 +326,8 @@ export function PosClient({
   initialDrawer: DrawerState;
   /** The dollar's rate, while dollars may be taken at it (0043); read again when refused. */
   fx?: { rate: number; roundTo: number } | null;
+  /** customer.edit: a customer, and their address, may be added at the till (0050). */
+  canAddCustomer?: boolean;
   /** The rate is this many hours old, too old to take dollars at: the till says so. */
   dollarsOffHours?: number | null;
 }) {
@@ -745,6 +776,7 @@ export function PosClient({
           })),
           ...discountParams(o.discount),
           ...discountWhy(o.discount),
+          customer: o.customer ? { id: o.customer.id, addressId: o.customer.addressId } : null,
         },
         key,
       ),
@@ -758,6 +790,7 @@ export function PosClient({
           tabId: data.tabId,
           version: data.version,
           saved: signature(o.lines, o.discount),
+          savedCustomer: customerKey(o.customer),
         };
     // What the bar has had: all of it once its ticket is printed; otherwise
     // what it had before, for the Barista ticket button to send.
@@ -855,6 +888,9 @@ export function PosClient({
           })),
           ...discountParams(o.discount),
           ...discountWhy(o.discount),
+          ...(o.customer
+            ? { customer: { id: o.customer.id, addressId: o.customer.addressId } }
+            : {}),
         },
         key,
       ),
@@ -919,6 +955,9 @@ export function PosClient({
         ...printTotals(o),
         printCount: data.printCount,
         turnNo: o.turnNo,
+        customer: o.customer
+          ? { name: o.customer.name, phone: o.customer.phone, address: o.customer.address }
+          : null,
         at: new Date().toISOString(),
         by: cashierName,
       },
@@ -1044,11 +1083,36 @@ export function PosClient({
       });
       return;
     }
+    // The café's own driver takes it to a customer's address (0050).
+    if (order.channel === "direct_delivery" && !order.customer?.addressId) {
+      setDialog({
+        kind: "customer",
+        why: "A delivery by the café's own driver needs the customer and their address",
+      });
+      return;
+    }
     let o = order;
     if (o.kind === "bill") {
       const saved = await current();
       if (!saved) return;
       o = saved;
+    }
+    // The customer's points now, and the rewards they come to (0050).
+    let reward: PayReward | null = null;
+    if (o.customer) {
+      const r = await customerAtTillAction(o.customer.id);
+      if (r.ok && r.data.loyalty) {
+        reward = {
+          name: r.data.name,
+          points: r.data.points,
+          available: r.data.rewards,
+          value: r.data.rewardValue,
+          each: r.data.rewardPoints,
+          blocked: o.discount
+            ? "A reward is the bill's discount: take the other discount off first"
+            : null,
+        };
+      }
     }
     setDialog({
       kind: "pay",
@@ -1057,12 +1121,25 @@ export function PosClient({
       order: o,
       title: title(o),
       error: null,
+      reward,
     });
   }
 
-  async function confirmPay(payments: Payment[], orderNo: string | null) {
+  /** The order's customer, as chosen in the customer dialog (0050). */
+  function setCustomer(c: OrderCustomer | null) {
+    patchOrder((o) => ({
+      ...o,
+      customer: c,
+      // A bill for a customer, without a table or a name, is named after them.
+      label: o.kind === "bill" && c && !o.tableId && !o.label?.trim() ? c.name : o.label,
+    }));
+    setDialog(null);
+  }
+
+  async function confirmPay(payments: Payment[], orderNo: string | null, rewards = 0) {
     if (dialog?.kind !== "pay" || busy || payments.length === 0) return;
     const o = dialog.order;
+    const rewardOffNow = rewards > 0 ? rewards * (dialog.reward?.value ?? 0) : 0;
     const tender = payments[0]?.type ?? dialog.tender;
     const received = payments.find((x) => x.type === "cash")?.received ?? null;
     await sendPayment({
@@ -1091,14 +1168,22 @@ export function PosClient({
             approvalId: null,
           }),
       // What the dialog showed: the database takes the money only at this total.
-      expectedNet: orderDue(o, byId, money, menu).toFixed(),
+      expectedNet: orderDue(o, byId, money, menu).minus(rewardOffNow).toFixed(),
       platformOrderNo: isPlatform(o.channel) ? orderNo : null,
+      // A quick sale's customer; a bill's is on the bill (0050).
+      customerId: o.kind === "quick" ? (o.customer?.id ?? null) : null,
+      addressId: o.kind === "quick" ? (o.customer?.addressId ?? null) : null,
+      rewards: rewards > 0 ? rewards : null,
       job: {
         kind: "receipt",
         title: dialog.title,
         channelLabel: channelName(o.channel),
         lines: printLines(o),
         ...printTotals(o),
+        ...(rewards > 0 ? { discountLabel: t("Loyalty reward") } : {}),
+        customer: o.customer
+          ? { name: o.customer.name, phone: o.customer.phone, address: o.customer.address }
+          : null,
         tender,
         received,
         payments,
@@ -1134,6 +1219,9 @@ export function PosClient({
               expectedNet: p.expectedNet,
               platformOrderNo: p.platformOrderNo,
               stockApprovalId: p.stockApprovalId ?? null,
+              customerId: p.customerId ?? null,
+              addressId: p.addressId ?? null,
+              rewards: p.rewards ?? null,
             })
           : await payBillAction({
               tabId: p.tabId!,
@@ -1142,6 +1230,7 @@ export function PosClient({
               ...paidAs(p),
               expectedNet: p.expectedNet,
               stockApprovalId: p.stockApprovalId ?? null,
+              rewards: p.rewards ?? null,
             });
       if (!r.ok && r.uncertain) {
         // No answer from the database: it may have been recorded. Freeze, and
@@ -1199,6 +1288,16 @@ export function PosClient({
             platformOrderNo: r.data.platformOrderNo ?? p.platformOrderNo,
             journalNo: r.data.journalNo,
             turnNo: r.data.turnNo ?? p.job.turnNo ?? null,
+            // What the sale did for its customer: the points earned and spent, and theirs now.
+            customer: r.data.customer
+              ? {
+                  ...(p.job.customer ?? {}),
+                  name: r.data.customer.name,
+                  earned: r.data.customer.earned,
+                  spent: r.data.customer.spent,
+                  points: r.data.customer.points,
+                }
+              : (p.job.customer ?? null),
           }
         : null;
       // A quick sale goes to the bar as it is paid; a bill went when it was saved.
@@ -1548,6 +1647,7 @@ export function PosClient({
             discountRules={discountRules}
             onDiscount={setDiscount}
             onAskApproval={askApproval}
+            onCustomer={() => setDialog({ kind: "customer", why: null })}
           />
         </div>
       </div>
@@ -1588,6 +1688,7 @@ export function PosClient({
           dollarsOffHours={isPlatform(dialog.order.channel) ? null : dollarsOffHours}
           busy={busy === "pay"}
           error={dialog.error}
+          reward={dialog.reward}
           onConfirm={confirmPay}
           onClose={() => setDialog(null)}
         />
@@ -1741,6 +1842,16 @@ export function PosClient({
       )}
       {dialog?.kind === "clock" && (
         <ClockDialog timezone={timezone} onClose={() => setDialog(null)} />
+      )}
+      {dialog?.kind === "customer" && (
+        <CustomerDialog
+          current={order.customer}
+          delivery={order.channel === "direct_delivery"}
+          why={dialog.why}
+          canAdd={canAddCustomer}
+          onChoose={setCustomer}
+          onClose={() => setDialog(null)}
+        />
       )}
       {dialog?.kind === "printing" && (
         <PrintingDialog

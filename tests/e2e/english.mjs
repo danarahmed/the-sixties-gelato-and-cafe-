@@ -50,6 +50,11 @@ const typed = () =>
     union select coalesce(additions_note, '') from payroll_line union select coalesce(deductions_note, '') from payroll_line
     union select coalesce(reopen_reason, '') from payroll_approval
     union select coalesce(cancel_reason, '') from salary_payment
+    -- Customers and their points (0050): the names, notes, addresses and reasons typed.
+    union select full_name from customer union select coalesce(notes, '') from customer
+    union select coalesce(label, '') from customer_address union select address from customer_address
+    union select coalesce(directions, '') from customer_address union select coalesce(reason, '') from loyalty_ledger
+    union select coalesce(delivery_address, '') from sales_order union select coalesce(delivery_address, '') from pos_tab
   ) x where n is not null`);
 const own = () =>
   new Set(
