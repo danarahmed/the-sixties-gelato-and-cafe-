@@ -29,9 +29,8 @@ export default async function PayrollPage() {
   const thisMonth = monthStart(today);
   const lastMonth = monthStart(addDays(thisMonth, -1));
   const months = [lastMonth, thisMonth].map((m) => ({ month: m, label: monthText(m) }));
-  const working = people
-    .filter((p) => p.leftOn === null || p.leftOn >= addDays(thisMonth, -31))
-    .map((p) => ({ id: p.id, name: p.name }));
+  // An advance goes to someone who works here today (the database refuses anyone else).
+  const working = people.filter((p) => p.worksNow).map((p) => ({ id: p.id, name: p.name }));
 
   return (
     <div className="grid" style={{ gap: 16 }}>
