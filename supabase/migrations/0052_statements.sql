@@ -186,7 +186,9 @@ begin
                     where l.journal_entry_id = e.id and cash_flow_line(a.code) = 'cash')
   ),
   jl as (
-    select m.id as journal_id, case when a.code = '2000' and m.paid_for is not null then m.paid_for else a.code end as code,
+    select m.id as journal_id,
+           case when a.code = '2000' and m.paid_for is not null and cash_flow_line(m.paid_for) <> 'cash'
+                then m.paid_for else a.code end as code,
            sum(l.credit - l.debit) as amount
       from moving m
       join journal_line l on l.journal_entry_id = m.id
