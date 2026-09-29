@@ -1356,3 +1356,15 @@ approval, wait, key)`** (`waste.record`), on the trail as `inventory.loss`.
   on `sale_adjustment`), the bills cancelled; the stock ledger and 1200; the
   deliveries as `receipt_state` gives them, the returns to suppliers, the
   suppliers' credits for price and the bills.
+
+### The balance sheet and the cash-flow statement (`0052`)
+
+- **No table changes.** Two functions, each needing `profit.view`:
+  `report_balance_sheet(as_of)` (any day up to today) and
+  `report_cash_flow(from, to)` (a year at most, up to today).
+- **Helpers nobody calls:** `cash_flow_line(code)` (the line of the statement
+  an account's cash goes on, by its code) and `cash_flow_section(line)`
+  (operating, investing, financing, or the exchange of dollars).
+- **What they read:** the published journals and their lines, the chart of
+  accounts, and, for a bill paid, its `supplier_payment` and the bill's
+  `purchase_invoice.expense_account_code`.

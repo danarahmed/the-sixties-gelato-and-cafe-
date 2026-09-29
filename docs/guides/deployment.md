@@ -48,6 +48,7 @@ Plan a short window when the café is closed.
 | Staff and pay (`0049`)                  | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked as four roles in a transaction that was rolled back (see [After `0049`](#after-0049)). The screens were merged ([pull request #37](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/37)) and deployed                                 |
 | Customers and points (`0050`)           | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked as four roles in a transaction that was rolled back (see [After `0050`](#after-0050)). The screens were merged ([pull request #38](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/38)) and deployed                                 |
 | Sales analysis (`0051`)                 | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0051`](#after-0051)). The screens were merged ([pull request #39](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/39)) and deployed            |
+| Balance sheet and cash flow (`0052`)    | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0052`](#after-0052)). The screens were merged ([pull request #40](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/40)) and deployed            |
 
 ## 0. Before you start
 
@@ -1995,6 +1996,73 @@ audit trail to 195).
 
 The security advisor adds the three reports above, each checking
 `cost.view`. The performance advisor's notes are unchanged.
+
+## After `0052`
+
+Migration `0052` (release Z) adds the two statements, for whoever sees profit
+(the owner, the general and branch managers, the accountant and the auditor:
+`profit.view`). They read and write nothing:
+
+- **Reports → Balance sheet and cash flow**: the balance sheet at the end of
+  the day before the dates and at their end, side by side (the cash in the
+  till, the safe and the bank; the rest of what the café owns now; its
+  equipment; what it owes; and the owner's, with the profit not yet closed
+  into Retained earnings), and **It balances** when it does. Then the cash
+  flow of the dates, by the direct method: the cash at the start; what came
+  from sales; what was paid for stock and to suppliers, to staff and for the
+  running costs; the drawer counted over or short; equipment; the owner's
+  money in and out; dollars changed at another rate; and the cash at the end,
+  checked against the balance sheet's. Each account opens its journals; each
+  statement downloads as CSV.
+
+What it adds:
+
+- no table, rule or permission;
+- the functions signed-in users may call, each checking `profit.view`:
+  `report_balance_sheet` and `report_cash_flow`; and two helpers nobody may
+  call from outside (`cash_flow_line` and `cash_flow_section`).
+
+It goes in before the screens: those deployed before it call none of it.
+
+It was applied on 29 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0051` build. The text stored there
+is the file byte for byte (md5 `3ba85f5ea6ef10bb7be8ad59ae4cc96a`, 14,310
+bytes). It was then compared with the tested build, object by object, the role
+permissions and column grants included: identical, but for the schema `citext`
+lives in, as before.
+
+On applying, no record changed.
+
+It was checked on the live records as the owner, the accountant and the
+barista, in one transaction that was rolled back:
+
+- **The balance sheet today**, against the ledger read directly: 2,310,514 of
+  assets (1,566,000 of cash: the bank's 1,886,000 and the till's −320,000;
+  card takings not yet in the bank, 19,000; what the platforms owe, 34,500;
+  the stock, 691,014) = 7,250 owed (2,500 of bills and 4,750 of goods not
+  yet billed) + the owner's 2,726,000 − the 422,736 lost so far this year:
+  the same figures, difference nought, and the loss is the P&L's to the dinar.
+  The day before the first journal: nothing.
+- **The till at −320,000** is the test records': 475,000 of expenses and
+  167,500 of bills were paid from the till before the drawer's checks
+  existed, against 239,500 of cash sales. It goes with the test records.
+- **The cash flow** of every day so far, 24 to 29 September: from nothing to
+  1,566,000, the balance sheet's cash: 206,500 from sales (248,000 in and
+  41,500 out, over 37 journals), 290,000 paid to suppliers, 600,000 of
+  running costs, the drawer 500 short, and 2,250,000 of the owner's money in;
+  difference nought. Today, no cash moved.
+- **Refused:** the balance sheet for tomorrow ("Choose today or a day before
+  it").
+- **The accountant** read both (difference nought); **the barista** was
+  refused both ("needs profit.view").
+- **Nothing was written:** no line on the audit trail, no journal.
+
+Nothing was kept: every table's count is as it was (journals to 1091, the
+audit trail to 195).
+
+The security advisor adds the two statements, each checking `profit.view`.
+The performance advisor's notes are unchanged.
 
 ## Clearing the test records
 

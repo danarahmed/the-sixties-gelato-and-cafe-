@@ -12,9 +12,9 @@ release T (the buying list, `0045`), release U (batches, their use-by dates
 and lots, and the day's plan, `0046`) and release V (losses by kind with their
 accounts, giveaways at the till and the loss report, `0047`–`0048`) since 28
 September, and release W (staff, their hours and their pay, `0049`),
-release X (customers and their points, `0050`) and release Y (the sales
-analysis, the stock's value on a day and what was bought, `0051`) since 29
-September.
+release X (customers and their points, `0050`), release Y (the sales
+analysis, the stock's value on a day and what was bought, `0051`) and release
+Z (the balance sheet and the cash-flow statement, `0052`) since 29 September.
 What was built differs from the plan below in these ways.
 
 Release J:
@@ -530,6 +530,34 @@ Release Y:
   added to them.
 - **Each downloads as CSV**, with English column names; a PDF waits for
   release AA.
+
+Release Z:
+
+- **Numbered `0052`**, and reading only: no table, column or permission is
+  added; both statements need `profit.view`, like the P&L.
+- **No `gl_account.cash_flow_class` column.** Where an account's cash goes is
+  read from its code (`cash_flow_line`): the chart is numbered and accounts
+  are added only by the migrations, so a column would only repeat the code.
+- **Lines, not only classes.** Operating is shown by what the cash was for:
+  received from sales, paid for stock and to suppliers, paid to staff and
+  advanced, running costs, and the drawer counted over or short. Investing is
+  equipment (15xx), financing the owner's (3xxx), and dollars changed at
+  another rate than they were kept at (6950) are shown apart, as the effect of
+  rates on the cash.
+- **Journal by journal.** Each journal's other lines are summed by line before
+  they are added up, so a sale's cost and the stock it used, which cancel in
+  the sale's journal, are no flow.
+- **A bill paid is read by what it was for.** A bill charged to an account (a
+  grinder to 1500, electricity to 6200) is read as that account when paid, so
+  equipment bought through a bill is investing, not a payment to a supplier of
+  stock.
+- **The profit in the equity** is this year's, from 1 January (the year-end
+  close is by the calendar year), and, apart, any earlier year's not yet
+  closed.
+- **One screen for both** (Reports → Balance sheet and cash flow): the balance
+  sheet at the end of the day before the dates and at their end, side by
+  side, and the cash flow of the dates between them, checked against each
+  other. A year of dates at most; CSV; a PDF waits for release AA.
 
 **Basis:**
 

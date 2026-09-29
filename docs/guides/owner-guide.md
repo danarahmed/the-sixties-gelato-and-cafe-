@@ -166,6 +166,28 @@ of any day, item by item, beside what the books held: for the month's end, or
 an insurer. **Purchasing**, on Reports, says what came in from each supplier
 and of each item in the dates.
 
+## What the café owns and owes, and where the cash went
+
+**Reports → Balance sheet and cash flow** (for you, the managers, the
+accountant and the auditor) puts the two statements an accountant or a bank
+asks for on one page:
+
+- **The balance sheet**, at the end of the day before the dates and at their
+  end, side by side: the cash in the till, the safe and the bank; card takings
+  not yet in the bank, the stock, advances; the equipment; what the café owes;
+  and what is yours, with the profit not yet closed into Retained earnings. It
+  says **It balances** when what the café owns is what it owes plus what is
+  yours.
+- **The cash flow** of the dates: the cash at the start, where it came from
+  and went (sales; stock and suppliers; staff; running costs; the drawer's
+  counts; equipment; your money in and out; dollars changed), and the cash at
+  the end. A bill counts as what it was for, so a machine paid through a bill
+  shows under equipment. Money moved between the till, the safe and the bank
+  is not a flow.
+
+Each account opens its journals, and **CSV** takes either statement to a
+spreadsheet. Pick **This year** for the year so far.
+
 ## Languages
 
 Every screen is in **English, Arabic and Kurdish (Sorani)**: its headings,
