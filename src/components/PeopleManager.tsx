@@ -50,6 +50,7 @@ function RolePicker({
               display: "flex",
               gap: 4,
               alignItems: "center",
+              whiteSpace: "nowrap",
               opacity: ownerOnly && !isOwner ? 0.5 : 1,
             }}
             title={ownerOnly && !isOwner ? t("Only the owner can give this role") : undefined}

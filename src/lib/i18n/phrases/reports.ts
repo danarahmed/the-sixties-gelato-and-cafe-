@@ -43,6 +43,10 @@ const phrases: PhraseBook = {
   Check: { ar: "الفحص", ckb: "پشکنین" },
   Subledger: { ar: "الدفتر الفرعي", ckb: "دەفتەری لاوەکی" },
   Ledger: { ar: "دفتر الأستاذ", ckb: "دەفتەری گشتی" },
+  "{n} of {total} checks do not tie": {
+    ar: "{n} من {total} فحوص غير متطابقة",
+    ckb: "{n} لە {total} پشکنین یەکناگرنەوە",
+  },
   "Every subledger agrees with its control account.": {
     ar: "كل دفتر فرعي يطابق حساب المراقبة الخاص به.",
     ckb: "هەموو دەفتەرە لاوەکییەکان لەگەڵ هەژماری کۆنترۆڵی خۆیان یەکدەگرنەوە.",
@@ -769,10 +773,10 @@ const phrases: PhraseBook = {
     ckb: "{n} جیاوازیی بەراوردکردن",
   },
   "Books reconcile": { ar: "الدفاتر متطابقة", ckb: "دەفتەرەکان یەکدەگرنەوە" },
-  "Revenue and cost of sales are read from today's published journal lines — the same figures the profit and loss will show. Gross profit here is after everything in cost of sales: waste, count differences, purchase price differences and platform fees. Open a figure to see what is behind it.":
+  "These are the profit and loss's own figures for today. Gross profit is after waste, count differences, price differences on deliveries and platform fees. Open a figure to see what is behind it.":
     {
-      ar: "تُقرأ الإيرادات وتكلفة المبيعات من سطور القيود المنشورة اليوم — وهي الأرقام نفسها التي سيُظهرها كشف الأرباح والخسائر. وإجمالي الربح هنا بعد كل ما في تكلفة المبيعات: الهدر، وفروق الجرد، وفروق أسعار الشراء، ورسوم المنصات. افتح أي رقم لترى ما وراءه.",
-      ckb: "داهات و تێچووی فرۆشتن لە هێڵەکانی تۆماری بڵاوکراوەی ئەمڕۆ دەخوێنرێنەوە — هەمان ئەو ژمارانەی ڕاپۆرتی قازانج و زیان پیشانیان دەدات. قازانجی گشتی لێرەدا دوای هەموو ئەو شتانەیە کە لە تێچووی فرۆشتندان: بەفیڕۆچوون، جیاوازییەکانی ژماردن، جیاوازییەکانی نرخی کڕین و کرێی پلاتفۆرمەکان. ژمارەیەک بکەرەوە بۆ ئەوەی ببینیت چی لە پشتیەتی.",
+      ar: "هذه أرقام الأرباح والخسائر نفسها لليوم. إجمالي الربح بعد الهدر وفروق الجرد وفروق الأسعار في التوريدات ورسوم المنصات. افتح أي رقم لترى ما وراءه.",
+      ckb: "ئەمانە هەمان ژمارەکانی قازانج و زیانن بۆ ئەمڕۆ. کۆی قازانج دوای بەفیڕۆچوون، جیاوازی ژماردن، جیاوازی نرخ لە گەیاندنەکان و کرێی پلاتفۆڕمەکانە. هەر ژمارەیەک بکەرەوە بۆ بینینی ئەوەی لە پشتیەتی.",
     },
   "No items yet.": { ar: "لا مواد بعد.", ckb: "هێشتا هیچ کاڵایەک نییە." },
   "All above reorder level": {

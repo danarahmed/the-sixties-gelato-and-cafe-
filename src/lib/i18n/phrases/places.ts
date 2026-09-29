@@ -203,6 +203,11 @@ const phrases: PhraseBook = {
   "Café total": { ar: "مجموع المقهى", ckb: "کۆی کافێکە" },
   // Every report at a place (0057).
   "The whole café": { ar: "المقهى كله", ckb: "هەموو کافێکە" },
+  "Read for {place}. These stay the whole café's: Do the books tie?, Payable Ageing, Product Margin by Channel, and the customers with the points they hold.":
+    {
+      ar: "مقروءة لـ{place}. تبقى هذه للمقهى كله: هل تتطابق الدفاتر؟، وأعمار الذمم الدائنة، وهامش ربح المنتجات حسب القناة، والزبائن ونقاطهم.",
+      ckb: "بۆ {place} خوێندراوەتەوە. ئەمانە هی هەموو کافێکە دەمێننەوە: ئایا دەفتەرەکان یەکدەگرنەوە؟، تەمەنی قەرزی دابینکەران، پەراوێزی قازانجی بەرهەمەکان بەپێی کەناڵ، و کڕیاران و خاڵەکانیان.",
+    },
   "What every item in stock at {place} was worth when the day ended, from the stock ledger. 1200 Inventory is the café's, so it is set beside the café's stock, not a place's.":
     {
       ar: "قيمة كل صنف في المخزون في {place} عند نهاية اليوم، من سجل المخزون. حساب 1200 المخزون للمقهى كله، فيُقارن بمخزون المقهى كله لا بمخزون مكان واحد.",

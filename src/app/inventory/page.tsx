@@ -66,7 +66,7 @@ export default async function InventoryPage() {
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
         <Rich
           text={t(
-            "Stock on hand is <b>derived from the movement ledger</b> — there is no stock figure to edit. Every change below adds a movement, valued at the item's average cost by the database and journaled in the same step.",
+            "Stock here is added up from everything recorded — deliveries, sales, counts, losses and transfers — so there is no figure to type over. Each change below is recorded, costed and booked in one step.",
           )}
         />
         {seesCost && (

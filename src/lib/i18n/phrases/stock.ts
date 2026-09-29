@@ -5,10 +5,10 @@ import type { PhraseBook } from "./types";
  */
 const phrases: PhraseBook = {
   // Inventory: the stock board.
-  "Stock on hand is <b>derived from the movement ledger</b> — there is no stock figure to edit. Every change below adds a movement, valued at the item's average cost by the database and journaled in the same step.":
+  "Stock here is added up from everything recorded — deliveries, sales, counts, losses and transfers — so there is no figure to type over. Each change below is recorded, costed and booked in one step.":
     {
-      ar: "المخزون المتوفّر <b>مستخرَج من سجل الحركات</b> — فلا يوجد رقم للمخزون يمكن تعديله. كل تغيير أدناه يضيف حركة تقيّمها قاعدة البيانات بمتوسط كلفة المادة وتقيّدها في الخطوة نفسها.",
-      ckb: "کۆگای بەردەست <b>لە تۆماری جووڵەکانەوە دەردەهێنرێت</b> — هیچ ژمارەیەکی کۆگا نییە کە دەستکاری بکرێت. هەر گۆڕانکارییەکی خوارەوە جووڵەیەک زیاد دەکات، کە بنکەدراوەکە بە ناوەندی تێچووی کاڵاکە بەهاکەی دیاری دەکات و لە هەمان هەنگاودا تۆماری دەکات.",
+      ar: "المخزون هنا مجموع كل ما سُجِّل — التوريدات والمبيعات والجرد والخسائر والتحويلات — فلا رقم يُكتب فوقه. كل تغيير أدناه يُسجَّل ويُكلَّف ويُقيَّد في خطوة واحدة.",
+      ckb: "کۆگای ئێرە کۆی هەموو ئەو شتانەیە کە تۆمارکراون — گەیاندن، فرۆشتن، ژماردن، زیان و گواستنەوە — بۆیە هیچ ژمارەیەک نییە بەسەریدا بنووسرێت. هەر گۆڕانکارییەک لە خوارەوە لە یەک هەنگاودا تۆمار دەکرێت، تێچووی بۆ دادەنرێت و لە دەفتەر دادەنرێت.",
     },
   "Items tracked": { ar: "المواد المتابَعة", ckb: "کاڵای بەدواداچوو" },
   "Stock value (ledger)": { ar: "قيمة المخزون (حسب السجل)", ckb: "بەهای کۆگا (بەپێی تۆمار)" },
@@ -494,6 +494,12 @@ const phrases: PhraseBook = {
   "Keep it": { ar: "أبقِه", ckb: "بیهێڵەرەوە" },
 
   // Purchasing.
+  "Receive what a supplier delivers, each line as the invoice gives it. Freight and other costs are shared over the lines, and a price more than 25% away from what the item costs now is asked about first. The supplier's bill goes on <vendors>Vendors</vendors>.":
+    {
+      ar: "استلم ما يسلّمه المورّد، كل سطر كما في الفاتورة. تُوزَّع أجور الشحن والتكاليف الأخرى على الأسطر، ويُسأل أولًا عن أي سعر يبعد أكثر من 25% عن كلفة الصنف الآن. تُسجَّل فاتورة المورّد في <vendors>المورّدون</vendors>.",
+      ckb: "ئەوەی دابینکەرێک دەیگەیەنێت وەربگرە، هەر هێڵێک وەک لە پسووڵەکەدایە. کرێی گواستنەوە و تێچووەکانی تر بەسەر هێڵەکاندا دابەش دەکرێن، و پێش هەموو شتێک پرسیار لە نرخێک دەکرێت کە زیاتر لە 25% لە تێچووی ئێستای کاڵاکە دوور بێت. پسووڵەی دابینکەر لە <vendors>دابینکەران</vendors> تۆمار دەکرێت.",
+    },
+  "How it is booked": { ar: "كيف يُقيَّد في الدفاتر", ckb: "چۆن لە دەفتەرەکاندا تۆمار دەکرێت" },
   "Receiving brings the stock in at its landed cost — freight and other costs less rebates, spread over the lines by value — and posts <b>Dr 1200 Inventory / Cr 2050 Goods received not invoiced</b>. The supplier's bill, recorded on <vendors>Vendors</vendors>, clears 2050 and raises the payable, so the purchase is never counted twice. Each line is entered at its price per unit, as the invoice gives it; a price more than 25% away from what the item costs now is asked about before anything is received.":
     {
       ar: "يُدخل الاستلامُ المخزونَ بكلفته الواصلة — الشحن والتكاليف الأخرى مطروحًا منها خصم المورّد، موزّعةً على السطور حسب القيمة — ويرحّل <b>مدين 1200 المخزون / دائن 2050 بضاعة مستلمة غير مفوترة</b>. فاتورة المورّد، التي تُسجَّل في <vendors>المورّدين</vendors>، تُصفّي 2050 وتُثبت المستحق للمورّد، فلا تُحتسب المشتريات مرتين أبدًا. يُدخَل كل سطر بسعر الوحدة كما في الفاتورة؛ وأي سعر يبتعد أكثر من 25% عن كلفة المادة الآن يُسأل عنه قبل استلام أي شيء.",

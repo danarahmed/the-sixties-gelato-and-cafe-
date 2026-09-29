@@ -189,5 +189,50 @@ console.log("▸ right to left, in Arabic and Kurdish");
   }
 }
 
+console.log("▸ the phone's top bar, the till's categories and tick boxes, as they should look");
+{
+  // The café's name gives way on a phone, cut with "…"; the controls, the
+  // language among them, stay readable on one line.
+  for (const locale of ["en", "ar"]) {
+    const { ctx, page } = await signIn(browser, "owner", { viewport: { width: 390, height: 900 } });
+    await ctx.addCookies([{ name: "locale", value: locale, url: BASE }]);
+    await open(page, "/dashboard");
+    const bar = await page.evaluate(() => ({
+      height: Math.round(document.querySelector(".topbar").getBoundingClientRect().height),
+      language: Math.round(document.querySelector(".topbar select").getBoundingClientRect().width),
+    }));
+    check(
+      bar.height <= 64 && bar.language >= 60,
+      `in ${locale} at 390px the top bar is one line (${bar.height}px high), the language readable (${bar.language}px)`,
+    );
+    await ctx.close();
+  }
+  // A product with no category is under "No category", not a second "Other".
+  {
+    const { ctx, page } = await signIn(browser, "cashier");
+    await open(page, "/pos");
+    const labels = (await page.locator(".chip .chip-label").allTextContents()).map((l) => l.trim());
+    check(
+      labels.length > 0 && new Set(labels).size === labels.length,
+      `the till's categories are each named once (${labels.join(", ")})`,
+    );
+    await ctx.close();
+  }
+  // Tick boxes keep a tick box's size: Settings' roles were large empty squares.
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/settings");
+  const boxes = await page.evaluate(() =>
+    [...document.querySelectorAll('input[type="checkbox"]')]
+      .map((b) => b.getBoundingClientRect())
+      .filter((r) => r.width > 0)
+      .map((r) => Math.round(Math.max(r.width, r.height))),
+  );
+  check(
+    boxes.length > 0 && boxes.every((x) => x <= 24),
+    `Settings' tick boxes are tick boxes (the largest ${Math.max(...boxes)}px)`,
+  );
+  await ctx.close();
+}
+
 await browser.close();
 done("pages");

@@ -75,11 +75,22 @@ export default async function PurchasingPage() {
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
         <Rich
           text={t(
-            "Receiving brings the stock in at its landed cost — freight and other costs less rebates, spread over the lines by value — and posts <b>Dr 1200 Inventory / Cr 2050 Goods received not invoiced</b>. The supplier's bill, recorded on <vendors>Vendors</vendors>, clears 2050 and raises the payable, so the purchase is never counted twice. Each line is entered at its price per unit, as the invoice gives it; a price more than 25% away from what the item costs now is asked about before anything is received.",
+            "Receive what a supplier delivers, each line as the invoice gives it. Freight and other costs are shared over the lines, and a price more than 25% away from what the item costs now is asked about first. The supplier's bill goes on <vendors>Vendors</vendors>.",
           )}
           tags={{ vendors: (c) => <Link href="/vendors">{c}</Link> }}
         />
       </p>
+      <details className="booked" data-testid="purchasing-booked">
+        <summary>{t("How it is booked")}</summary>
+        <p className="muted" style={{ margin: "6px 0 0", fontSize: ".85rem" }}>
+          <Rich
+            text={t(
+              "Receiving brings the stock in at its landed cost — freight and other costs less rebates, spread over the lines by value — and posts <b>Dr 1200 Inventory / Cr 2050 Goods received not invoiced</b>. The supplier's bill, recorded on <vendors>Vendors</vendors>, clears 2050 and raises the payable, so the purchase is never counted twice. Each line is entered at its price per unit, as the invoice gives it; a price more than 25% away from what the item costs now is asked about before anything is received.",
+            )}
+            tags={{ vendors: (c) => <Link href="/vendors">{c}</Link> }}
+          />
+        </p>
+      </details>
 
       <div
         className="card"
