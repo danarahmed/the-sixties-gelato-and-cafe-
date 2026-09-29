@@ -16,6 +16,7 @@ import {
   positive,
   text,
 } from "@/lib/validation";
+import { tillForWrite } from "@/lib/place";
 
 const PAYROLL_PATHS = ["/payroll", "/staff", "/journals", "/reports", "/dashboard", "/sales"];
 
@@ -219,6 +220,7 @@ export async function recordAdvanceAction(
     p_amount: v.data.amount,
     p_paid_from: v.data.paidFrom,
     p_reason: v.data.reason,
+    p_location: await tillForWrite(),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;

@@ -24,6 +24,8 @@ const inviteInput = z.object({
   email: z.string().trim().toLowerCase().email("Enter the person's email"),
   name: text("Their name", 120),
   roles: z.array(z.enum(ROLES)).min(1, "Give the person at least one role"),
+  /** Where they work (0055); none: everywhere. */
+  placeId: z.string().uuid().nullable().optional(),
 });
 
 export async function inviteMemberAction(
@@ -38,6 +40,7 @@ export async function inviteMemberAction(
     p_email: v.data.email,
     p_name: v.data.name,
     p_roles: v.data.roles,
+    p_location: v.data.placeId ?? null,
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
@@ -72,6 +75,30 @@ export async function setMemberActiveAction(
   const r = await callRpc("set_member_active", {
     p_member: v.data.memberId,
     p_active: v.data.active,
+  });
+  if (!r.ok) return r;
+  refresh("/settings");
+  return { ok: true, data: null };
+}
+
+const placeInput = z.object({
+  memberId: id("a person"),
+  /** One of the café's places, or none: everywhere. */
+  placeId: z.string().uuid().nullable(),
+});
+
+/**
+ * Where a person works (0055): at one place, or everywhere. The database then
+ * refuses anything they record at another place.
+ */
+export async function setMemberPlaceAction(
+  input: z.input<typeof placeInput>,
+): Promise<ActionResult<null>> {
+  const v = parse(placeInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("set_member_place", {
+    p_member: v.data.memberId,
+    p_location: v.data.placeId,
   });
   if (!r.ok) return r;
   refresh("/settings");

@@ -696,10 +696,10 @@ const phrases: PhraseBook = {
     ckb: "چی دروست بکرێت ڕۆژی {weekday}، {day}",
   },
   Tomorrow: { ar: "غدًا", ckb: "سبەینێ" },
-  "From what each was sold and used in batches on the same weekday over the last 4 to 8 weeks, on average, less what is on hand and still good at the end of the day: in whole batches.":
+  "From what each was sold, used in batches or sent to another place on the same weekday over the last 4 to 8 weeks, on average, less what is on hand and still good at the end of the day: in whole batches.":
     {
-      ar: "من متوسط ما بيع من كلٍّ منها وما استُعمل في الدفعات في اليوم نفسه من الأسبوع خلال آخر 4 إلى 8 أسابيع، مطروحًا منه ما هو متوفّر وما زال صالحًا حتى نهاية اليوم: بدفعات كاملة.",
-      ckb: "لە تێکڕای ئەوەی لە هەر یەکێکیان فرۆشراوە و لە دەستەکاندا بەکارهاتووە لە هەمان ڕۆژی هەفتە لە 4 تا 8 هەفتەی ڕابردوودا، کەمکراوە لەوەی بەردەستە و تا کۆتایی ڕۆژ هێشتا باشە: بە دەستەی تەواو.",
+      ar: "من متوسط ما بيع من كلٍّ منها أو استُعمل في الدفعات أو أُرسل إلى مكان آخر في اليوم نفسه من الأسبوع خلال آخر 4 إلى 8 أسابيع، مطروحًا منه ما هو متوفّر وما زال صالحًا حتى نهاية اليوم: بدفعات كاملة.",
+      ckb: "لە تێکڕای ئەوەی لە هەر یەکێکیان فرۆشراوە، لە دەستەکاندا بەکارهاتووە یان بۆ شوێنێکی تر نێردراوە لە هەمان ڕۆژی هەفتە لە 4 تا 8 هەفتەی ڕابردوودا، کەمکراوە لەوەی بەردەستە و تا کۆتایی ڕۆژ هێشتا باشە: بە دەستەی تەواو.",
     },
   "Nothing is made here yet.": {
     ar: "لا يُصنع شيء هنا بعد.",

@@ -10,6 +10,7 @@ import { z } from "zod";
 import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { countResult, type CountResult } from "@/lib/cash";
 import { id, nonNegative, optionalNonNegative, text } from "@/lib/validation";
+import { tillForWrite } from "@/lib/place";
 
 const PATHS = [
   "/pos",
@@ -70,6 +71,7 @@ export async function openSessionAction(
     p_counted: v.data.counted,
     p_denominations: v.data.notes ?? null,
     p_float_from_safe: v.data.floatFromSafe,
+    p_location: await tillForWrite(),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
@@ -105,6 +107,7 @@ export async function closeSessionAction(
     p_take_to: v.data.takeTo,
     p_session: v.data.sessionId ?? null,
     ...usdArgs(v.data),
+    p_location: await tillForWrite(),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
@@ -138,6 +141,7 @@ export async function handOverAction(
     p_left_in_drawer: v.data.left,
     p_take_to: v.data.takeTo,
     ...usdArgs(v.data),
+    p_location: await tillForWrite(),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;

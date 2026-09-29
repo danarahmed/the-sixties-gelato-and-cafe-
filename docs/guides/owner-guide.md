@@ -49,6 +49,11 @@ unverified until it is corrected ([`../REMEDIATION.md`](../REMEDIATION.md)).
   person keeps their login but can no longer see or do anything in the books.
 - Only you can make someone an owner or general manager, or take their access
   away, and the business always keeps at least one active owner.
+- **Works at** (once the café has a second place): everywhere, or one of the
+  café's places. Someone who works at the second branch records nothing
+  anywhere else: not a sale, a void, a drawer's count or a delivery. Their
+  devices work there, and offer no other place. You and the general manager
+  work everywhere.
 
 | Role              | Typically does                                                                                                                                                                                                               |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -507,7 +512,13 @@ discount, why and who approved it. The 10% is a business setting (shown on
 - **The central kitchen:** set the kitchen's tablet once to **Stock at:
   Central Kitchen** (beside the title of Inventory, Production and the other
   stock screens). What it records — batches, losses, counts, deliveries — is
-  then the kitchen's, and its screens show the kitchen's stock.
+  then the kitchen's, and its screens show the kitchen's stock. Its day's plan
+  is what it sends the branch on that weekday. The kitchen sells nothing: its
+  till asks which branch it sells at, when there is more than one.
+- **A second branch:** each till sells at its branch (**Till at**, above the
+  till, once there are two): that branch's drawer, tables, open bills and
+  turn numbers from 1, at its prices. A price of a branch's own is set on the
+  product (**Change a price… → At**); the product card lists it.
 - **Sending stock between them** (**Inventory → Transfers**): the branch sends
   the kitchen its milk and sugar, the kitchen sends the branch its gelato. It
   is on its way until the other place receives it: **Received: all of it**, or

@@ -191,7 +191,7 @@ export default async function ProductionPage({
         <div className="panel-b grid" style={{ gap: 10 }}>
           <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
             {t(
-              "From what each was sold and used in batches on the same weekday over the last 4 to 8 weeks, on average, less what is on hand and still good at the end of the day: in whole batches.",
+              "From what each was sold, used in batches or sent to another place on the same weekday over the last 4 to 8 weeks, on average, less what is on hand and still good at the end of the day: in whole batches.",
             )}
           </p>
           {plan.recipes.length === 0 ? (

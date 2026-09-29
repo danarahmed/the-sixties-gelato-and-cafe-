@@ -59,9 +59,10 @@ export async function getAttendance(
 }
 
 /** Who clocks at this till, and who is in (for the till). */
-export async function getClockBoard(): Promise<ClockPerson[]> {
+/** Who clocks in at the till's branch (0055; none named: the first branch). */
+export async function getClockBoard(place: string | null = null): Promise<ClockPerson[]> {
   const c = await db();
-  return clockBoardFrom(one(await c.rpc("clock_board", { p_location: null }), "who clocks here"));
+  return clockBoardFrom(one(await c.rpc("clock_board", { p_location: place }), "who clocks here"));
 }
 
 export async function getPayrollRuns(): Promise<PayrollRunRow[]> {

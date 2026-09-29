@@ -124,6 +124,8 @@ const priceInput = z.object({
   channel: salesChannel,
   price: positive("Price"),
   effectiveFrom: day("The start date"),
+  /** One branch's own price (0055); none: every branch's. */
+  placeId: z.string().uuid().nullable().optional(),
 });
 
 export async function setPriceAction(
@@ -139,6 +141,7 @@ export async function setPriceAction(
     p_channel: v.data.channel,
     p_price: v.data.price,
     p_effective_from: v.data.effectiveFrom,
+    p_location: v.data.placeId ?? null,
     p_idempotency_key: key,
   });
   if (!r.ok) return r;

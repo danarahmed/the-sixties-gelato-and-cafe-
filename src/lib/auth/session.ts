@@ -30,6 +30,9 @@ export interface Profile {
   hasPin: boolean;
   roles: string[];
   permissions: string[];
+  /** The place they work at (0055); null when they work everywhere. */
+  worksAt: string | null;
+  worksAtName: string | null;
 }
 
 export interface SessionState {
@@ -78,6 +81,9 @@ export const getSession = cache(async (): Promise<SessionState> => {
       hasPin: Boolean(p.has_pin),
       roles: Array.isArray(p.roles) ? p.roles.map(String) : [],
       permissions: Array.isArray(p.permissions) ? p.permissions.map(String) : [],
+      // Before 0055 everyone worked everywhere.
+      worksAt: p.works_at == null ? null : String(p.works_at),
+      worksAtName: p.works_at_name == null ? null : String(p.works_at_name),
     },
   };
 });

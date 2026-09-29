@@ -49,7 +49,7 @@ insert into res select 'R', receive_goods((select id from supplier where name = 
   p_idempotency_key => gen_random_uuid());
 insert into res select 'B', record_bill((select id from supplier where name = 'Kurdistan Coffee Imports'), 'KC-7',
   test.today(), 18000, 0, pg_temp.id('R', 'receipt_id'), null, gen_random_uuid());
-insert into res select 'E', record_expense('Cleaning cloths', 1000, '6900', 'bank', null, gen_random_uuid());
+insert into res select 'E', record_expense('Cleaning cloths', 1000, '6900', 'bank', null, null, gen_random_uuid());
 select test.eq(pg_temp.r('E') ? 'expense_id' and pg_temp.r('B') ? 'bill_id' and pg_temp.r('R') ? 'receipt_id', true,
   'a delivery, its bill and an expense');
 

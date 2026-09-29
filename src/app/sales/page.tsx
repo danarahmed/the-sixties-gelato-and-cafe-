@@ -14,6 +14,7 @@ import { getCardTakings } from "@/lib/db/settlements";
 import { getDollarsReport, getFxStatus } from "@/lib/db/fx";
 import { DollarsPanel } from "@/components/cash/DollarsPanel";
 import { EmptyState } from "@/components/ui";
+import { tillChoice } from "@/lib/place";
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +28,14 @@ export default async function SalesPage() {
   const canSessions =
     has(profile, "day.close") || has(profile, "cash.view_expected") || has(profile, "audit.view");
   const canMove = has(profile, "day.close") || has(profile, "accounting.post");
+  // The drawer of the branch this device's till is at (0055).
+  const { at: tillAt } = await tillChoice();
   const [rows, sessions, uncounted, drawer, till, card, channels, fx, dollars] = await Promise.all([
     getDailySales(from, today),
     canSessions ? getCashSessions(from, today) : Promise.resolve([]),
     getUnclosedDays(),
-    canMove ? getDrawerStatus() : Promise.resolve(null),
-    canDrawer ? getDrawerState() : Promise.resolve(null),
+    canMove ? getDrawerStatus(tillAt) : Promise.resolve(null),
+    canDrawer ? getDrawerState(tillAt) : Promise.resolve(null),
     getCardTakings(),
     getChannelNames(),
     // US dollars (0043): the rate, and what the tills and the safe hold.

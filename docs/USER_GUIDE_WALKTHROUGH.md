@@ -839,7 +839,23 @@ that place's stock, and record at it:
 - a batch made, and the day's plan and the batches in stock;
 - a loss, a correction, opening stock (a new item's too) and a count.
 
-The till still sells at the first branch.
+### The till at its branch, and who works where (`0055`)
+
+- **The till sells at this device's branch.** With more than one branch,
+  **Till at** above the till says which and changes it; the till loads anew
+  there. It sells at that branch's prices, from its own turn numbers (1 each
+  day), with its drawer, its tables and its open bills. A device at the
+  central kitchen is told the kitchen does not sell, and chooses the branch
+  its till is at (with one branch, it sells there).
+- **Where a person works** (Settings → People → **Works at**): everywhere, or
+  one place. Someone who works at one place has no other to choose, and the
+  database refuses anything they record elsewhere, in words: "You work at
+  Main Branch, not at Second Branch".
+- **A branch's own price:** Products → a product → **Change a price…** →
+  **At**: every branch, or one. The card lists each branch's own under the
+  price table; one to come names its branch.
+- **Paid from the till:** an expense, a supplier's bill or an advance paid
+  from the till comes out of this device's branch's drawer.
 
 ### Transfers (`0054`)
 

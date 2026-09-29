@@ -24,6 +24,8 @@ const USERS = {
   "counter@example.com": "a0000000-0000-0000-0000-00000000000d",
   // Made by the production suite, which needs someone who makes the gelato.
   "barista@example.com": "a0000000-0000-0000-0000-00000000000e",
+  // Made by the tills suite: a barista who works at the second branch only.
+  "barista2@example.com": "a0000000-0000-0000-0000-0000000000f1",
 };
 const PASSWORD = "password123";
 // For the retry suite: the next call to this database function is carried out,

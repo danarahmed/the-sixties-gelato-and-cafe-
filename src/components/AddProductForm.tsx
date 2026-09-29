@@ -314,8 +314,20 @@ export function AddProductForm({
   );
 }
 
-/** A new price from a date. The old price stays in force until then; history is kept. */
-export function PriceChange({ variantId, today }: { variantId: string; today: string }) {
+/**
+ * A new price from a date. The old price stays in force until then; history
+ * is kept. With more than one branch, a price is every branch's or one's own
+ * (0055).
+ */
+export function PriceChange({
+  variantId,
+  today,
+  branches = [],
+}: {
+  variantId: string;
+  today: string;
+  branches?: { id: string; name: string }[];
+}) {
   const op = useOperation();
   const { t } = useT();
   const router = useRouter();
@@ -325,6 +337,7 @@ export function PriceChange({ variantId, today }: { variantId: string; today: st
   const [channel, setChannel] = useState<SalesChannel>("dine_in");
   const [price, setPrice] = useState("");
   const [from, setFrom] = useState(today);
+  const [placeId, setPlaceId] = useState<string | null>(null);
   const [msg, setMsg] = useState<Msg>(null);
 
   if (!open) {
@@ -373,19 +386,42 @@ export function PriceChange({ variantId, today }: { variantId: string; today: st
         </div>
         <input type="date" value={from} min={today} onChange={(e) => setFrom(e.target.value)} />
       </label>
+      {branches.length > 1 && (
+        <label>
+          <div className="muted" style={{ fontSize: ".75rem" }}>
+            {t("At")}
+          </div>
+          <select
+            value={placeId ?? ""}
+            onChange={(e) => setPlaceId(e.target.value || null)}
+            data-testid="price-at"
+          >
+            <option value="">{t("Every branch")}</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <button
         className="btn-primary"
         disabled={busy || !price.trim()}
         onClick={() =>
           start(async () => {
             const r = await op.run("setPrice", (key) =>
-              setPriceAction({ variantId, channel, price, effectiveFrom: from }, key),
+              setPriceAction({ variantId, channel, price, effectiveFrom: from, placeId }, key),
             );
             if (r.ok) {
+              const place = branches.find((x) => x.id === placeId)?.name ?? null;
               setMsg({
                 ok: true,
-                text:
-                  from === today
+                text: place
+                  ? from === today
+                    ? t("Price at {place} changed from today.", { place })
+                    : t("New price at {place} takes effect on {date}.", { place, date: from })
+                  : from === today
                     ? t("Price changed from today.")
                     : t("New price takes effect on {date}.", { date: from }),
               });

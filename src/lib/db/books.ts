@@ -86,9 +86,12 @@ export interface DrawerStatus {
   safe: number;
 }
 
-export async function getDrawerStatus(): Promise<DrawerStatus> {
+export async function getDrawerStatus(place: string | null = null): Promise<DrawerStatus> {
   const c = await db();
-  const t = one(await c.rpc("drawer_status"), "the drawer") as Record<string, unknown> | null;
+  const t = one(await c.rpc("drawer_status", { p_location: place }), "the drawer") as Record<
+    string,
+    unknown
+  > | null;
   return {
     since: strOrNull(t?.since),
     start: numOrNull(t?.start),

@@ -46,10 +46,11 @@ honest, not by building a queue.
    itself, and, with an approved partner account, Talabat's own feed.
 3. **Production, further (M-11).** Built: recording batches, made items and
    their costs, batch numbers, use-by dates, stock kept batch by batch and the
-   day's plan (`0046`), and stock sent between the central kitchen and the
-   branch, each device doing its stock work at its own place (`0054`). Next,
-   with the branches' second part: tills, roles, numbers and prices by branch,
-   and each branch's profit and loss.
+   day's plan (`0046`), stock sent between the central kitchen and the
+   branch, each device doing its stock work at its own place (`0054`), and the
+   kitchen planning by what it sends; tills at each branch, who works where,
+   turn numbers and prices by branch (`0055`). Next: each branch's profit and
+   loss, and a branch to narrow the reports to (`0056`).
 4. **Every screen in Arabic and Kurdish, and languages the owner adds (L-06),
    next.** The owner asked for the whole system, every detail, in Arabic and
    Kurdish, and for more languages to be added. The navigation, the till, the

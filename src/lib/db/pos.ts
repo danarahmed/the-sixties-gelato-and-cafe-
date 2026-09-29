@@ -80,18 +80,21 @@ export function parsePosAddons(data: unknown): PosAddons {
   return { groups, offers };
 }
 
-/** The till's add-ons at today's prices (0041) — never their cost. */
-export async function getPosAddons(): Promise<PosAddons> {
+/** The till's add-ons at today's prices at its branch (0041, 0055) — never their cost. */
+export async function getPosAddons(place: string | null = null): Promise<PosAddons> {
   const c = await db();
-  const r = await c.rpc("pos_addons");
+  const r = await c.rpc("pos_addons", { p_location: place });
   if (r.error) throw new Error(r.error.message);
   return parsePosAddons(r.data);
 }
 
-/** The till's menu: categories in their order, then products by name. */
-export async function getPosCatalogue(): Promise<PosItem[]> {
+/**
+ * The till's menu at its branch's prices (0055; none named: the first
+ * branch's): categories in their order, then products by name.
+ */
+export async function getPosCatalogue(place: string | null = null): Promise<PosItem[]> {
   const c = await db();
-  return rows(await c.rpc("pos_catalogue"), "the menu").map((r: Row) => {
+  return rows(await c.rpc("pos_catalogue", { p_location: place }), "the menu").map((r: Row) => {
     const prices: Record<string, number> = {};
     for (const [k, v] of Object.entries((r.prices as Record<string, unknown>) ?? {}))
       prices[k] = num(v);
@@ -123,14 +126,15 @@ export interface DiningTable {
   isActive: boolean;
 }
 
-/** Every table, in use or not (the floor shows those in use; managers edit all). */
-export async function getTables(): Promise<DiningTable[]> {
+/**
+ * Every table at the till's branch (0055; none named: every branch's), in use
+ * or not (the floor shows those in use; managers edit all).
+ */
+export async function getTables(place: string | null = null): Promise<DiningTable[]> {
   const c = await db();
-  const res = await c
-    .from("dining_table")
-    .select("id,name,area,seats,sort_order,is_active")
-    .order("sort_order")
-    .order("name");
+  let q = c.from("dining_table").select("id,name,area,seats,sort_order,is_active");
+  if (place) q = q.eq("location_id", place);
+  const res = await q.order("sort_order").order("name");
   return rows(res, "the tables").map((r: Row) => ({
     id: str(r.id),
     name: str(r.name),
@@ -260,7 +264,10 @@ export function parseOpenBills(data: unknown): OpenBill[] {
   }));
 }
 
-export async function getOpenBills(): Promise<OpenBill[]> {
+/** The bills open at the till's branch (0055; none named: every branch's). */
+export async function getOpenBills(place: string | null = null): Promise<OpenBill[]> {
   const c = await db();
-  return parseOpenBills(rows(await c.rpc("pos_open_bills"), "the open bills"));
+  return parseOpenBills(
+    rows(await c.rpc("pos_open_bills", { p_location: place }), "the open bills"),
+  );
 }

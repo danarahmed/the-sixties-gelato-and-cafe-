@@ -14,6 +14,7 @@ import {
   type ClockPerson,
 } from "@/lib/staff";
 import { day, id, optionalNonNegative, optionalText, positive, text } from "@/lib/validation";
+import { tillForWrite } from "@/lib/place";
 
 const STAFF_PATHS = ["/staff", "/payroll", "/reports", "/pos"];
 
@@ -176,9 +177,9 @@ export async function saveScheduleAction(
   return { ok: true, data: { shifts: Number(r.data.shifts ?? 0) } };
 }
 
-/** Who clocks at this till, and who is in. */
+/** Who clocks at this till's branch (0055), and who is in. */
 export async function clockBoardAction(): Promise<ActionResult<ClockPerson[]>> {
-  const r = await callRpc<unknown>("clock_board", { p_location: null });
+  const r = await callRpc<unknown>("clock_board", { p_location: await tillForWrite() });
   if (!r.ok) return r;
   return { ok: true, data: clockBoardFrom(r.data) };
 }
@@ -206,7 +207,7 @@ export async function clockAction(
       ? await callRpc<unknown>("clock_in", {
           p_employee: v.data.employeeId,
           p_pin: v.data.pin,
-          p_location: null,
+          p_location: await tillForWrite(),
           p_idempotency_key: key,
         })
       : await callRpc<unknown>("clock_out", {

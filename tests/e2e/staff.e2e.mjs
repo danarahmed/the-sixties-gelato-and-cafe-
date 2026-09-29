@@ -193,15 +193,21 @@ check(
 );
 
 console.log("▸ a manager corrects today's hours, and adds hours nobody clocked last month");
+let todayRecord = "";
 {
   const { ctx, page } = await signIn(browser, "manager");
   await open(page, "/staff");
   const rec = page.locator('[data-testid="attendance-record"][data-name="Rana Staff"]').first();
   await rec.getByTestId("correct-hours").click();
   const form = page.getByTestId("correct-form");
+  // The record by its id: in the two hours after midnight, starting two hours
+  // earlier makes it the day before's.
+  todayRecord = last(
+    `select id from attendance where employee_id = '${RANA}' and work_day = ${TODAY} and cancelled_at is null`,
+  );
   const earlier =
     last(`select to_char((clock_in at time zone '${TZ}') - interval '2 hours', 'YYYY-MM-DD"T"HH24:MI')
-                          from attendance where employee_id = '${RANA}' and work_day = ${TODAY}`);
+                          from attendance where id = '${todayRecord}'`);
   await form.getByLabel("In", { exact: true }).fill(earlier);
   await form.getByLabel("Why").fill("Forgot to clock in at opening");
   await form.getByRole("button", { name: "Save the correction" }).click();
@@ -230,7 +236,7 @@ check(
 check(
   Number(
     last(`select floor(extract(epoch from clock_out - clock_in) / 60) from attendance
-           where employee_id = '${RANA}' and work_day = ${TODAY} and cancelled_at is null`),
+           where id = '${todayRecord}' and cancelled_at is null`),
   ) >= 119,
   "today's record starts two hours earlier",
 );

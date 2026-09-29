@@ -108,6 +108,7 @@ export default async function SettingsPage() {
           members={members}
           myId={profile.id}
           isOwner={profile.roles.includes("owner")}
+          places={locations.filter((l) => l.isActive).map((l) => ({ id: l.id, name: l.name }))}
         />
       </div>
 

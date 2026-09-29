@@ -78,6 +78,7 @@ import {
   describeChanges,
   showValue,
   subjectOf,
+  valueIn,
 } from "@/lib/audit";
 import { deliveryLineCost, needsPriceConfirmation, packCode, priceGap } from "@/lib/receiving";
 import { lookAlike, lookAlikes, nameKey, slips } from "@/lib/names";
@@ -4582,6 +4583,46 @@ describe("documents kept with the records (0053, release AA)", () => {
           "Document taken off",
           "Documents kept with records",
           "Document",
+        ].filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
+  });
+});
+
+describe("the audit trail in the reader's language", () => {
+  it("names a language's writing, its words cleared, and a refund paid back more than one way", () => {
+    const names = new Map<string, string>();
+    expect(
+      describeChanges({ dir: "ltr" }, { dir: "rtl" }, names).map((c) => [c.field, c.after]),
+    ).toEqual([["Writing direction", "Right to left"]]);
+    expect(describeChanges(null, { set: 2, cleared: 1 }, names).map((c) => c.field)).toEqual([
+      "Set",
+      "Cleared",
+    ]);
+    const back = showValue(
+      [
+        { type: "card", amount: 2000 },
+        { type: "cash", amount: 500 },
+      ],
+      "tenders",
+      names,
+    );
+    expect(back).toBe("Card 2,000, Cash 500");
+    const ar = translator(builtInWords("ar"));
+    const msg = (s: string) => s;
+    expect(valueIn(back, "Paid back", ar, msg)).toBe(`${ar("Card")} 2,000, ${ar("Cash")} 500`);
+    expect(valueIn("Right to left", "Writing direction", ar, msg)).toBe(ar("Right to left"));
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        [
+          "Writing direction",
+          "Cleared",
+          "Paid back",
+          "Set",
+          "Right to left",
+          "Left to right",
         ].filter((p) => !words[p]),
         locale,
       ).toEqual([]);
