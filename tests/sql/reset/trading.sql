@@ -112,6 +112,17 @@ grant select on pr to public;
 select approve_payroll((select (r ->> 'run_id')::uuid from pr));
 select pay_payroll((select (r ->> 'run_id')::uuid from pr), 'bank');
 
+-- A customer, with an address; a sale that earns points, and points given by
+-- hand (0050).
+select test.act_as('cashier@example.com');
+create temp table hawre as select save_customer(null, 'Hawre', '0770 123 4567', 'Likes it strong') r;
+grant select on hawre to public;
+select save_customer_address((select (r ->> 'customer_id')::uuid from hawre), null, 'Home', 'Salim Street, house 12');
+select record_sale(gen_random_uuid(), 'dine_in', 'card', '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]',
+                   p_customer => (select (r ->> 'customer_id')::uuid from hawre));
+select test.act_as('manager@example.com');
+select adjust_points((select (r ->> 'customer_id')::uuid from hawre), 50, 'From the paper card');
+
 -- The owner opens the dashboard: its alerts are kept, one acknowledged; and a
 -- threshold is changed.
 select test.act_as('owner@example.com');

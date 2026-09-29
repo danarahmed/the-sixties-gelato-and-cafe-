@@ -28,6 +28,10 @@ select test.eq((select count(*) from gl_account where business_id = '00000000-00
 select test.ok((select pin_hash is not null from app_user where email = 'owner@example.com'), 'and the PIN the owner approves with');
 select test.eq((select count(*) from employee where full_name = 'Rana' and rate = 500000 and clock_pin_hash is not null)::int, 1,
   'who works here is kept, with their pay and the PIN they clock with');
+select test.eq((select count(*) from customer c join customer_address a on a.customer_id = c.id
+                 where c.full_name = 'Hawre' and c.phone = '+9647701234567')::int, 1,
+  'the customers are kept, with their addresses');
+select test.eq((select count(*) from loyalty_ledger)::int, 0, 'but not their points: the sales that earned them are gone');
 select test.eq((select count(*) from reason_code)::int, 20, 'the list of reasons is kept');
 select test.eq((select string_agg(code || ' ' || name, ', ') from app_language), 'tr Türkçe', 'the languages the café added are kept');
 select test.eq((select string_agg(locale || ' ' || words, ', ' order by locale) from app_phrase), 'ar احفظ, tr Kaydet',
@@ -54,7 +58,7 @@ select test.eq((select count(*) from attendance) + (select count(*) from shift_s
 select test.eq((select count(*) from alert)::int, 0, 'nor the alerts raised on them: they rise again from what is recorded next');
 select test.eq((select alert_settings from business where id = '00000000-0000-0000-0000-0000000000b1'),
   '{"margin_target_percent": 65}'::jsonb, 'the alert thresholds are kept');
-select test.ok(exists (select 1 from audit_log where action = 'business.reset_test_data' and (after_state ->> 'sales_order')::int = 5),
+select test.ok(exists (select 1 from audit_log where action = 'business.reset_test_data' and (after_state ->> 'sales_order')::int = 6),
   'the audit trail records what was cleared');
 select test.ok(exists (select 1 from audit_log where action = 'cash.session.close'), 'and still holds what happened before it');
 

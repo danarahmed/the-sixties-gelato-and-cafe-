@@ -7,8 +7,8 @@
 --
 --   kept     the business, its locations and their drawers, the chart of
 --            accounts, the people (with their roles and approval PINs), who
---            works here (with their pay and clock PINs), the
---            menu (products, their sizes, categories, photos, prices, recipes
+--            works here (with their pay and clock PINs), the customers (with
+--            their addresses), the menu (products, their sizes, categories, photos, prices, recipes
 --            and their versions, add-ons with their groups, prices and
 --            recipes), the stock items and their units, suppliers and who
 --            each item is bought from, dining tables, platform and promotion
@@ -23,7 +23,8 @@
 --            retries, card settlements,
 --            stock movements and lots, losses and giveaways, stock counts,
 --            production batches, the schedule, the hours clocked and the PINs
---            typed, advances, payrolls and the salaries paid,
+--            typed, advances, payrolls and the salaries paid, the customers'
+--            points,
 --            purchase orders, deliveries and their corrections, returns to
 --            suppliers, supplier bills, payments and credits, expenses, every
 --            journal and accounting period,
@@ -65,7 +66,7 @@ insert into reset_keep values
   ('delivery_platform'), ('platform_store_map'), ('platform_product_map'), ('promotion'),
   ('reason_code'), ('app_language'), ('app_phrase'), ('business_rule'), ('business_rule_history'),
   ('modifier_group'), ('modifier'), ('modifier_price'), ('modifier_recipe_line'), ('product_modifier_group'),
-  ('employee'), ('audit_log');
+  ('employee'), ('customer'), ('customer_address'), ('audit_log');
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');
@@ -106,7 +107,7 @@ truncate table
   cash_transfer, clock_attempt, document_counter, employee_advance,
   expense, fx_cash_event, fx_exchange, fx_rate, goods_receipt, goods_receipt_line, inventory_movement, item_lot,
   journal_entry, journal_line,
-  loss_review, lot_movement,
+  loss_review, lot_movement, loyalty_ledger,
   payroll_approval, payroll_line, payroll_run,
   pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   pos_tab_line_modifier,

@@ -235,9 +235,9 @@ select test.eq((select count(*) from audit_log where action = 'inventory.count.s
 -- ------------------------------------------------------------------ bills at the till
 select test.act_as('cashier@example.com');
 create temp table tab1 as select open_tab('dine_in', null, 'Window seat', null,
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', null, null, null, null, null, pg_temp.k(40)) r;
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', null, null, null, null, null, null, pg_temp.k(40)) r;
 create temp table tab2 as select open_tab('dine_in', null, 'Window seat', null,
-  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', null, null, null, null, null, pg_temp.k(40)) r;
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":2}]', null, null, null, null, null, null, pg_temp.k(40)) r;
 grant select on tab1, tab2 to public;
 select test.as_admin();
 select test.eq((select count(*) from pos_tab where label = 'Window seat')::int, 1, 'a bill opened twice is one bill');
@@ -308,7 +308,7 @@ select test.succeeds($$select record_expense('Gas', 1000, '6200', 'owner', null,
   'with its key it goes through');
 select set_config('request.path', '/rpc/open_tab', false);
 select test.succeeds($$select open_tab('dine_in', null, 'Corner seat', null,
-    '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, null, null, null, null, gen_random_uuid())$$,
+    '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]', null, null, null, null, null, null, gen_random_uuid())$$,
   'a bill opened with its lines: open_tab''s own save_tab needs no key of its own');
 select set_config('request.path', '', false);
 select test.succeeds($$select record_expense('Gas', 500, '6200', 'owner')$$, 'from SQL, without a key, it runs as before');
