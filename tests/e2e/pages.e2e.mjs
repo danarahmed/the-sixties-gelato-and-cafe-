@@ -18,6 +18,8 @@ const PAGES = [
   "/inventory/usage",
   "/count",
   "/production",
+  "/staff",
+  "/payroll",
   "/journals",
   "/accounting",
   "/reports",

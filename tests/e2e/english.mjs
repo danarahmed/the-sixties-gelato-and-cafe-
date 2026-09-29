@@ -42,6 +42,14 @@ const typed = () =>
     union select coalesce(note, '') from purchase_order union select coalesce(close_reason, '') from purchase_order
     union select coalesce(cancel_reason, '') from purchase_order union select reason from supplier_return
     union select reason from supplier_credit union select coalesce(supplier_ref, '') from supplier_credit
+    -- Staff, their hours and their pay (0049): the names, jobs and reasons typed.
+    union select full_name from employee union select coalesce(title, '') from employee
+    union select coalesce(note, '') from shift_schedule
+    union select coalesce(edit_reason, '') from attendance union select coalesce(cancel_reason, '') from attendance
+    union select reason from employee_advance union select coalesce(cancel_reason, '') from employee_advance
+    union select coalesce(additions_note, '') from payroll_line union select coalesce(deductions_note, '') from payroll_line
+    union select coalesce(reopen_reason, '') from payroll_approval
+    union select coalesce(cancel_reason, '') from salary_payment
   ) x where n is not null`);
 const own = () =>
   new Set(

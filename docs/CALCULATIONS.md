@@ -872,6 +872,12 @@ daily use`; it fires when that is under `lead + 1` days, the lead being the
 - **Losses waiting for approval** (`0040`, 🟠, sure): losses saved to wait for
   a manager, with how many and what they are worth; 🔴 once one has waited
   two days.
+- **Clocked in a long time** (`0049`, 🟠, sure): someone clocked in for more
+  than the rule's hours (_16_); 🔴 after a day. Hours left open are paid as
+  worked, so a forgotten clock-out becomes overtime.
+- **Salaries due** (`0049`, 🟠, sure): from payday (the _1st_), last month's
+  payroll not approved, or approved and not paid in full; 🔴 a week after
+  payday.
 
 **The brief** of a day (midnight to midnight, Baghdad time):
 
@@ -893,3 +899,69 @@ card (2,500, voided), a water with 10% off (900, refunded, the bottle back on
 the shelf), 100 g of beans wasted (1,000) and the drawer counted at 4,500:
 net sales 5,000 over 2 sales; cost of goods 400 (8%); gross profit 3,600
 (72%); the drawer 500 short.
+
+## 13. Staff, their hours and their pay (`0049`)
+
+**A day's hours.** A person's records of a day (by the café's clock, the day
+they clocked in) add up to the minutes worked, a record still open counting
+until now. Against the schedule, with the rule's grace (_5_ minutes):
+
+```
+late        = first in − shift start     (when first in > shift start + grace)
+left early  = shift end − last out       (when last out < shift end − grace)
+absent      = a shift that has ended with no record that day
+overtime    = max(minutes worked − standard hours × 60, 0)
+```
+
+Overtime is counted each day, scheduled or not. Lateness, leaving early and
+absence are shown on Staff, Payroll and Reports, and deducted only when a
+manager deducts them on the payroll, with a note.
+
+**An hour's pay**, for overtime:
+
+| Paid         | An hour's pay              |
+| ------------ | -------------------------- |
+| by the hour  | the rate                   |
+| by the day   | rate ÷ standard hours      |
+| by the month | rate ÷ 30 ÷ standard hours |
+
+**A month's pay**, each person who worked here some of the month:
+
+```
+base      by the month: rate × days employed ÷ days in the month
+          by the day:   rate × days worked (days with minutes worked)
+          by the hour:  rate × (minutes worked − overtime minutes) ÷ 60
+overtime  = money_round(an hour's pay × overtime % ÷ 100 × overtime minutes ÷ 60)
+gross     = base + overtime + added − deducted     (deducted no more than earned)
+taken back = what the advances still owe, as far as the gross goes
+             (or the amount chosen, no more than that)
+to be paid = gross − taken back
+```
+
+The overtime percentage is the person's, or the café's rule (_150%_). Each
+figure is rounded to the whole dinar, half to even.
+
+**The journals:**
+
+- An advance: Dr 1300 Employee advances, Cr where the money came from (1000
+  the till, from the open drawer; 1005 the safe; 1020 the bank; 3000 the
+  owner). Cancelled, the journal is reversed.
+- A payroll approved: Dr 6100 Salaries the gross, Cr 2100 Salaries payable
+  what is to be paid, Cr 1300 the advances taken back, dated on the month's
+  last day at noon, so the cost lands in the month worked. Reopened, that
+  journal is reversed; approved again, a new one is posted.
+- A salary paid (to one person, or everyone at once): Dr 2100, Cr where the
+  money came from. Cancelled, the journal is reversed.
+
+**The checks:** salaries owed (what is to be paid of every approval not
+reopened, less what was paid and not cancelled) against 2100 Salaries payable,
+and advances not taken back (advances not cancelled, less what approved
+payrolls took back) against 1300 Employee advances, each difference zero.
+
+Worked example (the browser test): Rana, 600,000 a month, 8 hours a day, works
+the whole of August with one day of 10 hours, and owes an advance of 50,000;
+Omar, 3,000 an hour, works 6 hours. An hour of Rana's pay is 600,000 ÷ 30 ÷ 8 =
+2,500, and her two hours of overtime at 150% are 7,500; with a bonus of 25,000
+her gross is 632,500, and she is paid 582,500 after the advance. Omar's gross
+is 18,000. The payroll posts Dr 6100 650,500, Cr 2100 600,500, Cr 1300 50,000,
+and paying everyone from the bank Dr 2100 600,500, Cr 1020 600,500.

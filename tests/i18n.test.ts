@@ -283,6 +283,21 @@ describe("what the café is told without asking", () => {
       ["Golden vanilla gelato"],
     ],
     ["2 loss(es) waiting for a manager's approval (900 IQD)", []],
+    // Staff, their hours and their pay (0049): the alerts, the till's answers, the month's close.
+    ["Rana has been clocked in for 17 hours, since 27 Sep 08:00", ["Rana"]],
+    ["The payroll for 2026-08 is not approved: salaries were due on 01 Sep", []],
+    ["Salaries for 2026-08: 450,000 IQD not paid yet", []],
+    ["Rana has no PIN yet: a manager sets one on Staff", ["Rana"]],
+    ["Rana is clocked in already, since 28 Sep 08:02", ["Rana"]],
+    [
+      "Clocking by PIN is paused for Rana after too many wrong PINs today: a manager sets a new PIN on Staff",
+      ["Rana"],
+    ],
+    [
+      "The payroll for 2026-09 is not approved: after the lock it cannot be posted into this month",
+      [],
+    ],
+    ["That is more than is owed to Rana (240,000)", ["Rana"]],
     [
       "Costed at nothing: Alert vanilla, Alert cream; Used before it had a cost: Alert milk",
       ["Alert vanilla", "Alert cream", "Alert milk"],
@@ -297,8 +312,8 @@ describe("what the café is told without asking", () => {
       ["Milk", "Cups"],
     ],
   ];
-  // What stays the same in every language: the currency and the units.
-  const SAME = /\b(IQD|ml|kg|g|L)\b/g;
+  // What stays the same in every language: the currency, the units, and a PIN.
+  const SAME = /\b(IQD|ml|kg|g|L|PIN)\b/g;
 
   for (const locale of ["ar", "ckb"] as const) {
     it(`gives every alert in ${locale === "ar" ? "Arabic" : "Kurdish"}, names and all`, () => {
@@ -410,6 +425,26 @@ describe("the code", () => {
         if (isStringLike(arg) && !known.has(arg.text)) unknown.push(`${file}: ${arg.text}`);
       });
     expect(unknown).toEqual([]);
+  });
+
+  it("names where each journal came from in words the books have", () => {
+    // The register and an account's lines show a journal's source through t()
+    // from a map, which the check above cannot see.
+    const missing: string[] = [];
+    for (const { file, sf } of parsed)
+      walk(sf, (n) => {
+        if (!ts.isVariableDeclaration(n) || !ts.isIdentifier(n.name) || n.name.text !== "SOURCE")
+          return;
+        if (!n.initializer || !ts.isObjectLiteralExpression(n.initializer)) return;
+        for (const p of n.initializer.properties)
+          if (
+            ts.isPropertyAssignment(p) &&
+            isStringLike(p.initializer) &&
+            !known.has(p.initializer.text)
+          )
+            missing.push(`${file}: ${p.initializer.text}`);
+      });
+    expect(missing).toEqual([]);
   });
 
   it("gives every message of a form or an action as a phrase", () => {

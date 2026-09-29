@@ -299,6 +299,30 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     5300, whatever its kind.
   - 6110, 6610 and 6620 take expenses and bills too (a staff meal bought
     outside): Reports → Losses counts only what came out of stock.
+- **Staff, their hours and their pay, what they do not do (release W,
+  `0049`).**
+  - Clocking is at the till, by name and PIN: there is no clock of its own, no
+    fingerprint or face, and no clocking from a phone. The till clocks those
+    who work at its branch, have a shift there today, or are clocked in there.
+  - One shift a person a day, entered a week at a time; there are no breaks
+    within a shift, and no rota templates beyond "the same hours as the week
+    before".
+  - Lateness, leaving early and absence are shown, not deducted: a manager
+    deducts on the payroll, with a note. There are no leave, holidays or sick
+    days: a day off is a day with no shift.
+  - Overtime is each day's minutes beyond the person's standard hours; there
+    is no weekly overtime, no night or holiday rate, and no pay for public
+    holidays.
+  - No tax, social security or other deduction the law may ask for is worked
+    out: an amount deducted is typed, with why. No payslip is printed.
+  - A payroll is one month, approved once the month is over. Someone paid by
+    the month who starts or leaves within it is paid for the days employed,
+    not the days worked.
+  - A payroll is approved in the month it pays for: once that month is locked
+    it cannot be posted, and the close warns (without blocking) when it is not
+    approved.
+  - The people are kept when the test records are cleared; there is no
+    screen to delete someone, only a last day.
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the

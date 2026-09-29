@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 /** Stock costs come from their own records, never from a typed-in expense. */
-const NOT_EXPENSES = new Set(["5000", "5050", "5300", "5400"]);
+const NOT_EXPENSES = new Set(["5000", "5050", "5300", "5310", "5400"]);
 
 export default async function ExpensesPage() {
   const profile = await requirePermission("cost.view");

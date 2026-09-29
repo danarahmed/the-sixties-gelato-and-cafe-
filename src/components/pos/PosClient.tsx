@@ -26,6 +26,7 @@ import { ChooseBill, FloorView } from "./FloorView";
 import { OrderPanel, type Receipt } from "./OrderPanel";
 import { PayDialog } from "./PayDialog";
 import { GiveAwayDialog } from "./GiveAwayDialog";
+import { ClockDialog } from "./ClockDialog";
 import { giveawayLabel } from "@/lib/losses";
 import { SplitDialog } from "./SplitDialog";
 import {
@@ -246,7 +247,9 @@ type Dialog =
   | { kind: "tables" }
   | { kind: "printing" }
   /** The drawer (0036): opened, closed, handed over; `why` when cash was refused for it. */
-  | { kind: "drawer"; why: string | null };
+  | { kind: "drawer"; why: string | null }
+  /** Clocking in and out (0049): a name and a PIN. */
+  | { kind: "clock" };
 
 /**
  * The till. Two kinds of order share one screen: a quick sale at the counter,
@@ -1450,6 +1453,15 @@ export function PosClient({
           {drawer.open ? "🔓" : "🔒"} <span className="drawer-chip-label">{drawerLabel}</span>
         </button>
         <button
+          className="icon-btn"
+          onClick={() => setDialog({ kind: "clock" })}
+          title={t("Clock in or out")}
+          aria-label={t("Clock in or out")}
+          data-testid="clock-button"
+        >
+          🕐
+        </button>
+        <button
           className={`icon-btn print-btn${autoPrint ? " on" : ""}`}
           onClick={() => setDialog({ kind: "printing" })}
           title={t("pos.printing")}
@@ -1726,6 +1738,9 @@ export function PosClient({
             <button onClick={() => setDialog(null)}>{t("pos.close")}</button>
           </div>
         </Modal>
+      )}
+      {dialog?.kind === "clock" && (
+        <ClockDialog timezone={timezone} onClose={() => setDialog(null)} />
       )}
       {dialog?.kind === "printing" && (
         <PrintingDialog

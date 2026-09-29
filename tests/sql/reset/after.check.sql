@@ -26,6 +26,8 @@ select test.ok(exists (select 1 from user_role r join app_user u on u.id = r.app
 select test.eq((select count(*) from gl_account where business_id = '00000000-0000-0000-0000-0000000000b1'
                                                   and code in ('1000', '1005', '6300'))::int, 3, 'the chart of accounts is kept');
 select test.ok((select pin_hash is not null from app_user where email = 'owner@example.com'), 'and the PIN the owner approves with');
+select test.eq((select count(*) from employee where full_name = 'Rana' and rate = 500000 and clock_pin_hash is not null)::int, 1,
+  'who works here is kept, with their pay and the PIN they clock with');
 select test.eq((select count(*) from reason_code)::int, 20, 'the list of reasons is kept');
 select test.eq((select string_agg(code || ' ' || name, ', ') from app_language), 'tr Türkçe', 'the languages the café added are kept');
 select test.eq((select string_agg(locale || ' ' || words, ', ' order by locale) from app_phrase), 'ar احفظ, tr Kaydet',
@@ -44,6 +46,11 @@ select test.eq((select count(*) from cash_drawer where business_id = '00000000-0
   'each branch keeps its drawer');
 select test.eq((select count(*) from approval) + (select count(*) from pin_attempt), 0::bigint,
   'nor any approval, or PIN typed, while testing');
+select test.eq((select count(*) from attendance) + (select count(*) from shift_schedule) + (select count(*) from clock_attempt)
+               + (select count(*) from employee_advance) + (select count(*) from payroll_run) + (select count(*) from payroll_line)
+               + (select count(*) from payroll_approval) + (select count(*) from salary_payment)
+               + (select count(*) from salary_payment_line), 0::bigint,
+  'nor any hours, schedule, PIN typed at the till, advance, payroll or salary paid');
 select test.eq((select count(*) from alert)::int, 0, 'nor the alerts raised on them: they rise again from what is recorded next');
 select test.eq((select alert_settings from business where id = '00000000-0000-0000-0000-0000000000b1'),
   '{"margin_target_percent": 65}'::jsonb, 'the alert thresholds are kept');
@@ -71,6 +78,7 @@ select test.eq((select (r ->> 'session_no')::int || '/' || (r ->> 'variance') fr
 select test.act_as('owner@example.com');
 select move_cash('owner', 'till', 10000, 'Float for the till');
 select test.eq(next_bill_number(), 'SGC-' || extract(year from test.today()) || '-0001', 'the café''s own bill numbers start again at 0001');
+select test.eq((draft_payroll(test.today()) ->> 'run_no')::int, 1, 'and payrolls at 1');
 
 select test.act_as('cashier@example.com');
 create temp table sale as select record_sale(gen_random_uuid(), 'takeaway', 'cash',

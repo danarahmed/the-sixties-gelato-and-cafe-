@@ -6,7 +6,8 @@
 -- what the café is set up with, and clears everything it did:
 --
 --   kept     the business, its locations and their drawers, the chart of
---            accounts, the people (with their roles and approval PINs), the
+--            accounts, the people (with their roles and approval PINs), who
+--            works here (with their pay and clock PINs), the
 --            menu (products, their sizes, categories, photos, prices, recipes
 --            and their versions, add-ons with their groups, prices and
 --            recipes), the stock items and their units, suppliers and who
@@ -21,7 +22,8 @@
 --            the dollars taken, counted and exchanged, the answers kept for
 --            retries, card settlements,
 --            stock movements and lots, losses and giveaways, stock counts,
---            production batches,
+--            production batches, the schedule, the hours clocked and the PINs
+--            typed, advances, payrolls and the salaries paid,
 --            purchase orders, deliveries and their corrections, returns to
 --            suppliers, supplier bills, payments and credits, expenses, every
 --            journal and accounting period,
@@ -29,7 +31,8 @@
 --            notes, the alerts raised on all of it (they rise again from what
 --            is recorded next), and the document numbers (journals start again
 --            at 1001, the café's own bill numbers at 0001, cash sessions,
---            refunds, delivery corrections, orders, returns and credits at 1)
+--            refunds, delivery corrections, orders, returns, credits and
+--            payrolls at 1)
 --
 -- Afterwards no item has stock. Before the first sale, give each item its
 -- opening stock (Inventory → Opening stock): what is on the shelf, at what it
@@ -62,7 +65,7 @@ insert into reset_keep values
   ('delivery_platform'), ('platform_store_map'), ('platform_product_map'), ('promotion'),
   ('reason_code'), ('app_language'), ('app_phrase'), ('business_rule'), ('business_rule_history'),
   ('modifier_group'), ('modifier'), ('modifier_price'), ('modifier_recipe_line'), ('product_modifier_group'),
-  ('audit_log');
+  ('employee'), ('audit_log');
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');
@@ -99,19 +102,21 @@ end $$;
 -- triggers that keep the ledger append-only, and fails, changing nothing, if a
 -- table left out still refers to one of these.
 truncate table
-  accounting_period, ai_insight, ai_interaction_log, alert, approval, card_settlement, cash_event, cash_transfer,
-  document_counter,
+  accounting_period, ai_insight, ai_interaction_log, alert, approval, attendance, card_settlement, cash_event,
+  cash_transfer, clock_attempt, document_counter, employee_advance,
   expense, fx_cash_event, fx_exchange, fx_rate, goods_receipt, goods_receipt_line, inventory_movement, item_lot,
   journal_entry, journal_line,
   loss_review, lot_movement,
+  payroll_approval, payroll_line, payroll_run,
   pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   pos_tab_line_modifier,
   production_batch,
   purchase_invoice, purchase_order, purchase_order_line, receipt_correction, reconciliation_issue, request_log,
   sale_adjustment,
   sale_refund, sale_refund_line, sale_refund_tender,
-  sales_order, sales_order_line, sales_order_line_modifier, sales_tender, session_dollar_count, stock_count,
-  stock_count_line, stock_loss, stock_loss_line,
+  salary_payment, salary_payment_line,
+  sales_order, sales_order_line, sales_order_line_modifier, sales_tender, session_dollar_count, shift_schedule,
+  stock_count, stock_count_line, stock_loss, stock_loss_line,
   supplier_credit, supplier_credit_allocation, supplier_payment, supplier_return, supplier_return_line, sync_log,
   work_shift
   restart identity;

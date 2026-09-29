@@ -29,12 +29,14 @@ each job.
 13. [Inventory](#13-inventory) · `/inventory`
 14. [Stock Count](#14-stock-count) · `/count`
 15. [Production](#15-production) · `/production`
-16. [Journals](#16-journals) · `/journals`
-17. [Chart of Accounts](#17-chart-of-accounts) · `/accounting`
-18. [Reports](#18-reports) · `/reports`
-19. [Audit trail](#19-audit-trail) · `/audit`
-20. [Settings](#20-settings) · `/settings`
-21. [Every feature, and where it is](#21-every-feature-and-where-it-is)
+16. [Staff](#16-staff) · `/staff`
+17. [Payroll](#17-payroll) · `/payroll`
+18. [Journals](#18-journals) · `/journals`
+19. [Chart of Accounts](#19-chart-of-accounts) · `/accounting`
+20. [Reports](#20-reports) · `/reports`
+21. [Audit trail](#21-audit-trail) · `/audit`
+22. [Settings](#22-settings) · `/settings`
+23. [Every feature, and where it is](#23-every-feature-and-where-it-is)
 
 ---
 
@@ -243,6 +245,11 @@ gave it and who approved it.
   Cr Sales (4000);
 - Dr Cost of goods sold (5000), Cr Inventory (1200), for exactly the recipe and
   packaging used on that channel.
+
+**🕐 Clock in or out** (`0049`), at the top of the till: everyone working at
+this branch today, those in first with the time they came in, the others with
+their shift. Tap a name, type that person's PIN, and **Clock in** or **Clock
+out**. A wrong PIN is refused and counted; too many pause clocking by PIN.
 
 ## 6. Orders
 
@@ -869,7 +876,70 @@ A made item is then used like any other: in another batch, or in a product's
 recipe on Products & Recipes (**Change the recipe…**), so a cup of gelato takes
 120 g of the gelato you made.
 
-## 16. Journals
+## 16. Staff
+
+**Location:** Sidebar → **Staff** · `/staff` · **Who:** owner, managers;
+payroll readers (the accountant, the auditor) see it too
+
+- **In now:** who is clocked in, and since when.
+- **People:** everyone who works here, with where, since when, their login,
+  whether they have a PIN, and, for those who see payroll, their pay and the
+  advances they still owe. **+ Add someone who works here** (name, what they
+  do, phone, where they work, the day they started, their login if they have
+  one); **Edit**; **Set a PIN** / **New PIN** (they type it, twice: 4 to 8
+  digits, not 1111 or 1234); **Set the pay…** (payroll: by the month, the day
+  or the hour, a day's hours, their own overtime percentage, why it changes);
+  **Last day…** (why; their shifts after it are taken off) or **Works here
+  again…**.
+- **The schedule:** a week, Saturday to Friday, for one branch (**← The week
+  before** / **The week after →**, and the branches along the top). Type each
+  person's hours as `08:00-16:00` (ending at or before the start: the next
+  day), empty for a day off, or **The same hours as the week before**; then
+  **Save the week**. Someone working at another branch that day shows it
+  instead of a box; a month whose pay is approved no longer changes.
+- **The hours, day by day:** who was on the schedule, when they clocked in and
+  out, how long they worked, and badges: **Absent**, **Late by…**, **Left …
+  early**, **Overtime…**, **Still in**. Below, **each record of hours**, with
+  how it was recorded (at the till, or added by a manager) and every
+  correction's who and why. A manager may **Correct…** a record (a forgotten
+  clock-out), **Cancel…** a mistake, or **+ Add hours nobody clocked…**, each
+  with the reason. Nothing here changes pay by itself: deductions are made on
+  Payroll.
+
+Clocking in and out is on the till: **🕐** at the top, then the name and the
+PIN (see [POS](#5-pos)).
+
+## 17. Payroll
+
+**Location:** Sidebar → **Payroll** · `/payroll` · **Who:** owner, general
+manager, accountant; the auditor reads it
+
+- **Draft a payroll:** choose last month (or this one, to see what is owed so
+  far) and **Draft the payroll**; the payroll opens.
+- **The payrolls:** each month's, with its number, status (**Draft**,
+  **Approved**, **Paid**), how many people, the gross, what is to be paid and
+  what has been, and who approved it.
+- **A payroll** (`/payroll/…`): each person's pay (a month's for the days
+  employed, a day's for each day worked, or an hour's for each hour), the days
+  and hours worked with overtime, lateness and absences, the base, the
+  overtime, what was added and deducted (with why), the advance taken back,
+  what is to be paid and what has been. On a draft: **Adjust…** a line (added,
+  deducted, each with why; how much of an advance to take back), **Draft it
+  again** when the hours or pay changed since, and **Approve the payroll** once
+  the month is over. Approved: **Pay…** one person, or **Pay everyone still
+  owed** from the bank, the safe, the till's drawer or the owner; **Reopen…**
+  (with why) while nothing is paid from it. **Salaries paid** lists each
+  payment, which can be **Cancel…**led with why.
+- **Advances on pay:** who owes what; each advance given, from where, why and
+  its journal; **+ Give an advance…** (to whom, how much, from where, what it is
+  for); **Cancel…** one given by mistake while none of it is taken back.
+
+The journals: an advance Dr 1300 / Cr where it came from; an approval Dr 6100
+Salaries / Cr 2100 Salaries payable / Cr 1300 the advances taken back, on the
+month's last day; a payment Dr 2100 / Cr where it came from. Reports → **Do the
+books tie?** checks salaries owed against 2100 and advances against 1300.
+
+## 18. Journals
 
 **Location:** Sidebar → **Journals** · `/journals` · **Who:** anyone who sees
 costs; posting: accountant, general manager, owner
@@ -913,7 +983,7 @@ costs; posting: accountant, general manager, owner
   each, from the opening balance to the closing one (from the P&L: adding up to
   the P&L's figure, the year-end close left out). **CSV** downloads them.
 
-## 17. Chart of Accounts
+## 19. Chart of Accounts
 
 **Location:** Sidebar → **Chart of Accounts** · `/accounting` · **Who:** anyone
 who sees costs; locking: accountant, general manager, owner; reopening: owner
@@ -937,9 +1007,9 @@ who sees costs; locking: accountant, general manager, owner; reopening: owner
   the owner's alone, and needs a reason; reopen the most recent locked month
   first.
 
-- Who changed what is on the [Audit trail](#19-audit-trail).
+- Who changed what is on the [Audit trail](#21-audit-trail).
 
-## 18. Reports
+## 20. Reports
 
 **Location:** Sidebar → **Reports** · `/reports` · **Who:** anyone who sees costs;
 the P&L: owner, managers, accountant, auditor
@@ -1018,8 +1088,12 @@ accountant's own tools.
   returns to suppliers, why, what is owed back and how; the suppliers'
   credits, with their note and what is left; and what was returned, credited,
   and not yet set against a bill.
+- **Staff** (`0049`; for those who keep the staff, their hours or their pay):
+  each person's days on the schedule and worked, hours, overtime, lateness,
+  leaving early and absences in the dates (a year at most); and, for those who
+  see payroll, what 6100 Salaries holds each month against the month's sales.
 
-## 19. Audit trail
+## 21. Audit trail
 
 **Location:** Sidebar → **Audit trail** · `/audit` · **Who:** owner, managers,
 accountant, auditor
@@ -1045,7 +1119,7 @@ and **why**.
 The trail is written in the same step as the change and is never edited or
 deleted.
 
-## 20. Settings
+## 22. Settings
 
 **Location:** Sidebar → **Settings** · `/settings` · **Who:** owner, general
 manager
@@ -1095,6 +1169,13 @@ why, or **Default**:
 - **Purchase orders a manager approves, up to** (`0044`): 250,000 IQD for the
   café by default, and any order for the owner and the general manager; per
   role.
+- **Overtime is paid at** (`0049`): 150% of an hour's pay by default (100% to
+  300%); a person's own, set with their pay, comes first;
+- **Late, or leaving early, by more than** (`0049`): 5 minutes by default;
+- **Someone still clocked in after** (`0049`): 16 hours by default, then an
+  alert;
+- **Salaries are paid on the day of the month** (`0049`): the 1st by default;
+  from then an unapproved or unpaid payroll is an alert.
 
 **Change** a row, **Back to default**, or **+ Set it for** a role, a kind of
 item or an item: each takes a reason. **Every change** below lists them all,
@@ -1104,7 +1185,7 @@ a person's roles allows, then the café's.
 
 ---
 
-## 21. Every feature, and where it is
+## 23. Every feature, and where it is
 
 | Feature                                                                                                       | Where                                    | Who                                                                           |
 | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------- |
@@ -1143,4 +1224,7 @@ a person's roles allows, then the café's.
 | People and roles, business configuration                                                                      | `/settings`                              | owner, general manager                                                        |
 | Open, close and hand over the drawer, counted blind                                                           | `/pos`, `/sales`                         | cashier, barista, managers, owner                                             |
 | Cash sessions and each one's statement                                                                        | `/sales/sessions`                        | owner, managers, accountant, auditor                                          |
+| Who works here, their PINs, the schedule, the hours corrected with why                                        | `/staff`                                 | owner, managers                                                               |
+| Pay, advances, payroll drafted, approved and paid                                                             | `/staff`, `/payroll`                     | owner, general manager, accountant; the auditor reads                         |
+| Clock in and out with a name and a PIN                                                                        | `/pos`                                   | everyone who works here, at the till                                          |
 | **Not built:** settlement import (M-10), offline selling, split payments, balance sheet, PDF, attachments     | [`LIMITATIONS.md`](LIMITATIONS.md)       | —                                                                             |

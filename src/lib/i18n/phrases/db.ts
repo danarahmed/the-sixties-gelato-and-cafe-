@@ -2253,6 +2253,351 @@ const phrases: PhraseBook = {
   },
   "A loss with no journal": { ar: "خسارة بلا قيد", ckb: "زیانێک بێ تۆمار" },
   loss: { ar: "الخسارة", ckb: "زیان" },
+
+  // Staff, their hours and their pay (0049): what the database refuses with, and answers at the till.
+  "Choose someone who works here": {
+    ar: "اختر شخصًا يعمل هنا",
+    ckb: "کەسێک هەڵبژێرە کە لێرە کار دەکات",
+  },
+  "Type the person's name": { ar: "اكتب اسم الشخص", ckb: "ناوی کەسەکە بنووسە" },
+  "A name is at most 80 letters": {
+    ar: "لا يتجاوز الاسم 80 حرفًا",
+    ckb: "ناو لە 80 پیت زیاتر نابێت",
+  },
+  "Say when they started": { ar: "اذكر متى بدأ العمل", ckb: "بڵێ کەی دەستی بە کار کرد" },
+  "They start within a year": { ar: "يبدأ خلال سنة", ckb: "لە ماوەی ساڵێکدا دەست پێدەکات" },
+  "Choose where they work": { ar: "اختر مكان عمله", ckb: "شوێنی کارەکەی هەڵبژێرە" },
+  "Someone here is called {1} already: add a surname or a nickname": {
+    ar: "يوجد هنا مَن اسمه {1} مسبقًا: أضف اسم العائلة أو لقبًا",
+    ckb: "کەسێک لێرە پێشتر ناوی {1} ـە: پاشناو یان نازناوێک زیاد بکە",
+  },
+  "Choose a login of this café": {
+    ar: "اختر حسابًا من حسابات هذا المقهى",
+    ckb: "هەژمارێکی ئەم کافێیە هەڵبژێرە",
+  },
+  "{1} is the login of someone else already": {
+    ar: "{1} هو حساب شخص آخر مسبقًا",
+    ckb: "{1} پێشتر هەژماری کەسێکی ترە",
+  },
+  "There are hours recorded before {1}: correct them first": {
+    ar: "توجد ساعات مسجلة قبل {1}: صحّحها أولًا",
+    ckb: "کاتژمێر پێش {1} تۆمار کراوە: سەرەتا ڕاستیان بکەرەوە",
+  },
+  "They cannot start after their last day ({1})": {
+    ar: "لا يمكن أن يبدأ بعد آخر يوم عمل له ({1})",
+    ckb: "ناتوانێت دوای دوایین ڕۆژی کارەکەی دەست پێبکات ({1})",
+  },
+  "Choose how they are paid: by the month, the day or the hour": {
+    ar: "اختر طريقة احتساب أجره: بالشهر أو باليوم أو بالساعة",
+    ckb: "هەڵبژێرە چۆن مووچە وەردەگرێت: مانگانە، ڕۆژانە یان بە کاتژمێر",
+  },
+  "Enter the pay": { ar: "أدخل الأجر", ckb: "مووچەکە بنووسە" },
+  "A day's hours are more than 0 and at most 16": {
+    ar: "ساعات اليوم أكثر من 0 وبحد أقصى 16",
+    ckb: "کاتژمێرەکانی ڕۆژێک لە 0 زیاترن و لە 16 زیاتر نین",
+  },
+  "Overtime is paid at 100% to 300% of an hour's pay": {
+    ar: "يُدفع العمل الإضافي بنسبة من 100% إلى 300% من أجر الساعة",
+    ckb: "کاتی زیادە بە 100% تا 300% ی مووچەی کاتژمێرێک دەدرێت",
+  },
+  "Say why they work here again": {
+    ar: "اذكر لماذا يعود للعمل هنا",
+    ckb: "بڵێ بۆچی دووبارە لێرە کار دەکات",
+  },
+  "Say why they leave": { ar: "اذكر سبب مغادرته", ckb: "بڵێ بۆچی دەڕوات" },
+  "They cannot leave before they started ({1})": {
+    ar: "لا يمكن أن يغادر قبل أن يبدأ ({1})",
+    ckb: "ناتوانێت پێش دەستپێکردنی بڕوات ({1})",
+  },
+  "{1} is clocked in: clock them out first": {
+    ar: "{1} مسجَّل الحضور: سجّل انصرافه أولًا",
+    ckb: "هاتنی {1} تۆمار کراوە: سەرەتا ڕۆیشتنی تۆمار بکە",
+  },
+  "There are hours recorded after {1}: correct them first": {
+    ar: "توجد ساعات مسجلة بعد {1}: صحّحها أولًا",
+    ckb: "کاتژمێر دوای {1} تۆمار کراوە: سەرەتا ڕاستیان بکەرەوە",
+  },
+  "{1} works here already": { ar: "{1} يعمل هنا مسبقًا", ckb: "{1} پێشتر لێرە کار دەکات" },
+  "Choose up to 31 days": { ar: "اختر 31 يومًا كحد أقصى", ckb: "هەتا 31 ڕۆژ هەڵبژێرە" },
+  "Give the hours as a list": { ar: "اكتب الساعات كقائمة", ckb: "کاتژمێرەکان وەک لیستێک بنووسە" },
+  "Each day of the hours is within the dates chosen": {
+    ar: "كل يوم من الساعات يقع ضمن التواريخ المختارة",
+    ckb: "هەر ڕۆژێکی کاتژمێرەکان لە ناو بەروارە هەڵبژێردراوەکاندایە",
+  },
+  "{1} does not work here on {2}": {
+    ar: "{1} لا يعمل هنا في {2}",
+    ckb: "{1} لە {2} لێرە کار ناکات",
+  },
+  "Give the hours as 08:00 to 16:00": {
+    ar: "اكتب الساعات هكذا: 08:00 إلى 16:00",
+    ckb: "کاتژمێرەکان بەم شێوەیە بنووسە: 08:00 تا 16:00",
+  },
+  "{1} has one stretch of hours on {2} at most": {
+    ar: "لـ{1} فترة دوام واحدة يوم {2} كحد أقصى",
+    ckb: "{1} لە ڕۆژی {2} زۆرترین یەک ماوەی دەوامی هەیە",
+  },
+  "A note is at most 200 letters": {
+    ar: "لا تتجاوز الملاحظة 200 حرف",
+    ckb: "تێبینی لە 200 پیت زیاتر نابێت",
+  },
+  "The pay for {1} is approved: its hours can no longer change": {
+    ar: "أجر {1} معتمد: لم يعد ممكنًا تغيير ساعاته",
+    ckb: "مووچەی {1} پەسەند کراوە: چیتر کاتژمێرەکانی ناگۆڕدرێن",
+  },
+  "{1} works at {2} on {3} already": {
+    ar: "{1} يعمل في {2} يوم {3} مسبقًا",
+    ckb: "{1} پێشتر لە ڕۆژی {3} لە {2} کار دەکات",
+  },
+  "{1}'s hours overlap on {2}": {
+    ar: "تتداخل ساعات {1} يوم {2}",
+    ckb: "کاتژمێرەکانی {1} لە ڕۆژی {2} تێکەڵ دەبن",
+  },
+  "Choose up to 62 days": { ar: "اختر 62 يومًا كحد أقصى", ckb: "هەتا 62 ڕۆژ هەڵبژێرە" },
+  "A record of hours is cancelled, not deleted": {
+    ar: "يُلغى سجل الساعات ولا يُحذف",
+    ckb: "تۆماری کاتژمێر هەڵدەوەشێنرێتەوە، ناسڕدرێتەوە",
+  },
+  "That record was cancelled": { ar: "أُلغي ذلك السجل", ckb: "ئەو تۆمارە هەڵوەشێنرایەوە" },
+  "A record of hours stays with its person": {
+    ar: "يبقى سجل الساعات مع صاحبه",
+    ckb: "تۆماری کاتژمێر لەگەڵ خاوەنەکەی دەمێنێتەوە",
+  },
+  "Say when they clocked in": { ar: "اذكر متى سجّل حضوره", ckb: "بڵێ کەی هاتنی تۆمار کرد" },
+  "The hours cannot be in the future": {
+    ar: "لا يمكن أن تكون الساعات في المستقبل",
+    ckb: "کاتژمێرەکان ناتوانن لە داهاتوودا بن",
+  },
+  "They clock out after they clock in": {
+    ar: "يُسجَّل الانصراف بعد الحضور",
+    ckb: "ڕۆیشتن دوای هاتن تۆمار دەکرێت",
+  },
+  "One record is a day of hours at most": {
+    ar: "السجل الواحد يوم عمل واحد كحد أقصى",
+    ckb: "یەک تۆمار زۆرترین کاتژمێرەکانی ڕۆژێکە",
+  },
+  "{1} has other hours recorded then, from {2}": {
+    ar: "لـ{1} ساعات أخرى مسجلة في ذلك الوقت، منذ {2}",
+    ckb: "{1} لەو کاتەدا کاتژمێری تری تۆمار کراوە، لە {2}ەوە",
+  },
+  "Say why the hours are corrected": {
+    ar: "اذكر سبب تصحيح الساعات",
+    ckb: "بڵێ بۆچی کاتژمێرەکان ڕاست دەکرێنەوە",
+  },
+  "Record of hours not found": { ar: "سجل الساعات غير موجود", ckb: "تۆماری کاتژمێر نەدۆزرایەوە" },
+  "Say why the hours are added": {
+    ar: "اذكر سبب إضافة الساعات",
+    ckb: "بڵێ بۆچی کاتژمێرەکان زیاد دەکرێن",
+  },
+  "Say why the record is cancelled": {
+    ar: "اذكر سبب إلغاء السجل",
+    ckb: "بڵێ بۆچی تۆمارەکە هەڵدەوەشێنرێتەوە",
+  },
+  "{1} has no PIN yet: a manager sets one on Staff": {
+    ar: "ليس لـ{1} رمز PIN بعد: يعيّنه المدير في شاشة «الموظفون»",
+    ckb: "{1} هێشتا PIN ی نییە: بەڕێوەبەرێک لە شاشەی «کارمەندان» دایدەنێت",
+  },
+  "Clocking by PIN is paused for {1} after too many wrong PINs today: a manager sets a new PIN on Staff":
+    {
+      ar: "أُوقف تسجيل الحضور برمز PIN لـ{1} بعد رموز خاطئة كثيرة اليوم: يعيّن المدير رمزًا جديدًا في شاشة «الموظفون»",
+      ckb: "تۆمارکردن بە PIN بۆ {1} ڕاگیراوە دوای PIN ی هەڵەی زۆر ئەمڕۆ: بەڕێوەبەرێک لە شاشەی «کارمەندان» PIN ێکی نوێ دادەنێت",
+    },
+  "{1} is clocked in already, since {2}": {
+    ar: "{1} مسجَّل الحضور مسبقًا، منذ {2}",
+    ckb: "هاتنی {1} پێشتر تۆمار کراوە، لە {2}ەوە",
+  },
+  "{1} has hours recorded until later today: a manager corrects them on Staff": {
+    ar: "لـ{1} ساعات مسجلة حتى وقت لاحق من اليوم: يصحّحها المدير في شاشة «الموظفون»",
+    ckb: "{1} کاتژمێری تا دواتری ئەمڕۆ تۆمار کراوە: بەڕێوەبەرێک لە شاشەی «کارمەندان» ڕاستیان دەکاتەوە",
+  },
+  "{1} is not clocked in": { ar: "{1} غير مسجَّل الحضور", ckb: "هاتنی {1} تۆمار نەکراوە" },
+  "{1} has been clocked in for more than a day: a manager corrects the hours on Staff": {
+    ar: "{1} مسجَّل الحضور منذ أكثر من يوم: يصحّح المدير الساعات في شاشة «الموظفون»",
+    ckb: "هاتنی {1} زیاتر لە ڕۆژێکە تۆمار کراوە: بەڕێوەبەرێک کاتژمێرەکان لە شاشەی «کارمەندان» ڕاست دەکاتەوە",
+  },
+  "An advance is cancelled, not deleted": {
+    ar: "تُلغى السلفة ولا تُحذف",
+    ckb: "پێشەکی هەڵدەوەشێنرێتەوە، ناسڕدرێتەوە",
+  },
+  "An advance is not changed: cancel it and give it again": {
+    ar: "لا تُعدَّل السلفة: ألغِها وأعطِها مجددًا",
+    ckb: "پێشەکی ناگۆڕدرێت: هەڵیبوەشێنەوە و دووبارە بیدە",
+  },
+  "Say where the money came from: the till, the safe, the bank or the owner": {
+    ar: "اذكر من أين جاء المال: درج النقد أو الخزنة أو البنك أو المالك",
+    ckb: "بڵێ پارەکە لە کوێوە هات: دەخیلە، قاسە، بانک یان خاوەن",
+  },
+  "Say what the advance is for": { ar: "اذكر الغرض من السلفة", ckb: "بڵێ پێشەکییەکە بۆ چییە" },
+  "Say why the advance is cancelled": {
+    ar: "اذكر سبب إلغاء السلفة",
+    ckb: "بڵێ بۆچی پێشەکییەکە هەڵدەوەشێنرێتەوە",
+  },
+  "Advance not found": { ar: "السلفة غير موجودة", ckb: "پێشەکییەکە نەدۆزرایەوە" },
+  "This advance was cancelled already": {
+    ar: "أُلغيت هذه السلفة مسبقًا",
+    ckb: "ئەم پێشەکییە پێشتر هەڵوەشێنراوەتەوە",
+  },
+  "Some of this advance was taken back from a salary already: it cannot be cancelled": {
+    ar: "استُرد جزء من هذه السلفة من راتب مسبقًا: لا يمكن إلغاؤها",
+    ckb: "بەشێک لەم پێشەکییە پێشتر لە مووچەیەک گەڕێندراوەتەوە: ناتوانرێت هەڵبوەشێنرێتەوە",
+  },
+  "A payroll's approval is reopened, not deleted": {
+    ar: "يُعاد فتح اعتماد كشف الرواتب ولا يُحذف",
+    ckb: "پەسەندکردنی لیستی مووچە دووبارە دەکرێتەوە، ناسڕدرێتەوە",
+  },
+  "A payroll's approval is not changed: reopen the payroll": {
+    ar: "لا يُعدَّل اعتماد كشف الرواتب: أعِد فتح الكشف",
+    ckb: "پەسەندکردنی لیستی مووچە ناگۆڕدرێت: لیستەکە دووبارە بکەرەوە",
+  },
+  "Only a draft payroll changes: this one is approved": {
+    ar: "لا يتغير إلا كشف الرواتب المسودة: هذا الكشف معتمد",
+    ckb: "تەنها ڕەشنووسی لیستی مووچە دەگۆڕدرێت: ئەمە پەسەند کراوە",
+  },
+  "Choose the month": { ar: "اختر الشهر", ckb: "مانگەکە هەڵبژێرە" },
+  "Choose a month that has begun": {
+    ar: "اختر شهرًا قد بدأ",
+    ckb: "مانگێک هەڵبژێرە کە دەستی پێکردبێت",
+  },
+  "The pay for {1} is approved already": {
+    ar: "أجر {1} معتمد مسبقًا",
+    ckb: "مووچەی {1} پێشتر پەسەند کراوە",
+  },
+  "Payroll line not found": {
+    ar: "سطر كشف الرواتب غير موجود",
+    ckb: "هێڵی لیستی مووچە نەدۆزرایەوە",
+  },
+  "Enter amounts of zero or more": {
+    ar: "أدخل مبالغ تساوي الصفر أو أكثر",
+    ckb: "بڕی پارەی سفر یان زیاتر بنووسە",
+  },
+  "Say what the addition is for": { ar: "اذكر الغرض من الإضافة", ckb: "بڵێ زیادکراوەکە بۆ چییە" },
+  "Say what the deduction is for": { ar: "اذكر الغرض من الخصم", ckb: "بڵێ بڕدراوەکە بۆ چییە" },
+  "The deductions are more than {1} earned ({2})": {
+    ar: "الخصومات أكثر مما استحقه {1} ({2})",
+    ckb: "بڕدراوەکان زیاترن لەوەی {1} شایەنی بوو ({2})",
+  },
+  "{1} owes {2} of advances: take back no more than that": {
+    ar: "على {1} سلف بمبلغ {2}: لا تسترد أكثر من ذلك",
+    ckb: "{1} {2} پێشەکی قەرزارە: لەوە زیاتر مەگەڕێنەوە",
+  },
+  "Take back no more of the advances than the pay ({1})": {
+    ar: "لا تسترد من السلف أكثر من الأجر ({1})",
+    ckb: "لە پێشەکییەکان زیاتر لە مووچەکە مەگەڕێنەوە ({1})",
+  },
+  "Payroll not found": { ar: "كشف الرواتب غير موجود", ckb: "لیستی مووچە نەدۆزرایەوە" },
+  "This payroll is approved already": {
+    ar: "كشف الرواتب هذا معتمد مسبقًا",
+    ckb: "ئەم لیستی مووچەیە پێشتر پەسەند کراوە",
+  },
+  "The pay for {1} is approved once the month is over": {
+    ar: "يُعتمد أجر {1} بعد انتهاء الشهر",
+    ckb: "مووچەی {1} دوای تەواوبوونی مانگەکە پەسەند دەکرێت",
+  },
+  "Nobody worked here in {1}: there is no pay to approve": {
+    ar: "لم يعمل أحد هنا في {1}: لا أجر لاعتماده",
+    ckb: "لە {1} کەس لێرە کاری نەکرد: هیچ مووچەیەک نییە بۆ پەسەندکردن",
+  },
+  "{1} is still clocked in since {2}: clock them out or correct the hours first": {
+    ar: "ما زال {1} مسجَّل الحضور منذ {2}: سجّل انصرافه أو صحّح الساعات أولًا",
+    ckb: "هاتنی {1} هێشتا لە {2}ەوە تۆمار کراوە: سەرەتا ڕۆیشتنی تۆمار بکە یان کاتژمێرەکان ڕاست بکەرەوە",
+  },
+  "Set {1}'s pay on Staff, then draft the payroll again": {
+    ar: "حدّد أجر {1} في شاشة «الموظفون»، ثم أعدّ كشف الرواتب مجددًا",
+    ckb: "مووچەی {1} لە شاشەی «کارمەندان» دابنێ، پاشان لیستی مووچە دووبارە ئامادە بکەرەوە",
+  },
+  "The hours or the pay changed since this draft: draft it again, check it, then approve it": {
+    ar: "تغيّرت الساعات أو الأجور منذ هذه المسودة: أعدّها مجددًا وراجعها ثم اعتمدها",
+    ckb: "لەم ڕەشنووسەوە کاتژمێرەکان یان مووچەکان گۆڕاون: دووبارە ئامادەی بکەرەوە، بیپشکنە، پاشان پەسەندی بکە",
+  },
+  "Say why the payroll is reopened": {
+    ar: "اذكر سبب إعادة فتح كشف الرواتب",
+    ckb: "بڵێ بۆچی لیستی مووچە دووبارە دەکرێتەوە",
+  },
+  "This payroll is a draft already": {
+    ar: "كشف الرواتب هذا مسودة مسبقًا",
+    ckb: "ئەم لیستی مووچەیە پێشتر ڕەشنووسە",
+  },
+  "Salaries were paid from this payroll: cancel the payments first": {
+    ar: "دُفعت رواتب من هذا الكشف: ألغِ الدفعات أولًا",
+    ckb: "مووچە لەم لیستە دراوە: سەرەتا پارەدانەکان هەڵبوەشێنەوە",
+  },
+  "A salary payment is cancelled, not deleted": {
+    ar: "تُلغى دفعة الراتب ولا تُحذف",
+    ckb: "پارەدانی مووچە هەڵدەوەشێنرێتەوە، ناسڕدرێتەوە",
+  },
+  "A salary payment is not changed: cancel it and pay again": {
+    ar: "لا تُعدَّل دفعة الراتب: ألغِها وادفع مجددًا",
+    ckb: "پارەدانی مووچە ناگۆڕدرێت: هەڵیبوەشێنەوە و دووبارە بیدە",
+  },
+  "Approve the payroll first": {
+    ar: "اعتمد كشف الرواتب أولًا",
+    ckb: "سەرەتا لیستی مووچە پەسەند بکە",
+  },
+  "{1} is paid in full already": {
+    ar: "دُفع لـ{1} كامل المستحق مسبقًا",
+    ckb: "مووچەی {1} پێشتر بە تەواوی دراوە",
+  },
+  "That is more than is owed to {1} ({2})": {
+    ar: "هذا أكثر من المستحق لـ{1} ({2})",
+    ckb: "ئەمە زیاترە لەوەی بە {1} قەرزارین ({2})",
+  },
+  "Everyone is paid in full already": {
+    ar: "دُفع للجميع كامل المستحق مسبقًا",
+    ckb: "مووچەی هەمووان پێشتر بە تەواوی دراوە",
+  },
+  "Say why the payment is cancelled": {
+    ar: "اذكر سبب إلغاء الدفعة",
+    ckb: "بڵێ بۆچی پارەدانەکە هەڵدەوەشێنرێتەوە",
+  },
+  "Salary payment not found": { ar: "دفعة الراتب غير موجودة", ckb: "پارەدانی مووچە نەدۆزرایەوە" },
+  "This payment was cancelled already": {
+    ar: "أُلغيت هذه الدفعة مسبقًا",
+    ckb: "ئەم پارەدانە پێشتر هەڵوەشێنراوەتەوە",
+  },
+  "Choose up to a year": {
+    ar: "اختر مدة لا تتجاوز سنة",
+    ckb: "ماوەیەک هەڵبژێرە کە لە ساڵێک زیاتر نەبێت",
+  },
+  "An approved payroll with no journal": {
+    ar: "كشف رواتب معتمد بلا قيد",
+    ckb: "لیستێکی مووچەی پەسەندکراو بێ تۆمار",
+  },
+  "An advance with no journal": { ar: "سلفة بلا قيد", ckb: "پێشەکییەک بێ تۆمار" },
+  "A salary payment with no journal": { ar: "دفعة راتب بلا قيد", ckb: "پارەدانێکی مووچە بێ تۆمار" },
+  "A return to a supplier with no journal": {
+    ar: "مرتجع إلى مورّد بلا قيد",
+    ckb: "گەڕاندنەوەیەک بۆ دابینکەر بێ تۆمار",
+  },
+  "A supplier's credit with no journal": {
+    ar: "إشعار دائن من مورّد بلا قيد",
+    ckb: "پسووڵەی گەڕاندنەوەی دابینکەرێک بێ تۆمار",
+  },
+  "payroll's approval": { ar: "اعتماد كشف الرواتب", ckb: "پەسەندکردنی لیستی مووچە" },
+  "salary payment": { ar: "دفعة الراتب", ckb: "پارەدانی مووچە" },
+  "return to a supplier": { ar: "المرتجع إلى المورّد", ckb: "گەڕاندنەوەکە بۆ دابینکەر" },
+  "a payroll's approval (reopen the payroll on Payroll while nothing is paid from it)": {
+    ar: "اعتماد كشف رواتب (أعِد فتح الكشف في شاشة «الرواتب» ما دام لم يُدفع منه شيء)",
+    ckb: "پەسەندکردنی لیستێکی مووچە (لیستەکە لە شاشەی «مووچە» دووبارە بکەرەوە تا هیچی لێ نەدرابێت)",
+  },
+  "an advance to someone who works here (cancel it on Payroll)": {
+    ar: "سلفة لشخص يعمل هنا (ألغِها في شاشة «الرواتب»)",
+    ckb: "پێشەکییەک بۆ کەسێک کە لێرە کار دەکات (لە شاشەی «مووچە» هەڵیبوەشێنەوە)",
+  },
+  "a salary payment (cancel it on Payroll)": {
+    ar: "دفعة راتب (ألغِها في شاشة «الرواتب»)",
+    ckb: "پارەدانێکی مووچە (لە شاشەی «مووچە» هەڵیبوەشێنەوە)",
+  },
+  "a refund (refund the rest of the sale on Orders if more should go back)": {
+    ar: "استرداد (استردّ باقي البيع من شاشة «الطلبات» إن وجب ردّ المزيد)",
+    ckb: "گەڕاندنەوەی پارەیەک (ئەگەر دەبێت زیاتر بگەڕێنرێتەوە، باقی فرۆشتنەکە لە شاشەی «داواکارییەکان» بگەڕێنەوە)",
+  },
+  "the opening count of a cash session": {
+    ar: "عدّ افتتاح وردية نقد",
+    ckb: "ژماردنی کردنەوەی شیفتێکی پارە",
+  },
+  "a return to a supplier (record a credit on Vendors if more is owed back)": {
+    ar: "مرتجع إلى مورّد (سجّل إشعارًا دائنًا من شاشة «المورّدون» إن كان يُستحق ردّ المزيد)",
+    ckb: "گەڕاندنەوەیەک بۆ دابینکەر (ئەگەر زیاتر دەبێت بگەڕێنرێتەوە، لە شاشەی «دابینکەران» پسووڵەی گەڕاندنەوە تۆمار بکە)",
+  },
 };
 
 export default phrases;

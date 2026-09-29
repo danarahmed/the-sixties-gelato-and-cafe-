@@ -44,7 +44,11 @@ export default async function SettingsPage() {
           ? fmtIQD(Number(r.value))
           : d.kind === "hours"
             ? t("{n} hours", { n: String(r.value) })
-            : t(CHOICE_LABEL[String(r.value)] ?? String(r.value));
+            : d.kind === "minutes"
+              ? t("{n} minutes", { n: String(r.value) })
+              : d.kind === "day"
+                ? t("Day {n} of the month", { n: String(r.value) })
+                : t(CHOICE_LABEL[String(r.value)] ?? String(r.value));
     const others = rules.rows.filter((x) => x.key === d.key && x.scopeType !== "business").length;
     return [{ key: d.key, value, others }];
   });

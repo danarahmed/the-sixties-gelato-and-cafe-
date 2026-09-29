@@ -14,6 +14,10 @@ export const RULE_ORDER = [
   "usd_rate_max_age_hours",
   "usd_round_to",
   "po_approve_up_to",
+  "overtime_percent",
+  "late_after_minutes",
+  "clocked_in_alert_hours",
+  "payday",
 ] as const;
 export type RuleKey = (typeof RULE_ORDER)[number];
 export type ScopeType = "business" | "role" | "location" | "item_type" | "item";
@@ -29,6 +33,10 @@ export const RULE_LABEL: Record<RuleKey, string> = {
   usd_rate_max_age_hours: "A dollar rate is used for",
   usd_round_to: "Dollars are counted in dinars to the nearest",
   po_approve_up_to: "Purchase orders a manager approves, up to",
+  overtime_percent: "Overtime is paid at (% of an hour's pay)",
+  late_after_minutes: "Late, or leaving early, by more than",
+  clocked_in_alert_hours: "Someone still clocked in after",
+  payday: "Salaries are paid on the day of the month",
 };
 
 /** What each rule does: a phrase, shown through t(). */
@@ -51,6 +59,14 @@ export const RULE_HELP: Record<RuleKey, string> = {
     "Dollars handed over are worth their number times the rate, rounded to the nearest step (half-way rounds up). The change is given in dinars.",
   po_approve_up_to:
     "A purchase order is approved by an owner or manager whose limit covers its total. Set it for a role: by default a branch manager approves up to 250,000, and the owner and the general manager any order.",
+  overtime_percent:
+    "Hours beyond a person's standard hours in a day are paid at this share of their hour's pay: 150% is half as much again. Set on Staff for one person, it is theirs instead.",
+  late_after_minutes:
+    "Clocking in this long after the shift starts is late, and clocking out this long before it ends is leaving early. Both are shown on Staff and Payroll; pay is deducted only when a manager says so.",
+  clocked_in_alert_hours:
+    "Someone still clocked in after this many hours is an alert: they may have forgotten to clock out. A manager corrects the hours on Staff.",
+  payday:
+    "The day of the month salaries are due for the month before. From then, a payroll not approved or not paid is an alert, and red a week later.",
 };
 
 /** The choices of a choice rule: phrases, shown through t(). */
@@ -83,8 +99,8 @@ export const RULE_PHRASES: readonly string[] = [
 
 export interface RuleDefinition {
   key: RuleKey;
-  /** hours: how long something lasts (0043). */
-  kind: "percent" | "amount" | "choice" | "hours";
+  /** hours: how long something lasts (0043); minutes, and a day of the month (0049). */
+  kind: "percent" | "amount" | "choice" | "hours" | "minutes" | "day";
   min: number | null;
   max: number | null;
   whole: boolean;
@@ -127,6 +143,14 @@ export interface BusinessRules {
 }
 
 const isKey = (k: unknown): k is RuleKey => RULE_ORDER.includes(k as RuleKey);
+const RULE_KINDS: readonly RuleDefinition["kind"][] = [
+  "percent",
+  "amount",
+  "choice",
+  "hours",
+  "minutes",
+  "day",
+];
 const scalar = (v: unknown): number | string | null =>
   v === null || v === undefined ? null : typeof v === "number" ? v : String(v);
 
@@ -138,7 +162,9 @@ export function parseBusinessRules(raw: unknown): BusinessRules {
     const x = defs[key] ?? {};
     return {
       key,
-      kind: x.kind === "percent" || x.kind === "choice" || x.kind === "hours" ? x.kind : "amount",
+      kind: RULE_KINDS.includes(x.kind as RuleDefinition["kind"])
+        ? (x.kind as RuleDefinition["kind"])
+        : "amount",
       min: x.min == null ? null : Number(x.min),
       max: x.max == null ? null : Number(x.max),
       whole: Boolean(x.whole),

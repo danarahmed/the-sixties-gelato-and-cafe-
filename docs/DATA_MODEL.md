@@ -1250,3 +1250,51 @@ approval, wait, key)`** (`waste.record`), on the trail as `inventory.loss`.
   well above its usual counts 5310; running out counts the new kinds; losses
   waiting counted a loss at a time). `document_problems` and
   `journal_source_hint` know a loss; `legacy_unposted` never offers one.
+
+### Staff, their hours and their pay (`0049`)
+
+- **`gl_account`** gains, for every café, 1300 Employee advances and 2100
+  Salaries payable; neither takes a manual journal. **`role_permission`** gains
+  `staff.manage` and `attendance.edit` (owner, general and branch managers),
+  `payroll.view` (owner, general manager, accountant, auditor) and
+  `payroll.run` (owner, general manager, accountant). Four rules join
+  `business_rule`: `overtime_percent`, `late_after_minutes`,
+  `clocked_in_alert_hours` and `payday`, read by `staff_rule(business, key)`.
+- **`employee`**: the branch they work at, name (unique per café, ignoring
+  case), phone, title, the days they started and left, pay basis and rate (both
+  or neither), standard hours a day, their own overtime percentage, an optional
+  login (one person each), and the clock PIN's hash with when it was set. Those
+  without `payroll.view` read no rate and no PIN: the column grant leaves them
+  out. **`clock_attempt`** keeps every PIN typed at the till: whose, from which
+  login, right or wrong.
+- **`shift_schedule`**: one a person a day (employee, branch, day, start and
+  end, at most a day long, a note). **`attendance`**: in and out, the day it
+  counts for, from the till or a manager, who recorded, corrected and cancelled
+  it and why; one open at a time per person, never deleted, a cancelled one
+  never changed.
+- **`employee_advance`**: amount, where it was paid from, why, the day, its
+  journal, and its cancellation (the only thing that changes).
+- **`payroll_run`** (a number, a month, draft → approved → paid, one per month,
+  never deleted), **`payroll_line`** (a person's pay and hours as drafted, what
+  was added and deducted with why, the advance taken back, gross and to be
+  paid; changes only while the run is a draft) and **`payroll_approval`** (each
+  approval with its own journal, and its reopening with why and the reversal).
+  **`salary_payment`** and **`salary_payment_line`**: one payment, to one or
+  many, with its journal and its cancellation.
+- **Functions:** `save_employee`, `set_employee_pay` (`payroll.run`),
+  `set_employee_left`, `set_clock_pin`, `staff_list()`; `save_schedule`,
+  `staff_schedule(from, to, location)`; `clock_board`, `clock_in`,
+  `clock_out` (`sale.create`, `staff.manage` or `attendance.edit`, answering
+  `{ok, error}`); `correct_attendance`, `add_attendance`, `cancel_attendance`
+  (`attendance.edit`), `attendance_list(from, to, employee)`;
+  `record_advance`, `cancel_advance`, `employee_advances()`; `draft_payroll`,
+  `adjust_payroll_line`, `approve_payroll`, `reopen_payroll`, `pay_salary`,
+  `pay_payroll`, `cancel_salary_payment`, `payroll_runs()`,
+  `payroll_detail(run)`; `report_staff(from, to)`. Every write takes a key;
+  the trail's rows are `staff.*`, `attendance.*` and `payroll.*`, those about
+  pay hidden from whoever does not see payroll.
+- **The books:** `reconciliation_checks` adds `payroll` (salaries owed against 2100) and `advances` (against 1300), and the safe counts advances and
+  salaries paid from it; `period_close_checklist` warns (without blocking) when
+  the month's payroll is not approved; `document_problems` and
+  `journal_source_hint` know an approval, an advance and a salary payment. The
+  alerts add `clocked_in_long` and `payroll_due`.

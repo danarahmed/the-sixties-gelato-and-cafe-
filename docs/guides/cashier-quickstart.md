@@ -24,6 +24,8 @@ app's menu. Along the top:
   the customer, and the money is still to come.
 - **🔒 Open the drawer** or **🔓 Session 12**: the cash drawer, closed or
   open (on a phone, the lock alone). See [The drawer](#the-drawer).
+- **🕐** clocks you in and out (see
+  [Clocking in and out](#clocking-in-and-out)).
 - **🖨** sets how this till prints (see [Printing](#printing)); a green dot on
   it means it prints by itself. **⛶** makes the browser full screen.
 
@@ -41,6 +43,26 @@ by, and the one on the barista's ticket.
   match.
 - A number on a tile is how many are already in the order. A product sold in
   several sizes asks which one.
+
+## Clocking in and out
+
+Everyone who works here clocks in when they start and out when they leave, on
+any till at their branch, with **their name and their own PIN** (a manager
+sets it with you on **Staff**; you type it yourself, twice).
+
+1. Tap **🕐** at the top of the till. Everyone who works here today is listed:
+   those already in (highlighted) with the time they came in, the others with
+   their shift today.
+2. Tap **your name**, type **your PIN**, and tap **Clock in** (or **Clock
+   out**, when you are in).
+3. The till says the time it recorded, how late you were against your shift,
+   or, on the way out, the hours you worked today.
+
+A wrong PIN is refused and counted: after three from one till in 15 minutes the
+till waits 15 minutes, and after twenty for one person in a day, clocking by PIN
+stops for them until a manager sets a new PIN. **Never clock in for someone
+else.** Forgot to clock in or out? Tell a manager: they correct the hours on
+**Staff**, with the reason.
 
 ## The drawer
 
@@ -301,7 +323,8 @@ Recorded the wrong thing? Tell a manager: they cancel the batch, with the reason
 
 ## End of the day
 
-Close the drawer, counted (see [The drawer](#the-drawer)). A bill still open
+Close the drawer, counted (see [The drawer](#the-drawer)), and clock out (see
+[Clocking in and out](#clocking-in-and-out)). A bill still open
 is paid in the next session; one that will not be paid is cancelled by a
 manager, with the reason.
 

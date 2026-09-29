@@ -11,7 +11,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * Accounts a supplier's credit other than for goods may not be taken off (0044,
- * the database refuses the same): cash, the card's and the bank's, and stock.
+ * the database refuses the same): cash, the card's and the bank's, stock, the
+ * losses taken from stock (0048), and the advances given on pay (0049).
  * A credit may come off the price variance (5050), which a bill may not.
  */
 const NOT_FOR_CREDITS = new Set([
@@ -23,14 +24,17 @@ const NOT_FOR_CREDITS = new Set([
   "1020",
   "1100",
   "1200",
+  "1300",
   "5000",
   "5300",
+  "5310",
   "5400",
 ]);
 
 /**
  * Accounts a non-stock bill may not be charged to (the database refuses the
- * same list): cash, in dinars and dollars, the card's and the bank's, and stock.
+ * same list): cash, in dinars and dollars, the card's and the bank's, stock,
+ * the losses taken from stock (0048), and the advances given on pay (0049).
  */
 const NOT_FOR_BILLS = new Set([
   "1000",
@@ -41,9 +45,11 @@ const NOT_FOR_BILLS = new Set([
   "1020",
   "1100",
   "1200",
+  "1300",
   "5000",
   "5050",
   "5300",
+  "5310",
   "5400",
 ]);
 
