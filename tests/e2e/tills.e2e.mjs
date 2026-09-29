@@ -250,6 +250,39 @@ console.log("▸ the books by place: each place's profit and loss, side by side 
   );
   await ctx.close();
 }
+console.log("▸ every report at a place (0057)");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/reports");
+  const choice = page.getByTestId("reports-place");
+  check(
+    (await choice.locator("option").allTextContents()).join("|") ===
+      "The whole café|Main Branch|Central Kitchen|Second Branch",
+    "the owner reads the whole café's reports, or chooses one place",
+  );
+  await choice.selectOption(second);
+  await Promise.all([
+    page.waitForURL(/place=/),
+    page.getByRole("button", { name: "Show" }).click(),
+  ]);
+  await page.waitForLoadState("networkidle");
+  const secondSales = Number(
+    last(`select coalesce(sum(net_amount), 0) from sales_order
+           where location_id = '${second}' and status not in ('voided', 'open')
+             and business_local_date(business_id, placed_at) >= date_trunc('month', ${TODAY})::date`),
+  );
+  check(
+    (await page.getByTestId("reports-at").textContent())?.includes("Second Branch") &&
+      (await page.locator("#pnl h3").textContent())?.trim() === "Profit & Loss at Second Branch" &&
+      (await page.getByTestId("pnl-places").count()) === 0,
+    "chosen, the second branch's reports and its profit and loss",
+  );
+  check(
+    (await page.locator("#channel").textContent()).includes(secondSales.toLocaleString("en-US")),
+    `its sales by channel are its own, ${secondSales.toLocaleString("en-US")}`,
+  );
+  await ctx.close();
+}
 sql(`update user_role set location_id = '${main}'
       where app_user_id = (select id from app_user where email = 'manager@example.com')`);
 {
@@ -257,8 +290,16 @@ sql(`update user_role set location_id = '${main}'
   await open(page, "/reports");
   check(
     (await page.locator("#pnl h3").textContent())?.trim() === "Profit & Loss at Main Branch" &&
-      (await page.getByTestId("pnl-places").count()) === 0,
-    "the first branch's manager reads the first branch's profit and loss, and no other place's",
+      (await page.getByTestId("pnl-places").count()) === 0 &&
+      (await page.getByTestId("reports-place").count()) === 0 &&
+      (await page.getByTestId("reports-at").textContent())?.includes("Main Branch"),
+    "the first branch's manager reads the first branch's reports, and chooses no other place",
+  );
+  await open(page, "/dashboard");
+  check(
+    (await page.getByTestId("dashboard-at").textContent())?.includes("Main Branch") &&
+      (await page.getByText("Stock at Main Branch").count()) === 1,
+    "and the dashboard is the first branch's day",
   );
   await ctx.close();
 }

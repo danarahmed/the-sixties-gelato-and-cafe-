@@ -27,9 +27,16 @@ export async function getCustomer(id: string): Promise<CustomerDetail | null> {
   return customerDetailFrom(one(r, "the customer"));
 }
 
-export async function getCustomerReport(from: string, to: string): Promise<CustomerReport> {
+export async function getCustomerReport(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<CustomerReport> {
   const c = await db();
   return customerReportFrom(
-    one(await c.rpc("report_customers", { p_from: from, p_to: to }), "the loyalty report"),
+    one(
+      await c.rpc("report_customers", { p_from: from, p_to: to, p_location: place }),
+      "the loyalty report",
+    ),
   );
 }

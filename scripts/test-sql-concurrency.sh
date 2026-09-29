@@ -407,6 +407,9 @@ ok "$(grep -l "was cancelled already" "$WORK"/*.out | wc -l | tr -d ' ')" "9" "a
 
 # 0055 — ten tills at two branches sell at once, five at each: each branch
 # gives out its own numbers, from 1 at the new one, none twice and none skipped.
+# Each till draws its turn once, in a subquery of its own: drawn in the WHERE
+# clause itself, nextval ran for each place compared, and tills drawing in
+# between could make one till's lookup match both branches.
 sql "insert into location (business_id, kind, name) values ('00000000-0000-0000-0000-0000000000b1', 'branch', 'Race Branch');
      create sequence race_till; grant usage on sequence race_till to authenticated;
      select test.act_as('owner@example.com');
@@ -416,7 +419,7 @@ sql "insert into location (business_id, kind, name) values ('00000000-0000-0000-
 race 10 cashier@example.com "select record_sale(gen_random_uuid(), 'dine_in', 'card',
   '[{\"variant_id\":\"d1000000-0000-0000-0000-000000000001\",\"qty\":1}]',
   p_location => (select id from location
-                  where name = case when nextval('race_till') % 2 = 0 then 'Race Branch' else 'Main Branch' end))"
+                  where name = (select case when nextval('race_till') % 2 = 0 then 'Race Branch' else 'Main Branch' end)))"
 ok "$(grep -l '"order_id"' "$WORK"/*.out | wc -l | tr -d ' ')" "10" "ten tills at two branches all sell"
 { grep -h ERROR "$WORK"/*.out || true; } | sort | uniq -c | sed 's/^/      /'
 ok "$(sql "select count(*) || ' ' || (count(distinct turn_no) = count(*) and max(turn_no) = count(*)) from sales_order

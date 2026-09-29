@@ -652,8 +652,16 @@ Release AB:
   is approved (kept with the approval, so one reopened keeps each approval's
   own). What did not arrive of a transfer is the loss of the place that sent
   it. The bank's card fees and journals by hand are shared, no one place's.
-- **Someone who works at one place reads that place's profit and loss.** The
-  other reports stay the café's until the fourth step.
+- **Someone who works at one place reads that place's profit and loss**
+  (`0056`), and since the fourth step (`0057`) every report, the sales
+  analysis, the stock's value, the usage against the recipes and the
+  dashboard at their place. What is the café's as a whole stays the café's:
+  the books' checks, the statements, the journals, the payables, the menu's
+  costing, the dollar rates and the safe, the customers, and the daily brief.
+- **Every report at a place** (`0057`): each report that reads what was
+  recorded at a place takes one (none: the café's), and the reports that
+  already took one keep their bodies under their release's name, read
+  through the one-place rule.
 - **Found on the way:** a year-end close reversed by hand was left in the
   profit and loss (only the close itself was left out), counting the year
   again. `0056` leaves out both, there, on the dashboard and in the brief.

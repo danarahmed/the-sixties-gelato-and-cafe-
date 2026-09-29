@@ -50,7 +50,7 @@ honest, not by building a queue.
    branch, each device doing its stock work at its own place (`0054`), and the
    kitchen planning by what it sends; tills at each branch, who works where,
    turn numbers and prices by branch (`0055`); each place's profit and loss
-   (`0056`). Next: a place to narrow every other report to.
+   (`0056`), and every report read by place (`0057`).
 4. **Every screen in Arabic and Kurdish, and languages the owner adds (L-06),
    next.** The owner asked for the whole system, every detail, in Arabic and
    Kurdish, and for more languages to be added. The navigation, the till, the

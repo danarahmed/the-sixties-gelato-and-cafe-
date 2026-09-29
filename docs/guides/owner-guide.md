@@ -652,6 +652,12 @@ discount, why and who approved it. The 10% is a business setting (shown on
    and the payroll by where each person works. **Shared** is what belongs to no
    one place: the bank's card fees and journals by hand. The columns add up to
    the café's total.
+6. **Place** on Reports (`0057`) reads every report for one place: its sales
+   and payments, its losses, what came in and went back, its orders and
+   batches, its dollars, its staff and its customers' sales. Someone who works
+   at one place, a branch manager say, reads only theirs, and their
+   Dashboard is their place's day. The books' checks, the statements, the
+   journals, the payables and the customers themselves stay the café's.
 
 ## Why is a number what it is?
 

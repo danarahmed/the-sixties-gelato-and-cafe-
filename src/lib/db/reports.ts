@@ -275,6 +275,8 @@ export interface Dashboard {
   inventoryValue: number;
   lowStock: number;
   negativeStock: number;
+  /** The place whose day it is, for someone who works at one (0057); none: the café's. */
+  location: string | null;
 }
 
 export async function getDashboard(day: string): Promise<Dashboard> {
@@ -290,6 +292,7 @@ export async function getDashboard(day: string): Promise<Dashboard> {
     inventoryValue: num(d.inventory_value),
     lowStock: num(d.low_stock),
     negativeStock: num(d.negative_stock),
+    location: strOrNull(d.location),
   };
 }
 
@@ -419,10 +422,14 @@ export interface UncostedSale {
   reasons: string;
 }
 
-export async function getUncostedSales(from: string, to: string): Promise<UncostedSale[]> {
+export async function getUncostedSales(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<UncostedSale[]> {
   const c = await db();
   return rows(
-    await c.rpc("report_uncosted_sales", { p_from: from, p_to: to }),
+    await c.rpc("report_uncosted_sales", { p_from: from, p_to: to, p_location: place }),
     "uncosted sales",
   ).map((r: Record<string, unknown>) => ({
     orderId: str(r.order_id),
@@ -600,13 +607,16 @@ export async function getExceptions(
   from: string,
   to: string,
   max = 20_000,
+  place: string | null = null,
 ): Promise<ExceptionRow[]> {
   const c = await db();
   const out: ExceptionRow[] = [];
   for (let start = 0; start < max; start += LINES_PAGE) {
     const size = Math.min(LINES_PAGE, max - start);
     const page = rows(
-      await c.rpc("report_exceptions", { p_from: from, p_to: to }).range(start, start + size - 1),
+      await c
+        .rpc("report_exceptions", { p_from: from, p_to: to, p_location: place })
+        .range(start, start + size - 1),
       "the exceptions",
     ).map((r: Record<string, unknown>) => ({
       at: str(r.at),
@@ -643,10 +653,14 @@ export interface SizeAddonRow {
   offered: number | null;
 }
 
-export async function getSizesAndAddons(from: string, to: string): Promise<SizeAddonRow[]> {
+export async function getSizesAndAddons(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<SizeAddonRow[]> {
   const c = await db();
   return rows(
-    await c.rpc("report_sizes_and_addons", { p_from: from, p_to: to }),
+    await c.rpc("report_sizes_and_addons", { p_from: from, p_to: to, p_location: place }),
     "sizes and add-ons",
   ).map((r: Record<string, unknown>) => ({
     kind: str(r.kind) === "addon" ? "addon" : "size",
@@ -674,25 +688,37 @@ export interface PaymentMethodRow {
   net: number;
 }
 
-export async function getPaymentTakings(from: string, to: string): Promise<PaymentMethodRow[]> {
+export async function getPaymentTakings(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<PaymentMethodRow[]> {
   const c = await db();
-  return rows(await c.rpc("report_payments", { p_from: from, p_to: to }), "takings by payment").map(
-    (r: Record<string, unknown>) => ({
-      method: str(r.method),
-      sales: num(r.sales),
-      splitSales: num(r.split_sales),
-      taken: num(r.taken),
-      changeGiven: num(r.change_given),
-      refunded: num(r.refunded),
-      net: num(r.net),
-    }),
-  );
+  return rows(
+    await c.rpc("report_payments", { p_from: from, p_to: to, p_location: place }),
+    "takings by payment",
+  ).map((r: Record<string, unknown>) => ({
+    method: str(r.method),
+    sales: num(r.sales),
+    splitSales: num(r.split_sales),
+    taken: num(r.taken),
+    changeGiven: num(r.change_given),
+    refunded: num(r.refunded),
+    net: num(r.net),
+  }));
 }
 
 /** What was lost in the dates (0048): by kind and account, item, person and day, and each loss. */
-export async function getLossReport(from: string, to: string): Promise<LossReport> {
+export async function getLossReport(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<LossReport> {
   const c = await db();
   return lossReportFrom(
-    one(await c.rpc("report_losses", { p_from: from, p_to: to }), "what was lost"),
+    one(
+      await c.rpc("report_losses", { p_from: from, p_to: to, p_location: place }),
+      "what was lost",
+    ),
   );
 }

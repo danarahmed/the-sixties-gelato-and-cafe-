@@ -7,13 +7,13 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0056` and the rebuilt app. The SQL
-  checks (57, with the rehearsals of the upgrade, the clean start and clearing
+- **Built and verified:** migrations `0014`–`0057` and the rebuilt app. The SQL
+  checks (58, with the rehearsals of the upgrade, the clean start and clearing
   the test records), the browser suites (33, every role, every screen in
   Arabic and Kurdish, a lost answer on each kind of screen, every report on A4
   paper, documents kept with the records, stock sent between the café's
-  places, the tills at each branch and the books by place), the unit and
-  contract tests (505) and a production build all pass.
+  places, the tills at each branch, the books by place and every report at a
+  place), the unit and contract tests (505) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -1452,6 +1452,40 @@ browser tests through the real app, or both.
     café's total; the first branch's manager reading only theirs; Arabic and
     Kurdish;
   - unit tests, and every new text in Arabic and Kurdish.
+
+- **Every report at a place (release AB, fourth part, migration `0057`).**
+  Only the profit and loss was read by place.
+  - **Reports → Place** (with more than one place, for those who work
+    everywhere): every report on the page for **The whole café** or one of
+    its places, its name by the title: the day's sales, the payments, the
+    sizes and add-ons, the exceptions, the sales costed at nothing, the
+    losses, what came in and went back, purchasing, production, the dollars
+    at the place's tills, its staff and its share of the payroll, and its
+    customers' sales and points. The links to the sales analysis and the
+    stock's value, and the CSVs, keep the place.
+  - **The stock's value on a day** for one place, its stock alone.
+  - **Someone who works at one place** reads their place's, whichever they
+    ask for, on every report, the sales analysis, the stock's value and the
+    usage against the recipes; their **Dashboard** is their place's day.
+  - What is the café's as a whole stays the café's: the books' checks, the
+    statements, the journals, the payables, the menu's costing, the dollar
+    rates and the safe, the customers themselves and the daily brief.
+
+  Built and tested:
+  - a new SQL suite: two branches and the kitchen trading, a void, a
+    discount and a refund, a delivery and its return, a batch, a spill, an
+    order, a person at each branch with their hours; each report read for
+    each place and for the café; the second branch's manager reading only
+    theirs and refused the first's, on the reports, the analysis, the stock's
+    value and the dashboard;
+  - the browser: the owner choosing the second branch and reading its
+    reports, its profit and loss and its own sales by channel; the first
+    branch's manager reading theirs, with no place to choose, and their
+    dashboard the first branch's day;
+  - a race in the SQL checks mended: ten tills at two branches, each drawing
+    its branch once (drawn in the lookup itself, two tills drawing in turn
+    could match both);
+  - every new text in Arabic and Kurdish.
 
 ## The August 2026 audit, finding by finding
 

@@ -41,6 +41,9 @@ export async function GET(request: NextRequest) {
   const from = parseDay(q.get("from") ?? undefined, monthStart(today));
   const to = parseDay(q.get("to") ?? undefined, today);
   const report = q.get("report");
+  // A place's reports (0057); the database gives someone at one place theirs.
+  const askedPlace = q.get("place");
+  const place = askedPlace && /^[0-9a-f-]{36}$/i.test(askedPlace) ? askedPlace : null;
 
   let body: string;
   let name: string;
@@ -53,7 +56,7 @@ export async function GET(request: NextRequest) {
       );
       name = `trial-balance_${from}_${to}.csv`;
     } else if (report === "pnl") {
-      const rows = await getProfitAndLoss(from, to);
+      const rows = await getProfitAndLoss(from, to, place);
       body = csv(
         ["code", "account", "section", "amount"],
         rows.map((r) => [r.code, r.name, r.section, r.amount]),
@@ -164,7 +167,7 @@ export async function GET(request: NextRequest) {
     } else if (report === "exceptions") {
       // Voids, refunds, discounts, cancelled bills, lines taken off and wrong
       // PINs, by person (0028); report_exceptions checks audit.view itself.
-      const rows = await getExceptions(from, to, 1_000_000);
+      const rows = await getExceptions(from, to, 1_000_000, place);
       const tz = s.profile.timezone;
       body = csv(
         [
@@ -282,7 +285,7 @@ export async function GET(request: NextRequest) {
     } else if (report === "stock_value") {
       // The stock's value at the end of a day (0051), item by item.
       const on = parseDay(q.get("on") ?? undefined, today);
-      const v = await getStockValue(on, null);
+      const v = await getStockValue(on, place);
       body = csv(
         ["item", "type", "unit", "qty", "unit_cost", "value"],
         v.items.map((i) => [i.name, i.type, i.unit, i.qty, i.unitCost ?? "", i.value]),
@@ -290,7 +293,7 @@ export async function GET(request: NextRequest) {
       name = `stock-value_${on}.csv`;
     } else if (report === "purchases") {
       // What came in, by supplier then by item (0051).
-      const b = await getPurchases(from, to);
+      const b = await getPurchases(from, to, place);
       body = csv(
         [
           "kind",

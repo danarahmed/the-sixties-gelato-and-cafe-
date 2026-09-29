@@ -110,6 +110,10 @@ Count**; the purchasing role on **Reports**.
 **Location:** Sidebar → **Dashboard** · `/dashboard` · **Who:** owner, general
 manager, branch manager, accountant, auditor
 
+Someone who works at one place reads their place's day, with its name by the
+title (`0057`): its sales and their costs, its orders, **Stock at** their
+place, and its items low or below zero.
+
 **Needs you** comes first (`0029`): what the alert rules find in the books
 each time the page opens.
 
@@ -1144,6 +1148,10 @@ who sees costs; locking: accountant, general manager, owner; reopening: owner
 the P&L: owner, managers, accountant, auditor
 
 Choose **From** and **To**, or **This month**, **Last month**, **This year**.
+With more than one place, **Place** reads every report on the page for **The
+whole café** or one of its places (`0057`), its name by the title; the links
+to the analysis and the stock's value, and the CSVs, keep it. Someone who
+works at one place reads theirs and chooses no other.
 **Every journal line (CSV)** downloads the whole ledger for those dates, for the
 accountant's own tools. Two pages open from the top (`0051`):
 
@@ -1161,7 +1169,8 @@ accountant's own tools. Two pages open from the top (`0051`):
 - **Stock value on a day** (`/reports/stock`): every item's stock and value
   when the day ended, from the stock ledger, beside what 1200 Inventory held
   then (**They agree** when the books tie), by kind and item by item, with
-  **CSV**.
+  **CSV**. Read for one place (`0057`), it is that place's stock alone: 1200
+  is the café's, so it stands beside the café's stock only.
 - **Balance sheet and cash flow** (`/reports/statements`, for those who see
   profit, `0052`): what the café owned and owed at the end of the day before
   the dates and at their end, side by side (the cash, the rest of the current

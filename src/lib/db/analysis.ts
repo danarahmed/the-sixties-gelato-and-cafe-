@@ -54,9 +54,16 @@ export async function getStockValue(asOf: string, location: string | null): Prom
   );
 }
 
-export async function getPurchases(from: string, to: string): Promise<Purchases> {
+export async function getPurchases(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<Purchases> {
   const c = await db();
   return purchasesFrom(
-    one(await c.rpc("report_purchases", { p_from: from, p_to: to }), "what was bought"),
+    one(
+      await c.rpc("report_purchases", { p_from: from, p_to: to, p_location: place }),
+      "what was bought",
+    ),
   );
 }

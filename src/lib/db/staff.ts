@@ -87,9 +87,15 @@ export async function getAdvances(): Promise<{
   return advancesFrom(one(await c.rpc("employee_advances", { p_employee: null }), "the advances"));
 }
 
-export async function getStaffReport(from: string, to: string): Promise<StaffReport> {
+export async function getStaffReport(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<StaffReport> {
   const c = await db();
-  return staffReportFrom(one(await c.rpc("report_staff", { p_from: from, p_to: to }), "the hours"));
+  return staffReportFrom(
+    one(await c.rpc("report_staff", { p_from: from, p_to: to, p_location: place }), "the hours"),
+  );
 }
 
 /** The café's logins, to link to someone who works here. */
