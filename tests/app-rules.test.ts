@@ -261,6 +261,15 @@ import {
   salesAnalysisFrom,
   stockValueFrom,
 } from "@/lib/analysis";
+import {
+  balanceRows,
+  balanceSheetFrom,
+  CASH_FLOW_LINES,
+  CASH_FLOW_SECTIONS,
+  cashFlowFrom,
+  cashFlowLabel,
+  STATEMENT_PHRASES,
+} from "@/lib/statements";
 
 const perms = (role: Role) => [...ROLE_PERMISSIONS[role]];
 
@@ -4250,6 +4259,151 @@ describe("the sales analysis, the stock's value on a day and what was bought (00
       const words = builtInWords(locale);
       expect(
         ANALYSIS_PHRASES.filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
+  });
+});
+
+describe("the balance sheet and the cash flow (0052, release Z)", () => {
+  const sheet = (asOf: string, lines: [string, string, number][], extra = {}) =>
+    balanceSheetFrom({
+      as_of: asOf,
+      year_from: "2026-01-01",
+      lines: lines.map(([code, group, amount]) => ({
+        code,
+        name: `Account ${code}`,
+        section: group === "liability" || group === "equity" ? group : "asset",
+        group,
+        amount,
+      })),
+      ...extra,
+    });
+
+  it("reads the balance sheet as the database gives it", () => {
+    const b = sheet("2026-09-29", [["1000", "cash", 4200]], {
+      cash: "4200",
+      current_assets: 4200,
+      fixed_assets: 150000,
+      assets: 154200,
+      liabilities: 8000,
+      equity: 151000,
+      profit_this_year: -5560,
+      profit_earlier: 760,
+      equity_total: 146200,
+      liabilities_and_equity: 154200,
+      difference: 0,
+    });
+    expect(b.asOf).toBe("2026-09-29");
+    expect(b.lines[0]).toEqual({
+      code: "1000",
+      name: "Account 1000",
+      section: "asset",
+      group: "cash",
+      amount: 4200,
+    });
+    expect(b).toMatchObject({
+      cash: 4200,
+      assets: 154200,
+      profitThisYear: -5560,
+      profitEarlier: 760,
+    });
+    expect(b.difference).toBe(0);
+    // A group it does not know it reads as a current asset; nothing, as nothing.
+    expect(
+      balanceSheetFrom({ lines: [{ code: "1999", group: "odd", amount: 5 }] }).lines[0]?.group,
+    ).toBe("current");
+    expect(balanceSheetFrom(null)).toMatchObject({ lines: [], assets: 0, difference: 0 });
+  });
+
+  it("sets the two balance sheets side by side, account by account", () => {
+    const start = sheet("2026-08-31", [
+      ["1020", "cash", 402940],
+      ["1005", "cash", 50000],
+      ["3000", "equity", 450000],
+    ]);
+    const end = sheet("2026-09-29", [
+      ["1000", "cash", 4200],
+      ["1005", "cash", 6500],
+      ["1020", "cash", 242940],
+      ["1500", "fixed", 150000],
+      ["2000", "liability", 8000],
+      ["3000", "equity", 471000],
+      ["3200", "equity", -20000],
+    ]);
+    const rows = balanceRows(start, end);
+    expect(rows.cash).toEqual([
+      { code: "1000", name: "Account 1000", start: 0, end: 4200 },
+      { code: "1005", name: "Account 1005", start: 50000, end: 6500 },
+      { code: "1020", name: "Account 1020", start: 402940, end: 242940 },
+    ]);
+    expect(rows.fixed).toEqual([{ code: "1500", name: "Account 1500", start: 0, end: 150000 }]);
+    expect(rows.liability.map((r) => [r.code, r.start, r.end])).toEqual([["2000", 0, 8000]]);
+    expect(rows.equity.map((r) => [r.code, r.start, r.end])).toEqual([
+      ["3000", 450000, 471000],
+      ["3200", 0, -20000],
+    ]);
+    expect(rows.current).toEqual([]);
+  });
+
+  it("reads the cash flow as the database gives it", () => {
+    const f = cashFlowFrom({
+      from: "2026-09-29",
+      to: "2026-09-29",
+      cash: [{ code: "1000", name: "Cash in the till", opening: 0, closing: 4200 }],
+      opening: 452940,
+      closing: 253640,
+      lines: [
+        {
+          line: "sales",
+          section: "operating",
+          amount: 7000,
+          in: 9500,
+          out: "2500",
+          journals: 4,
+          accounts: [{ code: "4000", name: "Sales revenue", amount: 12500 }],
+        },
+      ],
+      operating: -29500,
+      investing: -150000,
+      financing: -20000,
+      exchange: 200,
+      net: -199300,
+      difference: 0,
+    });
+    expect(f.lines[0]).toMatchObject({ line: "sales", amount: 7000, cameIn: 9500, wentOut: 2500 });
+    expect(f.lines[0]?.accounts[0]).toEqual({ code: "4000", name: "Sales revenue", amount: 12500 });
+    expect(f.cash[0]).toMatchObject({ opening: 0, closing: 4200 });
+    expect(f.opening + f.net).toBe(f.closing);
+    expect(f.operating + f.investing + f.financing + f.exchange).toBe(f.net);
+    expect(cashFlowFrom(undefined)).toMatchObject({ lines: [], opening: 0, net: 0 });
+  });
+
+  it("names every line of the cash flow, each in its section", () => {
+    expect(cashFlowLabel("sales")).toEqual({ text: "Received from sales", phrase: true });
+    expect(cashFlowLabel("owner").text).toBe("The owner's money in and out");
+    // A line the database adds later shows by its key until it has words.
+    expect(cashFlowLabel("loans")).toEqual({ text: "loans", phrase: false });
+    const sections = CASH_FLOW_SECTIONS.map((s) => s.key);
+    expect(sections).toEqual(["operating", "investing", "financing", "exchange"]);
+    expect(CASH_FLOW_LINES.every((l) => sections.includes(l.section))).toBe(true);
+    expect(CASH_FLOW_LINES.map((l) => l.key)).toEqual([
+      "sales",
+      "stock",
+      "staff",
+      "running",
+      "counts",
+      "equipment",
+      "owner",
+      "exchange",
+    ]);
+  });
+
+  it("has every word of the statements in Arabic and Kurdish", () => {
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        STATEMENT_PHRASES.filter((p) => !words[p]),
         locale,
       ).toEqual([]);
     }
