@@ -34,7 +34,10 @@ export function sql(query) {
 export async function signIn(browser, who, options = {}) {
   const ctx = await browser.newContext(options);
   const page = await ctx.newPage();
-  page.on("pageerror", (e) => check(false, `${who}: browser error ${e.message}`));
+  // The page it happened on, for an error that comes and goes.
+  page.on("pageerror", (e) =>
+    check(false, `${who}: browser error on ${new URL(page.url()).pathname}: ${e.message}`),
+  );
   await page.goto(`${BASE}/login`);
   await page.fill('input[name="email"]', `${who}@example.com`);
   await page.fill('input[name="password"]', PASSWORD);
