@@ -163,7 +163,7 @@ export default async function AuditPage({
                     <td>{e.by ?? <span className="badge warn">{t("No one signed in")}</span>}</td>
                     <td>{t(e.label)}</td>
                     <td>{subjectIn(e.subject, e.action, t, msg)}</td>
-                    <td style={{ fontSize: ".84rem" }}>
+                    <td className="changes" style={{ fontSize: ".84rem" }}>
                       {e.changes.length === 0 ? (
                         <span className="muted">—</span>
                       ) : (

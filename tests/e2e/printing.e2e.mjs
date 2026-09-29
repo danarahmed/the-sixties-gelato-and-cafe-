@@ -49,6 +49,42 @@ console.log("▸ every report screen can be printed");
   await ctx.close();
 }
 
+console.log("▸ on A4, every report fits the width of the paper, in each language");
+{
+  // A4 upright is 210 mm; less the 10 mm margins, 190 mm: 718 px at 96 a inch.
+  const { ctx, page } = await signIn(browser, "owner");
+  await page.setViewportSize({ width: 718, height: 1000 });
+  const cut = [];
+  for (const [locale, path] of ["en", "ar", "ckb"].flatMap((l) => REPORTS.map((p) => [l, p]))) {
+    await ctx.addCookies([{ name: "locale", value: locale, url: BASE }]);
+    await open(page, path);
+    await page.evaluate(() => document.documentElement.classList.add("printing-report"));
+    await page.emulateMedia({ media: "print" });
+    const past = await page.evaluate(() => {
+      const edge = document.documentElement.clientWidth;
+      const out = [];
+      if (document.documentElement.scrollWidth > edge + 1)
+        out.push(`the page ${document.documentElement.scrollWidth}px`);
+      for (const t of document.querySelectorAll("table")) {
+        const r = t.getBoundingClientRect();
+        if (r.width > 0 && (r.right > edge + 1 || r.left < -1)) {
+          const named = t.closest("[data-testid]")?.getAttribute("data-testid") ?? "a table";
+          out.push(`${named} ${Math.round(r.width)}px`);
+        }
+      }
+      return out;
+    });
+    if (past.length) cut.push(`${path} (${locale}): ${past.join(", ")}`);
+    await page.emulateMedia({ media: "screen" });
+  }
+  check(
+    cut.length === 0,
+    `nothing runs past the edge of the paper, in English, Arabic or Kurdish` +
+      (cut.length ? `: ${cut.join("; ")}` : ""),
+  );
+  await ctx.close();
+}
+
 console.log("▸ the balance sheet and cash flow, on paper");
 {
   const { ctx, page } = await signIn(browser, "owner");

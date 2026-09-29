@@ -1090,6 +1090,14 @@ accountant's own tools. Two pages open from the top (`0051`):
   the start and the end are the balance sheet's. Each account opens its
   journals; each statement has **CSV**.
 
+**Print or save as PDF** (release AA), at the top of every report, prints it
+as it stands on the screen, headed with the café, the report, its dates and
+when it was read, without the menu, the forms or the buttons. In the print
+window, choose **Save as PDF** to keep it as a file for the accountant or the
+bank. It is on Reports and its three pages, the trial balance (Chart of
+Accounts), the audit trail, Journals and an account's ledger, the usage
+report, an item's movements, a cash session's statement and a payroll.
+
 - **Do the books tie?** Each subledger against its control account, as at the
   **To** date, with **CSV**:
   - stock vs Inventory;
@@ -1321,4 +1329,4 @@ a person's roles allows, then the café's.
 | Sales by hour, day, date, product, category, size, add-on, person, payment, channel or branch, and a second way; CSV | `/reports/sales`                         | cost viewers                                                                          |
 | The stock's value on a day against 1200; what came in by supplier and by item                                        | `/reports/stock`, `/reports`             | cost viewers                                                                          |
 | The balance sheet at the start and the end of the dates; the cash flow between; CSV                                  | `/reports/statements`                    | profit viewers                                                                        |
-| **Not built:** offline selling, PDF, attachments                                                                     | [`LIMITATIONS.md`](LIMITATIONS.md)       | —                                                                                     |
+| **Not built:** offline selling, attachments                                                                          | [`LIMITATIONS.md`](LIMITATIONS.md)       | —                                                                                     |

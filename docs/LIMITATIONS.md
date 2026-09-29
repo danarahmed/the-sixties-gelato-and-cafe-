@@ -354,8 +354,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     analysis of past dates changes when an old sale is refunded, and its
     total can differ from the P&L's for the same dates, which counts a refund
     on the day it was made. The add-ons are shown without their refunds.
-  - The bars are the only picture: there are no charts, and no PDF until
-    release AA. The branch is one branch until release AB.
+  - The bars are the only picture: there are no charts. The branch is one
+    branch until release AB.
   - The stock's value on a day is the stock ledger's, at the costs it
     carried; it is not a count, and it does not revalue stock at today's
     prices.
@@ -377,7 +377,7 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     no comparison with the same dates of an earlier year: the balance sheet
     shows the start and the end of the dates side by side.
   - A year of dates at most for the cash flow; the balance sheet for any day
-    up to today. One branch until release AB; no PDF until release AA.
+    up to today. One branch until release AB.
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the
@@ -386,14 +386,20 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   the item's last delivery; an item with no delivery yet uses the café's.
   Use-by dates (P2-7) and a late sale (impossible since `0024`) raise
   nothing.
-- **Balance sheet and cash-flow statements.** The trial balance carries every
-  balance, and the P&L is built; the formatted balance sheet and cash-flow
-  statements are not.
 - **Chart of accounts maintenance (M-06).** The accounts a café needs are all
   there. Adding or deactivating one needs a migration: there is no screen for it.
-- **Attachments and PDF (L-05).** There is no scan of an invoice on a bill or an
-  expense, and no PDF export. CSV export exists for the trial balance, P&L and
-  reconciliation.
+- **Attachments (L-05).** There is no scan of an invoice on a bill or an
+  expense yet: it comes with the second part of release AA.
+- **Reports on paper, what they do not do (release AA).**
+  - The PDF is the browser's: **Print or save as PDF** opens its print window,
+    where the paper, the margins, upright or across, and whether the browser
+    adds its own date and address at the edges are chosen. Nothing is made on
+    the server, and nothing is sent by email.
+  - A report prints as it stands on the screen, with the dates and choices
+    made there; it has no cover, no page numbers of its own and no signature
+    line. A long table runs on over as many pages as it takes.
+  - The till's bills and receipts, a purchase order and a vendor's statement
+    keep the print they had.
 - **Languages (L-06), what they do not do (release G, `0032`).** Every screen,
   message, alert and the books' own words are in English, Arabic and Kurdish,
   and the owner can add a language and give any phrase the café's own words.

@@ -567,6 +567,16 @@ database, behind a small local stand-in for Supabase's auth service.
   Reports leading to them; the branch manager reads them and the cashier
   (nor its CSV) does not; the page in Arabic and Kurdish; and the books still
   tie. `languages` includes the page.
+- `printing` (release AA): every report screen (Reports and its three pages,
+  the trial balance, the audit trail, Journals and an account's ledger, the
+  usage report, an item's movements, a cash session and a payroll) carries
+  **Print or save as PDF** and a heading kept for the paper; on A4 upright
+  every one fits the width of the paper, in English, Arabic and Kurdish; the
+  button readies the print layout before the print window opens; on paper
+  the balance sheet and cash flow leave out the menu, the top bar, the forms
+  and the buttons, keep the statements, and are headed with the report and
+  its dates; the browser saves it as a PDF; in Arabic the page and its
+  heading print right to left, and save as a PDF.
 - `losses` (`0048`): a manager records two cream shots lost in preparation,
   the form saying what each kind means and where it is charged (5310), kept
   as one loss of the product with one journal; a loss from the batch named,

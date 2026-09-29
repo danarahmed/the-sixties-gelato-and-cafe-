@@ -188,6 +188,11 @@ asks for on one page:
 Each account opens its journals, and **CSV** takes either statement to a
 spreadsheet. Pick **This year** for the year so far.
 
+**Print or save as PDF**, at the top of this page and of every other report,
+prints it headed with the café, the report and its dates, without the menu.
+In the print window, choose **Save as PDF** to keep it as a file or send it
+to the accountant.
+
 ## Languages
 
 Every screen is in **English, Arabic and Kurdish (Sorani)**: its headings,

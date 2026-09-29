@@ -1991,6 +1991,21 @@ a.card.stat:focus-visible {
   html.printing-report td {
     border-block-end: 1px solid #999;
     color: #000 !important;
+    padding: 3px 5px !important;
+    font-size: 10px !important;
+  }
+  /* On paper a table fits the width of the page: no box of its own to
+     scroll, closer cells, and headings that wrap. */
+  html.printing-report .tw {
+    overflow: visible !important;
+  }
+  html.printing-report th {
+    white-space: normal !important;
+    letter-spacing: 0.02em !important;
+  }
+  /* What changed on the audit trail can be a record written out whole. */
+  html.printing-report td.changes {
+    overflow-wrap: anywhere;
   }
   html.printing-report a {
     color: inherit !important;
