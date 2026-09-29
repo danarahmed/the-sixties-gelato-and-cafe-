@@ -17,6 +17,7 @@ import ledger from "./ledger";
 import languages from "./languages";
 import staff from "./staff";
 import customers from "./customers";
+import analysis from "./analysis";
 
 /**
  * The areas' phrase books; "db" holds what the database refuses with, "alerts"
@@ -37,6 +38,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   languages,
   staff,
   customers,
+  analysis,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

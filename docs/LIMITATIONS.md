@@ -343,6 +343,22 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - Customers are kept, and their points cleared, when the test records are
     cleared; a customer is put away, never deleted, and there is no merging
     of two customers into one.
+- **The sales analysis and the stock's value, what they do not do (release
+  Y, `0051`).**
+  - The sales are seen one way and a second at most, from a fixed list, with
+    the figures that go with it: there is no pivot of any three ways, no
+    measure chosen by hand, no view saved, and no comparison with the same
+    dates last month or last year.
+  - A year of dates at most, and 2,000 rows (the totals count them all).
+  - A refund is taken off the sale it gave back, whenever it was made, so the
+    analysis of past dates changes when an old sale is refunded, and its
+    total can differ from the P&L's for the same dates, which counts a refund
+    on the day it was made. The add-ons are shown without their refunds.
+  - The bars are the only picture: there are no charts, and no PDF until
+    release AA. The branch is one branch until release AB.
+  - The stock's value on a day is the stock ledger's, at the costs it
+    carried; it is not a count, and it does not revalue stock at today's
+    prices.
 - **Alerts, what they do not do (`0029`).** The rules are checked when the
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the

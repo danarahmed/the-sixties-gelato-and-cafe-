@@ -143,6 +143,29 @@ customers hold now and what they would take off, and who bought the most.
 Points are not a debt in the books: their worth reaches them only as rewards
 are taken.
 
+## What sells, and when
+
+**Reports → Sales analysis** answers the questions a till's totals do not:
+
+- **Which hours are busy?** See the sales by **Hour**, for a month: plan the
+  staff and the batches for them. **By Day of the week** does the same for
+  the week, Saturday first.
+- **What earns the most?** By **Product** (or **Category**, or **Size**), the
+  margin beside what each sold for; **then by Channel** shows where it sells.
+  **By Add-on** says which extras are taken, and what they bring in.
+- **Who sold what?** By **Who took the money**, then by **Payment**: each
+  person's sales and how they were paid.
+- **What stuck?** Every row shows what refunds gave back of it since, and
+  what was **kept**: a product often given back shows it here.
+
+Every way adds up to the same sales, and voided sales are left out (their
+count is below the table). **CSV** takes it to a spreadsheet.
+
+**Reports → Stock value on a day** gives what the stock was worth at the end
+of any day, item by item, beside what the books held: for the month's end, or
+an insurer. **Purchasing**, on Reports, says what came in from each supplier
+and of each item in the dates.
+
 ## Languages
 
 Every screen is in **English, Arabic and Kurdish (Sorani)**: its headings,

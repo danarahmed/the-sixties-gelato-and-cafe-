@@ -47,6 +47,7 @@ Plan a short window when the café is closed.
 | Losses and giveaways (`0047`–`0048`)    | ✅ Migrations applied on 28 September, compared object by object with the tested build (identical, permissions included) and checked as the owner and the barista in transactions that were rolled back (see [After `0048`](#after-0048)). The screens were merged ([pull request #36](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/36)) and deployed                 |
 | Staff and pay (`0049`)                  | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked as four roles in a transaction that was rolled back (see [After `0049`](#after-0049)). The screens were merged ([pull request #37](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/37)) and deployed                                 |
 | Customers and points (`0050`)           | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked as four roles in a transaction that was rolled back (see [After `0050`](#after-0050)). The screens were merged ([pull request #38](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/38)) and deployed                                 |
+| Sales analysis (`0051`)                 | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0051`](#after-0051)). The screens were merged ([pull request #39](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/39)) and deployed            |
 
 ## 0. Before you start
 
@@ -1922,6 +1923,78 @@ The security advisor adds the 8 new functions above, each checking its
 permission, and names `record_sale`, `settle_tab`, `open_tab` and `save_tab`
 again with their new parameters. The performance advisor adds notes that 8
 links of the new tables and columns have no index of their own.
+
+## After `0051`
+
+Migration `0051` (release Y) adds three reports, for whoever sees costs (the
+owner, the general and branch managers, purchasing, the accountant and the
+auditor: `cost.view`). They read and write nothing:
+
+- **Reports → Sales analysis**: the sales of the dates (a year at most) by
+  the hour, the day of the week, the date, the product, its category, its
+  size, an add-on, who took the money, the payment, the channel or the
+  branch, and then, if wanted, by a second of these; narrowed to a channel, a
+  branch, a category or a person. Each sale counts as it was paid, and what
+  its refunds gave back since is taken off it, so every way adds up to the
+  same sales, with the margin and the margin kept. A payment pays for a whole
+  sale, so the payments go with the hour, the day, the person, the channel
+  and the branch, not with a product. Voided sales are left out and counted
+  apart, with the bills cancelled. At most 2,000 rows, with the totals of
+  all; as CSV.
+- **Reports → Stock value on a day**: every item's stock and value when the
+  day ended, from the stock ledger, beside what 1200 Inventory held then (the
+  books check's two sides); as CSV.
+- **Reports → Purchasing**: what came in by supplier and by item, as the
+  deliveries' corrections left them, their landed costs shared in; what went
+  back to the suppliers, the credits for price and the bills; as CSV.
+
+What it adds:
+
+- no table, rule or permission;
+- the functions signed-in users may call, each checking `cost.view`:
+  `report_sales_analysis`, `inventory_valuation` and `report_purchases`; and
+  three helpers nobody may call from outside (`sales_dim_names`,
+  `sales_dim_key` and `sales_analysis_row`).
+
+It goes in before the screens: those deployed before it call none of it.
+
+It was applied on 29 September 2026 with the Supabase connector (one
+`apply_migration` call, one transaction), after a read-only check that the
+live database still matched the verified `0050` build. The text stored there
+is the file byte for byte (md5 `be2f3c3be3bd9a73bd70f3afa67733ee`, 33,830
+bytes). It was then compared with the tested build, object by object, the role
+permissions and column grants included: identical, but for the schema `citext`
+lives in, as before.
+
+On applying, no record changed.
+
+It was checked on the live records as the owner, the accountant and the
+barista, in one transaction that was rolled back:
+
+- **The dates:** every sale so far, 24 to 29 September. The tables hold 38
+  sales, 292,000 net, of which refunds gave back 4,500; and 2 voided.
+- **Every way:** by the hour (6 rows), the day of the week (3), the date (3),
+  the product (7), the category (3), the size (7), the person (2), the
+  channel (3) and the branch (1), the analysis came to 292,000 over the 38
+  sales, its rows adding up to it, with the 4,500 given back.
+- **By payment, then by the person:** 4 rows, 292,000 paid, 4,500 given back,
+  287,500 kept. By add-on: none sold yet. By product, then by channel: 19
+  rows, 292,000. Left out: the 2 voided sales (16,000) and 3 bills cancelled.
+  To narrow it to: 2 people, 5 categories, 1 branch. The payments by product
+  were refused in words ("A payment pays for a whole sale: …").
+- **The stock's value today:** 691,014 over 11 items, and 691,014 in 1200: no
+  difference, as the books check says.
+- **What was bought:** 9 deliveries from 5 suppliers, 5 items, 315,750
+  received, nothing sent back; the tables hold the same 9 deliveries.
+- **The accountant** saw the same 292,000; **the barista** was refused the
+  analysis and the stock's value ("needs cost.view").
+- **Nothing was written:** no line on the audit trail, no journal.
+
+Nothing was kept: every table's count is as it was (journals to 1091, the
+audit trail to 195).
+
+The security advisor adds the three reports above, each checking
+`cost.view`. The performance advisor's notes are unchanged.
 
 ## Clearing the test records
 

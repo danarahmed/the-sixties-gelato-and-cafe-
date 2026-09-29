@@ -10,6 +10,8 @@ import {
 import { getAuditTrail } from "@/lib/db/books";
 import { auditGroup } from "@/lib/audit";
 import { EXCEPTION_LABEL } from "@/lib/exceptions";
+import { getPurchases, getSalesAnalysis, getStockValue } from "@/lib/db/analysis";
+import { isSalesDimension, type SalesDimension } from "@/lib/analysis";
 import { addDays, businessToday, dateTimeIn, dayStart, monthStart, parseDay } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
@@ -188,6 +190,138 @@ export async function GET(request: NextRequest) {
         rows.map((r) => [r.key, r.label, r.subledger, r.ledger, r.difference]),
       );
       name = `reconciliation_${to}.csv`;
+    } else if (report === "sales_analysis") {
+      // The sales analysis (0051), as the screen shows it: English column names,
+      // the keys as the database gives them, beside the names.
+      const by: SalesDimension = isSalesDimension(q.get("by"))
+        ? (q.get("by") as SalesDimension)
+        : "product";
+      const thenRaw = q.get("then");
+      const then: SalesDimension | null =
+        isSalesDimension(thenRaw) && thenRaw !== by ? thenRaw : null;
+      const uuid = (k: string) => {
+        const v = q.get(k);
+        return v && /^[0-9a-f-]{36}$/i.test(v) ? v : null;
+      };
+      const a = await getSalesAnalysis({
+        from,
+        to,
+        by,
+        then,
+        channel: q.get("channel") || null,
+        location: uuid("location"),
+        category: uuid("category"),
+        cashier: uuid("cashier"),
+      });
+      const keys = (r: (typeof a.rows)[number]) =>
+        then ? [r.key, r.names.en, r.key2 ?? "", r.names2?.en ?? ""] : [r.key, r.names.en];
+      const head = then ? [by, `${by}_name`, then, `${then}_name`] : [by, `${by}_name`];
+      if (a.grain === "payment") {
+        body = csv(
+          [...head, "sales", "paid", "refunded", "kept"],
+          a.rows.map((r) => [...keys(r), r.orders, r.paid, r.refunded, r.kept]),
+        );
+      } else if (a.grain === "addon") {
+        body = csv(
+          [...head, "lines", "orders", "qty", "gross", "discount", "net", "cost", "margin"],
+          a.rows.map((r) => [
+            ...keys(r),
+            r.lines,
+            r.orders,
+            r.qty,
+            r.gross,
+            r.discount,
+            r.net,
+            r.cost,
+            r.margin,
+          ]),
+        );
+      } else {
+        body = csv(
+          [
+            ...head,
+            "orders",
+            "qty",
+            "gross",
+            "discount",
+            "net",
+            "cost",
+            "margin",
+            "refunded",
+            "cost_back",
+            "kept",
+            "margin_kept",
+          ],
+          a.rows.map((r) => [
+            ...keys(r),
+            r.orders,
+            r.qty,
+            r.gross,
+            r.discount,
+            r.net,
+            r.cost,
+            r.margin,
+            r.refunded,
+            r.costBack,
+            r.kept,
+            r.marginKept,
+          ]),
+        );
+      }
+      name = `sales-analysis_${by}${then ? `-${then}` : ""}_${from}_${to}.csv`;
+    } else if (report === "stock_value") {
+      // The stock's value at the end of a day (0051), item by item.
+      const on = parseDay(q.get("on") ?? undefined, today);
+      const v = await getStockValue(on, null);
+      body = csv(
+        ["item", "type", "unit", "qty", "unit_cost", "value"],
+        v.items.map((i) => [i.name, i.type, i.unit, i.qty, i.unitCost ?? "", i.value]),
+      );
+      name = `stock-value_${on}.csv`;
+    } else if (report === "purchases") {
+      // What came in, by supplier then by item (0051).
+      const b = await getPurchases(from, to);
+      body = csv(
+        [
+          "kind",
+          "name",
+          "deliveries",
+          "qty",
+          "unit",
+          "received",
+          "returned",
+          "price_credits",
+          "net",
+          "billed",
+        ],
+        [
+          ...b.suppliers.map((x) => [
+            "supplier",
+            x.name,
+            x.deliveries,
+            "",
+            "",
+            x.received,
+            x.returned,
+            x.priceCredits,
+            x.net,
+            x.billed,
+          ]),
+          ...b.items.map((i) => [
+            "item",
+            i.name,
+            "",
+            i.qty,
+            i.unit,
+            i.received,
+            i.returned,
+            "",
+            i.net,
+            "",
+          ]),
+        ],
+      );
+      name = `purchases_${from}_${to}.csv`;
     } else {
       return NextResponse.json({ error: "Unknown report" }, { status: 400 });
     }

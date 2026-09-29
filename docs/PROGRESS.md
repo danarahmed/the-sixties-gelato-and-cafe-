@@ -7,11 +7,11 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0050` and the rebuilt app. The SQL
-  checks (51, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (27, every role, every screen in
+- **Built and verified:** migrations `0014`–`0051` and the rebuilt app. The SQL
+  checks (52, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (28, every role, every screen in
   Arabic and Kurdish, and a lost answer on each kind of screen), the unit and
-  contract tests (466) and a production build all pass.
+  contract tests (475) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -1090,6 +1090,59 @@ browser tests through the real app, or both.
   a reward taken, a delivery to their address, Customers, the report and the
   rules), unit tests, and every new text in Arabic and Kurdish.
 
+- **The sales analysis, the stock's value on a day, and what was bought
+  (release Y, migration `0051`).** The reports answered set questions; none
+  said which hours are busy, what sells on a Friday, who sold what, or what a
+  product brings in once its refunds are taken off. **Reports → Sales
+  analysis** now shows the sales of any dates (a year at most) by the hour,
+  the day of the week, the date, the product, its category, its size, an
+  add-on, who took the money, the payment, the channel or the branch, and
+  then, if wanted, by a second of these, narrowed to a channel, a branch, a
+  category or a person. Each sale counts as it was paid, and what its refunds
+  gave back since is taken off it, so every way adds up to the same sales;
+  each row has its margin, and the margin kept after refunds, and a bar;
+  voided sales are left out and counted apart, with the bills cancelled; and
+  it downloads as CSV. **Reports → Stock value on a day** gives every item's
+  stock and value when a day ended, from the stock ledger, beside what 1200
+  Inventory held then. Reports' Purchasing section now says what came in by
+  supplier (each leading to its statement) and by item, as the deliveries'
+  corrections left them, with what went back, the credits for price and the
+  bills. Only those who see costs see any of it, and nothing is written. The
+  migration was applied to the live database on 29 September 2026. The text
+  stored there is the file byte for byte, and it matches the tested build
+  object by object, permissions included (the one difference, as before, is
+  the schema `citext` lives in). No record changed. It was checked on the
+  live records as the owner, the accountant and the barista, in one
+  transaction that was rolled back:
+  - from 24 to 29 September the tables hold 38 sales, 292,000 IQD net, of
+    which refunds gave back 4,500; by the hour, the day, the date, the
+    product, the category, the size, the person, the channel and the branch,
+    the analysis came to 292,000 over the 38 sales each time, its rows adding
+    up to it, with the 4,500 given back;
+  - by payment, then by the person: 292,000 paid, 4,500 given back, 287,500
+    kept; the payments by product were refused in words; the 2 voided sales
+    (16,000) and 3 cancelled bills were left out;
+  - the stock was worth 691,014 over 11 items, as 1200 held it: no
+    difference, as the books check says;
+  - 9 deliveries from 5 suppliers came to 315,750, as the tables hold them;
+  - the accountant saw the same; the barista was refused;
+  - nothing was written: no line on the audit trail, no journal.
+
+  Nothing was kept: every table's count is as it was. The security advisors
+  add the three reports a signed-in person calls, each checking its
+  permission; the performance advisors are unchanged. The screens went live
+  with
+  [pull request #39](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/39). Built and
+  tested: a new SQL suite (every way of seeing the sales adding up to the
+  same sales, two ways at once, the filters, refunds by the item and from
+  before them, add-ons, payments and what their refunds gave back, voids and
+  cancelled bills, the choices, the stock's value against the books check,
+  what was bought as its corrections left it, returns and credits, and who
+  may), a new browser suite (today's sales by product, by the hour and by
+  payment and person, as the database counts them; a refusal in words; CSV;
+  the stock's value beside 1200; what came in; the cashier not shown; Arabic
+  and Kurdish), unit tests, and every new text in Arabic and Kurdish.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -1158,17 +1211,17 @@ browser tests through the real app, or both.
 | Payroll             | owner, general manager, accountant; auditor (reading)      | A month drafted from the pay and the hours; additions and deductions with why; advances given, taken back and cancelled; approved once the month is over (6100, 2100, 1300), reopened while nothing is paid, and paid to one person or everyone from the till, the safe, the bank or the owner; each payroll with its lines, payments and journals                                                                                                                                                                                                                                                                                                                  |
 | Journals            | cost viewers (posting: accountant, owner, general manager) | Register, manual journals (draft/publish), reversal, owner's control correction                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Chart of Accounts   | cost viewers                                               | Trial balance by period, closing checklist, lock and reopen, audit trail, CSV                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, sales by payment method, dollars, purchasing, payable ageing, product margin, sizes and add-ons, losses, staff hours and what staff cost, customers and their points, CSV                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, sales by payment method, dollars, purchasing, payable ageing, product margin, sizes and add-ons, losses, staff hours and what staff cost, customers and their points, what came in by supplier and by item, CSV; the sales analysis (by hour, day, date, product, category, size, add-on, person, payment, channel or branch, and a second way; narrowed; CSV); the stock's value on a day against 1200                                                                                                                                                                                                                 |
 | Settings            | owner, general manager                                     | People and roles, business configuration, the alert thresholds, the café's rules, locations, the role matrix                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ## Tests
 
-| Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Result      |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                                                                                                                                                                                                                                                                                                                               | 466 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 40 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward)                                                                                                                                                                                  | 51 passing  |
-| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers and loyalty | 27 passing  |
-| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                    | green       |
+| Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Result      |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                                                                                                                                                                                                                                                                                                                                                                         | 475 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 41 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward)                                                                                                                                                                                                                            | 52 passing  |
+| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers and loyalty, the sales analysis and the stock's value | 28 passing  |
+| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | green       |
 
 What is not built, and why, is in [`LIMITATIONS.md`](LIMITATIONS.md); the order
 of the next work is in [`ROADMAP.md`](ROADMAP.md).

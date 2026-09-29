@@ -11,8 +11,10 @@ payments, `0042`), release R (US dollars at the till, `0043`), release S
 release T (the buying list, `0045`), release U (batches, their use-by dates
 and lots, and the day's plan, `0046`) and release V (losses by kind with their
 accounts, giveaways at the till and the loss report, `0047`–`0048`) since 28
-September, and release W (staff, their hours and their pay, `0049`) and
-release X (customers and their points, `0050`) since 29 September.
+September, and release W (staff, their hours and their pay, `0049`),
+release X (customers and their points, `0050`) and release Y (the sales
+analysis, the stock's value on a day and what was bought, `0051`) since 29
+September.
 What was built differs from the plan below in these ways.
 
 Release J:
@@ -490,6 +492,44 @@ Release X:
   bought the most.
 - **Clearing the test records** keeps the customers and their addresses, and
   clears their points.
+
+Release Y:
+
+- **Numbered `0051`**, and reading only: no table, column or permission is
+  added, and every report needs `cost.view`, like the other sales reports.
+- **The sales analysis** (`report_sales_analysis`: the dates, a way, a
+  second way, and a channel, branch, category or person to narrow it to)
+  sees the sales one way and, if wanted, a second (not a free list of
+  groupings), from a fixed set: the hour, the weekday (the café's week from
+  Saturday), the date, the product, the category, the size, the add-on, the
+  person who took the money, the payment, the channel and the branch. It
+  narrows to a channel, a branch, a category or a person. A year of dates at
+  most, and 2,000 rows, with the totals of all of them.
+- **Its measures follow what the rows are**, rather than being chosen: the
+  lines sold (orders, items, sold for, discount, net, cost, margin, given
+  back, kept, margin kept), each line with its add-ons, so every way adds up
+  to the same sales; the add-ons alone (times taken, items, sold for,
+  discount, net, cost, margin), without refunds; or the payments (sales,
+  paid, given back, kept), which go only with the hour, the day, the person,
+  the channel and the branch.
+- **A refund is taken off the sale it gave back**, whenever it was made, so
+  the analysis answers what the sales of the dates came to once their refunds
+  are off; Sales by Channel and the P&L keep counting a refund on the day it
+  was made. A refund from before refunds by the item (`0037`) gave back the
+  whole sale; the cost it put back is shared over the sale's lines by their
+  cost. Voided sales are left out, and counted apart with the bills
+  cancelled.
+- **The stock's value on a day** (`inventory_valuation(as_of, location)`) is
+  every item's stock and value from the stock ledger at the day's end,
+  against what 1200 held then (for the whole café).
+- **What was bought** (`report_purchases(from, to)`) is the deliveries of the
+  dates as their corrections left them, by supplier and by item, with the
+  returns, the credits for price and the bills of the dates.
+- **Already built:** the production report (release U, `0046`) and the
+  cash-session report (Sales → Cash Sessions, release K, `0036`); nothing was
+  added to them.
+- **Each downloads as CSV**, with English column names; a PDF waits for
+  release AA.
 
 **Basis:**
 

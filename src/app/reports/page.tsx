@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getMsg, getT } from "@/lib/i18n/server";
+import { getLocale, getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getDailySales, getVendorBook, ageBills, salesTotals } from "@/lib/db/books";
@@ -24,6 +24,8 @@ import { getPurchasingReport } from "@/lib/db/purchasing";
 import { getProductionReport } from "@/lib/db/production";
 import { getStaffReport } from "@/lib/db/staff";
 import { getCustomerReport } from "@/lib/db/customers";
+import { getPurchases } from "@/lib/db/analysis";
+import { itemNameIn } from "@/lib/analysis";
 import { monthText, splitMinutes } from "@/lib/staff";
 import { LOSS_ACCOUNT_NAME, giveawayLabel, kindShare } from "@/lib/losses";
 import { CREDIT_KIND_LABEL, orderStage, STAGE_LABEL } from "@/lib/purchasing";
@@ -58,6 +60,7 @@ export default async function ReportsPage({
   const profile = await requirePermission("cost.view");
   const t = await getT();
   const msg = await getMsg();
+  const locale = await getLocale();
   const sp = await searchParams;
   const today = businessToday(profile.timezone);
   const from = parseDay(sp.from, monthStart(today));
@@ -89,6 +92,7 @@ export default async function ReportsPage({
     lost,
     staff,
     loyalty,
+    bought,
   ] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to) : Promise.resolve([]),
     getReconciliation(to),
@@ -107,6 +111,8 @@ export default async function ReportsPage({
     getLossReport(from, to),
     seesStaff && staffDates ? getStaffReport(from, to) : Promise.resolve(null),
     seesCustomers && from <= to ? getCustomerReport(from, to) : Promise.resolve(null),
+    // What came in, by supplier and by item (0051).
+    from <= to ? getPurchases(from, to) : Promise.resolve(null),
   ]);
   // The menu as it sells today: a platform out of use sells nothing.
   const menu = allMenu.filter((m) =>
@@ -251,6 +257,24 @@ export default async function ReportsPage({
           ))}
         </span>
       </form>
+
+      {/* ---- The analysis and the stock's value on a day (0051) ---- */}
+      <div
+        className="card"
+        style={{ display: "flex", gap: 16, flexWrap: "wrap" }}
+        data-testid="report-pages"
+      >
+        <Link
+          className="drill"
+          href={`/reports/sales?from=${from}&to=${to}`}
+          data-testid="to-analysis"
+        >
+          {t("Sales analysis: by hour, day, product, person, payment… →")}
+        </Link>
+        <Link className="drill" href={`/reports/stock?on=${to}`} data-testid="to-stock-value">
+          {t("Stock value on a day →")}
+        </Link>
+      </div>
 
       {/* ---- Reconciliation ---- */}
       <section className="panel" id="reconciliation">
@@ -920,6 +944,106 @@ export default async function ReportsPage({
               },
             )}
           </p>
+          {bought && (bought.suppliers.length > 0 || bought.items.length > 0) && (
+            <>
+              <h4 style={{ margin: "6px 0 0" }}>{t("What came in, by supplier")}</h4>
+              <div className="tw">
+                <table data-testid="purchases-suppliers">
+                  <thead>
+                    <tr>
+                      <th>{t("Supplier")}</th>
+                      <th className="right">{t("Deliveries")}</th>
+                      <th className="right">{t("Received")}</th>
+                      <th className="right">{t("Sent back")}</th>
+                      <th className="right">{t("Credited for price")}</th>
+                      <th className="right">{t("Net")}</th>
+                      <th className="right">{t("Billed")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bought.suppliers.map((x) => (
+                      <tr key={x.supplierId} data-testid="purchases-supplier" data-name={x.name}>
+                        <td>
+                          <Link
+                            className="drill"
+                            href={`/vendors/${x.supplierId}/statement?from=${from}&to=${to}`}
+                          >
+                            {x.name}
+                          </Link>
+                        </td>
+                        <td className="right money">{x.deliveries}</td>
+                        <td className="right money">{fmtIQD(x.received)}</td>
+                        <td className="right money">
+                          {x.returned ? `(${fmtIQD(x.returned)})` : "—"}
+                        </td>
+                        <td className="right money">
+                          {x.priceCredits ? `(${fmtIQD(x.priceCredits)})` : "—"}
+                        </td>
+                        <td className="right money">{fmtIQD(x.net)}</td>
+                        <td className="right money">{x.bills ? fmtIQD(x.billed) : "—"}</td>
+                      </tr>
+                    ))}
+                    <tr className="grand">
+                      <td>{t("All")}</td>
+                      <td className="right money">{bought.total.deliveries}</td>
+                      <td className="right money">{fmtIQD(bought.total.received)}</td>
+                      <td className="right money">
+                        {bought.total.returned ? `(${fmtIQD(bought.total.returned)})` : "—"}
+                      </td>
+                      <td className="right money">
+                        {bought.total.priceCredits ? `(${fmtIQD(bought.total.priceCredits)})` : "—"}
+                      </td>
+                      <td className="right money">{fmtIQD(bought.total.net)}</td>
+                      <td className="right money">{fmtIQD(bought.total.billed)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <h4 style={{ margin: "6px 0 0" }}>{t("What came in, by item")}</h4>
+              <div className="tw">
+                <table data-testid="purchases-items">
+                  <thead>
+                    <tr>
+                      <th>{t("Item")}</th>
+                      <th className="right">{t("Came in")}</th>
+                      <th className="right">{t("Cost of one")}</th>
+                      <th className="right">{t("Received")}</th>
+                      <th className="right">{t("Sent back")}</th>
+                      <th className="right">{t("Net")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bought.items.map((i) => (
+                      <tr key={i.itemId} data-testid="purchases-item" data-name={i.name}>
+                        <td>
+                          <Link className="drill" href={`/inventory/${i.itemId}`}>
+                            {itemNameIn(i, locale)}
+                          </Link>
+                        </td>
+                        <td className="right money">
+                          {fmtQty(i.qty)} {i.unit}
+                        </td>
+                        <td className="right money">
+                          {i.unitCost === null ? "—" : fmtQty(i.unitCost)}
+                        </td>
+                        <td className="right money">{fmtIQD(i.received)}</td>
+                        <td className="right money">
+                          {i.returned ? `(${fmtIQD(i.returned)})` : "—"}
+                        </td>
+                        <td className="right money">{fmtIQD(i.net)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="muted" style={{ margin: 0, fontSize: ".76rem", lineHeight: 1.7 }}>
+                {t(
+                  "The deliveries received in the dates, as their corrections left them, their landed costs shared in; what went back to the suppliers in the dates, at what they owe back; the credits suppliers gave for price; and the bills dated in the dates.",
+                )}{" "}
+                <a href={`/reports/export?report=purchases&from=${from}&to=${to}`}>{t("CSV")}</a>
+              </p>
+            </>
+          )}
         </div>
       </section>
 
