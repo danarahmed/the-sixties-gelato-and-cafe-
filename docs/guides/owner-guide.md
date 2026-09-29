@@ -50,19 +50,66 @@ unverified until it is corrected ([`../REMEDIATION.md`](../REMEDIATION.md)).
 - Only you can make someone an owner or general manager, or take their access
   away, and the business always keeps at least one active owner.
 
-| Role              | Typically does                                                                                                                                      |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Owner             | Everything, including reopening a locked month and control corrections                                                                              |
-| General manager   | Everything except reopening a locked month                                                                                                          |
-| Branch manager    | Sells, voids and refunds, opens and closes the drawer, receives stock, approves purchase orders up to their limit, reviews counts, records expenses |
-| Cashier           | Sells; opens and closes the drawer                                                                                                                  |
-| Barista           | Sells, gives away, opens and closes the drawer, records losses                                                                                      |
-| Inventory counter | Counts stock, blind                                                                                                                                 |
-| Purchasing        | Adds suppliers, drafts purchase orders, receives goods and returns them, records bills and credit notes                                             |
-| Accountant        | Expenses, journals, locking months, the reports                                                                                                     |
-| Auditor           | Reads everything with a cost on it; changes nothing                                                                                                 |
+| Role              | Typically does                                                                                                                                                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Owner             | Everything, including reopening a locked month and control corrections                                                                                                                                                       |
+| General manager   | Everything except reopening a locked month                                                                                                                                                                                   |
+| Branch manager    | Sells, voids and refunds, opens and closes the drawer, receives stock, approves purchase orders up to their limit, reviews counts, records expenses; keeps the staff, their PINs, the schedule and the hours (not their pay) |
+| Cashier           | Sells; opens and closes the drawer                                                                                                                                                                                           |
+| Barista           | Sells, gives away, opens and closes the drawer, records losses                                                                                                                                                               |
+| Inventory counter | Counts stock, blind                                                                                                                                                                                                          |
+| Purchasing        | Adds suppliers, drafts purchase orders, receives goods and returns them, records bills and credit notes                                                                                                                      |
+| Accountant        | Expenses, journals, locking months, the reports; pay, advances and payroll                                                                                                                                                   |
+| Auditor           | Reads everything with a cost on it, payroll included; changes nothing                                                                                                                                                        |
 
 The exact matrix is under **Settings → Roles & what they may do**.
+
+## Staff, their hours and their pay
+
+**Staff** (the owner and the managers) lists **who works here**: everyone
+paid, whether or not they have a login. **+ Add someone who works here** with
+their name, what they do, where they work and the day they started; link their
+login if they have one. Then:
+
+- **Set a PIN** with them: they type 4 to 8 digits twice, and clock in and out
+  at the till with their name and that PIN. A PIN like 1111 or 1234 is refused.
+- **Set the pay** (you, the general manager or the accountant): by the month,
+  the day or the hour, a day's standard hours, and, if theirs differs from the
+  café's rule, the overtime percentage. Only those who see payroll (you, the
+  general manager, the accountant and the auditor) see anyone's pay.
+- **Last day…** when someone leaves: from the day after, they no longer clock
+  in and their shifts are taken off. Their records and pay stay.
+
+**The schedule** is a week at a time, Saturday to Friday: type each person's
+hours as `08:00-16:00` (a shift ending at or before it starts ends the next
+day), or copy **the same hours as the week before**, and **Save the week**.
+
+**The hours** show, day by day, who was on the schedule, when they clocked in
+and out, and who was late, left early, was absent or worked overtime (beyond
+their standard hours). A manager **corrects** a record (a forgotten clock-out),
+**adds** hours nobody clocked (the till was down), or **cancels** a mistake,
+each with the reason, all on the audit trail. Nothing here changes pay by
+itself.
+
+**Payroll** (you, the general manager, the accountant; the auditor reads it):
+
+1. After the month ends, **Draft the payroll** for it. Each person's pay comes
+   from their pay and their hours: a month's pay for the days employed, a day's
+   pay for each day worked, or an hour's for each hour, plus overtime; and any
+   advance they owe is taken back.
+2. **Adjust…** a line to add (a bonus) or deduct (an absence), always with why,
+   or to take back less of an advance. If hours or pay change afterwards, the
+   draft says so: **Draft it again** (what you added and deducted stays).
+3. **Approve the payroll.** It posts Dr 6100 Salaries, Cr 2100 Salaries
+   payable, Cr 1300 the advances taken back, dated on the month's last day.
+4. **Pay…** each person, or **Pay everyone**, from the bank, the safe, the
+   till's open drawer or your own pocket. A payroll with a mistake is
+   **reopened** (with why) while nothing is paid from it; a payment made by
+   mistake is cancelled first.
+
+**Advances on pay** are given on Payroll (from the bank, the safe, the till or
+the owner) and taken back by the next payroll. An advance given by mistake is
+cancelled while none of it has been taken back.
 
 ## Languages
 
@@ -116,6 +163,14 @@ rule shows what it does, who set it, when and why, and every change is kept:
   default, and everything else is sold with a red alert on the dashboard. Set
   an item, or a kind of item, to **Refused** once it is counted reliably, or
   to **A manager approves it** to have a manager decide each time.
+- **Overtime is paid at**: 150% of an hour's pay by default (100% to 300%); a
+  person's own percentage, set with their pay, comes first.
+- **Late, or leaving early, by more than**: 5 minutes by default.
+- **Someone still clocked in after**: 16 hours by default, an alert (red
+  after a day): they may have forgotten to clock out.
+- **Salaries are paid on the day of the month**: the 1st by default. From
+  then, last month's payroll not approved or not paid is an alert, red a week
+  later.
 
 A change takes a reason; set a rule back to its default the same way. Nothing
 else changes them: the business row's old settings are the defaults until they
@@ -446,11 +501,14 @@ discount, why and who approved it. The 10% is a business setting (shown on
 ## Every month
 
 1. Close the drawer's session after the month's last sale, approve or reject
-   any pending count, and publish or discard any draft journal.
+   any pending count, and publish or discard any draft journal. Draft, check
+   and approve the month's payroll on **Payroll** before you lock the month:
+   once it is locked, the payroll cannot be posted into it (the checklist
+   warns you).
 2. **Reports → Do the books tie?**, as at the last day of the month: every line
    should show ✅ — the stock, payables, deliveries not billed, sales, card
-   takings, what the platforms owe, the drawers, the safe, and every record
-   with its journal. A ⛔ says which account and by how much, and opens both
+   takings, what the platforms owe, the drawers, the safe, salaries owed,
+   advances not yet taken back, and every record with its journal. A ⛔ says which account and by how much, and opens both
    sides; a record without its journal is listed under the table.
 3. **Chart of Accounts:** choose the month and read its checklist. When every
    check passes, **Lock** it. The last month of the year also closes the year

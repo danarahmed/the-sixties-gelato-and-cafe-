@@ -508,7 +508,7 @@ function PayForm({ person, onDone }: { person: StaffMember; onDone: () => void }
           gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
         }}
       >
-        <Field label={t("Paid")}>
+        <Field label={t("How they are paid")}>
           <select
             style={inputStyle}
             value={basis}

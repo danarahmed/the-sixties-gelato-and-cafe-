@@ -389,6 +389,61 @@ Release V:
   journal, and a journal whose loss does not exist; a loss recorded whole is
   never offered as stock the old app did not journal.
 
+Release W:
+
+- **Numbered `0049`**, since release V took two migrations.
+- **Who may:** `staff.manage` (the people, their PINs, the schedule) and
+  `attendance.edit` (correcting, adding and cancelling hours) for the owner and
+  the managers; `payroll.view` for the owner, the general manager, the
+  accountant and the auditor; `payroll.run` (pay, advances, payrolls, salaries)
+  for the owner, the general manager and the accountant. Without
+  `payroll.view`, nobody reads a rate or a pay change: `staff_list` leaves pay
+  out, the column grants leave out the rate and the PIN, and the audit trail
+  hides `payroll.*` and `staff.pay` rows.
+- **Clocking in** is at the till, by name and the person's own clock PIN (not a
+  manager's approval PIN). A wrong PIN is an answer, not an error, and every
+  PIN typed is kept (`clock_attempt`): three wrong from one login in 15 minutes
+  pause that login; twenty wrong for one person since their PIN was set, within
+  a day, pause clocking by PIN for them until a manager sets a new one.
+- **One shift a person a day.** A shift ending at or before its start ends the
+  next day; nobody is scheduled at two branches on one day, nor with hours
+  running into another day's. A day whose month's pay is approved no longer
+  changes.
+- **Lateness, leaving early and absence are shown, never deducted by
+  themselves:** a manager deducts on the payroll, with a note. Overtime is each
+  day's minutes beyond the person's standard hours, paid at their overtime
+  percentage or the café's rule.
+- **A payroll is approved only once its month is over**, when nobody is still
+  clocked in in it, everyone in it has pay set, and the draft still says what
+  the hours and the pay say (drafting again keeps what was added, deducted and
+  chosen to take back). There is no approval by PIN.
+- **Each approval is a record** (`payroll_approval`) with its own journal, on
+  the month's last day at noon: Dr 6100 the gross, Cr 2100 what is to be paid,
+  Cr 1300 the advances taken back. Reopening, while nothing is paid from it,
+  reverses that journal; approving again posts a new one
+  (`journal_entry_one_per_source` allows one journal per record).
+- **Advances and salaries** are paid from the till (the open drawer, which must
+  hold it), the safe (which must hold it), the bank or the owner. The next
+  payroll takes an advance back as far as the pay goes, or the amount chosen;
+  an advance is cancelled only while none of it is taken back. Paying everyone
+  at once is one payment and one journal.
+- **The rules:** overtime (100–300%, 150 by default), late or early by more
+  than (0–120 minutes, 5), still clocked in after (4–24 hours, 16), and payday
+  (the 1st to the 28th, the 1st).
+- **The alerts:** someone clocked in for longer than the rule's hours (red after
+  a day), and from payday a month's payroll not approved or not paid (red a week
+  later).
+- **The checks:** salaries owed against 2100 and advances not taken back
+  against 1300 join "Do the books tie?"; the safe counts what advances and
+  salaries took from it; `document_problems` finds an approval, an advance or a
+  payment with no journal, and a journal whose record does not exist; the
+  month's close warns, without blocking, when its payroll is not approved.
+- **Reports → Staff** gives each person's days and hours, lateness, leaving
+  early and absence, and, for those who see payroll, what 6100 holds each month
+  against the month's sales.
+- **Clearing the test records** keeps the people, and clears their hours,
+  schedules, advances and payrolls.
+
 **Basis:**
 
 - The code at `d17436e`: migrations `0001`–`0034` and the app.
