@@ -250,6 +250,17 @@ import {
   saleCustomerFrom,
   tillCustomerFrom,
 } from "@/lib/customers";
+import {
+  ANALYSIS_PHRASES,
+  analysisGrain,
+  analysisProblem,
+  barWidth,
+  isSalesDimension,
+  purchasesFrom,
+  rowName,
+  salesAnalysisFrom,
+  stockValueFrom,
+} from "@/lib/analysis";
 
 const perms = (role: Role) => [...ROLE_PERMISSIONS[role]];
 
@@ -4073,5 +4084,174 @@ describe("customers and loyalty (0050, release X)", () => {
     expect(subjectOf("customer", "c1", { customer: "Hawre" }, null, new Map())).toBe("Hawre");
     expect(subjectOf("customer", "c1", null, null, new Map())).toBe("A customer");
     expect(fieldLabel("customer_notes")).toBe("Notes about them");
+  });
+});
+
+describe("the sales analysis, the stock's value on a day and what was bought (0051, release Y)", () => {
+  it("knows the ways the sales are seen, and which go together", () => {
+    expect(isSalesDimension("hour")).toBe(true);
+    expect(isSalesDimension("colour")).toBe(false);
+    expect(analysisGrain("product", null)).toBe("line");
+    expect(analysisGrain("hour", "addon")).toBe("addon");
+    expect(analysisGrain("employee", "payment")).toBe("payment");
+    expect(analysisProblem("product", "product", null)).toBe(
+      "Choose something else to see them by next",
+    );
+    expect(analysisProblem("payment", "product", null)).toMatch(/^A payment pays for a whole sale/);
+    expect(analysisProblem("payment", null, "c1")).toMatch(/^A payment pays for a whole sale/);
+    expect(analysisProblem("payment", "hour", null)).toBeNull();
+    expect(analysisProblem("product", "channel", "c1")).toBeNull();
+  });
+
+  it("reads the analysis as the database gives it", () => {
+    const a = salesAnalysisFrom({
+      from: "2026-09-29",
+      to: "2026-09-29",
+      by: "product",
+      then: "channel",
+      grain: "line",
+      rows: [
+        {
+          key: "p1",
+          names: { en: "Golden espresso", ar: "إسبريسو" },
+          key2: "dine_in",
+          names2: { en: "dine_in" },
+          orders: 3,
+          qty: 5,
+          gross: "12500",
+          discount: 250,
+          net: 12250,
+          cost: 1000,
+          margin: 11250,
+          refunded: 2500,
+          cost_back: 0,
+          kept: 9750,
+          margin_kept: 8750,
+        },
+      ],
+      row_count: 1,
+      truncated: false,
+      total: { orders: 4, net: 17300, refunded: 2500, kept: 14800 },
+      voided: { orders: 1, net: 1000 },
+      cancelled_bills: 1,
+      choices: {
+        people: [{ id: "u1", name: "Demo Cashier" }],
+        categories: [{ id: "c1", names: { en: "Hot drinks", ar: "مشروبات ساخنة" } }],
+        branches: [{ id: "l1", name: "Main" }],
+      },
+    });
+    expect(a.by).toBe("product");
+    expect(a.then).toBe("channel");
+    expect(a.rows[0]).toMatchObject({ key: "p1", key2: "dine_in", gross: 12500, kept: 9750 });
+    expect(a.rows[0]?.names.ar).toBe("إسبريسو");
+    expect(a.total).toMatchObject({ orders: 4, net: 17300, refunded: 2500, kept: 14800, paid: 0 });
+    expect(a.voided).toEqual({ orders: 1, net: 1000 });
+    expect(a.cancelledBills).toBe(1);
+    expect(a.choices.categories[0]?.names.ar).toBe("مشروبات ساخنة");
+    // What it does not know it reads as the product analysis, of nothing.
+    const empty = salesAnalysisFrom(null);
+    expect(empty.by).toBe("product");
+    expect(empty.rows).toEqual([]);
+  });
+
+  it("names each row as the screen shows it", () => {
+    const channel = (c: string) => (c === "dine_in" ? "Dine-in" : c);
+    expect(rowName("hour", "8", { en: "8" }, "en", channel)).toEqual({
+      text: "08:00",
+      phrase: false,
+    });
+    expect(rowName("weekday", "0", { en: "0" }, "en", channel)).toEqual({
+      text: "Saturday",
+      phrase: true,
+    });
+    expect(rowName("weekday", "6", { en: "6" }, "en", channel).text).toBe("Friday");
+    expect(rowName("payment", "card", { en: "card" }, "en", channel)).toEqual({
+      text: "Card",
+      phrase: true,
+    });
+    expect(rowName("channel", "dine_in", { en: "dine_in" }, "ar", channel).text).toBe("Dine-in");
+    expect(rowName("category", "none", { en: "No category" }, "ar", channel)).toEqual({
+      text: "No category",
+      phrase: true,
+    });
+    expect(rowName("employee", "none", { en: "No one" }, "en", channel).text).toBe("No one");
+    const names = { en: "Golden espresso", ar: "إسبريسو ذهبي" };
+    expect(rowName("product", "p1", names, "ar", channel).text).toBe("إسبريسو ذهبي");
+    expect(rowName("product", "p1", names, "ckb", channel).text).toBe("Golden espresso");
+  });
+
+  it("draws each row's bar as its share of the largest", () => {
+    expect(barWidth(50, 100)).toBe(50);
+    expect(barWidth(100, 100)).toBe(100);
+    expect(barWidth(0.1, 100)).toBe(1);
+    expect(barWidth(0, 100)).toBe(0);
+    expect(barWidth(-5, 100)).toBe(0);
+    expect(barWidth(5, 0)).toBe(0);
+  });
+
+  it("reads the stock's value on a day and what was bought", () => {
+    const v = stockValueFrom({
+      as_of: "2026-09-29",
+      items: [
+        {
+          item_id: "i1",
+          name: "Golden beans",
+          type: "ingredient",
+          unit: "g",
+          qty: 880,
+          value: 8800,
+          unit_cost: 10,
+        },
+      ],
+      by_type: [{ type: "ingredient", items: 1, value: 8800 }],
+      stock: 19250,
+      ledger: 19250,
+      difference: 0,
+    });
+    expect(v.items[0]).toMatchObject({ name: "Golden beans", qty: 880, value: 8800, unitCost: 10 });
+    expect(v.difference).toBe(0);
+    // At one branch there is no ledger to set it against.
+    expect(stockValueFrom({ stock: 5, ledger: null, difference: null }).ledger).toBeNull();
+    const b = purchasesFrom({
+      suppliers: [
+        {
+          supplier_id: "s1",
+          name: "Kurdistan Coffee Imports",
+          deliveries: 1,
+          received: 18000,
+          returned: 9000,
+          net: 9000,
+        },
+      ],
+      items: [
+        {
+          item_id: "i1",
+          name: "Golden beans",
+          unit: "g",
+          qty: 2000,
+          received: 18000,
+          unit_cost: 9,
+          qty_back: 1000,
+        },
+      ],
+      total: { deliveries: 1, received: 18000, returns: 1, returned: 9000, net: 9000 },
+    });
+    expect(b.suppliers[0]).toMatchObject({
+      name: "Kurdistan Coffee Imports",
+      net: 9000,
+      priceCredits: 0,
+    });
+    expect(b.items[0]).toMatchObject({ qty: 2000, unitCost: 9, qtyBack: 1000 });
+    expect(b.total).toMatchObject({ deliveries: 1, net: 9000 });
+  });
+
+  it("has every word of the analysis in Arabic and Kurdish", () => {
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        ANALYSIS_PHRASES.filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
   });
 });
