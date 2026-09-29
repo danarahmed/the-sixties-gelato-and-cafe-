@@ -15,6 +15,8 @@ import { PurchaseOrders } from "@/components/purchasing/PurchaseOrders";
 import { ReturnGoods } from "@/components/purchasing/ReturnGoods";
 import { DocumentsLink } from "@/components/documents/DocumentsLink";
 import { getDocumentCounts } from "@/lib/db/documents";
+import { PlaceSwitch } from "@/components/PlaceSwitch";
+import { placeChoice } from "@/lib/place";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +28,9 @@ export default async function PurchasingPage() {
   const canCreate = has(profile, "purchase.create");
   const canApprove = has(profile, "purchase.approve");
   const canReceive = has(profile, "purchase.receive");
+  // A delivery with no order, a new order and a return not named against a
+  // delivery are for this device's place (AB).
+  const { places, place } = await placeChoice();
   const [items, suppliers, receipts, costs, outOfUse, { orders, approveUpTo }, returns] =
     await Promise.all([
       getItems(),
@@ -63,7 +68,10 @@ export default async function PurchasingPage() {
 
   return (
     <div className="grid" style={{ gap: 16 }}>
-      <h1 style={{ margin: 0 }}>{t("nav.purchasing")}</h1>
+      <div className="title-row">
+        <h1>{t("nav.purchasing")}</h1>
+        <PlaceSwitch places={places} current={place?.id ?? null} />
+      </div>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
         <Rich
           text={t(

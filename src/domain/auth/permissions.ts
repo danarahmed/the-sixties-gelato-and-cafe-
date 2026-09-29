@@ -33,6 +33,7 @@ export type Permission =
   | "waste.record"
   | "waste.approve"
   | "production.record"
+  | "stock.transfer"
   | "purchase.create"
   | "purchase.receive"
   | "purchase.approve"
@@ -72,6 +73,7 @@ const ALL: Permission[] = [
   "waste.record",
   "waste.approve",
   "production.record",
+  "stock.transfer",
   "purchase.create",
   "purchase.receive",
   "purchase.approve",
@@ -121,6 +123,7 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "waste.record",
     "waste.approve",
     "production.record",
+    "stock.transfer",
     "purchase.create",
     "purchase.receive",
     "purchase.approve",
@@ -147,7 +150,12 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "customer.edit",
   ]),
   inventory_counter: new Set<Permission>(["inventory.count"]),
-  purchasing: new Set<Permission>(["purchase.create", "purchase.receive", "cost.view"]),
+  purchasing: new Set<Permission>([
+    "purchase.create",
+    "purchase.receive",
+    "cost.view",
+    "stock.transfer",
+  ]),
   accountant: new Set<Permission>([
     "cost.view",
     "profit.view",

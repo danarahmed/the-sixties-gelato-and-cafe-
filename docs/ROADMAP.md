@@ -44,10 +44,12 @@ honest, not by building a queue.
    delivery platforms, each with its names in Arabic and Kurdish, its own till
    button, prices and packaging (`0031`). Next: read the statement file
    itself, and, with an approved partner account, Talabat's own feed.
-3. **Production, further (M-11).** Stock moved between the central kitchen
-   and the branch. (Recording batches, made items and their costs are built,
-   and so are batch numbers, use-by dates, stock kept batch by batch and the
-   day's plan, `0046`.)
+3. **Production, further (M-11).** Built: recording batches, made items and
+   their costs, batch numbers, use-by dates, stock kept batch by batch and the
+   day's plan (`0046`), and stock sent between the central kitchen and the
+   branch, each device doing its stock work at its own place (`0054`). Next,
+   with the branches' second part: tills, roles, numbers and prices by branch,
+   and each branch's profit and loss.
 4. **Every screen in Arabic and Kurdish, and languages the owner adds (L-06),
    next.** The owner asked for the whole system, every detail, in Arabic and
    Kurdish, and for more languages to be added. The navigation, the till, the

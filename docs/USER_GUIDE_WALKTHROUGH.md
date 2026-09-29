@@ -825,6 +825,51 @@ costs; baristas can record waste
     change is on the audit trail with its values before and after.
 - **Movements:** the most recent entries in the stock ledger.
 
+### Where this device does its stock work (release AB)
+
+With a second place — the central kitchen, or another branch — **Stock at**
+beside the title of Inventory, Stock Count, Usage, Production, Purchasing and
+What to buy says where this device works, and changes it. The device keeps it:
+the kitchen's tablet is set to the kitchen once. There, the stock screens show
+that place's stock, and record at it:
+
+- a delivery with no order, a new order, and a return not named against a
+  delivery (a delivery against an order comes in where the order was for; a
+  return named against a delivery goes back from where it came in);
+- a batch made, and the day's plan and the batches in stock;
+- a loss, a correction, opening stock (a new item's too) and a count.
+
+The till still sells at the first branch.
+
+### Transfers (`0054`)
+
+**Location:** Inventory → **Transfers** (or Sidebar → **Transfers**) ·
+`/inventory/transfers` · **Who:** owner, general manager, branch manager,
+purchasing send, receive and cancel; whoever sees costs reads them
+
+- **🚚 Send stock to another place:** from this device's place (or another
+  chosen) to the other; each item, its quantity and unit, with what the place
+  holds shown beside it; a note if you like. It leaves at what it costs there,
+  the batch with the earliest use-by first, and is **on its way**: in neither
+  place, but in 1210 Stock in transit. Sending more than the place holds is
+  asked about first (refused, where the item's rule refuses stock below
+  zero).
+- **On their way:** each transfer, from where to where, what and at what,
+  who sent it and when.
+  - **Received: all of it** brings it into the other place at what it left
+    at. A batch is kept there as the same batch, with its use-by.
+  - **Not all of it arrived…** asks what arrived of each line, in the unit it
+    was sent in: what did not is lost, to 5300, with a note of why.
+  - **Cancel it…**, saying why, sends it back where it was, to the batches it
+    left.
+- **Received and cancelled:** the ones settled, with what arrived, what was
+  lost and why, or why each was cancelled.
+
+"Do the books tie?" checks what is on its way against 1210. The journals and
+the audit trail name each transfer by its number. A batch's page follows it to
+every place it is at: what was sold at the branch counts, what did not arrive
+is lost, and what is on its way is shown apart until it arrives.
+
 ## 15. Stock Count
 
 **Location:** Sidebar → **Stock Count** · `/count` · **Who:** counter (counts);
@@ -1353,5 +1398,6 @@ a person's roles allows, then the café's.
 | Sales by hour, day, date, product, category, size, add-on, person, payment, channel or branch, and a second way; CSV | `/reports/sales`                         | cost viewers                                                                          |
 | The stock's value on a day against 1200; what came in by supplier and by item                                        | `/reports/stock`, `/reports`             | cost viewers                                                                          |
 | The balance sheet at the start and the end of the dates; the cash flow between; CSV                                  | `/reports/statements`                    | profit viewers                                                                        |
+| Stock sent between the café's places, on its way in 1210; received, what did not arrive lost; or cancelled           | `/inventory/transfers`                   | owner, managers, purchasing; readers: cost viewers                                    |
 | Photos and PDFs of a delivery note, a bill, a credit note, a return slip or a receipt, kept with its record (📎)     | `/purchasing`, `/vendors`, `/expenses`   | cost viewers; attaching: whoever records it                                           |
 | **Not built:** offline selling                                                                                       | [`LIMITATIONS.md`](LIMITATIONS.md)       | —                                                                                     |

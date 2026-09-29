@@ -129,16 +129,29 @@ export async function getBatches(limit = 50): Promise<BatchRow[]> {
   );
 }
 
-/** What to make on a day, from what sold on that weekday in the weeks before. */
-export async function getProductionPlan(day?: string): Promise<ProductionPlan> {
+/**
+ * What to make on a day at a place (the first branch when none is named), from
+ * what sold on that weekday in the weeks before.
+ */
+export async function getProductionPlan(
+  day?: string,
+  place: string | null = null,
+): Promise<ProductionPlan> {
   const c = await db();
-  return planFrom(one(await c.rpc("production_plan", { p_day: day ?? null }), "the day's plan"));
+  return planFrom(
+    one(
+      await c.rpc("production_plan", { p_day: day ?? null, p_location: place }),
+      "the day's plan",
+    ),
+  );
 }
 
-/** The lots with stock left, the one used by first first. */
-export async function getProductionLots(): Promise<ProductionLot[]> {
+/** The lots with stock left at a place, the one used by first first. */
+export async function getProductionLots(place: string | null = null): Promise<ProductionLot[]> {
   const c = await db();
-  return lotsFrom(one(await c.rpc("production_lots", {}), "the batches in stock"));
+  return lotsFrom(
+    one(await c.rpc("production_lots", { p_location: place }), "the batches in stock"),
+  );
 }
 
 /** One batch: what it made, and what became of it; null when there is no such batch. */

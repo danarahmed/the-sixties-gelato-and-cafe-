@@ -11,6 +11,8 @@ import { getLossesWaiting } from "@/lib/db/rules";
 import { getPosCatalogue } from "@/lib/db/pos";
 import { getProductionLots } from "@/lib/db/production";
 import { EmptyState } from "@/components/ui";
+import { PlaceSwitch } from "@/components/PlaceSwitch";
+import { placeChoice } from "@/lib/place";
 
 export const dynamic = "force-dynamic";
 
@@ -21,16 +23,18 @@ export default async function InventoryPage() {
   const seesCost = has(profile, "cost.view");
   const approvesLosses = has(profile, "waste.approve");
   const recordsLosses = has(profile, "waste.record");
+  // Where this device does its stock work, when the café has more than one place (AB).
+  const { places, place, at } = await placeChoice();
   const [items, allBoard, movements, outOfUse, waiting, catalogue, lots] = await Promise.all([
     getItems(),
-    seesCost ? getStockBoard() : Promise.resolve([]),
-    seesCost ? getMovements(60) : Promise.resolve([]),
+    seesCost ? getStockBoard(at) : Promise.resolve([]),
+    seesCost ? getMovements(60, at) : Promise.resolve([]),
     seesCost ? getItemsOutOfUse() : Promise.resolve([]),
     approvesLosses ? getLossesWaiting() : Promise.resolve([]),
     // A product lost as made, and the batch an item is lost from (0048).
     recordsLosses && has(profile, "sale.create") ? getPosCatalogue() : Promise.resolve([]),
     recordsLosses && (has(profile, "production.record") || seesCost)
-      ? getProductionLots()
+      ? getProductionLots(at)
       : Promise.resolve([]),
   ]);
   const sizes = new Map<string, number>();
@@ -55,7 +59,10 @@ export default async function InventoryPage() {
 
   return (
     <div className="grid" style={{ gap: 16 }}>
-      <h1 style={{ margin: 0 }}>{t("nav.inventory")}</h1>
+      <div className="title-row">
+        <h1>{t("nav.inventory")}</h1>
+        <PlaceSwitch places={places} current={place?.id ?? null} />
+      </div>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
         <Rich
           text={t(
@@ -70,6 +77,23 @@ export default async function InventoryPage() {
                 "<usage>Usage</usage> sets what each item used between two counts against what its recipes say.",
               )}
               tags={{ usage: (c) => <Link href="/inventory/usage">{c}</Link> }}
+            />
+          </>
+        )}
+        {places.length > 1 && (seesCost || has(profile, "stock.transfer")) && (
+          <>
+            {" "}
+            <Rich
+              text={t(
+                "<transfers>Transfers</transfers> send stock from one of the café's places to another.",
+              )}
+              tags={{
+                transfers: (c) => (
+                  <Link href="/inventory/transfers" data-testid="to-transfers">
+                    {c}
+                  </Link>
+                ),
+              }}
             />
           </>
         )}
@@ -161,7 +185,7 @@ export default async function InventoryPage() {
                 "Open an item for its stock card: what it opened with, what came in and went out, and what is left.",
               )}
             </p>
-            <table>
+            <table data-testid="stock-board">
               <thead>
                 <tr>
                   <th>{t("Item")}</th>

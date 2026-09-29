@@ -21,7 +21,8 @@
 --            counts, cash events and cash moved, the dollar rates set and
 --            the dollars taken, counted and exchanged, the answers kept for
 --            retries, card settlements,
---            stock movements and lots, losses and giveaways, stock counts,
+--            stock movements and lots, the stock sent between places,
+--            losses and giveaways, stock counts,
 --            production batches, the schedule, the hours clocked and the PINs
 --            typed, advances, payrolls and the salaries paid, the customers'
 --            points,
@@ -32,8 +33,8 @@
 --            notes, the alerts raised on all of it (they rise again from what
 --            is recorded next), and the document numbers (journals start again
 --            at 1001, the café's own bill numbers at 0001, cash sessions,
---            refunds, delivery corrections, orders, returns, credits and
---            payrolls at 1)
+--            refunds, delivery corrections, orders, returns, credits,
+--            payrolls and transfers at 1)
 --
 -- Afterwards no item has stock. Before the first sale, give each item its
 -- opening stock (Inventory → Opening stock): what is on the shelf, at what it
@@ -119,7 +120,7 @@ truncate table
   sale_refund, sale_refund_line, sale_refund_tender,
   salary_payment, salary_payment_line,
   sales_order, sales_order_line, sales_order_line_modifier, sales_tender, session_dollar_count, shift_schedule,
-  stock_count, stock_count_line, stock_loss, stock_loss_line,
+  stock_count, stock_count_line, stock_loss, stock_loss_line, stock_transfer, stock_transfer_line,
   supplier_credit, supplier_credit_allocation, supplier_payment, supplier_return, supplier_return_line, sync_log,
   work_shift
   restart identity;

@@ -383,8 +383,30 @@ ok "$(grep -l "Not enough points" "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and n
 ok "$(sql "select customer_points('c5000000-0000-0000-0000-0000000000c1')")" "2" \
    "the customer's points: 100 spent, 2 earned on the 2,500 paid"
 
+# 0054 — ten sessions send the same transfer with one key: it is sent once.
+# Then ten people receive it at once, and ten cancel another at once: each is
+# received, or cancelled, once, and the other nine are told so.
+TRANSFERS=$(sql "select count(*) from stock_transfer")
+race 10 manager@example.com "select send_stock_transfer(null, (select id from location where name = 'Central Kitchen'),
+  '[{\"item_id\":\"c0000000-0000-0000-0000-000000000002\",\"qty\":3}]', p_idempotency_key => '88888888-0000-0000-0000-000000000054')"
+ok "$(( $(sql "select count(*) from stock_transfer") - TRANSFERS ))" "1" \
+   "10 simultaneous sends of one transfer with one key send it once"
+ok "$(grep -l '"replayed": true' "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and the other nine are told it was already sent"
+TRANSFER=$(sql "select id from stock_transfer order by transfer_no desc limit 1")
+race 10 manager@example.com "select receive_stock_transfer('$TRANSFER')"
+ok "$(sql "select count(*) from journal_entry where reference_type = 'stock_transfer_receipt' and reference_id = '$TRANSFER'")" "1" \
+   "10 people receive one transfer at once: it is received once, with one journal"
+ok "$(grep -l "was received already" "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and the other nine are told it was received already"
+TRANSFER=$(sql "select test.act_as('manager@example.com');
+  select send_stock_transfer(null, (select id from location where name = 'Central Kitchen'),
+    '[{\"item_id\":\"c0000000-0000-0000-0000-000000000002\",\"qty\":2}]') ->> 'transfer_id'" | tail -1)
+race 10 manager@example.com "select cancel_stock_transfer('$TRANSFER', 'Sent by mistake')"
+ok "$(sql "select count(*) from inventory_movement where reference_type = 'stock_transfer_cancel' and reference_id = '$TRANSFER'")" "1" \
+   "10 people cancel one transfer at once: its cups come back once"
+ok "$(grep -l "was cancelled already" "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and the other nine are told it was cancelled already"
+
 # The books still tie after all of it.
 ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(test.today())")" \
-   "0,0,0,0,0,0,0,0,0,0,0,0" "every subledger still reconciles to its control account"
+   "0,0,0,0,0,0,0,0,0,0,0,0,0" "every subledger still reconciles to its control account"
 
 [ "$FAILED" -eq 0 ]

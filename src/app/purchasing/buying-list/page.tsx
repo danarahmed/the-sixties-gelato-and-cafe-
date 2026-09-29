@@ -4,6 +4,8 @@ import { has, requirePermission } from "@/lib/auth/session";
 import { getItems, getSuppliers } from "@/lib/db/read";
 import { getBuyingList } from "@/lib/db/buying";
 import { BuyingListForm } from "@/components/purchasing/BuyingList";
+import { PlaceSwitch } from "@/components/PlaceSwitch";
+import { placeChoice } from "@/lib/place";
 
 export const dynamic = "force-dynamic";
 
@@ -16,12 +18,19 @@ export const dynamic = "force-dynamic";
 export default async function BuyingListPage() {
   const profile = await requirePermission("cost.view");
   const t = await getT();
-  const [list, items, suppliers] = await Promise.all([getBuyingList(), getItems(), getSuppliers()]);
+  // What this device's place needs (AB): the orders are for it.
+  const { places, place, at } = await placeChoice();
+  const [list, items, suppliers] = await Promise.all([
+    getBuyingList(at),
+    getItems(),
+    getSuppliers(),
+  ]);
   const units = Object.fromEntries(items.map((i) => [i.id, i.units]));
   return (
     <div className="grid" style={{ gap: 16 }} data-testid="buying-page">
       <div className="phead">
         <h1>{t("What to buy")}</h1>
+        <PlaceSwitch places={places} current={place?.id ?? null} />
         <span className="sc">
           {t("{place} · {day} · use judged over the last {days} days", {
             place: list.location,

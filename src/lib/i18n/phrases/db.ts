@@ -2573,6 +2573,8 @@ const phrases: PhraseBook = {
   },
   "payroll's approval": { ar: "اعتماد كشف الرواتب", ckb: "پەسەندکردنی لیستی مووچە" },
   "salary payment": { ar: "دفعة الراتب", ckb: "پارەدانی مووچە" },
+  // A journal whose transfer does not exist (0054).
+  transfer: { ar: "التحويل", ckb: "گواستنەوەکە" },
   "return to a supplier": { ar: "المرتجع إلى المورّد", ckb: "گەڕاندنەوەکە بۆ دابینکەر" },
   "a payroll's approval (reopen the payroll on Payroll while nothing is paid from it)": {
     ar: "اعتماد كشف رواتب (أعِد فتح الكشف في شاشة «الرواتب» ما دام لم يُدفع منه شيء)",
@@ -2597,6 +2599,104 @@ const phrases: PhraseBook = {
   "a return to a supplier (record a credit on Vendors if more is owed back)": {
     ar: "مرتجع إلى مورّد (سجّل إشعارًا دائنًا من شاشة «المورّدون» إن كان يُستحق ردّ المزيد)",
     ckb: "گەڕاندنەوەیەک بۆ دابینکەر (ئەگەر زیاتر دەبێت بگەڕێنرێتەوە، لە شاشەی «دابینکەران» پسووڵەی گەڕاندنەوە تۆمار بکە)",
+  },
+
+  // Stock sent between the café's places (0054): refused, in words.
+  "Stock in transit (1210) moves only with a transfer between places": {
+    ar: "لا يتحرك المخزون في الطريق (1210) إلا بتحويل بين الأماكن",
+    ckb: "کۆگای لە ڕێگادا (1210) تەنها بە گواستنەوە لە نێوان شوێنەکاندا دەجووڵێت",
+  },
+  "A transfer is not deleted: cancel it while it is on its way": {
+    ar: "لا يُحذف التحويل: ألغِه ما دام في الطريق",
+    ckb: "گواستنەوە ناسڕدرێتەوە: تا لە ڕێگادایە هەڵیبوەشێنەوە",
+  },
+  "Transfer {1} is settled: it does not change": {
+    ar: "انتهى التحويل {1}: لا يتغير",
+    ckb: "گواستنەوەی {1} کۆتایی هاتووە: ناگۆڕدرێت",
+  },
+  "What was sent does not change: cancel the transfer and send it again": {
+    ar: "ما أُرسل لا يتغير: ألغِ التحويل وأرسله من جديد",
+    ckb: "ئەوەی نێردرا ناگۆڕدرێت: گواستنەوەکە هەڵبوەشێنەوە و دووبارە بینێرە",
+  },
+  "What arrived does not change": { ar: "ما وصل لا يتغير", ckb: "ئەوەی گەیشت ناگۆڕدرێت" },
+  "Choose where the stock goes": {
+    ar: "اختر المكان الذي يذهب إليه المخزون",
+    ckb: "هەڵبژێرە کۆگاکە بۆ کوێ دەچێت",
+  },
+  "The stock goes to another place": {
+    ar: "يذهب المخزون إلى مكان آخر، لا إلى المكان نفسه",
+    ckb: "کۆگاکە بۆ شوێنێکی تر دەچێت، نەک بۆ هەمان شوێن",
+  },
+  "Unknown item on the transfer": {
+    ar: "صنف غير معروف في التحويل",
+    ckb: "کاڵایەکی نەناسراو لە گواستنەوەکەدا",
+  },
+  "{1} is on the transfer twice: one line for it": {
+    ar: "{1} مذكور في التحويل مرتين: سطر واحد له",
+    ckb: "{1} دوو جار لە گواستنەوەکەدایە: یەک هێڵ بۆی",
+  },
+  "This leaves {1} below zero, which its rule refuses: count it, or send less": {
+    ar: "هذا يترك {1} دون الصفر، وقاعدته ترفض ذلك: اجرده، أو أرسل كمية أقل",
+    ckb: "ئەمە {1} دەباتە ژێر سفر، کە یاساکەی ڕێگەی پێ نادات: بیژمێرە، یان کەمتر بنێرە",
+  },
+  "This leaves {1} below zero: confirm to send it all the same": {
+    ar: "هذا يترك {1} دون الصفر: أكّد لإرساله مع ذلك",
+    ckb: "ئەمە {1} دەباتە ژێر سفر: پشتڕاستی بکەرەوە بۆ ئەوەی هەر بنێردرێت",
+  },
+  "Transfer not found": { ar: "لم يُعثر على التحويل", ckb: "گواستنەوەکە نەدۆزرایەوە" },
+  "Transfer {1} was received already": {
+    ar: "استُلم التحويل {1} مسبقًا",
+    ckb: "گواستنەوەی {1} پێشتر وەرگیراوە",
+  },
+  "Transfer {1} was cancelled": { ar: "أُلغي التحويل {1}", ckb: "گواستنەوەی {1} هەڵوەشێنراوەتەوە" },
+  "That line is not on this transfer": {
+    ar: "هذا السطر ليس في هذا التحويل",
+    ckb: "ئەو هێڵە لەم گواستنەوەیەدا نییە",
+  },
+  "What arrived of {1} cannot be less than nothing": {
+    ar: "لا يمكن أن يكون ما وصل من {1} أقل من لا شيء",
+    ckb: "ئەوەی لە {1} گەیشت ناتوانێت لە هیچ کەمتر بێت",
+  },
+  "More of {1} cannot arrive than was sent ({2} {3})": {
+    ar: "لا يمكن أن يصل من {1} أكثر مما أُرسل ({2} {3})",
+    ckb: "لە {1} ناتوانێت زیاتر لەوەی نێردرا بگات ({2} {3})",
+  },
+  "Say why the transfer is cancelled": {
+    ar: "اذكر سبب إلغاء التحويل",
+    ckb: "بڵێ بۆچی گواستنەوەکە هەڵدەوەشێنرێتەوە",
+  },
+  "Transfer {1} was received: it is not cancelled": {
+    ar: "استُلم التحويل {1}: فلا يُلغى",
+    ckb: "گواستنەوەی {1} وەرگیراوە: هەڵناوەشێنرێتەوە",
+  },
+  "Transfer {1} was cancelled already": {
+    ar: "أُلغي التحويل {1} مسبقًا",
+    ckb: "گواستنەوەی {1} پێشتر هەڵوەشێنراوەتەوە",
+  },
+  // Where a journal came from, and a transfer lacking its journal (0054).
+  "stock sent to another place (cancel the transfer on Inventory while it is on its way)": {
+    ar: "مخزون أُرسل إلى مكان آخر (ألغِ التحويل في «المخزون» ما دام في الطريق)",
+    ckb: "کۆگایەک کە بۆ شوێنێکی تر نێردرا (تا لە ڕێگادایە، گواستنەوەکە لە «کۆگا» هەڵبوەشێنەوە)",
+  },
+  "stock received from another place": {
+    ar: "مخزون استُلم من مكان آخر",
+    ckb: "کۆگایەک کە لە شوێنێکی ترەوە وەرگیرا",
+  },
+  "a transfer cancelled on its way": {
+    ar: "تحويل أُلغي وهو في الطريق",
+    ckb: "گواستنەوەیەک کە لە ڕێگادا هەڵوەشێنرایەوە",
+  },
+  "Stock sent to another place with no journal": {
+    ar: "مخزون أُرسل إلى مكان آخر بلا قيد",
+    ckb: "کۆگایەک بۆ شوێنێکی تر نێردرا بێ تۆمار",
+  },
+  "Stock received from another place with no journal": {
+    ar: "مخزون استُلم من مكان آخر بلا قيد",
+    ckb: "کۆگایەک لە شوێنێکی ترەوە وەرگیرا بێ تۆمار",
+  },
+  "A transfer cancelled on its way with no journal": {
+    ar: "تحويل أُلغي في الطريق بلا قيد",
+    ckb: "گواستنەوەیەک لە ڕێگادا هەڵوەشێنرایەوە بێ تۆمار",
   },
 };
 

@@ -7,6 +7,7 @@
 import { z } from "zod";
 import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { getItems } from "@/lib/db/read";
+import { placeForWrite } from "@/lib/place";
 import { LOSS_KIND_KEYS } from "@/lib/losses";
 import { LOOKS_LIKE, lookAlikes, type LookAlike } from "@/lib/names";
 import { packCode } from "@/lib/receiving";
@@ -90,6 +91,7 @@ export async function createItemAction(
     p_opening_unit_cost: d.openingUnitCost,
     p_returnable: d.returnable,
     p_opening_reason: d.openingReason,
+    p_location: await placeForWrite(),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
@@ -147,6 +149,7 @@ export async function recordLossAction(
     p_unit_code: v.data.itemId ? (v.data.unitCode ?? null) : null,
     p_reason: v.data.reason,
     p_lot: v.data.itemId ? (v.data.lotId ?? null) : null,
+    p_location: await placeForWrite(),
     p_approval: v.data.approvalId ?? null,
     p_wait: v.data.wait ?? false,
     p_idempotency_key: key,
@@ -227,6 +230,7 @@ export async function adjustStockAction(
     p_unit_code: v.data.unitCode,
     p_reason: v.data.reason,
     p_unit_cost: v.data.unitCost,
+    p_location: await placeForWrite(),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
@@ -267,6 +271,7 @@ export async function recordOpeningStockAction(
     p_unit_code: v.data.unitCode,
     p_unit_cost: v.data.unitCost,
     p_reason: v.data.reason,
+    p_location: await placeForWrite(),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
@@ -366,7 +371,11 @@ export async function addItemUnitAction(
 export async function startCountAction(key: string): Promise<ActionResult<{ countId: string }>> {
   const bad = badKey(key);
   if (bad) return bad;
-  const r = await callRpc<string>("start_stock_count", { p_items: null, p_idempotency_key: key });
+  const r = await callRpc<string>("start_stock_count", {
+    p_items: null,
+    p_location: await placeForWrite(),
+    p_idempotency_key: key,
+  });
   if (!r.ok) return r;
   refresh("/count");
   return { ok: true, data: { countId: String(r.data) } };

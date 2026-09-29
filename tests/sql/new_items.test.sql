@@ -89,9 +89,9 @@ select test.ok(not has_function_privilege('authenticated', 'assert_unit_ok(text,
                and not has_function_privilege('anon', 'assert_unit_ok(text, text, text, numeric)', 'execute'),
   'the pack rule is the functions'' to use, not anyone''s to call');
 select test.ok(has_function_privilege('authenticated',
-                 'create_item(text, item_type, text, unit_dimension, text, text, numeric, jsonb, numeric, numeric, boolean, text, uuid)',
+                 'create_item(text, item_type, text, unit_dimension, text, text, numeric, jsonb, numeric, numeric, boolean, text, uuid, uuid)',
                  'execute')
                and not has_function_privilege('anon',
-                 'create_item(text, item_type, text, unit_dimension, text, text, numeric, jsonb, numeric, numeric, boolean, text, uuid)',
+                 'create_item(text, item_type, text, unit_dimension, text, text, numeric, jsonb, numeric, numeric, boolean, text, uuid, uuid)',
                  'execute'),
   'adding an item: signed-in people with the permission, and no one else');

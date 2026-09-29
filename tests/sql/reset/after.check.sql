@@ -55,6 +55,8 @@ select test.eq((select count(*) from attendance) + (select count(*) from shift_s
                + (select count(*) from payroll_approval) + (select count(*) from salary_payment)
                + (select count(*) from salary_payment_line), 0::bigint,
   'nor any hours, schedule, PIN typed at the till, advance, payroll or salary paid');
+select test.eq((select count(*) from stock_transfer) + (select count(*) from stock_transfer_line), 0::bigint,
+  'nor the stock sent between places');
 select test.eq((select count(*) from alert)::int, 0, 'nor the alerts raised on them: they rise again from what is recorded next');
 select test.eq((select alert_settings from business where id = '00000000-0000-0000-0000-0000000000b1'),
   '{"margin_target_percent": 65}'::jsonb, 'the alert thresholds are kept');
@@ -83,6 +85,12 @@ select test.act_as('owner@example.com');
 select move_cash('owner', 'till', 10000, 'Float for the till');
 select test.eq(next_bill_number(), 'SGC-' || extract(year from test.today()) || '-0001', 'the café''s own bill numbers start again at 0001');
 select test.eq((draft_payroll(test.today()) ->> 'run_no')::int, 1, 'and payrolls at 1');
+select test.act_as('manager@example.com');
+create temp table moved as select send_stock_transfer(null, (select id from location where name = 'Central Kitchen'),
+  '[{"item_id":"c0000000-0000-0000-0000-000000000002","qty":10}]'::jsonb) r;
+grant select on moved to public;
+select test.eq((select (r ->> 'transfer_no')::int from moved), 1, 'and transfers at 1');
+select receive_stock_transfer((select (r ->> 'transfer_id')::uuid from moved));
 
 select test.act_as('cashier@example.com');
 create temp table sale as select record_sale(gen_random_uuid(), 'takeaway', 'cash',

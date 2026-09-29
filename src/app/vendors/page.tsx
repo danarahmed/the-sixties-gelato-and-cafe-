@@ -25,6 +25,7 @@ const NOT_FOR_CREDITS = new Set([
   "1020",
   "1100",
   "1200",
+  "1210",
   "1300",
   "5000",
   "5300",
@@ -35,7 +36,8 @@ const NOT_FOR_CREDITS = new Set([
 /**
  * Accounts a non-stock bill may not be charged to (the database refuses the
  * same list): cash, in dinars and dollars, the card's and the bank's, stock,
- * the losses taken from stock (0048), and the advances given on pay (0049).
+ * the losses taken from stock (0048), the advances given on pay (0049), and
+ * the stock on its way between places (0054).
  */
 const NOT_FOR_BILLS = new Set([
   "1000",
@@ -46,6 +48,7 @@ const NOT_FOR_BILLS = new Set([
   "1020",
   "1100",
   "1200",
+  "1210",
   "1300",
   "5000",
   "5050",

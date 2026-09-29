@@ -49,7 +49,7 @@ export const AUDIT_GROUPS = [
   { key: "suppliers", label: "Suppliers & deliveries", prefixes: ["supplier.", "purchase."] }, // i18n-ignore
   {
     key: "stock",
-    label: "Counts, corrections & batches", // i18n-ignore
+    label: "Counts, corrections, batches & transfers", // i18n-ignore
     prefixes: [
       "inventory.adjust",
       "inventory.waste",
@@ -236,6 +236,10 @@ const ACTION_LABEL: Record<string, string> = {
   // Documents kept with the records (0053): the record is named by its number.
   "document.attach": "Document attached",
   "document.detach": "Document taken off",
+  // Stock sent between the café's places (0054): the transfer is named by its number.
+  "stock.transfer_send": "Stock sent to another place",
+  "stock.transfer_receive": "Transfer received",
+  "stock.transfer_cancel": "Transfer cancelled",
 };
 
 /**
@@ -436,6 +440,9 @@ const FIELD_LABEL: Record<string, string> = {
   bill: "Bill",
   order_lines: "Order lines",
   short: "Closed short of the order",
+  // Stock sent between the café's places (0054).
+  transfer_no: "Transfer",
+  lost: "Lost on the way",
   returned: "Returned",
   credit_kind: "For",
   // Staff, their hours and their pay (0049).
@@ -715,6 +722,9 @@ export function subjectOf(
       return pick("return_no") ? `Return ${pick("return_no")}` : "A return to a supplier";
     case "supplier_credit":
       return pick("credit_no") ? `Credit ${pick("credit_no")}` : "A supplier's credit";
+    // Stock sent between the café's places (0054), by its number.
+    case "stock_transfer":
+      return pick("transfer_no") ? `Transfer ${pick("transfer_no")}` : "A transfer";
     // Staff, their hours and their pay (0049): the person, or the payroll by its number.
     case "employee":
       return pick("name") ?? "Someone who works here";
@@ -767,6 +777,7 @@ const SUBJECT_WORDS = new Set([
   "A purchase order",
   "A return to a supplier",
   "A supplier's credit",
+  "A transfer",
   "Someone who works here",
   "A record of hours",
   "An advance",
@@ -789,6 +800,7 @@ const SUBJECTS: [RegExp, string, string[]][] = [
   [/^Purchase order (\d+)$/, "Purchase order {no}", ["no"]],
   [/^Return (\d+)$/, "Return {no}", ["no"]],
   [/^Credit (\d+)$/, "Credit {no}", ["no"]],
+  [/^Transfer (\d+)$/, "Transfer {no}", ["no"]],
   [/^Payroll (\d+)$/, "Payroll {no}", ["no"]],
   [
     /^Card takings (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})$/,

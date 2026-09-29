@@ -54,9 +54,10 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
 - **Production (M-11), what it does not do.** Batches are recorded, costed,
   numbered, used by a date and cancelled; made items are kept batch by batch
   and sold; the day's plan says what to make (see the walkthrough, and
-  release U below). It does not move stock between the branch and the
-  central kitchen; a batch is recorded at the branch, when it is made, or by
-  a manager up to a day late.
+  release U below). A batch is recorded at the place the device works at
+  (the branch, or the central kitchen: release AB), when it is made, or by a
+  manager up to a day late; what the kitchen makes goes to the branch by a
+  transfer.
 - **Batches, use-by dates and the plan, what they do not do (release U,
   `0046`).**
   - Stock is counted by item, not by batch: what a count finds missing comes
@@ -168,8 +169,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - A refund of something made to order puts nothing back on the shelf: what
     it used stays used, as the recipes say.
   - What may explain a difference is a list of things to look at, not a
-    finding. Transfers between locations are not built, so nothing moves
-    between them.
+    finding. Stock sent to or from a place in the dates is counted as moved
+    (release AB).
   - The alert looks only at each item's last two counts, the later in the
     last 14 days, and only at items a recipe uses.
 - **The café's rules, what they do not do (release O, `0040`).**
@@ -181,8 +182,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - A loss saved to wait for approval is in the stock and the books at once:
     approving it changes only its record, and reversing it puts the stock
     back at the loss's own value.
-  - Giveaways (release V) and returns to a supplier (release S) ask the stock
-    rule; transfers between branches will when they are built (release AB).
+  - Giveaways (release V), returns to a supplier (release S) and transfers
+    between places (release AB) ask the stock rule.
   - Refunds stay with managers (the owner's decision 3); what changed is the
     limit above which a second person approves one.
   - A delivery corrected keeps its own confirmation for stock left below
@@ -264,9 +265,9 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     names; what was used since goes to the price variance (5050), not back to
     the sales that used it.
 - **What to buy, what it does not do (release T, `0045`).**
-  - It is worked out when the page opens, for the café's first branch; there
-    is no choice of branch until branches come (release AB), and nothing is
-    sent to anyone.
+  - It is worked out when the page opens, for the place the device works at
+    (the first branch until another is chosen: release AB), and nothing is
+    sent to anyone. Stock a place sends to another is not counted as its use.
   - Use is judged on the last 28 days alone: no weekday or season, and a week
     of use more as the level to order up to when the item has no par level.
   - Items made here are left to Production. What their batches use is in each
@@ -440,8 +441,28 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     compressed on a full load).
   - Numbers are written with Western digits (1,500) in every language; typed
     Arabic-Indic and Eastern Arabic-Indic digits are accepted.
-- **Transfers between locations.** The Central Kitchen exists as a location, but
-  stock cannot yet move between locations.
+- **The café's places and the stock sent between them, what the first part of
+  the branches does not do (release AB, `0054`).**
+  - A device chooses where it does its **stock** work: deliveries without an
+    order, new orders, returns not named against a delivery, batches, losses,
+    corrections, opening stock and counts, and the stock screens. The till
+    still sells, and the drawer still counts, at the first branch: tills of
+    their own at each branch, roles bound to a branch, numbers and prices by
+    branch, and each branch's own profit and loss come with the second part.
+  - The place is kept on the device, not with the person: whoever signs in
+    there works at that place until it is changed, and anyone may change it.
+  - A transfer goes whole: it cannot be received in two goes, or sent on from
+    where it is going. What did not arrive is lost (5300) as it is received;
+    finding it later is a correction at that place.
+  - Anyone who may send stock may receive a transfer or cancel one, wherever
+    they are; the screen does not check that they are at the place it is
+    going to.
+  - Stock on its way is in neither place: the stock board, the buying list
+    and the running-out alerts do not count it until it arrives.
+  - A batch keeps its number and use-by at the place it goes to; stock with no
+    batch goes at the average cost where it left.
+  - One stock count is open at a time at each place; the count screen shows
+    the one at the device's place, and one's own wherever it is.
 - **Tax.** Out of scope by request. If the business is VAT-registered, that is a
   structural addition, not a setting.
 

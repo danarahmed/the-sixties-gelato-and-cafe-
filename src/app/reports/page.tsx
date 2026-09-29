@@ -145,6 +145,7 @@ export default async function ReportsPage({
     platform: { records: "/platforms#owed", accounts: "1100" },
     drawer: { records: "/sales/sessions", accounts: "1000" },
     safe: { records: "/sales", accounts: "1005" },
+    transit: { records: "/inventory/transfers", accounts: "1210" },
   };
   // Where each kind of record is found, to look into it.
   const problemLink = (p: { kind: string; recordId: string; at: string }) => {
@@ -176,6 +177,8 @@ export default async function ReportsPage({
         return "/sales#card";
       case "platform":
         return "/platforms#statement";
+      case "transfer":
+        return "/inventory/transfers";
       default:
         return `/journals?from=${day}&to=${day}`;
     }
@@ -198,6 +201,7 @@ export default async function ReportsPage({
     credit: t("Supplier's credit"),
     card: t("Card settlement"),
     platform: t("Platform statement"),
+    transfer: t("Transfer"),
     journal: t("Journal"),
   };
   const ledger = (accounts: string, f: string, tt: string, pnl = false) =>

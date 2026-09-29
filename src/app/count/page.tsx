@@ -8,6 +8,8 @@ import { dateTimeIn } from "@/lib/dates";
 import { fmtIQD, fmtQty } from "@/lib/format";
 import { CancelCount, CountSheet, ReviewActions, StartCount } from "@/components/CountClient";
 import { EmptyState } from "@/components/ui";
+import { PlaceSwitch } from "@/components/PlaceSwitch";
+import { placeChoice } from "@/lib/place";
 
 export const dynamic = "force-dynamic";
 
@@ -37,14 +39,20 @@ export default async function CountPage({
   const t = await getT();
   const msg = await getMsg();
   const sp = await searchParams;
-  const counts = await getStockCounts();
+  // A count is of this device's place (AB); the list names each one's place.
+  const [counts, { places, place }] = await Promise.all([getStockCounts(), placeChoice()]);
+  const placeName = new Map(places.map((p) => [p.id, p.name]));
   const canCount = has(profile, "inventory.count");
   const canReview = has(profile, "inventory.count.view_expected");
   const canApprove = has(profile, "inventory.adjust.approve");
 
   const mine = counts.find((c) => c.status === "counting" && c.countedById === profile.id);
-  // One count at a time: two open counts would each post the same difference.
-  const othersOpen = counts.find((c) => c.status === "counting" && c.countedById !== profile.id);
+  // One count at a time at a place: two open counts would each post the same
+  // difference. Another place's count is that place's (AB).
+  const here = (placeId: string | null) => places.length < 2 || !place || placeId === place.id;
+  const othersOpen = counts.find(
+    (c) => c.status === "counting" && c.countedById !== profile.id && here(c.placeId),
+  );
   const sheet = mine ? await getCountSheet(mine.id) : [];
 
   const reviewId = typeof sp.review === "string" ? sp.review : null;
@@ -75,7 +83,10 @@ export default async function CountPage({
 
   return (
     <div className="grid" style={{ gap: 16, maxWidth: 900 }}>
-      <h1 style={{ margin: 0 }}>{t("nav.count")}</h1>
+      <div className="title-row">
+        <h1>{t("nav.count")}</h1>
+        <PlaceSwitch places={places} current={place?.id ?? null} />
+      </div>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
         <Rich
           text={t(
@@ -186,6 +197,7 @@ export default async function CountPage({
             <thead>
               <tr>
                 <th>{t("Started")}</th>
+                {places.length > 1 && <th>{t("Place")}</th>}
                 <th>{t("Counter")}</th>
                 <th className="right">{t("Counted")}</th>
                 <th>{t("Status")}</th>
@@ -199,6 +211,7 @@ export default async function CountPage({
                   <td className="mono muted" style={{ fontSize: ".8rem" }}>
                     {dateTimeIn(profile.timezone, c.startedAt)}
                   </td>
+                  {places.length > 1 && <td>{(c.placeId && placeName.get(c.placeId)) ?? "—"}</td>}
                   <td>{c.countedBy ?? "—"}</td>
                   <td className="right mono">
                     {c.counted}/{c.lines}

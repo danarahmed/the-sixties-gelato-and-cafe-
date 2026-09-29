@@ -25,6 +25,10 @@ const SOURCE: Record<string, string> = {
   payroll_approval: "Payroll",
   employee_advance: "Advance",
   salary_payment: "Salaries",
+  // Stock sent between the café's places (0054).
+  stock_transfer: "Transfer sent",
+  stock_transfer_receipt: "Transfer received",
+  stock_transfer_cancel: "Transfer cancelled",
 };
 
 function signed(n: number): string {

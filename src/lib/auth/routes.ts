@@ -53,6 +53,13 @@ export const NAV: NavEntry[] = [
   },
   // What each item used against its recipes, between two counts (0039).
   { group: OPERATIONS, href: "/inventory/usage", key: "nav.usage", anyOf: ["cost.view"] },
+  // Stock sent between the café's places (0054).
+  {
+    group: OPERATIONS,
+    href: "/inventory/transfers",
+    key: "nav.transfers",
+    anyOf: ["stock.transfer"],
+  },
   {
     group: OPERATIONS,
     href: "/production",
