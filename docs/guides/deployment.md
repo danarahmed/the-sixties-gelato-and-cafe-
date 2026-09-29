@@ -49,6 +49,8 @@ Plan a short window when the café is closed.
 | Customers and points (`0050`)           | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked as four roles in a transaction that was rolled back (see [After `0050`](#after-0050)). The screens were merged ([pull request #38](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/38)) and deployed                                 |
 | Sales analysis (`0051`)                 | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0051`](#after-0051)). The screens were merged ([pull request #39](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/39)) and deployed            |
 | Balance sheet and cash flow (`0052`)    | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0052`](#after-0052)). The screens were merged ([pull request #40](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/40)) and deployed            |
+| Reports printed as PDF                  | ✅ No migration. The screens were merged ([pull request #41](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/41)) and deployed on 29 September                                                                                                                                                                                                                           |
+| Documents with the records (`0053`)     | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, the bucket and its rules too) and checked on the live records as three roles in a transaction that was rolled back (see [After `0053`](#after-0053)). The screens were merged ([pull request #42](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/42)) and deployed    |
 
 ## 0. Before you start
 
@@ -2064,6 +2066,87 @@ audit trail to 195).
 The security advisor adds the two statements, each checking `profit.view`.
 The performance advisor's notes are unchanged.
 
+## After `0053`
+
+Migration `0053` (release AA) keeps the papers with the records. A photo or a
+PDF of a delivery note, a supplier's bill or credit note, a return slip or the
+receipt for an expense is kept with its delivery, return, bill, credit note
+or expense:
+
+- **📎** by a record's number opens the record's page. It is on Purchasing
+  (deliveries and returns), Vendors (bills, credit notes, and each supplier's
+  statement) and Expenses.
+- The page lists the documents kept with the record, and those taken off with
+  why.
+- Whoever may record that kind of record also gets **Take a photo** and
+  **Choose a picture or a PDF** there.
+
+What it adds:
+
+- **A private Storage bucket, `documents`,** for pictures (JPEG, PNG, WebP)
+  and PDFs, 10 MB at most. Two rules on `storage.objects` guard it:
+  - a file is put under `<business>/<kind>/<record>/` only by someone of the
+    café who may keep that kind of record;
+  - a file is read only by someone of the café who may see it.
+- **The table `document_attachment`,** which says which file goes with which
+  record. A document is taken off with a reason, never changed or deleted.
+  Row-level security lets whoever may see it read it.
+- **The functions signed-in users may call**, each checking its permission:
+  - `attach_document` and `detach_document`, keyed and on the audit trail;
+  - `documents_for`, `document_counts` and `document_record`;
+  - the three the rules call: `document_permissions`, `document_may_attach`
+    and `document_may_see`.
+- **Four helpers** nobody may call from outside.
+
+It goes in before the screens: those deployed before it call none of it.
+
+A file goes from the browser straight to Storage, through a link the app's
+server makes for the person, so the server never carries the file.
+
+It was applied on 29 September 2026 with the Supabase connector: one
+`apply_migration` call, one transaction. Before it, a read-only check showed
+the live database still matched the verified `0052` build.
+
+The text stored there is the file byte for byte (md5
+`997da0ace9778799169c2f81c5f6243a`, 21,485 bytes). It was then compared with
+the tested build, object by object, the role permissions and column grants
+included. It is identical, but for the schema `citext` lives in, as before.
+The bucket and its two rules are the tested build's, to the letter.
+
+On applying, no record changed.
+
+It was checked on the live records as the owner, the accountant and the
+barista, in one transaction that was rolled back. A file's row was put in the
+bucket as Storage writes it; no file reached Storage.
+
+- **The owner** attached a delivery note to delivery 9. It was listed, counted
+  and shown on the delivery's page; sent twice with one key, it was attached
+  once.
+  - Refused in words: the same file again ("That file is attached already")
+    and a file never uploaded ("Upload the file first").
+  - A file in another café's folder was refused by row-level security.
+  - Taking it off without a reason was refused ("Say why the document is taken
+    off"). With one, it left the list and was kept among those taken off, with
+    why.
+- **The accountant** attached a PDF to bill SGC-2026-0007 and saw the
+  delivery's note. Row-level security let them put no file under a delivery.
+- **The barista** could put nothing in the bucket and saw no file and no
+  document. Asking for the list was refused ("needs purchase.receive or
+  cost.view").
+- **The audit trail** named each by its record: `document.attach` on delivery
+  9 and on bill SGC-2026-0007, and `document.detach` on delivery 9 with its
+  reason.
+
+Nothing was kept:
+
+- every table's count is as it was (journals to 1091, the audit trail to 195);
+- the bucket holds no file, and the new table no row.
+
+The security advisor adds the five functions a signed-in person calls, each
+checking its permission. The performance advisor adds two notes: who attached
+a document and who took it off are not indexed, like the other tables'
+who-columns. The table is small.
+
 ## Clearing the test records
 
 Every record of trading in the live database so far is a test (the owner, 25
@@ -2084,8 +2167,10 @@ with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/res
    (what was made stays kept batch by batch, from nothing), purchase orders,
    deliveries, returns to suppliers, supplier bills, payments and credits,
    expenses, the schedule, the hours and every PIN typed at the till,
-   advances, payrolls and salary payments, the customers' points, every
-   journal and period, and the
+   advances, payrolls and salary payments, the customers' points, which
+   document went with which record (the files stay in Storage's `documents`
+   bucket: remove them there if they should go too), every journal and
+   period, and the
    document numbers (journals start again at 1001, the café's bill numbers at
    0001, the cash sessions, refunds, orders, returns, credits and payrolls at
    1).

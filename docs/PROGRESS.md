@@ -7,12 +7,12 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0052` and the rebuilt app. The SQL
-  checks (53, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (30, every role, every screen in
-  Arabic and Kurdish, a lost answer on each kind of screen, and every report
-  on A4 paper), the unit and
-  contract tests (482) and a production build all pass.
+- **Built and verified:** migrations `0014`–`0053` and the rebuilt app. The SQL
+  checks (54, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (31, every role, every screen in
+  Arabic and Kurdish, a lost answer on each kind of screen, every report on A4
+  paper, and documents kept with the records), the unit and contract tests
+  (496) and a production build all pass.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -1214,6 +1214,62 @@ browser tests through the real app, or both.
   forms or the buttons, headed with its dates, saved as a PDF; and in Arabic,
   right to left), and its two texts in Arabic and Kurdish.
 
+- **Documents kept with the records (release AA, second part, migration
+  `0053`).** The papers a record came with were kept apart from it, on paper.
+  Now a delivery, a return to a supplier, a bill, a supplier's credit note
+  and an expense each keep them as photos or PDFs.
+  - **📎** by the record's number opens its page. It is on Purchasing,
+    Vendors (bills, credit notes and each supplier's statement, though not on
+    the printed statement) and Expenses, with how many are kept.
+  - On a phone, **Take a photo** opens the camera. A photo over 1.5 MB is made
+    smaller in the browser, its longer side 2,000 pixels. A picture or a PDF
+    of up to 10 MB can be chosen instead, 20 to a record.
+  - A file goes straight from the browser to a private Storage bucket, through
+    a link made for that person. The bucket lets someone of the café put a
+    file under a record only if they may keep that kind of record, and read
+    one only if they may see it.
+  - A document opens through a link that lasts a minute.
+  - A wrong one is taken off saying why, never deleted: the page keeps it
+    apart with who took it off and why, and the audit trail names the record
+    by its number.
+  - Whoever records that kind of record attaches its papers. Whoever sees
+    costs sees them.
+
+  The migration was applied to the live database on 29 September 2026. The
+  text stored there is the file byte for byte, and it matches the tested
+  build object by object, permissions included (the one difference, as
+  before, is the schema `citext` lives in). The bucket and its two rules are
+  the tested build's, to the letter. No record changed.
+
+  It was checked on the live records as the owner, the accountant and the
+  barista, in one transaction that was rolled back:
+  - the owner attached a delivery note to delivery 9, sent twice and attached
+    once, listed and counted, then took it off with why;
+  - the same file again, a file never uploaded and another café's folder were
+    refused;
+  - the accountant attached a PDF to a bill and saw the delivery's note, but
+    could put no file under a delivery;
+  - the barista could put nothing in the bucket and read nothing;
+  - the audit trail named each record by its number.
+
+  Nothing was kept. The security advisors add the five functions a signed-in
+  person calls, each checking its permission; the performance advisors note
+  two unindexed who-columns on the new, small table. The screens went live
+  with
+  [pull request #42](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/42).
+
+  Built and tested:
+  - a new SQL suite: uploading as each role; attaching, once however often
+    it is sent; every refusal in words; seeing and not seeing; taking off,
+    never changing or deleting; the audit trail; twenty to a record;
+  - a new browser suite, with a stand-in for Storage in the local gateway: a
+    phone's photo made smaller and a PDF kept as sent, both listed, opened
+    through a minute's link and downloaded; one taken off with why; a text
+    file refused; the bill's PDF from a supplier's statement and a receipt
+    with an expense; a cashier sent away; the audit trail; Arabic and
+    Kurdish;
+  - unit tests, and every new text in Arabic and Kurdish.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -1257,7 +1313,7 @@ browser tests through the real app, or both.
 | L-02 | A finished sale's cost can change              |   ✅   | Cost, lines and tenders frozen                                                                                                                                   |
 | L-03 | Period names in UTC                            |   ✅   | Business timezone                                                                                                                                                |
 | L-04 | Demo and real data mixed                       |   ✅   | The live trial records were cleared (`supabase/remediation/clean-start.sql`); the seed has no transactions; keep staging in a separate project                   |
-| L-05 | No exports or attachments                      |   🟡   | CSV, and every report printed or saved as a PDF (release AA). No attachments on bills or expenses yet                                                            |
+| L-05 | No exports or attachments                      |   ✅   | CSV; every report as a PDF; photos and PDFs of the papers kept with deliveries, returns, bills, credits and expenses (release AA)                                |
 | L-06 | Translations partial                           |   ✅   | Every screen, message and alert in English, Arabic and Kurdish; the owner adds languages and corrects words (`0032`). Limits: [`LIMITATIONS.md`](LIMITATIONS.md) |
 
 ## Screens
@@ -1283,16 +1339,17 @@ browser tests through the real app, or both.
 | Journals            | cost viewers (posting: accountant, owner, general manager) | Register, manual journals (draft/publish), reversal, owner's control correction                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Chart of Accounts   | cost viewers                                               | Trial balance by period, closing checklist, lock and reopen, audit trail, CSV                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Reports             | cost viewers                                               | P&L, "Do the books tie?", sales by channel, sales by payment method, dollars, purchasing, payable ageing, product margin, sizes and add-ons, losses, staff hours and what staff cost, customers and their points, what came in by supplier and by item, CSV; the sales analysis (by hour, day, date, product, category, size, add-on, person, payment, channel or branch, and a second way; narrowed; CSV); the stock's value on a day against 1200; the balance sheet at the start and the end of the dates and the cash flow between (profit viewers); each printed or saved as a PDF                                                                             |
+| Documents           | cost viewers (attaching: whoever records it)               | A record's photos and PDFs, opened from 📎 on Purchasing, Vendors and Expenses: taken with the camera or chosen, a large photo made smaller; opened through a link that lasts a minute; taken off with why, kept apart                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | Settings            | owner, general manager                                     | People and roles, business configuration, the alert thresholds, the café's rules, locations, the role matrix                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ## Tests
 
-| Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Result      |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 482 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 42 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward)                                                                                                                                                                                                                                                                                        | 53 passing  |
-| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers and loyalty, the sales analysis and the stock's value, the balance sheet and the cash flow, every report on paper | 30 passing  |
-| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | green       |
+| Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Result      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | 496 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 42 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward)                                                                                                                                                                                                                                                                                                                         | 54 passing  |
+| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers and loyalty, the sales analysis and the stock's value, the balance sheet and the cash flow, every report on paper, documents kept with the records | 31 passing  |
+| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | green       |
 
 What is not built, and why, is in [`LIMITATIONS.md`](LIMITATIONS.md); the order
 of the next work is in [`ROADMAP.md`](ROADMAP.md).
