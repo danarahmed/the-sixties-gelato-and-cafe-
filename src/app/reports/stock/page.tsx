@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PrintButton } from "@/components/PrintButton";
+import { PrintHead } from "@/components/PrintHead";
 import { getLocale, getT } from "@/lib/i18n/server";
 import { requirePermission } from "@/lib/auth/session";
 import { getStockValue } from "@/lib/db/analysis";
@@ -27,8 +29,15 @@ export default async function StockValuePage({
 
   return (
     <div className="grid" style={{ gap: 16 }}>
+      <PrintHead
+        business={profile.businessName}
+        title={t("Stock value on a day")}
+        period={t("End of {day}", { day: asOf })}
+        timezone={profile.timezone}
+      />
       <div className="phead">
         <h1>{t("Stock value on a day")}</h1>
+        <PrintButton />
         <span className="sc">
           <Link className="drill" href="/reports">
             {t("← Reports")}

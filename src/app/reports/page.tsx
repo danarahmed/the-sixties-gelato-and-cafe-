@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PrintButton } from "@/components/PrintButton";
+import { PrintHead } from "@/components/PrintHead";
 import { getLocale, getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
@@ -219,8 +221,15 @@ export default async function ReportsPage({
 
   return (
     <div className="grid" style={{ gap: 18 }}>
+      <PrintHead
+        business={profile.businessName}
+        title={t("nav.reports")}
+        period={t("{from} to {to}", { from, to })}
+        timezone={profile.timezone}
+      />
       <div className="phead">
         <h1>{t("nav.reports")}</h1>
+        <PrintButton />
         <span className="sc">
           <Rich
             text={t("{from} to {to} · from the ledger · <csv>every journal line (CSV)</csv>", {

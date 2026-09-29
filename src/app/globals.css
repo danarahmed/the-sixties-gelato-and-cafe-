@@ -1923,8 +1923,87 @@ a.card.stat:focus-visible {
    customer's check and the barista's ticket apart. Black only: a thermal
    printer has no grey. */
 .print-slip,
-.print-doc {
+.print-doc,
+.print-only {
   display: none;
+}
+/* A report printed or saved as a PDF (release AA): the page as it stands,
+   without the menu, the forms or the buttons, black on white, its tables
+   running on from page to page with their headings. */
+@media print {
+  html.printing-report .content {
+    page: report;
+  }
+  @page report {
+    margin: 12mm 10mm;
+  }
+  html.printing-report body > .app-shell {
+    display: block !important;
+  }
+  html.printing-report .topbar,
+  html.printing-report .sidenav,
+  html.printing-report .offline-banner,
+  html.printing-report form,
+  html.printing-report button,
+  html.printing-report .no-print,
+  html.printing-report .phead a {
+    display: none !important;
+  }
+  html.printing-report .layout {
+    display: block !important;
+  }
+  html.printing-report .content {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    color: #000;
+    font-size: 11px;
+  }
+  html.printing-report .print-only {
+    display: block !important;
+  }
+  html.printing-report .print-head {
+    margin-block-end: 6px;
+    padding-block-end: 4px;
+    border-block-end: 1px solid #000;
+  }
+  html.printing-report .panel,
+  html.printing-report .card {
+    border: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    padding: 0 !important;
+  }
+  html.printing-report table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  html.printing-report thead {
+    display: table-header-group;
+  }
+  html.printing-report tr {
+    break-inside: avoid;
+  }
+  html.printing-report tbody tr:nth-child(even) td {
+    background: transparent !important;
+  }
+  html.printing-report th,
+  html.printing-report td {
+    border-block-end: 1px solid #999;
+    color: #000 !important;
+  }
+  html.printing-report a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+  html.printing-report .badge {
+    border: 1px solid #000 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  html.printing-report .red {
+    color: #000 !important;
+  }
 }
 @media print {
   @page {

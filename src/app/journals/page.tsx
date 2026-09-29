@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PrintButton } from "@/components/PrintButton";
+import { PrintHead } from "@/components/PrintHead";
 import { getMsg, getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import {
@@ -65,8 +67,15 @@ export default async function JournalsPage({
     const name = chosen.map((r) => `${r.code} ${msg(r.name)}`).join(" + ") || ledgerOf.join(" + ");
     return (
       <div className="grid" style={{ gap: 18 }}>
+        <PrintHead
+          business={profile.businessName}
+          title={name}
+          period={t("{from} to {to}", { from, to })}
+          timezone={profile.timezone}
+        />
         <div className="phead">
           <h1>{t("nav.journals")}</h1>
+          <PrintButton />
           <span className="sc">{t("The lines behind the figure")}</span>
         </div>
         <AccountLedger
@@ -100,8 +109,15 @@ export default async function JournalsPage({
 
   return (
     <div className="grid" style={{ gap: 18 }}>
+      <PrintHead
+        business={profile.businessName}
+        title={t("nav.journals")}
+        period={period?.name}
+        timezone={profile.timezone}
+      />
       <div className="phead">
         <h1>{t("nav.journals")}</h1>
+        <PrintButton />
         <span className="sc">{t("Every entry in the book, by number, newest first")}</span>
         <div className="sp">
           {drafts > 0 && <span className="badge warn">{t("{n} draft", { n: drafts })}</span>}

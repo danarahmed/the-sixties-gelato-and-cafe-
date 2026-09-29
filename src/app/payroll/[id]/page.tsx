@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PrintButton } from "@/components/PrintButton";
+import { PrintHead } from "@/components/PrintHead";
 import { notFound } from "next/navigation";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
@@ -18,8 +20,15 @@ export default async function PayrollRunPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="grid" style={{ gap: 12 }}>
-      <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+      <PrintHead
+        business={profile.businessName}
+        title={t("nav.payroll")}
+        period={run.month}
+        timezone={profile.timezone}
+      />
+      <p className="muted" style={{ margin: 0, fontSize: ".85rem", display: "flex", gap: 12 }}>
         <Link href="/payroll">{t("← All payrolls")}</Link>
+        <PrintButton />
       </p>
       <PayrollRun run={run} canRun={has(profile, "payroll.run")} timezone={profile.timezone} />
     </div>
