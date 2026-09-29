@@ -64,6 +64,8 @@ const phrases: PhraseBook = {
   "Inventory count variance": { ar: "فروقات جرد المخزون", ckb: "جیاوازی ژماردنی کۆگا" },
   Rent: { ar: "الإيجار", ckb: "کرێی شوێن" },
   Salaries: { ar: "الرواتب", ckb: "مووچە" },
+  // Where a journal came from: an advance given to someone who works here (0049).
+  Advance: { ar: "سلفة", ckb: "پێشەکی" },
   Utilities: { ar: "الخدمات (الكهرباء والماء)", ckb: "خزمەتگوزارییەکان (کارەبا و ئاو)" },
   "Cash over / short": { ar: "زيادة / عجز النقد", ckb: "زیادە / کەمی پارەی نەختینە" },
   Depreciation: { ar: "الاستهلاك", ckb: "داخوران" },

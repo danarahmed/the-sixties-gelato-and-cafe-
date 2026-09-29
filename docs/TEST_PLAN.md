@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 450 tests)
+## 1. Unit (Vitest, 451 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -129,7 +129,8 @@ layers before every release.
 - `tests/i18n.test.ts` (release G): every phrase in Arabic and Kurdish, with the
   English's `{placeholders}` and `<tags>`, translated the same wherever it is
   repeated, and Kurdish in Kurdish letters; every `t("…")` a phrase the books
-  have; no screen with English written straight into it
+  have, and every word naming where a journal came from; no screen with
+  English written straight into it
   (`scripts/i18n-scan.mjs`); every message a form, an action or the database
   gives (`scripts/db-messages.mjs`) translated; the alerts the database tests
   raise, and the daily brief, translated whole with their values, dates and

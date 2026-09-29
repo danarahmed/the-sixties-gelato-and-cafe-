@@ -287,12 +287,26 @@ let RUN = "";
   await line.getByText("Eid bonus").waitFor({ timeout: 10000 });
   check((await net("Rana Staff")) === "582500", "a bonus added, with why");
 
+  // The message comes with the answer; the payroll's status, with the page
+  // refreshed after it.
+  const shows = (status) =>
+    page
+      .locator(`[data-testid="payroll-run"][data-status="${status}"]`)
+      .waitFor({ timeout: 10000 })
+      .then(
+        () => true,
+        () => false,
+      );
   await page.getByTestId("approve-payroll").click();
   await page
     .getByTestId("run-actions")
     .getByText("Approved, and posted.")
     .waitFor({ timeout: 10000 });
-  check((await page.getByTestId("run-status").textContent()).includes("Approved"), "approved");
+  check(
+    (await shows("approved")) &&
+      (await page.getByTestId("run-status").textContent()).includes("Approved"),
+    "approved",
+  );
 
   await page.getByTestId("pay-everyone").click();
   await page
@@ -300,7 +314,7 @@ let RUN = "";
     .getByText(/Paid\./)
     .waitFor({ timeout: 10000 });
   check(
-    (await page.getByTestId("run-status").textContent()).includes("Paid"),
+    (await shows("paid")) && (await page.getByTestId("run-status").textContent()).includes("Paid"),
     "paid, from the bank",
   );
   check(

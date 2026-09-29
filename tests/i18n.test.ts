@@ -427,6 +427,26 @@ describe("the code", () => {
     expect(unknown).toEqual([]);
   });
 
+  it("names where each journal came from in words the books have", () => {
+    // The register and an account's lines show a journal's source through t()
+    // from a map, which the check above cannot see.
+    const missing: string[] = [];
+    for (const { file, sf } of parsed)
+      walk(sf, (n) => {
+        if (!ts.isVariableDeclaration(n) || !ts.isIdentifier(n.name) || n.name.text !== "SOURCE")
+          return;
+        if (!n.initializer || !ts.isObjectLiteralExpression(n.initializer)) return;
+        for (const p of n.initializer.properties)
+          if (
+            ts.isPropertyAssignment(p) &&
+            isStringLike(p.initializer) &&
+            !known.has(p.initializer.text)
+          )
+            missing.push(`${file}: ${p.initializer.text}`);
+      });
+    expect(missing).toEqual([]);
+  });
+
   it("gives every message of a form or an action as a phrase", () => {
     // What an action answers ({ error }, { message }), what its checks say
     // (zod), and the names of the fields they check: shown through msg().
