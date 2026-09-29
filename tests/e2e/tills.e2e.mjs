@@ -281,6 +281,11 @@ console.log("▸ every report at a place (0057)");
     (await page.locator("#channel").textContent()).includes(secondSales.toLocaleString("en-US")),
     `its sales by channel are its own, ${secondSales.toLocaleString("en-US")}`,
   );
+  check(
+    (await page.getByTestId("reports-place-note").textContent()).includes("Second Branch") &&
+      (await page.getByTestId("reports-place-note").textContent()).includes("Payable Ageing"),
+    "and the page says which parts stay the whole café's",
+  );
   await ctx.close();
 }
 sql(`update user_role set location_id = '${main}'

@@ -74,6 +74,7 @@ function Controls({ locale, theme }: { locale: Locale; theme: "light" | "dark" }
           value={locale}
           onChange={(e) => changeLocale(e.target.value)}
           style={{
+            width: "auto",
             minHeight: 40,
             borderRadius: 8,
             padding: "0 8px",
@@ -146,7 +147,7 @@ export function AppShell({
         <span className="brand">{member.businessName || t("app.name")}</span>
         <span className="spacer" />
         <Controls locale={locale} theme={theme} />
-        <Link href="/account" className="badge" title={t("nav.account")}>
+        <Link href="/account" className="badge account-badge" title={t("nav.account")}>
           {member.name}
         </Link>
       </header>

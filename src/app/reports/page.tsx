@@ -311,6 +311,19 @@ export default async function ReportsPage({
         </span>
       </form>
 
+      {place && (
+        <p
+          className="muted"
+          style={{ margin: 0, fontSize: ".8rem" }}
+          data-testid="reports-place-note"
+        >
+          {t(
+            "Read for {place}. These stay the whole café's: Do the books tie?, Payable Ageing, Product Margin by Channel, and the customers with the points they hold.",
+            { place: placeName ?? "" },
+          )}
+        </p>
+      )}
+
       {/* ---- The analysis and the stock's value on a day (0051); the statements (0052) ---- */}
       <div
         className="card"
@@ -358,115 +371,123 @@ export default async function ReportsPage({
             />
           </span>
         </div>
-        <div className="tw">
-          <table>
-            <thead>
-              <tr>
-                <th>{t("Check")}</th>
-                <th className="right">{t("Subledger")}</th>
-                <th className="right">{t("Ledger")}</th>
-                <th className="right">{t("Difference")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rec.map((r) =>
-                r.key === "documents" ? (
-                  // A count of records, not money.
-                  <tr key={r.key} data-testid="rec-documents">
-                    <td>
-                      {r.difference === 0 ? "✅ " : "⛔ "}
-                      {msg(r.label)}
-                    </td>
-                    <td className="right mono">
-                      {r.subledger === 0 ? (
-                        t("none")
-                      ) : (
-                        <a className="drill" href="#documents">
-                          {t("{n} record(s)", { n: r.subledger })}
-                        </a>
-                      )}
-                    </td>
-                    <td className="right mono">—</td>
-                    <td className={`right mono ${r.difference !== 0 ? "red" : ""}`}>
-                      {r.difference}
-                    </td>
-                  </tr>
-                ) : (
-                  <tr key={r.key} data-testid={`rec-${r.key}`}>
-                    <td>
-                      {r.difference === 0 ? "✅ " : "⛔ "}
-                      {msg(r.label)}
-                    </td>
-                    <td className="right money">
-                      {recLinks[r.key] ? (
-                        <Link className="drill" href={recLinks[r.key]!.records}>
-                          {fmtIQD(r.subledger)}
-                        </Link>
-                      ) : (
-                        fmtIQD(r.subledger)
-                      )}
-                    </td>
-                    <td className="right money">
-                      {recLinks[r.key] ? (
-                        <Link
-                          className="drill"
-                          href={ledger(recLinks[r.key]!.accounts, monthStart(to), to)}
-                        >
-                          {fmtIQD(r.ledger)}
-                        </Link>
-                      ) : (
-                        fmtIQD(r.ledger)
-                      )}
-                    </td>
-                    <td className={`right money ${r.difference !== 0 ? "red" : ""}`}>
-                      {fmtIQD(r.difference)}
-                    </td>
-                  </tr>
-                ),
-              )}
-            </tbody>
-          </table>
-        </div>
-        {problems.length > 0 && (
-          <div className="tw" id="documents" style={{ padding: "0 16px" }}>
-            <h4 style={{ margin: "12px 0 6px" }}>{t("Records to look into")}</h4>
-            <table data-testid="document-problems">
+        {/* All tie: one line, the checks a click away. A check that fails opens them. */}
+        <details className="rec-details" open={unreconciled.length > 0 || problems.length > 0}>
+          <summary data-testid="rec-summary">
+            {unreconciled.length === 0
+              ? `✅ ${t("Every subledger agrees with its control account.")}`
+              : `⛔ ${t("{n} of {total} checks do not tie", { n: unreconciled.length, total: rec.length })}`}
+          </summary>
+          <div className="tw">
+            <table>
               <thead>
                 <tr>
-                  <th>{t("When")}</th>
-                  <th>{t("Record")}</th>
-                  <th>{t("What is wrong")}</th>
+                  <th>{t("Check")}</th>
+                  <th className="right">{t("Subledger")}</th>
+                  <th className="right">{t("Ledger")}</th>
+                  <th className="right">{t("Difference")}</th>
                 </tr>
               </thead>
               <tbody>
-                {problems.map((p) => (
-                  <tr key={`${p.kind}-${p.recordId}-${p.problem}`}>
-                    <td className="muted mono" style={{ fontSize: ".8rem" }}>
-                      {dateTimeIn(profile.timezone, p.at)}
-                    </td>
-                    <td>
-                      <Link className="drill" href={problemLink(p)}>
-                        {problemKind[p.kind] ?? p.kind}
-                      </Link>
-                    </td>
-                    <td>{msg(p.problem)}</td>
-                  </tr>
-                ))}
+                {rec.map((r) =>
+                  r.key === "documents" ? (
+                    // A count of records, not money.
+                    <tr key={r.key} data-testid="rec-documents">
+                      <td>
+                        {r.difference === 0 ? "✅ " : "⛔ "}
+                        {msg(r.label)}
+                      </td>
+                      <td className="right mono">
+                        {r.subledger === 0 ? (
+                          t("none")
+                        ) : (
+                          <a className="drill" href="#documents">
+                            {t("{n} record(s)", { n: r.subledger })}
+                          </a>
+                        )}
+                      </td>
+                      <td className="right mono">—</td>
+                      <td className={`right mono ${r.difference !== 0 ? "red" : ""}`}>
+                        {r.difference}
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={r.key} data-testid={`rec-${r.key}`}>
+                      <td>
+                        {r.difference === 0 ? "✅ " : "⛔ "}
+                        {msg(r.label)}
+                      </td>
+                      <td className="right money">
+                        {recLinks[r.key] ? (
+                          <Link className="drill" href={recLinks[r.key]!.records}>
+                            {fmtIQD(r.subledger)}
+                          </Link>
+                        ) : (
+                          fmtIQD(r.subledger)
+                        )}
+                      </td>
+                      <td className="right money">
+                        {recLinks[r.key] ? (
+                          <Link
+                            className="drill"
+                            href={ledger(recLinks[r.key]!.accounts, monthStart(to), to)}
+                          >
+                            {fmtIQD(r.ledger)}
+                          </Link>
+                        ) : (
+                          fmtIQD(r.ledger)
+                        )}
+                      </td>
+                      <td className={`right money ${r.difference !== 0 ? "red" : ""}`}>
+                        {fmtIQD(r.difference)}
+                      </td>
+                    </tr>
+                  ),
+                )}
               </tbody>
             </table>
           </div>
+          {problems.length > 0 && (
+            <div className="tw" id="documents" style={{ padding: "0 16px" }}>
+              <h4 style={{ margin: "12px 0 6px" }}>{t("Records to look into")}</h4>
+              <table data-testid="document-problems">
+                <thead>
+                  <tr>
+                    <th>{t("When")}</th>
+                    <th>{t("Record")}</th>
+                    <th>{t("What is wrong")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {problems.map((p) => (
+                    <tr key={`${p.kind}-${p.recordId}-${p.problem}`}>
+                      <td className="muted mono" style={{ fontSize: ".8rem" }}>
+                        {dateTimeIn(profile.timezone, p.at)}
+                      </td>
+                      <td>
+                        <Link className="drill" href={problemLink(p)}>
+                          {problemKind[p.kind] ?? p.kind}
+                        </Link>
+                      </td>
+                      <td>{msg(p.problem)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </details>
+        {unreconciled.length > 0 && (
+          <p
+            className="muted"
+            style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
+          >
+            {t(
+              "{n} difference(s). A period cannot be locked while its checks fail. Differences that predate the controls are explained in docs/REMEDIATION.md and are corrected by new, dated entries — reversals, cancelled bills, the owner's corrections — never by editing history.",
+              { n: unreconciled.length },
+            )}
+          </p>
         )}
-        <p
-          className="muted"
-          style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
-        >
-          {unreconciled.length === 0
-            ? t("Every subledger agrees with its control account.")
-            : t(
-                "{n} difference(s). A period cannot be locked while its checks fail. Differences that predate the controls are explained in docs/REMEDIATION.md and are corrected by new, dated entries — reversals, cancelled bills, the owner's corrections — never by editing history.",
-                { n: unreconciled.length },
-              )}
-        </p>
         <LegacyPostings
           records={unposted}
           canPost={has(profile, "accounting.period.unlock")}

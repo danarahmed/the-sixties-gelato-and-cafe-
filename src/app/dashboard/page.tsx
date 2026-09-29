@@ -47,7 +47,7 @@ export default async function DashboardPage() {
     { label: t("dash.orders"), value: String(d.orders), href: `/orders?${day}` },
     { label: t("dash.avgOrder"), value: fmtIQD(d.averageOrder), href: `/orders?${day}` },
     {
-      label: d.location ? t("Stock at {place}", { place: d.location }) : t("Inventory (1200)"),
+      label: d.location ? t("Stock at {place}", { place: d.location }) : t("Stock value"),
       value: fmtIQD(d.inventoryValue),
       href: "/inventory",
     },
@@ -134,7 +134,7 @@ export default async function DashboardPage() {
       </div>
       <p className="muted" style={{ margin: 0, fontSize: ".8rem" }}>
         {t(
-          "Revenue and cost of sales are read from today's published journal lines — the same figures the profit and loss will show. Gross profit here is after everything in cost of sales: waste, count differences, purchase price differences and platform fees. Open a figure to see what is behind it.",
+          "These are the profit and loss's own figures for today. Gross profit is after waste, count differences, price differences on deliveries and platform fees. Open a figure to see what is behind it.",
         )}
       </p>
 

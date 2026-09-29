@@ -212,6 +212,19 @@ console.log("▸ owner reads the exceptions, by person (0028)");
   await ctx.close();
 }
 
+console.log("▸ the books' checks: one line when all tie, open when one does not");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/reports");
+  const summary = (await page.getByTestId("rec-summary").textContent()).trim();
+  const unfolded = await page.locator("details.rec-details").evaluate((d) => d.open);
+  check(
+    summary.startsWith("✅") ? !unfolded : unfolded,
+    `the checks are ${unfolded ? "open" : "folded"}: "${summary}"`,
+  );
+  await ctx.close();
+}
+
 console.log("▸ a cashier downloads no journal lines, and no exceptions");
 {
   const { ctx, page } = await signIn(browser, "cashier");

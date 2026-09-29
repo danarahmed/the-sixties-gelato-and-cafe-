@@ -139,7 +139,7 @@ answered), kept apart.
 
 - **Net sales today**, **Gross profit after waste & fees**, **Orders**,
   **Average order value**;
-- **Inventory (1200)**: the value of stock in the ledger;
+- **Stock value**: the value of stock in the books (1200 Inventory);
 - **Low-stock items**: a count, and a list of items below their reorder level or
   negative;
 - each figure opens what is behind it: net sales the Sales by Channel report,
@@ -156,7 +156,9 @@ owner
 1. **Channel.** Choose **Dine-in**, **Takeaway**, **Direct delivery** or
    **Talabat**. Prices on the tiles change with it.
 2. **Products.** Tap a tile to add it. A tile is greyed out when the product has
-   no price on that channel. A product with **sizes or add-ons** (`0041`)
+   no price on that channel. The categories beside the tiles (**All**,
+   **★ Favourites**, then the café's own) narrow them; a product with no
+   category is under **No category**. A product with **sizes or add-ons** (`0041`)
    opens one sheet: tap the size, then its add-ons — a group that asks for a
    choice (the milk) comes first, and the drink is not added until it has
    one; tap an add-on again to take it off, and **+** for another of it
@@ -552,6 +554,9 @@ through, and is left out of the totals: it is no longer spent.
 **Location:** Sidebar → **Purchasing** · `/purchasing` · **Who:** anyone who sees
 costs; orders and receiving: purchasing, managers; approving: owner, general
 manager, branch manager
+
+The page says in plain words what receiving does; **How it is booked** under
+it gives the debits and credits, for the accountant.
 
 - **Purchase orders:** every order with its supplier, the day it is expected,
   what has come of each line, its total and its stage: **Draft**,
@@ -1150,8 +1155,9 @@ the P&L: owner, managers, accountant, auditor
 Choose **From** and **To**, or **This month**, **Last month**, **This year**.
 With more than one place, **Place** reads every report on the page for **The
 whole café** or one of its places (`0057`), its name by the title; the links
-to the analysis and the stock's value, and the CSVs, keep it. Someone who
-works at one place reads theirs and chooses no other.
+to the analysis and the stock's value, and the CSVs, keep it. A line under the
+dates says which parts stay the whole café's. Someone who works at one place
+reads theirs and chooses no other.
 **Every journal line (CSV)** downloads the whole ledger for those dates, for the
 accountant's own tools. Two pages open from the top (`0051`):
 
@@ -1193,7 +1199,9 @@ Accounts), the audit trail, Journals and an account's ledger, the usage
 report, an item's movements, a cash session's statement and a payroll.
 
 - **Do the books tie?** Each subledger against its control account, as at the
-  **To** date, with **CSV**:
+  **To** date, with **CSV**. When every check ties it folds to one line (**✅
+  Every subledger agrees with its control account.**), the checks a click
+  away; one that does not tie opens them:
   - stock vs Inventory;
   - unpaid bills (and deliveries the previous app posted to payables) vs
     Accounts payable;

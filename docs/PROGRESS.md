@@ -1510,6 +1510,27 @@ browser tests through the real app, or both.
     could match both);
   - every new text in Arabic and Kurdish.
 
+- **The UX and integration pass, first part (no migration).** Every main
+  screen walked through as the owner, a manager and a cashier, in English and
+  Arabic, on a phone and a desk (COMPLETION_PLAN §L.5):
+  - **tick boxes** sized as tick boxes everywhere: on Settings → Add a person
+    the roles with two-word names showed as large empty squares;
+  - **the till's categories:** a product with no category is under **No
+    category**, not a second "Other" beside the café's own;
+  - **the phone's top bar** on one line: the café's name gives way, cut with
+    "…", and the language picker shows the language;
+  - **Reports:** "Do the books tie?" folds to one line when every check ties,
+    and opens when one does not; with a place chosen, a line says which parts
+    stay the whole café's;
+  - **plain words first:** Purchasing says what receiving does in a manager's
+    words, the debits and credits under **How it is booked**; Inventory and
+    the Dashboard say what their figures are without ledger terms; the
+    Dashboard's tile is **Stock value**.
+
+  Built and tested: browser checks for the phone's top bar, the till's
+  categories, Settings' tick boxes, the books' checks folded or open and a
+  place's note; every new text in Arabic and Kurdish.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
