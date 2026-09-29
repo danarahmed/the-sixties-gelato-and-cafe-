@@ -388,8 +388,30 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   nothing.
 - **Chart of accounts maintenance (M-06).** The accounts a café needs are all
   there. Adding or deactivating one needs a migration: there is no screen for it.
-- **Attachments (L-05).** There is no scan of an invoice on a bill or an
-  expense yet: it comes with the second part of release AA.
+- **Documents kept with the records, what they do not do (release AA,
+  `0053`).**
+  - Only deliveries, returns, bills, supplier's credit notes and expenses keep
+    documents. A sale, a count, a payroll or a journal keeps none.
+  - Documents are pictures (JPEG, PNG or WebP) and PDFs: 10 MB at most, 20 to a
+    record.
+    - A photo in another format must be saved as one of those first, as a
+      phone does when it sends one through the browser; a picture the browser
+      cannot open is refused.
+    - A photo over 1.5 MB is made smaller in the browser. A PDF is kept as it
+      was sent.
+  - Nothing is read from a document: the bill's number and amount are typed as
+    before. There is no search by document, and no thumbnail of a picture on
+    the page.
+  - A document taken off is never deleted. Its file stays in Storage, and the
+    page lists it struck through, with why. There is no deleting a file from
+    the app.
+  - The link that opens a document lasts a minute. A link copied and sent to
+    someone stops working after that.
+  - The files are kept in Supabase Storage, apart from the database, so a copy
+    of the database does not hold them (see
+    [`guides/backup-restore.md`](guides/backup-restore.md)). Clearing the test
+    records forgets which file went with which record; it does not remove the
+    files.
 - **Reports on paper, what they do not do (release AA).**
   - The PDF is the browser's: **Print or save as PDF** opens its print window,
     where the paper, the margins, upright or across, and whether the browser

@@ -1907,6 +1907,28 @@ a.card.stat:focus-visible {
   font: inherit;
 }
 
+/* The way from a record to the documents kept with it (0053): 📎 and how many. */
+.doclink {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-inline-start: 6px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.doclink .n {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.doclink.none {
+  opacity: 0.45;
+}
+.doclink.none:hover,
+.doclink.none:focus-visible {
+  opacity: 1;
+}
+
 /* ---------------------------------------------------- honest offline state */
 .offline-banner {
   background: var(--err);
@@ -2063,6 +2085,9 @@ a.card.stat:focus-visible {
   }
   .print-doc .muted {
     color: #000;
+  }
+  .print-doc .no-print {
+    display: none !important;
   }
   .print-slip {
     display: block;

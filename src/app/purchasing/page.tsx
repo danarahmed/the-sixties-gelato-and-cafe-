@@ -13,6 +13,8 @@ import { ReceiveStockForm } from "@/components/ReceiveStockForm";
 import { CorrectionCatalogue, ReceiptCorrection } from "@/components/ReceiptCorrection";
 import { PurchaseOrders } from "@/components/purchasing/PurchaseOrders";
 import { ReturnGoods } from "@/components/purchasing/ReturnGoods";
+import { DocumentsLink } from "@/components/documents/DocumentsLink";
+import { getDocumentCounts } from "@/lib/db/documents";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +36,17 @@ export default async function PurchasingPage() {
       getPurchaseOrders(),
       getSupplierReturns(20),
     ]);
+  // The documents kept with each delivery and return (0053).
+  const [receiptDocs, returnDocs] = await Promise.all([
+    getDocumentCounts(
+      "goods_receipt",
+      receipts.map((r) => r.id),
+    ),
+    getDocumentCounts(
+      "supplier_return",
+      returns.map((x) => x.id),
+    ),
+  ]);
   const today = businessToday(profile.timezone);
   const itemName = new Map([...items, ...outOfUse].map((i) => [i.id, i.name]));
   const kindLabel = (k: string) =>
@@ -163,7 +176,10 @@ export default async function PurchasingPage() {
             <tbody>
               {returns.map((x) => (
                 <tr key={x.id} data-testid="return-row" data-return={x.returnNo}>
-                  <td className="mono">{x.returnNo}</td>
+                  <td className="mono">
+                    {x.returnNo}
+                    <DocumentsLink kind="supplier_return" id={x.id} count={returnDocs[x.id] ?? 0} />
+                  </td>
                   <td className="muted mono" style={{ fontSize: ".8rem" }}>
                     {dateTimeIn(profile.timezone, x.createdAt)}
                   </td>
@@ -235,7 +251,14 @@ export default async function PurchasingPage() {
                   return (
                     <Fragment key={r.id}>
                       <tr data-testid="receipt-row" data-receipt={r.receiptNo ?? ""}>
-                        <td className="mono">{r.receiptNo ?? "—"}</td>
+                        <td className="mono">
+                          {r.receiptNo ?? "—"}
+                          <DocumentsLink
+                            kind="goods_receipt"
+                            id={r.id}
+                            count={receiptDocs[r.id] ?? 0}
+                          />
+                        </td>
                         <td className="muted mono" style={{ fontSize: ".8rem" }}>
                           {r.receivedOn && r.receivedOn !== entered ? (
                             <span

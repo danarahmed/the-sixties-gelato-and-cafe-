@@ -87,6 +87,11 @@ export const AUDIT_GROUPS = [
     prefixes: ["customer.", "loyalty."],
   },
   {
+    key: "documents",
+    label: "Documents kept with records", // i18n-ignore
+    prefixes: ["document."],
+  },
+  {
     key: "settings",
     label: "Settings, places, platforms & people", // i18n-ignore
     prefixes: [
@@ -228,6 +233,9 @@ const ACTION_LABEL: Record<string, string> = {
   "customer.save": "Customer saved",
   "customer.address": "Customer's address saved",
   "loyalty.adjust": "Points given or taken by hand",
+  // Documents kept with the records (0053): the record is named by its number.
+  "document.attach": "Document attached",
+  "document.detach": "Document taken off",
 };
 
 /**

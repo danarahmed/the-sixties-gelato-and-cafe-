@@ -1368,3 +1368,45 @@ approval, wait, key)`** (`waste.record`), on the trail as `inventory.loss`.
 - **What they read:** the published journals and their lines, the chart of
   accounts, and, for a bill paid, its `supplier_payment` and the bill's
   `purchase_invoice.expense_account_code`.
+
+### Documents kept with the records (`0053`)
+
+- **`document_attachment`**: which file goes with which record. It holds:
+  - the café, and the kind of record: `goods_receipt`, `supplier_return`,
+    `purchase_invoice`, `supplier_credit` or `expense`, with the record's id;
+  - the file's place in Storage (`storage_path`, unique);
+  - its name (1 to 200 letters), its kind (JPEG, PNG, WebP or PDF) and its size
+    (10 MB at most);
+  - a note (500 letters at most), and who attached it and when;
+  - once taken off, who took it off, when and why.
+
+  A trigger refuses changing a document or deleting it. Whoever may see that
+  kind of record's documents reads the table; only the functions write it.
+
+- **Storage:** a private bucket, `documents`, takes the four kinds up to 10 MB.
+  Each file sits under `<business>/<kind>/<record>/<a name of its own>`. Two
+  rules on `storage.objects`:
+  - someone of the café puts a file there only if they may keep that kind of
+    record;
+  - they read one only if they may see it.
+- **Who:** `document_permissions(kind)` names who attaches each kind:
+  - a delivery: `purchase.receive`;
+  - a return: `purchase.receive` or `purchase.create`;
+  - a bill or a credit note: `purchase.create` or `accounting.post`;
+  - an expense: `expense.record`.
+
+  The rules call `document_may_attach(kind)` and `document_may_see(kind)`. Seeing
+  takes that permission, or `cost.view`.
+
+- **Functions:**
+  - `attach_document(kind, record, path, file_name, note, key)`, keyed. The
+    file must be in the bucket under that record, of a kind and size allowed,
+    and not attached already, and the record must keep fewer than 20.
+  - `detach_document(document, reason, key)`, keyed.
+  - Both write the audit trail (`document.attach`, `document.detach`), naming
+    the record by its number.
+  - `documents_for(kind, record)`, `document_counts(kind, records[])` and
+    `document_record(kind, record)`: what a record's page and the 📎 in the
+    lists show.
+- **Helpers nobody calls:** `document_record_exists`, `document_record_ref`,
+  `attach_document__run` and `detach_document__run`.

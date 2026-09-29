@@ -55,6 +55,9 @@ const typed = () =>
     union select coalesce(label, '') from customer_address union select address from customer_address
     union select coalesce(directions, '') from customer_address union select coalesce(reason, '') from loyalty_ledger
     union select coalesce(delivery_address, '') from sales_order union select coalesce(delivery_address, '') from pos_tab
+    -- Documents kept with the records (0053): their names, notes and why one was taken off.
+    union select file_name from document_attachment union select coalesce(note, '') from document_attachment
+    union select coalesce(removed_reason, '') from document_attachment
   ) x where n is not null`);
 const own = () =>
   new Set(
@@ -94,6 +97,11 @@ const SAME = new Set(
     "md",
     // The test fixtures' own records (an opening stock typed "fixture").
     "fixture",
+    // The kinds of file a document may be (0053).
+    "PDF",
+    "JPEG",
+    "PNG",
+    "WebP",
   ].map((w) => w.toLowerCase()),
 );
 // On Delivery Platforms, the column names of a platform's own report, which

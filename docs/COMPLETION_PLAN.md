@@ -14,8 +14,9 @@ accounts, giveaways at the till and the loss report, `0047`–`0048`) since 28
 September, and release W (staff, their hours and their pay, `0049`),
 release X (customers and their points, `0050`), release Y (the sales
 analysis, the stock's value on a day and what was bought, `0051`), release Z
-(the balance sheet and the cash-flow statement, `0052`) and the first part of
-release AA (every report printed or saved as a PDF) since 29 September.
+(the balance sheet and the cash-flow statement, `0052`) and release AA (every
+report printed or saved as a PDF, and the documents kept with the records,
+`0053`) since 29 September.
 What was built differs from the plan below in these ways.
 
 Release J:
@@ -577,6 +578,27 @@ Release AA:
   trail, Journals and an account's ledger, the usage report, an item's
   movements, a cash session's statement and a payroll. The till's bills and
   receipts, a purchase order and a vendor's statement keep their own print.
+- **Numbered `0053`** (the plan's `0052` went to the statements). The table is
+  `document_attachment`, as planned, keyed by the kind of record and its id.
+  It has no foreign key for each kind: a check on the kind, and a function
+  that finds the record.
+- **The kinds of record:** deliveries, returns to a supplier, bills, supplier's
+  credit notes and expenses. Whoever may record each kind attaches its
+  documents, and whoever sees costs sees them. The bucket's two rules call the
+  same helpers as the functions, so Storage and the database agree on who may.
+- **Taken off, never deleted.** A document is taken off with a reason. Its
+  row and its file stay, and the record's page lists it apart. The audit
+  trail names the record by its number, before and after, so what changed is
+  the document.
+- **Straight to Storage.** A file goes from the browser to Storage through a
+  link the app's server makes for the person, which Storage gives only to
+  someone the bucket's rule lets put it there. The app's server never carries
+  a file, so a PDF may be up to 10 MB. A photo over 1.5 MB is made smaller in
+  the browser first, its longer side 2,000 pixels, as a JPEG.
+- **Opened through a link that lasts a minute,** made only for someone who may
+  read the file. The file is never served from the app's own address.
+- **Not built:** reading the bill's numbers from its photo, thumbnails, and
+  documents on other records (sales, counts, payroll).
 
 **Basis:**
 

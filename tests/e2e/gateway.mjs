@@ -1,13 +1,18 @@
 // A stand-in for Supabase's API gateway, for LOCAL end-to-end checks only:
-//   /rest/v1/*  -> the real PostgREST (port 54330)
-//   /auth/v1/*  -> a minimal auth server issuing HS256 JWTs PostgREST accepts,
-//                  for the four fixture people (tests/sql/harness/fixtures.sql)
-//                  and the barista the production suite adds.
+//   /rest/v1/*    -> the real PostgREST (port 54330)
+//   /auth/v1/*    -> a minimal auth server issuing HS256 JWTs PostgREST accepts,
+//                    for the four fixture people (tests/sql/harness/fixtures.sql)
+//                    and the barista the production suite adds.
+//   /storage/v1/* -> the Storage calls the documents make (0053): a link to
+//                    put one file, the file put through it, and a link to read
+//                    it; the bucket's rules checked as the person, as Storage
+//                    checks them, and the files kept in memory.
 // It is not Supabase Auth and must never be deployed; it exists so the app's
 // cookie sessions, row-level security and every database call can be exercised
 // for real, with real JWTs, without a hosted project.
 import http from "node:http";
 import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 
 const SECRET = process.env.JWT_SECRET;
 if (!SECRET) throw new Error("JWT_SECRET is required");
@@ -96,6 +101,201 @@ function body(req) {
     req.on("end", () => r(d));
   });
 }
+function bytes(req) {
+  return new Promise((r) => {
+    const parts = [];
+    req.on("data", (c) => parts.push(c));
+    req.on("end", () => r(Buffer.concat(parts)));
+  });
+}
+
+// ------------------------------------------------------------------ Storage
+// The files, by "<bucket>/<path>": what was put, and its kind.
+const files = new Map();
+const CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, PUT, OPTIONS",
+  "access-control-max-age": "600",
+};
+/**
+ * SQL against the scratch database: as its superuser, as Storage writes a
+ * file's row; or, given a person's claims, as that person, in a transaction
+ * rolled back, as Storage checks what they may do.
+ */
+function storageSql(query, vars, claims = null) {
+  const args = [
+    "-X",
+    "-q",
+    "-At",
+    "-v",
+    "ON_ERROR_STOP=1",
+    "-d",
+    process.env.E2E_DB || "sixties_e2e",
+  ];
+  for (const [k, v] of Object.entries({ ...vars, claims: JSON.stringify(claims ?? {}) }))
+    args.push("-v", `${k}=${v}`);
+  const script = claims
+    ? `begin;\nset local "request.jwt.claims" to :'claims';\nset local role authenticated;\n${query}\nrollback;\n`
+    : `${query}\n`;
+  return execFileSync("psql", args, { input: script, stdio: ["pipe", "pipe", "pipe"] })
+    .toString()
+    .trim();
+}
+function storageError(res, status, statusCode, error, message) {
+  res.writeHead(status, { "content-type": "application/json", ...CORS });
+  res.end(JSON.stringify({ statusCode, error, message }));
+}
+/** "/object/upload/sign/documents/a/b.pdf" -> { bucket: "documents", name: "a/b.pdf" }. */
+function objectName(rest) {
+  const [bucket, ...name] = rest.split("/").map(decodeURIComponent);
+  return { bucket, name: name.join("/") };
+}
+async function storage(req, res, url) {
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, {
+      ...CORS,
+      "access-control-allow-headers": req.headers["access-control-request-headers"] || "*",
+    });
+    return res.end();
+  }
+  const route = url.pathname.slice("/storage/v1".length);
+  const token = verify(url.searchParams.get("token"));
+  const person = verify((req.headers.authorization || "").replace(/^Bearer /, ""));
+  // A link to put one file there: given only to someone the bucket lets put it.
+  if (req.method === "POST" && route.startsWith("/object/upload/sign/")) {
+    const { bucket, name } = objectName(route.slice("/object/upload/sign/".length));
+    if (!person?.sub) return storageError(res, 400, "403", "Unauthorized", "Invalid JWT");
+    const vars = { bucket, name, sub: person.sub };
+    const exists = storageSql(
+      "select count(*) from storage.objects where bucket_id = :'bucket' and name = :'name';",
+      vars,
+    );
+    if (exists !== "0")
+      return storageError(res, 400, "409", "Duplicate", "The resource already exists");
+    try {
+      storageSql(
+        "insert into storage.objects (bucket_id, name, owner, owner_id, metadata) " +
+          "values (:'bucket', :'name', (:'sub')::uuid, :'sub', '{}'::jsonb) returning id;",
+        vars,
+        person,
+      );
+    } catch {
+      return storageError(
+        res,
+        400,
+        "403",
+        "Unauthorized",
+        "new row violates row-level security policy",
+      );
+    }
+    const t = sign({
+      owner: person.sub,
+      url: `${bucket}/${name}`,
+      upsert: false,
+      exp: Math.floor(Date.now() / 1000) + 7200,
+    });
+    res.writeHead(200, { "content-type": "application/json", ...CORS });
+    return res.end(JSON.stringify({ url: `/object/upload/sign/${bucket}/${name}?token=${t}` }));
+  }
+  // The file, put through that link: its kind and size checked against the bucket's.
+  if (req.method === "PUT" && route.startsWith("/object/upload/sign/")) {
+    const { bucket, name } = objectName(route.slice("/object/upload/sign/".length));
+    if (!token || token.url !== `${bucket}/${name}`)
+      return storageError(res, 400, "403", "Unauthorized", "Invalid signature");
+    const data = await bytes(req);
+    const type = String(req.headers["content-type"] || "")
+      .split(";")[0]
+      .trim();
+    const [limit, types] = storageSql(
+      "select coalesce(file_size_limit, 0) || '|' || coalesce(array_to_string(allowed_mime_types, ','), '') " +
+        "from storage.buckets where id = :'bucket';",
+      { bucket },
+    ).split("|");
+    if (types && !types.split(",").includes(type))
+      return storageError(
+        res,
+        400,
+        "415",
+        "invalid_mime_type",
+        `mime type ${type} is not supported`,
+      );
+    if (Number(limit) > 0 && data.length > Number(limit))
+      return storageError(
+        res,
+        400,
+        "413",
+        "Payload too large",
+        "The object exceeded the maximum allowed size",
+      );
+    const meta = {
+      eTag: `"${crypto.createHash("md5").update(data).digest("hex")}"`,
+      size: data.length,
+      mimetype: type,
+      cacheControl: String(req.headers["cache-control"] || "no-cache"),
+      lastModified: new Date().toUTCString(),
+      contentLength: data.length,
+      httpStatusCode: 200,
+    };
+    let id;
+    try {
+      id = storageSql(
+        "insert into storage.objects (bucket_id, name, owner, owner_id, metadata) " +
+          "values (:'bucket', :'name', (:'owner')::uuid, :'owner', (:'meta')::jsonb) returning id;",
+        { bucket, name, owner: token.owner, meta: JSON.stringify(meta) },
+      );
+    } catch {
+      return storageError(res, 400, "409", "Duplicate", "The resource already exists");
+    }
+    files.set(`${bucket}/${name}`, { type, data });
+    res.writeHead(200, { "content-type": "application/json", ...CORS });
+    return res.end(JSON.stringify({ Key: `${bucket}/${name}`, Id: id }));
+  }
+  // A link to read a file for a minute: given only to someone who may read it.
+  if (req.method === "POST" && route.startsWith("/object/sign/")) {
+    const { bucket, name } = objectName(route.slice("/object/sign/".length));
+    if (!person?.sub) return storageError(res, 400, "403", "Unauthorized", "Invalid JWT");
+    const seen = storageSql(
+      "select count(*) from storage.objects where bucket_id = :'bucket' and name = :'name';",
+      { bucket, name },
+      person,
+    );
+    if (seen !== "1") return storageError(res, 400, "404", "not_found", "Object not found");
+    const { expiresIn = 60 } = JSON.parse((await body(req)) || "{}");
+    const t = sign({
+      url: `${bucket}/${name}`,
+      exp: Math.floor(Date.now() / 1000) + Number(expiresIn),
+    });
+    res.writeHead(200, { "content-type": "application/json", ...CORS });
+    return res.end(JSON.stringify({ signedURL: `/object/sign/${bucket}/${name}?token=${t}` }));
+  }
+  // The file itself, through that link, while it lasts.
+  if (req.method === "GET" && route.startsWith("/object/sign/")) {
+    const { bucket, name } = objectName(route.slice("/object/sign/".length));
+    const file = files.get(`${bucket}/${name}`);
+    if (!token || token.url !== `${bucket}/${name}`)
+      return storageError(
+        res,
+        400,
+        "InvalidSignature",
+        "InvalidSignature",
+        "The signature is invalid or expired",
+      );
+    if (!file) return storageError(res, 400, "404", "not_found", "Object not found");
+    const download = url.searchParams.get("download");
+    res.writeHead(200, {
+      "content-type": file.type,
+      "content-length": file.data.length,
+      ...(download !== null
+        ? {
+            "content-disposition": `attachment; filename*=UTF-8''${encodeURIComponent(download || name.split("/").pop())}`,
+          }
+        : {}),
+      ...CORS,
+    });
+    return res.end(file.data);
+  }
+  return storageError(res, 400, "404", "not_found", `not handled: ${req.method} ${url.pathname}`);
+}
 
 http
   .createServer(async (req, res) => {
@@ -129,6 +329,7 @@ http
       req.pipe(up);
       return;
     }
+    if (url.pathname.startsWith("/storage/v1/")) return storage(req, res, url);
     if (url.pathname === "/auth/v1/token") {
       const data = JSON.parse((await body(req)) || "{}");
       const grant = url.searchParams.get("grant_type");

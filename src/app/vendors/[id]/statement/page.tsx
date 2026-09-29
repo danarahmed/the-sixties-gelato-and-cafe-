@@ -7,6 +7,8 @@ import { fmtIQD } from "@/lib/format";
 import { businessToday, monthStart, parseDay } from "@/lib/dates";
 import { CREDIT_KIND_LABEL, type StatementLine } from "@/lib/purchasing";
 import { PrintDocument } from "@/components/PrintDocument";
+import { DocumentsLink } from "@/components/documents/DocumentsLink";
+import { getDocumentCounts } from "@/lib/db/documents";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +47,17 @@ export default async function SupplierStatementPage({
     if (e instanceof Error && /Supplier not found/.test(e.message)) notFound();
     throw e;
   });
+  // The documents kept with each bill and credit note (0053), shown on the screen only.
+  const [billDocs, creditDocs] = await Promise.all([
+    getDocumentCounts(
+      "purchase_invoice",
+      s.lines.filter((l) => l.kind === "bill").map((l) => l.id),
+    ),
+    getDocumentCounts(
+      "supplier_credit",
+      s.lines.filter((l) => l.kind === "credit").map((l) => l.id),
+    ),
+  ]);
 
   const what = (l: StatementLine): string => {
     switch (l.kind) {
@@ -130,7 +143,15 @@ export default async function SupplierStatementPage({
               <tr key={`${l.kind}-${l.id}`}>
                 <td>{l.date}</td>
                 <td>{what(l)}</td>
-                <td className="ref">{ref(l)}</td>
+                <td className="ref">
+                  {ref(l)}
+                  {l.kind === "bill" && (
+                    <DocumentsLink kind="purchase_invoice" id={l.id} count={billDocs[l.id] ?? 0} />
+                  )}
+                  {l.kind === "credit" && (
+                    <DocumentsLink kind="supplier_credit" id={l.id} count={creditDocs[l.id] ?? 0} />
+                  )}
+                </td>
                 <td className="right money">{l.charge ? fmtIQD(l.charge) : "—"}</td>
                 <td className="right money">{l.credit ? `(${fmtIQD(l.credit)})` : "—"}</td>
                 <td className="right money">{fmtIQD(l.balance)}</td>
