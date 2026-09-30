@@ -13,7 +13,8 @@ browser tests through the real app, or both.
   Arabic and Kurdish, a lost answer on each kind of screen, every report on A4
   paper, documents kept with the records, stock sent between the café's
   places, the tills at each branch, the books by place and every report at a
-  place), the unit and contract tests (505) and a production build all pass.
+  place), the unit and contract tests (510) and a production build all pass.
+  The UX and integration pass was closed on 30 September 2026, in four parts.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -1609,6 +1610,18 @@ browser tests through the real app, or both.
   - **"First in stock here today"** and **"No history yet"**, not "only 0
     day(s) of history", on the buying list and the day's production plan.
 
+  Deployed with
+  [pull request #50](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/50).
+
+- **The docs checked against the code (the audit's M-14, no migration).** A
+  unit test now fails when the runbook or the data model leaves out a
+  migration, or the data model a table. It found the data model silent on
+  `0008`–`0013`, on the café's own languages and words (`0032`: `app_language`
+  and `app_phrase`) and on a new item added from its delivery (`0033`); each
+  now has its section. The limitations no longer say the alerts and the daily
+  brief are in English only: they have been in the reader's language since
+  `0032`.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -1647,7 +1660,7 @@ browser tests through the real app, or both.
 | M-11 | Production has no write path                   |   ✅   | Batches recorded, costed and cancelled (0023); numbered, used by a date, kept batch by batch, and the day's plan (0046); moves between locations not built       |
 | M-12 | Movement value ≠ unit cost × quantity          |   ✅   | Enforced by a constraint                                                                                                                                         |
 | M-13 | Stock adjustments unchecked                    |   ✅   | Allowed types only, cost from the ledger, a reason, manager approval over the threshold, journal in the same transaction                                         |
-| M-14 | Documents contradict the code                  |   🟡   | Rewritten against the code; the September 2026 audit (Appendix B) found drift again, and `0024` fixes the lines it touches. No automated check                   |
+| M-14 | Documents contradict the code                  |   ✅   | Rewritten against the code; a unit test fails when the runbook or the data model leaves out a migration, or the data model a table (`tests/docs.test.ts`)        |
 | L-01 | Journals with no lines                         |   ✅   | A published entry needs balanced lines                                                                                                                           |
 | L-02 | A finished sale's cost can change              |   ✅   | Cost, lines and tenders frozen                                                                                                                                   |
 | L-03 | Period names in UTC                            |   ✅   | Business timezone                                                                                                                                                |

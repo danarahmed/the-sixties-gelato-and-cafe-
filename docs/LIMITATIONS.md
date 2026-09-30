@@ -384,7 +384,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   dashboard opens, not in the background, and nothing is sent: there is no
   email, WhatsApp or phone notification, and the daily brief waits on the
   dashboard rather than arriving at 07:00. The alert texts and the brief are
-  in English only. Running out knows a delivery time per supplier, taken from
+  in the reader's language, as the database words them translated whole
+  (`0032`). Running out knows a delivery time per supplier, taken from
   the item's last delivery; an item with no delivery yet uses the café's.
   Use-by dates (P2-7) and a late sale (impossible since `0024`) raise
   nothing.
