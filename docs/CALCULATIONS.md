@@ -507,10 +507,36 @@ and 2,400 with 450 commission each and 100 fees on 5503: Dr 1020 4,950, Dr
 5100 900, Dr 5200 150 (100 fees and 50 not explained), Cr 1100 6,000; 5502,
 sold between them, is left out.
 
-Statements are pasted from the platform's report: amounts are read as
-printed ("1,500", "IQD 2,550", "(900)"), a total row is left out, and
+Statements are pasted from the platform's report, or read from its file
+(Excel, CSV): the columns are found by their names below any title the
+report starts with, amounts are read as printed ("1,500", "IQD 2,550",
+"(900)"), a total row and a title or note with no payout are left out, and
 commission and fees printed as deductions (−450) are read as what the
 platform kept (450).
+
+**The bank's statement (`0059`).** A statement is kept when the lines ticked
+take the bank from the last statement kept to the balance the bank gives:
+
+```
+reached    = the last statement's balance (0 for the first) + Σ money in ticked − Σ money out ticked
+difference = the bank's balance − reached                     (kept only at 0)
+```
+
+Read from the bank's file or pasted, each of its lines (a date, money in or
+out, the balance after it) after the last statement kept is found among the
+books' bank lines on no statement yet, up to the statement's last day: the
+line of the same amount on the same day, else the nearest day up to 31 days
+before it or 7 after; each of the books' lines once, the statement's lines
+taken oldest first. Those found are ticked; the statement's last day and
+balance fill in the day and the balance. A statement giving the newest line
+first is put the other way round, told by its running balance (each line's
+balance is the one before it plus the line), else by its dates. Worked
+example (the unit test): the books hold 500,000 out on the 14th, 250,000 in
+on the 13th and 75,000 out on the 15th; the statement gives 500,000 out on
+the 14th, 250,000 in on the 15th and 5,000 out on the 16th. The first two are
+found (the card money two days after the books'), the 75,000 stays open (a
+cheque not cashed), and the 5,000 is on the statement, not in the books: a
+charge, recorded on Expenses, then found too.
 
 ## 10. Profit, shown separately (never one number)
 

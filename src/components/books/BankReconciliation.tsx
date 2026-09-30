@@ -6,19 +6,38 @@
  * take the bank from the last statement's balance to the one the bank gives,
  * and undoes the latest, with why. A line not on the bank's statement yet (a
  * transfer on its way) stays open for the next one.
+ *
+ * The bank's statement may be read from its file (or pasted): its lines are
+ * found among the books' lines and ticked, its last day and balance filled
+ * in, and its lines not in the books listed, to be recorded. What was read is
+ * kept for this browser tab, so it is found again after a bank's charge is
+ * recorded on Expenses.
  */
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Decimal from "decimal.js";
 import { saveBankStatementAction, undoBankStatementAction } from "@/lib/actions/bank";
-import { bankMath, linesTo } from "@/lib/bank";
+import {
+  BANK_EXAMPLE,
+  bankMath,
+  linesTo,
+  matchBankStatement,
+  parseBankStatement,
+  type BankStatementMatch,
+  type ParsedBankStatement,
+} from "@/lib/bank";
 import type { BankBook, BankStatementRow } from "@/lib/db/bank";
 import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { ReadStatementFile } from "@/components/ReadStatementFile";
 
 type Msg = { ok: boolean; text: string } | null;
+
+/** The bank's statement read on this page, kept for the browser tab. */
+const READ_KEY = "bank-statement-read";
 
 export function BankReconciliation({
   book,
@@ -29,7 +48,7 @@ export function BankReconciliation({
   canKeep: boolean;
   today: string;
 }) {
-  const { t, msg: say } = useT();
+  const { t, msg: say, locale } = useT();
   const router = useRouter();
   const op = useOperation();
   const [busy, start] = useTransition();
@@ -38,9 +57,49 @@ export function BankReconciliation({
   const [ticked, setTicked] = useState<ReadonlySet<string>>(() => new Set());
   const [note, setNote] = useState("");
   const [msg, setMsg] = useState<Msg>(null);
+  const [statement, setStatement] = useState("");
+  const [pasting, setPasting] = useState(false);
+  // Changed to start the file's button afresh, once what it read is let go.
+  const [fileKey, setFileKey] = useState(0);
 
   const after = book.last?.statementDate ?? "";
   const opening = book.last?.closingBalance ?? 0;
+  const read = useMemo(
+    () => (statement.trim() === "" ? null : parseBankStatement(statement)),
+    [statement],
+  );
+  const found = useMemo(
+    () => (read ? matchBankStatement(read, book.open, after) : null),
+    [read, book.open, after],
+  );
+
+  /** A statement read: its last day, its balance, and the books' lines it shows, ticked. */
+  function readStatement(text: string) {
+    setStatement(text);
+    try {
+      if (text.trim() === "") sessionStorage.removeItem(READ_KEY);
+      else sessionStorage.setItem(READ_KEY, text);
+    } catch {
+      // Kept for the tab only when the browser keeps it.
+    }
+    if (text.trim() === "") return;
+    const m = matchBankStatement(parseBankStatement(text), book.open, after);
+    if (m.lastDay && m.lastDay <= today && (after === "" || m.lastDay > after)) setDate(m.lastDay);
+    if (m.closing !== null) setClosing(m.closing);
+    setTicked(new Set(m.ticked));
+  }
+
+  // Back on the page in the same tab, after recording a charge: read it again.
+  useEffect(() => {
+    let saved: string | null = null;
+    try {
+      saved = sessionStorage.getItem(READ_KEY);
+    } catch {
+      saved = null;
+    }
+    if (saved && canKeep) readStatement(saved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const lines = linesTo(book.open, date);
   const onIt = lines.filter((l) => ticked.has(l.lineId));
   const m = bankMath(
@@ -77,6 +136,9 @@ export function BankReconciliation({
       setTicked(new Set());
       setClosing("");
       setNote("");
+      readStatement("");
+      setPasting(false);
+      setFileKey((k) => k + 1);
       router.refresh();
     });
   }
@@ -128,6 +190,61 @@ export function BankReconciliation({
           </span>
         </div>
         <div className="panel-b grid" style={{ gap: 12 }}>
+          {canKeep && (
+            <div className="grid" style={{ gap: 8 }} data-testid="bank-read">
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <span className="sc">{t("The bank's statement")}</span>
+                <ReadStatementFile
+                  key={fileKey}
+                  testId="bank-file"
+                  onRead={(text) => readStatement(text)}
+                />
+                {statement === "" && !pasting && (
+                  <button type="button" className="linklike" onClick={() => setPasting(true)}>
+                    {t("or paste it")}
+                  </button>
+                )}
+                {statement !== "" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      readStatement("");
+                      setPasting(false);
+                      setFileKey((k) => k + 1);
+                    }}
+                  >
+                    {t("Clear the statement read")}
+                  </button>
+                )}
+              </div>
+              {(pasting || statement !== "") && (
+                <textarea
+                  aria-label={t("The bank's statement")}
+                  // The bank's own words and numbers: not to be translated.
+                  translate="no"
+                  rows={5}
+                  spellCheck={false}
+                  className="mono"
+                  style={{ width: "100%", fontSize: ".8rem" }}
+                  value={statement}
+                  placeholder={BANK_EXAMPLE[locale] ?? BANK_EXAMPLE.en}
+                  onChange={(e) => {
+                    setPasting(true);
+                    readStatement(e.target.value);
+                  }}
+                  data-testid="bank-statement-text"
+                />
+              )}
+              {read && found && (
+                <StatementRead
+                  read={read}
+                  found={found}
+                  after={after}
+                  kept={book.last ? opening : null}
+                />
+              )}
+            </div>
+          )}
           {canKeep && (
             <div
               className="grid"
@@ -284,6 +401,138 @@ export function BankReconciliation({
       </section>
 
       <Statements statements={book.statements} canKeep={canKeep} onDone={setMsg} />
+    </div>
+  );
+}
+
+/**
+ * What the bank's statement read comes to: its lines, those found in the
+ * books (ticked), those on a statement kept already, and those not in the
+ * books, to be recorded.
+ */
+function StatementRead({
+  read,
+  found,
+  after,
+  kept,
+}: {
+  read: ParsedBankStatement;
+  found: BankStatementMatch;
+  after: string;
+  /** Where the last statement kept ends; null when none is kept yet. */
+  kept: number | null;
+}) {
+  const { t, msg: say } = useT();
+  const inBooks = found.lines.filter((x) => x.lineId !== null).length;
+  const missing = found.lines.filter((x) => x.lineId === null).map((x) => x.line);
+  const first = read.lines[0]?.day;
+  const last = read.lines[read.lines.length - 1]?.day;
+  const startsElsewhere =
+    found.opening !== null && !new Decimal(found.opening).eq(kept ?? 0) ? found.opening : null;
+  return (
+    <div className="grid" style={{ gap: 6, fontSize: ".85rem" }} data-testid="bank-read-summary">
+      <div className="muted">
+        {t("{n} line(s) read", { n: read.lines.length })}
+        {first && last ? ` · ${t("{from} to {to}", { from: first, to: last })}` : ""}
+        {read.columns ? ` · ${t("columns: {columns}", { columns: read.columns.join(", ") })}` : ""}
+        {read.skipped > 0
+          ? ` · ${t("{n} row(s) left out: titles, totals and balances brought forward", { n: read.skipped })}`
+          : ""}
+      </div>
+      {read.problems.length > 0 && (
+        <ul className="red" style={{ margin: 0 }}>
+          {read.problems.slice(0, 8).map((p) => (
+            <li key={p}>{say(p)}</li>
+          ))}
+          {read.problems.length > 8 && (
+            <li>{t("…and {n} more", { n: read.problems.length - 8 })}</li>
+          )}
+        </ul>
+      )}
+      {found.before > 0 && (
+        <div className="muted">
+          {t(
+            "{n} of its line(s), to {date}, are on the statements kept already, and are left out.",
+            {
+              n: found.before,
+              date: after,
+            },
+          )}
+        </div>
+      )}
+      {read.lines.length > 0 && found.lines.length === 0 && (
+        <div>
+          {t("Every line on it is on or before {date}, on the statements kept already.", {
+            date: after,
+          })}
+        </div>
+      )}
+      {found.lines.length > 0 && (
+        <div data-testid="bank-found">
+          {t("{found} of its {n} line(s) are in the books, and are ticked.", {
+            found: inBooks,
+            n: found.lines.length,
+          })}
+        </div>
+      )}
+      {startsElsewhere !== null && (
+        <div style={{ color: "var(--warn)" }} data-testid="bank-starts">
+          {kept !== null
+            ? t(
+                "The statement starts from {opening}, and the last statement kept ends at {kept}: a line between them may be missing.",
+                { opening: fmtIQD(Number(startsElsewhere)), kept: fmtIQD(kept) },
+              )
+            : t(
+                "The statement starts from {opening}, and the books start the bank from nothing: the bank's opening balance may not be in the books yet.",
+                { opening: fmtIQD(Number(startsElsewhere)) },
+              )}
+        </div>
+      )}
+      {missing.length > 0 && (
+        <div
+          className="card grid"
+          style={{ gap: 6, borderColor: "var(--warn)" }}
+          data-testid="bank-not-in-books"
+        >
+          <strong>{t("On the statement, not in the books")}</strong>
+          <div className="tw">
+            <table className="stack-table">
+              <thead>
+                <tr>
+                  <th>{t("Date")}</th>
+                  <th>{t("What")}</th>
+                  <th className="right">{t("Money in")}</th>
+                  <th className="right">{t("Money out")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {missing.map((l) => (
+                  <tr key={l.line} data-testid="bank-missing" data-amount={l.amount}>
+                    <td className="when" data-label={t("Date")}>
+                      {l.day}
+                    </td>
+                    <td data-label={t("What")}>
+                      <bdi translate="no">{l.description}</bdi>
+                    </td>
+                    <td className="right money" data-label={t("Money in")}>
+                      {Number(l.amount) > 0 ? fmtIQD(Number(l.amount)) : ""}
+                    </td>
+                    <td className="right money" data-label={t("Money out")}>
+                      {Number(l.amount) < 0 ? fmtIQD(-Number(l.amount)) : ""}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <span className="muted">
+            {t(
+              "Record each one (a bank's charge on Expenses, paid from the bank; interest by a journal): back on this page, it is found and ticked.",
+            )}{" "}
+            <Link href="/expenses">{t("nav.expenses")}</Link>
+          </span>
+        </div>
+      )}
     </div>
   );
 }

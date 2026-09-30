@@ -730,6 +730,67 @@ const phrases: PhraseBook = {
     ar: "{1} قيد للبنك حتى {2}، أولها من {3}، ليست في أي كشف بنك",
     ckb: "{1} تۆماری بانک تا {2}، یەکەمیان لە {3}ەوە، لە هیچ کەشفێکی بانکدا نین",
   },
+  // The bank's statement read from its file or pasted (src/lib/bank.ts, BankReconciliation).
+  "The bank's statement": { ar: "كشف البنك", ckb: "کەشفی بانک" },
+  "or paste it": { ar: "أو الصقه", ckb: "یان بیلکێنە" },
+  "Clear the statement read": { ar: "امسح الكشف المقروء", ckb: "کەشفە خوێندراوەکە بسڕەوە" },
+  "{n} row(s) left out: titles, totals and balances brought forward": {
+    ar: "صفوف مستبعدة (عناوين ومجاميع وأرصدة مدوّرة): {n}",
+    ckb: "{n} ڕیز لابرا: ناونیشان، کۆ و باڵانسی گوازراوە",
+  },
+  "{n} of its line(s), to {date}, are on the statements kept already, and are left out.": {
+    ar: "{n} من أسطره، حتى {date}، في الكشوف المحفوظة من قبل، فاستُبعدت.",
+    ckb: "{n} لە هێڵەکانی، تا {date}، پێشتر لە کەشفە هەڵگیراوەکاندان، بۆیە لابران.",
+  },
+  "Every line on it is on or before {date}, on the statements kept already.": {
+    ar: "كل أسطره في {date} أو قبله، في الكشوف المحفوظة من قبل.",
+    ckb: "هەموو هێڵەکانی لە {date} یان پێش ئەوەن، لە کەشفە هەڵگیراوەکاندا.",
+  },
+  "{found} of its {n} line(s) are in the books, and are ticked.": {
+    ar: "{found} من أسطره الـ{n} في الدفاتر، وعليها علامة.",
+    ckb: "{found} لە {n} هێڵەکەی لە دەفتەرەکاندان، و نیشانەیان لێدراوە.",
+  },
+  "The statement starts from {opening}, and the last statement kept ends at {kept}: a line between them may be missing.":
+    {
+      ar: "يبدأ الكشف من {opening}، وآخر كشف محفوظ ينتهي عند {kept}: قد يكون قيد بينهما ناقصًا.",
+      ckb: "کەشفەکە لە {opening}ەوە دەست پێدەکات، و دوایین کەشفی هەڵگیراو لە {kept} کۆتایی دێت: لەوانەیە هێڵێک لە نێوانیاندا کەم بێت.",
+    },
+  "The statement starts from {opening}, and the books start the bank from nothing: the bank's opening balance may not be in the books yet.":
+    {
+      ar: "يبدأ الكشف من {opening}، والدفاتر تبدأ البنك من الصفر: قد لا يكون الرصيد الافتتاحي للبنك في الدفاتر بعد.",
+      ckb: "کەشفەکە لە {opening}ەوە دەست پێدەکات، و دەفتەرەکان بانک لە سفرەوە دەست پێدەکەن: لەوانەیە باڵانسی سەرەتای بانک هێشتا لە دەفتەرەکاندا نەبێت.",
+    },
+  "On the statement, not in the books": {
+    ar: "في الكشف، وليس في الدفاتر",
+    ckb: "لە کەشفەکەدایە، لە دەفتەرەکاندا نییە",
+  },
+  "Record each one (a bank's charge on Expenses, paid from the bank; interest by a journal): back on this page, it is found and ticked.":
+    {
+      ar: "سجّل كلًّا منها (عمولة البنك في المصروفات، مدفوعة من البنك؛ والفائدة بقيد يومية): حين تعود إلى هذه الصفحة، يُوجد ويُعلَّم.",
+      ckb: "هەر یەکێکیان تۆمار بکە (کرێی بانک لە خەرجییەکاندا، لە بانکەوە دراو؛ سوودیش بە تۆمارێکی ڕۆژانە): کاتێک دەگەڕێیتەوە بۆ ئەم پەڕەیە، دەدۆزرێتەوە و نیشانەی لێدەدرێت.",
+    },
+  // What the bank's statement could not be read as (src/lib/bank.ts, parseBankStatement).
+  "The columns were not recognised. Name them Date, Money in and Money out (or Amount), and Balance if the statement gives it.":
+    {
+      ar: "لم تُعرَف الأعمدة. سمِّها «التاريخ» و«دائن» و«مدين» (أو «المبلغ»)، و«الرصيد» إن كان في الكشف.",
+      ckb: "ستوونەکان نەناسرانەوە. ناویان بنێ «بەروار»، «پارەی هاتوو» و «پارەی ڕۆیشتوو» (یان «بڕ»)، و «باڵانس» ئەگەر لە کەشفەکەدا هەبێت.",
+    },
+  'Line {1}: "{2}" is not an amount.': {
+    ar: "السطر {1}: «{2}» ليس مبلغًا صالحًا.",
+    ckb: "هێڵی {1}: «{2}» بڕە پارەیەکی دروست نییە.",
+  },
+  "Line {1} has an amount but no date.": {
+    ar: "في السطر {1} مبلغ دون تاريخ.",
+    ckb: "هێڵی {1} بڕی پارەی تێدایە بەڵام بەرواری نییە.",
+  },
+  'Line {1}: "{2}" is not a date.': {
+    ar: "السطر {1}: «{2}» ليس تاريخًا.",
+    ckb: "هێڵی {1}: «{2}» بەروار نییە.",
+  },
+  "A statement is read {1} lines at a time.": {
+    ar: "يُقرأ من الكشف {1} سطر كحدٍّ أقصى في كل مرة.",
+    ckb: "لە هەر جارێکدا زۆرترین {1} هێڵی کەشف دەخوێندرێتەوە.",
+  },
 };
 
 export default phrases;

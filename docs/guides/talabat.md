@@ -46,11 +46,12 @@ takes to pay"), and when 1100 holds money no order explains.
 
 ## When Talabat pays out: match its statement
 
-1. Open Talabat's statement: the report listing each order and what Talabat paid
-   for it.
-2. Copy its rows, **with the row of column names**, from the spreadsheet or the
-   report, and paste them into **Delivery Platforms → Match a Statement**.
-   Choose **Talabat**.
+1. Download Talabat's statement: the report listing each order and what
+   Talabat paid for it, as Excel or CSV.
+2. On **Delivery Platforms → Match a Statement**, choose **Talabat**, then
+   **Read it from its file…** and choose the file. Or copy its rows, **with the
+   row of column names**, from the spreadsheet or the report, and paste them.
+   What was read shows in the box, with how many lines and which columns.
 3. Press **Match to the orders waiting**. Nothing is recorded yet. Each line
    says what it is:
    - **Matched**: the sale with that order number, what it sold for, and what
@@ -78,13 +79,20 @@ takes to pay"), and when 1100 holds money no order explains.
    they are kept with the statement, and the orders left out wait for the next
    one.
 
-**How the paste is read.** The columns are found by their names: **Order**
-("Order ID", "Order number"…), **Payout** ("Net payout", "Amount paid"…),
-**Commission** and **Fees**. Without a row of names, the columns are read in
-that order. Amounts are read as printed ("1,500", "IQD 2,550", "(900)"); a
-commission or fee printed as a deduction (−450) is what Talabat kept (450); the
-Total row is left out. When the statement gives neither commission nor fees,
-everything Talabat kept is its commission.
+**How the statement is read.** The file is read in the browser: an Excel
+workbook (.xlsx, its first sheet with something on it), a CSV or text file,
+or the web page some reports save as an ".xls". A PDF or an old Excel file
+(.xls) is refused: save it as .xlsx or CSV. The columns are found by their
+names, in the first 30 rows, below any title the report starts with:
+**Order** ("Order ID", "Order number"…), **Payout** ("Net payout", "Amount
+paid"…), **Commission** ("Talabat commission" too) and **Fees**: every column
+of fees the report splits them into (delivery, payment, service…) is added
+up, a total of them left out. Without a row of names, the columns are read in
+that order. Amounts are read as printed ("1,500", "IQD 2,550",
+"(900)"); a commission or fee printed as a deduction (−450) is what Talabat
+kept (450); the Total row, and a title or note with no payout, are left out.
+When the statement gives neither commission nor fees, everything Talabat kept
+is its commission.
 
 **A statement posted by mistake.** Under **Statements Posted**, press
 **Cancel…** on it, with the reason. Its journal is reversed and its orders wait

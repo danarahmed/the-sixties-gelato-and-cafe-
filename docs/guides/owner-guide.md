@@ -611,9 +611,10 @@ discount, why and who approved it. The 10% is a business setting (shown on
   say why in the note; it posts to 6300 Cash over / short. Days are settled in
   order; the latest settlement can be cancelled, with the reason, and settled
   again.
-- **Delivery platforms, when a statement comes:** paste it on **Delivery
-  Platforms → Match a Statement**, check what matched, what did not and which
-  orders it left out, and post the payout (see the [Talabat guide](talabat.md)).
+- **Delivery platforms, when a statement comes:** on **Delivery Platforms →
+  Match a Statement**, choose its file (**Read it from its file…**, Excel or
+  CSV) or paste it, check what matched, what did not and which orders it left
+  out, and post the payout (see the [Talabat guide](talabat.md)).
   The dashboard names the orders a platform has not paid after 7 days.
 - **A new delivery platform:** add it on **Delivery Platforms → Your Delivery
   Platforms**, with its name in Arabic and Kurdish, and copy the packaging and
@@ -674,11 +675,13 @@ discount, why and who approved it. The 10% is a business setting (shown on
    one place: the bank's card fees and journals by hand. The columns add up to
    the café's total.
 6. **The bank against its statement** (Chart of Accounts, `0059`): when the
-   bank's statement for the month comes, type its last day and its closing
-   balance, tick the lines it shows, and keep it when it ties. What it shows
-   that the books do not (a charge, interest) is recorded first; what the
-   books have and it does not (a payment not yet cleared) waits for the next
-   one.
+   bank's statement for the month comes, choose its file (**Read it from its
+   file…**, the Excel or CSV the bank's website gives): the lines the books
+   have are found and ticked, and its last day and closing balance filled
+   in. Or type them, and tick the lines it shows, by eye. Keep it when it
+   ties. What it shows that the books do not (a charge, interest) is listed:
+   record it first, and come back; what the books have and it does not (a
+   payment not yet cleared) waits for the next one.
 7. **Place** on Reports (`0057`) reads every report for one place: its sales
    and payments, its losses, what came in and went back, its orders and
    batches, its dollars, its staff and its customers' sales. Someone who works
