@@ -2,7 +2,8 @@
 // Signed in, each screen a role is offered renders (no error boundary); a
 // screen it is not offered sends it to its own starting screen instead. And
 // every screen fits a phone, and names each of its boxes, lists and buttons.
-// The keyboard finds a way past the menu, and its place is always shown.
+// The keyboard finds a way past the menu, and its place is always shown. And
+// the browser is told its safeguards.
 import { chromium, BASE, check, done, open, signIn } from "./lib.mjs";
 
 const PAGES = [
@@ -503,6 +504,34 @@ console.log("▸ the keyboard: a way past the menu, and where it is (AL)");
   check(
     seen.length === 3 && seen.every((s) => s.ring) && seen[2].what === "input[checkbox]",
     `the keyboard's place is ringed: ${seen.map((s) => `${s.what} ${s.ring ? "✓" : "✗"}`).join(", ")}`,
+  );
+  await ctx.close();
+}
+
+console.log("▸ the browser's safeguards (AN)");
+{
+  // What the running app sends: a page may be shown inside no other site,
+  // is read as what it is, and may not use the camera; a product's photo
+  // (here one that is not there) goes without the pages' own policy.
+  const { ctx, page } = await signIn(browser, "owner");
+  const h = (await page.goto(`${BASE}/dashboard`)).headers();
+  const photo = await ctx.request.get(
+    `${BASE}/api/product-image/00000000-0000-0000-0000-000000000000`,
+  );
+  const ph = photo.headers();
+  check(
+    h["x-frame-options"] === "DENY" &&
+      (h["content-security-policy"] ?? "").includes("frame-ancestors 'none'") &&
+      h["x-content-type-options"] === "nosniff" &&
+      h["referrer-policy"] === "strict-origin-when-cross-origin" &&
+      (h["permissions-policy"] ?? "").includes("camera=()"),
+    "a page is shown inside no other site, is read as what it is, and may not use the camera",
+  );
+  check(
+    photo.status() === 404 &&
+      ph["x-frame-options"] === "DENY" &&
+      ph["content-security-policy"] === undefined,
+    "a product's photo keeps its own policy, not the pages'",
   );
   await ctx.close();
 }

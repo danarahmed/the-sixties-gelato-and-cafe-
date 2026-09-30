@@ -92,6 +92,19 @@ caller's permission itself.
 - CSV exports neutralise values that a spreadsheet would run as formulas.
 - The service worker caches only static files and the offline page, never
   business data.
+- **The browser's safeguards** (`next.config.mjs`), on every page:
+  - no other site may show a page inside its own (`X-Frame-Options: DENY`,
+    and `frame-ancestors 'none'`), so a click on the till or the books
+    cannot be steered from another site;
+  - a file is never read as another type than it says (`nosniff`);
+  - another site is told only where a link came from, never the page's
+    address (`strict-origin-when-cross-origin`);
+  - nothing may use the camera, the microphone, the location, payments in
+    the browser or USB (`Permissions-Policy`). Full screen, which the till
+    uses, stays.
+
+  A page's policy also refuses a `<base>` pointing elsewhere and plug-ins. A
+  product's photo keeps its own stricter policy: it runs nothing.
 
 ## Secrets
 

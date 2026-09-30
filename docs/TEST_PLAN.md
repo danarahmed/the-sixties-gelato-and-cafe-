@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 583 tests)
+## 1. Unit (Vitest, 585 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -189,6 +189,11 @@ layers before every release.
   as dark as each background it is written on, in the light theme and the
   dark one, read from the stylesheet's own tokens; and the text, the
   quieter words and the faintest keep that order.
+- `tests/headers.test.ts`: the browser's safeguards in `next.config.mjs`:
+  every page framed by no one, never sniffed, telling another site only
+  where a link came from, and kept from the camera, the microphone, the
+  location, payments and USB (full screen allowed); the pages' own policy
+  on every path but a product's photo.
 
 ## 2. SQL (`scripts/test-sql.sh`, about 800 assertions)
 
@@ -377,7 +382,9 @@ database, behind a small local stand-in for Supabase's auth service.
   the way past the menu, seen on the screen, in English at 1280px and in
   Kurdish on a phone, and Enter takes it to the page; the menu is named and
   marks the page shown; a box, a box with its own border and a tick box,
-  each reached by Tab, show a ring.
+  each reached by Tab, show a ring. The headers the running app sends: a
+  page framed by no one and kept from the camera, and a product's photo
+  without the pages' own policy.
 - `flows`: the day's work through the screens:
   - cash and platform-paid sales, a void and a refund; a Talabat sale waits
     for its order number (a colon refused), prints it, and the same number is
