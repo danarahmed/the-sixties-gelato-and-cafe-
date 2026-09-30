@@ -2,6 +2,7 @@
 // Signed in, each screen a role is offered renders (no error boundary); a
 // screen it is not offered sends it to its own starting screen instead. And
 // every screen fits a phone, and names each of its boxes, lists and buttons.
+// The keyboard finds a way past the menu, and its place is always shown.
 import { chromium, BASE, check, done, open, signIn } from "./lib.mjs";
 
 const PAGES = [
@@ -422,6 +423,86 @@ console.log("▸ every box, list and button has a name a screen reader can say")
   check(
     found.length === 0,
     `on ${SCREENS.length} screens, every box, list and button is named${found.length ? ` (not: ${found.slice(0, 6).join("; ")})` : ""}`,
+  );
+  await ctx.close();
+}
+
+console.log("▸ the keyboard: a way past the menu, and where it is (AL)");
+{
+  // The first place the keyboard reaches is a way past the menu, which then
+  // shows; it leads to the page. The menu is named, and the page shown is
+  // marked in it. Wherever the keyboard is, a ring shows it: on a box with a
+  // border of its own and on a tick box too, which showed nothing.
+  const ring = (page) =>
+    page.evaluate(() => {
+      const el = document.activeElement;
+      const s = getComputedStyle(el);
+      return {
+        what: `${el.tagName.toLowerCase()}${el.type ? `[${el.type}]` : ""}`,
+        ring: s.outlineStyle !== "none" && parseFloat(s.outlineWidth) >= 2,
+      };
+    });
+  for (const [locale, width] of [
+    ["en", 1280],
+    ["ckb", 390],
+  ]) {
+    const { ctx, page } = await signIn(browser, "owner", { viewport: { width, height: 900 } });
+    await ctx.addCookies([{ name: "locale", value: locale, url: BASE }]);
+    await open(page, "/expenses");
+    await page.keyboard.press("Tab");
+    const skip = await page.evaluate(() => {
+      const el = document.activeElement;
+      const r = el.getBoundingClientRect();
+      const w = document.documentElement.clientWidth;
+      return {
+        cls: el.className,
+        text: el.textContent.trim(),
+        seen: r.top >= 0 && r.bottom <= window.innerHeight && r.left >= 0 && r.right <= w,
+      };
+    });
+    await page.keyboard.press("Enter");
+    const landed = await page.evaluate(() => document.activeElement?.id ?? "");
+    check(
+      skip.cls === "skip-link" && skip.seen && skip.text !== "" && landed === "content",
+      `in ${locale} at ${width}px, the first Tab shows the way past the menu (“${skip.text}”), and Enter goes to the page`,
+    );
+    await ctx.close();
+  }
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/expenses");
+  const menu = await page.evaluate(() => {
+    const nav = document.querySelector("nav.sidenav");
+    return {
+      name: nav.getAttribute("aria-label"),
+      current: [...nav.querySelectorAll('[aria-current="page"]')].map((a) =>
+        a.getAttribute("href"),
+      ),
+    };
+  });
+  check(
+    menu.name === "Menu" && JSON.stringify(menu.current) === JSON.stringify(["/expenses"]),
+    `the menu is named (${menu.name}), and marks the page shown (${menu.current.join(", ")})`,
+  );
+  const seen = [];
+  // A box of the underlined kind (Expenses), then one with a border of its own
+  // (an advance on Payroll), then a tick box (Settings): each reached by Tab.
+  await page.getByLabel("Narration", { exact: true }).focus();
+  await page.keyboard.press("Tab");
+  seen.push(await ring(page));
+  await open(page, "/payroll");
+  await page.getByTestId("give-advance").click();
+  await page.getByTestId("advance-form").getByLabel("To", { exact: true }).focus();
+  await page.keyboard.press("Tab");
+  seen.push(await ring(page));
+  await open(page, "/settings");
+  const box = page.locator('input[type="checkbox"]').first();
+  await box.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  seen.push(await ring(page));
+  check(
+    seen.length === 3 && seen.every((s) => s.ring) && seen[2].what === "input[checkbox]",
+    `the keyboard's place is ringed: ${seen.map((s) => `${s.what} ${s.ring ? "✓" : "✗"}`).join(", ")}`,
   );
   await ctx.close();
 }

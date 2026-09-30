@@ -1857,6 +1857,18 @@ Built and tested:
   too; the browser suite shows the owner the safe and the drawer, warned
   when an amount is more, and shows the manager the safe and not the drawer.
 
+- **The keyboard's place always seen, and a way past the menu (no
+  migration).** A box drawn with a border of its own, which is how most
+  forms draw them, showed nothing when the keyboard reached it, and neither
+  did a tick box. Now a ring shows it, as on a button. The first thing the
+  keyboard reaches on every page is **Skip to the content**, which is out of
+  sight until then and leads past the menu to the page. The menu is named for
+  a screen reader and marks the page shown, and ☰ says whether it is open.
+  Built and tested: the browser suite, in English at 1280px and in Kurdish on
+  a phone, checks the way past the menu, the menu's name and its page shown,
+  and a ring on an underlined box, a box with its own border, and a tick box,
+  each reached by Tab.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open

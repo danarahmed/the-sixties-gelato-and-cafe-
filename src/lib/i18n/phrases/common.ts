@@ -9,6 +9,7 @@ import type { PhraseBook } from "./types";
 const phrases: PhraseBook = {
   // The frame, and a page that failed.
   Menu: { ar: "القائمة", ckb: "مێنیو" },
+  "Skip to the content": { ar: "انتقل إلى المحتوى", ckb: "بڕۆ بۆ ناوەڕۆک" },
   "This screen could not be loaded": {
     ar: "تعذّر تحميل هذه الشاشة",
     ckb: "ئەم شاشەیە بار نەکرا",

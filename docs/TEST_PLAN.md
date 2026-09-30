@@ -367,7 +367,11 @@ database, behind a small local stand-in for Supabase's auth service.
   ☰, on a phone and on the till, is out of sight until opened and then wholly
   in view, in English, Arabic and Kurdish. On 31 screens, with every folded
   form opened, every box, list and tick box has a name a screen reader can
-  say, and no button or link is only a sign.
+  say, and no button or link is only a sign. The keyboard's first stop is
+  the way past the menu, seen on the screen, in English at 1280px and in
+  Kurdish on a phone, and Enter takes it to the page; the menu is named and
+  marks the page shown; a box, a box with its own border and a tick box,
+  each reached by Tab, show a ring.
 - `flows`: the day's work through the screens:
   - cash and platform-paid sales, a void and a refund; a Talabat sale waits
     for its order number (a colon refused), prints it, and the same number is

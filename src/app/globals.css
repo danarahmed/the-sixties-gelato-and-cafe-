@@ -185,6 +185,39 @@ textarea:focus {
   outline: none;
   border-bottom-color: var(--brand);
 }
+/* Where the keyboard is (AL): a ring, as on a button. A box drawn with its
+   own border (the forms' inputStyle) kept its colour when focused, and a
+   tick box showed nothing at all. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+/* The way past the menu (AL): out of sight until the keyboard reaches it,
+   then at the top of the page, on the side the reading starts. */
+.skip-link {
+  position: absolute;
+  top: 8px;
+  inset-inline-start: 8px;
+  z-index: 1000;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-300%);
+}
+.skip-link:focus {
+  transform: none;
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+/* Where the way past the menu leads: not a control, so no ring of its own. */
+main.content:focus {
+  outline: none;
+}
 select {
   padding-inline-end: 18px;
 }
