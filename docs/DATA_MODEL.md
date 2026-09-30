@@ -1633,3 +1633,39 @@ approval, wait, key)`** (`waste.record`), on the trail as `inventory.loss`.
   holds, its items low or below zero, and `location`, its name.
 - **`customer_sales(business, from, to, location)`**: a customer's sales at a
   place (none: every place's).
+
+### The chart of accounts on a screen (`0058`)
+
+No table is added: `gl_account` and the café's own words (`app_phrase`,
+`0032`) are changed by functions that check who may. Each needs
+`accounting.post` (the owner, a general manager, the accountant), may be sent
+again with its key (`0035`), and is on the audit trail about the `gl_account`,
+named by its code.
+
+- **Added:** `create_account(code, name, type, names, key)` adds an income or
+  a cost. A `revenue` account's code is 4000 to 4999 and it is kept on the
+  credit side; an `expense` account's is 5000 to 6999 (5… the cost of what was
+  sold, 6… the running costs), on the debit side. It is in use and not the
+  system's (`is_system` false). A code taken, or a name taken whatever its
+  capitals, spaces and dots (`name_key`), is refused. An asset, a debt or the
+  owner's money is still added by a migration: the balance sheet and the cash
+  flow place an account by its code. On the trail: `account.create`, with its
+  name, its class (`account_type`) and its other names.
+- **Its names in Arabic and Kurdish** (`names`, `{"ar": "…", "ckb": "…"}`) are
+  kept as the café's own words for its name, so every screen shows it in the
+  reader's language; a name given none shows as it was typed.
+- **Renamed:** `rename_account(code, name, names, key)`. Its words go with it
+  where it has none under the new name; those given take their place. On the
+  trail: `account.rename`, the name before and after.
+- **Out of use, and back:** `set_account_in_use(code, in_use, reason, key)`
+  sets `gl_account.is_active`, with why. Out of use, each function that posts
+  to an account someone chooses (an expense, a bill for an account, a journal)
+  refuses it, and the screens no longer offer it; what was posted to it stays
+  in every report. It is not taken out of use while a draft journal has a line
+  on it. On the trail:
+  `account.in_use`, with the reason.
+- **The accounts the system posts to** (`is_system`) are neither renamed nor
+  taken out of use (`account_to_change`); the guard of `0014` already kept
+  their code and class.
+- **Helpers nobody calls:** `account_name_ok`, `account_names_save`,
+  `account_to_change`, and the three `__run` bodies.

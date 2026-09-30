@@ -157,6 +157,7 @@ export function ExpenseEntry({
         <label style={{ minWidth: 200 }}>
           <div className="sc">{t("Account")}</div>
           <select
+            aria-label={t("Account")}
             value={account}
             onChange={(e) => {
               setAccount(e.target.value);

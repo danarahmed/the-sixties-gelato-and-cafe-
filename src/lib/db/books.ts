@@ -416,6 +416,8 @@ export interface AccountRow {
   name: string;
   type: string;
   isActive: boolean;
+  /** One the system posts to: kept as it is (0058 changes only the café's own). */
+  isSystem: boolean;
 }
 
 /**
@@ -431,7 +433,10 @@ export async function getNextBillNumber(): Promise<string> {
 export async function getGlAccounts(): Promise<AccountRow[]> {
   const c = await db();
   return rows(
-    await c.from("gl_account").select("id,code,name,account_type,is_active").order("code"),
+    await c
+      .from("gl_account")
+      .select("id,code,name,account_type,is_active,is_system")
+      .order("code"),
     "accounts",
   ).map((a) => ({
     id: str(a.id),
@@ -439,6 +444,7 @@ export async function getGlAccounts(): Promise<AccountRow[]> {
     name: str(a.name),
     type: str(a.account_type),
     isActive: Boolean(a.is_active),
+    isSystem: Boolean(a.is_system),
   }));
 }
 

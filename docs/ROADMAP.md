@@ -60,8 +60,12 @@ honest, not by building a queue.
    phrase and add a language; and product names in each language.
 5. **Statements and exports (L-05).** Balance sheet and cash flow from the
    ledger; PDF; invoice scans attached to bills and expenses.
-6. **Accounts maintenance (M-06).** Add and deactivate accounts on screen, within
-   the rules the database already enforces.
+6. **Accounts maintenance (M-06).** Built: an income or a cost account added
+   on screen with its names in Arabic and Kurdish, renamed, taken out of use
+   and brought back, within the rules the database already enforces, on the
+   audit trail (`0058`). Next, if it is needed: an asset, a debt or the
+   owner's money added on screen, with where each goes on the balance sheet
+   and in the cash flow.
 7. **Partial refunds,** and a reason and an approval limit on discounts (which
    the till already gives), with the audit trail.
 8. **Offline selling, if it is needed.** A queue with its own rules for prices

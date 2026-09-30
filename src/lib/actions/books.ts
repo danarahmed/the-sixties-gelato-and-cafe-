@@ -314,3 +314,97 @@ export async function postControlCorrectionAction(
     data: { journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no) },
   };
 }
+
+// ---------------------------------------------------------------------------
+// The chart of accounts (0058): an income or a cost added, renamed, taken out
+// of use or brought back. The accounts the system posts to stay as they are.
+// ---------------------------------------------------------------------------
+const CHART_PATHS = ["/accounting", "/expenses", "/journals", "/reports", "/settings/languages"];
+
+/** Its names in Arabic and Kurdish, as the café's own words for its name: only those given. */
+const otherNames = (ar?: string | null, ckb?: string | null) => ({
+  ...(ar ? { ar } : {}),
+  ...(ckb ? { ckb } : {}),
+});
+
+const accountInput = z.object({
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{4}$/, "An account's code is four digits"),
+  name: text("The account's name", 60),
+  type: z.enum(["revenue", "expense"], { message: "Choose an income or a cost" }),
+  nameAr: optionalText(60),
+  nameCkb: optionalText(60),
+});
+
+export async function createAccountAction(
+  input: z.input<typeof accountInput>,
+  key: string,
+): Promise<ActionResult<{ code: string; name: string }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(accountInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("create_account", {
+    p_code: v.data.code,
+    p_name: v.data.name,
+    p_type: v.data.type,
+    p_names: otherNames(v.data.nameAr, v.data.nameCkb),
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...CHART_PATHS);
+  return { ok: true, data: { code: String(r.data.code), name: String(r.data.name) } };
+}
+
+const renameInput = z.object({
+  code: z.string().regex(/^\d{4}$/, "Choose the account"),
+  name: text("The account's name", 60),
+  nameAr: optionalText(60),
+  nameCkb: optionalText(60),
+});
+
+export async function renameAccountAction(
+  input: z.input<typeof renameInput>,
+  key: string,
+): Promise<ActionResult<{ code: string; name: string }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(renameInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("rename_account", {
+    p_code: v.data.code,
+    p_name: v.data.name,
+    p_names: otherNames(v.data.nameAr, v.data.nameCkb),
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...CHART_PATHS);
+  return { ok: true, data: { code: String(r.data.code), name: String(r.data.name) } };
+}
+
+const inUseInput = z.object({
+  code: z.string().regex(/^\d{4}$/, "Choose the account"),
+  inUse: z.boolean(),
+  reason: text("Why", 300),
+});
+
+export async function setAccountInUseAction(
+  input: z.input<typeof inUseInput>,
+  key: string,
+): Promise<ActionResult<{ code: string; inUse: boolean }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(inUseInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("set_account_in_use", {
+    p_code: v.data.code,
+    p_in_use: v.data.inUse,
+    p_reason: v.data.reason,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...CHART_PATHS);
+  return { ok: true, data: { code: String(r.data.code), inUse: r.data.in_use === true } };
+}

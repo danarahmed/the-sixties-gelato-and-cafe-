@@ -61,6 +61,8 @@ const typed = () =>
     -- Stock sent between places (0054): the notes and reasons typed.
     union select coalesce(note, '') from stock_transfer union select coalesce(receive_note, '') from stock_transfer
     union select coalesce(cancel_reason, '') from stock_transfer
+    -- The accounts the café added itself (0058): named as it typed them.
+    union select name from gl_account where not is_system
   ) x where n is not null`);
 const own = () =>
   new Set(

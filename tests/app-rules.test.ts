@@ -77,9 +77,11 @@ import {
   auditGroup,
   describeChanges,
   showValue,
+  subjectIn,
   subjectOf,
   valueIn,
 } from "@/lib/audit";
+import { nextFreeCode } from "@/lib/chart";
 import { deliveryLineCost, needsPriceConfirmation, packCode, priceGap } from "@/lib/receiving";
 import { lookAlike, lookAlikes, nameKey, slips } from "@/lib/names";
 import { REASONS, noteIsEnough, reasonKey, reasonMissing, type ReasonKind } from "@/lib/reasons";
@@ -4701,5 +4703,71 @@ describe("the books by place (0056, release AB)", () => {
       "m",
       "s",
     ]);
+  });
+});
+
+describe("the chart of accounts on a screen (0058)", () => {
+  const migration = readFileSync(
+    join(__dirname, "../supabase/migrations/0058_chart_of_accounts.sql"),
+    "utf8",
+  );
+
+  it("proposes the next free code of ten, from the kind's own first", () => {
+    const taken = [{ code: "4000" }, { code: "6000" }, { code: "6010" }];
+    expect(nextFreeCode(taken, "expense")).toBe("6020");
+    expect(nextFreeCode(taken, "revenue")).toBe("4300");
+    expect(nextFreeCode([...taken, { code: "4300" }], "revenue")).toBe("4310");
+    // Every code of ten taken: the first free one of the range.
+    const tens = Array.from({ length: 100 }, (_, i) => ({ code: String(6000 + i * 10) }));
+    expect(nextFreeCode(tens, "expense")).toBe("5000");
+  });
+
+  it("names each change to an account on the audit trail, in the reader's language", () => {
+    for (const a of ["account.create", "account.rename", "account.in_use"]) {
+      expect(migration).toContain(`'${a}'`);
+      expect(actionLabel(a)).not.toBe(a);
+    }
+    expect(auditGroup("books")?.prefixes).toContain("account.");
+    const names = new Map<string, string>();
+    const added = { name: "Repairs", account_type: "expense", names: { ar: "الإصلاحات" } };
+    expect(subjectOf("gl_account", "6010", null, added, names)).toBe("Account 6010 Repairs");
+    expect(subjectOf("gl_account", null, null, {}, names)).toBe("An account");
+    expect(describeChanges(null, added, names).map((c) => [c.field, c.after])).toEqual([
+      ["Name", "Repairs"],
+      ["Class", "Expense"],
+      ["In other languages", "ar الإصلاحات"],
+    ]);
+    // Taken out of use: the name, unchanged, is its subject and not a change.
+    expect(
+      describeChanges(
+        { name: "Repairs", is_active: true },
+        { name: "Repairs", is_active: false },
+        names,
+      ).map((c) => [c.field, c.before, c.after]),
+    ).toEqual([["In use", "yes", "no"]]);
+    const ar = translator(builtInWords("ar"));
+    const msg = (s: string) => (s === "Repairs" ? "الإصلاحات" : s);
+    expect(subjectIn("Account 6010 Repairs", "account.in_use", ar, msg)).toBe(
+      ar("Account {code} {name}", { code: "6010", name: "الإصلاحات" }),
+    );
+    expect(subjectIn("An account", "account.create", ar, msg)).toBe(ar("An account"));
+    expect(valueIn("Expense", "Class", ar, msg)).toBe(ar("Expense"));
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        [
+          "Account added",
+          "Account renamed",
+          "Account taken out of use or brought back",
+          "Account {code} {name}",
+          "Account {code}",
+          "An account",
+          "Class",
+          "Expense",
+          "Income",
+        ].filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
   });
 });

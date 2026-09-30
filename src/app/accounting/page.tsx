@@ -4,11 +4,18 @@ import { PrintHead } from "@/components/PrintHead";
 import { getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
-import { getCloseChecklist, getPeriods, periodFor, type CheckRow } from "@/lib/db/books";
+import {
+  getCloseChecklist,
+  getGlAccounts,
+  getPeriods,
+  periodFor,
+  type CheckRow,
+} from "@/lib/db/books";
 import { getTrialBalance } from "@/lib/db/reports";
 import { fmtIQD } from "@/lib/format";
 import { businessToday, monthEnd, monthStart } from "@/lib/dates";
 import { PeriodControl } from "@/components/books/PeriodControl";
+import { ChartOfAccounts } from "@/components/books/ChartOfAccounts";
 
 export const dynamic = "force-dynamic";
 
@@ -40,9 +47,10 @@ export default async function AccountingPage({
     has(profile, "accounting.period.lock") ||
     has(profile, "accounting.post") ||
     has(profile, "audit.view");
-  const [trial, checklist] = await Promise.all([
+  const [trial, checklist, accounts] = await Promise.all([
     getTrialBalance(from, to),
     chosen && canSeeChecklist ? getCloseChecklist(chosen.id) : Promise.resolve([] as CheckRow[]),
+    getGlAccounts(),
   ]);
 
   const totalDebit = trial.reduce((s, r) => s + r.debit, 0);
@@ -197,6 +205,17 @@ export default async function AccountingPage({
           timezone={profile.timezone}
         />
       )}
+
+      <ChartOfAccounts
+        accounts={accounts.map((a) => ({
+          code: a.code,
+          name: a.name,
+          type: a.type,
+          isActive: a.isActive,
+          isSystem: a.isSystem,
+        }))}
+        canChange={has(profile, "accounting.post")}
+      />
 
       {has(profile, "audit.view") && (
         <p className="muted" style={{ fontSize: ".82rem", margin: 0 }}>

@@ -55,6 +55,7 @@ Plan a short window when the café is closed.
 | The tills at each branch (`0055`)       | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0055`](#after-0055)). The screens were merged ([pull request #44](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/44)) and deployed              |
 | The books by place (`0056`)             | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0056`](#after-0056)). The screens were merged ([pull request #45](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/45)) and deployed            |
 | Every report at a place (`0057`)        | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0057`](#after-0057)). The screens were merged ([pull request #46](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/46)) and deployed            |
+| The chart of accounts (`0058`)          | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0058`](#after-0058)). The screens were merged ([pull request #52](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/52)) and deployed            |
 
 ## 0. Before you start
 
@@ -2481,6 +2482,80 @@ The security advisor lists the twelve reports made anew with a place in place
 of the old ones, each checking its permission; the helpers and the reports
 kept under their release's name are not callable. The performance advisor
 adds nothing, and two indexes it called unused are used now.
+
+## After `0058`
+
+Migration `0058` (the August audit's M-06) puts the chart of accounts on a
+screen.
+
+- **On Chart of Accounts,** the owner, a general manager or the accountant
+  adds an account for an income (4000–4999) or a cost (5000–6999), with its
+  name in English and, if they like, in Arabic and Kurdish; renames one the
+  café added; and takes one out of use or brings it back, with why. An asset,
+  a debt or the owner's money is still added by a migration: the balance
+  sheet and the cash flow place an account by its code.
+- **The accounts the system posts to** are neither renamed nor taken out of
+  use.
+- **An account out of use** takes no new posting, and the forms no longer
+  offer it; what was posted to it stays in every report. It is not taken out
+  of use while a draft journal has a line on it.
+
+What it adds:
+
+- **The functions signed-in users may call**, each checking
+  `accounting.post`: `create_account`, `rename_account` and
+  `set_account_in_use`. Each is done once when sent again with its key, and
+  is on the audit trail (`account.create`, `account.rename`,
+  `account.in_use`).
+- **Helpers nobody calls:** `account_name_ok`, `account_names_save`,
+  `account_to_change`, and the three `__run` bodies.
+- No table. Nothing recorded changes until someone adds an account.
+
+It goes in before the screens: those deployed before it call nothing it adds.
+
+It was applied on 30 September 2026 with the Supabase connector: one
+`apply_migration` call, one transaction. Before it, a read-only check showed
+the live database still matched the verified `0057` build, object by object,
+and that its 39 accounts were all the system's, with none of the café's own
+words yet.
+
+The text stored there is the file byte for byte (md5
+`2215604c3441bce5d35a53f69fcecb64`, 14,628 bytes). It was then compared with
+the tested build, object by object, the role permissions and column grants
+included. It is identical, but for the schema `citext` lives in, as before.
+Nothing recorded changed.
+
+It was checked on the live records as the owner, the branch manager and the
+barista, in one transaction that was rolled back, with nothing recorded in
+between (the records' counts and the last journal and audit numbers were as
+before it).
+
+- **Added:** 6010 Repairs, a cost on the debit side, in use and the café's
+  own, its names in Arabic and Kurdish kept as the café's words; sent again
+  with its key, it was answered from the first. An asset ("an income or a
+  cost"), a code taken ("Account 6000 is Rent"), a name taken ("Rent is
+  account 6000 already") and 7000 were refused.
+- **Posted to:** an expense of 1,000 IQD from the bank (6010 debited, 1020
+  credited), in the profit and loss as a running cost.
+- **Renamed** Repairs and upkeep, with its new Arabic; its Kurdish, not given
+  anew, was kept. 6000 Rent and 1000 Cash in the till were refused ("one the
+  system posts to: it is kept as it is").
+- **Out of use:** refused while a draft journal had a line on it; then out of
+  use, an expense on it refused and the 1,000 still in the profit and loss;
+  then brought back.
+- **The branch manager and the barista** were refused ("needs
+  accounting.post").
+- **The trail:** each change under the account's code, with why it was taken
+  out of use and brought back.
+- **The books:** each of the thirteen checks was at nothing before and after,
+  with no document out of step.
+
+Nothing was kept: every table's count is as it was after applying (journals to
+1100, the audit trail to 252).
+
+The security advisor lists the three functions added, each checking
+`accounting.post`; the helpers and the bodies are not callable. The
+performance advisor is unchanged.
 
 ## Clearing the test records
 
