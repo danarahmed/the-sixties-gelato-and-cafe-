@@ -109,6 +109,7 @@ export function CategoriesManager({
                   <td>
                     <input
                       value={d.name}
+                      aria-label={t("Name")}
                       maxLength={60}
                       disabled={!canEdit}
                       onChange={(e) => edit(c, { name: e.target.value })}
@@ -118,6 +119,7 @@ export function CategoriesManager({
                     <input
                       dir="rtl"
                       value={d.nameAr}
+                      aria-label={t("plat.form.nameIn", { language: "العربية" })}
                       maxLength={60}
                       disabled={!canEdit}
                       onChange={(e) => edit(c, { nameAr: e.target.value })}
@@ -127,6 +129,7 @@ export function CategoriesManager({
                     <input
                       dir="rtl"
                       value={d.nameCkb}
+                      aria-label={t("plat.form.nameIn", { language: "کوردی" })}
                       maxLength={60}
                       disabled={!canEdit}
                       onChange={(e) => edit(c, { nameCkb: e.target.value })}
@@ -136,6 +139,7 @@ export function CategoriesManager({
                     <input
                       inputMode="numeric"
                       value={d.sortOrder}
+                      aria-label={t("Order on the till")}
                       disabled={!canEdit}
                       onChange={(e) => edit(c, { sortOrder: e.target.value })}
                     />
@@ -177,6 +181,7 @@ export function CategoriesManager({
                 <td>
                   <input
                     value={fresh.name}
+                    aria-label={t("Name")}
                     maxLength={60}
                     placeholder={t("New category, e.g. Hot drinks")}
                     onChange={(e) => setFresh({ ...fresh, name: e.target.value })}
@@ -186,6 +191,7 @@ export function CategoriesManager({
                   <input
                     dir="rtl"
                     value={fresh.nameAr}
+                    aria-label={t("plat.form.nameIn", { language: "العربية" })}
                     maxLength={60}
                     onChange={(e) => setFresh({ ...fresh, nameAr: e.target.value })}
                   />
@@ -194,6 +200,7 @@ export function CategoriesManager({
                   <input
                     dir="rtl"
                     value={fresh.nameCkb}
+                    aria-label={t("plat.form.nameIn", { language: "کوردی" })}
                     maxLength={60}
                     onChange={(e) => setFresh({ ...fresh, nameCkb: e.target.value })}
                   />
@@ -202,6 +209,7 @@ export function CategoriesManager({
                   <input
                     inputMode="numeric"
                     value={fresh.sortOrder}
+                    aria-label={t("Order on the till")}
                     onChange={(e) => setFresh({ ...fresh, sortOrder: e.target.value })}
                   />
                 </td>

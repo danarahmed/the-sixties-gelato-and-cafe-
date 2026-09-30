@@ -151,6 +151,7 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
                     <td>
                       <input
                         value={d.name}
+                        aria-label={t("pos.tableName")}
                         maxLength={40}
                         onChange={(e) => edit(tb, { name: e.target.value })}
                       />
@@ -158,6 +159,7 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
                     <td>
                       <input
                         value={d.area}
+                        aria-label={t("pos.area")}
                         maxLength={40}
                         onChange={(e) => edit(tb, { area: e.target.value })}
                       />
@@ -166,6 +168,7 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
                       <input
                         inputMode="numeric"
                         value={d.seats}
+                        aria-label={t("pos.seatsH")}
                         onChange={(e) => edit(tb, { seats: e.target.value })}
                       />
                     </td>
@@ -173,6 +176,7 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
                       <input
                         inputMode="numeric"
                         value={d.sortOrder}
+                        aria-label={t("Order on the till")}
                         onChange={(e) => edit(tb, { sortOrder: e.target.value })}
                       />
                     </td>
@@ -181,6 +185,7 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
                         type="checkbox"
                         className="check"
                         checked={d.isActive}
+                        aria-label={t("pos.tableInUse", { name: d.name || tb.name })}
                         onChange={(e) => edit(tb, { isActive: e.target.checked })}
                       />
                     </td>
@@ -196,6 +201,7 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
                 <td>
                   <input
                     value={fresh.name}
+                    aria-label={t("pos.tableName")}
                     maxLength={40}
                     placeholder={t("pos.newTable")}
                     onChange={(e) => setFresh({ ...fresh, name: e.target.value })}
@@ -204,6 +210,7 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
                 <td>
                   <input
                     value={fresh.area}
+                    aria-label={t("pos.area")}
                     maxLength={40}
                     onChange={(e) => setFresh({ ...fresh, area: e.target.value })}
                   />
@@ -212,6 +219,7 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
                   <input
                     inputMode="numeric"
                     value={fresh.seats}
+                    aria-label={t("pos.seatsH")}
                     onChange={(e) => setFresh({ ...fresh, seats: e.target.value })}
                   />
                 </td>
@@ -219,6 +227,7 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
                   <input
                     inputMode="numeric"
                     value={fresh.sortOrder}
+                    aria-label={t("Order on the till")}
                     onChange={(e) => setFresh({ ...fresh, sortOrder: e.target.value })}
                   />
                 </td>

@@ -900,6 +900,7 @@ function CancelBill({
   const [date, setDate] = useState(today);
   const [err, setErr] = useState<string | null>(null);
   const small = { minHeight: 26, padding: "0 8px", fontSize: ".72rem" };
+  const why = invoiceNo ? t("Why cancel {bill}?", { bill: invoiceNo }) : t("Why cancel this bill?");
   if (!open) {
     return (
       <button
@@ -924,9 +925,8 @@ function CancelBill({
       <input
         value={reason}
         onChange={(e) => setReason(e.target.value)}
-        placeholder={
-          invoiceNo ? t("Why cancel {bill}?", { bill: invoiceNo }) : t("Why cancel this bill?")
-        }
+        placeholder={why}
+        aria-label={why}
         style={{ minHeight: 26, width: 180, fontSize: ".78rem" }}
         maxLength={300}
         autoFocus

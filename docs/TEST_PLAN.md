@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 567 tests)
+## 1. Unit (Vitest, 574 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -172,6 +172,14 @@ layers before every release.
   books, a rent each month to the payment nearest it), those on a statement
   kept left out; the example on the screen read in each language; every
   message in Arabic and Kurdish.
+- `tests/a11y.test.ts`: every box, list and tick box in the source has a
+  name a screen reader can say, those only a click opens too (a dialog, a
+  form): a label round it or pointing at it, a Field, or aria-label,
+  aria-labelledby or title; a placeholder is not one. A second box inside
+  one label is found (a label names only the first); a component that is
+  only a box is followed to where it is used. A button or link that shows
+  only a sign (×, ✎) has a name of its own. The check is itself tested on
+  small pieces of code.
 
 ## 2. SQL (`scripts/test-sql.sh`, about 800 assertions)
 
@@ -354,7 +362,9 @@ database, behind a small local stand-in for Supabase's auth service.
   Arabic at 1280px and in Kurdish at 390px (nothing past the left edge, where
   a right-to-left page would scroll to it); and the menu that slides in from
   ☰, on a phone and on the till, is out of sight until opened and then wholly
-  in view, in English, Arabic and Kurdish.
+  in view, in English, Arabic and Kurdish. On 31 screens, with every folded
+  form opened, every box, list and tick box has a name a screen reader can
+  say, and no button or link is only a sign.
 - `flows`: the day's work through the screens:
   - cash and platform-paid sales, a void and a refund; a Talabat sale waits
     for its order number (a colon refused), prints it, and the same number is

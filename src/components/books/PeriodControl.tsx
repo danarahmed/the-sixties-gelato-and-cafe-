@@ -135,6 +135,7 @@ export function PeriodControl({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder={t("Note for the audit trail (optional)")}
+              aria-label={t("Note for the audit trail (optional)")}
               style={{ minHeight: 36, minWidth: 260 }}
               maxLength={300}
             />
@@ -155,6 +156,7 @@ export function PeriodControl({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder={t("Why must it be reopened? (required)")}
+              aria-label={t("Why must it be reopened? (required)")}
               style={{ minHeight: 36, minWidth: 300 }}
               maxLength={300}
             />

@@ -94,6 +94,8 @@ export function JournalRow({
         <td>
           <button
             onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-label={entry.journalNo ? t("Journal {no}", { no: entry.journalNo }) : undefined}
             style={{
               border: "none",
               background: "transparent",
@@ -205,6 +207,7 @@ export function JournalRow({
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder={t("Why is it being reversed?")}
+                aria-label={t("Why is it being reversed?")}
                 style={{ minHeight: 30, minWidth: 260 }}
                 maxLength={300}
                 autoFocus

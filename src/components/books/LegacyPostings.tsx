@@ -125,6 +125,7 @@ export function LegacyPostings({
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder={t("Why they are being posted (for the audit trail)")}
+            aria-label={t("Why they are being posted (for the audit trail)")}
           />
           <button className="btn-primary" onClick={post} disabled={busy || reason.trim() === ""}>
             {busy ? t("Posting…") : t("Post these {n} journal(s)", { n: records.length })}

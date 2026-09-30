@@ -340,6 +340,7 @@ export function JournalEntryForm({
                     value={r.memo}
                     onChange={(e) => setRow(i, { memo: e.target.value })}
                     placeholder={t("Description")}
+                    aria-label={t("Description")}
                     maxLength={200}
                   />
                 </td>
@@ -349,6 +350,7 @@ export function JournalEntryForm({
                     style={{ textAlign: "end" }}
                     inputMode="decimal"
                     value={r.debit}
+                    aria-label={t("Debits")}
                     onChange={(e) => setRow(i, { debit: e.target.value, credit: "" })}
                   />
                 </td>
@@ -358,6 +360,7 @@ export function JournalEntryForm({
                     style={{ textAlign: "end" }}
                     inputMode="decimal"
                     value={r.credit}
+                    aria-label={t("Credits")}
                     onChange={(e) => setRow(i, { credit: e.target.value, debit: "" })}
                   />
                 </td>
@@ -365,6 +368,7 @@ export function JournalEntryForm({
                   <button
                     onClick={() => setRows((rs) => rs.filter((_, idx) => idx !== i))}
                     disabled={rows.length <= 2}
+                    aria-label={t("Remove line")}
                     title={t("Remove line")}
                     style={{ minHeight: 28, padding: "0 8px" }}
                   >

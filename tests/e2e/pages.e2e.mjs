@@ -1,7 +1,7 @@
 // Every screen, as every role. Signed out, each one sends you to sign-in.
 // Signed in, each screen a role is offered renders (no error boundary); a
 // screen it is not offered sends it to its own starting screen instead. And
-// every screen fits a phone.
+// every screen fits a phone, and names each of its boxes, lists and buttons.
 import { chromium, BASE, check, done, open, signIn } from "./lib.mjs";
 
 const PAGES = [
@@ -351,6 +351,77 @@ console.log(
   check(
     name === "ltr ellipsis",
     `in Kurdish the name on the top bar is cut at its own end (${name})`,
+  );
+  await ctx.close();
+}
+
+console.log("▸ every box, list and button has a name a screen reader can say");
+{
+  // A placeholder is not a name: it goes once something is typed. A button
+  // that shows only × is said as "multiplication sign". Every <details> is
+  // opened first, so the forms folded into them are looked at too. The
+  // unit tests (a11y) check the boxes only a click opens.
+  const SCREENS = [
+    ...PAGES,
+    "/sales/sessions",
+    "/purchasing/buying-list",
+    "/inventory/transfers",
+    "/accounting/bank",
+    "/reports/sales",
+    "/reports/statements",
+    "/reports/stock",
+    "/settings/rules",
+    "/settings/languages",
+  ];
+  const unnamed = () => {
+    const text = (el) => (el?.textContent ?? "").replace(/\s+/g, " ").trim();
+    const by = (el) =>
+      (el.getAttribute("aria-labelledby") || "")
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((id) => text(document.getElementById(id)))
+        .join(" ");
+    const shown = (el) =>
+      !el.hidden && !el.closest("[hidden]") && getComputedStyle(el).display !== "none";
+    const where = (el) =>
+      el.closest("[data-testid]")?.getAttribute("data-testid") ??
+      el.closest("section, form, table, dialog")?.tagName.toLowerCase() ??
+      "";
+    const out = [];
+    for (const el of document.querySelectorAll("input, select, textarea")) {
+      if (el.type === "hidden" || !shown(el)) continue;
+      const name =
+        by(el) ||
+        (el.getAttribute("aria-label") || "").trim() ||
+        [...(el.labels ?? [])].map(text).join(" ") ||
+        (el.getAttribute("title") || "").trim();
+      if (!name) out.push(`${el.tagName.toLowerCase()} in ${where(el)}`);
+    }
+    for (const el of document.querySelectorAll("button, a[href]")) {
+      if (!shown(el)) continue;
+      const name =
+        by(el) ||
+        (el.getAttribute("aria-label") || "").trim() ||
+        text(el) ||
+        (el.getAttribute("title") || "").trim();
+      if (!/[\p{L}\p{N}]/u.test(name))
+        out.push(`${el.tagName.toLowerCase()} “${text(el)}” in ${where(el)}`);
+    }
+    return out;
+  };
+  const { ctx, page } = await signIn(browser, "owner");
+  const found = [];
+  for (const p of SCREENS) {
+    await open(page, p);
+    await page.evaluate(() => {
+      for (const d of document.querySelectorAll("details")) d.open = true;
+    });
+    await page.waitForLoadState("networkidle");
+    found.push(...(await page.evaluate(unnamed)).map((s) => `${p}: ${s}`));
+  }
+  check(
+    found.length === 0,
+    `on ${SCREENS.length} screens, every box, list and button is named${found.length ? ` (not: ${found.slice(0, 6).join("; ")})` : ""}`,
   );
   await ctx.close();
 }

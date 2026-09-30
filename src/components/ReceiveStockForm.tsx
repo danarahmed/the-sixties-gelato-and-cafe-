@@ -452,6 +452,8 @@ function Receive({
                     setLines((ls) => ls.filter((_, i) => i !== idx));
                   }}
                   disabled={lines.length === 1}
+                  aria-label={t("Remove line")}
+                  title={t("Remove line")}
                 >
                   ×
                 </button>
