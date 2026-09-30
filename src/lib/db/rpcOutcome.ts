@@ -29,3 +29,24 @@ export function isUncertainFailure(
 
 export const UNCERTAIN_MESSAGE =
   "The database did not answer, so this may have been saved. Check before trying again.";
+
+/**
+ * A line for the app's own log (Vercel's, for whoever looks after the café's
+ * system): a call the database refused, with the words the person was shown,
+ * or one that came back with no answer. One JSON object a line, so the log
+ * can be searched ("rpc", the function's name). Nothing was written by either.
+ */
+export function rpcLogLine(
+  fn: string,
+  outcome: "refused" | "uncertain",
+  detail: { code?: string | null; status?: number | null; message?: string | null } = {},
+): string {
+  return JSON.stringify({
+    at: "rpc",
+    fn,
+    outcome,
+    ...(detail.code ? { code: detail.code } : {}),
+    ...(detail.status ? { status: detail.status } : {}),
+    ...(detail.message ? { message: detail.message.slice(0, 300) } : {}),
+  });
+}

@@ -33,9 +33,19 @@ interface CafeWords {
 
 const NONE: CafeWords = { languages: [], phrases: {} };
 
+/**
+ * Whether someone is signed in: the sign-in cookie is there. Signed out, the
+ * database gives the public key nothing, the café's words included, so they
+ * are not asked for.
+ */
+const signedIn = async (): Promise<boolean> =>
+  (await cookies())
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
+
 /** The café's added languages in use, and its own words in one language. */
 const cafeWords = cache(async (locale: string): Promise<CafeWords> => {
-  if (!supabaseConfig()) return NONE;
+  if (!supabaseConfig() || !(await signedIn())) return NONE;
   try {
     const db = await createServerSupabase();
     const { data, error } = await db.rpc("app_words", { p_locale: locale });
