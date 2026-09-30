@@ -567,9 +567,29 @@ costs; recording: managers, accountant, owner
 4. The entry is shown exactly as it will post (**Balanced — debits equal
    credits**), then **Post expense**.
 
+**Paid ahead for months to come** (`0060`): a cost that pays for months still
+to come (next month's rent, a quarter's, a year's insurance) is not all this
+month's. Tick **Paid ahead for months to come**: the **Date** gives way to the
+**First month** it covers (this month or one of the twelve after) and **How
+many months** (1 to 36; one only if it is still to come, since this month
+alone is an expense). The entry shows it paid into 1400 Prepaid expenses, then
+each month's share: equal, in whole dinars, the last taking what is left.
+**Post prepaid expense**: this month's share, if it covers this month, is an
+expense at once.
+
+**Prepaid Expenses**, below the form once there is one: each with the months
+it covers, the shares posted (**1 of 3**) and what is still ahead. When a
+month comes, **Release what is due (n)** posts each share whose month has
+come, as an expense of that month; the Dashboard says when one is due, and a
+month is not locked until its shares are posted. The owner, a general
+manager or the accountant **Cancel**s one entered in error, with why: its
+payment and every share posted are reversed that day, and cash from the
+drawer goes back in it.
+
 Below: the **Expense Register** and totals **By Account**. An expense whose
 journal has been reversed stays listed, marked **reversed by #…** and struck
-through, and is left out of the totals: it is no longer spent.
+through, and is left out of the totals: it is no longer spent. A prepaid
+expense's shares are listed here as they are posted, each with its month.
 
 ## 12. Purchasing
 

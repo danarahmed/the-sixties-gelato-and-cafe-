@@ -71,6 +71,8 @@ const phrases: PhraseBook = {
   Depreciation: { ar: "الاستهلاك", ckb: "داخوران" },
   "Card and bank fees": { ar: "رسوم البطاقات والبنك", ckb: "کرێی کارت و بانک" },
   "Other expenses": { ar: "مصروفات أخرى", ckb: "خەرجی تر" },
+  // Paid ahead for months to come (0060).
+  "Prepaid expenses": { ar: "المصروفات المدفوعة مقدمًا", ckb: "خەرجییە پێشەکییەکان" },
 
   // Where cash is kept, as a narration names it ("Cash from the till to the safe").
   till: { ar: "درج النقد", ckb: "دەخیلە" },
@@ -96,6 +98,7 @@ const phrases: PhraseBook = {
   "Payment — bill {1}": { ar: "دفعة — فاتورة {1}", ckb: "پارەدان — پسووڵەی {1}" },
   "Cancelled bill {1}: {2}": { ar: "فاتورة ملغاة {1}: {2}", ckb: "پسووڵەی هەڵوەشێنراوە {1}: {2}" },
   "Expense: {1}": { ar: "مصروف: {1}", ckb: "خەرجی: {1}" },
+  "Prepaid: {1}": { ar: "مدفوع مقدمًا: {1}", ckb: "پێشەکی دراو: {1}" },
   "Waste: {1}": { ar: "هدر: {1}", ckb: "بەفیڕۆچوون: {1}" },
   "Spoilage: {1}": { ar: "تلف: {1}", ckb: "خراپبوون: {1}" },
   "Expired: {1}": { ar: "منتهي الصلاحية: {1}", ckb: "بەسەرچوو: {1}" },

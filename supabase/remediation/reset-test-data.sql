@@ -114,7 +114,7 @@ truncate table
   loss_review, lot_movement, loyalty_ledger,
   payroll_approval, payroll_line, payroll_run,
   pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
-  pos_tab_line_modifier,
+  pos_tab_line_modifier, prepaid_expense, prepaid_release,
   production_batch,
   purchase_invoice, purchase_order, purchase_order_line, receipt_correction, reconciliation_issue, request_log,
   sale_adjustment,

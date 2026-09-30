@@ -318,6 +318,8 @@ describe("what the café is told without asking", () => {
       ["Golden vanilla gelato"],
     ],
     ["2 loss(es) waiting for a manager's approval (900 IQD)", []],
+    // A prepaid expense's months come and not posted (0060).
+    ["2 month(s) of prepaid expenses are due to be released, 43,333 IQD in all", []],
     // Staff, their hours and their pay (0049): the alerts, the till's answers, the month's close.
     ["Rana has been clocked in for 17 hours, since 27 Sep 08:00", ["Rana"]],
     ["The payroll for 2026-08 is not approved: salaries were due on 01 Sep", []],

@@ -34,9 +34,9 @@ select record_sale(gen_random_uuid(), 'talabat', 'platform_paid', '[{"variant_id
 select test.act_as('owner@example.com');
 select test.eq((select string_agg(check_key, ',' order by ord) from (
                   select check_key, row_number() over () ord from report_reconciliation(test.today())) x),
-  'inventory,payables,grni,sales,card,platform,drawer,safe,dollars,payroll,advances,transit,documents',
-  'thirteen checks: the four before, five new, the dollars (0043), the salaries owed and the advances (0049), and the stock on its way (0054)');
-select test.eq(pg_temp.recon(), 'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,safe=0,sales=0,transit=0',
+  'inventory,payables,grni,sales,card,platform,drawer,safe,dollars,payroll,advances,transit,documents,prepaid',
+  'fourteen checks: the four before, five new, the dollars (0043), the salaries owed and the advances (0049), the stock on its way (0054), and the prepaid expenses (0060)');
+select test.eq(pg_temp.recon(), 'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,prepaid=0,safe=0,sales=0,transit=0',
   'a day of cash, card and Talabat sales ties everywhere');
 select test.eq(pg_temp.check('card'), '2500/2500/0', 'the card takings not yet settled are what 1010 holds');
 select test.eq(pg_temp.check('platform'), '3000/3000/0', 'Talabat owes its order, as 1100 says');
@@ -106,9 +106,9 @@ set session_replication_role = origin;
 select test.act_as('owner@example.com');
 select test.eq((select string_agg(check_key || '=' || trim_scale(difference), ',' order by check_key)
                   from report_reconciliation(test.today() - 1)),
-  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,safe=0,sales=0,transit=0',
+  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,prepaid=0,safe=0,sales=0,transit=0',
   'yesterday ties too: each check is as at the end of its day');
-select test.eq(pg_temp.recon(), 'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,safe=0,sales=0,transit=0',
+select test.eq(pg_temp.recon(), 'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,prepaid=0,safe=0,sales=0,transit=0',
   'and today, after it all, ties everywhere');
 select test.eq(pg_temp.checklist(), 'card:ok,documents:ok,drawer:ok,platform:ok,safe:ok,sales:ok',
   'the month''s checklist has every check, each passing');

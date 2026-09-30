@@ -5,8 +5,13 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ExpensePrefill } from "@/lib/bank";
 import type { CashOnHand } from "@/lib/cash";
-import { previewExpenseCategoryAction, recordExpenseAction } from "@/lib/actions/books";
+import {
+  previewExpenseCategoryAction,
+  recordExpenseAction,
+  recordPrepaidExpenseAction,
+} from "@/lib/actions/books";
 import { fmtIQD } from "@/lib/format";
+import { addMonths, prepaidRefusal, prepaidShares } from "@/lib/prepaid";
 import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
@@ -43,6 +48,11 @@ type PaidFrom = keyof typeof PAID_FROM;
  * filled in (its words, amount, day, paid from the bank), with the way back.
  *
  * Paid from the safe or the till, the form says what it holds (AK).
+ *
+ * Paid ahead for months to come (next month's rent, a year's insurance), it
+ * goes into Prepaid expenses and each month it covers takes its share as an
+ * expense of that month (0060): the form shows the shares before anything is
+ * posted, and is an ordinary expense's again once it is.
  */
 export function ExpenseEntry({
   accounts,
@@ -70,9 +80,21 @@ export function ExpenseEntry({
   const [hint, setHint] = useState<Suggestion | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Paid ahead: from this month, or one of the twelve after it (0060).
+  const thisMonth = today.slice(0, 7);
+  const [ahead, setAhead] = useState(false);
+  const [firstMonth, setFirstMonth] = useState(thisMonth);
+  const [months, setMonths] = useState("12");
 
   const value = Number(normaliseNumber(amount)) || 0;
   const accountName = accounts.find((a) => a.code === account)?.name ?? "";
+  const monthCount = Number(normaliseNumber(months)) || 0;
+  // Why it cannot be paid ahead as it stands, as the database would say; else its shares.
+  const refusal =
+    ahead && value > 0 ? prepaidRefusal(value, monthCount, firstMonth, thisMonth) : null;
+  const shares = ahead && !refusal ? prepaidShares(value, monthCount, firstMonth) : [];
+  const first = shares[0];
+  const last = shares[shares.length - 1];
 
   useEffect(() => {
     if (!desc.trim()) {
@@ -91,11 +113,65 @@ export function ExpenseEntry({
     };
   }, [desc, value, chosenByHand, accounts]);
 
+  /** Posted: say so, and clear the form for the next one. */
+  function done(text: string) {
+    setMsg({ ok: true, text });
+    setDesc("");
+    setAmount("");
+    setAccount("");
+    setChosenByHand(false);
+    setHint(null);
+    setPosted(true);
+    router.refresh();
+  }
+
   function post() {
     setMsg(null);
     setPosted(false);
     start(async () => {
       if (!paidFrom) return;
+      if (ahead) {
+        const r = await op.run("recordPrepaidExpense", (key) =>
+          recordPrepaidExpenseAction(
+            {
+              description: desc,
+              amount,
+              accountCode: account,
+              paidFrom,
+              firstMonth,
+              months: monthCount,
+            },
+            key,
+          ),
+        );
+        if (r.ok)
+          done(
+            [
+              monthCount === 1
+                ? t("Paid into Prepaid expenses (journal {no}): one month, {first}.", {
+                    no: r.data.journalNo ?? "—",
+                    first: firstMonth,
+                  })
+                : t("Paid into Prepaid expenses (journal {no}): {n} months, {first} to {last}.", {
+                    no: r.data.journalNo ?? "—",
+                    n: monthCount,
+                    first: firstMonth,
+                    last: addMonths(firstMonth, monthCount - 1),
+                  }),
+              r.data.released > 0 ? t("This month's share is posted as an expense.") : "",
+            ]
+              .filter(Boolean)
+              .join(" "),
+          );
+        else setMsg({ ok: false, text: r.error });
+        // The next one is an ordinary expense unless it is ticked again.
+        if (r.ok) {
+          setAhead(false);
+          setFirstMonth(thisMonth);
+          setMonths("12");
+        }
+        return;
+      }
       const r = await op.run("recordExpense", (key) =>
         recordExpenseAction(
           {
@@ -108,23 +184,15 @@ export function ExpenseEntry({
           key,
         ),
       );
-      if (r.ok) {
-        setMsg({
-          ok: true,
-          text: t("Posted to {account} {name} (journal {no}).", {
+      if (r.ok)
+        done(
+          t("Posted to {account} {name} (journal {no}).", {
             account,
             name: say(accountName),
             no: r.data.journalNo ?? "—",
           }),
-        });
-        setDesc("");
-        setAmount("");
-        setAccount("");
-        setChosenByHand(false);
-        setHint(null);
-        setPosted(true);
-        router.refresh();
-      } else setMsg({ ok: false, text: r.error });
+        );
+      else setMsg({ ok: false, text: r.error });
     });
   }
 
@@ -151,10 +219,40 @@ export function ExpenseEntry({
             autoComplete="off"
           />
         </label>
-        <label style={{ minWidth: 140 }}>
-          <div className="sc">{t("Date")}</div>
-          <input type="date" value={date} max={today} onChange={(e) => setDate(e.target.value)} />
-        </label>
+        {ahead ? (
+          <>
+            <label style={{ minWidth: 120 }}>
+              <div className="sc">{t("First month")}</div>
+              <select
+                aria-label={t("First month")}
+                value={firstMonth}
+                onChange={(e) => setFirstMonth(e.target.value)}
+              >
+                {Array.from({ length: 13 }, (_, i) => addMonths(thisMonth, i)).map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label style={{ minWidth: 90 }}>
+              <div className="sc">{t("How many months")}</div>
+              <input
+                className="amt"
+                style={{ textAlign: "end" }}
+                inputMode="numeric"
+                value={months}
+                onChange={(e) => setMonths(e.target.value)}
+                autoComplete="off"
+              />
+            </label>
+          </>
+        ) : (
+          <label style={{ minWidth: 140 }}>
+            <div className="sc">{t("Date")}</div>
+            <input type="date" value={date} max={today} onChange={(e) => setDate(e.target.value)} />
+          </label>
+        )}
         <label style={{ minWidth: 150 }}>
           <div className="sc">{t("Paid from")}</div>
           <select
@@ -189,6 +287,25 @@ export function ExpenseEntry({
           </select>
         </label>
       </div>
+      <label
+        style={{
+          display: "flex",
+          gap: 6,
+          alignItems: "center",
+          marginBlockStart: 10,
+          fontSize: ".85rem",
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={ahead}
+          onChange={(e) => setAhead(e.target.checked)}
+          data-testid="expense-ahead"
+        />
+        {t(
+          "Paid ahead for months to come (next month's rent, a year's insurance): each month takes its share",
+        )}
+      </label>
       <div style={{ marginBlockStart: 8 }}>
         <CashOnHandNote on={cash} from={paidFrom} amount={value} />
       </div>
@@ -218,10 +335,17 @@ export function ExpenseEntry({
             <>
               <div className="vline">
                 <span className="dr">{t("Dr")}</span>
-                <span className="acct">
-                  <em>{account}</em>
-                  {say(accountName)}
-                </span>
+                {ahead ? (
+                  <span className="acct">
+                    <em>1400</em>
+                    {t("Prepaid expenses")}
+                  </span>
+                ) : (
+                  <span className="acct">
+                    <em>{account}</em>
+                    {say(accountName)}
+                  </span>
+                )}
                 <span className="amt">{fmtIQD(value)}</span>
               </div>
               {paidFrom ? (
@@ -244,6 +368,64 @@ export function ExpenseEntry({
                   </span>
                 </div>
               )}
+              {ahead && (
+                <div data-testid="prepaid-shares" style={{ marginBlockStart: 10 }}>
+                  <div className="sc">{t("Then each month it covers")}</div>
+                  {first && last ? (
+                    <>
+                      <div className="vline">
+                        <span className="dr">{t("Dr")}</span>
+                        <span className="acct">
+                          <em>{account}</em>
+                          {say(accountName)}
+                        </span>
+                        <span className="amt">{fmtIQD(first.amount)}</span>
+                      </div>
+                      <div className="vline credit">
+                        <span className="dr">{t("Cr")}</span>
+                        <span className="acct">
+                          <em>1400</em>
+                          {t("Prepaid expenses")}
+                        </span>
+                        <span className="amt">{fmtIQD(first.amount)}</span>
+                      </div>
+                      <div className="vline" style={{ paddingBlockStart: 6 }}>
+                        <span className="dr" />
+                        <span className="acct faint" style={{ fontSize: ".74rem" }}>
+                          {shares.length === 1
+                            ? t("One month, {first}: {each}", {
+                                first: first.month,
+                                each: fmtIQD(first.amount),
+                              })
+                            : first.amount === last.amount
+                              ? t("{n} months, {first} to {last}, {each} each", {
+                                  n: shares.length,
+                                  first: first.month,
+                                  last: last.month,
+                                  each: fmtIQD(first.amount),
+                                })
+                              : t("{n} months, {first} to {last}: {each} each, the last {rest}", {
+                                  n: shares.length,
+                                  first: first.month,
+                                  last: last.month,
+                                  each: fmtIQD(first.amount),
+                                  rest: fmtIQD(last.amount),
+                                })}{" "}
+                          {first.month === thisMonth
+                            ? t(
+                                "This month's share is posted now, each later one as its month comes.",
+                              )
+                            : t("Each share is posted as its month comes.")}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="vempty">
+                      {refusal ? t(refusal.text, refusal.vars) : t("Enter an amount")}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
           <div className="vfoot">
@@ -263,9 +445,16 @@ export function ExpenseEntry({
           <button
             className="btn-primary"
             onClick={post}
-            disabled={busy || !desc.trim() || value <= 0 || !account || !paidFrom}
+            disabled={
+              busy ||
+              !desc.trim() ||
+              value <= 0 ||
+              !account ||
+              !paidFrom ||
+              (ahead && (refusal !== null || shares.length === 0))
+            }
           >
-            {busy ? t("Posting…") : t("Post expense")}
+            {busy ? t("Posting…") : ahead ? t("Post prepaid expense") : t("Post expense")}
           </button>
           <div style={{ marginBlockStart: 12 }}>
             <OperationStatus op={op} />

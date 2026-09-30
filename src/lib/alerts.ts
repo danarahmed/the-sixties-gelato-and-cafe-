@@ -42,6 +42,7 @@ export const RULE_LABEL: Record<string, string> = {
   clocked_in_long: "Clocked in a long time",
   payroll_due: "Salaries due",
   bank_unreconciled: "Bank not reconciled",
+  prepaid_due: "Prepaid expenses due",
 };
 
 export function ruleLabel(rule: string): string {

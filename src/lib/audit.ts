@@ -73,7 +73,7 @@ export const AUDIT_GROUPS = [
   {
     key: "books",
     label: "Books & periods", // i18n-ignore
-    prefixes: ["journal.", "period.", "legacy.", "expense.", "account.", "bank."],
+    prefixes: ["journal.", "period.", "legacy.", "expense.", "account.", "bank.", "prepaid."],
   },
   { key: "alerts", label: "Alerts answered", prefixes: ["alert."] }, // i18n-ignore
   {
@@ -248,6 +248,10 @@ const ACTION_LABEL: Record<string, string> = {
   // The bank against its statement (0059): the statement is named by its number.
   "bank.reconcile": "Bank statement kept",
   "bank.unreconcile": "Bank statement undone",
+  // Prepaid expenses (0060): the prepaid expense is named by its words.
+  "prepaid.record": "Prepaid expense recorded",
+  "prepaid.release": "Prepaid expenses' shares posted",
+  "prepaid.cancel": "Prepaid expense cancelled",
 };
 
 /**
@@ -495,6 +499,11 @@ const FIELD_LABEL: Record<string, string> = {
   money_in: "Money in",
   money_out: "Money out",
   line_count: "Lines ticked",
+  // A prepaid expense (0060): the months it covers, and its shares.
+  first_month: "First month",
+  months: "Months",
+  released: "Shares posted",
+  shares_reversed: "Shares reversed",
 };
 
 /**
@@ -531,7 +540,14 @@ const CORRECTION_KIND: Record<string, string> = {
  * Keys that are bookkeeping, not what anyone changed. (A key not named above
  * reads as itself, "Track expiry"; those the trail records are phrases too.)
  */
-const NOISE = new Set(["id", "business_id", "created_at", "created_by", "updated_at"]);
+const NOISE = new Set([
+  "id",
+  "business_id",
+  "created_at",
+  "created_by",
+  "updated_at",
+  "prepaid_id",
+]);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function fieldLabel(key: string): string {
@@ -605,6 +621,16 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
         })
         .join(", ");
     if (key === "kinds") return v.map((k) => CORRECTION_KIND[String(k)] ?? String(k)).join(", ");
+    // The shares of prepaid expenses posted (0060): "Insurance, a year (2026-10): 10,000".
+    if (key === "released" && v.every(isObj))
+      return (
+        v
+          .map((x) => {
+            const o = x as Obj;
+            return `${String(o.description ?? "")} (${String(o.month)}): ${showValue(o.amount, "amount", names)}`;
+          })
+          .join("; ") || "—"
+      );
     return v.map((x) => showValue(x, key, names)).join(", ");
   }
   // The notes counted in the drawer (0036): "25,000 × 2, 1,000 × 3".
@@ -763,6 +789,9 @@ export function subjectOf(
       return pick("return_no") ? `Return ${pick("return_no")}` : "A return to a supplier";
     case "supplier_credit":
       return pick("credit_no") ? `Credit ${pick("credit_no")}` : "A supplier's credit";
+    // A prepaid expense (0060), by its words; what was released, all of them.
+    case "prepaid_expense":
+      return pick("description") ?? (entityId ? "A prepaid expense" : "Prepaid expenses");
     // A bank statement (0059), by its number.
     case "bank_statement":
       return pick("statement_no") ? `Bank statement ${pick("statement_no")}` : "A bank statement";
@@ -834,6 +863,8 @@ const SUBJECT_WORDS = new Set([
   "A salary payment",
   "An account",
   "A bank statement",
+  "A prepaid expense",
+  "Prepaid expenses",
 ]);
 
 /** An id shown short, as subjectOf shows it: "1a2b3c4d…". */
@@ -978,6 +1009,9 @@ export function valueIn(value: string, field: string, t: T, msg: Msg): string {
       return channelIn(value, t);
     case FIELD_LABEL.timezone:
       return t(value);
+    // Where the money came from: the till, the safe, the bank, a card or the owner.
+    case FIELD_LABEL.paid_from:
+      return msg(value);
     case FIELD_LABEL.default_locale:
       // A language by its own name: English, العربية, کوردی.
       return BUILT_IN_LANGUAGES.find((l) => l.code === value)?.label ?? value;

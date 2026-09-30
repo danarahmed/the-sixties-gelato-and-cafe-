@@ -133,7 +133,7 @@ select test.eq((select string_agg(l.name || ' ' || trim_scale(x.value::numeric),
                  where pa.journal_entry_id = (select id from journal_entry where journal_no = (pg_temp.r('pay2') ->> 'journal_no')::int)),
   'Main Branch 600000, Second Branch 500000', 'and the second its own, with the raise');
 select test.eq(pg_temp.checks(),
-  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,safe=0,sales=0,transit=0',
+  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,prepaid=0,safe=0,sales=0,transit=0',
   'the books tie');
 
 -- ------------------------------------------------------------------ the day, by place

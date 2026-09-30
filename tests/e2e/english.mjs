@@ -66,6 +66,8 @@ const typed = () =>
     union select name from gl_account where not is_system
     -- A bank statement's note, and why one was undone (0059).
     union select coalesce(note, '') from bank_statement union select coalesce(undo_reason, '') from bank_statement
+    -- A prepaid expense's words, and why one was cancelled (0060).
+    union select description from prepaid_expense union select coalesce(cancel_reason, '') from prepaid_expense
   ) x where n is not null`);
 const own = () =>
   new Set(

@@ -408,6 +408,127 @@ const phrases: PhraseBook = {
     ar: "رُحِّل إلى {account} {name} (القيد {no}).",
     ckb: "لە {account} {name} تۆمار کرا (تۆماری {no}).",
   },
+  // Paid ahead for months to come (0060): the expense form (ExpenseEntry).
+  "Paid ahead for months to come (next month's rent, a year's insurance): each month takes its share":
+    {
+      ar: "مدفوع مقدمًا عن أشهر قادمة (إيجار الشهر القادم، تأمين سنة): يأخذ كل شهر حصته",
+      ckb: "پێشەکی بۆ مانگانی داهاتوو دراوە (کرێی مانگی داهاتوو، بیمەی ساڵێک): هەر مانگێک بەشی خۆی وەردەگرێت",
+    },
+  "One month, {first}: {each}": {
+    ar: "شهر واحد، {first}: {each}",
+    ckb: "یەک مانگ، {first}: {each}",
+  },
+  "Paid into Prepaid expenses (journal {no}): one month, {first}.": {
+    ar: "دُفع إلى المصروفات المدفوعة مقدمًا (القيد {no}): شهر واحد، {first}.",
+    ckb: "خرایە سەر خەرجییە پێشەکییەکان (تۆماری {no}): یەک مانگ، {first}.",
+  },
+  "First month": { ar: "الشهر الأول", ckb: "مانگی یەکەم" },
+  "How many months": { ar: "كم شهرًا", ckb: "چەند مانگ" },
+  "Then each month it covers": {
+    ar: "ثم في كل شهر يغطيه",
+    ckb: "پاشان لە هەر مانگێکدا کە دەیگرێتەوە",
+  },
+  "{n} months, {first} to {last}, {each} each": {
+    ar: "{n} أشهر، من {first} إلى {last}، {each} لكل شهر",
+    ckb: "{n} مانگ، لە {first} تا {last}، هەر مانگێک {each}",
+  },
+  "{n} months, {first} to {last}: {each} each, the last {rest}": {
+    ar: "{n} أشهر، من {first} إلى {last}: {each} لكل شهر، والأخير {rest}",
+    ckb: "{n} مانگ، لە {first} تا {last}: هەر مانگێک {each}، دوایینیان {rest}",
+  },
+  "This month's share is posted now, each later one as its month comes.": {
+    ar: "تُرحَّل حصة هذا الشهر الآن، وكل حصة بعدها حين يأتي شهرها.",
+    ckb: "بەشی ئەم مانگە ئێستا تۆمار دەکرێت، هەر بەشێکی دواتریش کاتێک مانگەکەی دێت.",
+  },
+  "Each share is posted as its month comes.": {
+    ar: "تُرحَّل كل حصة حين يأتي شهرها.",
+    ckb: "هەر بەشێک کاتێک مانگەکەی دێت تۆمار دەکرێت.",
+  },
+  "Post prepaid expense": {
+    ar: "ترحيل المصروف المدفوع مقدمًا",
+    ckb: "تۆمارکردنی خەرجیی پێشەکی",
+  },
+  "Paid into Prepaid expenses (journal {no}): {n} months, {first} to {last}.": {
+    ar: "دُفع إلى المصروفات المدفوعة مقدمًا (القيد {no}): {n} أشهر، من {first} إلى {last}.",
+    ckb: "خرایە سەر خەرجییە پێشەکییەکان (تۆماری {no}): {n} مانگ، لە {first} تا {last}.",
+  },
+  "This month's share is posted as an expense.": {
+    ar: "رُحِّلت حصة هذا الشهر مصروفًا.",
+    ckb: "بەشی ئەم مانگە وەک خەرجی تۆمار کرا.",
+  },
+  "Choose the first month it covers": {
+    ar: "اختر الشهر الأول الذي يغطيه",
+    ckb: "یەکەم مانگ کە دەیگرێتەوە هەڵبژێرە",
+  },
+  "Say how many months it covers, 1 to 36": {
+    ar: "اذكر كم شهرًا يغطي، من 1 إلى 36",
+    ckb: "بڵێ چەند مانگ دەگرێتەوە، لە 1 تا 36",
+  },
+  "the prepaid expense": { ar: "المصروف المدفوع مقدمًا", ckb: "خەرجییە پێشەکییەکە" },
+  // The café's prepaid expenses on Expenses (PrepaidExpenses).
+  "Prepaid Expenses": { ar: "المصروفات المدفوعة مقدمًا", ckb: "خەرجییە پێشەکییەکان" },
+  "Paid ahead: each month takes its share as an expense of that month": {
+    ar: "مدفوعة مقدمًا: يأخذ كل شهر حصته مصروفًا لذلك الشهر",
+    ckb: "پێشەکی دراون: هەر مانگێک بەشی خۆی وەک خەرجیی ئەو مانگە وەردەگرێت",
+  },
+  "Still ahead: {amount}": {
+    ar: "المتبقي للأشهر القادمة: {amount}",
+    ckb: "ماوە بۆ مانگەکانی داهاتوو: {amount}",
+  },
+  "Still ahead": { ar: "المتبقي للأشهر القادمة", ckb: "ماوە بۆ مانگەکانی داهاتوو" },
+  "{n} month(s) due to take their share": {
+    ar: "{n} شهر (أشهر) حان أن تأخذ حصتها",
+    ckb: "{n} مانگ کاتی ئەوەیە بەشی خۆیان وەربگرن",
+  },
+  "Release what is due ({n})": {
+    ar: "رحّل ما استحق ({n})",
+    ckb: "ئەوەی کاتی هاتووە تۆمار بکە ({n})",
+  },
+  "{n} month(s)' share posted as an expense of its month.": {
+    ar: "رُحِّلت حصة {n} شهر (أشهر) مصروفًا لشهرها.",
+    ckb: "بەشی {n} مانگ وەک خەرجیی مانگەکەی خۆی تۆمار کرا.",
+  },
+  Months: { ar: "الأشهر", ckb: "مانگەکان" },
+  Posted: { ar: "المُرحَّل", ckb: "تۆمارکراو" },
+  "{n} of {m}": { ar: "{n} من {m}", ckb: "{n} لە {m}" },
+  "{n} due": { ar: "{n} مستحق", ckb: "{n} کاتی هاتووە" },
+  "{n} reversed by hand": { ar: "{n} عُكس يدويًا", ckb: "{n} بە دەست هەڵگەڕێنرایەوە" },
+  "Why cancel {what}?": { ar: "لماذا يُلغى «{what}»؟", ckb: "بۆچی «{what}» هەڵدەوەشێنرێتەوە؟" },
+  "Entered in error: its payment and every share posted are reversed today": {
+    ar: "أُدخل خطأً: تُعكس دفعته وكل حصة رُحِّلت منه اليوم",
+    ckb: "بە هەڵە تۆمار کراوە: پارەدانەکەی و هەموو بەشێکی تۆمارکراوی ئەمڕۆ هەڵدەگەڕێنرێنەوە",
+  },
+  // What the database says of them: the dashboard's alert, the month's close, the books tied.
+  "Prepaid expenses due": {
+    ar: "مصروفات مدفوعة مقدمًا مستحقة",
+    ckb: "خەرجیی پێشەکیی کاتهاتوو",
+  },
+  "{1} month(s) of prepaid expenses are due to be released, {2} IQD in all": {
+    ar: "حان ترحيل {1} شهر (أشهر) من المصروفات المدفوعة مقدمًا، {2} IQD في المجموع",
+    ckb: "کاتی تۆمارکردنی {1} مانگ لە خەرجییە پێشەکییەکان هاتووە، کۆی گشتی {2} IQD",
+  },
+  "Each month a prepaid expense covers takes its share of it: until it is released, that month's profit is too high.":
+    {
+      ar: "كل شهر يغطيه مصروف مدفوع مقدمًا يأخذ حصته منه: وما لم تُرحَّل، يبقى ربح ذلك الشهر أعلى مما هو.",
+      ckb: "هەر مانگێک کە خەرجییەکی پێشەکی دەیگرێتەوە بەشی خۆی لێ وەردەگرێت: تا تۆمار نەکرێت، قازانجی ئەو مانگە لە ڕاستی زیاترە.",
+    },
+  "Release what is due on Expenses.": {
+    ar: "رحّل ما استحق في شاشة «المصروفات».",
+    ckb: "ئەوەی کاتی هاتووە لە شاشەی «خەرجییەکان» تۆمار بکە.",
+  },
+  "Each prepaid expense's share of the month is posted": {
+    ar: "رُحِّلت حصة الشهر من كل مصروف مدفوع مقدمًا",
+    ckb: "بەشی مانگەکە لە هەموو خەرجییەکی پێشەکی تۆمار کراوە",
+  },
+  "{1} share(s) of prepaid expenses to {2}, {3} IQD in all, are not posted: release them on Expenses":
+    {
+      ar: "{1} حصة من المصروفات المدفوعة مقدمًا حتى {2}، {3} IQD في المجموع، لم تُرحَّل: رحّلها في شاشة «المصروفات»",
+      ckb: "{1} بەش لە خەرجییە پێشەکییەکان تا {2}، کۆی گشتی {3} IQD، تۆمار نەکراون: لە شاشەی «خەرجییەکان» تۆماریان بکە",
+    },
+  "Prepaid expenses still to come vs Prepaid expenses (1400)": {
+    ar: "المصروفات المدفوعة مقدمًا المتبقية مقابل المصروفات المدفوعة مقدمًا (1400)",
+    ckb: "خەرجییە پێشەکییە ماوەکان بەرامبەر خەرجییە پێشەکییەکان (1400)",
+  },
   // The account the house rules propose (src/lib/bookkeeping/rules.ts), shown through msg().
   "“{1}” sounds like stock that was lost. Record it on Inventory → Record a loss instead, so the stock and its cost come out together. Only post it here if it really is a bought-in service.":
     {

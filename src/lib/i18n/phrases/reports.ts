@@ -1225,6 +1225,22 @@ const phrases: PhraseBook = {
   "Lines ticked": { ar: "القيود المُعلَّمة", ckb: "تۆمارە نیشانەکراوەکان" },
   kept: { ar: "محفوظ", ckb: "هەڵگیراو" },
   undone: { ar: "مُلغى", ckb: "هەڵوەشێنراوە" },
+  // Prepaid expenses on the audit trail (0060).
+  "Prepaid expense recorded": {
+    ar: "سُجّل مصروف مدفوع مقدمًا",
+    ckb: "خەرجییەکی پێشەکی تۆمار کرا",
+  },
+  "Prepaid expenses' shares posted": {
+    ar: "رُحِّلت حصص من المصروفات المدفوعة مقدمًا",
+    ckb: "بەشەکانی خەرجییە پێشەکییەکان تۆمار کران",
+  },
+  "Prepaid expense cancelled": {
+    ar: "أُلغي مصروف مدفوع مقدمًا",
+    ckb: "خەرجییەکی پێشەکی هەڵوەشێنرایەوە",
+  },
+  "A prepaid expense": { ar: "مصروف مدفوع مقدمًا", ckb: "خەرجییەکی پێشەکی" },
+  "Shares posted": { ar: "الحصص المُرحَّلة", ckb: "بەشە تۆمارکراوەکان" },
+  "Shares reversed": { ar: "الحصص المعكوسة", ckb: "بەشە هەڵگەڕێنراوەکان" },
 };
 
 export default phrases;

@@ -2723,6 +2723,60 @@ const phrases: PhraseBook = {
     ar: "تحويل أُلغي في الطريق بلا قيد",
     ckb: "گواستنەوەیەک لە ڕێگادا هەڵوەشێنرایەوە بێ تۆمار",
   },
+  // Prepaid expenses (0060).
+  "a prepaid expense (cancel it on Expenses)": {
+    ar: "مصروف مدفوع مقدمًا (ألغِه في شاشة «المصروفات»)",
+    ckb: "خەرجییەکی پێشەکی (لە شاشەی «خەرجییەکان» هەڵیبوەشێنەوە)",
+  },
+  "A prepaid expense is never deleted: cancel it instead": {
+    ar: "لا يُحذف مصروف مدفوع مقدمًا أبدًا: ألغِه بدلًا من ذلك",
+    ckb: "خەرجییەکی پێشەکی هەرگیز ناسڕدرێتەوە: لە جیاتی ئەوە هەڵیبوەشێنەوە",
+  },
+  "That prepaid expense was cancelled already": {
+    ar: "أُلغي هذا المصروف المدفوع مقدمًا من قبل",
+    ckb: "ئەم خەرجییە پێشەکییە پێشتر هەڵوەشێنراوەتەوە",
+  },
+  "A prepaid expense stays as it was recorded: cancel it and record it again": {
+    ar: "يبقى المصروف المدفوع مقدمًا كما سُجّل: ألغِه وسجّله من جديد",
+    ckb: "خەرجیی پێشەکی وەک تۆمارکراوە دەمێنێتەوە: هەڵیبوەشێنەوە و دووبارە تۆماری بکەرەوە",
+  },
+  "A month's share of a prepaid expense is not changed: cancel the prepaid expense instead": {
+    ar: "لا تُغيَّر حصة شهر من مصروف مدفوع مقدمًا: ألغِ المصروف المدفوع مقدمًا بدلًا من ذلك",
+    ckb: "بەشی مانگێک لە خەرجییەکی پێشەکی ناگۆڕدرێت: لە جیاتی ئەوە خەرجییە پێشەکییەکە هەڵبوەشێنەوە",
+  },
+  "Prepaid expenses (1400) move only with a prepaid expense: record one on Expenses": {
+    ar: "لا تتحرك المصروفات المدفوعة مقدمًا (1400) إلا بمصروف مدفوع مقدمًا: سجّله في شاشة «المصروفات»",
+    ckb: "خەرجییە پێشەکییەکان (1400) تەنها بە خەرجییەکی پێشەکی دەجووڵێن: یەکێک لە شاشەی «خەرجییەکان» تۆمار بکە",
+  },
+  "A prepaid expense covers 1 to 36 months": {
+    ar: "يغطي المصروف المدفوع مقدمًا من شهر إلى 36 شهرًا",
+    ckb: "خەرجیی پێشەکی لە 1 تا 36 مانگ دەگرێتەوە",
+  },
+  "For this month alone, record an expense": {
+    ar: "لهذا الشهر وحده، سجّل مصروفًا",
+    ckb: "بۆ تەنها ئەم مانگە، خەرجییەک تۆمار بکە",
+  },
+  "A prepaid expense starts this month or later: what it paid for before is an expense of those months":
+    {
+      ar: "يبدأ المصروف المدفوع مقدمًا هذا الشهر أو بعده: ما دُفع عن أشهر سابقة مصروفُ تلك الأشهر",
+      ckb: "خەرجیی پێشەکی لەم مانگەوە یان دواتر دەست پێدەکات: ئەوەی بۆ پێشتر دراوە خەرجیی ئەو مانگانەیە",
+    },
+  "A prepaid expense starts within a year": {
+    ar: "يبدأ المصروف المدفوع مقدمًا خلال سنة",
+    ckb: "خەرجیی پێشەکی لە ماوەی ساڵێکدا دەست پێدەکات",
+  },
+  "Each month takes at least 1 of it: pay at least {1}, or cover fewer months": {
+    ar: "يأخذ كل شهر 1 منه على الأقل: ادفع {1} على الأقل، أو غطِّ أشهرًا أقل",
+    ckb: "هەر مانگێک لانیکەم 1ی لێ وەردەگرێت: لانیکەم {1} بدە، یان مانگی کەمتر بگرەوە",
+  },
+  "Say why the prepaid expense is cancelled": {
+    ar: "اذكر سبب إلغاء المصروف المدفوع مقدمًا",
+    ckb: "بڵێ بۆچی خەرجییە پێشەکییەکە هەڵدەوەشێنرێتەوە",
+  },
+  "Prepaid expense not found": {
+    ar: "لم يُعثر على المصروف المدفوع مقدمًا",
+    ckb: "خەرجییە پێشەکییەکە نەدۆزرایەوە",
+  },
 };
 
 export default phrases;

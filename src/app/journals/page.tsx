@@ -28,8 +28,8 @@ export const dynamic = "force-dynamic";
  * refuses them too): the till's cash (every movement of it is a drawer event,
  * 0024), the safe (every movement of it is cash moved, 0038), the dollars in
  * both (0043), stock, payables, goods received, retained earnings, the
- * advances given on pay and the salaries owed (0049), and the stock on its way
- * between places (0054).
+ * advances given on pay and the salaries owed (0049), the stock on its way
+ * between places (0054), and the prepaid expenses (0060).
  */
 const BLOCKED = new Set([
   "1000",
@@ -39,6 +39,7 @@ const BLOCKED = new Set([
   "1200",
   "1210",
   "1300",
+  "1400",
   "2000",
   "2050",
   "2100",

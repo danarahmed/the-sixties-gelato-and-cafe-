@@ -112,7 +112,7 @@ select test.eq((refund_sale((pg_temp.r('two') ->> 'order_id')::uuid, 'did not li
 select void_sale((pg_temp.r('amt') ->> 'order_id')::uuid, 'rung on the wrong table');
 select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key)
                   from report_reconciliation(test.today())),
-  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,safe=0,sales=0,transit=0', 'the books tie, discounts included');
+  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,prepaid=0,safe=0,sales=0,transit=0', 'the books tie, discounts included');
 select test.as_admin();
 select test.eq(test.balance('4100'), (500 + 525 + 313 + 2500)::numeric,
   'discounts given, less the voided one, sit in 4100');
@@ -200,7 +200,7 @@ select settle_tab(pg_temp.id('b3.new'), 1, gen_random_uuid(), 'cash');
 select test.act_as('owner@example.com');
 select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key)
                   from report_reconciliation(test.today())),
-  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,safe=0,sales=0,transit=0', 'every subledger still reconciles');
+  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,prepaid=0,safe=0,sales=0,transit=0', 'every subledger still reconciles');
 
 -- ------------------------------------------- a step of 500, the default
 -- A percentage comes to the nearest 500 IQD, so the change is always in notes:
@@ -257,4 +257,4 @@ select test.eq((my_profile() ->> 'discount_round_to')::numeric, 500::numeric, 't
 select test.act_as('owner@example.com');
 select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key)
                   from report_reconciliation(test.today())),
-  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,safe=0,sales=0,transit=0', 'and the books still tie');
+  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,prepaid=0,safe=0,sales=0,transit=0', 'and the books still tie');

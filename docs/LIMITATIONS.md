@@ -434,6 +434,30 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     it** fills in Expenses for money out, and a journal into the bank for
     money in; the account is still the person's to choose. The Chart of
     Accounts has no income for interest until the café adds one.
+- **Prepaid expenses, what they do not do (`0060`).**
+  - The payment is dated when it is recorded: one made days before is
+    recorded as of today. Its shares keep their months.
+  - It starts this month or in one of the twelve after. What was paid for
+    months already past is an expense of those months, recorded on Expenses
+    with its date.
+  - A share is a month's, not a number of days': one that starts mid-month
+    takes a whole share that month.
+  - A month's share is posted when someone presses **Release what is due**
+    (or records it in its first month), not by itself on the first of the
+    month. The Dashboard says when one is due, and the month is not locked
+    until it is posted.
+  - It stays as it was recorded: to change its amount, account or months,
+    cancel it and record it again. Cancelled, its payment and its shares are
+    reversed on the day it is cancelled, not in their months.
+  - A share reversed by hand on Journals is not posted again: its money
+    stays in 1400 until the prepaid expense is cancelled, and the list says
+    so.
+  - One recorded before `0060` as an expense (December's rent, 150,000,
+    expensed in September) stays as it was. To move it, reverse that expense
+    in the month it was posted in, and record it again as paid ahead from
+    the same place: the reversal puts the money back where it came from and
+    the prepaid expense takes it out again, so only the month it is an
+    expense of changes.
 - **Statements read from their files, what they do not do.**
   - The files read are Excel workbooks (.xlsx), CSV and text files, and the
     web page or Excel 2003 XML some banks give as an ".xls". An Excel 97–2003
