@@ -585,9 +585,11 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   not.** Every box, list and tick box, and every button that shows only a
   sign, has a name. The source is checked, and so is every screen as it is
   drawn. The keyboard's place is ringed, and its first stop leads past the
-  menu. Whether a name says enough is left to a person to judge. Colour
-  contrast, the order the keyboard moves through each screen, and the till
-  with a screen reader running have not been tested.
+  menu. The theme's colours for words stand at least 4.5:1 against their
+  backgrounds (AM), but a colour written into one screen by hand, or on a
+  product's photo, is not checked. Whether a name says enough is left to a
+  person to judge. The order the keyboard moves through each screen, and
+  the till with a screen reader running, have not been tested.
 - **What the safe and the till hold, under Paid from (AK).** The figures
   are those of when the page was opened. Money moved on another screen
   after that shows once the page is opened again. The database checks each

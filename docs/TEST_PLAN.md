@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 579 tests)
+## 1. Unit (Vitest, 583 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -183,6 +183,12 @@ layers before every release.
   only a box is followed to where it is used. A button or link that shows
   only a sign (×, ✎) has a name of its own. The check is itself tested on
   small pieces of code.
+- `tests/contrast.test.ts`: every colour words are written in (the text,
+  the quieter and the faintest words, the brand's, the ledger green, the
+  warnings, errors and notes, the menu's) is at least 4.5 times as light or
+  as dark as each background it is written on, in the light theme and the
+  dark one, read from the stylesheet's own tokens; and the text, the
+  quieter words and the faintest keep that order.
 
 ## 2. SQL (`scripts/test-sql.sh`, about 800 assertions)
 
