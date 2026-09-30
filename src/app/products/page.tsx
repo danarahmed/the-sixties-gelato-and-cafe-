@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import type { T } from "@/lib/i18n/core";
 import { has, requirePermission } from "@/lib/auth/session";
@@ -29,6 +30,7 @@ import { SizesPanel } from "@/components/menu/SizesPanel";
 import { ProductAddons } from "@/components/menu/ProductAddons";
 import { AddonsManager } from "@/components/menu/AddonsManager";
 import { EmptyState } from "@/components/ui";
+import { namesMatch, SEARCH_MAX, searchText } from "@/lib/find";
 
 export const dynamic = "force-dynamic";
 
@@ -221,9 +223,16 @@ function RecipeAndPrices({
   );
 }
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const profile = await requirePermission("cost.view");
   const t = await getT();
+  // Find a product (the September audit's P2-20): by its name or a size's, in any language.
+  const sp = await searchParams;
+  const find = typeof sp.q === "string" ? (searchText(sp.q) ?? "") : "";
   const today = businessToday(profile.timezone);
   const canEdit = has(profile, "recipe.edit");
   const [menu, lines, items, itemCosts, setup, scheduled, channels, addons, branchPrices, places] =
@@ -266,8 +275,23 @@ export default async function ProductsPage() {
   for (const p of products)
     if (p.categoryId) counts.set(p.categoryId, (counts.get(p.categoryId) ?? 0) + 1);
 
+  // Those a search names, or all of them.
+  const listed = find
+    ? products.filter((p) =>
+        namesMatch(
+          [
+            p.name,
+            p.nameAr,
+            p.nameCkb,
+            ...p.variants.flatMap((v) => [v.name, v.nameAr, v.nameCkb]),
+          ],
+          find,
+        ),
+      )
+    : products;
+
   // On the till, by category in the till's order; then everything hidden from it.
-  const onTill = products.filter((p) => p.isActive);
+  const onTill = listed.filter((p) => p.isActive);
   const groups: { key: string; title: string; hidden: boolean; products: MenuProduct[] }[] = [
     ...categories.map((c) => ({
       key: c.id,
@@ -282,7 +306,7 @@ export default async function ProductsPage() {
       products: onTill.filter((p) => !p.categoryId),
     },
   ].filter((g) => g.products.length > 0);
-  const hidden = products.filter((p) => !p.isActive);
+  const hidden = listed.filter((p) => !p.isActive);
 
   // "Recipe, prices, sizes and add-ons · Regular, Large · + Milk, Extras": what the till asks for, at a glance.
   const summaryOf = (p: MenuProduct) => {
@@ -299,7 +323,13 @@ export default async function ProductsPage() {
   };
 
   const card = (p: MenuProduct) => (
-    <div key={p.id} className="card grid" style={{ gap: 8 }}>
+    <div
+      key={p.id}
+      className="card grid"
+      style={{ gap: 8 }}
+      data-testid="product-card"
+      data-name={p.name}
+    >
       <ProductSetup product={p} categories={categories} canEdit={canEdit} />
       {p.isActive && (
         <details data-testid="sizes-addons">
@@ -373,8 +403,40 @@ export default async function ProductsPage() {
           editor={canEdit ? { items: itemOpts, decimals, today } : null}
         />
 
+        {products.length > 0 && (
+          <form
+            className="card"
+            role="search"
+            style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}
+          >
+            <label style={{ flex: "1 1 260px" }}>
+              <div className="sc">{t("Find a product")}</div>
+              <input
+                type="search"
+                name="q"
+                defaultValue={find}
+                maxLength={SEARCH_MAX}
+                dir="auto"
+                data-testid="find-product"
+                placeholder={t("Part of its name, or a size's, in any language")}
+              />
+            </label>
+            <button type="submit">{t("Find")}</button>
+            {find && (
+              <Link className="badge" href="/products">
+                {t("Every product")}
+              </Link>
+            )}
+          </form>
+        )}
+
         {products.length === 0 ? (
           <EmptyState title={t("No products yet")} hint={t("Add the first one above.")} />
+        ) : listed.length === 0 ? (
+          <EmptyState
+            title={t("No product matches “{q}”", { q: find })}
+            hint={t("Type part of its name, or of a size's, in English, Arabic or Kurdish.")}
+          />
         ) : (
           <>
             {groups.map((g) => (

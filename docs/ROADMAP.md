@@ -29,7 +29,8 @@ Since then, each in [`PROGRESS.md`](PROGRESS.md):
   its P1s in `0025`–`0030`, the rest in releases J to AB
   ([`COMPLETION_PLAN.md`](COMPLETION_PLAN.md)), then the UX and integration
   pass. Orders finds a sale by its receipt, its journal, a refund, the
-  platform's order number or the customer (P2-20).
+  platform's order number or the customer; Products & Recipes a product by
+  its name in any language; Journals a journal by its number or words (P2-20).
 - **Every screen in Arabic and Kurdish, and languages the owner adds (L-06),**
   from `0032`.
 - **Statements and exports (L-05):** the balance sheet and the cash flow
@@ -55,14 +56,12 @@ Since then, each in [`PROGRESS.md`](PROGRESS.md):
    from its report (`0030`), and the bank's is typed (`0059`). Next: read each
    from the file the platform or the bank gives, and, with an approved partner
    account, Talabat's own feed.
-3. **Search, further (P2-20).** Orders finds a sale. Next: Products & Recipes
-   by name, and the journals by number or words.
-4. **Accounts, further (M-06), if it is needed.** An asset, a debt or the
+3. **Accounts, further (M-06), if it is needed.** An asset, a debt or the
    owner's money added on screen, with where each goes on the balance sheet
    and in the cash flow.
-5. **Offline selling, if it is needed.** A queue with its own rules for prices
+4. **Offline selling, if it is needed.** A queue with its own rules for prices
    and stock that change while offline, and a reconciliation of what synced.
-6. **Operations.** Error monitoring, a scheduled restore drill, and staging as a
+5. **Operations.** Error monitoring, a scheduled restore drill, and staging as a
    separate Supabase project.
 
 ## Every release

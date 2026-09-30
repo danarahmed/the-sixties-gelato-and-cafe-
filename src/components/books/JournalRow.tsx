@@ -89,7 +89,7 @@ export function JournalRow({
 
   return (
     <>
-      <tr>
+      <tr data-testid="journal-row" data-no={entry.journalNo ?? ""}>
         <td className="when">{dateIn(timezone, new Date(entry.occurredAt))}</td>
         <td>
           <button

@@ -22,6 +22,21 @@ const phrases: PhraseBook = {
     ckb: "پێش پەسەندکردن دەبێت مەدین و دائین یەکسان بن",
   },
   "Journal Register": { ar: "سجل القيود", ckb: "لیستی تۆمارەکان" },
+  // Find a journal (P2-20).
+  "Find a journal": { ar: "ابحث عن قيد", ckb: "تۆمارێک بدۆزەوە" },
+  "Its number, or words in it": {
+    ar: "رقمه، أو كلمات فيه",
+    ckb: "ژمارەکەی، یان وشەیەک تێیدا",
+  },
+  "No journal matches “{q}”": {
+    ar: "لا يوجد قيد يطابق «{q}»",
+    ckb: "هیچ تۆمارێک لەگەڵ «{q}» ناگونجێت",
+  },
+  "Type its number, or words from its description, its reference or a line's note.": {
+    ar: "اكتب رقمه، أو كلمات من وصفه أو مرجعه أو ملاحظة أحد أسطره.",
+    ckb: "ژمارەکەی بنووسە، یان وشەیەک لە وەسفەکەی، لە سەرچاوەکەی یان لە تێبینیی یەکێک لە هێڵەکانی.",
+  },
+  "Found for “{q}”": { ar: "ما وُجد لـ «{q}»", ckb: "ئەوەی بۆ «{q}» دۆزرایەوە" },
   All: { ar: "الكل", ckb: "هەموو" },
   "Manual and reversals": { ar: "اليدوية والعكسية", ckb: "دەستی و هەڵگەڕاندنەوەکان" },
   "No journal entries yet": { ar: "لا توجد قيود بعد", ckb: "هێشتا هیچ تۆمارێک نییە" },

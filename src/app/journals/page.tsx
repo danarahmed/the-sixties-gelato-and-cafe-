@@ -4,6 +4,7 @@ import { PrintHead } from "@/components/PrintHead";
 import { getMsg, getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import {
+  findJournalIds,
   getGlAccounts,
   getJournalRegister,
   getNextJournalNo,
@@ -11,6 +12,7 @@ import {
   periodFor,
 } from "@/lib/db/books";
 import { getJournalLines, getTrialBalance } from "@/lib/db/reports";
+import { readJournalQuery, SEARCH_MAX, searchText } from "@/lib/find";
 import { fmtIQD } from "@/lib/format";
 import { businessToday, monthStart, parseDay } from "@/lib/dates";
 import { AccountLedger } from "@/components/books/AccountLedger";
@@ -99,8 +101,12 @@ export default async function JournalsPage({
     );
   }
   const canPost = has(profile, "accounting.post");
+  // Find a journal (the September audit's P2-20): by its number, or words in it.
+  const find = typeof sp.q === "string" ? (searchText(sp.q) ?? "") : "";
+  const query = find ? readJournalQuery(find) : null;
+  const found = query ? await findJournalIds(query) : null;
   const [entries, accounts, periods, nextNo] = await Promise.all([
-    getJournalRegister(200, manualOnly),
+    getJournalRegister(200, manualOnly && !find, find ? (found ?? []) : undefined),
     getGlAccounts(),
     getPeriods(),
     getNextJournalNo(),
@@ -158,16 +164,40 @@ export default async function JournalsPage({
         <div className="panel-h">
           <h3>{t("Journal Register")}</h3>
           <span className="muted" style={{ fontSize: ".74rem" }}>
-            <Link href="/journals" className={manualOnly ? "" : "badge"}>
+            <Link href="/journals" className={manualOnly || find ? "" : "badge"}>
               {t("All")}
             </Link>{" "}
             ·{" "}
-            <Link href="/journals?show=manual" className={manualOnly ? "badge" : ""}>
+            <Link href="/journals?show=manual" className={manualOnly && !find ? "badge" : ""}>
               {t("Manual and reversals")}
             </Link>
           </span>
         </div>
-        {entries.length === 0 ? (
+        <form
+          role="search"
+          style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "10px 16px 0" }}
+        >
+          <input
+            type="search"
+            name="q"
+            defaultValue={find}
+            maxLength={SEARCH_MAX}
+            dir="auto"
+            data-testid="find-journal"
+            aria-label={t("Find a journal")}
+            placeholder={t("Its number, or words in it")}
+            style={{ flex: "1 1 240px" }}
+          />
+          <button type="submit">{t("Find")}</button>
+        </form>
+        {find && entries.length === 0 ? (
+          <EmptyState
+            title={t("No journal matches “{q}”", { q: find })}
+            hint={t(
+              "Type its number, or words from its description, its reference or a line's note.",
+            )}
+          />
+        ) : entries.length === 0 ? (
           <EmptyState
             title={t("No journal entries yet")}
             hint={t(
@@ -229,7 +259,13 @@ export default async function JournalsPage({
         <div>
           <div className="sc">{t("Shown")}</div>
           <div className="v">{entries.length}</div>
-          <div className="m">{manualOnly ? t("Manual and reversals") : t("All sources")}</div>
+          <div className="m">
+            {find
+              ? t("Found for “{q}”", { q: find })
+              : manualOnly
+                ? t("Manual and reversals")
+                : t("All sources")}
+          </div>
         </div>
         <div>
           <div className="sc">{t("Drafts")}</div>

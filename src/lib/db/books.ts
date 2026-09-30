@@ -14,7 +14,8 @@ import {
 } from "@/lib/audit";
 import { daysBetween } from "@/lib/dates";
 import { channelName } from "@/lib/channels";
-import { db, num, numOrNull, one, rows, str, strOrNull } from "./client";
+import { db, num, numOrNull, one, rows, str, strOrNull, type Row } from "./client";
+import { likeText, type JournalQuery } from "@/lib/find";
 import { getChannels } from "./channels";
 
 /* ------------------------------------------------------------------ sales */
@@ -475,6 +476,33 @@ export interface JournalRegisterRow {
 const REVERSIBLE_BY_HAND = new Set(["manual", "correction", "expense", "year_end_close"]);
 
 /**
+ * The journals Find a journal names (needs cost.view, as the register does):
+ * by its number, or by words in its description, its reference or a line's
+ * note. The ids of at most `limit` of each kind; the register reads them.
+ */
+export async function findJournalIds(query: JournalQuery, limit = 200): Promise<string[]> {
+  const c = await db();
+  const found = new Set<string>();
+  const add = (list: Row[], key: string) => list.forEach((r) => r[key] && found.add(str(r[key])));
+  const words = query.words ? `%${likeText(query.words)}%` : null;
+  const [byNo, byText, byRef, byNote] = await Promise.all([
+    query.number != null
+      ? c.from("journal_entry").select("id").eq("journal_no", query.number).limit(limit)
+      : null,
+    words ? c.from("journal_entry").select("id").ilike("description", words).limit(limit) : null,
+    words ? c.from("journal_entry").select("id").ilike("reference_no", words).limit(limit) : null,
+    words
+      ? c.from("journal_line").select("journal_entry_id").ilike("memo", words).limit(limit)
+      : null,
+  ]);
+  if (byNo) add(rows(byNo, "journals"), "id");
+  if (byText) add(rows(byText, "journals"), "id");
+  if (byRef) add(rows(byRef, "journals"), "id");
+  if (byNote) add(rows(byNote, "journal lines"), "journal_entry_id");
+  return [...found];
+}
+
+/**
  * The register of every journal — sales, bills and manual entries alike — by
  * journal number, newest first (1054, 1053, 1052 …). Drafts have no number
  * until they are published, so they come first, where they wait for action.
@@ -482,6 +510,7 @@ const REVERSIBLE_BY_HAND = new Set(["manual", "correction", "expense", "year_end
 export async function getJournalRegister(
   limit = 150,
   onlyManual = false,
+  only?: string[],
 ): Promise<JournalRegisterRow[]> {
   const c = await db();
   let q = c
@@ -493,6 +522,11 @@ export async function getJournalRegister(
     .order("occurred_at", { ascending: false })
     .limit(limit);
   if (onlyManual) q = q.in("reference_type", ["manual", "reversal"]);
+  // The journals a search found (P2-20), and no others.
+  if (only) {
+    if (only.length === 0) return [];
+    q = q.in("id", only);
+  }
   const entries = rows(await q, "journals");
   if (entries.length === 0) return [];
   const ids = entries.map((e) => str(e.id));

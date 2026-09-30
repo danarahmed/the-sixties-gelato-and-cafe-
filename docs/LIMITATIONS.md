@@ -130,16 +130,22 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     made to order), at what it cost when it was sold.
   - A delivery platform's refund is taken off what the platform owes for the
     order; what the platform itself refunds its customer is not read from it.
-- **Find a sale on Orders, what it does not do (the September audit's
-  P2-20).**
-  - The turn number called at the counter is not searched: it starts again
-    each day.
-  - A sale is not found by what was in it (a product's name) or by its
-    amount.
-  - A customer's sales are the ones they were named on at the till. Finding
-    them by the customer also needs `customer.view`.
-  - It shows at most 50 sales found each way, the latest first.
-  - Products & Recipes has no search yet. The till's menu does.
+- **Finding things, what it does not do (the September audit's P2-20).**
+  - **A sale, on Orders:**
+    - The turn number called at the counter is not searched: it starts again
+      each day.
+    - A sale is not found by what was in it (a product's name) or by its
+      amount.
+    - A customer's sales are the ones they were named on at the till. Finding
+      them by the customer also needs `customer.view`.
+    - It shows at most 50 sales found each way, the latest first.
+  - **A product, on Products & Recipes:** by its name or a size's only, not
+    by what its recipe uses. A letter written differently in Kurdish and
+    Arabic (ێ, ڕ, ڵ) is not taken for the other.
+  - **A journal, on Journals:** by its number, or words in its description,
+    its reference or a line's note; not by an account or an amount (an
+    account's lines open from the trial balance). It shows at most 200, the
+    newest first.
 - **Delivery corrections, what they do not do (release M, `0038`).** A
   delivery not yet billed is corrected on Purchasing, or reversed. But:
   - A billed delivery is not corrected: its bill is cancelled on Vendors
