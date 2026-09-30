@@ -1226,7 +1226,9 @@ owner; reopening: owner
   to the bank's statement**, and the page, which keeps what was read for the
   tab, finds it too. On money in (interest), **Record it** opens a journal
   with **Dr 1020 Bank** and the amount filled in: choose the account it came
-  from, **Save and publish**, and back. When the
+  from, **Save and publish**, and back. Card money and a platform's payout
+  are recorded where they are settled, **Card Takings** and **Delivery
+  Platforms**, which the list points to. When the
   statement starts from another balance than the last one kept, the page says
   a line may be missing between them. **Clear the statement read** lets it go;
   keeping the statement does too.

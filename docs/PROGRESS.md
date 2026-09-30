@@ -1800,7 +1800,9 @@ Built and tested:
   day, paid from the bank), the person chooses the account and posts it, and
   **Back to the bank's statement** returns to the statement read, where the
   charge is found and ticked. Money in (interest) opens a journal with Dr
-  1020 Bank and the amount filled in, the account it came from to choose.
+  1020 Bank and the amount filled in, the account it came from to choose;
+  card money and a platform's payout are pointed to where they are settled
+  (Card Takings, Delivery Platforms).
   Built and tested: unit tests for the links and what Expenses and Journals
   take from them (nothing that could not be one); the browser suite records
   a charge and interest that way.

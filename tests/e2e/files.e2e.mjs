@@ -161,6 +161,10 @@ console.log("▸ the bank's statement, chosen as its CSV file, in Arabic");
     "the bank's charge and its interest: on the statement, not in the books",
   );
   check(
+    (await page.getByTestId("bank-settled-elsewhere").getByRole("link").count()) === 2,
+    "and money in from cards or a platform pointed to where it is settled",
+  );
+  check(
     (await page.getByTestId("bank-difference").textContent()).includes("1,500 IQD apart") &&
       (await page.getByTestId("bank-keep").isDisabled()),
     "so it does not tie yet, by the two, and cannot be kept",

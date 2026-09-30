@@ -535,9 +535,16 @@ function StatementRead({
           <span className="muted">
             {t(
               "Record it fills in what the bank shows: a charge on Expenses, paid from the bank; money in (interest) as a journal into the bank, the account it came from yours to choose. Back on this page, it is found and ticked.",
-            )}{" "}
-            <Link href="/expenses">{t("nav.expenses")}</Link>
+            )}
           </span>
+          {missing.some((l) => Number(l.amount) > 0) && (
+            <span className="muted" data-testid="bank-settled-elsewhere">
+              {t("Card money and a platform's payout are recorded where they are settled:")}{" "}
+              <Link href="/sales#card">{t("Card Takings")}</Link>
+              {" · "}
+              <Link href="/platforms">{t("nav.platforms")}</Link>
+            </span>
+          )}
         </div>
       )}
     </div>

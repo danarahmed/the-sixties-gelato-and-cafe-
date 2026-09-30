@@ -769,6 +769,10 @@ const phrases: PhraseBook = {
       ar: "زر «سجّله» يملأ ما يُظهره البنك: العمولة في المصروفات، مدفوعة من البنك؛ والمبالغ الداخلة (الفائدة) بقيد يومية إلى البنك، وتختار أنت الحساب الذي جاءت منه. حين تعود إلى هذه الصفحة، يُوجد ويُعلَّم.",
       ckb: "«تۆماری بکە» ئەوەی بانک نیشانی دەدات پڕ دەکاتەوە: کرێی بانک لە خەرجییەکاندا، لە بانکەوە دراو؛ پارەی هاتوو (سوود) بە تۆمارێکی ڕۆژانە بۆ بانک، و هەژمارەکەی لێیەوە هاتووە تۆ هەڵیدەبژێریت. کاتێک دەگەڕێیتەوە بۆ ئەم پەڕەیە، دەدۆزرێتەوە و نیشانەی لێدەدرێت.",
     },
+  "Card money and a platform's payout are recorded where they are settled:": {
+    ar: "أموال البطاقات ودفعات المنصات تُسجَّل حيث تُسوّى:",
+    ckb: "پارەی کارت و پارەدانی پلاتفۆرمەکان لەو شوێنەدا تۆمار دەکرێن کە تێیدا یەکلا دەکرێنەوە:",
+  },
   "Back to the bank's statement": { ar: "عُد إلى كشف البنك", ckb: "بگەڕێوە بۆ کەشفی بانک" },
   // What the bank's statement could not be read as (src/lib/bank.ts, parseBankStatement).
   "The columns were not recognised. Name them Date, Money in and Money out (or Amount), and Balance if the statement gives it.":
