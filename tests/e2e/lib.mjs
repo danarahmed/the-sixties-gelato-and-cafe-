@@ -30,9 +30,31 @@ export function sql(query) {
     .trim();
 }
 
+/**
+ * In every page: whether React hydrated the menu bar while the page was still
+ * arriving. A page's data streams in after its HTML; hydrating a long one (the
+ * audit trail) before all of it was in made React hydrate an element a second
+ * time, from the wrong place (a hydration error, React's #418, now and then).
+ * The shell holds hydration back until the whole page is in (AppShell), and
+ * open() checks it did.
+ */
+function watchHydration() {
+  const look = () => {
+    if (document.readyState !== "loading") return;
+    const bar = document.querySelector("header.topbar");
+    if (bar && Object.keys(bar).some((k) => k.startsWith("__reactFiber$"))) {
+      window.__hydratedEarly = true;
+      return;
+    }
+    setTimeout(look, 0);
+  };
+  look();
+}
+
 /** A browser context signed in as one of the fixture people. */
 export async function signIn(browser, who, options = {}) {
   const ctx = await browser.newContext(options);
+  await ctx.addInitScript(watchHydration);
   const page = await ctx.newPage();
   // The page it happened on, for an error that comes and goes.
   page.on("pageerror", (e) =>
@@ -52,5 +74,7 @@ export async function signIn(browser, who, options = {}) {
 export async function open(page, path) {
   const res = await page.goto(`${BASE}${path}`);
   await page.waitForLoadState("networkidle");
+  if (await page.evaluate(() => window.__hydratedEarly === true))
+    check(false, `${path}: hydrated before the whole page had arrived`);
   return res;
 }

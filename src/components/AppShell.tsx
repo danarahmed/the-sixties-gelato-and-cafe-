@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type ReactNode } from "react";
+import { use, useState, useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useT } from "@/lib/i18n/I18nProvider";
@@ -28,6 +28,27 @@ export function useOnline(): boolean {
     };
   }, []);
   return online;
+}
+
+let pageLoaded: Promise<void> | null = null;
+
+/**
+ * Holds hydration back, before the menu and the page, until the whole page
+ * has arrived. A page's data comes after its HTML, in scripts at its end, and
+ * a long page (the audit trail's 500 changes) is still arriving when React
+ * starts to hydrate. React paused at an element for a part not there yet, and
+ * when it came hydrated that element again from the wrong place: a hydration
+ * error (React's #418), the page thrown away and drawn again. Nothing is
+ * missing once the document has loaded, so the page is hydrated once, whole.
+ * The server and the browser both draw nothing here.
+ */
+function WholePage() {
+  if (typeof document === "undefined" || document.readyState !== "loading") return null;
+  pageLoaded ??= new Promise((done) =>
+    document.addEventListener("DOMContentLoaded", () => setTimeout(done), { once: true }),
+  );
+  use(pageLoaded);
+  return null;
 }
 
 /**
@@ -116,6 +137,7 @@ export function AppShell({
   if (!member) {
     return (
       <div className="app-shell">
+        <WholePage />
         <header className="topbar">
           <span className="brand">{t("app.name")}</span>
           <span className="spacer" />
@@ -135,6 +157,7 @@ export function AppShell({
 
   return (
     <div className={`app-shell${posMode ? " pos-mode" : ""}`}>
+      <WholePage />
       <header className="topbar">
         <button
           onClick={() => setMenuOpen((v) => !v)}
