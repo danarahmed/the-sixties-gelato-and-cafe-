@@ -193,7 +193,7 @@ export default async function CountPage({
         {counts.length === 0 ? (
           <EmptyState title={t("No counts yet")} hint={t("Start the first count above.")} />
         ) : (
-          <table>
+          <table className="stack-table" data-testid="counts-table">
             <thead>
               <tr>
                 <th>{t("Started")}</th>
@@ -208,15 +208,23 @@ export default async function CountPage({
             <tbody>
               {counts.map((c) => (
                 <tr key={c.id}>
-                  <td className="mono muted" style={{ fontSize: ".8rem" }}>
+                  <td
+                    className="mono muted"
+                    data-label={t("Started")}
+                    style={{ fontSize: ".8rem" }}
+                  >
                     {dateTimeIn(profile.timezone, c.startedAt)}
                   </td>
-                  {places.length > 1 && <td>{(c.placeId && placeName.get(c.placeId)) ?? "—"}</td>}
-                  <td>{c.countedBy ?? "—"}</td>
-                  <td className="right mono">
+                  {places.length > 1 && (
+                    <td data-label={t("Place")}>
+                      {(c.placeId && placeName.get(c.placeId)) ?? "—"}
+                    </td>
+                  )}
+                  <td data-label={t("Counter")}>{c.countedBy ?? "—"}</td>
+                  <td className="right mono" data-label={t("Counted")}>
                     {c.counted}/{c.lines}
                   </td>
-                  <td>
+                  <td data-label={t("Status")}>
                     <span className={`badge ${STATUS_BADGE[c.status] ?? ""}`}>{t(c.status)}</span>
                     {c.rejectedReason && (
                       <div className="muted" style={{ fontSize: ".75rem" }}>
@@ -224,7 +232,9 @@ export default async function CountPage({
                       </div>
                     )}
                   </td>
-                  <td className="muted">{c.approvedBy ?? "—"}</td>
+                  <td className="muted" data-label={t("Approved / rejected by")}>
+                    {c.approvedBy ?? "—"}
+                  </td>
                   <td className="right">
                     {canReview && c.status !== "counting" && (
                       <Link href={`/count?review=${c.id}`} className="badge">

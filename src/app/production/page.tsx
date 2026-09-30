@@ -225,9 +225,9 @@ export default async function ProductionPage({
                         <td className="right mono">
                           {r.demand === null ? (
                             <span className="muted" style={{ fontFamily: "inherit" }}>
-                              {t("{n} day(s) of history: 28 are needed", {
-                                n: r.historyDays ?? 0,
-                              })}
+                              {r.historyDays
+                                ? t("{n} day(s) of history: 28 are needed", { n: r.historyDays })
+                                : t("No history yet: 28 days are needed")}
                             </span>
                           ) : (
                             <>

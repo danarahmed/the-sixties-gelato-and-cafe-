@@ -278,7 +278,7 @@ function Statement({ vendor, businessName }: { vendor: VendorRow; businessName: 
             ) : (
               running.map((l, i) => (
                 <tr key={i}>
-                  <td>{l.date}</td>
+                  <td className="when">{l.date}</td>
                   <td>{msg(l.particulars)}</td>
                   <td className="ref">{l.ref ? t(l.ref.text, l.ref.vars) : ""}</td>
                   <td className="right money">{l.charge ? fmtIQD(l.charge) : "—"}</td>

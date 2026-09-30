@@ -163,6 +163,9 @@ export default async function InventoryPage() {
         isOwner={profile.roles.includes("owner")}
         lossLimit={profile.wasteApprovalOver}
         lossWindow={profile.wasteApprovalWindow}
+        onHand={Object.fromEntries(
+          allBoard.map((r) => [r.itemId, { qty: r.onHandBase, cost: r.unitCost }]),
+        )}
       />
 
       {seesCost &&

@@ -83,7 +83,7 @@ export default async function ExpensesPage() {
           />
         ) : (
           <div className="tw">
-            <table>
+            <table className="stack-table" data-testid="expense-register">
               <thead>
                 <tr>
                   <th>{t("Date")}</th>
@@ -97,8 +97,8 @@ export default async function ExpensesPage() {
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.id} className={r.reversedBy !== null ? "muted" : undefined}>
-                    <td>{r.date}</td>
-                    <td>
+                    <td className="when">{r.date}</td>
+                    <td data-label={t("Narration")}>
                       {r.description}
                       <DocumentsLink kind="expense" id={r.id} count={docs[r.id] ?? 0} />
                       {r.reversedBy !== null && (
@@ -107,11 +107,18 @@ export default async function ExpensesPage() {
                         </span>
                       )}
                     </td>
-                    <td className="muted">{msg(r.account)}</td>
-                    <td className="mono">{r.journalNo ?? "—"}</td>
-                    <td className="muted">{r.by ?? "—"}</td>
+                    <td className="muted" data-label={t("Account")}>
+                      {msg(r.account)}
+                    </td>
+                    <td className="mono" data-label={t("Journal")}>
+                      {r.journalNo ?? "—"}
+                    </td>
+                    <td className="muted" data-label={t("By")}>
+                      {r.by ?? "—"}
+                    </td>
                     <td
                       className="right money"
+                      data-label={t("Amount")}
                       style={{
                         textDecoration: r.reversedBy !== null ? "line-through" : undefined,
                       }}

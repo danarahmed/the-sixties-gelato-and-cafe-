@@ -130,7 +130,7 @@ export default async function SupplierStatementPage({
           </thead>
           <tbody>
             <tr>
-              <td>{s.from}</td>
+              <td className="when">{s.from}</td>
               <td>{t("Owed before {day}", { day: s.from })}</td>
               <td />
               <td className="right money">—</td>
@@ -141,7 +141,7 @@ export default async function SupplierStatementPage({
             </tr>
             {s.lines.map((l) => (
               <tr key={`${l.kind}-${l.id}`}>
-                <td>{l.date}</td>
+                <td className="when">{l.date}</td>
                 <td>{what(l)}</td>
                 <td className="ref">
                   {ref(l)}
@@ -158,7 +158,7 @@ export default async function SupplierStatementPage({
               </tr>
             ))}
             <tr>
-              <td>{s.to}</td>
+              <td className="when">{s.to}</td>
               <td>
                 <strong>{t("Owed on {day}", { day: s.to })}</strong>
               </td>
@@ -199,8 +199,8 @@ export default async function SupplierStatementPage({
               {s.openBills.map((b) => (
                 <tr key={b.billId}>
                   <td className="mono">{b.invoiceNo}</td>
-                  <td>{b.date}</td>
-                  <td>{b.due ?? "—"}</td>
+                  <td className="when">{b.date}</td>
+                  <td className="when">{b.due ?? "—"}</td>
                   <td className="right money">{fmtIQD(b.total)}</td>
                   <td className="right money">{fmtIQD(b.paid)}</td>
                   <td className="right money">{fmtIQD(b.credited)}</td>

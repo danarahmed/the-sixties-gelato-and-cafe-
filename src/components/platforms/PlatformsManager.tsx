@@ -41,7 +41,7 @@ export function PlatformsManager({
     <div className="panel-b grid" style={{ gap: 12 }}>
       <Notice msg={msg} />
       <div className="tw">
-        <table>
+        <table className="stack-table" data-testid="platforms-table">
           <thead>
             <tr>
               <th>{t("plat.col.platform")}</th>
@@ -296,12 +296,12 @@ function PlatformRow({
           </div>
         )}
       </td>
-      <td>
+      <td data-label={t("plat.col.status")}>
         <span className={`badge ${p.active ? "ok" : ""}`}>
           {p.active ? t("plat.inUse") : t("plat.notInUse")}
         </span>
       </td>
-      <td className="right">
+      <td className="right" data-label={t("plat.col.priced")}>
         <span className="mono" data-testid="platform-priced">
           {p.priced}
         </span>
@@ -311,7 +311,9 @@ function PlatformRow({
           </div>
         )}
       </td>
-      <td className="right mono">{p.waiting}</td>
+      <td className="right mono" data-label={t("plat.col.waiting")}>
+        {p.waiting}
+      </td>
       <OperationStatus op={op} />
     </tr>
   );

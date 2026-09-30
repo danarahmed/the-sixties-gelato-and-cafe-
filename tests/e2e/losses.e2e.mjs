@@ -294,6 +294,54 @@ for (const locale of ["ar", "ckb"]) {
   await ctx.close();
 }
 
+console.log("▸ a manager's correction says what it does, and a large one is asked again");
+{
+  sql(`select test.act_as('owner@example.com');
+       select create_item('E2E Trays', 'packaging', 'each', 'count', null, null, null, '[]', 10, 100,
+                          false, 'E2E opening')`);
+  const TRAYS = last(`select id from item where business_id = '${B}' and name = 'E2E Trays'`);
+  const moves = () =>
+    Number(last(`select count(*) from inventory_movement where item_id = '${TRAYS}'`));
+  const before = moves();
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/inventory");
+  const form = page.getByTestId("correct-stock");
+  await form.getByLabel("Item").selectOption({ label: "E2E Trays" });
+  await form.getByLabel(/^Change/).fill("100");
+  await form.getByLabel("Why (required)").fill("E2E recount");
+  const effect = (await form.getByTestId("correct-effect").textContent()) ?? "";
+  check(
+    effect.includes("10 each → 110 each") && effect.includes("worth 10,000 IQD"),
+    `before it is posted, what it does: ${effect}`,
+  );
+  await form.getByRole("button", { name: "Post correction" }).click();
+  await form.getByTestId("correct-confirm").waitFor({ timeout: 10000 });
+  check(moves() === before, "ten times what is there: asked again, nothing posted yet");
+  await form.getByRole("button", { name: "Change it" }).click();
+  check(
+    !(await form.getByTestId("correct-confirm").isVisible()),
+    "Change it takes the question away",
+  );
+  await form.getByLabel(/^Change/).fill("-2");
+  await form.getByRole("button", { name: "Post correction" }).click();
+  for (let i = 0; i < 40 && moves() === before; i++) await page.waitForTimeout(250);
+  check(moves() === before + 1, "two fewer, a small change, is posted at once");
+  await form.getByLabel(/^Change/).fill("50");
+  await form.getByLabel("Why (required)").fill("E2E found a box");
+  await form.getByRole("button", { name: "Post correction" }).click();
+  await form.getByTestId("correct-confirm").waitFor({ timeout: 10000 });
+  await form.getByRole("button", { name: "Yes, post it" }).click();
+  for (let i = 0; i < 40 && moves() === before + 1; i++) await page.waitForTimeout(250);
+  check(
+    moves() === before + 2 &&
+      last(
+        `select trim_scale(sum(base_quantity_signed)) from inventory_movement where item_id = '${TRAYS}'`,
+      ) === "58",
+    "a large one is posted once it is confirmed: 10 − 2 + 50 = 58 trays",
+  );
+  await ctx.close();
+}
+
 console.log("▸ the books still tie");
 check(differences() === before, `every subledger is where it was (${differences()})`);
 
