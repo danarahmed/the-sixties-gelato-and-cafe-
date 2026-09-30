@@ -23,6 +23,10 @@ const phrases: PhraseBook = {
   Code: { ar: "الرمز", ckb: "کۆد" },
   Written: { ar: "اتجاه الكتابة", ckb: "ئاراستەی نووسین" },
   "The café's own words": { ar: "كلمات المقهى الخاصة", ckb: "وشە تایبەتەکانی کافێکە" },
+  "{n} phrase(s) in {language} have the café's own words": {
+    ar: "{n} من العبارات في {language} لها كلمات المقهى الخاصة",
+    ckb: "{n} دەستەواژە لە {language} وشەی تایبەتی کافێکەیان هەیە",
+  },
   "{language} is saved.": { ar: "حُفظت {language}.", ckb: "{language} پاشەکەوت کرا." },
   "{language} is out of use: it leaves the language menu, and its words are kept.": {
     ar: "أُوقف استخدام {language}: تخرج من قائمة اللغات، وتبقى كلماتها محفوظة.",

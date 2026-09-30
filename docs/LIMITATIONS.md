@@ -581,6 +581,12 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - The balance sheet and the cash flow are the café's.
 - **Tax.** Out of scope by request. If the business is VAT-registered, that is a
   structural addition, not a setting.
+- **Screen readers (AJ), what is checked and what is not.** Every box, list
+  and tick box, and every button that shows only a sign, has a name. The
+  source is checked, and so is every screen as it is drawn. Whether a name
+  says enough is left to a person to judge. Colour contrast, the order the
+  keyboard moves through a screen, and the till with a screen reader
+  running have not been tested.
 
 ## Needs something outside the repository
 

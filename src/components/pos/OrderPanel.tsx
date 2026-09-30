@@ -126,6 +126,7 @@ function OrderLine({
             value={note}
             maxLength={200}
             placeholder={t("pos.notePlaceholder")}
+            aria-label={t("Note")}
             onChange={(e) => setNote(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") save();

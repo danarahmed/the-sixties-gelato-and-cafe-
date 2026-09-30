@@ -94,6 +94,7 @@ export default async function AccountingPage({
               key={p.id}
               href={`/accounting?period=${p.id}`}
               className={`badge ${p.id === chosen?.id ? "ok" : ""}`}
+              aria-current={p.id === chosen?.id ? "page" : undefined}
             >
               {p.name}
               {p.status === "locked" ? " 🔒" : ""}

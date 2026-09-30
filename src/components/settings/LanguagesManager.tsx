@@ -181,7 +181,15 @@ function LanguageLine({
       </td>
       <td className="right">
         {l.isActive && l.code !== editing ? (
-          <Link href={`/settings/languages?lang=${l.code}#words`}>{l.ownWords}</Link>
+          <Link
+            href={`/settings/languages?lang=${l.code}#words`}
+            aria-label={t("{n} phrase(s) in {language} have the café's own words", {
+              n: l.ownWords,
+              language: l.name,
+            })}
+          >
+            {l.ownWords}
+          </Link>
         ) : (
           l.ownWords
         )}

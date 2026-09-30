@@ -223,6 +223,7 @@ export function ReviewActions({ countId, countedByMe }: { countId: string; count
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         placeholder={t("Reason to reject (recount)")}
+        aria-label={t("Reason to reject (recount)")}
         style={{ minHeight: 36, minWidth: 200 }}
         maxLength={300}
       />

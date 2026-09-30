@@ -14,10 +14,10 @@ browser tests through the real app, or both.
   paper, documents kept with the records, stock sent between the café's
   places, the tills at each branch, the books by place, every report at a
   place, the chart of accounts, the bank against its statement, finding a
-  sale, a product or a journal, and statements read from their files), the
-  unit and contract tests (567) and a
-  production build all pass. The UX and
-  integration pass was closed on 30 September 2026, in four parts.
+  sale, a product or a journal, statements read from their files, and every
+  box and button named for a screen reader), the unit and contract tests
+  (574) and a production build all pass. The UX and integration pass was
+  closed on 30 September 2026, in four parts.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -1817,6 +1817,26 @@ Built and tested:
   public key, as it refuses everything. Built and tested: a unit test for the
   log's line.
 
+- **Every box, list and button named for a screen reader (no migration).**
+  A screen reader says a box by its name. Twenty-nine had none, or only a
+  placeholder, which goes once something is typed:
+  - the categories and the tables on the till, each by its column;
+  - locking and reopening a month;
+  - a journal's lines, and why it is reversed;
+  - why a count is rejected, and why a bill is cancelled;
+  - the note on a line at the till.
+
+  Two buttons showed only ×, which is said as "multiplication sign": they
+  now say **Remove line**. A journal's number says that it opens the
+  journal's lines, and whether they are open. The month shown on the trial
+  balance is marked as the one shown, and a language's count of the café's
+  own words says what it counts.
+
+  Built and tested: a unit test reads every screen's source and finds any
+  box with no name, a second box inside one label, and a button that shows
+  only a sign, including those only a click opens. The browser suite looks
+  at every screen as it is drawn, with its folded forms opened.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -1893,7 +1913,7 @@ Built and tested:
 
 | Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Result      |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | 567 passing |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files, every box and button named                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | 574 passing |
 | SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 49 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward, a transfer sent, received and cancelled at once, ten tills at two branches)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 60 passing  |
 | Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers, loyalty, the sales analysis and the stock's value, the balance sheet and cash flow, every report on paper, documents with the records, transfers, the tills at each branch, the books by place, every report at a place, the chart of accounts, the bank against its statement, finding a sale, a product and a journal, statements read from their files; on every page, that it is hydrated only once all of it has arrived | 37 passing  |
 | Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | green       |
