@@ -103,7 +103,7 @@ select refund_sale_lines((pg_temp.r('S1') ->> 'order_id')::uuid,
   (select jsonb_build_array(jsonb_build_object('line_id', l.id, 'qty', 1))
      from sales_order_line l where l.sales_order_id = (pg_temp.r('S1') ->> 'order_id')::uuid), 'changed_mind');
 select test.act_as('owner@example.com');
-select record_expense('Cleaning cloths', 1000, '6900', 'cash', null, null, gen_random_uuid());
+select record_expense('Cleaning cloths', 1000, '6900', 'cash', p_idempotency_key => gen_random_uuid());
 select move_cash('till', 'safe', 1500, null, null, gen_random_uuid());
 select move_cash('safe', 'owner', 20000, 'For the owner', null, gen_random_uuid());
 insert into res select 'EQ', record_bill(pg_temp.supplier('Kurdistan Coffee Imports'), 'EQ-1', test.today(), 150000, 0,

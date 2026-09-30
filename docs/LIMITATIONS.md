@@ -436,12 +436,16 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     Accounts has no income for interest until the café adds one.
 - **A payment like one posted already, what is not asked (P2-14).** Expenses
   asks about an expense or a prepaid expense to the same account, for the
-  same amount, within three days of one among the last 100 expenses or the
-  prepaid expenses. Another amount (a price that went up by 250), four days
-  apart, or another account is not asked about. A bill and a journal by hand
-  are not asked about as they are entered: the dashboard's alert (a possible
-  duplicate) finds any two to the same running-cost account within three
-  days once they are posted.
+  same amount, within three days of one posted: as it is typed, among the
+  last 100 expenses and the prepaid expenses; and the database asks again as
+  it would post it, among all of them (`0061`). Another amount (a price that
+  went up by 250), four days apart, or another account is not asked about;
+  nor are the words. A month's share of a prepaid expense counts as posted:
+  this month's rent recorded again is asked about. A bill and a journal by
+  hand are not asked about as they are entered: the dashboard's alert (a
+  possible duplicate) finds any two to the same running-cost account within
+  three days once they are posted, but not two shares of prepaid
+  expenses.
 - **Prepaid expenses, what they do not do (`0060`).**
   - The payment is dated when it is recorded: one made days before is
     recorded as of today. Its shares keep their months.
@@ -457,9 +461,12 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - It stays as it was recorded: to change its amount, account or months,
     cancel it and record it again. Cancelled, its payment and its shares are
     reversed on the day it is cancelled, not in their months.
-  - A share reversed by hand on Journals is not posted again: its money
-    stays in 1400 until the prepaid expense is cancelled, and the list says
-    so.
+  - A month's share is undone with its prepaid expense, by cancelling it:
+    Journals does not reverse it (`0061`). One reversed by hand before that
+    is not posted again: its money stays in 1400 until the prepaid expense is
+    cancelled, and the list says so.
+  - The account its shares go to stays in use until the last share is
+    posted, or it is cancelled (`0061`).
   - One recorded before `0060` as an expense (December's rent, 150,000,
     expensed in September) stays as it was. To move it, reverse that expense
     in the month it was posted in, and record it again as paid ahead from

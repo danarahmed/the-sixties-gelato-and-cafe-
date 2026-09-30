@@ -46,7 +46,8 @@ Since then, each in [`PROGRESS.md`](PROGRESS.md):
 - **The bank against its statement** (`0059`).
 - **Prepaid expenses** (`0060`, P2-14): a cost paid ahead is spread over the
   months it covers, each month's share an expense of that month; and a
-  payment like one posted already is asked about before it is posted.
+  payment like one posted already is asked about before it is posted, by the
+  database itself (`0061`).
 - **Statements read from their files.** A platform's report and the bank's
   statement are read from the file they come in (Excel, CSV, or the web page
   some banks give as an ".xls"), in the browser: the platform's orders are

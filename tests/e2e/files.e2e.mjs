@@ -38,8 +38,8 @@ for (const [qty, no] of [
 sql(`select test.act_as('owner@example.com');
   select save_journal(${TODAY} - 3, 'Cash taken to the bank',
     '[{"code":"1020","debit":1234500},{"code":"3000","credit":1234500}]', true);
-  select record_expense('Printer paper', 98765, '6900', 'bank', ${TODAY} - 1, null, gen_random_uuid());
-  select record_expense('A cheque not cashed yet', 45000, '6900', 'bank', ${TODAY} - 2, null, gen_random_uuid());
+  select record_expense('Printer paper', 98765, '6900', 'bank', ${TODAY} - 1, p_idempotency_key => gen_random_uuid());
+  select record_expense('A cheque not cashed yet', 45000, '6900', 'bank', ${TODAY} - 2, p_idempotency_key => gen_random_uuid());
   select create_account('4900', 'Bank interest', 'revenue');`);
 
 // The bank's statement as its website gives it: in Arabic, the newest line

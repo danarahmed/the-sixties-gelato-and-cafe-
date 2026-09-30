@@ -75,8 +75,16 @@ race 10 manager@example.com "select receive_goods((select id from supplier order
 ok "$(( $(sql "select count(*) from goods_receipt") - RECEIPTS ))" "1" \
    "10 simultaneous sends of one delivery with one key receive it once"
 ok "$(grep -l '"replayed": true' "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and the other nine are told it was already received"
-race 10 manager@example.com "select record_expense('Race ice', 1000, '6900', 'owner', null, null, '88888888-0000-0000-0000-000000000002')"
+race 10 manager@example.com "select record_expense('Race ice', 1000, '6900', 'owner', p_idempotency_key => '88888888-0000-0000-0000-000000000002')"
 ok "$(sql "select count(*) from expense where description = 'Race ice'")" "1" "10 simultaneous sends of one expense record it once"
+
+# 0061 — ten people post the same rent at once, each from their own screen (a
+# key of their own), each asked about one like it posted already (P2-14): one
+# is posted, and the other nine are asked about it, not let through.
+race 10 manager@example.com "select record_expense('Race rent', 250000, '6000', 'bank', p_ask_same => true, p_idempotency_key => gen_random_uuid())"
+ok "$(sql "select count(*) from expense where description = 'Race rent'")" "1" \
+   "10 people posting the same rent at once, each asked: it is posted once"
+ok "$(grep -l '"same"' "$WORK"/*.out | wc -l | tr -d ' ')" "9" "and the other nine are asked about the one posted"
 sql "select test.act_as('cashier@example.com');
      select record_sale(gen_random_uuid(),'dine_in','cash','[{\"variant_id\":\"d1000000-0000-0000-0000-000000000001\",\"qty\":3}]');" >/dev/null
 race 10 manager@example.com "select close_cash_session(5000, null, 0, 'safe', p_idempotency_key => '88888888-0000-0000-0000-000000000003')"

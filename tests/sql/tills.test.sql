@@ -155,7 +155,7 @@ select test.eq((select string_agg(distinct l.name, ', ') from cash_event e join 
 -- Paid from the till: out of the second branch's drawer, by its manager; not
 -- out of the first branch's.
 select test.act_as('manager2@example.com');
-insert into res select 'x1', record_expense('Ice', 500, '6900', 'till', null, (select branch2 from ids), gen_random_uuid());
+insert into res select 'x1', record_expense('Ice', 500, '6900', 'till', null, (select branch2 from ids), p_idempotency_key => gen_random_uuid());
 select test.as_admin();
 select test.eq((select l.name || ' ' || trim_scale(e.amount) from cash_event e join location l on l.id = e.location_id
                  where e.reference_type = 'expense' and e.reference_id = (pg_temp.r('x1') ->> 'expense_id')::uuid),
@@ -164,7 +164,7 @@ select test.eq((select l.name from expense x join location l on l.id = x.locatio
                  where x.id = (pg_temp.r('x1') ->> 'expense_id')::uuid),
   'Second Branch', 'and is the second branch''s');
 select test.act_as('manager2@example.com');
-select test.throws($$select record_expense('Ice', 500, '6900', 'till', null, null, gen_random_uuid())$$,
+select test.throws($$select record_expense('Ice', 500, '6900', 'till', p_idempotency_key => gen_random_uuid())$$,
   '%You work at Second Branch, not at Main Branch%', 'with no branch named, the first branch''s drawer: not theirs');
 
 -- The barista of the second branch does nothing at the first. (The first

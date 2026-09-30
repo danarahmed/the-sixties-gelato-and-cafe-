@@ -40,6 +40,8 @@ const SOURCE: Record<string, string> = {
   stock_transfer: "Transfer sent",
   stock_transfer_receipt: "Transfer received",
   stock_transfer_cancel: "Transfer cancelled",
+  // A cost paid ahead (0060); each month's share is an expense.
+  prepaid_expense: "Prepaid expense",
 };
 
 /** One entry of the register; expands to show its lines as they were written. */

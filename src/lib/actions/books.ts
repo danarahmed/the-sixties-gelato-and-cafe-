@@ -18,16 +18,7 @@ import {
   text,
 } from "@/lib/validation";
 import { placeForWrite, tillForWrite } from "@/lib/place";
-import { getSession } from "@/lib/auth/session";
-import { businessToday } from "@/lib/dates";
-import { getExpenses, getPrepaidExpenses } from "@/lib/db/books";
-import {
-  postedPayments,
-  SAME_PAYMENT,
-  samePayments,
-  type PostedPayment,
-  type SamePaymentRefusal,
-} from "@/lib/expenses";
+import { SAME_PAYMENT, sameFromServer, type SamePaymentRefusal } from "@/lib/expenses";
 
 const BOOK_PATHS = ["/journals", "/accounting", "/reports", "/dashboard"];
 
@@ -42,30 +33,6 @@ export async function previewExpenseCategoryAction(
   );
 }
 
-/**
- * The payments posted like this one (P2-14): an expense to the same account,
- * for the same amount, within three days. The screen asks as it is typed; this
- * is for one posted elsewhere since the screen was opened. What cannot be read
- * asks nothing: the question is a help, the books do not depend on it.
- */
-async function sameAsPosted(p: {
-  accountCode: string;
-  amount: string | number;
-  date?: string;
-}): Promise<PostedPayment[]> {
-  const timezone = (await getSession()).profile?.timezone;
-  if (!timezone) return [];
-  const [expenses, prepaid] = await Promise.all([
-    getExpenses(100).catch(() => []),
-    getPrepaidExpenses().catch(() => []),
-  ]);
-  return samePayments(postedPayments(expenses, prepaid, timezone), {
-    accountCode: p.accountCode,
-    amount: Number(p.amount),
-    date: p.date ?? businessToday(timezone),
-  });
-}
-
 const expenseInput = z.object({
   description: text("What the expense was for", 300),
   amount: positive("The amount"),
@@ -78,23 +45,18 @@ const expenseInput = z.object({
 
 /**
  * Dr the confirmed expense account / Cr where the money came from — one step.
- * One like it posted already is asked about first (P2-14), unless the person
- * said it is another payment, or this is a re-send of one that may be saved
- * (its key's first answer is given back instead).
+ * The database asks first about one like it posted already (P2-14, 0061),
+ * unless the person said it is another payment: it answers with those like
+ * it, and posts nothing. A re-send with the key gets the first answer back.
  */
 export async function recordExpenseAction(
   input: z.input<typeof expenseInput>,
   key: string,
-  resend = false,
 ): Promise<ActionResult<{ journalNo: number | null }> | SamePaymentRefusal> {
   const bad = badKey(key);
   if (bad) return bad;
   const v = parse(expenseInput, input);
   if (!v.ok) return v;
-  if (!v.data.acceptSame && !resend) {
-    const same = await sameAsPosted(v.data);
-    if (same.length > 0) return { ok: false, error: SAME_PAYMENT, same };
-  }
   const r = await callRpc<Record<string, unknown>>("record_expense", {
     p_description: v.data.description,
     p_amount: v.data.amount,
@@ -103,9 +65,12 @@ export async function recordExpenseAction(
     p_date: v.data.date,
     // Paid from the till: that till's branch; else where this device works (0055).
     p_location: v.data.paidFrom === "till" ? await tillForWrite() : await placeForWrite(),
+    p_ask_same: !v.data.acceptSame,
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
+  const same = sameFromServer(r.data);
+  if (same) return { ok: false, error: SAME_PAYMENT, same };
   refresh("/expenses", "/sales", ...BOOK_PATHS);
   return {
     ok: true,
@@ -131,22 +96,17 @@ const prepaidInput = z.object({
 /**
  * Paid ahead for months to come (0060): Dr 1400 Prepaid expenses / Cr where
  * the money came from; each month it covers takes its share as an expense of
- * that month, the month it starts in at once if that has come.
+ * that month, the month it starts in at once if that has come. Paid today: the
+ * database asks first about one like it paid within three days (P2-14, 0061).
  */
 export async function recordPrepaidExpenseAction(
   input: z.input<typeof prepaidInput>,
   key: string,
-  resend = false,
 ): Promise<ActionResult<{ journalNo: number | null; released: number }> | SamePaymentRefusal> {
   const bad = badKey(key);
   if (bad) return bad;
   const v = parse(prepaidInput, input);
   if (!v.ok) return v;
-  // Paid today: one like it paid within three days is asked about first (P2-14).
-  if (!v.data.acceptSame && !resend) {
-    const same = await sameAsPosted(v.data);
-    if (same.length > 0) return { ok: false, error: SAME_PAYMENT, same };
-  }
   const r = await callRpc<Record<string, unknown>>("record_prepaid_expense", {
     p_description: v.data.description,
     p_amount: v.data.amount,
@@ -156,9 +116,12 @@ export async function recordPrepaidExpenseAction(
     p_months: v.data.months,
     // As an expense: paid from the till, that till's branch; else where this device works.
     p_location: v.data.paidFrom === "till" ? await tillForWrite() : await placeForWrite(),
+    p_ask_same: !v.data.acceptSame,
     p_idempotency_key: key,
   });
   if (!r.ok) return r;
+  const same = sameFromServer(r.data);
+  if (same) return { ok: false, error: SAME_PAYMENT, same };
   refresh("/expenses", "/sales", ...BOOK_PATHS);
   return {
     ok: true,

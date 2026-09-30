@@ -58,6 +58,7 @@ Plan a short window when the café is closed.
 | The chart of accounts (`0058`)          | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0058`](#after-0058)). The screens were merged ([pull request #52](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/52)) and deployed            |
 | The bank against its statement (`0059`) | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0059`](#after-0059)). The screens were merged ([pull request #53](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/53)) and deployed            |
 | Prepaid expenses (`0060`)               | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0060`](#after-0060)). The screens were merged ([pull request #62](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/62)) and deployed            |
+| Prepaid and payments put right (`0061`) | ⏳ Rehearsed on a copy shaped like the live database; to be applied before its screens (see [After `0061`](#after-0061))                                                                                                                                                                                                                                                                 |
 
 ## 0. Before you start
 
@@ -2755,6 +2756,55 @@ The security advisor lists the four functions added, each checking
 bodies are not callable. The performance advisor adds eight notices of a kind
 it already lists (a foreign key without an index of its own), on the two new
 tables, which hold a few rows a year.
+
+## After `0061`
+
+Migration `0061` puts right what a review of `0060` (prepaid expenses) and of
+the question before an expense like one posted already (P2-14) found. No
+table changes, and nothing recorded changes.
+
+- **The safe ties with a prepaid expense paid from it.** The books' check of
+  the safe counted what expenses, bills, advances and salaries took out of it,
+  but not a prepaid expense, nor its cancellation: one paid from the safe put
+  the check out by what it paid.
+- **An account is kept in use while a prepaid expense takes from it.** An
+  account the café added could be taken out of use with a prepaid expense's
+  shares still to come on it; each would then be refused, and every other
+  share due with it. Now it is refused, in words: take it out of use once the
+  last share is posted, or cancel the prepaid expense first.
+- **A month's share is undone with its prepaid expense, not by hand.** On
+  Journals a share could be reversed like any expense; its month stayed
+  posted, so its share stayed in 1400 for good. Now the database refuses it
+  ("A month's share of a prepaid expense is undone by cancelling the prepaid
+  expense on Expenses"), and Journals no longer offers Reverse for it.
+- **The database asks about a payment like one posted already.** The app
+  asked from what it had read: two people posting the same rent at once were
+  both let through, and a submission sent again after no answer was not
+  asked, though the first might never have arrived. Now `record_expense` and
+  `record_prepaid_expense` ask, when the screen says to (`p_ask_same`), in the
+  step that would post: one payment to an account at a time, the answer kept
+  with the submission's key like any other.
+- **Smaller:** the prepaid list reads each one's shares due once; a share
+  released before noon on its month's first day is dated when it was
+  released, not later that day; and two shares of prepaid expenses are no
+  longer flagged as a possible duplicate payment on the dashboard.
+
+What it changes:
+
+- **`record_expense` and `record_prepaid_expense`** take `p_ask_same`, just
+  before the key. Their old versions are dropped. A screen deployed before
+  it sends no `p_ask_same`, and the database posts as before (that screen
+  still asks, from what it read); from SQL too.
+- **The books' checks and the alert rules** are 0060's, kept as
+  `reconciliation_checks_0060` and `alert_conditions_0060`, with the safe
+  counted and the two shares left out after them.
+- **Redefined in place:** `set_account_in_use__run`,
+  `trg_prepaid_by_its_records`, `cancel_prepaid_expense__run`,
+  `release_prepaid__run` and `prepaid_expenses`.
+- **Helpers nobody calls:** `same_payments` and `same_payment_question`.
+
+It goes in before the screens: those deployed before it keep working as
+they are, and the new ones need `p_ask_same`.
 
 ## Clearing the test records
 

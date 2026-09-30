@@ -571,7 +571,8 @@ costs; recording: managers, accountant, owner
    its day, its words and its journal. It is posted only once you tick **It
    is another payment, not the same one**: the rent posted twice is caught
    here. The same is asked when someone else posted it on another device
-   while your form was open.
+   while your form was open, or at the same moment: the database asks as it
+   posts. This month's share of the rent paid ahead counts as posted.
 
 **Paid ahead for months to come** (`0060`): a cost that pays for months still
 to come (next month's rent, a quarter's, a year's insurance) is not all this
@@ -590,7 +591,9 @@ come, as an expense of that month; the Dashboard says when one is due, and a
 month is not locked until its shares are posted. The owner, a general
 manager or the accountant **Cancel**s one entered in error, with why: its
 payment and every share posted are reversed that day, and cash from the
-drawer goes back in it.
+drawer goes back in it. A share is not reversed on **Journals**: it goes with
+its prepaid expense. The account its shares go to stays in use until the
+last one is posted.
 
 Below: the **Expense Register** and totals **By Account**. An expense whose
 journal has been reversed stays listed, marked **reversed by #…** and struck

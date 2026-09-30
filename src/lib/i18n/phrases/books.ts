@@ -465,6 +465,8 @@ const phrases: PhraseBook = {
     ckb: "بڵێ چەند مانگ دەگرێتەوە، لە 1 تا 36",
   },
   "the prepaid expense": { ar: "المصروف المدفوع مقدمًا", ckb: "خەرجییە پێشەکییەکە" },
+  // Where a journal came from, on Journals: a prepaid expense's payment (0060).
+  "Prepaid expense": { ar: "مصروف مدفوع مقدمًا", ckb: "خەرجیی پێشەکی" },
   // A payment like one posted already (P2-14): asked about before it is posted.
   "A payment like this one is posted already:": {
     ar: "سُجِّلت دفعة مثل هذه من قبل:",
@@ -719,6 +721,12 @@ const phrases: PhraseBook = {
     ar: "لقيدٍ مسوّدة ({1}) سطر على الحساب {2} {3}: رحّله أو غيّر السطر أولًا",
     ckb: "تۆمارێکی ڕەشنووس ({1}) هێڵێکی لەسەر هەژماری {2} {3} هەیە: سەرەتا پەسەندی بکە یان هێڵەکە بگۆڕە",
   },
+  // An account a prepaid expense still takes a share from each month stays in use (0061).
+  "A prepaid expense ({1}) takes a share from account {2} {3} each month until {4}: take it out of use once the last share is posted, or cancel the prepaid expense first":
+    {
+      ar: "مصروف مدفوع مقدمًا ({1}) يأخذ حصة من الحساب {2} {3} كل شهر حتى {4}: أخرِج الحساب من الاستخدام بعد ترحيل آخر حصة، أو ألغِ المصروف المدفوع مقدمًا أولًا",
+      ckb: "خەرجییەکی پێشەکی ({1}) هەموو مانگێک بەشێک لە هەژماری {2} {3} دەبات تا {4}: دوای تۆمارکردنی دوایین بەش هەژمارەکە لە بەکارهێنان لابە، یان سەرەتا خەرجییە پێشەکییەکە هەڵبوەشێنەوە",
+    },
   // The bank against its statement (0059).
   "The bank against its statement": { ar: "البنك مقابل كشفه", ckb: "بانک بەرامبەر بە کەشفەکەی" },
   "The bank's own statement shows whether the books have every payment in and out of the bank.": {

@@ -688,7 +688,9 @@ discount, why and who approved it. The 10% is a business setting (shown on
    on Expenses: each month's share of the rent or insurance paid ahead is
    then that month's expense. The month is not locked until it is. Record a
    cost paid for months to come with **Paid ahead for months to come**, not as
-   an expense of the month it was paid in.
+   an expense of the month it was paid in. One entered in error is cancelled
+   on Expenses, with its shares; a share is not reversed on Journals
+   (`0061`).
 8. **Place** on Reports (`0057`) reads every report for one place: its sales
    and payments, its losses, what came in and went back, its orders and
    batches, its dollars, its staff and its customers' sales. Someone who works

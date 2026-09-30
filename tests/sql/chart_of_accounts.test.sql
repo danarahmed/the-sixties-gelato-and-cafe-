@@ -89,7 +89,7 @@ select test.eq(pg_temp.acct('6020'), null, 'nothing refused was kept');
 
 -- ------------------------------------------------------------------ posted to
 select test.act_as('manager@example.com');
-insert into res select 'E', record_expense('Fixed the grinder', 50000, '6010', 'bank', null, null, pg_temp.k(2));
+insert into res select 'E', record_expense('Fixed the grinder', 50000, '6010', 'bank', p_idempotency_key => pg_temp.k(2));
 select test.eq(test.lines_of((pg_temp.r('E') ->> 'expense_id')::uuid), '1020 Cr 50000 | 6010 Dr 50000',
   'an expense on it, paid from the bank');
 select test.act_as('owner@example.com');

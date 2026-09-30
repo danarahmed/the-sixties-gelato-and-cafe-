@@ -99,7 +99,7 @@ select record_loss('waste', (select beans from ids), null, 50, 'g', 'Spilt', nul
                    false, gen_random_uuid());
 -- The second branch's cleaning, paid by the owner; a journal by hand for the
 -- café's share of the rent.
-select record_expense('Second branch''s cleaning', 7000, '6900', 'owner', null, (select branch2 from ids), gen_random_uuid());
+select record_expense('Second branch''s cleaning', 7000, '6900', 'owner', null, (select branch2 from ids), p_idempotency_key => gen_random_uuid());
 select save_journal((select today from ids), 'Rent: the café''s share',
   '[{"code": "6900", "debit": 1000}, {"code": "1020", "credit": 1000}]', true);
 -- Talabat pays out both orders: 450 and 400 kept, and 100 more on TB-2.

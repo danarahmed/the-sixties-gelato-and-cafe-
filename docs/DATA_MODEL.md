@@ -1714,8 +1714,9 @@ P2-14).
 
 - **1400 Prepaid expenses**, an asset, in every café's chart
   (`provision_chart_of_accounts`). Only a prepaid expense moves it: its
-  payment in, a month's share out, and the reversal of either (the trigger
-  `journal_line_prepaid`); a journal by hand does not (`manual_journal_blocked`).
+  payment in, a month's share out, and the reversal of either when it is
+  cancelled (the trigger `journal_line_prepaid`; `0061`); a journal by hand
+  does not (`manual_journal_blocked`).
 - **`prepaid_expense`:** one paid ahead: its words, the place it was recorded
   at (`location_id`), the expense account each month's share goes to
   (`account_id`), where the money came from (`paid_from`: the till, the safe,
@@ -1739,8 +1740,8 @@ P2-14).
   shares whose month has come and are not posted.
 - **Read** by anyone who sees costs (row-level security on both);
   **`prepaid_expenses()`** (`cost.view`) lists each, newest first, with the
-  shares posted, what they took out of 1400 (a share reversed by hand put its
-  back), those due, and the next month to come. Written only by the
+  shares posted, what they took out of 1400 (a share reversed by hand before
+  `0061` put its back), those due, and the next month to come. Written only by the
   functions:
   - **`record_prepaid_expense(description, amount, account, paid from, first
 month, months, place, key)`** (`expense.record`): paid into 1400, out of
@@ -1766,3 +1767,40 @@ month, months, place, key)`** (`expense.record`): paid into 1400, out of
   (cancel it on Expenses)".
 - **Helpers nobody calls:** `prepaid_shares`, `prepaid_due`, the three
   `__run` bodies and the three triggers.
+
+### Prepaid expenses and payments put right (`0061`)
+
+A review of `0060` and of the question asked before an expense like one
+posted already (P2-14) found five things to put right. No table changes.
+
+- **The safe tied** (`reconciliation_checks`, `safe`): what a prepaid expense
+  paid from the safe took out of it, and what its cancellation put back, are
+  counted with the expenses, bills, advances and salaries paid from it. Before,
+  one paid from the safe put the check out by what it paid.
+  `reconciliation_checks` wraps `reconciliation_checks_0060`.
+- **An account kept in use** (`set_account_in_use`): one the café added is not
+  taken out of use while a prepaid expense not cancelled still has a share to
+  come on it. Its shares would be refused (their account out of use), and
+  every other share due with them.
+- **A month's share undone only with its prepaid expense:** the trigger
+  `journal_line_prepaid` lets a share's reversal into 1400 only while the
+  prepaid expense is being cancelled (`ledger.prepaid_cancel`). Reversed by
+  hand on Journals, its month stayed posted and the share stayed in 1400 for
+  good. Journals offers no Reverse for a share.
+- **The question asked by the database** (`record_expense` and
+  `record_prepaid_expense` take `p_ask_same`, just before the key): asked,
+  they answer `{"same": [...]}` with the payments like it (`same_payments`: to
+  the same account, for the same amount, within three days; the expenses not
+  reversed, a prepaid expense's share among them, and the prepaid expenses not
+  cancelled, paid that day) and post nothing. The answer is kept with the key
+  like any other. One payment to an account at a time (`same_payment_question`,
+  an advisory lock), asked or not: of two sent at once, the second sees the
+  first. Only someone who may record an expense is told of them. From SQL,
+  and when the person has said it is another payment, they post as before.
+- **Smaller:** `prepaid_expenses()` works out each one's shares due from its
+  own shares; a share released before noon on its month's first day is dated
+  when it was released; and a possible duplicate payment (`duplicate_payment`)
+  whose two journals are both prepaid expenses' shares is not flagged
+  (`alert_conditions` wraps `alert_conditions_0060`). A share and an expense
+  like it still are.
+- **Helpers nobody calls:** `same_payments` and `same_payment_question`.
