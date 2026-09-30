@@ -56,6 +56,7 @@ Plan a short window when the café is closed.
 | The books by place (`0056`)             | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0056`](#after-0056)). The screens were merged ([pull request #45](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/45)) and deployed            |
 | Every report at a place (`0057`)        | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0057`](#after-0057)). The screens were merged ([pull request #46](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/46)) and deployed            |
 | The chart of accounts (`0058`)          | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0058`](#after-0058)). The screens were merged ([pull request #52](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/52)) and deployed            |
+| The bank against its statement (`0059`) | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0059`](#after-0059)). The screens were merged ([pull request #53](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/53)) and deployed            |
 
 ## 0. Before you start
 
@@ -2557,6 +2558,90 @@ The security advisor lists the three functions added, each checking
 `accounting.post`; the helpers and the bodies are not callable. The
 performance advisor is unchanged.
 
+## After `0059`
+
+Migration `0059` reconciles the bank against its statement: 1020 Bank, as
+the drawers and the safe are already counted against the books.
+
+- **On Chart of Accounts → The bank against its statement,** the owner, a
+  general manager or the accountant keeps a statement: its last day, the
+  balance the bank's statement shows, and a tick on each of the books' bank
+  lines it shows. It is kept only when the lines ticked take the bank from
+  the last statement's balance (nothing, for the first) to the bank's. A
+  line not on it yet stays open for the next. The latest is undone with why,
+  its lines open again. Anyone who sees costs reads it.
+- **An alert** when a bank line is more than 35 days old and on no
+  statement, and **a warning** on the month's closing checklist (it does not
+  stop the lock) when a line to the month's last day is on none.
+
+What it adds:
+
+- **Two tables:** `bank_statement` (never deleted nor changed; the latest
+  undone once) and `bank_statement_line` (each bank line on one statement at
+  most). Both are read by anyone who sees costs, and written only by the
+  functions.
+- **The functions signed-in users may call:** `bank_book` (`cost.view`),
+  `save_bank_statement` and `undo_bank_statement` (`accounting.post`), each
+  done once when sent again with its key, and on the audit trail
+  (`bank.reconcile`, `bank.unreconcile`).
+- **The alert rules and the closing checklist** are 0049's and 0054's, kept
+  as `alert_conditions_0049` and `period_close_checklist_0054`, with the new
+  rule and the new warning after them.
+- **Helpers nobody calls:** `bank_lines`, the two `__run` bodies and the two
+  triggers.
+- **Clearing the test records** (`reset-test-data.sql`) now clears the
+  statements with the journals they tick.
+
+It goes in before the screens: those deployed before it read the closing
+checklist and the alerts as before, with one more warning row.
+
+It was applied on 30 September 2026 with the Supabase connector: one
+`apply_migration` call, one transaction. Before it, a read-only check showed
+the live database still matched the verified `0058` build, object by object,
+but for one thing added on a screen that morning: a delivery platform, whose
+short name (`lezzoo`) joins the channels (`sales_channel`), as a platform's
+has since `0031`.
+
+The text stored there is the file byte for byte (md5
+`cd2901cb66ae2fe8b8f4353eca9aebf2`, 20,656 bytes). It was then compared with
+the tested build, object by object, the role permissions and column grants
+included. It is identical, but for the schema `citext` lives in, as before,
+and the new channel: the tested build with it added gives the live
+fingerprint exactly. Nothing recorded changed.
+
+It was checked on the live records as the owner, the branch manager and the
+barista, in one transaction that was rolled back:
+
+- **The bank book:** 1,886,000 IQD in the books' bank, no statement yet, and
+  four lines open, the first from 24 September.
+- **Refused:** a statement 1 IQD off ("The lines ticked take the bank to
+  1886000, and the statement says 1886001: 1 apart").
+- **Kept:** statement 1 to 29 September with the four lines: 2,008,500 in and
+  122,500 out, from nothing to 1,886,000. Sent again with its key, it was
+  answered from the first.
+- **The closing checklist:** its bank row warned of the four lines before
+  ("4 bank line(s) to 2026-09-30, the first from 2026-09-24, are on no bank
+  statement"), without stopping the lock, and was clear after.
+- **Refused next:** a line already on statement 1, and a statement ending
+  before it ("Statement 1 ends on 2026-09-29: the next one ends after it").
+- **The branch manager** read it and could not undo it ("needs
+  accounting.post"); **the barista** could not read it ("needs cost.view").
+- **Undone** with why: its four lines open again, and both steps on the trail
+  (`bank.reconcile`, then `bank.unreconcile` with why).
+- **No alert:** no bank line is more than 35 days old.
+- **The books:** each of the thirteen checks was at nothing before and after,
+  with no document out of step.
+
+Nothing was kept: every table's count is as it was before the check (journals
+to 1100, the audit trail to 280), and no statement, key or trail line of the
+bank's is left.
+
+The security advisor lists the three functions added, each checking
+`cost.view` or `accounting.post`; the helpers and the bodies are not
+callable. The performance advisor adds three notices of a kind it already
+lists (a foreign key without an index of its own: who kept a statement, who
+undid it, and a statement line's business), on tables of a statement a month.
+
 ## Clearing the test records
 
 Every record of trading in the live database so far is a test (the owner, 25
@@ -2579,8 +2664,8 @@ with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/res
    expenses, the schedule, the hours and every PIN typed at the till,
    advances, payrolls and salary payments, the customers' points, which
    document went with which record (the files stay in Storage's `documents`
-   bucket: remove them there if they should go too), every journal and
-   period, and the
+   bucket: remove them there if they should go too), the bank's statements
+   with the lines they tick, every journal and period, and the
    document numbers (journals start again at 1001, the café's bill numbers at
    0001, the cash sessions, refunds, orders, returns, credits, payrolls and
    transfers at 1).

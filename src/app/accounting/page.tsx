@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { PrintButton } from "@/components/PrintButton";
 import { PrintHead } from "@/components/PrintHead";
-import { getMsg, getT } from "@/lib/i18n/server";
+import { getDir, getMsg, getT } from "@/lib/i18n/server";
+import { arrows } from "@/lib/i18n/core";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import {
@@ -36,6 +37,7 @@ export default async function AccountingPage({
   const profile = await requirePermission("cost.view");
   const t = await getT();
   const msg = await getMsg();
+  const { on } = arrows(await getDir());
   const sp = await searchParams;
   const today = businessToday(profile.timezone);
   const periods = await getPeriods();
@@ -205,6 +207,12 @@ export default async function AccountingPage({
           timezone={profile.timezone}
         />
       )}
+
+      <p style={{ margin: 0 }}>
+        <Link href="/accounting/bank" className="badge" data-testid="to-bank">
+          {t("The bank against its statement")} {on}
+        </Link>
+      </p>
 
       <ChartOfAccounts
         accounts={accounts.map((a) => ({

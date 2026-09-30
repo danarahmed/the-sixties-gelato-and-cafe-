@@ -1669,3 +1669,38 @@ named by its code.
   their code and class.
 - **Helpers nobody calls:** `account_name_ok`, `account_names_save`,
   `account_to_change`, and the three `__run` bodies.
+
+### The bank against its statement (`0059`)
+
+The drawers and the safe were counted against the books; the bank was not.
+
+- **`bank_statement`:** a statement of the bank's, kept when the lines ticked
+  take 1020 from the last statement's balance (nothing, for the first) to
+  the one the bank gives: its number (`next_document_no`, from 1), its last
+  day, `opening_balance`, `closing_balance`, `money_in`, `money_out`,
+  `line_count`, a note, and who kept it and when. The closing balance is the
+  opening plus in, less out (a check). Statements follow one another: each
+  ends after the last one kept. The latest may be undone
+  (`status = 'undone'`, with `undo_reason`, `undone_by`, `undone_at`); a
+  statement is never deleted nor changed (a trigger).
+- **`bank_statement_line`:** a line of 1020 (`journal_line_id`, its key) on a
+  statement kept: each line on one at most. An undone statement's lines are
+  taken off it, and are open again. Published journal lines never change,
+  which is why the tick is kept here and not on the line.
+- **Read** by anyone who sees costs (row-level security on both); written
+  only by the functions.
+- **`bank_lines(business, to)`:** 1020's published lines to the end of a day,
+  the day each happened in the café's time, and the statement it is on.
+  **`bank_book(to)`** (`cost.view`): the books' bank at the day, the last
+  statement, the lines on none, and the latest statements.
+- **`save_bank_statement(date, closing, lines, note, key)`** and
+  **`undo_bank_statement(statement, reason, key)`** (`accounting.post`), each
+  done once when sent again with its key, and on the audit trail
+  (`bank.reconcile`, `bank.unreconcile`).
+- **The alert** `bank_unreconciled` (orange): a bank line more than 35 days
+  old and on no statement. **The closing checklist** warns, without stopping
+  the lock, when a line to the month's last day is on none
+  (`period_close_checklist` wraps `period_close_checklist_0054`;
+  `alert_conditions` wraps `alert_conditions_0049`).
+- **Helpers nobody calls:** `bank_lines`, the two `__run` bodies and the
+  triggers.

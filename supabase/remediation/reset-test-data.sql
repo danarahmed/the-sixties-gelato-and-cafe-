@@ -106,7 +106,8 @@ end $$;
 -- triggers that keep the ledger append-only, and fails, changing nothing, if a
 -- table left out still refers to one of these.
 truncate table
-  accounting_period, ai_insight, ai_interaction_log, alert, approval, attendance, card_settlement, cash_event,
+  accounting_period, ai_insight, ai_interaction_log, alert, approval, attendance, bank_statement,
+  bank_statement_line, card_settlement, cash_event,
   cash_transfer, clock_attempt, document_attachment, document_counter, employee_advance,
   expense, fx_cash_event, fx_exchange, fx_rate, goods_receipt, goods_receipt_line, inventory_movement, item_lot,
   journal_entry, journal_line,

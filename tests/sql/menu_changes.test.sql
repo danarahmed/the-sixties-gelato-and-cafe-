@@ -174,8 +174,8 @@ create temp table cl as select * from period_close_checklist(
       and test.today() between starts_on and ends_on));
 select test.eq((select ok::text || ' ' || blocks::text from cl where check_key = 'uncosted'), 'false false',
   'the month-end checklist warns of them, without stopping the lock');
-select test.ok((select bool_and(blocks) from cl where check_key not in ('uncosted', 'payroll_approved')),
-  'every other check still blocks, but for the month''s payroll (0049), a warning too');
+select test.ok((select bool_and(blocks) from cl where check_key not in ('uncosted', 'payroll_approved', 'bank')),
+  'every other check still blocks, but for the month''s payroll (0049) and the bank (0059), warnings too');
 
 -- Marked as using no stock, with a reason, the old product is no longer listed.
 select test.act_as('owner@example.com');

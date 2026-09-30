@@ -404,6 +404,17 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - Its other names are in Arabic and Kurdish, given on its own form. In a
     language the owner added, it shows as it was typed: **Settings →
     Languages** lists the built-in phrases, not the café's accounts.
+- **The bank against its statement, what it does not do (`0059`).**
+  - The statement is read by eye: its last day and balance are typed, and
+    each line on it is ticked. It is not read from the bank's file, and
+    nothing comes from the bank itself.
+  - One bank account, 1020 Bank. The dollars in the safe and the till are
+    counted on their own (`0043`).
+  - Only the latest statement is undone; an earlier one is undone by undoing
+    each after it first.
+  - Nothing is matched for you: the screen adds up what is ticked against the
+    bank's balance. A charge or interest the bank shows is recorded first
+    (Expenses, or a journal), then ticked.
 - **Documents kept with the records, what they do not do (release AA,
   `0053`).**
   - Only deliveries, returns, bills, supplier's credit notes and expenses keep

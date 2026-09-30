@@ -1195,6 +1195,17 @@ const phrases: PhraseBook = {
   "An account": { ar: "حساب", ckb: "هەژمارێک" },
   "Account {code} {name}": { ar: "الحساب {code} {name}", ckb: "هەژماری {code} {name}" },
   "Account {code}": { ar: "الحساب {code}", ckb: "هەژماری {code}" },
+  // The bank against its statement on the audit trail (0059).
+  "Bank statement kept": { ar: "حُفظ كشف بنك", ckb: "کەشفی بانکێک هەڵگیرا" },
+  "Bank statement undone": { ar: "أُلغي كشف بنك", ckb: "کەشفی بانکێک هەڵوەشێنرایەوە" },
+  "A bank statement": { ar: "كشف بنك", ckb: "کەشفی بانکێک" },
+  "Bank statement {no}": { ar: "كشف البنك {no}", ckb: "کەشفی بانکی {no}" },
+  "Bank statement": { ar: "كشف البنك", ckb: "کەشفی بانک" },
+  "Its last day": { ar: "آخر يوم فيه", ckb: "دوایین ڕۆژی" },
+  "From the last statement": { ar: "من الكشف الأخير", ckb: "لە دوایین کەشفەوە" },
+  "Lines ticked": { ar: "القيود المُعلَّمة", ckb: "تۆمارە نیشانەکراوەکان" },
+  kept: { ar: "محفوظ", ckb: "هەڵگیراو" },
+  undone: { ar: "مُلغى", ckb: "هەڵوەشێنراوە" },
 };
 
 export default phrases;

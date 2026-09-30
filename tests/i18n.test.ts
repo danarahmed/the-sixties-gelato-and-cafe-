@@ -492,6 +492,7 @@ describe("the code", () => {
       "nonNegative",
       "optionalNonNegative",
       "signedNonZero",
+      "signed",
       "id",
       "day",
       "text",

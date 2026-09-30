@@ -570,6 +570,151 @@ const phrases: PhraseBook = {
     ar: "لقيدٍ مسوّدة ({1}) سطر على الحساب {2} {3}: رحّله أو غيّر السطر أولًا",
     ckb: "تۆمارێکی ڕەشنووس ({1}) هێڵێکی لەسەر هەژماری {2} {3} هەیە: سەرەتا پەسەندی بکە یان هێڵەکە بگۆڕە",
   },
+  // The bank against its statement (0059).
+  "The bank against its statement": { ar: "البنك مقابل كشفه", ckb: "بانک بەرامبەر بە کەشفەکەی" },
+  "The bank's own statement shows whether the books have every payment in and out of the bank.": {
+    ar: "يُظهر كشف البنك نفسه هل في الدفاتر كل دفعة دخلت البنك أو خرجت منه.",
+    ckb: "کەشفی بانکەکە خۆی دەریدەخات ئایا هەموو پارەیەکی هاتوو و ڕۆیشتووی بانک لە دەفتەرەکاندا هەیە.",
+  },
+  "In the books, the bank holds": {
+    ar: "رصيد البنك في الدفاتر",
+    ckb: "لە دەفتەرەکاندا، بانک ئەمەی تێدایە",
+  },
+  "at the end of {date}": { ar: "في نهاية {date}", ckb: "لە کۆتایی {date}" },
+  "The last statement kept": { ar: "آخر كشف محفوظ", ckb: "دوایین کەشفی هەڵگیراو" },
+  "Statement {no}, to {date}": { ar: "الكشف {no}، حتى {date}", ckb: "کەشفی {no}، تا {date}" },
+  "None yet: the first starts from nothing.": {
+    ar: "لا شيء بعد: يبدأ الأول من الصفر.",
+    ckb: "هێشتا هیچ: یەکەمیان لە سفرەوە دەست پێدەکات.",
+  },
+  "The bank's lines on no statement yet": {
+    ar: "قيود البنك التي ليست في أي كشف بعد",
+    ckb: "تۆمارەکانی بانک کە هێشتا لە هیچ کەشفێکدا نین",
+  },
+  "Tick each line the bank's statement shows, to its last day.": {
+    ar: "ضع علامة على كل قيد يظهر في كشف البنك، حتى آخر يوم فيه.",
+    ckb: "نیشانە لە هەر تۆمارێک بدە کە کەشفی بانکەکە نیشانی دەدات، تا دوایین ڕۆژی.",
+  },
+  "{n} line(s)": { ar: "{n} قيد", ckb: "{n} تۆمار" },
+  "The statement's last day": { ar: "آخر يوم في الكشف", ckb: "دوایین ڕۆژی کەشفەکە" },
+  "The balance on the statement": { ar: "الرصيد في الكشف", ckb: "باڵانسی ناو کەشفەکە" },
+  "Every bank line in the books is on a statement.": {
+    ar: "كل قيد للبنك في الدفاتر موجود في كشف.",
+    ckb: "هەموو تۆمارێکی بانک لە دەفتەرەکاندا لە کەشفێکدایە.",
+  },
+  "No bank line to this day is waiting.": {
+    ar: "لا قيد للبنك حتى هذا اليوم ينتظر.",
+    ckb: "هیچ تۆمارێکی بانک تا ئەم ڕۆژە چاوەڕێ نییە.",
+  },
+  "Money in": { ar: "المبالغ الداخلة", ckb: "پارەی هاتوو" },
+  "Money out": { ar: "المبالغ الخارجة", ckb: "پارەی ڕۆیشتوو" },
+  "On the statement": { ar: "في الكشف", ckb: "لە کەشفەکەدا" },
+  "Tick every line to this day": {
+    ar: "ضع علامة على كل القيود حتى هذا اليوم",
+    ckb: "نیشانە لە هەموو تۆمارەکان بدە تا ئەم ڕۆژە",
+  },
+  "Untick all": { ar: "أزل كل العلامات", ckb: "هەموو نیشانەکان لابە" },
+  "The last statement": { ar: "الكشف الأخير", ckb: "دوایین کەشف" },
+  "Money in, ticked": { ar: "الداخل المُعلَّم", ckb: "پارەی هاتووی نیشانەکراو" },
+  "Money out, ticked": { ar: "الخارج المُعلَّم", ckb: "پارەی ڕۆیشتووی نیشانەکراو" },
+  "The lines ticked take the bank to": {
+    ar: "القيود المُعلَّمة توصل البنك إلى",
+    ckb: "تۆمارە نیشانەکراوەکان بانک دەگەیەننە",
+  },
+  "It ties with the statement.": { ar: "يتطابق مع الكشف.", ckb: "لەگەڵ کەشفەکە یەکدەگرێتەوە." },
+  "The statement says {closing}: {difference} apart.": {
+    ar: "الكشف يقول {closing}: الفرق {difference}.",
+    ckb: "کەشفەکە دەڵێت {closing}: جیاوازی {difference}.",
+  },
+  "The next statement ends after {date}.": {
+    ar: "الكشف التالي ينتهي بعد {date}.",
+    ckb: "کەشفی داهاتوو دوای {date} کۆتایی دێت.",
+  },
+  "Keep the statement": { ar: "احفظ الكشف", ckb: "کەشفەکە هەڵبگرە" },
+  "On the statement but not in the books? A bank's charge is recorded on Expenses, paid from the bank; interest by a journal. Then tick it here.":
+    {
+      ar: "في الكشف لكن ليس في الدفاتر؟ تُسجَّل عمولة البنك في المصروفات، مدفوعة من البنك؛ والفائدة بقيد يومية. ثم ضع عليها علامة هنا.",
+      ckb: "لە کەشفەکەدایە بەڵام لە دەفتەرەکاندا نییە؟ کرێی بانک لە خەرجییەکاندا تۆمار دەکرێت، لە بانکەوە دراو؛ سوودیش بە تۆمارێکی ڕۆژانە. پاشان لێرە نیشانەی لێ بدە.",
+    },
+  "Statement {no} is kept: the bank ties to {date}.": {
+    ar: "حُفظ الكشف {no}: يتطابق البنك حتى {date}.",
+    ckb: "کەشفی {no} هەڵگیرا: بانک تا {date} یەکدەگرێتەوە.",
+  },
+  "The statements kept": { ar: "الكشوف المحفوظة", ckb: "کەشفە هەڵگیراوەکان" },
+  "No statement yet.": { ar: "لا كشف بعد.", ckb: "هێشتا هیچ کەشفێک نییە." },
+  "The bank's balance": { ar: "رصيد البنك", ckb: "باڵانسی بانک" },
+  "Kept by": { ar: "حفظه", ckb: "هەڵیگرت" },
+  Undone: { ar: "أُلغي", ckb: "هەڵوەشێنرایەوە" },
+  "Undo…": { ar: "إلغاء…", ckb: "هەڵوەشاندنەوە…" },
+  "Undo the statement": { ar: "ألغِ الكشف", ckb: "کەشفەکە هەڵبوەشێنەوە" },
+  "Statement {no} is undone: its lines are open again.": {
+    ar: "أُلغي الكشف {no}: عادت قيوده مفتوحة.",
+    ckb: "کەشفی {no} هەڵوەشێنرایەوە: تۆمارەکانی دووبارە کراوەن.",
+  },
+  "Choose the lines on the statement": {
+    ar: "اختر القيود التي في الكشف",
+    ckb: "ئەو تۆمارانە هەڵبژێرە کە لە کەشفەکەدان",
+  },
+  "the statement": { ar: "الكشف", ckb: "کەشفەکە" },
+  "A bank statement is never deleted: undo it instead": {
+    ar: "لا يُحذف كشف البنك أبدًا: ألغِه بدلًا من ذلك",
+    ckb: "کەشفی بانک هەرگیز ناسڕدرێتەوە: لەبری ئەوە هەڵیبوەشێنەوە",
+  },
+  "Bank statement {1} was undone already": {
+    ar: "كشف البنك {1} أُلغي من قبل",
+    ckb: "کەشفی بانکی {1} پێشتر هەڵوەشێنراوەتەوە",
+  },
+  "A bank statement stays as it was kept": {
+    ar: "يبقى كشف البنك كما حُفظ",
+    ckb: "کەشفی بانک وەک ئەوە دەمێنێتەوە کە هەڵگیرا",
+  },
+  "A line on a bank statement is not changed: undo the statement instead": {
+    ar: "لا يُغيَّر قيد في كشف البنك: ألغِ الكشف بدلًا من ذلك",
+    ckb: "تۆمارێکی ناو کەشفی بانک ناگۆڕدرێت: لەبری ئەوە کەشفەکە هەڵبوەشێنەوە",
+  },
+  "Give the statement's last day": { ar: "أعطِ آخر يوم في الكشف", ckb: "دوایین ڕۆژی کەشفەکە بدە" },
+  "A statement cannot end after today": {
+    ar: "لا يمكن أن ينتهي الكشف بعد اليوم",
+    ckb: "کەشف ناتوانێت دوای ئەمڕۆ کۆتایی بێت",
+  },
+  "Give the balance the bank's statement shows": {
+    ar: "أعطِ الرصيد الذي يُظهره كشف البنك",
+    ckb: "ئەو باڵانسە بدە کە کەشفی بانکەکە نیشانی دەدات",
+  },
+  "Statement {1} ends on {2}: the next one ends after it": {
+    ar: "الكشف {1} ينتهي في {2}: والتالي ينتهي بعده",
+    ckb: "کەشفی {1} لە {2} کۆتایی دێت: داهاتوو دوای ئەو کۆتایی دێت",
+  },
+  "A line ticked is not one of the bank's lines to {1} still open": {
+    ar: "قيد مُعلَّم ليس من قيود البنك المفتوحة حتى {1}",
+    ckb: "تۆمارێکی نیشانەکراو یەکێک نییە لە تۆمارە کراوەکانی بانک تا {1}",
+  },
+  "The lines ticked take the bank to {1}, and the statement says {2}: {3} apart": {
+    ar: "القيود المُعلَّمة توصل البنك إلى {1}، والكشف يقول {2}: الفرق {3}",
+    ckb: "تۆمارە نیشانەکراوەکان بانک دەگەیەننە {1}، و کەشفەکە دەڵێت {2}: جیاوازی {3}",
+  },
+  "There is no such bank statement": { ar: "لا يوجد كشف بنك كهذا", ckb: "کەشفی بانکی وا نییە" },
+  "Statement {1} comes after it: undo the latest first": {
+    ar: "الكشف {1} يأتي بعده: ألغِ الأحدث أولًا",
+    ckb: "کەشفی {1} دوای ئەو دێت: سەرەتا نوێترینیان هەڵبوەشێنەوە",
+  },
+  "{1} bank line(s), the oldest from {2}, are on no bank statement": {
+    ar: "{1} قيد للبنك، أقدمها من {2}، ليست في أي كشف بنك",
+    ckb: "{1} تۆماری بانک، کۆنترینیان لە {2}ەوە، لە هیچ کەشفێکی بانکدا نین",
+  },
+  "Reconcile the bank with its statement on Chart of Accounts.": {
+    ar: "طابِق البنك مع كشفه في دليل الحسابات.",
+    ckb: "بانک لەگەڵ کەشفەکەیدا لە لیستی هەژمارەکان بەراورد بکە.",
+  },
+  "Bank not reconciled": { ar: "البنك غير مُطابَق", ckb: "بانک بەراورد نەکراوە" },
+  "The bank is reconciled to the month's end": {
+    ar: "البنك مُطابَق حتى نهاية الشهر",
+    ckb: "بانک تا کۆتایی مانگ بەراورد کراوە",
+  },
+  "{1} bank line(s) to {2}, the first from {3}, are on no bank statement": {
+    ar: "{1} قيد للبنك حتى {2}، أولها من {3}، ليست في أي كشف بنك",
+    ckb: "{1} تۆماری بانک تا {2}، یەکەمیان لە {3}ەوە، لە هیچ کەشفێکی بانکدا نین",
+  },
 };
 
 export default phrases;

@@ -136,7 +136,7 @@ select test.eq((
    where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'execute')),
   'acknowledge_alert,add_attendance,add_delivery_platform,add_item_unit,add_variant,adjust_payroll_line,'
   'adjust_points,adjust_stock,alert_thresholds,allocate_credit,app_words,approve_payroll,approve_po,'
-  'approve_stock_count,attach_document,attendance_list,batch_reconciliation,buying_list,cancel_advance,'
+  'approve_stock_count,attach_document,attendance_list,bank_book,batch_reconciliation,buying_list,cancel_advance,'
   'cancel_attendance,'
   'cancel_bill,cancel_card_settlement,cancel_platform_settlement,cancel_po,cancel_production,'
   'cancel_salary_payment,cancel_scheduled_price,cancel_scheduled_recipe,cancel_stock_count,'
@@ -168,7 +168,7 @@ select test.eq((
   'report_reconciliation,report_sales_analysis,report_sizes_and_addons,report_staff,report_trial_balance,'
   'report_unclosed_days,'
   'report_uncosted_sales,report_usage_variance,request_approval,retire_variant,return_to_supplier,'
-  'reverse_journal,reverse_receipt,review_loss,review_stock_count,sales_channels,save_batch_recipe,'
+  'reverse_journal,reverse_receipt,review_loss,review_stock_count,sales_channels,save_bank_statement,save_batch_recipe,'
   'save_category,save_customer,save_customer_address,save_employee,save_journal,save_language,'
   'save_modifier,save_modifier_group,save_phrases,save_po,save_schedule,save_tab,save_table,send_po,'
   'send_stock_transfer,'
@@ -176,7 +176,7 @@ select test.eq((
   'set_employee_pay,set_fx_rate,set_item_supplier,set_member_active,set_member_place,set_member_roles,set_modifier_price,'
   'set_modifier_recipe,set_my_pin,set_no_stock,set_price,set_product_details,set_product_image,'
   'set_product_modifiers,settle_tab,snooze_alert,split_tab,staff_list,staff_schedule,start_stock_count,'
-  'stock_card,stock_places,stock_transfers,submit_stock_count,supplier_statement,unlock_period,'
+  'stock_card,stock_places,stock_transfers,submit_stock_count,supplier_statement,undo_bank_statement,unlock_period,'
   'update_delivery_platform,update_item,'
   'update_supplier,update_variant,void_sale',
   'signed-in users can call exactly the intended API');
