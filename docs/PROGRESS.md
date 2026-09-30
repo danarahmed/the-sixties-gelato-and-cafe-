@@ -1543,7 +1543,47 @@ browser tests through the real app, or both.
     the Orders page say "Sales returns", not "4200".
 
   Built and tested: browser checks for the People cards on a phone and for
-  every control of the top bar on the screen, in English and Arabic.
+  every control of the top bar on the screen, in English and Arabic. Deployed
+  with [pull request #48](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/48).
+
+- **The UX and integration pass, third part (no migration).** The screens in
+  Kurdish, and the accountant's (the journals, the chart of accounts, the
+  statements, the audit trail), on a phone and a desk:
+  - **dates as written, in Arabic and Kurdish too:** a date among Arabic or
+    Kurdish words showed back to front ("30-09-2026") while the same date
+    alone in a table showed as written ("2026-09-30"). Every date put into a
+    sentence is now kept as written: the reports' lines, the headings, the
+    dashboard's alerts, the drawer, the rota, the statements and the audit
+    trail;
+  - **arrows that point the way the language reads:** the rota's week before
+    and after, the audit trail's before → after, the dashboard's links, a
+    batch's way back to Production, where the drawer's cash went, a
+    delivery's correction and the till's delivery address;
+  - **"each" in the reader's language** (قطعة, دانە) on the count, the stock,
+    deliveries, orders, returns, transfers, recipes, production, the buying
+    list and the reports; g, kg, ml and L stay as they are written;
+  - **an English name's example in English:** the boxes for a name in English
+    gave their example in Arabic or Kurdish; they say "Milk", "Large", "Oat
+    milk";
+  - **the name on the phone's top bar** is cut with "…" at its own end (in
+    Arabic and Kurdish it was cut at its start, with none);
+  - **tables on a phone:** an amount, a date or a code stays on one line
+    ("21,000 IQD", not "21,000" above "IQD"); the audit trail is a card per
+    change; a price on the till's tile stays whole; the new item's type,
+    measure and unit wrap when the card is narrow;
+  - **the Dashboard is "Dashboard"** (it said "Owner Dashboard" to a manager
+    too);
+  - **plain words on the stock forms:** a loss says it is taken out at what it
+    costs now, a correction what it does, the opening stock that it is the
+    owner's capital; their debits and credits are under **How it is booked**.
+
+  Built and tested: unit tests for dates kept as written, the arrows and the
+  units; browser checks in Arabic and Kurdish for the dates on seven screens
+  (none back to front), the rota's arrows, the audit trail as cards on a
+  phone and the name on the top bar; the languages suite now finds "each"
+  left in English. A scratch check over thirty screens and the records they
+  link to, after every suite had made its records, found 79 dates back to
+  front before and none after.
 
 ## The August 2026 audit, finding by finding
 

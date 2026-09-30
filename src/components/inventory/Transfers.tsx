@@ -11,7 +11,7 @@ import {
   sendTransferAction,
 } from "@/lib/actions/transfers";
 import { TRANSFER_NOTE_MAX, TRANSFER_STATUS_LABEL, type Transfer } from "@/lib/transfers";
-import { fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty, unitName } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
 import { normaliseNumber } from "@/lib/validation";
 
@@ -216,12 +216,12 @@ export function SendTransfer({
                       onChange={(e) => set(i, { unit: e.target.value })}
                       disabled={!it}
                     >
-                      {it && <option value={it.baseUnit}>{it.baseUnit}</option>}
+                      {it && <option value={it.baseUnit}>{unitName(it.baseUnit, t)}</option>}
                       {it?.units
                         .filter((u) => u.code !== it.baseUnit)
                         .map((u) => (
                           <option key={u.code} value={u.code}>
-                            {u.label}
+                            {unitName(u.label, t)}
                           </option>
                         ))}
                     </select>
@@ -230,7 +230,7 @@ export function SendTransfer({
                     className="right mono muted"
                     style={{ color: there !== null && there < 0 ? "var(--err)" : undefined }}
                   >
-                    {it && there !== null ? `${fmtQty(there)} ${it.baseUnit}` : ""}
+                    {it && there !== null ? `${fmtQty(there)} ${unitName(it.baseUnit, t)}` : ""}
                   </td>
                   <td>
                     {lines.length > 1 && (
@@ -304,7 +304,7 @@ export function SendTransfer({
 
 /** A unit's name as the item has it: "Sleeve of 50" for sleeve_50. */
 type UnitNames = Record<string, Record<string, string>>;
-const unitName = (units: UnitNames, itemId: string, code: string) => units[itemId]?.[code] ?? code;
+const unitNamed = (units: UnitNames, itemId: string, code: string) => units[itemId]?.[code] ?? code;
 
 /**
  * A transfer on its way: received there, all of it or what arrived, or
@@ -411,7 +411,7 @@ function OnItsWay({
               <span className="muted">
                 {t("of {qty} {unit} sent", {
                   qty: fmtQty(l.qty),
-                  unit: unitName(units, l.itemId, l.unitCode),
+                  unit: unitName(unitNamed(units, l.itemId, l.unitCode), t),
                 })}
               </span>
             </label>
@@ -561,7 +561,7 @@ function TransferList({
                     <tr key={l.id} data-testid="transfer-row">
                       <td>{l.item}</td>
                       <td className="right mono">
-                        {fmtQty(l.qty)} {unitName(units, l.itemId, l.unitCode)}
+                        {fmtQty(l.qty)} {unitName(unitNamed(units, l.itemId, l.unitCode), t)}
                       </td>
                       {x.status === "received" && (
                         <td
@@ -575,7 +575,7 @@ function TransferList({
                         >
                           {l.qtyReceived === null
                             ? "—"
-                            : `${fmtQty(l.qtyReceived)} ${unitName(units, l.itemId, l.unitCode)}`}
+                            : `${fmtQty(l.qtyReceived)} ${unitName(unitNamed(units, l.itemId, l.unitCode), t)}`}
                         </td>
                       )}
                       <td className="right mono">{fmtIQD(l.value)}</td>

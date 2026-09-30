@@ -5,7 +5,7 @@ import { sql } from "./lib.mjs";
 
 // What stays in Latin letters in every language: what the café typed itself
 // (its products, items, suppliers, people, places, tables, platforms), codes,
-// units and the currency.
+// units written as symbols (g, ml, kg) and the currency.
 const typed = () =>
   sql(`
   select string_agg(n, E'\\n') from (
@@ -78,7 +78,7 @@ const SAME = new Set(
     "ml",
     "kg",
     "pcs",
-    "each",
+    // Not "each": what is counted one by one is in the reader's language.
     "Talabat",
     "Lezzoo",
     "Careem",

@@ -7,7 +7,7 @@
  */
 import Decimal from "decimal.js";
 import { fill, type T } from "@/lib/i18n/core";
-import { fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty, unitName } from "@/lib/format";
 import { orderTotal } from "@/lib/purchasing";
 
 /** To order; enough on hand and coming; too new to judge; not used lately. */
@@ -290,7 +290,7 @@ export function reasonsOf(
   t: T = english,
   packName: (code: string) => string = (code) => code,
 ): string[] {
-  const u = line.baseUnit;
+  const u = unitName(line.baseUnit, t);
   const q = (n: number) => `${fmtQty(n)} ${u}`;
   const out: string[] = [];
   if (line.status === "no_history") {

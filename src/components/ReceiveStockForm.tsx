@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createSupplierAction, receiveGoodsAction } from "@/lib/actions/purchasing";
-import { fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty, unitName } from "@/lib/format";
 import { deliveryLineCost, priceGap } from "@/lib/receiving";
 import {
   differences,
@@ -427,8 +427,8 @@ function Receive({
                   >
                     {(it?.units ?? []).map((u) => (
                       <option key={u.code} value={u.code}>
-                        {u.label}
-                        {u.factor !== 1 ? ` (${u.factor} ${it?.baseUnit})` : ""}
+                        {unitName(u.label, t)}
+                        {u.factor !== 1 ? ` (${u.factor} ${unitName(it?.baseUnit ?? "", t)})` : ""}
                       </option>
                     ))}
                   </select>
@@ -436,7 +436,7 @@ function Receive({
                 <label style={{ flex: 1, minWidth: 120 }}>
                   <div className="muted" style={{ fontSize: ".78rem" }}>
                     {unit?.label || l.unit
-                      ? t("Price per {unit} (IQD)", { unit: unit?.label ?? l.unit })
+                      ? t("Price per {unit} (IQD)", { unit: unitName(unit?.label ?? l.unit, t) })
                       : t("Price per unit (IQD)")}
                   </div>
                   <input
@@ -502,13 +502,13 @@ function Receive({
                   {cost.perBase !== null && it
                     ? ` · ${t("{cost} IQD a {unit}", {
                         cost: fmtQty(Number(cost.perBase.toFixed(4))),
-                        unit: it.baseUnit,
+                        unit: unitName(it.baseUnit, t),
                       })}`
                     : ""}
                   {it?.costNow
                     ? ` · ${t("it costs {cost} a {unit} now", {
                         cost: fmtQty(Number(it.costNow.toFixed(4))),
-                        unit: it.baseUnit,
+                        unit: unitName(it.baseUnit, t),
                       })}`
                     : ` · ${t("its first delivery: no cost to compare yet")}`}
                   {gap !== null && far
@@ -617,7 +617,7 @@ function OrderDifferences({
       <div className="muted" style={{ fontSize: ".78rem" }} data-testid="receive-diff">
         {t("As ordered: {qty} {unit} still to come", {
           qty: fmtQty(inOrderUnit(ordered, ordered.outstandingBase)),
-          unit: ordered.unitCode,
+          unit: unitName(ordered.unitCode, t),
         })}
       </div>
     ) : null;
@@ -637,7 +637,7 @@ function OrderDifferences({
             {t("More than is still on order: {coming} of {ordered} {unit}", {
               coming: fmtQty(x.coming),
               ordered: fmtQty(x.ordered),
-              unit: line.unitCode,
+              unit: unitName(line.unitCode, t),
             })}
           </span>
         ) : x.kind === "less" ? (
@@ -645,7 +645,7 @@ function OrderDifferences({
             {t("{ordered} {unit} still on order: {coming} coming now", {
               coming: fmtQty(x.coming),
               ordered: fmtQty(x.ordered),
-              unit: line.unitCode,
+              unit: unitName(line.unitCode, t),
             })}
           </span>
         ) : (

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getT } from "@/lib/i18n/server";
+import { arrows } from "@/lib/i18n/core";
+import { getDir, getT } from "@/lib/i18n/server";
 import type { CashSessionRow } from "@/lib/db/cash";
 import { fmtIQD } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
@@ -29,6 +30,7 @@ export async function SessionsTable({
   timezone: string;
 }) {
   const t = await getT();
+  const { on } = arrows(await getDir());
   const at = (ts: string | null) => (ts ? dateTimeIn(timezone, ts) : "—");
   return (
     <div className="tw">
@@ -102,7 +104,7 @@ export async function SessionsTable({
                 <Diff v={r.isOpen ? null : r.variance} />
               </td>
               <td className="right money">
-                {r.taken ? `${fmtIQD(r.taken)} → ${t(String(r.takenTo))}` : "—"}
+                {r.taken ? `${fmtIQD(r.taken)} ${on} ${t(String(r.takenTo))}` : "—"}
               </td>
               <td className="right money">{r.card === null ? "—" : fmtIQD(r.card)}</td>
             </tr>

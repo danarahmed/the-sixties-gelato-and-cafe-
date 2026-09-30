@@ -87,10 +87,10 @@ export const getWords = cache(async (): Promise<Words> => {
 
 /** The translator for the reader's language. */
 export async function getT(): Promise<T> {
-  return translator(await getWords());
+  return translator(await getWords(), await getDir());
 }
 
 /** The translator for messages (the database's, an alert's), in the reader's language. */
 export async function getMsg(): Promise<Msg> {
-  return messenger(await getWords());
+  return messenger(await getWords(), await getDir());
 }

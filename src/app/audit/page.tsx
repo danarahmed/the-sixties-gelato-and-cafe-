@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { PrintButton } from "@/components/PrintButton";
 import { PrintHead } from "@/components/PrintHead";
-import { getMsg, getT } from "@/lib/i18n/server";
+import { arrows } from "@/lib/i18n/core";
+import { getDir, getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { requirePermission } from "@/lib/auth/session";
 import { getAuditTrail } from "@/lib/db/books";
@@ -43,6 +44,7 @@ export default async function AuditPage({
 }) {
   const profile = await requirePermission("audit.view");
   const t = await getT();
+  const { on } = arrows(await getDir());
   const msg = await getMsg();
   const sp = await searchParams;
   const today = businessToday(profile.timezone);
@@ -143,7 +145,7 @@ export default async function AuditPage({
           </div>
         ) : (
           <div className="tw">
-            <table>
+            <table className="stack-table" data-testid="audit-table">
               <thead>
                 <tr>
                   <th>{t("When")}</th>
@@ -157,13 +159,19 @@ export default async function AuditPage({
               <tbody>
                 {entries.map((e) => (
                   <tr key={e.id} data-action={e.action}>
-                    <td className="mono muted" style={{ fontSize: ".8rem", whiteSpace: "nowrap" }}>
+                    <td className="mono muted" style={{ fontSize: ".8rem" }}>
                       {dateTimeIn(profile.timezone, e.at)}
                     </td>
-                    <td>{e.by ?? <span className="badge warn">{t("No one signed in")}</span>}</td>
-                    <td>{t(e.label)}</td>
-                    <td>{subjectIn(e.subject, e.action, t, msg)}</td>
-                    <td className="changes" style={{ fontSize: ".84rem" }}>
+                    <td data-label={t("Who")}>
+                      {e.by ?? <span className="badge warn">{t("No one signed in")}</span>}
+                    </td>
+                    <td data-label={t("What happened")}>{t(e.label)}</td>
+                    <td data-label={t("About")}>{subjectIn(e.subject, e.action, t, msg)}</td>
+                    <td
+                      className="changes"
+                      data-label={t("Before → after")}
+                      style={{ fontSize: ".84rem" }}
+                    >
                       {e.changes.length === 0 ? (
                         <span className="muted">—</span>
                       ) : (
@@ -171,20 +179,26 @@ export default async function AuditPage({
                           <div key={i}>
                             <span className="muted">{t(c.field)}:</span>{" "}
                             {c.before === "" ? (
-                              <strong>{shown(valueIn(c.after, c.field, t, msg))}</strong>
+                              <strong>
+                                <bdi>{shown(valueIn(c.after, c.field, t, msg))}</bdi>
+                              </strong>
                             ) : c.after === "" ? (
-                              <s>{shown(valueIn(c.before, c.field, t, msg))}</s>
+                              <s>
+                                <bdi>{shown(valueIn(c.before, c.field, t, msg))}</bdi>
+                              </s>
                             ) : (
                               <>
-                                {shown(valueIn(c.before, c.field, t, msg))} →{" "}
-                                <strong>{shown(valueIn(c.after, c.field, t, msg))}</strong>
+                                <bdi>{shown(valueIn(c.before, c.field, t, msg))}</bdi> {on}{" "}
+                                <strong>
+                                  <bdi>{shown(valueIn(c.after, c.field, t, msg))}</bdi>
+                                </strong>
                               </>
                             )}
                           </div>
                         ))
                       )}
                     </td>
-                    <td className="muted" style={{ fontSize: ".84rem" }}>
+                    <td className="muted" data-label={t("Why")} style={{ fontSize: ".84rem" }}>
                       {msg(e.reason ?? "—")}
                     </td>
                   </tr>

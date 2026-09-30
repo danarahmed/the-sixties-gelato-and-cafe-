@@ -7,7 +7,7 @@ import { has, requirePermission } from "@/lib/auth/session";
 import { getItem, getItemPriceHistory, getSuppliers } from "@/lib/db/read";
 import { getItemSuppliers } from "@/lib/db/buying";
 import { getStockCard, type StockCardKind, type StockCardRow } from "@/lib/db/reports";
-import { fmtIQD, fmtQty, itemTypeLabel, movementLabel } from "@/lib/format";
+import { fmtIQD, fmtQty, itemTypeLabel, movementLabel, unitName } from "@/lib/format";
 import { businessToday, dateTimeIn, monthStart, parseDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui";
 import { EditItem, PackUnits } from "@/components/ItemEditor";
@@ -81,7 +81,7 @@ export default async function StockCardPage({
     const t = totals.get(m.kind) ?? { qty: 0, value: 0 };
     totals.set(m.kind, { qty: t.qty + m.qty, value: t.value + m.value });
   }
-  const unit = item.baseUnit;
+  const unit = unitName(item.baseUnit, t);
   const q = (n: number) => `${n > 0 ? "+" : ""}${fmtQty(n)}`;
 
   return (
@@ -267,7 +267,7 @@ export default async function StockCardPage({
                     <td className="mono">{p.receiptNo ?? "—"}</td>
                     <td>{p.supplier ?? "—"}</td>
                     <td className="right mono">
-                      {fmtQty(p.qty)} {p.unit}
+                      {fmtQty(p.qty)} {unitName(p.unit, t)}
                     </td>
                     <td className="right money">{fmtIQD(p.goodsValue)}</td>
                     <td className="right mono">

@@ -107,7 +107,7 @@ export function DollarsPanel({
               <tbody>
                 {fx.history.map((h) => (
                   <tr key={h.setAt + h.rate}>
-                    <td>{at(h.setAt)}</td>
+                    <td className="when">{at(h.setAt)}</td>
                     <td className="right money">{fmtRate(h.rate)}</td>
                     <td>{h.setBy ?? "—"}</td>
                     <td>{h.reason}</td>

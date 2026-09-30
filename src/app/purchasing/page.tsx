@@ -370,7 +370,7 @@ export default async function PurchasingPage() {
                             {r.corrections.map((c) => (
                               <div key={c.no}>
                                 {t("Correction {no}", { no: c.no })} ·{" "}
-                                {dateTimeIn(profile.timezone, c.at)}
+                                <bdi>{dateTimeIn(profile.timezone, c.at)}</bdi>
                                 {c.by ? ` · ${c.by}` : ""} · {c.kinds.map(kindLabel).join(", ")} · “
                                 {c.reason}”{" · "}
                                 {c.journalNo !== null

@@ -14,6 +14,7 @@ import {
   type Alert,
 } from "@/lib/alerts";
 import { dateTimeIn } from "@/lib/dates";
+import { arrows } from "@/lib/i18n/core";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 
@@ -117,7 +118,8 @@ function AlertRow({
   timezone: string;
 }) {
   const router = useRouter();
-  const { t, msg: say } = useT();
+  const { t, msg: say, dir } = useT();
+  const { on } = arrows(dir);
   const range = snoozeRange(today);
   const [mode, setMode] = useState<"none" | "answer" | "snooze">("none");
   const [note, setNote] = useState("");
@@ -158,7 +160,9 @@ function AlertRow({
       <div className="alert-meta">
         {a.action &&
           (a.link ? (
-            <Link href={a.link}>{say(a.action)} →</Link>
+            <Link href={a.link}>
+              {say(a.action)} {on}
+            </Link>
           ) : (
             <span style={{ color: "var(--text)" }}>{say(a.action)}</span>
           ))}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Decimal from "decimal.js";
 import { saveBatchRecipeAction } from "@/lib/actions/production";
 import { NO_CHANNELS } from "@/lib/channels";
-import { fmtIQD } from "@/lib/format";
+import { fmtIQD, unitName } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice, inputStyle } from "@/components/ui";
 import { parseNumber } from "@/components/pos/model";
@@ -320,7 +320,7 @@ export function BatchRecipeForm({
                 >
                   {m.units.map((u) => (
                     <option key={u.code} value={u.code}>
-                      {u.label}
+                      {unitName(u.label, t)}
                     </option>
                   ))}
                 </select>
@@ -345,7 +345,7 @@ export function BatchRecipeForm({
           >
             {yieldUnits.map((u) => (
               <option key={u.code} value={u.code}>
-                {u.label}
+                {unitName(u.label, t)}
               </option>
             ))}
           </select>

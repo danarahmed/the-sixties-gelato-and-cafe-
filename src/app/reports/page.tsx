@@ -22,7 +22,7 @@ import {
 } from "@/lib/db/reports";
 import { LegacyPostings } from "@/components/books/LegacyPostings";
 import { EXCEPTION_LABEL, NO_ONE, exceptionsByPerson, type ExceptionKind } from "@/lib/exceptions";
-import { fmtIQD, fmtQty, movementLabel, tenderLabel } from "@/lib/format";
+import { fmtIQD, fmtQty, movementLabel, tenderLabel, unitName } from "@/lib/format";
 import { getDollarsReport } from "@/lib/db/fx";
 import { getPurchasingReport } from "@/lib/db/purchasing";
 import { getProductionReport } from "@/lib/db/production";
@@ -880,7 +880,7 @@ export default async function ReportsPage({
                 <tbody>
                   {dollars.exchanges.map((x) => (
                     <tr key={x.id}>
-                      <td>{dateTimeIn(profile.timezone, x.at)}</td>
+                      <td className="when">{dateTimeIn(profile.timezone, x.at)}</td>
                       <td>{t(PLACE_LABEL[x.from] ?? x.from)}</td>
                       <td>{t(PLACE_LABEL[x.to] ?? x.to)}</td>
                       <td className="right money">{fmtUSD(x.usd)}</td>
@@ -1201,7 +1201,7 @@ export default async function ReportsPage({
                           </Link>
                         </td>
                         <td className="right money">
-                          {fmtQty(i.qty)} {i.unit}
+                          {fmtQty(i.qty)} {unitName(i.unit, t)}
                         </td>
                         <td className="right money">
                           {i.unitCost === null ? "—" : fmtQty(i.unitCost)}
@@ -1260,7 +1260,7 @@ export default async function ReportsPage({
               </thead>
               <tbody>
                 {made.map((b) => {
-                  const q = (n: number) => `${fmtQty(n)} ${b.baseUnit}`;
+                  const q = (n: number) => `${fmtQty(n)} ${unitName(b.baseUnit, t)}`;
                   return (
                     <tr
                       key={b.batchId}
@@ -1401,7 +1401,7 @@ export default async function ReportsPage({
                           <Link href={`/inventory/${i.itemId}`}>{i.item}</Link>
                         </td>
                         <td className="right mono">
-                          {fmtQty(i.qty)} {i.unit}
+                          {fmtQty(i.qty)} {unitName(i.unit, t)}
                         </td>
                         <td className="right money">{fmtIQD(i.value)}</td>
                       </tr>
@@ -1481,7 +1481,7 @@ export default async function ReportsPage({
                         {l.what
                           .map(
                             (w) =>
-                              `${w.unit ? `${fmtQty(w.qty)} ${w.unit}` : `${fmtQty(w.qty)} ×`} ${w.name}${
+                              `${w.unit ? `${fmtQty(w.qty)} ${unitName(w.unit, t)}` : `${fmtQty(w.qty)} ×`} ${w.name}${
                                 w.size ? ` — ${w.size}` : ""
                               }${w.addons.length > 0 ? ` (${w.addons.join(", ")})` : ""}${
                                 w.batchNo !== null ? ` · ${t("Batch {n}", { n: w.batchNo })}` : ""

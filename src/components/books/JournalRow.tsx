@@ -90,7 +90,7 @@ export function JournalRow({
   return (
     <>
       <tr>
-        <td>{dateIn(timezone, new Date(entry.occurredAt))}</td>
+        <td className="when">{dateIn(timezone, new Date(entry.occurredAt))}</td>
         <td>
           <button
             onClick={() => setOpen((v) => !v)}
@@ -247,7 +247,7 @@ export function JournalRow({
                 }}
               >
                 {t("Journal {no}", { no: entry.journalNo ?? t("(draft)") })} ·{" "}
-                {dateIn(timezone, new Date(entry.occurredAt))}
+                <bdi>{dateIn(timezone, new Date(entry.occurredAt))}</bdi>
                 {entry.referenceNo ? ` · ${t("ref {ref}", { ref: entry.referenceNo })}` : ""}
               </div>
               {entry.lines.map((l, i) => (

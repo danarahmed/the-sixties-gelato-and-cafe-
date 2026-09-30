@@ -9,7 +9,8 @@ import {
   type CorrectionPlan,
   type CorrectionResult,
 } from "@/lib/actions/purchasing";
-import { fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty, unitName } from "@/lib/format";
+import { arrows } from "@/lib/i18n/core";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { normaliseNumber } from "@/lib/validation";
 import { Modal } from "@/components/pos/Dialogs";
@@ -158,7 +159,8 @@ function CorrectionDialog({
 }) {
   const op = useOperation();
   const router = useRouter();
-  const { t, msg: say } = useT();
+  const { t, msg: say, dir } = useT();
+  const { on } = arrows(dir);
   const [busy, start] = useTransition();
   const [lines, setLines] = useState<LineDraft[]>(() =>
     receipt.lines.map((l) => ({
@@ -393,7 +395,7 @@ function CorrectionDialog({
                           >
                             {(it?.units ?? []).map((u) => (
                               <option key={u.code} value={u.code}>
-                                {u.label}
+                                {unitName(u.label, t)}
                               </option>
                             ))}
                           </select>
@@ -471,10 +473,10 @@ function CorrectionDialog({
                       <tr key={e.itemId}>
                         <td>{e.name}</td>
                         <td className="right mono">
-                          {fmtQty(e.qtyBefore)} → {fmtQty(e.qtyAfter)} {e.unit}
+                          {fmtQty(e.qtyBefore)} {on} {fmtQty(e.qtyAfter)} {unitName(e.unit, t)}
                         </td>
                         <td className={`right mono ${e.onHandAfter < 0 ? "red" : ""}`}>
-                          {fmtQty(e.onHand)} → {fmtQty(e.onHandAfter)}
+                          {fmtQty(e.onHand)} {on} {fmtQty(e.onHandAfter)}
                         </td>
                         <td className="right mono">{signed(e.stockChange)}</td>
                         <td className="right mono">{signed(e.grniChange)}</td>
@@ -516,7 +518,7 @@ function CorrectionDialog({
                 />
                 {t("This leaves {items} below zero: correct it all the same", {
                   items: plan.belowZero
-                    .map((b) => `${b.name} (${fmtQty(b.onHandAfter)} ${b.unit})`)
+                    .map((b) => `${b.name} (${fmtQty(b.onHandAfter)} ${unitName(b.unit, t)})`)
                     .join(", "),
                 })}
               </label>

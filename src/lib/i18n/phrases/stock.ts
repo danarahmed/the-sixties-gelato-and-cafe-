@@ -134,11 +134,11 @@ const phrases: PhraseBook = {
   "Added “{name}”.": { ar: "أُضيف «{name}».", ckb: "«{name}» زیاد کرا." },
   "Add stock item": { ar: "إضافة مادة مخزون", ckb: "زیادکردنی کاڵای کۆگا" },
   "Name (English)": { ar: "الاسم (بالإنجليزية)", ckb: "ناو (بە ئینگلیزی)" },
-  "e.g. Milk": { ar: "مثلًا: حليب", ckb: "بۆ نموونە: شیر" },
+  "e.g. Milk": { ar: "مثلًا: Milk", ckb: "بۆ نموونە: Milk" },
   "الاسم (Arabic)": { ar: "الاسم (بالعربية)", ckb: "ناو (بە عەرەبی)" },
   "ناو (Kurdish)": { ar: "الاسم (بالكردية)", ckb: "ناو (بە کوردی)" },
   "Measured in": { ar: "طريقة القياس", ckb: "شێوازی پێوان" },
-  "Count (each)": { ar: "العدد (each)", ckb: "ژمارە (each)" },
+  "Count (each)": { ar: "العدد (قطعة)", ckb: "ژمارە (دانە)" },
   "Mass (g)": { ar: "الوزن (g)", ckb: "کێش (g)" },
   "Volume (ml)": { ar: "الحجم (ml)", ckb: "قەبارە (ml)" },
   "Base unit": { ar: "الوحدة الأساسية", ckb: "یەکەی بنەڕەت" },
@@ -185,11 +185,15 @@ const phrases: PhraseBook = {
   "Quantity on the shelf": { ar: "الكمية على الرف", ckb: "بڕی سەر ڕەف" },
   "Where it came from": { ar: "من أين جاء", ckb: "لە کوێوە هاتووە" },
   "Worth {value}.": { ar: "القيمة: {value}.", ckb: "بەها: {value}." },
-  "It is capital you put into the business: journaled Dr 1200 Inventory / Cr 3000 Owner equity, and on the audit trail with where it came from. Once an item has stock, it changes only by deliveries, sales, waste, counts and corrections.":
+  "It is capital you put into the business, on the audit trail with where it came from. Once an item has stock, it changes only by deliveries, sales, waste, counts and corrections.":
     {
-      ar: "إنه رأس مال تضعه في العمل: يُقيَّد مدين 1200 المخزون / دائن 3000 حقوق المالك، ويُسجَّل في سجل التدقيق مع مصدره. وما إن يصبح للمادة مخزون، لا يتغيّر إلا بالشحنات والمبيعات والهدر والجرد والتصحيحات.",
-      ckb: "ئەمە سەرمایەیەکە کە دەیخەیتە ناو کارەکەوە: وەک مەدین 1200 کۆگا / دائین 3000 سەرمایەی خاوەن تۆمار دەکرێت، و لەگەڵ سەرچاوەکەی لە تۆماری گۆڕانکارییەکاندا دەنووسرێت. کاتێک کاڵایەک کۆگای هەبوو، تەنها بە بار و فرۆشتن و بەفیڕۆچوون و ژماردن و ڕاستکردنەوە دەگۆڕێت.",
+      ar: "إنه رأس مال تضعه في العمل، ويُسجَّل في سجل التدقيق مع مصدره. وما إن يصبح للمادة مخزون، لا يتغيّر إلا بالشحنات والمبيعات والهدر والجرد والتصحيحات.",
+      ckb: "ئەمە سەرمایەیەکە کە دەیخەیتە ناو کارەکەوە، و لەگەڵ سەرچاوەکەی لە تۆماری گۆڕانکارییەکاندا دەنووسرێت. کاتێک کاڵایەک کۆگای هەبوو، تەنها بە بار و فرۆشتن و بەفیڕۆچوون و ژماردن و ڕاستکردنەوە دەگۆڕێت.",
     },
+  "Journaled Dr 1200 Inventory / Cr 3000 Owner equity.": {
+    ar: "يُقيَّد مدين 1200 المخزون / دائن 3000 حقوق المالك.",
+    ckb: "وەک مەدین 1200 کۆگا / دائین 3000 سەرمایەی خاوەن تۆمار دەکرێت.",
+  },
   "Recording…": { ar: "جارٍ التسجيل…", ckb: "تۆمار دەکرێت…" },
   "Record opening stock": { ar: "تسجيل المخزون الافتتاحي", ckb: "تۆمارکردنی کۆگای سەرەتا" },
   "Recorded — {value} written off (journal {journal}).": {
@@ -220,11 +224,15 @@ const phrases: PhraseBook = {
     ckb: "تێچوو بۆ هەر یەکەیەکی بنەڕەت (بۆ زیادکردن)",
   },
   average: { ar: "المتوسط", ckb: "ناوەندی" },
-  "For corrections outside a count. Losses go out at average cost; posted against 5400 Inventory count variance and written to the audit trail. Counted stock is corrected by approving a count.":
+  "For corrections outside a count. What is taken off goes out at its average cost, and is written to the audit trail. Counted stock is corrected by approving a count.":
     {
-      ar: "للتصحيحات خارج الجرد. يخرج النقص بمتوسط الكلفة؛ ويُرحَّل على 5400 فروقات جرد المخزون ويُكتب في سجل التدقيق. أما المخزون المعدود فيُصحَّح بالموافقة على الجرد.",
-      ckb: "بۆ ڕاستکردنەوەی دەرەوەی ژماردن. کەمبوونەکان بە ناوەندی تێچوو دەردەچن؛ لەسەر 5400 جیاوازی ژماردنی کۆگا تۆمار دەکرێن و لە تۆماری گۆڕانکارییەکاندا دەنووسرێن. کۆگای ژمێردراو بە پەسەندکردنی ژماردنەکە ڕاست دەکرێتەوە.",
+      ar: "للتصحيحات خارج الجرد. يخرج النقص بمتوسط الكلفة، ويُكتب في سجل التدقيق. أما المخزون المعدود فيُصحَّح بالموافقة على الجرد.",
+      ckb: "بۆ ڕاستکردنەوەی دەرەوەی ژماردن. کەمبوونەکان بە ناوەندی تێچوو دەردەچن، و لە تۆماری گۆڕانکارییەکاندا دەنووسرێن. کۆگای ژمێردراو بە پەسەندکردنی ژماردنەکە ڕاست دەکرێتەوە.",
     },
+  "Posted against 5400 Inventory count variance.": {
+    ar: "يُرحَّل على 5400 فروقات جرد المخزون.",
+    ckb: "لەسەر 5400 جیاوازی ژماردنی کۆگا تۆمار دەکرێت.",
+  },
   "Posting…": { ar: "جارٍ الترحيل…", ckb: "تۆمار دەکرێت…" },
   "Post correction": { ar: "ترحيل التصحيح", ckb: "تۆمارکردنی ڕاستکردنەوە" },
 
@@ -1298,9 +1306,13 @@ const phrases: PhraseBook = {
     ar: "يخرج ما تستهلكه وصفته للأكل في المحل، من دون الإضافات.",
     ckb: "ئەوەی ڕەسەتەکەی بۆ خواردن لە شوێن بەکاری دەهێنێت دەردەهێنرێت، بەبێ زیادەکان.",
   },
-  "Taken out at what it costs now, in one journal: Dr {code} / Cr 1200 Inventory.": {
-    ar: "يُخرَج بكلفته الآن، في قيد واحد: مدين {code} / دائن 1200 المخزون.",
-    ckb: "بە تێچووی ئێستای دەردەهێنرێت، لە یەک تۆماردا: قەرزار {code} / بەستانکار 1200 کۆگا.",
+  "Taken out at what it costs now.": {
+    ar: "يُخرَج بكلفته الآن.",
+    ckb: "بە تێچووی ئێستای دەردەهێنرێت.",
+  },
+  "In one journal: Dr {code} / Cr 1200 Inventory.": {
+    ar: "في قيد واحد: مدين {code} / دائن 1200 المخزون.",
+    ckb: "لە یەک تۆماردا: مەدین {code} / دائین 1200 کۆگا.",
   },
   "Thrown away: made wrong, or not fit to sell.": {
     ar: "رُمي: صُنع خطأً، أو لا يصلح للبيع.",

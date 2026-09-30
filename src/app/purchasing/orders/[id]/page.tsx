@@ -4,7 +4,7 @@ import { getT } from "@/lib/i18n/server";
 import { requirePermission } from "@/lib/auth/session";
 import { getBusinessConfig, getSuppliers } from "@/lib/db/read";
 import { getPurchaseOrder } from "@/lib/db/purchasing";
-import { fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty, unitName } from "@/lib/format";
 import { inOrderUnit, orderStage, STAGE_LABEL } from "@/lib/purchasing";
 import { dateIn, dateTimeIn } from "@/lib/dates";
 import { PrintDocument } from "@/components/PrintDocument";
@@ -165,7 +165,7 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
                 </td>
                 <td className="right mono">—</td>
                 <td className="right mono">
-                  {fmtQty(u.baseQty)} {u.baseUnit}
+                  {fmtQty(u.baseQty)} {unitName(u.baseUnit, t)}
                 </td>
                 <td className="right mono">—</td>
               </tr>

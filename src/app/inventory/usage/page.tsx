@@ -5,7 +5,7 @@ import { getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { requirePermission } from "@/lib/auth/session";
 import { getUsageVariance, type UsageRow } from "@/lib/db/reports";
-import { fmtIQD, fmtQty, movementLabel } from "@/lib/format";
+import { fmtIQD, fmtQty, movementLabel, unitName } from "@/lib/format";
 import { addDays, businessToday, dateTimeIn, monthEnd, monthStart, parseDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui";
 import { PlaceSwitch } from "@/components/PlaceSwitch";
@@ -37,9 +37,10 @@ export default async function UsagePage({
   const once = rows.filter((r) => r.counts < 2);
   const over = pairs.filter((r) => r.varianceValue > 0).reduce((s, r) => s + r.varianceValue, 0);
   const under = pairs.filter((r) => r.varianceValue < 0).reduce((s, r) => s - r.varianceValue, 0);
-  const q = (n: number | null, unit: string) => (n === null ? "—" : `${fmtQty(n)} ${unit}`);
+  const q = (n: number | null, unit: string) =>
+    n === null ? "—" : `${fmtQty(n)} ${unitName(unit, t)}`;
   const signed = (n: number, unit: string) =>
-    `${n > 0 ? "+" : n < 0 ? "−" : ""}${fmtQty(Math.abs(n))} ${unit}`;
+    `${n > 0 ? "+" : n < 0 ? "−" : ""}${fmtQty(Math.abs(n))} ${unitName(unit, t)}`;
   const cameIn = (r: UsageRow) =>
     r.received + r.made + r.transferred + r.openingStock + r.corrected;
   const day = (iso: string | null) => (iso ? dateTimeIn(profile.timezone, iso) : "—");
@@ -246,7 +247,7 @@ export default async function UsagePage({
           <div className="panel-b" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             {once.map((r) => (
               <span key={r.itemId} className="badge">
-                {r.name} · {q(r.opening, r.unit)} · {day(r.openedAt)}
+                {r.name} · {q(r.opening, r.unit)} · <bdi>{day(r.openedAt)}</bdi>
               </span>
             ))}
           </div>

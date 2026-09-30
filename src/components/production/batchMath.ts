@@ -7,7 +7,7 @@
  */
 import Decimal from "decimal.js";
 import { parseNumber, roundMoney } from "@/components/pos/model";
-import { fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty, unitName } from "@/lib/format";
 
 export interface UnitsOf {
   baseUnit: string;
@@ -21,15 +21,25 @@ export function unitFactor(item: UnitsOf | undefined, code: string): number | nu
   return item.units.find((u) => u.code === code)?.factor ?? null;
 }
 
-/** The label a unit is shown with. */
-export function unitLabel(item: UnitsOf | undefined, code: string): string {
-  return item?.units.find((u) => u.code === code)?.label ?? code;
+/** The label a unit is shown with: "each" in the reader's language, given their translator. */
+export function unitLabel(
+  item: UnitsOf | undefined,
+  code: string,
+  t?: (key: string) => string,
+): string {
+  const label = item?.units.find((u) => u.code === code)?.label ?? code;
+  return t ? unitName(label, t) : label;
 }
 
 /** A base quantity, in another of the item's units, to show. */
-export function showIn(base: Decimal, item: UnitsOf | undefined, code: string): string {
+export function showIn(
+  base: Decimal,
+  item: UnitsOf | undefined,
+  code: string,
+  t?: (key: string) => string,
+): string {
   const f = unitFactor(item, code) ?? 1;
-  return `${fmtQty(base.div(f).toDecimalPlaces(3).toNumber())} ${unitLabel(item, code)}`;
+  return `${fmtQty(base.div(f).toDecimalPlaces(3).toNumber())} ${unitLabel(item, code, t)}`;
 }
 
 /** The number of batches typed, or null while it is not a number above zero. */
@@ -72,9 +82,15 @@ export function perUnit(total: Decimal, amount: Decimal, label: string): string 
  * A base quantity in kg or L once it is a thousand or more (and the item has
  * them), else in its base unit.
  */
-export function showNice(base: Decimal, item: UnitsOf | undefined, baseUnit: string): string {
+export function showNice(
+  base: Decimal,
+  item: UnitsOf | undefined,
+  baseUnit: string,
+  t?: (key: string) => string,
+): string {
   const big = item?.units.find((u) => (u.code === "kg" || u.code === "L") && u.factor === 1000);
+  const unit = item?.baseUnit ?? baseUnit;
   return big && base.abs().gte(1000)
-    ? showIn(base, item, big.code)
-    : `${fmtQty(base.toDecimalPlaces(3).toNumber())} ${item?.baseUnit ?? baseUnit}`;
+    ? showIn(base, item, big.code, t)
+    : `${fmtQty(base.toDecimalPlaces(3).toNumber())} ${t ? unitName(unit, t) : unit}`;
 }

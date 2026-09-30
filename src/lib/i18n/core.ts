@@ -38,17 +38,40 @@ export type Vars = Record<string, string | number>;
 /** Translate a key, filling its {placeholders}. */
 export type T = (key: string, vars?: Vars) => string;
 
-/** {name} in a phrase, filled; a placeholder with no value is left as it is. */
-export function fill(text: string, vars?: Vars): string {
+/** A date, a month or a time of day as the app writes one: 2026-09-30, 2026-09, 2026-09-30 14:05. */
+const DATE = /(?<![\d\u2066])\d{4}-\d{2}(?:-\d{2})?(?:[ T]\d{2}:\d{2}(?::\d{2})?)?(?!\d)/g;
+
+/**
+ * The dates in a text kept left to right, each on its own. Among Arabic or
+ * Kurdish words a browser shows 2026-09-30 as 30-09-2026, while the same date
+ * standing alone, in a table's cell, shows as it is written: marked off
+ * (U+2066 … U+2069, which show as nothing), it shows as written everywhere.
+ */
+export function isolateDates(text: string): string {
+  return text.replace(DATE, (d) => `\u2066${d}\u2069`);
+}
+
+/**
+ * {name} in a phrase, filled; a placeholder with no value is left as it is.
+ * For a right-to-left reader, the dates in a value are kept left to right.
+ */
+export function fill(text: string, vars?: Vars, dir: Dir = "ltr"): string {
   if (!vars) return text;
-  return text.replace(/\{(\w+)\}/g, (whole, name: string) =>
-    Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : whole,
-  );
+  return text.replace(/\{(\w+)\}/g, (whole, name: string) => {
+    if (!Object.prototype.hasOwnProperty.call(vars, name)) return whole;
+    const value = String(vars[name]);
+    return dir === "rtl" ? isolateDates(value) : value;
+  });
 }
 
 /** The translator for a language's words: the key itself (an English phrase) where it has none. */
-export function translator(words: Words): T {
-  return (key, vars) => fill(words[key] ?? key, vars);
+export function translator(words: Words, dir: Dir = "ltr"): T {
+  return (key, vars) => fill(words[key] ?? key, vars, dir);
+}
+
+/** The arrow that points on, and the one that points back, the way a direction reads. */
+export function arrows(dir: Dir): { on: string; back: string } {
+  return dir === "rtl" ? { on: "←", back: "→" } : { on: "→", back: "←" };
 }
 
 /** A language's direction, from the languages the café has. */
@@ -81,7 +104,7 @@ const SHORT_DATE = /^(\d{1,2}) ([A-Z][a-z]{2})((?: \d{2}:\d{2})?)$/;
  * days") is for the values inside a message, where it cannot swallow another.
  * Messages the database joins with "; " are translated one by one.
  */
-export function messenger(words: Words): Msg {
+export function messenger(words: Words, dir: Dir = "ltr"): Msg {
   type Pattern = { re: RegExp; slots: number[]; to: string; fixed: number; whole: boolean };
   let patterns: Pattern[] | null = null;
   const compile = (): Pattern[] =>
@@ -131,5 +154,9 @@ export function messenger(words: Words): Msg {
     }
     return text;
   };
-  return (text) => (text ? translate(text, 0) : text);
+  return (text) => {
+    if (!text) return text;
+    const said = translate(text, 0);
+    return dir === "rtl" ? isolateDates(said) : said;
+  };
 }

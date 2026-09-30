@@ -261,5 +261,99 @@ console.log("▸ the phone's top bar, the till's categories and tick boxes, as t
   await ctx.close();
 }
 
+console.log(
+  "▸ in Arabic and Kurdish: dates as written, arrows the way the words read, and on a phone",
+);
+{
+  // A date among Arabic or Kurdish words showed back to front (30-09-2026)
+  // while the same date alone showed as written (2026-09-30): each date on
+  // the screen is read where it is drawn, its year to the left of its day.
+  const backToFront = () => {
+    const out = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const s = n.textContent;
+      for (const m of s.matchAll(/\d{4}-\d{2}(?:-\d{2})?/g)) {
+        const at = (from, to) => {
+          const r = document.createRange();
+          r.setStart(n, from);
+          r.setEnd(n, to);
+          return r.getBoundingClientRect();
+        };
+        const year = at(m.index, m.index + 4);
+        const end = at(m.index + m[0].length - 2, m.index + m[0].length);
+        if (!year.width || !end.width || Math.abs(year.top - end.top) > 4) continue;
+        if (year.left > end.left) out.push(s.replace(/\s+/g, " ").trim().slice(0, 80));
+      }
+    }
+    return out;
+  };
+  const SCREENS = [
+    "/reports",
+    "/accounting",
+    "/reports/statements",
+    "/audit",
+    "/staff",
+    "/production",
+    "/inventory/usage",
+  ];
+  for (const locale of ["ar", "ckb"]) {
+    const { ctx, page } = await signIn(browser, "owner");
+    await ctx.addCookies([{ name: "locale", value: locale, url: BASE }]);
+    const found = [];
+    let dates = 0;
+    for (const path of SCREENS) {
+      await open(page, path);
+      found.push(...(await page.evaluate(backToFront)).map((s) => `${path}: ${s}`));
+      dates += await page.evaluate(
+        () => (document.body.innerText.match(/\d{4}-\d{2}/g) ?? []).length,
+      );
+    }
+    check(
+      dates > 0 && found.length === 0,
+      `in ${locale}, ${dates} dates on ${SCREENS.length} screens, none back to front${found.length ? `: ${found.slice(0, 3).join(" | ")}` : ""}`,
+    );
+    // The rota's weeks: the one before points back (right), the one after on (left).
+    await open(page, "/staff");
+    const before = (await page.getByTestId("week-before").textContent()).trim();
+    const after = (await page.getByTestId("week-after").textContent()).trim();
+    check(
+      before.startsWith("→") && after.endsWith("←"),
+      `in ${locale}, the rota's arrows point the way the words read (${before} · ${after})`,
+    );
+    await ctx.close();
+  }
+  // The audit trail on a phone: a card per change, nothing off the screen.
+  const { ctx, page } = await signIn(browser, "owner", { viewport: { width: 390, height: 900 } });
+  await ctx.addCookies([{ name: "locale", value: "ckb", url: BASE }]);
+  await open(page, "/audit");
+  const trail = await page.evaluate(() => {
+    const w = document.documentElement.clientWidth;
+    const table = document.querySelector('[data-testid="audit-table"]');
+    const cells = [...table.querySelectorAll("td")]
+      .map((c) => c.getBoundingClientRect())
+      .filter((r) => r.width > 0);
+    return {
+      head: getComputedStyle(table.querySelector("thead")).display,
+      cells: cells.length,
+      out: cells.filter((r) => r.right > w + 1 || r.left < -1).length,
+    };
+  });
+  check(
+    trail.head === "none" && trail.cells > 0 && trail.out === 0,
+    `the audit trail on a phone is a card per change (${trail.cells} cells, ${trail.out} off the screen)`,
+  );
+  // The name on the top bar, in Kurdish: a Latin name left to right, cut with "…" at its end.
+  const name = await page.evaluate(() => {
+    const style = getComputedStyle(document.querySelector(".topbar .account-name"));
+    return `${style.direction} ${style.textOverflow}`;
+  });
+  check(
+    name === "ltr ellipsis",
+    `in Kurdish the name on the top bar is cut at its own end (${name})`,
+  );
+  await ctx.close();
+}
+
 await browser.close();
 done("pages");

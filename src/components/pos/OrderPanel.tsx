@@ -5,6 +5,7 @@ import type { PosItem } from "@/lib/db/pos";
 import type { SaleReceipt } from "@/lib/actions/sales";
 import { fmtIQD, fmtQty } from "@/lib/format";
 import { fmtRate, fmtUSD } from "@/lib/fx";
+import { arrows } from "@/lib/i18n/core";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import { useChannels } from "@/components/ChannelsProvider";
@@ -390,7 +391,8 @@ export function OrderPanel({
   /** The order's customer (0050): found by their number, or added. */
   onCustomer?: (() => void) | null;
 }) {
-  const { t } = useT();
+  const { t, dir } = useT();
+  const { on } = arrows(dir);
   const { name: channelName } = useChannels();
   const isBill = order.kind === "bill";
   const blocked = busy !== null || pending;
@@ -488,7 +490,9 @@ export function OrderPanel({
                   ` · ${t("{n} points", { n: String(order.customer.points) })}`}
               </span>
               {order.customer.address && (
-                <span data-testid="order-customer-address">→ {order.customer.address}</span>
+                <span data-testid="order-customer-address">
+                  {on} {order.customer.address}
+                </span>
               )}
               <button type="button" className="linklike" onClick={onCustomer} disabled={blocked}>
                 {t("Change")}

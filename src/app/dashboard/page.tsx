@@ -4,7 +4,7 @@ import { has, requirePermission } from "@/lib/auth/session";
 import { getDashboard, getReconciliation } from "@/lib/db/reports";
 import { getSalesOrders, getStockBoard } from "@/lib/db/read";
 import { getCurrentAlerts, getDailyBrief } from "@/lib/db/alerts";
-import { fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty, unitName } from "@/lib/format";
 import { getChannelNames } from "@/lib/db/channels";
 import { addDays, businessToday, dateTimeIn } from "@/lib/dates";
 import { NeedsYou } from "@/components/dashboard/NeedsYou";
@@ -154,7 +154,7 @@ export default async function DashboardPage() {
                 <span>{s.name}</span>
                 <span className={`badge mono ${s.isNegative ? "err" : "warn"}`}>
                   {fmtQty(s.onHandBase)} / {s.reorderBase === null ? "—" : fmtQty(s.reorderBase)}{" "}
-                  {s.unit}
+                  {unitName(s.unit, t)}
                 </span>
               </div>
             ))

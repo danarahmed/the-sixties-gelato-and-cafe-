@@ -277,6 +277,12 @@ input[type="radio"] {
 .topbar .badge {
   white-space: nowrap;
 }
+/* The name, cut with "…" at its own end, a Latin name's on the right even in Arabic. */
+.topbar .account-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 @media (max-width: 520px) {
   .topbar {
     gap: 8px;
@@ -452,6 +458,13 @@ input[type="radio"] {
   border-block-start: 1px solid var(--border);
 }
 .pnl-places td.money {
+  white-space: nowrap;
+}
+/* An amount, a date or a code is read whole, never broken over two lines
+   ("21,000" above "IQD", "2026-" above "09-30"): on a phone its table scrolls. */
+td.money,
+td.mono,
+td.when {
   white-space: nowrap;
 }
 table {
@@ -1218,6 +1231,7 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
 }
 .tile-meta {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
   gap: 4px;
@@ -1230,6 +1244,8 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   font-weight: 700;
   font-size: 0.95rem;
   margin-inline-start: auto;
+  /* "from 3,000 IQD" whole: on a narrow tile it goes under the sizes instead. */
+  white-space: nowrap;
 }
 .tile-count {
   position: absolute;

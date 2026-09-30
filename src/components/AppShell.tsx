@@ -150,7 +150,9 @@ export function AppShell({
         <span className="spacer" />
         <Controls locale={locale} theme={theme} />
         <Link href="/account" className="badge account-badge" title={t("nav.account")}>
-          {member.name}
+          <span className="account-name" dir="auto">
+            {member.name}
+          </span>
         </Link>
       </header>
       <OfflineBanner />
