@@ -206,6 +206,38 @@ select {
   font-size: 0.8rem;
   color: var(--text-muted);
 }
+/* A table whose rows are cards on a phone: each cell under its heading, the
+   buttons in reach instead of off to the side (Settings → People). */
+@media (max-width: 640px) {
+  .stack-table thead {
+    display: none;
+  }
+  .stack-table,
+  .stack-table tbody,
+  .stack-table tr,
+  .stack-table td {
+    display: block;
+    width: 100%;
+  }
+  .stack-table tr {
+    padding: 10px 0;
+    border-block-end: 1px solid var(--border);
+  }
+  .stack-table td {
+    padding: 3px 0;
+    border: 0;
+    text-align: start;
+    white-space: normal;
+  }
+  .stack-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+}
 /* A tick box or a choice keeps its own size: the rule above is for text. */
 input[type="checkbox"],
 input[type="radio"] {
@@ -251,9 +283,13 @@ input[type="radio"] {
     padding: 8px 10px;
   }
   .topbar .account-badge {
-    max-width: 88px;
+    max-width: 72px;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  /* Online needs no saying on a phone; offline still shows, with its banner. */
+  .topbar .conn.ok {
+    display: none;
   }
 }
 .topbar .spacer {

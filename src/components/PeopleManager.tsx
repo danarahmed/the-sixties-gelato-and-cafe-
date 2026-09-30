@@ -148,7 +148,7 @@ export function PeopleManager({
   return (
     <div className="grid" style={{ gap: 14 }}>
       <div className="tw">
-        <table>
+        <table className="stack-table" data-testid="people-table">
           <thead>
             <tr>
               <th>{t("Name")}</th>
@@ -166,10 +166,10 @@ export function PeopleManager({
                   {m.name}
                   {m.id === myId && <span className="muted"> {t("(you)")}</span>}
                 </td>
-                <td dir="ltr" className="muted">
+                <td dir="ltr" className="muted" data-label={t("Email")}>
                   {m.email}
                 </td>
-                <td>
+                <td data-label={t("Roles")}>
                   {editing === m.id ? (
                     <RolePicker value={editRoles} onChange={setEditRoles} isOwner={isOwner} />
                   ) : (
@@ -177,7 +177,7 @@ export function PeopleManager({
                   )}
                 </td>
                 {manyPlaces && (
-                  <td data-testid={`works-at-${m.id}`}>
+                  <td data-testid={`works-at-${m.id}`} data-label={t("Works at")}>
                     <WorksAt
                       value={m.worksAt}
                       places={places}
@@ -197,7 +197,7 @@ export function PeopleManager({
                     />
                   </td>
                 )}
-                <td>
+                <td data-label={t("Login")}>
                   {!m.isActive ? (
                     <span className="badge">{t("deactivated")}</span>
                   ) : m.linked ? (

@@ -197,13 +197,22 @@ console.log("▸ the phone's top bar, the till's categories and tick boxes, as t
     const { ctx, page } = await signIn(browser, "owner", { viewport: { width: 390, height: 900 } });
     await ctx.addCookies([{ name: "locale", value: locale, url: BASE }]);
     await open(page, "/dashboard");
-    const bar = await page.evaluate(() => ({
-      height: Math.round(document.querySelector(".topbar").getBoundingClientRect().height),
-      language: Math.round(document.querySelector(".topbar select").getBoundingClientRect().width),
-    }));
+    const bar = await page.evaluate(() => {
+      const w = document.documentElement.clientWidth;
+      return {
+        height: Math.round(document.querySelector(".topbar").getBoundingClientRect().height),
+        language: Math.round(
+          document.querySelector(".topbar select").getBoundingClientRect().width,
+        ),
+        // Nothing in the bar past either edge of the screen.
+        off: [...document.querySelectorAll(".topbar *")]
+          .map((el) => el.getBoundingClientRect())
+          .filter((r) => r.width > 0 && (r.right > w + 1 || r.left < -1)).length,
+      };
+    });
     check(
-      bar.height <= 64 && bar.language >= 60,
-      `in ${locale} at 390px the top bar is one line (${bar.height}px high), the language readable (${bar.language}px)`,
+      bar.height <= 64 && bar.language >= 60 && bar.off === 0,
+      `in ${locale} at 390px the top bar is one line (${bar.height}px high), the language readable (${bar.language}px), nothing past the edge (${bar.off})`,
     );
     await ctx.close();
   }
@@ -215,6 +224,24 @@ console.log("▸ the phone's top bar, the till's categories and tick boxes, as t
     check(
       labels.length > 0 && new Set(labels).size === labels.length,
       `the till's categories are each named once (${labels.join(", ")})`,
+    );
+    await ctx.close();
+  }
+  // Settings → People on a phone: each person a card, their buttons in reach,
+  // not off to the side in the table's own scroll.
+  {
+    const { ctx, page } = await signIn(browser, "owner", { viewport: { width: 390, height: 900 } });
+    await open(page, "/settings");
+    const reach = await page.evaluate(() => {
+      const w = document.documentElement.clientWidth;
+      const boxes = [...document.querySelectorAll('[data-testid="people-table"] button')].map((b) =>
+        b.getBoundingClientRect(),
+      );
+      return { n: boxes.length, out: boxes.filter((r) => r.right > w + 1 || r.left < -1).length };
+    });
+    check(
+      reach.n > 0 && reach.out === 0,
+      `Settings' people on a phone: ${reach.n} button(s), ${reach.out} out of reach`,
     );
     await ctx.close();
   }

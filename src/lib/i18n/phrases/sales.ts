@@ -19,10 +19,7 @@ const phrases: PhraseBook = {
     ckb: "لە {days} ڕۆژی کارکردندا",
   },
   "Refunds made": { ar: "المبالغ المستردة", ckb: "پارەی گەڕێندراوە" },
-  "On the day they were made, through 4200 Sales returns": {
-    ar: "في يوم إجرائها، عبر 4200 مردودات المبيعات",
-    ckb: "لە ڕۆژی خۆیاندا، لە ڕێگەی 4200 گەڕاوەی فرۆشتنەوە",
-  },
+  "On the day they were made": { ar: "في يوم إجرائها", ckb: "لە ڕۆژی خۆیاندا" },
   "Cost of what was sold": { ar: "كلفة ما بيع", ckb: "تێچووی ئەوەی فرۆشرا" },
   "Sales margin {margin}% · before waste and fees": {
     ar: "هامش المبيعات {margin}% · قبل الهدر والرسوم",
