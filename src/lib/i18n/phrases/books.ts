@@ -440,6 +440,136 @@ const phrases: PhraseBook = {
   Correction: { ar: "تصحيح", ckb: "ڕاستکردنەوە" },
   "Card settlement": { ar: "تسوية البطاقات", ckb: "یەکلاکردنەوەی کارت" },
   "Platform settlement": { ar: "تسوية المنصة", ckb: "یەکلاکردنەوەی پلاتفۆرم" },
+
+  // The chart of accounts on a screen (0058).
+  "The accounts": { ar: "الحسابات", ckb: "هەژمارەکان" },
+  "An income or a cost the café adds is changed here; the accounts the system posts to stay as they are.":
+    {
+      ar: "يُغيَّر هنا إيراد أو كلفة يضيفها المقهى؛ أما الحسابات التي يرحّل إليها النظام فتبقى كما هي.",
+      ckb: "داهات یان تێچوویەک کە کافێکە زیادی دەکات لێرە دەگۆڕدرێت؛ ئەو هەژمارانەی سیستەمەکە تۆماریان تێدا دەکات وەک خۆیان دەمێننەوە.",
+    },
+  "Account {code} is renamed.": {
+    ar: "أُعيدت تسمية الحساب {code}.",
+    ckb: "ناوی هەژماری {code} گۆڕدرا.",
+  },
+  "Account {code} is out of use.": {
+    ar: "الحساب {code} خارج الاستخدام.",
+    ckb: "هەژماری {code} لە بەکارهێنان لابرا.",
+  },
+  "Account {code} is in use again.": {
+    ar: "عاد الحساب {code} إلى الاستخدام.",
+    ckb: "هەژماری {code} دووبارە بەکاردێت.",
+  },
+  "Save the name": { ar: "احفظ الاسم", ckb: "ناوەکە پاشەکەوت بکە" },
+  "Its names in Arabic and Kurdish stay as they are, unless new ones are given.": {
+    ar: "يبقى اسماه بالعربية والكردية كما هما، ما لم يُعطَ اسمان جديدان.",
+    ckb: "ناوەکانی بە عەرەبی و کوردی وەک خۆیان دەمێننەوە، مەگەر ناوی نوێ بدرێت.",
+  },
+  "Out of use, it takes no new posting; what was posted to it stays in every report.": {
+    ar: "خارج الاستخدام لا يُرحَّل إليه شيء جديد؛ ويبقى ما رُحِّل إليه في كل تقرير.",
+    ckb: "لە بەکارهێنان لابراو هیچ تۆمارێکی نوێ وەرناگرێت؛ ئەوەی پێشتر تۆمارکراوە لە هەموو ڕاپۆرتێکدا دەمێنێتەوە.",
+  },
+  "Back in use, it can be chosen again.": {
+    ar: "بعد إعادته إلى الاستخدام يمكن اختياره من جديد.",
+    ckb: "کە گەڕایەوە بۆ بەکارهێنان، دەتوانرێت دووبارە هەڵبژێردرێت.",
+  },
+  "Take it out of use": { ar: "أوقف استخدامه", ckb: "لە بەکارهێنانی لابە" },
+  "Put it back in use": { ar: "أعده إلى الاستخدام", ckb: "بیگەڕێنەوە بۆ بەکارهێنان" },
+  "The system posts to it": { ar: "يرحّل إليه النظام", ckb: "سیستەمەکە تۆماری تێدا دەکات" },
+  "Take out of use…": { ar: "إيقاف الاستخدام…", ckb: "لە بەکارهێنان لابردن…" },
+  "Bring back…": { ar: "إعادة الاستخدام…", ckb: "گەڕاندنەوە بۆ بەکارهێنان…" },
+  "Account {code} {name} is added.": {
+    ar: "أُضيف الحساب {code} {name}.",
+    ckb: "هەژماری {code} {name} زیاد کرا.",
+  },
+  "Add an account": { ar: "إضافة حساب", ckb: "زیادکردنی هەژمار" },
+  "A cost": { ar: "كلفة", ckb: "تێچوو" },
+  "An income": { ar: "إيراد", ckb: "داهات" },
+  "e.g. Repairs": { ar: "مثلًا: Repairs", ckb: "بۆ نموونە: Repairs" },
+  "An income's code is from 4000 to 4999.": {
+    ar: "رمز الإيراد من 4000 إلى 4999.",
+    ckb: "کۆدی داهات لە 4000 تا 4999 دەبێت.",
+  },
+  "A cost's code is from 5000 to 6999: 5… for the cost of what was sold, 6… for the running costs.":
+    {
+      ar: "رمز الكلفة من 5000 إلى 6999: يبدأ بـ5 لكلفة ما بيع، وبـ6 للمصاريف الجارية.",
+      ckb: "کۆدی تێچوو لە 5000 تا 6999 دەبێت: بە 5 دەست پێدەکات بۆ تێچووی ئەوەی فرۆشرا، بە 6 بۆ خەرجییە بەردەوامەکان.",
+    },
+  "An asset, a debt or the owner's money is added by whoever looks after the system, so that the balance sheet and the cash flow know where it goes.":
+    {
+      ar: "أما الأصل أو الدَّين أو مال المالك فيضيفه من يعتني بالنظام، لتعرف الميزانية وقائمة التدفق النقدي أين مكانه.",
+      ckb: "سامان، قەرز یان پارەی خاوەن ئەو کەسە زیادی دەکات کە ئاگای لە سیستەمەکەیە، بۆ ئەوەی خشتەی باڵانس و ڕەوتی پارەی نەختینە بزانن شوێنی لە کوێیە.",
+    },
+  "Add the account": { ar: "أضف الحساب", ckb: "هەژمارەکە زیاد بکە" },
+  "The account's name": { ar: "اسم الحساب", ckb: "ناوی هەژمارەکە" },
+  "Choose an income or a cost": { ar: "اختر إيرادًا أو كلفة", ckb: "داهات یان تێچوو هەڵبژێرە" },
+  // What the database says when an account is refused (0058).
+  "Name the account": { ar: "سمِّ الحساب", ckb: "ناوێک بۆ هەژمارەکە بنووسە" },
+  "An account's name is at most 60 letters": {
+    ar: "اسم الحساب 60 حرفًا على الأكثر",
+    ckb: "ناوی هەژمار زۆرترین 60 پیتە",
+  },
+  'Give the account\'s other names as {"ar": "…", "ckb": "…"}': {
+    ar: 'أعطِ أسماء الحساب الأخرى هكذا: {"ar": "…", "ckb": "…"}',
+    ckb: 'ناوەکانی تری هەژمارەکە بەم شێوەیە بدە: {"ar": "…", "ckb": "…"}',
+  },
+  "An account's other names are its Arabic (ar) and Kurdish (ckb)": {
+    ar: "أسماء الحساب الأخرى هي العربية (ar) والكردية (ckb)",
+    ckb: "ناوەکانی تری هەژمار بە عەرەبی (ar) و بە کوردی (ckb)ن",
+  },
+  "Give the account's name in {1} as text": {
+    ar: "أعطِ اسم الحساب بـ{1} نصًّا",
+    ckb: "ناوی هەژمارەکە بە {1} وەک نووسین بدە",
+  },
+  "There is no account {1}": { ar: "لا يوجد حساب {1}", ckb: "هەژماری {1} نییە" },
+  "Account {1} {2} is one the system posts to: it is kept as it is": {
+    ar: "الحساب {1} {2} يرحّل إليه النظام: يبقى كما هو",
+    ckb: "هەژماری {1} {2} سیستەمەکە تۆماری تێدا دەکات: وەک خۆی دەمێنێتەوە",
+  },
+  "An account added here is an income or a cost: an asset, a debt or the owner's money is added by whoever looks after the system":
+    {
+      ar: "الحساب الذي يُضاف هنا إيراد أو كلفة: أما الأصل أو الدَّين أو مال المالك فيضيفه من يعتني بالنظام",
+      ckb: "ئەو هەژمارەی لێرە زیاد دەکرێت داهات یان تێچووە: سامان، قەرز یان پارەی خاوەن ئەو کەسە زیادی دەکات کە ئاگای لە سیستەمەکەیە",
+    },
+  "An account's code is four digits": {
+    ar: "رمز الحساب أربعة أرقام",
+    ckb: "کۆدی هەژمار چوار ژمارەیە",
+  },
+  "An income's code is from 4000 to 4999": {
+    ar: "رمز الإيراد من 4000 إلى 4999",
+    ckb: "کۆدی داهات لە 4000 تا 4999 دەبێت",
+  },
+  "A cost's code is from 5000 to 6999: 5… for the cost of what was sold, 6… for the running costs":
+    {
+      ar: "رمز الكلفة من 5000 إلى 6999: يبدأ بـ5 لكلفة ما بيع، وبـ6 للمصاريف الجارية",
+      ckb: "کۆدی تێچوو لە 5000 تا 6999 دەبێت: بە 5 دەست پێدەکات بۆ تێچووی ئەوەی فرۆشرا، بە 6 بۆ خەرجییە بەردەوامەکان",
+    },
+  "Account {1} is {2}": { ar: "الحساب {1} موجود: {2}", ckb: "هەژماری {1} پێشتر هەیە: {2}" },
+  "{1} is account {2} already": {
+    ar: "{1} هو اسم الحساب {2} أصلًا",
+    ckb: "هەژماری {2} پێشتر ئەم ناوەی هەیە: {1}",
+  },
+  "Say whether the account is in use": {
+    ar: "قل هل الحساب قيد الاستخدام",
+    ckb: "بڵێ ئایا هەژمارەکە بەکاردێت",
+  },
+  "Say why": { ar: "اذكر السبب", ckb: "هۆکارەکە بڵێ" },
+  "A reason is at most 300 letters": {
+    ar: "السبب 300 حرف على الأكثر",
+    ckb: "هۆکار زۆرترین 300 پیتە",
+  },
+  "Account {1} {2} is in use already": {
+    ar: "الحساب {1} {2} قيد الاستخدام أصلًا",
+    ckb: "هەژماری {1} {2} پێشتر بەکاردێت",
+  },
+  "Account {1} {2} is out of use already": {
+    ar: "الحساب {1} {2} خارج الاستخدام أصلًا",
+    ckb: "هەژماری {1} {2} پێشتر لە بەکارهێنان لابراوە",
+  },
+  "A draft journal ({1}) has a line on account {2} {3}: publish it or change the line first": {
+    ar: "لقيدٍ مسوّدة ({1}) سطر على الحساب {2} {3}: رحّله أو غيّر السطر أولًا",
+    ckb: "تۆمارێکی ڕەشنووس ({1}) هێڵێکی لەسەر هەژماری {2} {3} هەیە: سەرەتا پەسەندی بکە یان هێڵەکە بگۆڕە",
+  },
 };
 
 export default phrases;

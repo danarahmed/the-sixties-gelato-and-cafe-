@@ -387,10 +387,23 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   in the reader's language, as the database words them translated whole
   (`0032`). Running out knows a delivery time per supplier, taken from
   the item's last delivery; an item with no delivery yet uses the café's.
-  Use-by dates (P2-7) and a late sale (impossible since `0024`) raise
-  nothing.
-- **Chart of accounts maintenance (M-06).** The accounts a café needs are all
-  there. Adding or deactivating one needs a migration: there is no screen for it.
+  A batch's use-by date raises its own alert (`0046`): orange within a day,
+  red once past with stock left. A late sale raises nothing: it cannot
+  happen since `0024`.
+- **Chart of accounts maintenance (M-06, `0058`).** An income (4000–4999) or
+  a cost (5000–6999) is added, renamed, taken out of use and brought back on
+  **Chart of Accounts**. What it does not do:
+  - An asset, a debt or the owner's money is still added by a migration: the
+    balance sheet and the cash flow place an account by its code, and one
+    added there would be placed by a guess.
+  - The accounts the system posts to (the till, the bank, sales, stock and the
+    like) keep their names and stay in use; their names are the phrases every
+    language translates.
+  - An account is never deleted; one taken out of use stays in the reports,
+    and its code and name stay taken.
+  - Its other names are in Arabic and Kurdish, given on its own form. In a
+    language the owner added, it shows as it was typed: **Settings →
+    Languages** lists the built-in phrases, not the café's accounts.
 - **Documents kept with the records, what they do not do (release AA,
   `0053`).**
   - Only deliveries, returns, bills, supplier's credit notes and expenses keep

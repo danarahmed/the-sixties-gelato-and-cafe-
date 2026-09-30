@@ -1131,7 +1131,8 @@ costs; posting: accountant, general manager, owner
 ## 20. Chart of Accounts
 
 **Location:** Sidebar → **Chart of Accounts** · `/accounting` · **Who:** anyone
-who sees costs; locking: accountant, general manager, owner; reopening: owner
+who sees costs; locking and changing the accounts: accountant, general manager,
+owner; reopening: owner
 
 - **Months** across the top, 🔒 when locked. Choose one.
 - **Trial Balance** for that month: each account's opening balance, debits,
@@ -1151,6 +1152,27 @@ who sees costs; locking: accountant, general manager, owner; reopening: owner
   year also posts the year-end close into 3100 Retained earnings. **Reopen** is
   the owner's alone, and needs a reason; reopen the most recent locked month
   first.
+
+- **The accounts** (`0058`): every account by its kind (assets, debts, the
+  owner's money, income, costs), in the reader's language. Those the system
+  posts to say so, and stay as they are.
+  - **Add an account** (owner, general manager, accountant): **A cost** or **An
+    income**, its code (proposed: the next free one of ten, 6010 or 4300), its
+    name in English and, if you like, in Arabic and Kurdish. A cost's code is
+    5000 to 6999 (5… the cost of what was sold, 6… the running costs); an
+    income's, 4000 to 4999. A code or a name taken is refused. A cost is offered
+    at once on Expenses and on a bill for an account, and either in a journal;
+    its lines are in the profit and loss by its code. An asset, a debt or the
+    owner's money is added by whoever looks after the system, so that the
+    balance sheet and the cash flow know where it goes.
+  - **Rename…** one the café added: its names in Arabic and Kurdish stay as
+    they are, unless new ones are given.
+  - **Take out of use…**, with why: nothing new is posted to it, and the forms
+    no longer offer it; what was posted to it stays in every report. Not while
+    a draft journal has a line on it: publish or change the draft first.
+    **Bring back…**, with why, to use it again.
+  - Each change is on the [Audit trail](#22-audit-trail) under **Books &
+    periods**, with why.
 
 - Who changed what is on the [Audit trail](#22-audit-trail).
 
@@ -1435,6 +1457,7 @@ a person's roles allows, then the café's.
 | Journal register, manual journals, reversal                                                                          | `/journals`                              | cost viewers; posting: accountant, general manager, owner                             |
 | Owner's correction to a control account                                                                              | `/journals`                              | owner                                                                                 |
 | Trial balance, closing checklist, lock / reopen                                                                      | `/accounting`                            | cost viewers; lock: accountant, general manager, owner; reopen: owner                 |
+| Add an income or a cost account, rename it, take it out of use or bring it back                                      | `/accounting`                            | cost viewers see; changing: accountant, general manager, owner                        |
 | Who changed what, before and after, by kind and person; CSV                                                          | `/audit`                                 | owner, managers, accountant, auditor                                                  |
 | Reconciliation, P&L, channels, ageing, margins, CSV                                                                  | `/reports`                               | cost viewers                                                                          |
 | Post the stock the old app never journaled                                                                           | `/reports`                               | owner                                                                                 |

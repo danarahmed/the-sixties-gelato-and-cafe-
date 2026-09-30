@@ -102,7 +102,8 @@ would match other messages.
   `node scripts/db-messages.mjs` lists it), `alerts` (the dashboard's alerts,
   the daily brief, and the words the database writes into the books itself:
   the chart of accounts it sets up, its journals' narrations, the period-close
-  checks).
+  checks). An account the café adds itself (`0058`) is not a phrase: its names
+  in Arabic and Kurdish are given with it, and kept as the café's own words.
 - A short phrase with a value ("{1} days", "under a day") translates a value
   inside a message; only a phrase with six letters of its own, or a start of
   four ("Waste {1}."), is matched against a whole message. A date the database

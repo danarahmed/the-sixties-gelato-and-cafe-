@@ -1,20 +1,21 @@
 # Progress & Status
 
-_Last updated: 2026-09-29._ This is the one place that says what works and what
+_Last updated: 2026-09-30._ This is the one place that says what works and what
 does not. A feature is marked done only when it runs on the real database path
 and is tested. Tested means the SQL suites on real PostgreSQL 16 and 17, the
 browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0057` and the rebuilt app. The SQL
-  checks (58, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (33, every role, every screen in
+- **Built and verified:** migrations `0014`–`0058` and the rebuilt app. The SQL
+  checks (59, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (34, every role, every screen in
   Arabic and Kurdish, a lost answer on each kind of screen, every report on A4
   paper, documents kept with the records, stock sent between the café's
-  places, the tills at each branch, the books by place and every report at a
-  place), the unit and contract tests (510) and a production build all pass.
-  The UX and integration pass was closed on 30 September 2026, in four parts.
+  places, the tills at each branch, the books by place, every report at a
+  place and the chart of accounts), the unit and contract tests (515) and a
+  production build all pass. The UX and integration pass was closed on 30
+  September 2026, in four parts.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -1622,6 +1623,52 @@ browser tests through the real app, or both.
   brief are in English only: they have been in the reader's language since
   `0032`.
 
+- **The chart of accounts on a screen (the audit's M-06, migration `0058`).**
+  Adding an account took a migration. **Chart of Accounts** now lists every
+  account by its kind, in the reader's language, and the owner, a general
+  manager or the accountant:
+  - **adds an income or a cost:** its code proposed (the next free one of
+    ten, 6010 or 4300), its name in English and, if they like, in Arabic and
+    Kurdish, kept as the café's own words, so every screen shows it in the
+    reader's language. A cost's code is 5000 to 6999, an income's 4000 to
+    4999; a code or a name taken is refused. A cost is offered at once on
+    Expenses and on a bill for an account, and either in a journal;
+  - **renames one the café added:** its other names stay unless new ones are
+    given;
+  - **takes one out of use, with why, and brings it back:** out of use, the
+    forms no longer offer it and nothing new is posted to it, and its past
+    stays in every report. Not while a draft journal has a line on it.
+
+  The accounts the system posts to stay as they are, and an asset, a debt or
+  the owner's money is still added by a migration. Each change is on the
+  audit trail under **Books & periods**, named by the account's code.
+
+  The migration was applied to the live database on 30 September 2026. The
+  text stored there is the file byte for byte, and it matches the tested
+  build object by object, permissions included (the one difference, as
+  before, is the schema `citext` lives in). Nothing recorded changed. It was
+  checked on the live records as the owner, the branch manager and the
+  barista, in one transaction that was rolled back: a cost added, posted to,
+  renamed, refused out of use while a draft used it, taken out of use and
+  brought back; the refusals; the thirteen checks at nothing before and
+  after. Nothing was kept. The security advisors list the three functions
+  added; the performance advisors are unchanged. The screens went live with
+  [pull request #52](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/52).
+
+  Built and tested:
+  - a new SQL suite: who may; a cost and an income added, their names in
+    Arabic and Kurdish, sent twice with one key; the refusals; an expense on
+    it and the profit and loss; renamed, its words kept; the system's
+    accounts kept; not out of use while a draft uses it; out of use and back;
+    what the trail keeps; the books tie as they did;
+  - a new browser suite: the owner adding Repairs (a code taken refused
+    first), a manager posting an expense on it, the owner renaming it, taking
+    it out of use (Expenses no longer offers it, the profit and loss still
+    shows it) and bringing it back; a branch manager changing nothing; the
+    trail; Arabic and Kurdish by the café's own words; a phone;
+  - unit tests for the code proposed and the trail's words, and every new
+    text in Arabic and Kurdish.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -1652,7 +1699,7 @@ browser tests through the real app, or both.
 | M-03 | Audit log never written                        |   ✅   | Every privileged action writes `audit_log` in its own transaction                                                                                                |
 | M-04 | Recipe and price dates ignored                 |   ✅   | The recipe and price in force on the day are used                                                                                                                |
 | M-05 | No closing entries or retained earnings        |   ✅   | 3100 Retained earnings; year-end close on locking the year's last month                                                                                          |
-| M-06 | Chart incomplete, not configurable             |   🟡   | Bank, GRNI, retained earnings, drawings, returns, PPV, count variance, equipment, depreciation, other added. No screen to add or deactivate accounts             |
+| M-06 | Chart incomplete, not configurable             |   ✅   | Income and cost accounts added, renamed, taken out of use and brought back on Chart of Accounts (`0058`); an asset, a debt or equity still by a migration        |
 | M-07 | Duplicate supplier invoices                    |   ✅   | Refused; a bill entered in error is cancelled (kept on record)                                                                                                   |
 | M-08 | Vendor balance and ageing disagree             |   ✅   | Both from the same bills and payments; payables reconciled to 2000                                                                                               |
 | M-09 | Discarding a published journal "succeeds"      |   ✅   | Refused with a clear message                                                                                                                                     |
@@ -1689,7 +1736,7 @@ browser tests through the real app, or both.
 | Staff               | owner, managers; accountant, auditor (reading)             | Everyone who works here, with or without a login: their job, branch, start and last day, and the PIN they clock in with; the week's schedule; the hours day by day with lateness, leaving early, absence and overtime, corrected, added or cancelled with why (managers); pay by the month, the day or the hour, set by those who run payroll and seen only by those who see it                                                                                                                                                                                                                                                                                                                                                                           |
 | Payroll             | owner, general manager, accountant; auditor (reading)      | A month drafted from the pay and the hours; additions and deductions with why; advances given, taken back and cancelled; approved once the month is over (6100, 2100, 1300), reopened while nothing is paid, and paid to one person or everyone from the till, the safe, the bank or the owner; each payroll with its lines, payments and journals                                                                                                                                                                                                                                                                                                                                                                                                        |
 | Journals            | cost viewers (posting: accountant, owner, general manager) | Register, manual journals (draft/publish), reversal, owner's control correction                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Chart of Accounts   | cost viewers                                               | Trial balance by period, closing checklist, lock and reopen, audit trail, CSV                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Chart of Accounts   | cost viewers                                               | Trial balance by period, closing checklist, lock and reopen, audit trail, CSV; the accounts listed, and an income or a cost account added, renamed, taken out of use or brought back (owner, general manager, accountant)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Reports             | cost viewers                                               | P&L, the P&L by place (0056), "Do the books tie?", sales by channel, sales by payment method, dollars, purchasing, payable ageing, product margin, sizes and add-ons, losses, staff hours and what staff cost, customers and their points, what came in by supplier and by item, CSV; the sales analysis (by hour, day, date, product, category, size, add-on, person, payment, channel or branch, and a second way; narrowed; CSV); the stock's value on a day against 1200; the balance sheet at the start and the end of the dates and the cash flow between (profit viewers); each printed or saved as a PDF                                                                                                                                          |
 | Documents           | cost viewers (attaching: whoever records it)               | A record's photos and PDFs, opened from 📎 on Purchasing, Vendors and Expenses: taken with the camera or chosen, a large photo made smaller; opened through a link that lasts a minute; taken off with why, kept apart                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Settings            | owner, general manager                                     | People, their roles and where each works, business configuration, the alert thresholds, the café's rules, locations, the role matrix                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |

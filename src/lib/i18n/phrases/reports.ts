@@ -1185,6 +1185,16 @@ const phrases: PhraseBook = {
   "A payroll": { ar: "كشف رواتب", ckb: "لیستێکی مووچە" },
   "A salary payment": { ar: "دفعة راتب", ckb: "پارەدانێکی مووچە" },
   "Payroll {no}": { ar: "كشف الرواتب {no}", ckb: "لیستی مووچەی {no}" },
+  // The chart of accounts on the audit trail (0058).
+  "Account added": { ar: "أُضيف حساب", ckb: "هەژمارێک زیاد کرا" },
+  "Account renamed": { ar: "غُيِّر اسم حساب", ckb: "ناوی هەژمارێک گۆڕدرا" },
+  "Account taken out of use or brought back": {
+    ar: "أُوقف استخدام حساب أو أُعيد إليه",
+    ckb: "هەژمارێک لە بەکارهێنان لابرا یان گەڕێندرایەوە",
+  },
+  "An account": { ar: "حساب", ckb: "هەژمارێک" },
+  "Account {code} {name}": { ar: "الحساب {code} {name}", ckb: "هەژماری {code} {name}" },
+  "Account {code}": { ar: "الحساب {code}", ckb: "هەژماری {code}" },
 };
 
 export default phrases;

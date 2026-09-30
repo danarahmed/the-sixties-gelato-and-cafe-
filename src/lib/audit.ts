@@ -73,7 +73,7 @@ export const AUDIT_GROUPS = [
   {
     key: "books",
     label: "Books & periods", // i18n-ignore
-    prefixes: ["journal.", "period.", "legacy.", "expense."],
+    prefixes: ["journal.", "period.", "legacy.", "expense.", "account."],
   },
   { key: "alerts", label: "Alerts answered", prefixes: ["alert."] }, // i18n-ignore
   {
@@ -241,6 +241,10 @@ const ACTION_LABEL: Record<string, string> = {
   "stock.transfer_send": "Stock sent to another place",
   "stock.transfer_receive": "Transfer received",
   "stock.transfer_cancel": "Transfer cancelled",
+  // The chart of accounts (0058): the account is named by its code.
+  "account.create": "Account added",
+  "account.rename": "Account renamed",
+  "account.in_use": "Account taken out of use or brought back",
 };
 
 /**
@@ -478,6 +482,8 @@ const FIELD_LABEL: Record<string, string> = {
   deductions: "Deducted",
   deductions_note: "What was deducted for",
   owed: "Still owed",
+  // An account of the books (0058): its class.
+  account_type: "Class",
 };
 
 /**
@@ -490,6 +496,14 @@ const PURCHASING_VALUE: Record<string, Record<string, string>> = {
   against: { delivery: "Off the delivery's bill", account: "On the account" },
   // How someone is paid (0049).
   pay_basis: PAY_BASIS_LABEL,
+  // An account's class (0058), as the trial balance says it.
+  account_type: {
+    asset: "Asset",
+    liability: "Liability",
+    equity: "Equity",
+    revenue: "Income",
+    expense: "Expense",
+  },
 };
 
 /** What a delivery's correction changed (0038), as the trail names it. */
@@ -738,6 +752,11 @@ export function subjectOf(
       return pick("return_no") ? `Return ${pick("return_no")}` : "A return to a supplier";
     case "supplier_credit":
       return pick("credit_no") ? `Credit ${pick("credit_no")}` : "A supplier's credit";
+    // An account of the books (0058): by its code, and its name where the trail has it.
+    case "gl_account":
+      return entityId
+        ? `Account ${entityId}${pick("name") ? ` ${pick("name")}` : ""}`
+        : "An account";
     // Stock sent between the café's places (0054), by its number.
     case "stock_transfer":
       return pick("transfer_no") ? `Transfer ${pick("transfer_no")}` : "A transfer";
@@ -799,6 +818,7 @@ const SUBJECT_WORDS = new Set([
   "An advance",
   "A payroll",
   "A salary payment",
+  "An account",
 ]);
 
 /** An id shown short, as subjectOf shows it: "1a2b3c4d…". */
@@ -838,6 +858,14 @@ function channelIn(name: string, t: T): string {
 export function subjectIn(subject: string, action: string, t: T, msg: Msg): string {
   if (SUBJECT_WORDS.has(subject)) return t(subject);
   if (action.startsWith("alert.")) return msg(subject);
+  // An account (0058): its code, and its name as the café calls it in this language.
+  if (action.startsWith("account.")) {
+    const m = /^Account (\d{4})(?: (.+))?$/.exec(subject);
+    if (m)
+      return m[2]
+        ? t("Account {code} {name}", { code: m[1]!, name: msg(m[2]) })
+        : t("Account {code}", { code: m[1]! });
+  }
   // A rule (0040): its name, then a role or a kind of item (phrases), or an item's name.
   if (action === "rule.set") {
     const at = subject.indexOf(": ");
@@ -900,6 +928,7 @@ export function valueIn(value: string, field: string, t: T, msg: Msg): string {
     case FIELD_LABEL.credit_kind:
     case FIELD_LABEL.against:
     case FIELD_LABEL.pay_basis:
+    case FIELD_LABEL.account_type:
       return t(value);
     case FIELD_LABEL.title:
       return msg(value);
