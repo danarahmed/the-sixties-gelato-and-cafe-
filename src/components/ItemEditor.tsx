@@ -6,6 +6,7 @@ import { addItemUnitAction, updateItemAction } from "@/lib/actions/stock";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { unitName } from "@/lib/format";
 
 type Msg = { ok: boolean; text: string } | null;
 type ItemType = "ingredient" | "packaging" | "consumable" | "finished_good" | "resale";
@@ -125,7 +126,7 @@ export function EditItem({ item }: { item: EditableItem }) {
               ))}
             </select>
           </Field>
-          <Field label={t("Reorder level ({unit})", { unit: item.baseUnit })}>
+          <Field label={t("Reorder level ({unit})", { unit: unitName(item.baseUnit, t) })}>
             <input
               style={inputStyle}
               value={f.minLevel}
@@ -133,7 +134,7 @@ export function EditItem({ item }: { item: EditableItem }) {
               onChange={(e) => setF({ ...f, minLevel: e.target.value })}
             />
           </Field>
-          <Field label={t("Par level ({unit})", { unit: item.baseUnit })}>
+          <Field label={t("Par level ({unit})", { unit: unitName(item.baseUnit, t) })}>
             <input
               style={inputStyle}
               value={f.parLevel}
@@ -164,7 +165,7 @@ export function EditItem({ item }: { item: EditableItem }) {
         <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
           {t(
             "It stays counted in {unit}: its whole history is. No two items in use share a name, whatever the capitals, spaces or punctuation. An item is taken out of use only when it has no stock and no recipe, product or batch needs it.",
-            { unit: item.baseUnit },
+            { unit: unitName(item.baseUnit, t) },
           )}
         </p>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -229,12 +230,14 @@ export function PackUnits({ item, canAdd }: { item: EditableItem; canAdd: boolea
           <tbody>
             {item.units.map((u) => (
               <tr key={u.code}>
-                <td className="mono">{u.code}</td>
-                <td>{u.label}</td>
+                <td className="mono" translate="no">
+                  {u.code}
+                </td>
+                <td>{unitName(u.label, t)}</td>
                 <td className="right mono">
                   {u.factor === 1 && u.code === item.baseUnit
                     ? t("base unit")
-                    : `${u.factor.toLocaleString("en-US")} ${item.baseUnit}`}
+                    : `${u.factor.toLocaleString("en-US")} ${unitName(item.baseUnit, t)}`}
                 </td>
               </tr>
             ))}
@@ -260,7 +263,7 @@ export function PackUnits({ item, canAdd }: { item: EditableItem; canAdd: boolea
                 onChange={(e) => setF({ ...f, label: e.target.value })}
               />
             </Field>
-            <Field label={t("Holds ({unit})", { unit: item.baseUnit })}>
+            <Field label={t("Holds ({unit})", { unit: unitName(item.baseUnit, t) })}>
               <input
                 style={inputStyle}
                 value={f.factor}

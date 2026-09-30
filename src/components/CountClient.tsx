@@ -10,7 +10,7 @@ import {
   startCountAction,
   submitCountAction,
 } from "@/lib/actions/stock";
-import { fmtIQD } from "@/lib/format";
+import { fmtIQD, unitName } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice, inputStyle } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
@@ -130,7 +130,7 @@ export function CountSheet({ countId, lines }: { countId: string; lines: SheetLi
           {lines.map((l) => (
             <tr key={l.itemId}>
               <td>
-                {l.name} <span className="muted">({l.unit})</span>
+                {l.name} <span className="muted">({unitName(l.unit, t)})</span>
                 {errors[l.itemId] && (
                   <div className="red" style={{ fontSize: ".75rem" }}>
                     {say(errors[l.itemId] ?? "")}

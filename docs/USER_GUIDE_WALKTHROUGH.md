@@ -81,7 +81,8 @@ Count**; the purchasing role on **Reports**.
 - **Top bar:**
   - **☰** opens the sidebar on a phone;
   - the **language** menu: English, العربية, کوردی (Arabic and Kurdish turn the
-    whole layout right-to-left);
+    whole layout right-to-left; a date still reads 2026-09-30, the arrows
+    point the way the language reads, and "each" is قطعة or دانە);
   - **☀️ / 🌙** for light or dark.
 - **Offline banner.** When the connection drops, a red banner says so. Selling and
   saving stop until it is back: nothing is saved offline, so nothing is recorded
@@ -792,7 +793,8 @@ costs; baristas can record waste
   quantity and unit, and for an item kept by batch, **from batch** (left as
   it is, the loss is taken as sales take stock) — or **a product, as made**,
   and how many: what its recipe uses to eat in comes out. And **why**. It is
-  valued at what it costs now, in one journal. A loss over the limit on
+  valued at what it costs now, in one journal (**How it is booked** under the
+  form gives its debit and credit). A loss over the limit on
   **Settings → Rules** — on its own, added to your other losses this session
   (or today), or to an item's losses today by anyone — needs a manager
   (`0040`): they choose their name and type their **PIN** there and then, or
@@ -806,7 +808,8 @@ costs; baristas can record waste
   own value and its journal is reversed. Nobody approves a loss they recorded.
   The dashboard names the losses waiting under **Needs you**.
 - **✏️ Correct stock (manager):** a signed change (− to reduce), the cost per base
-  unit for additions (blank = average), and **why**. It posts to 5400.
+  unit for additions (blank = average), and **why**. It posts to 5400, as
+  **How it is booked** under the form says.
 - **Stock on hand:** each item in use, with its quantity, unit, reorder level,
   average cost, value and status: **low**, or **negative** (shown, never
   hidden). Below it, the items with **no stock yet** and those **out of use**,
@@ -1315,6 +1318,9 @@ and **why**.
   customers and points; settings, places and people) and
   **Who** (anyone, a person, or no one signed in). **CSV** downloads every row
   chosen, with the values as the database stored them.
+
+On a phone each change is a card: when, who, what happened, what it was
+about, before → after and why, one under the other.
 
 The trail is written in the same step as the change and is never edited or
 deleted.

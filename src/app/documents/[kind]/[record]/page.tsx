@@ -122,7 +122,8 @@ export default async function RecordDocumentsPage({
                       {size(d)}
                     </td>
                     <td className="muted" style={{ fontSize: ".8rem" }}>
-                      {d.attachedBy ?? "—"} · {dateTimeIn(profile.timezone, d.attachedAt)}
+                      {d.attachedBy ?? "—"} ·{" "}
+                      <bdi>{dateTimeIn(profile.timezone, d.attachedAt)}</bdi>
                     </td>
                     <td style={{ fontSize: ".85rem" }}>{d.note ?? "—"}</td>
                     {r.mayAttach && (
@@ -196,10 +197,11 @@ export default async function RecordDocumentsPage({
                       </a>
                     </td>
                     <td className="muted" style={{ fontSize: ".8rem" }}>
-                      {d.attachedBy ?? "—"} · {dateTimeIn(profile.timezone, d.attachedAt)}
+                      {d.attachedBy ?? "—"} ·{" "}
+                      <bdi>{dateTimeIn(profile.timezone, d.attachedAt)}</bdi>
                     </td>
                     <td className="muted" style={{ fontSize: ".8rem" }}>
-                      {d.removedBy ?? "—"} · {dateTimeIn(profile.timezone, d.removedAt)}
+                      {d.removedBy ?? "—"} · <bdi>{dateTimeIn(profile.timezone, d.removedAt)}</bdi>
                     </td>
                     <td style={{ fontSize: ".85rem" }}>{d.reason}</td>
                   </tr>

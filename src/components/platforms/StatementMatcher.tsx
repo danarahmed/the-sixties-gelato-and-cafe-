@@ -321,8 +321,8 @@ export function StatementMatcher({
               <ul style={{ margin: "6px 0 0", fontSize: ".85rem" }}>
                 {match.missing.map((o) => (
                   <li key={o.saleId}>
-                    <span className="mono">{o.orderNo}</span> · {dateTimeIn(timezone, o.placedAt)} ·{" "}
-                    {fmtIQD(o.amount)}
+                    <span className="mono">{o.orderNo}</span> ·{" "}
+                    <bdi>{dateTimeIn(timezone, o.placedAt)}</bdi> · {fmtIQD(o.amount)}
                   </li>
                 ))}
               </ul>

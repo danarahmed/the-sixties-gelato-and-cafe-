@@ -3,7 +3,7 @@ import { getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems, getItemsOutOfUse, getMovements, getStockBoard } from "@/lib/db/read";
-import { itemTypeLabel, movementLabel, fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty, itemTypeLabel, movementLabel, unitName } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
 import { InventoryForms } from "@/components/InventoryForms";
 import { LossesWaiting } from "@/components/LossesWaiting";
@@ -217,7 +217,7 @@ export default async function InventoryPage() {
                     >
                       {fmtQty(r.onHandBase)}
                     </td>
-                    <td className="muted">{r.unit}</td>
+                    <td className="muted">{unitName(r.unit, t)}</td>
                     <td className="right mono muted">
                       {r.reorderBase === null ? "—" : fmtQty(r.reorderBase)}
                     </td>

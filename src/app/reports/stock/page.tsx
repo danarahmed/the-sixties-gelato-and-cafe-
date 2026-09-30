@@ -5,7 +5,7 @@ import { getLocale, getT } from "@/lib/i18n/server";
 import { requirePermission } from "@/lib/auth/session";
 import { getStockValue } from "@/lib/db/analysis";
 import { itemNameIn } from "@/lib/analysis";
-import { fmtIQD, fmtQty, itemTypeLabel } from "@/lib/format";
+import { fmtIQD, fmtQty, itemTypeLabel, unitName } from "@/lib/format";
 import { businessToday, parseDay } from "@/lib/dates";
 import { getCafePlaces } from "@/lib/place";
 
@@ -167,7 +167,7 @@ export default async function StockValuePage({
                         </td>
                         <td>{t(itemTypeLabel(i.type))}</td>
                         <td className="right money">
-                          {fmtQty(i.qty)} {i.unit}
+                          {fmtQty(i.qty)} {unitName(i.unit, t)}
                         </td>
                         <td className="right money">
                           {i.unitCost === null ? "—" : fmtQty(i.unitCost)}

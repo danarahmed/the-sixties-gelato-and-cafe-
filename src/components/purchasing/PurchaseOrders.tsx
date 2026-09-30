@@ -10,7 +10,7 @@ import {
   savePurchaseOrderAction,
   sendPurchaseOrderAction,
 } from "@/lib/actions/purchasing";
-import { fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty, unitName } from "@/lib/format";
 import {
   inOrderUnit,
   orderStage,
@@ -541,12 +541,12 @@ function OrderForm({
                     onChange={(e) => set(i, { unit: e.target.value })}
                     disabled={!it}
                   >
-                    {it && <option value={it.baseUnit}>{it.baseUnit}</option>}
+                    {it && <option value={it.baseUnit}>{unitName(it.baseUnit, t)}</option>}
                     {it?.units
                       .filter((u) => u.code !== it.baseUnit)
                       .map((u) => (
                         <option key={u.code} value={u.code}>
-                          {u.label}
+                          {unitName(u.label, t)}
                         </option>
                       ))}
                   </select>

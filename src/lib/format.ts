@@ -103,3 +103,11 @@ export function fmtIQD(n: number): string {
 export function fmtQty(n: number): string {
   return Number(n.toFixed(6)).toLocaleString("en-US", { maximumFractionDigits: 6 });
 }
+
+/**
+ * A unit as the reader sees it: "each", for what is counted one by one, in
+ * their language; g, kg, ml and L, and a pack the café named, as written.
+ */
+export function unitName(code: string, t: (key: string) => string): string {
+  return code === "each" ? t("each") : code;
+}

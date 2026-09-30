@@ -91,11 +91,11 @@ export default async function ProductionPage({
               text={
                 r.outputName !== r.name
                   ? t("one batch makes <qty>{qty}</qty> of {output}", {
-                      qty: showIn(yieldBase, output, r.yieldUnit),
+                      qty: showIn(yieldBase, output, r.yieldUnit, t),
                       output: r.outputName,
                     })
                   : t("one batch makes <qty>{qty}</qty>", {
-                      qty: showIn(yieldBase, output, r.yieldUnit),
+                      qty: showIn(yieldBase, output, r.yieldUnit, t),
                     })
               }
               tags={{ qty: (c) => <span className="mono">{c}</span> }}
@@ -108,7 +108,7 @@ export default async function ProductionPage({
                 tags={{ b: (c) => <strong className="mono">{c}</strong> }}
               />
               {(() => {
-                const each = perUnit(cost, yieldBase.div(f), unitLabel(output, r.yieldUnit));
+                const each = perUnit(cost, yieldBase.div(f), unitLabel(output, r.yieldUnit, t));
                 return each ? <span className="muted"> · {msg(each)}</span> : null;
               })()}
             </span>
@@ -128,7 +128,7 @@ export default async function ProductionPage({
           {r.lines.map((l, i) => (
             <li key={`${l.itemId}-${i}`}>
               <span className="mono">
-                {fmtQty(l.quantity)} {unitLabel(byId.get(l.itemId), l.unitCode)}
+                {fmtQty(l.quantity)} {unitLabel(byId.get(l.itemId), l.unitCode, t)}
               </span>{" "}
               {l.name}
             </li>
@@ -213,7 +213,7 @@ export default async function ProductionPage({
                 <tbody>
                   {plan.recipes.map((r) => {
                     const it = byId.get(r.itemId);
-                    const q = (n: number) => showNice(new Decimal(n), it, r.baseUnit);
+                    const q = (n: number) => showNice(new Decimal(n), it, r.baseUnit, t);
                     return (
                       <tr
                         key={r.recipeId}
@@ -270,7 +270,7 @@ export default async function ProductionPage({
                     .filter((i) => i.short > 0)
                     .map(
                       (i) =>
-                        `${i.item} ${showNice(new Decimal(i.short), byId.get(i.itemId), i.baseUnit)}`,
+                        `${i.item} ${showNice(new Decimal(i.short), byId.get(i.itemId), i.baseUnit, t)}`,
                     )
                     .join(", "),
                 })}
@@ -392,7 +392,7 @@ export default async function ProductionPage({
                       </td>
                       <td className="right mono">{Number(b.batches.toFixed(3))}</td>
                       <td className="right mono">
-                        {showIn(actual, output, b.enteredUnit)}
+                        {showIn(actual, output, b.enteredUnit, t)}
                         {!diff.isZero() && (
                           <div
                             className={diff.lt(0) ? "pr-short" : "muted"}
@@ -400,7 +400,7 @@ export default async function ProductionPage({
                           >
                             {diff.lt(0) ? "−" : "+"}
                             {t("{qty} on the recipe", {
-                              qty: showIn(diff.abs(), output, b.enteredUnit),
+                              qty: showIn(diff.abs(), output, b.enteredUnit, t),
                             })}
                           </div>
                         )}
@@ -408,7 +408,7 @@ export default async function ProductionPage({
                       <td className="right mono">
                         {b.leftBase === null || cancelled
                           ? "—"
-                          : showNice(new Decimal(b.leftBase), output, b.outputUnit)}
+                          : showNice(new Decimal(b.leftBase), output, b.outputUnit, t)}
                       </td>
                       <td className="muted mono" style={{ fontSize: ".8rem" }}>
                         {b.useBy ? dateTimeIn(profile.timezone, b.useBy) : "—"}
@@ -422,7 +422,7 @@ export default async function ProductionPage({
                                 perUnit(
                                   new Decimal(b.value),
                                   actual.div(f),
-                                  unitLabel(output, b.enteredUnit),
+                                  unitLabel(output, b.enteredUnit, t),
                                 ) ?? "",
                               )}
                             </div>

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { returnToSupplierAction } from "@/lib/actions/purchasing";
-import { fmtIQD } from "@/lib/format";
+import { fmtIQD, unitName } from "@/lib/format";
 import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
@@ -237,12 +237,12 @@ export function ReturnGoods({
                     onChange={(e) => set(i, { unit: e.target.value })}
                     disabled={!it}
                   >
-                    {it && <option value={it.baseUnit}>{it.baseUnit}</option>}
+                    {it && <option value={it.baseUnit}>{unitName(it.baseUnit, t)}</option>}
                     {it?.units
                       .filter((u) => u.code !== it.baseUnit)
                       .map((u) => (
                         <option key={u.code} value={u.code}>
-                          {u.label}
+                          {unitName(u.label, t)}
                         </option>
                       ))}
                   </select>

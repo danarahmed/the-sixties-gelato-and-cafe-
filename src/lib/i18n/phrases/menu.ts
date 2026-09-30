@@ -520,7 +520,7 @@ const phrases: PhraseBook = {
     ckb: "ناوی ئەو قەبارەیەی ئێستا دەفرۆشرێت",
   },
   "New size (English)": { ar: "الحجم الجديد (بالإنجليزية)", ckb: "قەبارەی نوێ (بە ئینگلیزی)" },
-  "e.g. Large": { ar: "مثلًا: كبير", ckb: "بۆ نموونە: گەورە" },
+  "e.g. Large": { ar: "مثلًا: Large", ckb: "بۆ نموونە: Large" },
   "What one serving of the size uses": {
     ar: "ما تستخدمه الحصة الواحدة من الحجم",
     ckb: "ئەوەی یەک بەشی ئەم قەبارەیە بەکاری دەهێنێت",
@@ -568,7 +568,7 @@ const phrases: PhraseBook = {
     ckb: "+ زیادەیەک بۆ {group} زیاد بکە",
   },
   "Add-on name (English)": { ar: "اسم الإضافة (بالإنجليزية)", ckb: "ناوی زیادە (بە ئینگلیزی)" },
-  "e.g. Oat milk": { ar: "مثلًا: حليب الشوفان", ckb: "بۆ نموونە: شیری جۆ" },
+  "e.g. Oat milk": { ar: "مثلًا: Oat milk", ckb: "بۆ نموونە: Oat milk" },
   "0 makes it free. A channel left empty does not offer it; give it a price later to offer it there.":
     {
       ar: "0 يجعلها مجانية. القناة المتروكة فارغة لا تقدّمها؛ حدّد لها سعرًا لاحقًا لتقدّمها فيها.",

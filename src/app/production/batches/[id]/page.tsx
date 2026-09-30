@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Decimal from "decimal.js";
-import { getMsg, getT } from "@/lib/i18n/server";
+import { arrows } from "@/lib/i18n/core";
+import { getDir, getMsg, getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems } from "@/lib/db/read";
 import { getBatchReconciliation } from "@/lib/db/production";
@@ -30,6 +31,7 @@ const SIGNED: readonly StoryPart[] = ["counted", "corrected"];
 export default async function BatchPage({ params }: { params: Promise<{ id: string }> }) {
   const profile = await requirePermission("cost.view", "production.record");
   const t = await getT();
+  const { back } = arrows(await getDir());
   const msg = await getMsg();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
@@ -37,7 +39,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
   if (!b) notFound();
   const item = items.find((i) => i.id === b.itemId);
   const units = item ? { baseUnit: item.baseUnit, units: item.units } : undefined;
-  const q = (n: number) => showNice(new Decimal(n), units, b.baseUnit);
+  const q = (n: number) => showNice(new Decimal(n), units, b.baseUnit, t);
   const signed = (n: number) => (n > 0 ? `+${q(n)}` : q(n));
   const cancelled = b.status === "cancelled";
   const at = (iso: string) => dateTimeIn(profile.timezone, iso);
@@ -49,7 +51,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
       <div className="phead">
         <h1>{t("Batch {no}: {recipe}", { no: b.batchNo, recipe: b.recipe })}</h1>
         <Link href="/production" className="sc">
-          ← {t("nav.production")}
+          {back} {t("nav.production")}
         </Link>
       </div>
 
@@ -66,8 +68,8 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
         </div>
         <div>
           {t("Came out: {actual} of the {planned} its recipe makes", {
-            actual: showIn(new Decimal(b.actual), units, b.enteredUnit),
-            planned: showIn(new Decimal(b.planned), units, b.enteredUnit),
+            actual: showIn(new Decimal(b.actual), units, b.enteredUnit, t),
+            planned: showIn(new Decimal(b.planned), units, b.enteredUnit, t),
           })}
           {" · "}
           <Link href={`/inventory/${b.itemId}`}>{b.item}</Link>

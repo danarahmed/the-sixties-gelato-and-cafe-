@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { adjustStockAction, recordLossAction, recordOpeningStockAction } from "@/lib/actions/stock";
-import { fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty, unitName } from "@/lib/format";
 import {
   LOSS_ACCOUNT_NAME,
   LOSS_KINDS,
@@ -116,13 +116,14 @@ function UnitSelect({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const { t } = useT();
   const units = item?.units ?? [];
   return (
     <select style={inputStyle} value={value} onChange={(e) => onChange(e.target.value)}>
       {units.map((u) => (
         <option key={u.code} value={u.code}>
-          {u.label}
-          {u.factor !== 1 ? ` (${u.factor} ${item?.baseUnit})` : ""}
+          {unitName(u.label, t)}
+          {u.factor !== 1 ? ` (${u.factor} ${unitName(item?.baseUnit ?? "", t)})` : ""}
         </option>
       ))}
     </select>
@@ -147,7 +148,7 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
   const [qty, setQty] = useState("");
   const [unitCost, setUnitCost] = useState("");
   const [reason, setReason] = useState("");
-  const unitLabel = item?.units.find((u) => u.code === unit)?.label ?? unit;
+  const unitLabel = unitName(item?.units.find((u) => u.code === unit)?.label ?? unit, t);
   const value =
     (Number(qty.replace(/[^0-9.]/g, "")) || 0) * (Number(unitCost.replace(/[^0-9.]/g, "")) || 0);
 
@@ -249,9 +250,15 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
       <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
         {value > 0 ? `${t("Worth {value}.", { value: fmtIQD(value) })} ` : ""}
         {t(
-          "It is capital you put into the business: journaled Dr 1200 Inventory / Cr 3000 Owner equity, and on the audit trail with where it came from. Once an item has stock, it changes only by deliveries, sales, waste, counts and corrections.",
+          "It is capital you put into the business, on the audit trail with where it came from. Once an item has stock, it changes only by deliveries, sales, waste, counts and corrections.",
         )}
       </p>
+      <details className="booked">
+        <summary>{t("How it is booked")}</summary>
+        <p className="muted" style={{ margin: "6px 0 0", fontSize: ".8rem" }}>
+          {t("Journaled Dr 1200 Inventory / Cr 3000 Owner equity.")}
+        </p>
+      </details>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <button
           className="btn-primary"
@@ -431,7 +438,8 @@ function RecordLoss({
                 {itemLots.map((l) => (
                   <option key={l.lotId} value={l.lotId}>
                     {l.batchNo !== null ? t("Batch {n}", { n: l.batchNo }) : l.lot} —{" "}
-                    {fmtQty(l.left)} {item?.baseUnit} · {t(LOT_STATUS_LABEL[l.status])}
+                    {fmtQty(l.left)} {unitName(item?.baseUnit ?? "", t)} ·{" "}
+                    {t(LOT_STATUS_LABEL[l.status])}
                   </option>
                 ))}
               </select>
@@ -497,9 +505,7 @@ function RecordLoss({
         />
       </Field>
       <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
-        {t("Taken out at what it costs now, in one journal: Dr {code} / Cr 1200 Inventory.", {
-          code: k.account,
-        })}{" "}
+        {t("Taken out at what it costs now.")}{" "}
         {lossLimit !== null &&
           t(
             lossWindow === "entry"
@@ -510,6 +516,12 @@ function RecordLoss({
             { limit: fmtIQD(lossLimit) },
           )}
       </p>
+      <details className="booked">
+        <summary>{t("How it is booked")}</summary>
+        <p className="muted" style={{ margin: "6px 0 0", fontSize: ".8rem" }}>
+          {t("In one journal: Dr {code} / Cr 1200 Inventory.", { code: k.account })}
+        </p>
+      </details>
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <button
           className="btn-primary"
@@ -532,7 +544,7 @@ function RecordLoss({
             kind="waste"
             items={
               what === "item"
-                ? `${item?.name ?? ""} ${qty} ${unit}`
+                ? `${item?.name ?? ""} ${qty} ${unitName(unit, t)}`
                 : `${product?.name ?? ""} ×${qty}`
             }
             onApproved={(a) => submit({ approvalId: a.id })}
@@ -649,9 +661,15 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
       </Field>
       <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
         {t(
-          "For corrections outside a count. Losses go out at average cost; posted against 5400 Inventory count variance and written to the audit trail. Counted stock is corrected by approving a count.",
+          "For corrections outside a count. What is taken off goes out at its average cost, and is written to the audit trail. Counted stock is corrected by approving a count.",
         )}
       </p>
+      <details className="booked">
+        <summary>{t("How it is booked")}</summary>
+        <p className="muted" style={{ margin: "6px 0 0", fontSize: ".8rem" }}>
+          {t("Posted against 5400 Inventory count variance.")}
+        </p>
+      </details>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <button
           className="btn-primary"

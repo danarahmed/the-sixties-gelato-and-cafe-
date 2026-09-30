@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { reviewLossAction } from "@/lib/actions/stock";
 import type { LossWaiting } from "@/lib/losses";
-import { fmtIQD, fmtQty, movementLabel } from "@/lib/format";
+import { fmtIQD, fmtQty, movementLabel, unitName } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice, inputStyle } from "@/components/ui";
@@ -107,7 +107,7 @@ function LossRow({ loss, mine, timezone }: { loss: LossWaiting; mine: boolean; t
           )}
         </td>
         <td className="right mono">
-          {loss.unit ? `${fmtQty(loss.qty)} ${loss.unit}` : `×${fmtQty(loss.qty)}`}
+          {loss.unit ? `${fmtQty(loss.qty)} ${unitName(loss.unit, t)}` : `×${fmtQty(loss.qty)}`}
         </td>
         <td>
           {t(movementLabel(loss.kind))}

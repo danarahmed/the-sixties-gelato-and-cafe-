@@ -13,7 +13,7 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { BOOKS } from "@/lib/i18n/phrases";
 import { getDictionary, builtInWords } from "@/lib/i18n/dictionaries";
-import { fill, messenger, translator } from "@/lib/i18n/core";
+import { arrows, fill, isolateDates, messenger, translator } from "@/lib/i18n/core";
 import { parseRich, plain } from "@/lib/i18n/Rich";
 import { LABELS } from "@/lib/format";
 import { RULE_PHRASES } from "@/lib/rules";
@@ -143,6 +143,41 @@ describe("the translator", () => {
     expect(msg("The count took 3 days")).toBe("The count took 3 days");
     // What has no translation stays as it is.
     expect(msg("Something new")).toBe("Something new");
+  });
+
+  it("keeps a date put in a phrase left to right for a right-to-left reader", () => {
+    const [lri, pdi] = ["\u2066", "\u2069"];
+    const t = translator({ "From {from} to {to}": "من {from} إلى {to}" }, "rtl");
+    expect(t("From {from} to {to}", { from: "2026-09-01", to: "2026-09-30" })).toBe(
+      `من ${lri}2026-09-01${pdi} إلى ${lri}2026-09-30${pdi}`,
+    );
+    // A month, a date and time, a date among other words; each date on its own.
+    expect(isolateDates("2026-09")).toBe(`${lri}2026-09${pdi}`);
+    expect(isolateDates("since 2026-09-30 14:05, open")).toBe(
+      `since ${lri}2026-09-30 14:05${pdi}, open`,
+    );
+    expect(isolateDates("2026-09-26 — 2026-10-02")).toBe(
+      `${lri}2026-09-26${pdi} — ${lri}2026-10-02${pdi}`,
+    );
+    // Marked once only, and never a longer number: an invoice's, a phone's.
+    expect(isolateDates(isolateDates("2026-09-30"))).toBe(`${lri}2026-09-30${pdi}`);
+    expect(isolateDates("INV-2026-0012 · 12026-09-30 · 0750-123-4567")).toBe(
+      "INV-2026-0012 · 12026-09-30 · 0750-123-4567",
+    );
+    // Left to right, the words are as they were: English, and numbers alone.
+    expect(translator({})("From {from} to {to}", { from: "2026-09-01", to: "2026-09-30" })).toBe(
+      "From 2026-09-01 to 2026-09-30",
+    );
+    expect(fill("{n} left", { n: 2026 }, "rtl")).toBe("2026 left");
+    // A message from the database, too.
+    expect(
+      messenger({ "Open since {1}": "مفتوح منذ {1}" }, "rtl")("Open since 2026-09-30 03:29"),
+    ).toBe(`مفتوح منذ ${lri}2026-09-30 03:29${pdi}`);
+  });
+
+  it("points an arrow on, or back, the way the language reads", () => {
+    expect(arrows("ltr")).toEqual({ on: "→", back: "←" });
+    expect(arrows("rtl")).toEqual({ on: "←", back: "→" });
   });
 
   it("marks words in a sentence without splitting it", () => {

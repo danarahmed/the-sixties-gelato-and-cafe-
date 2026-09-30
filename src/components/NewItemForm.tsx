@@ -9,6 +9,7 @@ import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { unitName } from "@/lib/format";
 
 type Msg = { ok: boolean; text: string } | null;
 type Dimension = "count" | "mass" | "volume";
@@ -86,7 +87,7 @@ export function NewItemForm({
   }, [f.name, f.nameAr, f.nameCkb, items, fromServer]);
   const same = similar.find((s) => s.same);
   const packHalf = (f.packLabel.trim() === "") !== (f.packHolds.trim() === "");
-  const unitWord = baseUnit.trim() || "each";
+  const unitWord = unitName(baseUnit.trim() || "each", t);
 
   function submit() {
     setMsg(null);
@@ -201,7 +202,10 @@ export function NewItemForm({
         </div>
       )}
 
-      <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+      <div
+        className="grid"
+        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 8 }}
+      >
         <Field label={t("Type")}>
           <select style={inputStyle} value={f.itemType} onChange={set("itemType")}>
             <option value="ingredient">{t("Ingredient")}</option>

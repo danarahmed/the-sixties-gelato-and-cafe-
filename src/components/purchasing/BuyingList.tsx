@@ -18,7 +18,7 @@ import {
   type LineDraft,
 } from "@/lib/buying";
 import { orderTotal } from "@/lib/purchasing";
-import { fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty, unitName } from "@/lib/format";
 import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
@@ -65,7 +65,7 @@ export function BuyingListForm({
   const names = new Map(suppliers.map((s) => [s.id, s.name]));
   const unitsOf = (itemId: string) => units[itemId] ?? [];
   const packName = (itemId: string, code: string) =>
-    unitsOf(itemId).find((u) => u.code === code)?.label ?? code;
+    unitName(unitsOf(itemId).find((u) => u.code === code)?.label ?? code, t);
   const draft = (l: BuyingLine) => drafts[l.itemId] ?? draftOf(l);
   const set = (itemId: string, d: LineDraft) => setDrafts((all) => ({ ...all, [itemId]: d }));
 
@@ -242,7 +242,7 @@ export function BuyingListForm({
                                   <Link href={`/purchasing/orders/${o.poId}`}>
                                     {t("Order {no}", { no: o.poNo })}
                                   </Link>
-                                  {`: ${fmtQty(o.baseQty)} ${l.baseUnit}`}
+                                  {`: ${fmtQty(o.baseQty)} ${unitName(l.baseUnit, t)}`}
                                 </Fragment>
                               ))}
                             </div>
@@ -272,7 +272,7 @@ export function BuyingListForm({
                                 : [{ code: l.baseUnit, label: l.baseUnit, factor: 1 }]
                               ).map((u) => (
                                 <option key={u.code} value={u.code}>
-                                  {u.label}
+                                  {unitName(u.label, t)}
                                 </option>
                               ))}
                             </select>
@@ -404,7 +404,7 @@ export function BuyingListForm({
                       {reasonsOf(l, t, (code) => packName(l.itemId, code)).join(" ")}
                     </td>
                     <td className="right mono">
-                      {fmtQty(l.onHand)} {l.baseUnit}
+                      {fmtQty(l.onHand)} {unitName(l.baseUnit, t)}
                     </td>
                     <td>
                       {canCreate && (

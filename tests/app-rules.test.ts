@@ -47,7 +47,7 @@ import {
   lossReportFrom,
   lossesWaitingFrom,
 } from "@/lib/losses";
-import { movementLabel } from "@/lib/format";
+import { movementLabel, unitName } from "@/lib/format";
 import { normaliseNumber, positive, signedNonZero } from "@/lib/validation";
 import { getBookkeeper } from "@/lib/bookkeeping/rules";
 import { isUncertainFailure } from "@/lib/db/rpcOutcome";
@@ -221,6 +221,7 @@ import {
   batchesOf,
   perUnit,
   showIn,
+  showNice,
   unitFactor,
 } from "@/components/production/batchMath";
 import { filledLines, halfFilled, linesFrom, newLine } from "@/components/menu/RecipeLines";
@@ -731,6 +732,19 @@ describe("a batch, as the production form shows it before it is recorded", () =>
     expect(showIn(new Decimal(4600), gelato, "kg")).toBe("4.6 kg");
     expect(showIn(new Decimal(5000), gelato, "pan")).toBe("1 Pan");
     expect(showIn(new Decimal(4600), gelato, "g")).toBe("4,600 g");
+  });
+
+  it("says a unit counted one by one in the reader's language, and a symbol as it is", () => {
+    const ckb = (k: string) => ({ each: "دانە" })[k] ?? k;
+    expect(unitName("each", ckb)).toBe("دانە");
+    expect(unitName("g", ckb)).toBe("g");
+    expect(unitName("Carton of 24", ckb)).toBe("Carton of 24");
+    const cup = { baseUnit: "each", units: [{ code: "each", label: "each", factor: 1 }] };
+    expect(showIn(new Decimal(3), cup, "each", ckb)).toBe("3 دانە");
+    expect(showNice(new Decimal(3), cup, "each", ckb)).toBe("3 دانە");
+    // Without the reader's words, as before: in English.
+    expect(showIn(new Decimal(3), cup, "each")).toBe("3 each");
+    expect(showIn(new Decimal(4600), gelato, "kg", ckb)).toBe("4.6 kg");
   });
 
   it("gives the cost of each unit made", () => {

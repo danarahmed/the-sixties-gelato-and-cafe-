@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { saveScheduleAction } from "@/lib/actions/staff";
 import { addDays } from "@/lib/dates";
 import { clockTime, typedHours, worksOn, type Schedule, type Shift } from "@/lib/staff";
+import { arrows } from "@/lib/i18n/core";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice, inputStyle } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
@@ -48,7 +49,8 @@ export function ScheduleWeek({
   nextHref: string;
 }) {
   const op = useOperation();
-  const { t } = useT();
+  const { t, dir } = useT();
+  const { on, back } = arrows(dir);
   const router = useRouter();
   const [busy, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -114,13 +116,13 @@ export function ScheduleWeek({
     <div className="grid" style={{ gap: 10 }}>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
         <Link href={prevHref} data-testid="week-before">
-          ← {t("The week before")}
+          {back} {t("The week before")}
         </Link>
         <b className="mono">
-          {first} — {last}
+          <bdi>{first}</bdi> — <bdi>{last}</bdi>
         </b>
         <Link href={nextHref} data-testid="week-after">
-          {t("The week after")} →
+          {t("The week after")} {on}
         </Link>
         {places.length > 1 && (
           <span style={{ display: "flex", gap: 6, marginInlineStart: "auto" }}>

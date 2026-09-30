@@ -108,7 +108,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
               <tbody>
                 {customer.ledger.map((l) => (
                   <tr key={l.id} data-testid="ledger-row" data-kind={l.kind}>
-                    <td>{dateTimeIn(tz, l.at)}</td>
+                    <td className="when">{dateTimeIn(tz, l.at)}</td>
                     <td>
                       {t(LOYALTY_KIND_LABEL[l.kind])}
                       {l.kind === "redeem" && l.value !== null && (

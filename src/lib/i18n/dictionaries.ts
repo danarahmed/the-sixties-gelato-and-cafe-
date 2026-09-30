@@ -49,7 +49,7 @@ const en: Dict = {
   "common.online": "Online",
   "common.offline":
     "Offline — sales cannot be recorded until the connection returns. Nothing is being saved.",
-  "dash.title": "Owner Dashboard",
+  "dash.title": "Dashboard",
   "dash.netSales": "Net sales today",
   "dash.grossProfit": "Gross profit after waste & fees",
   "dash.contribution": "Contribution profit",
@@ -407,7 +407,7 @@ const ar: Dict = {
   "common.theme": "المظهر",
   "common.online": "متصل",
   "common.offline": "غير متصل — لا يمكن تسجيل المبيعات حتى يعود الاتصال. لا يُحفظ أي شيء.",
-  "dash.title": "لوحة تحكم المالك",
+  "dash.title": "لوحة التحكم",
   "dash.netSales": "صافي مبيعات اليوم",
   "dash.grossProfit": "إجمالي الربح بعد الهدر والرسوم",
   "dash.contribution": "ربح المساهمة",
@@ -760,7 +760,7 @@ const ckb: Dict = {
   "common.online": "سەرهێڵ",
   "common.offline":
     "دەرهێڵ — تا پەیوەندی نەگەڕێتەوە ناتوانرێت فرۆشتن تۆمار بکرێت. هیچ شتێک پاشەکەوت ناکرێت.",
-  "dash.title": "داشبۆردی خاوەن",
+  "dash.title": "داشبۆرد",
   "dash.netSales": "فرۆشی پوختی ئەمڕۆ",
   "dash.grossProfit": "قازانجی گشتی دوای بەفیڕۆچوون و کرێکان",
   "dash.contribution": "قازانجی بەشداری",

@@ -137,7 +137,7 @@ export function RecordBatch({
       // An ingredient whose rule asks for a manager to use more than the books hold (0040).
       setNeedsManager(!r.ok && NEEDS_STOCK_APPROVAL.test(r.error));
       if (r.ok) {
-        const made = showIn(new Decimal(r.data.actual), output, shownUnit);
+        const made = showIn(new Decimal(r.data.actual), output, shownUnit, t);
         const vars = { no: r.data.batchNo, made, output: recipe.outputName };
         const recorded =
           r.data.value === null
@@ -212,7 +212,7 @@ export function RecordBatch({
               style={inputStyle}
               value={outQty}
               onChange={(e) => setOutQty(e.target.value)}
-              placeholder={planned ? showIn(planned, output, recipe!.yieldUnit) : ""}
+              placeholder={planned ? showIn(planned, output, recipe!.yieldUnit, t) : ""}
               inputMode="decimal"
             />
             <select
@@ -226,7 +226,7 @@ export function RecordBatch({
                   .filter((c, i, all) => all.indexOf(c) === i)
                   .map((c) => (
                     <option key={c} value={c}>
-                      {unitLabel(output, c)}
+                      {unitLabel(output, c, t)}
                     </option>
                   ))}
             </select>
@@ -300,14 +300,16 @@ export function RecordBatch({
                 return (
                   <li key={`${l.itemId}-${i}`}>
                     <span>{l.name}</span>
-                    <span className="mono">{showIn(need, it, l.unitCode)}</span>
+                    <span className="mono">{showIn(need, it, l.unitCode, t)}</span>
                     {have !== undefined && (
                       <span className={short ? "pr-short" : "muted"}>
                         {short
                           ? t("only {qty} in stock", {
-                              qty: showIn(new Decimal(have), it, l.unitCode),
+                              qty: showIn(new Decimal(have), it, l.unitCode, t),
                             })
-                          : t("{qty} in stock", { qty: showIn(new Decimal(have), it, l.unitCode) })}
+                          : t("{qty} in stock", {
+                              qty: showIn(new Decimal(have), it, l.unitCode, t),
+                            })}
                       </span>
                     )}
                   </li>
@@ -321,7 +323,7 @@ export function RecordBatch({
               <span>
                 <Rich
                   text={t("<qty>{qty}</qty> of {output}", {
-                    qty: showIn(actual, output, shownUnit),
+                    qty: showIn(actual, output, shownUnit, t),
                     output: recipe.outputName,
                   })}
                   tags={{ qty: (c) => <span className="mono">{c}</span> }}
@@ -336,12 +338,12 @@ export function RecordBatch({
                       {" "}
                       {diff.lt(0)
                         ? t("— {diff} less than the recipe's {planned}", {
-                            diff: showIn(diff.abs(), output, shownUnit),
-                            planned: showIn(planned, output, shownUnit),
+                            diff: showIn(diff.abs(), output, shownUnit, t),
+                            planned: showIn(planned, output, shownUnit, t),
                           })
                         : t("— {diff} more than the recipe's {planned}", {
-                            diff: showIn(diff.abs(), output, shownUnit),
-                            planned: showIn(planned, output, shownUnit),
+                            diff: showIn(diff.abs(), output, shownUnit, t),
+                            planned: showIn(planned, output, shownUnit, t),
                           })}
                     </span>
                   )
@@ -360,7 +362,7 @@ export function RecordBatch({
                 />
                 {(() => {
                   const f = unitFactor(output, shownUnit) ?? 1;
-                  const each = perUnit(cost, actual.div(f), unitLabel(output, shownUnit));
+                  const each = perUnit(cost, actual.div(f), unitLabel(output, shownUnit, t));
                   return each ? ` · ${say(each)}` : "";
                 })()}
               </span>

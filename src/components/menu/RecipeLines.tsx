@@ -7,7 +7,7 @@
 import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import { NO_CHANNELS, type ChannelSet } from "@/lib/channels";
-import { fmtIQD, fmtQty } from "@/lib/format";
+import { fmtIQD, fmtQty, unitName } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { inputStyle } from "@/components/ui";
 import { useChannels } from "@/components/ChannelsProvider";
@@ -203,7 +203,7 @@ export function RecipeLinesEditor({
               >
                 {(it?.units ?? []).map((u) => (
                   <option key={u.code} value={u.code}>
-                    {u.label}
+                    {unitName(u.label, t)}
                   </option>
                 ))}
               </select>
@@ -231,7 +231,7 @@ export function RecipeLinesEditor({
                       : perUnit &&
                         t("{qty} IQD per {unit}", {
                           qty: fmtQty(perUnit.toNumber()),
-                          unit: unit!.label,
+                          unit: unitName(unit!.label, t),
                         })}
                   </small>
                 )}

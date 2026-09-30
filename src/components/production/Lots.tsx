@@ -70,7 +70,7 @@ export function ProductionLots({
               </td>
               <td>{l.item}</td>
               <td className="right mono">
-                {showNice(new Decimal(l.left), byId.get(l.itemId), l.baseUnit)}
+                {showNice(new Decimal(l.left), byId.get(l.itemId), l.baseUnit, t)}
               </td>
               <td>
                 <span className="mono" style={{ fontSize: ".85rem" }}>
