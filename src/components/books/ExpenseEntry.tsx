@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import type { ExpensePrefill } from "@/lib/bank";
 import { previewExpenseCategoryAction, recordExpenseAction } from "@/lib/actions/books";
 import { fmtIQD } from "@/lib/format";
 import { normaliseNumber } from "@/lib/validation";
@@ -34,23 +36,29 @@ type PaidFrom = keyof typeof PAID_FROM;
  * Write the expense in plain words. The house rules PROPOSE an account from
  * the narration; the person sees the entry exactly as it will be written and
  * can change the account before posting. Nothing is posted on a guess.
+ *
+ * Opened from the bank's statement, a charge the books don't have yet comes
+ * filled in (its words, amount, day, paid from the bank), with the way back.
  */
 export function ExpenseEntry({
   accounts,
   today,
+  prefill = null,
 }: {
   accounts: { code: string; name: string }[];
   today: string;
+  prefill?: ExpensePrefill | null;
 }) {
   const op = useOperation();
   // say: what the server answers (an account's name, the house rules' reason), in the reader's language.
   const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
-  const [desc, setDesc] = useState("");
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(today);
-  const [paidFrom, setPaidFrom] = useState<PaidFrom | "">("");
+  const [desc, setDesc] = useState(prefill?.description ?? "");
+  const [amount, setAmount] = useState(prefill?.amount ?? "");
+  const [date, setDate] = useState(prefill?.date ?? today);
+  const [paidFrom, setPaidFrom] = useState<PaidFrom | "">(prefill?.paidFrom ?? "");
+  const [posted, setPosted] = useState(false);
   const [account, setAccount] = useState("");
   const [chosenByHand, setChosenByHand] = useState(false);
   const [hint, setHint] = useState<Suggestion | null>(null);
@@ -79,6 +87,7 @@ export function ExpenseEntry({
 
   function post() {
     setMsg(null);
+    setPosted(false);
     start(async () => {
       if (!paidFrom) return;
       const r = await op.run("recordExpense", (key) =>
@@ -107,6 +116,7 @@ export function ExpenseEntry({
         setAccount("");
         setChosenByHand(false);
         setHint(null);
+        setPosted(true);
         router.refresh();
       } else setMsg({ ok: false, text: r.error });
     });
@@ -251,6 +261,11 @@ export function ExpenseEntry({
           <div style={{ marginBlockStart: 12 }}>
             <OperationStatus op={op} />
             <Notice msg={msg} />
+            {posted && prefill?.back && (
+              <Link href={prefill.back} data-testid="expense-back">
+                {t("Back to the bank's statement")}
+              </Link>
+            )}
           </div>
         </div>
       </div>

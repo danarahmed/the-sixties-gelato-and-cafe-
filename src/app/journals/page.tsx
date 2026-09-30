@@ -17,6 +17,7 @@ import { fmtIQD } from "@/lib/format";
 import { businessToday, monthStart, parseDay } from "@/lib/dates";
 import { AccountLedger } from "@/components/books/AccountLedger";
 import { JournalEntryForm } from "@/components/books/JournalEntryForm";
+import { journalFromLink } from "@/lib/bank";
 import { JournalRow } from "@/components/books/JournalRow";
 import { EmptyState } from "@/components/ui";
 
@@ -55,6 +56,8 @@ export default async function JournalsPage({
   const sp = await searchParams;
   const manualOnly = sp.show === "manual";
   const today = businessToday(profile.timezone);
+  // Opened from the bank's statement: money it received, the other side to choose.
+  const prefill = journalFromLink(sp, today);
 
   // Opened from a figure: the lines of an account (or a few) behind it (0026).
   const ledgerOf =
@@ -156,6 +159,7 @@ export default async function JournalsPage({
             nextNo={nextNo}
             today={today}
             currency={profile.currency}
+            prefill={prefill}
           />
         </section>
       )}

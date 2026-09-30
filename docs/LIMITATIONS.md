@@ -430,7 +430,10 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - Only the latest statement is undone; an earlier one is undone by undoing
     each after it first.
   - A charge or interest the bank shows is recorded first (Expenses, or a
-    journal), then found or ticked: nothing is recorded for you.
+    journal), then found or ticked: nothing is recorded for you. **Record
+    it** fills in Expenses for money out, and a journal into the bank for
+    money in; the account is still the person's to choose. The Chart of
+    Accounts has no income for interest until the café adds one.
 - **Statements read from their files, what they do not do.**
   - The files read are Excel workbooks (.xlsx), CSV and text files, and the
     web page or Excel 2003 XML some banks give as an ".xls". An Excel 97–2003

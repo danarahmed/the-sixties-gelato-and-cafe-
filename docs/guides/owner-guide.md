@@ -680,8 +680,9 @@ discount, why and who approved it. The 10% is a business setting (shown on
    have are found and ticked, and its last day and closing balance filled
    in. Or type them, and tick the lines it shows, by eye. Keep it when it
    ties. What it shows that the books do not (a charge, interest) is listed:
-   record it first, and come back; what the books have and it does not (a
-   payment not yet cleared) waits for the next one.
+   **Record it** opens Expenses with a charge filled in, or a journal with
+   interest filled in; choose its account, post it, and come back. What the books have and it does not (a payment
+   not yet cleared) waits for the next one.
 7. **Place** on Reports (`0057`) reads every report for one place: its sales
    and payments, its losses, what came in and went back, its orders and
    batches, its dollars, its staff and its customers' sales. Someone who works

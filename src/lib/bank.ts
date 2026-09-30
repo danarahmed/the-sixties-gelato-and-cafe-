@@ -527,3 +527,110 @@ export function matchBankStatement(
     closing: lines[lines.length - 1]?.balance ?? null,
   };
 }
+
+// --- A line the bank shows and the books don't, recorded ----------------------------
+
+/** Where an expense may be paid from, as Expenses names it. */
+const PAID_FROM = ["till", "safe", "bank", "card", "owner"] as const;
+export type PaidFromKey = (typeof PAID_FROM)[number];
+
+/** What a link to Expenses fills in: each part only when it can be one. */
+export interface ExpensePrefill {
+  description?: string;
+  amount?: string;
+  date?: string;
+  paidFrom?: PaidFromKey;
+  /** Where the person goes back to once it is recorded. */
+  back: "/accounting/bank" | null;
+}
+
+/**
+ * The link that opens Expenses with a line of the bank's statement filled in:
+ * the bank's words, the amount, its day, paid from the bank, and the way back
+ * to the statement. The person chooses the account and posts it.
+ */
+export function expenseLink(line: BankStatementLine): string {
+  const q = new URLSearchParams({
+    what: line.description.trim().slice(0, 200),
+    amount: new Decimal(line.amount).abs().toFixed(),
+    on: line.day,
+    from: "bank",
+    back: "bank",
+  });
+  return `/expenses?${q.toString()}`;
+}
+
+/** What a link to Expenses asks to fill in; nothing that could not be one. */
+export function expenseFromLink(
+  sp: Record<string, string | string[] | undefined>,
+  today: string,
+): ExpensePrefill | null {
+  const one = (k: string) => {
+    const v = sp[k];
+    return typeof v === "string" ? v : "";
+  };
+  const out: ExpensePrefill = { back: one("back") === "bank" ? "/accounting/bank" : null };
+  const what = one("what").trim().slice(0, 200);
+  if (what) out.description = what;
+  const amount = normaliseNumber(one("amount"));
+  if (/^\d+(\.\d+)?$/.test(amount) && Number(amount) > 0) out.amount = amount;
+  const on = one("on");
+  if (statementDay(on) === on && on <= today) out.date = on;
+  const from = one("from");
+  if ((PAID_FROM as readonly string[]).includes(from)) out.paidFrom = from as PaidFromKey;
+  return out.description || out.amount || out.date || out.paidFrom || out.back ? out : null;
+}
+
+/** What a link to Journals fills in: money the bank received, its other side to choose. */
+export interface JournalPrefill {
+  description?: string;
+  date?: string;
+  amount: string;
+  /** The account the money went into: the bank. */
+  debit: "1020";
+  back: "/accounting/bank" | null;
+}
+
+/**
+ * The link that opens a journal with money the bank received filled in (a
+ * bank's interest, a transfer from someone): Dr 1020 Bank, the amount, its
+ * day and the bank's words, and the way back. The account it came from is
+ * the person's to choose.
+ */
+export function journalLink(line: BankStatementLine): string {
+  const q = new URLSearchParams({
+    what: line.description.trim().slice(0, 200),
+    amount: new Decimal(line.amount).abs().toFixed(),
+    on: line.day,
+    dr: "1020",
+    back: "bank",
+  });
+  return `/journals?${q.toString()}`;
+}
+
+/** What a link to Journals asks to fill in: only money into the bank, and only what can be. */
+export function journalFromLink(
+  sp: Record<string, string | string[] | undefined>,
+  today: string,
+): JournalPrefill | null {
+  const one = (k: string) => {
+    const v = sp[k];
+    return typeof v === "string" ? v : "";
+  };
+  const amount = normaliseNumber(one("amount"));
+  if (one("dr") !== "1020" || !/^\d+(\.\d+)?$/.test(amount) || !(Number(amount) > 0)) return null;
+  const out: JournalPrefill = {
+    amount,
+    debit: "1020",
+    back: one("back") === "bank" ? "/accounting/bank" : null,
+  };
+  const what = one("what").trim().slice(0, 200);
+  if (what) out.description = what;
+  const on = one("on");
+  if (statementDay(on) === on && on <= today) out.date = on;
+  return out;
+}
+
+/** Where a line the bank shows and the books don't is recorded: out on Expenses, in by a journal. */
+export const recordLink = (line: BankStatementLine) =>
+  Number(line.amount) < 0 ? expenseLink(line) : journalLink(line);
