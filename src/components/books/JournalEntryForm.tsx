@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import type { JournalPrefill } from "@/lib/bank";
 import Decimal from "decimal.js";
 import { postControlCorrectionAction, saveJournalAction } from "@/lib/actions/books";
 import { fmtIQD } from "@/lib/format";
@@ -33,6 +35,10 @@ const amount = (v: string) => {
  * an account, with the running difference shown. It cannot be published until
  * the difference is nil — the database enforces the same rule as it commits,
  * and gives the entry its number only then.
+ *
+ * Opened from the bank's statement, money the bank received comes filled in
+ * (Dr 1020 Bank, its amount, day and words), the other side to choose, with
+ * the way back.
  */
 export function JournalEntryForm({
   accounts,
@@ -41,6 +47,7 @@ export function JournalEntryForm({
   nextNo,
   today,
   currency,
+  prefill = null,
 }: {
   accounts: AccountOption[];
   /** Stock, payables, goods received, retained earnings: the owner's corrections only. */
@@ -49,19 +56,28 @@ export function JournalEntryForm({
   nextNo: number | null;
   today: string;
   currency: string;
+  prefill?: JournalPrefill | null;
 }) {
   const op = useOperation();
   // say: an account's name as the database has it, in the reader's language.
   const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(prefill !== null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState(prefill?.date ?? today);
   const [reverseOn, setReverseOn] = useState("");
   const [referenceNo, setReferenceNo] = useState("");
-  const [notes, setNotes] = useState("");
-  const [rows, setRows] = useState<Row[]>([{ ...emptyRow }, { ...emptyRow }]);
+  const [notes, setNotes] = useState(prefill?.description ?? "");
+  const [rows, setRows] = useState<Row[]>(() =>
+    prefill
+      ? [
+          { ...emptyRow, code: prefill.debit, debit: prefill.amount },
+          { ...emptyRow, credit: prefill.amount },
+        ]
+      : [{ ...emptyRow }, { ...emptyRow }],
+  );
+  const [posted, setPosted] = useState(false);
   const [correction, setCorrection] = useState(false);
   const [reason, setReason] = useState("");
   const options = correction
@@ -102,6 +118,7 @@ export function JournalEntryForm({
 
   function save(publish: boolean) {
     setMsg(null);
+    setPosted(false);
     if (correction) {
       start(async () => {
         const r = await op.run("postControlCorrection", (key) =>
@@ -164,6 +181,7 @@ export function JournalEntryForm({
               : t("Journal {no} published.", { no: String(r.data.journalNo) })
             : t("Saved as a draft. It is not in the books until it is published."),
         });
+        setPosted(publish);
         reset();
         router.refresh();
       } else setMsg({ ok: false, text: r.error });
@@ -302,9 +320,13 @@ export function JournalEntryForm({
           </thead>
           <tbody>
             {rows.map((r, i) => (
-              <tr key={i}>
+              <tr key={i} data-testid="journal-line">
                 <td>
-                  <select value={r.code} onChange={(e) => setRow(i, { code: e.target.value })}>
+                  <select
+                    aria-label={t("Account")}
+                    value={r.code}
+                    onChange={(e) => setRow(i, { code: e.target.value })}
+                  >
                     <option value="">{t("Select an account")}</option>
                     {options.map((a) => (
                       <option key={a.code} value={a.code}>
@@ -421,6 +443,11 @@ export function JournalEntryForm({
         )}
         <OperationStatus op={op} />
         <Notice msg={msg} />
+        {posted && prefill?.back && (
+          <Link href={prefill.back} data-testid="journal-back">
+            {t("Back to the bank's statement")}
+          </Link>
+        )}
       </div>
     </div>
   );

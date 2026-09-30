@@ -14,8 +14,13 @@ import { parseStatement } from "@/lib/settlements";
 import {
   BANK_EXAMPLE,
   dayOrder,
+  expenseFromLink,
+  expenseLink,
+  journalFromLink,
+  journalLink,
   matchBankStatement,
   parseBankStatement,
+  recordLink,
   statementDay,
   type BankOpenLine,
 } from "@/lib/bank";
@@ -568,6 +573,65 @@ describe("the bank's statement against the books", () => {
     ];
     const m = matchBankStatement(p, rent, "");
     expect(m.lines.map((x) => x.lineId)).toEqual(["august", "september", null]);
+  });
+});
+
+describe("a line the bank shows and the books don't, recorded", () => {
+  const charge = {
+    line: 5,
+    day: "2026-09-16",
+    description: "عمولة البنك & SMS",
+    amount: "-2750",
+    balance: null,
+  };
+
+  it("opens Expenses filled in, with the way back to the statement", () => {
+    const link = expenseLink(charge);
+    expect(link.startsWith("/expenses?")).toBe(true);
+    const sp = Object.fromEntries(new URLSearchParams(link.split("?")[1]));
+    expect(expenseFromLink(sp, "2026-09-30")).toEqual({
+      description: "عمولة البنك & SMS",
+      amount: "2750",
+      date: "2026-09-16",
+      paidFrom: "bank",
+      back: "/accounting/bank",
+    });
+  });
+
+  it("money in opens a journal into the bank, its other side to choose", () => {
+    const interest = { ...charge, description: "فائدة", amount: "1250" };
+    const link = journalLink(interest);
+    expect(recordLink(interest)).toBe(link);
+    expect(recordLink(charge)).toBe(expenseLink(charge));
+    const sp = Object.fromEntries(new URLSearchParams(link.split("?")[1]));
+    expect(journalFromLink(sp, "2026-09-30")).toEqual({
+      description: "فائدة",
+      date: "2026-09-16",
+      amount: "1250",
+      debit: "1020",
+      back: "/accounting/bank",
+    });
+    // Only money into the bank, with an amount: nothing else is filled in.
+    expect(journalFromLink({ ...sp, dr: "1000" }, "2026-09-30")).toBeNull();
+    expect(journalFromLink({ ...sp, amount: "0" }, "2026-09-30")).toBeNull();
+    expect(journalFromLink({ q: "5501" }, "2026-09-30")).toBeNull();
+  });
+
+  it("fills in nothing that could not be one", () => {
+    expect(expenseFromLink({}, "2026-09-30")).toBeNull();
+    expect(
+      expenseFromLink(
+        { what: "  ", amount: "-5", on: "2026-10-01", from: "the moon", back: "elsewhere" },
+        "2026-09-30",
+      ),
+    ).toBeNull();
+    expect(
+      expenseFromLink(
+        { amount: "١٬٥٠٠", on: "2026-02-30", from: "safe", what: ["a", "b"] },
+        "2026-09-30",
+      ),
+    ).toEqual({ amount: "1500", paidFrom: "safe", back: null });
+    expect(expenseFromLink({ what: "x".repeat(300) }, "2026-09-30")?.description).toHaveLength(200);
   });
 });
 

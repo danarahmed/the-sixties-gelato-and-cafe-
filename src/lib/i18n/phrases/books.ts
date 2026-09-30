@@ -764,11 +764,16 @@ const phrases: PhraseBook = {
     ar: "في الكشف، وليس في الدفاتر",
     ckb: "لە کەشفەکەدایە، لە دەفتەرەکاندا نییە",
   },
-  "Record each one (a bank's charge on Expenses, paid from the bank; interest by a journal): back on this page, it is found and ticked.":
+  "Record it fills in what the bank shows: a charge on Expenses, paid from the bank; money in (interest) as a journal into the bank, the account it came from yours to choose. Back on this page, it is found and ticked.":
     {
-      ar: "سجّل كلًّا منها (عمولة البنك في المصروفات، مدفوعة من البنك؛ والفائدة بقيد يومية): حين تعود إلى هذه الصفحة، يُوجد ويُعلَّم.",
-      ckb: "هەر یەکێکیان تۆمار بکە (کرێی بانک لە خەرجییەکاندا، لە بانکەوە دراو؛ سوودیش بە تۆمارێکی ڕۆژانە): کاتێک دەگەڕێیتەوە بۆ ئەم پەڕەیە، دەدۆزرێتەوە و نیشانەی لێدەدرێت.",
+      ar: "زر «سجّله» يملأ ما يُظهره البنك: العمولة في المصروفات، مدفوعة من البنك؛ والمبالغ الداخلة (الفائدة) بقيد يومية إلى البنك، وتختار أنت الحساب الذي جاءت منه. حين تعود إلى هذه الصفحة، يُوجد ويُعلَّم.",
+      ckb: "«تۆماری بکە» ئەوەی بانک نیشانی دەدات پڕ دەکاتەوە: کرێی بانک لە خەرجییەکاندا، لە بانکەوە دراو؛ پارەی هاتوو (سوود) بە تۆمارێکی ڕۆژانە بۆ بانک، و هەژمارەکەی لێیەوە هاتووە تۆ هەڵیدەبژێریت. کاتێک دەگەڕێیتەوە بۆ ئەم پەڕەیە، دەدۆزرێتەوە و نیشانەی لێدەدرێت.",
     },
+  "Card money and a platform's payout are recorded where they are settled:": {
+    ar: "أموال البطاقات ودفعات المنصات تُسجَّل حيث تُسوّى:",
+    ckb: "پارەی کارت و پارەدانی پلاتفۆرمەکان لەو شوێنەدا تۆمار دەکرێن کە تێیدا یەکلا دەکرێنەوە:",
+  },
+  "Back to the bank's statement": { ar: "عُد إلى كشف البنك", ckb: "بگەڕێوە بۆ کەشفی بانک" },
   // What the bank's statement could not be read as (src/lib/bank.ts, parseBankStatement).
   "The columns were not recognised. Name them Date, Money in and Money out (or Amount), and Balance if the statement gives it.":
     {

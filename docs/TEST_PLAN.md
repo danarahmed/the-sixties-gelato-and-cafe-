@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 563 tests)
+## 1. Unit (Vitest, 566 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -657,10 +657,13 @@ database, behind a small local stand-in for Supabase's auth service.
   names, three found in the books and ticked (the cash taken to the bank,
   the paper, the platform's payout), a cheque not cashed left open, the last
   day and balance filled in, the bank's charge listed as not in the books and
-  the statement 2,750 apart; on a 390px phone in Kurdish it fits; the charge
-  recorded, back on the page the statement read is there, the charge found,
-  it ties and is kept with its four lines, the cheque still open, and what
-  was read let go. In Arabic and Kurdish, both read with no English but the
+  the statement 2,750 apart; on a 390px phone in Kurdish it fits; **Record
+  it** opens Expenses filled in (the bank's words, 2,750, today, from the
+  bank), the charge posted to 6500 and **Back to the bank's statement**: the
+  statement read is there, the charge found; **Record it** on the interest
+  opens a journal (Dr 1020 Bank 1,250), published against Bank interest (an
+  income the café added), and back: it ties and is kept with its five lines,
+  the cheque still open, and what was read let go. In Arabic and Kurdish, both read with no English but the
   café's own names.
 - `documents` (`0053`): a manager opens a delivery's 📎 on Purchasing (none
   kept yet) and keeps its delivery note: a phone's photo of 4 MB or so, made

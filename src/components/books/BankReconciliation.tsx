@@ -21,6 +21,7 @@ import { saveBankStatementAction, undoBankStatementAction } from "@/lib/actions/
 import {
   BANK_EXAMPLE,
   bankMath,
+  recordLink,
   linesTo,
   matchBankStatement,
   parseBankStatement,
@@ -503,6 +504,7 @@ function StatementRead({
                   <th>{t("What")}</th>
                   <th className="right">{t("Money in")}</th>
                   <th className="right">{t("Money out")}</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -520,6 +522,11 @@ function StatementRead({
                     <td className="right money" data-label={t("Money out")}>
                       {Number(l.amount) < 0 ? fmtIQD(-Number(l.amount)) : ""}
                     </td>
+                    <td className="right">
+                      <Link href={recordLink(l)} data-testid="bank-record">
+                        {t("Record it")}
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -527,10 +534,17 @@ function StatementRead({
           </div>
           <span className="muted">
             {t(
-              "Record each one (a bank's charge on Expenses, paid from the bank; interest by a journal): back on this page, it is found and ticked.",
-            )}{" "}
-            <Link href="/expenses">{t("nav.expenses")}</Link>
+              "Record it fills in what the bank shows: a charge on Expenses, paid from the bank; money in (interest) as a journal into the bank, the account it came from yours to choose. Back on this page, it is found and ticked.",
+            )}
           </span>
+          {missing.some((l) => Number(l.amount) > 0) && (
+            <span className="muted" data-testid="bank-settled-elsewhere">
+              {t("Card money and a platform's payout are recorded where they are settled:")}{" "}
+              <Link href="/sales#card">{t("Card Takings")}</Link>
+              {" · "}
+              <Link href="/platforms">{t("nav.platforms")}</Link>
+            </span>
+          )}
         </div>
       )}
     </div>

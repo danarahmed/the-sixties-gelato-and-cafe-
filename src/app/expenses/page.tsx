@@ -3,6 +3,7 @@ import { has, requirePermission } from "@/lib/auth/session";
 import { getExpenses, getGlAccounts, getPeriods, periodFor } from "@/lib/db/books";
 import { fmtIQD } from "@/lib/format";
 import { businessToday } from "@/lib/dates";
+import { expenseFromLink } from "@/lib/bank";
 import { ExpenseEntry } from "@/components/books/ExpenseEntry";
 import { EmptyState } from "@/components/ui";
 import { DocumentsLink } from "@/components/documents/DocumentsLink";
@@ -13,11 +14,17 @@ export const dynamic = "force-dynamic";
 /** Stock costs come from their own records, never from a typed-in expense. */
 const NOT_EXPENSES = new Set(["5000", "5050", "5300", "5310", "5400"]);
 
-export default async function ExpensesPage() {
+export default async function ExpensesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const profile = await requirePermission("cost.view");
   const t = await getT();
   const msg = await getMsg();
   const today = businessToday(profile.timezone);
+  // Opened from the bank's statement: the line the books don't have, filled in.
+  const prefill = expenseFromLink(await searchParams, today);
   const [rows, accounts, periods] = await Promise.all([
     getExpenses(100),
     getGlAccounts(),
@@ -65,6 +72,7 @@ export default async function ExpensesPage() {
               .filter((a) => a.isActive && a.type === "expense" && !NOT_EXPENSES.has(a.code))
               .map((a) => ({ code: a.code, name: a.name }))}
             today={today}
+            prefill={prefill}
           />
         </section>
       )}
