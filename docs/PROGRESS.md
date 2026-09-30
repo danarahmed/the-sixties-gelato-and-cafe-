@@ -1529,7 +1529,21 @@ browser tests through the real app, or both.
 
   Built and tested: browser checks for the phone's top bar, the till's
   categories, Settings' tick boxes, the books' checks folded or open and a
-  place's note; every new text in Arabic and Kurdish.
+  place's note; every new text in Arabic and Kurdish. Deployed with
+  [pull request #47](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/47).
+
+- **The UX and integration pass, second part (no migration).**
+  - **Settings → People on a phone:** each person is a card (email, roles,
+    where they work, the login, and the **Roles** and **Deactivate** buttons in
+    reach), not a table running off to the side of the screen;
+  - **the phone's top bar:** every control on the screen, in Arabic too;
+    "Online" is not said on a phone (offline still is, with its banner), and
+    the café's name is cut cleanly at its end;
+  - **no account codes in a manager's words:** the Sales page's refunds and
+    the Orders page say "Sales returns", not "4200".
+
+  Built and tested: browser checks for the People cards on a phone and for
+  every control of the top bar on the screen, in English and Arabic.
 
 ## The August 2026 audit, finding by finding
 

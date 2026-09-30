@@ -64,7 +64,7 @@ function Controls({ locale, theme }: { locale: Locale; theme: "light" | "dark" }
 
   return (
     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-      <span className={`badge ${online ? "ok" : "err"}`}>
+      <span className={`badge conn ${online ? "ok" : "err"}`}>
         {online ? t("common.online") : t("common.offlineShort")}
       </span>
       <label className="muted" style={{ fontSize: ".85rem" }}>
@@ -144,7 +144,9 @@ export function AppShell({
         >
           ☰
         </button>
-        <span className="brand">{member.businessName || t("app.name")}</span>
+        <span className="brand" dir="auto">
+          {member.businessName || t("app.name")}
+        </span>
         <span className="spacer" />
         <Controls locale={locale} theme={theme} />
         <Link href="/account" className="badge account-badge" title={t("nav.account")}>

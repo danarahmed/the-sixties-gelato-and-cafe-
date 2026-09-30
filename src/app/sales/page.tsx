@@ -81,7 +81,7 @@ export default async function SalesPage() {
         <div>
           <div className="sc">{t("Refunds made")}</div>
           <div className="v red">({fmtIQD(totals.refunds)})</div>
-          <div className="m">{t("On the day they were made, through 4200 Sales returns")}</div>
+          <div className="m">{t("On the day they were made")}</div>
         </div>
         <div>
           <div className="sc">{t("Cost of what was sold")}</div>

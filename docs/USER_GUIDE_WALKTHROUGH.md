@@ -1325,7 +1325,8 @@ deleted.
 manager
 
 - **People:**
-  - every member, with name, email, roles, and whether they have signed in;
+  - every member, with name, email, roles, and whether they have signed in; on
+    a phone each is a card, their buttons in reach;
   - **Add a person** (name, email, roles), change roles, **Deactivate** /
     **Reactivate**.
 
