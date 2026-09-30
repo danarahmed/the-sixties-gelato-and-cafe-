@@ -1,10 +1,12 @@
-// Find a sale on Orders (the September audit's P2-20, "hard to find things"),
-// through the real screen: the owner finds a sale by the number its receipt
-// prints after "Sale", by its journal, by a refund's number and the refund's
-// journal; a Talabat sale by its order number, whatever its capitals; a
-// customer's sale by part of their name and by their phone typed another way.
-// A search that names nothing says so and shows no sale; in Arabic and
-// Kurdish, no English but the café's own names.
+// Finding things (the September audit's P2-20, "hard to find things"),
+// through the real screens. On Orders, the owner finds a sale by the number
+// its receipt prints after "Sale", by its journal, by a refund's number and
+// the refund's journal; a Talabat sale by its order number, whatever its
+// capitals; a customer's sale by part of their name and by their phone typed
+// another way. On Products & Recipes, a product by part of its name, in
+// capitals or not, and by its Arabic and Kurdish names. On Journals, a journal
+// by its number and by words in it. A search that names nothing says so; in
+// Arabic and Kurdish, no English but the café's own names.
 import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 import { english } from "./english.mjs";
 
@@ -36,6 +38,10 @@ sql(`select test.act_as('owner@example.com');
      select save_customer(null, 'Shilan Findtest', '0750 555 0199')`);
 const customer = last(`select id from customer where phone = '+9647505550199'`);
 const theirs = sell("takeaway", "cash", 1, `, p_customer => '${customer}'`);
+
+// The espresso's names in Arabic and Kurdish, as the owner would give them.
+sql(`update product set name_ar = 'إسبريسو ذهبي', name_ckb = 'ئێسپرێسۆی زێڕین'
+      where id = 'd0000000-0000-0000-0000-000000000001'`);
 
 const short = (id) => id.slice(0, 8);
 /** The sales Orders shows for a search: the number each receipt prints after "Sale". */
@@ -94,6 +100,62 @@ console.log("▸ the owner finds a sale by what its receipt and its refund print
   await ctx.close();
 }
 
+console.log("▸ a product on Products & Recipes, and a journal on Journals");
+{
+  const { ctx, page } = await signIn(browser, "manager");
+  const products = async (q) => {
+    await open(page, `/products?q=${encodeURIComponent(q)}`);
+    return page
+      .getByTestId("product-card")
+      .evaluateAll((cards) => cards.map((c) => c.getAttribute("data-name")));
+  };
+  let names = await products("GOLDEN WAT");
+  check(
+    names.length === 1 && names[0] === "Golden water",
+    `a product by part of its name, in capitals (${names.join(", ")})`,
+  );
+  names = await products("water");
+  check(
+    names.includes("Golden water") && names.includes("Bottled Water"),
+    `every product whose name has it (${names.join(", ")})`,
+  );
+  names = await products("ذهبي");
+  check(names.length === 1 && names[0] === "Golden espresso", "by its Arabic name");
+  names = await products("زێڕین");
+  check(names.length === 1 && names[0] === "Golden espresso", "and by its Kurdish name");
+  names = await products("إسبريسو");
+  check(
+    names.includes("Golden espresso") && names.includes("Espresso"),
+    `in Arabic, every product whose Arabic name has it (${names.join(", ")})`,
+  );
+  names = await products("no-such-product");
+  check(
+    names.length === 0 &&
+      (await page.getByText("No product matches “no-such-product”").isVisible()),
+    "a search that names no product says so",
+  );
+
+  const journals = async (q) => {
+    await open(page, `/journals?q=${encodeURIComponent(q)}`);
+    return page
+      .getByTestId("journal-row")
+      .evaluateAll((rows) => rows.map((r) => r.getAttribute("data-no")));
+  };
+  let nos = await journals(saleJournal);
+  check(nos.length === 1 && nos[0] === saleJournal, `a journal by its number, ${saleJournal}`);
+  nos = await journals(short(cash));
+  check(
+    nos.includes(saleJournal) && nos.includes(refundJournal),
+    `by words in it: the sale's and its refund's journals name the sale (${nos.join(", ")})`,
+  );
+  nos = await journals("no-such-journal");
+  check(
+    nos.length === 0 && (await page.getByText("No journal matches “no-such-journal”").isVisible()),
+    "a search that names no journal says so",
+  );
+  await ctx.close();
+}
+
 console.log("▸ in Arabic and in Kurdish");
 for (const locale of ["ar", "ckb"]) {
   const { ctx, page } = await signIn(browser, "owner");
@@ -103,6 +165,14 @@ for (const locale of ["ar", "ckb"]) {
   // Nothing found: digits, since what was typed is shown back as it was.
   await open(page, "/orders?q=99999998");
   words.push(...(await english(page, "/orders")));
+  for (const path of [
+    "/products?q=99999998",
+    `/journals?q=${saleJournal}`,
+    "/journals?q=99999998",
+  ]) {
+    await open(page, path);
+    words.push(...(await english(page, path.split("?")[0])));
+  }
   check(
     got.length === 1 && words.length === 0,
     `in ${locale}, the sale found, and no English but the café's own names` +

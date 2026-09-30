@@ -3,7 +3,7 @@ import { getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { findSaleIds, getSalesOrders } from "@/lib/db/read";
-import { readSaleQuery, SALE_QUERY_MAX } from "@/lib/findSale";
+import { readSaleQuery, SEARCH_MAX } from "@/lib/find";
 import { fmtIQD, fmtQty, orderStatusLabel, tenderLabel } from "@/lib/format";
 import { fmtRate, fmtUSD } from "@/lib/fx";
 import { getChannelNames } from "@/lib/db/channels";
@@ -27,7 +27,7 @@ export default async function OrdersPage({
   ]);
   // Find a sale (the September audit's P2-20): by what the receipt, a refund,
   // the platform or the customer calls it, whatever its day.
-  const find = typeof sp.q === "string" ? sp.q.trim().slice(0, SALE_QUERY_MAX) : "";
+  const find = typeof sp.q === "string" ? sp.q.trim().slice(0, SEARCH_MAX) : "";
   const query = find ? readSaleQuery(find) : null;
   // Opened from a report: the sales of those days (and that channel).
   const today = businessToday(profile.timezone);
@@ -86,7 +86,7 @@ export default async function OrdersPage({
             type="search"
             name="q"
             defaultValue={find}
-            maxLength={SALE_QUERY_MAX}
+            maxLength={SEARCH_MAX}
             dir="auto"
             data-testid="find-sale"
             placeholder={t("Sale or journal number, platform order, customer")}

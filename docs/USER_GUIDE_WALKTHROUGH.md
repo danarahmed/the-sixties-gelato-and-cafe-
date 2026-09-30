@@ -710,6 +710,11 @@ a credit or an expense. Whoever sees costs sees them.
 **Location:** Sidebar → **Products & Recipes** · `/products` · **Who:** anyone who
 sees costs; creating and pricing: owner, general manager
 
+**Find a product** narrows the list to the products whose name, or a size's,
+has what was typed, in English, Arabic or Kurdish. Capitals, accents and
+letter forms do not matter (ي and ی, ك and ک), as on the till's search.
+**Every product** shows them all again.
+
 - **Add a menu product**, in three steps:
   1. **Name and category:** its name in English, Arabic and Kurdish, and its
      category on the till.
@@ -1108,6 +1113,10 @@ costs; posting: accountant, general manager, owner
   moved, Manual, Year end). **Manual and reversals** filters to the hand-made ones. Open a row
   to see its lines. Entries from the previous app are marked **before
   controls**.
+- **Find a journal:** type its number, or words from its description, its
+  reference or a line's note. A sale's journal is found by the number its
+  receipt prints after **Sale**, which its description carries. **All** shows
+  every journal again.
 - **New Journal:**
   - a date, an optional **Reverse on** date (for accruals), a reference and
     notes;

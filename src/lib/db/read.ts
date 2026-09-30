@@ -10,7 +10,7 @@ import "server-only";
  * returns an empty list that would look like "nothing recorded yet".
  */
 import { db, num, numOrNull, rows, str, strOrNull, one, type Row } from "./client";
-import { likeText, type SaleQuery } from "@/lib/findSale";
+import { likeText, type SaleQuery } from "@/lib/find";
 import { leftToGiveBack, type LeftToGiveBack, type PaidPart, type PayType } from "@/lib/payments";
 
 export interface BusinessConfig {

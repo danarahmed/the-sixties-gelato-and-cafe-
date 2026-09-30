@@ -289,7 +289,14 @@ import {
   shrunkSize,
   sizeLabel,
 } from "@/lib/documents";
-import { likeText, phoneTail, readSaleQuery } from "@/lib/findSale";
+import {
+  likeText,
+  namesMatch,
+  phoneTail,
+  readJournalQuery,
+  readSaleQuery,
+  searchText,
+} from "@/lib/find";
 
 const perms = (role: Role) => [...ROLE_PERMISSIONS[role]];
 
@@ -4913,5 +4920,34 @@ describe("find a sale on Orders (the September audit's P2-20)", () => {
   it("takes %, _ and \\ typed in a search as themselves", () => {
     expect(likeText("50%_off")).toBe("50\\%\\_off");
     expect(likeText("a\\b")).toBe("a\\\\b");
+  });
+});
+
+describe("find a journal, and a product (the September audit's P2-20)", () => {
+  it("reads a search box's text as it is looked for", () => {
+    expect(searchText("  #  ١٠٢٤  ")).toBe("1024");
+    expect(searchText("rent   for   September")).toBe("rent for September");
+    expect(searchText("   ")).toBeNull();
+    expect(searchText("x".repeat(61))).toBeNull();
+  });
+
+  it("finds a journal by its number, or by words in it", () => {
+    expect(readJournalQuery("1024")).toEqual({ number: 1024, words: "1024" });
+    expect(readJournalQuery("rent")).toEqual({ words: "rent" });
+    // One letter or digit alone is a number, not words.
+    expect(readJournalQuery("7")).toEqual({ number: 7 });
+    expect(readJournalQuery("x")).toBeNull();
+  });
+
+  it("finds a product by part of its name or a size's, in any language and letter form", () => {
+    const latte = ["Latte", "لاتيه", "لاتێ", "Regular", "Large", "كبير", "گەورە"];
+    expect(namesMatch(latte, "lat")).toBe(true);
+    expect(namesMatch(latte, "LARGE")).toBe(true);
+    expect(namesMatch(latte, "لاتي")).toBe(true);
+    // Kurdish and Arabic letter forms are the same letter to a search (ی and ي, ک and ك).
+    expect(namesMatch(["کیک"], "كيك")).toBe(true);
+    expect(namesMatch(latte, "mocha")).toBe(false);
+    expect(namesMatch([null, undefined, ""], "a")).toBe(false);
+    expect(namesMatch(latte, "  ")).toBe(false);
   });
 });

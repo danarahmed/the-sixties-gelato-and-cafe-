@@ -1,8 +1,9 @@
 /**
- * Find a sale (the September audit's P2-20, "hard to find things"): what was
- * typed on Orders, read as each way a sale is named on paper or by a caller.
- * Pure: the screen and the tests both read through here.
+ * Finding things (the September audit's P2-20, "hard to find things"): what
+ * was typed in a search box, read as each way a thing is named. Pure: the
+ * screens and the tests both read through here.
  *
+ * A sale, on Orders:
  *  - the receipt's sale number: the 8 letters and digits printed after "Sale"
  *    (the start of the sale's id), or the whole id;
  *  - a number: the sale's journal or a refund's journal, or a refund's own
@@ -14,6 +15,7 @@
  * journal number and an order number): each is looked for.
  */
 import { cleanOrderNo, ORDER_NO } from "@/lib/validation";
+import { fold } from "@/components/pos/model";
 
 export interface SaleQuery {
   /** The receipt's sale number: the ids from `from` to `to`. */
@@ -29,7 +31,7 @@ export interface SaleQuery {
 }
 
 /** The longest search read: a name, a phone or an order number is shorter. */
-export const SALE_QUERY_MAX = 60;
+export const SEARCH_MAX = 60;
 
 const HEX8 = /^[0-9a-f]{8}$/i;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -53,13 +55,22 @@ export function phoneTail(input: string): string | null {
   return tail.length >= 7 ? tail : null;
 }
 
-/** What was typed on Orders, read as every way it can name a sale; null when nothing is. */
-export function readSaleQuery(input: string | null | undefined): SaleQuery | null {
+/**
+ * What was typed in a search box, as it is looked for: its digits 0–9, its
+ * spaces one, a leading # gone. Null when empty, or longer than a search holds.
+ */
+export function searchText(input: string | null | undefined): string | null {
   const text = latinDigits(String(input ?? ""))
     .replace(/\s+/g, " ")
     .trim()
     .replace(/^#+\s*/, "");
-  if (!text || text.length > SALE_QUERY_MAX) return null;
+  return text && text.length <= SEARCH_MAX ? text : null;
+}
+
+/** What was typed on Orders, read as every way it can name a sale; null when nothing is. */
+export function readSaleQuery(input: string | null | undefined): SaleQuery | null {
+  const text = searchText(input);
+  if (!text) return null;
   const q: SaleQuery = {};
   if (UUID.test(text)) q.ids = { from: text.toLowerCase(), to: text.toLowerCase() };
   else if (HEX8.test(text)) {
@@ -79,4 +90,32 @@ export function readSaleQuery(input: string | null | undefined): SaleQuery | nul
 /** A value for LIKE, its own % and _ taken as themselves. */
 export function likeText(s: string): string {
   return s.replace(/[\\%_]/g, (c) => `\\${c}`);
+}
+
+/** A journal, on Journals: by its number, or by words in it. */
+export interface JournalQuery {
+  /** Its number. */
+  number?: number;
+  /** Words in its description, its reference or a line's note. */
+  words?: string;
+}
+
+/** What was typed on Journals; null when nothing is. */
+export function readJournalQuery(input: string | null | undefined): JournalQuery | null {
+  const text = searchText(input);
+  if (!text) return null;
+  const q: JournalQuery = {};
+  if (/^\d{1,9}$/.test(text)) q.number = Number(text);
+  if (text.length >= 2) q.words = text;
+  return Object.keys(q).length ? q : null;
+}
+
+/**
+ * Whether a product is one a search names, on Products & Recipes: part of its
+ * name or a size's, in any of its languages, forgiving case, accents and
+ * Arabic and Kurdish letter forms, as the till's search does.
+ */
+export function namesMatch(names: readonly (string | null | undefined)[], typed: string): boolean {
+  const q = fold(typed);
+  return q.length > 0 && names.some((n) => !!n && fold(n).includes(q));
 }
