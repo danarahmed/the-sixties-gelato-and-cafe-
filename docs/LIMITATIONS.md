@@ -387,8 +387,9 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   in the reader's language, as the database words them translated whole
   (`0032`). Running out knows a delivery time per supplier, taken from
   the item's last delivery; an item with no delivery yet uses the café's.
-  Use-by dates (P2-7) and a late sale (impossible since `0024`) raise
-  nothing.
+  A batch's use-by date raises its own alert (`0046`): orange within a day,
+  red once past with stock left. A late sale raises nothing: it cannot
+  happen since `0024`.
 - **Chart of accounts maintenance (M-06, `0058`).** An income (4000–4999) or
   a cost (5000–6999) is added, renamed, taken out of use and brought back on
   **Chart of Accounts**. What it does not do:
