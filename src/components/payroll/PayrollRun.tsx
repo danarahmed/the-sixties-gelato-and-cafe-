@@ -23,11 +23,14 @@ import {
   type PayrollLine,
   type StaffPaidFrom,
 } from "@/lib/staff";
+import type { CashOnHand } from "@/lib/cash";
 import { fmtIQD } from "@/lib/format";
+import { normaliseNumber } from "@/lib/validation";
 import { dateTimeIn } from "@/lib/dates";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { CashOnHandNote } from "@/components/cash/CashOnHandNote";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -44,10 +47,13 @@ export function PayrollRun({
   run,
   canRun,
   timezone,
+  cash = null,
 }: {
   run: PayrollDetail;
   canRun: boolean;
   timezone: string;
+  /** What the safe and the drawer salaries are paid from hold (AK). */
+  cash?: CashOnHand | null;
 }) {
   const { t } = useT();
   const [open, setOpen] = useState<{ what: "adjust" | "pay"; id: string } | null>(null);
@@ -125,6 +131,7 @@ export function PayrollRun({
                 run={run}
                 hours={hours}
                 canRun={canRun}
+                cash={cash}
                 open={open?.id === l.id ? open.what : null}
                 setOpen={(what) => setOpen(what ? { what, id: l.id } : null)}
               />
@@ -149,7 +156,14 @@ export function PayrollRun({
         {t("Gross {gross}.", { gross: fmtIQD(totals.gross) })}
       </p>
 
-      {canRun && <RunActions run={run} owed={totals.owed} hasPayments={livePayments.length > 0} />}
+      {canRun && (
+        <RunActions
+          run={run}
+          owed={totals.owed}
+          hasPayments={livePayments.length > 0}
+          cash={cash}
+        />
+      )}
 
       {run.payments.length > 0 && (
         <section className="grid" style={{ gap: 8 }}>
@@ -204,6 +218,7 @@ function LineRow({
   run,
   hours,
   canRun,
+  cash,
   open,
   setOpen,
 }: {
@@ -211,6 +226,7 @@ function LineRow({
   run: PayrollDetail;
   hours: (minutes: number) => string;
   canRun: boolean;
+  cash: CashOnHand | null;
   open: "adjust" | "pay" | null;
   setOpen: (what: "adjust" | "pay" | null) => void;
 }) {
@@ -309,7 +325,7 @@ function LineRow({
             {open === "adjust" ? (
               <AdjustLine l={l} onDone={() => setOpen(null)} />
             ) : (
-              <PayLine l={l} owed={owed} onDone={() => setOpen(null)} />
+              <PayLine l={l} owed={owed} cash={cash} onDone={() => setOpen(null)} />
             )}
           </td>
         </tr>
@@ -419,7 +435,17 @@ function AdjustLine({ l, onDone }: { l: PayrollLine; onDone: () => void }) {
   );
 }
 
-function PayLine({ l, owed, onDone }: { l: PayrollLine; owed: number; onDone: () => void }) {
+function PayLine({
+  l,
+  owed,
+  cash,
+  onDone,
+}: {
+  l: PayrollLine;
+  owed: number;
+  cash: CashOnHand | null;
+  onDone: () => void;
+}) {
   const op = useOperation();
   const { t } = useT();
   const router = useRouter();
@@ -472,6 +498,9 @@ function PayLine({ l, owed, onDone }: { l: PayrollLine; owed: number; onDone: ()
       <button className="btn-primary" disabled={busy} onClick={pay}>
         {busy ? t("Saving…") : t("Pay {name}", { name: l.name })}
       </button>
+      <div style={{ flexBasis: "100%" }}>
+        <CashOnHandNote on={cash} from={from} amount={Number(normaliseNumber(amount)) || 0} />
+      </div>
       <OperationStatus op={op} />
       <Notice msg={msg} />
     </div>
@@ -483,10 +512,12 @@ function RunActions({
   run,
   owed,
   hasPayments,
+  cash,
 }: {
   run: PayrollDetail;
   owed: number;
   hasPayments: boolean;
+  cash: CashOnHand | null;
 }) {
   const op = useOperation();
   const { t } = useT();
@@ -577,6 +608,9 @@ function RunActions({
           >
             {t("Pay everyone still owed ({amount})", { amount: fmtIQD(owed) })}
           </button>
+          <div style={{ flexBasis: "100%" }}>
+            <CashOnHandNote on={cash} from={from} amount={owed} />
+          </div>
         </div>
       )}
       {run.status !== "draft" &&

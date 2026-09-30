@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 574 tests)
+## 1. Unit (Vitest, 579 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -36,7 +36,10 @@ layers before every release.
   Baghdad trading day; the expense-account suggestions; the drawer's count,
   typed or note by note, what stays and what is taken out at a close, and the
   answer and the drawer's state as the database gives them (`0036`); what a
-  refund of some of a sale's items gives back, as the database works it out
+  form says under "Paid from" (the safe's balance, what the drawer should
+  hold to those who may see it, a warning when a payment is more or the
+  drawer is not open, nothing for the bank, and all of it in Arabic and
+  Kurdish); what a refund of some of a sale's items gives back, as the database works it out
   (each line's share of what it was sold for, half to even, the last of a line
   taking exactly what is left of it, so three refunds of one of three add up
   to the line) and more than is left refused (`0037`);
@@ -435,7 +438,12 @@ database, behind a small local stand-in for Supabase's auth service.
   both; the manager opens the drawer with a float from the safe; the manager
   reads the week's sessions (the open one without what it should hold) and a
   closed session's statement, a cashier is sent home from them, and they fit
-  a phone. The drawer is left open, as it was found.
+  a phone. On Expenses, paid from the safe, the owner is told what the safe
+  holds, and warned when the amount is more; paid from the till, told what the
+  drawer should hold, and warned likewise; from the bank, told nothing. An
+  advance of more than the safe holds is warned of. The manager, who counts
+  blind, is told what the safe holds but not what the drawer should hold.
+  Nothing is paid. The drawer is left open, as it was found.
 - `refunds` (last, `0037`): on Orders a manager refunds one espresso and one
   water of a sale of three and two. The dialog starts from all that is left
   (9,500 back in cash, from the drawer), refuses 5 espressos when 3 are left,

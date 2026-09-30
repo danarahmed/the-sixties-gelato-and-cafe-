@@ -10,7 +10,8 @@ import {
   recordBillAction,
   updateSupplierAction,
 } from "@/lib/actions/purchasing";
-import type { PaymentSource } from "@/lib/validation";
+import { normaliseNumber, type PaymentSource } from "@/lib/validation";
+import type { CashOnHand } from "@/lib/cash";
 import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { SupplierCredit } from "@/lib/purchasing";
@@ -19,6 +20,7 @@ import { DocumentsLink } from "@/components/documents/DocumentsLink";
 import { Notice } from "@/components/ui";
 import type { OpenBill, VendorRow } from "@/lib/db/books";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { CashOnHandNote } from "@/components/cash/CashOnHandNote";
 
 export interface ReceiptOption {
   id: string;
@@ -53,6 +55,7 @@ export function VendorsClient({
   creditAccounts = [],
   canCredit = false,
   docs = {},
+  cash = null,
 }: {
   vendors: VendorRow[];
   bills: OpenBill[];
@@ -75,6 +78,8 @@ export function VendorsClient({
   canCredit?: boolean;
   /** How many documents each bill and credit note keeps (0053), by its id. */
   docs?: Record<string, number>;
+  /** What the safe and this device's drawer hold, for a bill paid out of them (AK). */
+  cash?: CashOnHand | null;
 }) {
   const { t } = useT();
   const router = useRouter();
@@ -184,6 +189,7 @@ export function VendorsClient({
               canPay={canPay}
               onDone={() => router.refresh()}
               docs={docs}
+              cash={cash}
             />
           )}
           {tab === "credits" && vendor && (
@@ -331,6 +337,7 @@ function Bills({
   canPay,
   onDone,
   docs,
+  cash,
 }: {
   vendor: VendorRow;
   bills: OpenBill[];
@@ -343,6 +350,7 @@ function Bills({
   onDone: () => void;
   /** How many documents each bill keeps (0053), by its id. */
   docs: Record<string, number>;
+  cash: CashOnHand | null;
 }) {
   const op = useOperation();
   const { t, msg: say } = useT();
@@ -690,6 +698,13 @@ function Bills({
               <button onClick={pay} disabled={busy || !payFor || !payAmt || !method}>
                 {busy ? t("Paying…") : t("Record payment")}
               </button>
+            </div>
+            <div style={{ marginBlockStart: 8 }}>
+              <CashOnHandNote
+                on={cash}
+                from={method}
+                amount={Number(normaliseNumber(payAmt)) || 0}
+              />
             </div>
           </div>
         )}

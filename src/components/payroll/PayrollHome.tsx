@@ -8,10 +8,13 @@ import {
   recordAdvanceAction,
 } from "@/lib/actions/payroll";
 import { PAID_FROM_LABEL, STAFF_PAID_FROM, type Advance, type StaffPaidFrom } from "@/lib/staff";
+import type { CashOnHand } from "@/lib/cash";
 import { fmtIQD } from "@/lib/format";
+import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { CashOnHandNote } from "@/components/cash/CashOnHandNote";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -71,17 +74,20 @@ export function DraftPayroll({ months }: { months: { month: string; label: strin
  * Advances (0049): what each person still owes, every advance given, and a new
  * one from the till, the safe, the bank or the owner. The payroll takes them
  * back from the salary; one given by mistake is cancelled while none of it is.
+ * From the safe or the till, the form says what it holds (AK).
  */
 export function Advances({
   advances,
   owed,
   people,
   canRun,
+  cash = null,
 }: {
   advances: Advance[];
   owed: { employeeId: string; name: string; owed: number }[];
   people: { id: string; name: string }[];
   canRun: boolean;
+  cash?: CashOnHand | null;
 }) {
   const { t } = useT();
   const [giving, setGiving] = useState(false);
@@ -131,7 +137,7 @@ export function Advances({
       )}
       {canRun &&
         (giving ? (
-          <GiveAdvance people={people} onDone={() => setGiving(false)} />
+          <GiveAdvance people={people} cash={cash} onDone={() => setGiving(false)} />
         ) : (
           <button
             type="button"
@@ -236,9 +242,11 @@ function AdvanceRow({
 
 function GiveAdvance({
   people,
+  cash,
   onDone,
 }: {
   people: { id: string; name: string }[];
+  cash: CashOnHand | null;
   onDone: () => void;
 }) {
   const op = useOperation();
@@ -310,6 +318,7 @@ function GiveAdvance({
           <input style={inputStyle} value={reason} onChange={(e) => setReason(e.target.value)} />
         </Field>
       </div>
+      <CashOnHandNote on={cash} from={from} amount={Number(normaliseNumber(amount)) || 0} />
       <p className="muted" style={{ margin: 0, fontSize: ".8rem" }}>
         {t(
           "Dr 1300 Employee advances, Cr where the money came from. The next payroll takes it back from their salary.",

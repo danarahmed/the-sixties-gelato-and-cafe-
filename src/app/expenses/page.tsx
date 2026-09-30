@@ -1,6 +1,7 @@
 import { getMsg, getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
-import { getExpenses, getGlAccounts, getPeriods, periodFor } from "@/lib/db/books";
+import { getCashOnHand, getExpenses, getGlAccounts, getPeriods, periodFor } from "@/lib/db/books";
+import { tillForWrite } from "@/lib/place";
 import { fmtIQD } from "@/lib/format";
 import { businessToday } from "@/lib/dates";
 import { expenseFromLink } from "@/lib/bank";
@@ -25,10 +26,14 @@ export default async function ExpensesPage({
   const today = businessToday(profile.timezone);
   // Opened from the bank's statement: the line the books don't have, filled in.
   const prefill = expenseFromLink(await searchParams, today);
-  const [rows, accounts, periods] = await Promise.all([
+  const canRecord = has(profile, "expense.record");
+  const [rows, accounts, periods, cash] = await Promise.all([
     getExpenses(100),
     getGlAccounts(),
     getPeriods(),
+    // What the safe and this device's drawer hold: an expense paid from the
+    // till comes out of that drawer (AK).
+    canRecord ? tillForWrite().then(getCashOnHand) : Promise.resolve(null),
   ]);
   // The receipts kept with each expense (0053).
   const docs = await getDocumentCounts(
@@ -59,7 +64,7 @@ export default async function ExpensesPage({
         </div>
       </div>
 
-      {has(profile, "expense.record") && (
+      {canRecord && (
         <section className="panel">
           <div className="panel-h">
             <h3>{t("Record an Expense")}</h3>
@@ -73,6 +78,7 @@ export default async function ExpensesPage({
               .map((a) => ({ code: a.code, name: a.name }))}
             today={today}
             prefill={prefill}
+            cash={cash}
           />
         </section>
       )}

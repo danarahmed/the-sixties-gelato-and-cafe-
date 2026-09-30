@@ -587,6 +587,11 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   says enough is left to a person to judge. Colour contrast, the order the
   keyboard moves through a screen, and the till with a screen reader
   running have not been tested.
+- **What the safe and the till hold, under Paid from (AK).** The figures
+  are those of when the page was opened. Money moved on another screen
+  after that shows once the page is opened again. The database checks each
+  payment when it is sent, as before. A salary paid from the till is
+  warned of against the first branch's drawer, which it comes out of.
 
 ## Needs something outside the repository
 
