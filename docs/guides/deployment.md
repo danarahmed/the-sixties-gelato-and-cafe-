@@ -226,6 +226,13 @@ following [`../REMEDIATION.md`](../REMEDIATION.md) section 5.
 - Keep staging separate: a second Supabase project and a Preview environment
   pointed at it. There is no longer any way for a copy of the app to reach the
   live database by accident.
+- **What people are refused** is in the app's log: Vercel → the project →
+  Logs, searching for `"at":"rpc"`. Each line is one call the database refused
+  (`"outcome":"refused"`, with the words the person was shown) or that came
+  back with no answer (`"outcome":"uncertain"`), and the function's name.
+  Nothing was written by either. A refusal repeated for one screen is a sign
+  that people need showing how it works, or that the screen needs to say more.
+  The log is kept as long as Vercel keeps the project's logs.
 
 ## After `0018`
 

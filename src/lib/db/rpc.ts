@@ -4,7 +4,7 @@ import type { PostgrestError } from "@supabase/supabase-js";
 import type { ZodType } from "zod";
 import { v5 as uuidv5 } from "uuid";
 import { createServerSupabase, NotConfiguredError } from "@/lib/supabase/server";
-import { UNCERTAIN_MESSAGE, isUncertainFailure } from "./rpcOutcome";
+import { UNCERTAIN_MESSAGE, isUncertainFailure, rpcLogLine } from "./rpcOutcome";
 
 /**
  * Every change to the books is ONE call to a database function that checks
@@ -38,6 +38,7 @@ export function friendlyError(e: Pick<PostgrestError, "code" | "message">): stri
  * Call one database function as the signed-in person. A refusal comes back as
  * a readable error, and nothing was written (the function's transaction
  * rolled back). A failure to reach the database is reported as uncertain.
+ * Either is written to the app's log, so what people are refused can be seen.
  */
 export async function callRpc<T>(
   fn: string,
@@ -56,12 +57,16 @@ export async function callRpc<T>(
     const { data, error, status } = await client.rpc(fn, args);
     if (error) {
       if (isUncertainFailure(error, status)) {
+        console.warn(rpcLogLine(fn, "uncertain", { code: error.code, status }));
         return { ok: false, uncertain: true, error: UNCERTAIN_MESSAGE };
       }
-      return { ok: false, error: friendlyError(error) };
+      const said = friendlyError(error);
+      console.warn(rpcLogLine(fn, "refused", { code: error.code, status, message: said }));
+      return { ok: false, error: said };
     }
     return { ok: true, data: data as T };
   } catch {
+    console.warn(rpcLogLine(fn, "uncertain"));
     return { ok: false, uncertain: true, error: UNCERTAIN_MESSAGE };
   }
 }

@@ -50,7 +50,7 @@ import {
 import { movementLabel, unitName } from "@/lib/format";
 import { normaliseNumber, positive, signedNonZero } from "@/lib/validation";
 import { getBookkeeper } from "@/lib/bookkeeping/rules";
-import { isUncertainFailure } from "@/lib/db/rpcOutcome";
+import { isUncertainFailure, rpcLogLine } from "@/lib/db/rpcOutcome";
 import { closeSplit, countResult, drawerStateFrom, notesCounted, notesTotal } from "@/lib/cash";
 import {
   allThatIsLeft,
@@ -1047,6 +1047,32 @@ describe("a failed database call: a refusal, or an unknown (audit P0-4)", () => 
   });
   it("no error is no failure", () => {
     expect(isUncertainFailure(null, 200)).toBe(false);
+  });
+  it("either is written to the app's log as one line: the function, and what the person saw", () => {
+    expect(
+      JSON.parse(
+        rpcLogLine("record_advance", "refused", {
+          code: "P0001",
+          status: 400,
+          message: "The till holds 15,000 IQD",
+        }),
+      ),
+    ).toEqual({
+      at: "rpc",
+      fn: "record_advance",
+      outcome: "refused",
+      code: "P0001",
+      status: 400,
+      message: "The till holds 15,000 IQD",
+    });
+    expect(JSON.parse(rpcLogLine("record_sale", "uncertain"))).toEqual({
+      at: "rpc",
+      fn: "record_sale",
+      outcome: "uncertain",
+    });
+    const long = JSON.parse(rpcLogLine("f", "refused", { message: "x".repeat(1000) }));
+    expect(long.message).toHaveLength(300);
+    expect(rpcLogLine("f", "refused").includes("\n")).toBe(false);
   });
 });
 

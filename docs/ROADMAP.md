@@ -63,8 +63,9 @@ Since then, each in [`PROGRESS.md`](PROGRESS.md):
    and in the cash flow.
 3. **Offline selling, if it is needed.** A queue with its own rules for prices
    and stock that change while offline, and a reconciliation of what synced.
-4. **Operations.** Error monitoring, a scheduled restore drill, and staging as a
-   separate Supabase project.
+4. **Operations.** Error monitoring (what the database refuses, and a call
+   with no answer, are written to the app's log already), a scheduled restore
+   drill, and staging as a separate Supabase project.
 
 ## Every release
 
