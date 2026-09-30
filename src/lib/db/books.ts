@@ -375,6 +375,8 @@ export interface ExpenseRow {
   description: string;
   amount: number;
   account: string;
+  /** The account's code alone: a payment like it is asked about (P2-14). */
+  accountCode: string;
   journalNo: number | null;
   by: string | null;
   /** The journal that reversed it: a reversed expense is no longer spent (audit P1-2). */
@@ -416,9 +418,14 @@ export async function getExpenses(limit = 100): Promise<ExpenseRow[]> {
   const label = new Map(
     rows(accounts, "accounts").map((a) => [str(a.id), `${str(a.code)} ${str(a.name)}`]),
   );
+  const code = new Map(rows(accounts, "accounts").map((a) => [str(a.id), str(a.code)]));
   const debited = new Map<string, string>();
+  const debitedCode = new Map<string, string>();
   for (const l of rows(lines, "expense journal lines")) {
-    if (num(l.debit) > 0) debited.set(str(l.journal_entry_id), label.get(str(l.account_id)) ?? "—");
+    if (num(l.debit) > 0) {
+      debited.set(str(l.journal_entry_id), label.get(str(l.account_id)) ?? "—");
+      debitedCode.set(str(l.journal_entry_id), code.get(str(l.account_id)) ?? "");
+    }
   }
   const journalNo = new Map(
     rows(entries, "expense journals").map((e) => [str(e.id), numOrNull(e.journal_no)]),
@@ -430,6 +437,7 @@ export async function getExpenses(limit = 100): Promise<ExpenseRow[]> {
     description: str(e.description) || "—",
     amount: num(e.amount),
     account: e.journal_entry_id ? (debited.get(str(e.journal_entry_id)) ?? "—") : "—",
+    accountCode: e.journal_entry_id ? (debitedCode.get(str(e.journal_entry_id)) ?? "") : "",
     journalNo: e.journal_entry_id ? (journalNo.get(str(e.journal_entry_id)) ?? null) : null,
     by: e.created_by ? (person.get(str(e.created_by)) ?? null) : null,
     reversedBy: e.journal_entry_id ? (reversedBy.get(str(e.journal_entry_id)) ?? null) : null,

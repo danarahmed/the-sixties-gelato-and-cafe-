@@ -434,6 +434,14 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     it** fills in Expenses for money out, and a journal into the bank for
     money in; the account is still the person's to choose. The Chart of
     Accounts has no income for interest until the café adds one.
+- **A payment like one posted already, what is not asked (P2-14).** Expenses
+  asks about an expense or a prepaid expense to the same account, for the
+  same amount, within three days of one among the last 100 expenses or the
+  prepaid expenses. Another amount (a price that went up by 250), four days
+  apart, or another account is not asked about. A bill and a journal by hand
+  are not asked about as they are entered: the dashboard's alert (a possible
+  duplicate) finds any two to the same running-cost account within three
+  days once they are posted.
 - **Prepaid expenses, what they do not do (`0060`).**
   - The payment is dated when it is recorded: one made days before is
     recorded as of today. Its shares keep their months.

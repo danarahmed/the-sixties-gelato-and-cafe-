@@ -16,6 +16,10 @@ import { useT } from "@/lib/i18n/I18nProvider";
  *
  * Each kind of submission on a screen has its own name, so a delivery that is
  * still unanswered never lends its key to a payment made next to it.
+ *
+ * Each send is told whether its key was sent before (a re-send): a question
+ * the server asks only before a first send (an expense like one posted
+ * already, P2-14) is not asked of a submission that may be saved already.
  */
 
 type Result = { ok: true } | { ok: false; error: string; uncertain?: boolean };
@@ -34,10 +38,13 @@ export interface Operation {
   checking: boolean;
   /**
    * Send one submission named `name`; `send` receives the key to pass to the
-   * server action. While an earlier submission of that name is unanswered, its
-   * key is used again.
+   * server action, and whether that key was sent before. While an earlier
+   * submission of that name is unanswered, its key is used again.
    */
-  run<R extends Result>(name: string, send: (key: string) => Promise<R>): Promise<R>;
+  run<R extends Result>(
+    name: string,
+    send: (key: string, resend: boolean) => Promise<R>,
+  ): Promise<R>;
 }
 
 export function useOperation(): Operation {
@@ -45,15 +52,19 @@ export function useOperation(): Operation {
   const waiting = useRef(new Map<string, string>());
 
   const run = useCallback(
-    async <R extends Result>(name: string, send: (key: string) => Promise<R>): Promise<R> => {
-      const key = waiting.current.get(name) ?? crypto.randomUUID();
-      let r = await attempt(send, key);
+    async <R extends Result>(
+      name: string,
+      send: (key: string, resend: boolean) => Promise<R>,
+    ): Promise<R> => {
+      const waitingKey = waiting.current.get(name);
+      const key = waitingKey ?? crypto.randomUUID();
+      let r = await attempt(send, key, waitingKey !== undefined);
       if (unanswered(r)) {
         setChecking((n) => n + 1);
         try {
           for (const wait of RETRY_WAITS) {
             await sleep(wait);
-            r = await attempt(send, key);
+            r = await attempt(send, key, true);
             if (!unanswered(r)) break;
           }
         } finally {
@@ -78,11 +89,12 @@ function unanswered(r: Result): boolean {
 }
 
 async function attempt<R extends Result>(
-  send: (key: string) => Promise<R>,
+  send: (key: string, resend: boolean) => Promise<R>,
   key: string,
+  resend: boolean,
 ): Promise<R> {
   try {
-    return await send(key);
+    return await send(key, resend);
   } catch {
     // The request to the app's server itself failed: no answer at all.
     return { ok: false, uncertain: true, error: STUCK_MESSAGE } as R;

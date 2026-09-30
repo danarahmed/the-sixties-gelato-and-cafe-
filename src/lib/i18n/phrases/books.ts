@@ -465,6 +465,19 @@ const phrases: PhraseBook = {
     ckb: "بڵێ چەند مانگ دەگرێتەوە، لە 1 تا 36",
   },
   "the prepaid expense": { ar: "المصروف المدفوع مقدمًا", ckb: "خەرجییە پێشەکییەکە" },
+  // A payment like one posted already (P2-14): asked about before it is posted.
+  "A payment like this one is posted already:": {
+    ar: "سُجِّلت دفعة مثل هذه من قبل:",
+    ckb: "پارەدانێکی وەک ئەمە پێشتر تۆمار کراوە:",
+  },
+  "It is another payment, not the same one": {
+    ar: "إنها دفعة أخرى، وليست الدفعة نفسها",
+    ckb: "ئەمە پارەدانێکی ترە، نەک هەمان پارەدان",
+  },
+  "A payment like this one is posted already: tick that it is another payment to post it": {
+    ar: "سُجِّلت دفعة مثل هذه من قبل: أشِّر أنها دفعة أخرى لترحيلها",
+    ckb: "پارەدانێکی وەک ئەمە پێشتر تۆمار کراوە: نیشانە بکە کە پارەدانێکی ترە بۆ ئەوەی تۆمار بکرێت",
+  },
   // The café's prepaid expenses on Expenses (PrepaidExpenses).
   "Prepaid Expenses": { ar: "المصروفات المدفوعة مقدمًا", ckb: "خەرجییە پێشەکییەکان" },
   "Paid ahead: each month takes its share as an expense of that month": {
