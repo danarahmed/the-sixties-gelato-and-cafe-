@@ -1583,7 +1583,31 @@ browser tests through the real app, or both.
   phone and the name on the top bar; the languages suite now finds "each"
   left in English. A scratch check over thirty screens and the records they
   link to, after every suite had made its records, found 79 dates back to
-  front before and none after.
+  front before and none after. Deployed with
+  [pull request #49](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/49).
+
+- **The UX and integration pass, fourth part (no migration).** The screens
+  not walked yet — vendors and a supplier's statement, expenses, delivery
+  platforms, payroll, customers, usage, the drawer's sessions, Settings'
+  rules and languages, my account, the stock's value on a day, the buying
+  list, products, transfers and the sales analysis — in English, Arabic and
+  Kurdish, on a phone and a desk. None ran past the edge of a phone, left
+  English in Arabic or Kurdish, or showed a date back to front. Found and
+  fixed:
+  - **a stock correction says what it does, and a large one is asked
+    again:** the stock here before → after and what the change is worth, as
+    it is typed; more than the item has here, or worth more than a loss a
+    manager must approve, asks **Yes, post it** or **Change it** first;
+  - **cards on a phone** for the counts (the counter's own screen), the
+    drawer's sessions, the expenses, the buying list's items not to order
+    and the delivery platforms: a table of six to ten columns ran off the
+    screen;
+  - **a supplier's statement:** its dates and due dates on one line (they
+    broke in two, on a desk too);
+  - **Transfers** says what sending does in plain words, the accounts under
+    **How it is booked**;
+  - **"First in stock here today"** and **"No history yet"**, not "only 0
+    day(s) of history", on the buying list and the day's production plan.
 
 ## The August 2026 audit, finding by finding
 

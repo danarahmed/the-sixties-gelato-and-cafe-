@@ -3236,6 +3236,10 @@ describe("the buying list (0045)", () => {
       "Only 5 day(s) of history: 7 are needed to judge its use by.",
       "Set a reorder level on the item, or add it to an order yourself.",
     ]);
+    // New today: not "only 0 days".
+    expect(reasonsOf({ ...sugar, historyDays: 0 })[0]).toBe(
+      "First in stock here today: 7 days of history are needed to judge its use by.",
+    );
     expect(sourceOf(sugar)).toEqual(["No supplier yet: choose one.", "No price yet: enter one."]);
     const drafted = { ...milk, status: "enough" as const, inDraft: 7000, position: 9000 };
     expect(reasonsOf(drafted)[0]).toBe(

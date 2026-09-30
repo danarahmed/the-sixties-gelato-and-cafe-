@@ -352,7 +352,7 @@ console.log("▸ the day's plan waits for four weeks of history");
   await row.waitFor({ timeout: 10000 });
   check(
     (await row.getAttribute("data-status")) === "no_history" &&
-      (await row.innerText()).includes("day(s) of history: 28 are needed"),
+      (await row.innerText()).includes("No history yet: 28 days are needed"),
     "a base first made today has too little history to plan by",
   );
   await ctx.close();

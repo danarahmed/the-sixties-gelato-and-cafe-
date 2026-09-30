@@ -834,6 +834,40 @@ console.log("▸ the journal register lists entries by number, newest first");
   await ctx.close();
 }
 
+console.log("▸ on a phone, the drawer's sessions, the counts and the expenses are cards");
+{
+  // Each a card per row, its cells under their headings, nothing off the screen.
+  const cards = async (page, testid) =>
+    page.evaluate((id) => {
+      const w = document.documentElement.clientWidth;
+      const table = document.querySelector(`[data-testid="${id}"]`);
+      if (!table) return { head: "missing", cells: 0, out: 0 };
+      const cells = [...table.querySelectorAll("td")]
+        .map((c) => c.getBoundingClientRect())
+        .filter((r) => r.width > 0);
+      return {
+        head: getComputedStyle(table.querySelector("thead")).display,
+        cells: cells.length,
+        out: cells.filter((r) => r.right > w + 1 || r.left < -1).length,
+      };
+    }, testid);
+  for (const [who, path, testid] of [
+    ["manager", "/sales/sessions", "sessions-table"],
+    ["counter", "/count", "counts-table"],
+    ["manager", "/expenses", "expense-register"],
+  ]) {
+    const { ctx, page } = await signIn(browser, who, { viewport: { width: 390, height: 900 } });
+    await ctx.addCookies([{ name: "locale", value: "ar", url: BASE }]);
+    await open(page, path);
+    const c = await cards(page, testid);
+    check(
+      c.head === "none" && c.cells > 0 && c.out === 0,
+      `${path} in Arabic on a phone: a card per row (${c.cells} cells, ${c.out} off the screen)`,
+    );
+    await ctx.close();
+  }
+}
+
 // ------------------------------------------------------- the ledger ties
 check(
   sql(

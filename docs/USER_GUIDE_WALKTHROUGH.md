@@ -809,7 +809,11 @@ costs; baristas can record waste
   The dashboard names the losses waiting under **Needs you**.
 - **✏️ Correct stock (manager):** a signed change (− to reduce), the cost per base
   unit for additions (blank = average), and **why**. It posts to 5400, as
-  **How it is booked** under the form says.
+  **How it is booked** under the form says. As you type, the form says what
+  it does here: the stock before → after, and what the change is worth. A
+  large change — more than the item has here, or worth more than a loss a
+  manager must approve — is asked again (**Yes, post it** or **Change it**):
+  a slip of the keyboard is caught before it is in the books.
 - **Stock on hand:** each item in use, with its quantity, unit, reorder level,
   average cost, value and status: **low**, or **negative** (shown, never
   hidden). Below it, the items with **no stock yet** and those **out of use**,
@@ -915,7 +919,7 @@ branch manager, general manager, owner (review and approve)
   **Approve and post variances** (to 5400, dated when submitted) or **Reject**,
   with a reason for the recount. The person who counted cannot approve.
 - **Counts:** every count with when it started, who counted, how many items,
-  its status, and who approved or rejected it.
+  its status, and who approved or rejected it; on a phone, a card each.
 
 More in [`guides/counting-guide.md`](guides/counting-guide.md).
 

@@ -18,7 +18,9 @@ analysis, the stock's value on a day and what was bought, `0051`), release Z
 report printed or saved as a PDF, and the documents kept with the records,
 `0053`) and release AB (the stock sent between the café's places, `0054`,
 the tills at each branch and who works where, `0055`, the books by place,
-`0056`, and every report at a place, `0057`) since 29 September.
+`0056`, and every report at a place, `0057`) since 29 September. The UX and
+integration pass (§L.5) was closed on 30 September 2026, in four parts with
+no migration (pull requests #47 to #50).
 What was built differs from the plan below in these ways.
 
 Release J:
@@ -1500,3 +1502,30 @@ Every screen is walked through as a new cashier, a new manager and the accountan
 - **Automation:** where can the system safely automate?
 
 Each finding is fixed and tested before the pass is closed.
+
+**Closed on 30 September 2026**, in four parts, with no migration:
+
+- **Parts one and two** walked every main screen as the owner, a manager and a cashier, in English and Arabic ([#47](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/47), [#48](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/48)).
+- **Part three** walked them in Kurdish, with the accountant's screens ([#49](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/49)).
+- **Part four** walked the rest in all three languages ([#50](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/50)).
+
+Every screen was seen on a phone and a desk. What each question found:
+
+- **Confusion and clarity:**
+  - Managers get plain words: on Purchasing, Inventory, the Dashboard, Sales, Orders, the stock forms and Transfers. The debits and credits are a click away, under **How it is booked**.
+  - "Do the books tie?" folds to one line when every check ties.
+  - A place's reports say which parts stay the whole café's.
+  - In Arabic and Kurdish:
+    - dates read as written;
+    - arrows point the way the words read;
+    - "each" is in the reader's language;
+    - a box for an English name gives its example in English.
+- **Phones:**
+  - People, counts, the drawer's sessions, expenses, the buying list, delivery platforms and the audit trail are a card per row.
+  - The top bar stays on the screen.
+  - An amount, a date or a code stays on one line.
+- **Risk:** a manager's stock correction shows the stock before → after and its value. A large one is asked again before it is posted.
+- **Wasted effort:** nothing was found that is entered twice except as a control. A supplier's bill is typed from the invoice, never copied from the delivery (audit P1-3).
+- **Automation:** the buying list, the day's production plan, the alerts and the account proposed from an expense's narration were already in place. Nothing else was found that is safe to automate without the owner.
+
+Each finding has a browser check. The check for English left in Arabic and Kurdish now also catches "each".

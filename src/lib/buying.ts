@@ -297,9 +297,11 @@ export function reasonsOf(
     out.push(
       line.historyDays === null
         ? t("Never in stock here: there is no use to judge by.")
-        : t("Only {n} day(s) of history: 7 are needed to judge its use by.", {
-            n: line.historyDays,
-          }),
+        : line.historyDays === 0
+          ? t("First in stock here today: 7 days of history are needed to judge its use by.")
+          : t("Only {n} day(s) of history: 7 are needed to judge its use by.", {
+              n: line.historyDays,
+            }),
       t("Set a reorder level on the item, or add it to an order yourself."),
     );
     return out;

@@ -46,12 +46,20 @@ export default async function TransfersPage() {
         </div>
       </div>
       <p className="muted" style={{ margin: 0, fontSize: ".88rem" }}>
-        <Rich
-          text={t(
-            "Stock sent from one of the café's places to another leaves at its cost where it was, into <b>1210 Stock in transit</b>, and comes into the other place when it is received there; what did not arrive goes to <b>5300 Waste & spoilage</b>. A batch keeps its use-by at the place it goes to.",
-          )}
-        />
+        {t(
+          "Stock sent from one of the café's places to another leaves at its cost where it was, is on its way until the other place receives it, and what did not arrive is written off as waste. A batch keeps its use-by at the place it goes to.",
+        )}
       </p>
+      <details className="booked" data-testid="transfers-booked">
+        <summary>{t("How it is booked")}</summary>
+        <p className="muted" style={{ margin: "6px 0 0", fontSize: ".85rem" }}>
+          <Rich
+            text={t(
+              "On its way it is held in <b>1210 Stock in transit</b>; what did not arrive goes to <b>5300 Waste & spoilage</b>.",
+            )}
+          />
+        </p>
+      </details>
 
       {places.length < 2 ? (
         <EmptyState

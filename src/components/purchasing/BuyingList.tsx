@@ -379,7 +379,7 @@ export function BuyingListForm({
           </p>
         ) : (
           <div className="tw">
-            <table>
+            <table className="stack-table">
               <thead>
                 <tr>
                   <th>{t("Item")}</th>
@@ -395,15 +395,15 @@ export function BuyingListForm({
                     <td>
                       <Link href={`/inventory/${l.itemId}`}>{l.item}</Link>
                     </td>
-                    <td>
+                    <td data-label={t("Stage")}>
                       <span className={l.status === "enough" ? "badge ok" : "badge"}>
                         {t(STATUS_LABEL[l.status])}
                       </span>
                     </td>
-                    <td style={{ fontSize: ".78rem", maxWidth: 420 }}>
+                    <td data-label={t("Why")} style={{ fontSize: ".78rem", maxWidth: 420 }}>
                       {reasonsOf(l, t, (code) => packName(l.itemId, code)).join(" ")}
                     </td>
-                    <td className="right mono">
+                    <td className="right mono" data-label={t("On hand")}>
                       {fmtQty(l.onHand)} {unitName(l.baseUnit, t)}
                     </td>
                     <td>

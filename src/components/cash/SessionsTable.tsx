@@ -34,7 +34,7 @@ export async function SessionsTable({
   const at = (ts: string | null) => (ts ? dateTimeIn(timezone, ts) : "—");
   return (
     <div className="tw">
-      <table data-testid="sessions-table">
+      <table className="stack-table" data-testid="sessions-table">
         <thead>
           <tr>
             <th>{t("Session")}</th>
@@ -83,14 +83,14 @@ export async function SessionsTable({
                   </div>
                 )}
               </td>
-              <td>{r.cashier ?? "—"}</td>
-              <td className="mono" style={{ fontSize: ".8rem" }}>
+              <td data-label={t("Cashier")}>{r.cashier ?? "—"}</td>
+              <td className="mono" data-label={t("Opened")} style={{ fontSize: ".8rem" }}>
                 {at(r.openedAt)}
               </td>
-              <td className="mono" style={{ fontSize: ".8rem" }}>
+              <td className="mono" data-label={t("Closed")} style={{ fontSize: ".8rem" }}>
                 {r.isOpen ? "—" : at(r.closedAt)}
               </td>
-              <td className="right money">
+              <td className="right money" data-label={t("Opened with")}>
                 {r.openingCounted === null ? "—" : fmtIQD(r.openingCounted)}
                 {r.openingVariance !== null && r.openingVariance !== 0 && (
                   <div style={{ fontSize: ".75rem" }}>
@@ -98,15 +98,21 @@ export async function SessionsTable({
                   </div>
                 )}
               </td>
-              <td className="right money">{r.expected === null ? "—" : fmtIQD(r.expected)}</td>
-              <td className="right money">{r.counted === null ? "—" : fmtIQD(r.counted)}</td>
-              <td className="right money">
+              <td className="right money" data-label={t("Should hold")}>
+                {r.expected === null ? "—" : fmtIQD(r.expected)}
+              </td>
+              <td className="right money" data-label={t("Counted")}>
+                {r.counted === null ? "—" : fmtIQD(r.counted)}
+              </td>
+              <td className="right money" data-label={t("Over / short")}>
                 <Diff v={r.isOpen ? null : r.variance} />
               </td>
-              <td className="right money">
+              <td className="right money" data-label={t("Taken out")}>
                 {r.taken ? `${fmtIQD(r.taken)} ${on} ${t(String(r.takenTo))}` : "—"}
               </td>
-              <td className="right money">{r.card === null ? "—" : fmtIQD(r.card)}</td>
+              <td className="right money" data-label={t("Card")}>
+                {r.card === null ? "—" : fmtIQD(r.card)}
+              </td>
             </tr>
           ))}
         </tbody>

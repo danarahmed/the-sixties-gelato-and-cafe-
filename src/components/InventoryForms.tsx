@@ -14,6 +14,7 @@ import {
 } from "@/lib/losses";
 import { LOT_STATUS_LABEL, type LotStatus } from "@/lib/production";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { normaliseNumber } from "@/lib/validation";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { NewItemForm } from "@/components/NewItemForm";
 import { OperationStatus, useOperation } from "@/components/useOperation";
@@ -58,6 +59,7 @@ export function InventoryForms({
   isOwner,
   lossLimit = null,
   lossWindow = null,
+  onHand = {},
 }: {
   items: ItemOpt[];
   /** The products sold, to record one lost as made (0048). */
@@ -74,6 +76,8 @@ export function InventoryForms({
   /** The loss a manager approves over, as it applies to the person, and what it is added up over (0040). */
   lossLimit?: number | null;
   lossWindow?: string | null;
+  /** Each item's stock here and what one base unit costs, for a correction to show its effect. */
+  onHand?: Record<string, { qty: number; cost: number | null }>;
 }) {
   if (!canAddItem && !canWaste && !canCorrect) return null;
   return (
@@ -92,7 +96,7 @@ export function InventoryForms({
           lossWindow={lossWindow}
         />
       )}
-      {canCorrect && <CorrectStock items={items} />}
+      {canCorrect && <CorrectStock items={items} onHand={onHand} lossLimit={lossLimit} />}
     </div>
   );
 }
@@ -562,7 +566,15 @@ function RecordLoss({
   );
 }
 
-function CorrectStock({ items }: { items: ItemOpt[] }) {
+function CorrectStock({
+  items,
+  onHand,
+  lossLimit,
+}: {
+  items: ItemOpt[];
+  onHand: Record<string, { qty: number; cost: number | null }>;
+  lossLimit: number | null;
+}) {
   const op = useOperation();
   const { t } = useT();
   const router = useRouter();
@@ -574,7 +586,39 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
   const [delta, setDelta] = useState("");
   const [unitCost, setUnitCost] = useState("");
   const [reason, setReason] = useState("");
+  // Asked again before a large change is posted: one a slip of the keyboard could make.
+  const [asking, setAsking] = useState(false);
   const adding = Number(delta.replace(/[^0-9.-]/g, "")) > 0;
+
+  // What the change does here: the stock before and after, and what it is worth.
+  const here = onHand[itemId];
+  const typed = Number(normaliseNumber(delta));
+  const change =
+    delta.trim() && Number.isFinite(typed)
+      ? typed * (item?.units.find((u) => u.code === unit)?.factor ?? 1)
+      : 0;
+  const typedCost = Number(normaliseNumber(unitCost));
+  const cost =
+    adding && unitCost.trim() && Number.isFinite(typedCost) ? typedCost : (here?.cost ?? null);
+  const worth = cost !== null ? Math.abs(change) * cost : null;
+  const base = unitName(item?.baseUnit ?? "", t);
+  const now = here ? `${fmtQty(here.qty)} ${base}` : "";
+  const after = here ? `${fmtQty(here.qty + change)} ${base}` : "";
+  // More than all it has here, or worth more than a loss a manager must approve.
+  const large =
+    here !== undefined &&
+    change !== 0 &&
+    (Math.abs(change) > Math.max(here.qty, 0) ||
+      (lossLimit !== null && worth !== null && worth > lossLimit));
+
+  function post() {
+    if (large && !asking) {
+      setAsking(true);
+      return;
+    }
+    setAsking(false);
+    submit();
+  }
 
   function submit() {
     setMsg(null);
@@ -609,7 +653,11 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
 
   if (items.length === 0) return null;
   return (
-    <div className="card grid" style={{ gap: 10, alignContent: "start" }}>
+    <div
+      className="card grid"
+      style={{ gap: 10, alignContent: "start" }}
+      data-testid="correct-stock"
+    >
       <h3 style={{ margin: 0 }}>✏️ {t("Correct stock (manager)")}</h3>
       <Field label={t("Item")}>
         <select
@@ -618,6 +666,7 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
           onChange={(e) => {
             setItemId(e.target.value);
             setUnit(items.find((i) => i.id === e.target.value)?.baseUnit ?? "");
+            setAsking(false);
           }}
         >
           {items.map((i) => (
@@ -632,13 +681,23 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
           <input
             style={inputStyle}
             value={delta}
-            onChange={(e) => setDelta(e.target.value)}
+            onChange={(e) => {
+              setDelta(e.target.value);
+              setAsking(false);
+            }}
             inputMode="decimal"
             placeholder="-250"
           />
         </Field>
         <Field label={t("Unit")}>
-          <UnitSelect item={item} value={unit} onChange={setUnit} />
+          <UnitSelect
+            item={item}
+            value={unit}
+            onChange={(u) => {
+              setUnit(u);
+              setAsking(false);
+            }}
+          />
         </Field>
         <Field label={t("Cost per base unit (additions)")}>
           <input
@@ -670,14 +729,49 @@ function CorrectStock({ items }: { items: ItemOpt[] }) {
           {t("Posted against 5400 Inventory count variance.")}
         </p>
       </details>
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+      {here && change !== 0 && (
+        <p className="muted" style={{ fontSize: ".85rem", margin: 0 }} data-testid="correct-effect">
+          {t("On hand here: {now} → {after}", { now, after })}
+          {worth !== null && ` · ${t("worth {value}", { value: fmtIQD(worth) })}`}
+        </p>
+      )}
+      {asking && (
+        <div
+          className="card"
+          role="alert"
+          data-testid="correct-confirm"
+          style={{ borderColor: "var(--warn)", padding: 10, fontSize: ".86rem" }}
+        >
+          {worth !== null
+            ? t(
+                "A large change: {item} goes from {now} to {after} here, worth {value}. Is it right?",
+                {
+                  item: item?.name ?? "",
+                  now,
+                  after,
+                  value: fmtIQD(worth),
+                },
+              )
+            : t("A large change: {item} goes from {now} to {after} here. Is it right?", {
+                item: item?.name ?? "",
+                now,
+                after,
+              })}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <button
           className="btn-primary"
-          onClick={submit}
+          onClick={post}
           disabled={pending || !delta || !reason.trim()}
         >
-          {pending ? t("Posting…") : t("Post correction")}
+          {pending ? t("Posting…") : asking ? t("Yes, post it") : t("Post correction")}
         </button>
+        {asking && (
+          <button type="button" onClick={() => setAsking(false)}>
+            {t("Change it")}
+          </button>
+        )}
         <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>

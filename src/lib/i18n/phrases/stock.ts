@@ -233,6 +233,21 @@ const phrases: PhraseBook = {
     ar: "يُرحَّل على 5400 فروقات جرد المخزون.",
     ckb: "لەسەر 5400 جیاوازی ژماردنی کۆگا تۆمار دەکرێت.",
   },
+  "On hand here: {now} → {after}": {
+    ar: "المتوفّر هنا: {now} ← {after}",
+    ckb: "بەردەست لێرە: {now} ← {after}",
+  },
+  "worth {value}": { ar: "بقيمة {value}", ckb: "بە بەهای {value}" },
+  "A large change: {item} goes from {now} to {after} here, worth {value}. Is it right?": {
+    ar: "تغيير كبير: يصبح {item} هنا {after} (الآن {now})، بقيمة {value}. هل هذا صحيح؟",
+    ckb: "گۆڕانکارییەکی گەورە: {item} لێرە دەبێت بە {after} (ئێستا {now})، بە بەهای {value}. ئایا ڕاستە؟",
+  },
+  "A large change: {item} goes from {now} to {after} here. Is it right?": {
+    ar: "تغيير كبير: يصبح {item} هنا {after} (الآن {now}). هل هذا صحيح؟",
+    ckb: "گۆڕانکارییەکی گەورە: {item} لێرە دەبێت بە {after} (ئێستا {now}). ئایا ڕاستە؟",
+  },
+  "Yes, post it": { ar: "نعم، رحّله", ckb: "بەڵێ، تۆماری بکە" },
+  "Change it": { ar: "عدّله", ckb: "بیگۆڕە" },
   "Posting…": { ar: "جارٍ الترحيل…", ckb: "تۆمار دەکرێت…" },
   "Post correction": { ar: "ترحيل التصحيح", ckb: "تۆمارکردنی ڕاستکردنەوە" },
 
@@ -1191,6 +1206,10 @@ const phrases: PhraseBook = {
   "Never in stock here: there is no use to judge by.": {
     ar: "لم تكن في المخزون هنا قطّ: لا استهلاك يُحكم به.",
     ckb: "هەرگیز لێرە لە کۆگادا نەبووە: هیچ بەکارهێنانێک نییە بۆ خەمڵاندن.",
+  },
+  "First in stock here today: 7 days of history are needed to judge its use by.": {
+    ar: "دخلت المخزون هنا اليوم أول مرة: يلزم سجلّ 7 أيام للحكم على استهلاكها.",
+    ckb: "یەکەمجار ئەمڕۆ لێرە کەوتە کۆگاوە: 7 ڕۆژ مێژوو پێویستە بۆ خەمڵاندنی بەکارهێنانەکەی.",
   },
   "Only {n} day(s) of history: 7 are needed to judge its use by.": {
     ar: "سجلّها {n} يوم فقط: يلزم 7 أيام للحكم على استهلاكها.",

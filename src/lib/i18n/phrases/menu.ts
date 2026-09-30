@@ -714,6 +714,10 @@ const phrases: PhraseBook = {
     ckb: "دەبێت پێش کۆتایی ڕۆژ بەکاربهێنرێت",
   },
   "To make": { ar: "للصنع", ckb: "بۆ دروستکردن" },
+  "No history yet: 28 days are needed": {
+    ar: "لا سجلّ بعد: يلزم 28 يومًا",
+    ckb: "هێشتا مێژووی نییە: 28 ڕۆژ پێویستە",
+  },
   "{n} day(s) of history: 28 are needed": {
     ar: "سجلّ {n} يوم/أيام: يلزم 28",
     ckb: "مێژووی {n} ڕۆژ: 28 پێویستە",

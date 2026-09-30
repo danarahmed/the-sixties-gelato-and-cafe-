@@ -97,7 +97,9 @@ console.log("▸ a manager opens What to buy: what is to order, with why, and wh
   const syrup = rest.locator('[data-testid="buying-rest-line"][data-item="E2E Syrup"]');
   check(
     (await syrup.textContent()).includes("Not enough history") &&
-      (await syrup.textContent()).includes("Only 0 day(s) of history: 7 are needed"),
+      (await syrup.textContent()).includes(
+        "First in stock here today: 7 days of history are needed",
+      ),
     "the syrup, new today, has not enough history to judge by",
   );
 

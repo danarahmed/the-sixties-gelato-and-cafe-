@@ -17,10 +17,15 @@ const phrases: PhraseBook = {
   // The transfers' screen.
   Transfers: { ar: "التحويلات", ckb: "گواستنەوەکان" },
   "On its way: {value}": { ar: "في الطريق: {value}", ckb: "لە ڕێگادا: {value}" },
-  "Stock sent from one of the café's places to another leaves at its cost where it was, into <b>1210 Stock in transit</b>, and comes into the other place when it is received there; what did not arrive goes to <b>5300 Waste & spoilage</b>. A batch keeps its use-by at the place it goes to.":
+  "Stock sent from one of the café's places to another leaves at its cost where it was, is on its way until the other place receives it, and what did not arrive is written off as waste. A batch keeps its use-by at the place it goes to.":
     {
-      ar: "المخزون المُرسل من أحد أماكن المقهى إلى آخر يخرج بكلفته حيث كان، إلى <b>1210 مخزون في الطريق</b>، ويدخل المكان الآخر حين يُستلم هناك؛ وما لم يصل يذهب إلى <b>5300 الهدر والتلف</b>. وتحتفظ الدفعة بموعد استعمالها في المكان الذي تذهب إليه.",
-      ckb: "ئەو کۆگایەی لە شوێنێکی کافێکەوە بۆ شوێنێکی تر دەنێردرێت بە تێچووی خۆی لەو شوێنەی لێی بوو دەردەچێت، بۆ <b>1210 کۆگای لە ڕێگادا</b>، و کاتێک لەوێ وەردەگیرێت دەچێتە ناو شوێنەکەی ترەوە؛ ئەوەی نەگەیشت دەچێتە سەر <b>5300 بەفیڕۆچوون و خراپبوون</b>. هەر دەستەیەک کاتی بەکارهێنانی خۆی لەو شوێنەی بۆی دەچێت دەپارێزێت.",
+      ar: "المخزون المُرسل من أحد أماكن المقهى إلى آخر يخرج بكلفته حيث كان، ويبقى في الطريق حتى يستلمه المكان الآخر، وما لم يصل يُشطب هدرًا. وتحتفظ الدفعة بموعد استعمالها في المكان الذي تذهب إليه.",
+      ckb: "ئەو کۆگایەی لە شوێنێکی کافێکەوە بۆ شوێنێکی تر دەنێردرێت بە تێچووی خۆی لەو شوێنەی لێی بوو دەردەچێت، لە ڕێگادا دەبێت تا شوێنەکەی تر وەریدەگرێت، و ئەوەی نەگەیشت وەک بەفیڕۆچوون دەسڕدرێتەوە. هەر دەستەیەک کاتی بەکارهێنانی خۆی لەو شوێنەی بۆی دەچێت دەپارێزێت.",
+    },
+  "On its way it is held in <b>1210 Stock in transit</b>; what did not arrive goes to <b>5300 Waste & spoilage</b>.":
+    {
+      ar: "وهو في الطريق يُحفظ في <b>1210 مخزون في الطريق</b>؛ وما لم يصل يذهب إلى <b>5300 الهدر والتلف</b>.",
+      ckb: "لە ڕێگادا لە <b>1210 کۆگای لە ڕێگادا</b> دەمێنێتەوە؛ ئەوەی نەگەیشت دەچێتە سەر <b>5300 بەفیڕۆچوون و خراپبوون</b>.",
     },
   "The café has one place": { ar: "للمقهى مكان واحد", ckb: "کافێکە یەک شوێنی هەیە" },
   "Stock is sent between places once the café has a second one: a branch or the central kitchen.": {

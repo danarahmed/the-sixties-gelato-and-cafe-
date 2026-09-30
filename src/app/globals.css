@@ -510,6 +510,10 @@ tr.grand td {
   text-transform: uppercase;
   color: var(--faint);
 }
+/* A reference in a table ("Due 2026-10-15") is read whole, like a date. */
+td.ref {
+  white-space: nowrap;
+}
 .ref.auto {
   color: var(--accent);
 }
