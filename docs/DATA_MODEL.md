@@ -129,6 +129,23 @@ impact + status/approval) and append-only `ai_interaction_log` (provider, model,
 prompt, response, approval) for a full audit trail. RLS enables tenant isolation
 on every business table plus role/cost-visibility helper functions.
 
+### Before the controls (`0008`–`0013`)
+
+- **`stock_board`** (`0008`): a view of each item with its stock on hand, for
+  the stock screens to read in one query.
+- **The demo's public access** (`0009`–`0011`): reading, then reading and
+  writing, the labelled demo business with the public key, and periods
+  created and locked by the demo's AI accountant. All of it was closed by
+  `0016`, which drops every policy and revokes every grant to the public key.
+- **Books** (`0012`): a bill (`purchase_invoice`) gains its due date, what is
+  paid on it, the delivery it bills and its journal; `supplier_payment` keeps
+  what is paid against a bill; and 6300 Cash over/short takes the day's count.
+- **The journal register** (`0013`): `journal_entry` gains its number
+  (`journal_no`), a reference (`reference_no`), a `status` (draft or
+  published) and a date to reverse on (`reverse_on`). A draft may be out of
+  balance; nothing is published unless its debits equal its credits. The
+  controls of `0014` number journals without gaps.
+
 ### Controls (`0014`–`0017`)
 
 Added after the August 2026 audit; see [ADR 0002](adr/0002-database-posting-engine.md).
@@ -624,6 +641,45 @@ note)`** (needs `accounting.post`; one at a time per business): matches
   (`alert_channel(business, channel)`, internal; the one-argument version is
   dropped). A price that looks mistyped names the dearest channel, and the
   first in order when two charge the same.
+
+### Languages the café adds, and its own words (`0032`)
+
+- **`app_language`**: a language the café adds beside the built-in English,
+  Arabic and Kurdish (never one of those three): its `code` (two or three
+  small Latin letters, a region after a dash if needed: `tr`, `fa`, `kmr`,
+  `pt-br`), its `name` as its speakers write it (up to 40 letters), `dir`
+  (`ltr` or `rtl`), `is_active`, and who added it and when.
+- **`app_phrase`**: the café's own words for a phrase in a language, a
+  built-in one too: `locale`, `phrase` (kept by its English, or a dotted key
+  such as `pos.title`), `words` (keeping every `{placeholder}` the English
+  has), and who changed them last and when. A phrase with no words in a
+  language shows its English.
+- Nothing reads either table directly (row-level security forced, with no
+  policy):
+  - **`app_words(locale)`** (any member): the café's languages in use, and
+    the reader's language's words;
+  - **`language_settings()`** (needs `settings.manage`): every language
+    added, in use or not, and how many phrases have the café's own words in
+    each language;
+  - **`save_language(code, name, dir, active)`** (needs `settings.manage`):
+    adds a language, renames it, takes it out of use or brings it back,
+    audited `language.add` or `language.update`;
+  - **`save_phrases(locale, phrases)`** (needs `settings.manage`): gives or
+    clears the café's words, at most 5,000 phrases at a time, audited
+    `language.words`.
+- Clearing the test records keeps both.
+
+### A new item from its delivery (`0033`)
+
+- **`create_item`** checks its pack units by the rule `add_item_unit` keeps
+  (`assert_unit_ok`, internal): a pack has a name of its own, not the base
+  unit's; it holds something; a kilogram is 1000 grams and a litre 1000 ml;
+  and no two packs of one item share a name. A reorder level is not
+  negative.
+- Who may add an item is unchanged: the owner and managers, and whoever does
+  the purchasing (`purchase.create`). An item added on a receipt has no
+  opening stock: its stock comes in with the delivery. The same name,
+  whatever its capitals, spaces or punctuation, is still refused (`0027`).
 
 ### Turn numbers (`0034`)
 
