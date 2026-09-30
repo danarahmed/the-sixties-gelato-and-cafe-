@@ -60,6 +60,7 @@ import {
   notesTotal,
   type CashOnHand,
 } from "@/lib/cash";
+import { postedPayments, SAME_PAYMENT, SAME_PAYMENT_DAYS, samePayments } from "@/lib/expenses";
 import {
   addMonths,
   prepaidFrom,
@@ -5279,6 +5280,87 @@ describe("an expense paid ahead for months to come (0060, the September audit's 
           "Shares posted",
           "Shares reversed",
           "Prepaid expenses due",
+        ].filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
+  });
+});
+
+describe("a payment like one posted already, asked about first (the September audit's P2-14)", () => {
+  const rent = {
+    accountCode: "6000",
+    amount: 150_000,
+    date: "2026-09-24",
+    journalNo: 1012,
+    description: "Shop rent",
+  };
+
+  it("finds one to the same account, for the same amount, within three days", () => {
+    expect(SAME_PAYMENT_DAYS).toBe(3);
+    const ask = (p: Partial<{ accountCode: string; amount: number; date: string }>) =>
+      samePayments([rent], { accountCode: "6000", amount: 150_000, date: "2026-09-24", ...p });
+    expect(ask({})).toEqual([rent]);
+    expect(ask({ date: "2026-09-27" })).toEqual([rent]);
+    expect(ask({ date: "2026-09-21" })).toEqual([rent]);
+    // Four days apart, another account or another amount: another payment.
+    expect(ask({ date: "2026-09-28" })).toEqual([]);
+    expect(ask({ accountCode: "6200" })).toEqual([]);
+    expect(ask({ amount: 150_250 })).toEqual([]);
+    // Nothing asked before the form is filled in.
+    expect(ask({ accountCode: "" })).toEqual([]);
+    expect(ask({ amount: 0 })).toEqual([]);
+    expect(ask({ date: "" })).toEqual([]);
+  });
+
+  it("reads what was posted: an expense not reversed, a prepaid expense not cancelled, on its day", () => {
+    const posted = postedPayments(
+      [
+        { ...rent, reversedBy: null },
+        { ...rent, journalNo: 1013, reversedBy: 1014 },
+        { ...rent, accountCode: "", journalNo: 1015, reversedBy: null },
+      ],
+      [
+        {
+          accountCode: "6900",
+          amount: 120_000,
+          // 21:30 UTC on the 29th is already the 30th in Baghdad: the café's day counts.
+          createdAt: "2026-09-29T21:30:00Z",
+          journalNo: 1020,
+          description: "Insurance, a year",
+          cancelledAt: null,
+        },
+        {
+          accountCode: "6900",
+          amount: 120_000,
+          createdAt: "2026-09-29T21:30:00Z",
+          journalNo: 1021,
+          description: "Insurance, entered twice",
+          cancelledAt: "2026-09-29T22:00:00Z",
+        },
+      ],
+      "Asia/Baghdad",
+    );
+    expect(posted.map((p) => [p.journalNo, p.date])).toEqual([
+      [1012, "2026-09-24"],
+      [1020, "2026-09-30"],
+    ]);
+    // A prepaid expense recorded again two days on is asked about.
+    expect(
+      samePayments(posted, { accountCode: "6900", amount: 120_000, date: "2026-10-01" }).map(
+        (p) => p.journalNo,
+      ),
+    ).toEqual([1020]);
+  });
+
+  it("asks in Arabic and Kurdish", () => {
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        [
+          SAME_PAYMENT,
+          "A payment like this one is posted already:",
+          "It is another payment, not the same one",
         ].filter((p) => !words[p]),
         locale,
       ).toEqual([]);

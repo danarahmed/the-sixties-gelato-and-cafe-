@@ -566,6 +566,12 @@ costs; recording: managers, accountant, owner
    expense.
 4. The entry is shown exactly as it will post (**Balanced — debits equal
    credits**), then **Post expense**.
+5. **A payment like one posted already** (the same account and amount within
+   three days, or a prepaid expense like it) is listed under the form, with
+   its day, its words and its journal. It is posted only once you tick **It
+   is another payment, not the same one**: the rent posted twice is caught
+   here. The same is asked when someone else posted it on another device
+   while your form was open.
 
 **Paid ahead for months to come** (`0060`): a cost that pays for months still
 to come (next month's rent, a quarter's, a year's insurance) is not all this

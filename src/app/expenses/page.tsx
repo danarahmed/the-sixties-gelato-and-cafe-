@@ -12,6 +12,7 @@ import { tillForWrite } from "@/lib/place";
 import { fmtIQD } from "@/lib/format";
 import { businessToday } from "@/lib/dates";
 import { expenseFromLink } from "@/lib/bank";
+import { postedPayments } from "@/lib/expenses";
 import { ExpenseEntry } from "@/components/books/ExpenseEntry";
 import { PrepaidExpenses } from "@/components/books/PrepaidExpenses";
 import { EmptyState } from "@/components/ui";
@@ -89,6 +90,8 @@ export default async function ExpensesPage({
             today={today}
             prefill={prefill}
             cash={cash}
+            // What was paid lately: a payment like one of them is asked about (P2-14).
+            paid={postedPayments(rows, prepaid, profile.timezone)}
           />
         </section>
       )}

@@ -328,6 +328,99 @@ console.log("▸ 1400 is offered nowhere else: a bill for a service, a journal b
   await ctx.close();
 }
 
+console.log("▸ a payment like one posted already is asked about before it is posted");
+{
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/expenses");
+  const fill = async (what, amount, account) => {
+    await page.getByPlaceholder("September shop rent").fill(what);
+    await page.locator("input.amt").first().fill(amount);
+    await page.getByLabel("Paid from", { exact: true }).selectOption("bank");
+    await page.getByLabel("Account", { exact: true }).selectOption(account);
+  };
+  const note = page.getByTestId("same-payment");
+  const post = page.getByRole("button", { name: "Post expense" });
+  await fill("Electricity, September", "45000", "6200");
+  check(
+    (await note.textContent()) === "" && !(await post.isDisabled()),
+    "the first: nothing to ask",
+  );
+  await post.click();
+  await page.getByText(/Posted to 6200/).waitFor({ timeout: 10000 });
+  await fill("Electricity again", "45000", "6200");
+  await note.getByText("Electricity, September").waitFor({ timeout: 10000 });
+  check(
+    (await note.textContent()).includes("A payment like this one is posted already") &&
+      (await post.isDisabled()),
+    "the same account and amount the same day: asked about, and not posted until answered",
+  );
+  await page.locator("input.amt").first().fill("45250");
+  check(
+    (await note.textContent()) === "" && !(await post.isDisabled()),
+    "another amount: nothing to ask",
+  );
+  await page.locator("input.amt").first().fill("45000");
+  await page.getByTestId("same-payment-ok").check();
+  check(!(await post.isDisabled()), "said to be another payment: it may be posted");
+  await post.click();
+  await page.getByText(/Posted to 6200/).waitFor({ timeout: 10000 });
+  check(
+    last(
+      `select count(*) from expense
+        where description in ('Electricity, September', 'Electricity again')`,
+    ) === "2",
+    "both posted, the second once it was said to be another",
+  );
+
+  // One posted from another device while this form was open: the server asks.
+  await fill("Cleaning, the manager's", "30000", "6900");
+  const owner = await signIn(browser, "owner");
+  await open(owner.page, "/expenses");
+  await owner.page.getByPlaceholder("September shop rent").fill("Cleaning, the owner's");
+  await owner.page.locator("input.amt").first().fill("30000");
+  await owner.page.getByLabel("Paid from", { exact: true }).selectOption("bank");
+  await owner.page.getByLabel("Account", { exact: true }).selectOption("6900");
+  await owner.page.getByRole("button", { name: "Post expense" }).click();
+  await owner.page.getByText(/Posted to 6900/).waitFor({ timeout: 10000 });
+  await owner.ctx.close();
+  await post.click();
+  await note.getByText("Cleaning, the owner's").waitFor({ timeout: 10000 });
+  check(
+    (await page
+      .getByText(
+        "A payment like this one is posted already: tick that it is another payment to post it",
+      )
+      .count()) === 1 &&
+      (await post.isDisabled()) &&
+      last(`select count(*) from expense
+                where description in ('Cleaning, the manager''s', 'Cleaning, the owner''s')`) ===
+        "1",
+    "posted meanwhile on another device: the server asks, and nothing is posted",
+  );
+  await page.getByTestId("same-payment-ok").check();
+  await post.click();
+  await page.getByText(/Posted to 6900/).waitFor({ timeout: 10000 });
+  check(
+    last(`select count(*) from expense
+                where description in ('Cleaning, the manager''s', 'Cleaning, the owner''s')`) ===
+      "2",
+    "said to be another: posted",
+  );
+
+  // Paid ahead too: the insurance paid today is asked about.
+  await page.getByPlaceholder("September shop rent").fill("Insurance, again");
+  await page.locator("input.amt").first().fill("120000");
+  await page.getByLabel("Account", { exact: true }).selectOption("6900");
+  await page.getByTestId("expense-ahead").check();
+  await page.getByLabel("First month", { exact: true }).selectOption(month(1));
+  await note.getByText("Insurance, a year").waitFor({ timeout: 10000 });
+  check(
+    await page.getByRole("button", { name: "Post prepaid expense" }).isDisabled(),
+    "a prepaid expense like the insurance paid today: asked about too",
+  );
+  await ctx.close();
+}
+
 console.log("▸ in Arabic and in Kurdish");
 for (const [locale, title] of [
   ["ar", "المصروفات المدفوعة مقدمًا"],

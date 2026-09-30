@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 597 tests)
+## 1. Unit (Vitest, 600 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -714,8 +714,14 @@ database, behind a small local stand-in for Supabase's auth service.
   in orange, and the manager's **Release what is due (1)** posts its 10,000.
   The owner cancels the rent with why: its payment and its share are
   reversed, the register marks the share reversed, 1400 ties, and the trail
-  keeps why. December's rent alone, paid now, waits in 1400. In Arabic and
-  Kurdish, with the form paid ahead, no English but the café's own words.
+  keeps why. December's rent alone, paid now, waits in 1400. A payment like
+  one posted already is asked about: the same day's electricity (6200,
+  45,000) again is listed with the first and not posted until **It is
+  another payment** is ticked (another amount asks nothing); the owner posting
+  the same cleaning on another device while the manager's form is open, the
+  server asks and nothing is posted until ticked; a prepaid expense like the
+  insurance paid today is asked about too. In Arabic and Kurdish, with the
+  form paid ahead, no English but the café's own words.
 - `documents` (`0053`): a manager opens a delivery's 📎 on Purchasing (none
   kept yet) and keeps its delivery note: a phone's photo of 4 MB or so, made
   smaller in the browser (its longer side 2,000 pixels) and put in the bucket

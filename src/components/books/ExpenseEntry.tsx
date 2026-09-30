@@ -12,10 +12,12 @@ import {
 } from "@/lib/actions/books";
 import { fmtIQD } from "@/lib/format";
 import { addMonths, prepaidRefusal, prepaidShares } from "@/lib/prepaid";
+import { samePayments, type PostedPayment } from "@/lib/expenses";
 import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import { CashOnHandNote } from "@/components/cash/CashOnHandNote";
+import { SamePaymentNote } from "@/components/books/SamePaymentNote";
 import { OperationStatus, useOperation } from "@/components/useOperation";
 
 interface Suggestion {
@@ -53,17 +55,24 @@ type PaidFrom = keyof typeof PAID_FROM;
  * goes into Prepaid expenses and each month it covers takes its share as an
  * expense of that month (0060): the form shows the shares before anything is
  * posted, and is an ordinary expense's again once it is.
+ *
+ * One like a payment posted in the three days around it (the same account, the
+ * same amount) is asked about before it is posted: the person ticks that it
+ * is another payment (the September audit's P2-14, rent posted twice).
  */
 export function ExpenseEntry({
   accounts,
   today,
   prefill = null,
   cash = null,
+  paid = [],
 }: {
   accounts: { code: string; name: string }[];
   today: string;
   prefill?: ExpensePrefill | null;
   cash?: CashOnHand | null;
+  /** What was paid lately: one like it is asked about (P2-14). */
+  paid?: PostedPayment[];
 }) {
   const op = useOperation();
   // say: what the server answers (an account's name, the house rules' reason), in the reader's language.
@@ -95,6 +104,24 @@ export function ExpenseEntry({
   const shares = ahead && !refusal ? prepaidShares(value, monthCount, firstMonth) : [];
   const first = shares[0];
   const last = shares[shares.length - 1];
+  // A payment like it posted already, as typed, and any the server found since
+  // the page opened: posted only once the person says it is another.
+  const [acceptedFor, setAcceptedFor] = useState<string | null>(null);
+  const [serverSame, setServerSame] = useState<{ key: string; same: PostedPayment[] } | null>(null);
+  const payDate = ahead ? today : date;
+  const fieldsKey = `${account}|${value}|${payDate}`;
+  const typedSame = samePayments(paid, { accountCode: account, amount: value, date: payDate });
+  const same =
+    serverSame?.key === fieldsKey
+      ? [
+          ...typedSame,
+          ...serverSame.same.filter(
+            (x) => !typedSame.some((y) => y.journalNo === x.journalNo && y.date === x.date),
+          ),
+        ]
+      : typedSame;
+  const sameKey = `${fieldsKey}|${same.map((x) => `${x.journalNo}`).join(",")}`;
+  const acceptSame = same.length > 0 && acceptedFor === sameKey;
 
   useEffect(() => {
     if (!desc.trim()) {
@@ -122,7 +149,15 @@ export function ExpenseEntry({
     setChosenByHand(false);
     setHint(null);
     setPosted(true);
+    setAcceptedFor(null);
+    setServerSame(null);
     router.refresh();
+  }
+
+  /** Not posted: say why, and show the payments like it the server found. */
+  function refused(r: { error: string; same?: PostedPayment[] }, key: string) {
+    if (r.same) setServerSame({ key, same: r.same });
+    setMsg({ ok: false, text: r.error });
   }
 
   function post() {
@@ -131,7 +166,7 @@ export function ExpenseEntry({
     start(async () => {
       if (!paidFrom) return;
       if (ahead) {
-        const r = await op.run("recordPrepaidExpense", (key) =>
+        const r = await op.run("recordPrepaidExpense", (key, resend) =>
           recordPrepaidExpenseAction(
             {
               description: desc,
@@ -140,8 +175,10 @@ export function ExpenseEntry({
               paidFrom,
               firstMonth,
               months: monthCount,
+              acceptSame,
             },
             key,
+            resend,
           ),
         );
         if (r.ok)
@@ -163,7 +200,7 @@ export function ExpenseEntry({
               .filter(Boolean)
               .join(" "),
           );
-        else setMsg({ ok: false, text: r.error });
+        else refused(r, fieldsKey);
         // The next one is an ordinary expense unless it is ticked again.
         if (r.ok) {
           setAhead(false);
@@ -172,7 +209,7 @@ export function ExpenseEntry({
         }
         return;
       }
-      const r = await op.run("recordExpense", (key) =>
+      const r = await op.run("recordExpense", (key, resend) =>
         recordExpenseAction(
           {
             description: desc,
@@ -180,8 +217,10 @@ export function ExpenseEntry({
             accountCode: account,
             paidFrom,
             date,
+            acceptSame,
           },
           key,
+          resend,
         ),
       );
       if (r.ok)
@@ -192,7 +231,7 @@ export function ExpenseEntry({
             no: r.data.journalNo ?? "—",
           }),
         );
-      else setMsg({ ok: false, text: r.error });
+      else refused(r, fieldsKey);
     });
   }
 
@@ -308,6 +347,11 @@ export function ExpenseEntry({
       </label>
       <div style={{ marginBlockStart: 8 }}>
         <CashOnHandNote on={cash} from={paidFrom} amount={value} />
+        <SamePaymentNote
+          same={same}
+          accepted={acceptSame}
+          onAccept={(yes) => setAcceptedFor(yes ? sameKey : null)}
+        />
       </div>
 
       <div
@@ -451,7 +495,8 @@ export function ExpenseEntry({
               value <= 0 ||
               !account ||
               !paidFrom ||
-              (ahead && (refusal !== null || shares.length === 0))
+              (ahead && (refusal !== null || shares.length === 0)) ||
+              (same.length > 0 && !acceptSame)
             }
           >
             {busy ? t("Posting…") : ahead ? t("Post prepaid expense") : t("Post expense")}

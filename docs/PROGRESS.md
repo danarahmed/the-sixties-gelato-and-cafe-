@@ -16,7 +16,7 @@ browser tests through the real app, or both.
   place, the chart of accounts, the bank against its statement, finding a
   sale, a product or a journal, statements read from their files, every
   box and button named for a screen reader, and prepaid expenses), the unit
-  and contract tests (597) and a production build all pass. The UX and integration pass was
+  and contract tests (600) and a production build all pass. The UX and integration pass was
   closed on 30 September 2026, in four parts.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
@@ -1940,6 +1940,24 @@ Built and tested:
   cancelled, December's rent alone, 1400 offered nowhere else, in Arabic and
   Kurdish); and every new text in Arabic and Kurdish.
 
+- **A payment like one posted already, asked about first (no migration; the
+  September audit's P2-14, the rest).** The audit found the rent posted twice
+  on 24 September. The dashboard's alert found such a pair once both were
+  posted; now **Expenses** asks before the second is. An expense, or a
+  prepaid expense, to the same account for the same amount within three days
+  of one posted (not reversed, not cancelled) is listed under the form, with
+  its day, its words and its journal, and it is posted only once the person
+  ticks **It is another payment, not the same one**. The server asks too, for
+  one posted from another device since the form was opened. A submission
+  sent again after an answer was lost is not asked again: the database gives
+  back its first answer, so it is still recorded once.
+
+  Built and tested: unit tests of the rule (the café's day, a reversed or
+  cancelled one left out, in Arabic and Kurdish); the browser suite asks the
+  same day's electricity again, lets it through once ticked, and asks when
+  the owner posts the same cleaning on another device while the manager's
+  form is open.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -2016,7 +2034,7 @@ Built and tested:
 
 | Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Result      |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files, every box and button named, every text colour readable, the browser's safeguards                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 597 passing |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files, every box and button named, every text colour readable, the browser's safeguards                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 600 passing |
 | SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 50 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward, a transfer sent, received and cancelled at once, ten tills at two branches)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 61 passing  |
 | Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers, loyalty, the sales analysis and the stock's value, the balance sheet and cash flow, every report on paper, documents with the records, transfers, the tills at each branch, the books by place, every report at a place, the chart of accounts, the bank against its statement, finding a sale, a product and a journal, statements read from their files; on every page, that it is hydrated only once all of it has arrived | 38 passing  |
 | Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | green       |

@@ -18,6 +18,16 @@ import {
   text,
 } from "@/lib/validation";
 import { placeForWrite, tillForWrite } from "@/lib/place";
+import { getSession } from "@/lib/auth/session";
+import { businessToday } from "@/lib/dates";
+import { getExpenses, getPrepaidExpenses } from "@/lib/db/books";
+import {
+  postedPayments,
+  SAME_PAYMENT,
+  samePayments,
+  type PostedPayment,
+  type SamePaymentRefusal,
+} from "@/lib/expenses";
 
 const BOOK_PATHS = ["/journals", "/accounting", "/reports", "/dashboard"];
 
@@ -32,23 +42,59 @@ export async function previewExpenseCategoryAction(
   );
 }
 
+/**
+ * The payments posted like this one (P2-14): an expense to the same account,
+ * for the same amount, within three days. The screen asks as it is typed; this
+ * is for one posted elsewhere since the screen was opened. What cannot be read
+ * asks nothing: the question is a help, the books do not depend on it.
+ */
+async function sameAsPosted(p: {
+  accountCode: string;
+  amount: string | number;
+  date?: string;
+}): Promise<PostedPayment[]> {
+  const timezone = (await getSession()).profile?.timezone;
+  if (!timezone) return [];
+  const [expenses, prepaid] = await Promise.all([
+    getExpenses(100).catch(() => []),
+    getPrepaidExpenses().catch(() => []),
+  ]);
+  return samePayments(postedPayments(expenses, prepaid, timezone), {
+    accountCode: p.accountCode,
+    amount: Number(p.amount),
+    date: p.date ?? businessToday(timezone),
+  });
+}
+
 const expenseInput = z.object({
   description: text("What the expense was for", 300),
   amount: positive("The amount"),
   accountCode: z.string().regex(/^\d{4}$/, "Choose the account"),
   paidFrom: paymentSource,
   date: day("The date"),
+  /** Posted although one like it is posted already: the person said it is another. */
+  acceptSame: z.boolean().default(false),
 });
 
-/** Dr the confirmed expense account / Cr where the money came from — one step. */
+/**
+ * Dr the confirmed expense account / Cr where the money came from — one step.
+ * One like it posted already is asked about first (P2-14), unless the person
+ * said it is another payment, or this is a re-send of one that may be saved
+ * (its key's first answer is given back instead).
+ */
 export async function recordExpenseAction(
   input: z.input<typeof expenseInput>,
   key: string,
-): Promise<ActionResult<{ journalNo: number | null }>> {
+  resend = false,
+): Promise<ActionResult<{ journalNo: number | null }> | SamePaymentRefusal> {
   const bad = badKey(key);
   if (bad) return bad;
   const v = parse(expenseInput, input);
   if (!v.ok) return v;
+  if (!v.data.acceptSame && !resend) {
+    const same = await sameAsPosted(v.data);
+    if (same.length > 0) return { ok: false, error: SAME_PAYMENT, same };
+  }
   const r = await callRpc<Record<string, unknown>>("record_expense", {
     p_description: v.data.description,
     p_amount: v.data.amount,
@@ -78,6 +124,8 @@ const prepaidInput = z.object({
     .int("Say how many months it covers, 1 to 36")
     .min(1, "Say how many months it covers, 1 to 36")
     .max(36, "Say how many months it covers, 1 to 36"),
+  /** Paid although one like it is posted already: the person said it is another. */
+  acceptSame: z.boolean().default(false),
 });
 
 /**
@@ -88,11 +136,17 @@ const prepaidInput = z.object({
 export async function recordPrepaidExpenseAction(
   input: z.input<typeof prepaidInput>,
   key: string,
-): Promise<ActionResult<{ journalNo: number | null; released: number }>> {
+  resend = false,
+): Promise<ActionResult<{ journalNo: number | null; released: number }> | SamePaymentRefusal> {
   const bad = badKey(key);
   if (bad) return bad;
   const v = parse(prepaidInput, input);
   if (!v.ok) return v;
+  // Paid today: one like it paid within three days is asked about first (P2-14).
+  if (!v.data.acceptSame && !resend) {
+    const same = await sameAsPosted(v.data);
+    if (same.length > 0) return { ok: false, error: SAME_PAYMENT, same };
+  }
   const r = await callRpc<Record<string, unknown>>("record_prepaid_expense", {
     p_description: v.data.description,
     p_amount: v.data.amount,
