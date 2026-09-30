@@ -9,7 +9,8 @@ import "server-only";
  * A failed read throws, and the screen says it could not load. It never
  * returns an empty list that would look like "nothing recorded yet".
  */
-import { db, num, numOrNull, rows, str, strOrNull, one } from "./client";
+import { db, num, numOrNull, rows, str, strOrNull, one, type Row } from "./client";
+import { likeText, type SaleQuery } from "@/lib/findSale";
 import { leftToGiveBack, type LeftToGiveBack, type PaidPart, type PayType } from "@/lib/payments";
 
 export interface BusinessConfig {
@@ -603,12 +604,119 @@ export interface OrderRow {
 }
 
 /**
+ * The sales Find a sale names (needs cost.view; a customer's sales also need
+ * customer.view): by the receipt's sale number, a journal of the sale or of a
+ * refund of it, a refund's number, the platform's order number, or the
+ * customer. The ids of at most `limit` of each kind; the screen reads them.
+ */
+export async function findSaleIds(query: SaleQuery, limit = 50): Promise<string[]> {
+  const c = await db();
+  const found = new Set<string>();
+  const add = (list: Row[], key: string) => list.forEach((r) => r[key] && found.add(str(r[key])));
+  const jobs: Promise<void>[] = [];
+  if (query.ids) {
+    const { from, to } = query.ids;
+    jobs.push(
+      (async () => {
+        const res = await c
+          .from("sales_order")
+          .select("id")
+          .gte("id", from)
+          .lte("id", to)
+          .limit(limit);
+        add(rows(res, "sales"), "id");
+      })(),
+    );
+  }
+  if (query.number != null) {
+    const n = query.number;
+    jobs.push(
+      (async () => {
+        // A journal of the sale, or of a refund or a void of it (a refund from
+        // before 0037 names its adjustment).
+        const refs = rows(
+          await c
+            .from("journal_entry")
+            .select("reference_type,reference_id")
+            .eq("journal_no", n)
+            .in("reference_type", ["sales_order", "sale_refund", "sale_void", "sale_adjustment"]),
+          "journals",
+        )
+          .map((r) => strOrNull(r.reference_id))
+          .filter((x): x is string => x !== null);
+        const [sales, refunds, adjustments, byNo] = await Promise.all([
+          refs.length ? c.from("sales_order").select("id").in("id", refs) : null,
+          refs.length ? c.from("sale_refund").select("sales_order_id").in("id", refs) : null,
+          refs.length ? c.from("sale_adjustment").select("sales_order_id").in("id", refs) : null,
+          c.from("sale_refund").select("sales_order_id").eq("refund_no", n).limit(limit),
+        ]);
+        if (sales) add(rows(sales, "sales"), "id");
+        if (refunds) add(rows(refunds, "refunds"), "sales_order_id");
+        if (adjustments) add(rows(adjustments, "voids and refunds"), "sales_order_id");
+        add(rows(byNo, "refunds"), "sales_order_id");
+      })(),
+    );
+  }
+  if (query.platformOrder) {
+    const order = query.platformOrder;
+    jobs.push(
+      (async () => {
+        const res = await c
+          .from("platform_order")
+          .select("sales_order_id")
+          .ilike("external_order_id", likeText(order))
+          .limit(limit);
+        add(rows(res, "platform orders"), "sales_order_id");
+      })(),
+    );
+  }
+  if (query.name || query.phoneTail) {
+    const { name, phoneTail } = query;
+    jobs.push(
+      (async () => {
+        const [byName, byPhone] = await Promise.all([
+          name
+            ? c
+                .from("customer")
+                .select("id")
+                .ilike("full_name", `%${likeText(name)}%`)
+                .limit(limit)
+            : null,
+          phoneTail
+            ? c
+                .from("customer")
+                .select("id")
+                .like("phone", `%${likeText(phoneTail)}`)
+                .limit(limit)
+            : null,
+        ]);
+        const people = [
+          ...(byName ? rows(byName, "customers") : []),
+          ...(byPhone ? rows(byPhone, "customers") : []),
+        ].map((r) => str(r.id));
+        if (!people.length) return;
+        const res = await c
+          .from("sales_order")
+          .select("id")
+          .in("customer_id", [...new Set(people)])
+          .neq("status", "open")
+          .order("placed_at", { ascending: false })
+          .limit(limit);
+        add(rows(res, "sales"), "id");
+      })(),
+    );
+  }
+  await Promise.all(jobs);
+  return [...found];
+}
+
+/**
  * Recent sales with their lines, tenders and any void or refund (needs
  * cost.view); or those placed between two instants, on one channel.
  */
 export async function getSalesOrders(
   limit = 200,
-  filter: { fromTs?: string; toTs?: string; channel?: string } = {},
+  filter: { fromTs?: string; toTs?: string; channel?: string; ids?: string[] } = {},
 ): Promise<OrderRow[]> {
   const c = await db();
   let q = c
@@ -618,6 +726,7 @@ export async function getSalesOrders(
   if (filter.fromTs) q = q.gte("placed_at", filter.fromTs);
   if (filter.toTs) q = q.lt("placed_at", filter.toTs);
   if (filter.channel) q = q.eq("channel", filter.channel);
+  if (filter.ids) q = q.in("id", filter.ids);
   const orders = rows(await q.order("placed_at", { ascending: false }).limit(limit), "sales");
   if (orders.length === 0) return [];
   const ids = orders.map((o) => str(o.id));

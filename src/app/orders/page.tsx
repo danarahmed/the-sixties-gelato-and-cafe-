@@ -2,7 +2,8 @@ import Link from "next/link";
 import { getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
-import { getSalesOrders } from "@/lib/db/read";
+import { findSaleIds, getSalesOrders } from "@/lib/db/read";
+import { readSaleQuery, SALE_QUERY_MAX } from "@/lib/findSale";
 import { fmtIQD, fmtQty, orderStatusLabel, tenderLabel } from "@/lib/format";
 import { fmtRate, fmtUSD } from "@/lib/fx";
 import { getChannelNames } from "@/lib/db/channels";
@@ -24,9 +25,13 @@ export default async function OrdersPage({
     searchParams,
     getChannelNames(),
   ]);
+  // Find a sale (the September audit's P2-20): by what the receipt, a refund,
+  // the platform or the customer calls it, whatever its day.
+  const find = typeof sp.q === "string" ? sp.q.trim().slice(0, SALE_QUERY_MAX) : "";
+  const query = find ? readSaleQuery(find) : null;
   // Opened from a report: the sales of those days (and that channel).
   const today = businessToday(profile.timezone);
-  const filtered = typeof sp.from === "string" || typeof sp.channel === "string";
+  const filtered = !find && (typeof sp.from === "string" || typeof sp.channel === "string");
   const from = parseDay(sp.from, today);
   const to = parseDay(sp.to, from);
   // Every channel, a platform out of use too: its sales are still there to see.
@@ -34,16 +39,21 @@ export default async function OrdersPage({
     typeof sp.channel === "string" && channels.channels.some((c) => c.code === sp.channel)
       ? sp.channel
       : "";
-  const orders = await getSalesOrders(
-    filtered ? 1000 : 300,
-    filtered
-      ? {
-          fromTs: dayStart(from, profile.timezone),
-          toTs: dayStart(addDays(to, 1), profile.timezone),
-          channel: channel || undefined,
-        }
-      : {},
-  );
+  const foundIds = query ? await findSaleIds(query) : [];
+  const orders = find
+    ? foundIds.length
+      ? await getSalesOrders(foundIds.length, { ids: foundIds })
+      : []
+    : await getSalesOrders(
+        filtered ? 1000 : 300,
+        filtered
+          ? {
+              fromTs: dayStart(from, profile.timezone),
+              toTs: dayStart(addDays(to, 1), profile.timezone),
+              channel: channel || undefined,
+            }
+          : {},
+      );
   // A sale part-refunded (0037) counts for what is left of it.
   const live = orders.filter((o) => o.status === "completed" || o.status === "partially_refunded");
   const totalNet = live.reduce((s, o) => s + o.net - o.refunded, 0);
@@ -64,6 +74,31 @@ export default async function OrdersPage({
           )}
         />
       </p>
+
+      <form
+        className="card"
+        role="search"
+        style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}
+      >
+        <label style={{ flex: "1 1 260px" }}>
+          <div className="sc">{t("Find a sale")}</div>
+          <input
+            type="search"
+            name="q"
+            defaultValue={find}
+            maxLength={SALE_QUERY_MAX}
+            dir="auto"
+            data-testid="find-sale"
+            placeholder={t("Sale or journal number, platform order, customer")}
+          />
+        </label>
+        <button type="submit">{t("Find")}</button>
+        {find && (
+          <Link className="badge" href="/orders">
+            {t("The latest 300")}
+          </Link>
+        )}
+      </form>
 
       <form
         className="card"
@@ -99,22 +134,24 @@ export default async function OrdersPage({
       <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px,1fr))" }}>
         <div className="card stat">
           <span className="label">
-            {filtered
-              ? from === to
-                ? channel
-                  ? t("Completed sales on {day}, {channel}", {
-                      day: from,
-                      channel: channels.name(channel),
-                    })
-                  : t("Completed sales on {day}", { day: from })
-                : channel
-                  ? t("Completed sales {from} to {to}, {channel}", {
-                      from,
-                      to,
-                      channel: channels.name(channel),
-                    })
-                  : t("Completed sales {from} to {to}", { from, to })
-              : t("Completed sales shown")}
+            {find
+              ? t("Completed sales found for “{q}”", { q: find })
+              : filtered
+                ? from === to
+                  ? channel
+                    ? t("Completed sales on {day}, {channel}", {
+                        day: from,
+                        channel: channels.name(channel),
+                      })
+                    : t("Completed sales on {day}", { day: from })
+                  : channel
+                    ? t("Completed sales {from} to {to}, {channel}", {
+                        from,
+                        to,
+                        channel: channels.name(channel),
+                      })
+                    : t("Completed sales {from} to {to}", { from, to })
+                : t("Completed sales shown")}
           </span>
           <span className="value">{live.length}</span>
         </div>
@@ -131,7 +168,19 @@ export default async function OrdersPage({
       </div>
 
       {orders.length === 0 ? (
-        <EmptyState title={t("No sales yet")} hint={t("Sales rung up on the till appear here.")} />
+        find ? (
+          <EmptyState
+            title={t("No sale matches “{q}”", { q: find })}
+            hint={t(
+              "Type the sale number printed after “Sale” on the receipt, its journal number, a refund's number, the platform's order number, or the customer's name or phone.",
+            )}
+          />
+        ) : (
+          <EmptyState
+            title={t("No sales yet")}
+            hint={t("Sales rung up on the till appear here.")}
+          />
+        )
       ) : (
         <div className="card tw">
           <table>
@@ -155,7 +204,9 @@ export default async function OrdersPage({
                 const adj = o.adjustments[0];
                 return (
                   <tr key={o.id}>
-                    <td className="mono">{o.id.slice(0, 8)}</td>
+                    <td className="mono" data-testid="sale-no">
+                      {o.id.slice(0, 8)}
+                    </td>
                     <td className="mono muted" style={{ fontSize: ".8rem", whiteSpace: "nowrap" }}>
                       {dateTimeIn(profile.timezone, o.placedAt)}
                     </td>
