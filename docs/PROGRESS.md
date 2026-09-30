@@ -1600,8 +1600,8 @@ browser tests through the real app, or both.
     manager must approve, asks **Yes, post it** or **Change it** first;
   - **cards on a phone** for the counts (the counter's own screen), the
     drawer's sessions, the expenses, the buying list's items not to order
-    and the delivery platforms: a table of six to ten columns ran off the
-    screen;
+    and the delivery platforms: each was a table whose last columns sat off
+    the screen, in its own sideways scroll;
   - **a supplier's statement:** its dates and due dates on one line (they
     broke in two, on a desk too);
   - **Transfers** says what sending does in plain words, the accounts under
