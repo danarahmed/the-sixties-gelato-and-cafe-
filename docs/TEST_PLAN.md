@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 482 tests)
+## 1. Unit (Vitest, 563 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -151,6 +151,27 @@ layers before every release.
   gives (`scripts/db-messages.mjs`) translated; the alerts the database tests
   raise, and the daily brief, translated whole with their values, dates and
   account names; a translator's CSV read back as it was written.
+- `tests/statements.test.ts`: statements read from their files. A table
+  split by tabs, semicolons or commas (whichever most of its lines use),
+  quoted cells across lines, a quote left open read line by line, the marks
+  that set a text's direction dropped, and back out as tab-separated text;
+  a file's words in UTF-8, UTF-16 either way round and Windows Arabic; Excel
+  workbooks as XlsxWriter and openpyxl write them (`tests/statement-files`,
+  made by `make.py` there: shared and inline words, dates as dates, a
+  formula's value, Arabic right to left) and one made part by part here
+  (prefixes, 1904 dates, packed and stored parts, an empty first sheet); a
+  web page's table and Excel 2003's XML; what is refused and why (nothing, a
+  true .xls, a PDF, a zip that is not a workbook, over 10 MB). A platform's
+  report read below its title, its total and note left out, its columns of
+  fees added up (a total of them not), a commission named with the
+  platform's name; dates as banks
+  print them, day or month first; the bank's statement read newest first or
+  oldest, in English and Arabic, one amount by its sign, a DR/CR mark or a
+  column, what cannot be read said by its line; its lines found among the
+  books' by amount and day (a cheque not cashed left, a charge not in the
+  books, a rent each month to the payment nearest it), those on a statement
+  kept left out; the example on the screen read in each language; every
+  message in Arabic and Kurdish.
 
 ## 2. SQL (`scripts/test-sql.sh`, about 800 assertions)
 
@@ -627,6 +648,20 @@ database, behind a small local stand-in for Supabase's auth service.
   branch's, and its sales by channel its own. The first branch's manager
   reads the first branch's reports, chooses no other place, and their
   Dashboard is the first branch's day. In Arabic and Kurdish, Reports too.
+- `files` (last): the owner chooses Talabat's report on Delivery Platforms
+  as an Excel workbook, a title above its columns, a total and a note: two
+  lines read by their names, what the file holds shown, both matched with
+  nothing unexplained and the payout posted; a PDF refused with what to
+  choose instead. On the bank's page the owner chooses the bank's statement
+  as a CSV in Arabic, the newest line first: four lines read by their Arabic
+  names, three found in the books and ticked (the cash taken to the bank,
+  the paper, the platform's payout), a cheque not cashed left open, the last
+  day and balance filled in, the bank's charge listed as not in the books and
+  the statement 2,750 apart; on a 390px phone in Kurdish it fits; the charge
+  recorded, back on the page the statement read is there, the charge found,
+  it ties and is kept with its four lines, the cheque still open, and what
+  was read let go. In Arabic and Kurdish, both read with no English but the
+  café's own names.
 - `documents` (`0053`): a manager opens a delivery's 📎 on Purchasing (none
   kept yet) and keeps its delivery note: a phone's photo of 4 MB or so, made
   smaller in the browser (its longer side 2,000 pixels) and put in the bucket

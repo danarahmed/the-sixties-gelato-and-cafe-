@@ -105,16 +105,19 @@ const SAME = new Set(
     "md",
     // The test fixtures' own records (an opening stock typed "fixture").
     "fixture",
-    // The kinds of file a document may be (0053).
+    // The kinds of file a document may be (0053), and a statement (Excel's).
     "PDF",
     "JPEG",
     "PNG",
     "WebP",
+    "Excel",
+    "xlsx",
+    "xls",
   ].map((w) => w.toLowerCase()),
 );
 // On Delivery Platforms, the column names of a platform's own report, which
 // the statement reader looks for as the platform writes them.
-const SAME_ON = { "/platforms": ["order", "payout", "commission", "fees", "id"] };
+const SAME_ON = { "/platforms": ["order", "payout", "commission", "fees", "id", "net"] };
 
 /**
  * The English words a screen shows that are not the café's own names, nor the

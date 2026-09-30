@@ -692,8 +692,9 @@ Migration `0030` is the audit's P1-9: card and platform money reconciled.
   per platform; the till asks for it. Talabat, Careem and Toters are added to
   the delivery platforms.
 - **Delivery Platforms** shows what each platform owes, order by order, and
-  matches a pasted statement to the orders; a person who keeps the books posts
-  the payout. See [`talabat.md`](talabat.md).
+  matches a pasted statement to the orders (read from its file since the
+  statements-from-files release); a person who keeps the books posts the
+  payout. See [`talabat.md`](talabat.md).
 - Until the new screens follow, minutes later, the till deployed before it
   cannot record a Talabat sale: it has no box for the order number, and the
   database asks for one. Everything else carries on.

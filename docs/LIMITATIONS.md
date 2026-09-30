@@ -17,8 +17,9 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
 ## Not built
 
 - **Settlements, what they do not do (`0030`).** A platform's statement is
-  pasted from its report, not read from its file, and nothing comes from the
-  platforms themselves (Talabat's partner feed needs an approved account). The
+  pasted from its report or read from its file (see "Statements read from
+  their files" below), and nothing comes from the platforms themselves
+  (Talabat's partner feed needs an approved account). The
   statement is matched by order number, so the platform sales from before
   `0030`, which have none, are matched by nobody: the 1100 they hold is
   flagged until a journal explains it. Card takings are settled a run of whole
@@ -421,16 +422,41 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     language the owner added, it shows as it was typed: **Settings →
     Languages** lists the built-in phrases, not the café's accounts.
 - **The bank against its statement, what it does not do (`0059`).**
-  - The statement is read by eye: its last day and balance are typed, and
-    each line on it is ticked. It is not read from the bank's file, and
-    nothing comes from the bank itself.
+  - The statement is read from the bank's file or pasted (below), or read by
+    eye: its last day and balance typed, and each line on it ticked. Nothing
+    comes from the bank itself.
   - One bank account, 1020 Bank. The dollars in the safe and the till are
     counted on their own (`0043`).
   - Only the latest statement is undone; an earlier one is undone by undoing
     each after it first.
-  - Nothing is matched for you: the screen adds up what is ticked against the
-    bank's balance. A charge or interest the bank shows is recorded first
-    (Expenses, or a journal), then ticked.
+  - A charge or interest the bank shows is recorded first (Expenses, or a
+    journal), then found or ticked: nothing is recorded for you.
+- **Statements read from their files, what they do not do.**
+  - The files read are Excel workbooks (.xlsx), CSV and text files, and the
+    web page or Excel 2003 XML some banks give as an ".xls". An Excel 97–2003
+    file (a true .xls) and a PDF are not read: saved again as .xlsx or CSV,
+    they are. A workbook's first sheet with something on it is read, not the
+    others; 10 MB at most.
+  - The file is read in the browser and not kept: the statement kept, or the
+    payout posted, is what stays. Keep the file itself as a document where
+    one is kept (an expense), or elsewhere.
+  - The columns are found by their names, in English, Arabic or Kurdish, in
+    the first 30 rows. A statement that names its columns otherwise is
+    pasted with the names changed, or its columns given in order (a
+    platform's only).
+  - A date like 03/04/2026 is read day first, as dates are written in Iraq,
+    unless a date on the same statement shows the month comes first
+    (04/13/2026).
+  - **The bank's lines are found by their amount and day only.** A line is
+    the books' line of the same amount, on the same day, else on the nearest
+    day up to a month before or a week after; each of the books' lines once.
+    Two payments of the same amount a few days apart may be found the other
+    way round; that changes nothing kept, but tick them by eye if it
+    matters. A payment the bank split, or joined with another, is not found:
+    tick it by eye.
+  - What was read stays on the bank's page for that browser tab until the
+    statement is kept or cleared, so a charge can be recorded on Expenses in
+    between; another tab or device does not see it.
 - **Documents kept with the records, what they do not do (release AA,
   `0053`).**
   - Only deliveries, returns, bills, supplier's credit notes and expenses keep

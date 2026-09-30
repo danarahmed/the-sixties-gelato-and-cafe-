@@ -12,10 +12,15 @@ import { CHANNEL_CODE } from "@/lib/channels";
 const ARABIC_INDIC = /[٠-٩]/g; // ٠١٢٣٤٥٦٧٨٩
 const EASTERN_ARABIC_INDIC = /[۰-۹]/g; // ۰۱۲۳۴۵۶۷۸۹ (Kurdish, Persian)
 
-export function normaliseNumber(input: unknown): string {
-  return String(input ?? "")
+/** Arabic and Kurdish digits as Latin ones: ١٤ and ۱۴ are 14. */
+export function latinDigits(input: string): string {
+  return input
     .replace(ARABIC_INDIC, (d) => String(d.charCodeAt(0) - 0x0660))
-    .replace(EASTERN_ARABIC_INDIC, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(EASTERN_ARABIC_INDIC, (d) => String(d.charCodeAt(0) - 0x06f0));
+}
+
+export function normaliseNumber(input: unknown): string {
+  return latinDigits(String(input ?? ""))
     .replace(/٫/g, ".") // Arabic decimal separator
     .replace(/[\s,٬،]/g, "") // spaces, commas, Arabic thousands separator
     .trim();
@@ -132,9 +137,7 @@ export const salesChannel = z.string().regex(CHANNEL_CODE, "Choose a channel");
  */
 export const ORDER_NO = /^[A-Za-z0-9#/_.-]{1,40}$/;
 export function cleanOrderNo(input: unknown): string {
-  return String(input ?? "")
-    .replace(ARABIC_INDIC, (d) => String(d.charCodeAt(0) - 0x0660))
-    .replace(EASTERN_ARABIC_INDIC, (d) => String(d.charCodeAt(0) - 0x06f0))
+  return latinDigits(String(input ?? ""))
     .replace(/\s+/g, "")
     .replace(/^#+/, "");
 }

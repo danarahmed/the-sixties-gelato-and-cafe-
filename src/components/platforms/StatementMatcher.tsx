@@ -15,6 +15,7 @@ import {
   type StatementMatch,
 } from "@/lib/settlements";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { ReadStatementFile } from "@/components/ReadStatementFile";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -38,7 +39,8 @@ const cell = (n: number | null) => (n === null ? "—" : fmtIQD(n));
 
 /**
  * A platform's statement, matched to the orders waiting to be paid out
- * (0030). Paste the statement's lines from the platform's report; the match
+ * (0030). Read the platform's report from its file (Excel or CSV), or paste
+ * its lines; the match
  * says, line by line, which sale each pays for, or why it pays for none, and
  * which orders it leaves out. Nothing is written until the payout is posted:
  * the money into the bank, the commission and fees, and the orders' value
@@ -69,6 +71,8 @@ export function StatementMatcher({
   const [receivedOn, setReceivedOn] = useState(today);
   const [note, setNote] = useState("");
   const [msg, setMsg] = useState<Msg>(null);
+  // Changed to start the file's button afresh, once the statement is posted.
+  const [fileKey, setFileKey] = useState(0);
 
   const parsed = useMemo(() => parseStatement(text), [text]);
   const name = platforms.find((p) => p.code === platform)?.name ?? platform;
@@ -129,6 +133,7 @@ export function StatementMatcher({
       setMatch(null);
       setReference("");
       setNote("");
+      setFileKey((k) => k + 1);
       router.refresh();
     });
   }
@@ -157,15 +162,35 @@ export function StatementMatcher({
           <span className="muted" style={{ fontSize: ".8rem", flex: 1, minWidth: 260 }}>
             <Rich
               text={t(
-                "Copy the statement's rows from the platform's report (a spreadsheet or CSV) with their column names: <b>Order</b>, <b>Payout</b>, and <b>Commission</b> and <b>Fees</b> if it gives them. Without the names, the columns are read in that order.",
+                "Choose the platform's report (Excel or CSV) with <b>Read it from its file…</b>, or copy its rows here, with their column names: <b>Order</b>, <b>Payout</b>, and <b>Commission</b> and <b>Fees</b> if it gives them. Without the names, the columns are read in that order.",
               )}
             />
           </span>
         </div>
-        <label>
-          <div className="sc">{t("The statement")}</div>
+        <div className="grid" style={{ gap: 4 }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+            }}
+          >
+            <div className="sc">{t("The statement")}</div>
+            <ReadStatementFile
+              key={fileKey}
+              testId="statement-file"
+              onRead={(read) => {
+                setText(read);
+                setMatch(null);
+              }}
+            />
+          </div>
           <textarea
             aria-label={t("The statement")}
+            // The platform's own words and numbers: not to be translated.
+            translate="no"
             rows={8}
             spellCheck={false}
             className="mono"
@@ -178,7 +203,7 @@ export function StatementMatcher({
               setMatch(null);
             }}
           />
-        </label>
+        </div>
         {text.trim() !== "" && (
           <div className="muted" style={{ fontSize: ".82rem" }} data-testid="statement-read">
             {t("{n} line(s) read", { n: parsed.lines.length })}
@@ -187,6 +212,9 @@ export function StatementMatcher({
               : ""}
             {parsed.skipped > 0
               ? ` · ${t("{n} total row(s) left out", { n: parsed.skipped })}`
+              : ""}
+            {parsed.other > 0
+              ? ` · ${t("{n} other row(s) left out: titles and notes", { n: parsed.other })}`
               : ""}
           </div>
         )}

@@ -417,9 +417,13 @@ who sees costs
   order number, with the day it was sold and how many days it has waited; each
   platform's total and its oldest order; what they come to, **1100 Platform
   receivable**, and the difference — **Not explained by any order**, normally 0.
-- **Match a Statement:** choose the platform and paste the statement's rows,
-  with their column names (Order, Payout, and Commission and Fees if it gives
-  them), from its report. The screen says how many lines it read. **Match to
+- **Match a Statement:** choose the platform, then **Read it from its file…**
+  and choose the platform's report (Excel or CSV), or paste the statement's
+  rows with their column names (Order, Payout, and Commission and Fees if it
+  gives them). A report's title above its columns, its total, and a note with
+  no payout are left out; a PDF or an old Excel file (.xls) is refused with
+  what to choose instead. The screen shows what it read and says how many
+  lines, and which columns. **Match to
   the orders waiting** shows, line by line, the sale each pays for, or why
   none (no sale has the number, already paid out, voided or refunded, on the
   statement twice); what it leaves out; what is not explained; and the journal
@@ -1208,6 +1212,20 @@ owner; reopening: owner
   lines are open again. A bank line more than 35 days old on no statement
   raises an alert, and the month's closing checklist warns (it does not stop
   the lock).
+
+  **Read it from its file…** reads the bank's statement as the bank gives it
+  (Excel, CSV, or the web page some banks save as an ".xls"; **or paste it**):
+  its columns found by their names in English, Arabic or Kurdish (Date,
+  Description, Debit and Credit or an Amount, Balance), below the account's
+  details. Each of its lines after the last statement kept is found among the
+  bank's lines by its amount, on the same day or the nearest (up to a month
+  before, a week after), and ticked; its last day and balance fill in the
+  statement's. **On the statement, not in the books** lists the rest: record
+  each (a charge on Expenses, interest by a journal) and come back, and the
+  page, which keeps what was read for the tab, finds it too. When the
+  statement starts from another balance than the last one kept, the page says
+  a line may be missing between them. **Clear the statement read** lets it go;
+  keeping the statement does too.
 
 - Who changed what is on the [Audit trail](#22-audit-trail).
 

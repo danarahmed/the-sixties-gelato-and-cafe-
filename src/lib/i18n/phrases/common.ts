@@ -254,6 +254,38 @@ const phrases: PhraseBook = {
   "Preparation waste": { ar: "هدر التحضير", ckb: "بەفیڕۆچوونی ئامادەکردن" },
   // A signed amount (0059): a bank's balance may be overdrawn.
   "{1} must be a number": { ar: "{1} يجب أن يكون رقمًا", ckb: "{1} دەبێت ژمارە بێت" },
+  // A statement read from its file (src/lib/sheet.ts, ReadStatementFile).
+  "Read it from its file…": { ar: "اقرأه من ملفه…", ckb: "لە فایلەکەیەوە بیخوێنەوە…" },
+  "Read from {file}": { ar: "قُرئ من {file}", ckb: "لە {file}ەوە خوێندرایەوە" },
+  "There is nothing in the file to read.": {
+    ar: "لا شيء في الملف لقراءته.",
+    ckb: "هیچ شتێک لە فایلەکەدا نییە بۆ خوێندنەوە.",
+  },
+  "The file is over 10 MB: a statement's own file is smaller.": {
+    ar: "حجم الملف أكبر من 10 ميغابايت: ملف الكشف نفسه أصغر من ذلك.",
+    ckb: "قەبارەی فایلەکە لە 10 مێگابایت زیاترە: فایلی کەشفەکە خۆی بچووکترە.",
+  },
+  "An Excel 97–2003 file (.xls) is not read: open it in Excel, save it as .xlsx or CSV, and choose that.":
+    {
+      ar: "ملف Excel 97–2003 (xls) لا يُقرأ: افتحه في Excel واحفظه بصيغة xlsx أو CSV، ثم اختره.",
+      ckb: "فایلی Excel 97–2003 (xls) ناخوێندرێتەوە: لە Excel بیکەرەوە، وەک xlsx یان CSV پاشەکەوتی بکە، و ئەوە هەڵبژێرە.",
+    },
+  "A PDF is not read: download the statement as Excel or CSV, and choose that.": {
+    ar: "ملف PDF لا يُقرأ: نزّل الكشف بصيغة Excel أو CSV، ثم اختره.",
+    ckb: "فایلی PDF ناخوێندرێتەوە: کەشفەکە وەک Excel یان CSV دابەزێنە، و ئەوە هەڵبژێرە.",
+  },
+  "The file is not a table: choose the statement's Excel or CSV file.": {
+    ar: "الملف ليس جدولًا: اختر ملف الكشف بصيغة Excel أو CSV.",
+    ckb: "فایلەکە خشتە نییە: فایلی Excel یان CSVی کەشفەکە هەڵبژێرە.",
+  },
+  "This browser cannot open Excel files: save the statement as CSV and choose that.": {
+    ar: "هذا المتصفح لا يفتح ملفات Excel: احفظ الكشف بصيغة CSV ثم اختره.",
+    ckb: "ئەم وێبگەڕە ناتوانێت فایلی Excel بکاتەوە: کەشفەکە وەک CSV پاشەکەوت بکە و ئەوە هەڵبژێرە.",
+  },
+  "The file could not be read: save it again as .xlsx or CSV, and choose that.": {
+    ar: "تعذّرت قراءة الملف: احفظه من جديد بصيغة xlsx أو CSV، ثم اختره.",
+    ckb: "فایلەکە نەخوێندرایەوە: دووبارە وەک xlsx یان CSV پاشەکەوتی بکە، و ئەوە هەڵبژێرە.",
+  },
 };
 
 export default phrases;

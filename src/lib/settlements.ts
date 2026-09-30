@@ -7,6 +7,15 @@
  */
 import Decimal from "decimal.js";
 import { cleanOrderNo, normaliseNumber, ORDER_NO } from "@/lib/validation";
+import {
+  columnNamed,
+  headerName,
+  isBlank,
+  PROSE,
+  readTable,
+  TOTAL_CELL,
+  TOTAL_START,
+} from "@/lib/sheet";
 
 const numOf = (v: unknown): number => {
   const n = typeof v === "number" ? v : Number(v ?? 0);
@@ -150,6 +159,8 @@ export interface ParsedStatement {
   problems: string[];
   /** Total rows left out. */
   skipped: number;
+  /** Other rows left out: a title above the column names, a note. */
+  other: number;
   /** The columns read, when the paste starts with their names. */
   columns: {
     orderNo: string;
@@ -201,53 +212,27 @@ const HEADERS: Record<"orderNo" | "payout" | "commission" | "fees", string[]> = 
     "other fees",
     "service fee",
     "service fees",
+    "delivery fee",
+    "delivery fees",
+    "delivery charge",
+    "delivery charges",
+    "payment fee",
+    "payment fees",
+    "transaction fee",
+    "transaction fees",
+    "processing fee",
+    "processing fees",
     "charges",
     "other charges",
-    "deductions",
     "الرسوم",
     "رسوم",
+    "رسوم التوصيل",
+    "رسوم الدفع",
+    "رسوم الخدمة",
   ],
 };
-const TOTAL_ROW =
-  /^(total|totals|grand total|sum|subtotal|المجموع|الإجمالي|المجموع الكلي|کۆ|کۆی گشتی)$/i;
-const MAX_LINES = 2000;
-
-function headerName(cell: string): string {
-  return cell
-    .toLowerCase()
-    .replace(/\(.*?\)/g, " ")
-    .replace(/\b(iqd)\b/g, " ")
-    .replace(/[#:*]/g, " ")
-    .replace(/[\s_\-.]+/g, " ")
-    .trim();
-}
-
-/** One row of a paste: tab-separated from a spreadsheet, or comma/semicolon CSV with quotes. */
-function cells(row: string, sep: string): string[] {
-  if (sep === "\t") return row.split("\t").map((c) => c.trim());
-  const out: string[] = [];
-  let cur = "";
-  let quoted = false;
-  for (let i = 0; i < row.length; i++) {
-    const ch = row[i]!;
-    if (quoted) {
-      if (ch === '"' && row[i + 1] === '"') {
-        cur += '"';
-        i++;
-      } else if (ch === '"') quoted = false;
-      else cur += ch;
-    } else if (ch === '"' && cur.trim() === "") {
-      quoted = true;
-      cur = "";
-    } else if (ch === sep) {
-      out.push(cur.trim());
-      cur = "";
-    } else cur += ch;
-  }
-  out.push(cur.trim());
-  return out;
-}
-
+/** What a platform took in all, commission and fees together: read as fees only when nothing else is. */
+const DEDUCTIONS = ["deductions", "الخصومات", "الاستقطاعات"];
 /**
  * An amount as a statement prints it: "1,500", "IQD 1500", "(900)" or "-900".
  * Null when it is not one.
@@ -268,62 +253,93 @@ export function statementAmount(cell: string): string | null {
   return (negative && !d.isZero() ? d.negated() : d).toFixed();
 }
 
+const MAX_LINES = 2000;
+/** How far down a report its column names may be: below its title, the period, the account. */
+const HEADER_SEARCH = 30;
+
+/** Where each column is: named, or in the order the statement's lines give them. */
+type At = { orderNo: number; payout: number; commission: number | null; fees: number[] };
+
+/** A commission or a fee named with more words: "Talabat commission", "Delivery fee". */
+const COMMISSION_NAMED = /(^|\s)(commission|العمولة|عمولة)$/;
+const FEE_NAMED = /(^|\s)(fees?|charges?)$|^رسوم\s/;
+/** A total of what is kept: not one more fee to add. */
+const TOTAL_NAMED = /^(total|sum)\b|الإجمالي|إجمالي|اجمالي|مجموع/;
+
+function columnsNamed(cells: string[]): At | null {
+  const names = cells.map(headerName);
+  const orderNo = columnNamed(names, HEADERS.orderNo);
+  const payout = columnNamed(names, HEADERS.payout);
+  if (orderNo === null || payout === null) return null;
+  const found = columnNamed(names, HEADERS.commission);
+  const named = names.findIndex(
+    (n, i) => i !== orderNo && i !== payout && COMMISSION_NAMED.test(n),
+  );
+  const commission = found ?? (named >= 0 ? named : null);
+  // Every column the report splits its fees into (delivery, payment, service), added up.
+  const taken = (i: number) => i === orderNo || i === payout || i === commission;
+  const fees = names.flatMap((n, i) =>
+    !taken(i) && !TOTAL_NAMED.test(n) && (HEADERS.fees.includes(n) || FEE_NAMED.test(n)) ? [i] : [],
+  );
+  const deductions = columnNamed(names, DEDUCTIONS);
+  return {
+    orderNo,
+    payout,
+    commission,
+    fees: fees.length > 0 || deductions === null || taken(deductions) ? fees : [deductions],
+  };
+}
+
 /**
- * The lines of a statement pasted from the platform's report: the order
- * number and the payout, and the commission and fees when it gives them. A
- * first row that names the columns is read by those names ("Order ID",
+ * The lines of a statement pasted from the platform's report, or read from its
+ * file: the order number and the payout, and the commission and fees when it
+ * gives them. The row that names the columns is found below any title the
+ * report starts with, and they are read by those names ("Order ID",
  * "Payout", "Commission", "Fees"); without one, the columns are taken in that
  * order. Commission and fees printed as deductions (-900) are read as what
- * the platform kept (900).
+ * the platform kept (900). Total rows, and a title or a note with no amount,
+ * are left out.
  */
 export function parseStatement(text: string): ParsedStatement {
-  const raw = text.split(/\r?\n/);
-  const first = raw.find((r) => r.trim() !== "") ?? "";
-  const sep = first.includes("\t") ? "\t" : first.includes(";") && !first.includes(",") ? ";" : ",";
+  const rows = readTable(text).filter((r) => !isBlank(r));
   const problems: string[] = [];
   const lines: StatementLine[] = [];
   let skipped = 0;
+  let other = 0;
   let columns: ParsedStatement["columns"] = null;
-  let at = { orderNo: 0, payout: 1, commission: 2 as number | null, fees: 3 as number | null };
-  let started = false;
+  let at: At = { orderNo: 0, payout: 1, commission: 2, fees: [3] };
+  let from = 0;
 
-  for (let n = 0; n < raw.length; n++) {
-    const row = raw[n]!;
-    if (row.trim() === "") continue;
-    const c = cells(row, sep);
-    const lineNo = n + 1;
-
-    if (!started) {
-      started = true;
-      const names = c.map(headerName);
-      const find = (k: keyof typeof HEADERS) => {
-        const i = names.findIndex((h) => HEADERS[k].includes(h));
-        return i < 0 ? null : i;
-      };
-      const looksLikeHeader = c.length > 1 && statementAmount(c[1] ?? "") === null;
-      if (looksLikeHeader) {
-        const o = find("orderNo");
-        const p = find("payout");
-        if (o === null || p === null) {
-          problems.push(
-            `Line ${lineNo}: the columns were not recognised. Name them Order, Payout, and Commission and Fees if the statement has them.`,
-          );
-          return { lines: [], problems, skipped, columns: null };
-        }
-        at = { orderNo: o, payout: p, commission: find("commission"), fees: find("fees") };
-        columns = {
-          orderNo: c[o]!,
-          payout: c[p]!,
-          commission: at.commission === null ? null : c[at.commission]!,
-          fees: at.fees === null ? null : c[at.fees]!,
-        };
-        continue;
-      }
+  const named = rows.slice(0, HEADER_SEARCH).findIndex((r) => columnsNamed(r.cells) !== null);
+  if (named >= 0) {
+    const c = rows[named]!.cells;
+    at = columnsNamed(c)!;
+    columns = {
+      orderNo: c[at.orderNo]!,
+      payout: c[at.payout]!,
+      commission: at.commission === null ? null : c[at.commission]!,
+      fees: at.fees.length === 0 ? null : at.fees.map((i) => c[i]!).join(", "),
+    };
+    other = named;
+    from = named + 1;
+  } else if (rows.length > 0) {
+    const first = rows[0]!;
+    if (first.cells.length > 1 && statementAmount(first.cells[1] ?? "") === null) {
+      problems.push(
+        `Line ${first.line}: the columns were not recognised. Name them Order, Payout, and Commission and Fees if the statement has them.`,
+      );
+      return { lines: [], problems, skipped, other, columns: null };
     }
+  }
 
+  for (const { line: lineNo, cells: c } of rows.slice(from)) {
     const orderCell = c[at.orderNo] ?? "";
     // "Total" may be under the order number, or under the first column.
-    if (c.some((x) => TOTAL_ROW.test(x.trim()))) {
+    if (
+      c.some((x) => TOTAL_CELL.test(x)) ||
+      TOTAL_START.test(c[0] ?? "") ||
+      TOTAL_START.test(orderCell)
+    ) {
       skipped++;
       continue;
     }
@@ -332,6 +348,14 @@ export function parseStatement(text: string): ParsedStatement {
     if (orderNo === "") {
       if (payoutCell.trim() === "") continue;
       problems.push(`Line ${lineNo} has a payout but no order number.`);
+      continue;
+    }
+    // A title or a note ("Generated on 30/09/2026"), with no payout: not a line.
+    if (
+      statementAmount(payoutCell) === null &&
+      (PROSE.test(orderCell) || !ORDER_NO.test(orderNo))
+    ) {
+      other++;
       continue;
     }
     if (!ORDER_NO.test(orderNo)) {
@@ -347,27 +371,33 @@ export function parseStatement(text: string): ParsedStatement {
       );
       continue;
     }
-    const kept = (i: number | null, what: string): string | null | undefined => {
-      if (i === null) return null;
-      const cell = c[i] ?? "";
-      if (cell.trim() === "") return null;
-      const v = statementAmount(cell);
-      if (v === null) {
-        problems.push(`Line ${lineNo} (order ${orderNo}): the ${what} "${cell}" is not an amount.`);
-        return undefined;
+    /** What the platform kept, from its columns added up; undefined when one cannot be read. */
+    const kept = (columns: number[], what: string): string | null | undefined => {
+      let sum: Decimal | null = null;
+      for (const i of columns) {
+        const cell = c[i] ?? "";
+        if (cell.trim() === "") continue;
+        const v = statementAmount(cell);
+        if (v === null) {
+          problems.push(
+            `Line ${lineNo} (order ${orderNo}): the ${what} "${cell}" is not an amount.`,
+          );
+          return undefined;
+        }
+        sum = (sum ?? new Decimal(0)).plus(new Decimal(v).abs());
       }
-      return new Decimal(v).abs().toFixed();
+      return sum === null ? null : sum.toFixed();
     };
-    const commission = kept(at.commission, "commission");
+    const commission = kept(at.commission === null ? [] : [at.commission], "commission");
     const fees = kept(at.fees, "fees");
     if (commission === undefined || fees === undefined) continue;
     lines.push({ orderNo, payout, commission, fees });
     if (lines.length > MAX_LINES) {
       problems.push(`A statement is matched ${MAX_LINES} lines at a time.`);
-      return { lines: [], problems, skipped, columns };
+      return { lines: [], problems, skipped, other, columns };
     }
   }
-  return { lines, problems, skipped, columns };
+  return { lines, problems, skipped, other, columns };
 }
 
 // --- What the database's match says ---------------------------------------------

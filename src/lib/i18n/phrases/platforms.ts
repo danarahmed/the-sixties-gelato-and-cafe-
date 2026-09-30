@@ -120,10 +120,10 @@ const phrases: PhraseBook = {
       ar: "سُجّل (القيد رقم {journal}): دُفعت طلبات {platform}، وعددها {n}؛ وأسطر غير مطابقة تمامًا عددها {issues}، حُفظت مع الكشف للمتابعة.",
       ckb: "تۆمار کرا (تۆماری ژمارە {journal}): پارەی {n} داواکاریی {platform} درا؛ {issues} هێڵ بە تەواوی هاوتا نین، لەگەڵ کەشفەکە هەڵگیران بۆ بەدواداچوون.",
     },
-  "Copy the statement's rows from the platform's report (a spreadsheet or CSV) with their column names: <b>Order</b>, <b>Payout</b>, and <b>Commission</b> and <b>Fees</b> if it gives them. Without the names, the columns are read in that order.":
+  "Choose the platform's report (Excel or CSV) with <b>Read it from its file…</b>, or copy its rows here, with their column names: <b>Order</b>, <b>Payout</b>, and <b>Commission</b> and <b>Fees</b> if it gives them. Without the names, the columns are read in that order.":
     {
-      ar: "انسخ صفوف الكشف من تقرير المنصة (جدول بيانات أو CSV) مع أسماء أعمدتها: <b>Order</b> و<b>Payout</b>، و<b>Commission</b> و<b>Fees</b> إن وُجدت. من دون الأسماء، تُقرأ الأعمدة بهذا الترتيب.",
-      ckb: "ڕیزەکانی کەشفەکە لە ڕاپۆرتی پلاتفۆرمەکەوە کۆپی بکە (خشتەیەک یان CSV) لەگەڵ ناوی ستوونەکانیان: <b>Order</b>، <b>Payout</b>، و <b>Commission</b> و <b>Fees</b> ئەگەر هەبن. بەبێ ناوەکان، ستوونەکان بەو ڕیزبەندییە دەخوێندرێنەوە.",
+      ar: "اختر تقرير المنصة (Excel أو CSV) بزر <b>اقرأه من ملفه…</b>، أو انسخ صفوفه هنا، مع أسماء أعمدتها: <b>Order</b> و<b>Payout</b>، و<b>Commission</b> و<b>Fees</b> إن وُجدت. من دون الأسماء، تُقرأ الأعمدة بهذا الترتيب.",
+      ckb: "ڕاپۆرتی پلاتفۆرمەکە (Excel یان CSV) بە <b>لە فایلەکەیەوە بیخوێنەوە…</b> هەڵبژێرە، یان ڕیزەکانی لێرە کۆپی بکە، لەگەڵ ناوی ستوونەکانیان: <b>Order</b>، <b>Payout</b>، و <b>Commission</b> و <b>Fees</b> ئەگەر هەبن. بەبێ ناوەکان، ستوونەکان بەو ڕیزبەندییە دەخوێندرێنەوە.",
     },
   "The statement": { ar: "الكشف", ckb: "کەشفەکە" },
   "{n} line(s) read": { ar: "الأسطر المقروءة: {n}", ckb: "{n} هێڵ خوێندرایەوە" },
@@ -131,6 +131,10 @@ const phrases: PhraseBook = {
   "{n} total row(s) left out": {
     ar: "صفوف المجاميع المستبعدة: {n}",
     ckb: "{n} ڕیزی کۆی گشتی لابرا",
+  },
+  "{n} other row(s) left out: titles and notes": {
+    ar: "صفوف أخرى مستبعدة (عناوين وملاحظات): {n}",
+    ckb: "{n} ڕیزی تر لابرا: ناونیشان و تێبینی",
   },
   "…and {n} more": { ar: "…و{n} أخرى", ckb: "…و {n}ی تر" },
   "Match to the orders waiting": {

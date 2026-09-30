@@ -44,6 +44,11 @@ Since then, each in [`PROGRESS.md`](PROGRESS.md):
 - **The chart of accounts on a screen (M-06):** an income or a cost added,
   renamed, taken out of use and brought back (`0058`).
 - **The bank against its statement** (`0059`).
+- **Statements read from their files.** A platform's report and the bank's
+  statement are read from the file they come in (Excel, CSV, or the web page
+  some banks give as an ".xls"), in the browser: the platform's orders are
+  matched as before, and the bank's lines are found among the books' lines
+  and ticked, with its lines not in the books listed to be recorded.
 
 ## Next
 
@@ -51,17 +56,14 @@ Since then, each in [`PROGRESS.md`](PROGRESS.md):
    P1-11) wait for the choice of plans. The daily brief and red alerts sent by
    message (email or WhatsApp) wait for a channel. The test records are
    cleared, and the opening balances entered, on the owner's word
-   ([`guides/deployment.md`](guides/deployment.md)).
-2. **Statements read from their files.** A platform's statement is pasted
-   from its report (`0030`), and the bank's is typed (`0059`). Next: read each
-   from the file the platform or the bank gives, and, with an approved partner
-   account, Talabat's own feed.
-3. **Accounts, further (M-06), if it is needed.** An asset, a debt or the
+   ([`guides/deployment.md`](guides/deployment.md)). Talabat's own feed of
+   orders and payouts waits on an approved partner account.
+2. **Accounts, further (M-06), if it is needed.** An asset, a debt or the
    owner's money added on screen, with where each goes on the balance sheet
    and in the cash flow.
-4. **Offline selling, if it is needed.** A queue with its own rules for prices
+3. **Offline selling, if it is needed.** A queue with its own rules for prices
    and stock that change while offline, and a reconciliation of what synced.
-5. **Operations.** Error monitoring, a scheduled restore drill, and staging as a
+4. **Operations.** Error monitoring, a scheduled restore drill, and staging as a
    separate Supabase project.
 
 ## Every release
