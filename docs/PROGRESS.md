@@ -1918,6 +1918,19 @@ Built and tested:
     journal by hand, a bill for a service and a supplier's credit do not,
     and their forms do not offer it.
 
+  The migration was applied to the live database on 30 September 2026. The
+  text stored there is the file byte for byte, and it matches the tested
+  build object by object, permissions included (the differences are the two
+  known from before, which it did not touch). Nothing recorded changed but
+  the new account. It was checked on the live records as the owner, the
+  branch manager and the barista, in one transaction that was rolled back: a
+  quarter's rent paid ahead (sent twice, recorded once) with September's
+  share posted, October's rent alone waiting, the refusals in words, the
+  manager releasing but not cancelling, the barista not reading, the rent
+  cancelled with its share, and the books' fourteen checks at nothing before
+  and after; nothing was kept. The screens went live with
+  [pull request #62](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/62).
+
   Built and tested: the SQL suite (the shares, the alert and the close, a
   share reversed by hand, the drawer, sent twice with one key, refused
   months and amounts, who may do what); unit tests of the shares (checked

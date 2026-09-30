@@ -57,7 +57,7 @@ Plan a short window when the café is closed.
 | Every report at a place (`0057`)        | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0057`](#after-0057)). The screens were merged ([pull request #46](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/46)) and deployed            |
 | The chart of accounts (`0058`)          | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0058`](#after-0058)). The screens were merged ([pull request #52](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/52)) and deployed            |
 | The bank against its statement (`0059`) | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0059`](#after-0059)). The screens were merged ([pull request #53](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/53)) and deployed            |
-| Prepaid expenses (`0060`)               | ⏳ To apply before the screens are deployed (see [After `0060`](#after-0060))                                                                                                                                                                                                                                                                                                            |
+| Prepaid expenses (`0060`)               | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0060`](#after-0060)). The screens were merged ([pull request #62](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/62)) and deployed            |
 
 ## 0. Before you start
 
@@ -2700,7 +2700,61 @@ What it adds:
 
 It goes in before the screens: those deployed before it read the closing
 checklist, the alerts and the books' checks as before, with one more row
-each, at nothing.
+each, at nothing. Until the new screens are in, a bill for a service on
+Vendors and a journal by hand offer 1400, which the database refuses; the
+new screens leave it off.
+
+It was applied on 30 September 2026 with the Supabase connector: one
+`apply_migration` call, one transaction. Before it, a read-only check showed
+the live database exactly as verified after `0059`, object by object.
+
+The text stored there is the file byte for byte (md5
+`c273c3f2365a422bf23d33f6ca010633`, 36,022 bytes). It was then compared with
+the tested build, object by object, the role permissions and column grants
+included. The functions, constraints, indexes, policies, triggers, views and
+every table but `app_user` are identical. The only differences are the two
+known from before, and `0060` changed neither: the schema `citext` lives in,
+and the channel of the platform added on a screen. Nothing recorded changed
+but the new account, 1400 Prepaid expenses.
+
+It was checked on the live records as the owner, the branch manager and the
+barista, in one transaction that was rolled back:
+
+- **Refused, in words:**
+  - this month alone ("For this month alone, record an expense");
+  - a month already past;
+  - 37 months;
+  - a stock cost (5000);
+  - less than a dinar a month;
+  - a journal by hand into 1400.
+- **A quarter's rent paid ahead:** 300,001 from the bank, three months from
+  September. It posted journal 1101, and September's share of 100,000 at once
+  (journal 1102). Sent again with its key, it was answered from the first.
+- **October's rent alone,** 150,000: nothing posted yet.
+- **The list:** "1 of 3" and "0 of 1", at Main Branch.
+- **September's closing checklist:** its prepaid row was clear, and it is one
+  that stops the lock.
+- **Nothing more to release.**
+- **The branch manager** read both and released, and could not cancel
+  ("needs accounting.post"). **The barista** could not read them ("needs
+  cost.view").
+- **The rent cancelled** with why: its payment and its share reversed
+  (journal 1105). A second cancel was refused.
+- **The alert:** none now. A month on: "1 month(s) of prepaid expenses are
+  due to be released, 150,000 IQD in all".
+- **The trail:** both records and the cancel, with why.
+- **The books:** each of the fourteen checks was at nothing before and
+  after, with no document out of step.
+
+Nothing was kept. Every table's count is as it was before the check, but for
+the new account (39 accounts to 40) and the two new tables, empty. The
+journals still end at 1100 and the audit trail at 280.
+
+The security advisor lists the four functions added, each checking
+`cost.view`, `expense.record` or `accounting.post`. The helpers and the
+bodies are not callable. The performance advisor adds eight notices of a kind
+it already lists (a foreign key without an index of its own), on the two new
+tables, which hold a few rows a year.
 
 ## Clearing the test records
 
