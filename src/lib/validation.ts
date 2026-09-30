@@ -31,6 +31,13 @@ export const positive = (label: string) =>
     .transform(normaliseNumber)
     .refine((v) => DECIMAL.test(v) && Number(v) > 0, `${label} must be a number greater than zero`);
 
+/** A decimal of any sign, zero included, as an exact string: a bank's balance may be overdrawn. */
+export const signed = (label: string) =>
+  z
+    .union([z.string(), z.number()])
+    .transform(normaliseNumber)
+    .refine((v) => SIGNED_DECIMAL.test(v), `${label} must be a number`);
+
 /** A decimal of zero or more, as an exact string (empty → "0"). */
 export const nonNegative = (label: string) =>
   z

@@ -673,7 +673,13 @@ discount, why and who approved it. The 10% is a business setting (shown on
    and the payroll by where each person works. **Shared** is what belongs to no
    one place: the bank's card fees and journals by hand. The columns add up to
    the café's total.
-6. **Place** on Reports (`0057`) reads every report for one place: its sales
+6. **The bank against its statement** (Chart of Accounts, `0059`): when the
+   bank's statement for the month comes, type its last day and its closing
+   balance, tick the lines it shows, and keep it when it ties. What it shows
+   that the books do not (a charge, interest) is recorded first; what the
+   books have and it does not (a payment not yet cleared) waits for the next
+   one.
+7. **Place** on Reports (`0057`) reads every report for one place: its sales
    and payments, its losses, what came in and went back, its orders and
    batches, its dollars, its staff and its customers' sales. Someone who works
    at one place, a branch manager say, reads only theirs, and their

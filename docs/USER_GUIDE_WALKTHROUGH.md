@@ -1174,6 +1174,20 @@ owner; reopening: owner
   - Each change is on the [Audit trail](#22-audit-trail) under **Books &
     periods**, with why.
 
+- **The bank against its statement** (`0059`, `/accounting/bank`): what the
+  books say the bank holds, the last statement kept, and the bank's lines on
+  no statement yet. The owner, a general manager or the accountant keeps a
+  statement: its last day, the balance the bank's statement shows, and a tick
+  on each line the statement shows (or **Tick every line to this day**). The
+  screen adds them up from the last statement's balance; **Keep the
+  statement** is offered once they come to the bank's balance. A line the
+  bank has not shown yet (a transfer on its way) stays for the next
+  statement. A charge the bank took is recorded first on **Expenses**, paid
+  from the bank; interest by a journal. **Undo…** the latest, with why: its
+  lines are open again. A bank line more than 35 days old on no statement
+  raises an alert, and the month's closing checklist warns (it does not stop
+  the lock).
+
 - Who changed what is on the [Audit trail](#22-audit-trail).
 
 ## 21. Reports
@@ -1458,6 +1472,7 @@ a person's roles allows, then the café's.
 | Owner's correction to a control account                                                                              | `/journals`                              | owner                                                                                 |
 | Trial balance, closing checklist, lock / reopen                                                                      | `/accounting`                            | cost viewers; lock: accountant, general manager, owner; reopen: owner                 |
 | Add an income or a cost account, rename it, take it out of use or bring it back                                      | `/accounting`                            | cost viewers see; changing: accountant, general manager, owner                        |
+| Reconcile the bank against its statement; undo the latest                                                            | `/accounting/bank`                       | cost viewers see; keeping: accountant, general manager, owner                         |
 | Who changed what, before and after, by kind and person; CSV                                                          | `/audit`                                 | owner, managers, accountant, auditor                                                  |
 | Reconciliation, P&L, channels, ageing, margins, CSV                                                                  | `/reports`                               | cost viewers                                                                          |
 | Post the stock the old app never journaled                                                                           | `/reports`                               | owner                                                                                 |

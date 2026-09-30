@@ -7,15 +7,15 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0058` and the rebuilt app. The SQL
-  checks (59, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (34, every role, every screen in
+- **Built and verified:** migrations `0014`–`0059` and the rebuilt app. The SQL
+  checks (60, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (35, every role, every screen in
   Arabic and Kurdish, a lost answer on each kind of screen, every report on A4
   paper, documents kept with the records, stock sent between the café's
   places, the tills at each branch, the books by place, every report at a
-  place and the chart of accounts), the unit and contract tests (515) and a
-  production build all pass. The UX and integration pass was closed on 30
-  September 2026, in four parts.
+  place, the chart of accounts and the bank against its statement), the unit
+  and contract tests (521) and a production build all pass. The UX and
+  integration pass was closed on 30 September 2026, in four parts.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
   zero and locked July and August.
@@ -1669,6 +1669,68 @@ browser tests through the real app, or both.
   - unit tests for the code proposed and the trail's words, and every new
     text in Arabic and Kurdish.
 
+- **The bank against its statement (migration `0059`).** The drawers and the
+  safe were counted against the books; the bank was not. **Chart of Accounts →
+  The bank against its statement** shows what the books say the bank holds,
+  the last statement kept, and the bank's lines on no statement yet. The
+  owner, a general manager or the accountant keeps a statement:
+  - **its last day and the balance the bank's statement shows,** and a tick on
+    each line it shows (or every line to that day at once);
+  - **kept only when the lines ticked take the bank** from the last
+    statement's balance to the bank's; until then the screen says how far
+    apart they are. A line not on it yet (a transfer on its way) stays open
+    for the next one. What the bank shows and the books don't (a charge,
+    interest) is recorded first, then ticked;
+  - **the latest is undone with why,** its lines open again.
+
+  A bank line more than 35 days old on no statement raises an alert, and the
+  month's closing checklist warns, without stopping the lock, when a line to
+  its last day is on none. Each statement kept or undone is on the audit
+  trail under **Books & periods**.
+
+  The migration was applied to the live database on 30 September 2026. The
+  text stored there is the file byte for byte, and it matches the tested
+  build object by object, permissions included (the differences: the schema
+  `citext` lives in, as before, and a delivery platform added on a screen
+  that morning, whose short name joins the channels). Nothing recorded
+  changed. It was checked on the live records as the owner, the branch
+  manager and the barista, in one transaction that was rolled back: the
+  bank's four open lines kept on a statement to 29 September (one 1 IQD off
+  refused first; sent twice with one key, kept once), the closing
+  checklist's warning cleared, a line already on it and an earlier end
+  refused, the branch manager reading and the barista refused, the statement
+  undone with why; the thirteen checks at nothing before and after. Nothing
+  was kept. The security advisors list the three functions added; the
+  performance advisors add three notices of a kind already listed. The
+  screens went live with
+  [pull request #53](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/53).
+
+Built and tested:
+
+- a new SQL suite: the books' bank lines; a statement kept only when it
+  ties, sent twice with one key; each line on one statement; statements
+  following one another; a bank charge recorded, then ticked; the latest
+  undone with why; the alert and the checklist's warning; who may and who
+  reads; a statement never changed or deleted; the books tie as they did;
+- a new browser suite: the owner keeping a statement (refused until it
+  ties) and undoing it; a branch manager reading it and a cashier sent
+  away; the trail; Arabic and Kurdish; a phone;
+- unit tests for the screen's sums, the lines offered to a day and the
+  trail's words, and every new text in Arabic and Kurdish.
+
+- **An error on long pages, found and fixed.** Now and then a long page (the
+  audit trail with its 500 changes) logged a React hydration error (#418) and
+  was drawn a second time in the browser. It came and went, and was first seen
+  in the browser tests on 30 September. The cause: a page's data streams in
+  after its HTML, and React began hydrating before all of it had arrived. It
+  paused at an element for a part not there yet, and when that part came
+  (within a few milliseconds), React hydrated the element again from the
+  wrong place: the first thing inside it. The shell now holds hydration back
+  until the whole page has arrived, so each page is hydrated once, whole
+  (`AppShell`). Loading the audit trail 90 times, as the tests do, 7 failed
+  before and none after. Every browser suite now also checks that no page is
+  hydrated before it has all arrived.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -1743,12 +1805,12 @@ browser tests through the real app, or both.
 
 ## Tests
 
-| Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Result      |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | 502 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 44 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward, a transfer sent, received and cancelled at once, ten tills at two branches)                                                                                                                                                                                                                                                                      | 56 passing  |
-| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers, loyalty, the sales analysis and the stock's value, the balance sheet and cash flow, every report on paper, documents with the records, transfers, the tills at each branch | 33 passing  |
-| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | green       |
+| Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Result      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | 521 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 49 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward, a transfer sent, received and cancelled at once, ten tills at two branches)                                                                                                                                                                                                                                                                                                                                                                                                                                              | 60 passing  |
+| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers, loyalty, the sales analysis and the stock's value, the balance sheet and cash flow, every report on paper, documents with the records, transfers, the tills at each branch, the books by place, every report at a place, the chart of accounts, the bank against its statement; on every page, that it is hydrated only once all of it has arrived | 35 passing  |
+| Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | green       |
 
 What is not built, and why, is in [`LIMITATIONS.md`](LIMITATIONS.md); the order
 of the next work is in [`ROADMAP.md`](ROADMAP.md).

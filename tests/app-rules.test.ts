@@ -82,6 +82,7 @@ import {
   valueIn,
 } from "@/lib/audit";
 import { nextFreeCode } from "@/lib/chart";
+import { bankMath, linesTo } from "@/lib/bank";
 import { deliveryLineCost, needsPriceConfirmation, packCode, priceGap } from "@/lib/receiving";
 import { lookAlike, lookAlikes, nameKey, slips } from "@/lib/names";
 import { REASONS, noteIsEnough, reasonKey, reasonMissing, type ReasonKind } from "@/lib/reasons";
@@ -4765,6 +4766,92 @@ describe("the chart of accounts on a screen (0058)", () => {
           "Class",
           "Expense",
           "Income",
+        ].filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
+  });
+});
+
+describe("the bank against its statement (0059)", () => {
+  const migration = readFileSync(
+    join(__dirname, "../supabase/migrations/0059_bank_reconciliation.sql"),
+    "utf8",
+  );
+
+  it("adds up the lines ticked from the last statement, against the bank's balance", () => {
+    const m = bankMath(940000, [-25000, "-5000"], "910,000");
+    expect([m.moneyIn.toNumber(), m.moneyOut.toNumber(), m.reached.toNumber()]).toEqual([
+      0, 30000, 910000,
+    ]);
+    expect(m.difference?.isZero()).toBe(true);
+    // Overdrawn is below zero, and Arabic digits are read.
+    const o = bankMath(0, [-150000], "-١٥٠٠٠٠");
+    expect(o.difference?.isZero()).toBe(true);
+    // Not typed yet, or not a number: no difference to show.
+    expect(bankMath(0, [1000], "").difference).toBeNull();
+    expect(bankMath(0, [1000], "abc").closing).toBeNull();
+    // Apart: the bank's balance less where the lines take it.
+    expect(bankMath(940000, [-25000], "900000").difference?.toNumber()).toBe(-15000);
+  });
+
+  it("offers a statement only the lines to its last day", () => {
+    const lines = [{ day: "2026-09-20" }, { day: "2026-09-25" }, { day: "2026-09-29" }];
+    expect(linesTo(lines, "2026-09-25").map((l) => l.day)).toEqual(["2026-09-20", "2026-09-25"]);
+    expect(linesTo(lines, "")).toEqual([]);
+  });
+
+  it("names each statement kept or undone on the audit trail, in the reader's language", () => {
+    for (const a of ["bank.reconcile", "bank.unreconcile"]) {
+      expect(migration).toContain(`'${a}'`);
+      expect(actionLabel(a)).not.toBe(a);
+    }
+    expect(auditGroup("books")?.prefixes).toContain("bank.");
+    const names = new Map<string, string>();
+    const kept = {
+      statement_no: 3,
+      statement_date: "2026-09-29",
+      opening_balance: 940000,
+      closing_balance: 910000,
+      line_count: 2,
+      money_in: 0,
+      money_out: 30000,
+    };
+    expect(subjectOf("bank_statement", "x", null, kept, names)).toBe("Bank statement 3");
+    expect(subjectOf("bank_statement", null, null, {}, names)).toBe("A bank statement");
+    expect(describeChanges(null, kept, names).map((c) => c.field)).toEqual([
+      "Bank statement",
+      "Its last day",
+      "From the last statement",
+      "The bank's balance",
+      "Lines ticked",
+      "Money in",
+      "Money out",
+    ]);
+    const ar = translator(builtInWords("ar"));
+    const msg = (s: string) => s;
+    expect(subjectIn("Bank statement 3", "bank.reconcile", ar, msg)).toBe(
+      ar("Bank statement {no}", { no: "3" }),
+    );
+    expect(valueIn("undone", "Status", ar, msg)).toBe(ar("undone"));
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        [
+          "Bank statement kept",
+          "Bank statement undone",
+          "Bank statement {no}",
+          "A bank statement",
+          "Bank statement",
+          "Its last day",
+          "From the last statement",
+          "The bank's balance",
+          "Lines ticked",
+          "Money in",
+          "Money out",
+          "kept",
+          "undone",
+          "Bank not reconciled",
         ].filter((p) => !words[p]),
         locale,
       ).toEqual([]);

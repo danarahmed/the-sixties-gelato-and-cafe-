@@ -73,7 +73,7 @@ export const AUDIT_GROUPS = [
   {
     key: "books",
     label: "Books & periods", // i18n-ignore
-    prefixes: ["journal.", "period.", "legacy.", "expense.", "account."],
+    prefixes: ["journal.", "period.", "legacy.", "expense.", "account.", "bank."],
   },
   { key: "alerts", label: "Alerts answered", prefixes: ["alert."] }, // i18n-ignore
   {
@@ -245,6 +245,9 @@ const ACTION_LABEL: Record<string, string> = {
   "account.create": "Account added",
   "account.rename": "Account renamed",
   "account.in_use": "Account taken out of use or brought back",
+  // The bank against its statement (0059): the statement is named by its number.
+  "bank.reconcile": "Bank statement kept",
+  "bank.unreconcile": "Bank statement undone",
 };
 
 /**
@@ -484,6 +487,14 @@ const FIELD_LABEL: Record<string, string> = {
   owed: "Still owed",
   // An account of the books (0058): its class.
   account_type: "Class",
+  // A bank statement (0059).
+  statement_no: "Bank statement",
+  statement_date: "Its last day",
+  opening_balance: "From the last statement",
+  closing_balance: "The bank's balance",
+  money_in: "Money in",
+  money_out: "Money out",
+  line_count: "Lines ticked",
 };
 
 /**
@@ -752,6 +763,9 @@ export function subjectOf(
       return pick("return_no") ? `Return ${pick("return_no")}` : "A return to a supplier";
     case "supplier_credit":
       return pick("credit_no") ? `Credit ${pick("credit_no")}` : "A supplier's credit";
+    // A bank statement (0059), by its number.
+    case "bank_statement":
+      return pick("statement_no") ? `Bank statement ${pick("statement_no")}` : "A bank statement";
     // An account of the books (0058): by its code, and its name where the trail has it.
     case "gl_account":
       return entityId
@@ -819,6 +833,7 @@ const SUBJECT_WORDS = new Set([
   "A payroll",
   "A salary payment",
   "An account",
+  "A bank statement",
 ]);
 
 /** An id shown short, as subjectOf shows it: "1a2b3c4d…". */
@@ -838,6 +853,7 @@ const SUBJECTS: [RegExp, string, string[]][] = [
   [/^Credit (\d+)$/, "Credit {no}", ["no"]],
   [/^Transfer (\d+)$/, "Transfer {no}", ["no"]],
   [/^Payroll (\d+)$/, "Payroll {no}", ["no"]],
+  [/^Bank statement (\d+)$/, "Bank statement {no}", ["no"]],
   [
     /^Card takings (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})$/,
     "Card takings {from} to {to}",

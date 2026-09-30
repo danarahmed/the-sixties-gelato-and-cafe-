@@ -20,6 +20,7 @@ const typed = () =>
     union select coalesce(contact, '') from supplier union select unnest(allergens) from product
     union select coalesce(sku, '') from item
     union select description from journal_entry where description like '%(fixture)%'
+    union select description from journal_entry where description like '%(e2e)%'
     union select description from expense union select coalesce(memo, '') from journal_line
     union select regexp_replace(description, '^Correction: ', '') from journal_entry where reference_type = 'correction'
     union select coalesce(no_stock_reason, '') from product_variant
@@ -63,6 +64,8 @@ const typed = () =>
     union select coalesce(cancel_reason, '') from stock_transfer
     -- The accounts the café added itself (0058): named as it typed them.
     union select name from gl_account where not is_system
+    -- A bank statement's note, and why one was undone (0059).
+    union select coalesce(note, '') from bank_statement union select coalesce(undo_reason, '') from bank_statement
   ) x where n is not null`);
 const own = () =>
   new Set(

@@ -252,6 +252,8 @@ const phrases: PhraseBook = {
   // Losses by kind, giveaways at the till, and the loss report (0048).
   "Production waste": { ar: "هدر الإنتاج", ckb: "بەفیڕۆچوونی بەرهەمهێنان" },
   "Preparation waste": { ar: "هدر التحضير", ckb: "بەفیڕۆچوونی ئامادەکردن" },
+  // A signed amount (0059): a bank's balance may be overdrawn.
+  "{1} must be a number": { ar: "{1} يجب أن يكون رقمًا", ckb: "{1} دەبێت ژمارە بێت" },
 };
 
 export default phrases;
