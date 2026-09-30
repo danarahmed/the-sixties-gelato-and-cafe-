@@ -357,6 +357,25 @@ const phrases: PhraseBook = {
     },
   "Every channel": { ar: "كل القنوات", ckb: "هەموو کەناڵەکان" },
   "The latest 300": { ar: "آخر 300", ckb: "دوایین 300" },
+  // Find a sale (P2-20).
+  "Find a sale": { ar: "ابحث عن بيع", ckb: "فرۆشتنێک بدۆزەوە" },
+  "Sale or journal number, platform order, customer": {
+    ar: "رقم البيع أو القيد، طلب المنصة، الزبون",
+    ckb: "ژمارەی فرۆشتن یان تۆمار، داواکاری پلاتفۆرم، کڕیار",
+  },
+  "Completed sales found for “{q}”": {
+    ar: "المبيعات المكتملة التي وُجدت لـ «{q}»",
+    ckb: "فرۆشتنە تەواوبووەکانی دۆزراوە بۆ «{q}»",
+  },
+  "No sale matches “{q}”": {
+    ar: "لا يوجد بيع يطابق «{q}»",
+    ckb: "هیچ فرۆشتنێک لەگەڵ «{q}» ناگونجێت",
+  },
+  "Type the sale number printed after “Sale” on the receipt, its journal number, a refund's number, the platform's order number, or the customer's name or phone.":
+    {
+      ar: "اكتب رقم البيع المطبوع بعد «بيع» على الإيصال، أو رقم قيده، أو رقم استرداد، أو رقم طلب المنصة، أو اسم الزبون أو هاتفه.",
+      ckb: "ئەو ژمارەی فرۆشتنە بنووسە کە لە پسوولەکەدا دوای «فرۆشتن» چاپ کراوە، یان ژمارەی تۆمارەکەی، یان ژمارەی گەڕاندنەوەیەک، یان ژمارەی داواکاری پلاتفۆرم، یان ناو یان تەلەفۆنی کڕیار.",
+    },
   "Completed sales on {day}": {
     ar: "المبيعات المكتملة في {day}",
     ckb: "فرۆشتنە تەواوبووەکان لە {day}",

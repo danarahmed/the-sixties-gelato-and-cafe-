@@ -22,57 +22,48 @@ Stages 0–5 of the August 2026 audit's roadmap:
 The one exception is H-04: offline selling was resolved by making the till
 honest, not by building a queue.
 
+Since then, each in [`PROGRESS.md`](PROGRESS.md):
+
+- **The September 2026 audit's action matrix**
+  ([`SYSTEM_AUDIT_2026-09.md`](SYSTEM_AUDIT_2026-09.md)): its P0s in `0024`,
+  its P1s in `0025`–`0030`, the rest in releases J to AB
+  ([`COMPLETION_PLAN.md`](COMPLETION_PLAN.md)), then the UX and integration
+  pass. Orders finds a sale by its receipt, its journal, a refund, the
+  platform's order number or the customer (P2-20).
+- **Every screen in Arabic and Kurdish, and languages the owner adds (L-06),**
+  from `0032`.
+- **Statements and exports (L-05):** the balance sheet and the cash flow
+  (`0052`), every report printed or saved as a PDF, and documents kept with
+  the records (`0053`).
+- **Partial refunds** (`0037`), and a reason and an approval limit on
+  discounts (`0028`, `0040`).
+- **Production and places (M-11):** batches, use-by dates and the day's plan
+  (`0046`), stock sent between places (`0054`), tills and prices by branch
+  (`0055`), and the books and every report by place (`0056`, `0057`).
+- **The chart of accounts on a screen (M-06):** an income or a cost added,
+  renamed, taken out of use and brought back (`0058`).
+- **The bank against its statement** (`0059`).
+
 ## Next
 
-1. **The September 2026 audit's action matrix**
-   ([`SYSTEM_AUDIT_2026-09.md`](SYSTEM_AUDIT_2026-09.md)). Its P0s — counts
-   while trading, the drawer across midnight, where money came from, a lost
-   answer from the database — are fixed in `0024`, and P1-5 to P1-7 (the
-   recipe and price in force, printed bills, sales costed at nothing) in
-   `0025`, P1-2 (reports that agree, and numbers that open) in `0026`, and
-   P1-1, P1-3 and P1-4 (who changed what, delivery prices checked, items and
-   suppliers kept right) in `0027`, P1-10 (reasons, approvals with a
-   manager's PIN, the exceptions report) in `0028`, P1-8 (alerts, the
-   exception-first dashboard and the daily brief) in `0029`, and P1-9 (card
-   and platform money reconciled) in `0030`; P1-11 (backups and monitoring)
-   waits for the owner's choice of plans. Then,
-   on the owner's word, clear the test records and enter the opening balances
+1. **What waits on the owner.** Backups and monitoring (the September audit's
+   P1-11) wait for the choice of plans. The daily brief and red alerts sent by
+   message (email or WhatsApp) wait for a channel. The test records are
+   cleared, and the opening balances entered, on the owner's word
    ([`guides/deployment.md`](guides/deployment.md)).
-2. **Platform statements, further.** Matching a statement to the orders by
-   number and posting its payout are built (`0030`, M-10); a statement is
-   pasted from the platform's report. The owner adds, renames and retires
-   delivery platforms, each with its names in Arabic and Kurdish, its own till
-   button, prices and packaging (`0031`). Next: read the statement file
-   itself, and, with an approved partner account, Talabat's own feed.
-3. **Production, further (M-11).** Built: recording batches, made items and
-   their costs, batch numbers, use-by dates, stock kept batch by batch and the
-   day's plan (`0046`), stock sent between the central kitchen and the
-   branch, each device doing its stock work at its own place (`0054`), and the
-   kitchen planning by what it sends; tills at each branch, who works where,
-   turn numbers and prices by branch (`0055`); each place's profit and loss
-   (`0056`), and every report read by place (`0057`).
-4. **Every screen in Arabic and Kurdish, and languages the owner adds (L-06),
-   next.** The owner asked for the whole system, every detail, in Arabic and
-   Kurdish, and for more languages to be added. The navigation, the till, the
-   platforms screen and each platform's name already are; next, every screen's
-   text, the database's messages, the alerts and the daily brief, checked
-   right-to-left on a phone; a Languages page on Settings to correct any
-   phrase and add a language; and product names in each language.
-5. **Statements and exports (L-05).** Balance sheet and cash flow from the
-   ledger; PDF; invoice scans attached to bills and expenses.
-6. **Accounts maintenance (M-06).** Built: an income or a cost account added
-   on screen with its names in Arabic and Kurdish, renamed, taken out of use
-   and brought back, within the rules the database already enforces, on the
-   audit trail (`0058`). Next, if it is needed: an asset, a debt or the
+2. **Statements read from their files.** A platform's statement is pasted
+   from its report (`0030`), and the bank's is typed (`0059`). Next: read each
+   from the file the platform or the bank gives, and, with an approved partner
+   account, Talabat's own feed.
+3. **Search, further (P2-20).** Orders finds a sale. Next: Products & Recipes
+   by name, and the journals by number or words.
+4. **Accounts, further (M-06), if it is needed.** An asset, a debt or the
    owner's money added on screen, with where each goes on the balance sheet
    and in the cash flow.
-7. **Partial refunds,** and a reason and an approval limit on discounts (which
-   the till already gives), with the audit trail.
-8. **Offline selling, if it is needed.** A queue with its own rules for prices
+5. **Offline selling, if it is needed.** A queue with its own rules for prices
    and stock that change while offline, and a reconciliation of what synced.
-9. **Operations.** Error monitoring, a scheduled restore drill, and staging as a
-   separate Supabase project; the daily brief and red alerts sent by message
-   (email or WhatsApp) once there is a channel for it.
+6. **Operations.** Error monitoring, a scheduled restore drill, and staging as a
+   separate Supabase project.
 
 ## Every release
 

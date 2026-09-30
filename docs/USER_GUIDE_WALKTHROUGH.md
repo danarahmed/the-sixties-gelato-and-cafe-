@@ -285,6 +285,18 @@ sales. An item's add-ons follow it, in the order they were given: **Latte —
 Large (+ Oat milk, Extra shot ×2)**. Choose **From**, **To** and a **Channel** to see the sales of those days;
 a report's figures open here with them chosen.
 
+**Find a sale** finds one whatever its day, for a customer back with a receipt
+or a platform asking about an order. Type any of these:
+
+- the number the receipt prints after **Sale** (8 letters and digits);
+- the sale's journal number;
+- a refund's number, or its journal;
+- the platform's order number (capitals do not matter);
+- the customer's name, or part of it, or their phone typed any way.
+
+The sales it names are shown with their refunds and voids. **The latest 300**
+clears it.
+
 - **Void.** For a sale rung in error, until the drawer's session holding its
   cash is closed (after midnight too: the close, not the date, decides).
   Revenue, payment, cost and stock all come back exactly.

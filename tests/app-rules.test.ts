@@ -289,6 +289,7 @@ import {
   shrunkSize,
   sizeLabel,
 } from "@/lib/documents";
+import { likeText, phoneTail, readSaleQuery } from "@/lib/findSale";
 
 const perms = (role: Role) => [...ROLE_PERMISSIONS[role]];
 
@@ -4856,5 +4857,61 @@ describe("the bank against its statement (0059)", () => {
         locale,
       ).toEqual([]);
     }
+  });
+});
+
+describe("find a sale on Orders (the September audit's P2-20)", () => {
+  it("reads the receipt's sale number as the ids that begin with it, or the whole id", () => {
+    expect(readSaleQuery("3FA9C2E1")?.ids).toEqual({
+      from: "3fa9c2e1-0000-0000-0000-000000000000",
+      to: "3fa9c2e1-ffff-ffff-ffff-ffffffffffff",
+    });
+    const id = "3fa9c2e1-1111-4222-8333-444455556666";
+    expect(readSaleQuery(` ${id.toUpperCase()} `)?.ids).toEqual({ from: id, to: id });
+    // A sale number is not a customer's name.
+    expect(readSaleQuery("3fa9c2e1")?.name).toBeUndefined();
+  });
+
+  it("reads a number as a journal's or a refund's, and as an order number too", () => {
+    expect(readSaleQuery("1024")).toMatchObject({ number: 1024, platformOrder: "1024" });
+    expect(readSaleQuery("#1024")?.number).toBe(1024);
+    // In Arabic-Indic or Eastern Arabic-Indic digits, as a phone's keyboard types them.
+    expect(readSaleQuery("١٠٢٤")?.number).toBe(1024);
+    expect(readSaleQuery("۱۰۲۴")?.number).toBe(1024);
+    // Eight digits are a sale number, a journal number and an order number at once.
+    expect(readSaleQuery("12345678")).toMatchObject({
+      number: 12345678,
+      platformOrder: "12345678",
+      ids: { from: "12345678-0000-0000-0000-000000000000" },
+    });
+  });
+
+  it("reads the platform's order number as its tablet shows it", () => {
+    expect(readSaleQuery("TB-99/7")?.platformOrder).toBe("TB-99/7");
+    expect(readSaleQuery(" # tb 99 ")?.platformOrder).toBe("tb99");
+  });
+
+  it("reads a customer's name in any script, and their phone typed any way", () => {
+    expect(readSaleQuery("Ali")?.name).toBe("Ali");
+    expect(readSaleQuery("  هاوڕێ   ئەحمەد ")?.name).toBe("هاوڕێ ئەحمەد");
+    expect(readSaleQuery("0770 123 4567")?.phoneTail).toBe("7701234567");
+    expect(readSaleQuery("+964 770-123-4567")?.phoneTail).toBe("7701234567");
+    expect(readSaleQuery("٠٧٧٠١٢٣٤٥٦٧")?.phoneTail).toBe("7701234567");
+    expect(phoneTail("00964 53 123 4567")).toBe("531234567");
+    // Too short to be a phone: a number, not a phone's end.
+    expect(phoneTail("1024")).toBeNull();
+    expect(phoneTail("Ali")).toBeNull();
+  });
+
+  it("reads nothing from nothing, or from more than a search holds", () => {
+    expect(readSaleQuery("")).toBeNull();
+    expect(readSaleQuery("   ")).toBeNull();
+    expect(readSaleQuery(null)).toBeNull();
+    expect(readSaleQuery("x".repeat(61))).toBeNull();
+  });
+
+  it("takes %, _ and \\ typed in a search as themselves", () => {
+    expect(likeText("50%_off")).toBe("50\\%\\_off");
+    expect(likeText("a\\b")).toBe("a\\\\b");
   });
 });
