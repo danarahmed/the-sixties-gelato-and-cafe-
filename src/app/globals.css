@@ -13,7 +13,7 @@
   --surface-2: #f1f4ee; /* green-bar band */
   --text: #1b2229;
   --text-muted: #55606b;
-  --faint: #8b949d;
+  --faint: #676e74; /* 4.5:1 on every background (AM) */
   --border: #dfe3de;
   --rule: #a9b2aa; /* hard rule under headings / above totals */
   --brand: #b8375b; /* café raspberry — the single action accent */
@@ -26,7 +26,7 @@
   --rail: #16202b;
   --rail-2: #101822;
   --rail-ink: #ccd6e0;
-  --rail-mute: #74838f;
+  --rail-mute: #7c8a96;
   --shadow: none;
   --radius: 3px;
   --tap: 44px;
@@ -38,7 +38,7 @@
   --surface-2: #1a2129;
   --text: #e6eae6;
   --text-muted: #a3ada6;
-  --faint: #79847d;
+  --faint: #818b85;
   --border: #29323a;
   --rule: #47535c;
   --brand: #e2769a;
@@ -51,7 +51,7 @@
   --rail: #0b1119;
   --rail-2: #070c12;
   --rail-ink: #c3ccd5;
-  --rail-mute: #6f7c88;
+  --rail-mute: #727f8a;
 }
 
 * {
@@ -184,6 +184,39 @@ select:focus,
 textarea:focus {
   outline: none;
   border-bottom-color: var(--brand);
+}
+/* Where the keyboard is (AL): a ring, as on a button. A box drawn with its
+   own border (the forms' inputStyle) kept its colour when focused, and a
+   tick box showed nothing at all. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+/* The way past the menu (AL): out of sight until the keyboard reaches it,
+   then at the top of the page, on the side the reading starts. */
+.skip-link {
+  position: absolute;
+  top: 8px;
+  inset-inline-start: 8px;
+  z-index: 1000;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-300%);
+}
+.skip-link:focus {
+  transform: none;
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+/* Where the way past the menu leads: not a control, so no ring of its own. */
+main.content:focus {
+  outline: none;
 }
 select {
   padding-inline-end: 18px;

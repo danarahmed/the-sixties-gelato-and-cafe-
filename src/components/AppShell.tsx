@@ -144,7 +144,9 @@ export function AppShell({
           <Controls locale={locale} theme={theme} />
         </header>
         <OfflineBanner />
-        <main className="content">{children}</main>
+        <main className="content" id="content" tabIndex={-1}>
+          {children}
+        </main>
       </div>
     );
   }
@@ -157,11 +159,17 @@ export function AppShell({
 
   return (
     <div className={`app-shell${posMode ? " pos-mode" : ""}`}>
+      {/* The first place the keyboard reaches: past the menu, to the page (AL). */}
+      <a href="#content" className="skip-link">
+        {t("Skip to the content")}
+      </a>
       <WholePage />
       <header className="topbar">
         <button
           onClick={() => setMenuOpen((v) => !v)}
           aria-label={t("Menu")}
+          aria-expanded={menuOpen}
+          aria-controls="sidenav"
           style={{ minWidth: 44 }}
           className="menu-toggle"
         >
@@ -180,14 +188,23 @@ export function AppShell({
       </header>
       <OfflineBanner />
       <div className="layout">
-        <nav className={`sidenav ${menuOpen ? "open" : ""}`} onClick={() => setMenuOpen(false)}>
+        <nav
+          id="sidenav"
+          aria-label={t("Menu")}
+          className={`sidenav ${menuOpen ? "open" : ""}`}
+          onClick={() => setMenuOpen(false)}
+        >
           {nav.map((n, i) => {
             const active = pathname === n.href || pathname?.startsWith(`${n.href}/`);
             const heading = n.group && n.group !== nav[i - 1]?.group ? n.group : null;
             return (
               <div key={n.href}>
                 {heading && <div className="navgroup">{t(heading)}</div>}
-                <Link href={n.href} className={active ? "active" : ""}>
+                <Link
+                  href={n.href}
+                  className={active ? "active" : ""}
+                  aria-current={active ? "page" : undefined}
+                >
                   {t(n.key)}
                 </Link>
               </div>
@@ -195,12 +212,18 @@ export function AppShell({
           })}
           <div>
             <div className="navgroup">{t("nav.group.you")}</div>
-            <Link href="/account" className={pathname === "/account" ? "active" : ""}>
+            <Link
+              href="/account"
+              className={pathname === "/account" ? "active" : ""}
+              aria-current={pathname === "/account" ? "page" : undefined}
+            >
               {t("nav.account")}
             </Link>
           </div>
         </nav>
-        <main className="content">{children}</main>
+        <main className="content" id="content" tabIndex={-1}>
+          {children}
+        </main>
       </div>
     </div>
   );

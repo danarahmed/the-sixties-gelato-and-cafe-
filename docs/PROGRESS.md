@@ -16,7 +16,7 @@ browser tests through the real app, or both.
   place, the chart of accounts, the bank against its statement, finding a
   sale, a product or a journal, statements read from their files, and every
   box and button named for a screen reader), the unit and contract tests
-  (579) and a production build all pass. The UX and integration pass was
+  (585) and a production build all pass. The UX and integration pass was
   closed on 30 September 2026, in four parts.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
@@ -1857,6 +1857,38 @@ Built and tested:
   too; the browser suite shows the owner the safe and the drawer, warned
   when an amount is more, and shows the manager the safe and not the drawer.
 
+- **The keyboard's place always seen, and a way past the menu (no
+  migration).** A box drawn with a border of its own, which is how most
+  forms draw them, showed nothing when the keyboard reached it, and neither
+  did a tick box. Now a ring shows it, as on a button. The first thing the
+  keyboard reaches on every page is **Skip to the content**, which is out of
+  sight until then and leads past the menu to the page. The menu is named for
+  a screen reader and marks the page shown, and ☰ says whether it is open.
+  Built and tested: the browser suite, in English at 1280px and in Kurdish on
+  a phone, checks the way past the menu, the menu's name and its page shown,
+  and a ring on an underlined box, a box with its own border, and a tick box,
+  each reached by Tab.
+
+- **Words readable against their background (no migration).** The faintest
+  words stood only 2.8 to 3.1 times as dark as the page in the light theme,
+  under the 4.5 that small text needs to be read with ease. The faintest
+  words in the dark theme, and the menu's group headings in both, were just
+  under 4.5 too. All four colours are now a little stronger, and the order
+  is kept: the text, then the quieter words, then the faintest. Built and
+  tested: a unit test reads each colour from the stylesheet, in both themes,
+  and checks every colour words are written in against each background it
+  is written on.
+
+- **The browser's safeguards (no migration).** No other site may show a
+  page of the app inside its own, where a click on the till or the books
+  could be steered (clickjacking). A file is never read as another type
+  than it says. Another site is told only where a link came from, never the
+  page's address. Nothing may use the camera, the microphone, the location,
+  payments in the browser or USB. The till's full screen stays. See
+  [`SECURITY.md`](SECURITY.md). Built and tested: a unit test on the
+  settings, and the browser suite reads the headers the running app sends,
+  a product's photo keeping its own stricter policy.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -1933,7 +1965,7 @@ Built and tested:
 
 | Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Result      |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files, every box and button named                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | 579 passing |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files, every box and button named, every text colour readable, the browser's safeguards                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 585 passing |
 | SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 49 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward, a transfer sent, received and cancelled at once, ten tills at two branches)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 60 passing  |
 | Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers, loyalty, the sales analysis and the stock's value, the balance sheet and cash flow, every report on paper, documents with the records, transfers, the tills at each branch, the books by place, every report at a place, the chart of accounts, the bank against its statement, finding a sale, a product and a journal, statements read from their files; on every page, that it is hydrated only once all of it has arrived | 37 passing  |
 | Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | green       |
