@@ -13,6 +13,7 @@ import {
   type Json,
 } from "@/lib/audit";
 import { daysBetween } from "@/lib/dates";
+import type { CashOnHand } from "@/lib/cash";
 import { channelName } from "@/lib/channels";
 import { db, num, numOrNull, one, rows, str, strOrNull, type Row } from "./client";
 import { likeText, type JournalQuery } from "@/lib/find";
@@ -90,6 +91,8 @@ export interface DrawerStatus {
   /** Bills still waiting for their money: the drawer is counted once they are settled. */
   openBills: number;
   safe: number;
+  /** Whether a session is open at the drawer: nothing is paid out of a closed one. */
+  sessionOpen: boolean;
 }
 
 export async function getDrawerStatus(place: string | null = null): Promise<DrawerStatus> {
@@ -115,7 +118,24 @@ export async function getDrawerStatus(place: string | null = null): Promise<Draw
     platform: num(t?.platform),
     openBills: num(t?.open_bills),
     safe: num(t?.safe),
+    sessionOpen: t?.session_open === true,
   };
+}
+
+/**
+ * What the safe and a till's drawer hold, for a form that pays out of them
+ * (AK). `place` is the drawer's branch: the one the payment would come out of.
+ * Only advice: the database checks the payment itself, so a screen that
+ * cannot read them opens all the same, without them.
+ */
+export async function getCashOnHand(place: string | null = null): Promise<CashOnHand | null> {
+  try {
+    const d = await getDrawerStatus(place);
+    return { safe: d.safe, till: d.expected, tillOpen: d.sessionOpen };
+  } catch (e) {
+    console.warn(`cash on hand not read: ${e instanceof Error ? e.message : String(e)}`);
+    return null;
+  }
 }
 
 /* ---------------------------------------------------------------- vendors */

@@ -245,3 +245,63 @@ export function drawerStateFrom(t: Record<string, unknown> | null): DrawerState 
     },
   };
 }
+
+/**
+ * What the safe and a till's drawer hold, for a form that pays money out of
+ * them (AK), as the database gives them (drawer_status). The database refuses
+ * a payment out of either that is more than it holds. The form says so before
+ * the payment is sent.
+ */
+export interface CashOnHand {
+  /** The safe's balance in the books (1005). */
+  safe: number;
+  /**
+   * What the drawer should hold: null to a reader who may not see it (the
+   * count is blind), or before its start is known.
+   */
+  till: number | null;
+  /** Whether the drawer is open: nothing is paid out of a closed one. */
+  tillOpen: boolean;
+}
+
+/** What a form says under "Paid from": a phrase, the amount it names, and whether it warns. */
+export interface CashNote {
+  text: string;
+  amount: number | null;
+  warn: boolean;
+}
+
+/**
+ * The note for money paid from `from` ("safe", or the drawer as "till" or
+ * "cash"). Null when there is nothing to say: another source, or a drawer
+ * whose figure the reader may not see.
+ */
+export function cashNote(on: CashOnHand | null, from: string, amount: number): CashNote | null {
+  if (!on) return null;
+  if (from === "safe") {
+    const short = amount > on.safe;
+    return {
+      text: short
+        ? "The safe holds {amount} in the books: not enough to pay this. Put the takings in the safe first (Move cash, on Sales), or pay it from elsewhere."
+        : "The safe holds {amount} in the books.",
+      amount: on.safe,
+      warn: short,
+    };
+  }
+  if (from !== "till" && from !== "cash") return null;
+  if (!on.tillOpen)
+    return {
+      text: "The drawer is not open: open it on the till first, or pay it from elsewhere.",
+      amount: null,
+      warn: true,
+    };
+  if (on.till === null) return null;
+  const short = amount > on.till;
+  return {
+    text: short
+      ? "The drawer should hold {amount}: not enough to pay this. Move cash into the till first, or pay it from elsewhere."
+      : "The drawer should hold {amount}.",
+    amount: on.till,
+    warn: short,
+  };
+}

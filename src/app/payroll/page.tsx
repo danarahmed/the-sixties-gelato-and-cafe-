@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getAdvances, getPayrollRuns, getStaff } from "@/lib/db/staff";
+import { getCashOnHand } from "@/lib/db/books";
+import { tillForWrite } from "@/lib/place";
 import { RUN_STATUS_LABEL, monthText } from "@/lib/staff";
 import { fmtIQD } from "@/lib/format";
 import { addDays, businessToday, dateTimeIn, monthStart } from "@/lib/dates";
@@ -21,10 +23,15 @@ export default async function PayrollPage() {
   const t = await getT();
   const canRun = has(profile, "payroll.run");
   const today = businessToday(profile.timezone);
-  const [runs, { advances, owed }, people] = await Promise.all([
+  // What the safe and this device's drawer hold, for an advance paid out of
+  // them (AK); to those who may read them (the drawer's status asks for
+  // cost.view or day.close).
+  const seesCash = canRun && (has(profile, "cost.view") || has(profile, "day.close"));
+  const [runs, { advances, owed }, people, cash] = await Promise.all([
     getPayrollRuns(),
     getAdvances(),
     getStaff(),
+    seesCash ? tillForWrite().then(getCashOnHand) : Promise.resolve(null),
   ]);
   const thisMonth = monthStart(today);
   const lastMonth = monthStart(addDays(thisMonth, -1));
@@ -105,7 +112,7 @@ export default async function PayrollPage() {
 
       <section className="card grid" style={{ gap: 8 }} id="advances">
         <h2 style={{ margin: 0 }}>{t("Advances on pay")}</h2>
-        <Advances advances={advances} owed={owed} people={working} canRun={canRun} />
+        <Advances advances={advances} owed={owed} people={working} canRun={canRun} cash={cash} />
       </section>
 
       <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>

@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ExpensePrefill } from "@/lib/bank";
+import type { CashOnHand } from "@/lib/cash";
 import { previewExpenseCategoryAction, recordExpenseAction } from "@/lib/actions/books";
 import { fmtIQD } from "@/lib/format";
 import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
+import { CashOnHandNote } from "@/components/cash/CashOnHandNote";
 import { OperationStatus, useOperation } from "@/components/useOperation";
 
 interface Suggestion {
@@ -39,15 +41,19 @@ type PaidFrom = keyof typeof PAID_FROM;
  *
  * Opened from the bank's statement, a charge the books don't have yet comes
  * filled in (its words, amount, day, paid from the bank), with the way back.
+ *
+ * Paid from the safe or the till, the form says what it holds (AK).
  */
 export function ExpenseEntry({
   accounts,
   today,
   prefill = null,
+  cash = null,
 }: {
   accounts: { code: string; name: string }[];
   today: string;
   prefill?: ExpensePrefill | null;
+  cash?: CashOnHand | null;
 }) {
   const op = useOperation();
   // say: what the server answers (an account's name, the house rules' reason), in the reader's language.
@@ -182,6 +188,9 @@ export function ExpenseEntry({
             ))}
           </select>
         </label>
+      </div>
+      <div style={{ marginBlockStart: 8 }}>
+        <CashOnHandNote on={cash} from={paidFrom} amount={value} />
       </div>
 
       <div

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getPayroll } from "@/lib/db/staff";
+import { getCashOnHand } from "@/lib/db/books";
 import { PayrollRun } from "@/components/payroll/PayrollRun";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,14 @@ export default async function PayrollRunPage({ params }: { params: Promise<{ id:
   const t = await getT();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const run = await getPayroll(id);
+  const canRun = has(profile, "payroll.run");
+  // What the safe and the drawer hold (AK), to those who may read them: a
+  // salary paid from the till comes out of the first branch's drawer (0049).
+  const seesCash = canRun && (has(profile, "cost.view") || has(profile, "day.close"));
+  const [run, cash] = await Promise.all([
+    getPayroll(id),
+    seesCash ? getCashOnHand(null) : Promise.resolve(null),
+  ]);
   if (!run) notFound();
 
   return (
@@ -30,7 +38,7 @@ export default async function PayrollRunPage({ params }: { params: Promise<{ id:
         <Link href="/payroll">{t("← All payrolls")}</Link>
         <PrintButton />
       </p>
-      <PayrollRun run={run} canRun={has(profile, "payroll.run")} timezone={profile.timezone} />
+      <PayrollRun run={run} canRun={canRun} timezone={profile.timezone} cash={cash} />
     </div>
   );
 }

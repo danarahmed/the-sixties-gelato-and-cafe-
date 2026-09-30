@@ -1,6 +1,13 @@
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
-import { ageBills, getGlAccounts, getNextBillNumber, getVendorBook } from "@/lib/db/books";
+import {
+  ageBills,
+  getCashOnHand,
+  getGlAccounts,
+  getNextBillNumber,
+  getVendorBook,
+} from "@/lib/db/books";
+import { tillForWrite } from "@/lib/place";
 import { getReceipts } from "@/lib/db/read";
 import { fmtIQD } from "@/lib/format";
 import { businessToday } from "@/lib/dates";
@@ -62,13 +69,19 @@ export default async function VendorsPage() {
   const t = await getT();
   const today = businessToday(profile.timezone);
   const canBill = has(profile, "purchase.create") || has(profile, "accounting.post");
-  const [{ vendors, openBills }, receipts, accounts, nextBillNo, credits] = await Promise.all([
-    getVendorBook(today),
-    getReceipts(200),
-    getGlAccounts(),
-    canBill ? getNextBillNumber() : Promise.resolve(null),
-    getSupplierCredits(),
-  ]);
+  const canPay = has(profile, "accounting.post");
+  const [{ vendors, openBills }, receipts, accounts, nextBillNo, credits, cash] = await Promise.all(
+    [
+      getVendorBook(today),
+      getReceipts(200),
+      getGlAccounts(),
+      canBill ? getNextBillNumber() : Promise.resolve(null),
+      getSupplierCredits(),
+      // What the safe and this device's drawer hold: a bill paid from the till
+      // comes out of that drawer (AK).
+      canPay ? tillForWrite().then(getCashOnHand) : Promise.resolve(null),
+    ],
+  );
   const ageing = ageBills(openBills);
   // The documents kept with each bill and credit note (0053).
   const [billDocs, creditDocs] = await Promise.all([
@@ -150,7 +163,8 @@ export default async function VendorsPage() {
         businessName={profile.businessName}
         canBill={canBill}
         nextBillNo={nextBillNo}
-        canPay={has(profile, "accounting.post")}
+        canPay={canPay}
+        cash={cash}
         canAddVendor={has(profile, "purchase.create")}
         credits={credits}
         billedReceipts={receipts

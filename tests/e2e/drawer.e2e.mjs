@@ -1,7 +1,8 @@
 // The drawer in sessions (0036, release K), on the screens: a session handed
 // over at the till; cash sold into whoever's session is open; a manager closing
 // one left open, without a count; the drawer opened with a float from the safe;
-// and the sessions' record on Sales. The count is blind throughout: the tests
+// and the sessions' record on Sales; and a payment out of the safe or the
+// drawer, told what it holds first (AK). The count is blind throughout: the tests
 // know what the drawer holds from the database, as the cash in a real drawer
 // would tell whoever counts it. It leaves the drawer open, as it found it.
 import { chromium, check, done, open, signIn, sql } from "./lib.mjs";
@@ -186,6 +187,69 @@ console.log("▸ the sessions' record: the list, a statement, and who may read t
     return main.scrollWidth - main.clientWidth;
   });
   check(over <= 1, `the sessions' record fits a phone (${over}px over)`);
+  await ctx.close();
+}
+
+// ------------------------------------------------------------- paying out of them
+console.log("▸ paid from the safe or the drawer, a form says what it holds (AK)");
+{
+  // The database refuses a payment out of the safe or the drawer that is more
+  // than it holds: the form says so before it is sent. Nothing is paid here.
+  const safe = Number(sql(`select gl_balance_at('${BIZ}', '1005', 'infinity')`));
+  const drawer = holds();
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/expenses");
+  const note = page.getByTestId("cash-on-hand");
+  const from = page.getByLabel("Paid from", { exact: true });
+  const amount = page.getByLabel("Amount (IQD)", { exact: true });
+  await from.selectOption("safe");
+  await amount.fill(String(safe));
+  check(
+    (await note.textContent()) === `The safe holds ${fmt(safe)} in the books.` &&
+      (await note.getAttribute("data-warn")) === "no",
+    `Expenses, from the safe: it holds ${fmt(safe)}`,
+  );
+  await amount.fill(String(safe + 1000));
+  check(
+    (await note.getAttribute("data-warn")) === "yes" &&
+      (await note.textContent()).includes("not enough to pay this"),
+    "and more than that is warned of before it is sent",
+  );
+  await from.selectOption("till");
+  await amount.fill(String(drawer));
+  check(
+    (await note.textContent()) === `The drawer should hold ${fmt(drawer)}.`,
+    `from the till: the owner is told what the drawer should hold (${fmt(drawer)})`,
+  );
+  await amount.fill(String(drawer + 250));
+  check((await note.getAttribute("data-warn")) === "yes", "and warned of paying more than that");
+  await from.selectOption("bank");
+  check((await note.textContent()) === "", "from the bank: nothing to say");
+
+  // An advance on pay, from the safe (the form's first choice).
+  await open(page, "/payroll");
+  await page.getByTestId("give-advance").click();
+  const form = page.getByTestId("advance-form");
+  await form.getByLabel("Amount", { exact: true }).fill(String(safe + 1000));
+  check(
+    (await form.getByTestId("cash-on-hand").getAttribute("data-warn")) === "yes",
+    "an advance of more than the safe holds is warned of",
+  );
+  await ctx.close();
+}
+{
+  // The manager counts blind: the drawer's figure is not shown, the safe's is.
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/expenses");
+  const note = page.getByTestId("cash-on-hand");
+  await page.getByLabel("Paid from", { exact: true }).selectOption("till");
+  await page.getByLabel("Amount (IQD)", { exact: true }).fill("99999999");
+  check((await note.textContent()) === "", "the manager is not told what the drawer should hold");
+  await page.getByLabel("Paid from", { exact: true }).selectOption("safe");
+  check(
+    (await note.textContent()).startsWith("⚠️ The safe holds"),
+    "but is told what the safe holds",
+  );
   await ctx.close();
 }
 

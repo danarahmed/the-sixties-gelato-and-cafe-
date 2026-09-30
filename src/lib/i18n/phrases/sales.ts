@@ -190,6 +190,30 @@ const phrases: PhraseBook = {
       ckb: "بەپێی دەفتەرەکان {amount} لە قاسەدایە. نە دەخیلە و نە قاسە ناتوانن زیاتر لەوەی تێیاندایە بدەن.",
     },
 
+  // Under "Paid from" (AK): what the safe or the drawer holds, before a payment out of it.
+  "The safe holds {amount} in the books.": {
+    ar: "في الخزنة {amount} حسب الدفاتر.",
+    ckb: "بەپێی دەفتەرەکان {amount} لە قاسەدایە.",
+  },
+  "The safe holds {amount} in the books: not enough to pay this. Put the takings in the safe first (Move cash, on Sales), or pay it from elsewhere.":
+    {
+      ar: "في الخزنة {amount} حسب الدفاتر: وهذا لا يكفي لدفع هذا المبلغ. ضع المقبوضات في الخزنة أولًا (انقل النقد، في المبيعات)، أو ادفعه من مصدر آخر.",
+      ckb: "بەپێی دەفتەرەکان {amount} لە قاسەدایە: ئەمەش بەشی دانی ئەمە ناکات. سەرەتا داهاتەکە بخەرە قاسەکەوە (پارەکە بگوازەرەوە، لە فرۆشتن)، یان لە شوێنێکی ترەوە بیدە.",
+    },
+  "The drawer is not open: open it on the till first, or pay it from elsewhere.": {
+    ar: "درج النقد غير مفتوح: افتحه في نقطة البيع أولًا، أو ادفعه من مصدر آخر.",
+    ckb: "دەخیلەکە کراوە نییە: سەرەتا لە خاڵی فرۆشتن بیکەرەوە، یان لە شوێنێکی ترەوە بیدە.",
+  },
+  "The drawer should hold {amount}.": {
+    ar: "يُفترض أن يحوي درج النقد {amount}.",
+    ckb: "دەبێت {amount} لە دەخیلەکەدا بێت.",
+  },
+  "The drawer should hold {amount}: not enough to pay this. Move cash into the till first, or pay it from elsewhere.":
+    {
+      ar: "يُفترض أن يحوي درج النقد {amount}: وهذا لا يكفي لدفع هذا المبلغ. انقل نقدًا إلى درج النقد أولًا، أو ادفعه من مصدر آخر.",
+      ckb: "دەبێت {amount} لە دەخیلەکەدا بێت: ئەمەش بەشی دانی ئەمە ناکات. سەرەتا پارە بگوازەرەوە بۆ دەخیلەکە، یان لە شوێنێکی ترەوە بیدە.",
+    },
+
   // Card takings, settled against the terminal and the bank.
   "Settled (journal {journal}): {fee} card fee; the till and the terminal agree.": {
     ar: "تمّت التسوية (القيد {journal}): رسوم البطاقة {fee}؛ ونقطة البيع وجهاز البطاقات متطابقان.",

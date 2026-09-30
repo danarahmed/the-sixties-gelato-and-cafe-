@@ -51,7 +51,15 @@ import { movementLabel, unitName } from "@/lib/format";
 import { normaliseNumber, positive, signedNonZero } from "@/lib/validation";
 import { getBookkeeper } from "@/lib/bookkeeping/rules";
 import { isUncertainFailure, rpcLogLine } from "@/lib/db/rpcOutcome";
-import { closeSplit, countResult, drawerStateFrom, notesCounted, notesTotal } from "@/lib/cash";
+import {
+  cashNote,
+  closeSplit,
+  countResult,
+  drawerStateFrom,
+  notesCounted,
+  notesTotal,
+  type CashOnHand,
+} from "@/lib/cash";
 import {
   allThatIsLeft,
   refundLineAmount,
@@ -1025,6 +1033,66 @@ describe("the drawer's count, as the form takes it (0036): blind", () => {
     expect(d.session).toMatchObject({ no: 3, cashier: "Rawand", mine: true });
     expect(d.takers).toEqual([{ id: "m1", name: "Lana" }]);
     expect(drawerStateFrom(null)).toMatchObject({ open: false, session: null, mayOpen: false });
+  });
+});
+
+describe("what the safe and the drawer hold, under Paid from (AK)", () => {
+  const held: CashOnHand = { safe: 500, till: 12000, tillOpen: true };
+
+  it("says what the safe holds, and warns when the payment is more", () => {
+    expect(cashNote(held, "safe", 500)).toEqual({
+      text: "The safe holds {amount} in the books.",
+      amount: 500,
+      warn: false,
+    });
+    expect(cashNote(held, "safe", 1000)).toMatchObject({ amount: 500, warn: true });
+    expect(cashNote(held, "safe", 1000)?.text).toMatch(/not enough to pay this/);
+  });
+
+  it("says what the drawer should hold, only to those who may see it", () => {
+    expect(cashNote(held, "till", 12000)).toEqual({
+      text: "The drawer should hold {amount}.",
+      amount: 12000,
+      warn: false,
+    });
+    expect(cashNote(held, "till", 12250)).toMatchObject({ amount: 12000, warn: true });
+    // A bill's payment names the till "cash".
+    expect(cashNote(held, "cash", 12250)).toMatchObject({ amount: 12000, warn: true });
+    // The count is blind: a reader who may not see it is told nothing.
+    expect(cashNote({ ...held, till: null }, "till", 99999999)).toBeNull();
+  });
+
+  it("warns that nothing is paid out of a drawer not open, to anyone", () => {
+    for (const till of [12000, null])
+      expect(cashNote({ safe: 500, till, tillOpen: false }, "till", 1)).toEqual({
+        text: "The drawer is not open: open it on the till first, or pay it from elsewhere.",
+        amount: null,
+        warn: true,
+      });
+  });
+
+  it("says nothing of the bank, a card or the owner, nor before a source is chosen", () => {
+    for (const from of ["bank", "card", "owner", "transfer", ""])
+      expect(cashNote(held, from, 1_000_000)).toBeNull();
+    expect(cashNote(null, "safe", 1_000_000)).toBeNull();
+  });
+
+  it("says each of it in Arabic and Kurdish", () => {
+    const said = [
+      cashNote(held, "safe", 1),
+      cashNote(held, "safe", 1000),
+      cashNote(held, "till", 1),
+      cashNote(held, "till", 13000),
+      cashNote({ ...held, tillOpen: false }, "till", 1),
+    ];
+    for (const locale of ["ar", "ckb"] as const) {
+      const t = translator(builtInWords(locale));
+      for (const note of said) {
+        const text = t(note!.text, { amount: "500" });
+        expect(text).not.toBe(note!.text.replace("{amount}", "500"));
+        expect(text).not.toMatch(/[A-Za-z]{2,}/);
+      }
+    }
   });
 });
 

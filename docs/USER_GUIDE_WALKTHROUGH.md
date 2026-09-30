@@ -555,6 +555,11 @@ costs; recording: managers, accountant, owner
    pays, 1020), or the owner personally. There is no default: the money came from somewhere, and the
    books follow it. From the till it lowers what the drawer should hold, and
    neither the till nor the safe can pay more than the books say it holds.
+   Chosen, the safe says what it holds in the books under the form, and the
+   till what its drawer should hold (only to those who may see it: the
+   count is blind). An amount that is more, or a drawer that is not open,
+   is warned of before anything is sent. An advance, a salary and a
+   supplier's bill say the same.
 3. An **Account** is proposed from the narration: rent → 6000, wages → 6100,
    electricity → 6200, anything unclear → 6900 Other expenses. **Confirm or
    change it.** A stock loss is sent to Inventory instead, because it is not an
