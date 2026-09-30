@@ -61,6 +61,14 @@ import {
   type CashOnHand,
 } from "@/lib/cash";
 import {
+  addMonths,
+  prepaidFrom,
+  prepaidRefusal,
+  prepaidShares,
+  stillAhead,
+  PREPAID_MONTHS,
+} from "@/lib/prepaid";
+import {
   allThatIsLeft,
   refundLineAmount,
   refundPlan,
@@ -105,7 +113,7 @@ import {
   typedRuleValue,
   type ScopeType,
 } from "@/lib/rules";
-import { translator } from "@/lib/i18n/core";
+import { messenger, translator } from "@/lib/i18n/core";
 import {
   RULE_LABEL,
   THRESHOLD_LABEL,
@@ -5043,5 +5051,237 @@ describe("find a journal, and a product (the September audit's P2-20)", () => {
     expect(namesMatch(latte, "mocha")).toBe(false);
     expect(namesMatch([null, undefined, ""], "a")).toBe(false);
     expect(namesMatch(latte, "  ")).toBe(false);
+  });
+});
+
+describe("an expense paid ahead for months to come (0060, the September audit's P2-14)", () => {
+  const migration = readFileSync(
+    join(__dirname, "../supabase/migrations/0060_prepaid_expenses.sql"),
+    "utf8",
+  );
+
+  it("counts months across the turn of a year, both ways", () => {
+    expect(addMonths("2026-09", 0)).toBe("2026-09");
+    expect(addMonths("2026-09", 3)).toBe("2026-12");
+    expect(addMonths("2026-12", 1)).toBe("2027-01");
+    expect(addMonths("2026-09", 35)).toBe("2029-08");
+    expect(addMonths("2026-01", -1)).toBe("2025-12");
+  });
+
+  it("gives each month an equal share in whole dinars, the last what is left", () => {
+    const shares = prepaidShares(1_000_000, 12, "2026-09");
+    expect(shares).toHaveLength(12);
+    expect(shares[0]).toEqual({ month: "2026-09", amount: 83_333 });
+    expect(shares[10]).toEqual({ month: "2027-07", amount: 83_333 });
+    expect(shares[11]).toEqual({ month: "2027-08", amount: 83_337 });
+    expect(shares.reduce((s, x) => s + x.amount, 0)).toBe(1_000_000);
+    // An amount that divides: every share the same.
+    expect(new Set(prepaidShares(120_000, 12, "2026-10").map((x) => x.amount))).toEqual(
+      new Set([10_000]),
+    );
+  });
+
+  it("splits as the database does (tests/sql/prepaid.test.sql)", () => {
+    // The rent: 100,000 over three months; the database posts 33,333, 33,333, 33,334.
+    expect(prepaidShares(100_000, 3, "2026-09").map((x) => x.amount)).toEqual([
+      33_333, 33_333, 33_334,
+    ]);
+    // The insurance's first share and the rent's second: the alert's 43,333.
+    expect(prepaidShares(120_000, 12, "2026-10")[0]!.amount + 33_333).toBe(43_333);
+  });
+
+  it("spreads nothing it cannot: out of 1 to 36 months, or less than a dinar a month", () => {
+    expect(PREPAID_MONTHS).toEqual({ min: 1, max: 36 });
+    for (const months of [0, 37, 2.5, Number.NaN])
+      expect(prepaidShares(100_000, months, "2026-09")).toEqual([]);
+    expect(prepaidShares(2, 3, "2026-09")).toEqual([]);
+    expect(prepaidShares(3, 3, "2026-09").map((x) => x.amount)).toEqual([1, 1, 1]);
+    expect(prepaidShares(Number.NaN, 3, "2026-09")).toEqual([]);
+    // One month to come, alone: December's rent paid in September, all December's.
+    expect(prepaidShares(150_000, 1, "2026-12")).toEqual([{ month: "2026-12", amount: 150_000 }]);
+  });
+
+  it("refuses before it is sent what the database would refuse, in its words", () => {
+    const now = "2026-09";
+    expect(prepaidRefusal(300_000, 3, "2026-09", now)).toBeNull();
+    expect(prepaidRefusal(150_000, 1, "2026-12", now)).toBeNull();
+    expect(prepaidRefusal(150_000, 1, "2026-09", now)?.text).toBe(
+      "For this month alone, record an expense",
+    );
+    for (const months of [0, 37, 1.5])
+      expect(prepaidRefusal(150_000, months, "2026-10", now)?.text).toBe(
+        "Say how many months it covers, 1 to 36",
+      );
+    expect(prepaidRefusal(150_000, 3, "2026-08", now)?.text).toBe(
+      "Choose the first month it covers",
+    );
+    expect(prepaidRefusal(2, 3, "2026-10", now)).toEqual({
+      text: "Each month takes at least 1 of it: pay at least {1}, or cover fewer months",
+      vars: { 1: 3 },
+    });
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      for (const [amount, months, first] of [
+        [150_000, 1, "2026-09"],
+        [150_000, 0, "2026-10"],
+        [150_000, 3, "2026-08"],
+        [2, 3, "2026-10"],
+      ] as const)
+        expect(words[prepaidRefusal(amount, months, first, now)!.text], locale).toBeTruthy();
+    }
+  });
+
+  it("reads the list the database gives, and what each still holds in 1400", () => {
+    const row = prepaidFrom({
+      id: "0f0e0d0c-0b0a-0908-0706-050403020100",
+      description: "Shop rent, three months",
+      account_code: "6000",
+      account_name: "Rent",
+      paid_from: "bank",
+      amount: "100000",
+      first_month: "2026-09",
+      last_month: "2026-11",
+      months: 3,
+      created_at: "2026-09-30T09:00:00+00:00",
+      journal_no: 41,
+      location: null,
+      released: 1,
+      released_amount: "33333",
+      reversed: 0,
+      due: 0,
+      next_month: "2026-10",
+      cancelled_at: null,
+      cancel_reason: null,
+    });
+    expect(row).toMatchObject({
+      amount: 100_000,
+      months: 3,
+      released: 1,
+      releasedAmount: 33_333,
+      reversed: 0,
+      journalNo: 41,
+      location: null,
+      nextMonth: "2026-10",
+      cancelledAt: null,
+    });
+    expect(stillAhead(row)).toBe(66_667);
+    // Cancelled: its payment reversed, nothing of it is left in 1400.
+    expect(stillAhead({ ...row, cancelledAt: "2026-09-30T10:00:00+00:00" })).toBe(0);
+    // Every share posted: nothing left.
+    expect(stillAhead({ ...row, released: 3, releasedAmount: 100_000, nextMonth: null })).toBe(0);
+  });
+
+  it("keeps 1400 off the screens' journals, bills and credits, as the database does", () => {
+    const listed = (file: string, name: string) => {
+      const src = readFileSync(join(__dirname, "..", file), "utf8");
+      const body = new RegExp(`const ${name} = new Set\\(\\[([^\\]]*)\\]`).exec(src)?.[1] ?? "";
+      return new Set([...body.matchAll(/"(\d{4})"/g)].map((m) => m[1]));
+    };
+    // The accounts the database takes no journal by hand on, as 0060 leaves them.
+    const blocked = new Set(
+      [
+        ...(
+          /manual_journal_blocked[\s\S]*?select p_code in \(([^)]*)\)/.exec(migration)?.[1] ?? ""
+        ).matchAll(/'(\d{4})'/g),
+      ].map((m) => m[1]),
+    );
+    expect(blocked.has("1400")).toBe(true);
+    expect(listed("src/app/journals/page.tsx", "BLOCKED")).toEqual(blocked);
+    for (const list of ["NOT_FOR_BILLS", "NOT_FOR_CREDITS"])
+      expect(listed("src/app/vendors/page.tsx", list).has("1400"), list).toBe(true);
+  });
+
+  it("names each prepaid expense recorded, released or cancelled on the audit trail", () => {
+    for (const a of ["prepaid.record", "prepaid.release", "prepaid.cancel"]) {
+      expect(migration).toContain(`'${a}'`);
+      expect(actionLabel(a)).not.toBe(a);
+    }
+    expect(auditGroup("books")?.prefixes).toContain("prepaid.");
+    const names = new Map<string, string>();
+    const recorded = {
+      description: "Shop rent, a quarter",
+      amount: 300001,
+      account: "6000",
+      paid_from: "bank",
+      first_month: "2026-09-01",
+      months: 3,
+      journal_no: 1101,
+    };
+    expect(subjectOf("prepaid_expense", "x", null, recorded, names)).toBe("Shop rent, a quarter");
+    expect(describeChanges(null, recorded, names).map((c) => c.field)).toEqual([
+      "Description",
+      "Amount",
+      "Account",
+      "Paid from",
+      "First month",
+      "Months",
+      "Journal",
+    ]);
+    const released = {
+      released: [
+        {
+          prepaid_id: "0f0e0d0c-0b0a-0908-0706-050403020100",
+          description: "Insurance, a year",
+          month: "2026-10",
+          amount: 10000,
+          journal_no: 1102,
+        },
+        {
+          prepaid_id: "1f0e0d0c-0b0a-0908-0706-050403020100",
+          description: "Shop rent, a quarter",
+          month: "2026-10",
+          amount: 100000,
+          journal_no: 1103,
+        },
+      ],
+    };
+    expect(subjectOf("prepaid_expense", null, null, released, names)).toBe("Prepaid expenses");
+    expect(describeChanges(null, released, names)).toEqual([
+      {
+        field: "Shares posted",
+        before: "",
+        after: "Insurance, a year (2026-10): 10,000; Shop rent, a quarter (2026-10): 100,000",
+      },
+    ]);
+    // Cancelled: by its words; which one it was is not a change anyone reads.
+    const cancelled = {
+      prepaid_id: "1f0e0d0c-0b0a-0908-0706-050403020100",
+      description: "Shop rent, a quarter",
+      shares_reversed: 1,
+      journal_no: 1104,
+    };
+    expect(subjectOf("prepaid_expense", "x", null, cancelled, names)).toBe("Shop rent, a quarter");
+    expect(describeChanges(null, cancelled, names).map((c) => c.field)).toEqual([
+      "Description",
+      "Shares reversed",
+      "Journal",
+    ]);
+    expect(subjectOf("prepaid_expense", "x", null, {}, names)).toBe("A prepaid expense");
+    const ar = translator(builtInWords("ar"));
+    expect(subjectIn("A prepaid expense", "prepaid.cancel", ar, (s) => s)).toBe(
+      ar("A prepaid expense"),
+    );
+    // Where the money came from, in the reader's words.
+    const msg = messenger(builtInWords("ar"));
+    expect(valueIn("bank", "Paid from", ar, msg)).toBe(msg("bank"));
+    expect(msg("bank")).not.toBe("bank");
+    for (const locale of ["ar", "ckb"] as const) {
+      const words = builtInWords(locale);
+      expect(
+        [
+          "Prepaid expense recorded",
+          "Prepaid expenses' shares posted",
+          "Prepaid expense cancelled",
+          "A prepaid expense",
+          "Prepaid expenses",
+          "First month",
+          "Months",
+          "Shares posted",
+          "Shares reversed",
+          "Prepaid expenses due",
+        ].filter((p) => !words[p]),
+        locale,
+      ).toEqual([]);
+    }
   });
 });

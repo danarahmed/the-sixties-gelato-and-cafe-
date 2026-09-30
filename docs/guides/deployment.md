@@ -57,6 +57,7 @@ Plan a short window when the café is closed.
 | Every report at a place (`0057`)        | ✅ Migration applied on 29 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0057`](#after-0057)). The screens were merged ([pull request #46](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/46)) and deployed            |
 | The chart of accounts (`0058`)          | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0058`](#after-0058)). The screens were merged ([pull request #52](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/52)) and deployed            |
 | The bank against its statement (`0059`) | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0059`](#after-0059)). The screens were merged ([pull request #53](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/53)) and deployed            |
+| Prepaid expenses (`0060`)               | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0060`](#after-0060)). The screens were merged ([pull request #62](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/62)) and deployed            |
 
 ## 0. Before you start
 
@@ -2650,6 +2651,111 @@ callable. The performance advisor adds three notices of a kind it already
 lists (a foreign key without an index of its own: who kept a statement, who
 undid it, and a statement line's business), on tables of a statement a month.
 
+## After `0060`
+
+Migration `0060` (the September audit's P2-14) spreads a cost paid ahead over
+the months it covers: next month's rent, a quarter's or a year's insurance
+was an expense of the month it was paid in, that month's profit too low and
+the months it paid for too high.
+
+- **On Expenses,** whoever records expenses ticks "Paid ahead for months to
+  months", and chooses the first month it covers (this month or one of the
+  twelve after) and how many months (1 to 36; one only if it is still to
+  come, like next month's rent). The form shows each month's
+  share before it is posted. It is paid into 1400 Prepaid expenses, out of
+  the drawer or the safe as an expense is, and the first month's share is
+  posted at once if that month has come.
+- **Prepaid Expenses,** on the same screen: each one, the shares posted and
+  what is still ahead. "Release what is due" posts every share whose month
+  has come, each an expense of its month on the Expense Register. The owner,
+  a general manager or the accountant cancels one entered in error, with why:
+  its payment and every share posted are reversed that day, and cash paid out
+  of the drawer goes back in it.
+- **An alert** when a share whose month has come is not posted, and **a check
+  on the month's close** that stops the lock until it is.
+- **The books tied:** a fourteenth check, 1400 against what the prepaid
+  expenses still hold.
+
+What it adds:
+
+- **Account 1400 Prepaid expenses** in every café's chart. Only a prepaid
+  expense moves it; a journal by hand does not.
+- **Two tables:** `prepaid_expense` (never deleted nor changed; cancelled
+  once) and `prepaid_release` (a month's share posted, never changed). Both
+  are read by anyone who sees costs, and written only by the functions.
+- **The functions signed-in users may call:** `prepaid_expenses`
+  (`cost.view`), `record_prepaid_expense` (`expense.record`),
+  `release_prepaid` (`expense.record` or `accounting.post`) and
+  `cancel_prepaid_expense` (`accounting.post`), each done once when sent again
+  with its key, and on the audit trail (`prepaid.record`, `prepaid.release`,
+  `prepaid.cancel`).
+- **The alert rules, the closing checklist and the books' checks** are 0059's
+  and 0054's, kept as `alert_conditions_0059`, `period_close_checklist_0059`
+  and `reconciliation_checks_0054`, with the new rule, check and tie after
+  them.
+- **Helpers nobody calls:** `prepaid_shares`, `prepaid_due`, the three
+  `__run` bodies and the three triggers.
+- **Clearing the test records** (`reset-test-data.sql`) now clears the
+  prepaid expenses with their shares.
+
+It goes in before the screens: those deployed before it read the closing
+checklist, the alerts and the books' checks as before, with one more row
+each, at nothing. Until the new screens are in, a bill for a service on
+Vendors and a journal by hand offer 1400, which the database refuses; the
+new screens leave it off.
+
+It was applied on 30 September 2026 with the Supabase connector: one
+`apply_migration` call, one transaction. Before it, a read-only check showed
+the live database exactly as verified after `0059`, object by object.
+
+The text stored there is the file byte for byte (md5
+`c273c3f2365a422bf23d33f6ca010633`, 36,022 bytes). It was then compared with
+the tested build, object by object, the role permissions and column grants
+included. The functions, constraints, indexes, policies, triggers, views and
+every table but `app_user` are identical. The only differences are the two
+known from before, and `0060` changed neither: the schema `citext` lives in,
+and the channel of the platform added on a screen. Nothing recorded changed
+but the new account, 1400 Prepaid expenses.
+
+It was checked on the live records as the owner, the branch manager and the
+barista, in one transaction that was rolled back:
+
+- **Refused, in words:**
+  - this month alone ("For this month alone, record an expense");
+  - a month already past;
+  - 37 months;
+  - a stock cost (5000);
+  - less than a dinar a month;
+  - a journal by hand into 1400.
+- **A quarter's rent paid ahead:** 300,001 from the bank, three months from
+  September. It posted journal 1101, and September's share of 100,000 at once
+  (journal 1102). Sent again with its key, it was answered from the first.
+- **October's rent alone,** 150,000: nothing posted yet.
+- **The list:** "1 of 3" and "0 of 1", at Main Branch.
+- **September's closing checklist:** its prepaid row was clear, and it is one
+  that stops the lock.
+- **Nothing more to release.**
+- **The branch manager** read both and released, and could not cancel
+  ("needs accounting.post"). **The barista** could not read them ("needs
+  cost.view").
+- **The rent cancelled** with why: its payment and its share reversed
+  (journal 1105). A second cancel was refused.
+- **The alert:** none now. A month on: "1 month(s) of prepaid expenses are
+  due to be released, 150,000 IQD in all".
+- **The trail:** both records and the cancel, with why.
+- **The books:** each of the fourteen checks was at nothing before and
+  after, with no document out of step.
+
+Nothing was kept. Every table's count is as it was before the check, but for
+the new account (39 accounts to 40) and the two new tables, empty. The
+journals still end at 1100 and the audit trail at 280.
+
+The security advisor lists the four functions added, each checking
+`cost.view`, `expense.record` or `accounting.post`. The helpers and the
+bodies are not callable. The performance advisor adds eight notices of a kind
+it already lists (a foreign key without an index of its own), on the two new
+tables, which hold a few rows a year.
+
 ## Clearing the test records
 
 Every record of trading in the live database so far is a test (the owner, 25
@@ -2673,7 +2779,8 @@ with [`supabase/remediation/reset-test-data.sql`](../../supabase/remediation/res
    advances, payrolls and salary payments, the customers' points, which
    document went with which record (the files stay in Storage's `documents`
    bucket: remove them there if they should go too), the bank's statements
-   with the lines they tick, every journal and period, and the
+   with the lines they tick, the prepaid expenses with their shares, every
+   journal and period, and the
    document numbers (journals start again at 1001, the café's bill numbers at
    0001, the cash sessions, refunds, orders, returns, credits, payrolls and
    transfers at 1).

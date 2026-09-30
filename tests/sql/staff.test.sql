@@ -686,7 +686,7 @@ select test.eq((select status from payroll_run where id = pg_temp.id('run', 'run
 -- =============================================================================
 select test.as_admin();
 select test.eq(pg_temp.checks(),
-               'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,safe=0,sales=0,transit=0',
+               'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,prepaid=0,safe=0,sales=0,transit=0',
                'every check at zero: salaries owed against 2100, advances against 1300');
 select test.eq(test.balance('2100'), 0::numeric, 'nothing owed in salaries');
 select test.eq(test.balance('1300'), (select 100000 - back from totals), 'the advance not taken back is in 1300');

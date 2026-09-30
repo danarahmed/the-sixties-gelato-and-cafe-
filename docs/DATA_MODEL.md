@@ -1704,3 +1704,65 @@ The drawers and the safe were counted against the books; the bank was not.
   `alert_conditions` wraps `alert_conditions_0049`).
 - **Helpers nobody calls:** `bank_lines`, the two `__run` bodies and the
   triggers.
+
+### Prepaid expenses (`0060`)
+
+A cost paid ahead for months to come (next month's rent, a quarter's, a
+year's insurance) was an expense of the month it was paid in: that month's
+profit too low, the months it paid for too high (the September audit's
+P2-14).
+
+- **1400 Prepaid expenses**, an asset, in every café's chart
+  (`provision_chart_of_accounts`). Only a prepaid expense moves it: its
+  payment in, a month's share out, and the reversal of either (the trigger
+  `journal_line_prepaid`); a journal by hand does not (`manual_journal_blocked`).
+- **`prepaid_expense`:** one paid ahead: its words, the place it was recorded
+  at (`location_id`), the expense account each month's share goes to
+  (`account_id`), where the money came from (`paid_from`: the till, the safe,
+  the bank, a card or the owner), the `amount`, the `first_month` it covers
+  (this month or one of the twelve after) and how many `months` (1 to 36;
+  one only if it is still to come: this month alone is an expense),
+  its journal (Dr 1400 / Cr where the money came from), and who recorded it
+  and when. It is never deleted nor changed (a trigger); it is cancelled once,
+  with why (`cancelled_at`, `cancelled_by`, `cancel_reason`,
+  `cancel_journal_entry_id`).
+- **`prepaid_release`:** a month's share posted: the `month`, the `amount`,
+  the `expense` row it is (on the Expense Register, and in that place's
+  profit and loss) and its journal (Dr the expense's account / Cr 1400),
+  once for each month (`unique (prepaid_id, month)`). Never changed nor
+  deleted (a trigger).
+- **The shares** (`prepaid_shares`): equal, rounded down to the café's money
+  (`currency_decimals`), the last taking what is left, so they add up to what
+  was paid. A share is posted once its month has come, dated on the month's
+  first day at noon in the café's time, or when the prepaid expense was
+  recorded if that is later. **`prepaid_due(business, through)`**: the
+  shares whose month has come and are not posted.
+- **Read** by anyone who sees costs (row-level security on both);
+  **`prepaid_expenses()`** (`cost.view`) lists each, newest first, with the
+  shares posted, what they took out of 1400 (a share reversed by hand put its
+  back), those due, and the next month to come. Written only by the
+  functions:
+  - **`record_prepaid_expense(description, amount, account, paid from, first
+month, months, place, key)`** (`expense.record`): paid into 1400, out of
+    the drawer or the safe as an expense is (`pay_out_of`), and the first
+    month's share posted at once if that month has come. On the trail:
+    `prepaid.record`.
+  - **`release_prepaid(key)`** (`expense.record` or `accounting.post`): every
+    share due posted, one press for the café. On the trail: `prepaid.release`,
+    when anything was.
+  - **`cancel_prepaid_expense(prepaid, reason, key)`** (`accounting.post`): its
+    payment and every share posted and not already reversed are reversed that
+    day, and cash paid out of the drawer goes back in it
+    (`paid_out_reversed`). On the trail: `prepaid.cancel`, with why.
+    Each is done once when sent again with its key (0035).
+- **The alert** `prepaid_due` (orange): a share whose month has come is not
+  posted. **The closing checklist** does not lock a month while a share of it
+  is not posted (`prepaid_shares`, which stops the lock). **The books tied**
+  (`reconciliation_checks`, `prepaid`): what the prepaid expenses still hold
+  against 1400. `alert_conditions`, `period_close_checklist` and
+  `reconciliation_checks` wrap `alert_conditions_0059`,
+  `period_close_checklist_0059` and `reconciliation_checks_0054`.
+- **Where a journal came from** (`journal_source_hint`): "a prepaid expense
+  (cancel it on Expenses)".
+- **Helpers nobody calls:** `prepaid_shares`, `prepaid_due`, the three
+  `__run` bodies and the three triggers.

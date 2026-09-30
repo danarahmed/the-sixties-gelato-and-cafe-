@@ -67,6 +67,99 @@ export async function recordExpenseAction(
   };
 }
 
+const prepaidInput = z.object({
+  description: text("What the expense was for", 300),
+  amount: positive("The amount"),
+  accountCode: z.string().regex(/^\d{4}$/, "Choose the account"),
+  paidFrom: paymentSource,
+  firstMonth: z.string().regex(/^\d{4}-\d{2}$/, "Choose the first month it covers"),
+  months: z.coerce
+    .number()
+    .int("Say how many months it covers, 1 to 36")
+    .min(1, "Say how many months it covers, 1 to 36")
+    .max(36, "Say how many months it covers, 1 to 36"),
+});
+
+/**
+ * Paid ahead for months to come (0060): Dr 1400 Prepaid expenses / Cr where
+ * the money came from; each month it covers takes its share as an expense of
+ * that month, the month it starts in at once if that has come.
+ */
+export async function recordPrepaidExpenseAction(
+  input: z.input<typeof prepaidInput>,
+  key: string,
+): Promise<ActionResult<{ journalNo: number | null; released: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(prepaidInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("record_prepaid_expense", {
+    p_description: v.data.description,
+    p_amount: v.data.amount,
+    p_account_code: v.data.accountCode,
+    p_paid_from: v.data.paidFrom,
+    p_first_month: `${v.data.firstMonth}-01`,
+    p_months: v.data.months,
+    // As an expense: paid from the till, that till's branch; else where this device works.
+    p_location: v.data.paidFrom === "till" ? await tillForWrite() : await placeForWrite(),
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh("/expenses", "/sales", ...BOOK_PATHS);
+  return {
+    ok: true,
+    data: {
+      journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
+      released: Array.isArray(r.data.released) ? r.data.released.length : 0,
+    },
+  };
+}
+
+/** Every share of the prepaid expenses whose month has come, posted (0060). */
+export async function releasePrepaidAction(
+  key: string,
+): Promise<ActionResult<{ released: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const r = await callRpc<Record<string, unknown>>("release_prepaid", { p_idempotency_key: key });
+  if (!r.ok) return r;
+  refresh("/expenses", ...BOOK_PATHS);
+  return {
+    ok: true,
+    data: { released: Array.isArray(r.data.released) ? r.data.released.length : 0 },
+  };
+}
+
+const cancelPrepaidInput = z.object({
+  prepaidId: id("the prepaid expense"),
+  reason: text("Why it is cancelled", 300),
+});
+
+/** One entered in error: its payment and every share posted reversed today (0060). */
+export async function cancelPrepaidExpenseAction(
+  input: z.input<typeof cancelPrepaidInput>,
+  key: string,
+): Promise<ActionResult<{ journalNo: number | null; sharesReversed: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(cancelPrepaidInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("cancel_prepaid_expense", {
+    p_prepaid: v.data.prepaidId,
+    p_reason: v.data.reason,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh("/expenses", "/sales", ...BOOK_PATHS);
+  return {
+    ok: true,
+    data: {
+      journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
+      sharesReversed: Number(r.data.shares_reversed ?? 0),
+    },
+  };
+}
+
 const journalInput = z.object({
   date: day("The date"),
   description: text("Notes", 500),

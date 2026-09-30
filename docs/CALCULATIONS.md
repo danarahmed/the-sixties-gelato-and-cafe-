@@ -764,6 +764,25 @@ qty ordered ÷ base ordered`, to three places.
   until `0030`), or 3000 Owner equity when the owner paid personally (capital
   they put in).
 - Expense: Dr its account / Cr where the money came from, the same five.
+- Prepaid expense (`0060`): paid ahead for months to come, Dr 1400 Prepaid
+  expenses / Cr where the money came from (the same five), when it is
+  recorded. Each month it covers then takes its share as an expense of that
+  month: Dr its account / Cr 1400, dated on the month's first day at noon (or
+  when it was recorded, if later), once that month has come. The shares:
+
+  ```
+  each  = ⌊amount ÷ months⌋                      (to the café's money: whole dinars)
+  last  = amount − each × (months − 1)           (so they add up to what was paid)
+  ```
+
+  Worked example (the SQL and unit tests): 100,000 over three months is
+  33,333, 33,333 and 33,334; 300,001 is 100,000, 100,000 and 100,001;
+  120,000 over twelve is 10,000 a month. One month alone, still to come
+  (December's rent paid in September), is all that month's. Cancelled, its
+  payment and every share posted are reversed that day. 1400 is checked
+  against the prepaid expenses whenever the books are tied: what they were
+  paid, less a cancelled one's, less the shares posted, plus a share reversed.
+
 - Waste: Dr 5300 Waste & spoilage / Cr 1200. Stock correction and approved
   count variance: 5400 Inventory count variance against 1200.
 - Opening stock: Dr 1200 / Cr 3000 Owner equity — for a new item, or (`0024`)

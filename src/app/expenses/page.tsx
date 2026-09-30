@@ -1,11 +1,19 @@
 import { getMsg, getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
-import { getCashOnHand, getExpenses, getGlAccounts, getPeriods, periodFor } from "@/lib/db/books";
+import {
+  getCashOnHand,
+  getExpenses,
+  getGlAccounts,
+  getPeriods,
+  getPrepaidExpenses,
+  periodFor,
+} from "@/lib/db/books";
 import { tillForWrite } from "@/lib/place";
 import { fmtIQD } from "@/lib/format";
 import { businessToday } from "@/lib/dates";
 import { expenseFromLink } from "@/lib/bank";
 import { ExpenseEntry } from "@/components/books/ExpenseEntry";
+import { PrepaidExpenses } from "@/components/books/PrepaidExpenses";
 import { EmptyState } from "@/components/ui";
 import { DocumentsLink } from "@/components/documents/DocumentsLink";
 import { getDocumentCounts } from "@/lib/db/documents";
@@ -27,13 +35,15 @@ export default async function ExpensesPage({
   // Opened from the bank's statement: the line the books don't have, filled in.
   const prefill = expenseFromLink(await searchParams, today);
   const canRecord = has(profile, "expense.record");
-  const [rows, accounts, periods, cash] = await Promise.all([
+  const [rows, accounts, periods, cash, prepaid] = await Promise.all([
     getExpenses(100),
     getGlAccounts(),
     getPeriods(),
     // What the safe and this device's drawer hold: an expense paid from the
     // till comes out of that drawer (AK).
     canRecord ? tillForWrite().then(getCashOnHand) : Promise.resolve(null),
+    // Paid ahead for months to come, each month its share (0060).
+    getPrepaidExpenses(),
   ]);
   // The receipts kept with each expense (0053).
   const docs = await getDocumentCounts(
@@ -81,6 +91,15 @@ export default async function ExpensesPage({
             cash={cash}
           />
         </section>
+      )}
+
+      {prepaid.length > 0 && (
+        <PrepaidExpenses
+          rows={prepaid}
+          timezone={profile.timezone}
+          canRelease={canRecord || has(profile, "accounting.post")}
+          canCancel={has(profile, "accounting.post")}
+        />
       )}
 
       <section className="panel">

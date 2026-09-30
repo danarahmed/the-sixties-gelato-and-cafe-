@@ -15,7 +15,7 @@ select test.act_as('owner@example.com');
 
 -- Before: the damage, as the reconciliation reports it.
 select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from report_reconciliation('2026-08-31')),
-  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=-169610,payables=110000,payroll=0,platform=0,safe=0,sales=0,transit=0', 'before: the legacy damage is visible');
+  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=-169610,payables=110000,payroll=0,platform=0,prepaid=0,safe=0,sales=0,transit=0', 'before: the legacy damage is visible');
 select test.throws($$select lock_period((select id from accounting_period where name = '2026-08'))$$,
   '%cannot be locked yet%', 'before: August cannot be locked over it');
 
@@ -25,7 +25,7 @@ select test.eq((select (r ->> 'posted')::int from (select post_legacy_unposted('
   3, 'the three unjournaled records are posted');
 select test.throws($$select post_legacy_unposted('again')$$, '%nothing left%', 'and cannot be posted twice');
 select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from report_reconciliation('2026-08-31')),
-  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=-219060,payables=110000,payroll=0,platform=0,safe=0,sales=0,transit=0', 'what remains is the damage in the ledger itself');
+  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=-219060,payables=110000,payroll=0,platform=0,prepaid=0,safe=0,sales=0,transit=0', 'what remains is the damage in the ledger itself');
 
 -- Step 1. A raced duplicate journal: reverse it.
 select reverse_journal('11111111-0000-0000-0000-000000000003',
@@ -69,7 +69,7 @@ select discard_journal('11111111-0000-0000-0000-000000000007');
 
 -- After: every subledger agrees, and August locks.
 select test.eq((select string_agg(check_key || '=' || difference, ',' order by check_key) from report_reconciliation('2026-08-31')),
-  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,safe=0,sales=0,transit=0', 'after: every subledger agrees with its control account');
+  'advances=0,card=0,documents=0,dollars=0,drawer=0,grni=0,inventory=0,payables=0,payroll=0,platform=0,prepaid=0,safe=0,sales=0,transit=0', 'after: every subledger agrees with its control account');
 select test.eq((select count(*) from period_close_checklist((select id from accounting_period where name = '2026-08')) where not ok)::int,
   0, 'after: every closing check passes');
 select lock_period((select id from accounting_period where name = '2026-08'), 'Legacy history reconciled (docs/REMEDIATION.md)');

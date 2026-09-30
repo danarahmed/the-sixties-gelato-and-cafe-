@@ -683,7 +683,13 @@ discount, why and who approved it. The 10% is a business setting (shown on
    **Record it** opens Expenses with a charge filled in, or a journal with
    interest filled in; choose its account, post it, and come back. What the books have and it does not (a payment
    not yet cleared) waits for the next one.
-7. **Place** on Reports (`0057`) reads every report for one place: its sales
+7. **Prepaid expenses** (Expenses, `0060`): before the month is locked, if
+   the Dashboard says prepaid expenses are due, press **Release what is due**
+   on Expenses: each month's share of the rent or insurance paid ahead is
+   then that month's expense. The month is not locked until it is. Record a
+   cost paid for months to come with **Paid ahead for months to come**, not as
+   an expense of the month it was paid in.
+8. **Place** on Reports (`0057`) reads every report for one place: its sales
    and payments, its losses, what came in and went back, its orders and
    batches, its dollars, its staff and its customers' sales. Someone who works
    at one place, a branch manager say, reads only theirs, and their

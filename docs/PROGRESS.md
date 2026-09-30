@@ -7,16 +7,16 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0059` and the rebuilt app. The SQL
-  checks (60, with the rehearsals of the upgrade, the clean start and clearing
-  the test records), the browser suites (37, every role, every screen in
+- **Built and verified:** migrations `0014`–`0060` and the rebuilt app. The SQL
+  checks (61, with the rehearsals of the upgrade, the clean start and clearing
+  the test records), the browser suites (38, every role, every screen in
   Arabic and Kurdish, a lost answer on each kind of screen, every report on A4
   paper, documents kept with the records, stock sent between the café's
   places, the tills at each branch, the books by place, every report at a
   place, the chart of accounts, the bank against its statement, finding a
-  sale, a product or a journal, statements read from their files, and every
-  box and button named for a screen reader), the unit and contract tests
-  (585) and a production build all pass. The UX and integration pass was
+  sale, a product or a journal, statements read from their files, every
+  box and button named for a screen reader, and prepaid expenses), the unit
+  and contract tests (597) and a production build all pass. The UX and integration pass was
   closed on 30 September 2026, in four parts.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
@@ -1889,6 +1889,57 @@ Built and tested:
   settings, and the browser suite reads the headers the running app sends,
   a product's photo keeping its own stricter policy.
 
+- **Prepaid expenses (`0060`, the September audit's P2-14).** A cost paid
+  ahead for months to come was an expense of the month it was paid in: a
+  quarter's rent made that month's profit too low, and the next two months'
+  too high. The audit found one on the live books: December's rent, 150,000,
+  expensed in September. Now, on **Expenses**:
+  - **"Paid ahead for months to come"** asks for the first month it covers
+    (this month or one of the twelve after) and how many months (1 to 36;
+    one only if it is still to come, like December's rent paid in
+    September).
+    The form shows the entry (1400 Prepaid expenses debited, where the money
+    came from credited) and each month's share before anything is posted.
+    The shares are equal, rounded down to whole dinars, and the last takes
+    what is left, so they add up to what was paid.
+  - **Each month takes its share** as an expense of that month, on the
+    Expense Register and in that place's profit and loss. The month it
+    starts in takes its share at once, if that month has come. For the
+    months after, **Prepaid Expenses** on the same screen lists each one,
+    with the shares posted and what is still ahead, and **Release what is
+    due** posts every share whose month has come.
+  - **The dashboard says when a share is due,** and a month is not locked
+    until its shares are posted.
+  - **One entered in error is cancelled,** by the owner, a general manager
+    or the accountant, with why. Its payment and every share posted are
+    reversed that day, and cash paid out of the drawer goes back in it.
+  - **The books tie:** a fourteenth check holds 1400 against what the
+    prepaid expenses still hold. Only a prepaid expense moves 1400: a
+    journal by hand, a bill for a service and a supplier's credit do not,
+    and their forms do not offer it.
+
+  The migration was applied to the live database on 30 September 2026. The
+  text stored there is the file byte for byte, and it matches the tested
+  build object by object, permissions included (the differences are the two
+  known from before, which it did not touch). Nothing recorded changed but
+  the new account. It was checked on the live records as the owner, the
+  branch manager and the barista, in one transaction that was rolled back: a
+  quarter's rent paid ahead (sent twice, recorded once) with September's
+  share posted, October's rent alone waiting, the refusals in words, the
+  manager releasing but not cancelling, the barista not reading, the rent
+  cancelled with its share, and the books' fourteen checks at nothing before
+  and after; nothing was kept. The screens went live with
+  [pull request #62](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/62).
+
+  Built and tested: the SQL suite (the shares, the alert and the close, a
+  share reversed by hand, the drawer, sent twice with one key, refused
+  months and amounts, who may do what); unit tests of the shares (checked
+  against the database's own), of the list and of the audit trail; a
+  browser suite (the rent paid ahead, the insurance from next month, its
+  share released when its month comes, the dashboard's alert, the rent
+  cancelled, December's rent alone, 1400 offered nowhere else, in Arabic and
+  Kurdish); and every new text in Arabic and Kurdish.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -1965,9 +2016,9 @@ Built and tested:
 
 | Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Result      |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files, every box and button named, every text colour readable, the browser's safeguards                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 585 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 49 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward, a transfer sent, received and cancelled at once, ten tills at two branches)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 60 passing  |
-| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers, loyalty, the sales analysis and the stock's value, the balance sheet and cash flow, every report on paper, documents with the records, transfers, the tills at each branch, the books by place, every report at a place, the chart of accounts, the bank against its statement, finding a sale, a product and a journal, statements read from their files; on every page, that it is hydrated only once all of it has arrived | 37 passing  |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files, every box and button named, every text colour readable, the browser's safeguards                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 597 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 50 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward, a transfer sent, received and cancelled at once, ten tills at two branches)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 61 passing  |
+| Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers, loyalty, the sales analysis and the stock's value, the balance sheet and cash flow, every report on paper, documents with the records, transfers, the tills at each branch, the books by place, every report at a place, the chart of accounts, the bank against its statement, finding a sale, a product and a journal, statements read from their files; on every page, that it is hydrated only once all of it has arrived | 38 passing  |
 | Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | green       |
 
 What is not built, and why, is in [`LIMITATIONS.md`](LIMITATIONS.md); the order

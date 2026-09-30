@@ -14,6 +14,7 @@ import {
 } from "@/lib/audit";
 import { daysBetween } from "@/lib/dates";
 import type { CashOnHand } from "@/lib/cash";
+import { prepaidFrom, type PrepaidRow } from "@/lib/prepaid";
 import { channelName } from "@/lib/channels";
 import { db, num, numOrNull, one, rows, str, strOrNull, type Row } from "./client";
 import { likeText, type JournalQuery } from "@/lib/find";
@@ -136,6 +137,12 @@ export async function getCashOnHand(place: string | null = null): Promise<CashOn
     console.warn(`cash on hand not read: ${e instanceof Error ? e.message : String(e)}`);
     return null;
   }
+}
+
+/** The café's prepaid expenses, newest first (0060). */
+export async function getPrepaidExpenses(): Promise<PrepaidRow[]> {
+  const c = await db();
+  return rows(await c.rpc("prepaid_expenses"), "the prepaid expenses").map(prepaidFrom);
 }
 
 /* ---------------------------------------------------------------- vendors */

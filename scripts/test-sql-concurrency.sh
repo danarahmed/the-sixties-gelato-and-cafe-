@@ -431,6 +431,6 @@ ok "$(sql "select count(distinct turn_no) = count(*) from sales_order
 
 # The books still tie after all of it.
 ok "$(sql "select string_agg(difference::text, ',') from (select test.act_as('owner@example.com')) a, report_reconciliation(test.today())")" \
-   "0,0,0,0,0,0,0,0,0,0,0,0,0" "every subledger still reconciles to its control account"
+   "0,0,0,0,0,0,0,0,0,0,0,0,0,0" "every subledger still reconciles to its control account"
 
 [ "$FAILED" -eq 0 ]

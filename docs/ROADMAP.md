@@ -44,6 +44,8 @@ Since then, each in [`PROGRESS.md`](PROGRESS.md):
 - **The chart of accounts on a screen (M-06):** an income or a cost added,
   renamed, taken out of use and brought back (`0058`).
 - **The bank against its statement** (`0059`).
+- **Prepaid expenses** (`0060`, P2-14): a cost paid ahead is spread over the
+  months it covers, each month's share an expense of that month.
 - **Statements read from their files.** A platform's report and the bank's
   statement are read from the file they come in (Excel, CSV, or the web page
   some banks give as an ".xls"), in the browser: the platform's orders are
