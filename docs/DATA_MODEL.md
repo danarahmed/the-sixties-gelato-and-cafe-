@@ -1804,3 +1804,25 @@ posted already (P2-14) found five things to put right. No table changes.
   (`alert_conditions` wraps `alert_conditions_0060`). A share and an expense
   like it still are.
 - **Helpers nobody calls:** `same_payments` and `same_payment_question`.
+
+### Accounts out of use and sales by hand put right (`0062`)
+
+A review of the chart of accounts on a screen (`0058`) and of the bank
+against its statement (`0059`) found two things the database should hold.
+No table changes.
+
+- **An account out of use still takes its history** (`post_journal`): a
+  reversal, the year-end close and a prepaid expense's share
+  (`ledger.prepaid_share`) may post to an account taken out of use. Each was
+  refused ("Account … is missing or inactive"): the year-end close of a year
+  it was used in stopped, and with it every lock after it; a bill or an
+  expense on it could not be reversed. Anything else still needs the account
+  in use: out of use, it takes nothing new.
+- **Sales revenue moves only with sales and refunds**
+  (`manual_journal_blocked`): sales revenue (4000), the merchant-funded
+  discount (4100) and sales returns (4200) take no journal by hand, as stock,
+  payables and the cash do not. The books' check ties them to the sales and
+  refunds recorded, and a month is not locked until it does: money in from
+  the bank's statement credited to 4000 stopped the lock. Other income goes
+  to an income account the café adds (4310 Bank interest, say). The owner's
+  correction (`post_control_correction`) still reaches them, with a reason.

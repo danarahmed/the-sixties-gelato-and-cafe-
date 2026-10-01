@@ -269,12 +269,17 @@ function RecordCredit({
   const [billId, setBillId] = useState("");
   const bill = bills.find((b) => b.id === billId) ?? null;
   const [account, setAccount] = useState("");
+  // The bill's own account, while it is still in use: one taken out of use takes no credit (0058).
+  const billAccount =
+    bill?.accountCode && accounts.some((a) => a.code === bill.accountCode)
+      ? bill.accountCode
+      : null;
   const ready =
     !busy &&
     ref.trim() !== "" &&
     reason.trim() !== "" &&
     Number(normaliseNumber(amount)) > 0 &&
-    (kind === "price" ? receiptId !== "" : account !== "" || (bill?.accountCode ?? null) !== null);
+    (kind === "price" ? receiptId !== "" : account !== "" || billAccount !== null);
 
   function submit() {
     if (!ready) return;
@@ -410,9 +415,7 @@ function RecordCredit({
                 onChange={(e) => setAccount(e.target.value)}
               >
                 <option value="">
-                  {bill?.accountCode
-                    ? t("The bill's own ({code})", { code: bill.accountCode })
-                    : t("Choose…")}
+                  {billAccount ? t("The bill's own ({code})", { code: billAccount }) : t("Choose…")}
                 </option>
                 {accounts.map((a) => (
                   <option key={a.code} value={a.code}>

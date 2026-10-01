@@ -5220,14 +5220,21 @@ describe("an expense paid ahead for months to come (0060, the September audit's 
       const body = new RegExp(`const ${name} = new Set\\(\\[([^\\]]*)\\]`).exec(src)?.[1] ?? "";
       return new Set([...body.matchAll(/"(\d{4})"/g)].map((m) => m[1]));
     };
-    // The accounts the database takes no journal by hand on, as 0060 leaves them.
+    // The accounts the database takes no journal by hand on, as its latest migration leaves them.
+    const latest = readdirSync(join(__dirname, "../supabase/migrations"))
+      .filter((f) => f.endsWith(".sql"))
+      .sort()
+      .map((f) => readFileSync(join(__dirname, "../supabase/migrations", f), "utf8"))
+      .filter((sql) => /function manual_journal_blocked/.test(sql))
+      .pop()!;
     const blocked = new Set(
       [
         ...(
-          /manual_journal_blocked[\s\S]*?select p_code in \(([^)]*)\)/.exec(migration)?.[1] ?? ""
+          /manual_journal_blocked[\s\S]*?select p_code in \(([^)]*)\)/.exec(latest)?.[1] ?? ""
         ).matchAll(/'(\d{4})'/g),
       ].map((m) => m[1]),
     );
+    expect(["4000", "4100", "4200"].every((c) => blocked.has(c))).toBe(true);
     expect(blocked.has("1400")).toBe(true);
     expect(listed("src/app/journals/page.tsx", "BLOCKED")).toEqual(blocked);
     for (const list of ["NOT_FOR_BILLS", "NOT_FOR_CREDITS"])

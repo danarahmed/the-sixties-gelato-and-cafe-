@@ -7,7 +7,7 @@
  * again when the statement is kept.
  */
 import Decimal from "decimal.js";
-import { statementAmount } from "@/lib/settlements";
+import { decimalMark, statementAmount, type DecimalMark } from "@/lib/settlements";
 import { columnNamed, headerName, isBlank, readTable, TOTAL_CELL, TOTAL_START } from "@/lib/sheet";
 import { latinDigits, normaliseNumber } from "@/lib/validation";
 
@@ -210,27 +210,33 @@ function bankColumns(cells: string[]): BankAt | null {
 
 /** A balance brought or carried forward: not money in or out. */
 const BALANCE_ROW =
-  /^(opening|closing|previous)\s+balance\b|^balance\s+(b\/?f|c\/?f|brought|carried|forward)\b|^(brought|carried)\s+forward\b|^(b\/?f|c\/?f)$|^(ال)?رصيد\s*(ال)?(افتتاحي|سابق|مدور|ختامي|منقول)|^رصيد\s+(أول|اول|آخر|اخر)\s+المدة|^باڵانسی\s*(سەرەتا|پێشوو|کۆتایی)/i;
+  /^(opening|closing|previous|beginning|starting|ending)\s+balance\b|^balance\s+(b\/?f|c\/?f|brought|carried|forward|as\s+(of|at)|at)\b|^(brought|carried)\s+forward\b|^(b\/?f|c\/?f)$|^(ال)?رصيد\s*(ال)?(افتتاحي|سابق|مدور|ختامي|منقول)|^(ال)?رصيد\s+(بداية|نهاية|في)\b|^رصيد\s+(أول|اول|آخر|اخر)\s+المدة|^باڵانسی\s*(سەرەتا|پێشوو|کۆتایی)/i;
 
 /** An empty column, as some statements print one. */
 const NOTHING = /^[-–—_.]+$/;
 
 /** An amount as a bank prints it: "1,500.00", "(900)", "-900", "900 DR", "CR 1,500". */
-function bankAmount(cell: string): string | null {
+function bankAmount(cell: string, decimals: DecimalMark = "."): string | null {
   const m = /^(?:(dr|cr)\.?\s*)?(.*?)(?:\s*(dr|cr)\.?)?$/i.exec(cell.trim());
-  const v = statementAmount(m?.[2] ?? cell);
+  const v = statementAmount(m?.[2] ?? cell, decimals);
   if (v === null) return null;
   const mark = (m?.[1] ?? m?.[3] ?? "").toLowerCase();
   const d = new Decimal(v);
   return (mark === "dr" ? d.abs().negated() : mark === "cr" ? d.abs() : d).toFixed();
 }
 
-/** What a DR/CR column says: money out, money in, or nothing. */
-function markOf(cell: string): "in" | "out" | null {
-  const s = cell.trim().toLowerCase();
-  if (/^(dr|d|debit|مدين|سحب)$/.test(s)) return "out";
-  if (/^(cr|c|credit|دائن|إيداع|ايداع)$/.test(s)) return "in";
-  return null;
+/**
+ * What a DR/CR or type column says: money out, money in, nothing written, or
+ * a word that says neither ("Transfer", "POS").
+ */
+function markOf(cell: string): "in" | "out" | "other" | null {
+  const s = cell.trim().toLowerCase().replace(/\.$/, "");
+  if (s === "") return null;
+  if (/^(dr|d|debit|debits|withdrawal|withdrawals|withdraw|out|مدين)$|سحب|صادر|ڕۆیشتوو/.test(s))
+    return "out";
+  if (/^(cr|c|credit|credits|deposit|deposits|in|دائن)$|إيداع|ايداع|وارد|هاتوو/.test(s))
+    return "in";
+  return "other";
 }
 
 const MONTHS: Record<string, number> = {
@@ -371,15 +377,38 @@ export function parseBankStatement(text: string): ParsedBankStatement {
   let skipped = named + 1;
   const data = rows.slice(named + 1);
   const order = dayOrder(data.map((r) => r.cells[at.date!] ?? ""));
+  // The statement's own decimal mark, from its amounts and balances.
+  const amountColumns = [at.in, at.out, at.amount, at.balance].filter(
+    (i): i is number => i !== null,
+  );
+  const decimals = decimalMark(data.flatMap((r) => amountColumns.map((i) => r.cells[i] ?? "")));
+  // Amounts that carry their own sign: a type column then only says what a line is.
+  const signed =
+    at.amount !== null &&
+    data.some((r) => (bankAmount(r.cells[at.amount!] ?? "", decimals) ?? "").startsWith("-"));
 
   for (const { line, cells: c } of data) {
     const dateCell = c[at.date!] ?? "";
     const what = at.description === null ? "" : (c[at.description] ?? "");
+    // A total is a row with no date of its own ("Total", "إجمالي المسحوبات");
+    // a dated line whose words start so ("Total Energies") is a line.
+    const dated = statementDay(dateCell, order) !== null;
     if (
       c.some((x) => TOTAL_CELL.test(x)) ||
-      [c[0] ?? "", dateCell, what].some((x) => TOTAL_START.test(x) || BALANCE_ROW.test(x))
+      [c[0] ?? "", dateCell, what].some(
+        (x) => BALANCE_ROW.test(x) || (!dated && TOTAL_START.test(x)),
+      )
     ) {
       skipped++;
+      continue;
+    }
+    // More cells than the statement has columns: a comma inside an amount not
+    // in quotes ("500,000" in a CSV) has split it, and every cell after it is
+    // in the wrong column.
+    if (c.length > header.length && c.slice(header.length).some((x) => x !== "")) {
+      problems.push(
+        `Line ${line} has more cells than the statement has columns: an amount with commas, not in quotes?`,
+      );
       continue;
     }
     let bad: string | null = null;
@@ -387,11 +416,12 @@ export function parseBankStatement(text: string): ParsedBankStatement {
       if (i === null) return null;
       const cell = c[i] ?? "";
       if (cell === "" || NOTHING.test(cell)) return null;
-      const v = bankAmount(cell);
+      const v = bankAmount(cell, decimals);
       if (v === null) bad ??= cell;
       return v === null ? null : new Decimal(v);
     };
     let amount: Decimal | null = null;
+    let unsaid: string | null = null;
     if (at.in !== null || at.out !== null) {
       const into = read(at.in);
       const out = read(at.out);
@@ -399,12 +429,20 @@ export function parseBankStatement(text: string): ParsedBankStatement {
         amount = (into?.abs() ?? new Decimal(0)).minus(out?.abs() ?? new Decimal(0));
     } else {
       amount = read(at.amount);
-      const mark = at.sign === null ? null : markOf(c[at.sign] ?? "");
-      if (amount !== null && mark !== null)
+      const markCell = at.sign === null ? "" : (c[at.sign] ?? "");
+      const mark = at.sign === null ? null : markOf(markCell);
+      if (amount !== null && (mark === "in" || mark === "out"))
         amount = mark === "out" ? amount.abs().negated() : amount.abs();
+      // Amounts with no sign, and a type that says neither in nor out: which
+      // it was is not known, and is not guessed.
+      else if (amount !== null && mark === "other" && !signed) unsaid = markCell;
     }
     if (bad !== null) {
       problems.push(`Line ${line}: "${bad}" is not an amount.`);
+      continue;
+    }
+    if (unsaid !== null) {
+      problems.push(`Line ${line}: "${unsaid}" does not say whether the money went in or out.`);
       continue;
     }
     // A title, a note, or a balance with no money moved.
@@ -427,7 +465,8 @@ export function parseBankStatement(text: string): ParsedBankStatement {
       day,
       description: what,
       amount: amount.toFixed(),
-      balance: balanceCell === "" || NOTHING.test(balanceCell) ? null : bankAmount(balanceCell),
+      balance:
+        balanceCell === "" || NOTHING.test(balanceCell) ? null : bankAmount(balanceCell, decimals),
     });
     if (lines.length > MAX_BANK_LINES) {
       problems.push(`A statement is read ${MAX_BANK_LINES} lines at a time.`);

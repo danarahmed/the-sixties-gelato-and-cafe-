@@ -6,7 +6,7 @@
  * which does the posting and checks it all again.
  */
 import Decimal from "decimal.js";
-import { cleanOrderNo, normaliseNumber, ORDER_NO } from "@/lib/validation";
+import { cleanOrderNo, latinDigits, normaliseNumber, ORDER_NO } from "@/lib/validation";
 import {
   columnNamed,
   headerName,
@@ -234,11 +234,17 @@ const HEADERS: Record<"orderNo" | "payout" | "commission" | "fees", string[]> = 
 /** What a platform took in all, commission and fees together: read as fees only when nothing else is. */
 const DEDUCTIONS = ["deductions", "الخصومات", "الاستقطاعات"];
 /**
- * An amount as a statement prints it: "1,500", "IQD 1500", "(900)" or "-900".
- * Null when it is not one.
+ * How a statement's amounts mark their decimals: a dot ("1,500,000.50", as
+ * banks in Iraq print them) or a comma ("1.500.000,50", as some others do).
  */
-export function statementAmount(cell: string): string | null {
-  let s = normaliseNumber(cell.replace(/IQD|د\.ع|دينار|دینار/gi, ""));
+export type DecimalMark = "." | ",";
+
+/** An amount cell as written, plainly: Latin digits, no currency, no spaces, no sign. */
+function amountText(cell: string): { text: string; negative: boolean } {
+  let s = latinDigits(cell.replace(/IQD|د\.ع|دينار|دینار/gi, ""))
+    .replace(/٫/g, ".") // the Arabic decimal mark
+    .replace(/[٬،]/g, ",") // the Arabic thousands marks
+    .replace(/\s/g, "");
   let negative = false;
   if (/^\(.*\)$/.test(s)) {
     negative = true;
@@ -247,6 +253,41 @@ export function statementAmount(cell: string): string | null {
   if (s.startsWith("-")) {
     negative = !negative;
     s = s.slice(1);
+  }
+  return { text: s, negative };
+}
+
+/**
+ * The decimal mark a statement's own amounts show: a comma when one is
+ * written "1.500,50", "500,00" or "1.500.000"; a dot when one is written
+ * "1,500,000" or "1500.50". The first that shows it decides; none does, a
+ * dot.
+ */
+export function decimalMark(cells: readonly string[]): DecimalMark {
+  for (const cell of cells) {
+    const s = amountText(cell).text;
+    if (/^\d{1,3}(\.\d{3})+,\d+$|^\d{1,3}(\.\d{3}){2,}$|^\d+,\d{1,2}$/.test(s)) return ",";
+    if (/^\d{1,3}(,\d{3})+(\.\d+)?$|^\d+\.\d{1,2}$/.test(s)) return ".";
+  }
+  return ".";
+}
+
+/**
+ * An amount as a statement prints it: "1,500", "IQD 1500", "(900)" or "-900";
+ * with a comma for its decimals ("1.500,50") when that is the statement's
+ * mark. Null when it is not one: a comma not between thousands ("500,00" in a
+ * statement that marks decimals with a dot) is not read as thousands, nor
+ * dots as decimals, so an amount is never read 100 or 1,000 times out.
+ */
+export function statementAmount(cell: string, mark: DecimalMark = "."): string | null {
+  const { text, negative } = amountText(cell);
+  let s = text;
+  if (mark === ",") {
+    if (!/^(\d{1,3}(\.\d{3})+|\d+)(,\d+)?$/.test(s)) return null;
+    s = s.replace(/\./g, "").replace(",", ".");
+  } else if (s.includes(",")) {
+    if (!/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) return null;
+    s = s.replace(/,/g, "");
   }
   if (!AMOUNT.test(s)) return null;
   const d = new Decimal(s);

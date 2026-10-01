@@ -1260,7 +1260,9 @@ owner; reopening: owner
   to the bank's statement**, and the page, which keeps what was read for the
   tab, finds it too. On money in (interest), **Record it** opens a journal
   with **Dr 1020 Bank** and the amount filled in: choose the account it came
-  from, **Save and publish**, and back. Card money and a platform's payout
+  from, **Save and publish**, and back. Sales revenue (4000) is not offered:
+  it moves with the sales recorded (`0062`), so interest goes to an income
+  account added on the Chart of Accounts (4310 Bank interest, say). Card money and a platform's payout
   are recorded where they are settled, **Card Takings** and **Delivery
   Platforms**, which the list points to. When the
   statement starts from another balance than the last one kept, the page says

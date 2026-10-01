@@ -59,6 +59,7 @@ Plan a short window when the café is closed.
 | The bank against its statement (`0059`) | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0059`](#after-0059)). The screens were merged ([pull request #53](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/53)) and deployed            |
 | Prepaid expenses (`0060`)               | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0060`](#after-0060)). The screens were merged ([pull request #62](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/62)) and deployed            |
 | Prepaid and payments put right (`0061`) | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0061`](#after-0061)). The screens were merged ([pull request #64](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/64)) and deployed               |
+| Accounts and bank put right (`0062`)    | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0062`](#after-0062)). The screens were merged ([pull request #65](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/65)) and deployed                 |
 
 ## 0. Before you start
 
@@ -2846,6 +2847,87 @@ journals still end at 1100 and the audit trail at 280.
 The security advisor lists the same notices as before: the two expense
 functions under their new signatures, as they were under the old. The
 performance advisor's list is unchanged.
+
+## After `0062`
+
+Migration `0062` puts right what a review of `0058` (the chart of accounts
+on a screen) and `0059` (the bank against its statement) found in the
+database. No table changes, and nothing recorded changes.
+
+- **An account out of use still takes its history.** An account the café
+  added and took out of use refused the year-end close of a year it was
+  used in ("Account … is missing or inactive"): locking that December
+  stopped, with every check on its list clear, and so did every month after
+  it. The reversal of a journal on it was refused too (a bill or an expense
+  on it, a prepaid expense cancelled), and so was a prepaid expense's share
+  recorded on it in the second it was taken out of use. Now a reversal, the
+  year-end close and a prepaid expense's share may post to it; anything
+  else still needs it in use.
+- **Sales revenue moves only with sales and refunds.** Sales revenue
+  (4000), the merchant-funded discount (4100) and sales returns (4200) took
+  a journal by hand. The books tie them to the sales and refunds recorded,
+  and a month is not locked until they do: money in from the bank's
+  statement credited to 4000 stopped the lock. Now they take none, as
+  stock, payables and the cash do not; the owner's correction of a control
+  account still reaches them, with why.
+
+What it changes:
+
+- **`post_journal`** (the journal builder every posting function calls) is
+  `0015`'s, with one change: a `reversal`, a `year_end_close` and a
+  prepaid expense's share (`ledger.prepaid_share`) may post to an account
+  out of use.
+- **`manual_journal_blocked`** is `0060`'s list with 4000, 4100 and 4200.
+- Both stay callable only inside the database's own functions.
+
+The screens and it may go in either order. A Journals screen deployed
+before it still offers 4000, 4100 and 4200, and the database refuses them
+in words; the new one does not offer them. The app's other changes (the
+supplier's credit to an account in use, statements read as written) need
+nothing from the database.
+
+Before it is applied, check that no draft journal waits with a line on
+4000, 4100 or 4200: a draft is published as it was saved, and one saved
+before `0062` would still post there. Discard it, or post it as it is if it
+was meant.
+
+It was applied on 1 October 2026 with the Supabase connector: one
+`apply_migration` call, one transaction. Before it, a read-only check showed
+the live database exactly as verified after `0061`, object by object, every
+table's count as it was, and no draft journal at all.
+
+The text stored there is the file byte for byte (md5
+`9e058910e73ec9ab53dc9d22d30a5a1b`, 4,877 bytes). It was then compared with
+the tested build, object by object, the role permissions and column grants
+included. The functions (627), constraints, indexes, policies, triggers,
+views and every table but `app_user` are identical. The only differences are
+the two known from before, and `0062` changed neither. Nothing recorded
+changed.
+
+It was checked on the live records as the owner and the accountant, in one
+transaction that was rolled back:
+
+- **An account out of use (6800, added for the check):** an expense of
+  50,000 kept on it and one of 30,000; a prepaid expense of 40,000 on it
+  from November, for two months; then taken out of use, as in the second it
+  is recorded. The 30,000 was reversed (journal 1104); a new expense and a
+  journal by hand on it were refused, in words; its two shares were
+  released, and the prepaid expense cancelled with both reversed; the
+  year-end close took its 50,000 with the rest, balanced.
+- **Sales by hand:** the owner's journal of bank interest to 4000, and the
+  accountant's to 4100 and, as a draft, to 4200, were refused, in words. An
+  income account added (4310) took the interest (journal 1111). The owner's
+  correction between 4100 and 4000, with why, was posted (1112) and
+  reversed (1113).
+- **The books:** each of the fourteen checks was at nothing before and
+  after, with no document out of step.
+
+Nothing was kept. Every table's count is as it was before the check; the
+journals still end at 1100 and the audit trail at 280. (Two alerts were
+raised that morning, before `0062` was applied, when the dashboard was
+opened: September's payroll falling due on 1 October, and a margin.)
+
+The security and performance advisors list the same notices as before.
 
 ## Clearing the test records
 
