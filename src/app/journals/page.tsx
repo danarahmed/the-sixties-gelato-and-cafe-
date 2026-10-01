@@ -29,7 +29,9 @@ export const dynamic = "force-dynamic";
  * 0024), the safe (every movement of it is cash moved, 0038), the dollars in
  * both (0043), stock, payables, goods received, retained earnings, the
  * advances given on pay and the salaries owed (0049), the stock on its way
- * between places (0054), and the prepaid expenses (0060).
+ * between places (0054), the prepaid expenses (0060), and the sales revenue,
+ * its discounts and its refunds, tied to the sales recorded (0062): money in
+ * that is not a sale goes to an income account the café adds.
  */
 const BLOCKED = new Set([
   "1000",
@@ -44,6 +46,9 @@ const BLOCKED = new Set([
   "2050",
   "2100",
   "3100",
+  "4000",
+  "4100",
+  "4200",
 ]);
 
 export default async function JournalsPage({

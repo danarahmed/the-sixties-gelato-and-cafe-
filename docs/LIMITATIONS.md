@@ -417,10 +417,27 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     like) keep their names and stay in use; their names are the phrases every
     language translates.
   - An account is never deleted; one taken out of use stays in the reports,
-    and its code and name stay taken.
+    and its code and name stay taken. Out of use, it takes nothing new, but
+    what was posted to it is still closed at the year's end, reversed, and
+    shared out as a prepaid expense's months (`0062`).
+  - Sales revenue (4000), its discounts (4100) and its returns (4200) take no
+    journal by hand: they move with the sales and refunds recorded, which the
+    books tie them to (`0062`). Other income (interest, a rebate) goes to an
+    income account the café adds; the owner's correction of a control
+    account still reaches them, with why.
   - Its other names are in Arabic and Kurdish, given on its own form. In a
     language the owner added, it shows as it was typed: **Settings →
     Languages** lists the built-in phrases, not the café's accounts.
+  - Those names are kept as the café's own words for the account's English
+    name, where **Settings → Languages** keeps its words for the screens. An
+    account named as a word the screens use (Delivery, Other) gives that
+    word its Arabic and Kurdish on every screen, and whoever may post
+    journals may set them so. Name an account so it is only its own
+    ("Delivery costs"). Renamed, its words for the old name stay with that
+    name.
+  - Taken out of use in the very second a journal is saved as a draft on it,
+    an account may keep that draft, and the draft may still be published to
+    it. A draft on it at any other time keeps it in use.
 - **The bank against its statement, what it does not do (`0059`).**
   - The statement is read from the bank's file or pasted (below), or read by
     eye: its last day and balance typed, and each line on it ticked. Nothing
@@ -433,7 +450,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     journal), then found or ticked: nothing is recorded for you. **Record
     it** fills in Expenses for money out, and a journal into the bank for
     money in; the account is still the person's to choose. The Chart of
-    Accounts has no income for interest until the café adds one.
+    Accounts has no income for interest until the café adds one: sales
+    revenue does not take it (`0062`).
 - **A payment like one posted already, what is not asked (P2-14).** Expenses
   asks about an expense or a prepaid expense to the same account, for the
   same amount, within three days of one posted: as it is typed, among the
@@ -488,7 +506,26 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     platform's only).
   - A date like 03/04/2026 is read day first, as dates are written in Iraq,
     unless a date on the same statement shows the month comes first
-    (04/13/2026).
+    (04/13/2026). A date with a time and its zone (2026-09-13T21:00:00Z, as
+    some exports write them) is read as the day written there, not turned
+    into Baghdad's: one written in another zone near midnight may land a day
+    early or late.
+  - An amount is read as the statement writes it: 1,500,000.50 or
+    1.500.000,50, the decimal mark taken from the statement's own amounts
+    and balances. Where none shows it (every amount like 1.500), a dot is
+    taken. An amount that does not fit the statement's mark (500,00 on a
+    statement of 1,500.00) is not read but listed as a problem.
+  - In or out is read from the amount's sign or its columns, or from a type
+    column's words: Dr, Cr, Debit, Credit, Withdrawal, Deposit, In, Out, and
+    their Arabic and Kurdish (مدين، دائن، سحب، إيداع، صادر، وارد). Where the
+    amounts carry no sign and the type says neither ("Transfer", "POS"), the
+    line is listed as a problem, not guessed.
+  - A line with more cells than the statement has columns (an amount with
+    commas, not in quotes, in a CSV) is listed as a problem, not read.
+  - A total is left out: a line with a cell that is only "Total" (or
+    "المجموع", "کۆ"), or one with no date that starts like a total. So are
+    the opening, beginning and closing balances. A dated line whose words
+    only start like a total's ("Total Energies") is read.
   - **The bank's lines are found by their amount and day only.** A line is
     the books' line of the same amount, on the same day, else on the nearest
     day up to a month before or a week after; each of the books' lines once.

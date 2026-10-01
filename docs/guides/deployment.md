@@ -59,6 +59,7 @@ Plan a short window when the café is closed.
 | The bank against its statement (`0059`) | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0059`](#after-0059)). The screens were merged ([pull request #53](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/53)) and deployed            |
 | Prepaid expenses (`0060`)               | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0060`](#after-0060)). The screens were merged ([pull request #62](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/62)) and deployed            |
 | Prepaid and payments put right (`0061`) | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0061`](#after-0061)). The screens were merged ([pull request #64](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/64)) and deployed               |
+| Accounts and bank put right (`0062`)    | ⏳ Rehearsed on a copy shaped like the live database; to be applied with its screens (see [After `0062`](#after-0062))                                                                                                                                                                                                                                                                   |
 
 ## 0. Before you start
 
@@ -2846,6 +2847,49 @@ journals still end at 1100 and the audit trail at 280.
 The security advisor lists the same notices as before: the two expense
 functions under their new signatures, as they were under the old. The
 performance advisor's list is unchanged.
+
+## After `0062`
+
+Migration `0062` puts right what a review of `0058` (the chart of accounts
+on a screen) and `0059` (the bank against its statement) found in the
+database. No table changes, and nothing recorded changes.
+
+- **An account out of use still takes its history.** An account the café
+  added and took out of use refused the year-end close of a year it was
+  used in ("Account … is missing or inactive"): locking that December
+  stopped, with every check on its list clear, and so did every month after
+  it. The reversal of a journal on it was refused too (a bill or an expense
+  on it, a prepaid expense cancelled), and so was a prepaid expense's share
+  recorded on it in the second it was taken out of use. Now a reversal, the
+  year-end close and a prepaid expense's share may post to it; anything
+  else still needs it in use.
+- **Sales revenue moves only with sales and refunds.** Sales revenue
+  (4000), the merchant-funded discount (4100) and sales returns (4200) took
+  a journal by hand. The books tie them to the sales and refunds recorded,
+  and a month is not locked until they do: money in from the bank's
+  statement credited to 4000 stopped the lock. Now they take none, as
+  stock, payables and the cash do not; the owner's correction of a control
+  account still reaches them, with why.
+
+What it changes:
+
+- **`post_journal`** (the journal builder every posting function calls) is
+  `0015`'s, with one change: a `reversal`, a `year_end_close` and a
+  prepaid expense's share (`ledger.prepaid_share`) may post to an account
+  out of use.
+- **`manual_journal_blocked`** is `0060`'s list with 4000, 4100 and 4200.
+- Both stay callable only inside the database's own functions.
+
+The screens and it may go in either order. A Journals screen deployed
+before it still offers 4000, 4100 and 4200, and the database refuses them
+in words; the new one does not offer them. The app's other changes (the
+supplier's credit to an account in use, statements read as written) need
+nothing from the database.
+
+Before it is applied, check that no draft journal waits with a line on
+4000, 4100 or 4200: a draft is published as it was saved, and one saved
+before `0062` would still post there. Discard it, or post it as it is if it
+was meant.
 
 ## Clearing the test records
 

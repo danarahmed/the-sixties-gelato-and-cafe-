@@ -7,7 +7,7 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0060` and the rebuilt app. The SQL
+- **Built and verified:** migrations `0014`–`0062` and the rebuilt app. The SQL
   checks (61, with the rehearsals of the upgrade, the clean start and clearing
   the test records), the browser suites (38, every role, every screen in
   Arabic and Kurdish, a lost answer on each kind of screen, every report on A4
@@ -16,7 +16,7 @@ browser tests through the real app, or both.
   place, the chart of accounts, the bank against its statement, finding a
   sale, a product or a journal, statements read from their files, every
   box and button named for a screen reader, and prepaid expenses), the unit
-  and contract tests (603) and a production build all pass. The UX and integration pass was
+  and contract tests (611) and a production build all pass. The UX and integration pass was
   closed on 30 September 2026, in four parts.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
@@ -2014,6 +2014,57 @@ Built and tested:
   kept. The screens went live with
   [pull request #64](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/64).
 
+- **The chart, the bank and statements put right after review (`0062`).** A
+  review of what went live with `0058` (the chart of accounts on a screen)
+  and `0059` (the bank against its statement), and of statements read from
+  their files, found these, now put right:
+  - **An account out of use still takes its history.** An account the café
+    added and took out of use refused the year-end close of a year it was
+    used in (so locking that December stopped, and every month after it),
+    the reversal of a journal on it (a bill or an expense on it could not be
+    put right), and the share of a prepaid expense recorded on it in the
+    second it was taken out of use. Out of use, it takes nothing new; what
+    was posted to it is still closed, reversed and shared out.
+  - **Sales revenue moves only with sales and refunds.** Sales revenue
+    (4000), the merchant-funded discount (4100) and sales returns (4200)
+    took a journal by hand, and Journals offered them for money in from the
+    bank's statement. The books tie them to the sales and refunds recorded,
+    and a month is not locked until they do, so one credited by hand stopped
+    the lock. The database refuses it now, Journals no longer offers them,
+    and other income goes to an income account the café adds (4310 Bank
+    interest, say).
+  - **A supplier's credit to the bill's account only while it is in use.**
+    The credit note form offered the bill's own account after it was taken
+    out of use, and the credit was then refused. It is offered only while
+    the account is in use.
+  - **A statement's amounts read as written.** A statement that marks its
+    decimals with a comma (1.500.000,50) was misread: 500,00 as fifty
+    thousand, 2.500,00 as two and a half. The decimal mark is now taken from
+    the statement's own amounts and balances, and an amount that does not
+    fit it is listed as a problem, not read.
+  - **In or out from the bank's own words.** A type column saying
+    Withdrawal, Deposit, Dr. or Cr., or سحب, إيداع, صادر or وارد, was not
+    understood, and its line was read as money in. These are understood
+    now, in English, Arabic and Kurdish; a word that says neither is listed
+    as a problem, unless the amounts carry their own sign.
+  - **A line split by a comma.** In a CSV, an amount with commas not in
+    quotes (500,000) split into two cells and was read as 500, with the
+    rest of the line shifted. A line with more cells than the statement has
+    columns is listed as a problem now.
+  - **Totals and balances.** A dated line whose words start like a total's
+    ("Total Energies", "إجمالي رسوم الخدمة") was left out as a total; it is
+    read now. A beginning balance was read as money in; it is left out now.
+
+  Built and tested: the SQL suite (an account out of use: an expense on it
+  reversed, its year closed with the rest, a prepaid expense's shares
+  posted to it and reversed on cancelling, nothing new taken; sales
+  revenue, its discounts and its refunds refused by hand, an income account
+  added and taken; checked to fail without the fix); unit tests of the
+  amounts, the decimal mark, the words for in and out, a line too wide,
+  dated totals and the beginning balance, a platform's payout with a
+  decimal comma, and Journals' list of the accounts it does not offer, read
+  from the latest migration.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -2090,7 +2141,7 @@ Built and tested:
 
 | Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Result      |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files, every box and button named, every text colour readable, the browser's safeguards                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 603 passing |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files, every box and button named, every text colour readable, the browser's safeguards                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 611 passing |
 | SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 50 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward, a transfer sent, received and cancelled at once, ten tills at two branches)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 61 passing  |
 | Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers, loyalty, the sales analysis and the stock's value, the balance sheet and cash flow, every report on paper, documents with the records, transfers, the tills at each branch, the books by place, every report at a place, the chart of accounts, the bank against its statement, finding a sale, a product and a journal, statements read from their files; on every page, that it is hydrated only once all of it has arrived | 38 passing  |
 | Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | green       |

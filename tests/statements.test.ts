@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import { deflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { decodeText, readStatementFile, readTable, toTsv } from "@/lib/sheet";
-import { parseStatement } from "@/lib/settlements";
+import { decimalMark, parseStatement, statementAmount } from "@/lib/settlements";
 import {
   BANK_EXAMPLE,
   dayOrder,
@@ -529,6 +529,94 @@ describe("the bank's statement, read", () => {
   });
 });
 
+describe("a statement's amounts and words, read as written (after review)", () => {
+  it("never reads a decimal comma as thousands, nor thousands' dots as decimals", () => {
+    // Read as the bank wrote them: a dot for decimals, commas between thousands.
+    expect(statementAmount("1,234,567")).toBe("1234567");
+    expect(statementAmount("(1,500.50)")).toBe("-1500.5");
+    expect(statementAmount("١٬٥٠٠٬٠٠٠")).toBe("1500000");
+    // Not read, so shown as a problem: 500,00 was read as 50,000, and 2.500,00 as 2.5.
+    for (const cell of ["500,00", "2.500,00", "12,34", "1.500.000"])
+      expect([cell, statementAmount(cell)]).toEqual([cell, null]);
+    // A statement that marks its decimals with a comma is read so.
+    expect(statementAmount("2.500,00", ",")).toBe("2500");
+    expect(statementAmount("-1.500.000,50", ",")).toBe("-1500000.5");
+    expect(statementAmount("500,5", ",")).toBe("500.5");
+    expect(statementAmount("1,500.00", ",")).toBeNull();
+  });
+
+  it("finds the statement's decimal mark in its own amounts, a dot when nothing shows", () => {
+    expect(decimalMark(["", "500,00"])).toBe(",");
+    expect(decimalMark(["250.000", "1.250.000"])).toBe(",");
+    expect(decimalMark(["2.500,00"])).toBe(",");
+    expect(decimalMark(["1,500,000"])).toBe(".");
+    expect(decimalMark(["1500.50"])).toBe(".");
+    expect(decimalMark(["250.000", "5000"])).toBe(".");
+  });
+
+  it("reads a statement with comma decimals, its balances too", () => {
+    const p = parseBankStatement(
+      "Date;Description;Amount;Balance\n14/09/2026;SMS fee;-500,00;1.500.000,00\n15/09/2026;Deposit;2.500,00;1.502.500,00",
+    );
+    expect(p.problems).toEqual([]);
+    expect(p.lines.map((l) => [l.amount, l.balance])).toEqual([
+      ["-500", "1500000"],
+      ["2500", "1502500"],
+    ]);
+  });
+
+  it("says so where one amount in a dot statement has a decimal comma", () => {
+    const p = parseBankStatement(
+      'Date,Description,Debit,Credit\n14/09/2026,Transfer,"500,000",\n15/09/2026,SMS fee,"500,00",',
+    );
+    expect(p.lines.map((l) => l.amount)).toEqual(["-500000"]);
+    expect(p.problems).toEqual(['Line 3: "500,00" is not an amount.']);
+  });
+
+  it("takes in or out from the words banks use, and asks where a word says neither", () => {
+    const p = parseBankStatement(
+      "Date\tType\tAmount\n01/09/2026\tWithdrawal\t250,000\n02/09/2026\tDeposit\t100,000\n03/09/2026\tDr.\t1,000\n" +
+        "04/09/2026\tسحب نقدي\t5,000\n05/09/2026\tحوالة واردة\t7,000\n06/09/2026\tPOS\t3,000",
+    );
+    expect(p.lines.map((l) => l.amount)).toEqual(["-250000", "100000", "-1000", "-5000", "7000"]);
+    expect(p.problems).toEqual(['Line 7: "POS" does not say whether the money went in or out.']);
+    // Where the amounts carry their own sign, the type only says what a line is.
+    const signed = parseBankStatement(
+      "Date\tType\tAmount\n01/09/2026\tPOS\t-3,000\n02/09/2026\tTransfer\t9,000",
+    );
+    expect([signed.problems, signed.lines.map((l) => l.amount)]).toEqual([[], ["-3000", "9000"]]);
+  });
+
+  it("says so where a comma not in quotes splits an amount", () => {
+    const p = parseBankStatement(
+      "Date,Description,Debit,Credit,Balance\n14/09/2026,Transfer,500,000,,1,500,000\n15/09/2026,Fee,250,,1499750",
+    );
+    expect(p.problems).toEqual([
+      "Line 2 has more cells than the statement has columns: an amount with commas, not in quotes?",
+    ]);
+    expect(p.lines.map((l) => [l.amount, l.balance])).toEqual([["-250", "1499750"]]);
+  });
+
+  it("reads a dated line whose words start with a total's, and leaves out totals and balances", () => {
+    const p = parseBankStatement(
+      "Date,Description,Debit,Credit\n01/09/2026,Beginning balance,,2000000\n14/09/2026,Total Energies fuel,25000,\n" +
+        "15/09/2026,إجمالي رسوم الخدمة,5000,\n,Total,30000,\n30/09/2026,Total,30000,",
+    );
+    expect(p.problems).toEqual([]);
+    expect(p.lines.map((l) => [l.description, l.amount])).toEqual([
+      ["Total Energies fuel", "-25000"],
+      ["إجمالي رسوم الخدمة", "-5000"],
+    ]);
+    expect(p.skipped).toBe(4);
+  });
+
+  it("does not read a platform's payout with a decimal comma", () => {
+    const p = parseStatement("Order\tPayout\n5501\t8.500,00");
+    expect(p.lines).toEqual([]);
+    expect(p.problems.length).toBe(1);
+  });
+});
+
 describe("the bank's statement against the books", () => {
   const books: BankOpenLine[] = [
     { lineId: "transfer", day: "2026-09-14", amount: -500000 },
@@ -653,6 +741,8 @@ describe("what a statement's reading says", () => {
       ).problems,
     );
     add(parseStatement("Order\tPayout\nDelivery adjustment\t-1,000\n5501\t").problems);
+    add(parseBankStatement("Date\tType\tAmount\n01/09/2026\tPOS\t3,000").problems);
+    add(parseBankStatement("Date,Description,Debit\n14/09/2026,Transfer,500,000").problems);
     for (const bytes of [
       new Uint8Array(),
       new Uint8Array([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]),
@@ -665,7 +755,7 @@ describe("what a statement's reading says", () => {
     }
     said.add("This browser cannot open Excel files: save the statement as CSV and choose that.");
     said.add("The file could not be read: save it again as .xlsx or CSV, and choose that.");
-    expect(said.size).toBeGreaterThanOrEqual(13);
+    expect(said.size).toBeGreaterThanOrEqual(15);
     for (const locale of ["ar", "ckb"]) {
       const msg = messenger(builtInWords(locale), "rtl");
       expect([...said].filter((m) => msg(m) === m)).toEqual([]);

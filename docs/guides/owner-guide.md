@@ -681,7 +681,10 @@ discount, why and who approved it. The 10% is a business setting (shown on
    in. Or type them, and tick the lines it shows, by eye. Keep it when it
    ties. What it shows that the books do not (a charge, interest) is listed:
    **Record it** opens Expenses with a charge filled in, or a journal with
-   interest filled in; choose its account, post it, and come back. What the books have and it does not (a payment
+   interest filled in; choose its account, post it, and come back. Interest
+   goes to an income account of its own, added once on the Chart of Accounts
+   (4310 Bank interest, say): sales revenue moves only with the sales
+   recorded (`0062`). What the books have and it does not (a payment
    not yet cleared) waits for the next one.
 7. **Prepaid expenses** (Expenses, `0060`): before the month is locked, if
    the Dashboard says prepaid expenses are due, press **Release what is due**

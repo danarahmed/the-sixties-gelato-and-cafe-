@@ -142,3 +142,69 @@ select test.eq(pg_temp.trail('account.in_use'),
 
 -- ------------------------------------------------------------------ the books
 select test.eq(pg_temp.checks(), (select checks from before), 'the books tie as they did');
+
+-- ------------------------------------------------------------------ out of use, its history still posted (0062)
+-- Out of use, an account takes nothing new; what was posted to it is still
+-- reversed, shared out and closed at the year's end.
+select test.as_admin();
+create function pg_temp.year_end() returns uuid language sql security definer as $$
+  select post_year_end_close('00000000-0000-0000-0000-0000000000b1',
+                             make_date(extract(year from test.today())::int, 12, 31))
+$$;
+create function pg_temp.month(p_plus int) returns date language sql stable as $$
+  select (date_trunc('month', test.today()) + make_interval(months => p_plus))::date
+$$;
+create function pg_temp.release_through(p_day date) returns jsonb language sql security definer as $$
+  select release_prepaid__run('00000000-0000-0000-0000-0000000000b1', p_day,
+                              (select id from app_user where email = 'owner@example.com'))
+$$;
+-- The moment 0061 cannot see: the account taken out of use as a prepaid expense is recorded on it.
+create function pg_temp.out_of_use_now(p_code text) returns void language sql security definer as $$
+  update gl_account set is_active = false
+   where business_id = '00000000-0000-0000-0000-0000000000b1' and code = p_code
+$$;
+select test.act_as('owner@example.com');
+insert into res select 'E3', record_expense('Fixed the fridge', 30000, '6010', 'bank',
+                                            p_idempotency_key => pg_temp.k(10));
+insert into res select 'P', record_prepaid_expense('Upkeep contract, two months', 40000, '6010', 'bank',
+                                                   pg_temp.month(1), 2, p_idempotency_key => pg_temp.k(11));
+select pg_temp.out_of_use_now('6010');
+select test.eq(pg_temp.acct('6010'), 'Repairs and upkeep expense debit out of use own', 'out of use');
+select test.succeeds(format($$select reverse_journal('%s', 'The fridge was under guarantee')$$,
+                            (select journal_entry_id from expense
+                              where id = (pg_temp.r('E3') ->> 'expense_id')::uuid)),
+  'an expense on it is still reversed');
+select test.throws($$select record_expense('Fixed the door', 20000, '6010', 'bank')$$,
+  'Account 6010 cannot take an expense%', 'but nothing new is posted to it');
+select test.throws($$select save_journal(test.today(), 'Repairs',
+                                         '[{"code":"6010","debit":500},{"code":"1020","credit":500}]', true)$$,
+  'Account 6010 is missing or inactive', 'nor a journal by hand');
+-- The year's end closes it with the rest (locking December posts it): the
+-- grinder's 50,000; the fridge's 30,000 was reversed.
+insert into res select 'Y', jsonb_build_object('id', pg_temp.year_end());
+select test.eq((select trim_scale(l.credit) from journal_line l join gl_account a on a.id = l.account_id
+                 where l.journal_entry_id = (pg_temp.r('Y') ->> 'id')::uuid and a.code = '6010'),
+               '50000', 'the year-end close takes it to retained earnings with the rest');
+-- The prepaid expense recorded on it as it went out of use: its shares are posted when their months come.
+insert into res select 'R', pg_temp.release_through(pg_temp.month(2));
+select test.eq(jsonb_array_length(pg_temp.r('R')), 2, 'its two shares are posted to it all the same');
+insert into res select 'C', cancel_prepaid_expense((pg_temp.r('P') ->> 'prepaid_id')::uuid, 'Contract ended early');
+select test.eq((pg_temp.r('C') ->> 'shares_reversed')::int, 2, 'and cancelled, both shares are reversed');
+
+-- ------------------------------------------------------------------ sales revenue by hand (0062)
+-- 4000, 4100 and 4200 move only with sales and refunds: the books tie them to
+-- the sales recorded. Money in that is not a sale goes to an income account.
+select test.throws($$select save_journal(test.today(), 'Bank interest',
+                                         '[{"code":"1020","debit":1500},{"code":"4000","credit":1500}]', true)$$,
+  'Account 4000 has a subledger and cannot take a manual journal%', 'sales revenue takes no journal by hand');
+select test.throws($$select save_journal(test.today(), 'A discount',
+                                         '[{"code":"4100","debit":1500},{"code":"1020","credit":1500}]', true)$$,
+  'Account 4100 has a subledger%', 'nor the discounts');
+select test.throws($$select save_journal(test.today(), 'A refund',
+                                         '[{"code":"4200","debit":1500},{"code":"1020","credit":1500}]', true)$$,
+  'Account 4200 has a subledger%', 'nor the refunds');
+select create_account('4310', 'Bank interest', 'revenue');
+select test.succeeds($$select save_journal(test.today(), 'Bank interest',
+                                           '[{"code":"1020","debit":1500},{"code":"4310","credit":1500}]', true)$$,
+  'an income account the café adds takes it');
+select test.eq(pg_temp.checks(), (select checks from before), 'and the books still tie');
