@@ -58,7 +58,7 @@ Plan a short window when the café is closed.
 | The chart of accounts (`0058`)          | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0058`](#after-0058)). The screens were merged ([pull request #52](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/52)) and deployed            |
 | The bank against its statement (`0059`) | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0059`](#after-0059)). The screens were merged ([pull request #53](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/53)) and deployed            |
 | Prepaid expenses (`0060`)               | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0060`](#after-0060)). The screens were merged ([pull request #62](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/62)) and deployed            |
-| Prepaid and payments put right (`0061`) | ⏳ Rehearsed on a copy shaped like the live database; to be applied before its screens (see [After `0061`](#after-0061))                                                                                                                                                                                                                                                                 |
+| Prepaid and payments put right (`0061`) | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0061`](#after-0061)). The screens were merged ([pull request #64](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/64)) and deployed               |
 
 ## 0. Before you start
 
@@ -2805,6 +2805,47 @@ What it changes:
 
 It goes in before the screens: those deployed before it keep working as
 they are, and the new ones need `p_ask_same`.
+
+It was applied on 1 October 2026 with the Supabase connector: one
+`apply_migration` call, one transaction. Before it, a read-only check showed
+the live database exactly as verified after `0060`, object by object, and
+every table's count as it was.
+
+The text stored there is the file byte for byte (md5
+`7617f1332eb2206430f93c604d075366`, 26,650 bytes). It was then compared with
+the tested build, object by object, the role permissions and column grants
+included. The functions (627), constraints, indexes, policies, triggers,
+views and every table but `app_user` are identical. The only differences are
+the two known from before, and `0061` changed neither. Nothing recorded
+changed.
+
+It was checked on the live records as the owner, the branch manager and the
+barista, in one transaction that was rolled back:
+
+- **The safe:** 90,000 put in it and a prepaid expense of 90,000 paid from
+  it: every check at nothing; cancelled, every check at nothing again.
+- **An account kept in use:** an account added (6800) with a prepaid
+  expense on it was refused out of use, in words; once the prepaid expense
+  was cancelled, it was taken out of use.
+- **A month's share:** posted at 09:48 on 1 October and dated 09:48, not
+  noon. Its reversal by hand was refused, in words; the cancel reversed it.
+- **The question:** an internet bill of 35,123 posted (journal 1110), then
+  the same again, asked about: listed with its journal, nothing posted; sent
+  again with its key, the same answer; said to be another, posted. A
+  prepaid expense like them was asked about both, and so was the branch
+  manager; the barista was told nothing ("needs expense.record").
+- **Duplicates:** two shares of 100,123 were not flagged against each
+  other; an expense of 100,123 was flagged with each.
+- **The trail:** each record and cancel, and the account's changes.
+- **The books:** each of the fourteen checks was at nothing before and
+  after, with no document out of step.
+
+Nothing was kept. Every table's count is as it was before the check; the
+journals still end at 1100 and the audit trail at 280.
+
+The security advisor lists the same notices as before: the two expense
+functions under their new signatures, as they were under the old. The
+performance advisor's list is unchanged.
 
 ## Clearing the test records
 

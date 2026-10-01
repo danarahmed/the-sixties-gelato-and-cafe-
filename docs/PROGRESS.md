@@ -2000,6 +2000,20 @@ Built and tested:
   database's); every test calling `record_expense` with its key by position
   now names the key.
 
+  The migration was applied to the live database on 1 October 2026. The text
+  stored there is the file byte for byte, and it matches the tested build
+  object by object, permissions included (the differences are the two known
+  from before, which it did not touch). Nothing recorded changed. It was
+  checked on the live records as the owner, the branch manager and the
+  barista, in one transaction that was rolled back: a prepaid expense paid
+  from the safe and cancelled with every check at nothing, an account kept
+  in use until its prepaid expense was cancelled, a share dated when it was
+  posted that morning and refused a reversal by hand, the question asked
+  and answered again with its key, two shares not flagged as a duplicate,
+  and the books' fourteen checks at nothing before and after; nothing was
+  kept. The screens went live with
+  [pull request #64](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/64).
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
