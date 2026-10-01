@@ -1,5 +1,5 @@
 -- =============================================================================
--- What a review of the releases since 0035 found, put right (0063). Each part
+-- What a review of the releases since 0035 found, put right (0063, 0064). Each part
 -- below is a case that went wrong before it:
 --  1. a batch recorded with a time before its items were counted, and a loss
 --     reversed after its item was counted, were in that count already;

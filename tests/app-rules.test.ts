@@ -5467,7 +5467,7 @@ describe("a payment like one posted already, asked about first (the September au
   });
 });
 
-describe("what a review of the releases since 0035 found, put right (0063)", () => {
+describe("what a review of the releases since 0035 found, put right (0063, 0064)", () => {
   const read = (path: string) => readFileSync(join(__dirname, "..", path), "utf8");
 
   it("the till lists its own branch's bills after a change, as its page does", () => {

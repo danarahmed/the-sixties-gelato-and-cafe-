@@ -1827,11 +1827,13 @@ No table changes.
   to an income account the café adds (4310 Bank interest, say). The owner's
   correction (`post_control_correction`) still reaches them, with a reason.
 
-### What a review of the releases since `0035` found, put right (`0063`)
+### What a review of the releases since `0035` found, put right (`0063`–`0064`)
 
 Five reviews, one for each part of what `0035` to `0057` built, each finding
-checked against the code before it was put right. No table changes, and
-nothing recorded changes.
+checked against the code before it was put right: the counts, the places,
+stock below zero and payroll in `0063`; purchases, the till and the safe, and
+the staff report in `0064` (two migrations, each small enough to apply in one
+call). No table changes, and nothing recorded changes.
 
 - **What a count has seen is not posted again** (`record_production`,
   `review_loss`): a count line's expected stock is what the books held when it
@@ -1872,7 +1874,7 @@ nothing recorded changes.
   not be drafted again. The journals of salaries paid and advances given name
   no one: "Salaries 2026-09 (payroll 3)" and "Advance on pay". Journals are
   read by those who see costs; who was paid what is for those who see payroll.
-- **Purchases:**
+- **Purchases** (`0064`):
   - **A delivery's share still on the shelf** (`receipt_share_on_hand`) starts
     where its units first came in. Its own corrections and returns change the
     delivery, not the share; another delivery's return or correction is not a
@@ -1892,17 +1894,18 @@ nothing recorded changes.
   - **An order's receiving and its cancellation** (`po_view`, `cancel_po`) go by
     what came and stayed (`po_received`), not by whether a delivery was ever
     recorded: an order whose only delivery was reversed is cancelled.
-- **Money from the till or the safe** (`record_expense`, `reverse_journal`): an
-  expense paid from the till or the safe is dated today, and a journal that
-  moved their cash (1000, 1001, 1005, 1006) is reversed today. Their own
-  records are written when the money moves; a journal dated another day put
-  that day's count out for good, and its month could not be locked. Paid by
-  the bank, a card or the owner, an expense keeps the date it is given.
+- **Money from the till or the safe** (`0064`; `record_expense`,
+  `reverse_journal`): an expense paid from the till or the safe is dated
+  today, and a journal that moved their cash (1000, 1001, 1005, 1006) is
+  reversed today. Their own records are written when the money moves; a
+  journal dated another day put that day's count out for good, and its month
+  could not be locked. Paid by the bank, a card or the owner, an expense keeps
+  the date it is given.
   `record_expense__run` wraps `record_expense__run_0055`, and
   `reverse_journal__run` wraps `reverse_journal__run_0035`.
-- **The staff's cost without the year-end close** (`report_staff`): the café's
-  labour by month leaves the year-end close out, as each place's did. Before,
-  the close's month showed minus the year's staff cost.
+- **The staff's cost without the year-end close** (`0064`; `report_staff`):
+  the café's labour by month leaves the year-end close out, as each place's
+  did. Before, the close's month showed minus the year's staff cost.
 - **The app:** Transfers lists every one of the café's places to send to for
   someone who works at one place (who saw "The café has one place" before),
   and offers receiving where a transfer goes and cancelling where it came

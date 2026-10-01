@@ -283,7 +283,7 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - A lower price revalues only what is still on the shelf of the delivery it
     names; what was used since goes to the price variance (5050), not back to
     the sales that used it.
-  - A bill is dated no earlier than the day its delivery came (`0063`): a
+  - A bill is dated no earlier than the day its delivery came (`0064`): a
     supplier's invoice dated before the goods arrived is entered on the day
     they came, and its due date counts from that day.
 - **What to buy, what it does not do (release T, `0045`).**
@@ -501,7 +501,7 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     the same place: the reversal puts the money back where it came from and
     the prepaid expense takes it out again, so only the month it is an
     expense of changes. One paid from the till or the safe is reversed today
-    (`0063`), so the month it was posted in keeps it and this month takes it
+    (`0064`), so the month it was posted in keeps it and this month takes it
     back.
 - **Statements read from their files, what they do not do.**
   - The files read are Excel workbooks (.xlsx), CSV and text files, and the
@@ -707,7 +707,7 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   original and the correction stay on record.
 - A locked month refuses every posting. Reopening it is the owner's decision,
   with a reason on the audit trail.
-- Money from the till or the safe is recorded the day it moves (`0063`): an
+- Money from the till or the safe is recorded the day it moves (`0064`): an
   expense paid from either is dated today, and a journal that moved their cash
   is reversed today. The drawer's and the safe's own records are written when
   the money moves, and each day's count is checked against them. One forgotten
