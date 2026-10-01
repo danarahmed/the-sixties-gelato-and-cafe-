@@ -2065,6 +2065,20 @@ Built and tested:
   decimal comma, and Journals' list of the accounts it does not offer, read
   from the latest migration.
 
+  The migration was applied to the live database on 1 October 2026. The text
+  stored there is the file byte for byte, and it matches the tested build
+  object by object, permissions included (the differences are the two known
+  from before, which it did not touch). Nothing recorded changed. It was
+  checked on the live records as the owner and the accountant, in one
+  transaction that was rolled back: an account out of use whose expense was
+  reversed, whose prepaid shares were released and cancelled and whose
+  50,000 the year-end close took, while it took nothing new; sales revenue,
+  its discounts and its returns refused by hand; interest to an income
+  account added; the owner's correction still reaching 4000; and the books'
+  fourteen checks at nothing before and after. Nothing was kept. The screens
+  went live with
+  [pull request #65](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/65).
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
