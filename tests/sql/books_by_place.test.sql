@@ -139,11 +139,11 @@ select test.eq(pg_temp.checks(),
 -- ------------------------------------------------------------------ the day, by place
 select test.act_as('owner@example.com');
 select test.eq(pg_temp.col((select today from ids), (select today from ids), (select branch1 from ids)),
-  '4000 8000, 5000 650, 5100 450, 5300 500, 6100 -600000',
-  'the first branch: its sales less the void, their cost, Talabat''s commission, the beans that never reached the kitchen, and last month''s pay taken back');
+  '4000 8000, 5000 650, 5100 450, 5300 500',
+  'the first branch: its sales less the void, their cost, Talabat''s commission, the beans that never reached the kitchen; last month''s pay is not taken back today (0063)');
 select test.eq(pg_temp.col((select today from ids), (select today from ids), (select branch2 from ids)),
-  '4000 5500, 4200 -2500, 5000 450, 5100 400, 5200 100, 6100 -450000, 6900 7000',
-  'the second branch: its sales, the refund, their cost, Talabat''s commission and what it paid short, the pay taken back, the cleaning');
+  '4000 5500, 4200 -2500, 5000 450, 5100 400, 5200 100, 6900 7000',
+  'the second branch: its sales, the refund, their cost, Talabat''s commission and what it paid short, the cleaning');
 select test.eq(pg_temp.col((select today from ids), (select today from ids), (select kitchen from ids)),
   '5300 500', 'the kitchen: the beans it spilt');
 select test.eq(pg_temp.col((select today from ids), (select today from ids), null, true),
@@ -155,16 +155,16 @@ select test.eq(pg_temp.pnl((select today from ids), (select today from ids), (se
   'the second branch''s profit and loss is its column');
 
 -- Last month: each approval split as it paid.
-select test.eq(pg_temp.col((select lm from ids), (select lm_end from ids), (select branch1 from ids)), '6100 1200000',
-  'last month, the first branch: Rana''s pay, approved twice');
-select test.eq(pg_temp.col((select lm from ids), (select lm_end from ids), (select branch2 from ids)), '6100 950000',
-  'the second branch: Sami''s 450,000, then 500,000');
+select test.eq(pg_temp.col((select lm from ids), (select lm_end from ids), (select branch1 from ids)), '6100 600000',
+  'last month, the first branch: Rana''s pay, approved, taken back in its own month when reopened, and approved again');
+select test.eq(pg_temp.col((select lm from ids), (select lm_end from ids), (select branch2 from ids)), '6100 500000',
+  'the second branch: Sami''s 450,000 taken back in its month, then 500,000');
 select test.eq(pg_temp.untied((select lm from ids), (select lm_end from ids)), '', 'and they add up');
 
 -- ------------------------------------------------------------------ someone who works at one place
 select test.act_as('manager2@example.com');
 select test.eq(pg_temp.pnl((select today from ids), (select today from ids)),
-  '4000 5500, 4200 -2500, 5000 450, 5100 400, 5200 100, 6100 -450000, 6900 7000',
+  '4000 5500, 4200 -2500, 5000 450, 5100 400, 5200 100, 6900 7000',
   'the second branch''s manager reads the second branch''s profit and loss');
 select test.eq((select string_agg(distinct location, ', ') from report_profit_and_loss_by_place((select today from ids), (select today from ids))),
   'Second Branch', 'and only its column');

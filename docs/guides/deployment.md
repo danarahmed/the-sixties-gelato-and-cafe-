@@ -60,6 +60,7 @@ Plan a short window when the café is closed.
 | Prepaid expenses (`0060`)               | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0060`](#after-0060)). The screens were merged ([pull request #62](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/62)) and deployed            |
 | Prepaid and payments put right (`0061`) | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0061`](#after-0061)). The screens were merged ([pull request #64](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/64)) and deployed               |
 | Accounts and bank put right (`0062`)    | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0062`](#after-0062)). The screens were merged ([pull request #65](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/65)) and deployed                 |
+| Review fixes since `0035` (`0063`)      | ⏳ Rehearsed on a copy shaped like the live database; to be applied with its screens (see [After `0063`](#after-0063))                                                                                                                                                                                                                                                                   |
 
 ## 0. Before you start
 
@@ -2928,6 +2929,67 @@ raised that morning, before `0062` was applied, when the dashboard was
 opened: September's payroll falling due on 1 October, and a margin.)
 
 The security and performance advisors list the same notices as before.
+
+## After `0063`
+
+Migration `0063` puts right what five reviews of the releases since `0035`
+found in the database, each finding checked against the code first. No table
+changes, and nothing recorded changes. What people will notice:
+
+- **A batch or a loss a count has seen.** A batch recorded with a time before
+  one of its items was counted at its place, in a count still open or
+  approved, is refused: the count found what it made and used. A loss waiting
+  for approval whose item was counted since is approved, not reversed.
+- **Each place's work by those who work there.** Someone who works at one
+  place is refused receiving a transfer elsewhere (even as "nothing
+  arrived"), reviewing a loss elsewhere, and correcting or crediting a
+  delivery elsewhere. The drawer is handed only to someone who works at its
+  place.
+- **Below zero by a transfer or a return,** for an item whose rule wants a
+  manager's approval, is done only by someone who may approve it, and it is on
+  the audit trail.
+- **Payroll.** A payroll reopened is reversed in its own month, and is not
+  reopened while that month is locked. A month whose payment was cancelled is
+  drafted again. Salaries' and advances' journals name no one.
+- **Purchases.** A price corrected or credited revalues what is still on the
+  shelf of the delivery, counting what was used before a correction and not
+  what went back. A bill is not dated before its delivery came. A supplier
+  settled by a credit is taken out of use; an order whose only delivery was
+  reversed is cancelled.
+- **The till and the safe.** An expense paid from either is dated today, and a
+  journal that moved their cash is reversed today.
+- **The staff report** leaves the year-end close out of the café's labour.
+
+What it changes:
+
+- **Wrapped**, each old version renamed and kept, closed:
+  `record_production__run` (`_0046`), `review_loss__run` (`_0048`),
+  `receive_stock_transfer__run` (`_0054`), `correct_receipt__run` (`_0044`),
+  `send_stock_transfer__run` (`_0054`), `return_to_supplier__run` (`_0044`),
+  `record_expense__run` (`_0055`) and `reverse_journal__run` (`_0035`).
+- **Replaced**, with the same arguments: `hand_over_session`,
+  `cash_session_status`, `reopen_payroll__run`, `payroll_refresh`,
+  `payroll_current`, `pay_salaries`, `record_advance__run`,
+  `receipt_share_on_hand`, `record_supplier_credit__run`, `record_bill__run`,
+  `update_supplier`, `po_view`, `cancel_po__run` and `report_staff`.
+- The functions behind each keyed write and the helpers stay callable only
+  inside the database's own functions; the public ones keep their grants.
+
+The screens and it may go in either order. The app's changes (Transfers for
+someone who works at one place, the till's open bills after a change) need
+nothing new from the database: `pos_open_bills` takes its place since `0055`.
+A Transfers screen deployed before it offers receiving or cancelling a
+transfer elsewhere, and the database refuses it in words.
+
+Before it is applied, check on the live records (they are not changed by
+it, and what it refuses from then on is new work only):
+
+- whether a bill is dated before the day its delivery came;
+- whether a payroll line has a salary payment, cancelled or not;
+- which items' rule for stock below zero wants a manager's approval, and the
+  café's own rule;
+- whether an expense paid from the till or the safe is dated another day
+  than it was recorded.
 
 ## Clearing the test records
 

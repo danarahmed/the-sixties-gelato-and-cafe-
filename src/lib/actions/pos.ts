@@ -28,7 +28,7 @@ import {
 } from "@/lib/validation";
 import type { SaleReceipt } from "@/lib/actions/sales";
 import { howPaid, saleReceipt } from "@/lib/payments";
-import { tillForWrite } from "@/lib/place";
+import { tillChoice, tillForWrite } from "@/lib/place";
 
 /** A paid bill changes these screens; the till itself is kept current by the action's answer. */
 const PAID_PATHS = ["/orders", "/sales", "/dashboard", "/inventory", "/reports", "/journals"];
@@ -58,8 +58,10 @@ const toDb = (
     modifiers: addonsToDb(l.addons),
   }));
 
+/** The bills open at this till's branch, as the till's page lists them (0055, 0063). */
 async function openBills(): Promise<ActionResult<OpenBill[]>> {
-  const r = await callRpc<unknown>("pos_open_bills");
+  const { at } = await tillChoice();
+  const r = await callRpc<unknown>("pos_open_bills", { p_location: at });
   return r.ok ? { ok: true, data: parseOpenBills(r.data) } : r;
 }
 

@@ -78,10 +78,14 @@ A correction compares the delivery as it stands with the delivery as it
 should be, item by item, and moves only the difference. What was entered
 first is never changed.
 
-- **How much of the delivery is still on the shelf**, `σ`, from 0 to 1: at the
-  delivery it is 1; each use of the item since (a sale, a batch, a loss, a
-  count) leaves `after ÷ before` of it, as average cost spreads every use over
-  all the stock. Corrections and revaluations are not uses.
+- **How much of the delivery is still on the shelf**, `σ`, from 0 to 1: its
+  units on the shelf ÷ its units, from where they first came in. Each use of
+  the item since (a sale, a batch, a loss, a count, a transfer out) leaves
+  `after ÷ before` of its units, as average cost spreads every use over all
+  the stock. The delivery's own corrections and returns change its units and
+  its size, and are not uses; nor are revaluations, nor another delivery's
+  corrections and returns (`0063`: before, a correction's top-up started `σ`
+  again at 1, and what went back was counted as used).
 - **A price corrected**: `Δp = the line's corrected goods value − its value as
 it stands` (freight and rebates shared out again by value, as on receipt).
   The part still on the shelf revalues the stock: `round(Δp × σ)`, as a pair
@@ -740,16 +744,21 @@ qty ordered ÷ base ordered`, to three places.
   billed) or Dr 2000 (billed, or no delivery named) with what is owed back,
   Cr 1200 the stock value, the difference to 5050 (Dr when the stock was worth
   more). A delivery's goods received not invoiced is its landed value less
-  what went back from it. Worked example (the SQL test): a delivery of 3,000
-  in stock since used at a lower average, returned after the bill: 1200 Cr
-  2,778, 2000 Dr 3,000, 5050 Cr 222, and credit 3,000 set against its bill.
+  what went back from it. Worked example (the SQL test): ten cups of a
+  delivery returned after its bill, 400 owed back, the stock leaving at its
+  cost now: 1200 Cr 440, 2000 Dr 400, 5050 Dr 40, and credit 1 set against
+  its bill.
 - A supplier's credit (`0044`) for a lower price on a delivery: no more than
   the delivery is still worth to the supplier (its landed value less what went
   back and earlier price credits). It is shared over the delivery's items by
   their value; of each item's share, the part still on the shelf (reckoned as
   a delivery's correction reckons it, `0038`) comes off the item's stock value
   (a pair of cost adjustments), and the rest, for what was used since, goes
-  to 5050: Dr 2000 the credit / Cr 1200 the share / Cr 5050 the rest. For
+  to 5050: Dr 2000 the credit / Cr 1200 the share / Cr 5050 the rest. Worked
+  example (the SQL test): 3,000 off a delivery of beans and cups none of
+  which was used since, some of each sent back: 1200 Cr 3,000, 2000 Dr 3,000,
+  set against its bill (`0063`: what went back is shared out of the credit
+  and is not a use). For
   other: Dr 2000 / Cr the account chosen. Set against a bill, a credit counts as paid: a bill's paid
   amount is its payments plus the credits set against it; a credit is set
   against a bill no more than the bill still owes and no more than is left of

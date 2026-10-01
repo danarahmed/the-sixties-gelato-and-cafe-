@@ -38,11 +38,15 @@ const BELOW_ZERO = /below zero: confirm to send it all the same$/;
  */
 export function SendTransfer({
   places,
+  destinations,
   from: fromFirst,
   items,
   stock,
 }: {
+  /** Where it may be sent from: where this person works. */
   places: { id: string; name: string }[];
+  /** Where it may go: any of the café's places (0063). */
+  destinations: { id: string; name: string }[];
   from: string;
   items: TransferItemOpt[];
   /** What each place holds: place → item → stock in its base unit. */
@@ -55,7 +59,7 @@ export function SendTransfer({
   const [msg, setMsg] = useState<Msg>(null);
   const [check, setCheck] = useState<string | null>(null);
   const [from, setFrom] = useState(fromFirst);
-  const [to, setTo] = useState(places.find((p) => p.id !== fromFirst)?.id ?? "");
+  const [to, setTo] = useState(destinations.find((p) => p.id !== fromFirst)?.id ?? "");
   const [note, setNote] = useState("");
   const blank = (): LineDraft => ({ itemId: "", qty: "", unit: "" });
   const [lines, setLines] = useState<LineDraft[]>([blank()]);
@@ -132,7 +136,7 @@ export function SendTransfer({
               setCheck(null);
               setFrom(e.target.value);
               if (e.target.value === to)
-                setTo(places.find((p) => p.id !== e.target.value)?.id ?? "");
+                setTo(destinations.find((p) => p.id !== e.target.value)?.id ?? "");
             }}
           >
             {places.map((p) => (
@@ -153,7 +157,7 @@ export function SendTransfer({
               setTo(e.target.value);
             }}
           >
-            {places
+            {destinations
               .filter((p) => p.id !== from)
               .map((p) => (
                 <option key={p.id} value={p.id}>
@@ -309,15 +313,20 @@ const unitNamed = (units: UnitNames, itemId: string, code: string) => units[item
 /**
  * A transfer on its way: received there, all of it or what arrived, or
  * cancelled. What was done is said by the board above it, where it stays when
- * the transfer moves to those received and cancelled.
+ * the transfer moves to those received and cancelled. Someone who works at one
+ * place receives it there, and cancels it where it was sent from (0063).
  */
 function OnItsWay({
   transfer,
   units,
+  mayReceive,
+  mayCancel,
   onDone,
 }: {
   transfer: Transfer;
   units: UnitNames;
+  mayReceive: boolean;
+  mayCancel: boolean;
   onDone: (text: string) => void;
 }) {
   const { t } = useT();
@@ -444,24 +453,34 @@ function OnItsWay({
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
         {mode === "none" && (
           <>
-            <button
-              className="btn-primary"
-              onClick={() => receive(true)}
-              disabled={busy}
-              data-testid="transfer-receive"
-            >
-              {t("Received: all of it")}
-            </button>
-            <button
-              onClick={() => setMode("short")}
-              disabled={busy}
-              data-testid="transfer-receive-some"
-            >
-              {t("Not all of it arrived…")}
-            </button>
-            <button onClick={() => setMode("cancel")} disabled={busy} data-testid="transfer-cancel">
-              {t("Cancel it…")}
-            </button>
+            {mayReceive && (
+              <>
+                <button
+                  className="btn-primary"
+                  onClick={() => receive(true)}
+                  disabled={busy}
+                  data-testid="transfer-receive"
+                >
+                  {t("Received: all of it")}
+                </button>
+                <button
+                  onClick={() => setMode("short")}
+                  disabled={busy}
+                  data-testid="transfer-receive-some"
+                >
+                  {t("Not all of it arrived…")}
+                </button>
+              </>
+            )}
+            {mayCancel && (
+              <button
+                onClick={() => setMode("cancel")}
+                disabled={busy}
+                data-testid="transfer-cancel"
+              >
+                {t("Cancel it…")}
+              </button>
+            )}
           </>
         )}
         {mode === "short" && (
@@ -506,12 +525,14 @@ function TransferList({
   transfers,
   units,
   canAct,
+  worksAt,
   timezone,
   onDone,
 }: {
   transfers: Transfer[];
   units: UnitNames;
   canAct: boolean;
+  worksAt: string | null;
   timezone: string;
   onDone: (text: string) => void;
 }) {
@@ -604,9 +625,17 @@ function TransferList({
                 })}
               </p>
             )}
-            {x.status === "sent" && canAct && (
-              <OnItsWay transfer={x} units={units} onDone={onDone} />
-            )}
+            {x.status === "sent" &&
+              canAct &&
+              (worksAt === null || worksAt === x.toId || worksAt === x.fromId) && (
+                <OnItsWay
+                  transfer={x}
+                  units={units}
+                  mayReceive={worksAt === null || worksAt === x.toId}
+                  mayCancel={worksAt === null || worksAt === x.fromId}
+                  onDone={onDone}
+                />
+              )}
           </div>
         </section>
       ))}
@@ -622,12 +651,15 @@ export function TransferBoard({
   transfers,
   units,
   canAct,
+  worksAt = null,
   timezone,
 }: {
   transfers: Transfer[];
   /** Each item's units by code, for their names. */
   units: UnitNames;
   canAct: boolean;
+  /** The one place this person works at, or none when they work at all of them. */
+  worksAt?: string | null;
   timezone: string;
 }) {
   const { t } = useT();
@@ -649,6 +681,7 @@ export function TransferBoard({
             transfers={onTheirWay}
             units={units}
             canAct={canAct}
+            worksAt={worksAt}
             timezone={timezone}
             onDone={said}
           />
@@ -661,6 +694,7 @@ export function TransferBoard({
             transfers={settled}
             units={units}
             canAct={false}
+            worksAt={worksAt}
             timezone={timezone}
             onDone={said}
           />

@@ -421,6 +421,12 @@ const phrases: PhraseBook = {
     ckb: "لیستی مووچە دووبارە کرایەوە: {1}",
   },
   "Salaries {1}: {2}": { ar: "رواتب {1}: {2}", ckb: "مووچەی {1}: {2}" },
+  // Named by their payroll, not by whom they pay (0063).
+  "Salaries {1} (payroll {2})": {
+    ar: "رواتب {1} (كشف الرواتب {2})",
+    ckb: "مووچەی {1} (لیستی مووچەی {2})",
+  },
+  "Advance on pay": { ar: "سلفة على الراتب", ckb: "پێشەکی لە مووچە" },
   "Salary payment cancelled: {1}": {
     ar: "أُلغيت دفعة الراتب: {1}",
     ckb: "پارەدانی مووچە هەڵوەشێنرایەوە: {1}",
