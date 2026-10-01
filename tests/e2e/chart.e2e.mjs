@@ -60,8 +60,22 @@ console.log("▸ the owner adds a cost: Repairs");
     Number(last(`select count(*) from gl_account where business_id = '${B}'`)) === accounts,
     "a code taken is refused, in words, and nothing is added",
   );
-
+  // A word the screens use: its Arabic would be that word's on every screen.
   await add.getByLabel("Code").fill("6010");
+  await add.getByLabel("Name (English)").fill("Delivery");
+  await add.getByLabel("الاسم (Arabic)").fill("التوصيل");
+  await add.getByRole("button", { name: "Add the account" }).click();
+  await chart
+    .getByText("A word the screens use has its Arabic and Kurdish already", { exact: false })
+    .waitFor({
+      timeout: 10000,
+    });
+  check(
+    Number(last(`select count(*) from gl_account where business_id = '${B}'`)) === accounts &&
+      words("ar", "Delivery") === "",
+    "a word the screens use is refused as a name, in words, and its words are left as they were",
+  );
+
   await add.getByLabel("Name (English)").fill("Repairs");
   await add.getByLabel("الاسم (Arabic)").fill("الإصلاحات");
   await add.getByLabel("ناو (Kurdish)").fill("چاککردنەوە");

@@ -16,7 +16,7 @@ browser tests through the real app, or both.
   place, the chart of accounts, the bank against its statement, finding a
   sale, a product or a journal, statements read from their files, every
   box and button named for a screen reader, and prepaid expenses), the unit
-  and contract tests (611) and a production build all pass. The UX and integration pass was
+  and contract tests (613) and a production build all pass. The UX and integration pass was
   closed on 30 September 2026, in four parts.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
@@ -2079,6 +2079,32 @@ Built and tested:
   went live with
   [pull request #65](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/65).
 
+- **Statement dates in Baghdad's time, and the screens' words kept apart from
+  account names (no migration).** Two things the review above left, now put
+  right:
+  - **A date with a time and its zone** (2026-09-13T21:00:00Z, as some banks'
+    exports write them, with a T or a space, its zone as Z, +03:00, +0300 or
+    +03) was read as the day written: a line after 21:00 UTC, midnight in
+    Baghdad, landed a day early, so the statement's last day was a day early,
+    the books' lines of its true last day were left out of the matching, and
+    **Record it** dated a charge a day early (into the month before, on the
+    1st). It is read as the day it was in Baghdad now; one with no zone, as
+    written. A date that is none (31 September), with a zone or not, is not
+    read as the day after it. No bank statement has been kept on the live
+    database, so none read before is read differently.
+  - **An account named as a word the screens use.** An account's Arabic and
+    Kurdish are kept as the café's own words for its English name, where
+    Settings → Languages keeps its words for the screens: an account named
+    "Delivery" or "Other", given Arabic, changed that word on every screen,
+    and whoever may post journals could do it, not only the owner. Such a
+    name takes no Arabic or Kurdish of its own now (added without them, it
+    shows the screens' own), and an account is not renamed as one.
+
+  Built and tested: unit tests of the zoned dates (a space for the T, zones
+  of hours only, Arabic digits, a year's end, dates that are none) and of
+  the names refused and let through; the browser suite refuses "Delivery"
+  with Arabic on the Chart of Accounts, its words left as they were.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -2155,7 +2181,7 @@ Built and tested:
 
 | Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Result      |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files, every box and button named, every text colour readable, the browser's safeguards                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 611 passing |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files, every box and button named, every text colour readable, the browser's safeguards                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 613 passing |
 | SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 50 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward, a transfer sent, received and cancelled at once, ten tills at two branches)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 61 passing  |
 | Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers, loyalty, the sales analysis and the stock's value, the balance sheet and cash flow, every report on paper, documents with the records, transfers, the tills at each branch, the books by place, every report at a place, the chart of accounts, the bank against its statement, finding a sale, a product and a journal, statements read from their files; on every page, that it is hydrated only once all of it has arrived | 38 passing  |
 | Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | green       |

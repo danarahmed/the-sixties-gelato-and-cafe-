@@ -107,6 +107,12 @@ import {
   valueIn,
 } from "@/lib/audit";
 import { nextFreeCode } from "@/lib/chart";
+import {
+  isScreenWord,
+  SCREEN_WORD_NAME,
+  SCREEN_WORD_RENAME,
+  screenWordRefusal,
+} from "@/lib/i18n/screenWords";
 import { bankMath, linesTo } from "@/lib/bank";
 import { deliveryLineCost, needsPriceConfirmation, packCode, priceGap } from "@/lib/receiving";
 import { lookAlike, lookAlikes, nameKey, slips } from "@/lib/names";
@@ -4840,6 +4846,31 @@ describe("the chart of accounts on a screen (0058)", () => {
     // Every code of ten taken: the first free one of the range.
     const tens = Array.from({ length: 100 }, (_, i) => ({ code: String(6000 + i * 10) }));
     expect(nextFreeCode(tens, "expense")).toBe("5000");
+  });
+
+  it("does not let an account's words become a word the screens use", () => {
+    // "delivery" is the channel's word as well as the supplier's "Delivery".
+    for (const name of ["Delivery", "delivery", "Other", " Staff  meals ", "Packaging"])
+      expect([name, isScreenWord(name)]).toEqual([name, true]);
+    for (const name of ["Delivery costs", "Repairs", "Bank interest", "Shop rent", "other costs"])
+      expect([name, isScreenWord(name)]).toEqual([name, false]);
+    // Added without other names, it writes no words and shows the screens' own.
+    expect(screenWordRefusal("Packaging", false, false)).toBeNull();
+    // Given its own Arabic or Kurdish, they would be that word's on every screen.
+    expect(screenWordRefusal("Packaging", true, false)).toBe(SCREEN_WORD_NAME);
+    // Renamed, the database carries its words from its old name: refused either way.
+    expect(screenWordRefusal("Packaging", false, true)).toBe(SCREEN_WORD_RENAME);
+    expect(screenWordRefusal("Delivery costs", true, true)).toBeNull();
+    // Both actions ask, adding and renaming.
+    const actions = readFileSync(join(__dirname, "../src/lib/actions/books.ts"), "utf8");
+    expect(
+      actions.match(
+        /screenWordRefusal\(v\.data\.name, Boolean\(v\.data\.nameAr \|\| v\.data\.nameCkb\), (false|true)\)/g,
+      ),
+    ).toEqual([
+      "screenWordRefusal(v.data.name, Boolean(v.data.nameAr || v.data.nameCkb), false)",
+      "screenWordRefusal(v.data.name, Boolean(v.data.nameAr || v.data.nameCkb), true)",
+    ]);
   });
 
   it("names each change to an account on the audit trail, in the reader's language", () => {

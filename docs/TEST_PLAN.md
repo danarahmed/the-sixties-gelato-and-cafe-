@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 611 tests)
+## 1. Unit (Vitest, 613 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -182,7 +182,11 @@ layers before every release.
   asked about unless the amounts carry their own sign; a line split by a
   comma not in quotes; a dated line starting like a total read, and a
   beginning balance and an undated total left out; a platform's payout
-  with a decimal comma not read.
+  with a decimal comma not read. A date with a time and its zone read as
+  the day it was in Baghdad (21:00 UTC the next day), with a T or a space
+  and a zone of Z, ±hh:mm, ±hhmm or ±hh, from Excel 2003's XML and from a
+  CSV; one with no zone as written; a date that is none, zoned or not, not
+  read.
 - `tests/a11y.test.ts`: every box, list and tick box in the source has a
   name a screen reader can say, those only a click opens too (a dialog, a
   form): a label round it or pointing at it, a Field, or aria-label,
@@ -714,6 +718,20 @@ database, behind a small local stand-in for Supabase's auth service.
   income the café added), and back: it ties and is kept with its five lines,
   the cheque still open, and what was read let go. In Arabic and Kurdish, both read with no English but the
   café's own names.
+- `chart` (`0058`): the owner opens Chart of Accounts: an account the
+  system posts to says so and offers no change; a cost is proposed 6010, an
+  income 4300 with the codes an income may have; a code taken is refused, in
+  words, and nothing is added; "Delivery", a word the screens use, given
+  Arabic, is refused, in words, and that word's own Arabic is left as it was;
+  Repairs is added with its Arabic and Kurdish, kept as the café's own words,
+  and listed among the costs. A manager records 50,000 on it from the bank
+  (6010 debited, the bank credited), in the profit and loss. The owner renames
+  it Repairs and upkeep with new Arabic, its Kurdish kept; takes it out of use
+  with why, marked so, what was posted to it still in the profit and loss;
+  and brings it back. A branch manager sees the accounts and changes none.
+  Each change is on the audit trail, under Books & periods, by the account's
+  code and name, with why. In Arabic and Kurdish, and on a phone with the
+  rename open.
 - `prepaid` (`0060`): a manager pays a quarter's rent ahead from the bank:
   the first month offered is this one or one of the twelve after, and no
   date is asked; this month alone, or 40 months, is refused before anything

@@ -19,6 +19,7 @@ import {
 } from "@/lib/validation";
 import { placeForWrite, tillForWrite } from "@/lib/place";
 import { SAME_PAYMENT, sameFromServer, type SamePaymentRefusal } from "@/lib/expenses";
+import { screenWordRefusal } from "@/lib/i18n/screenWords";
 
 const BOOK_PATHS = ["/journals", "/accounting", "/reports", "/dashboard"];
 
@@ -456,6 +457,8 @@ export async function createAccountAction(
   if (bad) return bad;
   const v = parse(accountInput, input);
   if (!v.ok) return v;
+  const refused = screenWordRefusal(v.data.name, Boolean(v.data.nameAr || v.data.nameCkb), false);
+  if (refused) return { ok: false, error: refused };
   const r = await callRpc<Record<string, unknown>>("create_account", {
     p_code: v.data.code,
     p_name: v.data.name,
@@ -483,6 +486,8 @@ export async function renameAccountAction(
   if (bad) return bad;
   const v = parse(renameInput, input);
   if (!v.ok) return v;
+  const refused = screenWordRefusal(v.data.name, Boolean(v.data.nameAr || v.data.nameCkb), true);
+  if (refused) return { ok: false, error: refused };
   const r = await callRpc<Record<string, unknown>>("rename_account", {
     p_code: v.data.code,
     p_name: v.data.name,

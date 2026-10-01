@@ -418,10 +418,25 @@ function numberText(v: string, n: number): string {
   return /^-?\d+(\.\d{1,6})?$/.test(v) ? v : String(Number(n.toFixed(6)));
 }
 
-/** An ISO date and time, as the date, or the date and time when it has one. */
+/**
+ * A date and time with its zone, as some exports write them
+ * ("2026-09-13T21:00:00Z", "2026-09-14 08:00:00+03:00", "… +0300", "… +03"):
+ * a moment, whose day is the one it was where the café is. Its parts: the
+ * year, month and day, the hours and minutes, the seconds, their fraction,
+ * and the zone.
+ */
+export const ZONED_TIME =
+  /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}:\d{2})(?::(\d{2})(?:\.(\d+))?)?\s*(Z|[+-]\d{2}(?::?\d{2})?)$/i;
+
+/**
+ * An ISO date and time, as the date, or the date and time when it has one;
+ * with its zone, kept whole, to be read in the café's time.
+ */
 function isoText(v: string): string {
-  const m = /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}:\d{2}))?/.exec(v.trim());
-  if (!m) return v.trim();
+  const s = v.trim();
+  if (ZONED_TIME.test(s)) return s;
+  const m = /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}:\d{2}))?/.exec(s);
+  if (!m) return s;
   return m[2] && m[2] !== "00:00" ? `${m[1]} ${m[2]}` : m[1]!;
 }
 

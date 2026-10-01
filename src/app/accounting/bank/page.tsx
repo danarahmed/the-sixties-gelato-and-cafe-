@@ -32,7 +32,12 @@ export default async function BankPage() {
           </span>
         </div>
       </div>
-      <BankReconciliation book={book} canKeep={has(profile, "accounting.post")} today={today} />
+      <BankReconciliation
+        book={book}
+        canKeep={has(profile, "accounting.post")}
+        today={today}
+        timezone={profile.timezone}
+      />
     </div>
   );
 }

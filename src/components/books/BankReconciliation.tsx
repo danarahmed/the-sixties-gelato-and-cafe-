@@ -44,10 +44,13 @@ export function BankReconciliation({
   book,
   canKeep,
   today,
+  timezone,
 }: {
   book: BankBook;
   canKeep: boolean;
   today: string;
+  /** The café's: a statement's date with a time and its zone is read as its day there. */
+  timezone: string;
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -66,8 +69,8 @@ export function BankReconciliation({
   const after = book.last?.statementDate ?? "";
   const opening = book.last?.closingBalance ?? 0;
   const read = useMemo(
-    () => (statement.trim() === "" ? null : parseBankStatement(statement)),
-    [statement],
+    () => (statement.trim() === "" ? null : parseBankStatement(statement, timezone)),
+    [statement, timezone],
   );
   const found = useMemo(
     () => (read ? matchBankStatement(read, book.open, after) : null),
@@ -84,7 +87,7 @@ export function BankReconciliation({
       // Kept for the tab only when the browser keeps it.
     }
     if (text.trim() === "") return;
-    const m = matchBankStatement(parseBankStatement(text), book.open, after);
+    const m = matchBankStatement(parseBankStatement(text, timezone), book.open, after);
     if (m.lastDay && m.lastDay <= today && (after === "" || m.lastDay > after)) setDate(m.lastDay);
     if (m.closing !== null) setClosing(m.closing);
     setTicked(new Set(m.ticked));
