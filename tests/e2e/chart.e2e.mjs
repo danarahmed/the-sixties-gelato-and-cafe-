@@ -65,9 +65,11 @@ console.log("▸ the owner adds a cost: Repairs");
   await add.getByLabel("Name (English)").fill("Delivery");
   await add.getByLabel("الاسم (Arabic)").fill("التوصيل");
   await add.getByRole("button", { name: "Add the account" }).click();
-  await chart.getByText("A word the screens use cannot name an account", { exact: false }).waitFor({
-    timeout: 10000,
-  });
+  await chart
+    .getByText("A word the screens use has its Arabic and Kurdish already", { exact: false })
+    .waitFor({
+      timeout: 10000,
+    });
   check(
     Number(last(`select count(*) from gl_account where business_id = '${B}'`)) === accounts &&
       words("ar", "Delivery") === "",
