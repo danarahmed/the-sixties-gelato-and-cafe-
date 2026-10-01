@@ -199,13 +199,15 @@ To see a cost or an income apart (repairs, the internet, catering), add its
 account on **Chart of Accounts → Add an account** (you, a general manager or
 the accountant): **A cost** or **An income**, its code (the next free one is
 proposed), its name in English and, if you like, in Arabic and Kurdish, so
-every screen shows it in the reader's language. A cost's code starts with 5
+every screen shows it in the reader's language. A name the screens use
+already (Delivery, Packaging) keeps the screens' own Arabic and Kurdish: give
+it none, or a name of its own ("Delivery costs"). A cost's code starts with 5
 (the cost of what was sold) or 6 (the running costs); an income's with 4. A
 cost is offered at once on **Expenses** and on a bill for an account, and
 its lines are on the profit and loss.
 
 - **Rename…** changes its name; its Arabic and Kurdish stay unless you give
-  new ones.
+  new ones. A word the screens use is not a new name.
 - **Take out of use…**, with why, when you no longer want it offered:
   nothing new goes to it, and what went to it stays in every report. Publish
   or discard any draft journal that uses it first. **Bring back…** undoes it.

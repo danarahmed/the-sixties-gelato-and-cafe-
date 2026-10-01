@@ -1219,13 +1219,18 @@ owner; reopening: owner
     income**, its code (proposed: the next free one of ten, 6010 or 4300), its
     name in English and, if you like, in Arabic and Kurdish. A cost's code is
     5000 to 6999 (5… the cost of what was sold, 6… the running costs); an
-    income's, 4000 to 4999. A code or a name taken is refused. A cost is offered
+    income's, 4000 to 4999. A code or a name taken is refused. A name that is
+    a word the screens use (Delivery, Packaging) takes no Arabic or Kurdish of
+    its own, which would change that word on every screen: add it without them
+    (it shows the screens' own), or give it a name of its own ("Delivery
+    costs"). A cost is offered
     at once on Expenses and on a bill for an account, and either in a journal;
     its lines are in the profit and loss by its code. An asset, a debt or the
     owner's money is added by whoever looks after the system, so that the
     balance sheet and the cash flow know where it goes.
   - **Rename…** one the café added: its names in Arabic and Kurdish stay as
-    they are, unless new ones are given.
+    they are, unless new ones are given. A word the screens use is not a new
+    name.
   - **Take out of use…**, with why: nothing new is posted to it, and the forms
     no longer offer it; what was posted to it stays in every report. Not while
     a draft journal has a line on it: publish or change the draft first.

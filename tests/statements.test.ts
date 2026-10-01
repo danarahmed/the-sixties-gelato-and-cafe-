@@ -617,6 +617,49 @@ describe("a statement's amounts and words, read as written (after review)", () =
   });
 });
 
+describe("a statement's dates with their time zone, in the café's time", () => {
+  it("reads a date with a time and its zone as the day it was where the café is", async () => {
+    // 21:00 UTC is midnight in Baghdad: the 14th there.
+    expect(statementDay("2026-09-13T21:00:00Z")).toBe("2026-09-14");
+    expect(statementDay("2026-09-13T20:59:59.000Z")).toBe("2026-09-13");
+    expect(statementDay("2026-09-14T00:30:00+03:00")).toBe("2026-09-14");
+    expect(statementDay("2026-09-13T19:00:00-0500")).toBe("2026-09-14");
+    expect(statementDay("2026-09-13T21:00:00Z", "dmy", "UTC")).toBe("2026-09-13");
+    // With no zone, the day written.
+    expect(statementDay("2026-09-13T23:30:00")).toBe("2026-09-13");
+    // A space for the T, a zone of hours only, and a lower-case z, as databases and exports write them.
+    for (const cell of [
+      "2026-09-13 21:00:00Z",
+      "2026-09-13 21:00:00+00",
+      "2026-09-13T21:00:00+00",
+      "2026-09-13 21:00:00.123456+00:00",
+      "2026-09-13t21:00:00z",
+      "٢٠٢٦-٠٩-١٣T٢١:٠٠:٠٠Z",
+    ])
+      expect([cell, statementDay(cell)]).toEqual([cell, "2026-09-14"]);
+    expect(statementDay("2026-12-31T21:00:00Z")).toBe("2027-01-01");
+    // A date that is none, with a zone or not, is no date: not the day after it.
+    for (const cell of [
+      "2026-09-31T10:00:00Z",
+      "2026-02-29T21:00:00Z",
+      "0001-01-01T00:00:00Z",
+      "9999-12-31T23:59:59Z",
+    ])
+      expect([cell, statementDay(cell)]).toEqual([cell, null]);
+    // Excel 2003's XML keeps the zone, and the bank's line is the 14th's.
+    const xml = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="S"><Table>
+      <Row><Cell><Data ss:Type="String">Date</Data></Cell><Cell><Data ss:Type="String">Description</Data></Cell><Cell><Data ss:Type="String">Amount</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="DateTime">2026-09-13T21:30:00.000Z</Data></Cell><Cell><Data ss:Type="String">Card takings</Data></Cell><Cell><Data ss:Type="Number">250000</Data></Cell></Row>
+      </Table></Worksheet></Workbook>`;
+    const text = await read(utf8(xml));
+    expect(text).toBe("Date\tDescription\tAmount\n2026-09-13T21:30:00.000Z\tCard takings\t250000");
+    expect(parseBankStatement(text).lines.map((l) => l.day)).toEqual(["2026-09-14"]);
+    // A CSV an online bank writes: its fee after 22:00 UTC on the 30th is the 1st's.
+    const csv = parseBankStatement("Date,Description,Amount\n2026-09-30T22:15:00Z,Fee,-500");
+    expect(csv.lines.map((l) => [l.day, l.amount])).toEqual([["2026-10-01", "-500"]]);
+  });
+});
+
 describe("the bank's statement against the books", () => {
   const books: BankOpenLine[] = [
     { lineId: "transfer", day: "2026-09-14", amount: -500000 },

@@ -429,12 +429,12 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     language the owner added, it shows as it was typed: **Settings →
     Languages** lists the built-in phrases, not the café's accounts.
   - Those names are kept as the café's own words for the account's English
-    name, where **Settings → Languages** keeps its words for the screens. An
-    account named as a word the screens use (Delivery, Other) gives that
-    word its Arabic and Kurdish on every screen, and whoever may post
-    journals may set them so. Name an account so it is only its own
-    ("Delivery costs"). Renamed, its words for the old name stay with that
-    name.
+    name, where **Settings → Languages** keeps its words for the screens. So
+    an account named as a word the screens use (Delivery, Packaging) takes no
+    Arabic or Kurdish of its own, and is not renamed so: the screen refuses
+    it, in words. The database does not know the screens' words, so an
+    account added by a call to it directly, not through the screen, is not
+    checked. Renamed, its words for the old name stay with that name.
   - Taken out of use in the very second a journal is saved as a draft on it,
     an account may keep that draft, and the draft may still be published to
     it. A draft on it at any other time keeps it in use.
@@ -507,9 +507,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - A date like 03/04/2026 is read day first, as dates are written in Iraq,
     unless a date on the same statement shows the month comes first
     (04/13/2026). A date with a time and its zone (2026-09-13T21:00:00Z, as
-    some exports write them) is read as the day written there, not turned
-    into Baghdad's: one written in another zone near midnight may land a day
-    early or late.
+    some exports write them) is read as the day it was in Baghdad, the
+    14th; one with no zone, as the day written.
   - An amount is read as the statement writes it: 1,500,000.50 or
     1.500.000,50, the decimal mark taken from the statement's own amounts
     and balances. Where none shows it (every amount like 1.500), a dot is

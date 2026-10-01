@@ -8,8 +8,20 @@
  */
 import Decimal from "decimal.js";
 import { decimalMark, statementAmount, type DecimalMark } from "@/lib/settlements";
-import { columnNamed, headerName, isBlank, readTable, TOTAL_CELL, TOTAL_START } from "@/lib/sheet";
+import { dateIn } from "@/lib/dates";
+import {
+  columnNamed,
+  headerName,
+  isBlank,
+  readTable,
+  TOTAL_CELL,
+  TOTAL_START,
+  ZONED_TIME,
+} from "@/lib/sheet";
 import { latinDigits, normaliseNumber } from "@/lib/validation";
+
+/** The café's time zone, where a screen does not give it: Baghdad's. */
+const CAFE_TIME = "Asia/Baghdad";
 
 /** A balance as the bank may give it: overdrawn is below zero. */
 const SIGNED = /^-?\d+(\.\d+)?$/;
@@ -284,11 +296,31 @@ export function dayOrder(cells: readonly string[]): DayOrder {
 /**
  * A date as a statement prints it, as 2026-09-14: 2026-09-14, 14/09/2026,
  * 14-09-26, 14 Sep 2026, Sep 14, 2026, with a time after it or not; and a
- * spreadsheet's day number whose date format was lost (46279). Null when it
- * is not one.
+ * spreadsheet's day number whose date format was lost (46279). A date and
+ * time with its zone (2026-09-13T21:00:00Z) is a moment: its day is the one
+ * it was in the café's time zone (the 14th in Baghdad). Null when it is not
+ * one.
  */
-export function statementDay(cell: string, order: DayOrder = "dmy"): string | null {
+export function statementDay(
+  cell: string,
+  order: DayOrder = "dmy",
+  timezone: string = CAFE_TIME,
+): string | null {
   const s = latinDigits(cell).trim();
+  const z = ZONED_TIME.exec(s);
+  if (z) {
+    // The date as written must be one (not 31 September), and so must its day here.
+    if (ymd(Number(z[1]), Number(z[2]), Number(z[3])) === null) return null;
+    const zone = /^[+-]\d{2}$/.test(z[7]!)
+      ? `${z[7]}:00`
+      : z[7]!.toUpperCase().replace(/^([+-]\d{2})(\d{2})$/, "$1:$2");
+    const at = new Date(
+      `${z[1]}-${z[2]}-${z[3]}T${z[4]}:${z[5] ?? "00"}.${(z[6] ?? "").padEnd(3, "0").slice(0, 3)}${zone}`,
+    );
+    if (Number.isNaN(at.getTime())) return null;
+    const [y, m, d] = dateIn(timezone, at).split("-").map(Number);
+    return ymd(y!, m!, d!);
+  }
   let m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?!\d)/.exec(s);
   if (m) return ymd(Number(m[1]), Number(m[2]), Number(m[3]));
   m = NUMERIC_DAY.exec(s);
@@ -352,9 +384,13 @@ export const BANK_EXAMPLE: Record<string, string> = {
  * English or Arabic), found below the account's details the statement starts
  * with. One amount column is read by its sign, or by a DR/CR mark or column.
  * Totals, balances brought forward, and rows where no money moved are left
- * out.
+ * out. A date with a time and its zone is read as the day it was in
+ * `timezone`, the café's.
  */
-export function parseBankStatement(text: string): ParsedBankStatement {
+export function parseBankStatement(
+  text: string,
+  timezone: string = CAFE_TIME,
+): ParsedBankStatement {
   const rows = readTable(text).filter((r) => !isBlank(r));
   const named = rows.slice(0, HEADER_SEARCH).findIndex((r) => bankColumns(r.cells) !== null);
   if (named < 0)
@@ -392,7 +428,8 @@ export function parseBankStatement(text: string): ParsedBankStatement {
     const what = at.description === null ? "" : (c[at.description] ?? "");
     // A total is a row with no date of its own ("Total", "إجمالي المسحوبات");
     // a dated line whose words start so ("Total Energies") is a line.
-    const dated = statementDay(dateCell, order) !== null;
+    const day = statementDay(dateCell, order, timezone);
+    const dated = day !== null;
     if (
       c.some((x) => TOTAL_CELL.test(x)) ||
       [c[0] ?? "", dateCell, what].some(
@@ -450,7 +487,6 @@ export function parseBankStatement(text: string): ParsedBankStatement {
       skipped++;
       continue;
     }
-    const day = statementDay(dateCell, order);
     if (day === null) {
       problems.push(
         dateCell === ""

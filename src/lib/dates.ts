@@ -5,15 +5,23 @@
  * boundary and every date shown on a screen goes through here.
  */
 
+/** One day formatter per time zone: making one is slow, and a statement asks for thousands. */
+const DAY_FORMATS = new Map<string, Intl.DateTimeFormat>();
+
 /** YYYY-MM-DD of an instant, as a calendar date in `timezone`. */
 export function dateIn(timezone: string, at: Date = new Date()): string {
-  // en-CA formats as YYYY-MM-DD.
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(at);
+  let format = DAY_FORMATS.get(timezone);
+  if (!format) {
+    // en-CA formats as YYYY-MM-DD.
+    format = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    DAY_FORMATS.set(timezone, format);
+  }
+  return format.format(at);
 }
 
 /** The business's trading day right now. */

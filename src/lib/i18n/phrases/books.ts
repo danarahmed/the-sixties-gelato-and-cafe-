@@ -682,6 +682,17 @@ const phrases: PhraseBook = {
       ar: "الحساب الذي يُضاف هنا إيراد أو كلفة: أما الأصل أو الدَّين أو مال المالك فيضيفه من يعتني بالنظام",
       ckb: "ئەو هەژمارەی لێرە زیاد دەکرێت داهات یان تێچووە: سامان، قەرز یان پارەی خاوەن ئەو کەسە زیادی دەکات کە ئاگای لە سیستەمەکەیە",
     },
+  // An account named as a word the screens use (src/lib/i18n/screenWords.ts).
+  "A word the screens use has its Arabic and Kurdish already: add the account without other names, or give it a name of its own (“Delivery costs”, not “Delivery”)":
+    {
+      ar: "كلمة تستعملها الشاشات لها عربيتها وكرديتها: أضف الحساب بلا أسماء أخرى، أو أعطه اسمًا خاصًا به (“Delivery costs” لا “Delivery”)",
+      ckb: "وشەیەک کە شاشەکان بەکاری دەهێنن عەرەبی و کوردیی خۆی هەیە: هەژمارەکە بەبێ ناوی تر زیاد بکە، یان ناوێکی تایبەت بە خۆی پێ بدە (“Delivery costs” نەک “Delivery”)",
+    },
+  "An account is not renamed as a word the screens use: its Arabic and Kurdish would change that word on every screen (“Delivery costs”, not “Delivery”)":
+    {
+      ar: "لا يُعاد تسمية حساب بكلمة تستعملها الشاشات: ستتغير عربيتها وكرديتها في كل شاشة (“Delivery costs” لا “Delivery”)",
+      ckb: "ناوی هەژمار ناگۆڕدرێت بۆ وشەیەک کە شاشەکان بەکاری دەهێنن: عەرەبی و کوردییەکەی لە هەموو شاشەیەکدا دەگۆڕێت (“Delivery costs” نەک “Delivery”)",
+    },
   "An account's code is four digits": {
     ar: "رمز الحساب أربعة أرقام",
     ckb: "کۆدی هەژمار چوار ژمارەیە",
