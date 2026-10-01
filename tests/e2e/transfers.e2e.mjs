@@ -3,8 +3,9 @@
 // kitchen, and the kitchen receives what arrived, half a litre lost on the
 // way; the device then works at the kitchen, whose stock the stock screens
 // show and where a loss is recorded; cones sent back are cancelled on their
-// way; sending more than the kitchen holds is asked about first. A cashier is
-// sent away. The books tie, 1210 against what is on its way; the journals and
+// way; sending more than the kitchen holds is asked about first. A manager
+// who works at the kitchen alone sends from it to the branch, receives what
+// comes to it and cancels what it sent (0063). A cashier is sent away. The books tie, 1210 against what is on its way; the journals and
 // the audit trail name each transfer. The screens in Arabic and Kurdish.
 import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 import { english } from "./english.mjs";
@@ -196,6 +197,62 @@ let no;
   );
   await ask.getByRole("button", { name: "Let me correct it" }).click();
   check(transfers() === before, "and nothing is sent until they say so");
+  await ctx.close();
+}
+
+console.log(
+  "▸ a manager who works at the kitchen alone sends from it to the café's other places (0063)",
+);
+{
+  sql(`insert into auth.users (id, email) values ('a0000000-0000-0000-0000-0000000000f7', 'kitchenboss@example.com')
+         on conflict do nothing;
+       insert into app_user (business_id, full_name, email, auth_user_id)
+       values ('${B}', 'Kitchen Boss', 'kitchenboss@example.com', 'a0000000-0000-0000-0000-0000000000f7');
+       insert into user_role (app_user_id, role, location_id)
+       select id, 'branch_manager', '${kitchen}' from app_user where email = 'kitchenboss@example.com';`);
+  // A litre of milk on its way from the branch to the kitchen.
+  const coming = last(`select test.act_as('owner@example.com');
+    select send_stock_transfer('${branch}', '${kitchen}',
+      '[{"item_id": "${milk}", "qty": 1, "unit_code": "L"}]', 'For tomorrow''s gelato',
+      p_idempotency_key => gen_random_uuid()) ->> 'transfer_no'`);
+  const { ctx, page } = await signIn(browser, "kitchenboss");
+  await open(page, "/inventory/transfers");
+  const form = page.getByTestId("send-transfer");
+  const from = await form.getByTestId("transfer-from").locator("option").allTextContents();
+  const to = await form.getByTestId("transfer-to").locator("option").allTextContents();
+  check(
+    from.join("|") === "Central Kitchen" && to.join("|") === "Main Branch",
+    "their place is the only one they send from, and the café's others are where it goes",
+  );
+  const toThem = page.locator(`[data-testid="transfer"][data-no="${coming}"]`);
+  check(
+    (await toThem.getByTestId("transfer-receive").count()) === 1 &&
+      (await toThem.getByTestId("transfer-cancel").count()) === 0,
+    "what comes to the kitchen is theirs to receive, not to cancel",
+  );
+  await toThem.getByTestId("transfer-receive").click();
+  await page
+    .getByText(new RegExp(`Transfer ${coming} received: all of it`))
+    .waitFor({ timeout: 10000 });
+  check(at(milk, kitchen) === "5000 @ 10000", "received, the litre is at the kitchen");
+  const line = form.getByTestId("transfer-line").nth(0);
+  await line.getByLabel("Item").selectOption({ label: "Transfer cones" });
+  await line.getByLabel("Quantity").fill("1");
+  await line.getByLabel("Unit").selectOption("box_40");
+  await form.getByTestId("transfer-send").click();
+  await form.getByText(/is on its way to Main Branch/).waitFor({ timeout: 10000 });
+  const sent = Number(last(`select max(transfer_no) from stock_transfer`));
+  const fromThem = page.locator(`[data-testid="transfer"][data-no="${sent}"]`);
+  check(
+    (await fromThem.getByTestId("transfer-cancel").count()) === 1 &&
+      (await fromThem.getByTestId("transfer-receive").count()) === 0,
+    "what they sent is theirs to cancel, and the branch's to receive",
+  );
+  await fromThem.getByTestId("transfer-cancel").click();
+  await fromThem.getByTestId("transfer-cancel-reason").fill("Sent by mistake");
+  await fromThem.getByTestId("transfer-cancel-confirm").click();
+  await page.getByText(/cancelled: back at Central Kitchen/).waitFor({ timeout: 10000 });
+  check(at(cones, kitchen) === "40 @ 4000", "cancelled, the cones are back at the kitchen");
   await ctx.close();
 }
 

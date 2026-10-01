@@ -677,8 +677,11 @@ database, behind a small local stand-in for Supabase's auth service.
   and not the branch's, and a loss recorded there comes off its milk. Cones
   sent back from the kitchen are cancelled on their way, and are back as they
   were. Sending 10 L the kitchen does not hold is asked about in words, and
-  nothing goes until confirmed. A cashier is sent away and has no Transfers in
-  the menu. The books tie (1210), the journals name each transfer's source,
+  nothing goes until confirmed. A manager who works at the kitchen alone
+  (`0063`) sends from it, and only from it, to the branch; is offered
+  receiving, not cancelling, what comes to the kitchen, and receives it;
+  and cancelling, not receiving, what they sent, and cancels it. A cashier is
+  sent away and has no Transfers in the menu. The books tie (1210), the journals name each transfer's source,
   and the trail names each by its number, with why. In Arabic and Kurdish.
 - `tills` (`0055`): the café opens a second branch, with its own price for
   an espresso. The owner's till offers **Till at** the two branches, the
