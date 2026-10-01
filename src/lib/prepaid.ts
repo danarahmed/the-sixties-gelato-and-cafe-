@@ -32,17 +32,34 @@ export interface PrepaidShare {
 }
 
 /**
- * Each month's share of an amount paid ahead for `months` months from
- * `first`: equal, rounded down to whole dinars, the last taking what is left.
- * Empty when it cannot be spread (no whole dinar a month, or months out of
- * range).
+ * The amount as the database records it (money_round): to the currency's
+ * `decimals` (0 for the dinar), halves to even. NaN when it is no number.
  */
-export function prepaidShares(amount: number, months: number, first: Month): PrepaidShare[] {
+export function recordedAmount(amount: number, decimals = 0): number {
+  const d = new Decimal(amount);
+  return d.isFinite()
+    ? d.toDecimalPlaces(decimals, Decimal.ROUND_HALF_EVEN).toNumber()
+    : Number.NaN;
+}
+
+/**
+ * Each month's share of an amount paid ahead for `months` months from
+ * `first`: the amount rounded as the database records it, then equal shares
+ * rounded down to the currency's `decimals` (whole dinars), the last taking
+ * what is left. Empty when it cannot be spread (no whole dinar a month, or
+ * months out of range).
+ */
+export function prepaidShares(
+  amount: number,
+  months: number,
+  first: Month,
+  decimals = 0,
+): PrepaidShare[] {
   if (!Number.isInteger(months) || months < PREPAID_MONTHS.min || months > PREPAID_MONTHS.max)
     return [];
-  const total = new Decimal(amount);
+  const total = new Decimal(recordedAmount(amount, decimals));
   if (!total.isFinite() || total.lt(months)) return [];
-  const each = total.div(months).floor();
+  const each = total.div(months).toDecimalPlaces(decimals, Decimal.ROUND_DOWN);
   return Array.from({ length: months }, (_, i) => ({
     month: addMonths(first, i),
     amount: i < months - 1 ? each.toNumber() : total.minus(each.times(months - 1)).toNumber(),
@@ -51,20 +68,22 @@ export function prepaidShares(amount: number, months: number, first: Month): Pre
 
 /**
  * Why the form cannot record it yet, as the database would refuse it: a
- * phrase and its values, or null when it can. `thisMonth` is the café's.
+ * phrase and its values, or null when it can. `thisMonth` is the café's; the
+ * amount counts as the database rounds it (`decimals`).
  */
 export function prepaidRefusal(
   amount: number,
   months: number,
   first: Month,
   thisMonth: Month,
+  decimals = 0,
 ): { text: string; vars?: Record<string, number> } | null {
   if (!Number.isInteger(months) || months < PREPAID_MONTHS.min || months > PREPAID_MONTHS.max)
     return { text: "Say how many months it covers, 1 to 36" };
   if (first < thisMonth) return { text: "Choose the first month it covers" };
   if (months === 1 && first === thisMonth)
     return { text: "For this month alone, record an expense" };
-  if (!(amount >= months))
+  if (!(recordedAmount(amount, decimals) >= months))
     return {
       text: "Each month takes at least 1 of it: pay at least {1}, or cover fewer months",
       vars: { 1: months },
@@ -128,4 +147,17 @@ export function prepaidFrom(r: Record<string, unknown>): PrepaidRow {
 /** What is still in 1400 for one: nothing once cancelled. */
 export function stillAhead(p: PrepaidRow): number {
   return p.cancelledAt ? 0 : new Decimal(p.amount).minus(p.releasedAmount).toNumber();
+}
+
+/**
+ * A month's share of a prepaid expense, among the journals: an expense's
+ * journal that takes from 1400 Prepaid expenses, which only a share does. It
+ * is undone by cancelling its prepaid expense on Expenses, never by hand: the
+ * database refuses that (0061), so Journals offers no Reverse for it.
+ */
+export function isPrepaidShare(
+  referenceType: string | null,
+  lines: { code: string; credit: number }[],
+): boolean {
+  return referenceType === "expense" && lines.some((l) => l.code === "1400" && l.credit > 0);
 }

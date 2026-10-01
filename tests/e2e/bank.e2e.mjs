@@ -18,8 +18,8 @@ const daysAgo = (n) => last(`select ${TODAY} - ${n}`);
 sql(`select test.act_as('owner@example.com');
   select save_journal(${TODAY} - 10, 'The owner puts money in the bank',
     '[{"code":"1020","debit":1000000},{"code":"3000","credit":1000000}]', true);
-  select record_expense('The internet', 60000, '6200', 'bank', ${TODAY} - 8, null, gen_random_uuid());
-  select record_expense('Cleaning', 25000, '6900', 'bank', ${TODAY} - 2, null, gen_random_uuid());`);
+  select record_expense('The internet', 60000, '6200', 'bank', ${TODAY} - 8, p_idempotency_key => gen_random_uuid());
+  select record_expense('Cleaning', 25000, '6900', 'bank', ${TODAY} - 2, p_idempotency_key => gen_random_uuid());`);
 const open_ = (to) =>
   last(`select count(*) || '/' || coalesce(trim_scale(sum(amount)), 0) from bank_lines('${B}', '${to}')
          where statement_no is null`);

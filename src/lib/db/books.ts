@@ -14,7 +14,7 @@ import {
 } from "@/lib/audit";
 import { daysBetween } from "@/lib/dates";
 import type { CashOnHand } from "@/lib/cash";
-import { prepaidFrom, type PrepaidRow } from "@/lib/prepaid";
+import { isPrepaidShare, prepaidFrom, type PrepaidRow } from "@/lib/prepaid";
 import { channelName } from "@/lib/channels";
 import { db, num, numOrNull, one, rows, str, strOrNull, type Row } from "./client";
 import { likeText, type JournalQuery } from "@/lib/find";
@@ -415,17 +415,17 @@ export async function getExpenses(limit = 100): Promise<ExpenseRow[]> {
   const reversedBy = new Map(
     rows(reversals, "reversals").map((r) => [str(r.reverses_entry), numOrNull(r.journal_no)]),
   );
-  const label = new Map(
-    rows(accounts, "accounts").map((a) => [str(a.id), `${str(a.code)} ${str(a.name)}`]),
+  const accountOf = new Map(
+    rows(accounts, "accounts").map((a) => [
+      str(a.id),
+      { code: str(a.code), label: `${str(a.code)} ${str(a.name)}` },
+    ]),
   );
-  const code = new Map(rows(accounts, "accounts").map((a) => [str(a.id), str(a.code)]));
-  const debited = new Map<string, string>();
-  const debitedCode = new Map<string, string>();
+  // The account each expense's journal charged: its debit line.
+  const charged = new Map<string, { code: string; label: string }>();
   for (const l of rows(lines, "expense journal lines")) {
-    if (num(l.debit) > 0) {
-      debited.set(str(l.journal_entry_id), label.get(str(l.account_id)) ?? "—");
-      debitedCode.set(str(l.journal_entry_id), code.get(str(l.account_id)) ?? "");
-    }
+    const a = accountOf.get(str(l.account_id));
+    if (num(l.debit) > 0 && a) charged.set(str(l.journal_entry_id), a);
   }
   const journalNo = new Map(
     rows(entries, "expense journals").map((e) => [str(e.id), numOrNull(e.journal_no)]),
@@ -436,8 +436,8 @@ export async function getExpenses(limit = 100): Promise<ExpenseRow[]> {
     date: str(e.incurred_on),
     description: str(e.description) || "—",
     amount: num(e.amount),
-    account: e.journal_entry_id ? (debited.get(str(e.journal_entry_id)) ?? "—") : "—",
-    accountCode: e.journal_entry_id ? (debitedCode.get(str(e.journal_entry_id)) ?? "") : "",
+    account: charged.get(str(e.journal_entry_id))?.label ?? "—",
+    accountCode: charged.get(str(e.journal_entry_id))?.code ?? "",
     journalNo: e.journal_entry_id ? (journalNo.get(str(e.journal_entry_id)) ?? null) : null,
     by: e.created_by ? (person.get(str(e.created_by)) ?? null) : null,
     reversedBy: e.journal_entry_id ? (reversedBy.get(str(e.journal_entry_id)) ?? null) : null,
@@ -506,7 +506,9 @@ export interface JournalRegisterRow {
  * Entries no record stands behind. A journal a sale, receipt, bill, payment,
  * stock movement, count or day close wrote is corrected through that record,
  * so the database refuses to reverse it by hand; entries from before the
- * controls may always be reversed (migration 0015, reverse_journal).
+ * controls may always be reversed (migration 0015, reverse_journal). A
+ * prepaid expense's month's share is an expense's journal, but it goes with
+ * its prepaid expense (0061): see `isPrepaidShare`.
  */
 const REVERSIBLE_BY_HAND = new Set(["manual", "correction", "expense", "year_end_close"]);
 
@@ -587,6 +589,7 @@ export async function getJournalRegister(
   const account = new Map(
     rows(accounts, "accounts").map((a) => [str(a.id), `${str(a.code)} ${str(a.name)}`]),
   );
+  const codeOf = new Map(rows(accounts, "accounts").map((a) => [str(a.id), str(a.code)]));
   const person = new Map(rows(people, "people").map((p) => [str(p.id), str(p.full_name)]));
   const reversedBy = new Map(
     rows(reversals, "reversals").map((r) => [str(r.reverses_entry), numOrNull(r.journal_no)]),
@@ -595,8 +598,13 @@ export async function getJournalRegister(
     rows(reversed, "reversed journals").map((r) => [str(r.id), numOrNull(r.journal_no)]),
   );
   const byEntry = new Map<string, JournalRegisterRow["lines"]>();
+  const credited = new Map<string, { code: string; credit: number }[]>();
   for (const l of rows(lines, "journal lines")) {
     const k = str(l.journal_entry_id);
+    credited.set(k, [
+      ...(credited.get(k) ?? []),
+      { code: codeOf.get(str(l.account_id)) ?? "", credit: num(l.credit) },
+    ]);
     byEntry.set(k, [
       ...(byEntry.get(k) ?? []),
       {
@@ -619,7 +627,10 @@ export async function getJournalRegister(
       notes: str(e.description),
       status: str(e.status) || "published",
       legacy: Boolean(e.legacy),
-      reversibleByHand: Boolean(e.legacy) || REVERSIBLE_BY_HAND.has(str(e.reference_type)),
+      reversibleByHand:
+        Boolean(e.legacy) ||
+        (REVERSIBLE_BY_HAND.has(str(e.reference_type)) &&
+          !isPrepaidShare(strOrNull(e.reference_type), credited.get(id) ?? [])),
       amount: ls.reduce((t, l) => t + l.debit, 0),
       createdBy: e.posted_by ? (person.get(str(e.posted_by)) ?? "—") : "—",
       reversesNo: e.reverses_entry ? (numberOf.get(str(e.reverses_entry)) ?? null) : null,

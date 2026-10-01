@@ -92,6 +92,7 @@ export default async function ExpensesPage({
             cash={cash}
             // What was paid lately: a payment like one of them is asked about (P2-14).
             paid={postedPayments(rows, prepaid, profile.timezone)}
+            decimals={profile.currencyDecimals}
           />
         </section>
       )}

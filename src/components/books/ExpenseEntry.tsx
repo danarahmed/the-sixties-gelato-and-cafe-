@@ -11,7 +11,7 @@ import {
   recordPrepaidExpenseAction,
 } from "@/lib/actions/books";
 import { fmtIQD } from "@/lib/format";
-import { addMonths, prepaidRefusal, prepaidShares } from "@/lib/prepaid";
+import { addMonths, recordedAmount, prepaidRefusal, prepaidShares } from "@/lib/prepaid";
 import { samePayments, type PostedPayment } from "@/lib/expenses";
 import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
@@ -58,7 +58,9 @@ type PaidFrom = keyof typeof PAID_FROM;
  *
  * One like a payment posted in the three days around it (the same account, the
  * same amount) is asked about before it is posted: the person ticks that it
- * is another payment (the September audit's P2-14, rent posted twice).
+ * is another payment (the September audit's P2-14, rent posted twice). The
+ * form asks as it is typed; the database asks again as it would post it
+ * (0061), so one posted meanwhile on another device is asked about too.
  */
 export function ExpenseEntry({
   accounts,
@@ -66,6 +68,7 @@ export function ExpenseEntry({
   prefill = null,
   cash = null,
   paid = [],
+  decimals = 0,
 }: {
   accounts: { code: string; name: string }[];
   today: string;
@@ -73,6 +76,8 @@ export function ExpenseEntry({
   cash?: CashOnHand | null;
   /** What was paid lately: one like it is asked about (P2-14). */
   paid?: PostedPayment[];
+  /** The café's currency's decimals: an amount counts as the database rounds it. */
+  decimals?: number;
 }) {
   const op = useOperation();
   // say: what the server answers (an account's name, the house rules' reason), in the reader's language.
@@ -100,8 +105,8 @@ export function ExpenseEntry({
   const monthCount = Number(normaliseNumber(months)) || 0;
   // Why it cannot be paid ahead as it stands, as the database would say; else its shares.
   const refusal =
-    ahead && value > 0 ? prepaidRefusal(value, monthCount, firstMonth, thisMonth) : null;
-  const shares = ahead && !refusal ? prepaidShares(value, monthCount, firstMonth) : [];
+    ahead && value > 0 ? prepaidRefusal(value, monthCount, firstMonth, thisMonth, decimals) : null;
+  const shares = ahead && !refusal ? prepaidShares(value, monthCount, firstMonth, decimals) : [];
   const first = shares[0];
   const last = shares[shares.length - 1];
   // A payment like it posted already, as typed, and any the server found since
@@ -109,8 +114,10 @@ export function ExpenseEntry({
   const [acceptedFor, setAcceptedFor] = useState<string | null>(null);
   const [serverSame, setServerSame] = useState<{ key: string; same: PostedPayment[] } | null>(null);
   const payDate = ahead ? today : date;
-  const fieldsKey = `${account}|${value}|${payDate}`;
-  const typedSame = samePayments(paid, { accountCode: account, amount: value, date: payDate });
+  // The amount as the database records it, which is what it asks about.
+  const payAmount = recordedAmount(value, decimals);
+  const fieldsKey = `${account}|${payAmount}|${payDate}`;
+  const typedSame = samePayments(paid, { accountCode: account, amount: payAmount, date: payDate });
   const same =
     serverSame?.key === fieldsKey
       ? [
@@ -166,7 +173,7 @@ export function ExpenseEntry({
     start(async () => {
       if (!paidFrom) return;
       if (ahead) {
-        const r = await op.run("recordPrepaidExpense", (key, resend) =>
+        const r = await op.run("recordPrepaidExpense", (key) =>
           recordPrepaidExpenseAction(
             {
               description: desc,
@@ -178,7 +185,6 @@ export function ExpenseEntry({
               acceptSame,
             },
             key,
-            resend,
           ),
         );
         if (r.ok)
@@ -209,7 +215,7 @@ export function ExpenseEntry({
         }
         return;
       }
-      const r = await op.run("recordExpense", (key, resend) =>
+      const r = await op.run("recordExpense", (key) =>
         recordExpenseAction(
           {
             description: desc,
@@ -220,7 +226,6 @@ export function ExpenseEntry({
             acceptSame,
           },
           key,
-          resend,
         ),
       );
       if (r.ok)

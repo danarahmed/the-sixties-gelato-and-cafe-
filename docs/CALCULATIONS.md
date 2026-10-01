@@ -768,7 +768,9 @@ qty ordered ÷ base ordered`, to three places.
   expenses / Cr where the money came from (the same five), when it is
   recorded. Each month it covers then takes its share as an expense of that
   month: Dr its account / Cr 1400, dated on the month's first day at noon (or
-  when it was recorded, if later), once that month has come. The shares:
+  when it was recorded, if later; or when it was released, if that is
+  earlier, `0061`), once that month has come. The amount is first rounded as
+  every amount is (to the café's money, halves to even); the shares:
 
   ```
   each  = ⌊amount ÷ months⌋                      (to the café's money: whole dinars)
@@ -782,6 +784,8 @@ qty ordered ÷ base ordered`, to three places.
   payment and every share posted are reversed that day. 1400 is checked
   against the prepaid expenses whenever the books are tied: what they were
   paid, less a cancelled one's, less the shares posted, plus a share reversed.
+  One paid from the safe is counted in the safe's check too, and its
+  cancellation (`0061`).
 
 - Waste: Dr 5300 Waste & spoilage / Cr 1200. Stock correction and approved
   count variance: 5400 Inventory count variance against 1200.

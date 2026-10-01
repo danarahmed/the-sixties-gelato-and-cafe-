@@ -60,9 +60,17 @@ import {
   notesTotal,
   type CashOnHand,
 } from "@/lib/cash";
-import { postedPayments, SAME_PAYMENT, SAME_PAYMENT_DAYS, samePayments } from "@/lib/expenses";
+import {
+  postedPayments,
+  SAME_PAYMENT,
+  SAME_PAYMENT_DAYS,
+  sameFromServer,
+  samePayments,
+} from "@/lib/expenses";
 import {
   addMonths,
+  isPrepaidShare,
+  recordedAmount,
   prepaidFrom,
   prepaidRefusal,
   prepaidShares,
@@ -5102,6 +5110,40 @@ describe("an expense paid ahead for months to come (0060, the September audit's 
     expect(prepaidShares(150_000, 1, "2026-12")).toEqual([{ month: "2026-12", amount: 150_000 }]);
   });
 
+  it("splits what was typed as the database records it: rounded first, half to even (0061)", () => {
+    expect(recordedAmount(300_000.5)).toBe(300_000);
+    expect(recordedAmount(300_001.5)).toBe(300_002);
+    expect(recordedAmount(Number.NaN)).toBeNaN();
+    // 300,001.5 is recorded as 300,002: shares of 100,000, the last 100,002.
+    expect(prepaidShares(300_001.5, 3, "2026-09").map((x) => x.amount)).toEqual([
+      100_000, 100_000, 100_002,
+    ]);
+    // 2.6 is recorded as 3: three months take one each, and it is not refused.
+    expect(prepaidRefusal(2.6, 3, "2026-10", "2026-09")).toBeNull();
+    expect(prepaidShares(2.6, 3, "2026-10").map((x) => x.amount)).toEqual([1, 1, 1]);
+    // A currency with two decimals: shares rounded down to them, the last what is left.
+    expect(prepaidShares(100, 3, "2026-09", 2).map((x) => x.amount)).toEqual([33.33, 33.33, 33.34]);
+  });
+
+  it("knows a month's share among the journals: undone with its prepaid expense, not by hand", () => {
+    const share = [
+      { code: "6000", credit: 0 },
+      { code: "1400", credit: 33_333 },
+    ];
+    expect(isPrepaidShare("expense", share)).toBe(true);
+    // An ordinary expense, the prepaid expense's own payment, and its cancellation are not shares.
+    expect(isPrepaidShare("expense", [{ code: "1020", credit: 33_333 }])).toBe(false);
+    expect(isPrepaidShare("prepaid_expense", [{ code: "1020", credit: 100_000 }])).toBe(false);
+    expect(isPrepaidShare("reversal", [{ code: "1400", credit: 100_000 }])).toBe(false);
+    const fix = readFileSync(
+      join(__dirname, "../supabase/migrations/0061_prepaid_and_payments.sql"),
+      "utf8",
+    );
+    expect(fix).toContain(
+      "A month''s share of a prepaid expense is undone by cancelling the prepaid expense on Expenses",
+    );
+  });
+
   it("refuses before it is sent what the database would refuse, in its words", () => {
     const now = "2026-09";
     expect(prepaidRefusal(300_000, 3, "2026-09", now)).toBeNull();
@@ -5351,6 +5393,25 @@ describe("a payment like one posted already, asked about first (the September au
         (p) => p.journalNo,
       ),
     ).toEqual([1020]);
+  });
+
+  it("reads the payments like it the database answers with instead of posting (0061)", () => {
+    expect(sameFromServer({ expense_id: "e", journal_no: 1013 })).toBeNull();
+    expect(
+      sameFromServer({
+        same: [
+          {
+            account_code: "6000",
+            amount: 150000,
+            date: "2026-09-24",
+            journal_no: 1012,
+            description: "Shop rent",
+          },
+        ],
+        // Sent again with its key: the first answer, given back.
+        replayed: true,
+      }),
+    ).toEqual([rent]);
   });
 
   it("asks in Arabic and Kurdish", () => {

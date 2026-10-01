@@ -30,7 +30,7 @@ const receiptNo = last(`select receipt_no from goods_receipt where id = '${recei
 const bill = last(`select test.act_as('owner@example.com');
   select record_bill('${supplier}', 'E2E-DOC-1', ${TODAY}, 1200, 0, '${receipt}', null) ->> 'bill_id'`);
 const expense = last(`select test.act_as('owner@example.com');
-  select record_expense('Printer paper', 2500, '6900', 'bank', null, null, gen_random_uuid()) ->> 'expense_id'`);
+  select record_expense('Printer paper', 2500, '6900', 'bank', p_idempotency_key => gen_random_uuid()) ->> 'expense_id'`);
 const files = () => n(`select count(*) from storage.objects where bucket_id = 'documents'`);
 const kept = (record, name) =>
   last(`select id || '|' || content_type || '|' || size_bytes || '|' || storage_path || '|'

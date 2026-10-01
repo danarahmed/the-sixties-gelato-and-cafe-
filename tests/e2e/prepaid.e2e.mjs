@@ -221,6 +221,32 @@ sql(`alter table prepaid_expense disable trigger prepaid_expense_guard;
   await ctx.close();
 }
 
+console.log("▸ on Journals, a month's share is not reversed by hand: it goes with its prepaid expense");
+{
+  // An ordinary expense beside them, which the owner may reverse by hand.
+  sql(`select test.act_as('owner@example.com');
+       select record_expense('Window cleaning', 12345, '6900', 'bank',
+                             p_idempotency_key => gen_random_uuid());`);
+  const no = (q) => last(`select journal_no from journal_entry where id = (${q})`);
+  const share = no(`select journal_entry_id from prepaid_release where prepaid_id = ${rent}`);
+  const paid = no(`select journal_entry_id from prepaid_expense where id = ${rent}`);
+  const cleaning = no(`select journal_entry_id from expense where description = 'Window cleaning'`);
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/journals");
+  const row = (n) => page.locator(`[data-testid="journal-row"][data-no="${n}"]`);
+  const reverse = (n) => row(n).getByRole("button", { name: "Reverse" }).count();
+  await row(share).waitFor({ timeout: 10000 });
+  check(
+    (await reverse(cleaning)) === 1 && (await reverse(share)) === 0 && (await reverse(paid)) === 0,
+    "an expense offers Reverse; the rent's share and its payment do not",
+  );
+  check(
+    (await row(paid).textContent()).includes("Prepaid expense"),
+    "the payment's journal says it came from a prepaid expense",
+  );
+  await ctx.close();
+}
+
 console.log("▸ the owner cancels the rent, entered in error");
 {
   const { ctx, page } = await signIn(browser, "owner");

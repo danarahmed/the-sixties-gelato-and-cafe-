@@ -2777,6 +2777,11 @@ const phrases: PhraseBook = {
     ar: "لم يُعثر على المصروف المدفوع مقدمًا",
     ckb: "خەرجییە پێشەکییەکە نەدۆزرایەوە",
   },
+  // Prepaid expenses put right (0061).
+  "A month's share of a prepaid expense is undone by cancelling the prepaid expense on Expenses": {
+    ar: "تُلغى حصة شهر من مصروف مدفوع مقدمًا بإلغاء المصروف المدفوع مقدمًا في شاشة «المصروفات»",
+    ckb: "بەشی مانگێک لە خەرجییەکی پێشەکی بە هەڵوەشاندنەوەی خەرجییە پێشەکییەکە لە شاشەی «خەرجییەکان» لادەبرێت",
+  },
 };
 
 export default phrases;

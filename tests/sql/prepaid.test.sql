@@ -64,9 +64,9 @@ select test.act_as('owner@example.com');
 select save_journal(test.today(), 'The owner puts money in the bank',
                     '[{"code":"1020","debit":1000000},{"code":"3000","credit":1000000}]', true);
 insert into res select 'P1', record_prepaid_expense('Shop rent, three months', 100000, '6000', 'bank',
-                                                    pg_temp.month(0), 3, null, pg_temp.k(1));
+                                                    pg_temp.month(0), 3, p_idempotency_key => pg_temp.k(1));
 insert into res select 'P1b', record_prepaid_expense('Shop rent, three months', 100000, '6000', 'bank',
-                                                     pg_temp.month(0), 3, null, pg_temp.k(1));
+                                                     pg_temp.month(0), 3, p_idempotency_key => pg_temp.k(1));
 select test.eq(pg_temp.r('P1b') - 'replayed', pg_temp.r('P1'), 'sent twice with one key: recorded once');
 select test.eq(test.lines_of((pg_temp.r('P1') ->> 'prepaid_id')::uuid), '1020 Cr 100000 | 1400 Dr 100000',
   'paid from the bank into 1400');
@@ -93,7 +93,7 @@ select test.eq(pg_temp.audits('prepaid.release'), 0, 'and nothing released is no
 
 -- ------------------------------------------------------------------ one starting next month
 insert into res select 'P2', record_prepaid_expense('Insurance, a year', 120000, '6900', 'bank',
-                                                    pg_temp.month(1), 12, null, pg_temp.k(3));
+                                                    pg_temp.month(1), 12, p_idempotency_key => pg_temp.k(3));
 select test.eq(jsonb_array_length(pg_temp.r('P2') -> 'released'), 0, 'starting next month: nothing posted yet');
 select test.eq(pg_temp.alert(now()), null, 'nothing due: no alert');
 select test.eq(pg_temp.check_of(pg_temp.month(0)), 'true ', 'this month can be locked: its share is posted');
@@ -175,24 +175,27 @@ select move_cash('owner', 'till', 60000, 'Float for the till');
 create temp table drawer_before as select pg_temp.drawer() as v;
 grant select on drawer_before to public;
 insert into res select 'P3', record_prepaid_expense('Security, two months', 50000, '6900', 'till',
-                                                    pg_temp.month(0), 2, null, pg_temp.k(5));
+                                                    pg_temp.month(0), 2, p_idempotency_key => pg_temp.k(5));
 select test.eq(pg_temp.drawer(), (select v from drawer_before) - 50000, 'paid out of the drawer');
--- Its share of this month reversed by hand first: a correction the accountant may make.
-select reverse_journal((select journal_entry_id from prepaid_release
-                         where prepaid_id = (pg_temp.r('P3') ->> 'prepaid_id')::uuid), 'Security not due this month');
-select test.eq(pg_temp.checks(), (select checks from before), 'a share reversed by hand: the books tie');
+-- Its share of this month is not reversed by hand (0061): its month would stay
+-- posted and the share in 1400 for good. It goes with the prepaid expense.
+select test.throws(format($$select reverse_journal('%s', 'Security not due this month')$$,
+                          (select journal_entry_id from prepaid_release
+                            where prepaid_id = (pg_temp.r('P3') ->> 'prepaid_id')::uuid)),
+  'A month''s share of a prepaid expense is undone by cancelling the prepaid expense on Expenses',
+  'a month''s share is not reversed by hand');
 insert into res select 'L3', prepaid_expenses();
 select test.eq((select (x ->> 'released') || ' posted, ' || (x ->> 'reversed') || ' reversed, '
                        || (x ->> 'released_amount') || ' out of 1400'
                   from jsonb_array_elements(pg_temp.r('L3')) x where x ->> 'id' = pg_temp.r('P3') ->> 'prepaid_id'),
-               '1 posted, 1 reversed, 0 out of 1400',
-  'the list: its share posted and reversed by hand, so all of it is still in 1400');
+               '1 posted, 0 reversed, 25000 out of 1400',
+  'the list: its share posted, out of 1400');
 insert into res select 'C3', cancel_prepaid_expense((pg_temp.r('P3') ->> 'prepaid_id')::uuid,
                                                     'Entered twice', pg_temp.k(6));
 insert into res select 'C3b', cancel_prepaid_expense((pg_temp.r('P3') ->> 'prepaid_id')::uuid,
                                                      'Entered twice', pg_temp.k(6));
 select test.eq(pg_temp.r('C3b') - 'replayed', pg_temp.r('C3'), 'sent twice with one key: cancelled once');
-select test.eq((pg_temp.r('C3') ->> 'shares_reversed')::int, 0, 'the share reversed by hand is not reversed again');
+select test.eq((pg_temp.r('C3') ->> 'shares_reversed')::int, 1, 'its share posted is reversed with it');
 select test.eq(pg_temp.drawer(), (select v from drawer_before), 'the cash is back in the drawer');
 select test.eq(test.balance('1400'), 100000::numeric, 'nothing of it is left in 1400');
 select test.eq((select cancel_reason from prepaid_expense where id = (pg_temp.r('P3') ->> 'prepaid_id')::uuid),
@@ -212,7 +215,7 @@ select test.eq(pg_temp.checks(), (select checks from before), 'and the books tie
 -- A month to come, alone: December's rent paid in September (the audit's own
 -- example) waits in 1400 until its month, and is all that month's.
 insert into res select 'P4', record_prepaid_expense('Shop rent, one month ahead', 150000, '6000', 'bank',
-                                                    pg_temp.month(3), 1, null, pg_temp.k(7));
+                                                    pg_temp.month(3), 1, p_idempotency_key => pg_temp.k(7));
 select test.eq(jsonb_array_length(pg_temp.r('P4') -> 'released'), 0, 'a month to come, alone: nothing posted yet');
 select test.eq(test.balance('1400'), 150000::numeric, '1400 holds it until then');
 select test.eq(pg_temp.check_of(pg_temp.month(2)), 'true ', 'the months before it owe it nothing');
@@ -220,4 +223,103 @@ select pg_temp.release_through(pg_temp.month(3));
 select test.eq(pg_temp.shares(pg_temp.r('P4') ->> 'prepaid_id'), to_char(pg_temp.month(3), 'YYYY-MM') || ':150000',
   'its month takes all of it');
 select test.eq(test.balance('1400'), 0::numeric, 'and 1400 is empty again');
+select test.eq(pg_temp.checks(), (select checks from before), 'the books tie');
+
+-- ------------------------------------------------------------------ paid from the safe (0061)
+-- The safe's tie-out counts what a prepaid expense took out of the safe, and
+-- what its cancellation put back.
+select move_cash('owner', 'safe', 90000, 'Cash into the safe');
+insert into res select 'P5', record_prepaid_expense('Water, three months', 90000, '6200', 'safe',
+                                                    pg_temp.month(1), 3, p_idempotency_key => pg_temp.k(8));
+select test.eq(test.balance('1005'), 0::numeric, 'paid out of the safe');
+select test.eq(pg_temp.checks(), (select checks from before), 'paid from the safe: the safe still ties');
+select cancel_prepaid_expense((pg_temp.r('P5') ->> 'prepaid_id')::uuid, 'The landlord pays the water');
+select test.eq(test.balance('1005'), 90000::numeric, 'cancelled: back in the safe');
+select test.eq(pg_temp.checks(), (select checks from before), 'and the safe ties again');
+
+-- ------------------------------------------------------------------ its account kept in use (0061)
+-- An account the café added stays in use while a prepaid expense still takes
+-- shares from it: the shares would be refused, and every other share due too.
+select create_account('6010', 'Generator rent', 'expense');
+insert into res select 'P6', record_prepaid_expense('Generator rent, two months', 40000, '6010', 'bank',
+                                                    pg_temp.month(1), 2, p_idempotency_key => pg_temp.k(9));
+select test.throws($$select set_account_in_use('6010', false, 'The generator is sold')$$,
+  'A prepaid expense (Generator rent, two months) takes a share from account 6010 Generator rent each month until '
+    || to_char(pg_temp.month(2), 'YYYY-MM')
+    || ': take it out of use once the last share is posted, or cancel the prepaid expense first',
+  'an account a prepaid expense still takes shares from stays in use');
+select pg_temp.release_through(pg_temp.month(1));
+select test.throws($$select set_account_in_use('6010', false, 'The generator is sold')$$,
+  'A prepaid expense (Generator rent, two months)%', 'while a share of it is still to come');
+select pg_temp.release_through(pg_temp.month(2));
+select test.succeeds($$select set_account_in_use('6010', false, 'The generator is sold')$$,
+  'its last share posted: the account may be taken out of use');
+select test.eq(test.balance('6010'), 40000::numeric, 'all of it an expense of its two months');
+
+-- ------------------------------------------------------------------ a payment like one posted already (0061)
+-- Asked by the database when the screen asks (p_ask_same), in the step that
+-- would post it: the payments like it come back and nothing is posted. The
+-- answer is kept with its key; from SQL, and once the person says it is
+-- another payment, it is posted as before.
+create function pg_temp.posted(p_desc text) returns int language sql security definer as $$
+  select count(*)::int from expense where description = p_desc
+$$;
+select test.act_as('manager@example.com');
+insert into res select 'E1', record_expense('Internet, October', 35000, '6200', 'bank',
+                                            p_idempotency_key => pg_temp.k(10));
+insert into res select 'Q1', record_expense('Internet again', 35000, '6200', 'bank', p_ask_same => true,
+                                            p_idempotency_key => pg_temp.k(11));
+select test.eq((select string_agg((x ->> 'account_code') || ' ' || (x ->> 'amount') || ' ' || (x ->> 'date') || ' '
+                                  || (x ->> 'description') || ' #' || (x ->> 'journal_no'), '; ')
+                  from jsonb_array_elements(pg_temp.r('Q1') -> 'same') x),
+               '6200 35000 ' || test.today() || ' Internet, October #' || (pg_temp.r('E1') ->> 'journal_no'),
+  'asked: the payment like it posted today, with its journal');
+select test.eq(pg_temp.posted('Internet again'), 0, 'and nothing is posted');
+insert into res select 'Q1b', record_expense('Internet again', 35000, '6200', 'bank', p_ask_same => true,
+                                             p_idempotency_key => pg_temp.k(11));
+select test.eq(pg_temp.r('Q1b') - 'replayed', pg_temp.r('Q1'), 'sent again with its key: the same answer');
+select test.eq(jsonb_array_length(record_expense('Internet again', 35000, '6200', 'bank', test.today() - 3,
+                                                 p_ask_same => true, p_idempotency_key => pg_temp.k(12)) -> 'same'),
+               1, 'three days before it: asked too');
+select test.eq(record_expense('Internet again', 35000, '6200', 'bank', test.today() - 4, p_ask_same => true,
+                              p_idempotency_key => pg_temp.k(13)) ? 'expense_id',
+               true, 'four days before it: nothing to ask, posted');
+select test.eq(record_expense('Internet, the shop upstairs', 35000, '6200', 'bank',
+                              p_idempotency_key => pg_temp.k(14)) ? 'expense_id',
+               true, 'said to be another payment: posted');
+select test.eq(pg_temp.audits('expense.record'), 3, 'only those posted are on the audit trail');
+-- A prepaid expense paid today is asked about the same way, and asks about them.
+insert into res select 'Q2', record_prepaid_expense('Internet, three months', 35000, '6200', 'bank',
+                                                    pg_temp.month(1), 3, p_ask_same => true,
+                                                    p_idempotency_key => pg_temp.k(15));
+select test.eq(jsonb_array_length(pg_temp.r('Q2') -> 'same'), 2, 'a prepaid expense like them: asked about both');
+select test.eq((select count(*)::int from prepaid_expense where description = 'Internet, three months'), 0,
+  'and not recorded');
+select test.eq(record_prepaid_expense('Internet, three months', 35000, '6200', 'bank', pg_temp.month(1), 3,
+                                      p_idempotency_key => pg_temp.k(16)) ? 'prepaid_id',
+               true, 'said to be another: recorded');
+select test.eq(jsonb_array_length(record_expense('Internet once more', 35000, '6200', 'bank', p_ask_same => true,
+                                                 p_idempotency_key => pg_temp.k(17)) -> 'same'),
+               3, 'an expense like the prepaid expense paid today: asked about it too');
+-- A month's share counts: this month's rent posted already.
+insert into res select 'P7', record_prepaid_expense('Shop rent, two months', 60000, '6000', 'bank',
+                                                    pg_temp.month(0), 2, p_idempotency_key => pg_temp.k(18));
+select test.eq((select string_agg(x ->> 'description', '; ')
+                  from jsonb_array_elements(record_expense('Rent', 30000, '6000', 'bank', p_ask_same => true,
+                                                           p_idempotency_key => pg_temp.k(19)) -> 'same') x),
+               'Shop rent, two months (' || to_char(pg_temp.month(0), 'YYYY-MM') || ')',
+  'this month''s share of the rent paid ahead: an expense of rent like it is asked about');
+-- A payment reversed is not one posted.
+select test.act_as('owner@example.com');
+select reverse_journal((select journal_entry_id from expense where description = 'Internet, the shop upstairs'),
+                       'Paid by the shop upstairs');
+select test.eq(jsonb_array_length(record_expense('Internet once more', 35000, '6200', 'bank', p_ask_same => true,
+                                                 p_idempotency_key => pg_temp.k(20)) -> 'same'),
+               2, 'one reversed is not asked about');
+-- Only someone who may record an expense is told of those posted.
+select test.act_as('cashier@example.com');
+select test.throws($$select record_expense('Internet', 35000, '6200', 'bank', p_ask_same => true,
+                                           p_idempotency_key => gen_random_uuid())$$,
+  '%needs expense.record%', 'a cashier is told nothing of them');
+select test.act_as('owner@example.com');
 select test.eq(pg_temp.checks(), (select checks from before), 'the books tie');

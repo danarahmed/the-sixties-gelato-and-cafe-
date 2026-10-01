@@ -2,9 +2,11 @@
  * A payment posted twice (the September audit's P2-14: "rent posted twice on
  * 24 Sep"): an expense to the same account, for the same amount, within three
  * days of one already posted is asked about before it is posted. The
- * dashboard's alert (duplicate_payment, 0029) finds the same among what was
- * posted; this asks before. Pure: Expenses, its actions and the tests read
- * through here.
+ * database asks (same_payments, 0061), in the step that would post it, one
+ * payment to an account at a time; the screen asks the same as it is typed,
+ * from what was posted when it opened. The dashboard's alert
+ * (duplicate_payment, 0029) finds the same among what was posted. Pure:
+ * Expenses, its actions and the tests read through here.
  */
 import { dateIn, daysBetween } from "@/lib/dates";
 
@@ -27,6 +29,21 @@ export interface PostedPayment {
 
 /** What the server says when it asks: the phrase, and the payments like it. */
 export type SamePaymentRefusal = { ok: false; error: string; same: PostedPayment[] };
+
+/**
+ * The payments like it the database answered with instead of posting
+ * (record_expense and record_prepaid_expense asked, 0061); null when it posted.
+ */
+export function sameFromServer(data: Record<string, unknown>): PostedPayment[] | null {
+  if (!Array.isArray(data.same)) return null;
+  return (data.same as Record<string, unknown>[]).map((x) => ({
+    accountCode: String(x.account_code ?? ""),
+    amount: Number(x.amount ?? 0),
+    date: String(x.date ?? ""),
+    journalNo: x.journal_no == null ? null : Number(x.journal_no),
+    description: String(x.description ?? ""),
+  }));
+}
 
 /**
  * The payments posted to the same account, for the same amount, within
