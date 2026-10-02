@@ -5467,7 +5467,7 @@ describe("a payment like one posted already, asked about first (the September au
   });
 });
 
-describe("what a review of the releases since 0035 found, put right (0063, 0064)", () => {
+describe("what a review of the releases since 0035 found, put right (0063–0066)", () => {
   const read = (path: string) => readFileSync(join(__dirname, "..", path), "utf8");
 
   it("the till lists its own branch's bills after a change, as its page does", () => {
@@ -5502,7 +5502,7 @@ describe("what a review of the releases since 0035 found, put right (0063, 0064)
   });
 
   it("the journals of salaries and advances name no one, and read in each language", () => {
-    const migration = read("supabase/migrations/0063_review_fixes.sql");
+    const migration = read("supabase/migrations/0064_review_fixes_payroll_till.sql");
     expect(migration).toContain(
       "'Salaries ' || payroll_month_text(r.month) || ' (payroll ' || r.run_no || ')'",
     );

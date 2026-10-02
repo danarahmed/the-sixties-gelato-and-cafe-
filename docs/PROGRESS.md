@@ -7,7 +7,7 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0064` and the rebuilt app. The SQL
+- **Built and verified:** migrations `0014`–`0066` and the rebuilt app. The SQL
   checks (62, with the rehearsals of the upgrade, the clean start and clearing
   the test records), the browser suites (38, every role, every screen in
   Arabic and Kurdish, a lost answer on each kind of screen, every report on A4
@@ -2105,7 +2105,7 @@ Built and tested:
   the names refused and let through; the browser suite refuses "Delivery"
   with Arabic on the Chart of Accounts, its words left as they were.
 
-- **What a review of the releases since `0035` found, put right (`0063`–`0064`).**
+- **What a review of the releases since `0035` found, put right (`0063`–`0066`).**
   Five reviews, one for each part of what `0035` to `0057` built (counts and
   batches, places, payroll, purchases, the till), each finding checked
   against the code before it was put right:

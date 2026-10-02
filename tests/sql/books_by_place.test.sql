@@ -140,7 +140,7 @@ select test.eq(pg_temp.checks(),
 select test.act_as('owner@example.com');
 select test.eq(pg_temp.col((select today from ids), (select today from ids), (select branch1 from ids)),
   '4000 8000, 5000 650, 5100 450, 5300 500',
-  'the first branch: its sales less the void, their cost, Talabat''s commission, the beans that never reached the kitchen; last month''s pay is not taken back today (0063)');
+  'the first branch: its sales less the void, their cost, Talabat''s commission, the beans that never reached the kitchen; last month''s pay is not taken back today (0064)');
 select test.eq(pg_temp.col((select today from ids), (select today from ids), (select branch2 from ids)),
   '4000 5500, 4200 -2500, 5000 450, 5100 400, 5200 100, 6900 7000',
   'the second branch: its sales, the refund, their cost, Talabat''s commission and what it paid short, the cleaning');

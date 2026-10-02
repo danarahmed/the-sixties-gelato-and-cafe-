@@ -84,7 +84,7 @@ first is never changed.
   `after ÷ before` of its units, as average cost spreads every use over all
   the stock. The delivery's own corrections and returns change its units and
   its size, and are not uses; nor are revaluations, nor another delivery's
-  corrections and returns (`0064`: before, a correction's top-up started `σ`
+  corrections and returns (`0065`: before, a correction's top-up started `σ`
   again at 1, and what went back was counted as used).
 - **A price corrected**: `Δp = the line's corrected goods value − its value as
 it stands` (freight and rebates shared out again by value, as on receipt).
@@ -757,7 +757,7 @@ qty ordered ÷ base ordered`, to three places.
   to 5050: Dr 2000 the credit / Cr 1200 the share / Cr 5050 the rest. Worked
   example (the SQL test): 3,000 off a delivery of beans and cups none of
   which was used since, some of each sent back: 1200 Cr 3,000, 2000 Dr 3,000,
-  set against its bill (`0064`: what went back is shared out of the credit
+  set against its bill (`0065`: what went back is shared out of the credit
   and is not a use). For
   other: Dr 2000 / Cr the account chosen. Set against a bill, a credit counts as paid: a bill's paid
   amount is its payments plus the credits set against it; a credit is set

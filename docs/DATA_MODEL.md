@@ -1827,13 +1827,14 @@ No table changes.
   to an income account the café adds (4310 Bank interest, say). The owner's
   correction (`post_control_correction`) still reaches them, with a reason.
 
-### What a review of the releases since `0035` found, put right (`0063`–`0064`)
+### What a review of the releases since `0035` found, put right (`0063`–`0066`)
 
 Five reviews, one for each part of what `0035` to `0057` built, each finding
-checked against the code before it was put right: the counts, the places,
-stock below zero and payroll in `0063`; purchases, the till and the safe, and
-the staff report in `0064` (two migrations, each small enough to apply in one
-call). No table changes, and nothing recorded changes.
+checked against the code before it was put right: the counts, the places and
+stock below zero in `0063`; payroll, the till and the safe in `0064`; a
+delivery's share on the shelf and a supplier's credit in `0065`; bills,
+suppliers, orders and the staff report in `0066` (four migrations, each small
+enough to apply in one call). No table changes, and nothing recorded changes.
 
 - **What a count has seen is not posted again** (`record_production`,
   `review_loss`): a count line's expected stock is what the books held when it
@@ -1848,10 +1849,10 @@ call). No table changes, and nothing recorded changes.
 - **Each place's work by those who work there** (`0055`): a transfer received
   (even as "nothing arrived", which moves nothing), a loss waiting for
   approval, and a delivery corrected (`correct_receipt`: its supplier, its
-  date) or given a supplier's price credit are refused to someone who works at
-  another place (`assert_works_at`), stock moved or not. The drawer is handed
-  over only to someone who works at its place, and only they are offered to
-  take it (`hand_over_session`, `cash_session_status`).
+  date) or given a supplier's price credit (`0065`) are refused to someone who
+  works at another place (`assert_works_at`), stock moved or not. The drawer
+  is handed over only to someone who works at its place, and only they are
+  offered to take it (`hand_over_session`, `cash_session_status`).
   `receive_stock_transfer__run` wraps `receive_stock_transfer__run_0054`, and
   `correct_receipt__run` wraps `correct_receipt__run_0044`. (A transfer
   cancelled moves its goods back where they were sent from, so `0055` refused
@@ -1863,7 +1864,7 @@ call). No table changes, and nothing recorded changes.
   (`stock.below_zero`) as a sale's is. Before, a confirmation alone let it
   through. `send_stock_transfer__run` wraps `send_stock_transfer__run_0054`,
   and `return_to_supplier__run` wraps `return_to_supplier__run_0044`.
-- **Payroll** (`reopen_payroll`, `payroll_refresh`, `payroll_current`,
+- **Payroll** (`0064`; `reopen_payroll`, `payroll_refresh`, `payroll_current`,
   `pay_salaries`, `record_advance`): a payroll reopened is reversed at its
   approval's own date, so its cost stays in its month; with that month locked
   the reopen is refused, as the approval again would be. Before, a payroll
@@ -1874,26 +1875,28 @@ call). No table changes, and nothing recorded changes.
   not be drafted again. The journals of salaries paid and advances given name
   no one: "Salaries 2026-09 (payroll 3)" and "Advance on pay". Journals are
   read by those who see costs; who was paid what is for those who see payroll.
-- **Purchases** (`0064`):
-  - **A delivery's share still on the shelf** (`receipt_share_on_hand`) starts
-    where its units first came in. Its own corrections and returns change the
-    delivery, not the share; another delivery's return or correction is not a
-    use of it. Before, a correction's top-up started it again at all of it,
-    forgetting what was used before, and what went back to the supplier was
-    counted as used. A price corrected or credited revalues the stock by it.
-  - **A supplier's price credit** (`record_supplier_credit`) is shared over what
-    of the delivery stayed: each item's value less what of it went back; the
-    earlier price credits are what was taken off it already.
-  - **A bill is not dated before its delivery came** (`record_bill`): "Delivery
-    … came on …: date its bill that day or later". Dated before, it cleared
-    goods received not invoiced before they were received, and the books did
-    not tie on the days between, nor could that month be locked.
-  - **What a supplier is owed** (`update_supplier`) is what their bills still
-    owe, payments and credits set against them both counted: a supplier
+- **Purchases** (`0065`, `0066`):
+  - **A delivery's share still on the shelf** (`0065`;
+    `receipt_share_on_hand`) starts where its units first came in. Its own
+    corrections and returns change the delivery, not the share; another
+    delivery's return or correction is not a use of it. Before, a correction's
+    top-up started it again at all of it, forgetting what was used before, and
+    what went back to the supplier was counted as used. A price corrected or
+    credited revalues the stock by it.
+  - **A supplier's price credit** (`0065`; `record_supplier_credit`) is shared
+    over what of the delivery stayed: each item's value less what of it went
+    back; the earlier price credits are what was taken off it already.
+  - **A bill is not dated before its delivery came** (`0066`; `record_bill`):
+    "Delivery … came on …: date its bill that day or later". Dated before, it
+    cleared goods received not invoiced before they were received, and the
+    books did not tie on the days between, nor could that month be locked.
+  - **What a supplier is owed** (`0066`; `update_supplier`) is what their bills
+    still owe, payments and credits set against them both counted: a supplier
     settled by a credit is taken out of use.
-  - **An order's receiving and its cancellation** (`po_view`, `cancel_po`) go by
-    what came and stayed (`po_received`), not by whether a delivery was ever
-    recorded: an order whose only delivery was reversed is cancelled.
+  - **An order's receiving and its cancellation** (`0066`; `po_view`,
+    `cancel_po`) go by what came and stayed (`po_received`), not by whether a
+    delivery was ever recorded: an order whose only delivery was reversed is
+    cancelled.
 - **Money from the till or the safe** (`0064`; `record_expense`,
   `reverse_journal`): an expense paid from the till or the safe is dated
   today, and a journal that moved their cash (1000, 1001, 1005, 1006) is
@@ -1903,7 +1906,7 @@ call). No table changes, and nothing recorded changes.
   the date it is given.
   `record_expense__run` wraps `record_expense__run_0055`, and
   `reverse_journal__run` wraps `reverse_journal__run_0035`.
-- **The staff's cost without the year-end close** (`0064`; `report_staff`):
+- **The staff's cost without the year-end close** (`0066`; `report_staff`):
   the café's labour by month leaves the year-end close out, as each place's
   did. Before, the close's month showed minus the year's staff cost.
 - **The app:** Transfers lists every one of the café's places to send to for

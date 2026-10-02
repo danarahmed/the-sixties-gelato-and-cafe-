@@ -1,5 +1,5 @@
 -- =============================================================================
--- What a review of the releases since 0035 found, put right (0063, 0064). Each part
+-- What a review of the releases since 0035 found, put right (0063–0066). Each part
 -- below is a case that went wrong before it:
 --  1. a batch recorded with a time before its items were counted, and a loss
 --     reversed after its item was counted, were in that count already;
@@ -16,6 +16,8 @@
 --     delivery was reversed kept from being cancelled;
 --  6. an expense from the till or the safe dated an earlier day;
 --  7. the café's staff cost counting the year-end close.
+-- (1 to 3 are put right in 0063, 4 and 6 in 0064, the shelf's share and the
+-- credit in 0065, the rest of 5 and 7 in 0066.)
 -- Golden beans: 1,000 g at 10; cups: 100 at 50; water: 24 at 250.
 -- =============================================================================
 select test.golden_catalogue();

@@ -283,7 +283,7 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - A lower price revalues only what is still on the shelf of the delivery it
     names; what was used since goes to the price variance (5050), not back to
     the sales that used it.
-  - A bill is dated no earlier than the day its delivery came (`0064`): a
+  - A bill is dated no earlier than the day its delivery came (`0066`): a
     supplier's invoice dated before the goods arrived is entered on the day
     they came, and its due date counts from that day.
 - **What to buy, what it does not do (release T, `0045`).**
@@ -343,7 +343,7 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     not the days worked.
   - A payroll is approved in the month it pays for: once that month is locked
     it cannot be posted, and the close warns (without blocking) when it is not
-    approved. Reopened, its approval is reversed at its own date (`0063`), so
+    approved. Reopened, its approval is reversed at its own date (`0064`), so
     a payroll whose month is locked is not reopened until the month is.
   - The people are kept when the test records are cleared; there is no
     screen to delete someone, only a last day.

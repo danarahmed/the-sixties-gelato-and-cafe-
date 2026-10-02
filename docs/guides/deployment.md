@@ -60,7 +60,7 @@ Plan a short window when the café is closed.
 | Prepaid expenses (`0060`)               | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0060`](#after-0060)). The screens were merged ([pull request #62](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/62)) and deployed            |
 | Prepaid and payments put right (`0061`) | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0061`](#after-0061)). The screens were merged ([pull request #64](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/64)) and deployed               |
 | Accounts and bank put right (`0062`)    | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0062`](#after-0062)). The screens were merged ([pull request #65](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/65)) and deployed                 |
-| Review fixes (`0063`–`0064`)            | ⏳ Rehearsed on a copy shaped like the live database; to be applied with its screens (see [After `0064`](#after-0064))                                                                                                                                                                                                                                                                   |
+| Review fixes (`0063`–`0066`)            | ⏳ Rehearsed on a copy shaped like the live database; to be applied with its screens (see [After `0066`](#after-0066))                                                                                                                                                                                                                                                                   |
 
 ## 0. Before you start
 
@@ -2930,15 +2930,17 @@ opened: September's payroll falling due on 1 October, and a margin.)
 
 The security and performance advisors list the same notices as before.
 
-## After `0064`
+## After `0066`
 
-Migrations `0063` and `0064` put right what five reviews of the releases
-since `0035` found in the database, each finding checked against the code
-first: the counts, the places, stock below zero and payroll in `0063`;
-purchases, the till and the safe, and the staff report in `0064`. They are
-two because one file of 65 KB was more than the connector that applies them
-takes in one call; each is applied whole, in one transaction, `0063` first. No
-table changes, and nothing recorded changes. What people will notice:
+Migrations `0063` to `0066` put right what five reviews of the releases since
+`0035` found in the database, each finding checked against the code first:
+the counts, the places and stock below zero in `0063`; payroll, the till and
+the safe in `0064`; a delivery's share on the shelf and a supplier's credit in
+`0065`; bills, suppliers, orders and the staff report in `0066`. They are four
+because one file of 65 KB, and then two of over 30 KB, were more than the
+connector that applies them takes in one call (20 KB goes through); each is
+applied whole, in one transaction, in order. No table changes, and nothing
+recorded changes. What people will notice:
 
 - **A batch or a loss a count has seen.** A batch recorded with a time before
   one of its items was counted at its place, in a count still open or
@@ -2972,11 +2974,12 @@ What they change:
   `send_stock_transfer__run` (`_0054`) and `return_to_supplier__run`
   (`_0044`); in `0064`, `record_expense__run` (`_0055`) and
   `reverse_journal__run` (`_0035`).
-- **Replaced**, with the same arguments: in `0063`, `hand_over_session`,
-  `cash_session_status`, `reopen_payroll__run`, `payroll_refresh`,
-  `payroll_current`, `pay_salaries` and `record_advance__run`; in `0064`,
-  `receipt_share_on_hand`, `record_supplier_credit__run`, `record_bill__run`,
-  `update_supplier`, `po_view`, `cancel_po__run` and `report_staff`.
+- **Replaced**, with the same arguments: in `0063`, `hand_over_session` and
+  `cash_session_status`; in `0064`, `reopen_payroll__run`, `payroll_refresh`,
+  `payroll_current`, `pay_salaries` and `record_advance__run`; in `0065`,
+  `receipt_share_on_hand` and `record_supplier_credit__run`; in `0066`,
+  `record_bill__run`, `update_supplier`, `po_view`, `cancel_po__run` and
+  `report_staff`.
 - The functions behind each keyed write and the helpers stay callable only
   inside the database's own functions, each closed in the migration that
   makes it; the public ones keep their grants.

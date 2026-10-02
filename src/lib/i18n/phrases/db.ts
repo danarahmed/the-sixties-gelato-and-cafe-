@@ -2782,7 +2782,7 @@ const phrases: PhraseBook = {
     ar: "تُلغى حصة شهر من مصروف مدفوع مقدمًا بإلغاء المصروف المدفوع مقدمًا في شاشة «المصروفات»",
     ckb: "بەشی مانگێک لە خەرجییەکی پێشەکی بە هەڵوەشاندنەوەی خەرجییە پێشەکییەکە لە شاشەی «خەرجییەکان» لادەبرێت",
   },
-  // What a review of the releases since 0035 found, put right (0063, 0064).
+  // What a review of the releases since 0035 found, put right (0063–0066).
   "{1} was counted after that time: a batch made before the count is in it already, and is not recorded now":
     {
       ar: "جُرد {1} بعد ذلك الوقت: الدفعة المصنوعة قبل الجرد داخلة فيه بالفعل، ولا تُسجَّل الآن",

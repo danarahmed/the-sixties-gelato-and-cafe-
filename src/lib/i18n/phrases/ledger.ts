@@ -421,7 +421,7 @@ const phrases: PhraseBook = {
     ckb: "لیستی مووچە دووبارە کرایەوە: {1}",
   },
   "Salaries {1}: {2}": { ar: "رواتب {1}: {2}", ckb: "مووچەی {1}: {2}" },
-  // Named by their payroll, not by whom they pay (0063).
+  // Named by their payroll, not by whom they pay (0064).
   "Salaries {1} (payroll {2})": {
     ar: "رواتب {1} (كشف الرواتب {2})",
     ckb: "مووچەی {1} (لیستی مووچەی {2})",
