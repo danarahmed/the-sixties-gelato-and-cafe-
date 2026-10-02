@@ -119,7 +119,7 @@ begin
     if p_receipt is null then raise exception 'Choose the delivery the price was for'; end if;
     select * into r from goods_receipt where id = p_receipt and business_id = v_business for update;
     if not found then raise exception 'Delivery not found'; end if;
-    -- Recorded by someone who works at the delivery's place (0055), stock moved or not (0063).
+    -- Recorded by someone who works at the delivery's place (0055), stock moved or not (0065).
     perform assert_works_at(r.location_id);
     v_state := receipt_state(p_receipt);
     if (v_state ->> 'supplier_id')::uuid is distinct from p_supplier then
@@ -137,7 +137,7 @@ begin
       raise exception 'Delivery % is not billed yet: correct its price on Purchasing instead', r.receipt_no;
     end if;
     -- What the delivery is still worth to the supplier: each item's value less
-    -- what of it went back (the credit is shared over what stayed, 0063), less
+    -- what of it went back (the credit is shared over what stayed, 0065), less
     -- earlier credits.
     select array_agg(g.item_id order by g.item_id), array_agg(g.v order by g.item_id), coalesce(sum(g.v), 0)
       into v_items, v_values, v_worth

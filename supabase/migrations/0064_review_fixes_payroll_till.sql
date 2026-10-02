@@ -37,7 +37,7 @@ begin
   select * into a from payroll_approval where run_id = r.id and reopened_at is null for update;
   if a.journal_entry_id is not null then
     -- In the month the approval was posted in: reopened later, the cost stayed
-    -- there and went out of the month it was reopened in (0063).
+    -- there and went out of the month it was reopened in (0064).
     v_rev := reverse_entry_internal(a.journal_entry_id,
                                     (select occurred_at from journal_entry where id = a.journal_entry_id),
                                     'Payroll reopened: ' || trim(p_reason));
@@ -65,7 +65,7 @@ begin
   v_start := r.month;
   v_end := (r.month + interval '1 month - 1 day')::date;
   -- Someone not employed that month leaves the payroll. A line paid from once
-  -- (a payment since cancelled, which is kept for good) stays, at nothing (0063).
+  -- (a payment since cancelled, which is kept for good) stays, at nothing (0064).
   update payroll_line x
      set base_pay = 0, overtime_pay = 0, additions = 0, deductions = 0, advance_owed = 0, advance_recovered = 0,
          recovery_set = false, gross = 0, net = 0, days_employed = 0, days_worked = 0, minutes_worked = 0,
@@ -125,7 +125,7 @@ begin
   v_end := (r.month + interval '1 month - 1 day')::date;
   if exists (select 1 from payroll_line x join employee y on y.id = x.employee_id
               where x.run_id = r.id and not (y.hired_on <= v_end and (y.left_on is null or y.left_on >= v_start))
-                -- A line paid from once, kept at nothing, is as it should be (0063).
+                -- A line paid from once, kept at nothing, is as it should be (0064).
                 and not (x.gross = 0 and x.net = 0 and x.advance_recovered = 0
                          and exists (select 1 from salary_payment_line pl where pl.line_id = x.id))) then
     return false;
@@ -159,7 +159,7 @@ declare
 begin
   select coalesce(sum((x ->> 'amount')::numeric), 0) into v_total from jsonb_array_elements(p_lines) x;
   -- Named by its payroll, not by whom it pays: the journals are read by those
-  -- who see costs, and pay is for those who see payroll (0063).
+  -- who see costs, and pay is for those who see payroll (0064).
   v_journal := post_journal(p_business, now(),
     'Salaries ' || payroll_month_text(r.month) || ' (payroll ' || r.run_no || ')', 'salary_payment', v_id,
     jsonb_build_array(jsonb_build_object('code', '2100', 'debit', v_total),
@@ -194,7 +194,7 @@ begin
   e := staff_member(v_business, p_employee, true);
   if not works_on(e, v_today) then raise exception '% does not work here on %', e.full_name, v_today; end if;
   v_loc := resolve_location(v_business, p_location);
-  -- Not named, nor why: an advance is for those who see payroll (0063).
+  -- Not named, nor why: an advance is for those who see payroll (0064).
   v_journal := post_journal(v_business, now(), 'Advance on pay',
     'employee_advance', v_id,
     jsonb_build_array(jsonb_build_object('code', '1300', 'debit', v_amount),

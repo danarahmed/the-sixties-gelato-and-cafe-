@@ -62,7 +62,7 @@ begin
       raise exception 'That receipt has already been billed';
     end if;
     -- Not dated before the goods came: it clears what their receipt raised,
-    -- and before it there is nothing to clear (0063).
+    -- and before it there is nothing to clear (0066).
     if coalesce(p_invoice_date, business_local_date(v_business, now())) < (v_state ->> 'received_on')::date then
       raise exception 'Delivery % came on %: date its bill that day or later',
         (select receipt_no from goods_receipt where id = p_receipt), v_state ->> 'received_on';
@@ -133,7 +133,7 @@ begin
   end if;
   if coalesce(p_is_active, true) then perform assert_name_free(v_business, 'supplier', p_name, p_supplier); end if;
   if not coalesce(p_is_active, true) and s.is_active then
-    -- What the bills still owe: payments and credits set against them both count (0063).
+    -- What the bills still owe: payments and credits set against them both count (0066).
     select coalesce(sum(amount_total - paid_amount), 0) into v_owed
       from purchase_invoice where supplier_id = p_supplier and cancelled_at is null;
     if v_owed > 0 then
@@ -207,7 +207,7 @@ begin
   select * into o from purchase_order where id = p_po and business_id = v_business for update;
   if not found then raise exception 'Order not found'; end if;
   if o.status in ('closed', 'cancelled') then raise exception 'Order % is not open', o.po_no; end if;
-  -- What came and stayed: a delivery reversed brought nothing (0063).
+  -- What came and stayed: a delivery reversed brought nothing (0066).
   if exists (select 1 from po_received(o.id) g where g.base_qty > 0) then
     raise exception 'Goods have come against order %: close it instead', o.po_no;
   end if;
