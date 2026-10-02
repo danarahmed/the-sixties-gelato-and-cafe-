@@ -73,8 +73,10 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - An item is kept batch by batch from its first batch after `0046`: what it
     had before is stock with no lot, and batches made before `0046` have no
     story of their own.
-  - A batch is recorded late by a day at most, by a manager, and not before
-    the last approved count of its items.
+  - A batch is recorded late by a day at most, by a manager, and not with a
+    time before one of its items was counted at its place, in a count open or
+    approved (`0063`): the count found what it made and used, so its cost is
+    in the count's difference, not in the production report.
   - The plan judges by the same weekday over the last 4 to 8 weeks alone: no
     season or holiday, and what is on hand now, so tomorrow's plan does not
     take off what today will still sell. A base is not planned for the
@@ -281,6 +283,9 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - A lower price revalues only what is still on the shelf of the delivery it
     names; what was used since goes to the price variance (5050), not back to
     the sales that used it.
+  - A bill is dated no earlier than the day its delivery came (`0066`): a
+    supplier's invoice dated before the goods arrived is entered on the day
+    they came, and its due date counts from that day.
 - **What to buy, what it does not do (release T, `0045`).**
   - It is worked out when the page opens, for the place the device works at,
     and nothing is sent to anyone. What a place sends to another counts as its
@@ -338,7 +343,8 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     not the days worked.
   - A payroll is approved in the month it pays for: once that month is locked
     it cannot be posted, and the close warns (without blocking) when it is not
-    approved.
+    approved. Reopened, its approval is reversed at its own date (`0064`), so
+    a payroll whose month is locked is not reopened until the month is.
   - The people are kept when the test records are cleared; there is no
     screen to delete someone, only a last day.
 - **Customers and their points, what they do not do (release X, `0050`).**
@@ -358,6 +364,10 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - A delivery platform's customers are its own and are not kept here; a bill
     split in two leaves the new bill with no customer; a sale already paid
     cannot be given a customer afterwards.
+  - A delivery's address is kept on its sale, and the sales are read by
+    whoever sees costs: someone who sees costs but not customers (a branch
+    manager, purchasing) could read it from the database, though none of their
+    screens shows it.
   - Customers are kept, and their points cleared, when the test records are
     cleared; a customer is put away, never deleted, and there is no merging
     of two customers into one.
@@ -490,7 +500,9 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     in the month it was posted in, and record it again as paid ahead from
     the same place: the reversal puts the money back where it came from and
     the prepaid expense takes it out again, so only the month it is an
-    expense of changes.
+    expense of changes. One paid from the till or the safe is reversed today
+    (`0064`), so the month it was posted in keeps it and this month takes it
+    back.
 - **Statements read from their files, what they do not do.**
   - The files read are Excel workbooks (.xlsx), CSV and text files, and the
     web page or Excel 2003 XML some banks give as an ".xls". An Excel 97–2003
@@ -695,4 +707,10 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   original and the correction stay on record.
 - A locked month refuses every posting. Reopening it is the owner's decision,
   with a reason on the audit trail.
+- Money from the till or the safe is recorded the day it moves (`0064`): an
+  expense paid from either is dated today, and a journal that moved their cash
+  is reversed today. The drawer's and the safe's own records are written when
+  the money moves, and each day's count is checked against them. One forgotten
+  from an earlier day is recorded today, saying when it was paid. Paid by the
+  bank, a card or the owner, an expense keeps the date it is given.
 - Full payment-card details are never stored.

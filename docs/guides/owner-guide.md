@@ -109,7 +109,8 @@ itself.
    payable, Cr 1300 the advances taken back, dated on the month's last day.
 4. **Pay…** each person, or **Pay everyone**, from the bank, the safe, the
    till's open drawer or your own pocket. A payroll with a mistake is
-   **reopened** (with why) while nothing is paid from it; a payment made by
+   **reopened** (with why) while nothing is paid from it, and while its month
+   is not locked: it is taken back in its own month; a payment made by
    mistake is cancelled first.
 
 **Advances on pay** are given on Payroll (from the bank, the safe, the till or
@@ -724,7 +725,7 @@ line (CSV)** gives your accountant the whole ledger.
 | A delivery entered wrongly (not yet billed)                              | **Purchasing → Correct** (quantity, price, item, supplier, day) or **Reverse** (never came), with the reason                     |
 | Stock that is wrong                                                      | a **count**, or **Inventory → Correct stock** (manager), with the reason                                                         |
 | An item or a vendor named, typed or levelled wrongly                     | its card on **Inventory → Correct this item**, or **Vendors → Edit vendor**, with the reason; take one no longer used out of use |
-| A manual journal or an expense                                           | **Journals → Reverse**, dated in the month it corrects                                                                           |
+| A manual journal or an expense                                           | **Journals → Reverse**, dated in the month it corrects; one that moved the till's or the safe's cash, today                      |
 | A control account (the till's cash, Inventory, payables, goods received) | your **Correction to a control account** on Journals — owner only, with a reason. Meant for history from before these controls   |
 
 ## Golden rules

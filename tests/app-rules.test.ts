@@ -5466,3 +5466,78 @@ describe("a payment like one posted already, asked about first (the September au
     }
   });
 });
+
+describe("what a review of the releases since 0035 found, put right (0063–0066)", () => {
+  const read = (path: string) => readFileSync(join(__dirname, "..", path), "utf8");
+
+  it("the till lists its own branch's bills after a change, as its page does", () => {
+    // Every read of the open bills names the branch: without it, a till showed
+    // every branch's, and took one's payment into its own drawer.
+    for (const file of ["src/lib/actions/pos.ts", "src/lib/db/pos.ts"]) {
+      const calls = read(file).match(/"pos_open_bills"[^)]*\)/g) ?? [];
+      expect([file, calls.length > 0]).toEqual([file, true]);
+      for (const call of calls)
+        expect([file, call]).toEqual([file, expect.stringContaining("p_location")]);
+    }
+    // The branch is the one the till's page lists: tillChoice's.
+    expect(read("src/lib/actions/pos.ts")).toMatch(
+      /const \{ at \} = await tillChoice\(\);\s+const r = await callRpc<unknown>\("pos_open_bills", \{ p_location: at \}\)/,
+    );
+  });
+
+  it("someone who works at one place sends to any of the café's places", () => {
+    const page = read("src/app/inventory/transfers/page.tsx");
+    // Whether the café has a second place is the café's, not this person's.
+    expect(page).toContain("getCafePlaces()");
+    expect(page).toMatch(/\{cafe\.length < 2 \?/);
+    expect(page).toMatch(/destinations=\{cafe\.map\(/);
+    expect(page).toContain("worksAt={profile.worksAt}");
+    const form = read("src/components/inventory/Transfers.tsx");
+    // Sent from where they work, to any other of the café's places.
+    expect(form).toMatch(/\{destinations\s+\.filter\(\(p\) => p\.id !== from\)/);
+    expect(form).toMatch(/\{places\.map\(\(p\) => \(\s+<option/);
+    // Received where it goes, cancelled where it was sent from: as the database checks.
+    expect(form).toContain("mayReceive={worksAt === null || worksAt === x.toId}");
+    expect(form).toContain("mayCancel={worksAt === null || worksAt === x.fromId}");
+  });
+
+  it("the journals of salaries and advances name no one, and read in each language", () => {
+    const migration = read("supabase/migrations/0064_review_fixes_payroll_till.sql");
+    expect(migration).toContain(
+      "'Salaries ' || payroll_month_text(r.month) || ' (payroll ' || r.run_no || ')'",
+    );
+    expect(migration).toContain("post_journal(v_business, now(), 'Advance on pay',");
+    for (const locale of ["ar", "ckb"] as const) {
+      const msg = messenger(builtInWords(locale));
+      const said = msg("Salaries 2026-09 (payroll 3)");
+      expect([
+        locale,
+        said.includes("2026-09") && said.includes("3"),
+        said === "Salaries 2026-09 (payroll 3)",
+      ]).toEqual([locale, true, false]);
+      expect([locale, msg("Advance on pay") === "Advance on pay"]).toEqual([locale, false]);
+    }
+  });
+
+  it("says each new refusal in Arabic and Kurdish", () => {
+    const refusals = [
+      "Golden milk was counted after that time: a batch made before the count is in it already, and is not recorded now",
+      "Golden beans was counted since the loss, and the count put its stock right: approve the loss instead",
+      "Second Manager works at Second Branch, not here: choose someone who works here",
+      "This leaves Golden cup below zero, which a manager approves: ask one to send it",
+      "This leaves Golden cup below zero, which a manager approves: ask one to return it",
+      "Delivery 4 came on 2026-10-01: date its bill that day or later",
+      "Money from the till or the safe is recorded the day it is taken out: today",
+      "A journal that moved the till's or the safe's cash is reversed today, when they count it",
+    ];
+    for (const locale of ["ar", "ckb"] as const) {
+      const msg = messenger(builtInWords(locale));
+      for (const r of refusals)
+        expect([
+          locale,
+          r,
+          /[A-Za-z]{4,}/.test(msg(r).replace(/Golden \w+|Second \w+|\d{4}-\d{2}-\d{2}/g, "")),
+        ]).toEqual([locale, r, false]);
+    }
+  });
+});

@@ -345,9 +345,9 @@ insert into res select 'c3', record_supplier_credit(pg_temp.kci(), 'price', 3000
   p_receipt => pg_temp.id('r1', 'receipt_id'), p_idempotency_key => gen_random_uuid());
 select test.eq((select (v ->> 'credit_no') || ' ' || (v ->> 'amount') || ' stock ' || (v ->> 'stock') || ' set against '
                        || (v ->> 'set_against_bill') from res where k = 'c3'),
-  '3 3000 stock -2778 set against 3000', 'credit note CN-7: 3,000 off delivery 1, the stock of it still on hand revalued');
-select test.eq(test.lines_of(pg_temp.id('c3', 'credit_id')), '1200 Cr 2778 | 2000 Dr 3000 | 5050 Cr 222',
-  'the share still on hand comes off the stock; what was used since, off the price variance');
+  '3 3000 stock -3000 set against 3000', 'credit note CN-7: 3,000 off delivery 1, the stock of it still on hand revalued');
+select test.eq(test.lines_of(pg_temp.id('c3', 'credit_id')), '1200 Cr 3000 | 2000 Dr 3000',
+  'none of it was used: what went back to the supplier, of this delivery or another, is not a use, so all of it comes off the stock');
 select test.eq(pg_temp.bill('KCI-1'), '31000 paid 3400', 'and it is set against the delivery''s bill');
 select test.throws(format('select record_supplier_credit(%L, %L, 100, %L, %L, p_receipt => %L)', pg_temp.kci(), 'price',
                           'cn-7', 'again', pg_temp.id('r1', 'receipt_id')),

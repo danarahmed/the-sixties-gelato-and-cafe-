@@ -4,7 +4,7 @@ import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems } from "@/lib/db/read";
 import { getStockByPlace, getTransfers } from "@/lib/db/transfers";
-import { placeChoice } from "@/lib/place";
+import { getCafePlaces, placeChoice } from "@/lib/place";
 import { fmtIQD } from "@/lib/format";
 import { EmptyState } from "@/components/ui";
 import { PlaceSwitch } from "@/components/PlaceSwitch";
@@ -16,14 +16,17 @@ export const dynamic = "force-dynamic";
  * Stock sent between the café's places (0054, release AB): the branch sends
  * the kitchen what it makes with, the kitchen sends the branch what it made.
  * Each transfer leaves at its cost where it was, is on its way in 1210 Stock in
- * transit, and is received where it went — or cancelled on its way.
+ * transit, and is received where it went — or cancelled on its way. Someone
+ * who works at one place sends from it to any of the café's, receives what
+ * comes to it and cancels what it sent (0063).
  */
 export default async function TransfersPage() {
   const profile = await requirePermission("cost.view", "stock.transfer");
   const t = await getT();
   const canSend = has(profile, "stock.transfer");
-  const [{ places, place }, transfers, items, stock] = await Promise.all([
+  const [{ places, place }, cafe, transfers, items, stock] = await Promise.all([
     placeChoice(),
+    getCafePlaces(),
     getTransfers(100),
     getItems(),
     has(profile, "cost.view") ? getStockByPlace() : Promise.resolve({}),
@@ -61,7 +64,7 @@ export default async function TransfersPage() {
         </p>
       </details>
 
-      {places.length < 2 ? (
+      {cafe.length < 2 ? (
         <EmptyState
           title={t("The café has one place")}
           hint={t(
@@ -73,6 +76,7 @@ export default async function TransfersPage() {
         place && (
           <SendTransfer
             places={places.map((p) => ({ id: p.id, name: p.name }))}
+            destinations={cafe.map((p) => ({ id: p.id, name: p.name }))}
             from={place.id}
             items={items.map((i) => ({
               id: i.id,
@@ -89,6 +93,7 @@ export default async function TransfersPage() {
         transfers={transfers}
         units={units}
         canAct={canSend}
+        worksAt={profile.worksAt}
         timezone={profile.timezone}
       />
     </div>

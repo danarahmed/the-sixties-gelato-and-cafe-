@@ -7,8 +7,8 @@ browser tests through the real app, or both.
 
 ## Where things stand
 
-- **Built and verified:** migrations `0014`–`0062` and the rebuilt app. The SQL
-  checks (61, with the rehearsals of the upgrade, the clean start and clearing
+- **Built and verified:** migrations `0014`–`0066` and the rebuilt app. The SQL
+  checks (62, with the rehearsals of the upgrade, the clean start and clearing
   the test records), the browser suites (38, every role, every screen in
   Arabic and Kurdish, a lost answer on each kind of screen, every report on A4
   paper, documents kept with the records, stock sent between the café's
@@ -16,7 +16,7 @@ browser tests through the real app, or both.
   place, the chart of accounts, the bank against its statement, finding a
   sale, a product or a journal, statements read from their files, every
   box and button named for a screen reader, and prepaid expenses), the unit
-  and contract tests (613) and a production build all pass. The UX and integration pass was
+  and contract tests (617) and a production build all pass. The UX and integration pass was
   closed on 30 September 2026, in four parts.
 - **Rehearsed on a copy of the live data:** the upgrade applied cleanly, and the
   correction sequence in [`REMEDIATION.md`](REMEDIATION.md) left every check at
@@ -2105,6 +2105,66 @@ Built and tested:
   the names refused and let through; the browser suite refuses "Delivery"
   with Arabic on the Chart of Accounts, its words left as they were.
 
+- **What a review of the releases since `0035` found, put right (`0063`–`0066`).**
+  Five reviews, one for each part of what `0035` to `0057` built (counts and
+  batches, places, payroll, purchases, the till), each finding checked
+  against the code before it was put right:
+  - **A count is not posted twice.** A batch recorded with a time before one
+    of its items was counted (a count still open, or approved within the
+    hour) is in that count already, and was posted again; a loss reversed
+    after its item was counted came back twice. The batch is refused now,
+    and the loss is approved instead.
+  - **Each place's work by those who work there.** Receiving a transfer as
+    "nothing arrived", approving a loss, moving a delivery to another
+    supplier and recording a price credit on one all used moved no stock, so
+    someone at another branch could do them. They are refused now, and the
+    drawer is handed only to someone who works at its place.
+  - **Below zero needs a manager when the rule says so.** A transfer or a
+    return took an item whose rule wants a manager's approval below zero on
+    a confirmation alone. Now only someone who may approve it does it, and
+    it is on the audit trail.
+  - **Payroll.** A payroll reopened next month took its cost out of that
+    month; it is reversed in its own month now, and not reopened while that
+    month is locked. A payment cancelled left the month undraftable once its
+    person was taken off; their line stays at nothing now. Salaries' and
+    advances' journals named who was paid, and those who see costs read
+    them; they name the payroll now ("Salaries 2026-09 (payroll 3)",
+    "Advance on pay").
+  - **Purchases.** A delivery's share still on the shelf forgot what was
+    used before a correction, and counted what went back as used, so a
+    price corrected or credited revalued the stock wrongly. A bill dated
+    before its delivery came put the books out on the days between; it is
+    refused now ("date its bill that day or later"). A supplier settled by a
+    credit could not be taken out of use, and an order whose only delivery
+    was reversed could not be cancelled.
+  - **The till and the safe.** An expense from the till or the safe dated
+    an earlier day, or a journal that moved their cash reversed on one, put
+    that day's count out for good; they are dated today now. After a change,
+    the till listed every branch's open bills, and paying one of another
+    branch's took its money into this drawer; it lists its own branch's now.
+  - **Transfers for someone who works at one place.** They saw "The café
+    has one place" and could not send anything; they send from their place
+    to any other now, and are offered receiving and cancelling where they
+    may.
+  - **The staff report** counted the year-end close in the café's labour of
+    its month; it leaves it out now, as each place's did.
+
+  Built and tested: a new SQL suite, each case one that went wrong before
+  it, run on the build before `0063` (every case failing) and with each fix
+  taken out alone (each caught, but the cancelled transfer's check: a
+  cancellation moves its goods back, so `0055` refused it already, and it is
+  not changed); two older suites put right where they had kept the old
+  answers (a payroll reopened today, a credit on goods all still on the
+  shelf); unit tests of the till's bills, the Transfers lists, the journals'
+  titles and every new refusal in Arabic and Kurdish.
+
+  Live: `0063` was applied to the live database on 2 October 2026, matches
+  the tested build object by object, and was checked as the owner in
+  transactions that were rolled back; the screens went live with
+  [pull request #67](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/67).
+  `0064`–`0066` wait: the connector that applies migrations does not take
+  their text (see [`guides/deployment.md`](guides/deployment.md#after-0066)).
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
@@ -2181,8 +2241,8 @@ Built and tested:
 
 | Layer                        | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Result      |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files, every box and button named, every text colour readable, the browser's safeguards                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 613 passing |
-| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 50 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward, a transfer sent, received and cancelled at once, ten tills at two branches)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 61 passing  |
+| Unit, acceptance, contract   | `npm test`: the domain core, 12 acceptance scenarios, role matrix = database, every call = a granted function, the docs name every migration and table, statements read from their files, every box and button named, every text colour readable, the browser's safeguards                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 617 passing |
+| SQL (PostgreSQL 16 and 17.6) | `scripts/test-sql.sh`: upgrade and clean-start rehearsals on the live migration order, clearing the test records, 51 suites, concurrency (sales, bills, keys, the drawer, losses and the last bottle racing, giveaways, clocking in, drafting and paying payroll, a customer's one reward, a transfer sent, received and cancelled at once, ten tills at two branches)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 62 passing  |
 | Browser                      | `scripts/test-e2e.sh`: every screen as every role, the day's work, the drawer in sessions (opened, closed blind, handed over, closed by a manager), retry, and a lost answer on each kind of screen, offline, bills, pricing, production, master data, alerts, card and platform settlements, languages, refunds, corrections, usage, rules, sizes and add-ons, split payments, dollars, purchasing, buying, losses and giveaways, staff and payroll, customers, loyalty, the sales analysis and the stock's value, the balance sheet and cash flow, every report on paper, documents with the records, transfers, the tills at each branch, the books by place, every report at a place, the chart of accounts, the bank against its statement, finding a sale, a product and a journal, statements read from their files; on every page, that it is hydrated only once all of it has arrived | 38 passing  |
 | Build                        | `npm run build`, types, lint, formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | green       |
 
