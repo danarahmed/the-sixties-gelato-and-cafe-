@@ -2158,6 +2158,13 @@ Built and tested:
   shelf); unit tests of the till's bills, the Transfers lists, the journals'
   titles and every new refusal in Arabic and Kurdish.
 
+  Live: `0063` was applied to the live database on 2 October 2026, matches
+  the tested build object by object, and was checked as the owner in
+  transactions that were rolled back; the screens went live with
+  [pull request #67](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/67).
+  `0064`–`0066` wait: the connector that applies migrations does not take
+  their text (see [`guides/deployment.md`](guides/deployment.md#after-0066)).
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
