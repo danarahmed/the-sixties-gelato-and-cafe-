@@ -1508,7 +1508,7 @@ export function PosClient({
               className={view === "floor" ? "active" : ""}
               onClick={() => setView("floor")}
             >
-              <Icon name="table" /> {t("pos.tables")}
+              <Icon name="table" size={16} /> {t("pos.tables")}
             </button>
             <button
               role="tab"
@@ -1516,7 +1516,7 @@ export function PosClient({
               className={view === "menu" ? "active" : ""}
               onClick={() => setView("menu")}
             >
-              <Icon name="cup" /> {t("pos.menu")}
+              <Icon name="cup" size={16} /> {t("pos.menu")}
             </button>
           </div>
         )}
@@ -1526,7 +1526,7 @@ export function PosClient({
             onClick={showQuick}
             disabled={blocked}
           >
-            <Icon name="bolt" /> {t("pos.quickSale")}
+            <Icon name="bolt" size={16} /> {t("pos.quickSale")}
             {quick.lines.length > 0 && <span className="chip-n">{itemCount(quick)}</span>}
           </button>
           {strip.map((b) => (
@@ -1575,7 +1575,7 @@ export function PosClient({
           <Icon name="print" />
         </button>
         <button
-          className="icon-btn"
+          className="icon-btn fullscreen-btn"
           onClick={fullscreen}
           title={t("pos.fullscreen")}
           aria-label={t("pos.fullscreen")}

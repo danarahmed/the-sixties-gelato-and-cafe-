@@ -746,9 +746,21 @@ tr.grand td {
   font-weight: 700;
   background: transparent !important;
 }
+/* A table in a card: its first and last columns line up with the card's own
+   edge, and the columns between keep a gap, so figures never run together. */
 .card > table th,
 .card > table td {
-  padding-inline: 0;
+  padding-inline: 10px;
+}
+.card > table :is(th, td):first-child {
+  padding-inline-start: 0;
+}
+.card > table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+/* A mark in a table's cell stays whole ("Dine-in", never "Dine- / in"). */
+td .badge {
+  white-space: nowrap;
 }
 
 /* Reference marks in registers (Auto / POS / Manual / Due). */
@@ -1194,12 +1206,16 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   border-color: var(--warn);
   background: color-mix(in srgb, var(--warn) 10%, var(--surface));
 }
-/* On a phone the drawer's chip is its lock alone; its words are its name. */
+/* On a phone the drawer's chip is its lock alone; its words are its name.
+   Full screen is left to the phone itself. */
 @media (max-width: 599px) {
   .drawer-chip {
     padding: 0 11px;
   }
   .drawer-chip-label {
+    display: none;
+  }
+  .fullscreen-btn {
     display: none;
   }
 }
