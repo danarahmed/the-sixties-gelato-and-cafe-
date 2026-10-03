@@ -138,6 +138,7 @@ import {
   briefToDo,
   canAnswer,
   groupByRule,
+  splitRed,
   overall,
   parseBrief,
   parseThresholds,
@@ -1537,6 +1538,24 @@ describe("the system speaks: alerts and the daily brief (0029, the audit's P1-8)
       ["no_cost", ["1", "3"]],
       ["bill_due", ["2"]],
     ]);
+  });
+
+  it("red alerts of one rule: the first two shown, the rest under one row, none folded away", () => {
+    const red = (id: string, rule: string) => alert({ id, rule, urgency: "red" });
+    const g = splitRed([
+      red("bank", "cash_negative"),
+      red("a", "running_out"),
+      red("b", "running_out"),
+      red("c", "running_out"),
+      red("d", "running_out"),
+      red("u", "use_by"),
+    ]);
+    expect(g.map((x) => [x.rule, x.shown.map((a) => a.id), x.more.map((a) => a.id)])).toEqual([
+      ["cash_negative", ["bank"], []],
+      ["running_out", ["a", "b"], ["c", "d"]],
+      ["use_by", ["u"], []],
+    ]);
+    expect(g.flatMap((x) => [...x.shown, ...x.more])).toHaveLength(6);
   });
 
   it("nobody answers an alert about their own exceptions", () => {

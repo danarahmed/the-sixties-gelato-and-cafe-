@@ -8,6 +8,8 @@ import type { Msg, T } from "@/lib/i18n/core";
  * brief's lines are written in them (t), and what to do is the alerts' own
  * words from the database (msg).
  */
+const TO_DO_SHOWN = 5;
+
 export function DailyBrief({
   brief,
   heading,
@@ -21,6 +23,8 @@ export function DailyBrief({
   t: T;
   msg: Msg;
 }) {
+  // What to do, five at most: the rest are each under Needs you, with what they are about.
+  const toDo = briefToDo(brief, t);
   const d = new Date(`${brief.day}T12:00:00Z`);
   const weekday = d.toLocaleDateString("en-GB", { weekday: "long", timeZone: "UTC" });
   // "24 Sept": the day as it is, the month's name in the reader's language.
@@ -53,9 +57,14 @@ export function DailyBrief({
         <div data-testid="brief-to-do">
           <h4>{labels.toDo}</h4>
           <ul>
-            {briefToDo(brief, t).map((l) => (
+            {toDo.slice(0, TO_DO_SHOWN).map((l) => (
               <li key={l}>{msg(l)}</li>
             ))}
+            {toDo.length > TO_DO_SHOWN && (
+              <li>
+                <a href="#needs-you">{t("…and {n} more", { n: toDo.length - TO_DO_SHOWN })}</a>
+              </li>
+            )}
           </ul>
           {brief.red + brief.orange > 0 && (
             <p className="muted" style={{ fontSize: ".8rem", margin: "8px 0 0" }}>

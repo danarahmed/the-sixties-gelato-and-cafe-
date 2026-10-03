@@ -47,7 +47,7 @@ function contrast(a: string, b: string): number {
 const WRITTEN: [string[], string[]][] = [
   [
     ["text", "text-muted", "faint", "brand", "accent", "ok", "warn", "err", "info"],
-    ["paper", "surface", "surface-2"],
+    ["paper", "surface", "surface-2", "brand-soft"],
   ],
   [["brand-ink"], ["brand"]],
   [

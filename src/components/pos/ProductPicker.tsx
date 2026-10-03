@@ -41,8 +41,11 @@ export function ProductThumb({
       />
     );
   }
-  let h = 0;
-  for (const c of seed) h = (h * 31 + c.charCodeAt(0)) % 360;
+  // One of the café's eight flavours, the same for every product of a
+  // category (FNV-1a: categories spread over the eight, not bunched).
+  let hash = 2166136261;
+  for (const c of seed) hash = Math.imul(hash ^ c.charCodeAt(0), 16777619);
+  const h = (hash >>> 0) % 8;
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
@@ -50,14 +53,7 @@ export function ProductThumb({
     .map((w) => w[0])
     .join("")
     .toUpperCase();
-  return (
-    <span
-      className="tile-img tile-initials"
-      style={{ background: `hsl(${h} 45% 88%)`, color: `hsl(${h} 45% 28%)` }}
-    >
-      {initials}
-    </span>
-  );
+  return <span className={`tile-img tile-initials flavour-${h}`}>{initials}</span>;
 }
 
 /**

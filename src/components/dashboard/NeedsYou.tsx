@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { Fragment, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { acknowledgeAlertAction, snoozeAlertAction } from "@/lib/actions/alerts";
 import {
@@ -11,6 +11,7 @@ import {
   ruleLabel,
   snoozeRange,
   sortAlerts,
+  splitRed,
   type Alert,
 } from "@/lib/alerts";
 import { dateTimeIn } from "@/lib/dates";
@@ -24,7 +25,8 @@ type Msg = { ok: boolean; text: string } | null;
  * What needs the owner, at the top of the dashboard (0029, the audit's P1-8):
  * 🔴 and 🟠 waiting for someone, 🟢 when nothing does, and 🔵 what has been
  * answered or snoozed — still open until its condition clears. Orange alerts
- * of one rule fold into one row to open; red ones are always shown.
+ * of one rule fold into one row to open; red ones are always shown, the first
+ * two of a rule on the page and any more under one red row saying how many.
  */
 export function NeedsYou({
   alerts,
@@ -52,7 +54,7 @@ export function NeedsYou({
     />
   );
   return (
-    <section className="grid" style={{ gap: 10 }} data-testid="needs-you">
+    <section id="needs-you" className="grid" style={{ gap: 10 }} data-testid="needs-you">
       <h2 style={{ margin: 0, fontSize: "1.15rem" }}>{t("dash.needsYou")}</h2>
       {needsYou.length === 0 ? (
         <div className="alert-row green" data-testid="all-clear">
@@ -67,7 +69,27 @@ export function NeedsYou({
         </div>
       ) : (
         <div className="alerts">
-          {needsYou.filter((a) => a.urgency === "red").map(row)}
+          {splitRed(needsYou.filter((a) => a.urgency === "red")).map((g) => (
+            <Fragment key={g.rule}>
+              {g.shown.map(row)}
+              {g.more.length > 0 && (
+                <details
+                  className="alert-row red alert-group"
+                  data-testid="alert-more"
+                  data-rule={g.rule}
+                >
+                  <summary>
+                    <span className="alert-title">
+                      🔴 {t("{rule}: {n} more", { rule: msg(ruleLabel(g.rule)), n: g.more.length })}
+                    </span>
+                  </summary>
+                  <div className="alerts" style={{ marginTop: 8 }}>
+                    {g.more.map(row)}
+                  </div>
+                </details>
+              )}
+            </Fragment>
+          ))}
           {groupByRule(needsYou.filter((a) => a.urgency === "orange")).map((g) =>
             g.alerts.length === 1 ? (
               row(g.alerts[0]!)

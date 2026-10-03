@@ -121,7 +121,9 @@ each time the page opens.
 - 🔴 **red** needs doing now, 🟠 **orange** soon; each says what happened, why
   it matters, what to do (a link to where it is done) and how sure the rule is
   (**Sure**, **Fairly sure**, **Early sign**). Orange alerts of one kind fold
-  into one row: open it to see each.
+  into one row: open it to see each. Red ones are never folded away: of one
+  kind, the first two are shown and any more wait under one red row that says
+  how many (**Running out: 17 more**).
 - **Answer** (owner, managers, accountant): a line saying what was done, or
   why it is fine. **Snooze**: a day, from tomorrow to 30 days ahead, and why it
   can wait. Both are on the audit trail; the alert stays, marked 🔵 under
@@ -136,17 +138,50 @@ nothing), its **Calculations** (cost of goods, gross profit, against the same
 day last week and a usual one) and **To do** (the red alerts nobody has
 answered), kept apart.
 
-**Today**, from the books:
+**Today**, from the books, under a greeting with the day and the time:
 
-- **Net sales today**, **Gross profit after waste & fees**, **Orders**,
-  **Average order value**;
-- **Stock value**: the value of stock in the books (1200 Inventory);
-- **Low-stock items**: a count, and a list of items below their reorder level or
-  negative;
+- **Net sales today**, **Orders**, **Average order value** and **Gross profit
+  after waste & fees** (with its share of net sales). Under each of the first
+  three, how today stands against **a usual day of its kind by this time**: ▲
+  above, ▼ below, ● within 5% either way, in words ("14% below usual by
+  16:09"); and a line of the 14 whole days before today. A usual Saturday is
+  the four Saturdays before, any the café sold nothing on left out, each
+  counted only to the same time of day — today so far is never set against a
+  whole day;
 - each figure opens what is behind it: net sales the Sales by Channel report,
-  gross profit the P&L, orders today's orders, inventory and low stock the
-  Inventory page;
-- **Recent sales**;
+  gross profit the P&L, orders and the average today's orders.
+
+**What the figures say** (for whoever sees costs), in words, each a link to
+where to act on it:
+
+- today against a usual day of its kind by now, with both amounts;
+- the hour a usual day of its kind is busiest: have the most hands on then
+  (**Staff**);
+- what brought in the most over the last 7 days, and what it keeps after the
+  cost of what it uses;
+- the product that keeps the least of what it sells for, when that is under
+  30%, it sold 3 times or more and it is costed — a product with no cost is
+  never read as a fine margin (**Products & Recipes**);
+- how many items are at or below their reorder level (**Inventory**).
+
+Then, drawn (for whoever sees costs):
+
+- **Sales, the last 14 days**: a column a day, today's in raspberry, and a
+  dashed line at the average of the 13 days before that had sales;
+- **Today, hour by hour**: today's sales in each hour, and a usual day of its
+  kind as a line, so the rest of the day can be read ahead;
+- **What sells, the last 7 days**: the five products that brought in the most,
+  how many were sold, and what part of their price each keeps (**not costed
+  yet** when it has no cost).
+
+Point at a column, or tab to the chart and move with the arrow keys, for its
+figures; **Show as a table** under each chart holds the same figures.
+
+- **Stock value** (**Stock at** a place): the value of stock in the books
+  (1200 Inventory), and up to six items below zero or at their reorder level —
+  below zero first, then the furthest under it — with a link to the rest on
+  **Inventory**;
+- **Yesterday's brief** and **Recent sales**;
 - whether the **books reconcile**, with a link to the differences if they do not.
 
 ## 5. POS

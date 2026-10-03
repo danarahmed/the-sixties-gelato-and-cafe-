@@ -243,6 +243,8 @@ console.log(
   await form.getByText(/is on its way to Main Branch/).waitFor({ timeout: 10000 });
   const sent = Number(last(`select max(transfer_no) from stock_transfer`));
   const fromThem = page.locator(`[data-testid="transfer"][data-no="${sent}"]`);
+  // The list is drawn again after the message: wait for the transfer in it.
+  await fromThem.waitFor({ timeout: 10000 });
   check(
     (await fromThem.getByTestId("transfer-cancel").count()) === 1 &&
       (await fromThem.getByTestId("transfer-receive").count()) === 0,
