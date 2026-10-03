@@ -46,7 +46,9 @@ each job.
 
 **Location:** `/login` · **My account** at the bottom of the sidebar (`/account`)
 
-- **Sign in** with your own email and password.
+- **Sign in** with your own email and password. Beside the form, the café's
+  name on its raspberry and what the system is for; on a phone, a band above
+  the form.
 - **First time here? Create your login.** It works only for an email the owner
   has added under Settings → People. Confirm the email you receive, then sign
   in. A login for an email nobody added sees nothing.

@@ -287,6 +287,25 @@ const phrases: PhraseBook = {
     ar: "تعذّرت قراءة الملف: احفظه من جديد بصيغة xlsx أو CSV، ثم اختره.",
     ckb: "فایلەکە نەخوێندرایەوە: دووبارە وەک xlsx یان CSV پاشەکەوتی بکە، و ئەوە هەڵبژێرە.",
   },
+
+  // The sign-in screen: what the system is for, beside the form.
+  "Welcome back": { ar: "أهلًا بعودتك", ckb: "بەخێربێیتەوە" },
+  "The till, the kitchen and the books, in one place.": {
+    ar: "نقطة البيع والمطبخ والدفاتر، في مكان واحد.",
+    ckb: "خاڵی فرۆشتن، چێشتخانە و دەفتەرەکان، لە یەک شوێندا.",
+  },
+  "Sell at the counter, at a table, or for delivery": {
+    ar: "بِع على الكاونتر أو على طاولة أو للتوصيل",
+    ckb: "لە پێشخان، لەسەر مێز یان بۆ گەیاندن بفرۆشە",
+  },
+  "Make, count and keep the stock right": {
+    ar: "اصنع وعُدّ وأبقِ المخزون صحيحًا",
+    ckb: "دروست بکە، بژمێرە و کۆگاکە ڕاست ڕابگرە",
+  },
+  "See the day's figures, and what they mean": {
+    ar: "شاهد أرقام اليوم وما تعنيه",
+    ckb: "ژمارەکانی ڕۆژ و مانایان ببینە",
+  },
 };
 
 export default phrases;
