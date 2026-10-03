@@ -40,6 +40,11 @@ const nextConfig = {
         source: "/:path((?!api/product-image/).*)",
         headers: [{ key: "Content-Security-Policy", value: PAGE_POLICY }],
       },
+      // The fonts change only with a new file name: a browser keeps them a month.
+      {
+        source: "/fonts/:file*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=2592000" }],
+      },
       // The service worker and manifest are served from /public.
       {
         source: "/sw.js",

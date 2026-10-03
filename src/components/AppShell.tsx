@@ -6,6 +6,33 @@ import Link from "next/link";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { Locale } from "@/lib/i18n/core";
 import { NAV, holdsAny } from "@/lib/auth/routes";
+import { BrandMark, Icon, type IconName } from "@/components/Icon";
+
+/** Each screen's icon in the menu, beside its name. */
+const NAV_ICONS: Record<string, IconName> = {
+  "/dashboard": "dashboard",
+  "/sales": "sales",
+  "/platforms": "platforms",
+  "/customers": "customers",
+  "/vendors": "vendors",
+  "/expenses": "expenses",
+  "/purchasing": "purchasing",
+  "/payroll": "payroll",
+  "/pos": "cone",
+  "/orders": "orders",
+  "/products": "cup",
+  "/inventory": "box",
+  "/count": "count",
+  "/inventory/usage": "usage",
+  "/inventory/transfers": "transfers",
+  "/production": "bowl",
+  "/staff": "staff",
+  "/journals": "book",
+  "/accounting": "ledger",
+  "/reports": "reports",
+  "/audit": "shield",
+  "/settings": "settings",
+};
 
 export interface ShellMember {
   name: string;
@@ -111,8 +138,13 @@ function Controls({ locale, theme }: { locale: Locale; theme: "light" | "dark" }
           ))}
         </select>
       </label>
-      <button onClick={toggleTheme} aria-label={t("common.theme")} title={t("common.theme")}>
-        {cur === "dark" ? "🌙" : "☀️"}
+      <button
+        onClick={toggleTheme}
+        aria-label={t("common.theme")}
+        title={t("common.theme")}
+        className="icon-only"
+      >
+        <Icon name={cur === "dark" ? "moon" : "sun"} />
       </button>
     </div>
   );
@@ -139,6 +171,7 @@ export function AppShell({
       <div className="app-shell">
         <WholePage />
         <header className="topbar">
+          <BrandMark />
           <span className="brand">{t("app.name")}</span>
           <span className="spacer" />
           <Controls locale={locale} theme={theme} />
@@ -171,10 +204,11 @@ export function AppShell({
           aria-expanded={menuOpen}
           aria-controls="sidenav"
           style={{ minWidth: 44 }}
-          className="menu-toggle"
+          className="menu-toggle icon-only"
         >
-          ☰
+          <Icon name="menu" />
         </button>
+        <BrandMark />
         <span className="brand" dir="auto">
           {member.businessName || t("app.name")}
         </span>
@@ -205,6 +239,7 @@ export function AppShell({
                   className={active ? "active" : ""}
                   aria-current={active ? "page" : undefined}
                 >
+                  {NAV_ICONS[n.href] && <Icon name={NAV_ICONS[n.href]!} size={18} />}
                   {t(n.key)}
                 </Link>
               </div>
@@ -217,6 +252,7 @@ export function AppShell({
               className={pathname === "/account" ? "active" : ""}
               aria-current={pathname === "/account" ? "page" : undefined}
             >
+              <Icon name="user" size={18} />
               {t("nav.account")}
             </Link>
           </div>
