@@ -138,7 +138,7 @@ export default async function SalesPage() {
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.day + r.channel}>
-                    <td>{r.day}</td>
+                    <td className="when">{r.day}</td>
                     <td>
                       <span className="ref auto">{channels.name(r.channel)}</span>
                     </td>

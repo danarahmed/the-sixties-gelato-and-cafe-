@@ -427,6 +427,10 @@ select {
     text-align: start;
     white-space: normal;
   }
+  /* Cards are told apart by the line between them, not by a stripe. */
+  .stack-table tbody tr:nth-child(even) td {
+    background: transparent;
+  }
   .stack-table td[data-label]::before {
     content: attr(data-label);
     display: block;
@@ -1126,7 +1130,10 @@ td.ref {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
   background: var(--surface);
+  box-shadow: var(--shadow);
 }
 .cards2 > div {
   padding: 12px 15px;
@@ -1136,10 +1143,10 @@ td.ref {
   border-inline-end: none;
 }
 .cards2 .v {
-  font-family: var(--font-display);
-  font-variant-numeric: tabular-nums;
-  font-size: 1.24rem;
-  font-weight: 700;
+  font-family: var(--font-ui);
+  font-size: 1.3rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
   margin-block-start: 4px;
 }
 .cards2 .m {
@@ -1242,6 +1249,18 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   }
   .fullscreen-btn {
     display: none;
+  }
+  /* The open bills on a row of their own, under the tabs and the buttons, so
+     Quick sale is never cut in half at the edge. */
+  .pos-top {
+    flex-wrap: wrap;
+  }
+  .pos-top .bill-strip {
+    order: 2;
+    flex: 1 1 100%;
+  }
+  .pos-top .drawer-chip {
+    margin-inline-start: auto;
   }
 }
 .chip.active {
@@ -3731,6 +3750,20 @@ a.card.stat:focus-visible {
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+/* Any grid of figures (Inventory, Orders...) on a phone: two to a row, as on
+   the dashboard, whatever width the page asked for them. */
+@media (max-width: 640px) {
+  .grid:has(> .stat) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .grid > .stat {
+    padding: 12px;
+  }
+  .grid > .stat .value {
+    font-size: 1.2rem;
+  }
 }
 /* On a phone, two figures to a row, so the day reads without scrolling past them. */
 @media (max-width: 640px) {

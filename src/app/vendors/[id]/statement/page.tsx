@@ -229,7 +229,7 @@ export default async function SupplierStatementPage({
               {s.openCredits.map((c) => (
                 <tr key={c.creditId}>
                   <td className="mono">{c.creditNo}</td>
-                  <td>{c.date}</td>
+                  <td className="when">{c.date}</td>
                   <td>{t(CREDIT_KIND_LABEL[c.kind])}</td>
                   <td>{c.supplierRef ?? t("Awaiting their note")}</td>
                   <td className="right money">{fmtIQD(c.amount)}</td>

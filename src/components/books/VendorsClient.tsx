@@ -618,7 +618,7 @@ function Bills({
                       {b.invoiceNo || "—"}
                       <DocumentsLink kind="purchase_invoice" id={b.id} count={docs[b.id] ?? 0} />
                     </td>
-                    <td>{b.invoiceDate}</td>
+                    <td className="when">{b.invoiceDate}</td>
                     <td>{b.dueDate ?? "—"}</td>
                     <td className="right money">{fmtIQD(b.total)}</td>
                     <td className="right money">{fmtIQD(b.outstanding)}</td>
