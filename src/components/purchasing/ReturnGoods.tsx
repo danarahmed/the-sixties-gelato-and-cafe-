@@ -8,6 +8,7 @@ import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { Icon } from "@/components/Icon";
 
 export interface ReturnItemOpt {
   id: string;
@@ -139,7 +140,9 @@ export function ReturnGoods({
 
   return (
     <div className="card grid" style={{ gap: 10 }} data-testid="return-goods">
-      <h3 style={{ margin: 0 }}>↩️ {t("Return goods to a supplier")}</h3>
+      <h3 style={{ margin: 0 }}>
+        <Icon name="undo" /> {t("Return goods to a supplier")}
+      </h3>
       <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
         {t(
           "Named against the delivery they came in, the supplier owes back what it charged for them: before its bill, the bill is for what was kept; after it, a credit on their account is set against the bill. The stock leaves at what it costs now.",

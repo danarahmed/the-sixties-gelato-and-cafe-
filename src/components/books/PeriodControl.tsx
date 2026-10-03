@@ -8,6 +8,7 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import type { CheckRow } from "@/lib/db/books";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { StatusMark } from "@/components/Icon";
 
 /**
  * Closing a period. Every check must pass before the lock is offered, and the
@@ -112,7 +113,12 @@ export function PeriodControl({
             <tbody>
               {checklist.map((c) => (
                 <tr key={c.key} data-check={c.key}>
-                  <td style={{ width: 28 }}>{c.ok ? "✅" : c.blocks ? "⛔" : "⚠️"}</td>
+                  <td style={{ width: 28 }}>
+                    <StatusMark
+                      state={c.ok ? "ok" : c.blocks ? "bad" : "warn"}
+                      label={c.ok ? t("All good") : c.blocks ? t("Stops the close") : t("Warning")}
+                    />
+                  </td>
                   <td>{say(c.label)}</td>
                   <td
                     className={c.ok ? "muted" : c.blocks ? "red" : undefined}

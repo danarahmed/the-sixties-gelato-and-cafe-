@@ -25,6 +25,7 @@ import {
   type LineDraft,
 } from "@/components/menu/RecipeLines";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { Icon } from "@/components/Icon";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -138,7 +139,15 @@ export function AddProductForm({
         onClick={() => setOpen((o) => !o)}
         style={{ alignSelf: "start" }}
       >
-        {open ? t("▾ Hide product form") : t("➕ Add menu product")}
+        {open ? (
+          <>
+            <Icon name="close" size={16} /> {t("Hide product form")}
+          </>
+        ) : (
+          <>
+            <Icon name="plus" size={16} /> {t("Add menu product")}
+          </>
+        )}
       </button>
       {open && (
         <div className="pf">

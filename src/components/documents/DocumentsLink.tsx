@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { DocumentKind } from "@/lib/documents";
+import { Icon } from "@/components/Icon";
 
 /**
  * The way from a record in a list to the documents kept with it: 📎 and how
@@ -30,7 +31,8 @@ export function DocumentsLink({
       data-testid="documents-link"
       data-count={count}
     >
-      📎{count ? <span className="n">{count}</span> : null}
+      <Icon name="clip" size={16} />
+      {count ? <span className="n">{count}</span> : null}
     </Link>
   );
 }

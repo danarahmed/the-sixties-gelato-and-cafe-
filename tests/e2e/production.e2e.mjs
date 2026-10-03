@@ -53,7 +53,7 @@ console.log("▸ owner sets up a base, and a flavour made from it kept in pans")
 {
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/production");
-  await page.getByText("➕ Add something you make").click();
+  await page.getByText("Add something you make", { exact: true }).click();
   await page.getByLabel("Name of what it makes").fill("E2E base");
   await page.getByLabel("How it is counted").selectOption("volume");
   await page.getByLabel("One batch makes", { exact: true }).fill("5");
@@ -118,7 +118,7 @@ console.log("▸ a barista records two batches of the base, and is shown no cost
     "no cost anywhere on the barista's page",
   );
   check(
-    (await page.getByText("➕ Add something you make").count()) === 0 &&
+    (await page.getByText("Add something you make", { exact: true }).count()) === 0 &&
       (await page.getByRole("button", { name: /^Cancel/ }).count()) === 0,
     "and no way to change recipes or cancel batches",
   );

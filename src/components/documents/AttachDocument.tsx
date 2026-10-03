@@ -16,6 +16,7 @@ import {
   sizeLabel,
   type DocumentKind,
 } from "@/lib/documents";
+import { Icon } from "@/components/Icon";
 
 /**
  * A picture over 1.5 MB, made smaller in the browser before it is sent: its
@@ -141,10 +142,10 @@ export function AttachDocument({ kind, record }: { kind: DocumentKind; record: s
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         {/* On a phone the first opens the camera; on a computer both choose a file. */}
         <button type="button" onClick={() => camera.current?.click()} disabled={busy}>
-          📷 {t("Take a photo")}
+          <Icon name="camera" /> {t("Take a photo")}
         </button>
         <button type="button" onClick={() => chooser.current?.click()} disabled={busy}>
-          📄 {t("Choose a picture or a PDF")}
+          <Icon name="file" /> {t("Choose a picture or a PDF")}
         </button>
         <input
           ref={camera}

@@ -17,6 +17,7 @@ import { fmtIQD } from "@/lib/format";
 import { businessToday, monthEnd, monthStart } from "@/lib/dates";
 import { PeriodControl } from "@/components/books/PeriodControl";
 import { ChartOfAccounts } from "@/components/books/ChartOfAccounts";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -97,7 +98,14 @@ export default async function AccountingPage({
               aria-current={p.id === chosen?.id ? "page" : undefined}
             >
               {p.name}
-              {p.status === "locked" ? " 🔒" : ""}
+              {p.status === "locked" && (
+                <>
+                  {" "}
+                  <span role="img" aria-label={t("Locked")}>
+                    <Icon name="lock" size={14} />
+                  </span>
+                </>
+              )}
             </Link>
           ))}
         </div>

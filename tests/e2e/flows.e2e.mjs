@@ -580,8 +580,10 @@ console.log("▸ owner reads the books");
 {
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/reports");
-  const recon = await page.locator("#reconciliation").textContent();
-  check(!recon.includes("⛔"), "every subledger reconciles to its control account");
+  check(
+    (await page.locator('#reconciliation [data-state="bad"]').count()) === 0,
+    "every subledger reconciles to its control account",
+  );
   check(
     /Net revenue/.test(await page.locator("#pnl").textContent()),
     "the P&L renders from the ledger",

@@ -19,6 +19,7 @@ import { Field, Notice, inputStyle } from "@/components/ui";
 import { NewItemForm } from "@/components/NewItemForm";
 import { OperationStatus, useOperation } from "@/components/useOperation";
 import { ManagerApproval } from "@/components/ManagerApproval";
+import { Icon } from "@/components/Icon";
 
 interface ItemOpt {
   id: string;
@@ -105,7 +106,9 @@ function AddItem({ isOwner, items }: { isOwner: boolean; items: ItemOpt[] }) {
   const { t } = useT();
   return (
     <div className="card grid" style={{ gap: 10, alignContent: "start" }}>
-      <h3 style={{ margin: 0 }}>➕ {t("Add stock item")}</h3>
+      <h3 style={{ margin: 0 }}>
+        <Icon name="plus" /> {t("Add stock item")}
+      </h3>
       <NewItemForm items={items} isOwner={isOwner} />
     </div>
   );
@@ -198,7 +201,9 @@ function OpeningStock({ items }: { items: ItemOpt[] }) {
       style={{ gap: 10, alignContent: "start" }}
       data-testid="opening-stock"
     >
-      <h3 style={{ margin: 0 }}>📦 {t("Opening stock")}</h3>
+      <h3 style={{ margin: 0 }}>
+        <Icon name="box" /> {t("Opening stock")}
+      </h3>
       <p className="muted" style={{ fontSize: ".8rem", margin: 0 }}>
         {t(
           "{n} item(s) have no stock recorded yet. Count what is on the shelf and enter it at what it cost, so every sale of it is costed.",
@@ -365,7 +370,9 @@ function RecordLoss({
   if (items.length === 0 && products.length === 0) return null;
   return (
     <div className="card grid" style={{ gap: 10, alignContent: "start" }} data-testid="record-loss">
-      <h3 style={{ margin: 0 }}>🗑️ {t("Record a loss")}</h3>
+      <h3 style={{ margin: 0 }}>
+        <Icon name="trash" /> {t("Record a loss")}
+      </h3>
       <Field label={t("What kind of loss")}>
         <select
           style={inputStyle}
@@ -658,7 +665,9 @@ function CorrectStock({
       style={{ gap: 10, alignContent: "start" }}
       data-testid="correct-stock"
     >
-      <h3 style={{ margin: 0 }}>✏️ {t("Correct stock (manager)")}</h3>
+      <h3 style={{ margin: 0 }}>
+        <Icon name="pencil" /> {t("Correct stock (manager)")}
+      </h3>
       <Field label={t("Item")}>
         <select
           style={inputStyle}

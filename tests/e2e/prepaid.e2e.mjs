@@ -221,7 +221,9 @@ sql(`alter table prepaid_expense disable trigger prepaid_expense_guard;
   await ctx.close();
 }
 
-console.log("▸ on Journals, a month's share is not reversed by hand: it goes with its prepaid expense");
+console.log(
+  "▸ on Journals, a month's share is not reversed by hand: it goes with its prepaid expense",
+);
 {
   // An ordinary expense beside them, which the owner may reverse by hand.
   sql(`select test.act_as('owner@example.com');

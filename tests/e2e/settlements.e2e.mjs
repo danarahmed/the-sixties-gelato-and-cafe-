@@ -79,7 +79,7 @@ console.log("▸ the owner settles yesterday's against the terminal and the bank
   check(await record.isDisabled(), "a difference needs a note saying why");
   await panel.getByLabel("Note").fill("A card sale rung by mistake: it was paid in cash");
   await record.click();
-  await page.getByText(/^✅ Settled \(journal \d+\)/).waitFor({ timeout: 10000 });
+  await page.getByText(/^Settled \(journal \d+\)/).waitFor({ timeout: 10000 });
   check(
     lines("card_settlement") === "1010 Cr 10000 | 1020 Dr 7450 | 6300 Dr 2500 | 6500 Dr 50",
     "the bank's money in, the fee to 6500, the difference to 6300, the till's takings out of 1010",
@@ -97,7 +97,7 @@ console.log("▸ the owner settles yesterday's against the terminal and the bank
   await panel.getByRole("button", { name: "Cancel…" }).click();
   await panel.getByLabel("Why it is cancelled").fill("The terminal's report was the day before's");
   await panel.getByRole("button", { name: "Cancel it" }).click();
-  await page.getByText(/^✅ Cancelled: its journal is reversed/).waitFor({ timeout: 10000 });
+  await page.getByText(/^Cancelled: its journal is reversed/).waitFor({ timeout: 10000 });
   await open(page, "/sales");
   check(
     num(await panel.getByTestId("card-till").textContent()) === 10000,
@@ -106,7 +106,7 @@ console.log("▸ the owner settles yesterday's against the terminal and the bank
   await panel.getByRole("button", { name: "Same as the till" }).click();
   await panel.getByLabel("Reached the bank").fill("9900");
   await panel.getByRole("button", { name: "Record the settlement" }).click();
-  await page.getByText(/^✅ Settled \(journal \d+\)/).waitFor({ timeout: 10000 });
+  await page.getByText(/^Settled \(journal \d+\)/).waitFor({ timeout: 10000 });
   check(
     lines("card_settlement") === "1010 Cr 10000 | 1020 Dr 9900 | 6500 Dr 100",
     "settled again with no difference: no note needed",
@@ -208,7 +208,7 @@ console.log("▸ the owner posts it with a note, then cancels it");
     .fill("9999 is not ours; E2E-3 was voided; E2E-4 paid 50 short, asked; line 5 repeats line 1");
   await post.click();
   await page
-    .getByText(/^✅ Posted \(journal \d+\): 2 Talabat order\(s\) paid out; 4 line\(s\)/)
+    .getByText(/^Posted \(journal \d+\): 2 Talabat order\(s\) paid out; 4 line\(s\)/)
     .waitFor({ timeout: 10000 });
   check(
     lines("platform_settlement") === "1020 Dr 5050 | 1100 Cr 6000 | 5100 Dr 900 | 5200 Dr 50",
@@ -232,7 +232,7 @@ console.log("▸ the owner posts it with a note, then cancels it");
   await row.getByRole("button", { name: "Cancel…" }).click();
   await row.getByLabel("Why it is cancelled").fill("The statement was Careem's");
   await row.getByRole("button", { name: "Cancel it" }).click();
-  await page.getByText(/^✅ Cancelled: its journal is reversed/).waitFor({ timeout: 10000 });
+  await page.getByText(/^Cancelled: its journal is reversed/).waitFor({ timeout: 10000 });
   await open(page, "/platforms");
   check(
     (

@@ -200,7 +200,7 @@ console.log(
     "the corrections moved the stock ledger and GRNI with their accounts",
   );
   check(
-    (await page.getByTestId("rec-grni").textContent()).startsWith(now.grni === 0 ? "✅" : "⛔"),
+    (await page.getByTestId("rec-grni").getAttribute("data-ok")) === String(now.grni === 0),
     "and Reports shows GRNI as the database has it",
   );
   // A journal that says it is an expense's, for an expense that does not exist.

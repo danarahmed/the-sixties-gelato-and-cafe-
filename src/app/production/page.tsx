@@ -24,6 +24,7 @@ import { BatchRecipeForm } from "@/components/production/BatchRecipeForm";
 import { CancelBatch, RecipeActions } from "@/components/production/RecipeActions";
 import { ProductionLots } from "@/components/production/Lots";
 import { batchCost, perUnit, showIn, showNice, unitLabel } from "@/components/production/batchMath";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -325,7 +326,9 @@ export default async function ProductionPage({
         <h2 style={{ margin: "8px 0 0" }}>{t("What you make")}</h2>
         {canEdit && (
           <details className="card pr-new">
-            <summary>{t("➕ Add something you make")}</summary>
+            <summary>
+              <Icon name="plus" size={16} /> {t("Add something you make")}
+            </summary>
             <BatchRecipeForm items={itemOpts} decimals={decimals} seesCost={seesCost} />
           </details>
         )}

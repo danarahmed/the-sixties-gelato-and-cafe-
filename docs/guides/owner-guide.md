@@ -328,7 +328,7 @@ fast. Set it up once, on **Products** and on the till itself:
   (they get a chip of their own), and untick **On the till** for anything not
   sold now. A hidden product keeps its recipe, prices and history, and comes
   back by ticking the box again.
-- **A new product** (Products, **➕ Add menu product**): build its recipe
+- **A new product** (Products, **Add menu product**): build its recipe
   first. The form costs it as you type, at today's stock costs and exactly as a
   sale will post it: each ingredient, then **Cost of one serving** (more for
   takeaway and delivery, where the cup and lid are used). Then choose the

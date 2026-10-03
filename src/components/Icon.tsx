@@ -255,6 +255,61 @@ const PATHS = {
       <path d="M9 8.5V7a3 3 0 0 1 6 0v1.5" />
     </>
   ),
+  // The rest of the screens'.
+  plus: <path d="M12 5v14M5 12h14" />,
+  trash: (
+    <>
+      <path d="M4.5 7h15M9.5 7V4.5h5V7" />
+      <path d="M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5" />
+    </>
+  ),
+  pencil: (
+    <>
+      <path d="M4 20l1-4.5L16 4.5a2.1 2.1 0 0 1 3 3L8 18.5z" />
+      <path d="M14.5 6l3.5 3.5" />
+    </>
+  ),
+  undo: <path d="M9 7.5L4.5 12 9 16.5M5 12h9.5a5 5 0 0 1 0 10H12" />,
+  camera: (
+    <>
+      <path d="M4 8.5h3l1.5-2.5h7L17 8.5h3a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z" />
+      <circle cx="12" cy="13.5" r="3.5" />
+    </>
+  ),
+  file: (
+    <>
+      <path d="M6.5 3.5h7l4 4v13h-11z" />
+      <path d="M13.5 3.5v4h4M9 12h6M9 15.5h6" />
+    </>
+  ),
+  image: (
+    <>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+      <circle cx="9" cy="9.5" r="1.8" />
+      <path d="M4 17.5l5-4.5 3.5 3 3-2.5 4.5 4" />
+    </>
+  ),
+  clip: (
+    <path d="M17.5 10.5l-6.8 6.8a3.5 3.5 0 0 1-5-5L13 5a2.3 2.3 0 0 1 3.3 3.3l-7.2 7.2a1.1 1.1 0 0 1-1.6-1.6L14 7.4" />
+  ),
+  alert: (
+    <>
+      <path d="M12 4l9 15.5H3z" />
+      <path d="M12 10v4.5M12 17.2v.3" />
+    </>
+  ),
+  ok: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M7.8 12.3l2.8 2.8 5.6-5.6" />
+    </>
+  ),
+  bad: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9 9l6 6M15 9l-6 6" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof PATHS;
@@ -284,6 +339,27 @@ export function BrandMark({ size = 30 }: { size?: number }) {
   return (
     <span className="brand-mark" style={{ width: size, height: size }} aria-hidden="true">
       <Icon name="cone" size={Math.round(size * 0.62)} />
+    </span>
+  );
+}
+
+/**
+ * A check's outcome, drawn: a tick in green, a cross in red, a warning in
+ * amber — never colour alone, the shape says it too, and a screen reader is
+ * told it in words. `data-state` says it to a test.
+ */
+export function StatusMark({
+  state,
+  label,
+  size = 16,
+}: {
+  state: "ok" | "bad" | "warn";
+  label: string;
+  size?: number;
+}) {
+  return (
+    <span className={`status-mark ${state}`} data-state={state} role="img" aria-label={label}>
+      <Icon name={state === "ok" ? "ok" : state === "bad" ? "bad" : "alert"} size={size} />
     </span>
   );
 }

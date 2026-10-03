@@ -19,6 +19,7 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { NewItemForm, type CreatedItem } from "@/components/NewItemForm";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { Icon } from "@/components/Icon";
 
 interface ItemOpt {
   id: string;
@@ -101,7 +102,9 @@ function AddSupplier() {
 
   return (
     <div className="card grid" style={{ gap: 10, alignContent: "start" }}>
-      <h3 style={{ margin: 0 }}>🏭 {t("Add supplier")}</h3>
+      <h3 style={{ margin: 0 }}>
+        <Icon name="vendors" /> {t("Add supplier")}
+      </h3>
       <Field label={t("Name")}>
         <input
           style={inputStyle}
@@ -291,7 +294,9 @@ function Receive({
   if ((items.length === 0 && !canAddItem) || suppliers.length === 0) {
     return (
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>📦 {t("Receive stock")}</h3>
+        <h3 style={{ marginTop: 0 }}>
+          <Icon name="box" /> {t("Receive stock")}
+        </h3>
         <p className="muted" style={{ fontSize: ".9rem" }}>
           {items.length === 0
             ? t("Add stock items on Inventory first.")
@@ -303,7 +308,9 @@ function Receive({
 
   return (
     <div className="card grid" style={{ gap: 10, gridColumn: "span 2" }} data-testid="receive">
-      <h3 style={{ margin: 0 }}>📦 {t("Receive stock (goods receipt)")}</h3>
+      <h3 style={{ margin: 0 }}>
+        <Icon name="box" /> {t("Receive stock (goods receipt)")}
+      </h3>
       <div className="grid" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 8 }}>
         <Field label={t("Supplier")}>
           <select
@@ -464,7 +471,9 @@ function Receive({
                   data-testid="new-item"
                   style={{ background: "var(--surface)", borderStyle: "dashed" }}
                 >
-                  <h4 style={{ margin: "0 0 4px" }}>➕ {t("A new stock item")}</h4>
+                  <h4 style={{ margin: "0 0 4px" }}>
+                    <Icon name="plus" /> {t("A new stock item")}
+                  </h4>
                   <p className="muted" style={{ fontSize: ".8rem", margin: "0 0 8px" }}>
                     {t(
                       "It goes into Inventory with its name in each language, and its stock comes in with this delivery. Its price is entered on the line, as the invoice has it.",

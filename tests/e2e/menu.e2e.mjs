@@ -32,7 +32,7 @@ console.log("▸ owner prices a new drink from what its recipe costs");
 {
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/products");
-  await page.getByRole("button", { name: "➕ Add menu product" }).click();
+  await page.getByRole("button", { name: "Add menu product", exact: true }).click();
   await page.getByLabel("Product name (English)").fill("Golden cortado");
   const serving = page.getByTestId("serving-cost");
   check(
@@ -197,7 +197,7 @@ console.log("▸ a product with no recipe says why it uses no stock, or is flagg
 {
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/products");
-  await page.getByRole("button", { name: "➕ Add menu product" }).click();
+  await page.getByRole("button", { name: "Add menu product", exact: true }).click();
   await page.getByLabel("Product name (English)").fill("Golden service");
   await page.getByLabel("Dine-in price").fill("1000");
   await page.getByRole("button", { name: "Create product" }).click();
@@ -273,10 +273,11 @@ console.log("▸ it is sold, and Reports list the sale as costed at nothing");
   await open(page, "/accounting");
   const warning = (await page.locator('tr[data-check="uncosted"]').textContent()) ?? "";
   check(
-    warning.includes("⚠️") && warning.includes("costed at nothing"),
+    (await page.locator('tr[data-check="uncosted"] [data-state="warn"]').count()) === 1 &&
+      warning.includes("costed at nothing"),
     "the month's closing checklist warns of it",
   );
-  const blocking = await page.locator("tr[data-check]", { hasText: "⛔" }).count();
+  const blocking = await page.locator('tr[data-check]:has([data-state="bad"])').count();
   const hints = page.getByText(/Resolve the \d+ failing check/);
   const hint = (await hints.count()) > 0 ? await hints.textContent() : "";
   check(

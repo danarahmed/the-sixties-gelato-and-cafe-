@@ -18,6 +18,7 @@ import { normaliseNumber } from "@/lib/validation";
 import { Modal } from "@/components/pos/Dialogs";
 import { PrintSlip, type PrintJob } from "@/components/pos/PrintSlip";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { Icon } from "@/components/Icon";
 
 export interface RefundableSale {
   orderId: string;
@@ -205,7 +206,7 @@ export function RefundDialog({
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <button className="btn-primary" onClick={() => printSlip(done)}>
-                🖨 {t("Print the refund slip")}
+                <Icon name="print" /> {t("Print the refund slip")}
               </button>
               <button onClick={onClose}>{t("pos.close")}</button>
             </div>
