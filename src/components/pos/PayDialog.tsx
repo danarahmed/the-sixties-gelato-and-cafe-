@@ -15,6 +15,7 @@ import {
   type RestWay,
 } from "@/lib/fx";
 import type { Tender } from "./model";
+import { Icon } from "@/components/Icon";
 
 /** Notes a customer is likely to hand over for this total: the next round sums above it. */
 export function suggestedCash(total: number): number[] {
@@ -289,7 +290,7 @@ export function PayDialog({
                 onClick={() => setTender(x)}
                 disabled={busy}
               >
-                {x === "cash" ? "💵 " : x === "card" ? "💳 " : "🧾 "}
+                <Icon name={x === "cash" ? "cash" : x === "card" ? "card" : "receipt"} />{" "}
                 {t(`pos.tender.${x}`)}
               </button>
             ))}
@@ -314,7 +315,7 @@ export function PayDialog({
                 disabled={busy}
                 data-testid="pay-split"
               >
-                ➗ {t("Split")}
+                <Icon name="split" /> {t("Split")}
               </button>
             )}
           </div>
@@ -541,8 +542,7 @@ export function PayDialog({
                       onClick={() => setRestWay(x)}
                       disabled={busy}
                     >
-                      {x === "cash" ? "💵 " : "💳 "}
-                      {t(`pos.tender.${x}`)}
+                      <Icon name={x === "cash" ? "cash" : "card"} /> {t(`pos.tender.${x}`)}
                     </button>
                   ))}
                 </div>

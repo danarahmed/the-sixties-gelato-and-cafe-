@@ -5,6 +5,7 @@ import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { useChannels } from "@/components/ChannelsProvider";
 import { minutesSince } from "./model";
+import { Icon } from "@/components/Icon";
 
 function Elapsed({ at, now }: { at: string | null; now: number }) {
   const { t } = useT();
@@ -27,7 +28,9 @@ function Elapsed({ at, now }: { at: string | null; now: number }) {
 function BillState({ printed }: { printed: boolean }) {
   const { t } = useT();
   return printed ? (
-    <span className="badge warn">🧾 {t("pos.waitingPayment")}</span>
+    <span className="badge warn">
+      <Icon name="receipt" size={14} /> {t("pos.waitingPayment")}
+    </span>
   ) : (
     <span className="badge">{t("pos.ordering")}</span>
   );
@@ -75,7 +78,7 @@ export function FloorView({
         </span>
         {waiting > 0 && (
           <span className="badge warn">
-            🧾 {waiting} {t("pos.waitingPayment")}
+            <Icon name="receipt" size={14} /> {waiting} {t("pos.waitingPayment")}
           </span>
         )}
         <span className="spacer" />
@@ -129,7 +132,11 @@ export function FloorView({
                             </span>
                           )}
                         </span>
-                        {printed && <span className="table-flag">🧾</span>}
+                        {printed && (
+                          <span className="table-flag">
+                            <Icon name="receipt" size={14} />
+                          </span>
+                        )}
                       </>
                     )}
                   </button>

@@ -64,8 +64,8 @@ console.log("▸ the cashier still sells for cash, into the manager's session");
   const before = holds();
   const { ctx, page } = await signIn(browser, "cashier");
   await open(page, "/pos");
-  if (await page.getByRole("tab", { name: "☕ Menu" }).count()) {
-    await page.getByRole("tab", { name: "☕ Menu" }).click();
+  if (await page.getByRole("tab", { name: "Menu", exact: true }).count()) {
+    await page.getByRole("tab", { name: "Menu", exact: true }).click();
   }
   await page.getByRole("button", { name: "Takeaway" }).click();
   await page.locator(".product-tile", { hasText: "Golden espresso" }).click();

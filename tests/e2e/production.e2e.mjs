@@ -358,6 +358,22 @@ console.log("▸ the day's plan waits for four weeks of history");
   await ctx.close();
 }
 
+console.log("▸ a row of the plan opens the batch form with what it says to make");
+{
+  const { ctx, page } = await signIn(browser, "barista");
+  await open(page, "/production");
+  const what = page.getByLabel("What did you make");
+  const id = await what.locator("option", { hasText: "E2E base" }).getAttribute("value");
+  // What a "Record these" link on a plan row opens: the recipe and its batches, filled in.
+  await open(page, `/production?make=${id}&batches=3#record`);
+  check(
+    (await page.getByLabel("What did you make").inputValue()) === id &&
+      (await page.getByLabel("Batches", { exact: true }).inputValue()) === "3",
+    "the recipe and the batches the plan says, ready to check and record",
+  );
+  await ctx.close();
+}
+
 console.log("▸ owner changes a product's recipe from today");
 {
   const beans = Number(

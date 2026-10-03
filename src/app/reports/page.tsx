@@ -25,7 +25,7 @@ import { Sayings, type Saying } from "@/components/Sayings";
 import { BarList } from "@/components/charts/BarList";
 import { ShareBar } from "@/components/charts/ShareBar";
 import { direction, percent } from "@/lib/dashboard";
-import { change, largestExpense, pct as share, previousPeriod, spending } from "@/lib/insights";
+import { change, largestExpense, pctText, previousPeriod, spending } from "@/lib/insights";
 import { EXCEPTION_LABEL, NO_ONE, exceptionsByPerson, type ExceptionKind } from "@/lib/exceptions";
 import { fmtIQD, fmtQty, movementLabel, tenderLabel, unitName } from "@/lib/format";
 import { getDollarsReport } from "@/lib/db/fx";
@@ -283,7 +283,7 @@ export default async function ReportsPage({
   };
   const ofRevenue = (n: number) =>
     totals.revenue > 0
-      ? t("{pct}% of net revenue", { pct: Math.round((n / totals.revenue) * 100) })
+      ? t("{pct}% of net revenue", { pct: pctText(n, totals.revenue) ?? "0" })
       : null;
   const glance =
     seesProfit && from <= to
@@ -417,12 +417,12 @@ export default async function ReportsPage({
         text: t("{account} was the largest expense: {amount}, {pct}% of net revenue.", {
           account: msg(big.name),
           amount: fmtIQD(big.amount),
-          pct: share(big.amount, totals.revenue) ?? 0,
+          pct: pctText(big.amount, totals.revenue) ?? 0,
         }),
         href: ledger(big.code, from, to, true),
       });
     const platforms = spend?.parts.find((x) => x.key === "platforms");
-    if (platforms && platforms.amount > 0)
+    if (platforms && platforms.amount >= totals.revenue * 0.01)
       said.push({
         tone: "info",
         icon: "●",
@@ -430,7 +430,7 @@ export default async function ReportsPage({
           "The delivery platforms' commission and fees came to {amount}: {pct}% of net revenue.",
           {
             amount: fmtIQD(platforms.amount),
-            pct: share(platforms.amount, totals.revenue) ?? 0,
+            pct: pctText(platforms.amount, totals.revenue) ?? 0,
           },
         ),
         href: "/platforms",
@@ -445,7 +445,7 @@ export default async function ReportsPage({
         allChannels.net > 0
           ? t("Losses came to {amount}, {pct}% of net sales.", {
               amount: fmtIQD(lost.total.value),
-              pct: share(lost.total.value, allChannels.net) ?? 0,
+              pct: pctText(lost.total.value, allChannels.net) ?? 0,
             })
           : t("Losses came to {amount}.", { amount: fmtIQD(lost.total.value) }),
       detail: most
@@ -945,8 +945,8 @@ export default async function ReportsPage({
                       value: v.net,
                       valueText: fmtIQD(v.net),
                       sub: t("{share}% of net sales · margin {kept}%", {
-                        share: share(v.net, allChannels.net) ?? 0,
-                        kept: share(v.margin, v.net) ?? 0,
+                        share: pctText(v.net, allChannels.net) ?? 0,
+                        kept: pctText(v.margin, v.net) ?? 0,
                       }),
                     };
                   })
@@ -1205,7 +1205,7 @@ export default async function ReportsPage({
                     valueText: fmtIQD(r.net),
                     sub: t("{share}% of net sales", {
                       share:
-                        share(
+                        pctText(
                           r.net,
                           takings.reduce((sum, x) => sum + x.net, 0),
                         ) ?? 0,
@@ -1801,7 +1801,7 @@ export default async function ReportsPage({
               ].map((r) => ({
                 ...r,
                 valueText: fmtIQD(r.value),
-                sub: t("{share}% of what is owed", { share: share(r.value, ageing.total) ?? 0 }),
+                sub: t("{share}% of what is owed", { share: pctText(r.value, ageing.total) ?? 0 }),
               }))}
             />
           </div>

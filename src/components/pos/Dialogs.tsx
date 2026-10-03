@@ -8,6 +8,7 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import { useChannels } from "@/components/ChannelsProvider";
 import { REASONS, reasonKey, reasonMissing } from "@/lib/reasons";
 import { normaliseNumber } from "@/lib/validation";
+import { Icon } from "@/components/Icon";
 
 export function Modal({
   label,
@@ -410,7 +411,9 @@ export function PrintingDialog({
   const { t } = useT();
   return (
     <Modal label={t("pos.printingTitle")} onClose={onClose}>
-      <h3 style={{ marginTop: 0 }}>🖨 {t("pos.printingTitle")}</h3>
+      <h3 style={{ marginTop: 0 }}>
+        <Icon name="print" /> {t("pos.printingTitle")}
+      </h3>
       <div className="print-options">
         <label className="print-option">
           <input

@@ -172,6 +172,89 @@ const PATHS = {
     </>
   ),
   moon: <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />,
+  // The till's.
+  cash: (
+    <>
+      <rect x="2.5" y="6.5" width="19" height="11" rx="2" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M6 9.5v5M18 9.5v5" />
+    </>
+  ),
+  card: (
+    <>
+      <rect x="2.5" y="5.5" width="19" height="13" rx="2" />
+      <path d="M2.5 10h19M6.5 14.5h4" />
+    </>
+  ),
+  receipt: (
+    <>
+      <path d="M6 3.5h12v17l-2-1.3-2 1.3-2-1.3-2 1.3-2-1.3-2 1.3z" />
+      <path d="M9 8h6M9 11.5h6M9 15h3.5" />
+    </>
+  ),
+  save: (
+    <>
+      <path d="M5 3.5h11l3.5 3.5v12a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V5A1.5 1.5 0 0 1 5 3.5z" />
+      <path d="M7.5 3.5v4.5h8V3.5M7.5 20.5v-6h9v6" />
+    </>
+  ),
+  print: (
+    <>
+      <path d="M7 8.5V3.5h10v5" />
+      <rect x="3.5" y="8.5" width="17" height="8" rx="2" />
+      <path d="M7 13.5h10v7H7z" />
+    </>
+  ),
+  split: (
+    <>
+      <circle cx="6" cy="6" r="2.5" />
+      <circle cx="6" cy="18" r="2.5" />
+      <path d="M8 7.5l12 9M8 16.5l12-9" />
+    </>
+  ),
+  move: <path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5" />,
+  close: <path d="M6 6l12 12M18 6L6 18" />,
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </>
+  ),
+  gift: (
+    <>
+      <rect x="3.5" y="8.5" width="17" height="4" rx="1" />
+      <path d="M5 12.5v8h14v-8M12 8.5v12" />
+      <path d="M12 8.5C10.5 5.5 6.5 4.5 6.5 7c0 1.5 3 1.5 5.5 1.5zM12 8.5c1.5-3 5.5-4 5.5-1.5 0 1.5-3 1.5-5.5 1.5z" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x="5" y="10.5" width="14" height="10" rx="2" />
+      <path d="M8 10.5v-3a4 4 0 0 1 8 0v3" />
+    </>
+  ),
+  unlock: (
+    <>
+      <rect x="5" y="10.5" width="14" height="10" rx="2" />
+      <path d="M8 10.5v-3a4 4 0 0 1 7.7-1.5" />
+    </>
+  ),
+  bolt: <path d="M13 2.5L5 13.5h6l-1 8 8-11h-6z" />,
+  table: <path d="M3.5 8.5h17M5.5 8.5v11M18.5 8.5v11M5.5 13.5h13" />,
+  expand: <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />,
+  check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
+  key: (
+    <>
+      <circle cx="8" cy="15" r="4" />
+      <path d="M11 12l8.5-8.5M16 7l2.5 2.5M14 9l2 2" />
+    </>
+  ),
+  bag: (
+    <>
+      <path d="M5 8.5h14l-1.2 11H6.2z" />
+      <path d="M9 8.5V7a3 3 0 0 1 6 0v1.5" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof PATHS;
