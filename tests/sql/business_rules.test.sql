@@ -63,7 +63,7 @@ select test.eq((select string_agg((x ->> 'key') || ' ' || (x ->> 'scope_type')
                                   order by x ->> 'key', x ->> 'scope_type', x ->> 'scope_id')
                   from jsonb_array_elements(list_business_rules() -> 'rows') x
                  where x ->> 'key' not in ('discount_round_to')),
-  'clocked_in_alert_hours business = 16 (default); '
+  'clocked_in_alert_hours business = 16 (default); daily_sales_target business = 0 (default); '
   'discount_cap_percent business = 10 (default); late_after_minutes business = 5 (default); '
   'loyalty business = on (default); loyalty_point_per business = 1000 (default); '
   'loyalty_reward_points business = 100 (default); loyalty_reward_value business = 5000 (default); '

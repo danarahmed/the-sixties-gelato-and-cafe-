@@ -278,6 +278,10 @@ name.
 **Settings → Open Rules →** (the owner and the general manager, `0040`). Each
 rule shows what it does, who set it, when and why, and every change is kept:
 
+- **A day's net sales target** (`0067`): none by default. Set, the dashboard
+  shows today against it: how much of it is made, whether today is ahead of
+  the pace a usual day of its kind keeps or behind it, and where the day ends
+  if the rest of it sells as usual. Set it at what a good day brings in.
 - **Discounts a manager approves**: over 10% of the bill by default. Set it for
   a role to let that role give more, or less, without a manager.
 - **Refunds a second person approves**: over 25,000 IQD by default; a manager's
@@ -328,6 +332,11 @@ fast. Set it up once, on **Products** and on the till itself:
   (they get a chip of their own), and untick **On the till** for anything not
   sold now. A hidden product keeps its recipe, prices and history, and comes
   back by ticking the box again.
+- **Photos for the till** (Products, under **Add menu product**): every
+  product on the till in one place, those still without a photo first, with
+  how many have one. Tap a product, then take or choose its picture: one tap
+  each, without opening the product. One with no photo keeps its colour and
+  initials on the till.
 - **A new product** (Products, **Add menu product**): build its recipe
   first. The form costs it as you type, at today's stock costs and exactly as a
   sale will post it: each ingredient, then **Cost of one serving** (more for
@@ -490,6 +499,16 @@ discount, why and who approved it. The 10% is a business setting (shown on
   whose cash no closed session has covered; a month cannot lock until each is.
   The dashboard warns of a session open too long, one short by the limit or
   more (at its opening or its close), and one a manager closed.
+- **Closing up: End of Day.** The day's close, step by step, on **End of
+  Day** (the Dashboard offers it from four in the afternoon): the bills still
+  open, who is still clocked in, the drawers still open (this branch's is
+  closed right there, counted), the losses waiting for a manager, the card and
+  platform money (today's card total to check against the terminal's own, and
+  whatever is late), and the red alerts nobody has answered. Each step says
+  where it stands, opens where its work is done, and is ticked once nothing of
+  it is left; the ring at the top counts them. Under them, the day in numbers
+  (net sales, gross profit, voids and refunds, waste, against last week and a
+  usual day of its kind, and how it was paid), to print or keep as a PDF.
 - **Paying for something:** always say where the money came from — the till,
   the safe, the bank, a card (which the bank pays), or you personally. From
   the till it comes out of

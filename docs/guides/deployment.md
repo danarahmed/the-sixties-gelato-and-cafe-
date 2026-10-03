@@ -61,6 +61,7 @@ Plan a short window when the café is closed.
 | Prepaid and payments put right (`0061`) | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0061`](#after-0061)). The screens were merged ([pull request #64](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/64)) and deployed                                                                       |
 | Accounts and bank put right (`0062`)    | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0062`](#after-0062)). The screens were merged ([pull request #65](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/65)) and deployed                                                                         |
 | Review fixes (`0063`–`0066`)            | 🟡 `0063` applied on 2 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as the owner in transactions that were rolled back. `0064`–`0066` are not applied yet: the connector does not take their text (see [After `0066`](#after-0066)). The screens were merged ([pull request #67](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/67)) and deployed |
+| A day's sales target (`0067`)           | ✅ Migration applied on 3 October, its text checked byte for byte against the file, and checked on the live records as the owner in a transaction that was rolled back (see [After `0067`](#after-0067)). It went in on its own, before `0064`–`0066`                                                                                                                                                                                            |
 
 ## 0. Before you start
 
@@ -3040,6 +3041,50 @@ each third of that part went through by itself. Until they are applied, the
 live database refuses what `0063` refuses, and payroll, the till and the
 safe, a delivery's share and credits, bills, suppliers, orders and the staff
 report work as they did. The app's changes need nothing from them.
+
+## After `0067`
+
+Migration `0067` adds one rule, a day's net sales target, and the function
+that reads it for the dashboard. The owner sets it on **Settings → Rules**
+(**A day's net sales target**), with a reason, like every rule; 0, the
+default, is no target. The dashboard then shows **Today's target**: today's
+net sales (the books' own, as on the tile beside it) as a share of it, a bar
+with a mark where a usual day of its kind stands by now, and in words whether
+today is ahead of that pace or behind it, and where the day ends if the rest
+of it sells as usual. With no target, an owner is offered to set one under
+the day's figures.
+
+What it changes:
+
+- **Replaced**, with the same arguments: `rule_definitions` (0050's list and
+  the target first) and `rule_defaults` (0050's, and no target).
+- **New:** `daily_sales_target(p_location)`, for those who see the profits
+  (`profit.view`), and no one else.
+
+Nothing is recorded by it and no table changes. It touches nothing `0064`
+to `0066` change, so it applies on its own, before or after them, in one
+transaction (9 KB: the connector takes it in one call). The app is ready for
+it either way: before it is applied, the dashboard reads no target and shows
+none, and Settings → Rules lists the rules the database has.
+
+`0067` was applied on 3 October 2026 with the Supabase connector: one
+`apply_migration` call, one transaction, on top of `0063` (`0064`–`0066` still
+wait). Before it, a read-only check showed the café's seventeen rules as
+`0050` left them, no row of the target, no reader, and one branch.
+
+The text stored there is the file byte for byte (md5
+`af6ae33e737a974fa5b73f4ee5223a92`, 9,245 bytes). After it: eighteen rules;
+`daily_sales_target` runs as its owner, signed-in people may call it (it
+checks `profit.view` itself) and the public may not.
+
+It was checked on the live records as the owner, in a transaction that was
+rolled back: no target to begin with, and Settings listing it at 0 by
+default; set at 300,000, the café's target and the branch's (the café's only
+branch) were 300,000, and the central kitchen's none; a target below nothing
+was refused, in words. Nothing was kept: no rule row nor change to one, and
+the audit trail still ends at 280. The security advisor lists the same five
+kinds of notice as before, the reader among the functions a signed-in person
+may call, as every function the app calls is.
 
 ## Clearing the test records
 

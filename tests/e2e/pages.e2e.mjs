@@ -15,6 +15,7 @@ const PAGES = [
   "/expenses",
   "/purchasing",
   "/pos",
+  "/end-of-day",
   "/orders",
   "/products",
   "/inventory",

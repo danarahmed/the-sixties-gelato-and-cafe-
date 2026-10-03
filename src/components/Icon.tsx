@@ -172,6 +172,13 @@ const PATHS = {
     </>
   ),
   moon: <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />,
+  // The end of the day: the sun going down behind the horizon.
+  sunset: (
+    <>
+      <path d="M7 16.5a5 5 0 0 1 10 0" />
+      <path d="M2.5 16.5h19M6 20h12M12 3v5.5M9.5 6.5l2.5 2.5 2.5-2.5M4.5 10.5L6 12M19.5 10.5L18 12" />
+    </>
+  ),
   // The till's.
   cash: (
     <>

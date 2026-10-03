@@ -1916,3 +1916,18 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   page does (`pos_open_bills` with `p_location`): before, a change listed
   every branch's, and a bill paid from that list took its money into this
   till's drawer.
+
+### A day's net sales target (`0067`)
+
+- **The rule** `daily_sales_target` joins `business_rule` (`0040`): the net
+  sales the café aims for in a day, a whole amount from 0 to 1,000,000,000,
+  for the café or for one of its places; 0 is no target, and the default. It
+  is set on Settings → Rules with a reason and kept with its history, like
+  every rule (`rule_definitions` and `rule_defaults` are 0050's with it).
+- **`daily_sales_target(p_location)`** (`profit.view`): the target that
+  applies to a day, for the dashboard. With no place, the café's. With a
+  place, its own row first; else the café's while the place is the café's
+  only branch; else none (a place that sells nothing, or one branch of
+  several). A place not the café's is refused.
+- Nothing is recorded by it, and nothing but the dashboard reads it: no table
+  changes.

@@ -19,25 +19,26 @@ each job.
 3. [Ideas used everywhere](#3-ideas-used-everywhere)
 4. [Dashboard](#4-dashboard) · `/dashboard`
 5. [POS](#5-pos) · `/pos`
-6. [Orders](#6-orders) · `/orders`
-7. [Sales](#7-sales) · `/sales`
-8. [Delivery Platforms](#8-delivery-platforms) · `/platforms`
-9. [Customers](#9-customers) · `/customers`
-10. [Vendors](#10-vendors) · `/vendors`
-11. [Expenses](#11-expenses) · `/expenses`
-12. [Purchasing](#12-purchasing) · `/purchasing`
-13. [Products & Recipes](#13-products--recipes) · `/products`
-14. [Inventory](#14-inventory) · `/inventory`
-15. [Stock Count](#15-stock-count) · `/count`
-16. [Production](#16-production) · `/production`
-17. [Staff](#17-staff) · `/staff`
-18. [Payroll](#18-payroll) · `/payroll`
-19. [Journals](#19-journals) · `/journals`
-20. [Chart of Accounts](#20-chart-of-accounts) · `/accounting`
-21. [Reports](#21-reports) · `/reports`
-22. [Audit trail](#22-audit-trail) · `/audit`
-23. [Settings](#23-settings) · `/settings`
-24. [Every feature, and where it is](#24-every-feature-and-where-it-is)
+6. [End of Day](#6-end-of-day) · `/end-of-day`
+7. [Orders](#7-orders) · `/orders`
+8. [Sales](#8-sales) · `/sales`
+9. [Delivery Platforms](#9-delivery-platforms) · `/platforms`
+10. [Customers](#10-customers) · `/customers`
+11. [Vendors](#11-vendors) · `/vendors`
+12. [Expenses](#12-expenses) · `/expenses`
+13. [Purchasing](#13-purchasing) · `/purchasing`
+14. [Products & Recipes](#14-products--recipes) · `/products`
+15. [Inventory](#15-inventory) · `/inventory`
+16. [Stock Count](#16-stock-count) · `/count`
+17. [Production](#17-production) · `/production`
+18. [Staff](#18-staff) · `/staff`
+19. [Payroll](#19-payroll) · `/payroll`
+20. [Journals](#20-journals) · `/journals`
+21. [Chart of Accounts](#21-chart-of-accounts) · `/accounting`
+22. [Reports](#22-reports) · `/reports`
+23. [Audit trail](#23-audit-trail) · `/audit`
+24. [Settings](#24-settings) · `/settings`
+25. [Every feature, and where it is](#25-every-feature-and-where-it-is)
 
 ---
 
@@ -45,7 +46,9 @@ each job.
 
 **Location:** `/login` · **My account** at the bottom of the sidebar (`/account`)
 
-- **Sign in** with your own email and password.
+- **Sign in** with your own email and password. Beside the form, the café's
+  name on its raspberry and what the system is for; on a phone, a band above
+  the form.
 - **First time here? Create your login.** It works only for an email the owner
   has added under Settings → People. Confirm the email you receive, then sign
   in. A login for an email nobody added sees nothing.
@@ -113,7 +116,9 @@ manager, branch manager, accountant, auditor
 
 Someone who works at one place reads their place's day, with its name by the
 title (`0057`): its sales and their costs, its orders, **Stock at** their
-place, and its items low or below zero.
+place, and its items low or below zero. From four in the afternoon, whoever
+closes the day is offered **Closing up? The end of the day, step by step**
+beside the title (see [End of Day](#6-end-of-day)).
 
 **Needs you** comes first (`0029`): what the alert rules find in the books
 each time the page opens.
@@ -139,6 +144,15 @@ day last week and a usual one) and **To do** (the red alerts nobody has
 answered), kept apart.
 
 **Today**, from the books, under a greeting with the day and the time:
+
+- **Today's target** (`0067`), once the owner has set **A day's net sales
+  target** on Settings → Rules: today's net sales (the tile's figure) and
+  what share of the target they are, a bar with a mark where a usual day of
+  its kind stands by now, and in words whether today is ahead of that pace or
+  behind it, and where the day ends if the rest of it sells as usual (see
+  [`CALCULATIONS.md`](CALCULATIONS.md)). Reached, it turns green and says by
+  how much. With no target, an owner is offered **Give the café a day's sales
+  target** under the figures.
 
 - **Net sales today**, **Orders**, **Average order value** and **Gross profit
   after waste & fees** (with its share of net sales). Under each of the first
@@ -309,7 +323,53 @@ goes**: one of their addresses, or **+ Add an address** (a name for it, the
 address, how to find it). The bill and the receipt print it, and the sale
 keeps it as it was.
 
-## 6. Orders
+## 6. End of Day
+
+**Location:** Sidebar → **End of Day** · `/end-of-day` · **Who:** whoever
+closes the day (`day.close`): the owner, the general manager and branch
+managers. From four in the afternoon the Dashboard offers it too (**Closing
+up? The end of the day, step by step**).
+
+The day's close, step by step. Each step says where it stands now, as the
+database has it, and is ticked once nothing of it is left; the ring at the top
+counts the steps ticked (**4 of 6 done**, then **Everything is done: the day
+can close.**). Each step's button opens where its work is done. Someone who
+works at one branch sees that branch's bills, drawers and takings.
+
+1. **Bills paid:** the bills still open (tables and names), what they come to
+   and since when. A bill left open is paid in the next session; one that will
+   not be paid is cancelled by a manager, with the reason. **Open the till.**
+2. **Everyone clocked out:** who is still clocked in, and since when, at every
+   place (shown once anyone works there). Each clocks out on the till; a
+   manager corrects forgotten hours on Staff (**Open the hours**).
+3. **Drawers closed and counted:** each session still open, whose, since when
+   and where. The drawer of this device's branch is closed right here, on the
+   same panel as the till's (**Close the drawer**, or a manager's **Close it
+   for them** with the reason), and its answer stays on the screen as the step
+   ticks. Once every drawer is closed: how many were counted today, and
+   whether they agreed or came to so much short or over in all; one closed
+   without a count is said so.
+4. **Losses approved:** the losses waiting for a manager other than whoever
+   recorded them, with what they cost. **Approve them** opens them on
+   Inventory.
+5. **Card and platform money:** what was paid by card today, to check against
+   the terminal's own total for the day; card takings still to reach the
+   bank; what the delivery platforms still owe. It is ticked unless an alert
+   says some of it is late (**Card Takings** on Sales, **Delivery
+   Platforms**).
+6. **Red alerts answered:** the red alerts nobody has answered or snoozed, the
+   first three named; how many orange ones can wait. **Answer them** opens the
+   Dashboard's **Needs you**.
+
+**The day in numbers:** today so far, as the books have it: net sales and the
+orders, gross profit after waste and every other cost of sales, voids and
+refunds, and waste at what it cost, each opening what is behind it; against
+the same day last week and a usual one of its kind; and **How it was paid**,
+each payment method's share of net sales. **Today's reports** opens Reports
+for today. **Print or save as PDF** prints the page with its heading, without
+the menu or the buttons.
+
+## 7. Orders
 
 **Location:** Sidebar → **Orders** · `/orders` · **Who:** anyone who sees costs
 
@@ -363,7 +423,7 @@ over the limit on **Settings → Rules** (25,000 IQD by default) cannot go
 without one (`0040`). Each void or refund shows why, who asked and who
 approved it.
 
-## 7. Sales
+## 8. Sales
 
 **Location:** Sidebar → **Sales** · `/sales` · **Who:** anyone who sees costs;
 the drawer: whoever may open it (a manager closes one left open); moving cash:
@@ -443,7 +503,7 @@ general manager and the accountant
   it. The drawer counts before sessions, and days closed the old way, are
   listed too.
 
-## 8. Delivery Platforms
+## 9. Delivery Platforms
 
 **Location:** Sidebar → **Delivery Platforms** · `/platforms` · **Who:** anyone
 who sees costs
@@ -476,7 +536,7 @@ who sees costs
 
 See [`guides/talabat.md`](guides/talabat.md) for the whole routine.
 
-## 9. Customers
+## 10. Customers
 
 **Location:** Sidebar → **Customers** · `/customers` · **Who:** owner,
 managers; the accountant and the auditor read it (`0050`)
@@ -504,7 +564,7 @@ loyalty on or off) are under **Settings → Rules**. Reports → **Customers**
 gives the points earned, spent and outstanding, the rewards taken and who
 bought the most.
 
-## 10. Vendors
+## 11. Vendors
 
 **Location:** Sidebar → **Vendors** · `/vendors` · **Who:** anyone who sees costs;
 bills: purchasing, managers, accountant; payments: accountant, general manager,
@@ -577,7 +637,7 @@ Deliveries received before these controls show as **Before controls ·
 (supplier's name)** under every vendor. The previous app did not record the
 supplier on them. Their bill is recorded against the payable already posted.
 
-## 11. Expenses
+## 12. Expenses
 
 **Location:** Sidebar → **Expenses** · `/expenses` · **Who:** anyone who sees
 costs; recording: managers, accountant, owner
@@ -635,7 +695,7 @@ journal has been reversed stays listed, marked **reversed by #…** and struck
 through, and is left out of the totals: it is no longer spent. A prepaid
 expense's shares are listed here as they are posted, each with its month.
 
-## 12. Purchasing
+## 13. Purchasing
 
 **Location:** Sidebar → **Purchasing** · `/purchasing` · **Who:** anyone who sees
 costs; orders and receiving: purchasing, managers; approving: owner, general
@@ -778,7 +838,7 @@ Whoever may record that kind of record attaches its papers: receiving for a
 delivery, buying for a return, a bill or a credit, the accountant for a bill,
 a credit or an expense. Whoever sees costs sees them.
 
-## 13. Products & Recipes
+## 14. Products & Recipes
 
 **Location:** Sidebar → **Products & Recipes** · `/products` · **Who:** anyone who
 sees costs; creating and pricing: owner, general manager
@@ -811,6 +871,11 @@ letter forms do not matter (ي and ی, ك and ک), as on the till's search.
   product with no recipe needs **Why it uses no stock** (a service charge):
   without one it is not created.
 
+- **Photos for the till** (owner, general manager): every product on the till
+  as the till shows it, those without a photo first, and **1 of 14 have one**.
+  A tap on a product opens the phone's camera or pictures (a computer's
+  files); the picture is made small in the browser and the till shows it at
+  once. **Change photo** on one that has a photo replaces it.
 - **Each product** shows its **Recipe** (component, quantity, applies to) and
   **Price & margin by channel**, costed exactly as a sale would post it today.
 - **Change the recipe…:** the recipe in force today, to change, costed as you
@@ -852,7 +917,7 @@ letter forms do not matter (ي and ی, ك and ک), as on the till's search.
   it was made with. Neither a group nor an add-on on an open bill is taken off
   the till.
 
-## 14. Inventory
+## 15. Inventory
 
 **Location:** Sidebar → **Inventory** · `/inventory` · **Who:** anyone who sees
 costs; baristas can record waste
@@ -992,7 +1057,7 @@ the audit trail name each transfer by its number. A batch's page follows it to
 every place it is at: what was sold at the branch counts, what did not arrive
 is lost, and what is on its way is shown apart until it arrives.
 
-## 15. Stock Count
+## 16. Stock Count
 
 **Location:** Sidebar → **Stock Count** · `/count` · **Who:** counter (counts);
 branch manager, general manager, owner (review and approve)
@@ -1042,7 +1107,7 @@ they used. The dashboard names an item whose last two counts, the later in
 the last fortnight, differ from the recipes by 10% and 5,000 IQD or more (both
 set on **Settings → Alerts**).
 
-## 16. Production
+## 17. Production
 
 **Location:** Sidebar → **Production** · `/production` · **Who:** anyone who sees
 costs, and baristas (who make the batches); setting up what is made: owner,
@@ -1114,7 +1179,7 @@ A made item is then used like any other: in another batch, or in a product's
 recipe on Products & Recipes (**Change the recipe…**), so a cup of gelato takes
 120 g of the gelato you made.
 
-## 17. Staff
+## 18. Staff
 
 **Location:** Sidebar → **Staff** · `/staff` · **Who:** owner, managers;
 payroll readers (the accountant, the auditor) see it too
@@ -1147,7 +1212,7 @@ payroll readers (the accountant, the auditor) see it too
 Clocking in and out is on the till: **🕐** at the top, then the name and the
 PIN (see [POS](#5-pos)).
 
-## 18. Payroll
+## 19. Payroll
 
 **Location:** Sidebar → **Payroll** · `/payroll` · **Who:** owner, general
 manager, accountant; the auditor reads it
@@ -1177,7 +1242,7 @@ Salaries / Cr 2100 Salaries payable / Cr 1300 the advances taken back, on the
 month's last day; a payment Dr 2100 / Cr where it came from. Reports → **Do the
 books tie?** checks salaries owed against 2100 and advances against 1300.
 
-## 19. Journals
+## 20. Journals
 
 **Location:** Sidebar → **Journals** · `/journals` · **Who:** anyone who sees
 costs; posting: accountant, general manager, owner
@@ -1225,7 +1290,7 @@ costs; posting: accountant, general manager, owner
   each, from the opening balance to the closing one (from the P&L: adding up to
   the P&L's figure, the year-end close left out). **CSV** downloads them.
 
-## 20. Chart of Accounts
+## 21. Chart of Accounts
 
 **Location:** Sidebar → **Chart of Accounts** · `/accounting` · **Who:** anyone
 who sees costs; locking and changing the accounts: accountant, general manager,
@@ -1273,7 +1338,7 @@ owner; reopening: owner
     no longer offer it; what was posted to it stays in every report. Not while
     a draft journal has a line on it: publish or change the draft first.
     **Bring back…**, with why, to use it again.
-  - Each change is on the [Audit trail](#22-audit-trail) under **Books &
+  - Each change is on the [Audit trail](#23-audit-trail) under **Books &
     periods**, with why.
 
 - **The bank against its statement** (`0059`, `/accounting/bank`): what the
@@ -1312,9 +1377,9 @@ owner; reopening: owner
   a line may be missing between them. **Clear the statement read** lets it go;
   keeping the statement does too.
 
-- Who changed what is on the [Audit trail](#22-audit-trail).
+- Who changed what is on the [Audit trail](#23-audit-trail).
 
-## 21. Reports
+## 22. Reports
 
 **Location:** Sidebar → **Reports** · `/reports` · **Who:** anyone who sees costs;
 the P&L: owner, managers, accountant, auditor
@@ -1483,7 +1548,7 @@ largest first, each with its share, above their tables.
   customers there are, and how many are new in the dates; and the ten who
   bought the most, with their orders, what they spent and their points.
 
-## 22. Audit trail
+## 23. Audit trail
 
 **Location:** Sidebar → **Audit trail** · `/audit` · **Who:** owner, managers,
 accountant, auditor
@@ -1513,7 +1578,7 @@ about, before → after and why, one under the other.
 The trail is written in the same step as the change and is never edited or
 deleted.
 
-## 23. Settings
+## 24. Settings
 
 **Location:** Sidebar → **Settings** · `/settings` · **Who:** owner, general
 manager
@@ -1551,6 +1616,8 @@ Each rule, what it does, and every row that applies — the whole café's, and
 any set for a role, a kind of item or one item — with who set it, when and
 why, or **Default**:
 
+- **A day's net sales target** (`0067`; **No target** by default): the
+  dashboard measures today against it;
 - **Discounts a manager approves** (10% of the bill by default; per role);
 - **Discounts rounded to** (the step a percentage discount is rounded to);
 - **Refunds a second person approves** (over 25,000 IQD by default; per role);
@@ -1586,7 +1653,7 @@ a person's roles allows, then the café's.
 
 ---
 
-## 24. Every feature, and where it is
+## 25. Every feature, and where it is
 
 | Feature                                                                                                              | Where                                    | Who                                                                                   |
 | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------- |
@@ -1603,6 +1670,7 @@ a person's roles allows, then the café's.
 | Set your approval PIN                                                                                                | My account `/account`                    | managers, owner                                                                       |
 | Exceptions by person: voids, refunds, discounts, cancelled bills, items taken off, wrong PINs; CSV                   | `/reports`                               | owner, managers, accountant, auditor                                                  |
 | Daily summaries; the drawer in sessions; move cash between till, safe, bank and owner                                | `/sales`                                 | cost viewers; the drawer: whoever may open it                                         |
+| The end of the day, step by step: bills, clocked in, drawers (closed there), losses, card and platform money, alerts | `/end-of-day`                            | owner, general manager, branch managers                                               |
 | Platform orders; payout by journal                                                                                   | `/platforms`, `/journals`                | cost viewers                                                                          |
 | Vendor statements, bills, payments, cancel a bill, ageing; correct a vendor, take one out of use                     | `/vendors`                               | cost viewers (by permission)                                                          |
 | Expenses with a proposed account                                                                                     | `/expenses`                              | managers, accountant, owner                                                           |

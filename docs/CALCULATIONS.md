@@ -973,6 +973,21 @@ analysis of `0051`, for whoever sees costs):
   compared the same way.
 - _Busiest hour:_ the hour with the most net sales on the usual day, hour by
   hour the average of those days.
+- _Today's target_ (`0067`): the day's net sales target from Settings →
+  Rules (0, none; for someone who reads their place's day, the place's own,
+  or the café's while it has one branch). `share = today's net sales ÷
+target`, today's net sales being the books' own (the **Net sales today**
+  tile's), shown in whole percent rounded down, so 100% means reached. A
+  usual day says how much of a day is sold by now:
+  `usual share by now = usual so far ÷ usual whole day` (at most 1), and
+  `expected by now = target × usual share by now`: today is ahead of the
+  pace at or over it, behind under it. Where the day ends if the rest of it
+  sells as usual: `today so far + (usual whole day − usual so far)`, said to
+  the nearest 1,000. Example: a target of 400,000 at 15:00, a usual Saturday
+  having made 25% of itself by then: 100,000 is expected by now; with 120,000
+  sold the café is ahead, and a usual Saturday's other 75% (say 300,000)
+  ends the day at about 420,000, over it. With no usual day yet, only what
+  is still to make is said.
 - _What a product keeps:_ `(net − recipe cost) ÷ net`, over the last 7 days;
   none when its cost is nothing, so it is never read as a fine margin. The
   thinnest named is under 30%, sold 3 times or more.
