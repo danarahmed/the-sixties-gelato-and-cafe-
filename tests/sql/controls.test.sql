@@ -145,7 +145,7 @@ select test.eq((
   'clear_product_image,clock_board,clock_in,clock_out,close_cash_session,close_po,copy_platform_setup,'
   'correct_attendance,correct_receipt,create_account,create_item,create_product,create_supplier,current_alerts,'
   'current_app_user_id,current_business_id,current_can_view_costs,current_has_permission,current_has_role,'
-  'customer_at_till,customer_detail,customer_list,daily_brief,dashboard_summary,detach_document,'
+  'customer_at_till,customer_detail,customer_list,daily_brief,daily_sales_target,dashboard_summary,detach_document,'
   'discard_journal,document_counts,document_may_attach,document_may_see,document_permissions,document_record,'
   'documents_for,'
   'draft_payroll,drawer_status,employee_advances,exchange_dollars,find_customer,force_close_session,'
