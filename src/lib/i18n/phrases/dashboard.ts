@@ -108,6 +108,10 @@ const phrases: PhraseBook = {
     ar: "ما زال {left} لبلوغه؛ ولا يوجد يوم {weekday} سابق لمعرفة الوتيرة منه.",
     ckb: "هێشتا {left} ماوە؛ هیچ ڕۆژێکی {weekday}ی پێشوو نییە بۆ زانینی خێرایی.",
   },
+  "{left} still to make; a usual {weekday} has sold almost nothing by {time}.": {
+    ar: "ما زال {left} لبلوغه؛ ولم يبع يوم {weekday} المعتاد شيئًا يُذكر حتى {time}.",
+    ckb: "هێشتا {left} ماوە؛ ڕۆژی {weekday}ی ئاسایی تا {time} نزیکەی هیچی نەفرۆشتووە.",
+  },
   "Ahead of the pace: by {time} a usual {weekday} has made {pct}% of its day, and today has {share}% of the target.":
     {
       ar: "متقدّم على الوتيرة: حتى {time} يكون يوم {weekday} المعتاد قد حقّق {pct}% من يومه، واليوم حقّق {share}% من الهدف.",

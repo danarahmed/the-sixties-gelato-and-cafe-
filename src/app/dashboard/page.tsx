@@ -216,25 +216,31 @@ export default async function DashboardPage() {
                 left: fmtIQD(goal.left),
                 weekday: t(weekday),
               })
-            : goal.net >= goal.expectedByNow
-              ? t(
-                  "Ahead of the pace: by {time} a usual {weekday} has made {pct}% of its day, and today has {share}% of the target.",
-                  {
-                    time,
-                    weekday: t(weekday),
-                    pct: shareText(goal.usualShareByNow ?? 0),
-                    share: shareText(goal.share),
-                  },
-                )
-              : t(
-                  "Behind the pace: by {time} a usual {weekday} has made {pct}% of its day, and today has {share}% of the target.",
-                  {
-                    time,
-                    weekday: t(weekday),
-                    pct: shareText(goal.usualShareByNow ?? 0),
-                    share: shareText(goal.share),
-                  },
-                ),
+            : Math.floor((goal.usualShareByNow ?? 0) * 100) === 0
+              ? t("{left} still to make; a usual {weekday} has sold almost nothing by {time}.", {
+                  left: fmtIQD(goal.left),
+                  weekday: t(weekday),
+                  time,
+                })
+              : goal.net >= goal.expectedByNow
+                ? t(
+                    "Ahead of the pace: by {time} a usual {weekday} has made {pct}% of its day, and today has {share}% of the target.",
+                    {
+                      time,
+                      weekday: t(weekday),
+                      pct: shareText(goal.usualShareByNow ?? 0),
+                      share: shareText(goal.share),
+                    },
+                  )
+                : t(
+                    "Behind the pace: by {time} a usual {weekday} has made {pct}% of its day, and today has {share}% of the target.",
+                    {
+                      time,
+                      weekday: t(weekday),
+                      pct: shareText(goal.usualShareByNow ?? 0),
+                      share: shareText(goal.share),
+                    },
+                  ),
           goal.projected === null
             ? null
             : goal.projected >= goal.target
@@ -258,6 +264,8 @@ export default async function DashboardPage() {
           .join(" ");
   const behind =
     goal !== null && !goal.reached && goal.expectedByNow !== null && goal.net < goal.expectedByNow;
+  // A day of more refunds than sales draws an empty bar, not a negative one.
+  const filled = goal ? Math.min(Math.max(goal.share, 0), 1) : 0;
 
   // ------------------------------------------------------- what they say
   const sayings: Saying[] = [];
@@ -452,13 +460,10 @@ export default async function DashboardPage() {
               aria-labelledby="dash-target-h"
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-valuenow={Math.min(Math.floor(goal.share * 100), 100)}
+              aria-valuenow={Math.floor(filled * 100)}
               aria-valuetext={t("{pct}% of the target", { pct: shareText(goal.share) })}
             >
-              <span
-                className="target-fill"
-                style={{ inlineSize: `${Math.min(goal.share, 1) * 100}%` }}
-              />
+              <span className="target-fill" style={{ inlineSize: `${filled * 100}%` }} />
               {goal.usualShareByNow !== null && !goal.reached && (
                 <span
                   className="target-now"
