@@ -29,6 +29,16 @@ const SOURCE: Record<string, string> = {
   stock_transfer: "Transfer sent",
   stock_transfer_receipt: "Transfer received",
   stock_transfer_cancel: "Transfer cancelled",
+  card_settlement: "Card settlement",
+  platform_settlement: "Platform settlement",
+  prepaid_expense: "Prepaid expense",
+  receipt_correction: "Delivery correction",
+  supplier_return: "Return to a supplier",
+  supplier_credit: "Supplier's credit",
+  sale_void: "Void",
+  production_cancel: "Batch cancelled",
+  fx_exchange: "Dollars exchanged",
+  session_dollars: "Dollars counted",
 };
 
 function signed(n: number): string {
