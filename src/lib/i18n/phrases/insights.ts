@@ -153,6 +153,15 @@ const phrases: PhraseBook = {
   "More than 30 days late": { ar: "متأخرة أكثر من 30 يومًا", ckb: "زیاتر لە 30 ڕۆژ دواکەوتوو" },
   "{share}% of what is owed": { ar: "{share}% من المستحق", ckb: "{share}%ی ئەوەی قەرزە" },
 
+  // A check's outcome, drawn, told to a screen reader in words.
+  "All good": { ar: "كل شيء سليم", ckb: "هەموو شتێک باشە" },
+  Ties: { ar: "متطابق", ckb: "یەکدەگرێتەوە" },
+  "Does not tie": { ar: "غير متطابق", ckb: "یەکناگرێتەوە" },
+  Warning: { ar: "تنبيه", ckb: "ئاگاداری" },
+  "Stops the close": { ar: "يمنع الإقفال", ckb: "ڕێگری لە داخستن دەکات" },
+  "A PDF": { ar: "ملف PDF", ckb: "فایلی PDF" },
+  "A picture": { ar: "صورة", ckb: "وێنە" },
+
   // Production: the day's plan opens the batch form filled in.
   "Record these": { ar: "سجّل هذه الدفعات", ckb: "ئەم دەستانە تۆمار بکە" },
 

@@ -16,6 +16,7 @@ import { fmtIQD } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
 import { AttachDocument } from "@/components/documents/AttachDocument";
 import { DetachDocument } from "@/components/documents/DetachDocument";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,16 @@ export default async function RecordDocumentsPage({
     const s = sizeLabel(d.size);
     return t(s.phrase, { n: s.n });
   };
-  const type = (d: KeptDocument) => (d.contentType === "application/pdf" ? "📄" : "🖼️");
+  const type = (d: KeptDocument) =>
+    d.contentType === "application/pdf" ? (
+      <span role="img" aria-label={t("A PDF")}>
+        <Icon name="file" size={16} />
+      </span>
+    ) : (
+      <span role="img" aria-label={t("A picture")}>
+        <Icon name="image" size={16} />
+      </span>
+    );
   const back = DOCUMENT_HOME[kind];
 
   return (

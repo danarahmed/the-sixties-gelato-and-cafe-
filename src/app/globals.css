@@ -276,6 +276,31 @@ button:active:not(:disabled) {
   flex: none;
   vertical-align: -0.22em;
 }
+/* A check's outcome: its shape and its colour, with words for a screen reader. */
+.status-mark {
+  display: inline-flex;
+  vertical-align: -0.22em;
+}
+.status-mark.ok {
+  color: var(--ok);
+}
+.status-mark.bad {
+  color: var(--err);
+}
+.status-mark.warn {
+  color: var(--warn);
+}
+/* An empty list's mark: the café's cone in a soft circle. */
+.empty-mark {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  color: var(--brand-2);
+}
 button.icon-only {
   display: inline-flex;
   align-items: center;

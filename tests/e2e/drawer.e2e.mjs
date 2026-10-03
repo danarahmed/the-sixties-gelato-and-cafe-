@@ -247,7 +247,8 @@ console.log("▸ paid from the safe or the drawer, a form says what it holds (AK
   check((await note.textContent()) === "", "the manager is not told what the drawer should hold");
   await page.getByLabel("Paid from", { exact: true }).selectOption("safe");
   check(
-    (await note.textContent()).startsWith("⚠️ The safe holds"),
+    (await note.getAttribute("data-warn")) === "yes" &&
+      (await note.textContent()).trim().startsWith("The safe holds"),
     "but is told what the safe holds",
   );
   await ctx.close();

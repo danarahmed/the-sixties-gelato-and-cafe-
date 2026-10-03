@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { Icon } from "@/components/Icon";
 
 export const inputStyle: React.CSSProperties = {
   minHeight: 44,
@@ -44,9 +45,10 @@ export function Notice({ msg }: { msg: { ok: boolean; text: string } | null }) {
   return (
     <div
       className={`badge ${msg.ok ? "ok" : "err"}`}
+      role={msg.ok ? "status" : "alert"}
       style={{ alignSelf: "start", whiteSpace: "normal" }}
     >
-      {msg.ok ? "✅ " : "⚠️ "}
+      <Icon name={msg.ok ? "ok" : "alert"} size={15} />
       {say(msg.text)}
     </div>
   );
@@ -56,9 +58,11 @@ export function EmptyState({ title, hint }: { title: string; hint?: string }) {
   return (
     <div
       className="card"
-      style={{ textAlign: "center", padding: "28px 16px", color: "var(--muted, #888)" }}
+      style={{ textAlign: "center", padding: "28px 16px", color: "var(--text-muted)" }}
     >
-      <div style={{ fontSize: "1.5rem", marginBottom: 6 }}>🗒️</div>
+      <div className="empty-mark" aria-hidden="true">
+        <Icon name="cone" size={26} />
+      </div>
       <strong>{title}</strong>
       {hint && (
         <p className="muted" style={{ fontSize: ".9rem", margin: "6px 0 0" }}>

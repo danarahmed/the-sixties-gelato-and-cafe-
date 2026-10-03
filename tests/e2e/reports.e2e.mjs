@@ -217,9 +217,10 @@ console.log("▸ the books' checks: one line when all tie, open when one does no
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/reports");
   const summary = (await page.getByTestId("rec-summary").textContent()).trim();
+  const ties = (await page.getByTestId("rec-summary").getAttribute("data-ok")) === "true";
   const unfolded = await page.locator("details.rec-details").evaluate((d) => d.open);
   check(
-    summary.startsWith("✅") ? !unfolded : unfolded,
+    ties ? !unfolded : unfolded,
     `the checks are ${unfolded ? "open" : "folded"}: "${summary}"`,
   );
   await ctx.close();

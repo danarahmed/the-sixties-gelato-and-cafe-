@@ -19,6 +19,7 @@ import {
   type CostedItem,
   type LineUse,
 } from "@/components/menu/recipeCost";
+import { Icon, StatusMark } from "@/components/Icon";
 
 export interface ItemOpt extends CostedItem {
   name: string;
@@ -244,7 +245,7 @@ export function RecipeLinesEditor({
                 onClick={() => onChange((ls) => ls.filter((x) => x.key !== l.key))}
                 disabled={lines.length === 1}
               >
-                ✕
+                <Icon name="close" size={16} />
               </button>
             </div>
             {channels && l.use === "custom" && (
@@ -357,7 +358,7 @@ export function NoCostYet({ lines, items }: { lines: LineDraft[]; items: ItemOpt
   if (names.length === 0) return null;
   return (
     <p className="pf-warn">
-      ⚠{" "}
+      <StatusMark state="warn" label={t("Warning")} />{" "}
       {names.length === 1
         ? t(
             "No cost yet for {names}: never bought or made, so counted as 0 here. Receive it on Purchasing, make a batch on Production, or give an opening cost on Inventory, for a true cost.",

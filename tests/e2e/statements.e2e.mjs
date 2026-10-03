@@ -76,15 +76,13 @@ console.log("▸ the owner: the balance sheet at the end of today, and the cash 
     start === cashAtStart && end === cashNow,
     `the cash flow starts at the books' ${cashAtStart.toLocaleString("en-US")} and ends at ${cashNow.toLocaleString("en-US")}`,
   );
-  const lines = await page
-    .getByTestId("cf-line")
-    .evaluateAll((els) =>
-      els.map((e) => ({
-        line: e.dataset.line,
-        amount: Number(e.dataset.amount),
-        in: Number(e.dataset.in),
-      })),
-    );
+  const lines = await page.getByTestId("cf-line").evaluateAll((els) =>
+    els.map((e) => ({
+      line: e.dataset.line,
+      amount: Number(e.dataset.amount),
+      in: Number(e.dataset.in),
+    })),
+  );
   const sum = lines.reduce((s, l) => s + l.amount, 0);
   check(
     sum === net && start + net === end,

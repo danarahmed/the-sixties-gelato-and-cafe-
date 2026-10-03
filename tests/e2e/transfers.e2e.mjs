@@ -278,7 +278,7 @@ console.log("▸ the books, the journals and the audit trail");
   check(
     (await transit.textContent()).includes(
       "Stock on its way between places vs Stock in transit (1210)",
-    ) && (await transit.textContent()).includes("✅"),
+    ) && (await transit.getAttribute("data-ok")) === "true",
     "the books tie: what is on its way against 1210",
   );
   await open(page, "/journals");

@@ -98,7 +98,7 @@ console.log("▸ a platform's report, chosen as its Excel file");
   await m.getByLabel("Statement number or date").fill("TLB-FILE-1");
   await m.getByRole("button", { name: "Post the payout" }).click();
   await page
-    .getByText(/^✅ Posted \(journal \d+\): 2 Talabat order\(s\) paid out\.$/)
+    .getByText(/^Posted \(journal \d+\): 2 Talabat order\(s\) paid out\.$/)
     .waitFor({ timeout: 10000 });
   check(
     last(`select count(*) from platform_order

@@ -273,10 +273,11 @@ console.log("▸ it is sold, and Reports list the sale as costed at nothing");
   await open(page, "/accounting");
   const warning = (await page.locator('tr[data-check="uncosted"]').textContent()) ?? "";
   check(
-    warning.includes("⚠️") && warning.includes("costed at nothing"),
+    (await page.locator('tr[data-check="uncosted"] [data-state="warn"]').count()) === 1 &&
+      warning.includes("costed at nothing"),
     "the month's closing checklist warns of it",
   );
-  const blocking = await page.locator("tr[data-check]", { hasText: "⛔" }).count();
+  const blocking = await page.locator('tr[data-check]:has([data-state="bad"])').count();
   const hints = page.getByText(/Resolve the \d+ failing check/);
   const hint = (await hints.count()) > 0 ? await hints.textContent() : "";
   check(

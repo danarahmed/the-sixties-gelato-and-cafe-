@@ -3,6 +3,7 @@
 import { fmtIQD } from "@/lib/format";
 import type { PostedPayment } from "@/lib/expenses";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { StatusMark } from "@/components/Icon";
 
 /**
  * A payment like this one posted already (the September audit's P2-14: rent
@@ -27,7 +28,10 @@ export function SamePaymentNote({
     >
       {same.length > 0 && (
         <>
-          <div>⚠️ {t("A payment like this one is posted already:")}</div>
+          <div>
+            <StatusMark state="warn" label={t("Warning")} />{" "}
+            {t("A payment like this one is posted already:")}
+          </div>
           <ul style={{ margin: "4px 0", paddingInlineStart: 18 }}>
             {same.map((x, i) => (
               <li key={`${x.journalNo ?? "-"}-${x.date}-${i}`}>

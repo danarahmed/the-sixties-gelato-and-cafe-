@@ -14,6 +14,7 @@ import { TRANSFER_NOTE_MAX, TRANSFER_STATUS_LABEL, type Transfer } from "@/lib/t
 import { fmtIQD, fmtQty, unitName } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
 import { normaliseNumber } from "@/lib/validation";
+import { Icon } from "@/components/Icon";
 
 export interface TransferItemOpt {
   id: string;
@@ -119,7 +120,9 @@ export function SendTransfer({
 
   return (
     <div className="card grid" style={{ gap: 10 }} data-testid="send-transfer">
-      <h3 style={{ margin: 0 }}>🚚 {t("Send stock to another place")}</h3>
+      <h3 style={{ margin: 0 }}>
+        <Icon name="transfers" /> {t("Send stock to another place")}
+      </h3>
       <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
         {t(
           "It leaves at what it costs where it is, the batch with the earliest use-by first, and is on its way until the other place receives it: counted there, what did not arrive is lost. While it is on its way it can be cancelled, and goes back where it was.",

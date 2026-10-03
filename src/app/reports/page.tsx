@@ -22,6 +22,7 @@ import {
 } from "@/lib/db/reports";
 import { LegacyPostings } from "@/components/books/LegacyPostings";
 import { Sayings, type Saying } from "@/components/Sayings";
+import { StatusMark } from "@/components/Icon";
 import { BarList } from "@/components/charts/BarList";
 import { ShareBar } from "@/components/charts/ShareBar";
 import { direction, percent } from "@/lib/dashboard";
@@ -2284,10 +2285,21 @@ export default async function ReportsPage({
         </div>
         {/* All tie: one line, the checks a click away. A check that fails opens them. */}
         <details className="rec-details" open={unreconciled.length > 0 || problems.length > 0}>
-          <summary data-testid="rec-summary">
-            {unreconciled.length === 0
-              ? `✅ ${t("Every subledger agrees with its control account.")}`
-              : `⛔ ${t("{n} of {total} checks do not tie", { n: unreconciled.length, total: rec.length })}`}
+          <summary data-testid="rec-summary" data-ok={unreconciled.length === 0}>
+            {unreconciled.length === 0 ? (
+              <>
+                <StatusMark state="ok" label={t("Ties")} />{" "}
+                {t("Every subledger agrees with its control account.")}
+              </>
+            ) : (
+              <>
+                <StatusMark state="bad" label={t("Does not tie")} />{" "}
+                {t("{n} of {total} checks do not tie", {
+                  n: unreconciled.length,
+                  total: rec.length,
+                })}
+              </>
+            )}
           </summary>
           <div className="tw">
             <table>
@@ -2303,9 +2315,12 @@ export default async function ReportsPage({
                 {rec.map((r) =>
                   r.key === "documents" ? (
                     // A count of records, not money.
-                    <tr key={r.key} data-testid="rec-documents">
+                    <tr key={r.key} data-testid="rec-documents" data-ok={r.difference === 0}>
                       <td>
-                        {r.difference === 0 ? "✅ " : "⛔ "}
+                        <StatusMark
+                          state={r.difference === 0 ? "ok" : "bad"}
+                          label={r.difference === 0 ? t("Ties") : t("Does not tie")}
+                        />{" "}
                         {msg(r.label)}
                       </td>
                       <td className="right mono">
@@ -2323,9 +2338,12 @@ export default async function ReportsPage({
                       </td>
                     </tr>
                   ) : (
-                    <tr key={r.key} data-testid={`rec-${r.key}`}>
+                    <tr key={r.key} data-testid={`rec-${r.key}`} data-ok={r.difference === 0}>
                       <td>
-                        {r.difference === 0 ? "✅ " : "⛔ "}
+                        <StatusMark
+                          state={r.difference === 0 ? "ok" : "bad"}
+                          label={r.difference === 0 ? t("Ties") : t("Does not tie")}
+                        />{" "}
                         {msg(r.label)}
                       </td>
                       <td className="right money">
@@ -2417,7 +2435,8 @@ export default async function ReportsPage({
         {uncosted.length === 0 ? (
           <div className="panel-b">
             <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-              ✅ {t("Every sale in these dates carries its cost.")}
+              <StatusMark state="ok" label={t("All good")} />{" "}
+              {t("Every sale in these dates carries its cost.")}
             </p>
           </div>
         ) : (
@@ -2456,7 +2475,7 @@ export default async function ReportsPage({
               className="muted"
               style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
             >
-              ⚠️{" "}
+              <StatusMark state="warn" label={t("Warning")} />{" "}
               <Rich
                 text={t(
                   "{n} sale(s), {amount} of sales: their profit is overstated by what went into them uncosted. A sale keeps the cost it was recorded with. To cost the next ones, give the product its recipe on <products>Products</products> (or say why it uses no stock), and give an item with no cost its opening stock or its first delivery on <inventory>Inventory</inventory>.",
@@ -2496,7 +2515,7 @@ export default async function ReportsPage({
           {exceptions.length === 0 ? (
             <div className="panel-b">
               <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-                ✅{" "}
+                <StatusMark state="ok" label={t("All good")} />{" "}
                 {t(
                   "Nothing was voided, refunded, discounted, cancelled or taken off a bill in these dates.",
                 )}
@@ -2584,14 +2603,19 @@ export default async function ReportsPage({
                 className="muted"
                 style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
               >
-                {toReview > 0
-                  ? `⚠️ ${t(
+                {toReview > 0 ? (
+                  <>
+                    <StatusMark state="warn" label={t("Warning")} />{" "}
+                    {t(
                       "{n} wait for your review: a void or refund nobody else approved, a wrong PIN, or a discount over the cap given before discounts were checked. Discounts over the cap need a manager's approval on the till; a void or refund may be approved there by a second person with their name and PIN.",
                       { n: toReview },
-                    )}`
-                  : t(
-                      "a void or refund nobody else approved, a wrong PIN, or a discount over the cap given before discounts were checked. Discounts over the cap need a manager's approval on the till; a void or refund may be approved there by a second person with their name and PIN.",
                     )}
+                  </>
+                ) : (
+                  t(
+                    "a void or refund nobody else approved, a wrong PIN, or a discount over the cap given before discounts were checked. Discounts over the cap need a manager's approval on the till; a void or refund may be approved there by a second person with their name and PIN.",
+                  )
+                )}
               </p>
             </>
           )}

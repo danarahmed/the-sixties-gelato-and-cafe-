@@ -3,6 +3,7 @@
 import { cashNote, type CashOnHand } from "@/lib/cash";
 import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { StatusMark } from "@/components/Icon";
 
 /**
  * Under a form's "Paid from" (AK): what the safe or the drawer holds, and a
@@ -34,9 +35,16 @@ export function CashOnHandNote({
         color: note?.warn ? "var(--warn)" : undefined,
       }}
     >
-      {note
-        ? `${note.warn ? "⚠️ " : ""}${t(note.text, note.amount === null ? {} : { amount: fmtIQD(note.amount) })}`
-        : null}
+      {note ? (
+        <>
+          {note.warn && (
+            <>
+              <StatusMark state="warn" label={t("Warning")} />{" "}
+            </>
+          )}
+          {t(note.text, note.amount === null ? {} : { amount: fmtIQD(note.amount) })}
+        </>
+      ) : null}
     </p>
   );
 }
