@@ -54,7 +54,7 @@ export function NeedsYou({
     />
   );
   return (
-    <section className="grid" style={{ gap: 10 }} data-testid="needs-you">
+    <section id="needs-you" className="grid" style={{ gap: 10 }} data-testid="needs-you">
       <h2 style={{ margin: 0, fontSize: "1.15rem" }}>{t("dash.needsYou")}</h2>
       {needsYou.length === 0 ? (
         <div className="alert-row green" data-testid="all-clear">

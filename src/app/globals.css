@@ -170,6 +170,10 @@
   box-sizing: border-box;
 }
 
+/* A link to a part of a page lands it below the sticky top bar, not under it. */
+html {
+  scroll-padding-top: 76px;
+}
 html,
 body {
   margin: 0;
@@ -2253,6 +2257,10 @@ input.check {
   justify-content: space-between;
   gap: 8px;
   padding: 4px 0;
+}
+/* An amount at the end of a row stays on one line ("3,000 IQD", never "3,000 / IQD"). */
+.deduction-row > .mono {
+  white-space: nowrap;
 }
 
 .muted {
