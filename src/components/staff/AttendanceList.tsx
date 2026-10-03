@@ -84,7 +84,7 @@ export function AttendanceList({
                   data-name={d.name}
                   data-day={d.day}
                 >
-                  <td className="mono">{d.day}</td>
+                  <td className="mono when">{d.day}</td>
                   <td>{d.name}</td>
                   <td className="mono">
                     {d.shiftStarts
