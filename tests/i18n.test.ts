@@ -112,7 +112,7 @@ describe("the phrase books", () => {
 
 describe("the translator", () => {
   it("fills placeholders, and leaves one with no value as it is", () => {
-    expect(fill("{n} order(s) for {name}", { n: 2, name: "Lezzoo" })).toBe("2 order(s) for Lezzoo");
+    expect(fill("{n} order(s) for {name}", { n: 2, name: "Lezzoo" })).toBe("2 orders for Lezzoo");
     expect(fill("{n} left", {})).toBe("{n} left");
     const t = translator({ "Hello {name}": "مرحبا {name}" });
     expect(t("Hello {name}", { name: "Dana" })).toBe("مرحبا Dana");

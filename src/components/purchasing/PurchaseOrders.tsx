@@ -10,7 +10,7 @@ import {
   savePurchaseOrderAction,
   sendPurchaseOrderAction,
 } from "@/lib/actions/purchasing";
-import { fmtIQD, fmtQty, unitName } from "@/lib/format";
+import { fmtIQD, fmtQty, packName, unitName } from "@/lib/format";
 import {
   inOrderUnit,
   orderStage,
@@ -151,7 +151,8 @@ export function PurchaseOrders({
                       <div key={l.lineId}>
                         {itemName.get(l.itemId) ?? l.item}{" "}
                         <span className="mono">
-                          {fmtQty(inOrderUnit(l, l.receivedBase))}/{fmtQty(l.qty)} {l.unitCode}
+                          {fmtQty(inOrderUnit(l, l.receivedBase))}/{fmtQty(l.qty)}{" "}
+                          {packName(l.unitCode, items.find((i) => i.id === l.itemId)?.units, t)}
                         </span>
                       </div>
                     ))}
@@ -197,6 +198,9 @@ export function PurchaseOrders({
     </div>
   );
 }
+
+/** A row's buttons, small enough to sit side by side. */
+const small = { minHeight: 30, padding: "0 10px", fontSize: ".8rem" } as const;
 
 /** What can be done to an order at its step, by the reader. */
 function OrderActions({
@@ -246,7 +250,7 @@ function OrderActions({
     <div className="grid" style={{ gap: 6 }}>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {canCreate && (order.status === "draft" || order.status === "approved") && (
-          <button type="button" onClick={onEdit} disabled={busy}>
+          <button type="button" style={small} onClick={onEdit} disabled={busy}>
             {t("Change")}
           </button>
         )}
@@ -254,6 +258,7 @@ function OrderActions({
           <button
             type="button"
             className="btn-primary"
+            style={small}
             disabled={busy}
             onClick={() =>
               run(
@@ -269,6 +274,7 @@ function OrderActions({
         {mayAct && order.status === "approved" && (
           <button
             type="button"
+            style={small}
             disabled={busy}
             onClick={() =>
               run(
@@ -282,12 +288,12 @@ function OrderActions({
           </button>
         )}
         {mayAct && open && !nothingCame && (
-          <button type="button" disabled={busy} onClick={() => setAsking("close")}>
+          <button type="button" style={small} disabled={busy} onClick={() => setAsking("close")}>
             {t("Close")}
           </button>
         )}
         {mayAct && order.status !== "closed" && order.status !== "cancelled" && nothingCame && (
-          <button type="button" disabled={busy} onClick={() => setAsking("cancel")}>
+          <button type="button" style={small} disabled={busy} onClick={() => setAsking("cancel")}>
             {t("Cancel")}
           </button>
         )}

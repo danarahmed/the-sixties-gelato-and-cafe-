@@ -158,8 +158,8 @@ console.log("▸ a manager matches a Talabat statement, and does not post it");
   await m.getByLabel("Platform").selectOption("talabat");
   await m.getByLabel("The statement").fill(statement);
   check(
-    (await m.getByTestId("statement-read").textContent()).includes("5 line(s) read") &&
-      (await m.getByTestId("statement-read").textContent()).includes("1 total row(s) left out"),
+    (await m.getByTestId("statement-read").textContent()).includes("5 lines read") &&
+      (await m.getByTestId("statement-read").textContent()).includes("1 total row left out"),
     "the pasted statement is read by its column names, its total row left out",
   );
   await m.getByRole("button", { name: "Match to the orders waiting" }).click();
@@ -208,7 +208,7 @@ console.log("▸ the owner posts it with a note, then cancels it");
     .fill("9999 is not ours; E2E-3 was voided; E2E-4 paid 50 short, asked; line 5 repeats line 1");
   await post.click();
   await page
-    .getByText(/^Posted \(journal \d+\): 2 Talabat order\(s\) paid out; 4 line\(s\)/)
+    .getByText(/^Posted \(journal \d+\): 2 Talabat orders paid out; 4 lines/)
     .waitFor({ timeout: 10000 });
   check(
     lines("platform_settlement") === "1020 Dr 5050 | 1100 Cr 6000 | 5100 Dr 900 | 5200 Dr 50",

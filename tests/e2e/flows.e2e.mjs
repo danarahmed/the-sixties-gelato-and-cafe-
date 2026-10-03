@@ -385,7 +385,7 @@ console.log("▸ a bill still waiting for its money is no cash yet: it carries t
   const drawer = page.getByTestId("drawer-panel");
   await drawer.getByRole("button", { name: "Close the drawer" }).click();
   await drawer
-    .getByText("1 bill(s) are still open: they are no cash yet, and are paid in the next session.")
+    .getByText("1 bill is still open: they are no cash yet, and are paid in the next session.")
     .waitFor({ timeout: 10000 });
   ok("closing the drawer, the till says the open bill carries to the next session");
   await drawer.getByRole("button", { name: "Back" }).click();
@@ -726,7 +726,7 @@ console.log("▸ owner reviews and posts stock the old app never journaled, then
     .getByPlaceholder("Why they are being posted (for the audit trail)")
     .fill("e2e: real stock from before the upgrade");
   await page.getByRole("button", { name: /Post these 2 journal/ }).click();
-  await page.getByText(/2 journal\(s\) posted/).waitFor({ timeout: 10000 });
+  await page.getByText(/2 journals posted/).waitFor({ timeout: 10000 });
   check(
     sql(
       `select string_agg(a.code || case when l.debit > 0 then ' Dr ' || l.debit else ' Cr ' || l.credit end, ' | ' order by a.code)

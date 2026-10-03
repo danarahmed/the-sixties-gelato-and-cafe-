@@ -219,7 +219,7 @@ console.log("▸ the base keeps three days; a barista's batch is used by then");
   await card.getByRole("button", { name: "Save changes" }).click();
   await page.getByTestId("recipe-keeps").first().waitFor({ timeout: 10000 });
   check(
-    (await baseCard().innerText()).includes("keeps 3 day(s)"),
+    (await baseCard().innerText()).includes("keeps 3 days"),
     "the base keeps 3 days, as its card says",
   );
   check(
@@ -234,7 +234,7 @@ console.log("▸ the base keeps three days; a barista's batch is used by then");
   await page.getByLabel("What did you make").selectOption({ label: "E2E base" });
   check(
     (await page.getByTestId("use-by-hint").innerText()) ===
-      "Left empty: 3 day(s) from when it is made, as its recipe keeps.",
+      "Left empty: 3 days from when it is made, as its recipe keeps.",
     "the form says the batch is used by three days on, unless a date is given",
   );
   check(
@@ -351,8 +351,11 @@ console.log("▸ the day's plan waits for four weeks of history");
   const row = page.locator('[data-testid="plan-row"][data-recipe="E2E base"]');
   await row.waitFor({ timeout: 10000 });
   check(
+    // Made two hours ago: before 02:00 in Baghdad that was yesterday, a day of history.
     (await row.getAttribute("data-status")) === "no_history" &&
-      (await row.innerText()).includes("No history yet: 28 days are needed"),
+      /No history yet: 28 days are needed|\b1 day of history: 28 are needed/.test(
+        await row.innerText(),
+      ),
     "a base first made today has too little history to plan by",
   );
   await ctx.close();

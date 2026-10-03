@@ -7,7 +7,7 @@ import { getItems, getItemsOutOfUse, getReceipts, getSuppliers } from "@/lib/db/
 import { getItemCosts } from "@/lib/db/reports";
 import { getPurchaseOrders, getSupplierReturns } from "@/lib/db/purchasing";
 import { isOpen } from "@/lib/purchasing";
-import { fmtIQD } from "@/lib/format";
+import { fmtIQD, packName } from "@/lib/format";
 import { businessToday, dateIn, dateTimeIn, monthEnd, monthStart } from "@/lib/dates";
 import { ReceiveStockForm } from "@/components/ReceiveStockForm";
 import { CorrectionCatalogue, ReceiptCorrection } from "@/components/ReceiptCorrection";
@@ -54,6 +54,7 @@ export default async function PurchasingPage() {
   ]);
   const today = businessToday(profile.timezone);
   const itemName = new Map([...items, ...outOfUse].map((i) => [i.id, i.name]));
+  const unitsOf = new Map(items.map((i) => [i.id, i.units]));
   const kindLabel = (k: string) =>
     ({
       quantity: t("the quantity"),
@@ -207,7 +208,8 @@ export default async function PurchasingPage() {
                   <td style={{ fontSize: ".8rem" }}>
                     {x.lines.map((l, i) => (
                       <div key={i}>
-                        {itemName.get(l.itemId) ?? "—"} {l.qty} {l.unitCode}
+                        {itemName.get(l.itemId) ?? "—"} {l.qty}{" "}
+                        {packName(l.unitCode, unitsOf.get(l.itemId), t)}
                       </div>
                     ))}
                     <div className="muted">“{x.reason}”</div>

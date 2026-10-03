@@ -183,7 +183,7 @@ sql(`alter table prepaid_expense disable trigger prepaid_expense_guard;
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/dashboard");
   const alert = page.getByTestId("alert").filter({
-    hasText: "1 month(s) of prepaid expenses are due to be released, 10,000 IQD in all",
+    hasText: "1 month of prepaid expenses are due to be released, 10,000 IQD in all",
   });
   check(
     (await alert.count()) === 1 && (await alert.getAttribute("data-urgency")) === "orange",
@@ -201,7 +201,7 @@ sql(`alter table prepaid_expense disable trigger prepaid_expense_guard;
   );
   await release.click();
   await page
-    .getByText("1 month(s)' share posted as an expense of its month.")
+    .getByText("1 month's share posted as an expense of its month.")
     .waitFor({ timeout: 10000 });
   check(
     last(`select r.month || ' ' || trim_scale(r.amount) from prepaid_release r

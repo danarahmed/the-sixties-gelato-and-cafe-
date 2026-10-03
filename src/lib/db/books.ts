@@ -17,6 +17,7 @@ import type { CashOnHand } from "@/lib/cash";
 import { isPrepaidShare, prepaidFrom, type PrepaidRow } from "@/lib/prepaid";
 import { channelName } from "@/lib/channels";
 import { db, num, numOrNull, one, rows, str, strOrNull, type Row } from "./client";
+import { readInBatches } from "./batches";
 import { likeText, type JournalQuery } from "@/lib/find";
 import { getChannels } from "./channels";
 
@@ -568,10 +569,16 @@ export async function getJournalRegister(
   if (entries.length === 0) return [];
   const ids = entries.map((e) => str(e.id));
   const [lines, accounts, people, reversals, reversed] = await Promise.all([
-    c
-      .from("journal_line")
-      .select("journal_entry_id,account_id,debit,credit,memo")
-      .in("journal_entry_id", ids),
+    // 200 journals' lines may be more than a call returns: a batch at a time.
+    readInBatches(
+      ids,
+      (batch) =>
+        c
+          .from("journal_line")
+          .select("journal_entry_id,account_id,debit,credit,memo")
+          .in("journal_entry_id", batch),
+      "journal lines",
+    ),
     c.from("gl_account").select("id,code,name"),
     c.from("app_user").select("id,full_name"),
     c.from("journal_entry").select("reverses_entry,journal_no").in("reverses_entry", ids),
@@ -599,7 +606,7 @@ export async function getJournalRegister(
   );
   const byEntry = new Map<string, JournalRegisterRow["lines"]>();
   const credited = new Map<string, { code: string; credit: number }[]>();
-  for (const l of rows(lines, "journal lines")) {
+  for (const l of lines) {
     const k = str(l.journal_entry_id);
     credited.set(k, [
       ...(credited.get(k) ?? []),

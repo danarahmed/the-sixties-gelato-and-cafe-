@@ -97,9 +97,9 @@ console.log("▸ the owner adds Turkish, and gives it words");
   // The menu's "Sales" is kept by its key; the phrase "Sales" is another row.
   await words.getByLabel("Search").fill("nav.sales");
   await words.getByLabel("Words for: Sales", { exact: true }).fill("Satışlar");
-  await words.getByRole("button", { name: "Save 2 change(s)" }).click();
+  await words.getByRole("button", { name: "Save 2 changes" }).click();
   await page
-    .getByText("Saved: 2 phrase(s) with new words, 0 back to the built-in words.")
+    .getByText("Saved: 2 phrases with new words, 0 back to the built-in words.")
     .waitFor({ timeout: 10000 });
   check(true, "the owner gives two phrases their Turkish");
   check(
@@ -144,10 +144,10 @@ console.log("▸ the owner adds Turkish, and gives it words");
   const back = `${file}.csv`;
   writeFileSync(back, "key,english,built_in,words\r\nnav.dashboard,Dashboard,,Gösterge paneli\r\n");
   await page.locator("#words input[type=file]").setInputFiles(back);
-  await page.getByText("Read 1 phrase(s) with new words from the file.").waitFor();
-  await page.locator("#words").getByRole("button", { name: "Save 1 change(s)" }).click();
+  await page.getByText("Read 1 phrase with new words from the file.").waitFor();
+  await page.locator("#words").getByRole("button", { name: "Save 1 change" }).click();
   await page
-    .getByText("Saved: 1 phrase(s) with new words, 0 back to the built-in words.")
+    .getByText("Saved: 1 phrase with new words, 0 back to the built-in words.")
     .waitFor();
   // Saved, the page is refreshed: wait for the menu to be given the new words.
   const uploaded = await page

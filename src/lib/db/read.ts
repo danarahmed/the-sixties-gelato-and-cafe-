@@ -10,6 +10,7 @@ import "server-only";
  * returns an empty list that would look like "nothing recorded yet".
  */
 import { db, num, numOrNull, rows, str, strOrNull, one, type Row } from "./client";
+import { readInBatches } from "./batches";
 import { likeText, type SaleQuery } from "@/lib/find";
 import { leftToGiveBack, type LeftToGiveBack, type PaidPart, type PayType } from "@/lib/payments";
 
@@ -401,16 +402,27 @@ export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
   if (receipts.length === 0) return [];
   const ids = receipts.map((r) => str(r.id));
   const [lines, moves, bills, journals, suppliers, corrections, people] = await Promise.all([
-    c
-      .from("goods_receipt_line")
-      .select("id,goods_receipt_id,item_id,received_qty,received_unit_code,goods_value")
-      .in("goods_receipt_id", ids),
-    c
-      .from("inventory_movement")
-      .select("reference_id,value")
-      .eq("reference_type", "goods_receipt")
-      .eq("type", "purchase_receipt")
-      .in("reference_id", ids),
+    // 50 deliveries' lines, and their stock, may be more than a call returns.
+    readInBatches(
+      ids,
+      (batch) =>
+        c
+          .from("goods_receipt_line")
+          .select("id,goods_receipt_id,item_id,received_qty,received_unit_code,goods_value")
+          .in("goods_receipt_id", batch),
+      "delivery lines",
+    ),
+    readInBatches(
+      ids,
+      (batch) =>
+        c
+          .from("inventory_movement")
+          .select("reference_id,value")
+          .eq("reference_type", "goods_receipt")
+          .eq("type", "purchase_receipt")
+          .in("reference_id", batch),
+      "delivery stock",
+    ),
     c
       .from("purchase_invoice")
       .select("goods_receipt_id")
@@ -449,7 +461,7 @@ export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
   );
   const goods = new Map<string, { value: number; count: number }>();
   const originalLines = new Map<string, ReceiptRow["lines"]>();
-  for (const l of rows(lines, "receipt lines")) {
+  for (const l of lines) {
     const k = str(l.goods_receipt_id);
     const cur = goods.get(k) ?? { value: 0, count: 0 };
     goods.set(k, { value: cur.value + num(l.goods_value), count: cur.count + 1 });
@@ -486,7 +498,7 @@ export async function getReceipts(limit = 50): Promise<ReceiptRow[]> {
       ? (effects as Record<string, unknown>[]).reduce((t, e) => t + num(e[field]), 0)
       : 0;
   const valued = new Map<string, number>();
-  for (const m of rows(moves, "receipt movements")) {
+  for (const m of moves) {
     valued.set(str(m.reference_id), (valued.get(str(m.reference_id)) ?? 0) + num(m.value));
   }
   const billed = new Set(rows(bills, "bills").map((b) => str(b.goods_receipt_id)));
@@ -730,55 +742,87 @@ export async function getSalesOrders(
   const orders = rows(await q.order("placed_at", { ascending: false }).limit(limit), "sales");
   if (orders.length === 0) return [];
   const ids = orders.map((o) => str(o.id));
-  const [lines, tenders, adjustments, variants, products, people, refunds] = await Promise.all([
-    c
-      .from("sales_order_line")
-      .select("id,sales_order_id,product_variant_id,product_name,quantity,unit_price,line_net")
-      .in("sales_order_id", ids),
-    c
-      .from("sales_tender")
-      .select(
-        "sales_order_id,tender_type,amount,received,change_given,position,currency,foreign_amount,rate",
-      )
-      .in("sales_order_id", ids)
-      .order("position"),
-    c
-      .from("sale_adjustment")
-      .select("id,sales_order_id,kind,amount,reason,created_at,requested_by,approved_by")
-      .in("sales_order_id", ids),
-    c.from("product_variant").select("id,product_id,name"),
-    c.from("product").select("id,name"),
-    c.from("app_user").select("id,full_name"),
-    c
-      .from("sale_refund")
-      .select(
-        "id,refund_no,sales_order_id,amount,cost_returned,reason,created_at,requested_by,approved_by",
-      )
-      .in("sales_order_id", ids),
-  ]);
-  const refundRows = rows(refunds, "refunds");
+  // The sales' own rows, a batch of sales at a time: 500 sales' ids do not fit
+  // in one request, and their lines may be more than a call returns.
+  const [lines, tenders, adjustments, variants, products, people, refundRows, addonRows] =
+    await Promise.all([
+      readInBatches(
+        ids,
+        (b) =>
+          c
+            .from("sales_order_line")
+            .select(
+              "id,sales_order_id,product_variant_id,product_name,quantity,unit_price,line_net",
+            )
+            .in("sales_order_id", b),
+        "sale lines",
+      ),
+      readInBatches(
+        ids,
+        (b) =>
+          c
+            .from("sales_tender")
+            .select(
+              "sales_order_id,tender_type,amount,received,change_given,position,currency,foreign_amount,rate",
+            )
+            .in("sales_order_id", b)
+            .order("position")
+            .order("id"),
+        "tenders",
+      ),
+      readInBatches(
+        ids,
+        (b) =>
+          c
+            .from("sale_adjustment")
+            .select("id,sales_order_id,kind,amount,reason,created_at,requested_by,approved_by")
+            .in("sales_order_id", b),
+        "voids and refunds",
+      ),
+      c.from("product_variant").select("id,product_id,name"),
+      c.from("product").select("id,name"),
+      c.from("app_user").select("id,full_name"),
+      readInBatches(
+        ids,
+        (b) =>
+          c
+            .from("sale_refund")
+            .select(
+              "id,refund_no,sales_order_id,amount,cost_returned,reason,created_at,requested_by,approved_by",
+            )
+            .in("sales_order_id", b),
+        "refunds",
+      ),
+      // Each line's add-ons (0041), named with it: "Latte — Large (+ Oat milk, Extra shot ×2)".
+      readInBatches(
+        ids,
+        (b) =>
+          c
+            .from("sales_order_line_modifier")
+            .select("sales_order_line_id,name,qty,position")
+            .in("sales_order_id", b)
+            .order("position")
+            .order("id"),
+        "add-ons",
+      ),
+    ]);
   const refundIds = refundRows.map((r) => str(r.id));
-  // Each line's add-ons (0041), named with it: "Latte — Large (+ Oat milk, Extra shot ×2)".
-  const addonRows = rows(
-    await c
-      .from("sales_order_line_modifier")
-      .select("sales_order_line_id,name,qty,position")
-      .in("sales_order_id", ids)
-      .order("position"),
-    "add-ons",
-  );
-  const [refundLines, refundTenders] = refundIds.length
-    ? await Promise.all([
+  const [rLines, refundTenders] = await Promise.all([
+    readInBatches(
+      refundIds,
+      (b) =>
         c
           .from("sale_refund_line")
           .select("refund_id,sales_order_line_id,qty,amount")
-          .in("refund_id", refundIds),
-        c
-          .from("sale_refund_tender")
-          .select("refund_id,tender_type,amount")
-          .in("refund_id", refundIds),
-      ])
-    : [null, null];
+          .in("refund_id", b),
+      "refund lines",
+    ),
+    readInBatches(
+      refundIds,
+      (b) => c.from("sale_refund_tender").select("refund_id,tender_type,amount").in("refund_id", b),
+      "refund payments",
+    ),
+  ]);
   const productName = new Map(rows(products, "products").map((p) => [str(p.id), str(p.name)]));
   const variantLabel = new Map<string, string>();
   for (const v of rows(variants, "product variants")) {
@@ -792,7 +836,7 @@ export async function getSalesOrders(
     for (const x of list) m.set(key(x), [...(m.get(key(x)) ?? []), x]);
     return m;
   };
-  const saleLines = rows(lines, "sale lines");
+  const saleLines = lines;
   const linesBy = group(saleLines, (l) => str(l.sales_order_id));
   const addonsBy = group(addonRows, (a) => str(a.sales_order_line_id));
   const lineName = new Map(
@@ -807,13 +851,12 @@ export async function getSalesOrders(
       return [str(l.id), addons.length ? `${name} (+ ${addons.join(", ")})` : name];
     }),
   );
-  const tendersBy = group(rows(tenders, "tenders"), (t) => str(t.sales_order_id));
-  const adjBy = group(rows(adjustments, "voids and refunds"), (a) => str(a.sales_order_id));
-  const rLines = refundLines ? rows(refundLines, "refund lines") : [];
+  const tendersBy = group(tenders, (t) => str(t.sales_order_id));
+  const adjBy = group(adjustments, (a) => str(a.sales_order_id));
   const rLinesBy = group(rLines, (l) => str(l.refund_id));
   const rLinesByLine = group(rLines, (l) => str(l.sales_order_line_id));
   const rTenders = group(
-    (refundTenders ? rows(refundTenders, "refund payments") : []).map((t) => ({
+    refundTenders.map((t) => ({
       refundId: str(t.refund_id),
       type: str(t.tender_type) as PayType,
       amount: num(t.amount),
@@ -943,16 +986,13 @@ export async function getStockCounts(limit = 30): Promise<CountSummary[]> {
   const list = rows(counts, "stock counts");
   const person = new Map(rows(people, "people").map((p) => [str(p.id), str(p.full_name)]));
   const ids = list.map((x) => str(x.id));
-  const lineRows =
-    ids.length === 0
-      ? []
-      : rows(
-          await c
-            .from("stock_count_line")
-            .select("stock_count_id,counted_base")
-            .in("stock_count_id", ids),
-          "count lines",
-        );
+  // 30 counts of a hundred items each are more lines than a call returns.
+  const lineRows = await readInBatches(
+    ids,
+    (batch) =>
+      c.from("stock_count_line").select("stock_count_id,counted_base").in("stock_count_id", batch),
+    "count lines",
+  );
   const tally = new Map<string, { lines: number; counted: number }>();
   for (const l of lineRows) {
     const k = str(l.stock_count_id);

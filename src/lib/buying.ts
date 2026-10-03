@@ -7,7 +7,7 @@
  */
 import Decimal from "decimal.js";
 import { fill, type T } from "@/lib/i18n/core";
-import { fmtIQD, fmtQty, unitName } from "@/lib/format";
+import { fmtAbout, fmtIQD, fmtQty, unitName } from "@/lib/format";
 import { orderTotal } from "@/lib/purchasing";
 
 /** To order; enough on hand and coming; too new to judge; not used lately. */
@@ -292,6 +292,8 @@ export function reasonsOf(
 ): string[] {
   const u = unitName(line.baseUnit, t);
   const q = (n: number) => `${fmtQty(n)} ${u}`;
+  // What is worked out from use (a day's, a level), rounded to be read.
+  const about = (n: number) => `${fmtAbout(n)} ${u}`;
   const out: string[] = [];
   if (line.status === "no_history") {
     out.push(
@@ -331,7 +333,7 @@ export function reasonsOf(
             all: q(line.position),
           }),
   );
-  const level = q(line.reorderLevel ?? 0);
+  const level = about(line.reorderLevel ?? 0);
   if (line.reorderFrom === "item")
     out.push(
       line.status === "order"
@@ -342,11 +344,11 @@ export function reasonsOf(
     out.push(
       t(
         "About {daily} a day over the last {days} days; a delivery takes {lead} day(s), and a day more: {level} is its reorder level.",
-        { daily: q(line.dailyUse ?? 0), days: line.days ?? 0, lead: line.leadTime, level },
+        { daily: about(line.dailyUse ?? 0), days: line.days ?? 0, lead: line.leadTime, level },
       ),
     );
     if (line.safetyStock)
-      out.push(t("With a safety stock of {qty}.", { qty: q(line.safetyStock) }));
+      out.push(t("With a safety stock of {qty}.", { qty: about(line.safetyStock) }));
     out.push(
       line.status === "order"
         ? t("Below it: to order.")
@@ -354,7 +356,7 @@ export function reasonsOf(
     );
   }
   if (line.status !== "order") return out;
-  const target = q(line.targetLevel ?? 0);
+  const target = about(line.targetLevel ?? 0);
   out.push(
     line.targetFrom === "par"
       ? t("Ordered up to its par level, {target}.", { target })

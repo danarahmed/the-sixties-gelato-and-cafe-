@@ -87,6 +87,23 @@ export function holdsAny(permissions: readonly string[], anyOf: readonly string[
   return anyOf.some((p) => permissions.includes(p));
 }
 
+/**
+ * The menu's entry for the screen open: the one whose address is the screen's
+ * or the nearest one above it, so Usage (/inventory/usage) lights Usage alone,
+ * not Inventory too, and What to buy (/purchasing/buying-list) lights
+ * Purchasing.
+ */
+export function activeHref(pathname: string | null, hrefs: readonly string[]): string | null {
+  if (!pathname) return null;
+  let best: string | null = null;
+  for (const h of hrefs) {
+    if ((pathname === h || pathname.startsWith(`${h}/`)) && h.length > (best?.length ?? 0)) {
+      best = h;
+    }
+  }
+  return best;
+}
+
 /** Where a person starts: the first screen their work begins on. */
 export function homeFor(permissions: readonly string[]): string {
   if (permissions.includes("profit.view")) return "/dashboard";

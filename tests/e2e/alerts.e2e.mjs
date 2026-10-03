@@ -105,7 +105,17 @@ console.log("▸ a manager answers it with a note; the owner snoozes another");
 {
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/dashboard");
-  // Twenty-odd ingredients with no cost yet fold into one row: opened, one is snoozed.
+  // What can wait folds into one row while anything is red; inside it, twenty-odd
+  // ingredients with no cost yet fold into one row of their own: opened, one is snoozed.
+  const wait = page.getByTestId("alerts-can-wait");
+  const red = await page.getByTestId("needs-you").locator('[data-urgency="red"]').count();
+  check(
+    /^🟠 \d+ orange alerts? can wait for a quiet moment\.$/.test(
+      (await wait.locator(":scope > summary .alert-title").textContent()).trim(),
+    ) && (await wait.evaluate((d) => d.open)) === (red === 0),
+    "what can wait is one row, folded while anything is red",
+  );
+  if (!(await wait.evaluate((d) => d.open))) await wait.locator(":scope > summary").click();
   const group = page.getByTestId("alert-group").first();
   check(
     /^🟠 No cost yet: \d+/.test((await group.locator("summary .alert-title").textContent()).trim()),

@@ -51,17 +51,67 @@ export function isolateDates(text: string): string {
   return text.replace(DATE, (d) => `\u2066${d}\u2069`);
 }
 
+/** A number as the app writes one: 3, 1,646, 2.36, -77. */
+const NUMBER = /-?\d[\d,]*(?:\.\d+)?/g;
+
+/**
+ * An English word whose plural is left open, "bill(s)", "loss(es)", "month(s)'",
+ * and a verb right after it that agrees with it.
+ */
+const OPEN_PLURAL = /\b([A-Za-z]+)\((e?s)\)(')?(?:(\s+)(are|have|do|wait|differ|need)\b)?/g;
+
+const SINGULAR: Record<string, string> = {
+  are: "is",
+  have: "has",
+  do: "does",
+  wait: "waits",
+  differ: "differs",
+  need: "needs",
+};
+
+/**
+ * An English word whose plural a phrase leaves open ("{n} bill(s) are still
+ * open") made to agree with the number nearest before it: "1 bill is still
+ * open", "3 bills are still open". With no number before it, the plural.
+ * Arabic and Kurdish words never leave a plural open, and are left as they are.
+ */
+export function agree(text: string): string {
+  if (!text.includes("(")) return text;
+  return text.replace(
+    OPEN_PLURAL,
+    (
+      _whole,
+      word: string,
+      ending: string,
+      apostrophe: string | undefined,
+      space: string | undefined,
+      verb: string | undefined,
+      at: number,
+    ) => {
+      const numbers = text.slice(0, at).match(NUMBER);
+      const last = numbers?.[numbers.length - 1];
+      const one = last !== undefined && Number(last.replace(/,/g, "")) === 1;
+      const owner = apostrophe ? (one ? "'s" : "'") : "";
+      const said = verb ? `${space ?? " "}${one ? (SINGULAR[verb] ?? verb) : verb}` : "";
+      return `${one ? word : word + ending}${owner}${said}`;
+    },
+  );
+}
+
 /**
  * {name} in a phrase, filled; a placeholder with no value is left as it is.
  * For a right-to-left reader, the dates in a value are kept left to right.
+ * A plural the phrase leaves open agrees with its number.
  */
 export function fill(text: string, vars?: Vars, dir: Dir = "ltr"): string {
-  if (!vars) return text;
-  return text.replace(/\{(\w+)\}/g, (whole, name: string) => {
-    if (!Object.prototype.hasOwnProperty.call(vars, name)) return whole;
-    const value = String(vars[name]);
-    return dir === "rtl" ? isolateDates(value) : value;
-  });
+  if (!vars) return agree(text);
+  return agree(
+    text.replace(/\{(\w+)\}/g, (whole, name: string) => {
+      if (!Object.prototype.hasOwnProperty.call(vars, name)) return whole;
+      const value = String(vars[name]);
+      return dir === "rtl" ? isolateDates(value) : value;
+    }),
+  );
 }
 
 /** The translator for a language's words: the key itself (an English phrase) where it has none. */
@@ -156,7 +206,7 @@ export function messenger(words: Words, dir: Dir = "ltr"): Msg {
   };
   return (text) => {
     if (!text) return text;
-    const said = translate(text, 0);
+    const said = agree(translate(text, 0));
     return dir === "rtl" ? isolateDates(said) : said;
   };
 }

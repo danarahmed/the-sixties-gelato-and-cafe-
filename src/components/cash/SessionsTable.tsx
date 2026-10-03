@@ -52,7 +52,7 @@ export async function SessionsTable({
         <tbody>
           {rows.map((r) => (
             <tr key={r.id}>
-              <td>
+              <td className="session-cell">
                 {r.kind === "session" ? (
                   <Link className="drill" href={`/sales/sessions/${r.id}`}>
                     {t("Session {no}", { no: String(r.no) })}

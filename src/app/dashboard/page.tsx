@@ -659,13 +659,17 @@ export default async function DashboardPage() {
               recent.map((o) => (
                 <div key={o.id} className="deduction-row">
                   <span>
+                    <span className="muted mono recent-time">
+                      {dateTimeIn(profile.timezone, o.placedAt).slice(11)}
+                    </span>{" "}
                     <span className="badge">{channels.name(o.channel)}</span>{" "}
                     {o.lines.map((l) => `${l.name} ×${l.qty}`).join(", ") || "—"}
-                    <span className="muted" style={{ fontSize: ".75rem" }}>
-                      {" "}
-                      · {dateTimeIn(profile.timezone, o.placedAt).slice(11)}
-                      {o.status !== "completed" ? ` · ${t(o.status)}` : ""}
-                    </span>
+                    {o.status !== "completed" && (
+                      <>
+                        {" "}
+                        <span className="badge warn">{t(o.status)}</span>
+                      </>
+                    )}
                   </span>
                   <span className="mono">{fmtIQD(o.net)}</span>
                 </div>

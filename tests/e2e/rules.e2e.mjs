@@ -199,7 +199,7 @@ rule("waste_approval_over", "business", null, 1);
   const { ctx, page } = await signIn(browser, "manager");
   await open(page, "/dashboard");
   check(
-    /loss\(es\) waiting for a manager's approval/.test(await page.textContent("main")),
+    /\d+ loss(es)? waiting for a manager's approval/.test(await page.textContent("main")),
     "the dashboard names the losses waiting",
   );
   await open(page, "/inventory");

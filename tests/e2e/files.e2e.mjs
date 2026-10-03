@@ -75,10 +75,10 @@ console.log("▸ a platform's report, chosen as its Excel file");
   await m.getByTestId("file-read").waitFor({ timeout: 10000 });
   const read = await m.getByTestId("statement-read").textContent();
   check(
-    read.includes("2 line(s) read") &&
+    read.includes("2 lines read") &&
       read.includes("columns: Order ID, Net Payout, Commission") &&
-      read.includes("1 total row(s) left out") &&
-      read.includes("3 other row(s) left out: titles and notes"),
+      read.includes("1 total row left out") &&
+      read.includes("3 other rows left out: titles and notes"),
     `read from the workbook by the column names below its title; its total, title and note left out (${read})`,
   );
   check(
@@ -98,7 +98,7 @@ console.log("▸ a platform's report, chosen as its Excel file");
   await m.getByLabel("Statement number or date").fill("TLB-FILE-1");
   await m.getByRole("button", { name: "Post the payout" }).click();
   await page
-    .getByText(/^Posted \(journal \d+\): 2 Talabat order\(s\) paid out\.$/)
+    .getByText(/^Posted \(journal \d+\): 2 Talabat orders paid out\.$/)
     .waitFor({ timeout: 10000 });
   check(
     last(`select count(*) from platform_order
@@ -128,15 +128,15 @@ console.log("▸ the bank's statement, chosen as its CSV file, in Arabic");
   await page.getByTestId("bank-read-summary").waitFor({ timeout: 10000 });
   const summary = await page.getByTestId("bank-read-summary").textContent();
   check(
-    summary.includes("5 line(s) read") &&
+    summary.includes("5 lines read") &&
       summary.includes(`${daysAgo(3)} to ${daysAgo(0)}`) &&
       summary.includes("columns: التاريخ, البيان, دائن, مدين, الرصيد") &&
-      summary.includes("4 row(s) left out"),
+      summary.includes("4 rows left out"),
     `its five lines read, oldest first, by their Arabic column names (${summary})`,
   );
   check(
     (await page.getByTestId("bank-found").textContent()).includes(
-      "3 of its 5 line(s) are in the books, and are ticked.",
+      "3 of its 5 lines are in the books, and are ticked.",
     ),
     "three found in the books",
   );
@@ -212,7 +212,7 @@ console.log("▸ the bank's statement, chosen as its CSV file, in Arabic");
   await page.getByTestId("bank-found").waitFor({ timeout: 10000 });
   check(
     (await page.getByTestId("bank-found").textContent()).includes(
-      "4 of its 5 line(s) are in the books, and are ticked.",
+      "4 of its 5 lines are in the books, and are ticked.",
     ) && (await line(page, -2750).isChecked()),
     "back on the page, the statement read is there, and the charge found and ticked",
   );
@@ -238,7 +238,7 @@ console.log("▸ the bank's statement, chosen as its CSV file, in Arabic");
   await page.getByTestId("bank-found").waitFor({ timeout: 10000 });
   check(
     (await page.getByTestId("bank-found").textContent()).includes(
-      "5 of its 5 line(s) are in the books, and are ticked.",
+      "5 of its 5 lines are in the books, and are ticked.",
     ) &&
       (await page.getByTestId("bank-not-in-books").count()) === 0 &&
       (await line(page, 1250).isChecked()),

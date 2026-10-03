@@ -8,7 +8,7 @@
 // the item's page, who it is bought from is set and removed; a cashier sees
 // no buying list; the audit trail says so; the screens speak Arabic and
 // Kurdish; and the books still tie.
-import { BASE, TODAY, chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { BASE, TODAY, chromium, check, counted, done, open, signIn, sql } from "./lib.mjs";
 import { english } from "./english.mjs";
 
 const browser = await chromium.launch();
@@ -140,7 +140,7 @@ console.log("▸ a manager opens What to buy: what is to order, with why, and wh
   );
   await line(page, "E2E Straws").getByLabel("Price of a pack", { exact: true }).fill("5000");
   check(
-    (await create.textContent()).includes("2 line(s) ticked: 2 draft order(s), 20,000 IQD in all."),
+    (await create.textContent()).includes("2 lines ticked: 2 draft orders, 20,000 IQD in all."),
     "two lines, two suppliers: two draft orders, 20,000 in all",
   );
   await create.getByRole("button", { name: "Create the orders" }).click();
@@ -292,6 +292,31 @@ for (const locale of ["ar", "ckb"]) {
     left.length === 0,
     `in ${locale}, no English but the café's own names` +
       (left.length ? `\n      ${left.join("\n      ")}` : ""),
+  );
+  await ctx.close();
+}
+
+// ------------------------------------------------------------ Inventory's tiles
+console.log("▸ Inventory's tiles open their items");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/inventory");
+  const tile = (id) => page.getByTestId(id).locator(".value").textContent();
+  const low = Number((await tile("tile-low")).trim());
+  await page.getByTestId("tile-low").click();
+  await page.waitForURL(/show=low/);
+  const only = (await page.getByTestId("stock-only").textContent()) ?? "";
+  check(
+    (await page.getByTestId("stock-board").locator("tbody tr").count()) === low &&
+      only.includes(`Only the ${counted(low, "item")} at or below their reorder level.`),
+    `"Below reorder level" opens its ${counted(low, "item")} alone`,
+  );
+  await page.getByTestId("stock-only").getByRole("link", { name: "Show every item" }).click();
+  await page.waitForURL((u) => !u.search.includes("show="));
+  check(
+    (await page.getByTestId("stock-board").locator("tbody tr").count()) ===
+      Number((await tile("tile-tracked")).trim()),
+    "and every item again, one link away",
   );
   await ctx.close();
 }

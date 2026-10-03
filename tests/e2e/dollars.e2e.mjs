@@ -11,7 +11,7 @@
 // Settings. The drawer is open (the fixtures', or one a suite before left
 // open), and is left open. Prices are read from the database: earlier suites
 // change them.
-import { chromium, check, done, open, signIn, sql, TODAY } from "./lib.mjs";
+import { chromium, check, counted, done, open, signIn, sql, TODAY } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const last = (q) => sql(q).split("\n").pop();
@@ -341,8 +341,8 @@ console.log("▸ Reports → Dollars; the books tie");
     .map(Number);
   check(
     (await page.getByTestId("dollars-taken").textContent()) ===
-      `${sales} sale(s) paid in dollars: $${usdTaken}, taken at ${iqd(valueTaken)}; they paid ${iqd(paid)}, and ${iqd(change)} went back as change in dinars.`,
-    `Reports → Dollars: ${sales} sale(s), $${usdTaken}, as the database has it`,
+      `${counted(sales, "sale")} paid in dollars: $${usdTaken}, taken at ${iqd(valueTaken)}; they paid ${iqd(paid)}, and ${iqd(change)} went back as change in dinars.`,
+    `Reports → Dollars: ${counted(sales, "sale")}, $${usdTaken}, as the database has it`,
   );
   check(
     (await page.getByTestId("dollars-exchanges").locator("tbody tr").count()) >= 1,

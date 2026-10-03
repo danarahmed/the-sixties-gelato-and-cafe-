@@ -14,6 +14,15 @@ const phrases: PhraseBook = {
   "Stock value (ledger)": { ar: "قيمة المخزون (حسب السجل)", ckb: "بەهای کۆگا (بەپێی تۆمار)" },
   "Below reorder level": { ar: "دون حدّ إعادة الطلب", ckb: "لە خوار ئاستی داواکردنەوە" },
   "Negative stock": { ar: "المخزون السالب", ckb: "کۆگای ژێر سفر" },
+  "Only the {n} item(s) at or below their reorder level.": {
+    ar: "فقط المواد الـ{n} التي عند حدّ إعادة الطلب أو دونه.",
+    ckb: "تەنها ئەو {n} کاڵایەی لە ئاستی داواکردنەوە یان لە خوارییەوەن.",
+  },
+  "Only the {n} item(s) with negative stock.": {
+    ar: "فقط المواد الـ{n} ذات المخزون السالب.",
+    ckb: "تەنها ئەو {n} کاڵایەی کۆگاکەیان ژێر سفرە.",
+  },
+  "Show every item": { ar: "اعرض كل المواد", ckb: "هەموو کاڵاکان پیشان بدە" },
   "No stock recorded yet": {
     ar: "لم يُسجَّل أي مخزون بعد",
     ckb: "هێشتا هیچ کۆگایەک تۆمار نەکراوە",
@@ -1113,6 +1122,7 @@ const phrases: PhraseBook = {
   Other: { ar: "غير ذلك", ckb: "هی تر" },
   // What to buy (0045): the buying list, and who an item is bought from.
   "What to buy": { ar: "ما يجب شراؤه", ckb: "چی بکڕدرێت" },
+  "How it was worked out": { ar: "كيف حُسب ذلك", ckb: "چۆن هەژمار کرا" },
   "Open What to buy": { ar: "افتح «ما يجب شراؤه»", ckb: "«چی بکڕدرێت» بکەرەوە" },
   "{place} · {day} · use judged over the last {days} days": {
     ar: "{place} · {day} · يُحكم على الاستهلاك خلال آخر {days} يومًا",

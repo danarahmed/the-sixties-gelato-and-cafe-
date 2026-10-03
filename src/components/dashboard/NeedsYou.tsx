@@ -24,9 +24,11 @@ type Msg = { ok: boolean; text: string } | null;
 /**
  * What needs the owner, at the top of the dashboard (0029, the audit's P1-8):
  * 🔴 and 🟠 waiting for someone, 🟢 when nothing does, and 🔵 what has been
- * answered or snoozed — still open until its condition clears. Orange alerts
- * of one rule fold into one row to open; red ones are always shown, the first
- * two of a rule on the page and any more under one red row saying how many.
+ * answered or snoozed — still open until its condition clears. Red ones are
+ * always shown, the first two of a rule on the page and any more under one
+ * red row saying how many. Orange ones can wait: while anything is red they
+ * fold into one row saying how many and of what, and those of one rule fold
+ * again into a row of their own.
  */
 export function NeedsYou({
   alerts,
@@ -44,6 +46,9 @@ export function NeedsYou({
 }) {
   const { t, msg } = useT();
   const { needsYou, answered } = sortAlerts(alerts);
+  const red = needsYou.filter((a) => a.urgency === "red");
+  const orange = needsYou.filter((a) => a.urgency === "orange");
+  const orangeGroups = groupByRule(orange);
   const row = (a: Alert) => (
     <AlertRow
       key={a.id}
@@ -69,7 +74,7 @@ export function NeedsYou({
         </div>
       ) : (
         <div className="alerts">
-          {splitRed(needsYou.filter((a) => a.urgency === "red")).map((g) => (
+          {splitRed(red).map((g) => (
             <Fragment key={g.rule}>
               {g.shown.map(row)}
               {g.more.length > 0 && (
@@ -90,27 +95,51 @@ export function NeedsYou({
               )}
             </Fragment>
           ))}
-          {groupByRule(needsYou.filter((a) => a.urgency === "orange")).map((g) =>
-            g.alerts.length === 1 ? (
-              row(g.alerts[0]!)
-            ) : (
-              <details
-                key={g.rule}
-                className="alert-row orange alert-group"
-                data-testid="alert-group"
-                data-rule={g.rule}
-              >
-                <summary>
-                  <span className="alert-title">
-                    🟠 {msg(ruleLabel(g.rule))}: {g.alerts.length}
-                  </span>{" "}
-                  <span className="alert-why">— {msg(g.alerts[0]!.why ?? "")}</span>
-                </summary>
-                <div className="alerts" style={{ marginTop: 8 }}>
-                  {g.alerts.map(row)}
-                </div>
-              </details>
-            ),
+          {orange.length > 0 && (
+            // What can wait folds into one row while something is red, so the
+            // red stays at the top of the page; open when nothing is.
+            <details
+              className="alert-row orange alert-wait"
+              data-testid="alerts-can-wait"
+              open={red.length === 0}
+            >
+              <summary>
+                <span className="alert-title">
+                  🟠 {t("{n} orange alert(s) can wait for a quiet moment.", { n: orange.length })}
+                </span>{" "}
+                <span className="alert-why">
+                  {orangeGroups
+                    .slice(0, 3)
+                    .map((g) => msg(ruleLabel(g.rule)))
+                    .join(" · ")}
+                  {orangeGroups.length > 3 ? " …" : ""}
+                </span>
+              </summary>
+              <div className="alerts" style={{ marginTop: 8 }}>
+                {orangeGroups.map((g) =>
+                  g.alerts.length === 1 ? (
+                    row(g.alerts[0]!)
+                  ) : (
+                    <details
+                      key={g.rule}
+                      className="alert-row orange alert-group"
+                      data-testid="alert-group"
+                      data-rule={g.rule}
+                    >
+                      <summary>
+                        <span className="alert-title">
+                          🟠 {msg(ruleLabel(g.rule))}: {g.alerts.length}
+                        </span>{" "}
+                        <span className="alert-why">— {msg(g.alerts[0]!.why ?? "")}</span>
+                      </summary>
+                      <div className="alerts" style={{ marginTop: 8 }}>
+                        {g.alerts.map(row)}
+                      </div>
+                    </details>
+                  ),
+                )}
+              </div>
+            </details>
           )}
         </div>
       )}

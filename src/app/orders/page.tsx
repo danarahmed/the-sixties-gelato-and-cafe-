@@ -32,6 +32,8 @@ export default async function OrdersPage({
   // Opened from a report: the sales of those days (and that channel).
   const today = businessToday(profile.timezone);
   const filtered = !find && (typeof sp.from === "string" || typeof sp.channel === "string");
+  // The latest 100 to begin with: a page of 300 sales is long on a phone.
+  const latest = sp.more === "1" ? 300 : 100;
   const from = parseDay(sp.from, today);
   const to = parseDay(sp.to, from);
   // Every channel, a platform out of use too: its sales are still there to see.
@@ -45,7 +47,7 @@ export default async function OrdersPage({
       ? await getSalesOrders(foundIds.length, { ids: foundIds })
       : []
     : await getSalesOrders(
-        filtered ? 1000 : 300,
+        filtered ? 1000 : latest,
         filtered
           ? {
               fromTs: dayStart(from, profile.timezone),
@@ -95,7 +97,7 @@ export default async function OrdersPage({
         <button type="submit">{t("Find")}</button>
         {find && (
           <Link className="badge" href="/orders">
-            {t("The latest 300")}
+            {t("The latest sales")}
           </Link>
         )}
       </form>
@@ -126,7 +128,7 @@ export default async function OrdersPage({
         <button type="submit">{t("Show")}</button>
         {filtered && (
           <Link className="badge" href="/orders">
-            {t("The latest 300")}
+            {t("The latest sales")}
           </Link>
         )}
       </form>
@@ -323,6 +325,13 @@ export default async function OrdersPage({
               })}
             </tbody>
           </table>
+          {!find && !filtered && orders.length === latest && latest < 300 && (
+            <p style={{ marginBottom: 0 }}>
+              <Link href="/orders?more=1" data-testid="orders-more">
+                {t("Show the latest 300")}
+              </Link>
+            </p>
+          )}
         </div>
       )}
     </div>
