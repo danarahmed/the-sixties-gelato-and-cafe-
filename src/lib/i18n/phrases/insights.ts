@@ -153,6 +153,9 @@ const phrases: PhraseBook = {
   "More than 30 days late": { ar: "متأخرة أكثر من 30 يومًا", ckb: "زیاتر لە 30 ڕۆژ دواکەوتوو" },
   "{share}% of what is owed": { ar: "{share}% من المستحق", ckb: "{share}%ی ئەوەی قەرزە" },
 
+  // Production: the day's plan opens the batch form filled in.
+  "Record these": { ar: "سجّل هذه الدفعات", ckb: "ئەم دەستانە تۆمار بکە" },
+
   // The sales analysis, drawn over time.
   "Average: {amount} an hour sold in": {
     ar: "المتوسط: {amount} في كل ساعة بيع فيها",

@@ -92,6 +92,7 @@ import { customerAtTillAction } from "@/lib/actions/customers";
 import { reasonKey } from "@/lib/reasons";
 import { changeGiven, type Payment } from "@/lib/payments";
 import { RATE_REFUSED } from "@/lib/fx";
+import { Icon } from "@/components/Icon";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string; uncertain?: boolean };
 type Msg = { ok: boolean; text: string } | null;
@@ -1507,7 +1508,7 @@ export function PosClient({
               className={view === "floor" ? "active" : ""}
               onClick={() => setView("floor")}
             >
-              🪑 {t("pos.tables")}
+              <Icon name="table" /> {t("pos.tables")}
             </button>
             <button
               role="tab"
@@ -1515,7 +1516,7 @@ export function PosClient({
               className={view === "menu" ? "active" : ""}
               onClick={() => setView("menu")}
             >
-              ☕ {t("pos.menu")}
+              <Icon name="cup" /> {t("pos.menu")}
             </button>
           </div>
         )}
@@ -1525,7 +1526,7 @@ export function PosClient({
             onClick={showQuick}
             disabled={blocked}
           >
-            ⚡ {t("pos.quickSale")}
+            <Icon name="bolt" /> {t("pos.quickSale")}
             {quick.lines.length > 0 && <span className="chip-n">{itemCount(quick)}</span>}
           </button>
           {strip.map((b) => (
@@ -1536,7 +1537,11 @@ export function PosClient({
               disabled={blocked}
               title={b.billPrintedAt ? t("pos.waitingPayment") : t("pos.ordering")}
             >
-              {b.billPrintedAt ? "🧾 " : ""}
+              {b.billPrintedAt && (
+                <>
+                  <Icon name="receipt" size={16} />{" "}
+                </>
+              )}
               {billTitle(b, tables, b.label ?? "—")}
               <span className="mono chip-amt">{fmtIQD(b.total)}</span>
             </button>
@@ -1549,7 +1554,8 @@ export function PosClient({
           aria-label={drawerLabel}
           data-testid="drawer-button"
         >
-          {drawer.open ? "🔓" : "🔒"} <span className="drawer-chip-label">{drawerLabel}</span>
+          <Icon name={drawer.open ? "unlock" : "lock"} size={18} />{" "}
+          <span className="drawer-chip-label">{drawerLabel}</span>
         </button>
         <button
           className="icon-btn"
@@ -1558,7 +1564,7 @@ export function PosClient({
           aria-label={t("Clock in or out")}
           data-testid="clock-button"
         >
-          🕐
+          <Icon name="clock" />
         </button>
         <button
           className={`icon-btn print-btn${autoPrint ? " on" : ""}`}
@@ -1566,7 +1572,7 @@ export function PosClient({
           title={t("pos.printing")}
           aria-label={t("pos.printing")}
         >
-          🖨
+          <Icon name="print" />
         </button>
         <button
           className="icon-btn"
@@ -1574,7 +1580,7 @@ export function PosClient({
           title={t("pos.fullscreen")}
           aria-label={t("pos.fullscreen")}
         >
-          ⛶
+          <Icon name="expand" />
         </button>
       </div>
 
@@ -1658,7 +1664,7 @@ export function PosClient({
           onClick={() => panel.current?.scrollIntoView({ behavior: "smooth" })}
         >
           <span>
-            🛒 {itemCount(order)} · {title(order)}
+            <Icon name="bag" size={18} /> {itemCount(order)} · {title(order)}
           </span>
           <strong className="mono">{fmtIQD(total.toNumber())}</strong>
         </button>

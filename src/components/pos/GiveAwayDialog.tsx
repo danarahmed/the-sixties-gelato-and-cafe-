@@ -11,6 +11,7 @@ import {
 import { useT } from "@/lib/i18n/I18nProvider";
 import { ManagerApproval } from "@/components/ManagerApproval";
 import { Modal } from "./Dialogs";
+import { Icon } from "@/components/Icon";
 
 export interface GiveawayLine {
   variantId: string;
@@ -71,7 +72,9 @@ export function GiveAwayDialog({
   return (
     <Modal label={t("Give away")} busy={busy} onClose={onClose}>
       <div className="grid" style={{ gap: 12 }} data-testid="giveaway-dialog">
-        <h3 style={{ margin: 0 }}>🎁 {t("Give away")}</h3>
+        <h3 style={{ margin: 0 }}>
+          <Icon name="gift" /> {t("Give away")}
+        </h3>
         <p className="muted" style={{ margin: 0 }}>
           {summary}
         </p>

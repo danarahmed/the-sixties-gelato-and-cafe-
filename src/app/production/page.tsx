@@ -44,6 +44,13 @@ export default async function ProductionPage({
   const today = businessToday(profile.timezone);
   const tomorrow = addDays(today, 1);
   const planDay = parseDay(sp.day, today) === tomorrow ? tomorrow : today;
+  // A row of the plan opens the form with what it says to make (one tap fewer, still checked).
+  const make = typeof sp.make === "string" && /^[0-9a-f-]{36}$/i.test(sp.make) ? sp.make : null;
+  const makeBatches = typeof sp.batches === "string" ? Number(sp.batches) : NaN;
+  const prefill =
+    make && Number.isInteger(makeBatches) && makeBatches >= 1 && makeBatches <= 99
+      ? { recipeId: make, batches: makeBatches }
+      : null;
   // Batches are made, planned and kept at this device's place (AB).
   const { places, place, at } = await placeChoice();
   const [recipes, batches, items, costs, board, plan, lots] = await Promise.all([
@@ -153,9 +160,11 @@ export default async function ProductionPage({
       </p>
 
       {canRecord && (
-        <div className="card grid" style={{ gap: 12 }}>
+        <div className="card grid" style={{ gap: 12 }} id="record">
           <h2 style={{ margin: 0 }}>{t("Record a batch")}</h2>
           <RecordBatch
+            key={prefill ? `${prefill.recipeId}:${prefill.batches}` : "blank"}
+            initial={prefill}
             recipes={active}
             items={itemOpts}
             onHand={onHand}
@@ -242,9 +251,22 @@ export default async function ProductionPage({
                         <td className="right mono">{r.due > 0 ? q(r.due) : "—"}</td>
                         <td className="right">
                           {r.status === "make" ? (
-                            <strong>
-                              {t("{n} batch(es): {qty}", { n: r.batches, qty: q(r.makes) })}
-                            </strong>
+                            <span className="plan-make">
+                              <strong>
+                                {t("{n} batch(es): {qty}", { n: r.batches, qty: q(r.makes) })}
+                              </strong>
+                              {canRecord && active.some((x) => x.id === r.recipeId) && (
+                                <Link
+                                  className="btn-soft"
+                                  href={`/production?make=${r.recipeId}&batches=${r.batches}${
+                                    planDay === tomorrow ? `&day=${tomorrow}` : ""
+                                  }#record`}
+                                  data-testid="plan-record"
+                                >
+                                  {t("Record these")}
+                                </Link>
+                              )}
+                            </span>
                           ) : (
                             <span className={r.status === "enough" ? "badge ok" : "badge"}>
                               {t(PLAN_STATUS_LABEL[r.status])}

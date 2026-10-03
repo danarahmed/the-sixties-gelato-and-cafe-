@@ -271,6 +271,11 @@ button:active:not(:disabled) {
   transform: translateY(1px);
 }
 /* A button that is its icon alone: its name is in its aria-label. */
+/* An icon beside words sits on their line; a space keeps it apart from them. */
+.icon {
+  flex: none;
+  vertical-align: -0.22em;
+}
 button.icon-only {
   display: inline-flex;
   align-items: center;
@@ -4175,6 +4180,34 @@ a.card.stat:focus-visible {
 }
 .share-5 {
   background: var(--viz-6);
+}
+
+/* A quiet action beside a figure: a soft raspberry pill. */
+.btn-soft {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-2);
+  font-size: 0.82rem;
+  font-weight: 650;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.btn-soft:hover,
+.btn-soft:focus-visible {
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+/* The day's plan: what to make, and the tap that records it. */
+.plan-make {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 10px;
 }
 
 /* ---------------------------------------------------------------- reports */

@@ -33,7 +33,10 @@ console.log("▸ cashier rings up two sales");
     await page.getByRole("button", { name: /platform/i }).isVisible(),
     "a Talabat order offers only platform-paid",
   );
-  check(!(await page.getByRole("button", { name: /💵/ }).isVisible()), "and no cash button");
+  check(
+    !(await page.getByRole("button", { name: "Cash", exact: true }).isVisible()),
+    "and no cash button",
+  );
   await page.getByRole("button", { name: /platform/i }).click();
   // The order number from the Talabat tablet (0030): the payout is matched by it.
   const number = page.getByLabel("Talabat order number");
@@ -461,7 +464,10 @@ console.log(
     "once the count is in: it should have held 2,500; 500 short, posted to 6300; 500 to the safe, 1,500 stays",
   );
   await page.getByRole("button", { name: "Close", exact: true }).click();
-  await page.getByText("🔒 Open the drawer").waitFor({ timeout: 10000 });
+  await page
+    .getByTestId("drawer-button")
+    .filter({ hasText: "Open the drawer" })
+    .waitFor({ timeout: 10000 });
   ok("the till shows the drawer closed");
   await ctx.close();
 }
@@ -527,7 +533,10 @@ console.log("▸ cash waits for the drawer to open; the next session opens on wh
     .waitFor({ timeout: 10000 });
   ok("session 2 opens on the 1,500 left in the drawer, which agrees exactly");
   await page.getByRole("button", { name: "Close", exact: true }).click();
-  await page.getByText("🔓 Session 2").waitFor({ timeout: 10000 });
+  await page
+    .getByTestId("drawer-button")
+    .filter({ hasText: "Session 2" })
+    .waitFor({ timeout: 10000 });
   ok("and the till shows it open");
   await ctx.close();
 }

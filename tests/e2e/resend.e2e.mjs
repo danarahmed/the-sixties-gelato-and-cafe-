@@ -167,7 +167,7 @@ console.log("▸ a bill kept open with its answer lost is one bill");
   const { ctx, page } = await signIn(browser, "cashier");
   await open(page, "/pos");
   // With tables set up, the till opens on them: go to the menu.
-  await page.getByRole("tab", { name: "☕ Menu" }).click();
+  await page.getByRole("tab", { name: "Menu", exact: true }).click();
   await page.getByRole("button", { name: "Dine-in" }).click();
   await page.locator(".product-tile", { hasText: "Golden espresso" }).click();
   await page.getByRole("button", { name: /Keep open, pay later/ }).click();

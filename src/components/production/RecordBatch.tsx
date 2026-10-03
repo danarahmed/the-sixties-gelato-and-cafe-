@@ -47,6 +47,7 @@ export function RecordBatch({
   decimals,
   timezone,
   canRecordLate,
+  initial = null,
 }: {
   recipes: BatchRecipe[];
   items: ProductionItem[];
@@ -57,15 +58,21 @@ export function RecordBatch({
   timezone: string;
   /** A manager, who may record a batch made earlier today or yesterday. */
   canRecordLate: boolean;
+  /** What the day's plan says to make, filled in from its row: still checked and recorded here. */
+  initial?: { recipeId: string; batches: number } | null;
 }) {
   const op = useOperation();
   const { t, msg: say } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
-  const [recipeId, setRecipeId] = useState(recipes[0]?.id ?? "");
-  const [batches, setBatches] = useState("1");
+  const first =
+    recipes.find((r) => r.id === initial?.recipeId) ?? (recipes[0] as BatchRecipe | undefined);
+  const [recipeId, setRecipeId] = useState(first?.id ?? "");
+  const [batches, setBatches] = useState(
+    initial && first?.id === initial.recipeId ? String(initial.batches) : "1",
+  );
   const [outQty, setOutQty] = useState("");
-  const [outUnit, setOutUnit] = useState(recipes[0]?.yieldUnit ?? "");
+  const [outUnit, setOutUnit] = useState(first?.yieldUnit ?? "");
   const [note, setNote] = useState("");
   const [useBy, setUseBy] = useState("");
   const [late, setLate] = useState(false);

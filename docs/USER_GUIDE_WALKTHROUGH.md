@@ -1070,6 +1070,9 @@ What the café makes in batches: gelato, a base, syrup, cold brew, dough.
   before the day is out; and so how many batches to make, and what that makes.
   Ingredients the batches need beyond what is in stock are listed, with a link
   to What to buy. Under four weeks of history, it says how many days there are.
+  **Record these** beside a row to make opens **Record a batch** with that
+  recipe and its batches filled in: check what it uses and makes, change
+  anything that was made otherwise, and **Record batch**.
 - **In stock by batch:** every batch with something left, the one to be used
   first first, with its use-by and whether it is past it, due today, due
   within a day or good. Sales, losses and other batches take from them in

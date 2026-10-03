@@ -7,6 +7,7 @@ import { normaliseNumber } from "@/lib/validation";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { OperationStatus, useOperation } from "@/components/useOperation";
 import { Modal } from "./Dialogs";
+import { Icon } from "@/components/Icon";
 
 /**
  * Clocking in and out at the till (0049): each person who works at this branch
@@ -72,7 +73,9 @@ export function ClockDialog({ timezone, onClose }: { timezone: string; onClose: 
   return (
     <Modal label={t("Clock in or out")} busy={busy} onClose={onClose}>
       <div className="grid" style={{ gap: 12 }} data-testid="clock-dialog">
-        <h3 style={{ margin: 0 }}>🕐 {t("Clock in or out")}</h3>
+        <h3 style={{ margin: 0 }}>
+          <Icon name="clock" /> {t("Clock in or out")}
+        </h3>
 
         {done && (
           <div

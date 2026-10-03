@@ -36,6 +36,7 @@ import {
   type Tender,
 } from "./model";
 import { Emblem, type BaristaTicket, type PrintJob } from "./PrintSlip";
+import { Icon } from "@/components/Icon";
 
 export interface Receipt extends SaleReceipt {
   tender: Tender;
@@ -281,13 +282,14 @@ function DiscountRow({
         <p className="disc-note disc-approval" data-testid="discount-needs-approval">
           <span>{t("pos.overCap").replace("{cap}", String(rules.cap))}</span>
           <button onClick={onAskApproval} disabled={locked}>
-            🔑 {t("pos.askManager")}
+            <Icon name="key" size={16} /> {t("pos.askManager")}
           </button>
         </p>
       )}
       {discount?.approval && !kept && needs === null && (
         <p className="muted disc-note" data-testid="discount-approved">
-          ✓ {t("pos.approvedBy").replace("{name}", discount.approval.by)}
+          <Icon name="check" size={16} />{" "}
+          {t("pos.approvedBy").replace("{name}", discount.approval.by)}
         </p>
       )}
       {lockedReason && <p className="muted disc-note">{lockedReason}</p>}
@@ -426,7 +428,7 @@ export function OrderPanel({
             {isBill && order.tabId === null && <span className="badge">{t("pos.newBill")}</span>}
             {isBill && order.printedAt && (
               <span className="badge warn">
-                🧾 {t("pos.printed")}
+                <Icon name="receipt" size={16} /> {t("pos.printed")}
                 {order.printCount > 1 ? ` ×${order.printCount}` : ""}
               </span>
             )}
@@ -486,7 +488,8 @@ export function OrderPanel({
           {order.customer ? (
             <>
               <span>
-                👤 <b data-testid="order-customer-name">{order.customer.name}</b>
+                <Icon name="user" size={16} />{" "}
+                <b data-testid="order-customer-name">{order.customer.name}</b>
                 {order.customer.points !== null &&
                   ` · ${t("{n} points", { n: String(order.customer.points) })}`}
               </span>
@@ -506,7 +509,7 @@ export function OrderPanel({
               disabled={blocked}
               data-testid="order-customer-add"
             >
-              👤 {t("Customer")}
+              <Icon name="user" size={16} /> {t("Customer")}
             </button>
           )}
         </div>
@@ -517,7 +520,7 @@ export function OrderPanel({
           <div className="receipt-card">
             <div className="rc-top">
               <strong>
-                ✅ {t("pos.recorded")} · {receipt.orderId.slice(0, 8)}
+                <Icon name="check" /> {t("pos.recorded")} · {receipt.orderId.slice(0, 8)}
               </strong>
               {receipt.payments.length > 1 || receipt.payments.some((p) => p.currency === "USD") ? (
                 <span
@@ -548,7 +551,7 @@ export function OrderPanel({
             )}
             {receipt.customer && (
               <p className="rc-facts" data-testid="receipt-points">
-                👤 {receipt.customer.name}
+                <Icon name="user" size={16} /> {receipt.customer.name}
                 {receipt.customer.earned > 0 &&
                   ` · ${t("Points earned: {n}", { n: String(receipt.customer.earned) })}`}
                 {receipt.customer.spent > 0 &&
@@ -575,13 +578,15 @@ export function OrderPanel({
             )}
             <div className="rc-actions">
               <button onClick={onPrintReceipt}>
-                🖨{" "}
+                <Icon name="print" />{" "}
                 {receiptTicket && !receipt.ticketPrinted
                   ? t("pos.printBoth")
                   : t("pos.printReceipt")}
               </button>
               {receiptTicket && (
-                <button onClick={onPrintReceiptTicket}>☕ {t("pos.baristaTicket")}</button>
+                <button onClick={onPrintReceiptTicket}>
+                  <Icon name="cup" /> {t("pos.baristaTicket")}
+                </button>
               )}
             </div>
             <p className="rc-next muted">{t("pos.nextCustomer")}</p>
@@ -677,7 +682,7 @@ export function OrderPanel({
                     disabled={blocked || !online || badDiscount}
                     onClick={() => onPay("platform_paid")}
                   >
-                    🧾 {t("pos.platformPaid")}
+                    <Icon name="receipt" /> {t("pos.platformPaid")}
                   </button>
                 ) : (
                   <>
@@ -686,14 +691,14 @@ export function OrderPanel({
                       disabled={blocked || !online || badDiscount}
                       onClick={() => onPay("cash")}
                     >
-                      💵 {t("pos.cash")}
+                      <Icon name="cash" /> {t("pos.cash")}
                     </button>
                     <button
                       className="btn-primary big"
                       disabled={blocked || !online || badDiscount}
                       onClick={() => onPay("card")}
                     >
-                      💳 {t("pos.card")}
+                      <Icon name="card" /> {t("pos.card")}
                     </button>
                   </>
                 )}
@@ -707,14 +712,14 @@ export function OrderPanel({
                         blocked || !online || badDiscount || !(dirty || order.tabId === null)
                       }
                     >
-                      💾 {t("pos.save")}
+                      <Icon name="save" /> {t("pos.save")}
                     </button>
                     <button onClick={onPrintBill} disabled={blocked || !online || badDiscount}>
-                      🖨 {t("pos.printBill")}
+                      <Icon name="print" /> {t("pos.printBill")}
                     </button>
                     {ticketOn && (
                       <button onClick={onTicket} disabled={blocked || !online || badDiscount}>
-                        ☕ {t("pos.baristaTicket")}
+                        <Icon name="cup" /> {t("pos.baristaTicket")}
                       </button>
                     )}
                     <button
@@ -723,11 +728,11 @@ export function OrderPanel({
                         blocked || !online || badDiscount || order.tabId === null || count < 2
                       }
                     >
-                      ✂ {t("pos.split")}
+                      <Icon name="split" /> {t("pos.split")}
                     </button>
                     {hasTables && (
                       <button onClick={onMove} disabled={blocked || !online || badDiscount}>
-                        ⇄ {t("pos.move")}
+                        <Icon name="move" /> {t("pos.move")}
                       </button>
                     )}
                     <button
@@ -737,19 +742,19 @@ export function OrderPanel({
                       }
                       title={savedWithItems && !canVoid ? t("pos.cancelNeedsManager") : undefined}
                     >
-                      ✕ {t("pos.cancelBill")}
+                      <Icon name="close" /> {t("pos.cancelBill")}
                     </button>
                   </>
                 ) : (
                   <>
                     {!isPlatform(order.channel) && (
                       <button onClick={onKeepForLater} disabled={blocked || !online || badDiscount}>
-                        🕒 {t("pos.keepForLater")}
+                        <Icon name="clock" /> {t("pos.keepForLater")}
                       </button>
                     )}
                     {onGiveAway && (
                       <button onClick={onGiveAway} disabled={blocked || !online}>
-                        🎁 {t("Give away…")}
+                        <Icon name="gift" /> {t("Give away…")}
                       </button>
                     )}
                     <button onClick={onClear} disabled={blocked}>
@@ -764,7 +769,7 @@ export function OrderPanel({
         {isBill && empty && !pending && (
           <div className="order-actions secondary">
             <button onClick={onCancelBill} disabled={blocked || (order.tabId !== null && !online)}>
-              ✕ {order.tabId === null ? t("pos.close") : t("pos.cancelBill")}
+              <Icon name="close" /> {order.tabId === null ? t("pos.close") : t("pos.cancelBill")}
             </button>
           </div>
         )}
