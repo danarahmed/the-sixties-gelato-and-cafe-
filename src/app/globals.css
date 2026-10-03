@@ -3686,6 +3686,22 @@ a.card.stat:focus-visible {
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
 }
+/* On a phone, two figures to a row, so the day reads without scrolling past them. */
+@media (max-width: 640px) {
+  .kpis {
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .kpis .stat {
+    padding: 12px;
+  }
+  .kpis .stat .value {
+    font-size: 1.2rem;
+  }
+  .kpis .delta {
+    font-size: 0.74rem;
+  }
+}
 .dash-grid {
   display: grid;
   gap: 18px;
@@ -4086,4 +4102,159 @@ a.card.stat:focus-visible {
   grid-column: 1 / -1;
   font-size: 0.78rem;
   color: var(--text-muted);
+}
+
+/* One whole in its parts, in one bar: the categorical hues in their fixed
+   order, a hairline of the surface between them; the list under it is the
+   legend and the table. */
+.sharebar {
+  display: grid;
+  gap: 14px;
+  margin-block-start: 12px;
+}
+.sharebar-track {
+  display: flex;
+  gap: 2px;
+  height: 22px;
+}
+.sharebar-part {
+  min-width: 3px;
+}
+.sharebar-part:first-child {
+  border-start-start-radius: 4px;
+  border-end-start-radius: 4px;
+}
+.sharebar-part:last-child {
+  border-start-end-radius: 4px;
+  border-end-end-radius: 4px;
+}
+.sharebar-keys {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.sharebar-key {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  align-items: baseline;
+  font-size: 0.9rem;
+}
+.sharebar-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  align-self: center;
+}
+.sharebar-value {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sharebar-sub {
+  grid-column: 2 / -1;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.share-0 {
+  background: var(--viz-1);
+}
+.share-1 {
+  background: var(--viz-2);
+}
+.share-2 {
+  background: var(--viz-3);
+}
+.share-3 {
+  background: var(--viz-4);
+}
+.share-4 {
+  background: var(--viz-5);
+}
+.share-5 {
+  background: var(--viz-6);
+}
+
+/* ---------------------------------------------------------------- reports */
+.rep-overview {
+  display: grid;
+  gap: 16px;
+}
+.rep-overview .dash-h {
+  margin: 0;
+}
+.rep-insight {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+@media (min-width: 1100px) {
+  .rep-insight {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  }
+}
+/* The parts of the page, by what they are about: one row that stays in
+   reach under the top bar, scrolling sideways on a phone. */
+.rep-nav {
+  position: sticky;
+  top: 57px;
+  z-index: 15;
+  display: flex;
+  gap: 6px 18px;
+  overflow-x: auto;
+  padding: 8px 12px;
+  margin-inline: -4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: var(--shadow);
+  scrollbar-width: thin;
+}
+.rep-nav-group {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.rep-nav-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-inline-end: 4px;
+}
+.rep-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  text-decoration: none;
+}
+.rep-nav-link:hover,
+.rep-nav-link:focus-visible {
+  background: var(--brand-soft);
+  color: var(--brand-2);
+}
+/* A group's name above its reports: Profit, Sales, Buying and stock... */
+.rep-group {
+  margin: 14px 0 0;
+  font-size: 1.25rem;
+}
+.rep-chart {
+  border-block-end: 1px solid var(--border);
+}
+.rep-chart .vbars {
+  margin: 0;
+  max-width: 640px;
 }

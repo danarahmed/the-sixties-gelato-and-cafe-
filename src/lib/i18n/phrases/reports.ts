@@ -344,10 +344,6 @@ const phrases: PhraseBook = {
   "Vendor statements": { ar: "كشوفات المورّدين", ckb: "کەشفی حسابی دابینکەران" },
   "Stock valuation": { ar: "تقييم المخزون", ckb: "نرخاندنی کۆگا" },
   "Count variances": { ar: "فروق الجرد", ckb: "جیاوازییەکانی ژماردن" },
-  "Not built yet: balance sheet, cash-flow statement, sales by hour.": {
-    ar: "لم تُبنَ بعد: الميزانية العمومية، وقائمة التدفقات النقدية، والمبيعات حسب الساعة.",
-    ckb: "هێشتا دروست نەکراون: لیستی باری دارایی، لیستی ڕەوتی پارە، فرۆشتن بەپێی کاتژمێر.",
-  },
 
   // -------------------------------------------------------------- Orders
   "A sale is never edited. A sale rung in error is <b>voided</b> until the drawer's session holding it closes — revenue, payment, cost and stock all come back exactly. After that, money goes back to the customer by a <b>refund</b> of some of its items or all of them, through Sales returns, the way it was paid; only goods that can go back on the shelf return to stock. Both take a reason from the list and are on the audit trail; one approved by a second person (their name and PIN) is marked so, and one without waits for the owner on the exceptions report.":

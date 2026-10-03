@@ -28,6 +28,7 @@ import { DailyBrief } from "@/components/dashboard/DailyBrief";
 import { ColumnChart } from "@/components/charts/ColumnChart";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { BarList } from "@/components/charts/BarList";
+import { Sayings, type Saying } from "@/components/Sayings";
 
 export const dynamic = "force-dynamic";
 
@@ -182,13 +183,7 @@ export default async function DashboardPage() {
   ];
 
   // ------------------------------------------------------- what they say
-  const sayings: {
-    tone: "ok" | "warn" | "info";
-    icon: string;
-    text: string;
-    detail?: string;
-    href?: string;
-  }[] = [];
+  const sayings: Saying[] = [];
   if (analyse) {
     if (p.net === 0 && p.orders === 0 && (p.usualNet ?? 0) < 1) {
       sayings.push({ tone: "info", icon: "●", text: t("No sales yet today.") });
@@ -368,19 +363,7 @@ export default async function DashboardPage() {
           <h3 id="dash-say" className="viz-title">
             {t("What the figures say")}
           </h3>
-          <ul className="sayings">
-            {sayings.map((s) => (
-              <li key={s.text} className={`saying ${s.tone}`}>
-                <span className="saying-icon" aria-hidden="true">
-                  {s.icon}
-                </span>
-                <span>
-                  {s.href ? <Link href={s.href}>{s.text}</Link> : s.text}
-                  {s.detail && <span className="saying-detail">{s.detail}</span>}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <Sayings items={sayings} />
         </section>
 
         <div className="dash-main">

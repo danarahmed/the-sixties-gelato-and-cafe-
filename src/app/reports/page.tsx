@@ -21,6 +21,11 @@ import {
   pnlTotals,
 } from "@/lib/db/reports";
 import { LegacyPostings } from "@/components/books/LegacyPostings";
+import { Sayings, type Saying } from "@/components/Sayings";
+import { BarList } from "@/components/charts/BarList";
+import { ShareBar } from "@/components/charts/ShareBar";
+import { direction, percent } from "@/lib/dashboard";
+import { change, largestExpense, pct as share, previousPeriod, spending } from "@/lib/insights";
 import { EXCEPTION_LABEL, NO_ONE, exceptionsByPerson, type ExceptionKind } from "@/lib/exceptions";
 import { fmtIQD, fmtQty, movementLabel, tenderLabel, unitName } from "@/lib/format";
 import { getDollarsReport } from "@/lib/db/fx";
@@ -88,6 +93,8 @@ export default async function ReportsPage({
   const placeName = cafePlaces.find((p) => p.id === place)?.name ?? profile.worksAtName;
   const choosesPlace = profile.worksAt === null && cafePlaces.length > 1;
   const withPlace = place && profile.worksAt === null ? `&place=${place}` : "";
+  const before = previousPeriod(from, to);
+  const days = from <= to ? daysBetween(from, to) + 1 : 0;
 
   const [
     pnl,
@@ -109,6 +116,7 @@ export default async function ReportsPage({
     loyalty,
     bought,
     byPlaceRows,
+    pnlBefore,
   ] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to, place) : Promise.resolve([]),
     getReconciliation(to),
@@ -131,6 +139,10 @@ export default async function ReportsPage({
     from <= to ? getPurchases(from, to, place) : Promise.resolve(null),
     // Each place's profit and loss side by side (0056), when the café's is read.
     seesProfit && place === null ? getProfitAndLossByPlace(from, to) : Promise.resolve([]),
+    // The days just before, as many: what the period is compared with.
+    seesProfit && from <= to
+      ? getProfitAndLoss(before.from, before.to, place)
+      : Promise.resolve([]),
   ]);
   // The menu as it sells today: a platform out of use sells nothing.
   const menu = allMenu.filter((m) =>
@@ -154,6 +166,7 @@ export default async function ReportsPage({
   const byChannel = new Map<string, typeof sales>();
   for (const r of sales) byChannel.set(r.channel, [...(byChannel.get(r.channel) ?? []), r]);
   const allChannels = salesTotals(sales);
+
   // Each reconciliation line opens its two sides: the records, and the ledger.
   const recLinks: Record<string, { records: string; accounts: string }> = {
     inventory: { records: "/inventory", accounts: "1200" },
@@ -226,6 +239,321 @@ export default async function ReportsPage({
   const ledger = (accounts: string, f: string, tt: string, pnl = false) =>
     `/journals?account=${accounts}&from=${f}&to=${tt}${pnl ? "&pnl=1" : ""}`;
 
+  // ------------------------------------------------ the period at a glance
+  // Each figure against the days just before, as many; in words, with what
+  // to do about it; and where each 1,000 IQD of net revenue went.
+  const totalsBefore = pnlTotals(pnlBefore);
+  const spend = seesProfit ? spending(pnl) : null;
+  const marginNow = totals.revenue > 0 ? totals.grossProfit / totals.revenue : null;
+  const marginBefore =
+    totalsBefore.revenue > 0 ? totalsBefore.grossProfit / totalsBefore.revenue : null;
+  const netShare = totals.revenue > 0 ? totals.net / totals.revenue : null;
+  const netShareBefore = totalsBefore.revenue > 0 ? totalsBefore.net / totalsBefore.revenue : null;
+  const mark = (dir: "up" | "down" | "same") => (dir === "up" ? "▲" : dir === "down" ? "▼" : "●");
+  /** Against the days before, in words: more is better for these. */
+  const versus = (c: number | null) => {
+    const dir = direction(c);
+    if (dir === null || c === null) return null;
+    return (
+      <span className={`delta ${dir}`}>
+        <span aria-hidden="true">{mark(dir)}</span>{" "}
+        {dir === "up"
+          ? t("{pct}% more than the {n} day(s) before", { pct: percent(c), n: days })
+          : dir === "down"
+            ? t("{pct}% less than the {n} day(s) before", { pct: percent(c), n: days })
+            : t("About as the {n} day(s) before", { n: days })}
+      </span>
+    );
+  };
+  /** A share of net revenue against the days before, in points: within one either way is as before. */
+  const points = (now: number | null, then: number | null) => {
+    if (now === null || then === null) return null;
+    const d = Math.round((now - then) * 100);
+    const dir = d >= 1 ? "up" : d <= -1 ? "down" : "same";
+    return (
+      <span className={`delta ${dir}`}>
+        <span aria-hidden="true">{mark(dir)}</span>{" "}
+        {dir === "up"
+          ? t("{n} point(s) more than the {days} day(s) before", { n: Math.abs(d), days })
+          : dir === "down"
+            ? t("{n} point(s) less than the {days} day(s) before", { n: Math.abs(d), days })
+            : t("About as the {n} day(s) before", { n: days })}
+      </span>
+    );
+  };
+  const ofRevenue = (n: number) =>
+    totals.revenue > 0
+      ? t("{pct}% of net revenue", { pct: Math.round((n / totals.revenue) * 100) })
+      : null;
+  const glance =
+    seesProfit && from <= to
+      ? [
+          {
+            label: t("Net revenue"),
+            value: fmtIQD(totals.revenue),
+            href: "#pnl",
+            note: null,
+            delta: versus(change(totals.revenue, totalsBefore.revenue)),
+          },
+          {
+            label: t("dash.grossProfit"),
+            value: fmtIQD(totals.grossProfit),
+            tone: totals.grossProfit < 0 ? "err" : undefined,
+            href: "#pnl",
+            note: ofRevenue(totals.grossProfit),
+            delta: points(marginNow, marginBefore),
+          },
+          {
+            label: totals.net < 0 ? t("Net loss") : t("Net profit"),
+            value: fmtIQD(totals.net),
+            tone: totals.net < 0 ? "err" : undefined,
+            href: "#pnl",
+            note: ofRevenue(totals.net),
+            delta: points(netShare, netShareBefore),
+          },
+          {
+            label: t("Losses"),
+            value: fmtIQD(lost.total.value),
+            href: "#losses",
+            note: ofRevenue(lost.total.value),
+            delta: null,
+          },
+        ]
+      : [];
+
+  const said: Saying[] = [
+    unreconciled.length
+      ? {
+          tone: "warn",
+          icon: "!",
+          text: t(
+            "{n} reconciliation difference(s): look into them before trusting these figures.",
+            { n: unreconciled.length },
+          ),
+          href: "#reconciliation",
+        }
+      : {
+          tone: "ok",
+          icon: "✓",
+          text: t("The books tie: every record agrees with its account."),
+          href: "#reconciliation",
+        },
+  ];
+  if (seesProfit && from <= to && totals.revenue > 0) {
+    const c = change(totals.revenue, totalsBefore.revenue);
+    const dir = direction(c);
+    said.push({
+      tone: dir === "up" ? "ok" : dir === "down" ? "warn" : "info",
+      icon: mark(dir ?? "same"),
+      text:
+        c === null || dir === null
+          ? t("Net revenue was {amount}; the {n} day(s) before had none to compare with.", {
+              amount: fmtIQD(totals.revenue),
+              n: days,
+            })
+          : dir === "up"
+            ? t("Net revenue was {pct}% more than in the {n} day(s) before.", {
+                pct: percent(c),
+                n: days,
+              })
+            : dir === "down"
+              ? t("Net revenue was {pct}% less than in the {n} day(s) before.", {
+                  pct: percent(c),
+                  n: days,
+                })
+              : t("Net revenue was about as in the {n} day(s) before.", { n: days }),
+      detail:
+        c === null
+          ? undefined
+          : t("{now} against {before}.", {
+              now: fmtIQD(totals.revenue),
+              before: fmtIQD(totalsBefore.revenue),
+            }),
+      href: `/reports/sales?from=${from}&to=${to}&by=date${withPlace.replace("place", "location")}`,
+    });
+    if (marginNow !== null) {
+      const d = marginBefore === null ? 0 : Math.round((marginNow - marginBefore) * 100);
+      said.push({
+        tone: d <= -1 ? "warn" : d >= 1 ? "ok" : "info",
+        icon: d <= -1 ? "▼" : d >= 1 ? "▲" : "●",
+        text: t("You kept {pct}% of net revenue after the cost of sales.", {
+          pct: Math.round(marginNow * 100),
+        }),
+        detail:
+          marginBefore === null
+            ? undefined
+            : t("{pct}% in the {n} day(s) before.", {
+                pct: Math.round(marginBefore * 100),
+                n: days,
+              }),
+        href: "#pnl",
+      });
+    }
+    said.push(
+      totals.net >= 0
+        ? {
+            tone: "ok",
+            icon: "✓",
+            text: t("After every expense, the period made {amount}: {pct}% of net revenue.", {
+              amount: fmtIQD(totals.net),
+              pct: Math.round((totals.net / totals.revenue) * 100),
+            }),
+            href: "#pnl",
+          }
+        : {
+            tone: "warn",
+            icon: "▼",
+            text: t("After every expense, the period lost {amount}.", {
+              amount: fmtIQD(-totals.net),
+            }),
+            href: "#pnl",
+          },
+    );
+    const big = largestExpense(pnl);
+    if (big)
+      said.push({
+        tone: "info",
+        icon: "●",
+        text: t("{account} was the largest expense: {amount}, {pct}% of net revenue.", {
+          account: msg(big.name),
+          amount: fmtIQD(big.amount),
+          pct: share(big.amount, totals.revenue) ?? 0,
+        }),
+        href: ledger(big.code, from, to, true),
+      });
+    const platforms = spend?.parts.find((x) => x.key === "platforms");
+    if (platforms && platforms.amount > 0)
+      said.push({
+        tone: "info",
+        icon: "●",
+        text: t(
+          "The delivery platforms' commission and fees came to {amount}: {pct}% of net revenue.",
+          {
+            amount: fmtIQD(platforms.amount),
+            pct: share(platforms.amount, totals.revenue) ?? 0,
+          },
+        ),
+        href: "/platforms",
+      });
+  }
+  if (lost.total.value > 0) {
+    const most = [...lost.byKind].sort((a, b) => b.value - a.value)[0];
+    said.push({
+      tone: "warn",
+      icon: "!",
+      text:
+        allChannels.net > 0
+          ? t("Losses came to {amount}, {pct}% of net sales.", {
+              amount: fmtIQD(lost.total.value),
+              pct: share(lost.total.value, allChannels.net) ?? 0,
+            })
+          : t("Losses came to {amount}.", { amount: fmtIQD(lost.total.value) }),
+      detail: most
+        ? t("The largest kind: {kind}, {amount}.", {
+            kind: t(movementLabel(most.kind)),
+            amount: fmtIQD(most.value),
+          })
+        : undefined,
+      href: "#losses",
+    });
+  }
+  const overdue = ageing.d1_15 + ageing.d16_30 + ageing.d31plus;
+  if (overdue > 0)
+    said.push({
+      tone: "warn",
+      icon: "!",
+      text:
+        ageing.d31plus > 0
+          ? t("{amount} owed to suppliers is past due, {old} of it by more than 30 days.", {
+              amount: fmtIQD(overdue),
+              old: fmtIQD(ageing.d31plus),
+            })
+          : t("{amount} owed to suppliers is past due.", { amount: fmtIQD(overdue) }),
+      href: "#ageing",
+    });
+  if (uncostedNet > 0)
+    said.push({
+      tone: "warn",
+      icon: "!",
+      text: t(
+        "Sales of {amount} were costed at nothing: their profit is overstated until what they use has a cost.",
+        { amount: fmtIQD(uncostedNet) },
+      ),
+      href: "#uncosted",
+    });
+
+  // Where each 1,000 IQD went, in the order drawn; what was kept, last.
+  const SPENT_LABEL: Record<string, string> = {
+    goods: t("What was sold cost"),
+    platforms: t("Delivery platforms"),
+    waste: t("Waste and stock differences"),
+    staff: t("Staff"),
+    running: t("Rent and running costs"),
+  };
+  const spentParts = spend
+    ? [
+        ...spend.parts.map((x) => ({
+          key: x.key,
+          label: SPENT_LABEL[x.key] ?? x.key,
+          value: Math.max(x.perThousand, 0),
+          valueText: fmtIQD(x.perThousand),
+          sub: t("{amount} in all", { amount: fmtIQD(x.amount) }),
+        })),
+        {
+          key: "kept",
+          label: spend.net < 0 ? t("The period's loss") : t("Kept as profit"),
+          value: Math.max(spend.netPerThousand, 0),
+          valueText: fmtIQD(spend.netPerThousand),
+          sub: t("{amount} in all", { amount: fmtIQD(spend.net) }),
+        },
+      ]
+    : [];
+
+  // The parts of the page, by what they are about, each a tap away.
+  const jump = [
+    ...(seesProfit
+      ? [
+          {
+            label: t("Profit"),
+            links: [
+              { href: "#pnl", label: t("Profit & Loss") },
+              ...(byPlace ? [{ href: "#pnl-places", label: t("Profit & Loss by place") }] : []),
+            ],
+          },
+        ]
+      : []),
+    {
+      label: t("Sales"),
+      links: [
+        { href: "#channel", label: t("Sales by Channel") },
+        { href: "#margin", label: t("Product Margin by Channel") },
+        { href: "#sizes", label: t("Sizes and add-ons") },
+        { href: "#payments", label: t("Sales by payment method") },
+        { href: "#dollars", label: t("Dollars") },
+        ...(seesCustomers && loyalty
+          ? [{ href: "#customers", label: t("Customers and loyalty") }]
+          : []),
+      ],
+    },
+    {
+      label: t("Buying and stock"),
+      links: [
+        { href: "#purchasing", label: t("Purchasing") },
+        { href: "#ageing", label: t("Payable Ageing") },
+        { href: "#production", label: t("Production") },
+        { href: "#losses", label: t("Losses") },
+      ],
+    },
+    ...(seesStaff ? [{ label: t("People"), links: [{ href: "#staff", label: t("Staff") }] }] : []),
+    {
+      label: t("Checks"),
+      links: [
+        { href: "#reconciliation", label: t("Do the books tie?") },
+        { href: "#uncosted", label: t("Uncosted Sales") },
+        ...(seesExceptions ? [{ href: "#exceptions", label: t("Exceptions") }] : []),
+      ],
+    },
+  ];
   const lastMonthEnd = addDays(monthStart(today), -1);
   const ranges: [string, string, string][] = [
     ["This month", monthStart(today), today],
@@ -324,6 +652,59 @@ export default async function ReportsPage({
         </p>
       )}
 
+      {/* ---- The period at a glance: its figures against the days before, what they say, where the money went ---- */}
+      <section className="rep-overview" aria-labelledby="rep-glance" data-testid="report-glance">
+        <h2 id="rep-glance" className="dash-h">
+          {t("The period at a glance")}
+        </h2>
+        {glance.length > 0 && (
+          <div className="kpis">
+            {glance.map((g) => (
+              <a key={g.label} href={g.href} className="card stat">
+                <span className="label">{g.label}</span>
+                <span className={`value${g.tone ? ` ${g.tone}` : ""}`}>{g.value}</span>
+                {g.note && <span className="delta">{g.note}</span>}
+                {g.delta}
+              </a>
+            ))}
+          </div>
+        )}
+        <div className="rep-insight">
+          <section className="card" aria-labelledby="rep-say" data-testid="report-says">
+            <h3 id="rep-say" className="viz-title">
+              {t("What the period says")}
+            </h3>
+            <Sayings items={said} />
+          </section>
+          {spend && (
+            <section className="card" aria-labelledby="rep-spent" data-testid="report-spent">
+              <h3 id="rep-spent" className="viz-title">
+                {t("Where each 1,000 IQD of net revenue went")}
+              </h3>
+              <ShareBar label={t("Where each 1,000 IQD of net revenue went")} parts={spentParts} />
+              <p className="muted dash-note">
+                {t(
+                  "From the P&L: what was sold cost is the recipes' cost of goods; waste and stock differences are waste, preparation loss, count differences and price differences on deliveries; the staff are their pay and their meals.",
+                )}
+              </p>
+            </section>
+          )}
+        </div>
+      </section>
+
+      <nav className="rep-nav no-print" aria-label={t("Parts of the reports")}>
+        {jump.map((g) => (
+          <span key={g.label} className="rep-nav-group">
+            <span className="rep-nav-label">{g.label}</span>
+            {g.links.map((l) => (
+              <a key={l.href} href={l.href} className="rep-nav-link">
+                {l.label}
+              </a>
+            ))}
+          </span>
+        ))}
+      </nav>
+
       {/* ---- The analysis and the stock's value on a day (0051); the statements (0052) ---- */}
       <div
         className="card"
@@ -355,145 +736,11 @@ export default async function ReportsPage({
         )}
       </div>
 
-      {/* ---- Reconciliation ---- */}
-      <section className="panel" id="reconciliation">
-        <div className="panel-h">
-          <h3>{t("Do the books tie?")}</h3>
-          <span className="muted" style={{ fontSize: ".74rem" }}>
-            <Rich
-              text={t(
-                "Each subledger against its control account, as at the end of {to} · <csv>CSV</csv>",
-                { to },
-              )}
-              tags={{
-                csv: (c) => <a href={`/reports/export?report=reconciliation&to=${to}`}>{c}</a>,
-              }}
-            />
-          </span>
-        </div>
-        {/* All tie: one line, the checks a click away. A check that fails opens them. */}
-        <details className="rec-details" open={unreconciled.length > 0 || problems.length > 0}>
-          <summary data-testid="rec-summary">
-            {unreconciled.length === 0
-              ? `✅ ${t("Every subledger agrees with its control account.")}`
-              : `⛔ ${t("{n} of {total} checks do not tie", { n: unreconciled.length, total: rec.length })}`}
-          </summary>
-          <div className="tw">
-            <table>
-              <thead>
-                <tr>
-                  <th>{t("Check")}</th>
-                  <th className="right">{t("Subledger")}</th>
-                  <th className="right">{t("Ledger")}</th>
-                  <th className="right">{t("Difference")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rec.map((r) =>
-                  r.key === "documents" ? (
-                    // A count of records, not money.
-                    <tr key={r.key} data-testid="rec-documents">
-                      <td>
-                        {r.difference === 0 ? "✅ " : "⛔ "}
-                        {msg(r.label)}
-                      </td>
-                      <td className="right mono">
-                        {r.subledger === 0 ? (
-                          t("none")
-                        ) : (
-                          <a className="drill" href="#documents">
-                            {t("{n} record(s)", { n: r.subledger })}
-                          </a>
-                        )}
-                      </td>
-                      <td className="right mono">—</td>
-                      <td className={`right mono ${r.difference !== 0 ? "red" : ""}`}>
-                        {r.difference}
-                      </td>
-                    </tr>
-                  ) : (
-                    <tr key={r.key} data-testid={`rec-${r.key}`}>
-                      <td>
-                        {r.difference === 0 ? "✅ " : "⛔ "}
-                        {msg(r.label)}
-                      </td>
-                      <td className="right money">
-                        {recLinks[r.key] ? (
-                          <Link className="drill" href={recLinks[r.key]!.records}>
-                            {fmtIQD(r.subledger)}
-                          </Link>
-                        ) : (
-                          fmtIQD(r.subledger)
-                        )}
-                      </td>
-                      <td className="right money">
-                        {recLinks[r.key] ? (
-                          <Link
-                            className="drill"
-                            href={ledger(recLinks[r.key]!.accounts, monthStart(to), to)}
-                          >
-                            {fmtIQD(r.ledger)}
-                          </Link>
-                        ) : (
-                          fmtIQD(r.ledger)
-                        )}
-                      </td>
-                      <td className={`right money ${r.difference !== 0 ? "red" : ""}`}>
-                        {fmtIQD(r.difference)}
-                      </td>
-                    </tr>
-                  ),
-                )}
-              </tbody>
-            </table>
-          </div>
-          {problems.length > 0 && (
-            <div className="tw" id="documents" style={{ padding: "0 16px" }}>
-              <h4 style={{ margin: "12px 0 6px" }}>{t("Records to look into")}</h4>
-              <table data-testid="document-problems">
-                <thead>
-                  <tr>
-                    <th>{t("When")}</th>
-                    <th>{t("Record")}</th>
-                    <th>{t("What is wrong")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {problems.map((p) => (
-                    <tr key={`${p.kind}-${p.recordId}-${p.problem}`}>
-                      <td className="muted mono" style={{ fontSize: ".8rem" }}>
-                        {dateTimeIn(profile.timezone, p.at)}
-                      </td>
-                      <td>
-                        <Link className="drill" href={problemLink(p)}>
-                          {problemKind[p.kind] ?? p.kind}
-                        </Link>
-                      </td>
-                      <td>{msg(p.problem)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </details>
-        {unreconciled.length > 0 && (
-          <p
-            className="muted"
-            style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
-          >
-            {t(
-              "{n} difference(s). A period cannot be locked while its checks fail. Differences that predate the controls are explained in docs/REMEDIATION.md and are corrected by new, dated entries — reversals, cancelled bills, the owner's corrections — never by editing history.",
-              { n: unreconciled.length },
-            )}
-          </p>
-        )}
-        <LegacyPostings
-          records={unposted}
-          canPost={has(profile, "accounting.period.unlock")}
-          timezone={profile.timezone}
-        />
-      </section>
+      {seesProfit && (
+        <h2 className="rep-group" id="g-profit">
+          {t("Profit")}
+        </h2>
+      )}
 
       {/* ---- Profit & Loss ---- */}
       {seesProfit && (
@@ -663,6 +910,10 @@ export default async function ReportsPage({
         </section>
       )}
 
+      <h2 className="rep-group" id="g-sales">
+        {t("Sales")}
+      </h2>
+
       {/* ---- Sales by channel ---- */}
       <section className="panel" id="channel">
         <div className="panel-h">
@@ -681,62 +932,245 @@ export default async function ReportsPage({
             </p>
           </div>
         ) : (
+          <>
+            <div className="panel-b rep-chart">
+              <BarList
+                label={t("Net sales by channel")}
+                rows={[...byChannel.entries()]
+                  .map(([c, list]) => {
+                    const v = salesTotals(list);
+                    return {
+                      key: c,
+                      name: channels.name(c),
+                      value: v.net,
+                      valueText: fmtIQD(v.net),
+                      sub: t("{share}% of net sales · margin {kept}%", {
+                        share: share(v.net, allChannels.net) ?? 0,
+                        kept: share(v.margin, v.net) ?? 0,
+                      }),
+                    };
+                  })
+                  .sort((x, y) => y.value - x.value)}
+              />
+            </div>
+            <div className="tw">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{t("Channel")}</th>
+                    <th className="right">{t("Orders")}</th>
+                    <th className="right">{t("Sales")}</th>
+                    <th className="right">{t("Refunds")}</th>
+                    <th className="right">{t("Net sales")}</th>
+                    <th className="right">{t("Sales margin")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...byChannel.entries()].map(([c, list]) => {
+                    const v = salesTotals(list);
+                    return (
+                      <tr key={c}>
+                        <td>
+                          <span className="ref">{channels.name(c)}</span>
+                        </td>
+                        <td className="right money">
+                          <Link
+                            className="drill"
+                            href={`/orders?from=${from}&to=${to}&channel=${encodeURIComponent(c)}`}
+                          >
+                            {list.reduce((s, r) => s + r.orders, 0)}
+                          </Link>
+                        </td>
+                        <td className="right money">{fmtIQD(v.sold)}</td>
+                        <td className="right money">
+                          {v.refunds ? `(${fmtIQD(v.refunds)})` : "—"}
+                        </td>
+                        <td className="right money">{fmtIQD(v.net)}</td>
+                        <td className="right money">{fmtIQD(v.margin)}</td>
+                      </tr>
+                    );
+                  })}
+                  <tr className="grand">
+                    <td>{t("All channels")}</td>
+                    <td className="right money">{sales.reduce((s, r) => s + r.orders, 0)}</td>
+                    <td className="right money">{fmtIQD(allChannels.sold)}</td>
+                    <td className="right money">
+                      {allChannels.refunds ? `(${fmtIQD(allChannels.refunds)})` : "—"}
+                    </td>
+                    <td className="right money">{fmtIQD(allChannels.net)}</td>
+                    <td className="right money">{fmtIQD(allChannels.margin)}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p
+                className="muted"
+                style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
+              >
+                {t(
+                  "Net sales are what the P&L shows as net revenue for the same dates (4000 less 4100 and 4200). The sales margin is net sales less the recipe cost of what was sold; the P&L's gross profit also takes off waste, count differences, purchase price differences and platform fees.",
+                )}
+              </p>
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* ---- Product margin ---- */}
+      <section className="panel" id="margin">
+        <div className="panel-h">
+          <h3>{t("Product Margin by Channel")}</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            {t("Today's prices and today's costs, costed exactly as a sale posts them")}
+          </span>
+        </div>
+        {menu.length === 0 ? (
+          <div className="panel-b">
+            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+              {t("Add products with recipes and prices to see their margins.")}
+            </p>
+          </div>
+        ) : (
           <div className="tw">
             <table>
               <thead>
                 <tr>
+                  <th>{t("Product")}</th>
                   <th>{t("Channel")}</th>
-                  <th className="right">{t("Orders")}</th>
-                  <th className="right">{t("Sales")}</th>
-                  <th className="right">{t("Refunds")}</th>
-                  <th className="right">{t("Net sales")}</th>
-                  <th className="right">{t("Sales margin")}</th>
+                  <th className="right">{t("Price")}</th>
+                  <th className="right">{t("Cost")}</th>
+                  <th className="right">{t("Margin")}</th>
+                  <th className="right">%</th>
                 </tr>
               </thead>
               <tbody>
-                {[...byChannel.entries()].map(([c, list]) => {
-                  const v = salesTotals(list);
+                {menu.map((m) => {
+                  const margin = m.unitCost === null ? null : m.price - m.unitCost;
                   return (
-                    <tr key={c}>
+                    <tr key={m.variantId + m.channel}>
                       <td>
-                        <span className="ref">{channels.name(c)}</span>
+                        {m.productName}
+                        {m.variantName !== m.productName ? ` — ${m.variantName}` : ""}
+                      </td>
+                      <td>
+                        <span className="ref">{channels.name(m.channel)}</span>
+                      </td>
+                      <td className="right money">{fmtIQD(m.price)}</td>
+                      <td className="right money">
+                        {m.unitCost === null ? t("unknown") : fmtIQD(m.unitCost)}
+                      </td>
+                      <td className={`right money ${margin !== null && margin < 0 ? "red" : ""}`}>
+                        {margin === null ? "—" : fmtIQD(margin)}
                       </td>
                       <td className="right money">
-                        <Link
-                          className="drill"
-                          href={`/orders?from=${from}&to=${to}&channel=${encodeURIComponent(c)}`}
-                        >
-                          {list.reduce((s, r) => s + r.orders, 0)}
-                        </Link>
+                        {margin === null || m.price <= 0
+                          ? "—"
+                          : `${((margin / m.price) * 100).toFixed(1)}%`}
                       </td>
-                      <td className="right money">{fmtIQD(v.sold)}</td>
-                      <td className="right money">{v.refunds ? `(${fmtIQD(v.refunds)})` : "—"}</td>
-                      <td className="right money">{fmtIQD(v.net)}</td>
-                      <td className="right money">{fmtIQD(v.margin)}</td>
                     </tr>
                   );
                 })}
-                <tr className="grand">
-                  <td>{t("All channels")}</td>
-                  <td className="right money">{sales.reduce((s, r) => s + r.orders, 0)}</td>
-                  <td className="right money">{fmtIQD(allChannels.sold)}</td>
-                  <td className="right money">
-                    {allChannels.refunds ? `(${fmtIQD(allChannels.refunds)})` : "—"}
-                  </td>
-                  <td className="right money">{fmtIQD(allChannels.net)}</td>
-                  <td className="right money">{fmtIQD(allChannels.margin)}</td>
-                </tr>
               </tbody>
             </table>
+          </div>
+        )}
+      </section>
+
+      {/* ---- Sizes and add-ons (0041) ---- */}
+      <section className="panel" id="sizes" data-testid="sizes-report">
+        <div className="panel-h">
+          <h3>{t("Sizes and add-ons")}</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            {t("Sold {from} to {to}, at the prices and costs of each sale; voids left out", {
+              from,
+              to,
+            })}
+          </span>
+        </div>
+        {sizeRows.length === 0 && addonRows.length === 0 ? (
+          <div className="panel-b">
+            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+              {t(
+                "No product was sold in more than one size, and no add-on was taken, in these dates.",
+              )}
+            </p>
+          </div>
+        ) : (
+          <>
+            {sizeRows.length > 0 && (
+              <div className="tw">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>{t("Product")}</th>
+                      <th>{t("Size")}</th>
+                      <th className="right">{t("Qty")}</th>
+                      <th className="right">{t("Net sales")}</th>
+                      <th className="right">{t("Cost")}</th>
+                      <th className="right">{t("Margin")}</th>
+                      <th className="right">%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sizeRows.map((r, i) => (
+                      <tr key={i}>
+                        <td>{r.parent}</td>
+                        <td>{r.name}</td>
+                        <td className="right mono">{r.qty}</td>
+                        <td className="right money">{fmtIQD(r.sales)}</td>
+                        <td className="right money">{fmtIQD(r.cost)}</td>
+                        <td className={`right money ${r.margin < 0 ? "red" : ""}`}>
+                          {fmtIQD(r.margin)}
+                        </td>
+                        <td className="right money">{pct(r.margin, r.sales)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {addonRows.length > 0 && (
+              <div className="tw">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>{t("Group")}</th>
+                      <th>{t("Add-on")}</th>
+                      <th className="right">{t("Qty")}</th>
+                      <th className="right">{t("On lines")}</th>
+                      <th className="right">{t("Of the lines offered it")}</th>
+                      <th className="right">{t("Net sales")}</th>
+                      <th className="right">{t("Cost")}</th>
+                      <th className="right">{t("Margin")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {addonRows.map((r, i) => (
+                      <tr key={i}>
+                        <td>{r.parent}</td>
+                        <td>{r.name}</td>
+                        <td className="right mono">{r.qty}</td>
+                        <td className="right mono">{r.lines}</td>
+                        <td className="right mono">{pct(r.lines, r.offered ?? 0)}</td>
+                        <td className="right money">{fmtIQD(r.sales)}</td>
+                        <td className="right money">{fmtIQD(r.cost)}</td>
+                        <td className={`right money ${r.margin < 0 ? "red" : ""}`}>
+                          {fmtIQD(r.margin)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
             <p
               className="muted"
               style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
             >
               {t(
-                "Net sales are what the P&L shows as net revenue for the same dates (4000 less 4100 and 4200). The sales margin is net sales less the recipe cost of what was sold; the P&L's gross profit also takes off waste, count differences, purchase price differences and platform fees.",
+                "A size's figures leave out its add-ons, which are counted on their own, each with its share of the line's discount. Refunds are not taken off here: Sales by Channel has them. How often an add-on is taken is out of the lines of the products that offer it today.",
               )}
             </p>
-          </div>
+          </>
         )}
       </section>
 
@@ -758,61 +1192,87 @@ export default async function ReportsPage({
             </p>
           </div>
         ) : (
-          <div className="tw">
-            <table>
-              <thead>
-                <tr>
-                  <th>{t("Paid by")}</th>
-                  <th className="right">{t("Sales")}</th>
-                  <th className="right">{t("Takings")}</th>
-                  <th className="right">{t("Refunds")}</th>
-                  <th className="right">{t("Net")}</th>
-                  <th className="right">{t("Change given")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {takings.map((r) => (
-                  <tr key={r.method} data-testid={`payments-${r.method}`}>
-                    <td>{t(tenderLabel(r.method))}</td>
-                    <td className="right money">
-                      {r.sales}
-                      {r.splitSales > 0 && (
-                        <div className="muted" style={{ fontSize: ".72rem" }}>
-                          {t("{n} paid two ways", { n: r.splitSales })}
-                        </div>
-                      )}
-                    </td>
-                    <td className="right money">{fmtIQD(r.taken)}</td>
-                    <td className="right money">{r.refunded ? `(${fmtIQD(r.refunded)})` : "—"}</td>
-                    <td className="right money">{fmtIQD(r.net)}</td>
-                    <td className="right money">{r.changeGiven ? fmtIQD(r.changeGiven) : "—"}</td>
+          <>
+            <div className="panel-b rep-chart">
+              <BarList
+                label={t("Net sales by payment method")}
+                rows={[...takings]
+                  .sort((x, y) => y.net - x.net)
+                  .map((r) => ({
+                    key: r.method,
+                    name: t(tenderLabel(r.method)),
+                    value: r.net,
+                    valueText: fmtIQD(r.net),
+                    sub: t("{share}% of net sales", {
+                      share:
+                        share(
+                          r.net,
+                          takings.reduce((sum, x) => sum + x.net, 0),
+                        ) ?? 0,
+                    }),
+                  }))}
+              />
+            </div>
+            <div className="tw">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{t("Paid by")}</th>
+                    <th className="right">{t("Sales")}</th>
+                    <th className="right">{t("Takings")}</th>
+                    <th className="right">{t("Refunds")}</th>
+                    <th className="right">{t("Net")}</th>
+                    <th className="right">{t("Change given")}</th>
                   </tr>
-                ))}
-                <tr className="grand">
-                  <td>{t("All payments")}</td>
-                  <td className="right money" />
-                  <td className="right money">
-                    {fmtIQD(takings.reduce((s, r) => s + r.taken, 0))}
-                  </td>
-                  <td className="right money">
-                    {takings.some((r) => r.refunded)
-                      ? `(${fmtIQD(takings.reduce((s, r) => s + r.refunded, 0))})`
-                      : "—"}
-                  </td>
-                  <td className="right money">{fmtIQD(takings.reduce((s, r) => s + r.net, 0))}</td>
-                  <td className="right money" />
-                </tr>
-              </tbody>
-            </table>
-            <p
-              className="muted"
-              style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
-            >
-              {t(
-                "A sale paid part in cash and part by card counts under each, for the part it paid. Cash is what the sale kept: the change went back to the customer. The net matches the sales by channel.",
-              )}
-            </p>
-          </div>
+                </thead>
+                <tbody>
+                  {takings.map((r) => (
+                    <tr key={r.method} data-testid={`payments-${r.method}`}>
+                      <td>{t(tenderLabel(r.method))}</td>
+                      <td className="right money">
+                        {r.sales}
+                        {r.splitSales > 0 && (
+                          <div className="muted" style={{ fontSize: ".72rem" }}>
+                            {t("{n} paid two ways", { n: r.splitSales })}
+                          </div>
+                        )}
+                      </td>
+                      <td className="right money">{fmtIQD(r.taken)}</td>
+                      <td className="right money">
+                        {r.refunded ? `(${fmtIQD(r.refunded)})` : "—"}
+                      </td>
+                      <td className="right money">{fmtIQD(r.net)}</td>
+                      <td className="right money">{r.changeGiven ? fmtIQD(r.changeGiven) : "—"}</td>
+                    </tr>
+                  ))}
+                  <tr className="grand">
+                    <td>{t("All payments")}</td>
+                    <td className="right money" />
+                    <td className="right money">
+                      {fmtIQD(takings.reduce((s, r) => s + r.taken, 0))}
+                    </td>
+                    <td className="right money">
+                      {takings.some((r) => r.refunded)
+                        ? `(${fmtIQD(takings.reduce((s, r) => s + r.refunded, 0))})`
+                        : "—"}
+                    </td>
+                    <td className="right money">
+                      {fmtIQD(takings.reduce((s, r) => s + r.net, 0))}
+                    </td>
+                    <td className="right money" />
+                  </tr>
+                </tbody>
+              </table>
+              <p
+                className="muted"
+                style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
+              >
+                {t(
+                  "A sale paid part in cash and part by card counts under each, for the part it paid. Cash is what the sale kept: the change went back to the customer. The net matches the sales by channel.",
+                )}
+              </p>
+            </div>
+          </>
         )}
       </section>
 
@@ -953,6 +1413,98 @@ export default async function ReportsPage({
           </p>
         </div>
       </section>
+
+      {/* ---- Customers and their points (0050) ---- */}
+      {seesCustomers && loyalty && (
+        <section className="panel" id="customers" data-testid="customer-report">
+          <div className="panel-h">
+            <h3>{t("Customers and loyalty")}</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              {t("Points earned and spent {from} to {to}, and who bought the most", { from, to })}
+            </span>
+          </div>
+          <div className="panel-b grid" style={{ gap: 6 }}>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <span data-testid="loyalty-earned">
+                {t("Points earned: {n}", { n: String(loyalty.points.earned) })}
+              </span>
+              <span data-testid="loyalty-rewards">
+                {t("Rewards taken: {n}, {amount} off", {
+                  n: String(loyalty.points.rewards),
+                  amount: fmtIQD(loyalty.points.rewardsValue),
+                })}
+              </span>
+              <span>
+                {t("Taken back on voids and refunds: {n}; given back: {m}", {
+                  n: String(loyalty.points.takenBack),
+                  m: String(loyalty.points.givenBack),
+                })}
+              </span>
+              <span>
+                {t("By hand: {plus} given, {minus} taken", {
+                  plus: String(loyalty.points.givenByHand),
+                  minus: String(loyalty.points.takenByHand),
+                })}
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <span data-testid="loyalty-outstanding">
+                {t("Customers hold {n} points now, worth {amount} in rewards", {
+                  n: String(loyalty.outstanding),
+                  amount: fmtIQD(loyalty.outstandingValue),
+                })}
+              </span>
+              <span>
+                {t("{n} customers, {m} new in these dates", {
+                  n: String(loyalty.customers),
+                  m: String(loyalty.newCustomers),
+                })}
+              </span>
+              <span>
+                {t("Their sales: {n}, {amount}", {
+                  n: String(loyalty.sales.orders),
+                  amount: fmtIQD(loyalty.sales.net),
+                })}
+              </span>
+            </div>
+            <p className="muted" style={{ margin: 0, fontSize: ".8rem" }}>
+              {t(
+                "A reward is a discount on 4100, like any other: the points are no liability in the books, only what customers hold here.",
+              )}
+            </p>
+          </div>
+          {loyalty.top.length > 0 && (
+            <div className="tw">
+              <table data-testid="customer-top">
+                <thead>
+                  <tr>
+                    <th>{t("Customer")}</th>
+                    <th className="right">{t("Orders")}</th>
+                    <th className="right">{t("Bought")}</th>
+                    <th className="right">{t("Points")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loyalty.top.map((c) => (
+                    <tr key={c.customerId} data-testid="customer-top-row" data-name={c.name}>
+                      <td>
+                        <Link href={`/customers/${c.customerId}`}>{c.name}</Link>
+                      </td>
+                      <td className="right mono">{c.orders}</td>
+                      <td className="right mono">{fmtIQD(c.spent)}</td>
+                      <td className="right mono">{c.points}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      <h2 className="rep-group" id="g-buying">
+        {t("Buying and stock")}
+      </h2>
 
       {/* ---- Purchasing (0044) ---- */}
       <section className="panel" id="purchasing" data-testid="purchasing-report">
@@ -1229,6 +1781,78 @@ export default async function ReportsPage({
         </div>
       </section>
 
+      {/* ---- Payable ageing ---- */}
+      <section className="panel" id="ageing">
+        <div className="panel-h">
+          <h3>{t("Payable Ageing")}</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            {t("Today · what to pay first")}
+          </span>
+        </div>
+        {ageing.total > 0 && (
+          <div className="panel-b rep-chart">
+            <BarList
+              label={t("What is owed, by how late it is")}
+              rows={[
+                { key: "current", name: t("Not yet due"), value: ageing.current },
+                { key: "1-15", name: t("1 to 15 days late"), value: ageing.d1_15 },
+                { key: "16-30", name: t("16 to 30 days late"), value: ageing.d16_30 },
+                { key: "31+", name: t("More than 30 days late"), value: ageing.d31plus },
+              ].map((r) => ({
+                ...r,
+                valueText: fmtIQD(r.value),
+                sub: t("{share}% of what is owed", { share: share(r.value, ageing.total) ?? 0 }),
+              }))}
+            />
+          </div>
+        )}
+        <div className="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>{t("Vendor")}</th>
+                <th>{t("Invoice")}</th>
+                <th>{t("Due")}</th>
+                <th className="right">{t("Outstanding")}</th>
+                <th className="right">{t("Age")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {book.openBills.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="muted" style={{ fontStyle: "italic" }}>
+                    {t("Nothing outstanding — every bill is settled.")}
+                  </td>
+                </tr>
+              ) : (
+                book.openBills.map((b) => (
+                  <tr key={b.id}>
+                    <td>{b.supplierName}</td>
+                    <td>{b.invoiceNo || "—"}</td>
+                    <td>{b.dueDate ?? "—"}</td>
+                    <td className="right money">{fmtIQD(b.outstanding)}</td>
+                    <td className="right">
+                      <span className={`ref ${b.daysOverdue > 0 ? "due" : ""}`}>
+                        {b.daysOverdue > 0 ? t("{n}d over", { n: b.daysOverdue }) : t("Current")}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+              {book.openBills.length > 0 && (
+                <tr className="grand">
+                  <td />
+                  <td>{t("Total payable")}</td>
+                  <td />
+                  <td className="right money">{fmtIQD(ageing.total)}</td>
+                  <td />
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       {/* ---- Production (0046) ---- */}
       <section className="panel" id="production" data-testid="production-report">
         <div className="panel-h">
@@ -1337,6 +1961,20 @@ export default async function ReportsPage({
                   </>
                 )}
               </p>
+            </div>
+            <div className="panel-b rep-chart">
+              <BarList
+                label={t("Losses by kind")}
+                rows={[...lost.byKind]
+                  .sort((x, y) => y.value - x.value)
+                  .map((k) => ({
+                    key: `${k.kind}:${k.account}`,
+                    name: t(movementLabel(k.kind)),
+                    value: k.value,
+                    valueText: fmtIQD(k.value),
+                    sub: `${kindShare(k.value, lost.total.value)}% · ${k.account} ${msg(k.accountName ?? LOSS_ACCOUNT_NAME[k.account] ?? "")}`,
+                  }))}
+              />
             </div>
             <div className="tw">
               <table data-testid="loss-by-kind">
@@ -1509,6 +2147,12 @@ export default async function ReportsPage({
         )}
       </section>
 
+      {seesStaff && (
+        <h2 className="rep-group" id="g-people">
+          {t("People")}
+        </h2>
+      )}
+
       {/* ---- Staff: their hours, and what they cost (0049) ---- */}
       {seesStaff && (
         <section className="panel" id="staff" data-testid="staff-report">
@@ -1618,93 +2262,149 @@ export default async function ReportsPage({
         </section>
       )}
 
-      {/* ---- Customers and their points (0050) ---- */}
-      {seesCustomers && loyalty && (
-        <section className="panel" id="customers" data-testid="customer-report">
-          <div className="panel-h">
-            <h3>{t("Customers and loyalty")}</h3>
-            <span className="muted" style={{ fontSize: ".74rem" }}>
-              {t("Points earned and spent {from} to {to}, and who bought the most", { from, to })}
-            </span>
-          </div>
-          <div className="panel-b grid" style={{ gap: 6 }}>
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-              <span data-testid="loyalty-earned">
-                {t("Points earned: {n}", { n: String(loyalty.points.earned) })}
-              </span>
-              <span data-testid="loyalty-rewards">
-                {t("Rewards taken: {n}, {amount} off", {
-                  n: String(loyalty.points.rewards),
-                  amount: fmtIQD(loyalty.points.rewardsValue),
-                })}
-              </span>
-              <span>
-                {t("Taken back on voids and refunds: {n}; given back: {m}", {
-                  n: String(loyalty.points.takenBack),
-                  m: String(loyalty.points.givenBack),
-                })}
-              </span>
-              <span>
-                {t("By hand: {plus} given, {minus} taken", {
-                  plus: String(loyalty.points.givenByHand),
-                  minus: String(loyalty.points.takenByHand),
-                })}
-              </span>
-            </div>
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-              <span data-testid="loyalty-outstanding">
-                {t("Customers hold {n} points now, worth {amount} in rewards", {
-                  n: String(loyalty.outstanding),
-                  amount: fmtIQD(loyalty.outstandingValue),
-                })}
-              </span>
-              <span>
-                {t("{n} customers, {m} new in these dates", {
-                  n: String(loyalty.customers),
-                  m: String(loyalty.newCustomers),
-                })}
-              </span>
-              <span>
-                {t("Their sales: {n}, {amount}", {
-                  n: String(loyalty.sales.orders),
-                  amount: fmtIQD(loyalty.sales.net),
-                })}
-              </span>
-            </div>
-            <p className="muted" style={{ margin: 0, fontSize: ".8rem" }}>
-              {t(
-                "A reward is a discount on 4100, like any other: the points are no liability in the books, only what customers hold here.",
+      <h2 className="rep-group" id="g-checks">
+        {t("Checks")}
+      </h2>
+
+      {/* ---- Reconciliation ---- */}
+      <section className="panel" id="reconciliation">
+        <div className="panel-h">
+          <h3>{t("Do the books tie?")}</h3>
+          <span className="muted" style={{ fontSize: ".74rem" }}>
+            <Rich
+              text={t(
+                "Each subledger against its control account, as at the end of {to} · <csv>CSV</csv>",
+                { to },
               )}
-            </p>
+              tags={{
+                csv: (c) => <a href={`/reports/export?report=reconciliation&to=${to}`}>{c}</a>,
+              }}
+            />
+          </span>
+        </div>
+        {/* All tie: one line, the checks a click away. A check that fails opens them. */}
+        <details className="rec-details" open={unreconciled.length > 0 || problems.length > 0}>
+          <summary data-testid="rec-summary">
+            {unreconciled.length === 0
+              ? `✅ ${t("Every subledger agrees with its control account.")}`
+              : `⛔ ${t("{n} of {total} checks do not tie", { n: unreconciled.length, total: rec.length })}`}
+          </summary>
+          <div className="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>{t("Check")}</th>
+                  <th className="right">{t("Subledger")}</th>
+                  <th className="right">{t("Ledger")}</th>
+                  <th className="right">{t("Difference")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rec.map((r) =>
+                  r.key === "documents" ? (
+                    // A count of records, not money.
+                    <tr key={r.key} data-testid="rec-documents">
+                      <td>
+                        {r.difference === 0 ? "✅ " : "⛔ "}
+                        {msg(r.label)}
+                      </td>
+                      <td className="right mono">
+                        {r.subledger === 0 ? (
+                          t("none")
+                        ) : (
+                          <a className="drill" href="#documents">
+                            {t("{n} record(s)", { n: r.subledger })}
+                          </a>
+                        )}
+                      </td>
+                      <td className="right mono">—</td>
+                      <td className={`right mono ${r.difference !== 0 ? "red" : ""}`}>
+                        {r.difference}
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={r.key} data-testid={`rec-${r.key}`}>
+                      <td>
+                        {r.difference === 0 ? "✅ " : "⛔ "}
+                        {msg(r.label)}
+                      </td>
+                      <td className="right money">
+                        {recLinks[r.key] ? (
+                          <Link className="drill" href={recLinks[r.key]!.records}>
+                            {fmtIQD(r.subledger)}
+                          </Link>
+                        ) : (
+                          fmtIQD(r.subledger)
+                        )}
+                      </td>
+                      <td className="right money">
+                        {recLinks[r.key] ? (
+                          <Link
+                            className="drill"
+                            href={ledger(recLinks[r.key]!.accounts, monthStart(to), to)}
+                          >
+                            {fmtIQD(r.ledger)}
+                          </Link>
+                        ) : (
+                          fmtIQD(r.ledger)
+                        )}
+                      </td>
+                      <td className={`right money ${r.difference !== 0 ? "red" : ""}`}>
+                        {fmtIQD(r.difference)}
+                      </td>
+                    </tr>
+                  ),
+                )}
+              </tbody>
+            </table>
           </div>
-          {loyalty.top.length > 0 && (
-            <div className="tw">
-              <table data-testid="customer-top">
+          {problems.length > 0 && (
+            <div className="tw" id="documents" style={{ padding: "0 16px" }}>
+              <h4 style={{ margin: "12px 0 6px" }}>{t("Records to look into")}</h4>
+              <table data-testid="document-problems">
                 <thead>
                   <tr>
-                    <th>{t("Customer")}</th>
-                    <th className="right">{t("Orders")}</th>
-                    <th className="right">{t("Bought")}</th>
-                    <th className="right">{t("Points")}</th>
+                    <th>{t("When")}</th>
+                    <th>{t("Record")}</th>
+                    <th>{t("What is wrong")}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {loyalty.top.map((c) => (
-                    <tr key={c.customerId} data-testid="customer-top-row" data-name={c.name}>
-                      <td>
-                        <Link href={`/customers/${c.customerId}`}>{c.name}</Link>
+                  {problems.map((p) => (
+                    <tr key={`${p.kind}-${p.recordId}-${p.problem}`}>
+                      <td className="muted mono" style={{ fontSize: ".8rem" }}>
+                        {dateTimeIn(profile.timezone, p.at)}
                       </td>
-                      <td className="right mono">{c.orders}</td>
-                      <td className="right mono">{fmtIQD(c.spent)}</td>
-                      <td className="right mono">{c.points}</td>
+                      <td>
+                        <Link className="drill" href={problemLink(p)}>
+                          {problemKind[p.kind] ?? p.kind}
+                        </Link>
+                      </td>
+                      <td>{msg(p.problem)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-        </section>
-      )}
+        </details>
+        {unreconciled.length > 0 && (
+          <p
+            className="muted"
+            style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
+          >
+            {t(
+              "{n} difference(s). A period cannot be locked while its checks fail. Differences that predate the controls are explained in docs/REMEDIATION.md and are corrected by new, dated entries — reversals, cancelled bills, the owner's corrections — never by editing history.",
+              { n: unreconciled.length },
+            )}
+          </p>
+        )}
+        <LegacyPostings
+          records={unposted}
+          canPost={has(profile, "accounting.period.unlock")}
+          timezone={profile.timezone}
+        />
+      </section>
 
       {/* ---- Sales costed at nothing (0025) ---- */}
       <section className="panel" id="uncosted">
@@ -1898,228 +2598,13 @@ export default async function ReportsPage({
         </section>
       )}
 
-      {/* ---- Payable ageing ---- */}
-      <section className="panel" id="ageing">
-        <div className="panel-h">
-          <h3>{t("Payable Ageing")}</h3>
-          <span className="muted" style={{ fontSize: ".74rem" }}>
-            {t("Today · what to pay first")}
-          </span>
-        </div>
-        <div className="tw">
-          <table>
-            <thead>
-              <tr>
-                <th>{t("Vendor")}</th>
-                <th>{t("Invoice")}</th>
-                <th>{t("Due")}</th>
-                <th className="right">{t("Outstanding")}</th>
-                <th className="right">{t("Age")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {book.openBills.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="muted" style={{ fontStyle: "italic" }}>
-                    {t("Nothing outstanding — every bill is settled.")}
-                  </td>
-                </tr>
-              ) : (
-                book.openBills.map((b) => (
-                  <tr key={b.id}>
-                    <td>{b.supplierName}</td>
-                    <td>{b.invoiceNo || "—"}</td>
-                    <td>{b.dueDate ?? "—"}</td>
-                    <td className="right money">{fmtIQD(b.outstanding)}</td>
-                    <td className="right">
-                      <span className={`ref ${b.daysOverdue > 0 ? "due" : ""}`}>
-                        {b.daysOverdue > 0 ? t("{n}d over", { n: b.daysOverdue }) : t("Current")}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-              {book.openBills.length > 0 && (
-                <tr className="grand">
-                  <td />
-                  <td>{t("Total payable")}</td>
-                  <td />
-                  <td className="right money">{fmtIQD(ageing.total)}</td>
-                  <td />
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* ---- Product margin ---- */}
-      <section className="panel" id="margin">
-        <div className="panel-h">
-          <h3>{t("Product Margin by Channel")}</h3>
-          <span className="muted" style={{ fontSize: ".74rem" }}>
-            {t("Today's prices and today's costs, costed exactly as a sale posts them")}
-          </span>
-        </div>
-        {menu.length === 0 ? (
-          <div className="panel-b">
-            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-              {t("Add products with recipes and prices to see their margins.")}
-            </p>
-          </div>
-        ) : (
-          <div className="tw">
-            <table>
-              <thead>
-                <tr>
-                  <th>{t("Product")}</th>
-                  <th>{t("Channel")}</th>
-                  <th className="right">{t("Price")}</th>
-                  <th className="right">{t("Cost")}</th>
-                  <th className="right">{t("Margin")}</th>
-                  <th className="right">%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {menu.map((m) => {
-                  const margin = m.unitCost === null ? null : m.price - m.unitCost;
-                  return (
-                    <tr key={m.variantId + m.channel}>
-                      <td>
-                        {m.productName}
-                        {m.variantName !== m.productName ? ` — ${m.variantName}` : ""}
-                      </td>
-                      <td>
-                        <span className="ref">{channels.name(m.channel)}</span>
-                      </td>
-                      <td className="right money">{fmtIQD(m.price)}</td>
-                      <td className="right money">
-                        {m.unitCost === null ? t("unknown") : fmtIQD(m.unitCost)}
-                      </td>
-                      <td className={`right money ${margin !== null && margin < 0 ? "red" : ""}`}>
-                        {margin === null ? "—" : fmtIQD(margin)}
-                      </td>
-                      <td className="right money">
-                        {margin === null || m.price <= 0
-                          ? "—"
-                          : `${((margin / m.price) * 100).toFixed(1)}%`}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      {/* ---- Sizes and add-ons (0041) ---- */}
-      <section className="panel" id="sizes" data-testid="sizes-report">
-        <div className="panel-h">
-          <h3>{t("Sizes and add-ons")}</h3>
-          <span className="muted" style={{ fontSize: ".74rem" }}>
-            {t("Sold {from} to {to}, at the prices and costs of each sale; voids left out", {
-              from,
-              to,
-            })}
-          </span>
-        </div>
-        {sizeRows.length === 0 && addonRows.length === 0 ? (
-          <div className="panel-b">
-            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-              {t(
-                "No product was sold in more than one size, and no add-on was taken, in these dates.",
-              )}
-            </p>
-          </div>
-        ) : (
-          <>
-            {sizeRows.length > 0 && (
-              <div className="tw">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>{t("Product")}</th>
-                      <th>{t("Size")}</th>
-                      <th className="right">{t("Qty")}</th>
-                      <th className="right">{t("Net sales")}</th>
-                      <th className="right">{t("Cost")}</th>
-                      <th className="right">{t("Margin")}</th>
-                      <th className="right">%</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sizeRows.map((r, i) => (
-                      <tr key={i}>
-                        <td>{r.parent}</td>
-                        <td>{r.name}</td>
-                        <td className="right mono">{r.qty}</td>
-                        <td className="right money">{fmtIQD(r.sales)}</td>
-                        <td className="right money">{fmtIQD(r.cost)}</td>
-                        <td className={`right money ${r.margin < 0 ? "red" : ""}`}>
-                          {fmtIQD(r.margin)}
-                        </td>
-                        <td className="right money">{pct(r.margin, r.sales)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {addonRows.length > 0 && (
-              <div className="tw">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>{t("Group")}</th>
-                      <th>{t("Add-on")}</th>
-                      <th className="right">{t("Qty")}</th>
-                      <th className="right">{t("On lines")}</th>
-                      <th className="right">{t("Of the lines offered it")}</th>
-                      <th className="right">{t("Net sales")}</th>
-                      <th className="right">{t("Cost")}</th>
-                      <th className="right">{t("Margin")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {addonRows.map((r, i) => (
-                      <tr key={i}>
-                        <td>{r.parent}</td>
-                        <td>{r.name}</td>
-                        <td className="right mono">{r.qty}</td>
-                        <td className="right mono">{r.lines}</td>
-                        <td className="right mono">{pct(r.lines, r.offered ?? 0)}</td>
-                        <td className="right money">{fmtIQD(r.sales)}</td>
-                        <td className="right money">{fmtIQD(r.cost)}</td>
-                        <td className={`right money ${r.margin < 0 ? "red" : ""}`}>
-                          {fmtIQD(r.margin)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            <p
-              className="muted"
-              style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
-            >
-              {t(
-                "A size's figures leave out its add-ons, which are counted on their own, each with its share of the line's discount. Refunds are not taken off here: Sales by Channel has them. How often an add-on is taken is out of the lines of the products that offer it today.",
-              )}
-            </p>
-          </>
-        )}
-      </section>
-
       <p className="muted" style={{ fontSize: ".78rem" }}>
         {t("Also:")} <Link href="/accounting">{t("Trial balance")}</Link> ·{" "}
         <Link href="/journals">{t("Journal register")}</Link> ·{" "}
         <Link href="/sales">{t("Daily sales & cash over/short")}</Link> ·{" "}
         <Link href="/vendors">{t("Vendor statements")}</Link> ·{" "}
         <Link href="/inventory">{t("Stock valuation")}</Link> ·{" "}
-        <Link href="/count">{t("Count variances")}</Link>.{" "}
-        {t("Not built yet: balance sheet, cash-flow statement, sales by hour.")}
+        <Link href="/count">{t("Count variances")}</Link>.
       </p>
     </div>
   );
