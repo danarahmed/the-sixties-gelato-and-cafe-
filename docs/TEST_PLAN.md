@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 617 tests)
+## 1. Unit (Vitest, 663 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -25,7 +25,8 @@ layers before every release.
 - `tests/rpc-contract.test.ts`: every function the app calls exists in the
   migrations, takes the parameters the app passes, and is granted to signed-in
   users.
-- `tests/app-rules.test.ts`: where each role lands and what its menu offers,
+- `tests/app-rules.test.ts`: where each role lands, what its menu offers and
+  which one entry it lights (Usage, not Inventory too),
   numbers typed in Arabic-Indic digits, what a till discount comes to (the
   percentage and the amount filling each other in, a percentage rounded to the
   nearest 500 IQD, and to the café's 250, as the books round it), what a new
@@ -145,6 +146,15 @@ layers before every release.
   them, the two balance sheets side by side account by account, every line
   of the cash flow named and in its section, and every word of them in Arabic
   and Kurdish.
+- `tests/plurals.test.ts`: a plural a phrase leaves open, "{n} bill(s)",
+  agreeing with the number nearest before it in English ("1 bill is", "3
+  bills are", "1 month's share", "2 losses wait"), in a phrase and in a
+  message from the database; the plural with no number before it; Arabic and
+  Kurdish words left as they are.
+- `tests/batches.test.ts`: a read over a long list of ids (the lines of 500
+  sales) asks 100 ids at a time and reads every row once; a batch whose rows
+  fill a page is read again in halves, one id's many rows a page at a time;
+  nothing asked for an empty list; any batch's error the whole read's.
 - `tests/i18n.test.ts` (release G): every phrase in Arabic and Kurdish, with the
   English's `{placeholders}` and `<tags>`, translated the same wherever it is
   repeated, and Kurdish in Kurdish letters; every `t("…")` a phrase the books
@@ -555,7 +565,9 @@ database, behind a small local stand-in for Supabase's auth service.
   unticked, two draft orders are made once, each expected in its supplier's
   days, with no note. Drafted, the milk is no longer to order. On the item's
   page the usual supplier is replaced and the dairy removed; a cashier is
-  sent elsewhere; the trail, Arabic and Kurdish, and the books still tying.
+  sent elsewhere; the trail, Arabic and Kurdish; Inventory's **Below reorder
+  level** opening its items alone, and every item again one link away; and
+  the books still tying.
 - `purchasing` (`0044`): a manager drafts a purchase order on
   Purchasing (its total as it is typed), approves it within their 250,000,
   marks it sent and opens its page, printable, with who approved it. A
@@ -815,8 +827,9 @@ database, behind a small local stand-in for Supabase's auth service.
   first (the bank taken below zero), with why, what to do and how sure; then
   yesterday's brief, its facts, calculations and what to do apart; then today's
   figures. A manager answers the red alert (a note too short is not taken) and
-  it moves to answered, on the audit trail; the uncosted ingredients fold into
-  one row, and the owner snoozes one with a reason; the money put back, the
+  it moves to answered, on the audit trail; what can wait is one row, folded
+  while anything is red, and inside it the uncosted ingredients fold into one
+  row, and the owner snoozes one with a reason; the money put back, the
   alert leaves by itself. The owner sets the margin target on Settings (96%
   refused) and empties it back to the default; a manager says the dairy takes
   4 days to deliver.

@@ -125,10 +125,14 @@ each time the page opens.
 
 - 🔴 **red** needs doing now, 🟠 **orange** soon; each says what happened, why
   it matters, what to do (a link to where it is done) and how sure the rule is
-  (**Sure**, **Fairly sure**, **Early sign**). Orange alerts of one kind fold
-  into one row: open it to see each. Red ones are never folded away: of one
-  kind, the first two are shown and any more wait under one red row that says
-  how many (**Running out: 17 more**).
+  (**Sure**, **Fairly sure**, **Early sign**). Red ones are never folded away:
+  of one kind, the first two are shown and any more wait under one red row
+  that says how many (**Running out: 17 more**).
+- While anything is red, the orange ones wait under one row saying how many
+  and of what (**39 orange alerts can wait for a quiet moment.** No cost yet ·
+  Margin · …), so the red ones and the day's figures are on the first screen;
+  with nothing red, that row is open. Inside it, orange alerts of one kind
+  fold into one row again: open it to see each.
 - **Answer** (owner, managers, accountant): a line saying what was done, or
   why it is fine. **Snooze**: a day, from tomorrow to 30 days ahead, and why it
   can wait. Both are on the audit trail; the alert stays, marked 🔵 under
@@ -389,8 +393,11 @@ or a platform asking about an order. Type any of these:
 - the platform's order number (capitals do not matter);
 - the customer's name, or part of it, or their phone typed any way.
 
-The sales it names are shown with their refunds and voids. **The latest 300**
+The sales it names are shown with their refunds and voids. **The latest sales**
 clears it.
+
+With nothing chosen, Orders shows the latest 100 sales; **Show the latest 300**
+under them shows more. Older ones are found by their days or by **Find a sale**.
 
 - **Void.** For a sale rung in error, until the drawer's session holding its
   cash is closed (after midnight too: the close, not the date, decides).
@@ -726,11 +733,13 @@ it gives the debits and credits, for the accountant.
   alert on the dashboard that an item bought is running out or below its
   reorder level): every item bought, worked out for the branch now.
   1. The items **to order** are grouped by supplier, each line saying why,
-     with its numbers: what is on hand, on order and in draft orders; its
-     reorder level, its own (set on the item) or its use a day over the last
-     28 days for the days a delivery takes and a day more; what it is ordered
-     up to (its par level, or the reorder level and a week of use); and the
-     packs, rounded up to whole ones. The supplier is its usual one, or the
+     with its numbers: first what is on hand (on order and in draft orders
+     too) and what to order, in packs rounded up to whole ones; then, under
+     **How it was worked out**, its reorder level, its own (set on the item)
+     or its use a day over the last 28 days for the days a delivery takes and
+     a day more, and what it is ordered up to (its par level, or the reorder
+     level and a week of use). A use or a level worked out is rounded to be
+     read (about 148 ml a day, not 147.571). The supplier is its usual one, or the
      one its last delivery came from; the price is the one agreed or last
      paid, or what it costs now, to be checked. Items with no supplier yet are
      under **No supplier yet**.
@@ -923,7 +932,9 @@ letter forms do not matter (ي and ی, ك and ک), as on the till's search.
 costs; baristas can record waste
 
 - **Cards:** items tracked, stock value (from the ledger), items below reorder
-  level, items with negative stock.
+  level, items with negative stock. **Below reorder level** and **Negative
+  stock** open **Stock on hand** with those items alone, with **Show every
+  item** to go back, and, for the low ones, **What to buy**.
 - **📦 Opening stock** (the owner's alone; shown while any item has no stock
   recorded yet — after the test records are cleared, or for an item added
   without it): choose the item, count what is on the shelf, and enter the

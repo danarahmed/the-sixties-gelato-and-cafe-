@@ -4840,3 +4840,8 @@ a.card.stat[aria-current="true"] {
   color: var(--text-muted);
   margin-top: 2px;
 }
+
+/* Usage: an item's explanation reads across, not down a narrow column. */
+.usage-item {
+  min-width: 16rem;
+}

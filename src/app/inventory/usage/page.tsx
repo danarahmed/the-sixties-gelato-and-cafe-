@@ -140,7 +140,7 @@ export default async function UsagePage({
                     data-item={r.name}
                     style={{ verticalAlign: "top" }}
                   >
-                    <td>
+                    <td className="usage-item">
                       <Link className="drill" href={`/inventory/${r.itemId}?from=${from}&to=${to}`}>
                         {r.name}
                       </Link>
