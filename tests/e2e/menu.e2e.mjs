@@ -32,7 +32,7 @@ console.log("▸ owner prices a new drink from what its recipe costs");
 {
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/products");
-  await page.getByRole("button", { name: "➕ Add menu product" }).click();
+  await page.getByRole("button", { name: "Add menu product", exact: true }).click();
   await page.getByLabel("Product name (English)").fill("Golden cortado");
   const serving = page.getByTestId("serving-cost");
   check(
@@ -197,7 +197,7 @@ console.log("▸ a product with no recipe says why it uses no stock, or is flagg
 {
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/products");
-  await page.getByRole("button", { name: "➕ Add menu product" }).click();
+  await page.getByRole("button", { name: "Add menu product", exact: true }).click();
   await page.getByLabel("Product name (English)").fill("Golden service");
   await page.getByLabel("Dine-in price").fill("1000");
   await page.getByRole("button", { name: "Create product" }).click();

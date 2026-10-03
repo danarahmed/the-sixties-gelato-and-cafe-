@@ -99,10 +99,10 @@ const phrases: PhraseBook = {
     ar: "أضف أولًا مواد المخزون من شاشة المخزون، ليكون للوصفة مكوّنات تستخدمها.",
     ckb: "سەرەتا کاڵاکانی کۆگا لە شاشەی کۆگا زیاد بکە، بۆ ئەوەی ڕەسەتەکە پێکهاتەی هەبێت بۆ بەکارهێنان.",
   },
-  "▾ Hide product form": { ar: "▾ إخفاء نموذج المنتج", ckb: "▾ شاردنەوەی فۆڕمی بەرهەم" },
-  "➕ Add menu product": {
-    ar: "➕ إضافة منتج إلى القائمة",
-    ckb: "➕ زیادکردنی بەرهەم بۆ مێنیو",
+  "Hide product form": { ar: "إخفاء نموذج المنتج", ckb: "شاردنەوەی فۆڕمی بەرهەم" },
+  "Add menu product": {
+    ar: "إضافة منتج إلى القائمة",
+    ckb: "زیادکردنی بەرهەم بۆ مێنیو",
   },
   "Name and category": { ar: "الاسم والفئة", ckb: "ناو و پۆل" },
   "Product name (English)": { ar: "اسم المنتج (بالإنجليزية)", ckb: "ناوی بەرهەم (بە ئینگلیزی)" },
@@ -306,9 +306,9 @@ const phrases: PhraseBook = {
   },
   "Record a batch": { ar: "تسجيل دفعة", ckb: "تۆمارکردنی دەستەیەک" },
   "What you make": { ar: "ما تصنعه", ckb: "ئەوەی دروستی دەکەیت" },
-  "➕ Add something you make": {
-    ar: "➕ إضافة شيء تصنعه",
-    ckb: "➕ زیادکردنی شتێک کە دروستی دەکەیت",
+  "Add something you make": {
+    ar: "إضافة شيء تصنعه",
+    ckb: "زیادکردنی شتێک کە دروستی دەکەیت",
   },
   "Nothing set up yet": { ar: "لم يُجهَّز شيء بعد", ckb: "هێشتا هیچ ڕێک نەخراوە" },
   "Add what you make above: its name, how much a batch makes, and what goes in.": {

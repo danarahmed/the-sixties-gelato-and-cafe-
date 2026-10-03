@@ -1081,7 +1081,7 @@ What the café makes in batches: gelato, a base, syrup, cold brew, dough.
   **Change the use-by…** with why, on the audit trail.
 - **What you make:** each batch recipe, with what one batch makes, what goes
   into it, how to make it, and (for those who see costs) what a batch costs.
-  **➕ Add something you make** sets one up:
+  **Add something you make** sets one up:
   1. **What it makes:** its name; something new to keep in stock (weighed,
      measured or counted in pieces, and optionally kept in a container such as a
      pan of 5 kg) or an item already kept; and how much one batch makes, roughly
