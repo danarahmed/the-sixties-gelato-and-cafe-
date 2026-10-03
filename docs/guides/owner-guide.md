@@ -495,6 +495,16 @@ discount, why and who approved it. The 10% is a business setting (shown on
   whose cash no closed session has covered; a month cannot lock until each is.
   The dashboard warns of a session open too long, one short by the limit or
   more (at its opening or its close), and one a manager closed.
+- **Closing up: End of Day.** The day's close, step by step, on **End of
+  Day** (the Dashboard offers it from four in the afternoon): the bills still
+  open, who is still clocked in, the drawers still open (this branch's is
+  closed right there, counted), the losses waiting for a manager, the card and
+  platform money (today's card total to check against the terminal's own, and
+  whatever is late), and the red alerts nobody has answered. Each step says
+  where it stands, opens where its work is done, and is ticked once nothing of
+  it is left; the ring at the top counts them. Under them, the day in numbers
+  (net sales, gross profit, voids and refunds, waste, against last week and a
+  usual day of its kind, and how it was paid), to print or keep as a PDF.
 - **Paying for something:** always say where the money came from — the till,
   the safe, the bank, a card (which the bank pays), or you personally. From
   the till it comes out of

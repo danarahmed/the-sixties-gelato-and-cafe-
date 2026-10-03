@@ -29,6 +29,7 @@ import { ColumnChart } from "@/components/charts/ColumnChart";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { BarList } from "@/components/charts/BarList";
 import { Sayings, type Saying } from "@/components/Sayings";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -298,6 +299,7 @@ export default async function DashboardPage() {
   const usualByHour = new Map(usual.map((h) => [h.hour, h]));
   const hh = (h: number) => `${String(h).padStart(2, "0")}:00`;
 
+  const closing = has(profile, "day.close") && (hour >= 16 || hour < 4);
   const firstName = (profile.name ?? "").trim().split(/\s+/)[0] ?? "";
   const greeting = !firstName
     ? t("dash.title")
@@ -317,14 +319,22 @@ export default async function DashboardPage() {
             {d.location && <span data-testid="dashboard-at"> · {d.location}</span>}
           </p>
         </div>
-        <Link
-          href="/reports#reconciliation"
-          className={`badge ${differences.length ? "err" : "ok"}`}
-        >
-          {differences.length
-            ? t("{n} reconciliation difference(s)", { n: differences.length })
-            : t("Books reconcile")}
-        </Link>
+        <div className="dash-hero-acts">
+          {/* From the late afternoon, whoever closes the day is offered its steps. */}
+          {closing && (
+            <Link href="/end-of-day" className="btn-soft" data-testid="dash-end-of-day">
+              <Icon name="sunset" size={16} /> {t("Closing up? The end of the day, step by step")}
+            </Link>
+          )}
+          <Link
+            href="/reports#reconciliation"
+            className={`badge ${differences.length ? "err" : "ok"}`}
+          >
+            {differences.length
+              ? t("{n} reconciliation difference(s)", { n: differences.length })
+              : t("Books reconcile")}
+          </Link>
+        </div>
       </header>
 
       <NeedsYou

@@ -759,6 +759,17 @@ database, behind a small local stand-in for Supabase's auth service.
   offers Reverse to the owner, and the rent's share and its payment (from a
   "Prepaid expense") do not. In Arabic and Kurdish, with the
   form paid ahead, no English but the café's own words.
+- `close` (last): the owner opens End of Day; each step stands as the
+  database does — the bills open, who is clocked in, the drawers open, the
+  losses waiting, the card and platform money late, the red alerts nobody
+  answered — and the ring counts the steps ticked; the day's net sales are the
+  daily brief's. The cashier's drawer, the only one open, is closed from the
+  page itself with a manager's reason and a count: it agrees exactly, the step
+  ticks with the answer still on the screen, the ring counts one more and the
+  session keeps why; the drawer is then opened again for the cashier, as it was
+  found. A branch manager has it in the menu, a cashier is sent to the till,
+  and the dashboard offers it only from four in the afternoon. The `pages` and
+  `languages` suites open it too: on a phone, in Arabic and in Kurdish.
 - `documents` (`0053`): a manager opens a delivery's 📎 on Purchasing (none
   kept yet) and keeps its delivery note: a phone's photo of 4 MB or so, made
   smaller in the browser (its longer side 2,000 pixels) and put in the bucket

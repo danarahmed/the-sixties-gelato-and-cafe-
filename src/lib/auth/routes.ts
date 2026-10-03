@@ -37,6 +37,8 @@ export const NAV: NavEntry[] = [
   { group: SPENDING, href: "/payroll", key: "nav.payroll", anyOf: ["payroll.view"] },
 
   { group: OPERATIONS, href: "/pos", key: "nav.pos", anyOf: ["sale.create"] },
+  // The end of the day, step by step: whoever closes the day.
+  { group: OPERATIONS, href: "/end-of-day", key: "nav.endOfDay", anyOf: ["day.close"] },
   { group: OPERATIONS, href: "/orders", key: "nav.orders", anyOf: ["cost.view"] },
   { group: OPERATIONS, href: "/products", key: "nav.products", anyOf: ["cost.view"] },
   {

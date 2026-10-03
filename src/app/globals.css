@@ -3738,6 +3738,15 @@ a.card.stat:focus-visible {
   margin: 4px 0 0;
   color: var(--text-muted);
 }
+.dash-hero-acts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.dash-hero-acts .btn-soft {
+  gap: 6px;
+}
 .dash-h {
   margin: 0 0 12px;
   font-size: 1.2rem;
@@ -4424,4 +4433,129 @@ a.card.stat:focus-visible {
 .rep-chart .vbars {
   margin: 0;
   max-width: 640px;
+}
+
+/* ------------------------------------------------------------- end of day */
+/* How far the day's close has come: a ring that fills, raspberry, then green. */
+.eod-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+}
+.eod-head h2 {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+}
+.eod-head p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+.eod-ring {
+  flex: none;
+  width: 64px;
+  height: 64px;
+}
+.eod-ring-track,
+.eod-ring-done {
+  fill: none;
+  stroke-width: 4.5;
+}
+.eod-ring-track {
+  stroke: var(--border);
+}
+.eod-ring-done {
+  stroke: var(--brand);
+  stroke-linecap: round;
+}
+.eod-head.ready .eod-ring-done {
+  stroke: var(--ok);
+}
+/* The steps, in the order a close goes: each says where it stands. */
+.eod-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.eod-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 6px 14px;
+  align-items: start;
+}
+.eod-step.left {
+  border-inline-start: 4px solid var(--warn);
+}
+.eod-dot {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  font-weight: 750;
+  font-size: 0.9rem;
+  background: var(--brand-soft);
+  color: var(--brand-2);
+}
+.eod-step.done .eod-dot {
+  background: var(--ok);
+  color: var(--surface);
+}
+.eod-body h3 {
+  margin: 4px 0;
+  font-size: 1rem;
+}
+.eod-say {
+  margin: 0;
+}
+.eod-items {
+  margin: 6px 0 0;
+  padding-inline-start: 18px;
+  display: grid;
+  gap: 2px;
+  font-size: 0.86rem;
+}
+.eod-note {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+}
+.eod-go {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.eod-go .btn-soft {
+  justify-content: center;
+  white-space: nowrap;
+}
+.eod-drawer {
+  margin-top: 10px;
+}
+.eod-h4 {
+  margin: 0 0 8px;
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: var(--text-muted);
+}
+.eod-against {
+  margin: 0;
+  font-size: 0.85rem;
+}
+@media (max-width: 599px) {
+  .eod-step {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .eod-go {
+    grid-column: 2;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .eod-ring {
+    width: 52px;
+    height: 52px;
+  }
 }

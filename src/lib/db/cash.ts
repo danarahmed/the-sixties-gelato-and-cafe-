@@ -24,6 +24,7 @@ export interface CashSessionRow {
   /** A session; before them, a drawer count, or a day closed the old way. */
   kind: "session" | "drawer" | "day";
   no: number | null;
+  locationId: string;
   location: string;
   cashier: string | null;
   openedAt: string;
@@ -64,6 +65,7 @@ function sessionRow(r: Record<string, unknown>): CashSessionRow {
     id: str(r.id),
     kind: str(r.kind) as CashSessionRow["kind"],
     no: numOrNull(r.session_no),
+    locationId: str(r.location_id),
     location: str(r.location),
     cashier: strOrNull(r.cashier),
     openedAt: str(r.opened_at),
@@ -95,12 +97,20 @@ function sessionRow(r: Record<string, unknown>): CashSessionRow {
   };
 }
 
-/** Sessions opened or closed in the dates, or still open, newest first. */
-export async function getCashSessions(from: string, to: string): Promise<CashSessionRow[]> {
+/**
+ * Sessions opened or closed in the dates, or still open, newest first: at one
+ * place, or (none named) at every place.
+ */
+export async function getCashSessions(
+  from: string,
+  to: string,
+  place: string | null = null,
+): Promise<CashSessionRow[]> {
   const c = await db();
-  return rows(await c.rpc("cash_sessions", { p_from: from, p_to: to }), "the cash sessions").map(
-    sessionRow,
-  );
+  return rows(
+    await c.rpc("cash_sessions", { p_from: from, p_to: to, p_location: place }),
+    "the cash sessions",
+  ).map(sessionRow);
 }
 
 export interface SessionMovement {
