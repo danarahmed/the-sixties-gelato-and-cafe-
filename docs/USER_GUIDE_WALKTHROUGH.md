@@ -811,6 +811,11 @@ letter forms do not matter (ي and ی, ك and ک), as on the till's search.
   product with no recipe needs **Why it uses no stock** (a service charge):
   without one it is not created.
 
+- **Photos for the till** (owner, general manager): every product on the till
+  as the till shows it, those without a photo first, and **1 of 14 have one**.
+  A tap on a product opens the phone's camera or pictures (a computer's
+  files); the picture is made small in the browser and the till shows it at
+  once. **Change photo** on one that has a photo replaces it.
 - **Each product** shows its **Recipe** (component, quantity, applies to) and
   **Price & margin by channel**, costed exactly as a sale would post it today.
 - **Change the recipe…:** the recipe in force today, to change, costed as you

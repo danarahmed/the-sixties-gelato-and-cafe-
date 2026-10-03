@@ -31,6 +31,7 @@ import { ProductAddons } from "@/components/menu/ProductAddons";
 import { AddonsManager } from "@/components/menu/AddonsManager";
 import { EmptyState } from "@/components/ui";
 import { namesMatch, SEARCH_MAX, searchText } from "@/lib/find";
+import { MenuPhotos } from "@/components/menu/MenuPhotos";
 
 export const dynamic = "force-dynamic";
 
@@ -393,6 +394,8 @@ export default async function ProductsPage({
             money={{ decimals: profile.currencyDecimals, priceStep: profile.discountRoundTo }}
           />
         )}
+
+        {canEdit && <MenuPhotos products={products} />}
 
         <CategoriesManager categories={categories} counts={counts} canEdit={canEdit} />
 

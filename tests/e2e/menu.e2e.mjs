@@ -287,5 +287,67 @@ console.log("▸ it is sold, and Reports list the sale as costed at nothing");
   await ctx.close();
 }
 
+console.log("▸ owner gives a product its photo for the till, one tap from the photo panel");
+{
+  // A 1×1 PNG: the browser shrinks and re-encodes it, the database checks the bytes.
+  const PNG = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+    "base64",
+  );
+  const shown = () =>
+    sql(
+      `select count(*) filter (where image_url is not null) || ' of ' || count(*) from product where business_id = '${B}' and is_active`,
+    );
+  const before = shown();
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/products");
+  const panel = page.getByTestId("menu-photos");
+  check(
+    (await panel.locator("summary").textContent()).includes(`${before} have one`),
+    `the panel says how many products on the till have a photo: ${before}`,
+  );
+  await panel.locator("summary").click();
+  const firstWithout = await panel.locator(".photo-tile").first().getAttribute("data-product");
+  check(
+    sql(
+      `select image_url is null from product where business_id = '${B}' and name = '${firstWithout.replace(/'/g, "''")}'`,
+    ) === "t",
+    "those still without one come first",
+  );
+  const tile = panel.locator('.photo-tile[data-product="Golden cortado"]');
+  check((await tile.textContent()).includes("Add photo"), "the new drink is offered a photo");
+  const [chooser] = await Promise.all([page.waitForEvent("filechooser"), tile.click()]);
+  await chooser.setFiles({ name: "cortado.png", mimeType: "image/png", buffer: PNG });
+  await panel.getByText("Photo saved").waitFor({ timeout: 15000 });
+  const type = sql(
+    `select pi.content_type from product_image pi join product p on p.id = pi.product_id where p.name = 'Golden cortado'`,
+  );
+  check(
+    type === "image/webp" || type === "image/jpeg",
+    `one tap and one picture: the photo is stored, shrunk, as ${type}, on that product`,
+  );
+  await tile.getByText("Change photo").waitFor({ timeout: 10000 });
+  check(
+    (await panel.locator("summary").textContent()).includes(`${shown()} have one`),
+    `and the panel counts it: ${shown()}`,
+  );
+  await ctx.close();
+
+  const cashier = await signIn(browser, "cashier");
+  await open(cashier.page, "/pos");
+  await cashier.page.locator(".strip-chip", { hasText: "Quick sale" }).click();
+  await cashier.page.getByRole("button", { name: "Dine-in" }).click();
+  await cashier.page.getByRole("tab", { name: /All/ }).click();
+  const src = await cashier.page
+    .locator(".product-tile", { hasText: "Golden cortado" })
+    .locator("img.tile-img")
+    .getAttribute("src");
+  check(
+    src === sql(`select image_url from product where name = 'Golden cortado'`),
+    "the till's button for it shows the photo",
+  );
+  await cashier.ctx.close();
+}
+
 await browser.close();
 done("menu");

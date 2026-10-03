@@ -165,6 +165,16 @@ const phrases: PhraseBook = {
   // Production: the day's plan opens the batch form filled in.
   "Record these": { ar: "سجّل هذه الدفعات", ckb: "ئەم دەستانە تۆمار بکە" },
 
+  // Products & Recipes: the whole menu, one tap from a photo.
+  "Photos for the till": { ar: "صور لنقطة البيع", ckb: "وێنەکان بۆ خاڵی فرۆشتن" },
+  "{n} of {total} have one": { ar: "{n} من {total} لها صورة", ckb: "{n} لە {total} وێنەیان هەیە" },
+  "Tap a product to give it a photo, or a new one: a phone offers its camera or its pictures. One with no photo shows its colour and its initials.":
+    {
+      ar: "اضغط على منتج لتعطيه صورة أو صورة جديدة: يعرض الهاتف الكاميرا أو الصور. المنتج بلا صورة يظهر بلونه وحروفه الأولى.",
+      ckb: "دەست لە بەرهەمێک بدە بۆ ئەوەی وێنەیەک یان وێنەیەکی نوێی بدەیتێ: مۆبایل کامێرا یان وێنەکانی پیشان دەدات. بەرهەمێک کە وێنەی نییە بە ڕەنگ و پیتە سەرەتاییەکانی دەردەکەوێت.",
+    },
+  "Photo for the till": { ar: "صورة لنقطة البيع", ckb: "وێنە بۆ خاڵی فرۆشتن" },
+
   // The sales analysis, drawn over time.
   "Average: {amount} an hour sold in": {
     ar: "المتوسط: {amount} في كل ساعة بيع فيها",

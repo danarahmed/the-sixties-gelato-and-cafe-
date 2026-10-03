@@ -328,6 +328,11 @@ fast. Set it up once, on **Products** and on the till itself:
   (they get a chip of their own), and untick **On the till** for anything not
   sold now. A hidden product keeps its recipe, prices and history, and comes
   back by ticking the box again.
+- **Photos for the till** (Products, under **Add menu product**): every
+  product on the till in one place, those still without a photo first, with
+  how many have one. Tap a product, then take or choose its picture: one tap
+  each, without opening the product. One with no photo keeps its colour and
+  initials on the till.
 - **A new product** (Products, **Add menu product**): build its recipe
   first. The form costs it as you type, at today's stock costs and exactly as a
   sale will post it: each ingredient, then **Cost of one serving** (more for

@@ -4284,6 +4284,66 @@ a.card.stat:focus-visible {
   gap: 6px 10px;
 }
 
+/* Products & Recipes: every product the till offers, one tap from a photo. */
+.menu-photos > summary {
+  cursor: pointer;
+  font-weight: 650;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.menu-photos-count {
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+.photo-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+}
+.photo-tile {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  text-align: start;
+  align-content: start;
+  border-radius: var(--radius-sm);
+}
+.photo-thumb {
+  display: block;
+}
+.photo-tile .tile-img {
+  aspect-ratio: 4 / 3;
+}
+.photo-name {
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.photo-act {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+.photo-act.add {
+  color: var(--brand-2);
+  font-weight: 650;
+}
+@media (max-width: 599px) {
+  .photo-grid {
+    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  }
+  .photo-tile {
+    padding: 6px;
+  }
+}
+
 /* ---------------------------------------------------------------- reports */
 .rep-overview {
   display: grid;
