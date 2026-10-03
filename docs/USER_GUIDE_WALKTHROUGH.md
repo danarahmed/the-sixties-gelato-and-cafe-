@@ -145,6 +145,15 @@ answered), kept apart.
 
 **Today**, from the books, under a greeting with the day and the time:
 
+- **Today's target** (`0067`), once the owner has set **A day's net sales
+  target** on Settings → Rules: today's net sales (the tile's figure) and
+  what share of the target they are, a bar with a mark where a usual day of
+  its kind stands by now, and in words whether today is ahead of that pace or
+  behind it, and where the day ends if the rest of it sells as usual (see
+  [`CALCULATIONS.md`](CALCULATIONS.md)). Reached, it turns green and says by
+  how much. With no target, an owner is offered **Give the café a day's sales
+  target** under the figures.
+
 - **Net sales today**, **Orders**, **Average order value** and **Gross profit
   after waste & fees** (with its share of net sales). Under each of the first
   three, how today stands against **a usual day of its kind by this time**: ▲
@@ -1607,6 +1616,8 @@ Each rule, what it does, and every row that applies — the whole café's, and
 any set for a role, a kind of item or one item — with who set it, when and
 why, or **Default**:
 
+- **A day's net sales target** (`0067`; **No target** by default): the
+  dashboard measures today against it;
 - **Discounts a manager approves** (10% of the bill by default; per role);
 - **Discounts rounded to** (the step a percentage discount is rounded to);
 - **Refunds a second person approves** (over 25,000 IQD by default; per role);

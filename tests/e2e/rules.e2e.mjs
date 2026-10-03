@@ -281,5 +281,68 @@ for (const who of ["manager", "cashier"]) {
   await ctx.close();
 }
 
+console.log(
+  "▸ the owner gives the café a day's target, and the dashboard measures today against it",
+);
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/dashboard");
+  check(
+    (await page.getByTestId("dash-target").count()) === 0 &&
+      (await page.getByTestId("dash-set-target").count()) === 1,
+    "with no target, the dashboard offers the owner to set one",
+  );
+  await page.getByTestId("dash-set-target").click();
+  await page.waitForURL("**/settings/rules#rule-daily_sales_target");
+  const target = ruleRow(page, "daily_sales_target", "business:");
+  check(
+    (await target.getByTestId("rule-value").textContent()).trim() === "No target",
+    "Rules opens on it: no target, by default",
+  );
+  await target.getByRole("button", { name: "Change" }).click();
+  const form = page.locator('[data-rule="daily_sales_target"] [data-testid="rule-form"]');
+  await form.getByTestId("rule-input").fill("450000");
+  await form.getByTestId("rule-reason").fill("What a good day brings in");
+  await form.getByRole("button", { name: "Save" }).click();
+  await page.waitForFunction(
+    () =>
+      document
+        .querySelector(
+          '[data-rule="daily_sales_target"] [data-scope="business:"] [data-testid="rule-value"]',
+        )
+        ?.textContent?.includes("450,000"),
+    null,
+    { timeout: 10000 },
+  );
+  check(
+    (await target.textContent()).includes("What a good day brings in"),
+    "set at 450,000 IQD, with the reason",
+  );
+  await open(page, "/dashboard");
+  const day = last(`select business_local_date('${B}', now())`);
+  const net = Number(
+    last(`select test.act_as('owner@example.com');
+          select (dashboard_summary('${day}') ->> 'net_revenue')::numeric`),
+  );
+  const pct = Math.floor((net / 450000) * 100);
+  const card = page.getByTestId("dash-target");
+  check(
+    (await card.getByTestId("dash-target-pct").textContent()).trim() === `${pct}%` &&
+      (await card.textContent()).includes("of 450,000 IQD") &&
+      (await card.getByRole("progressbar").getAttribute("aria-valuetext")) ===
+        `${pct}% of the target`,
+    `the dashboard measures today's ${Math.round(net).toLocaleString("en-US")} IQD against it: ${pct}%`,
+  );
+  const state = await card.getAttribute("data-state");
+  check(
+    (net >= 450000 ? state === "reached" : ["on-pace", "behind"].includes(state)) &&
+      (await card.getByTestId("dash-target-say").textContent()).trim().length > 0,
+    `and says in words how today stands against it (${state})`,
+  );
+  // As it was found: no target.
+  rule("daily_sales_target", "business", null, null);
+  await ctx.close();
+}
+
 await browser.close();
 done("rules");

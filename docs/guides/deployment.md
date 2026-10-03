@@ -61,6 +61,7 @@ Plan a short window when the café is closed.
 | Prepaid and payments put right (`0061`) | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0061`](#after-0061)). The screens were merged ([pull request #64](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/64)) and deployed                                                                       |
 | Accounts and bank put right (`0062`)    | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0062`](#after-0062)). The screens were merged ([pull request #65](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/65)) and deployed                                                                         |
 | Review fixes (`0063`–`0066`)            | 🟡 `0063` applied on 2 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as the owner in transactions that were rolled back. `0064`–`0066` are not applied yet: the connector does not take their text (see [After `0066`](#after-0066)). The screens were merged ([pull request #67](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/67)) and deployed |
+| A day's sales target (`0067`)           | 🟡 Not applied yet (see [After `0067`](#after-0067)). It applies on its own, before or after `0064`–`0066`. Until it is, the dashboard shows no target and Settings → Rules does not list it                                                                                                                                                                                                                                                     |
 
 ## 0. Before you start
 
@@ -3040,6 +3041,31 @@ each third of that part went through by itself. Until they are applied, the
 live database refuses what `0063` refuses, and payroll, the till and the
 safe, a delivery's share and credits, bills, suppliers, orders and the staff
 report work as they did. The app's changes need nothing from them.
+
+## After `0067`
+
+Migration `0067` adds one rule, a day's net sales target, and the function
+that reads it for the dashboard. The owner sets it on **Settings → Rules**
+(**A day's net sales target**), with a reason, like every rule; 0, the
+default, is no target. The dashboard then shows **Today's target**: today's
+net sales (the books' own, as on the tile beside it) as a share of it, a bar
+with a mark where a usual day of its kind stands by now, and in words whether
+today is ahead of that pace or behind it, and where the day ends if the rest
+of it sells as usual. With no target, an owner is offered to set one under
+the day's figures.
+
+What it changes:
+
+- **Replaced**, with the same arguments: `rule_definitions` (0050's list and
+  the target first) and `rule_defaults` (0050's, and no target).
+- **New:** `daily_sales_target(p_location)`, for those who see the profits
+  (`profit.view`), and no one else.
+
+Nothing is recorded by it and no table changes. It touches nothing `0064`
+to `0066` change, so it applies on its own, before or after them, in one
+transaction (9 KB: the connector takes it in one call). The app is ready for
+it either way: before it is applied, the dashboard reads no target and shows
+none, and Settings → Rules lists the rules the database has.
 
 ## Clearing the test records
 

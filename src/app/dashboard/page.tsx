@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getLocale, getMsg, getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
-import { getDashboard, getReconciliation } from "@/lib/db/reports";
+import { getDailySalesTarget, getDashboard, getReconciliation } from "@/lib/db/reports";
 import { getSalesOrders, getStockBoard } from "@/lib/db/read";
 import { getCurrentAlerts, getDailyBrief } from "@/lib/db/alerts";
 import { getSalesAnalysis, type AnalysisQuery } from "@/lib/db/analysis";
@@ -17,6 +17,7 @@ import {
   pace,
   percent,
   sameWeekdaysBefore,
+  targetPace,
   thinnestMargin,
   topSellers,
   usualHours,
@@ -74,20 +75,34 @@ export default async function DashboardPage() {
   const maybe = (query: AnalysisQuery) =>
     analyse ? getSalesAnalysis(query) : Promise.resolve(null);
 
-  const [alerts, brief, d, rec, board, recent, channels, days, hoursToday, products, ...hoursPast] =
-    await Promise.all([
-      getCurrentAlerts(),
-      getDailyBrief(addDays(today, -1)),
-      getDashboard(today),
-      getReconciliation(today),
-      getStockBoard(),
-      getSalesOrders(6),
-      getChannelNames(),
-      maybe(q(addDays(today, -14), today, "date")),
-      maybe(q(today, today, "hour")),
-      maybe(q(addDays(today, -6), today, "product")),
-      ...pastDays.map((day) => maybe(q(day, day, "hour"))),
-    ]);
+  const [
+    alerts,
+    brief,
+    d,
+    rec,
+    board,
+    recent,
+    channels,
+    target,
+    days,
+    hoursToday,
+    products,
+    ...hoursPast
+  ] = await Promise.all([
+    getCurrentAlerts(),
+    getDailyBrief(addDays(today, -1)),
+    getDashboard(today),
+    getReconciliation(today),
+    getStockBoard(),
+    getSalesOrders(6),
+    getChannelNames(),
+    // The day's target (0067): the café's, or the place's for someone who reads their place's day.
+    getDailySalesTarget(profile.worksAt),
+    maybe(q(addDays(today, -14), today, "date")),
+    maybe(q(today, today, "hour")),
+    maybe(q(addDays(today, -6), today, "product")),
+    ...pastDays.map((day) => maybe(q(day, day, "hour"))),
+  ]);
   // Below zero first (the records are wrong), then the furthest under their
   // reorder level; the rest are a link away, so the card stays a glance.
   const low = board
@@ -115,6 +130,9 @@ export default async function DashboardPage() {
   const past = hoursPast.map(hoursOf);
   const p = pace(todayHours, past, hour, minute);
   const usual = usualHours(past);
+  // Today's net sales as the books have them (the tile's), against the target;
+  // a usual day of its kind says how much of a day is sold by now.
+  const goal = targetPace(target, d.netRevenue, p, usual);
   const busiest = busiestHour(usual);
   const sold: ProductSales[] = (products?.rows ?? []).map((r) => ({
     name: namesIn(r.names, locale),
@@ -182,6 +200,64 @@ export default async function DashboardPage() {
           : null,
     },
   ];
+
+  // ------------------------------------------------------- the target
+  const shareText = (x: number) => String(Math.floor(x * 100));
+  const about = (x: number) => fmtIQD(Math.round(x / 1000) * 1000);
+  const goalWords = !goal
+    ? null
+    : goal.reached
+      ? goal.net > goal.target
+        ? t("Reached: {over} over the target.", { over: fmtIQD(goal.net - goal.target) })
+        : t("Reached, exactly.")
+      : [
+          goal.expectedByNow === null
+            ? t("{left} still to make; no {weekday} before today to know the pace by.", {
+                left: fmtIQD(goal.left),
+                weekday: t(weekday),
+              })
+            : goal.net >= goal.expectedByNow
+              ? t(
+                  "Ahead of the pace: by {time} a usual {weekday} has made {pct}% of its day, and today has {share}% of the target.",
+                  {
+                    time,
+                    weekday: t(weekday),
+                    pct: shareText(goal.usualShareByNow ?? 0),
+                    share: shareText(goal.share),
+                  },
+                )
+              : t(
+                  "Behind the pace: by {time} a usual {weekday} has made {pct}% of its day, and today has {share}% of the target.",
+                  {
+                    time,
+                    weekday: t(weekday),
+                    pct: shareText(goal.usualShareByNow ?? 0),
+                    share: shareText(goal.share),
+                  },
+                ),
+          goal.projected === null
+            ? null
+            : goal.projected >= goal.target
+              ? t(
+                  "Selling as a usual {weekday} from here, the day ends at about {amount}: over it.",
+                  {
+                    weekday: t(weekday),
+                    amount: about(goal.projected),
+                  },
+                )
+              : t(
+                  "Selling as a usual {weekday} from here, the day ends at about {amount}: {short} short of it.",
+                  {
+                    weekday: t(weekday),
+                    amount: about(goal.projected),
+                    short: about(goal.target - goal.projected),
+                  },
+                ),
+        ]
+          .filter(Boolean)
+          .join(" ");
+  const behind =
+    goal !== null && !goal.reached && goal.expectedByNow !== null && goal.net < goal.expectedByNow;
 
   // ------------------------------------------------------- what they say
   const sayings: Saying[] = [];
@@ -349,6 +425,53 @@ export default async function DashboardPage() {
         <h2 id="dash-today" className="dash-h">
           {t("dash.today")}
         </h2>
+        {goal && (
+          <section
+            className={`card dash-target${goal.reached ? " reached" : behind ? " behind" : ""}`}
+            data-testid="dash-target"
+            data-state={goal.reached ? "reached" : behind ? "behind" : "on-pace"}
+            aria-labelledby="dash-target-h"
+          >
+            <div className="dash-target-top">
+              <div>
+                <h3 id="dash-target-h" className="viz-title">
+                  {t("Today's target")}
+                </h3>
+                <p className="dash-target-num">
+                  <b>{fmtIQD(goal.net)}</b>{" "}
+                  <span className="muted">{t("of {target}", { target: fmtIQD(goal.target) })}</span>
+                </p>
+              </div>
+              <span className="dash-target-pct" data-testid="dash-target-pct">
+                {shareText(goal.share)}%
+              </span>
+            </div>
+            <div
+              className="target-bar"
+              role="progressbar"
+              aria-labelledby="dash-target-h"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.min(Math.floor(goal.share * 100), 100)}
+              aria-valuetext={t("{pct}% of the target", { pct: shareText(goal.share) })}
+            >
+              <span
+                className="target-fill"
+                style={{ inlineSize: `${Math.min(goal.share, 1) * 100}%` }}
+              />
+              {goal.usualShareByNow !== null && !goal.reached && (
+                <span
+                  className="target-now"
+                  style={{ insetInlineStart: `${goal.usualShareByNow * 100}%` }}
+                  aria-hidden="true"
+                />
+              )}
+            </div>
+            <p className="dash-target-say" data-testid="dash-target-say">
+              {goalWords}
+            </p>
+          </section>
+        )}
         <div className="kpis">
           {kpis.map((k) => (
             <Link key={k.label} href={k.href} className="card stat">
@@ -362,6 +485,14 @@ export default async function DashboardPage() {
         <p className="muted dash-note">
           {t(
             "These are the profit and loss's own figures for today. Gross profit is after waste, count differences, price differences on deliveries and platform fees. Open a figure to see what is behind it.",
+          )}
+          {!goal && has(profile, "settings.manage") && (
+            <>
+              {" "}
+              <Link href="/settings/rules#rule-daily_sales_target" data-testid="dash-set-target">
+                {t("Give the café a day's sales target, and today is measured against it.")}
+              </Link>
+            </>
           )}
         </p>
       </section>

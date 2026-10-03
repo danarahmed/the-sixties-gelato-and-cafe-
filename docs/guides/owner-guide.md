@@ -278,6 +278,10 @@ name.
 **Settings → Open Rules →** (the owner and the general manager, `0040`). Each
 rule shows what it does, who set it, when and why, and every change is kept:
 
+- **A day's net sales target** (`0067`): none by default. Set, the dashboard
+  shows today against it: how much of it is made, whether today is ahead of
+  the pace a usual day of its kind keeps or behind it, and where the day ends
+  if the rest of it sells as usual. Set it at what a good day brings in.
 - **Discounts a manager approves**: over 10% of the bill by default. Set it for
   a role to let that role give more, or less, without a manager.
 - **Refunds a second person approves**: over 25,000 IQD by default; a manager's

@@ -14,6 +14,7 @@ import {
   percent,
   salesBy,
   sameWeekdaysBefore,
+  targetPace,
   thinnestMargin,
   topSellers,
   usualHours,
@@ -75,6 +76,51 @@ describe("a usual day of today's kind", () => {
     expect(usual).toEqual([h(8, 2000, 1), h(14, 5000, 1)]);
     expect(busiestHour(usual)).toBe(14);
     expect(busiestHour([])).toBeNull();
+  });
+});
+
+describe("today against the day's target", () => {
+  // A usual day: 1,000 at 8, 3,000 at 9, 6,000 at 10, 10,000 in all.
+  const usual = [h(8, 1000), h(9, 3000), h(10, 6000)];
+
+  it("expects as much by now as a usual day has made of itself, and ends as a usual day goes on", () => {
+    // By 9:30 a usual day has made 1,000 and half of 3,000: 2,500, a quarter of itself.
+    const p = pace([h(8, 900), h(9, 400)], [usual], 9, 30);
+    const tp = targetPace(40_000, 1_300, p, usualHours([usual]))!;
+    expect(tp.share).toBeCloseTo(1_300 / 40_000, 10);
+    expect(tp.usualShareByNow).toBeCloseTo(0.25, 10);
+    expect(tp.expectedByNow).toBeCloseTo(10_000, 6);
+    // Today so far and the 7,500 a usual day still sells after now.
+    expect(tp.projected).toBeCloseTo(8_800, 6);
+    expect(tp.reached).toBe(false);
+    expect(tp.left).toBe(38_700);
+  });
+
+  it("is reached once today's net sales come to it, with nothing left", () => {
+    const p = pace([h(8, 30_000), h(9, 15_000)], [usual], 10, 0);
+    const tp = targetPace(40_000, 45_000, p, usualHours([usual]))!;
+    expect(tp.reached).toBe(true);
+    expect(tp.left).toBe(0);
+    expect(tp.share).toBeCloseTo(1.125, 10);
+  });
+
+  it("knows no pace without a usual day, and measures nothing without a target", () => {
+    const p = pace([h(9, 500)], [[], [h(9, 0, 0)]], 10, 0);
+    const tp = targetPace(100_000, 500, p, usualHours([[], [h(9, 0, 0)]]))!;
+    expect(tp.usualShareByNow).toBeNull();
+    expect(tp.expectedByNow).toBeNull();
+    expect(tp.projected).toBeNull();
+    expect(tp.share).toBeCloseTo(0.005, 10);
+    expect(targetPace(0, 500, p, [])).toBeNull();
+    expect(targetPace(-5, 500, p, [])).toBeNull();
+  });
+
+  it("never expects more than the whole target by now, past a usual day's last hour", () => {
+    const p = pace([h(8, 1000)], [usual], 23, 0);
+    const tp = targetPace(40_000, 1_000, p, usualHours([usual]))!;
+    expect(tp.usualShareByNow).toBe(1);
+    expect(tp.expectedByNow).toBe(40_000);
+    expect(tp.projected).toBe(1_000);
   });
 });
 

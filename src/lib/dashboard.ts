@@ -112,6 +112,56 @@ export function pace(today: HourSales[], past: HourSales[][], hour: number, minu
   };
 }
 
+/** Today against the day's net sales target (0067), and where it should be by now. */
+export interface TargetPace {
+  target: number;
+  /** Today so far: the books' net sales. */
+  net: number;
+  /** Of the target so far (0.42 is 42%). */
+  share: number;
+  reached: boolean;
+  /** What is still to make; 0 once reached. */
+  left: number;
+  /**
+   * How much of a usual day of its kind is sold by now (0.6 is 60%), and so
+   * where today should stand against the target; null with no usual day.
+   */
+  usualShareByNow: number | null;
+  expectedByNow: number | null;
+  /** Today so far and the rest of a usual day: where the day ends if it goes as usual. */
+  projected: number | null;
+}
+
+/**
+ * Today so far against the day's target. A usual day of its kind says how
+ * much of a day is usually sold by now, so a target of 400,000 at a time a
+ * usual day has made 25% of itself expects 100,000 by now; and today so far,
+ * with what a usual day still sells after now, is where the day ends. No
+ * target (0, or none set), nothing to measure.
+ */
+export function targetPace(
+  target: number,
+  net: number,
+  p: Pace,
+  usual: HourSales[],
+): TargetPace | null {
+  if (!(target > 0)) return null;
+  const usualDay = usual.reduce((s, h) => s + h.net, 0);
+  const byNow = p.usualNet;
+  const usualShareByNow =
+    byNow !== null && usualDay > 0 ? Math.min(Math.max(byNow / usualDay, 0), 1) : null;
+  return {
+    target,
+    net,
+    share: net / target,
+    reached: net >= target,
+    left: Math.max(target - net, 0),
+    usualShareByNow,
+    expectedByNow: usualShareByNow === null ? null : target * usualShareByNow,
+    projected: byNow !== null && usualDay > 0 ? net + Math.max(usualDay - byNow, 0) : null,
+  };
+}
+
 /** A usual day's sales hour by hour: the average of the days the café was open. */
 export function usualHours(past: HourSales[][]): HourSales[] {
   const open = past.filter((d) => d.some((h) => h.net !== 0 || h.orders !== 0));

@@ -46,6 +46,7 @@ const ITEM_TYPES = [
 /** A rule's value as the café reads it: 10%, 25,000 IQD, or its choice. */
 function shownValue(def: RuleDefinition, v: number | string | null, t: T): string {
   if (v === null || v === "") return t("Default");
+  if (def.key === "daily_sales_target" && Number(v) === 0) return t("No target");
   if (def.kind === "percent") return `${fmtQty(Number(v))}%`;
   if (def.kind === "amount") return fmtIQD(Number(v));
   if (def.kind === "hours") return t("{n} hours", { n: fmtQty(Number(v)) });
@@ -90,7 +91,13 @@ export function RulesManager({
   return (
     <div className="grid" style={{ gap: 16 }}>
       {rules.definitions.map((def) => (
-        <section key={def.key} className="panel" data-testid="rule" data-rule={def.key}>
+        <section
+          key={def.key}
+          id={`rule-${def.key}`}
+          className="panel"
+          data-testid="rule"
+          data-rule={def.key}
+        >
           <div className="panel-h">
             <h3>{t(RULE_LABEL[def.key])}</h3>
           </div>

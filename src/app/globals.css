@@ -3917,6 +3917,73 @@ a.card.stat:focus-visible {
   margin: 4px 0 0;
   color: var(--text-muted);
 }
+/* Today against the day's target: how far, and where a usual day is by now. */
+.dash-target {
+  display: grid;
+  gap: 10px;
+  margin-block-end: 14px;
+}
+.dash-target-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+}
+.dash-target .viz-title {
+  margin: 0 0 4px;
+}
+.dash-target-num {
+  margin: 0;
+}
+.dash-target-num b {
+  font-size: 1.35rem;
+  font-weight: 750;
+}
+.dash-target-pct {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--brand-2);
+}
+.dash-target.reached .dash-target-pct {
+  color: var(--ok);
+}
+.dash-target.behind .dash-target-pct {
+  color: var(--warn);
+}
+.target-bar {
+  position: relative;
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.target-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--glow);
+}
+.dash-target.reached .target-fill {
+  background: var(--ok);
+}
+.target-now {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--text);
+  transform: translateX(-50%);
+}
+[dir="rtl"] .target-now {
+  transform: translateX(50%);
+}
+.dash-target-say {
+  margin: 0;
+  font-size: 0.9rem;
+}
 .dash-hero-acts {
   display: flex;
   align-items: center;

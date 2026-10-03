@@ -296,6 +296,19 @@ export async function getDashboard(day: string): Promise<Dashboard> {
   };
 }
 
+/**
+ * The net sales a day aims at (0067): the café's, or a place's for someone
+ * who reads their place's day; 0 is none. A database without the rule yet
+ * (before 0067) has none, and the dashboard shows none.
+ */
+export async function getDailySalesTarget(place: string | null = null): Promise<number> {
+  const c = await db();
+  const r = await c.rpc("daily_sales_target", { p_location: place });
+  if (r.error) return 0;
+  const n = Number(r.data ?? 0);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
 export interface MenuCostRow {
   variantId: string;
   productId: string;

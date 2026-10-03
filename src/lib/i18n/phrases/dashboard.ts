@@ -94,6 +94,49 @@ const phrases: PhraseBook = {
     ckb: "{n} فرۆشرا · {kept}% دەمێنێتەوە",
   },
   "Show as a table": { ar: "اعرضه جدولًا", ckb: "وەک خشتە پیشانی بدە" },
+
+  // Today against the day's target (0067), and the rule that sets it.
+  "Today's target": { ar: "هدف اليوم", ckb: "ئامانجی ئەمڕۆ" },
+  "of {target}": { ar: "من {target}", ckb: "لە {target}" },
+  "{pct}% of the target": { ar: "{pct}% من الهدف", ckb: "{pct}%ی ئامانجەکە" },
+  "Reached: {over} over the target.": {
+    ar: "تحقّق: بزيادة {over} على الهدف.",
+    ckb: "پێکرا: {over} زیاتر لە ئامانجەکە.",
+  },
+  "Reached, exactly.": { ar: "تحقّق تمامًا.", ckb: "ڕێک پێکرا." },
+  "{left} still to make; no {weekday} before today to know the pace by.": {
+    ar: "ما زال {left} لبلوغه؛ ولا يوجد يوم {weekday} سابق لمعرفة الوتيرة منه.",
+    ckb: "هێشتا {left} ماوە؛ هیچ ڕۆژێکی {weekday}ی پێشوو نییە بۆ زانینی خێرایی.",
+  },
+  "Ahead of the pace: by {time} a usual {weekday} has made {pct}% of its day, and today has {share}% of the target.":
+    {
+      ar: "متقدّم على الوتيرة: حتى {time} يكون يوم {weekday} المعتاد قد حقّق {pct}% من يومه، واليوم حقّق {share}% من الهدف.",
+      ckb: "لە پێش خێراییەوەیە: تا {time} ڕۆژی {weekday}ی ئاسایی {pct}%ی ڕۆژەکەی کردووە، و ئەمڕۆ {share}%ی ئامانجەکەی کردووە.",
+    },
+  "Behind the pace: by {time} a usual {weekday} has made {pct}% of its day, and today has {share}% of the target.":
+    {
+      ar: "متأخّر عن الوتيرة: حتى {time} يكون يوم {weekday} المعتاد قد حقّق {pct}% من يومه، واليوم حقّق {share}% من الهدف.",
+      ckb: "لە دوای خێراییەوەیە: تا {time} ڕۆژی {weekday}ی ئاسایی {pct}%ی ڕۆژەکەی کردووە، و ئەمڕۆ {share}%ی ئامانجەکەی کردووە.",
+    },
+  "Selling as a usual {weekday} from here, the day ends at about {amount}: over it.": {
+    ar: "إن استمر البيع كيوم {weekday} المعتاد من الآن، ينتهي اليوم عند نحو {amount}: فوق الهدف.",
+    ckb: "ئەگەر لێرەوە وەک ڕۆژی {weekday}ی ئاسایی بفرۆشرێت، ڕۆژەکە بە نزیکەی {amount} کۆتایی دێت: سەرووی ئامانجەکە.",
+  },
+  "Selling as a usual {weekday} from here, the day ends at about {amount}: {short} short of it.": {
+    ar: "إن استمر البيع كيوم {weekday} المعتاد من الآن، ينتهي اليوم عند نحو {amount}: أقل من الهدف بـ{short}.",
+    ckb: "ئەگەر لێرەوە وەک ڕۆژی {weekday}ی ئاسایی بفرۆشرێت، ڕۆژەکە بە نزیکەی {amount} کۆتایی دێت: {short} کەمتر لە ئامانجەکە.",
+  },
+  "Give the café a day's sales target, and today is measured against it.": {
+    ar: "حدّد للمقهى هدف مبيعات يومي، فيُقاس اليوم به.",
+    ckb: "ئامانجێکی فرۆشی ڕۆژانە بۆ کافێکە دابنێ، و ئەمڕۆ بەوە دەپێورێت.",
+  },
+  "A day's net sales target": { ar: "هدف صافي المبيعات اليومي", ckb: "ئامانجی فرۆشی پوختی ڕۆژانە" },
+  "The net sales the café aims to make in a day, after discounts and refunds. The dashboard measures today against it, and says where today should be by now from how a usual day of its kind sells. 0 is no target.":
+    {
+      ar: "صافي المبيعات الذي يسعى المقهى إلى تحقيقه في اليوم، بعد الخصومات والمستردات. تقيس لوحة التحكم اليوم به، وتقول أين يجب أن يكون اليوم الآن بحسب ما يبيعه يوم معتاد من نوعه. 0 يعني بلا هدف.",
+      ckb: "ئەو فرۆشە پوختەی کافێکە ئامانجیەتی لە ڕۆژێکدا بیکات، دوای داشکاندن و گەڕاندنەوەی پارە. داشبۆرد ئەمڕۆی پێ دەپێوێت، و دەڵێت ئەمڕۆ دەبێت ئێستا لە کوێ بێت بەپێی ئەوەی ڕۆژێکی ئاسایی لە جۆری خۆی دەیفرۆشێت. 0 واتە بێ ئامانج.",
+    },
+  "No target": { ar: "بلا هدف", ckb: "بێ ئامانج" },
 };
 
 export default phrases;
