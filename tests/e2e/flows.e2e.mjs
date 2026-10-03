@@ -726,7 +726,7 @@ console.log("▸ owner reviews and posts stock the old app never journaled, then
     .getByPlaceholder("Why they are being posted (for the audit trail)")
     .fill("e2e: real stock from before the upgrade");
   await page.getByRole("button", { name: /Post these 2 journal/ }).click();
-  await page.getByText(/2 journal\(s\) posted/).waitFor({ timeout: 10000 });
+  await page.getByText(/2 journals posted/).waitFor({ timeout: 10000 });
   check(
     sql(
       `select string_agg(a.code || case when l.debit > 0 then ' Dr ' || l.debit else ' Cr ' || l.credit end, ' | ' order by a.code)

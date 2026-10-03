@@ -208,7 +208,7 @@ console.log("▸ the owner posts it with a note, then cancels it");
     .fill("9999 is not ours; E2E-3 was voided; E2E-4 paid 50 short, asked; line 5 repeats line 1");
   await post.click();
   await page
-    .getByText(/^Posted \(journal \d+\): 2 Talabat order\(s\) paid out; 4 line\(s\)/)
+    .getByText(/^Posted \(journal \d+\): 2 Talabat orders paid out; 4 lines/)
     .waitFor({ timeout: 10000 });
   check(
     lines("platform_settlement") === "1020 Dr 5050 | 1100 Cr 6000 | 5100 Dr 900 | 5200 Dr 50",
