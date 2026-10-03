@@ -18,6 +18,10 @@ export function check(cond, message) {
   console.log(`  ${cond ? "✓" : "✗"} ${message}`);
   if (!cond) failures++;
 }
+/** "1 bill", "3 bills": a count as the screens write it. */
+export function counted(n, one, many = `${one}s`) {
+  return `${n} ${Number(n) === 1 ? one : many}`;
+}
 export function done(what) {
   console.log(failures ? `\n${what}: ${failures} failure(s)` : `\n${what}: all passed`);
   process.exit(failures ? 1 : 0);

@@ -4,7 +4,7 @@
 // the cashier sells on it from the till, by the number from its tablet, in
 // English and in Arabic; the owner renames it, takes it out of use (it leaves
 // the till, what it owes stays) and brings it back.
-import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { BASE, chromium, check, counted, done, open, signIn, sql } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const row = (page, code) => page.locator(`[data-testid="platform-row"][data-code="${code}"]`);
@@ -68,7 +68,7 @@ console.log("▸ the owner adds Lezzoo, set up like Talabat");
   await form.getByRole("button", { name: "Add the platform" }).click();
   await page
     .getByText(
-      `Lezzoo is added. ${talabatPrices} product price(s) and ${talabatLines} packaging line(s) copied.`,
+      `Lezzoo is added. ${counted(talabatPrices, "product price")} and ${counted(talabatLines, "packaging line")} copied.`,
     )
     .waitFor({ timeout: 10000 });
   check(true, "added, with Talabat's prices and packaging");

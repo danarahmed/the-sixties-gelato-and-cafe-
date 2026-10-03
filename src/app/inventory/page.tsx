@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { getMsg, getT } from "@/lib/i18n/server";
+import { getDir, getMsg, getT } from "@/lib/i18n/server";
+import { arrows } from "@/lib/i18n/core";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems, getItemsOutOfUse, getMovements, getStockBoard } from "@/lib/db/read";
-import { fmtIQD, fmtQty, itemTypeLabel, movementLabel, unitName } from "@/lib/format";
+import { fmtAbout, fmtIQD, fmtQty, itemTypeLabel, movementLabel, unitName } from "@/lib/format";
 import { dateTimeIn } from "@/lib/dates";
 import { InventoryForms } from "@/components/InventoryForms";
 import { LossesWaiting } from "@/components/LossesWaiting";
@@ -16,9 +17,17 @@ import { placeChoice } from "@/lib/place";
 
 export const dynamic = "force-dynamic";
 
-export default async function InventoryPage() {
+export default async function InventoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const profile = await requirePermission("cost.view", "waste.record");
   const t = await getT();
+  const { on } = arrows(await getDir());
+  // A tile's items alone: those at or below their reorder level, or below nothing.
+  const sp = await searchParams;
+  const only = sp.show === "low" || sp.show === "negative" ? sp.show : null;
   const msg = await getMsg();
   const seesCost = has(profile, "cost.view");
   const approvesLosses = has(profile, "waste.approve");
@@ -56,6 +65,12 @@ export default async function InventoryPage() {
   const totalValue = board.reduce((s, r) => s + r.value, 0);
   const low = board.filter((r) => r.isLow).length;
   const negative = board.filter((r) => r.isNegative).length;
+  const shown =
+    only === "low"
+      ? board.filter((r) => r.isLow)
+      : only === "negative"
+        ? board.filter((r) => r.isNegative)
+        : board;
 
   return (
     <div className="grid" style={{ gap: 16 }}>
@@ -104,26 +119,36 @@ export default async function InventoryPage() {
           className="grid"
           style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px,1fr))" }}
         >
-          <div className="card stat">
+          <Link href="/inventory#stock" className="card stat" data-testid="tile-tracked">
             <span className="label">{t("Items tracked")}</span>
             <span className="value">{board.length}</span>
-          </div>
+          </Link>
           <div className="card stat">
             <span className="label">{t("Stock value (ledger)")}</span>
             <span className="value mono">{fmtIQD(totalValue)}</span>
           </div>
-          <div className="card stat">
+          <Link
+            href="/inventory?show=low#stock"
+            className="card stat"
+            data-testid="tile-low"
+            aria-current={only === "low" ? "true" : undefined}
+          >
             <span className="label">{t("Below reorder level")}</span>
             <span className="value" style={{ color: low ? "var(--warn)" : "var(--ok)" }}>
               {low}
             </span>
-          </div>
-          <div className="card stat">
+          </Link>
+          <Link
+            href="/inventory?show=negative#stock"
+            className="card stat"
+            data-testid="tile-negative"
+            aria-current={only === "negative" ? "true" : undefined}
+          >
             <span className="label">{t("Negative stock")}</span>
             <span className="value" style={{ color: negative ? "var(--err)" : "var(--ok)" }}>
               {negative}
             </span>
-          </div>
+          </Link>
         </div>
       )}
 
@@ -181,8 +206,28 @@ export default async function InventoryPage() {
             }
           />
         ) : (
-          <div className="card tw">
+          <div className="card tw" id="stock">
             <h3 style={{ marginTop: 0 }}>{t("Stock on hand")}</h3>
+            {only !== null && (
+              <p className="stock-only" data-testid="stock-only">
+                <strong>
+                  {only === "low"
+                    ? t("Only the {n} item(s) at or below their reorder level.", {
+                        n: shown.length,
+                      })
+                    : t("Only the {n} item(s) with negative stock.", { n: shown.length })}
+                </strong>{" "}
+                <Link href="/inventory#stock">{t("Show every item")}</Link>
+                {only === "low" && shown.length > 0 && (
+                  <>
+                    {" · "}
+                    <Link href="/purchasing/buying-list">
+                      {t("What to buy")} {on}
+                    </Link>
+                  </>
+                )}
+              </p>
+            )}
             <p className="muted" style={{ marginTop: 0, fontSize: ".82rem" }}>
               {t(
                 "Open an item for its stock card: what it opened with, what came in and went out, and what is left.",
@@ -202,7 +247,7 @@ export default async function InventoryPage() {
                 </tr>
               </thead>
               <tbody>
-                {board.map((r) => (
+                {shown.map((r) => (
                   <tr key={r.itemId}>
                     <td>
                       <Link
@@ -226,7 +271,7 @@ export default async function InventoryPage() {
                     </td>
                     <td className="right mono">
                       {/* i18n-ignore: a cost in IQD, the currency's code */}
-                      {r.unitCost === null ? "—" : `${fmtQty(r.unitCost)} IQD`}
+                      {r.unitCost === null ? "—" : `${fmtAbout(r.unitCost)} IQD`}
                     </td>
                     <td className="right mono">{fmtIQD(r.value)}</td>
                     <td>

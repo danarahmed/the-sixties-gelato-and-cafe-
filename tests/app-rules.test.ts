@@ -10,7 +10,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
-import { NAV, holdsAny, homeFor, isPublicPath } from "@/lib/auth/routes";
+import { NAV, activeHref, holdsAny, homeFor, isPublicPath } from "@/lib/auth/routes";
 import {
   addDays,
   dateIn,
@@ -47,7 +47,7 @@ import {
   lossReportFrom,
   lossesWaitingFrom,
 } from "@/lib/losses";
-import { movementLabel, unitName } from "@/lib/format";
+import { fmtAbout, movementLabel, unitName } from "@/lib/format";
 import { normaliseNumber, positive, signedNonZero } from "@/lib/validation";
 import { getBookkeeper } from "@/lib/bookkeeping/rules";
 import { isUncertainFailure, rpcLogLine } from "@/lib/db/rpcOutcome";
@@ -364,6 +364,19 @@ describe("where each role lands", () => {
     const offered = NAV.filter((n) => holdsAny(perms("cashier"), n.anyOf)).map((n) => n.href);
     expect(homeFor(perms("cashier"))).toBe("/pos");
     expect(offered).toEqual(["/pos"]);
+  });
+
+  it("the menu lights one entry: the screen's, or the nearest above it", () => {
+    const hrefs = NAV.map((n) => n.href);
+    expect(activeHref("/inventory/usage", hrefs)).toBe("/inventory/usage");
+    expect(activeHref("/inventory/transfers", hrefs)).toBe("/inventory/transfers");
+    expect(activeHref("/inventory", hrefs)).toBe("/inventory");
+    expect(activeHref("/purchasing/buying-list", hrefs)).toBe("/purchasing");
+    expect(activeHref("/sales/sessions", hrefs)).toBe("/sales");
+    expect(activeHref("/inventory-old", hrefs)).toBeNull();
+    // Whoever is not offered Usage sees Inventory lit there.
+    expect(activeHref("/inventory/usage", ["/inventory"])).toBe("/inventory");
+    expect(activeHref(null, hrefs)).toBeNull();
   });
 
   it("a counter is offered the count and nothing with a cost on it", () => {
@@ -3367,10 +3380,22 @@ describe("the buying list (0045)", () => {
     expect(buyingListFrom(null).items).toEqual([]);
   });
 
+  it("rounds what is worked out from use, to be read", () => {
+    expect(
+      [147.571, 1328.143, 11.857, 53.357, 2.464, 5.929, -1646, 0.5, 3000].map(fmtAbout),
+    ).toEqual(["148", "1,328", "11.9", "53.4", "2.46", "5.93", "-1,646", "0.5", "3,000"]);
+    const odd = { ...milk, dailyUse: 147.571, reorderLevel: 295.143, targetLevel: 1328.143 };
+    expect(reasonsOf(odd).slice(1, 4)).toEqual([
+      "About 148 ml a day over the last 25 days; a delivery takes 2 days, and a day more: 295 ml is its reorder level.",
+      "Below it: to order.",
+      "Ordered up to the reorder level and a week of use: 1,328 ml.",
+    ]);
+  });
+
   it("says why, with the numbers", () => {
     expect(reasonsOf(milk, undefined, (c) => (c === "carton_1l" ? "Carton of 1 L" : c))).toEqual([
       "2,000 ml on hand.",
-      "About 1,000 ml a day over the last 25 days; a delivery takes 2 day(s), and a day more: 3,000 ml is its reorder level.",
+      "About 1,000 ml a day over the last 25 days; a delivery takes 2 days, and a day more: 3,000 ml is its reorder level.",
       "Below it: to order.",
       "Ordered up to the reorder level and a week of use: 10,000 ml.",
       "8 × Carton of 1 L (8,000 ml), rounded up to whole packs.",
@@ -3380,7 +3405,7 @@ describe("the buying list (0045)", () => {
       "1,500 IQD a pack, as delivered 2026-09-28.",
     ]);
     expect(reasonsOf(sugar)).toEqual([
-      "Only 5 day(s) of history: 7 are needed to judge its use by.",
+      "Only 5 days of history: 7 are needed to judge its use by.",
       "Set a reorder level on the item, or add it to an order yourself.",
     ]);
     // New today: not "only 0 days".

@@ -105,9 +105,35 @@ export function fmtQty(n: number): string {
 }
 
 /**
+ * A quantity worked out rather than counted (a day's use, a reorder level, a
+ * cost per gram), with the decimals worth reading: 147.571 → "148",
+ * 11.857 → "11.9", 2.464 → "2.46".
+ */
+export function fmtAbout(n: number): string {
+  const a = Math.abs(n);
+  const digits = a >= 100 ? 0 : a >= 10 ? 1 : 2;
+  return Number(n.toFixed(digits)).toLocaleString("en-US", { maximumFractionDigits: digits });
+}
+
+/**
  * A unit as the reader sees it: "each", for what is counted one by one, in
  * their language; g, kg, ml and L, and a pack the café named, as written.
  */
 export function unitName(code: string, t: (key: string) => string): string {
   return code === "each" ? t("each") : code;
+}
+
+/** Units written the same in every language, and "each". */
+const METRIC = new Set(["g", "kg", "ml", "l", "L", "each"]);
+
+/**
+ * A unit an item is bought or moved in: a pack by the name the café gave it
+ * ("Carton of 1 L"), never its code ("carton_1l"); g, kg, ml and L as written.
+ */
+export function packName(
+  code: string,
+  units: readonly { code: string; label: string }[] | undefined,
+  t: (key: string) => string,
+): string {
+  return (!METRIC.has(code) && units?.find((u) => u.code === code)?.label) || unitName(code, t);
 }

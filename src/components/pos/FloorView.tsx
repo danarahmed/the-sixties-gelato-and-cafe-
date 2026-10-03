@@ -74,7 +74,7 @@ export function FloorView({
     <div className="floor">
       <div className="floor-summary">
         <span>
-          <strong>{bills.length}</strong> {t("pos.openBills")}
+          <strong>{bills.length}</strong> {t(bills.length === 1 ? "pos.openBill" : "pos.openBills")}
         </span>
         {waiting > 0 && (
           <span className="badge warn">

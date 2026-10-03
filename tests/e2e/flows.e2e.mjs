@@ -385,7 +385,7 @@ console.log("▸ a bill still waiting for its money is no cash yet: it carries t
   const drawer = page.getByTestId("drawer-panel");
   await drawer.getByRole("button", { name: "Close the drawer" }).click();
   await drawer
-    .getByText("1 bill(s) are still open: they are no cash yet, and are paid in the next session.")
+    .getByText("1 bill is still open: they are no cash yet, and are paid in the next session.")
     .waitFor({ timeout: 10000 });
   ok("closing the drawer, the till says the open bill carries to the next session");
   await drawer.getByRole("button", { name: "Back" }).click();

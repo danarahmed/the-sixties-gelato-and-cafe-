@@ -231,9 +231,7 @@ export function BuyingListForm({
                             style={{ fontSize: ".78rem", maxWidth: 340 }}
                             data-testid="buying-why"
                           >
-                            {reasonsOf(l, t, (code) => packName(l.itemId, code)).map((s, i) => (
-                              <div key={i}>{s}</div>
-                            ))}
+                            <Why reasons={reasonsOf(l, t, (code) => packName(l.itemId, code))} />
                             <div className="muted">
                               {sourceOf(l, t).join(" ")}
                               {l.orders.map((o) => (
@@ -424,5 +422,36 @@ export function BuyingListForm({
         )}
       </details>
     </div>
+  );
+}
+
+/**
+ * A line's why: what it has and what to order, first; how that was worked
+ * out (its use, its level, what it is ordered up to) one tap away.
+ */
+function Why({ reasons }: { reasons: string[] }) {
+  const { t } = useT();
+  const [have, ...rest] = reasons;
+  const decided = rest.pop();
+  return (
+    <>
+      <div>
+        {have}
+        {decided && (
+          <>
+            {" "}
+            <strong>{decided}</strong>
+          </>
+        )}
+      </div>
+      {rest.length > 0 && (
+        <details className="why-more">
+          <summary>{t("How it was worked out")}</summary>
+          {rest.map((s, i) => (
+            <div key={i}>{s}</div>
+          ))}
+        </details>
+      )}
+    </>
   );
 }

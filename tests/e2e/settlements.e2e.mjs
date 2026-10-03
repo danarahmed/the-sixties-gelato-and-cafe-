@@ -158,8 +158,8 @@ console.log("▸ a manager matches a Talabat statement, and does not post it");
   await m.getByLabel("Platform").selectOption("talabat");
   await m.getByLabel("The statement").fill(statement);
   check(
-    (await m.getByTestId("statement-read").textContent()).includes("5 line(s) read") &&
-      (await m.getByTestId("statement-read").textContent()).includes("1 total row(s) left out"),
+    (await m.getByTestId("statement-read").textContent()).includes("5 lines read") &&
+      (await m.getByTestId("statement-read").textContent()).includes("1 total row left out"),
     "the pasted statement is read by its column names, its total row left out",
   );
   await m.getByRole("button", { name: "Match to the orders waiting" }).click();

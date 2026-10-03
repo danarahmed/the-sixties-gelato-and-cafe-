@@ -208,7 +208,7 @@ console.log(
          '[{"code":"6900","debit":100},{"code":"1020","credit":100}]')`);
   await open(page, "/reports");
   check(
-    (await page.getByTestId("rec-documents").textContent()).includes("1 record(s)"),
+    (await page.getByTestId("rec-documents").textContent()).includes("1 record"),
     "the records check counts it",
   );
   const list = page.getByTestId("document-problems");

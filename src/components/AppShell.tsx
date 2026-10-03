@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { Locale } from "@/lib/i18n/core";
-import { NAV, holdsAny } from "@/lib/auth/routes";
+import { NAV, activeHref, holdsAny } from "@/lib/auth/routes";
 import { BrandMark, Icon, type IconName } from "@/components/Icon";
 
 /** Each screen's icon in the menu, beside its name. */
@@ -190,6 +190,10 @@ export function AppShell({
   const nav = NAV.filter((n) => holdsAny(member.permissions, n.anyOf));
   // The till takes the whole screen; the menu opens from the ☰ button.
   const posMode = pathname === "/pos" || pathname?.startsWith("/pos/");
+  const lit = activeHref(
+    pathname,
+    nav.map((n) => n.href),
+  );
 
   return (
     <div className={`app-shell${posMode ? " pos-mode" : ""}`}>
@@ -230,7 +234,7 @@ export function AppShell({
           onClick={() => setMenuOpen(false)}
         >
           {nav.map((n, i) => {
-            const active = pathname === n.href || pathname?.startsWith(`${n.href}/`);
+            const active = n.href === lit;
             const heading = n.group && n.group !== nav[i - 1]?.group ? n.group : null;
             return (
               <div key={n.href}>

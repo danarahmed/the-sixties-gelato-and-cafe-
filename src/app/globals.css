@@ -3772,12 +3772,18 @@ a.card.stat:focus-visible {
   gap: 4px;
   font-size: 0.9rem;
 }
-.alert-group > summary {
+.alert-group > summary,
+.alert-wait > summary {
   cursor: pointer;
   list-style-position: inside;
 }
-.alert-group[open] > summary {
+.alert-group[open] > summary,
+.alert-wait[open] > summary {
   margin-bottom: 4px;
+}
+/* What can wait, folded: its own rows sit inside it without a second frame. */
+.alert-wait > .alerts > .alert-row {
+  background: var(--surface);
 }
 .th-grid {
   display: grid;
@@ -4804,4 +4810,33 @@ a.card.stat:focus-visible {
     width: 52px;
     height: 52px;
   }
+}
+
+/* The dashboard's recent sales: the time first, never broken over two lines. */
+.recent-time {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+/* Inventory: a tile's items alone, and the way back to every item. */
+a.card.stat[aria-current="true"] {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+  background: var(--brand-soft);
+}
+.stock-only {
+  margin: 0 0 6px;
+  font-size: 0.88rem;
+}
+
+/* Cash sessions: room for why a session was closed, on two lines not eight. */
+.session-cell {
+  min-width: 13rem;
+}
+
+/* What to buy: how a line's order was worked out, one tap away. */
+.why-more > summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  margin-top: 2px;
 }

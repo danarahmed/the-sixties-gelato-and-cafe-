@@ -6,7 +6,7 @@
 // the count's answer still on the screen. The day in numbers is the books' own.
 // A branch manager is offered it, a cashier is not. It leaves the drawer open,
 // as it found it.
-import { chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { chromium, check, counted, done, open, signIn, sql } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const BIZ = "00000000-0000-0000-0000-0000000000b1";
@@ -86,8 +86,10 @@ console.log("▸ the owner's end of the day says what the database has open");
   const bills = billsOpen();
   if (bills > 0) {
     check(
-      (await page.getByTestId("eod-bills").textContent()).includes(`${bills} bill(s) still open`),
-      `the bills step counts the ${bills} bill(s) open`,
+      (await page.getByTestId("eod-bills").textContent()).includes(
+        `${counted(bills, "bill")} still open`,
+      ),
+      `the bills step counts the ${counted(bills, "bill")} open`,
     );
   }
   const steps = await page.locator(".eod-step").count();
@@ -114,7 +116,7 @@ console.log("▸ the owner's end of the day says what the database has open");
   // ---------------------------------------------------------- the drawer, closed here
   const tills = page.getByTestId("eod-tills");
   check(
-    (await tills.textContent()).includes("1 drawer(s) still open.") &&
+    (await tills.textContent()).includes("1 drawer still open.") &&
       (await tills.textContent()).includes("Demo Cashier"),
     "the drawer step lists the cashier's session, still open",
   );
