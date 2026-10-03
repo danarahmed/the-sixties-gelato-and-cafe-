@@ -4,7 +4,15 @@
  * in one part and what was kept the rest; nothing divided by no revenue.
  */
 import { describe, expect, it } from "vitest";
-import { change, largestExpense, pct, previousPeriod, spending, spentOn } from "@/lib/insights";
+import {
+  change,
+  largestExpense,
+  pct,
+  pctText,
+  previousPeriod,
+  spending,
+  spentOn,
+} from "@/lib/insights";
 import type { PnlRow } from "@/lib/db/reports";
 
 const row = (code: string, amount: number): PnlRow => ({
@@ -104,5 +112,12 @@ describe("where each 1,000 IQD went", () => {
   it("says a share in whole percent, none of nothing", () => {
     expect(pct(124, 1000)).toBe(12);
     expect(pct(5, 0)).toBeNull();
+  });
+
+  it("writes a share that rounds to nothing as under 1%, never as 0%", () => {
+    expect(pctText(124, 1000)).toBe("12");
+    expect(pctText(1350, 3_528_770)).toBe("<1");
+    expect(pctText(0, 1000)).toBe("0");
+    expect(pctText(5, 0)).toBeNull();
   });
 });

@@ -81,3 +81,13 @@ export function pct(part: number, whole: number): number | null {
   if (!whole || whole <= 0) return null;
   return Math.round((part / whole) * 100);
 }
+
+/**
+ * A share as it is written beside a figure: "12", or "<1" for a share that
+ * is there but rounds to nothing — never "0" for something that was spent.
+ */
+export function pctText(part: number, whole: number): string | null {
+  const p = pct(part, whole);
+  if (p === null) return null;
+  return p === 0 && part > 0 ? "<1" : String(p);
+}
