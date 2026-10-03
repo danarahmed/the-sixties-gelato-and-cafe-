@@ -4829,9 +4829,12 @@ a.card.stat[aria-current="true"] {
   font-size: 0.88rem;
 }
 
-/* Cash sessions: room for why a session was closed, on two lines not eight. */
-.session-cell {
-  min-width: 13rem;
+/* Cash sessions: room for why a session was closed, on two lines not eight.
+   On a screen only: on paper the table keeps to the page's width. */
+@media screen {
+  .session-cell {
+    min-width: 13rem;
+  }
 }
 
 /* What to buy: how a line's order was worked out, one tap away. */
@@ -4841,7 +4844,10 @@ a.card.stat[aria-current="true"] {
   margin-top: 2px;
 }
 
-/* Usage: an item's explanation reads across, not down a narrow column. */
-.usage-item {
-  min-width: 16rem;
+/* Usage: an item's explanation reads across, not down a narrow column; on a
+   screen only, as above. */
+@media screen {
+  .usage-item {
+    min-width: 16rem;
+  }
 }
