@@ -13,10 +13,13 @@ import {
   namesIn,
   rowName,
   SALES_DIMENSIONS,
+  TIME_DIMENSIONS,
+  WEEKDAYS,
   type AnalysisRow,
   type SalesDimension,
 } from "@/lib/analysis";
 import { fmtIQD, fmtQty } from "@/lib/format";
+import { ColumnChart, type Column } from "@/components/charts/ColumnChart";
 import { addDays, businessToday, daysBetween, monthEnd, monthStart, parseDay } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
@@ -100,6 +103,52 @@ export default async function SalesAnalysisPage({
     ["This month", monthStart(today), today],
     ["Last month", monthStart(lastMonthEnd), monthEnd(lastMonthEnd)],
   ];
+  // Sales over time drawn as well (one way only, not the payments'): every
+  // hour from the first to the last sold in, every day of the dates (two
+  // months at most), every day of the week; a gap is a column of nothing.
+  const hh = (h: number) => `${String(h).padStart(2, "0")}:00`;
+  const timeChart: { columns: Column[]; per: "hour" | "day" | null } | null = (() => {
+    if (!a || then || a.grain === "payment" || !TIME_DIMENSIONS.has(by) || a.rows.length === 0)
+      return null;
+    const byKey = new Map(a.rows.map((r) => [r.key, r]));
+    const column = (key: string, label: string, detail: string): Column => {
+      const r = byKey.get(key);
+      return {
+        key,
+        label,
+        value: Math.max(r?.net ?? 0, 0),
+        valueText: fmtIQD(r?.net ?? 0),
+        detail: `${detail} · ${t("{n} order(s)", { n: r?.orders ?? 0 })}`,
+        emphasis: true,
+      };
+    };
+    if (by === "hour") {
+      const hours = a.rows.map((r) => Number(r.key));
+      const first = Math.min(...hours);
+      const last = Math.max(...hours);
+      return {
+        per: "hour",
+        columns: Array.from({ length: last - first + 1 }, (_, i) => first + i).map((h) =>
+          column(String(h), String(h), `${hh(h)}–${hh(h + 1)}`),
+        ),
+      };
+    }
+    if (by === "weekday")
+      return {
+        per: null,
+        columns: WEEKDAYS.map((d, i) => column(String(i), t(d), t(d))),
+      };
+    if (daysBetween(from, to) > 61) return null;
+    return {
+      per: "day",
+      columns: Array.from({ length: daysBetween(from, to) + 1 }, (_, i) => addDays(from, i)).map(
+        (d) => column(d, d.slice(8).replace(/^0/, ""), d),
+      ),
+    };
+  })();
+  const sold = timeChart?.columns.filter((c) => c.value > 0) ?? [];
+  const perAverage = sold.length ? sold.reduce((s, c) => s + c.value, 0) / sold.length : 0;
+
   // The bar beside each row: the most of the first way's groups sets its length.
   const measure = (r: AnalysisRow) => (a?.grain === "payment" ? r.paid : r.net);
   const most = a ? Math.max(0, ...a.rows.map(measure)) : 0;
@@ -252,149 +301,176 @@ export default async function SalesAnalysisPage({
               </p>
             </div>
           ) : (
-            <div className="tw">
-              <table data-testid="analysis-table">
-                <thead>
-                  <tr>
-                    <th>{t(dimensionLabel(by))}</th>
-                    {then && <th>{t(dimensionLabel(then))}</th>}
-                    {a.grain === "payment" ? (
-                      <>
-                        <th className="right">{t("Sales")}</th>
-                        <th className="right">{t("Paid")}</th>
-                        <th className="right">{t("Given back")}</th>
-                        <th className="right">{t("Kept")}</th>
-                      </>
-                    ) : (
-                      <>
-                        <th className="right">
-                          {a.grain === "addon" ? t("Times taken") : t("Orders")}
-                        </th>
-                        <th className="right">{t("Items")}</th>
-                        <th className="right">{t("Sold for")}</th>
-                        <th className="right">{t("Discount")}</th>
-                        <th className="right">{t("Net")}</th>
-                        <th className="right">{t("Cost")}</th>
-                        <th className="right">{t("Margin")}</th>
-                        {a.grain === "line" && (
-                          <>
-                            <th className="right">{t("Given back")}</th>
-                            <th className="right">{t("Kept")}</th>
-                            <th className="right">{t("Margin kept")}</th>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {a.rows.map((r, i) => {
-                    const first = i === 0 || a.rows[i - 1]?.key !== r.key;
-                    return (
-                      <tr
-                        key={`${r.key}|${r.key2 ?? ""}`}
-                        data-testid="analysis-row"
-                        data-key={r.key}
-                        data-key2={r.key2 ?? ""}
-                        data-net={r.net}
-                        data-paid={r.paid}
-                      >
-                        <td>
-                          {first || !then ? (
-                            <span className="ref">{name(by, r.key, r.names)}</span>
-                          ) : (
-                            ""
+            <>
+              {timeChart && (
+                <div className="panel-b rep-chart" data-testid="analysis-chart">
+                  <ColumnChart
+                    title={t("Net sales")}
+                    columnsName={t("Net sales")}
+                    labels={{ table: t("Show as a table"), heading: t(dimensionLabel(by)) }}
+                    reference={
+                      timeChart.per && perAverage > 0
+                        ? {
+                            value: perAverage,
+                            label:
+                              timeChart.per === "hour"
+                                ? t("Average: {amount} an hour sold in", {
+                                    amount: fmtIQD(perAverage),
+                                  })
+                                : t("Average: {amount} a day sold in", {
+                                    amount: fmtIQD(perAverage),
+                                  }),
+                          }
+                        : undefined
+                    }
+                    columns={timeChart.columns}
+                  />
+                </div>
+              )}
+              <div className="tw">
+                <table data-testid="analysis-table">
+                  <thead>
+                    <tr>
+                      <th>{t(dimensionLabel(by))}</th>
+                      {then && <th>{t(dimensionLabel(then))}</th>}
+                      {a.grain === "payment" ? (
+                        <>
+                          <th className="right">{t("Sales")}</th>
+                          <th className="right">{t("Paid")}</th>
+                          <th className="right">{t("Given back")}</th>
+                          <th className="right">{t("Kept")}</th>
+                        </>
+                      ) : (
+                        <>
+                          <th className="right">
+                            {a.grain === "addon" ? t("Times taken") : t("Orders")}
+                          </th>
+                          <th className="right">{t("Items")}</th>
+                          <th className="right">{t("Sold for")}</th>
+                          <th className="right">{t("Discount")}</th>
+                          <th className="right">{t("Net")}</th>
+                          <th className="right">{t("Cost")}</th>
+                          <th className="right">{t("Margin")}</th>
+                          {a.grain === "line" && (
+                            <>
+                              <th className="right">{t("Given back")}</th>
+                              <th className="right">{t("Kept")}</th>
+                              <th className="right">{t("Margin kept")}</th>
+                            </>
                           )}
-                        </td>
-                        {then && <td>{name(then, r.key2 ?? "", r.names2 ?? { en: "" })}</td>}
-                        {a.grain === "payment" ? (
-                          <>
-                            <td className="right money">{r.orders}</td>
-                            <td className="right money">
-                              <Bar width={barWidth(r.paid, most)} />
-                              {fmtIQD(r.paid)}
-                            </td>
-                            <td className="right money">
-                              {r.refunded ? `(${fmtIQD(r.refunded)})` : "—"}
-                            </td>
-                            <td className="right money">{fmtIQD(r.kept)}</td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="right money">
-                              {a.grain === "addon" ? r.lines : r.orders}
-                            </td>
-                            <td className="right money">{fmtQty(r.qty)}</td>
-                            <td className="right money">{fmtIQD(r.gross)}</td>
-                            <td className="right money">
-                              {r.discount ? `(${fmtIQD(r.discount)})` : "—"}
-                            </td>
-                            <td className="right money" data-testid="analysis-net">
-                              <Bar width={barWidth(r.net, most)} />
-                              {fmtIQD(r.net)}
-                            </td>
-                            <td className="right money">{fmtIQD(r.cost)}</td>
-                            <td className="right money">{fmtIQD(r.margin)}</td>
-                            {a.grain === "line" && (
-                              <>
-                                <td className="right money">
-                                  {r.refunded ? `(${fmtIQD(r.refunded)})` : "—"}
-                                </td>
-                                <td className="right money">{fmtIQD(r.kept)}</td>
-                                <td className="right money">{fmtIQD(r.marginKept)}</td>
-                              </>
+                        </>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {a.rows.map((r, i) => {
+                      const first = i === 0 || a.rows[i - 1]?.key !== r.key;
+                      return (
+                        <tr
+                          key={`${r.key}|${r.key2 ?? ""}`}
+                          data-testid="analysis-row"
+                          data-key={r.key}
+                          data-key2={r.key2 ?? ""}
+                          data-net={r.net}
+                          data-paid={r.paid}
+                        >
+                          <td>
+                            {first || !then ? (
+                              <span className="ref">{name(by, r.key, r.names)}</span>
+                            ) : (
+                              ""
                             )}
-                          </>
-                        )}
-                      </tr>
-                    );
-                  })}
-                  <tr
-                    className="grand"
-                    data-testid="analysis-total"
-                    data-net={a.total.net}
-                    data-paid={a.total.paid}
-                    data-kept={a.total.kept}
-                  >
-                    <td>{t("All")}</td>
-                    {then && <td />}
-                    {a.grain === "payment" ? (
-                      <>
-                        <td className="right money">{a.total.orders}</td>
-                        <td className="right money">{fmtIQD(a.total.paid)}</td>
-                        <td className="right money">
-                          {a.total.refunded ? `(${fmtIQD(a.total.refunded)})` : "—"}
-                        </td>
-                        <td className="right money">{fmtIQD(a.total.kept)}</td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="right money">
-                          {a.grain === "addon" ? a.total.lines : a.total.orders}
-                        </td>
-                        <td className="right money">{fmtQty(a.total.qty)}</td>
-                        <td className="right money">{fmtIQD(a.total.gross)}</td>
-                        <td className="right money">
-                          {a.total.discount ? `(${fmtIQD(a.total.discount)})` : "—"}
-                        </td>
-                        <td className="right money">{fmtIQD(a.total.net)}</td>
-                        <td className="right money">{fmtIQD(a.total.cost)}</td>
-                        <td className="right money">{fmtIQD(a.total.margin)}</td>
-                        {a.grain === "line" && (
-                          <>
-                            <td className="right money">
-                              {a.total.refunded ? `(${fmtIQD(a.total.refunded)})` : "—"}
-                            </td>
-                            <td className="right money">{fmtIQD(a.total.kept)}</td>
-                            <td className="right money">{fmtIQD(a.total.marginKept)}</td>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                          </td>
+                          {then && <td>{name(then, r.key2 ?? "", r.names2 ?? { en: "" })}</td>}
+                          {a.grain === "payment" ? (
+                            <>
+                              <td className="right money">{r.orders}</td>
+                              <td className="right money">
+                                <Bar width={barWidth(r.paid, most)} />
+                                {fmtIQD(r.paid)}
+                              </td>
+                              <td className="right money">
+                                {r.refunded ? `(${fmtIQD(r.refunded)})` : "—"}
+                              </td>
+                              <td className="right money">{fmtIQD(r.kept)}</td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="right money">
+                                {a.grain === "addon" ? r.lines : r.orders}
+                              </td>
+                              <td className="right money">{fmtQty(r.qty)}</td>
+                              <td className="right money">{fmtIQD(r.gross)}</td>
+                              <td className="right money">
+                                {r.discount ? `(${fmtIQD(r.discount)})` : "—"}
+                              </td>
+                              <td className="right money" data-testid="analysis-net">
+                                <Bar width={barWidth(r.net, most)} />
+                                {fmtIQD(r.net)}
+                              </td>
+                              <td className="right money">{fmtIQD(r.cost)}</td>
+                              <td className="right money">{fmtIQD(r.margin)}</td>
+                              {a.grain === "line" && (
+                                <>
+                                  <td className="right money">
+                                    {r.refunded ? `(${fmtIQD(r.refunded)})` : "—"}
+                                  </td>
+                                  <td className="right money">{fmtIQD(r.kept)}</td>
+                                  <td className="right money">{fmtIQD(r.marginKept)}</td>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </tr>
+                      );
+                    })}
+                    <tr
+                      className="grand"
+                      data-testid="analysis-total"
+                      data-net={a.total.net}
+                      data-paid={a.total.paid}
+                      data-kept={a.total.kept}
+                    >
+                      <td>{t("All")}</td>
+                      {then && <td />}
+                      {a.grain === "payment" ? (
+                        <>
+                          <td className="right money">{a.total.orders}</td>
+                          <td className="right money">{fmtIQD(a.total.paid)}</td>
+                          <td className="right money">
+                            {a.total.refunded ? `(${fmtIQD(a.total.refunded)})` : "—"}
+                          </td>
+                          <td className="right money">{fmtIQD(a.total.kept)}</td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="right money">
+                            {a.grain === "addon" ? a.total.lines : a.total.orders}
+                          </td>
+                          <td className="right money">{fmtQty(a.total.qty)}</td>
+                          <td className="right money">{fmtIQD(a.total.gross)}</td>
+                          <td className="right money">
+                            {a.total.discount ? `(${fmtIQD(a.total.discount)})` : "—"}
+                          </td>
+                          <td className="right money">{fmtIQD(a.total.net)}</td>
+                          <td className="right money">{fmtIQD(a.total.cost)}</td>
+                          <td className="right money">{fmtIQD(a.total.margin)}</td>
+                          {a.grain === "line" && (
+                            <>
+                              <td className="right money">
+                                {a.total.refunded ? `(${fmtIQD(a.total.refunded)})` : "—"}
+                              </td>
+                              <td className="right money">{fmtIQD(a.total.kept)}</td>
+                              <td className="right money">{fmtIQD(a.total.marginKept)}</td>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
           <div
             className="panel-b muted"

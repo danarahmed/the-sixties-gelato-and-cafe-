@@ -22,6 +22,7 @@ import statements from "./statements";
 import documents from "./documents";
 import places from "./places";
 import dashboard from "./dashboard";
+import insights from "./insights";
 
 /**
  * The areas' phrase books; "db" holds what the database refuses with, "alerts"
@@ -47,6 +48,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   documents,
   places,
   dashboard,
+  insights,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

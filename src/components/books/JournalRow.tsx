@@ -42,6 +42,14 @@ const SOURCE: Record<string, string> = {
   stock_transfer_cancel: "Transfer cancelled",
   // A cost paid ahead (0060); each month's share is an expense.
   prepaid_expense: "Prepaid expense",
+  // Named, so a reader in Arabic or Kurdish never meets the database's word for it.
+  receipt_correction: "Delivery correction",
+  supplier_return: "Return to a supplier",
+  supplier_credit: "Supplier's credit",
+  sale_void: "Void",
+  production_cancel: "Batch cancelled",
+  fx_exchange: "Dollars exchanged",
+  session_dollars: "Dollars counted",
 };
 
 /** One entry of the register; expands to show its lines as they were written. */

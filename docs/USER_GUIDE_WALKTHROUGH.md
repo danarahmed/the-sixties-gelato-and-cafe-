@@ -1335,7 +1335,10 @@ accountant's own tools. Two pages open from the top (`0051`):
   share; the add-ons (times taken, sold for, net, cost) and the payments
   (paid, given back, kept) have their own. Every way adds up to the same
   sales; voided sales are left out and counted below with the bills
-  cancelled. **CSV** downloads it. A year of dates at most.
+  cancelled. **CSV** downloads it. A year of dates at most. By the hour, the
+  date (two months of dates at most) or the day of the week, on their own, the
+  sales are drawn too: a column each, a gap a column of nothing, the average
+  of those sold in a dashed line, with **Show as a table**.
 - **Stock value on a day** (`/reports/stock`): every item's stock and value
   when the day ended, from the stock ledger, beside what 1200 Inventory held
   then (**They agree** when the books tie), by kind and item by item, with
@@ -1361,6 +1364,27 @@ window, choose **Save as PDF** to keep it as a file for the accountant or the
 bank. It is on Reports and its three pages, the trial balance (Chart of
 Accounts), the audit trail, Journals and an account's ledger, the usage
 report, an item's movements, a cash session's statement and a payroll.
+
+**The period at a glance** opens the page. For whoever sees profit: **Net
+revenue**, **Gross profit after waste & fees**, **Net profit** (or **Net
+loss**) and **Losses**, each against the days just before, as many (the 3 days
+of a month so far against the 3 days before them), the profits as a share of
+net revenue and how many points that moved. **What the period says**, in
+words, each a link to its report: whether the books tie (look into a
+difference before trusting the rest), net revenue against the days before,
+what was kept after the cost of sales, what the period made or lost after
+every expense, the largest expense, what the delivery platforms took, the
+losses and their largest kind, what is owed to suppliers past its due date,
+and sales costed at nothing. **Where each 1,000 IQD of net revenue went**:
+what was sold cost, the delivery platforms, waste and stock differences, the
+staff, rent and running costs, and what was kept — in one bar, each part
+named under it with its amount over the period.
+
+A row under the top bar names the page's parts by what they are about —
+**Profit**, **Sales**, **Buying and stock**, **People**, **Checks** — each a tap
+away, and the reports follow in that order. **Sales by Channel**, **Sales by
+payment method**, **Losses** and **Payable Ageing** open with their bars, the
+largest first, each with its share, above their tables.
 
 - **Do the books tie?** Each subledger against its control account, as at the
   **To** date, with **CSV**. When every check ties it folds to one line (**✅

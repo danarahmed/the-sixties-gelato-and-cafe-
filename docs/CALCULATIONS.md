@@ -979,6 +979,24 @@ analysis of `0051`, for whoever sees costs):
 - _The 14 days:_ net sales a day; the dashed line is the average of the 13
   days before today that had sales.
 
+**The reports at a glance** (`src/lib/insights.ts`, from the P&L of `0026`
+and its place of `0057`):
+
+- _The days before:_ as many days as the period, ending the day before it
+  starts (before 1–31 October, 31 August to 30 September).
+  `change = (now − before) ÷ before`, none when the days before had nothing;
+  within 5% either way is said as about the same. A profit's share of net
+  revenue moves in points: `(share now − share before) × 100`, within one
+  point either way as before.
+- _Where each 1,000 IQD of net revenue went:_ for each part,
+  `amount ÷ revenue × 1,000`, the revenue being net revenue. What was sold
+  cost is 5000; the delivery platforms 5100
+  and 5200; waste and stock differences the rest of cost of sales (5050,
+  5300, 5310, 5400); the staff 6100 and 6110; rent and running costs every
+  other operating expense. What was kept is net revenue less them all — the
+  net profit — or, below zero, the period's loss. Nothing is divided when
+  there is no net revenue.
+
 ## 13. Staff, their hours and their pay (`0049`)
 
 **A day's hours.** A person's records of a day (by the café's clock, the day
