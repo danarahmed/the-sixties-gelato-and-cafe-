@@ -99,6 +99,22 @@
   --f-blueberry: #6f7fd6;
   --f-mint: #5fbfa4;
   --f-vanilla: #efd9a7;
+  /* The charts: eight flavours in a fixed order, checked for colour-blind
+     readers and for 3:1 on the cards (the dataviz six checks); the quiet
+     warm grey of what is context; the line a series is read against. */
+  --viz-1: #d3316a;
+  --viz-2: #0386b1;
+  --viz-3: #b75f0b;
+  --viz-4: #0c9c82;
+  --viz-5: #496cef;
+  --viz-6: #608a05;
+  --viz-7: #b243ba;
+  --viz-8: #a36e09;
+  --viz-accent: var(--viz-1);
+  --viz-muted: #d8c7b6;
+  --viz-line: #7a6152;
+  --viz-grid: #efe5d8;
+  --viz-axis: #d6c2ac;
   /* Raspberry turning to a burnt orange: white words read on all of it. */
   --glow: linear-gradient(135deg, #b8375b 0%, #c44a22 100%);
   --shadow: 0 1px 2px rgba(74, 42, 22, 0.06), 0 6px 20px rgba(74, 42, 22, 0.06);
@@ -136,6 +152,18 @@
   --rail-mute: #ab9483;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
   --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.35), 0 16px 36px rgba(0, 0, 0, 0.35);
+  --viz-1: #cb2865;
+  --viz-2: #0396c6;
+  --viz-3: #af5b0b;
+  --viz-4: #19aa8e;
+  --viz-5: #4366e8;
+  --viz-6: #5b8304;
+  --viz-7: #ab3db3;
+  --viz-8: #9b690b;
+  --viz-muted: #4d3c33;
+  --viz-line: #c7b2a2;
+  --viz-grid: #33261f;
+  --viz-axis: #4a3a31;
 }
 
 * {
@@ -190,7 +218,6 @@ h3 {
 .money,
 .amt,
 .fig,
-.stat .value,
 td.right,
 th.right {
   font-variant-numeric: tabular-nums lining-nums;
@@ -576,25 +603,39 @@ a.card:hover {
   height: 4px;
   background: var(--stat-flavour, var(--f-raspberry));
 }
-.grid > .stat:nth-child(5n + 2) {
+:is(.grid, .kpis) > .stat:nth-child(5n + 2) {
   --stat-flavour: var(--f-mango);
 }
-.grid > .stat:nth-child(5n + 3) {
+:is(.grid, .kpis) > .stat:nth-child(5n + 3) {
   --stat-flavour: var(--f-pistachio);
 }
-.grid > .stat:nth-child(5n + 4) {
+:is(.grid, .kpis) > .stat:nth-child(5n + 4) {
   --stat-flavour: var(--f-blueberry);
 }
-.grid > .stat:nth-child(5n + 5) {
+:is(.grid, .kpis) > .stat:nth-child(5n + 5) {
   --stat-flavour: var(--f-caramel);
 }
 .stat .value {
-  font-family: var(--font-display);
-  font-variation-settings: "SOFT" 100;
-  font-size: 1.75rem;
-  font-weight: 650;
+  font-family: var(--font-ui);
+  font-size: 1.7rem;
+  font-weight: 750;
   line-height: 1.15;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+}
+.stat .value.err {
+  color: var(--err);
+}
+/* Today against a usual day of its kind: an arrow and words, never colour alone. */
+.delta {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.delta.up {
+  color: var(--ok);
+}
+.delta.down {
+  color: var(--warn);
 }
 .stat .label {
   color: var(--text-muted);
@@ -2422,7 +2463,7 @@ a.card.stat:focus-visible {
   html.printing-report td {
     border-block-end: 1px solid #999;
     color: #000 !important;
-    padding: 3px 5px !important;
+    padding: 3px 4px !important;
     font-size: 10px !important;
   }
   /* On paper a table fits the width of the page: no box of its own to
@@ -3602,4 +3643,439 @@ a.card.stat:focus-visible {
   gap: 6px 14px;
   padding-inline-start: 26px;
   font-size: 0.9rem;
+}
+
+/* ---------------------------------------------------------------- dashboard */
+.dash {
+  display: grid;
+  gap: 22px;
+}
+.dash-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10px 16px;
+  flex-wrap: wrap;
+}
+.dash-hero h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 1.15rem + 1.5vw, 2.35rem);
+}
+.dash-when {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+}
+.dash-h {
+  margin: 0 0 12px;
+  font-size: 1.2rem;
+}
+.dash-note {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+}
+.kpis {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+.dash-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr);
+}
+/* A wide screen: the charts and yesterday's brief on the left; on the right
+   what the figures say, then what sells, the stock and the last sales. Each
+   column stacks on its own, so neither waits for the other's height. */
+@media (min-width: 1100px) {
+  .dash-grid {
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "main say"
+      "main side";
+  }
+  .dash-say {
+    grid-area: say;
+  }
+  .dash-main {
+    grid-area: main;
+  }
+  .dash-side {
+    grid-area: side;
+  }
+}
+.dash-main,
+.dash-side {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  min-width: 0;
+}
+.dash-stock-value {
+  margin: 4px 0 12px;
+  font-size: 1.5rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+.dash-side .viz-title a {
+  color: inherit;
+}
+.dash-more {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* What the figures say: each with its mark and words, a link to act on it. */
+.sayings {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.saying {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.saying a {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 3px;
+}
+.saying a:hover {
+  text-decoration-color: var(--brand);
+}
+.saying-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+.saying.ok .saying-icon {
+  background: color-mix(in srgb, var(--ok) 12%, var(--surface));
+  color: var(--ok);
+}
+.saying.warn .saying-icon {
+  background: color-mix(in srgb, var(--warn) 12%, var(--surface));
+  color: var(--warn);
+}
+.saying.info .saying-icon {
+  background: color-mix(in srgb, var(--info) 12%, var(--surface));
+  color: var(--info);
+}
+.saying-detail {
+  display: block;
+  margin-block-start: 3px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* A figure's last fortnight before today: a quiet line, its last point marked. */
+.spark {
+  position: relative;
+  display: block;
+  height: 30px;
+  margin-block-start: 6px;
+}
+.spark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+[dir="rtl"] .spark svg {
+  transform: scaleX(-1);
+}
+.spark polyline {
+  fill: none;
+  stroke: var(--viz-line);
+  stroke-opacity: 0.55;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.spark-dot {
+  position: absolute;
+  inset-inline-end: 0;
+  width: 8px;
+  height: 8px;
+  margin-inline-end: -4px;
+  margin-block-end: -4px;
+  border-radius: 50%;
+  background: var(--viz-line);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+/* ---------------------------------------------------------------- charts */
+/* Columns from one baseline, 24px at most, a 4px round at the top; hairline
+   grid; the pointer or the keyboard brings every series at a column; a table
+   under each holds the same figures. Logical properties: the time runs the
+   way the reader reads. */
+.viz {
+  --axis-w: 62px;
+  margin: 0;
+  display: grid;
+  gap: 14px;
+}
+.viz-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px 14px;
+  flex-wrap: wrap;
+}
+.viz-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-variation-settings: "SOFT" 100;
+  font-size: 1.08rem;
+  font-weight: 600;
+}
+.viz-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.viz-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.viz-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--viz-accent);
+}
+.viz-linekey {
+  display: inline-block;
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--viz-line);
+}
+.viz-refkey {
+  display: inline-block;
+  width: 16px;
+  height: 0;
+  border-block-start: 2px dashed var(--viz-line);
+}
+.viz-frame {
+  position: relative;
+  height: calc(var(--plot-h) + 26px);
+}
+.viz-plot {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: var(--axis-w);
+  inset-inline-end: 0;
+  height: var(--plot-h);
+}
+.viz-gridline {
+  position: absolute;
+  inset-inline: 0;
+  height: 0;
+  border-block-start: 1px solid var(--viz-grid);
+}
+.viz-gridline:first-child {
+  border-block-start-color: var(--viz-axis);
+}
+.viz-tick {
+  position: absolute;
+  inset-inline-end: calc(100% + 8px);
+  top: 0;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* A level to read the columns against, dashed, over them; named in the legend. */
+.viz-ref {
+  position: absolute;
+  inset-inline: 0;
+  z-index: 2;
+  height: 0;
+  border-block-start: 2px dashed var(--viz-line);
+  pointer-events: none;
+}
+.viz-cols {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+.viz-slot {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border-radius: 6px;
+  outline: none;
+}
+.viz-slot:hover,
+.viz-slot.on {
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+}
+.viz-slot:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--brand);
+}
+.viz-bar {
+  width: min(24px, 64%);
+  background: var(--viz-muted);
+  border-radius: 4px 4px 0 0;
+}
+.viz-slot.emph .viz-bar {
+  background: var(--viz-accent);
+}
+.viz-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+[dir="rtl"] .viz-line {
+  transform: scaleX(-1);
+}
+.viz-line polyline {
+  fill: none;
+  stroke: var(--viz-line);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.viz-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin-inline-start: -4px;
+  margin-block-end: -4px;
+  border-radius: 50%;
+  background: var(--viz-line);
+  box-shadow: 0 0 0 2px var(--surface);
+  pointer-events: none;
+}
+.viz-tip {
+  position: absolute;
+  inset-block-start: 0;
+  z-index: 6;
+  display: grid;
+  gap: 2px;
+  padding: 8px 11px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 8px));
+}
+[dir="rtl"] .viz-tip {
+  transform: translate(50%, calc(-100% - 8px));
+}
+.viz-tip strong {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.viz-tip-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.viz-tip-line strong {
+  font-size: 0.85rem;
+}
+.viz-xlabels {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-start: var(--axis-w);
+  inset-inline-end: 0;
+  height: 20px;
+  display: flex;
+}
+.viz-xlabel {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--faint);
+  white-space: nowrap;
+}
+/* On a phone, every other day's name, today's always among them. */
+@media (max-width: 640px) {
+  .viz {
+    --axis-w: 54px;
+  }
+  .viz-xlabel:nth-last-child(even) {
+    visibility: hidden;
+  }
+}
+.viz-table > summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.viz-table[open] > summary {
+  margin-block-end: 8px;
+}
+
+/* Bars along their rows: one colour, each value beside its bar. */
+.vbars {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.vbar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+.vbar-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.vbar-value {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.vbar-track {
+  grid-column: 1 / -1;
+  height: 12px;
+}
+.vbar-fill {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  background: var(--viz-accent);
+  border-start-end-radius: 4px;
+  border-end-end-radius: 4px;
+}
+.vbar-sub {
+  grid-column: 1 / -1;
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }

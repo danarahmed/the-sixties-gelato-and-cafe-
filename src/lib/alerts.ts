@@ -100,7 +100,7 @@ export function sortAlerts(list: Alert[]): { needsYou: Alert[]; answered: Alert[
 /**
  * Orange alerts of one rule, together once there are two or more — twenty
  * ingredients without a cost read as one row to open, not twenty. Red ones
- * are never folded away. In the order the rules first appear.
+ * are never folded away (splitRed). In the order the rules first appear.
  */
 export function groupByRule(list: Alert[]): { rule: string; alerts: Alert[] }[] {
   const groups: { rule: string; alerts: Alert[] }[] = [];
@@ -110,6 +110,26 @@ export function groupByRule(list: Alert[]): { rule: string; alerts: Alert[] }[] 
     else groups.push({ rule: a.rule, alerts: [a] });
   }
   return groups;
+}
+
+/** How many red alerts of one rule are shown before the rest wait under one row. */
+export const RED_SHOWN = 2;
+
+/**
+ * Red alerts of one rule: the first `shown` on the page, and the rest under
+ * one red row that says how many more — twenty items running out at once
+ * still show their kind in red at the top, without burying the page. In the
+ * order the rules first appear.
+ */
+export function splitRed(
+  list: Alert[],
+  shown = RED_SHOWN,
+): { rule: string; shown: Alert[]; more: Alert[] }[] {
+  return groupByRule(list).map((g) => ({
+    rule: g.rule,
+    shown: g.alerts.slice(0, shown),
+    more: g.alerts.slice(shown),
+  }));
 }
 
 /** 🔴 when anything red waits, 🟠 when only orange does, 🟢 when nothing does. */

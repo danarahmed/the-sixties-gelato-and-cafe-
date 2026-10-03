@@ -958,6 +958,27 @@ the shelf), 100 g of beans wasted (1,000) and the drawer counted at 4,500:
 net sales 5,000 over 2 sales; cost of goods 400 (8%); gross profit 3,600
 (72%); the drawer 500 short.
 
+**The dashboard's comparisons** (`src/lib/dashboard.ts`, from the sales
+analysis of `0051`, for whoever sees costs):
+
+- _A usual day of its kind_ is the four days of the same weekday before
+  today, leaving out any with no sales (the café was closed), as the brief
+  counts its usual.
+- _By this time:_ each of those days counted from its start to the time it is
+  now — its whole hours before this one, and of this hour the part that has
+  passed (at 16:09, the hours to 16:00 and 9/60 of the 16:00 hour). The usual
+  is the average of those days, and
+  `change = (today so far − usual) ÷ usual`. Within 5% either way is said as
+  usual. The average order: `net ÷ orders` for today and for the usual,
+  compared the same way.
+- _Busiest hour:_ the hour with the most net sales on the usual day, hour by
+  hour the average of those days.
+- _What a product keeps:_ `(net − recipe cost) ÷ net`, over the last 7 days;
+  none when its cost is nothing, so it is never read as a fine margin. The
+  thinnest named is under 30%, sold 3 times or more.
+- _The 14 days:_ net sales a day; the dashed line is the average of the 13
+  days before today that had sales.
+
 ## 13. Staff, their hours and their pay (`0049`)
 
 **A day's hours.** A person's records of a day (by the café's clock, the day

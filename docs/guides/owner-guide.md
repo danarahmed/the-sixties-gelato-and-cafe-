@@ -457,10 +457,16 @@ discount, why and who approved it. The 10% is a business setting (shown on
   it until a day, with a reason. Either way it stays, marked 🔵, until its
   condition clears, and then leaves by itself; one that turns from orange to
   red asks again. Many of one kind (say, twenty ingredients with no cost yet)
-  fold into one row to open. 🟢 means nothing needs you. Below it,
-  **yesterday's brief** — what happened, what follows from it, and what to do,
-  kept apart — then today's revenue, gross profit, orders, stock value, low
-  and negative stock, and whether the books reconcile.
+  fold into one row to open; red ones show the first two of a kind, and a red
+  row says how many more. 🟢 means nothing needs you. Below it, today's
+  net sales, orders, average order and gross profit, each against **a usual
+  day of its kind by this time** (a Saturday afternoon against the four
+  Saturdays before, to the same hour); **what the figures say**, in words,
+  each with a link to where to act — how today is going, the busiest hour to
+  staff for, what sells, a margin that is too thin, what to buy; the last 14
+  days and today hour by hour, drawn; the stock; **yesterday's brief** —
+  what happened, what follows from it, and what to do, kept apart — and
+  whether the books reconcile.
 - **The drawer, in sessions.** Whoever works the drawer opens it on the till
   by counting what is in it, and closes it at the end of their shift by
   counting again ([cashier's guide](cashier-quickstart.md#the-drawer)); the
