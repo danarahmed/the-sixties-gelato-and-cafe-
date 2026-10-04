@@ -183,12 +183,16 @@ console.log("▸ the week at a glance: the seven days to today against the seven
     "seven days drawn, each beside the week before's, and what the week says in words",
   );
   await page.getByTestId("week-before").click();
-  await page.waitForURL(/end=/);
-  await page.waitForLoadState("networkidle");
+  // The link moves within the page: wait for the week before to be drawn.
+  const back = await page
+    .locator('[data-testid="week-period"]', { hasText: `${beforeFrom} to ${beforeTo},` })
+    .waitFor({ timeout: 10000 })
+    .then(() => true)
+    .catch(() => false);
   check(
-    (await page.getByTestId("week-period").textContent()).startsWith(
-      `${beforeFrom} to ${beforeTo}`,
-    ) && (await page.getByTestId("week-after").count()) === 1,
+    back &&
+      new URL(page.url()).searchParams.get("end") === beforeTo &&
+      (await page.getByTestId("week-after").count()) === 1,
     "a week back, with the way forward again",
   );
   await ctx.close();
