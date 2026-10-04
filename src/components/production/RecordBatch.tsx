@@ -14,12 +14,15 @@ import type { BatchRecipe } from "@/lib/db/production";
 import {
   batchCost,
   batchesOf,
+  labelsFor,
   perUnit,
   showIn,
+  showNice,
   unitFactor,
   unitLabel,
   type UnitsOf,
 } from "@/components/production/batchMath";
+import { BatchLabels, type LabelBatch } from "@/components/production/BatchLabels";
 import { OperationStatus, useOperation } from "@/components/useOperation";
 import { ManagerApproval } from "@/components/ManagerApproval";
 
@@ -48,6 +51,7 @@ export function RecordBatch({
   timezone,
   canRecordLate,
   initial = null,
+  labels = null,
 }: {
   recipes: BatchRecipe[];
   items: ProductionItem[];
@@ -60,6 +64,16 @@ export function RecordBatch({
   canRecordLate: boolean;
   /** What the day's plan says to make, filled in from its row: still checked and recorded here. */
   initial?: { recipeId: string; batches: number } | null;
+  /**
+   * For the labels of a batch just recorded: the café's name, where it was
+   * made, by whom, and what each made item is called in the reader's language.
+   */
+  labels?: {
+    businessName: string;
+    place: string | null;
+    by: string;
+    names: Record<string, string>;
+  } | null;
 }) {
   const op = useOperation();
   const { t, msg: say } = useT();
@@ -80,6 +94,8 @@ export function RecordBatch({
   const [lateReason, setLateReason] = useState("");
   const [msg, setMsg] = useState<Msg>(null);
   const [needsManager, setNeedsManager] = useState(false);
+  // The batch just recorded, for its pans' labels.
+  const [made, setMade] = useState<{ batch: LabelBatch; pans: number } | null>(null);
 
   const byId = new Map(items.map((i) => [i.id, i]));
   const recipe = recipes.find((r) => r.id === recipeId);
@@ -114,6 +130,7 @@ export function RecordBatch({
   function submit(stockApprovalId: string | null = null) {
     if (!recipe) return;
     setMsg(null);
+    setMade(null);
     const producedAt = late ? localTimeToIso(madeAt, timezone) : null;
     if (late && !producedAt) {
       setMsg({ ok: false, text: t("Enter when it was made") });
@@ -162,6 +179,19 @@ export function RecordBatch({
             ? `${recorded} ${t("Use it by {when}.", { when: dateTimeIn(timezone, r.data.useBy) })}`
             : recorded,
         });
+        if (labels)
+          setMade({
+            batch: {
+              batchNo: r.data.batchNo,
+              name: labels.names[recipe.outputItemId] || recipe.outputName,
+              made: showNice(new Decimal(r.data.actual), output, output?.baseUnit ?? "", t),
+              madeAt: producedAt ?? new Date().toISOString(),
+              useBy: r.data.useBy,
+              place: labels.place,
+              madeBy: labels.by,
+            },
+            pans: labelsFor(r.data.actual, shownUnit, output),
+          });
         setBatches("1");
         setOutQty("");
         setNote("");
@@ -385,6 +415,14 @@ export function RecordBatch({
         <OperationStatus op={op} />
         <Notice msg={msg} />
       </div>
+      {made && labels && (
+        <BatchLabels
+          batch={made.batch}
+          businessName={labels.businessName}
+          timezone={timezone}
+          pans={made.pans}
+        />
+      )}
       {needsManager && recipe && (
         <div className="card grid" style={{ gap: 8 }} data-testid="batch-approval">
           <b style={{ fontSize: ".9rem" }}>

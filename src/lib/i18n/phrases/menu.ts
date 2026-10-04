@@ -767,6 +767,17 @@ const phrases: PhraseBook = {
     ckb: "دەرچوو: {actual} لەو {planned}ەی ڕەسەتەکەی بەرهەمی دەهێنێت",
   },
   "To be used by {when}": { ar: "يُستعمل قبل {when}", ckb: "دەبێت پێش {when} بەکاربهێنرێت" },
+  // A pan's label (round four): printed on the receipt printer.
+  Labels: { ar: "الملصقات", ckb: "لیبڵەکان" },
+  "How many labels": { ar: "عدد الملصقات", ckb: "ژمارەی لیبڵەکان" },
+  "Print {n} label(s)": {
+    ar: "{n, plural, one {اطبع ملصقًا واحدًا} two {اطبع ملصقين} few {اطبع # ملصقات} many {اطبع # ملصقًا} other {اطبع # ملصق}}",
+    ckb: "{n} لیبڵ چاپ بکە",
+  },
+  "Batch {no}": { ar: "الدفعة {no}", ckb: "دەستەی {no}" },
+  "Pan {i} of {n}": { ar: "الوعاء {i} من {n}", ckb: "قاپی {i} لە {n}" },
+  "No use-by": { ar: "لا موعد استعمال", ckb: "کاتی بەکارهێنانی نییە" },
+  "The batch made {made}": { ar: "أنتجت الدفعة {made}", ckb: "دەستەکە {made}ی دروستکرد" },
   "No use-by: its recipe keeps no shelf life.": {
     ar: "لا موعد استعمال: لا مدة صلاحية في وصفتها.",
     ckb: "کاتی بەکارهێنانی نییە: ڕەسەتەکەی ماوەی بەکارهێنانی بۆ دانەنراوە.",

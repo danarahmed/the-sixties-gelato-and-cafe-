@@ -144,29 +144,7 @@ export function PrintSlip({
   onDone: () => void;
 }) {
   const { locale, dir } = useT();
-  // Printed once per job, however often the till re-renders meanwhile.
-  const done = useRef(onDone);
-  done.current = onDone;
-
-  useEffect(() => {
-    if (!slips || slips.length === 0) return;
-    let finished = false;
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      done.current();
-    };
-    window.addEventListener("afterprint", finish);
-    // Let the slips render before the print dialog takes its picture of the page.
-    const timer = window.setTimeout(() => {
-      window.print();
-      window.setTimeout(finish, 500);
-    }, 60);
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener("afterprint", finish);
-    };
-  }, [slips]);
+  usePrintOnce(slips && slips.length > 0 ? slips : null, onDone);
 
   if (!slips || slips.length === 0 || typeof document === "undefined") return null;
   const at = (iso: string, withDate: boolean) =>
@@ -192,6 +170,36 @@ export function PrintSlip({
     </div>,
     document.body,
   );
+}
+
+/**
+ * The print dialog, once for each job given (slips, labels), however often the
+ * page re-renders meanwhile; `onDone` when it is closed. What prints is what
+ * the page holds for printing (.print-slip), everything else hidden.
+ */
+export function usePrintOnce(job: unknown, onDone: () => void) {
+  const done = useRef(onDone);
+  done.current = onDone;
+
+  useEffect(() => {
+    if (!job) return;
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      done.current();
+    };
+    window.addEventListener("afterprint", finish);
+    // Let the slips render before the print dialog takes its picture of the page.
+    const timer = window.setTimeout(() => {
+      window.print();
+      window.setTimeout(finish, 500);
+    }, 60);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("afterprint", finish);
+    };
+  }, [job]);
 }
 
 /** The café's mark: a scoop on a cone, in a double ring; on paper, and on the empty till. */

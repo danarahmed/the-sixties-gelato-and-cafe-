@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Decimal from "decimal.js";
-import { getMsg, getT } from "@/lib/i18n/server";
+import { getLocale, getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems, getStockBoard } from "@/lib/db/read";
@@ -36,6 +36,7 @@ export default async function ProductionPage({
   const profile = await requirePermission("cost.view", "production.record");
   const t = await getT();
   const msg = await getMsg();
+  const locale = await getLocale();
   const sp = await searchParams;
   const seesCost = has(profile, "cost.view");
   const canRecord = has(profile, "production.record");
@@ -173,6 +174,17 @@ export default async function ProductionPage({
             decimals={decimals}
             timezone={profile.timezone}
             canRecordLate={canCancel}
+            labels={{
+              businessName: profile.businessName,
+              place: place?.name ?? null,
+              by: profile.name,
+              names: Object.fromEntries(
+                items.map((i) => [
+                  i.id,
+                  (locale === "ar" ? i.nameAr : locale === "ckb" ? i.nameCkb : null) || i.name,
+                ]),
+              ),
+            }}
           />
         </div>
       )}

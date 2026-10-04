@@ -33,6 +33,7 @@ import {
   reconciliationFrom,
   storyAddsUp,
   storyFrom,
+  weekdayOf,
 } from "@/lib/production";
 import {
   GIVEAWAY_KINDS,
@@ -254,6 +255,7 @@ import {
 import {
   batchCost,
   batchesOf,
+  labelsFor,
   perUnit,
   showIn,
   showNice,
@@ -5583,5 +5585,41 @@ describe("what a review of the releases since 0035 found, put right (0063–0066
           /[A-Za-z]{4,}/.test(msg(r).replace(/Golden \w+|Second \w+|\d{4}-\d{2}-\d{2}/g, "")),
         ]).toEqual([locale, r, false]);
     }
+  });
+});
+
+describe("a batch's labels, one a pan (round four)", () => {
+  const gelato = {
+    baseUnit: "g",
+    units: [
+      { code: "kg", label: "kg", factor: 1000 },
+      { code: "pan_5kg", label: "Pan of 5 kg", factor: 5000 },
+    ],
+  };
+
+  it("weighed in pans: one a pan, the last one part full", () => {
+    expect(labelsFor(10000, "pan_5kg", gelato)).toBe(2);
+    expect(labelsFor(9600, "pan_5kg", gelato)).toBe(2);
+    expect(labelsFor(10001, "pan_5kg", gelato)).toBe(3);
+    expect(labelsFor(4800, "pan_5kg", gelato)).toBe(1);
+  });
+
+  it("weighed in kilos or grams, or counted: one", () => {
+    expect(labelsFor(9600, "kg", gelato)).toBe(1);
+    expect(labelsFor(9600, "g", gelato)).toBe(1);
+    expect(labelsFor(24, "each", { baseUnit: "each", units: [] })).toBe(1);
+  });
+
+  it("twenty at most; a unit the item lacks, or nothing made, one", () => {
+    expect(labelsFor(500000, "pan_5kg", gelato)).toBe(20);
+    expect(labelsFor(10000, "tub", gelato)).toBe(1);
+    expect(labelsFor(0, "pan_5kg", gelato)).toBe(1);
+  });
+
+  it("the weekday its dates fall on, in the café's time", () => {
+    // 2026-10-04 is a Sunday; 22:30 UTC on the 4th is 01:30 on Monday the 5th in Baghdad.
+    expect(weekdayOf("2026-10-04T08:00:00Z", "Asia/Baghdad")).toBe("Sunday");
+    expect(weekdayOf("2026-10-04T22:30:00Z", "Asia/Baghdad")).toBe("Monday");
+    expect(weekdayOf("2026-10-04T22:30:00Z", "UTC")).toBe("Sunday");
   });
 });
