@@ -242,7 +242,7 @@ back to **Tables**.
    product's name anywhere on the till and it is found, the first match lit
    in raspberry; **↑ ↓** choose another and **Enter** adds it. A number typed
    first adds that many of the next one (**3**, then the name and **Enter**:
-   three, shown as **× 3** until then); **3\*latte** in the search does the
+   three, shown as **× 3** until then, and gone after ten seconds unused); **3\*latte** in the search does the
    same. **F2** takes cash — **Enter** then takes the exact amount — and **F4**
    a card; a delivery platform's order is the platform's either way. **Esc**
    clears what was typed, **/** goes to the search, and **?** (or the small

@@ -878,7 +878,9 @@ database, behind a small local stand-in for Supabase's auth service.
   30,000 to 40,000 IQD a kilo; a dine-in espresso uses what its recipe says of
   them, the rise adds that times 10 IQD, its margin falls, and the price that
   keeps it is above today's; the dashboard says the beans came in dearer and
-  leads there; the page in Arabic and Kurdish.
+  leads there; the page in Arabic and Kurdish; and the dearer delivery
+  corrected to 31 a gram, the beans are off the watch (3%, under the 5% it
+  says from): a delivery is read as it stands now.
 - `documents` (`0053`): a manager opens a delivery's 📎 on Purchasing (none
   kept yet) and keeps its delivery note: a phone's photo of 4 MB or so, made
   smaller in the browser (its longer side 2,000 pixels) and put in the bucket

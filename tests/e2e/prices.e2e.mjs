@@ -3,7 +3,8 @@
 // which says so, by how much and when, and what it does to every size of the
 // espresso — what a serving uses of the beans times the rise, the margin
 // before and after, and the price that keeps it; the dashboard says the beans
-// came in dearer and leads there; and the page speaks Arabic and Kurdish.
+// came in dearer and leads there; the page speaks Arabic and Kurdish; and once
+// the delivery is corrected to its true price, the watch reads it so.
 import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 import { english } from "./english.mjs";
 
@@ -21,7 +22,7 @@ const receive = (qty, price) =>
 
 console.log("▸ the beans come in a third dearer than the delivery before");
 receive(1000, 30);
-receive(1000, 40);
+const dearer = receive(1000, 40);
 // What the price history says of the two, newest first: a gram at 30, then at 40.
 const history = last(`select test.act_as('owner@example.com');
   select string_agg(trim_scale(round(coalesce(landed_per_base, cost_per_base), 2))::text, ',')
@@ -94,6 +95,23 @@ for (const locale of ["ar", "ckb"]) {
     words.length === 0,
     `in ${locale}, no English but the café's own names` +
       (words.length ? `: ${words.slice(0, 12).join(" ")}` : ""),
+  );
+  await ctx.close();
+}
+
+console.log("▸ the delivery corrected: the watch reads it as it stands now");
+{
+  const line = last(`select id from goods_receipt_line where goods_receipt_id = '${dearer}'`);
+  last(`select test.act_as('manager@example.com');
+        select correct_receipt('${dearer}',
+          jsonb_build_array(jsonb_build_object('line_id', '${line}', 'item_id', '${BEANS}',
+                                               'qty', 1000, 'unit_price', 31)),
+          null, null, 'The beans were 31 a gram: a typing mistake', true)`);
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/reports/prices");
+  check(
+    (await page.locator('[data-testid="price-rise"][data-item="Golden beans"]').count()) === 0,
+    "corrected to 31 a gram, 3% over the delivery before: no rise worth saying",
   );
   await ctx.close();
 }

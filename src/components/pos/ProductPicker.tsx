@@ -232,6 +232,14 @@ export function ProductPicker({
     return () => window.removeEventListener("keydown", onKey);
   }, [free, times]);
 
+  // A number typed first and left: gone after ten seconds, so a key pressed by
+  // mistake never adds five of whatever is tapped next.
+  useEffect(() => {
+    if (!times) return;
+    const gone = setTimeout(() => setTimes(""), 10_000);
+    return () => clearTimeout(gone);
+  }, [times]);
+
   /** Add a product: as many as typed first, or asked in the search; then the count is done with. */
   function pick(p: Product) {
     if (disabled) return;
