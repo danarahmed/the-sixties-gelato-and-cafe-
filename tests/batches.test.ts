@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ID_BATCH, ROW_PAGE, readInBatches } from "@/lib/db/batches";
+import { ID_BATCH, ROW_PAGE, readInBatches, readPaged } from "@/lib/db/batches";
 
 /**
  * A table read as the hosted API reads it: the rows of the ids asked for, in
@@ -68,6 +68,47 @@ describe("reading over a long list of ids", () => {
     const t = table(Object.fromEntries(list.map((id) => [id, 1])), ROW_PAGE, list[120] ?? "");
     await expect(readInBatches(list, t.read, "refunds")).rejects.toThrow(
       "Could not load refunds: URI too long",
+    );
+  });
+});
+
+describe("reading every row of one read (round six)", () => {
+  /** A read the hosted API answers a page at a time, at most `page` rows a call. */
+  const pages = (n: number, page: number, failAt?: number) => {
+    const all = Array.from({ length: n }, (_, i) => ({ id: i }));
+    const asked: [number, number][] = [];
+    const read = () => ({
+      range: async (from: number, to: number) => {
+        asked.push([from, to]);
+        if (failAt !== undefined && from >= failAt)
+          return { data: null, error: { message: "timeout" } as never };
+        return { data: all.slice(from, Math.min(to + 1, from + page)), error: null };
+      },
+    });
+    return { read, asked };
+  };
+
+  it("reads a page at a time until one comes back short", async () => {
+    const p = pages(2500, 1000);
+    const got = await readPaged(p.read, "hours");
+    expect(got.map((r) => r.id)).toEqual(Array.from({ length: 2500 }, (_, i) => i));
+    expect(p.asked).toEqual([
+      [0, 999],
+      [1000, 1999],
+      [2000, 2999],
+    ]);
+  });
+
+  it("a read that fills its last page exactly asks once more, and gets none", async () => {
+    const p = pages(2000, 1000);
+    expect(await readPaged(p.read, "hours")).toHaveLength(2000);
+    expect(p.asked).toHaveLength(3);
+    expect(await readPaged(pages(0, 1000).read, "hours")).toEqual([]);
+  });
+
+  it("any page's error is the read's: never a shorter list in its place", async () => {
+    await expect(readPaged(pages(2500, 1000, 1000).read, "the hours on the clock")).rejects.toThrow(
+      "Could not load the hours on the clock: timeout",
     );
   });
 });

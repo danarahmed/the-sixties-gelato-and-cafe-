@@ -77,9 +77,22 @@ Count**; the purchasing role on **Reports**.
   - **Operations:** POS, Orders, Products & Recipes, Inventory, Stock Count,
     Production;
   - **Accountant:** Journals, Chart of Accounts, Reports, Settings;
-  - **You:** My account.
+  - **You:** My account, and, on the till, Production and the Dashboard,
+    **Show me around this screen**.
 
   You see only the screens your roles allow.
+
+- **Show me around** (round six): the till, Production and the Dashboard each
+  have a short tour for someone new to them. The first time on a device, the
+  screen offers it (**New here? Let us show you around this screen.**, in the
+  till's empty order, under Production's title, above the Dashboard's day):
+  **Show me around** starts it, **No thanks** puts the offer away. Each step
+  lights a part of the screen, dims the rest, and says in a sentence what it
+  is for: **Next** and **Back**, or the arrows the way the language reads;
+  **Finish** or **End the tour**, or Escape, ends it, and it is not offered
+  again on that device. A step whose part the screen does not show (a role
+  that does not see it, a plan not made yet) is passed over. The menu's
+  **Show me around this screen** takes the tour again whenever.
 
 - **Top bar:**
   - **☰** opens the sidebar on a phone;
@@ -402,6 +415,16 @@ the same day last week and a usual one of its kind; and **How it was paid**,
 each payment method's share of net sales. **Today's reports** opens Reports
 for today. **Print or save as PDF** prints the page with its heading, without
 the menu or the buttons.
+
+**Print the slip for the till** (round six) prints the day's close on the
+till's 80 mm receipt printer, in the look of its checks, to keep with the
+cash: the day, when it was printed and by whom; the day's **net sales**,
+written large; the orders, the average order, voids and refunds, and waste;
+how it was paid; the drawers counted today, against what they should hold
+(no difference, short or over), and those still open; the five that sold the
+most; each step of the close, ticked or crossed; and lines to sign for who
+closed and who checked. Each part is there only for whoever the page shows it
+to.
 
 ### Start of Day
 
@@ -1532,6 +1555,40 @@ accountant's own tools. Pages open from the top (`0051`):
   its new. On a phone, each size is a card. Each item opens its deliveries
   and prices.
 
+- **Staffed when busy?** (`/reports/staffing`; round six; for those who see
+  the sales analysis and the staff's hours): the four weeks to yesterday, each
+  hour of the café's week on average — the orders rung up in it against the
+  people on the clock in it. What a person on the clock usually serves in an
+  hour is every order served with someone on the clock, over every hour on the
+  clock. An hour is **short of hands** where each person served half as many
+  orders again as usual or more, in the busier half of the hours; **quiet**
+  where two or more were on the clock and each served half the usual or less;
+  and kept with **nobody on the clock** where orders came and nobody was
+  clocked in. It says each run of such hours in words — what one more person
+  would bring the load to, or how many would still be left with one fewer
+  (unless they were preparing) — and warns when 5% or more of the orders came
+  with nobody on the clock: the page reads true only with the clock kept.
+  **Orders hour by hour** draws a day — every day on average, or a weekday
+  chosen above it — against **What those on the clock usually serve** (a
+  line), its short hours in raspberry; **The week, hour by hour** is the week
+  as a grid, each hour shaded by its orders and marked ▲ short, ▽ quiet, ●
+  nobody. A weekday's name, or a sentence, opens that day. **The four weeks
+  before** and **after** step back and forth. A stretch clocked in and not out
+  is left out, and counted beneath.
+
+- **Waste by recipe** (`/reports/waste`, or from Production; round six; cost
+  viewers): the batches made in the four weeks to yesterday, recipe by
+  recipe, each followed to now: made, sold or used in other batches, thrown
+  away (past its use-by, spoilt, spilt or melted — less a loss taken back on
+  review), eaten by the staff, given away or tasted, and still in stock. Of
+  what has gone, the share thrown away, and what it cost at the batch's own
+  cost. Where what was thrown away mostly went unsold, from two or more
+  batches all gone, it says **a better batch**: what each of them sold, used
+  or gave on average, rounded down — batches of that size would have covered
+  what went. Where it was mostly spilt or melted, it says a smaller batch
+  would not help: look at how it is made and kept. A bar for each recipe's
+  waste in money, the most first; on a phone each recipe is a card.
+
 - **Sales analysis** (`/reports/sales`): the sales of the dates **by** the
   hour, the day of the week, the date, the product, the category, the size,
   an add-on, who took the money, the payment, the channel or the branch,
@@ -1848,6 +1905,10 @@ a person's roles allows, then the café's.
 | The week at a glance: the seven days against the seven before, charted, and what changed said in words                                                           | `/reports/week`                          | cost viewers                                                                          |
 | The month at a glance: against the same days of the month before; where it closes at its pace; the weekdays that sell                                            | `/reports/month`                         | cost viewers                                                                          |
 | Price watch: what came in dearer, the margins it cuts, the price that keeps each                                                                                 | `/reports/prices`, `/dashboard`          | cost viewers                                                                          |
+| Staffed when busy?: each hour's orders against the people on the clock; short-handed, quiet and unclocked hours                                                  | `/reports/staffing`                      | cost viewers who keep the staff, their hours or their pay                             |
+| Waste by recipe: made, sold, thrown away, eaten or given; the batch that would have covered what went                                                            | `/reports/waste`, `/production`          | cost viewers                                                                          |
+| The day's close on the till's receipt printer, to keep with the cash                                                                                             | `/end-of-day`                            | owner, general manager, branch managers                                               |
+| A tour of the till, Production and the Dashboard for someone new; again from the menu                                                                            | `/pos`, `/production`, `/dashboard`      | everyone who opens them                                                               |
 | The stock's value on a day against 1200; what came in by supplier and by item                                                                                    | `/reports/stock`, `/reports`             | cost viewers                                                                          |
 | The balance sheet at the start and the end of the dates; the cash flow between; CSV                                                                              | `/reports/statements`                    | profit viewers                                                                        |
 | Stock sent between the café's places, on its way in 1210; received, what did not arrive lost; or cancelled                                                       | `/inventory/transfers`                   | owner, managers, purchasing; readers: cost viewers                                    |

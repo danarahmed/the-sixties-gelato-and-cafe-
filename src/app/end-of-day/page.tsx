@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { getMsg, getT } from "@/lib/i18n/server";
+import { getDir, getLocale, getMsg, getT } from "@/lib/i18n/server";
+import { isolateDates, wholeDates } from "@/lib/i18n/core";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getOpenBills } from "@/lib/db/pos";
 import { getCashSessions, getDrawerState } from "@/lib/db/cash";
@@ -9,6 +10,8 @@ import { getLossesWaiting } from "@/lib/db/rules";
 import { getCurrentAlerts, getDailyBrief } from "@/lib/db/alerts";
 import { getCardTakings, getPlatformMoney } from "@/lib/db/settlements";
 import { getPaymentTakings } from "@/lib/db/reports";
+import { getSalesAnalysis } from "@/lib/db/analysis";
+import { namesIn } from "@/lib/analysis";
 import { getPlaces, tillChoice } from "@/lib/place";
 import { businessToday, dateTimeIn } from "@/lib/dates";
 import { fmtIQD, fmtQty, tenderLabel, unitName } from "@/lib/format";
@@ -27,6 +30,7 @@ import { KeepShown } from "@/components/KeepShown";
 import { ShareBar } from "@/components/charts/ShareBar";
 import { PrintButton } from "@/components/PrintButton";
 import { PrintHead } from "@/components/PrintHead";
+import { DaySlipButton, type DaySlipData, type DaySlipPart } from "@/components/endofday/DaySlip";
 import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
@@ -60,7 +64,7 @@ interface Step {
  */
 export default async function EndOfDayPage() {
   const profile = await requirePermission("day.close");
-  const [t, msg] = await Promise.all([getT(), getMsg()]);
+  const [t, msg, locale, dir] = await Promise.all([getT(), getMsg(), getLocale(), getDir()]);
   const tz = profile.timezone;
   const today = businessToday(tz);
   const now = dateTimeIn(tz, new Date().toISOString());
@@ -81,7 +85,7 @@ export default async function EndOfDayPage() {
     drawer: has(profile, "cash.session") || has(profile, "cash.session.force"),
   };
   const [{ at: tillAt }, places] = await Promise.all([tillChoice(), getPlaces()]);
-  const [bills, sessions, boards, losses, alerts, card, platforms, takings, brief, drawer] =
+  const [bills, sessions, boards, losses, alerts, card, platforms, takings, brief, drawer, sold] =
     await Promise.all([
       sees.bills ? getOpenBills(place) : Promise.resolve([]),
       getCashSessions(today, today, place),
@@ -93,6 +97,19 @@ export default async function EndOfDayPage() {
       sees.money ? getPaymentTakings(today, today, place) : Promise.resolve([]),
       sees.alerts ? getDailyBrief(today) : Promise.resolve(null),
       sees.drawer ? getDrawerState(tillAt) : Promise.resolve(null),
+      // What sold the most today, for the day's slip (round six).
+      sees.money
+        ? getSalesAnalysis({
+            from: today,
+            to: today,
+            by: "product",
+            then: null,
+            channel: null,
+            location: place,
+            category: null,
+            cashier: null,
+          })
+        : Promise.resolve(null),
     ]);
   const severalPlaces = places.length > 1;
   const waiting = waitingAlerts(alerts);
@@ -333,6 +350,93 @@ export default async function EndOfDayPage() {
   const reports = `/reports?from=${today}&to=${today}`;
   const orders = `/orders?from=${today}&to=${today}`;
 
+  // ------------------------------------------------------------ the day's slip
+  // The close on the receipt printer, to keep with the cash (round six): what
+  // the page says, each part only for those the page shows it to.
+  const drawersNow = openDrawers(sessions);
+  const countedToday = closedOn(sessions, today, dayOf);
+  const top = sold ? [...sold.rows].sort((a, b) => b.qty - a.qty || b.net - a.net).slice(0, 5) : [];
+  const parts: (DaySlipPart | null)[] = [
+    f
+      ? {
+          key: "sales",
+          title: t("Sales"),
+          rows: [
+            { label: t("dash.orders"), value: String(f.sales) },
+            ...(f.sales > 0
+              ? [
+                  {
+                    label: t("An order on average"),
+                    value: fmtIQD(Math.round(f.netSales / f.sales)),
+                  },
+                ]
+              : []),
+            { label: t("Voids and refunds"), value: fmtIQD(f.voided + f.refunded) },
+            { label: t("Waste"), value: fmtIQD(f.waste) },
+          ],
+        }
+      : null,
+    paid.length
+      ? {
+          key: "paid",
+          title: t("How it was paid"),
+          rows: paid.map((x) => ({ label: x.label, value: x.valueText })),
+        }
+      : null,
+    {
+      key: "drawers",
+      title: t("Drawers"),
+      rows: [
+        { label: t("Counted today"), value: String(countedToday.counted) },
+        ...(countedToday.counted > 0
+          ? [
+              {
+                label: t("Against what they should hold"),
+                value:
+                  countedToday.difference === 0
+                    ? t("No difference")
+                    : countedToday.difference < 0
+                      ? t("{amount} short", { amount: fmtIQD(-countedToday.difference) })
+                      : t("{amount} over", { amount: fmtIQD(countedToday.difference) }),
+              },
+            ]
+          : []),
+        ...(drawersNow.length
+          ? [{ label: t("Still open"), value: String(drawersNow.length) }]
+          : []),
+      ],
+    },
+    top.length
+      ? {
+          key: "top",
+          title: t("What sold the most"),
+          rows: top.map((r) => ({ label: namesIn(r.names, locale), value: `×${fmtQty(r.qty)}` })),
+        }
+      : null,
+  ];
+  const slip: DaySlipData = {
+    businessName: profile.businessName,
+    kind: t("The day's close"),
+    meta: [
+      // Kept left to right among Arabic or Kurdish words, as a phrase's dates are.
+      {
+        label: t("Day"),
+        value: `${t(weekday)} ${dir === "rtl" ? isolateDates(today) : wholeDates(today)}`,
+      },
+      { label: t("Printed at"), value: now.slice(11, 16) },
+      ...(profile.worksAtName ? [{ label: t("Place"), value: profile.worksAtName }] : []),
+      { label: t("Printed by"), value: profile.name },
+    ],
+    total: f ? { label: t("Net sales"), value: fmtIQD(f.netSales) } : null,
+    parts: parts.filter((x): x is DaySlipPart => x !== null),
+    checksTitle: t("The close, step by step"),
+    checks: steps.map((s) => ({
+      done: s.state === "done",
+      text: s.state === "done" ? s.title : s.say,
+    })),
+    sign: [t("Closed by"), t("Checked by")],
+  };
+
   return (
     <div className="grid eod" style={{ gap: 18 }}>
       <PrintHead
@@ -347,8 +451,9 @@ export default async function EndOfDayPage() {
           {t(weekday)} {today} · {now.slice(11, 16)}
           {profile.worksAtName ? ` · ${profile.worksAtName}` : ""}
         </span>
-        <div className="sp no-print">
+        <div className="sp no-print eod-prints">
           <PrintButton />
+          <DaySlipButton slip={slip} label={t("Print the slip for the till")} />
         </div>
       </div>
 

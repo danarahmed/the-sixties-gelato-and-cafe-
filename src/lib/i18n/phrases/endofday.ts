@@ -257,6 +257,26 @@ const phrases: PhraseBook = {
     ar: "لا مبيعات بعد لمقارنة اليوم بها.",
     ckb: "هێشتا هیچ فرۆشتنێک نییە بۆ بەراوردکردنی ڕۆژەکە.",
   },
+  // The day's close on the receipt printer (round six).
+  "Print the slip for the till": {
+    ar: "اطبع قسيمة نقطة البيع",
+    ckb: "پسوولەی خاڵی فرۆشتن چاپ بکە",
+  },
+  "The day's close": { ar: "إغلاق اليوم", ckb: "داخستنی ڕۆژ" },
+  "Printed at": { ar: "طُبع الساعة", ckb: "کاتی چاپکردن" },
+  "Printed by": { ar: "طبعه", ckb: "چاپکەر" },
+  "An order on average": { ar: "متوسط الطلب", ckb: "تێکڕای داواکارییەک" },
+  Drawers: { ar: "الأدراج", ckb: "دەخیلەکان" },
+  "Counted today": { ar: "عُدّت اليوم", ckb: "ئەمڕۆ ژمێردران" },
+  "Against what they should hold": {
+    ar: "مقابل ما يجب أن تحويه",
+    ckb: "بەرامبەر ئەوەی دەبوو تێیدا بێت",
+  },
+  "No difference": { ar: "لا فرق", ckb: "جیاوازی نییە" },
+  "Still open": { ar: "ما زالت مفتوحة", ckb: "هێشتا کراوەن" },
+  "The close, step by step": { ar: "الإغلاق خطوة بخطوة", ckb: "داخستن هەنگاو بە هەنگاو" },
+  "Closed by": { ar: "أغلقه", ckb: "داخراوە لەلایەن" },
+  "Checked by": { ar: "دقّقه", ckb: "پشکنراوە لەلایەن" },
 };
 
 export default phrases;

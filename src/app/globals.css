@@ -5207,3 +5207,374 @@ kbd {
   gap: 10px;
   align-content: start;
 }
+
+/* Staffed when busy? (round six): a day of the week chosen from a row that
+   wraps on a phone; the week as a grid of hours, each shaded by its orders
+   (one hue, light to deep) and marked where it was short of hands, quiet,
+   or kept with nobody on the clock. */
+.staffing-day {
+  display: grid;
+  gap: 12px;
+}
+.day-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  justify-self: start;
+}
+.day-pick a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+.day-pick a:hover {
+  background: var(--surface);
+}
+.day-pick a[aria-current="page"] {
+  background: var(--brand);
+  color: var(--brand-ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+.hour-grid-wrap {
+  margin-top: 10px;
+}
+.hour-grid {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 2px;
+}
+.hour-grid th,
+.hour-grid td {
+  padding: 0;
+  border: none;
+  background: none;
+}
+.hour-grid thead th {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: start;
+  white-space: nowrap;
+}
+.hour-grid thead th:first-child,
+.hour-grid tbody th {
+  width: 84px;
+}
+.hour-grid tbody th {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-inline-end: 6px;
+}
+.hour-grid tbody th a {
+  color: var(--text);
+}
+.hour-grid tbody th a:hover {
+  color: var(--brand);
+  text-decoration: underline;
+}
+.hg-c {
+  height: 26px;
+  border-radius: 4px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 0.72rem;
+  line-height: 1;
+  color: var(--text);
+}
+.hg-c.s0 {
+  background: var(--surface-2);
+}
+.hg-c.s1 {
+  background: color-mix(in oklab, var(--viz-1) 14%, var(--surface));
+}
+.hg-c.s2 {
+  background: color-mix(in oklab, var(--viz-1) 30%, var(--surface));
+}
+.hg-c.s3 {
+  background: color-mix(in oklab, var(--viz-1) 48%, var(--surface));
+}
+.hg-c.s4 {
+  background: color-mix(in oklab, var(--viz-1) 68%, var(--surface));
+  color: #fff;
+}
+.hg-c.s5 {
+  background: var(--viz-1);
+  color: #fff;
+}
+.hour-grid-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.hg-scale {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.hg-scale .hg-c {
+  display: inline-block;
+  width: 16px;
+  height: 12px;
+  border-radius: 3px;
+}
+.hg-scale .hg-c:first-of-type {
+  margin-inline-start: 4px;
+}
+.hg-scale .hg-c:last-of-type {
+  margin-inline-end: 4px;
+}
+@media (max-width: 560px) {
+  .hour-grid thead th:first-child,
+  .hour-grid tbody th {
+    width: 58px;
+  }
+  .hour-grid tbody th {
+    font-size: 0.7rem;
+  }
+  .hg-c {
+    height: 22px;
+    font-size: 0.62rem;
+  }
+}
+
+/* Waste by recipe (round six): a figure's share, quieter, under it in its cell. */
+.cell-sub {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* The day's close on the receipt printer (round six): its parts ruled like the
+   check's, each step of the close ticked or crossed, and lines to sign. */
+.eod-prints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+@media print {
+  .sl-part {
+    margin-top: 7px;
+  }
+  .sl-part-title {
+    margin-bottom: 1px;
+    padding-bottom: 2px;
+    border-bottom: 1.5px solid #000;
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .sl-part .sl-row {
+    padding: 2px 0;
+    border-bottom: 1px dotted #000;
+    font-size: 11.5px;
+  }
+  .sl-part .sl-row span:first-child {
+    overflow-wrap: anywhere;
+  }
+  .sl-part .sl-row span:last-child {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .sl-check {
+    display: flex;
+    gap: 6px;
+    padding: 2px 0;
+    font-size: 11px;
+  }
+  .sl-check span:first-child {
+    flex: none;
+    width: 12px;
+    font-weight: 700;
+  }
+  .sl-sign {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .sl-sign div {
+    padding-bottom: 20px;
+    border-bottom: 1px solid #000;
+  }
+  .sl-sign span {
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+/* Show me around (round six): the offer, where a page puts it; in the menu,
+   the way to take it again; and the tour over the page — the part a step is
+   about lit, the rest dimmed in espresso, and a card beside it. */
+.tour-offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 10px 12px;
+  border: 1px dashed color-mix(in oklab, var(--brand) 45%, var(--border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--brand-soft) 60%, var(--surface));
+  color: var(--text);
+  font-size: 0.88rem;
+}
+.tour-offer > .icon {
+  color: var(--brand);
+  flex: none;
+}
+.tour-offer > span:first-of-type {
+  flex: 1 1 200px;
+}
+.tour-offer-acts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.tour-no {
+  min-height: 36px;
+  padding: 0 10px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.tour-no:hover {
+  color: var(--text);
+}
+.order-empty .tour-offer {
+  margin-top: 12px;
+  text-align: start;
+}
+/* In the menu, as its links are. */
+.nav-tour {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 40px;
+  margin-block: 1px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--rail-ink);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.nav-tour .icon {
+  flex: none;
+  opacity: 0.8;
+}
+.nav-tour:hover {
+  background: rgba(255, 236, 220, 0.08);
+}
+.tour-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+.tour-spot {
+  position: fixed;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 3px var(--brand),
+    0 0 0 9999px rgba(32, 19, 13, 0.62);
+  transition:
+    top 0.2s ease,
+    left 0.2s ease,
+    width 0.2s ease,
+    height 0.2s ease;
+  pointer-events: none;
+}
+.tour-dim {
+  position: fixed;
+  inset: 0;
+  background: rgba(32, 19, 13, 0.62);
+}
+.tour-card {
+  position: fixed;
+  display: grid;
+  gap: 8px;
+  padding: 16px 16px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-lift);
+  border-top: 4px solid var(--brand);
+}
+.tour-card h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+}
+.tour-card p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.tour-count {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tour-dots {
+  display: flex;
+  gap: 5px;
+}
+.tour-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.tour-dots span.on {
+  background: var(--brand);
+}
+.tour-acts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tour-acts .sp {
+  flex: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-spot {
+    transition: none;
+  }
+}
+@media print {
+  .tour-layer,
+  .tour-offer {
+    display: none !important;
+  }
+}

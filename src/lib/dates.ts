@@ -46,6 +46,23 @@ export function dateTimeIn(timezone: string, iso: string): string {
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`;
 }
 
+/** The day and the hour the business's clock shows at an instant (milliseconds), one formatter for them all. */
+export function localClock(timezone: string): (at: number) => { day: string; hour: number } {
+  const format = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hourCycle: "h23",
+  });
+  return (at) => {
+    const parts = format.formatToParts(at);
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+    return { day: `${get("year")}-${get("month")}-${get("day")}`, hour: Number(get("hour")) % 24 };
+  };
+}
+
 /**
  * The instant a business day begins — midnight in `timezone` — as an ISO
  * string, for reading records by the business's own days.

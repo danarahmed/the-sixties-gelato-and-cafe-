@@ -1465,6 +1465,246 @@ const phrases: PhraseBook = {
     ar: "في المتوسط، كان يوم {best} الأكثر مبيعًا: {amount} في اليوم؛ ويوم {worst} الأقل: {low}.",
     ckb: "بە تێکڕا، {best} زۆرترین فرۆشتنی هەبوو: {amount} لە ڕۆژێکدا؛ {worst} کەمترین: {low}.",
   },
+
+  // Staffed when busy? (round six): the orders of each hour against the people on the clock.
+  "Staffed when busy?": {
+    ar: "هل يكفي العاملون وقت الزحام؟",
+    ckb: "ئایا کارمەند بەسە لە کاتی قەرەباڵغیدا؟",
+  },
+  "Staffed when busy? Orders an hour against who was on the clock →": {
+    ar: "هل يكفي العاملون وقت الزحام؟ الطلبات في الساعة مقابل من كان على الدوام ←",
+    ckb: "ئایا کارمەند بەسە لە کاتی قەرەباڵغیدا؟ داواکاری لە کاتژمێرێکدا بەرامبەر ئەوانەی لە دەوامدا بوون ←",
+  },
+  "{from} to {to}: four weeks, each hour of the week on average": {
+    ar: "من {from} إلى {to}: أربعة أسابيع، كل ساعة من الأسبوع في المتوسط",
+    ckb: "لە {from} تا {to}: چوار هەفتە، هەر کاتژمێرێکی هەفتە بە تێکڕا",
+  },
+  "Four weeks at a time": { ar: "أربعة أسابيع في كل مرة", ckb: "هەر جارە چوار هەفتە" },
+  "The four weeks before": { ar: "الأسابيع الأربعة السابقة", ckb: "چوار هەفتەی پێشوو" },
+  "The four weeks after": { ar: "الأسابيع الأربعة التالية", ckb: "چوار هەفتەی دواتر" },
+  "The last four weeks": { ar: "آخر أربعة أسابيع", ckb: "دوایین چوار هەفتە" },
+  "This page needs the hours on the clock.": {
+    ar: "تحتاج هذه الصفحة إلى ساعات الدوام المسجّلة.",
+    ckb: "ئەم پەڕەیە پێویستی بە کاتژمێرە تۆمارکراوەکانی دەوامە.",
+  },
+  "Those who keep the staff, their hours or their pay can see it.": {
+    ar: "يراها من يدير الموظفين أو ساعاتهم أو رواتبهم.",
+    ckb: "ئەوانەی کارمەندان، کاتژمێرەکانیان یان مووچەکەیان بەڕێوە دەبەن دەیبینن.",
+  },
+  "{day}, {from}–{to}": { ar: "{day}، {from}–{to}", ckb: "{day}، {from}–{to}" },
+  "Short of hands": { ar: "نقص في الأيدي", ckb: "دەست کەمە" },
+  Quiet: { ar: "هادئة", ckb: "ئارام" },
+  "Nobody on the clock": { ar: "لا أحد على الدوام", ckb: "کەس لە دەوامدا نییە" },
+  "No orders in these four weeks.": {
+    ar: "لا طلبات في هذه الأسابيع الأربعة.",
+    ckb: "لەم چوار هەفتەیەدا هیچ داواکارییەک نییە.",
+  },
+  "Nobody was on the clock in these four weeks.": {
+    ar: "لم يكن أحد على الدوام في هذه الأسابيع الأربعة.",
+    ckb: "لەم چوار هەفتەیەدا کەس لە دەوامدا نەبوو.",
+  },
+  "This page sets the orders of each hour against the hours on the clock: clock in and out at the till, or add the hours on Staff.":
+    {
+      ar: "تضع هذه الصفحة طلبات كل ساعة مقابل ساعات الدوام: سجّلوا الحضور والانصراف على نقطة البيع، أو أضيفوا الساعات في صفحة الموظفين.",
+      ckb: "ئەم پەڕەیە داواکارییەکانی هەر کاتژمێرێک بەرامبەر کاتژمێرەکانی دەوام دادەنێت: لەسەر خاڵی فرۆشتن هاتن و ڕۆیشتن تۆمار بکەن، یان کاتژمێرەکان لە پەڕەی کارمەندان زیاد بکەن.",
+    },
+  "The busiest hour: {when}, about {orders} orders and {amount}.": {
+    ar: "أكثر الساعات زحامًا: {when}، نحو {orders} طلب و{amount}.",
+    ckb: "قەرەباڵغترین کاتژمێر: {when}، نزیکەی {orders} داواکاری و {amount}.",
+  },
+  "{people} on the clock, on average.": {
+    ar: "{people} على الدوام في المتوسط.",
+    ckb: "بە تێکڕا {people} کەس لە دەوامدا.",
+  },
+  "Short of hands: {when}.": { ar: "نقص في الأيدي: {when}.", ckb: "دەست کەمە: {when}." },
+  "About {orders} orders an hour with {people} on the clock: {each} each, against {usual} usually. One more would bring it to {after} each.":
+    {
+      ar: "نحو {orders} طلب في الساعة و{people} على الدوام: {each} لكل واحد، مقابل {usual} عادةً. شخص آخر ينزل بها إلى {after} لكل واحد.",
+      ckb: "نزیکەی {orders} داواکاری لە کاتژمێرێکدا بە {people} کەس لە دەوامدا: هەریەکە {each}، بەرامبەر {usual} بە ئاسایی. کەسێکی تر دەیگەیەنێتە {after} بۆ هەریەکە.",
+    },
+  "Quiet with {people} on the clock: {when}.": {
+    ar: "هادئة و{people} على الدوام: {when}.",
+    ckb: "ئارامە و {people} کەس لە دەوامدان: {when}.",
+  },
+  "About {orders} orders an hour: {each} each, against {usual} usually. Unless they were preparing, one fewer would still leave {left}.":
+    {
+      ar: "نحو {orders} طلب في الساعة: {each} لكل واحد، مقابل {usual} عادةً. ما لم يكونوا يحضّرون، فإن شخصًا أقل يُبقي {left}.",
+      ckb: "نزیکەی {orders} داواکاری لە کاتژمێرێکدا: هەریەکە {each}، بەرامبەر {usual} بە ئاسایی. ئەگەر خەریکی ئامادەکاری نەبوون، بە کەسێک کەمتر هێشتا {left} دەمێنن.",
+    },
+  "Orders with nobody on the clock: {when}.": {
+    ar: "طلبات ولا أحد على الدوام: {when}.",
+    ckb: "داواکاری هەبوو و کەس لە دەوامدا نەبوو: {when}.",
+  },
+  "About {orders} an hour. Clock in at the till, so this page reads true.": {
+    ar: "نحو {orders} في الساعة. سجّلوا الحضور على نقطة البيع لتصدق هذه الصفحة.",
+    ckb: "نزیکەی {orders} لە کاتژمێرێکدا. لەسەر خاڵی فرۆشتن هاتن تۆمار بکەن، بۆ ئەوەی ئەم پەڕەیە ڕاست بێت.",
+  },
+  "No hour was short of hands, nor quiet with two or more on the clock.": {
+    ar: "لم تنقص الأيدي في أي ساعة، ولم تهدأ أي ساعة واثنان أو أكثر على الدوام.",
+    ckb: "هیچ کاتژمێرێک دەستی کەم نەبوو، و هیچ کاتژمێرێک بە دوو کەس یان زیاتر لە دەوامدا ئارام نەبوو.",
+  },
+  "{pct}% of the orders were rung up with nobody on the clock.": {
+    ar: "{pct}% من الطلبات سُجّلت ولا أحد على الدوام.",
+    ckb: "{pct}%ی داواکارییەکان تۆمارکران کاتێک کەس لە دەوامدا نەبوو.",
+  },
+  "This page counts only the hours on the clock: clock in and out at the till.": {
+    ar: "لا تحسب هذه الصفحة إلا ساعات الدوام المسجّلة: سجّلوا الحضور والانصراف على نقطة البيع.",
+    ckb: "ئەم پەڕەیە تەنها کاتژمێرە تۆمارکراوەکانی دەوام دەژمێرێت: لەسەر خاڵی فرۆشتن هاتن و ڕۆیشتن تۆمار بکەن.",
+  },
+  "Orders an hour, each on the clock": {
+    ar: "الطلبات في الساعة لكل من على الدوام",
+    ckb: "داواکاری لە کاتژمێرێکدا بۆ هەر کەسێکی دەوام",
+  },
+  "Over {n} hour(s) on the clock": {
+    ar: "على مدى {n, plural, one {ساعة دوام واحدة} two {ساعتي دوام} few {# ساعات دوام} many {# ساعة دوام} other {# ساعة دوام}}",
+    ckb: "لە ماوەی {n} کاتژمێری دەوامدا",
+  },
+  "The busiest hour": { ar: "أكثر الساعات زحامًا", ckb: "قەرەباڵغترین کاتژمێر" },
+  "About {orders} orders, {people} on the clock": {
+    ar: "نحو {orders} طلب، و{people} على الدوام",
+    ckb: "نزیکەی {orders} داواکاری، {people} کەس لە دەوامدا",
+  },
+  "Hours short of hands": { ar: "ساعات بنقص في الأيدي", ckb: "کاتژمێرەکانی کەمیی دەست" },
+  "A week: each served half as many again as usual, or more": {
+    ar: "في الأسبوع: خدم كل واحد مرة ونصفًا من المعتاد أو أكثر",
+    ckb: "لە هەفتەیەکدا: هەریەکە یەک و نیو هێندەی ئاسایی یان زیاتری خزمەت کرد",
+  },
+  "Hours quiet with two or more": {
+    ar: "ساعات هادئة واثنان أو أكثر على الدوام",
+    ckb: "کاتژمێرە ئارامەکان بە دوو کەس یان زیاتر",
+  },
+  "A week: each served half the usual, or less": {
+    ar: "في الأسبوع: خدم كل واحد نصف المعتاد أو أقل",
+    ckb: "لە هەفتەیەکدا: هەریەکە نیوەی ئاسایی یان کەمتری خزمەت کرد",
+  },
+  "{people} on the clock": { ar: "{people} على الدوام", ckb: "{people} کەس لە دەوامدا" },
+  "What the hours say": { ar: "ما تقوله الساعات", ckb: "کاتژمێرەکان چی دەڵێن" },
+  "A day of the week": { ar: "يوم من الأسبوع", ckb: "ڕۆژێکی هەفتە" },
+  "Every day": { ar: "كل الأيام", ckb: "هەموو ڕۆژەکان" },
+  "Orders hour by hour: a day on average": {
+    ar: "الطلبات ساعة بساعة: يوم في المتوسط",
+    ckb: "داواکارییەکان کاتژمێر بە کاتژمێر: ڕۆژێک بە تێکڕا",
+  },
+  "Orders hour by hour: {day}": {
+    ar: "الطلبات ساعة بساعة: {day}",
+    ckb: "داواکارییەکان کاتژمێر بە کاتژمێر: {day}",
+  },
+  "Orders an hour": { ar: "الطلبات في الساعة", ckb: "داواکاری لە کاتژمێرێکدا" },
+  "What those on the clock usually serve": {
+    ar: "ما يخدمه من على الدوام عادةً",
+    ckb: "ئەوەی کەسانی دەوام بە ئاسایی خزمەتی دەکەن",
+  },
+  "Where a column stands above the line, each person on the clock served more than usual; where it falls well below with two or more on the clock, the hour was quiet.":
+    {
+      ar: "حيث يعلو العمود الخط، خدم كل من على الدوام أكثر من المعتاد؛ وحيث ينخفض عنه كثيرًا واثنان أو أكثر على الدوام، كانت الساعة هادئة.",
+      ckb: "لەو شوێنەی ستوونێک لە سەرووی هێڵەکەوەیە، هەر کەسێکی دەوام زیاتر لە ئاسایی خزمەتی کرد؛ لەو شوێنەی زۆر لە خوارییەوەیە و دوو کەس یان زیاتر لە دەوامدان، کاتژمێرەکە ئارام بوو.",
+    },
+  "The week, hour by hour": { ar: "الأسبوع ساعة بساعة", ckb: "هەفتە کاتژمێر بە کاتژمێر" },
+  "Orders an hour, a day on average, and the hours marked": {
+    ar: "الطلبات في الساعة، يوم في المتوسط، والساعات المعلَّمة",
+    ckb: "داواکاری لە کاتژمێرێکدا، ڕۆژێک بە تێکڕا، و کاتژمێرە نیشانکراوەکان",
+  },
+  "Fewer orders": { ar: "طلبات أقل", ckb: "داواکاریی کەمتر" },
+  "More orders": { ar: "طلبات أكثر", ckb: "داواکاریی زیاتر" },
+  "Orders as rung up, in the hour they were paid; hours on the clock as clocked in and out at the till or added on Staff, those cancelled left out; each a day on average over the four weeks. What a person usually serves is every order served with someone on the clock, over every hour on the clock.":
+    {
+      ar: "الطلبات كما سُجّلت، في الساعة التي دُفعت فيها؛ وساعات الدوام كما سُجّل الحضور والانصراف على نقطة البيع أو أُضيفت في صفحة الموظفين، دون الملغاة؛ وكلٌّ يوم في المتوسط على مدى الأسابيع الأربعة. وما يخدمه الشخص عادةً هو كل طلب خُدم وأحدٌ على الدوام، مقسومًا على كل ساعات الدوام.",
+      ckb: "داواکارییەکان وەک تۆمارکران، لەو کاتژمێرەی پارەکەیان درا؛ کاتژمێرەکانی دەوام وەک لەسەر خاڵی فرۆشتن هاتن و ڕۆیشتن تۆمارکران یان لە پەڕەی کارمەندان زیادکران، بێ هەڵوەشێنراوەکان؛ هەریەکە ڕۆژێک بە تێکڕا لە ماوەی چوار هەفتەکەدا. ئەوەی کەسێک بە ئاسایی خزمەتی دەکات هەموو ئەو داواکارییانەیە کە کەسێک لە دەوامدا بووە، دابەش بەسەر هەموو کاتژمێرەکانی دەوامدا.",
+    },
+  "{n} time(s) clocked in and not out are left out.": {
+    ar: "{n, plural, one {استُبعدت مرة واحدة سُجّل فيها حضور دون انصراف.} two {استُبعدت مرتان سُجّل فيهما حضور دون انصراف.} few {استُبعدت # مرات سُجّل فيها حضور دون انصراف.} many {استُبعدت # مرة سُجّل فيها حضور دون انصراف.} other {استُبعدت # مرة سُجّل فيها حضور دون انصراف.}}",
+    ckb: "{n} جار هاتن تۆمارکرا بەبێ ڕۆیشتن، ئەوانە لاوەنران.",
+  },
+
+  // Waste by recipe (round six): what each recipe's batches came to.
+  "Waste by recipe": { ar: "الهدر حسب الوصفة", ckb: "بەفیڕۆچوون بەپێی ڕەسەتە" },
+  "Waste by recipe: made, sold and thrown away →": {
+    ar: "الهدر حسب الوصفة: ما صُنع وما بيع وما رُمي ←",
+    ckb: "بەفیڕۆچوون بەپێی ڕەسەتە: دروستکراو، فرۆشراو و فڕێدراو ←",
+  },
+  "Batches made {from} to {to}, each as it stands now": {
+    ar: "الدفعات المصنوعة من {from} إلى {to}، كلٌّ كما هو الآن",
+    ckb: "ئەو دەستانەی لە {from} تا {to} دروستکران، هەریەکە وەک ئێستا هەیە",
+  },
+  "No batches were made in these four weeks.": {
+    ar: "لم تُصنع أي دفعة في هذه الأسابيع الأربعة.",
+    ckb: "لەم چوار هەفتەیەدا هیچ دەستەیەک دروست نەکرا.",
+  },
+  "Each batch recorded on Production is followed here, to the last of it.": {
+    ar: "كل دفعة تُسجَّل في الإنتاج تُتتبَّع هنا حتى آخرها.",
+    ckb: "هەر دەستەیەک لە بەرهەمهێناندا تۆمار بکرێت لێرە تا کۆتایی بەدوای دەچین.",
+  },
+  "Thrown away": { ar: "ما رُمي", ckb: "فڕێدراو" },
+  "{pct} of what was made and has gone": {
+    ar: "{pct} مما صُنع ونفد",
+    ckb: "{pct}ی ئەوەی دروستکرا و ڕۆیشت",
+  },
+  "Batches made": { ar: "الدفعات المصنوعة", ckb: "دەستە دروستکراوەکان" },
+  "{n} recipe(s)": {
+    ar: "{n, plural, one {وصفة واحدة} two {وصفتان} few {# وصفات} many {# وصفة} other {# وصفة}}",
+    ckb: "{n} ڕەسەتە",
+  },
+  "Eaten or given away": { ar: "ما أُكل أو أُهدي", ckb: "خوراو یان بەخشراو" },
+  "Staff meals, gifts and tastings": {
+    ar: "وجبات الموظفين والهدايا والتذوق",
+    ckb: "خواردنی کارمەندان، دیاری و تامکردن",
+  },
+  "The most thrown away": { ar: "الأكثر رميًا", ckb: "زۆرترین فڕێدراو" },
+  "{pct} of what it made and has gone": {
+    ar: "{pct} مما صنعته ونفد",
+    ckb: "{pct}ی ئەوەی دروستی کرد و ڕۆیشت",
+  },
+  "What the batches say": { ar: "ما تقوله الدفعات", ckb: "دەستەکان چی دەڵێن" },
+  "{recipe}: {pct} of what went was thrown away, {amount}.": {
+    ar: "{recipe}: رُمي {pct} مما نفد، بقيمة {amount}.",
+    ckb: "{recipe}: {pct}ی ئەوەی ڕۆیشت فڕێدرا، بە {amount}.",
+  },
+  "Batches of about {made}, of which about {taken} was sold, used or eaten; most of the rest went past its use-by. Batches of about {better} would have covered what went.":
+    {
+      ar: "دفعات بنحو {made}، بيع منها أو استُعمل أو أُكل نحو {taken}؛ وتجاوز معظم الباقي موعد استعماله. دفعات بنحو {better} كانت ستكفي ما نفد.",
+      ckb: "دەستەکانی نزیکەی {made}، کە نزیکەی {taken}ی لێ فرۆشرا، بەکارهات یان خورا؛ زۆربەی ئەوەی مایەوە کاتی بەکارهێنانی بەسەرچوو. دەستەکانی نزیکەی {better} بەسی ئەوە دەبوون کە ڕۆیشت.",
+    },
+  "Most of it went past its use-by, unsold.": {
+    ar: "تجاوز معظمه موعد استعماله دون أن يُباع.",
+    ckb: "زۆربەی بێ فرۆشتن کاتی بەکارهێنانی بەسەرچوو.",
+  },
+  "Most of it was spilt, melted or spoilt in the making: a smaller batch would not help. Look at how it is made and kept.":
+    {
+      ar: "معظمه انسكب أو ذاب أو فسد أثناء الصنع: لن تفيد دفعة أصغر. انظروا في طريقة صنعه وحفظه.",
+      ckb: "زۆربەی ڕژا، توایەوە یان لە کاتی دروستکردندا تێکچوو: دەستەی بچووکتر یارمەتی نادات. سەیری چۆنیەتی دروستکردن و هەڵگرتنی بکەن.",
+    },
+  "Nothing made in these four weeks was thrown away.": {
+    ar: "لم يُرمَ شيء مما صُنع في هذه الأسابيع الأربعة.",
+    ckb: "هیچ شتێک لەوەی لەم چوار هەفتەیەدا دروستکرا فڕێ نەدرا.",
+  },
+  "No recipe threw away a tenth of what went.": {
+    ar: "لم ترمِ أي وصفة عُشر ما نفد منها.",
+    ckb: "هیچ ڕەسەتەیەک دەیەکی ئەوەی ڕۆیشت فڕێ نەدا.",
+  },
+  "{amount} of it was eaten by the staff, given away or tasted.": {
+    ar: "أكل الموظفون منه أو أُهدي أو تُذوِّق ما قيمته {amount}.",
+    ckb: "{amount}ی لێ لەلایەن کارمەندانەوە خورا، بەخشرا یان تامکرا.",
+  },
+  "{n} batch(es) are still in stock: what becomes of them is not counted yet.": {
+    ar: "{n, plural, one {دفعة واحدة ما زالت في المخزون} two {دفعتان ما زالتا في المخزون} few {# دفعات ما زالت في المخزون} many {# دفعة ما زالت في المخزون} other {# دفعة ما زالت في المخزون}}: لم يُحسب بعدُ ما سيصير إليه.",
+    ckb: "{n} دەستە هێشتا لە کۆگادان: ئەوەی بەسەریان دێت هێشتا نەژمێردراوە.",
+  },
+  "What was thrown away, by recipe": {
+    ar: "ما رُمي حسب الوصفة",
+    ckb: "ئەوەی فڕێدرا بەپێی ڕەسەتە",
+  },
+  "{pct} of what went, {qty}": { ar: "{pct} مما نفد، {qty}", ckb: "{pct}ی ئەوەی ڕۆیشت، {qty}" },
+  "Recipe by recipe": { ar: "وصفةً وصفة", ckb: "ڕەسەتە بە ڕەسەتە" },
+  Recipe: { ar: "الوصفة", ckb: "ڕەسەتە" },
+  "Sold or used": { ar: "بيع أو استُعمل", ckb: "فرۆشرا یان بەکارهات" },
+  "{pct} of what went": { ar: "{pct} مما نفد", ckb: "{pct}ی ئەوەی ڕۆیشت" },
+  "What it cost": { ar: "ما كلّفه", ckb: "تێچووەکەی" },
+  "A better batch": { ar: "دفعة أنسب", ckb: "دەستەیەکی گونجاوتر" },
+  "Each batch made in the four weeks, followed to now: what was sold and what went into other batches; what was thrown away — past its use-by, spoilt, spilt or melted, less any loss taken back on review; and what the staff ate, was given away or tasted. Its cost is the batch's own. A batch to cover what went is said only where most of what was thrown away went unsold, from two or more batches all gone: what each of them sold, used or gave, on average.":
+    {
+      ar: "كل دفعة صُنعت في الأسابيع الأربعة، مُتتبَّعة حتى الآن: ما بيع وما دخل في دفعات أخرى؛ وما رُمي — بتجاوز موعد استعماله أو فساده أو انسكابه أو ذوبانه، ناقصًا أي خسارة أُعيدت عند المراجعة؛ وما أكله الموظفون أو أُهدي أو تُذوِّق. وكلفته كلفة الدفعة نفسها. ولا تُذكر دفعة تكفي ما نفد إلا حيث بقي معظم المرمي دون بيع، ومن دفعتين أو أكثر نفدت كلها: متوسط ما باعته كلٌّ منها أو استعملته أو أعطته.",
+      ckb: "هەر دەستەیەک لەم چوار هەفتەیەدا دروستکرا، تا ئێستا بەدوای دەچین: ئەوەی فرۆشرا و ئەوەی چووە ناو دەستەکانی ترەوە؛ ئەوەی فڕێدرا — بە بەسەرچوونی کاتی بەکارهێنان، تێکچوون، ڕژان یان توانەوە، کەمتر هەر زیانێک کە لە پێداچوونەوەدا گەڕێنرایەوە؛ و ئەوەی کارمەندان خواردیان، بەخشرا یان تامکرا. تێچووەکەی تێچووی خودی دەستەکەیە. دەستەیەک کە بەسی ئەوە بێت کە ڕۆیشت تەنها لەو شوێنانە دەوترێت کە زۆربەی فڕێدراو بێ فرۆشتن مایەوە، لە دوو دەستە یان زیاتر کە هەموویان ڕۆیشتن: تێکڕای ئەوەی هەریەکەیان فرۆشتی، بەکاری هێنا یان بەخشی.",
+    },
 };
 
 export default phrases;

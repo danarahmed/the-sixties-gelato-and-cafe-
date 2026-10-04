@@ -1,6 +1,6 @@
 import "server-only";
 import { db, rows, str } from "@/lib/db/client";
-import { readInBatches } from "@/lib/db/batches";
+import { readInBatches, readPaged } from "@/lib/db/batches";
 import { getItems, type ItemRow } from "@/lib/db/read";
 import { getItemCosts, getMenuCosting, getMenuRecipeLines } from "@/lib/db/reports";
 import { getBatchRecipes } from "@/lib/db/production";
@@ -150,14 +150,16 @@ const LOOK_BACK_DAYS = 180;
  */
 async function deliveriesOf(c: Db, since: string): Promise<Map<string, Delivered[]>> {
   const from = (day: string) => `${addDays(day, -1)}T00:00:00Z`;
-  // The items delivered lately (a day's margin for the café's midnight).
-  const lately = rows(
-    await c
-      .from("inventory_movement")
-      .select("item_id")
-      .eq("type", "purchase_receipt")
-      .gte("occurred_at", from(since))
-      .limit(5000),
+  // The items delivered lately (a day's margin for the café's midnight),
+  // every page of them: a busy month holds more than one.
+  const lately = await readPaged(
+    () =>
+      c
+        .from("inventory_movement")
+        .select("id,item_id")
+        .eq("type", "purchase_receipt")
+        .gte("occurred_at", from(since))
+        .order("id"),
     "the stock deliveries put in",
   );
   const itemIds = [...new Set(lately.map((m) => str(m.item_id)))];
