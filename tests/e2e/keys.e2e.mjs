@@ -25,7 +25,10 @@ console.log("▸ the cashier rings up a sale from the keyboard alone");
 {
   const { ctx, page } = await signIn(browser, "cashier");
   await open(page, "/pos");
-  await page.getByRole("button", { name: "Dine-in" }).click();
+  // The menu, where the products are: a till at a place with tables opens on them the first time.
+  const menu = page.getByRole("tab", { name: "Menu", exact: true });
+  if (await menu.count()) await menu.click();
+  await page.getByRole("button", { name: "Dine-in", exact: true }).click();
   const search = page.getByRole("searchbox");
   const before = sales();
 
