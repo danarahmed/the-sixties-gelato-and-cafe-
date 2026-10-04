@@ -5,7 +5,7 @@
 // is saved to wait, the dashboard names it, and the manager approves it on
 // Inventory. A refund over the limit asks for a second person. Earlier suites
 // sell, lose and refund too: this one reads what it needs from the database.
-import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { BASE, chromium, check, done, inventoryForm, open, signIn, sql } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const last = (q) => sql(q).split("\n").pop();
@@ -176,7 +176,7 @@ rule("waste_approval_over", "business", null, 1);
 {
   const { ctx, page } = await signIn(browser, "barista");
   await open(page, "/inventory");
-  const form = page.getByTestId("record-loss");
+  const form = await inventoryForm(page, "loss", "record-loss");
   await form.getByLabel("What kind of loss").selectOption("spoilage");
   await form.getByLabel("Item").selectOption({ label: "Golden beans" });
   await form.getByLabel("Quantity lost").fill("50");

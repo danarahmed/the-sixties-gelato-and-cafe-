@@ -123,7 +123,7 @@ const phrases: PhraseBook = {
     ckb: "خەڵاتی بەکارهاتوو، هەر یەکەیان {amount} داشکاندن",
   },
   "{n} reward(s): {amount} off, {points} points": {
-    ar: "{n} مكافأة: خصم {amount}، مقابل {points} نقطة",
+    ar: "{n, plural, one {مكافأة واحدة} two {مكافأتان} few {# مكافآت} other {# مكافأة}}: خصم {amount}، مقابل {points, plural, one {نقطة واحدة} two {نقطتين} few {# نقاط} other {# نقطة}}",
     ckb: "{n} خەڵات: {amount} داشکاندن، بە {points} خاڵ",
   },
   "Loyalty reward": { ar: "مكافأة الولاء", ckb: "خەڵاتی دڵسۆزی" },

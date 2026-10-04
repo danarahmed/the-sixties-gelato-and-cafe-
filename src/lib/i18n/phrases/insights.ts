@@ -12,23 +12,23 @@ const phrases: PhraseBook = {
 
   // Each figure against the days just before, as many.
   "{pct}% more than the {n} day(s) before": {
-    ar: "أكثر بـ{pct}% من الأيام الـ{n} السابقة",
+    ar: "أكثر بـ{pct}% من {n, plural, one {اليوم السابق} two {اليومين السابقين} other {الأيام الـ# السابقة}}",
     ckb: "{pct}% زیاتر لە {n} ڕۆژی پێشوو",
   },
   "{pct}% less than the {n} day(s) before": {
-    ar: "أقل بـ{pct}% من الأيام الـ{n} السابقة",
+    ar: "أقل بـ{pct}% من {n, plural, one {اليوم السابق} two {اليومين السابقين} other {الأيام الـ# السابقة}}",
     ckb: "{pct}% کەمتر لە {n} ڕۆژی پێشوو",
   },
   "About as the {n} day(s) before": {
-    ar: "قريب من الأيام الـ{n} السابقة",
+    ar: "قريب من {n, plural, one {اليوم السابق} two {اليومين السابقين} other {الأيام الـ# السابقة}}",
     ckb: "نزیکەی وەک {n} ڕۆژی پێشوو",
   },
   "{n} point(s) more than the {days} day(s) before": {
-    ar: "أعلى بـ{n} نقطة من الأيام الـ{days} السابقة",
+    ar: "أعلى بـ{n, plural, one {نقطة واحدة} two {نقطتين} few {# نقاط} other {# نقطة}} من {days, plural, one {اليوم السابق} two {اليومين السابقين} other {الأيام الـ# السابقة}}",
     ckb: "{n} خاڵ زیاتر لە {days} ڕۆژی پێشوو",
   },
   "{n} point(s) less than the {days} day(s) before": {
-    ar: "أقل بـ{n} نقطة من الأيام الـ{days} السابقة",
+    ar: "أقل بـ{n, plural, one {نقطة واحدة} two {نقطتين} few {# نقاط} other {# نقطة}} من {days, plural, one {اليوم السابق} two {اليومين السابقين} other {الأيام الـ# السابقة}}",
     ckb: "{n} خاڵ کەمتر لە {days} ڕۆژی پێشوو",
   },
   "{pct}% of net revenue": { ar: "{pct}% من صافي الإيرادات", ckb: "{pct}%ی داهاتی پوخت" },
@@ -43,19 +43,19 @@ const phrases: PhraseBook = {
     ckb: "دەفتەرەکان یەکدەگرنەوە: هەموو تۆمارێک لەگەڵ هەژمارەکەی دەگونجێت.",
   },
   "Net revenue was {amount}; the {n} day(s) before had none to compare with.": {
-    ar: "كان صافي الإيرادات {amount}؛ ولم يكن في الأيام الـ{n} السابقة ما يُقارن به.",
+    ar: "كان صافي الإيرادات {amount}؛ ولم يكن في {n, plural, one {اليوم السابق} two {اليومين السابقين} other {الأيام الـ# السابقة}} ما يُقارن به.",
     ckb: "داهاتی پوخت {amount} بوو؛ لە {n} ڕۆژی پێشوودا هیچ نەبوو بۆ بەراوردکردن.",
   },
   "Net revenue was {pct}% more than in the {n} day(s) before.": {
-    ar: "كان صافي الإيرادات أعلى بـ{pct}% منه في الأيام الـ{n} السابقة.",
+    ar: "كان صافي الإيرادات أعلى بـ{pct}% منه في {n, plural, one {اليوم السابق} two {اليومين السابقين} other {الأيام الـ# السابقة}}.",
     ckb: "داهاتی پوخت {pct}% زیاتر بوو لە {n} ڕۆژی پێشوو.",
   },
   "Net revenue was {pct}% less than in the {n} day(s) before.": {
-    ar: "كان صافي الإيرادات أقل بـ{pct}% منه في الأيام الـ{n} السابقة.",
+    ar: "كان صافي الإيرادات أقل بـ{pct}% منه في {n, plural, one {اليوم السابق} two {اليومين السابقين} other {الأيام الـ# السابقة}}.",
     ckb: "داهاتی پوخت {pct}% کەمتر بوو لە {n} ڕۆژی پێشوو.",
   },
   "Net revenue was about as in the {n} day(s) before.": {
-    ar: "كان صافي الإيرادات قريبًا مما كان في الأيام الـ{n} السابقة.",
+    ar: "كان صافي الإيرادات قريبًا مما كان في {n, plural, one {اليوم السابق} two {اليومين السابقين} other {الأيام الـ# السابقة}}.",
     ckb: "داهاتی پوخت نزیکەی وەک {n} ڕۆژی پێشوو بوو.",
   },
   "{now} against {before}.": { ar: "{now} مقابل {before}.", ckb: "{now} بەرامبەر {before}." },
@@ -64,7 +64,7 @@ const phrases: PhraseBook = {
     ckb: "{pct}%ی داهاتی پوخت مایەوە دوای تێچووی فرۆشتن.",
   },
   "{pct}% in the {n} day(s) before.": {
-    ar: "{pct}% في الأيام الـ{n} السابقة.",
+    ar: "{pct}% في {n, plural, one {اليوم السابق} two {اليومين السابقين} other {الأيام الـ# السابقة}}.",
     ckb: "{pct}% لە {n} ڕۆژی پێشوودا.",
   },
   "After every expense, the period made {amount}: {pct}% of net revenue.": {

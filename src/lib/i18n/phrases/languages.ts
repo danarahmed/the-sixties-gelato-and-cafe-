@@ -124,6 +124,11 @@ const phrases: PhraseBook = {
     ar: 'أبقِ علامات <…> الموجودة في الإنجليزية ضمن كلمات "{1}"',
     ckb: 'نیشانەکانی <…>ی ئینگلیزییەکە لە وشەکانی "{1}"دا بهێڵەرەوە',
   },
+  'Write each count in the words for "{1}" whole: one form after another in { }, and an "other" form with # for the number':
+    {
+      ar: 'اكتب كل عدد في كلمات "{1}" كاملًا: صيغة بعد صيغة، كلٌّ بين { }، وصيغة "other" فيها # مكان الرقم',
+      ckb: 'هەر ژمارەیەک لە وشەکانی "{1}"دا تەواو بنووسە: شێوەیەک لە دوای شێوەیەک، هەریەکە لە ناو { }، و شێوەی "other" بە # لە جێی ژمارەکە',
+    },
 
   // What the database answers (0032).
   "A language's code is two or three small Latin letters, as the world writes it (tr, fa, kmr), with a region after a dash if needed (pt-br)":

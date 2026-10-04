@@ -1003,7 +1003,7 @@ const phrases: PhraseBook = {
   },
   "{sales} sale(s) paid in dollars: {usd}, taken at {value}; they paid {paid}, and {change} went back as change in dinars.":
     {
-      ar: "{sales} بيع (بيوع) دُفعت بالدولار: {usd}، أُخذت بقيمة {value}؛ دفعت {paid}، وأُعيد {change} باقيًا بالدينار.",
+      ar: "{sales, plural, one {بيع واحد دُفع} two {بيعان دُفعا} few {# بيوع دُفعت} many {# بيعًا دُفعت} other {# بيع دُفعت}} بالدولار: {usd}، أُخذت بقيمة {value}؛ دفعت {paid}، وأُعيد {change} باقيًا بالدينار.",
       ckb: "{sales} فرۆشتن بە دۆلار دران: {usd}، بە بەهای {value} وەرگیران؛ {paid}یان دا، و {change} وەک باقی بە دینار گەڕایەوە.",
     },
   "Should have held": { ar: "كان يجب أن يحوي", ckb: "دەبوو تێیدا بێت" },
@@ -1132,7 +1132,7 @@ const phrases: PhraseBook = {
     ckb: "لەم ڕێکەوتانەدا هیچ لەدەست نەچوو.",
   },
   "{n} loss(es), {value} in all.": {
-    ar: "{n} خسارة، بقيمة {value} إجمالًا.",
+    ar: "{n, plural, one {خسارة واحدة} two {خسارتان} few {# خسائر} other {# خسارة}}، بقيمة {value} إجمالًا.",
     ckb: "{n} زیان، بە کۆی {value}.",
   },
   "{n} of them wait for a manager ({value}).": {

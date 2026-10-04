@@ -2,7 +2,7 @@
 // (cash and platform-paid), void and refund, an expense, a manual journal and
 // its reversal, a blind count approved by a second person, the drawer count
 // and moving its takings, the reports, and adding a member of staff.
-import { chromium, BASE, check, done, open, signIn, sql } from "./lib.mjs";
+import { chromium, BASE, check, done, inventoryForm, open, signIn, sql } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const ok = (m) => check(true, m);
@@ -318,14 +318,14 @@ sql(`
   const m = await signIn(browser, "manager");
   await open(m.page, "/inventory");
   check(
-    (await m.page.getByTestId("opening-stock").count()) === 0,
+    (await m.page.getByTestId("inv-open-opening").count()) === 0,
     "a manager is not offered opening stock: it is the owner's capital",
   );
   await m.ctx.close();
 
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/inventory");
-  const panel = page.getByTestId("opening-stock");
+  const panel = await inventoryForm(page, "opening", "opening-stock");
   await panel.getByLabel("Item with no stock yet").selectOption({ label: "Fresh milk" });
   await panel.getByLabel("Quantity on the shelf").fill("12.5");
   // A select inside its label adds its option to the label's name ("Unit ml").
@@ -349,9 +349,10 @@ sql(`
   );
   await open(page, "/inventory");
   check(
-    (await page.getByTestId("opening-stock").count()) === 0 ||
-      !(await page
-        .getByTestId("opening-stock")
+    (await page.getByTestId("inv-open-opening").count()) === 0 ||
+      !(await (
+        await inventoryForm(page, "opening", "opening-stock")
+      )
         .getByLabel("Item with no stock yet")
         .locator("option", { hasText: "Fresh milk" })
         .count()),

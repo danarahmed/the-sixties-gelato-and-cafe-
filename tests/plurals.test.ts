@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { agree, messenger, translator } from "@/lib/i18n/core";
+import {
+  agree,
+  flatPlurals,
+  keptMarks,
+  keptWords,
+  messenger,
+  pluralsWhole,
+  translator,
+  writtenWords,
+} from "@/lib/i18n/core";
+import { BOOKS } from "@/lib/i18n/phrases";
 
 const en = translator({});
 
@@ -74,5 +84,124 @@ describe("a plural a phrase leaves open agrees with its number", () => {
     const ar = translator({ "{n} bill(s) still open.": "{n} فاتورة ما زالت مفتوحة." }, "rtl");
     expect(ar("{n} bill(s) still open.", { n: 1 })).toBe("1 فاتورة ما زالت مفتوحة.");
     expect(agree("٣ پسووڵە (s)")).toBe("٣ پسووڵە (s)");
+  });
+});
+
+describe("a count in Arabic takes the form Arabic gives its number", () => {
+  const book = (l: "ar" | "ckb") =>
+    Object.fromEntries(
+      Object.values(BOOKS).flatMap((b) => Object.entries(b).map(([en, t]) => [en, t[l]])),
+    );
+  const ar = translator(book("ar"), "rtl", "ar");
+  const bills = (n: number) =>
+    ar("{n} bill(s) still open, {amount} in all.", { n, amount: "3,000 IQD" });
+
+  it("one, two, three to ten, eleven to ninety-nine, and a hundred", () => {
+    expect(bills(1)).toBe("فاتورة واحدة ما زالت مفتوحة، بمجموع 3,000 IQD.");
+    expect(bills(2)).toBe("فاتورتان ما زالتا مفتوحتين، بمجموع 3,000 IQD.");
+    expect(bills(3)).toBe("3 فواتير ما زالت مفتوحة، بمجموع 3,000 IQD.");
+    expect(bills(10)).toBe("10 فواتير ما زالت مفتوحة، بمجموع 3,000 IQD.");
+    expect(bills(11)).toBe("11 فاتورة ما زالت مفتوحة، بمجموع 3,000 IQD.");
+    expect(bills(100)).toBe("100 فاتورة ما زالت مفتوحة، بمجموع 3,000 IQD.");
+    expect(bills(103)).toBe("103 فواتير ما زالت مفتوحة، بمجموع 3,000 IQD.");
+  });
+
+  it("days after a word, and the days before", () => {
+    const days = (n: number) =>
+      ar("Card takings still to reach the bank: {amount} over {n} day(s).", {
+        n,
+        amount: "500 IQD",
+      });
+    expect([1, 2, 5, 11, 100].map(days).map((s) => s.split("عن ")[1])).toEqual([
+      "يوم واحد.",
+      "يومين.",
+      "5 أيام.",
+      "11 يومًا.",
+      "100 يوم.",
+    ]);
+    expect(ar("{pct}% more than the {n} day(s) before", { pct: 5, n: 1 })).toBe(
+      "أكثر بـ5% من اليوم السابق",
+    );
+    expect(ar("{pct}% more than the {n} day(s) before", { pct: 5, n: 7 })).toBe(
+      "أكثر بـ5% من الأيام الـ7 السابقة",
+    );
+  });
+
+  it("a mark kept round the count, as on the till's floor", () => {
+    expect(ar("<b>{n}</b> open bill(s)", { n: 2 })).toBe("<b>فاتورتان</b> مفتوحتان");
+    expect(ar("<b>{n}</b> open bill(s)", { n: 4 })).toBe("<b>4</b> فواتير مفتوحة");
+  });
+
+  it("a message from the database too", () => {
+    const msg = messenger(book("ar"), "rtl", "ar");
+    expect(msg("2 loss(es) waiting for a manager's approval (5,000 IQD)")).toBe(
+      "خسارتان تنتظران موافقة مدير (5,000 IQD)",
+    );
+  });
+
+  it("Kurdish and English as they were", () => {
+    const ckb = translator(book("ckb"), "rtl", "ckb");
+    expect(ckb("{n} bill(s) still open, {amount} in all.", { n: 2, amount: "1 IQD" })).toBe(
+      "2 پسووڵە هێشتا کراوەن، کۆی گشتی 1 IQD.",
+    );
+    expect(en("<b>{n}</b> open bill(s)", { n: 1 })).toBe("<b>1</b> open bill");
+  });
+});
+
+describe("the café's own words may write a count's forms too", () => {
+  const page = "Page {page} of {pages} · {n} phrase(s)";
+  const words =
+    "صفحة {page} من {pages} · {n, plural, one {عبارة واحدة} two {عبارتان} few {# عبارات} other {# عبارة}}";
+  /** The database's check (0032, phrase_placeholders): each {name}, as often as it is there. */
+  const dbPlaceholders = (s: string) =>
+    [...s.matchAll(/\{([\p{L}\p{N}_]+)\}/gu)]
+      .map((m) => m[1])
+      .sort()
+      .join();
+
+  it("read as their other form, the count as its placeholder", () => {
+    expect(flatPlurals(words)).toBe("صفحة {page} من {pages} · {n} عبارة");
+    expect(flatPlurals("no count here")).toBe("no count here");
+  });
+
+  it("each count whole, or refused", () => {
+    expect(pluralsWhole(words)).toBe(true);
+    expect(pluralsWhole("{n} عبارة")).toBe(true);
+    // No other form; no number in it; a form left open; a form with a mark the others lack.
+    expect(pluralsWhole("{n, plural, one {عبارة واحدة}}")).toBe(false);
+    expect(pluralsWhole("{n, plural, one {عبارة} other {عبارات}}")).toBe(false);
+    expect(pluralsWhole("{n, plural, one {عبارة} other {# عبارات}")).toBe(false);
+    expect(pluralsWhole("{n, plural, one {<b>عبارة</b>} other {# عبارات}}")).toBe(false);
+  });
+
+  it("kept so the database's check finds the English's placeholders, and read back as written", () => {
+    const kept = keptWords(words);
+    expect(dbPlaceholders(kept)).toBe(dbPlaceholders(page));
+    expect(dbPlaceholders(words)).not.toBe(dbPlaceholders(page));
+    expect(writtenWords(kept)).toBe(words);
+    // A count's forms with marks and another value inside them.
+    const bills =
+      "{n, plural, one {<b>فاتورة واحدة</b> منذ {date}} other {<b>#</b> فاتورة منذ {date}}}";
+    expect(dbPlaceholders(keptWords(bills))).toBe("date,n");
+    expect(writtenWords(keptWords(bills))).toBe(bills);
+  });
+
+  it("words with no count are kept as they are", () => {
+    expect(keptWords("صفحة {page} من {pages}")).toBe("صفحة {page} من {pages}");
+    expect(writtenWords("صفحة {page} من {pages}")).toBe("صفحة {page} من {pages}");
+  });
+
+  it("the marks they are kept with are taken out of words as written", () => {
+    expect(keptMarks("a\u2063b ⟪c⟫")).toBe("ab c");
+  });
+
+  it("and a page shows them by the count", () => {
+    const ar = translator({ [page]: writtenWords(keptWords(words)) }, "rtl", "ar");
+    expect([1, 2, 3, 11].map((n) => ar(page, { page: 1, pages: 9, n }))).toEqual([
+      "صفحة 1 من 9 · عبارة واحدة",
+      "صفحة 1 من 9 · عبارتان",
+      "صفحة 1 من 9 · 3 عبارات",
+      "صفحة 1 من 9 · 11 عبارة",
+    ]);
   });
 });

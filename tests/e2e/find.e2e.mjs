@@ -3,10 +3,11 @@
 // its receipt prints after "Sale", by its journal, by a refund's number and
 // the refund's journal; a Talabat sale by its order number, whatever its
 // capitals; a customer's sale by part of their name and by their phone typed
-// another way. On Products & Recipes, a product by part of its name, in
-// capitals or not, and by its Arabic and Kurdish names. On Journals, a journal
-// by its number and by words in it. A search that names nothing says so; in
-// Arabic and Kurdish, no English but the café's own names.
+// another way; Today, Yesterday and Last 7 days a tap each. On Products &
+// Recipes, a product by part of its name, in capitals or not, and by its
+// Arabic and Kurdish names. On Journals, a journal by its number and by words
+// in it. A search that names nothing says so; in Arabic and Kurdish, no
+// English but the café's own names.
 import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 import { english } from "./english.mjs";
 
@@ -178,6 +179,36 @@ for (const locale of ["ar", "ckb"]) {
     `in ${locale}, the sale found, and no English but the café's own names` +
       (words.length ? `: ${words.slice(0, 12).join(" ")}` : ""),
   );
+  await ctx.close();
+}
+
+console.log("▸ Orders' days: today, yesterday and the last seven, a tap each");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/orders");
+  const days = page.getByTestId("orders-days");
+  await days.getByRole("link", { name: "Today", exact: true }).click();
+  await page.waitForURL(/\/orders\?from=/);
+  const [today, sold] = sql(
+    `select (now() at time zone 'Asia/Baghdad')::date || ' ' || count(*)
+       from sales_order
+      where status in ('completed', 'partially_refunded')
+        and (placed_at at time zone 'Asia/Baghdad')::date = (now() at time zone 'Asia/Baghdad')::date`,
+  ).split(" ");
+  const url = new URL(page.url());
+  const tile = await page.locator(".card.stat .value").first().textContent();
+  check(
+    url.searchParams.get("from") === today &&
+      url.searchParams.get("to") === today &&
+      Number(tile) === Number(sold) &&
+      (await days
+        .getByRole("link", { name: "Today", exact: true })
+        .getAttribute("aria-current")) === "true",
+    `Today opens today's ${sold} completed sales, and is marked as chosen`,
+  );
+  await days.getByRole("link", { name: "Last 7 days" }).click();
+  await page.waitForURL((u) => u.searchParams.get("from") !== today);
+  check(new URL(page.url()).searchParams.get("to") === today, "the last seven days end today");
   await ctx.close();
 }
 

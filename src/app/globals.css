@@ -4851,3 +4851,24 @@ a.card.stat[aria-current="true"] {
     min-width: 16rem;
   }
 }
+
+/* Inventory: what can be done here, a button each; one form open at a time below. */
+.inv-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.inv-buttons .btn-soft {
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 0.88rem;
+  border: 0;
+}
+.inv-buttons .btn-soft.active {
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+.inv-actions > .card {
+  max-width: 760px;
+}

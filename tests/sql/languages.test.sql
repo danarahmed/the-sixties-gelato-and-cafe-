@@ -58,6 +58,23 @@ select test.eq(app_words('ar') -> 'phrases', '{}'::jsonb, 'and Arabic has its bu
 select test.throws($$select save_phrases('tr', jsonb_build_object('Save', repeat('x', 4001)))$$, '%too long%',
   'words are at most 4000 letters');
 
+-- A count's forms, as the built-in Arabic writes them: this check reads only {name}, so the app
+-- keeps them as their flat words, then, after U+2063, the words with their braces as ⟪ ⟫
+-- (src/lib/i18n/core.ts, keptWords), and reads them back as written.
+select test.throws($$select save_phrases('ar', '{"Page {page} of {pages} · {n} phrase(s)":
+    "صفحة {page} من {pages} · {n, plural, one {عبارة واحدة} other {# عبارة}}"}')$$,
+  '%Keep {n} {page} {pages}%', 'a count''s forms as written are not read by the check');
+select test.eq(save_phrases('ar', jsonb_build_object('Page {page} of {pages} · {n} phrase(s)',
+    'صفحة {page} من {pages} · {n} عبارة' || chr(8291) ||
+    'صفحة ⟪page⟫ من ⟪pages⟫ · ⟪n, plural, one ⟪عبارة واحدة⟫ other ⟪# عبارة⟫⟫')),
+  '{"set": 1, "cleared": 0}'::jsonb, 'kept as the app keeps them, they are saved');
+select test.eq(app_words('ar') -> 'phrases' ->> 'Page {page} of {pages} · {n} phrase(s)',
+  'صفحة {page} من {pages} · {n} عبارة' || chr(8291) ||
+    'صفحة ⟪page⟫ من ⟪pages⟫ · ⟪n, plural, one ⟪عبارة واحدة⟫ other ⟪# عبارة⟫⟫',
+  'and given back as they were kept');
+select test.eq(save_phrases('ar', '{"Page {page} of {pages} · {n} phrase(s)": ""}'),
+  '{"set": 0, "cleared": 1}'::jsonb, 'and cleared like any words');
+
 -- A language taken out of use leaves the pages; its words are kept for when it comes back.
 select test.eq(save_language('fa', 'فارسی', 'rtl', false) ->> 'is_active', 'false', 'the owner takes Persian out of use');
 select test.eq(jsonb_array_length(app_words('fa') -> 'languages'), 1, 'it is no longer offered');
@@ -79,7 +96,7 @@ select test.throws($$insert into app_phrase (business_id, locale, phrase, words)
 select test.throws($$select * from app_language$$, '%permission denied%', 'nor read the languages directly');
 select test.as_admin();
 select test.eq((select string_agg(action || ' ' || entity_id, ', ' order by id) from audit_log where action like 'language.%'),
-  'language.add tr, language.add fa, language.words tr, language.words ar, language.words ar, language.update fa, language.update tr, language.update tr',
+  'language.add tr, language.add fa, language.words tr, language.words ar, language.words ar, language.words ar, language.words ar, language.update fa, language.update tr, language.update tr',
   'every language added or changed, and every change of words, is audited');
 select test.eq((select after_state from audit_log where action = 'language.words' order by id limit 1),
   '{"set": 3, "cleared": 0}'::jsonb, 'with how many phrases changed');

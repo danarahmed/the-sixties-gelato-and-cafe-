@@ -18,6 +18,14 @@ export function check(cond, message) {
   console.log(`  ${cond ? "✓" : "✗"} ${message}`);
   if (!cond) failures++;
 }
+/** One of Inventory's forms, opened from its button unless it is open already. */
+export async function inventoryForm(page, key, testid) {
+  const form = page.getByTestId(testid);
+  if ((await form.count()) === 0) await page.getByTestId(`inv-open-${key}`).click();
+  await form.waitFor({ timeout: 10000 });
+  return form;
+}
+
 /** "1 bill", "3 bills": a count as the screens write it. */
 export function counted(n, one, many = `${one}s`) {
   return `${n} ${Number(n) === 1 ? one : many}`;

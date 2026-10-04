@@ -121,8 +121,22 @@ would match other messages.
   dotted keys in `dictionaries.ts` (journal: قيد / تۆمار; account: حساب /
   هەژمار; supplier: مورّد / دابینکەر; stock: مخزون / کۆگا; drawer: درج النقد /
   دەخیلە).
-- A count reads right for any number: English keeps "{n} day(s)"; Arabic and
-  Kurdish may say it as "الأيام: {n}" or with the plural a screen normally uses.
+- A count reads right for any number. English writes "{n} day(s)", and the
+  word, and a verb right after it ("are", "have", "wait"…), agree with the
+  number nearest before them: "1 day", "3 days", "1 bill is", "2 bills are".
+- Arabic writes a count's forms, ICU's way, chosen by the language's rules:
+  `{n, plural, one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}}`
+  gives "يوم واحد", "يومان", "5 أيام", "11 يومًا", "100 يوم". `#` is the count as
+  given; `=0 {…}` is a form for one number alone; a form left out falls back
+  to `other`, which must have `#`. Each form keeps the same `{placeholders}`
+  and `<marks>`, and the phrase, read with each count in its `other` form,
+  keeps the English's. Kurdish counts as Sorani does, with the noun singular
+  after a number ("3 پسووڵە"), so it needs no forms.
+- The café's own words may write forms too. The database's check (0032) reads
+  only `{name}`, so the app keeps such words as their `other` reading, then,
+  after an invisible separator (U+2063), the words as written with their
+  braces as ⟪ ⟫, and reads them back as written (`keptWords`, `writtenWords`
+  in `core.ts`). U+2063, ⟪ and ⟫ are taken out of words typed in.
 
 ## Checking
 

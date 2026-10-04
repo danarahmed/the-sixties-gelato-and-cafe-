@@ -492,7 +492,7 @@ const phrases: PhraseBook = {
   },
   "Still ahead": { ar: "المتبقي للأشهر القادمة", ckb: "ماوە بۆ مانگەکانی داهاتوو" },
   "{n} month(s) due to take their share": {
-    ar: "{n} شهر (أشهر) حان أن تأخذ حصتها",
+    ar: "{n, plural, one {شهر واحد حان أن يأخذ حصته} two {شهران حان أن يأخذا حصتهما} few {# أشهر حان أن تأخذ حصتها} many {# شهرًا حان أن تأخذ حصتها} other {# شهر حان أن تأخذ حصتها}}",
     ckb: "{n} مانگ کاتی ئەوەیە بەشی خۆیان وەربگرن",
   },
   "Release what is due ({n})": {
@@ -500,7 +500,7 @@ const phrases: PhraseBook = {
     ckb: "ئەوەی کاتی هاتووە تۆمار بکە ({n})",
   },
   "{n} month(s)' share posted as an expense of its month.": {
-    ar: "رُحِّلت حصة {n} شهر (أشهر) مصروفًا لشهرها.",
+    ar: "رُحِّلت حصة {n, plural, one {شهر واحد} two {شهرين} few {# أشهر} many {# شهرًا} other {# شهر}} مصروفًا لشهرها.",
     ckb: "بەشی {n} مانگ وەک خەرجیی مانگەکەی خۆی تۆمار کرا.",
   },
   Months: { ar: "الأشهر", ckb: "مانگەکان" },
@@ -519,7 +519,7 @@ const phrases: PhraseBook = {
     ckb: "خەرجیی پێشەکیی کاتهاتوو",
   },
   "{1} month(s) of prepaid expenses are due to be released, {2} IQD in all": {
-    ar: "حان ترحيل {1} شهر (أشهر) من المصروفات المدفوعة مقدمًا، {2} IQD في المجموع",
+    ar: "حان ترحيل {1, plural, one {شهر واحد} two {شهرين} few {# أشهر} many {# شهرًا} other {# شهر}} من المصروفات المدفوعة مقدمًا، {2} IQD في المجموع",
     ckb: "کاتی تۆمارکردنی {1} مانگ لە خەرجییە پێشەکییەکان هاتووە، کۆی گشتی {2} IQD",
   },
   "Each month a prepaid expense covers takes its share of it: until it is released, that month's profit is too high.":
@@ -537,7 +537,7 @@ const phrases: PhraseBook = {
   },
   "{1} share(s) of prepaid expenses to {2}, {3} IQD in all, are not posted: release them on Expenses":
     {
-      ar: "{1} حصة من المصروفات المدفوعة مقدمًا حتى {2}، {3} IQD في المجموع، لم تُرحَّل: رحّلها في شاشة «المصروفات»",
+      ar: "{1, plural, one {حصة واحدة} two {حصتان} few {# حصص} other {# حصة}} من المصروفات المدفوعة مقدمًا حتى {2}، {3} IQD في المجموع، لم تُرحَّل: رحّلها في شاشة «المصروفات»",
       ckb: "{1} بەش لە خەرجییە پێشەکییەکان تا {2}، کۆی گشتی {3} IQD، تۆمار نەکراون: لە شاشەی «خەرجییەکان» تۆماریان بکە",
     },
   "Prepaid expenses still to come vs Prepaid expenses (1400)": {
@@ -763,7 +763,10 @@ const phrases: PhraseBook = {
     ar: "ضع علامة على كل قيد يظهر في كشف البنك، حتى آخر يوم فيه.",
     ckb: "نیشانە لە هەر تۆمارێک بدە کە کەشفی بانکەکە نیشانی دەدات، تا دوایین ڕۆژی.",
   },
-  "{n} line(s)": { ar: "{n} قيد", ckb: "{n} تۆمار" },
+  "{n} line(s)": {
+    ar: "{n, plural, one {قيد واحد} two {قيدان} few {# قيود} many {# قيدًا} other {# قيد}}",
+    ckb: "{n} تۆمار",
+  },
   "The statement's last day": { ar: "آخر يوم في الكشف", ckb: "دوایین ڕۆژی کەشفەکە" },
   "The balance on the statement": { ar: "الرصيد في الكشف", ckb: "باڵانسی ناو کەشفەکە" },
   "Every bank line in the books is on a statement.": {
@@ -867,7 +870,7 @@ const phrases: PhraseBook = {
     ckb: "کەشفی {1} دوای ئەو دێت: سەرەتا نوێترینیان هەڵبوەشێنەوە",
   },
   "{1} bank line(s), the oldest from {2}, are on no bank statement": {
-    ar: "{1} قيد للبنك، أقدمها من {2}، ليست في أي كشف بنك",
+    ar: "{1, plural, one {قيد واحد للبنك} two {قيدان للبنك} few {# قيود للبنك} many {# قيدًا للبنك} other {# قيد للبنك}}، أقدمها من {2}، ليست في أي كشف بنك",
     ckb: "{1} تۆماری بانک، کۆنترینیان لە {2}ەوە، لە هیچ کەشفێکی بانکدا نین",
   },
   "Reconcile the bank with its statement on Chart of Accounts.": {
@@ -880,7 +883,7 @@ const phrases: PhraseBook = {
     ckb: "بانک تا کۆتایی مانگ بەراورد کراوە",
   },
   "{1} bank line(s) to {2}, the first from {3}, are on no bank statement": {
-    ar: "{1} قيد للبنك حتى {2}، أولها من {3}، ليست في أي كشف بنك",
+    ar: "{1, plural, one {قيد واحد للبنك} two {قيدان للبنك} few {# قيود للبنك} many {# قيدًا للبنك} other {# قيد للبنك}} حتى {2}، أولها من {3}، ليست في أي كشف بنك",
     ckb: "{1} تۆماری بانک تا {2}، یەکەمیان لە {3}ەوە، لە هیچ کەشفێکی بانکدا نین",
   },
   // The bank's statement read from its file or pasted (src/lib/bank.ts, BankReconciliation).

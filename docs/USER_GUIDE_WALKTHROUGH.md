@@ -85,7 +85,9 @@ Count**; the purchasing role on **Reports**.
   - **☰** opens the sidebar on a phone;
   - the **language** menu: English, العربية, کوردی (Arabic and Kurdish turn the
     whole layout right-to-left; a date still reads 2026-09-30, the arrows
-    point the way the language reads, and "each" is قطعة or دانە);
+    point the way the language reads, and "each" is قطعة or دانە). A count
+    reads as its language says it: "1 bill", "3 bills"; in Arabic "فاتورة
+    واحدة", "فاتورتان", "3 فواتير", "11 فاتورة";
   - **☀️ / 🌙** for light or dark.
 - **Offline banner.** When the connection drops, a red banner says so. Selling and
   saving stop until it is back: nothing is saved offline, so nothing is recorded
@@ -206,6 +208,14 @@ figures; **Show as a table** under each chart holds the same figures.
 
 **Location:** Sidebar → **POS** · `/pos` · **Who:** cashier, barista, managers,
 owner
+
+**Tables or Menu.** At a branch with tables the till has two views at its top:
+**Tables**, the floor, each table with its bills and how long they have been
+open, and how many bills are open in all ("1 open bill"); and **Menu**, the
+products, for an order rung up there and then. Each device opens on the view
+it was last left on: the counter's till on **Menu**, the floor's on
+**Tables** (**Tables**, the first time). A bill saved, paid or cancelled goes
+back to **Tables**.
 
 1. **Channel.** Choose **Dine-in**, **Takeaway**, **Direct delivery** or
    **Talabat**. Prices on the tiles change with it.
@@ -382,7 +392,9 @@ margin (the sale's price less the recipe cost of what it used). Each item keeps
 the name it was sold under: renaming a product later does not relabel its past
 sales. An item's add-ons follow it, in the order they were given: **Latte —
 Large (+ Oat milk, Extra shot ×2)**. Choose **From**, **To** and a **Channel** to see the sales of those days;
-a report's figures open here with them chosen.
+a report's figures open here with them chosen. **Today**, **Yesterday** and
+**Last 7 days** beside them choose those days in one tap, in the café's day,
+keeping the channel chosen; the days shown are lit.
 
 **Find a sale** finds one whatever its day, for a customer back with a receipt
 or a platform asking about an order. Type any of these:
@@ -935,6 +947,12 @@ costs; baristas can record waste
   level, items with negative stock. **Below reorder level** and **Negative
   stock** open **Stock on hand** with those items alone, with **Show every
   item** to go back, and, for the low ones, **What to buy**.
+- **What to do here, a button each:** **Record a loss**, **Correct stock
+  (manager)**, **Add stock item**, and **Opening stock** with how many items
+  wait for it, as far as you may. Each opens its form under the buttons, one
+  at a time, and **Stock on hand** follows straight after; tap it again to
+  close it. Someone who may do one of them has it open. A link opens a form:
+  `/inventory#record-loss`, `#correct-stock`, `#add-item`, `#opening-stock`.
 - **📦 Opening stock** (the owner's alone; shown while any item has no stock
   recorded yet — after the test records are cleared, or for an item added
   without it): choose the item, count what is on the shelf, and enter the

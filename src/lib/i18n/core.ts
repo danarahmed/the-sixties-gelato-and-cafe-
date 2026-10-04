@@ -98,15 +98,161 @@ export function agree(text: string): string {
   );
 }
 
+/** A count's forms in a phrase, ICU's way: "{n, plural, one {…} two {…} few {# …} other {# …}}". */
+const PLURAL_HEAD = /\{(\w+), plural,/g;
+
+export interface PluralBlock {
+  /** Where the block starts and ends in the phrase. */
+  start: number;
+  end: number;
+  /** The count it is chosen by: a placeholder's name ("n"), or a message's value ("1"). */
+  name: string;
+  /** Each form by its category ("one", "two", "few", "many", "other") or "=0"; # is the count. */
+  forms: Map<string, string>;
+}
+
+/** The count blocks of a phrase; one written wrong ends the reading, and is left as written. */
+export function pluralBlocks(text: string): PluralBlock[] {
+  const out: PluralBlock[] = [];
+  const head = new RegExp(PLURAL_HEAD);
+  let m: RegExpExecArray | null;
+  while ((m = head.exec(text))) {
+    let i = m.index + m[0].length;
+    const forms = new Map<string, string>();
+    for (;;) {
+      while (i < text.length && /\s/.test(text[i]!)) i++;
+      if (text[i] === "}") {
+        i++;
+        break;
+      }
+      const sel = /^(=\d+|zero|one|two|few|many|other)\s*\{/.exec(text.slice(i));
+      if (!sel) return out;
+      i += sel[0].length;
+      const from = i;
+      for (let depth = 1; depth > 0; i++) {
+        if (i >= text.length) return out;
+        if (text[i] === "{") depth++;
+        else if (text[i] === "}") depth--;
+      }
+      forms.set(sel[1]!, text.slice(from, i - 1));
+    }
+    out.push({ start: m.index, end: i, name: m[1]!, forms });
+    head.lastIndex = i;
+  }
+  return out;
+}
+
+const RULES = new Map<string, Intl.PluralRules>();
+
+/** A number's category in a language: Arabic's one, two, few (3–10), many (11–99) and other. */
+function categoryOf(locale: string, n: number): string {
+  let rules = RULES.get(locale);
+  if (!rules) {
+    try {
+      rules = new Intl.PluralRules(locale);
+    } catch {
+      rules = new Intl.PluralRules("en");
+    }
+    RULES.set(locale, rules);
+  }
+  return rules.select(n);
+}
+
+/**
+ * Each count in a phrase in the form its language gives that number: in
+ * Arabic, "فاتورة واحدة", "فاتورتان", "3 فواتير", "11 فاتورة". A form is chosen
+ * by the number itself (=0), then by the language's rules, then "other"; # in
+ * it is the count as given. A count with no value is left as written.
+ */
+export function plurals(text: string, values: Record<string, unknown>, locale: string): string {
+  if (!text.includes(", plural,")) return text;
+  let out = "";
+  let at = 0;
+  for (const b of pluralBlocks(text)) {
+    if (!Object.prototype.hasOwnProperty.call(values, b.name)) continue;
+    const value = String(values[b.name]);
+    const n = Number(value.replace(/,/g, ""));
+    const form =
+      b.forms.get(`=${n}`) ??
+      (Number.isFinite(n) ? b.forms.get(categoryOf(locale, n)) : undefined) ??
+      b.forms.get("other") ??
+      "";
+    out += text.slice(at, b.start) + form.replace(/#/g, value);
+    at = b.end;
+  }
+  return out + text.slice(at);
+}
+
+/**
+ * A phrase with each count written in its "other" form, # as the count's
+ * {placeholder}: what its words must keep of the English, {placeholders} and
+ * <marks> alike.
+ */
+export function flatPlurals(text: string): string {
+  let out = "";
+  let at = 0;
+  for (const b of pluralBlocks(text)) {
+    out += text.slice(at, b.start) + (b.forms.get("other") ?? "").replace(/#/g, `{${b.name}}`);
+    at = b.end;
+  }
+  return out + text.slice(at);
+}
+
+const tagsOf = (s: string) => [...s.matchAll(/<\/?[a-z][a-z0-9]*>/gi)].map((m) => m[0]).sort();
+const namesOf = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+
+/**
+ * Whether each count in a phrase is written whole: every block read to its
+ * end, an "other" form with the count (#) in it, and each form with the same
+ * {placeholders} and <marks> as the "other" one.
+ */
+export function pluralsWhole(text: string): boolean {
+  const blocks = pluralBlocks(text);
+  if (blocks.length !== text.split(", plural,").length - 1) return false;
+  return blocks.every((b) => {
+    const other = b.forms.get("other");
+    if (other === undefined || !other.includes("#")) return false;
+    const marks = (f: string) => [...namesOf(f), ...tagsOf(f)].join();
+    return [...b.forms.values()].every((f) => marks(f) === marks(other));
+  });
+}
+
+/** What parts the café's words as the database keeps them from the words as written. */
+const KEPT = "⁣";
+
+/**
+ * The café's words as the database keeps them (0032). Its check wants each
+ * {placeholder} of the English as often as the English has it, and does not
+ * read a count's forms, so words with forms are kept as their flat words (each
+ * count in its "other" form), then, after an invisible separator, the words as
+ * written, their braces as ⟪ ⟫. Words with no forms are kept as they are.
+ */
+export function keptWords(words: string): string {
+  if (pluralBlocks(words).length === 0) return words;
+  const braces = words.replace(/[{}]/g, (c) => (c === "{" ? "⟪" : "⟫"));
+  return `${flatPlurals(words)}${KEPT}${braces}`;
+}
+
+/** The café's words as they were written, from the words the database keeps. */
+export function writtenWords(kept: string): string {
+  const at = kept.lastIndexOf(KEPT);
+  if (at < 0) return kept;
+  return kept.slice(at + KEPT.length).replace(/[⟪⟫]/g, (c) => (c === "⟪" ? "{" : "}"));
+}
+
+/** The marks the café's words are kept with, taken out of the words as written. */
+export const keptMarks = (words: string) => words.replace(/[⁣⟪⟫]/g, "");
+
 /**
  * {name} in a phrase, filled; a placeholder with no value is left as it is.
  * For a right-to-left reader, the dates in a value are kept left to right.
- * A plural the phrase leaves open agrees with its number.
+ * A count takes the form its language gives that number, and an English
+ * plural the phrase leaves open agrees with its number.
  */
-export function fill(text: string, vars?: Vars, dir: Dir = "ltr"): string {
+export function fill(text: string, vars?: Vars, dir: Dir = "ltr", locale: Locale = "en"): string {
   if (!vars) return agree(text);
   return agree(
-    text.replace(/\{(\w+)\}/g, (whole, name: string) => {
+    plurals(text, vars, locale).replace(/\{(\w+)\}/g, (whole, name: string) => {
       if (!Object.prototype.hasOwnProperty.call(vars, name)) return whole;
       const value = String(vars[name]);
       return dir === "rtl" ? isolateDates(value) : value;
@@ -115,8 +261,8 @@ export function fill(text: string, vars?: Vars, dir: Dir = "ltr"): string {
 }
 
 /** The translator for a language's words: the key itself (an English phrase) where it has none. */
-export function translator(words: Words, dir: Dir = "ltr"): T {
-  return (key, vars) => fill(words[key] ?? key, vars, dir);
+export function translator(words: Words, dir: Dir = "ltr", locale: Locale = "en"): T {
+  return (key, vars) => fill(words[key] ?? key, vars, dir, locale);
 }
 
 /** The arrow that points on, and the one that points back, the way a direction reads. */
@@ -154,7 +300,7 @@ const SHORT_DATE = /^(\d{1,2}) ([A-Z][a-z]{2})((?: \d{2}:\d{2})?)$/;
  * days") is for the values inside a message, where it cannot swallow another.
  * Messages the database joins with "; " are translated one by one.
  */
-export function messenger(words: Words, dir: Dir = "ltr"): Msg {
+export function messenger(words: Words, dir: Dir = "ltr", locale: Locale = "en"): Msg {
   type Pattern = { re: RegExp; slots: number[]; to: string; fixed: number; whole: boolean };
   let patterns: Pattern[] | null = null;
   const compile = (): Pattern[] =>
@@ -192,7 +338,10 @@ export function messenger(words: Words, dir: Dir = "ltr"): Msg {
       if (!m) continue;
       const values: Record<string, string> = {};
       p.slots.forEach((slot, i) => (values[slot] = translate(m[i + 1] ?? "", depth + 1)));
-      return p.to.replace(/\{(\d+)\}/g, (whole, n: string) => values[n] ?? whole);
+      return plurals(p.to, values, locale).replace(
+        /\{(\d+)\}/g,
+        (whole, n: string) => values[n] ?? whole,
+      );
     }
     // Messages joined into a list: each one on its own, the ones after the
     // first as the values they are ("Label — detail").

@@ -779,7 +779,7 @@ const phrases: PhraseBook = {
     ckb: "{name}: {sold} فرۆشرا، {used} بەکارهات",
   },
   "{name}: {batches} batch(es), using {used}": {
-    ar: "{name}: {batches} دفعة، استهلكت {used}",
+    ar: "{name}: {batches, plural, one {دفعة واحدة} two {دفعتان} few {# دفعات} other {# دفعة}}، استهلكت {used}",
     ckb: "{name}: {batches} دەستە، {used} بەکارهات",
   },
   "Counted once in these dates": {
@@ -1147,7 +1147,7 @@ const phrases: PhraseBook = {
     ckb: "ڕەشنووسی {n} داواکاری دروست کرا، بۆ ئەوەی بەڕێوەبەرێک پەسەندیان بکات:",
   },
   "{supplier}: {n} line(s), {total}, expected {day}": {
-    ar: "{supplier}: {n} سطر، {total}، متوقَّعة في {day}",
+    ar: "{supplier}: {n, plural, one {سطر واحد} two {سطران} few {# أسطر} many {# سطرًا} other {# سطر}}، {total}، متوقَّعة في {day}",
     ckb: "{supplier}: {n} هێڵ، {total}، چاوەڕوان دەکرێت لە {day}",
   },
   "Nothing to order now.": { ar: "لا شيء يُطلب الآن.", ckb: "ئێستا هیچ شتێک داوا ناکرێت." },
@@ -1158,10 +1158,13 @@ const phrases: PhraseBook = {
     },
   "No supplier yet": { ar: "لا مورّد بعد", ckb: "هێشتا دابینکەر نییە" },
   "Delivers in the café's {n} day(s)": {
-    ar: "يُسلِّم خلال {n} يوم (المدة العامة للمقهى)",
+    ar: "يُسلِّم خلال {n, plural, one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}} (المدة العامة للمقهى)",
     ckb: "لە {n} ڕۆژدا دەیگەیەنێت (ماوەی گشتیی کافێکە)",
   },
-  "Delivers in {n} day(s)": { ar: "يُسلِّم خلال {n} يوم", ckb: "لە {n} ڕۆژدا دەیگەیەنێت" },
+  "Delivers in {n} day(s)": {
+    ar: "يُسلِّم خلال {n, plural, one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}}",
+    ckb: "لە {n} ڕۆژدا دەیگەیەنێت",
+  },
   "Choose a supplier for each line": {
     ar: "اختر مورّدًا لكل سطر",
     ckb: "بۆ هەر هێڵێک دابینکەرێک هەڵبژێرە",
@@ -1178,7 +1181,7 @@ const phrases: PhraseBook = {
     ckb: "ئەوەی دەتەوێت داوای بکەیت نیشانە بکە.",
   },
   "{lines} line(s) ticked: {orders} draft order(s), {total} in all.": {
-    ar: "{lines} سطر مؤشَّر: {orders} مسودة طلبية، {total} إجمالًا.",
+    ar: "{lines, plural, one {سطر واحد مؤشَّر} two {سطران مؤشَّران} few {# أسطر مؤشَّرة} many {# سطرًا مؤشَّرًا} other {# سطر مؤشَّر}}: {orders, plural, one {مسودة طلبية واحدة} two {مسودتا طلبية} few {# مسودات طلبية} other {# مسودة طلبية}}، {total} إجمالًا.",
     ckb: "{lines} هێڵ نیشانە کراوە: {orders} ڕەشنووسی داواکاری، {total} بە گشتی.",
   },
   "Create the orders": { ar: "أنشئ الطلبيات", ckb: "داواکارییەکان دروست بکە" },
@@ -1222,7 +1225,7 @@ const phrases: PhraseBook = {
     ckb: "یەکەمجار ئەمڕۆ لێرە کەوتە کۆگاوە: 7 ڕۆژ مێژوو پێویستە بۆ خەمڵاندنی بەکارهێنانەکەی.",
   },
   "Only {n} day(s) of history: 7 are needed to judge its use by.": {
-    ar: "سجلّها {n} يوم فقط: يلزم 7 أيام للحكم على استهلاكها.",
+    ar: "سجلّها {n, plural, one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}} فقط: يلزم 7 أيام للحكم على استهلاكها.",
     ckb: "تەنها {n} ڕۆژ مێژووی هەیە: 7 ڕۆژ پێویستە بۆ خەمڵاندنی بەکارهێنانەکەی.",
   },
   "Set a reorder level on the item, or add it to an order yourself.": {

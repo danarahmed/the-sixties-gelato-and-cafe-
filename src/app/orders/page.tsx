@@ -32,6 +32,12 @@ export default async function OrdersPage({
   // Opened from a report: the sales of those days (and that channel).
   const today = businessToday(profile.timezone);
   const filtered = !find && (typeof sp.from === "string" || typeof sp.channel === "string");
+  const yesterday = addDays(today, -1);
+  const quickDays: [string, string, string][] = [
+    ["Today", today, today],
+    ["Yesterday", yesterday, yesterday],
+    ["Last 7 days", addDays(today, -6), today],
+  ];
   // The latest 100 to begin with: a page of 300 sales is long on a phone.
   const latest = sp.more === "1" ? 300 : 100;
   const from = parseDay(sp.from, today);
@@ -126,6 +132,19 @@ export default async function OrdersPage({
           </select>
         </label>
         <button type="submit">{t("Show")}</button>
+        {/* The days asked for most, a tap each, in the café's day. */}
+        <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }} data-testid="orders-days">
+          {quickDays.map(([label, f, tt]) => (
+            <Link
+              key={label}
+              className={filtered && from === f && to === tt ? "badge ok" : "badge"}
+              href={`/orders?from=${f}&to=${tt}${channel ? `&channel=${channel}` : ""}`}
+              aria-current={filtered && from === f && to === tt ? "true" : undefined}
+            >
+              {t(label)}
+            </Link>
+          ))}
+        </span>
         {filtered && (
           <Link className="badge" href="/orders">
             {t("The latest sales")}

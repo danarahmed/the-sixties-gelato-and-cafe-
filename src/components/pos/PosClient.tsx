@@ -305,6 +305,7 @@ export function PosClient({
   fx = null,
   dollarsOffHours = null,
   canAddCustomer = false,
+  startView = null,
 }: {
   items: PosItem[];
   /** The add-ons, and which products offer them (0041). */
@@ -331,6 +332,8 @@ export function PosClient({
   canAddCustomer?: boolean;
   /** The rate is this many hours old, too old to take dollars at: the till says so. */
   dollarsOffHours?: number | null;
+  /** The view this device was left on (a cookie): the till opens there again. */
+  startView?: "floor" | "menu" | null;
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -356,7 +359,15 @@ export function PosClient({
   const hasFloor = floorTables.length > 0 || canManageTables;
 
   const [bills, setBills] = useState<OpenBill[]>(initialBills);
-  const [view, setView] = useState<"floor" | "menu">(floorTables.length > 0 ? "floor" : "menu");
+  // Tables first where there are tables, unless this device was last left on the menu.
+  const [view, setView] = useState<"floor" | "menu">(
+    floorTables.length > 0 && startView !== "menu" ? "floor" : "menu",
+  );
+  /** The cashier's own choice of view, kept on this device for the next time the till opens. */
+  function chooseView(v: "floor" | "menu") {
+    setView(v);
+    document.cookie = `pos_view=${v}; path=/; max-age=31536000; samesite=lax`;
+  }
   const [quick, setQuick] = useState<Order>(() =>
     quickOrder(channels.includes("takeaway") ? "takeaway" : (channels[0] ?? "takeaway")),
   );
@@ -1506,7 +1517,7 @@ export function PosClient({
               role="tab"
               aria-selected={view === "floor"}
               className={view === "floor" ? "active" : ""}
-              onClick={() => setView("floor")}
+              onClick={() => chooseView("floor")}
             >
               <Icon name="table" size={16} /> {t("pos.tables")}
             </button>
@@ -1514,7 +1525,7 @@ export function PosClient({
               role="tab"
               aria-selected={view === "menu"}
               className={view === "menu" ? "active" : ""}
-              onClick={() => setView("menu")}
+              onClick={() => chooseView("menu")}
             >
               <Icon name="cup" size={16} /> {t("pos.menu")}
             </button>

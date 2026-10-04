@@ -7,7 +7,7 @@
 // who works at the kitchen alone sends from it to the branch, receives what
 // comes to it and cancels what it sent (0063). A cashier is sent away. The books tie, 1210 against what is on its way; the journals and
 // the audit trail name each transfer. The screens in Arabic and Kurdish.
-import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { BASE, chromium, check, done, inventoryForm, open, signIn, sql } from "./lib.mjs";
 import { english } from "./english.mjs";
 
 const browser = await chromium.launch();
@@ -136,7 +136,7 @@ let no;
     board.includes("Transfer milk") && board.includes("4,500") && !board.includes("Golden beans"),
     "the stock board shows the kitchen's stock, and not the branch's",
   );
-  const loss = page.getByTestId("record-loss");
+  const loss = await inventoryForm(page, "loss", "record-loss");
   await loss.getByLabel("What kind of loss").selectOption("damaged");
   await loss.getByLabel("Item").selectOption({ label: "Transfer milk" });
   await loss.getByLabel("Quantity lost").fill("500");

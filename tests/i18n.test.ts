@@ -13,7 +13,15 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { BOOKS } from "@/lib/i18n/phrases";
 import { getDictionary, builtInWords } from "@/lib/i18n/dictionaries";
-import { arrows, fill, isolateDates, messenger, translator } from "@/lib/i18n/core";
+import {
+  arrows,
+  fill,
+  flatPlurals,
+  isolateDates,
+  messenger,
+  pluralsWhole,
+  translator,
+} from "@/lib/i18n/core";
 import { parseRich, plain } from "@/lib/i18n/Rich";
 import { LABELS } from "@/lib/format";
 import { RULE_PHRASES } from "@/lib/rules";
@@ -25,8 +33,11 @@ import { scan, screens } from "../scripts/i18n-scan.mjs";
 import { raiseMessages } from "../scripts/db-messages.mjs";
 
 const ROOT = join(__dirname, "..");
-const placeholders = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
-const tags = (s: string) => [...s.matchAll(/<\/?([a-z][a-z0-9]*)>/gi)].map((m) => m[0]).sort();
+/** A phrase's {placeholders} and <tags>, each count's forms read as its "other" form. */
+const placeholders = (s: string) =>
+  [...flatPlurals(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+const tags = (s: string) =>
+  [...flatPlurals(s).matchAll(/<\/?([a-z][a-z0-9]*)>/gi)].map((m) => m[0]).sort();
 
 function files(dir: string, ext: RegExp): string[] {
   const out: string[] = [];
@@ -56,6 +67,15 @@ describe("the phrase books", () => {
             placeholders(p.t[l]).join() !== placeholders(p.en).join() ||
             tags(p.t[l]).join() !== tags(p.en).join(),
         )
+        .map((l) => `${p.book} ${l}: ${p.en}`),
+    );
+    expect(wrong).toEqual([]);
+  });
+
+  it("write each count's forms whole: an other form with the count, and the same words around", () => {
+    const wrong = all.flatMap((p) =>
+      (["ar", "ckb"] as const)
+        .filter((l) => !pluralsWhole(p.t[l]))
         .map((l) => `${p.book} ${l}: ${p.en}`),
     );
     expect(wrong).toEqual([]);
