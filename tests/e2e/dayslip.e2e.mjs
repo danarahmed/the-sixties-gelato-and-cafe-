@@ -5,18 +5,25 @@
 // voids and refunds and waste; how it was paid; the drawers; what sold the
 // most; each step of the close, done or not; and lines to sign. In Arabic it
 // prints right to left, in Arabic.
-import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { BASE, chromium, check, done, open, signIn, sql, TODAY } from "./lib.mjs";
 
 const browser = await chromium.launch();
+const B = "00000000-0000-0000-0000-0000000000b1";
 const last = (q) => sql(q).split("\n").pop();
 const VARIANT = "d1000000-0000-0000-0000-000000000001";
-const product = last(`select p.name from product_variant v join product p on p.id = v.product_id
-                       where v.id = '${VARIANT}'`);
 
 // A sale of its own, by card (no drawer needed), so the day has one whatever ran before.
 sql(`select test.act_as('cashier@example.com');
      select record_sale(gen_random_uuid(), 'dine_in', 'card',
        '[{"variant_id": "${VARIANT}", "qty": 3}]'::jsonb)`);
+// What sold the most today, as the database counts it: whatever else ran today, it is on the slip.
+const product = last(`select p.name from sales_order o
+                        join sales_order_line l on l.sales_order_id = o.id
+                        join product_variant v on v.id = l.product_variant_id
+                        join product p on p.id = v.product_id
+                       where o.business_id = '${B}' and o.status not in ('voided', 'open')
+                         and business_local_date('${B}', o.placed_at) = ${TODAY}
+                       group by p.name order by sum(l.quantity) desc, sum(l.line_net) desc limit 1`);
 
 /** The print dialog is not opened here, and the slip stays on the page to be read. */
 async function printSlip(page) {

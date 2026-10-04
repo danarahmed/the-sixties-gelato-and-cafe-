@@ -1,5 +1,6 @@
 import "server-only";
-import { db, rows, str } from "@/lib/db/client";
+import { db, str } from "@/lib/db/client";
+import { readPaged } from "@/lib/db/batches";
 import { getSalesAnalysis } from "@/lib/db/analysis";
 import { addDays } from "@/lib/dates";
 import type { ClockSpan, HourSales } from "@/lib/staffing";
@@ -17,15 +18,17 @@ export async function getStaffing(
   location: string | null,
 ): Promise<{ sales: HourSales[]; spans: ClockSpan[]; open: number }> {
   const c = await db();
-  let clock = c
-    .from("attendance")
-    .select("clock_in,clock_out")
-    .is("cancelled_at", null)
-    // The day before too: a night's hours after midnight fall in the first day.
-    .gte("work_day", addDays(from, -1))
-    .lte("work_day", to);
-  if (location) clock = clock.eq("location_id", location);
-  const [analysis, kept] = await Promise.all([
+  const clock = () => {
+    const q = c
+      .from("attendance")
+      .select("id,clock_in,clock_out")
+      .is("cancelled_at", null)
+      // The day before too: a night's hours after midnight fall in the first day.
+      .gte("work_day", addDays(from, -1))
+      .lte("work_day", to);
+    return (location ? q.eq("location_id", location) : q).order("clock_in").order("id");
+  };
+  const [analysis, records] = await Promise.all([
     getSalesAnalysis({
       from,
       to,
@@ -36,9 +39,8 @@ export async function getStaffing(
       category: null,
       cashier: null,
     }),
-    clock.order("clock_in").limit(20_000),
+    readPaged(clock, "the hours on the clock"),
   ]);
-  const records = rows(kept, "the hours on the clock");
   return {
     sales: analysis.rows.map((r) => ({
       weekday: Number(r.key),

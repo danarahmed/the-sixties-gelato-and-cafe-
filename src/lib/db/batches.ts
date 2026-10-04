@@ -52,3 +52,25 @@ export async function readInBatches<T = Record<string, unknown>>(
   for (let i = 0; i < unique.length; i += batch) batches.push(unique.slice(i, i + batch));
   return (await Promise.all(batches.map(readBatch))).flat();
 }
+
+/**
+ * Every row of one read, a page at a time: the hosted API returns at most
+ * 1,000 rows a call and says nothing of the rest, so a read that may hold
+ * more is read again from where the last page ended until a page comes back
+ * short. The read's order must end with a column of its own (the id), or a
+ * page could repeat or miss a row. Any page's error is the read's.
+ */
+export async function readPaged<T = Record<string, unknown>>(
+  read: () => { range(from: number, to: number): Page },
+  what: string,
+  page: number = ROW_PAGE,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let start = 0; ; start += page) {
+    const res = await read().range(start, start + page - 1);
+    if (res.error) throw new Error(`Could not load ${what}: ${res.error.message}`);
+    const rows = (Array.isArray(res.data) ? res.data : []) as T[];
+    out.push(...rows);
+    if (rows.length < page) return out;
+  }
+}
