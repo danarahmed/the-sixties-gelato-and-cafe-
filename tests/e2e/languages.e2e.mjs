@@ -280,7 +280,7 @@ console.log("▸ Persian, written right to left; Turkish taken out of use");
     sql(
       `select string_agg(action, ',' order by id) from audit_log where action like 'language.%'`,
     ) ===
-      "language.add,language.words,language.words,language.words,language.words,language.add,language.update",
+      "language.add,language.words,language.words,language.words,language.words,language.words,language.words,language.add,language.update",
     "every language added or changed, and every change of words, is on the audit trail",
   );
   await ctx.close();
