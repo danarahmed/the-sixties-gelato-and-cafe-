@@ -327,6 +327,10 @@ button:focus-visible {
   border-color: transparent;
   color: var(--brand-ink);
 }
+/* Ticks, choices and sliders in the café's raspberry, not the browser's blue. */
+html {
+  accent-color: var(--brand);
+}
 input,
 select,
 textarea {
@@ -4985,6 +4989,90 @@ a.card.stat[aria-current="true"] {
   gap: 6px;
   min-height: 40px;
   padding: 0 14px;
+}
+
+/* The day's plan recorded in one go: a row a recipe, filled in as the plan says. */
+.plan-all {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.plan-all > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 650;
+  color: var(--brand);
+  list-style: none;
+}
+.plan-all > summary::-webkit-details-marker {
+  display: none;
+}
+.plan-all[open] > summary {
+  border-block-end: 1px solid var(--border);
+}
+.plan-all-body {
+  display: grid;
+  gap: 12px;
+  padding: 12px 14px 14px;
+}
+.plan-all-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.plan-all-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border-inline-start: 3px solid var(--brand);
+}
+.plan-all-row[data-state="skipped"] {
+  opacity: 0.6;
+  border-inline-start-color: var(--border);
+}
+.plan-all-row.done {
+  border-inline-start-color: var(--ok);
+}
+.plan-all-row.refused {
+  border-inline-start-color: var(--err);
+}
+.plan-all-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 180px;
+  flex: 1 1 180px;
+  align-self: center;
+}
+.plan-all-pick input {
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  flex: none;
+}
+.plan-all-field {
+  display: grid;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.plan-all-said {
+  flex: 1 1 100%;
+  font-size: 0.85rem;
+}
+.plan-all-said.ok {
+  flex: 2 1 260px;
+  color: var(--ok);
+  align-self: center;
 }
 
 /* The week and the month at a glance: a week or a month, each a tap from the one before; what sold and what was lost side by side. */

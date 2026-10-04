@@ -403,6 +403,112 @@ console.log("▸ a row of the plan opens the batch form with what it says to mak
   await ctx.close();
 }
 
+console.log("▸ the day's plan recorded in one go: the base, then the gelato made from it");
+{
+  // Six weeks of this weekday: as much used each week as is good now and half
+  // a batch more, so the plan says one batch of each. Put in six weeks ago and
+  // taken out week by week at no value: the stock and its value are as they were.
+  const planned = (name) =>
+    JSON.parse(
+      sql(`select test.act_as('owner@example.com');
+           select r from jsonb_array_elements(production_plan() -> 'recipes') r where r ->> 'recipe' = '${name}'`)
+        .split("\n")
+        .pop(),
+    );
+  for (const name of ["E2E base", "E2E pistachio gelato"]) {
+    const p = planned(name);
+    const used = Number(p.good) + Number(p.batch_yield) / 2;
+    sql(`insert into inventory_movement (business_id, item_id, location_id, type, base_quantity_signed, unit_cost,
+                                         value, reason, occurred_at)
+         select '${B}', '${p.item_id}', default_location('${B}'), 'opening_balance', ${used * 6}, 0, 0,
+                'the opening count', ((test.today() - 43) + time '09:00') at time zone timezone
+           from business where id = '${B}';
+         insert into inventory_movement (business_id, item_id, location_id, type, base_quantity_signed, unit_cost,
+                                         value, reference_type, reason, occurred_at)
+         select '${B}', '${p.item_id}', default_location('${B}'), 'sale_consumption', -${used}, 0, 0,
+                'sales_order', 'Sale', ((test.today() - 7 * k) + time '12:00') at time zone b.timezone
+           from generate_series(1, 6) k, business b where b.id = '${B}';`);
+  }
+  check(
+    planned("E2E base").status === "make" &&
+      planned("E2E base").batches === 1 &&
+      planned("E2E pistachio gelato").batches === 1,
+    "with six weeks of history, the plan says a batch of the base and one of the gelato",
+  );
+  const made = (name) =>
+    Number(
+      sql(
+        `select count(*) from production_batch b join recipe r on r.id = b.recipe_id where r.name = '${name}'`,
+      ),
+    );
+  const before = { base: made("E2E base"), gelato: made("E2E pistachio gelato") };
+
+  const { ctx, page } = await signIn(browser, "barista");
+  await open(page, "/production");
+  const all = page.getByTestId("plan-all");
+  await all.locator("summary").click();
+  const rows = all.getByTestId("plan-all-row");
+  // The gelato is made from the base: the base is recorded first.
+  check(
+    (await rows.count()) === 2 &&
+      (await rows.nth(0).getAttribute("data-recipe")) === "E2E base" &&
+      (await rows.nth(1).getAttribute("data-recipe")) === "E2E pistachio gelato" &&
+      (await all.getByLabel("Batches of E2E base").inputValue()) === "1" &&
+      (await all.getByLabel("Batches of E2E pistachio gelato").inputValue()) === "1",
+    "each batch the plan says, filled in as it says: the base before the gelato made from it",
+  );
+  // What came out of the gelato differs: weighed, 4.8 kg.
+  await all.getByLabel("What came out of E2E pistachio gelato", { exact: true }).fill("4.8");
+  await all.getByLabel("Unit of what came out of E2E pistachio gelato").selectOption("kg");
+  const press = all.getByTestId("plan-all-record");
+  check((await press.textContent()) === "Record 2 batches", "one press for both: Record 2 batches");
+  await press.click();
+  const done = await all
+    .locator('[data-testid="plan-all-row"][data-state="done"]')
+    .nth(1)
+    .waitFor({ timeout: 20000 })
+    .then(() => true)
+    .catch(() => false);
+  const nos = sql(
+    `select string_agg(r.name || ' ' || b.batch_no, ', ' order by b.batch_no) from production_batch b
+       join recipe r on r.id = b.recipe_id
+      where r.name in ('E2E base', 'E2E pistachio gelato')
+        and b.batch_no > (select coalesce(max(batch_no), 0) - 2 from production_batch where business_id = '${B}')`,
+  );
+  check(
+    done &&
+      made("E2E base") === before.base + 1 &&
+      made("E2E pistachio gelato") === before.gelato + 1 &&
+      /^E2E base \d+, E2E pistachio gelato \d+$/.test(nos),
+    `both recorded, each once, the base first: ${nos}`,
+  );
+  const said = await rows.nth(1).textContent();
+  check(
+    /Recorded as batch \d+: 4\.8 kg of E2E pistachio gelato into stock\./.test(said),
+    "each says what it became: the gelato as weighed",
+  );
+  // Every label at once: one for the base (in litres), one for the gelato (weighed in kilos).
+  await page.evaluate(() => {
+    const st = window.setTimeout;
+    window.setTimeout = (fn, ms, ...a) => (ms === 500 ? 0 : st(fn, ms, ...a));
+    window.print = () => {};
+  });
+  const print = page.getByTestId("print-all-labels");
+  check((await print.textContent()).includes("Print 2 labels"), "and every label in one press: 2");
+  await print.click();
+  const slips = page.locator('.print-slip [data-testid="pan-label"]');
+  await slips.first().waitFor({ state: "attached", timeout: 10000 });
+  const texts = await slips.allTextContents();
+  check(
+    texts.length === 2 &&
+      texts[0].includes("E2E base") &&
+      texts[1].includes("E2E pistachio gelato") &&
+      texts[1].includes("The batch made 4.8 kg"),
+    "the base's label, then the gelato's",
+  );
+  await ctx.close();
+}
+
 console.log("▸ owner changes a product's recipe from today");
 {
   const beans = Number(

@@ -20,6 +20,7 @@ import { PlaceSwitch } from "@/components/PlaceSwitch";
 import { placeChoice } from "@/lib/place";
 import type { ItemOpt } from "@/components/menu/RecipeLines";
 import { RecordBatch } from "@/components/production/RecordBatch";
+import { RecordPlan } from "@/components/production/RecordPlan";
 import { BatchRecipeForm } from "@/components/production/BatchRecipeForm";
 import { CancelBatch, RecipeActions } from "@/components/production/RecipeActions";
 import { ProductionLots } from "@/components/production/Lots";
@@ -77,6 +78,22 @@ export default async function ProductionPage({
   if (onHand) for (const r of board) onHand[r.itemId] = (onHand[r.itemId] ?? 0) + r.onHandBase;
   const active = recipes.filter((r) => r.isActive);
   const stopped = recipes.filter((r) => !r.isActive);
+  // What a batch's labels say beyond the batch: the café, the place, who made it, and each made item's name.
+  const labelWords = {
+    businessName: profile.businessName,
+    place: place?.name ?? null,
+    by: profile.name,
+    names: Object.fromEntries(
+      items.map((i) => [
+        i.id,
+        (locale === "ar" ? i.nameAr : locale === "ckb" ? i.nameCkb : null) || i.name,
+      ]),
+    ),
+  };
+  // The plan's batches to make, of recipes in use: recorded in one go.
+  const toMake = plan.recipes
+    .filter((r) => r.status === "make" && r.batches > 0 && active.some((x) => x.id === r.recipeId))
+    .map((r) => ({ recipeId: r.recipeId, batches: r.batches }));
 
   const recipeCard = (r: BatchRecipe) => {
     const output = byId.get(r.outputItemId);
@@ -174,17 +191,7 @@ export default async function ProductionPage({
             decimals={decimals}
             timezone={profile.timezone}
             canRecordLate={canCancel}
-            labels={{
-              businessName: profile.businessName,
-              place: place?.name ?? null,
-              by: profile.name,
-              names: Object.fromEntries(
-                items.map((i) => [
-                  i.id,
-                  (locale === "ar" ? i.nameAr : locale === "ckb" ? i.nameCkb : null) || i.name,
-                ]),
-              ),
-            }}
+            labels={labelWords}
           />
         </div>
       )}
@@ -292,6 +299,18 @@ export default async function ProductionPage({
                 </tbody>
               </table>
             </div>
+          )}
+          {/* Drawn while the page is: what it recorded stays said when nothing is left to make. */}
+          {canRecord && (
+            <RecordPlan
+              key={planDay}
+              plan={toMake}
+              recipes={active}
+              items={itemOpts}
+              onHand={onHand}
+              timezone={profile.timezone}
+              labels={labelWords}
+            />
           )}
           {plan.ingredients.some((i) => i.short > 0) && (
             <p

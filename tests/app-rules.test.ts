@@ -256,6 +256,7 @@ import {
   batchCost,
   batchesOf,
   labelsFor,
+  makeOrder,
   perUnit,
   showIn,
   showNice,
@@ -5621,5 +5622,36 @@ describe("a batch's labels, one a pan (round four)", () => {
     expect(weekdayOf("2026-10-04T08:00:00Z", "Asia/Baghdad")).toBe("Sunday");
     expect(weekdayOf("2026-10-04T22:30:00Z", "Asia/Baghdad")).toBe("Monday");
     expect(weekdayOf("2026-10-04T22:30:00Z", "UTC")).toBe("Sunday");
+  });
+});
+
+describe("the day's plan recorded in one go (round five)", () => {
+  const row = (name: string, makes: string, uses: string[]) => ({
+    name,
+    outputItemId: makes,
+    uses,
+  });
+
+  it("makes a base before the flavours made from it, and the rest as given", () => {
+    const plan = [
+      row("Pistachio gelato", "pistachio", ["base", "paste"]),
+      row("Lemon sorbet", "lemon", ["sugar", "lemons"]),
+      row("Vanilla base", "base", ["milk", "sugar"]),
+      row("Chocolate gelato", "chocolate", ["base", "cocoa"]),
+    ];
+    expect(makeOrder(plan).map((r) => r.name)).toEqual([
+      "Lemon sorbet",
+      "Vanilla base",
+      "Pistachio gelato",
+      "Chocolate gelato",
+    ]);
+  });
+
+  it("keeps the order when nothing is made from another, or two use each other", () => {
+    const apart = [row("A", "a", ["x"]), row("B", "b", ["y"])];
+    expect(makeOrder(apart).map((r) => r.name)).toEqual(["A", "B"]);
+    const loop = [row("A", "a", ["b"]), row("B", "b", ["a"])];
+    expect(makeOrder(loop).map((r) => r.name)).toEqual(["A", "B"]);
+    expect(makeOrder([])).toEqual([]);
   });
 });
