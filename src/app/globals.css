@@ -3139,6 +3139,68 @@ a.card.stat:focus-visible {
     font-size: 10px;
     text-align: center;
   }
+
+  /* A pan's label: what is in it, its batch, and its use-by, large and boxed. */
+  .sl-label-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #000;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .sl-label-emblem {
+    width: 18px;
+    height: 18px;
+  }
+  .sl-label-name {
+    margin: 5px 0 1px;
+    font-size: 21px;
+    font-weight: 800;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+  .sl-label-batch {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .sl-label-dates {
+    width: 100%;
+    margin: 5px 0 3px;
+    border-collapse: collapse;
+  }
+  .sl-label-dates th,
+  .sl-label-dates td {
+    padding: 2px 4px;
+    background: #fff !important;
+    color: #000;
+    font-size: 13px;
+    text-align: start;
+    vertical-align: middle;
+  }
+  .sl-label-dates th {
+    width: 26%;
+    padding-inline-start: 0;
+    font-weight: 600;
+  }
+  .sl-label-useby th,
+  .sl-label-useby td {
+    border: 2px solid #000;
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .sl-label-useby th {
+    padding-inline-start: 4px;
+  }
+  .sl-label-meta {
+    font-size: 11px;
+  }
+  .sl-label-lot {
+    margin-top: 2px;
+    font-size: 9.5px;
+    font-family: ui-monospace, Menlo, monospace;
+  }
 }
 
 /* ------------------------------------------------ products on the till */
@@ -4871,4 +4933,42 @@ a.card.stat[aria-current="true"] {
 }
 .inv-actions > .card {
   max-width: 760px;
+}
+
+/* A batch's labels, on its page and as soon as it is recorded: how many, and print. */
+.label-print {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.label-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.label-print .btn-soft {
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+/* The week at a glance: the weeks a tap apart; what sold and what was lost side by side. */
+.week-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.week-two {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+.week-two > .card {
+  display: grid;
+  gap: 10px;
+  align-content: start;
 }

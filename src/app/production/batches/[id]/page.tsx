@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Decimal from "decimal.js";
 import { arrows } from "@/lib/i18n/core";
-import { getDir, getMsg, getT } from "@/lib/i18n/server";
+import { getDir, getLocale, getMsg, getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems } from "@/lib/db/read";
 import { getBatchReconciliation } from "@/lib/db/production";
@@ -15,7 +15,8 @@ import {
   type StoryPart,
 } from "@/lib/production";
 import { SetUseBy } from "@/components/production/Lots";
-import { showIn, showNice } from "@/components/production/batchMath";
+import { labelsFor, showIn, showNice } from "@/components/production/batchMath";
+import { BatchLabels } from "@/components/production/BatchLabels";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
   const t = await getT();
   const { back } = arrows(await getDir());
   const msg = await getMsg();
+  const locale = await getLocale();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const [b, items] = await Promise.all([getBatchReconciliation(id), getItems()]);
@@ -45,6 +47,8 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
   const at = (iso: string) => dateTimeIn(profile.timezone, iso);
   // A batch sent from the kitchen to the branch is at two places (0054).
   const places = new Set(b.movements.map((m) => m.place));
+  // What is in its pans, as the reader calls it.
+  const name = (locale === "ar" ? item?.nameAr : locale === "ckb" ? item?.nameCkb : null) || b.item;
 
   return (
     <div className="grid" style={{ gap: 16 }} data-testid="batch-page">
@@ -85,6 +89,23 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
             <span className="badge warn">{t("cancelled")}</span> {b.cancelReason}
             {b.cancelledAt ? ` — ${at(b.cancelledAt)}` : ""}
           </div>
+        )}
+        {!cancelled && (
+          <BatchLabels
+            batch={{
+              batchNo: b.batchNo,
+              name,
+              made: q(b.actual),
+              madeAt: b.madeAt,
+              useBy: b.useBy,
+              place: b.movements.find((m) => m.kind === "made" && m.qty > 0)?.place ?? null,
+              madeBy: b.madeBy,
+              lot: b.lot,
+            }}
+            businessName={profile.businessName}
+            timezone={profile.timezone}
+            pans={labelsFor(b.actual, b.enteredUnit, units)}
+          />
         )}
         {has(profile, "inventory.adjust.approve") && !cancelled && b.lot && (
           <div style={{ marginTop: 6 }}>

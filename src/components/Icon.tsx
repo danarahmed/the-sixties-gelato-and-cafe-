@@ -317,6 +317,13 @@ const PATHS = {
       <path d="M9 9l6 6M15 9l-6 6" />
     </>
   ),
+  /** A tag, for a batch's labels. */
+  tag: (
+    <>
+      <path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1.4 1.4 0 0 1 0 2l-6.3 6.3a1.4 1.4 0 0 1-2 0z" />
+      <circle cx="8" cy="8" r="1.4" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof PATHS;

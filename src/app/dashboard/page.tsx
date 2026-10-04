@@ -31,6 +31,7 @@ import { Sparkline } from "@/components/charts/Sparkline";
 import { BarList } from "@/components/charts/BarList";
 import { Sayings, type Saying } from "@/components/Sayings";
 import { Icon } from "@/components/Icon";
+import { isMorning } from "@/lib/startofday";
 
 export const dynamic = "force-dynamic";
 
@@ -384,6 +385,7 @@ export default async function DashboardPage() {
   const hh = (h: number) => `${String(h).padStart(2, "0")}:00`;
 
   const closing = has(profile, "day.close") && (hour >= 16 || hour < 4);
+  const opening = has(profile, "day.close") && isMorning(hour);
   const firstName = (profile.name ?? "").trim().split(/\s+/)[0] ?? "";
   const greeting = !firstName
     ? t("dash.title")
@@ -404,7 +406,12 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="dash-hero-acts">
-          {/* From the late afternoon, whoever closes the day is offered its steps. */}
+          {/* In the morning, whoever opens the day is offered its steps; from the late afternoon, its close. */}
+          {opening && (
+            <Link href="/start-of-day" className="btn-soft" data-testid="dash-start-of-day">
+              <Icon name="sun" size={16} /> {t("Opening up? The start of the day, step by step")}
+            </Link>
+          )}
           {closing && (
             <Link href="/end-of-day" className="btn-soft" data-testid="dash-end-of-day">
               <Icon name="sunset" size={16} /> {t("Closing up? The end of the day, step by step")}

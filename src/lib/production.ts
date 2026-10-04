@@ -4,6 +4,8 @@
  * and the tests read through here.
  */
 
+import { dateIn } from "@/lib/dates";
+
 /** Where a lot stands against its use-by. */
 export type LotStatus = "expired" | "today" | "soon" | "good";
 
@@ -112,6 +114,12 @@ export const WEEKDAY_NAME = [
   "Saturday",
   "Sunday",
 ] as const;
+
+/** The weekday a moment falls on in the café's time, by its name: a phrase in the books. */
+export function weekdayOf(iso: string, timezone: string): (typeof WEEKDAY_NAME)[number] {
+  const day = dateIn(timezone, new Date(iso));
+  return WEEKDAY_NAME[(new Date(`${day}T00:00:00Z`).getUTCDay() + 6) % 7]!;
+}
 
 /** A movement of a batch's lot, as the batch's page names it. */
 export const LOT_MOVEMENT_LABEL = {

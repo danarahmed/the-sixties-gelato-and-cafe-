@@ -126,6 +126,9 @@ export function unitName(code: string, t: (key: string) => string): string {
 /** Units written the same in every language, and "each". */
 const METRIC = new Set(["g", "kg", "ml", "l", "L", "each"]);
 
+/** A unit that measures (g, kg, ml, L, each), not a pack or a pan the café named. */
+export const isMeasure = (code: string) => METRIC.has(code);
+
 /**
  * A unit an item is bought or moved in: a pack by the name the café gave it
  * ("Carton of 1 L"), never its code ("carton_1l"); g, kg, ml and L as written.

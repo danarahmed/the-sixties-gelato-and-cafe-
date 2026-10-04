@@ -3,7 +3,8 @@ import type { PhraseBook } from "./types";
 /**
  * The end of the day, step by step: the bills, the people clocked in, the
  * drawers, the losses waiting, the card and platform money and the red
- * alerts, and the day in numbers.
+ * alerts, and the day in numbers. And its start: the drawer, the people due
+ * in, what to make, the deliveries due, what is low, and the day ahead.
  */
 const phrases: PhraseBook = {
   "Everything is done: the day can close.": {
@@ -166,6 +167,96 @@ const phrases: PhraseBook = {
   },
   "at what it cost": { ar: "بتكلفته", ckb: "بە تێچووەکەی" },
   "How it was paid": { ar: "كيف دُفع", ckb: "چۆن پارەکەی درا" },
+
+  // The start of the day, step by step (round four).
+  "Opening up? The start of the day, step by step": {
+    ar: "تفتح المحل؟ بداية اليوم خطوة بخطوة",
+    ckb: "دەیکەیتەوە؟ سەرەتای ڕۆژ هەنگاو بە هەنگاو",
+  },
+  "Everything is ready: open the doors.": {
+    ar: "كل شيء جاهز: افتح الأبواب.",
+    ckb: "هەموو شتێک ئامادەیە: دەرگاکان بکەرەوە.",
+  },
+  "The till is ready for the first customer.": {
+    ar: "نقطة البيع جاهزة لأول زبون.",
+    ckb: "خاڵی فرۆشتن ئامادەیە بۆ یەکەم کڕیار.",
+  },
+  "Drawer open and counted": { ar: "درج النقد مفتوح ومعدود", ckb: "دەخیلە کراوەتەوە و ژمێردراوە" },
+  "Session {no} is open: {cashier}, since {time}.": {
+    ar: "الوردية {no} مفتوحة: {cashier}، منذ {time}.",
+    ckb: "شیفتی {no} کراوەیە: {cashier}، لە {time}ەوە.",
+  },
+  "The drawer is not open yet: count what is in it and open it here.": {
+    ar: "درج النقد لم يُفتح بعد: عُدّ ما فيه وافتحه هنا.",
+    ckb: "دەخیلە هێشتا نەکراوەتەوە: ئەوەی تێیدایە بژمێرە و لێرە بیکەرەوە.",
+  },
+  "Everyone due in is in": { ar: "حضر كل من حان موعده", ckb: "هەموو ئەوانەی کاتیانە هاتوون" },
+  "{n} due in and not clocked in yet.": {
+    ar: "{n, plural, one {شخص واحد حان موعده ولم يسجّل حضوره بعد.} two {شخصان حان موعدهما ولم يسجّلا حضورهما بعد.} few {# أشخاص حان موعدهم ولم يسجّلوا حضورهم بعد.} many {# شخصًا حان موعدهم ولم يسجّلوا حضورهم بعد.} other {# شخص حان موعدهم ولم يسجّلوا حضورهم بعد.}}",
+    ckb: "{n} کەس کاتیانە و هێشتا هاتنیان تۆمار نەکردووە.",
+  },
+  "{n} clocked in.": {
+    ar: "{n, plural, one {سجّل شخص واحد حضوره.} two {سجّل شخصان حضورهما.} few {سجّل # أشخاص حضورهم.} many {سجّل # شخصًا حضورهم.} other {سجّل # شخص حضورهم.}}",
+    ckb: "{n} کەس هاتنیان تۆمار کردووە.",
+  },
+  "Nobody is due in yet.": { ar: "لم يحن موعد أحد بعد.", ckb: "هێشتا کاتی هیچ کەسێک نەهاتووە." },
+  "due {when}": { ar: "موعده {when}", ckb: "کاتی: {when}" },
+  "Due later: {names}.": { ar: "لاحقًا: {names}.", ckb: "دواتر: {names}." },
+  "Clock in on the till": {
+    ar: "سجّل الحضور على نقطة البيع",
+    ckb: "لە خاڵی فرۆشتن هاتن تۆمار بکە",
+  },
+  "What to make today": { ar: "ما يُصنع اليوم", ckb: "ئەمڕۆ چی دروست بکرێت" },
+  "{n} recipe(s) to make, {batches} batch(es) in all.": {
+    ar: "{n, plural, one {وصفة واحدة للصنع} two {وصفتان للصنع} few {# وصفات للصنع} many {# وصفة للصنع} other {# وصفة للصنع}}، {batches, plural, one {دفعة واحدة} two {دفعتان} few {# دفعات} many {# دفعة} other {# دفعة}} في المجموع.",
+    ckb: "{n} ڕەسەتە بۆ دروستکردن، {batches} دەستە بە گشتی.",
+  },
+  "Nothing needs making: the stock covers the day.": {
+    ar: "لا حاجة لصنع شيء: المخزون يكفي اليوم.",
+    ckb: "پێویست بە دروستکردنی هیچ ناکات: کۆگا بەشی ئەمڕۆ دەکات.",
+  },
+  "Nothing is made in batches here.": {
+    ar: "لا يُصنع شيء على دفعات هنا.",
+    ckb: "لێرە هیچ شتێک بە دەستە دروست ناکرێت.",
+  },
+  "Short for the plan: {items}.": { ar: "ينقص للخطة: {items}.", ckb: "بۆ پلانەکە کەمە: {items}." },
+  "Open the plan": { ar: "افتح الخطة", ckb: "پلانەکە بکەرەوە" },
+  "Deliveries due": { ar: "التوريدات المستحقة", ckb: "گەیاندنە چاوەڕوانکراوەکان" },
+  "{n} order(s) due today or late.": {
+    ar: "{n, plural, one {طلبية واحدة مستحقة اليوم أو متأخرة.} two {طلبيتان مستحقتان اليوم أو متأخرتان.} few {# طلبيات مستحقة اليوم أو متأخرة.} many {# طلبية مستحقة اليوم أو متأخرة.} other {# طلبية مستحقة اليوم أو متأخرة.}}",
+    ckb: "{n} داواکاری ئەمڕۆ چاوەڕوان دەکرێن یان دواکەوتوون.",
+  },
+  "No delivery is due today.": {
+    ar: "لا توريد مستحق اليوم.",
+    ckb: "ئەمڕۆ هیچ گەیاندنێک چاوەڕوان ناکرێت.",
+  },
+  "Receive each against its order on Purchasing as it comes in.": {
+    ar: "استلم كل توريد على طلبيته في المشتريات حين يصل.",
+    ckb: "هەر گەیاندنێک کاتێک دەگات لە کڕین بەرامبەر داواکارییەکەی وەری بگرە.",
+  },
+  "Receive them": { ar: "استلمها", ckb: "وەریان بگرە" },
+  "Nothing low without an order": {
+    ar: "لا مادة ناقصة بلا طلبية",
+    ckb: "هیچ کاڵایەکی کەم بێ داواکاری نییە",
+  },
+  "{n} item(s) low and not on any order yet.": {
+    ar: "{n, plural, one {مادة واحدة ناقصة وليست في أي طلبية بعد.} two {مادتان ناقصتان وليستا في أي طلبية بعد.} few {# مواد ناقصة وليست في أي طلبية بعد.} many {# مادة ناقصة وليست في أي طلبية بعد.} other {# مادة ناقصة وليست في أي طلبية بعد.}}",
+    ckb: "{n} کاڵا کەمن و هێشتا لە هیچ داواکارییەکدا نین.",
+  },
+  "{n} item(s) low, all on order.": {
+    ar: "{n, plural, one {مادة واحدة ناقصة، وهي في طلبية.} two {مادتان ناقصتان، وكلتاهما في طلبية.} few {# مواد ناقصة، كلها في طلبيات.} many {# مادة ناقصة، كلها في طلبيات.} other {# مادة ناقصة، كلها في طلبيات.}}",
+    ckb: "{n} کاڵا کەمن، هەموویان داواکراون.",
+  },
+  "Everything is above its reorder level.": {
+    ar: "كل شيء فوق حدّ إعادة الطلب.",
+    ckb: "هەموو شتێک لە سەرووی ئاستی داواکردنەوەیە.",
+  },
+  "The day ahead": { ar: "اليوم المقبل", ckb: "ڕۆژی بەردەم" },
+  "Today's target: {amount}.": { ar: "هدف اليوم: {amount}.", ckb: "ئامانجی ئەمڕۆ: {amount}." },
+  "No sales yet to compare the day with.": {
+    ar: "لا مبيعات بعد لمقارنة اليوم بها.",
+    ckb: "هێشتا هیچ فرۆشتنێک نییە بۆ بەراوردکردنی ڕۆژەکە.",
+  },
 };
 
 export default phrases;

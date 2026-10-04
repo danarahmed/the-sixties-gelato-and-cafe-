@@ -7,7 +7,7 @@
  */
 import Decimal from "decimal.js";
 import { parseNumber, roundMoney } from "@/components/pos/model";
-import { fmtIQD, fmtQty, unitName } from "@/lib/format";
+import { fmtIQD, fmtQty, isMeasure, unitName } from "@/lib/format";
 
 export interface UnitsOf {
   baseUnit: string;
@@ -93,4 +93,16 @@ export function showNice(
   return big && base.abs().gte(1000)
     ? showIn(base, item, big.code, t)
     : `${fmtQty(base.toDecimalPlaces(3).toNumber())} ${t ? unitName(unit, t) : unit}`;
+}
+
+/**
+ * How many labels a batch needs: one a pan when it was weighed in pans (or
+ * tubs, or any container the café named), the last one part full; one when
+ * it was weighed in kilos, litres or pieces. Twenty at most.
+ */
+export function labelsFor(actual: number, entered: string, item: UnitsOf | undefined): number {
+  if (isMeasure(entered)) return 1;
+  const f = unitFactor(item, entered);
+  if (!f || f <= 1 || !(actual > 0)) return 1;
+  return Math.min(20, Math.max(1, Math.ceil(new Decimal(actual).div(f).toNumber() - 1e-9)));
 }

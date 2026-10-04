@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 675 tests)
+## 1. Unit (Vitest, 688 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -145,7 +145,10 @@ layers before every release.
   (`0052`): the balance sheet and the cash flow read as the database gives
   them, the two balance sheets side by side account by account, every line
   of the cash flow named and in its section, and every word of them in Arabic
-  and Kurdish.
+  and Kurdish. A batch's labels (round four): one a pan when it was weighed in
+  pans, the last part full; one when weighed in kilos, grams or pieces; twenty
+  at most; one for a unit the item lacks or nothing made; and the weekday its
+  dates fall on in the café's time.
 - `tests/plurals.test.ts`: a plural a phrase leaves open, "{n} bill(s)",
   agreeing with the number nearest before it in English ("1 bill is", "3
   bills are", "1 month's share", "2 losses wait"), in a phrase and in a
@@ -161,6 +164,17 @@ layers before every release.
   placeholders, and read back as written; words with no count kept as they
   are; the marks they are kept with taken out of words typed in; a page
   showing them by the count.
+- `tests/startofday.test.ts`: who is due in at the start of the day — in, late
+  (the longest waited for first) and later, each once across places, someone
+  in at one place counted in; what the plan says to make, the most first; the
+  deliveries due, orders approved or sent and expected by the day, the late
+  first, a draft, a closed one and one with no date not due; the morning, four
+  until noon.
+- `tests/week.test.ts`: the week at a glance — the seven days to a day and the
+  seven before; each week's sales, margin and its share, orders and an order's
+  average; day by day beside the same weekday of the week before; the best
+  day; the best sellers, a product new this week, and the biggest rise and
+  fall in dinars (a gone product falls; a small one's large share is no news).
 - `tests/batches.test.ts`: a read over a long list of ids (the lines of 500
   sales) asks 100 ids at a time and reads every row once; a batch whose rows
   fill a page is read again in halves, one id's many rows a page at a time;
@@ -671,7 +685,10 @@ database, behind a small local stand-in for Supabase's auth service.
   the hour, the same; by payment then by person, the payments adding up to
   it; payments of a category refused in words; the CSV; the stock's value
   on the day beside 1200, agreeing, item by item; Reports leading to both, and
-  what came in by supplier; no analysis for the till's cashier; the pages in
+  what came in by supplier; the week at a glance from Reports, its net sales
+  the analysis's for the seven days to today beside the seven before's, its
+  dates, seven days drawn and what it says, a week back and the way forward
+  again; no analysis for the till's cashier; the pages, the week's too, in
   Arabic and Kurdish; and the books still tie. `languages` includes the two
   pages.
 - `statements` (`0052`): the owner puts 25,000 in the bank; on the day the
@@ -802,6 +819,14 @@ database, behind a small local stand-in for Supabase's auth service.
   found. A branch manager has it in the menu, a cashier is sent to the till,
   and the dashboard offers it only from four in the afternoon. The `pages` and
   `languages` suites open it too: on a phone, in Arabic and in Kurdish.
+  Start of Day (round four), with the drawer closed: the ring counts the steps
+  ticked, the red alerts stand as the database has them, each delivery listed
+  is an order still to come by today, and the drawer step is still to do; the
+  drawer is opened from the page, counted, its step ticks, the ring counts one
+  more and the count's answer stays; then it is closed again for the cashier.
+  The branch manager has it too, a cashier is sent to the till, and the
+  dashboard offers it only from four until noon; `pages` and `languages` open
+  it as well.
 - `documents` (`0053`): a manager opens a delivery's 📎 on Purchasing (none
   kept yet) and keeps its delivery note: a phone's photo of 4 MB or so, made
   smaller in the browser (its longer side 2,000 pixels) and put in the bucket

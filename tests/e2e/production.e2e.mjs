@@ -1,7 +1,8 @@
 // Production through the real screens: the owner sets up a base and a
 // flavour made from it, kept in pans; a barista records two batches of the
 // base and is never shown a cost; the owner records a batch of the flavour,
-// weighed short, and sees what it cost; a manager cancels it. Then batches
+// weighed short, sees what it cost and prints its pans' labels (round four);
+// a manager cancels it. Then batches
 // and their use-by (0046): the base keeps three days, a barista's batch is
 // used by then, a manager records one made earlier and already past its
 // use-by, the dashboard says so, the manager changes it with a reason, a
@@ -143,11 +144,36 @@ console.log("▸ owner records a batch of the flavour, weighed short");
     "and what it costs: 21,264 IQD, 4,623 IQD a kg",
   );
   await page.getByRole("button", { name: "Record batch" }).click();
-  await page
-    .getByText(
-      /Recorded as batch \d+: 4\.6 kg of E2E pistachio gelato into stock\. The ingredients cost 21,264 IQD\.$/,
-    )
-    .waitFor({ timeout: 10000 });
+  const recorded = page.getByText(
+    /Recorded as batch \d+: 4\.6 kg of E2E pistachio gelato into stock\. The ingredients cost 21,264 IQD\.$/,
+  );
+  await recorded.waitFor({ timeout: 10000 });
+  // Its pans' labels, printed there and then: weighed in kilos, one to start from; two asked.
+  const no = (await recorded.textContent()).match(/batch (\d+)/)[1];
+  const labels = page.getByTestId("batch-labels");
+  check(
+    (await labels.getByTestId("print-labels").textContent()).includes("Print 1 label"),
+    "the answer offers its labels: one, weighed in kilos",
+  );
+  // The print dialog is not opened here, and the labels stay on the page to be read.
+  await page.evaluate(() => {
+    const st = window.setTimeout;
+    window.setTimeout = (fn, ms, ...a) => (ms === 500 ? 0 : st(fn, ms, ...a));
+    window.print = () => {};
+  });
+  await labels.getByLabel("How many labels").fill("2");
+  await labels.getByTestId("print-labels").click();
+  const printed = page.locator('.print-slip [data-testid="pan-label"]');
+  await printed.first().waitFor({ state: "attached", timeout: 10000 });
+  const texts = await printed.allTextContents();
+  check(
+    texts.length === 2 &&
+      texts.every((x) => x.includes("E2E pistachio gelato") && x.includes(`Batch ${no}`)) &&
+      texts[0].includes("Pan 1 of 2") &&
+      texts[1].includes("Pan 2 of 2") &&
+      texts[0].includes("The batch made 4.6 kg"),
+    `two labels for batch ${no}, a pan each: what is in it, its batch, and what the batch made`,
+  );
   const moved =
     sql(`select string_agg(i.name || ' ' || trim_scale(m.base_quantity_signed) || ' = ' || m.value, '; '
                                        order by m.base_quantity_signed, i.name)

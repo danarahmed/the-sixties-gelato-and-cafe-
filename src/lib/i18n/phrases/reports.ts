@@ -1238,6 +1238,107 @@ const phrases: PhraseBook = {
   "A prepaid expense": { ar: "مصروف مدفوع مقدمًا", ckb: "خەرجییەکی پێشەکی" },
   "Shares posted": { ar: "الحصص المُرحَّلة", ckb: "بەشە تۆمارکراوەکان" },
   "Shares reversed": { ar: "الحصص المعكوسة", ckb: "بەشە هەڵگەڕێنراوەکان" },
+
+  // The week at a glance (round four).
+  "The week at a glance": { ar: "الأسبوع في لمحة", ckb: "هەفتە بە یەک سەیرکردن" },
+  "{from} to {to}, against {beforeFrom} to {beforeTo}": {
+    ar: "من {from} إلى {to}، مقابل {beforeFrom} إلى {beforeTo}",
+    ckb: "لە {from} بۆ {to}، بەرامبەر {beforeFrom} بۆ {beforeTo}",
+  },
+  Weeks: { ar: "الأسابيع", ckb: "هەفتەکان" },
+  "The last 7 days": { ar: "الأيام السبعة الأخيرة", ckb: "حەوت ڕۆژی کۆتایی" },
+  "This week": { ar: "هذا الأسبوع", ckb: "ئەم هەفتەیە" },
+  "Gross margin": { ar: "هامش الربح الإجمالي", ckb: "پەراوێزی قازانجی گشتی" },
+  "{amount} an order on average": {
+    ar: "{amount} للطلب في المتوسط",
+    ckb: "بە تێکڕا {amount} بۆ هەر داواکارییەک",
+  },
+  "{amount} the week before.": {
+    ar: "{amount} في الأسبوع السابق.",
+    ckb: "{amount} لە هەفتەی پێشوودا.",
+  },
+  "What the week says": { ar: "ما يقوله الأسبوع", ckb: "هەفتەکە چی دەڵێت" },
+  "Sales day by day": { ar: "المبيعات يومًا بيوم", ckb: "فرۆشتن ڕۆژ بە ڕۆژ" },
+  "What sold the most": { ar: "الأكثر مبيعًا", ckb: "ئەوەی زۆرترین فرۆشرا" },
+  "new this week": { ar: "جديد هذا الأسبوع", ckb: "ئەم هەفتەیە نوێیە" },
+  "{n} loss(es)": {
+    ar: "{n, plural, one {خسارة واحدة} two {خسارتان} few {# خسائر} many {# خسارة} other {# خسارة}}",
+    ckb: "{n} زیان",
+  },
+  "The sales analysis of the week →": {
+    ar: "تحليل مبيعات الأسبوع ←",
+    ckb: "شیکاری فرۆشتنی هەفتەکە ←",
+  },
+  "The losses of the week →": { ar: "خسائر الأسبوع ←", ckb: "زیانەکانی هەفتەکە ←" },
+  "Sales as paid, less what refunds gave back since, as the sales analysis has them; what was lost at what it cost.":
+    {
+      ar: "المبيعات كما دُفعت، مطروحًا منها ما ردّته المرتجعات منذئذ، كما في تحليل المبيعات؛ وما فُقد بتكلفته.",
+      ckb: "فرۆشتن وەک پارەکەی درا، ئەوەی گەڕاندنەوەکان لەوەتەی گەڕاندیانەوە لێی دەرکراوە، وەک شیکاری فرۆشتن هەیەتی؛ ئەوەی لەدەستچوو بە تێچووەکەی.",
+    },
+  "No sales this week.": { ar: "لا مبيعات هذا الأسبوع.", ckb: "ئەم هەفتەیە هیچ فرۆشتنێک نییە." },
+  "The best day: {day}, {amount}.": {
+    ar: "أفضل يوم: {day}، {amount}.",
+    ckb: "باشترین ڕۆژ: {day}، {amount}.",
+  },
+  "Net sales {amount}: nothing sold the week before to compare with.": {
+    ar: "صافي المبيعات {amount}: لم يُبع شيء في الأسبوع السابق للمقارنة.",
+    ckb: "فرۆشتنی پوخت {amount}: لە هەفتەی پێشوودا هیچ نەفرۆشرا بۆ بەراوردکردن.",
+  },
+  "Net sales rose {pct}% on the week before: {amount} more.": {
+    ar: "ارتفع صافي المبيعات {pct}% عن الأسبوع السابق: {amount} أكثر.",
+    ckb: "فرۆشتنی پوخت {pct}% لە هەفتەی پێشوو زیادی کرد: {amount} زیاتر.",
+  },
+  "Net sales fell {pct}% on the week before: {amount} less.": {
+    ar: "انخفض صافي المبيعات {pct}% عن الأسبوع السابق: {amount} أقل.",
+    ckb: "فرۆشتنی پوخت {pct}% لە هەفتەی پێشوو کەمی کرد: {amount} کەمتر.",
+  },
+  "Net sales held steady against the week before.": {
+    ar: "بقي صافي المبيعات ثابتًا مقارنة بالأسبوع السابق.",
+    ckb: "فرۆشتنی پوخت بەراورد بە هەفتەی پێشوو وەک خۆی ماوەتەوە.",
+  },
+  "The margin fell {n} point(s), to {pct}%.": {
+    ar: "انخفض الهامش {n, plural, one {نقطة واحدة} two {نقطتين} few {# نقاط} many {# نقطة} other {# نقطة}}، إلى {pct}%.",
+    ckb: "پەراوێزەکە {n} خاڵ دابەزی، بۆ {pct}%.",
+  },
+  "The margin rose {n} point(s), to {pct}%.": {
+    ar: "ارتفع الهامش {n, plural, one {نقطة واحدة} two {نقطتين} few {# نقاط} many {# نقطة} other {# نقطة}}، إلى {pct}%.",
+    ckb: "پەراوێزەکە {n} خاڵ بەرز بووەوە، بۆ {pct}%.",
+  },
+  "The margin held at {pct}%.": {
+    ar: "بقي الهامش عند {pct}%.",
+    ckb: "پەراوێزەکە لە {pct}% ماوەتەوە.",
+  },
+  "What was sold cost {cost}% more, on {sales}% more sales: check the recipes' costs and the prices.":
+    {
+      ar: "كلّف ما بيع {cost}% أكثر، مقابل مبيعات أكثر بـ{sales}%: راجع تكاليف الوصفات والأسعار.",
+      ckb: "ئەوەی فرۆشرا {cost}% تێچووی زیاتری بوو، بەرامبەر {sales}% فرۆشتنی زیاتر: تێچووی ڕەسەتەکان و نرخەکان بپشکنە.",
+    },
+  "Lost {amount} to waste, {pct}% of net sales.": {
+    ar: "فُقد {amount} هدرًا، {pct}% من صافي المبيعات.",
+    ckb: "{amount} بە بەفیڕۆچوون لەدەستچوو، {pct}%ی فرۆشتنی پوخت.",
+  },
+  "Most of it {item}: {amount}.": {
+    ar: "معظمه {item}: {amount}.",
+    ckb: "زۆربەی {item}: {amount}.",
+  },
+  "Nothing was lost this week.": {
+    ar: "لم يُفقد شيء هذا الأسبوع.",
+    ckb: "ئەم هەفتەیە هیچ لەدەست نەچوو.",
+  },
+  "{name} sold the most: {amount}.": {
+    ar: "{name} الأكثر مبيعًا: {amount}.",
+    ckb: "{name} زۆرترین فرۆشرا: {amount}.",
+  },
+  "{name} rose the most: {amount} more than the week before.": {
+    ar: "{name} ارتفع أكثر من غيره: {amount} أكثر من الأسبوع السابق.",
+    ckb: "{name} زۆرترین زیادبوونی هەبوو: {amount} زیاتر لە هەفتەی پێشوو.",
+  },
+  "{name} fell the most: {amount} less than the week before.": {
+    ar: "{name} انخفض أكثر من غيره: {amount} أقل من الأسبوع السابق.",
+    ckb: "{name} زۆرترین کەمبوونەوەی هەبوو: {amount} کەمتر لە هەفتەی پێشوو.",
+  },
+  // On Reports, beside the analysis and the statements.
+  "The week at a glance →": { ar: "الأسبوع في لمحة ←", ckb: "هەفتە بە یەک سەیرکردن ←" },
 };
 
 export default phrases;

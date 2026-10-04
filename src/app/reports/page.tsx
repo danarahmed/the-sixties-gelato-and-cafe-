@@ -721,6 +721,13 @@ export default async function ReportsPage({
         </Link>
         <Link
           className="drill"
+          href={`/reports/week?end=${to > today ? today : to}${place && profile.worksAt === null ? `&location=${place}` : ""}`}
+          data-testid="to-week"
+        >
+          {t("The week at a glance →")}
+        </Link>
+        <Link
+          className="drill"
           href={`/reports/stock?on=${to}${withPlace}`}
           data-testid="to-stock-value"
         >
