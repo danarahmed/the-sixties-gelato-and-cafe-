@@ -361,12 +361,17 @@ export function ticketChanges(
 }
 
 /**
- * Add one of a product, with its add-ons: onto a line of the same product
- * with the same add-ons and no note, or as a new line at the prices the bill
- * already has for it and for each add-on (a printed bill keeps its prices for
- * more of the same, as the database does).
+ * Add one of a product (or as many as `qty`), with its add-ons: onto a line
+ * of the same product with the same add-ons and no note, or as a new line at
+ * the prices the bill already has for it and for each add-on (a printed bill
+ * keeps its prices for more of the same, as the database does).
  */
-export function addLine(lines: Line[], variantId: string, addons: AddonChoice[] = []): Line[] {
+export function addLine(
+  lines: Line[],
+  variantId: string,
+  addons: AddonChoice[] = [],
+  qty = 1,
+): Line[] {
   const key = addonsKey(addons);
   let i = lines.length - 1;
   while (
@@ -374,7 +379,7 @@ export function addLine(lines: Line[], variantId: string, addons: AddonChoice[] 
     !(lines[i]!.variantId === variantId && !lines[i]!.note && addonsKey(lines[i]!.addons) === key)
   )
     i--;
-  if (i >= 0) return lines.map((l, j) => (j === i ? { ...l, qty: l.qty + 1 } : l));
+  if (i >= 0) return lines.map((l, j) => (j === i ? { ...l, qty: l.qty + qty } : l));
   const frozen = (modifierId: string) =>
     lines.flatMap((l) => l.addons).find((a) => a.modifierId === modifierId && a.billPrice !== null)
       ?.billPrice ?? null;
@@ -383,7 +388,7 @@ export function addLine(lines: Line[], variantId: string, addons: AddonChoice[] 
     {
       key: lineKey(),
       variantId,
-      qty: 1,
+      qty,
       note: null,
       lineId: null,
       fallbackName: null,
@@ -716,4 +721,16 @@ export function fold(s: string): string {
     .replace(/[ىی]/g, "ي")
     .replace(/[ك]/g, "ک")
     .trim();
+}
+
+/**
+ * How many of the next product the till's search asks for: "3*latte",
+ * "3 x latte" or "3×latte" adds three lattes; the rest is what is searched for.
+ * At most 99; none asked is one.
+ */
+export function searchedTimes(query: string): { times: number | null; find: string } {
+  const m = /^\s*(\d{1,2})\s*[*x×]\s*(.*)$/i.exec(query);
+  if (!m) return { times: null, find: query };
+  const n = Number(m[1]);
+  return n >= 1 ? { times: n, find: m[2]! } : { times: null, find: m[2]! };
 }

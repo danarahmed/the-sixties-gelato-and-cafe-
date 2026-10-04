@@ -518,6 +518,25 @@ export function PosClient({
     return () => window.removeEventListener("beforeunload", warn);
   }, [bill]);
 
+  // The till's keys for payment (round five): F2 takes cash — Enter then takes
+  // the exact amount — and F4 a card; a delivery platform's order is its
+  // platform's either way. Not while a dialog is open, nor with nothing to pay.
+  const payKeys = useRef<(e: KeyboardEvent) => void>(() => {});
+  payKeys.current = (e: KeyboardEvent) => {
+    if (e.key !== "F2" && e.key !== "F4") return;
+    if (e.ctrlKey || e.metaKey || e.altKey || dialog !== null) return;
+    if (document.querySelector('[aria-modal="true"]')) return;
+    if (order.lines.length === 0 || pending || busy) return;
+    e.preventDefault();
+    if (isPlatform(order.channel)) void startPay("platform_paid");
+    else void startPay(e.key === "F2" ? "cash" : "card");
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => payKeys.current(e);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // ------------------------------------------------------------ running an action
   /**
    * One change to a bill, recorded once (0035): `fn` gets the key of this
@@ -630,11 +649,11 @@ export function PosClient({
     if (showBill && billRef.current) putBill(fn(billRef.current));
     else setQuick(fn);
   }
-  function add(variantId: string, chosen: AddonChoice[] = []) {
+  function add(variantId: string, chosen: AddonChoice[] = [], qty = 1) {
     if (pending || busy) return;
     setReceipt(null);
     setMsg(null);
-    patchOrder((o) => ({ ...o, lines: addLine(o.lines, variantId, chosen) }));
+    patchOrder((o) => ({ ...o, lines: addLine(o.lines, variantId, chosen, qty) }));
   }
   function changeQty(key: string, delta: number) {
     patchOrder((o) => ({
@@ -1615,6 +1634,7 @@ export function PosClient({
               channel={order.channel}
               counts={counts}
               disabled={blocked}
+              quiet={dialog !== null}
               onAdd={add}
             />
           )}

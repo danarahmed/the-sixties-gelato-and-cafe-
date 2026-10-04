@@ -9,6 +9,7 @@ import { useChannels } from "@/components/ChannelsProvider";
 import { REASONS, reasonKey, reasonMissing } from "@/lib/reasons";
 import { normaliseNumber } from "@/lib/validation";
 import { Icon } from "@/components/Icon";
+import { useDialogFocus } from "./dialogFocus";
 
 export function Modal({
   label,
@@ -21,9 +22,12 @@ export function Modal({
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  const box = useDialogFocus<HTMLDivElement>();
   return (
     <div className="pos-modal-back" onClick={() => !busy && onClose()}>
       <div
+        ref={box}
+        tabIndex={-1}
         className="pos-modal"
         role="dialog"
         aria-modal="true"

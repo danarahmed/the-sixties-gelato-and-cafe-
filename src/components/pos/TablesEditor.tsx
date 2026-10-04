@@ -6,6 +6,7 @@ import { saveTableAction } from "@/lib/actions/pos";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { useDialogFocus } from "./dialogFocus";
 
 interface Draft {
   name: string;
@@ -43,6 +44,7 @@ function input(d: Draft, id: string | null) {
 export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClose: () => void }) {
   const op = useOperation();
   const { t } = useT();
+  const dialogBox = useDialogFocus<HTMLDivElement>();
   const [edits, setEdits] = useState<Record<string, Draft>>({});
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -124,6 +126,8 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
   return (
     <div className="pos-modal-back" onClick={() => !busy && onClose()}>
       <div
+        ref={dialogBox}
+        tabIndex={-1}
         className="pos-modal wide"
         role="dialog"
         aria-modal="true"

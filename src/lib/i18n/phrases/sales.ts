@@ -901,6 +901,26 @@ const phrases: PhraseBook = {
   "Amount of payment {n}": { ar: "مبلغ الدفعة {n}", ckb: "بڕی پارەدانی {n}" },
   "How payment {n} is made": { ar: "طريقة الدفعة {n}", ckb: "شێوازی پارەدانی {n}" },
   "Take off payment {n}": { ar: "احذف الدفعة {n}", ckb: "پارەدانی {n} لاببە" },
+  // The till's keys (round five), as the "?" beside its search lists them.
+  "Keys on the till": { ar: "مفاتيح نقطة البيع", ckb: "کلیلەکانی خاڵی فرۆشتن" },
+  "Find a product by its name": { ar: "ابحث عن منتج باسمه", ckb: "بەرهەمێک بە ناوەکەی بدۆزەرەوە" },
+  "Choose among what is found": { ar: "اختر مما وُجد", ckb: "لەوەی دۆزرایەوە هەڵبژێرە" },
+  "Add it to the order": { ar: "أضفه إلى الطلب", ckb: "بیخەرە سەر داواکارییەکە" },
+  "How many of the next one: 3, then a product, adds three": {
+    ar: "كم من التالي: 3 ثم منتج يضيف ثلاثة",
+    ckb: "چەند دانە لە داهاتوو: 3 و پاشان بەرهەمێک، سێ دانە زیاد دەکات",
+  },
+  "Take cash: Enter then takes the exact amount": {
+    ar: "ادفع نقدًا: ثم Enter يأخذ المبلغ بالضبط",
+    ckb: "پارەی نەقد وەربگرە: پاشان Enter بڕە تەواوەکە وەردەگرێت",
+  },
+  "Take a card": { ar: "ادفع بالبطاقة", ckb: "بە کارت وەربگرە" },
+  "Clear what was typed": { ar: "امسح ما كُتب", ckb: "ئەوەی نووسرا بسڕەوە" },
+  "Go to the search": { ar: "اذهب إلى البحث", ckb: "بڕۆ بۆ گەڕان" },
+  "Show or hide these keys": {
+    ar: "أظهر هذه المفاتيح أو أخفها",
+    ckb: "ئەم کلیلانە پیشان بدە یان بیانشارەوە",
+  },
   "Amounts are whole dinars": { ar: "المبالغ بالدينار الكامل", ckb: "بڕەکان بە دیناری تەواون" },
   "Type how much each payment is": { ar: "اكتب مبلغ كل دفعة", ckb: "بڕی هەر پارەدانێک بنووسە" },
   "The last payment takes what is left.": {

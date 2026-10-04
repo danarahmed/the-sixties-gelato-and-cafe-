@@ -4991,6 +4991,89 @@ a.card.stat[aria-current="true"] {
   padding: 0 14px;
 }
 
+/* The till from a keyboard: what Enter adds, how many, and the keys listed. */
+/* A dialog takes the keyboard as it opens: itself, without a ring round it. */
+.pos-modal:focus {
+  outline: none;
+}
+.product-tile.kb-on {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+  box-shadow: 0 6px 18px rgba(184, 55, 91, 0.25);
+}
+.kb-times {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+.kb-help-button {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+/* The keys are for a till with a keyboard: a touch screen has no use for the "?". */
+@media (hover: none), (pointer: coarse) {
+  .kb-help-button {
+    display: none;
+  }
+}
+.kb-help {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(43, 27, 20, 0.12);
+  font-size: 0.85rem;
+}
+.kb-help dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 6px 18px;
+  margin: 8px 0 0;
+}
+.kb-help dl > div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.kb-help dt {
+  flex: none;
+  min-width: 52px;
+}
+.kb-help dd {
+  margin: 0;
+  color: var(--text-muted);
+}
+kbd {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+  border-block-end-width: 2px;
+  background: var(--surface-2);
+  font:
+    600 0.78rem/1.4 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  color: var(--text);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
 /* The day's plan recorded in one go: a row a recipe, filled in as the plan says. */
 .plan-all {
   border: 1px solid var(--border);

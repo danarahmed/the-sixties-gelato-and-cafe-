@@ -16,6 +16,7 @@ import {
 } from "@/lib/fx";
 import type { Tender } from "./model";
 import { Icon } from "@/components/Icon";
+import { useDialogFocus } from "./dialogFocus";
 
 /** Notes a customer is likely to hand over for this total: the next round sums above it. */
 export function suggestedCash(total: number): number[] {
@@ -101,6 +102,7 @@ export function PayDialog({
   onClose: () => void;
 }) {
   const { t, msg } = useT();
+  const dialogBox = useDialogFocus<HTMLDivElement>();
   const [rewards, setRewards] = useState(0);
   // Rewards the bill can take, whole: never more than it comes to.
   const maxRewards =
@@ -202,6 +204,8 @@ export function PayDialog({
   return (
     <div className="pos-modal-back" onClick={() => !busy && onClose()}>
       <div
+        ref={dialogBox}
+        tabIndex={-1}
         className="pos-modal pay-modal"
         role="dialog"
         aria-modal="true"

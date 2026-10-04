@@ -230,6 +230,7 @@ import {
   orderSubtotal,
   percentOf,
   quickOrder,
+  searchedTimes,
   signature,
   type Discount,
   type MoneyRules,
@@ -5653,5 +5654,26 @@ describe("the day's plan recorded in one go (round five)", () => {
     const loop = [row("A", "a", ["b"]), row("B", "b", ["a"])];
     expect(makeOrder(loop).map((r) => r.name)).toEqual(["A", "B"]);
     expect(makeOrder([])).toEqual([]);
+  });
+});
+
+describe("the till from a keyboard (round five)", () => {
+  it("adds as many of a product as typed first, onto its line or as a new one", () => {
+    let lines = addLine([], "v-latte", [], 3);
+    expect(lines.map((l) => l.qty)).toEqual([3]);
+    lines = addLine(lines, "v-latte", [], 2);
+    expect(lines.map((l) => l.qty)).toEqual([5]);
+    lines = addLine(lines, "v-latte", [{ modifierId: "m-oat", qty: 1 }]);
+    expect(lines.map((l) => l.qty)).toEqual([5, 1]);
+  });
+
+  it('reads "3*latte" in the search as three of what is found for "latte"', () => {
+    expect(searchedTimes("3*latte")).toEqual({ times: 3, find: "latte" });
+    expect(searchedTimes("12 x pistachio")).toEqual({ times: 12, find: "pistachio" });
+    expect(searchedTimes("2×كوب")).toEqual({ times: 2, find: "كوب" });
+    // A name with a number in it is searched for as it is; nought of a thing is none asked.
+    expect(searchedTimes("7up")).toEqual({ times: null, find: "7up" });
+    expect(searchedTimes("0*latte")).toEqual({ times: null, find: "latte" });
+    expect(searchedTimes("latte")).toEqual({ times: null, find: "latte" });
   });
 });
