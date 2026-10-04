@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getOpenBills, getPosAddons, getPosCatalogue, getTables } from "@/lib/db/pos";
@@ -35,6 +36,8 @@ export default async function PosPage() {
       </div>
     );
   }
+  // The view this device was left on: Tables or the menu.
+  const startView = (await cookies()).get("pos_view")?.value;
   const [items, addons, tables, bills, channels, drawer, fx] = await Promise.all([
     getPosCatalogue(at),
     getPosAddons(at),
@@ -84,6 +87,7 @@ export default async function PosPage() {
         initialDrawer={drawer}
         fx={fx.usable && fx.rate !== null ? { rate: fx.rate, roundTo: fx.roundTo } : null}
         dollarsOffHours={!fx.usable && fx.rate !== null ? fx.ageHours : null}
+        startView={startView === "floor" || startView === "menu" ? startView : null}
       />
     </ChannelsProvider>
   );

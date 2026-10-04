@@ -675,7 +675,7 @@ const phrases: PhraseBook = {
     ckb: "دانان",
   },
   "{n} session(s) · short {short} · over {over}": {
-    ar: "{n} وردية · العجز {short} · الزيادة {over}",
+    ar: "{n, plural, one {وردية واحدة} two {ورديتان} few {# ورديات} other {# وردية}} · العجز {short} · الزيادة {over}",
     ckb: "{n} شیفت · کەم {short} · زیادە {over}",
   },
   "No cash sessions in these dates": {
@@ -765,7 +765,7 @@ const phrases: PhraseBook = {
     ckb: "دەخیلەکە ڕادەستی ئەم کەسە بکە",
   },
   "{n} bill(s) are still open: they are no cash yet, and are paid in the next session.": {
-    ar: "لا تزال {n} فاتورة مفتوحة: ليست نقدًا بعد، وتُدفع في الوردية التالية.",
+    ar: "{n, plural, one {لا تزال فاتورة واحدة مفتوحة} two {لا تزال فاتورتان مفتوحتين} few {لا تزال # فواتير مفتوحة} other {لا تزال # فاتورة مفتوحة}}: ليست نقدًا بعد، وتُدفع في الوردية التالية.",
     ckb: "{n} پسووڵە هێشتا کراوەن: هێشتا پارە نین، و لە شیفتی داهاتوودا دەدرێن.",
   },
   "Close the session": {
@@ -781,7 +781,7 @@ const phrases: PhraseBook = {
     ckb: "دەبێت {amount}ی تێدا بێت",
   },
   "cash sales {sales}, card {card}, {orders} order(s)": {
-    ar: "مبيعات نقدية {sales}، بطاقة {card}، {orders} طلب",
+    ar: "مبيعات نقدية {sales}، بطاقة {card}، {orders, plural, one {طلب واحد} two {طلبان} few {# طلبات} many {# طلبًا} other {# طلب}}",
     ckb: "فرۆشتنی نەختینە {sales}، کارت {card}، {orders} داواکاری",
   },
   "it agrees exactly": {
@@ -828,7 +828,7 @@ const phrases: PhraseBook = {
   },
   "Cash sales {sales} · refunds {refunds} · voids {voids} · paid out {paidOut} · put in {cashIn} · taken out {cashOut} · card {card} · {orders} order(s)":
     {
-      ar: "مبيعات نقدية {sales} · استردادات {refunds} · إلغاءات {voids} · مدفوعات {paidOut} · إيداعات {cashIn} · سحوبات {cashOut} · بطاقة {card} · {orders} طلب",
+      ar: "مبيعات نقدية {sales} · استردادات {refunds} · إلغاءات {voids} · مدفوعات {paidOut} · إيداعات {cashIn} · سحوبات {cashOut} · بطاقة {card} · {orders, plural, one {طلب واحد} two {طلبان} few {# طلبات} many {# طلبًا} other {# طلب}}",
       ckb: "فرۆشتنی نەختینە {sales} · گەڕاندنەوە {refunds} · هەڵوەشاندنەوە {voids} · پارەدان {paidOut} · دانان {cashIn} · دەرهێنان {cashOut} · کارت {card} · {orders} داواکاری",
     },
   "Notes of {note}": {
@@ -1071,6 +1071,11 @@ const phrases: PhraseBook = {
     ckb: "ئەم بەخشینە کلیلی ڕێگری لە دووبارەبوونەوەی نییە",
   },
   "Why it is given away": { ar: "سبب الإهداء", ckb: "هۆی بەخشین" },
+  // The till's floor: how many bills are open, in each language's form for the number.
+  "<b>{n}</b> open bill(s)": {
+    ar: "{n, plural, one {<b>فاتورة واحدة</b> مفتوحة} two {<b>فاتورتان</b> مفتوحتان} few {<b>#</b> فواتير مفتوحة} other {<b>#</b> فاتورة مفتوحة}}",
+    ckb: "<b>{n}</b> پسووڵەی کراوە",
+  },
 };
 
 export default phrases;

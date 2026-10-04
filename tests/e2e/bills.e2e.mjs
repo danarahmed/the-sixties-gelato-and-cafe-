@@ -603,5 +603,26 @@ console.log("▸ an order prints twice: the customer's receipt and the barista's
   await ctx.close();
 }
 
+console.log("▸ the till opens where it was left: the menu, or the tables");
+{
+  const { ctx, page } = await signIn(browser, "cashier");
+  const on = async () =>
+    (await page.getByRole("tab", { name: /Tables/ }).getAttribute("aria-selected")) === "true"
+      ? "tables"
+      : "menu";
+  await open(page, "/pos");
+  const first = await on();
+  await page.getByRole("tab", { name: "Menu", exact: true }).click();
+  await open(page, "/pos");
+  const menu = await on();
+  await page.getByRole("tab", { name: /Tables/ }).click();
+  await open(page, "/pos");
+  check(
+    first === "tables" && menu === "menu" && (await on()) === "tables",
+    "on the tables at first; left on the menu, it opens on the menu; back on the tables, there",
+  );
+  await ctx.close();
+}
+
 await browser.close();
 done("bills");

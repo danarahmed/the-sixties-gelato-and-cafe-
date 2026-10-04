@@ -59,7 +59,7 @@ const phrases: PhraseBook = {
     ckb: "یەکەم {n} ڕیز لە {m}: بەروارەکان یان هەڵبژاردنەکە تەسک بکەرەوە بۆ بینینی ئەوانی تر.",
   },
   "Left out: {n} voided sale(s), {amount}; {m} bill(s) cancelled.": {
-    ar: "خارج التحليل: {n} بيع ملغى، {amount}؛ {m} فاتورة ملغاة.",
+    ar: "خارج التحليل: {n, plural, one {بيع ملغى واحد} two {بيعان ملغيان} few {# بيوع ملغاة} many {# بيعًا ملغى} other {# بيع ملغى}}، {amount}؛ {m, plural, one {فاتورة ملغاة واحدة} two {فاتورتان ملغاتان} few {# فواتير ملغاة} other {# فاتورة ملغاة}}.",
     ckb: "لەدەرەوە: {n} فرۆشتنی هەڵوەشێنراوە، {amount}؛ {m} پسووڵەی هەڵوەشێنراوە.",
   },
   "Each add-on as it was sold on its line, its share of the discount taken off. Refunds are not taken off here.":

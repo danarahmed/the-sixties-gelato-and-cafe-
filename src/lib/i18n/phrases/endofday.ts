@@ -31,7 +31,7 @@ const phrases: PhraseBook = {
   // The bills.
   "Bills paid": { ar: "الفواتير مدفوعة", ckb: "پسووڵەکان دراون" },
   "{n} bill(s) still open, {amount} in all.": {
-    ar: "{n} فاتورة ما زالت مفتوحة، بمجموع {amount}.",
+    ar: "{n, plural, one {فاتورة واحدة ما زالت مفتوحة} two {فاتورتان ما زالتا مفتوحتين} few {# فواتير ما زالت مفتوحة} other {# فاتورة ما زالت مفتوحة}}، بمجموع {amount}.",
     ckb: "{n} پسووڵە هێشتا کراوەن، کۆی گشتی {amount}.",
   },
   "No bill is open.": { ar: "لا توجد فاتورة مفتوحة.", ckb: "هیچ پسووڵەیەک کراوە نییە." },
@@ -60,7 +60,7 @@ const phrases: PhraseBook = {
     ckb: "دەخیلەکان داخراون و ژمێردراون",
   },
   "{n} drawer(s) still open.": {
-    ar: "{n} درج نقد ما زال مفتوحًا.",
+    ar: "{n, plural, one {درج نقد واحد ما زال مفتوحًا} two {درجا نقد ما زالا مفتوحين} few {# أدراج نقد ما زالت مفتوحة} other {# درج نقد ما زالت مفتوحة}}.",
     ckb: "{n} دەخیلە هێشتا کراوەیە.",
   },
   "Every drawer is closed.": { ar: "كل أدراج النقد مغلقة.", ckb: "هەموو دەخیلەکان داخراون." },
@@ -88,11 +88,11 @@ const phrases: PhraseBook = {
   // The losses.
   "Losses approved": { ar: "الخسائر موافَق عليها", ckb: "زیانەکان ڕەزامەندییان لەسەر دراوە" },
   "{n} loss(es) wait for a manager, {amount} in all.": {
-    ar: "{n} خسارة تنتظر مديرًا، بمجموع {amount}.",
+    ar: "{n, plural, one {خسارة واحدة تنتظر مديرًا} two {خسارتان تنتظران مديرًا} few {# خسائر تنتظر مديرًا} other {# خسارة تنتظر مديرًا}}، بمجموع {amount}.",
     ckb: "{n} زیان چاوەڕێی بەڕێوەبەرێکن، کۆی گشتی {amount}.",
   },
   "{n} loss(es) wait for a manager.": {
-    ar: "{n} خسارة تنتظر مديرًا.",
+    ar: "{n, plural, one {خسارة واحدة تنتظر مديرًا} two {خسارتان تنتظران مديرًا} few {# خسائر تنتظر مديرًا} other {# خسارة تنتظر مديرًا}}.",
     ckb: "{n} زیان چاوەڕێی بەڕێوەبەرێکن.",
   },
   "No loss waits for approval.": {
@@ -116,11 +116,11 @@ const phrases: PhraseBook = {
     ckb: "ئەمڕۆ هیچ پارەدانێک بە کارت نەبووە.",
   },
   "Card takings still to reach the bank: {amount} over {n} day(s).": {
-    ar: "مقبوضات البطاقات التي لم تصل إلى البنك بعد: {amount} عن {n} يوم.",
+    ar: "مقبوضات البطاقات التي لم تصل إلى البنك بعد: {amount} عن {n, plural, one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}}.",
     ckb: "داهاتی کارت کە هێشتا نەگەیشتووەتە بانک: {amount} بۆ {n} ڕۆژ.",
   },
   "Delivery platforms still owe {amount} for {n} order(s).": {
-    ar: "ما زالت منصات التوصيل مدينة بـ{amount} عن {n} طلب.",
+    ar: "ما زالت منصات التوصيل مدينة بـ{amount} عن {n, plural, one {طلب واحد} two {طلبين} few {# طلبات} many {# طلبًا} other {# طلب}}.",
     ckb: "پلاتفۆرمەکانی گەیاندن هێشتا {amount} قەرزارن بۆ {n} داواکاری.",
   },
   "Late: settle it on Sales, or record what the platform paid on Delivery Platforms.": {
@@ -135,7 +135,7 @@ const phrases: PhraseBook = {
     ckb: "ئاگادارکردنەوە سوورەکان وەڵام دراونەتەوە",
   },
   "{n} red alert(s) wait for an answer.": {
-    ar: "{n} تنبيه أحمر ينتظر ردًّا.",
+    ar: "{n, plural, one {تنبيه أحمر واحد ينتظر ردًّا} two {تنبيهان أحمران ينتظران ردًّا} few {# تنبيهات حمراء تنتظر ردًّا} many {# تنبيهًا أحمر تنتظر ردًّا} other {# تنبيه أحمر تنتظر ردًّا}}.",
     ckb: "{n} ئاگادارکردنەوەی سوور چاوەڕێی وەڵامن.",
   },
   "No red alert waits.": {
@@ -143,7 +143,7 @@ const phrases: PhraseBook = {
     ckb: "هیچ ئاگادارکردنەوەیەکی سوور چاوەڕێ نییە.",
   },
   "{n} orange alert(s) can wait for a quiet moment.": {
-    ar: "{n} تنبيه برتقالي يمكنه انتظار وقت فراغ.",
+    ar: "{n, plural, one {تنبيه برتقالي واحد يمكنه انتظار وقت فراغ} two {تنبيهان برتقاليان يمكنهما انتظار وقت فراغ} few {# تنبيهات برتقالية يمكنها انتظار وقت فراغ} many {# تنبيهًا برتقاليًا يمكنها انتظار وقت فراغ} other {# تنبيه برتقالي يمكنها انتظار وقت فراغ}}.",
     ckb: "{n} ئاگادارکردنەوەی پرتەقاڵی دەتوانن چاوەڕێی کاتێکی هێمن بکەن.",
   },
   "Answer them": { ar: "أجب عنها", ckb: "وەڵامیان بدەرەوە" },
@@ -161,7 +161,7 @@ const phrases: PhraseBook = {
   },
   "Voids and refunds": { ar: "الإلغاءات والمستردات", ckb: "هەڵوەشاندنەوە و گەڕاندنەوەی پارە" },
   "{voids} void(s), {refunds} refund(s)": {
-    ar: "{voids} إلغاء، {refunds} استرداد",
+    ar: "{voids, plural, one {إلغاء واحد} two {إلغاءان} few {# إلغاءات} many {# إلغاءً} other {# إلغاء}}، {refunds, plural, one {استرداد واحد} two {استردادان} few {# استردادات} many {# استردادًا} other {# استرداد}}",
     ckb: "{voids} هەڵوەشاندنەوە، {refunds} گەڕاندنەوەی پارە",
   },
   "at what it cost": { ar: "بتكلفته", ckb: "بە تێچووەکەی" },

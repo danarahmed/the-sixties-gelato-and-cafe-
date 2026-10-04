@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { agree, messenger, translator } from "@/lib/i18n/core";
+import { BOOKS } from "@/lib/i18n/phrases";
 
 const en = translator({});
 
@@ -74,5 +75,66 @@ describe("a plural a phrase leaves open agrees with its number", () => {
     const ar = translator({ "{n} bill(s) still open.": "{n} فاتورة ما زالت مفتوحة." }, "rtl");
     expect(ar("{n} bill(s) still open.", { n: 1 })).toBe("1 فاتورة ما زالت مفتوحة.");
     expect(agree("٣ پسووڵە (s)")).toBe("٣ پسووڵە (s)");
+  });
+});
+
+describe("a count in Arabic takes the form Arabic gives its number", () => {
+  const book = (l: "ar" | "ckb") =>
+    Object.fromEntries(
+      Object.values(BOOKS).flatMap((b) => Object.entries(b).map(([en, t]) => [en, t[l]])),
+    );
+  const ar = translator(book("ar"), "rtl", "ar");
+  const bills = (n: number) =>
+    ar("{n} bill(s) still open, {amount} in all.", { n, amount: "3,000 IQD" });
+
+  it("one, two, three to ten, eleven to ninety-nine, and a hundred", () => {
+    expect(bills(1)).toBe("فاتورة واحدة ما زالت مفتوحة، بمجموع 3,000 IQD.");
+    expect(bills(2)).toBe("فاتورتان ما زالتا مفتوحتين، بمجموع 3,000 IQD.");
+    expect(bills(3)).toBe("3 فواتير ما زالت مفتوحة، بمجموع 3,000 IQD.");
+    expect(bills(10)).toBe("10 فواتير ما زالت مفتوحة، بمجموع 3,000 IQD.");
+    expect(bills(11)).toBe("11 فاتورة ما زالت مفتوحة، بمجموع 3,000 IQD.");
+    expect(bills(100)).toBe("100 فاتورة ما زالت مفتوحة، بمجموع 3,000 IQD.");
+    expect(bills(103)).toBe("103 فواتير ما زالت مفتوحة، بمجموع 3,000 IQD.");
+  });
+
+  it("days after a word, and the days before", () => {
+    const days = (n: number) =>
+      ar("Card takings still to reach the bank: {amount} over {n} day(s).", {
+        n,
+        amount: "500 IQD",
+      });
+    expect([1, 2, 5, 11, 100].map(days).map((s) => s.split("عن ")[1])).toEqual([
+      "يوم واحد.",
+      "يومين.",
+      "5 أيام.",
+      "11 يومًا.",
+      "100 يوم.",
+    ]);
+    expect(ar("{pct}% more than the {n} day(s) before", { pct: 5, n: 1 })).toBe(
+      "أكثر بـ5% من اليوم السابق",
+    );
+    expect(ar("{pct}% more than the {n} day(s) before", { pct: 5, n: 7 })).toBe(
+      "أكثر بـ5% من الأيام الـ7 السابقة",
+    );
+  });
+
+  it("a mark kept round the count, as on the till's floor", () => {
+    expect(ar("<b>{n}</b> open bill(s)", { n: 2 })).toBe("<b>فاتورتان</b> مفتوحتان");
+    expect(ar("<b>{n}</b> open bill(s)", { n: 4 })).toBe("<b>4</b> فواتير مفتوحة");
+  });
+
+  it("a message from the database too", () => {
+    const msg = messenger(book("ar"), "rtl", "ar");
+    expect(msg("2 loss(es) waiting for a manager's approval (5,000 IQD)")).toBe(
+      "خسارتان تنتظران موافقة مدير (5,000 IQD)",
+    );
+  });
+
+  it("Kurdish and English as they were", () => {
+    const ckb = translator(book("ckb"), "rtl", "ckb");
+    expect(ckb("{n} bill(s) still open, {amount} in all.", { n: 2, amount: "1 IQD" })).toBe(
+      "2 پسووڵە هێشتا کراوەن، کۆی گشتی 1 IQD.",
+    );
+    expect(en("<b>{n}</b> open bill(s)", { n: 1 })).toBe("<b>1</b> open bill");
   });
 });

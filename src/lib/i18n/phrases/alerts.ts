@@ -574,7 +574,7 @@ const phrases: PhraseBook = {
     ckb: "ئەو بار یان دەفعەیەی کەمە تۆمار بکە، یان کاڵاکە لە «ژماردنی کۆگا» بژمێرە.",
   },
   "{1} loss(es) waiting for a manager's approval ({2} IQD)": {
-    ar: "{1} خسارة (خسائر) تنتظر موافقة مدير ({2} IQD)",
+    ar: "{1, plural, one {خسارة واحدة تنتظر} two {خسارتان تنتظران} few {# خسائر تنتظر} other {# خسارة تنتظر}} موافقة مدير ({2} IQD)",
     ckb: "{1} زیان چاوەڕێی ڕەزامەندی بەڕێوەبەرێکن ({2} IQD)",
   },
   "A loss over the limit was saved to wait for a manager: until one approves it, or reverses it, nobody has looked at it.":

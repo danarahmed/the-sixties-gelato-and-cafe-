@@ -3,6 +3,7 @@
 import type { DiningTable, OpenBill } from "@/lib/db/pos";
 import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { Rich } from "@/lib/i18n/Rich";
 import { useChannels } from "@/components/ChannelsProvider";
 import { minutesSince } from "./model";
 import { Icon } from "@/components/Icon";
@@ -74,7 +75,7 @@ export function FloorView({
     <div className="floor">
       <div className="floor-summary">
         <span>
-          <strong>{bills.length}</strong> {t(bills.length === 1 ? "pos.openBill" : "pos.openBills")}
+          <Rich text={t("<b>{n}</b> open bill(s)", { n: bills.length })} />
         </span>
         {waiting > 0 && (
           <span className="badge warn">
