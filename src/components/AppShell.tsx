@@ -19,6 +19,7 @@ const NAV_ICONS: Record<string, IconName> = {
   "/purchasing": "purchasing",
   "/payroll": "payroll",
   "/pos": "cone",
+  "/start-of-day": "sun",
   "/end-of-day": "sunset",
   "/orders": "orders",
   "/products": "cup",

@@ -4,8 +4,9 @@
 // ticked only once nothing of it is left, and counted in the ring at the top.
 // The drawer is closed from the page itself, counted, and its step ticks with
 // the count's answer still on the screen. The day in numbers is the books' own.
-// A branch manager is offered it, a cashier is not. It leaves the drawer open,
-// as it found it.
+// A branch manager is offered it, a cashier is not. The start of the day
+// (round four) says what the morning needs, and opens the drawer from the page.
+// It leaves the drawer open, as it found it.
 import { chromium, check, counted, done, open, signIn, sql } from "./lib.mjs";
 
 const browser = await chromium.launch();
@@ -154,6 +155,70 @@ console.log("▸ the owner's end of the day says what the database has open");
   );
   await ctx.close();
 }
+console.log("▸ the start of the day: what the morning needs, and the drawer opened from it");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/start-of-day");
+  const state = (step) => page.getByTestId(`sod-${step}`).getAttribute("data-state");
+  const ring = page.getByTestId("sod-progress");
+  const steps = await page.locator(".eod-step").count();
+  const ticked = await page.locator('.eod-step[data-state="done"]').count();
+  check(
+    Number(await ring.getAttribute("data-done")) === ticked &&
+      Number(await ring.getAttribute("data-total")) === steps &&
+      (await ring.textContent()).includes(
+        ticked === steps ? "Everything is ready" : `${ticked} of ${steps} done`,
+      ),
+    `the ring counts the steps ticked: ${ticked} of ${steps}`,
+  );
+  check(
+    (await state("alerts")) === (waitingAlerts("urgency = 'red'") > 0 ? "left" : "done"),
+    "the red alerts stand as the database has them",
+  );
+  // Each delivery listed is an order still to come, expected today or before.
+  const today = sql(`select business_local_date('${BIZ}', now())`);
+  const listed = [
+    ...(await page.getByTestId("sod-deliveries").textContent()).matchAll(/Order (\d+)/g),
+  ].map((m) => m[1]);
+  const due = listed.length
+    ? count(`select count(*) from purchase_order where business_id = '${BIZ}'
+              and po_no in (${listed.join(",")}) and status in ('approved', 'sent')
+              and expected_on <= '${today}'`)
+    : 0;
+  check(
+    due === listed.length && (await state("deliveries")) === (listed.length ? "left" : "done"),
+    `the deliveries due are orders still to come by today: ${listed.length}`,
+  );
+
+  // The drawer, closed at the end of the day, opened here, counted.
+  check(
+    drawersOpen() === 0 && (await state("drawer")) === "left",
+    "with the drawer closed, its step is still to do",
+  );
+  const before = Number(await ring.getAttribute("data-done"));
+  const drawer = page.getByTestId("sod-open-drawer").getByTestId("drawer-panel");
+  await drawer.getByRole("button", { name: "Open the drawer" }).click();
+  await drawer.getByLabel("Cash counted", { exact: true }).fill(String(holds()));
+  await drawer.getByRole("button", { name: "Open the drawer" }).last().click();
+  const answer = drawer.getByTestId("drawer-answer");
+  await answer.waitFor({ timeout: 15000 });
+  await page.locator('[data-testid="sod-drawer"][data-state="done"]').waitFor({ timeout: 15000 });
+  check(
+    drawersOpen() === 1 &&
+      (await page.getByTestId("sod-open-drawer").isVisible()) &&
+      (await answer.isVisible()) &&
+      Number(await ring.getAttribute("data-done")) === before + 1,
+    "opened from the start of the day, its step ticks, the ring counts one more, and the count's answer stays",
+  );
+  await ctx.close();
+}
+// As it was: the drawer closed again, counted, for the cashier to open.
+{
+  const [id] = sql(`select id from work_shift where business_id = '${BIZ}' and kind = 'session'
+                      and closed_at is null`).split("\n");
+  sql(`select test.act_as('owner@example.com');
+       select close_cash_session(${holds()}, null, null, null, '${id}', '${MAIN}')`);
+}
 // As it was found: the cashier's drawer open again, on what was left in it.
 sql(`select test.act_as('cashier@example.com'); select open_cash_session(${holds()})`);
 check(drawersOpen() === 1, "the drawer is open again for the next suite");
@@ -169,16 +234,25 @@ console.log("▸ a branch manager is offered it; a cashier is not");
       (await page.locator(".eod-step").count()) > 0,
     "the branch manager has End of Day in the menu, and its steps",
   );
+  await open(page, "/start-of-day");
+  check(
+    menu.includes("/start-of-day") &&
+      new URL(page.url()).pathname === "/start-of-day" &&
+      (await page.locator(".eod-step").count()) > 0,
+    "and Start of Day, with its steps",
+  );
   await ctx.close();
 }
 {
   const { ctx, page } = await signIn(browser, "cashier");
   await open(page, "/end-of-day");
   check(new URL(page.url()).pathname === "/pos", "a cashier is sent to the till instead");
+  await open(page, "/start-of-day");
+  check(new URL(page.url()).pathname === "/pos", "from the start of the day too");
   await ctx.close();
 }
 
-console.log("▸ the dashboard offers it from the late afternoon");
+console.log("▸ the dashboard offers it from the late afternoon, and the start in the morning");
 {
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/dashboard");
@@ -191,6 +265,11 @@ console.log("▸ the dashboard offers it from the late afternoon");
   check(
     offered === (hour >= 16 || hour < 4),
     `at ${hour}:00 the dashboard ${offered ? "offers" : "does not yet offer"} the end of the day`,
+  );
+  const morning = (await page.getByTestId("dash-start-of-day").count()) === 1;
+  check(
+    morning === (hour >= 4 && hour < 12),
+    `and ${morning ? "offers" : "does not offer"} the start of the day`,
   );
   await ctx.close();
 }

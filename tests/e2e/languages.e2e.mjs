@@ -13,6 +13,7 @@ const browser = await chromium.launch();
 const SCREENS = [
   "/dashboard",
   "/pos",
+  "/start-of-day",
   "/end-of-day",
   "/sales",
   "/sales/sessions",
