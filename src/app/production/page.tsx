@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TourOffer } from "@/components/Tour";
 import Decimal from "decimal.js";
 import { getLocale, getMsg, getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
@@ -182,6 +183,7 @@ export default async function ProductionPage({
           {t("Waste by recipe: made, sold and thrown away →")}
         </Link>
       )}
+      <TourOffer tourKey="production" />
 
       {canRecord && (
         <div className="card grid" style={{ gap: 12 }} id="record">

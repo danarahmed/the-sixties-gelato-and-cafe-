@@ -27,6 +27,7 @@ import {
 import { NeedsYou } from "@/components/dashboard/NeedsYou";
 import { DailyBrief } from "@/components/dashboard/DailyBrief";
 import { ColumnChart } from "@/components/charts/ColumnChart";
+import { TourOffer } from "@/components/Tour";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { BarList } from "@/components/charts/BarList";
 import { Sayings, type Saying } from "@/components/Sayings";
@@ -458,6 +459,8 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </header>
+
+      <TourOffer tourKey="dashboard" />
 
       <NeedsYou
         alerts={alerts}

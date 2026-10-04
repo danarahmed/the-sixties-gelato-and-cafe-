@@ -165,6 +165,13 @@ const PATHS = {
     </>
   ),
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  // Show me around (round six): a compass, its needle pointing the way.
+  compass: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M15.2 8.8l-1.9 4.5-4.5 1.9 1.9-4.5z" />
+    </>
+  ),
   sun: (
     <>
       <circle cx="12" cy="12" r="4" />

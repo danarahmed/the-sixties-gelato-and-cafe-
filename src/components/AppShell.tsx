@@ -7,6 +7,7 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import type { Locale } from "@/lib/i18n/core";
 import { NAV, activeHref, holdsAny } from "@/lib/auth/routes";
 import { BrandMark, Icon, type IconName } from "@/components/Icon";
+import { TourMenuItem, TourRunner } from "@/components/Tour";
 
 /** Each screen's icon in the menu, beside its name. */
 const NAV_ICONS: Record<string, IconName> = {
@@ -261,12 +262,14 @@ export function AppShell({
               <Icon name="user" size={18} />
               {t("nav.account")}
             </Link>
+            <TourMenuItem />
           </div>
         </nav>
         <main className="content" id="content" tabIndex={-1}>
           {children}
         </main>
       </div>
+      <TourRunner />
     </div>
   );
 }

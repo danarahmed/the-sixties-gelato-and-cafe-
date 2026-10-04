@@ -198,6 +198,25 @@ layers before every release.
   cost and margin before (the item on the recipe at its old price, whatever
   the average on hand) and after, what it adds, and the price that keeps the
   margin rounded up to 250 — none when that is under half a step.
+- `tests/staffing.test.ts`: staffed when busy? (round six) — the café's
+  weekday (Saturday first) and how many of each four weeks hold; each stretch
+  on the clock cut into the hours the café's clock showed (across midnight,
+  out before in, a zone half an hour off the hour, Baghdad's own clock); each
+  hour of the week a day on average, what a person usually serves, the busier
+  half; the hours short of hands, quiet with two or more, and kept with
+  nobody (from half an order a day); a weekday's runs of them as one, the
+  weightiest first; a day hour by hour, a weekday's or every day's (marked
+  among its own hours); the busiest hour; and nothing to say with nothing.
+- `tests/waste.test.ts`: waste by recipe (round six) — each recipe's batches
+  added up, a cancelled one left out; thrown away is what the lot lost less
+  what was eaten, given or tasted (a loss taken back on review is not thrown
+  away); the share of what went, what it cost at each batch's cost; a better
+  batch only where it went mostly unsold, from two or more batches all gone,
+  and never for what melted, nor under a tenth; kilos and litres as read,
+  rounded down for a batch.
+- `tests/tours.test.ts`: show me around (round six) — a tour for the till,
+  Production and the dashboard and none elsewhere; each step points somewhere
+  and says what it is for; every word in Arabic and in Kurdish.
 - `tests/batches.test.ts`: a read over a long list of ids (the lines of 500
   sales) asks 100 ids at a time and reads every row once; a batch whose rows
   fill a page is read again in halves, one id's many rows a page at a time;
@@ -881,6 +900,38 @@ database, behind a small local stand-in for Supabase's auth service.
   leads there; the page in Arabic and Kurdish; and the dearer delivery
   corrected to 31 a gram, the beans are off the watch (3%, under the 5% it
   says from): a delivery is read as it stands now.
+- `staffing` (round six): on the last four of yesterday's weekday, one on the
+  clock from 18:00 to 22:00 with two orders an hour, then twelve and ten;
+  three from 09:00 to 12:00 with no order, then one, then six; and two orders
+  at 23:00 with nobody clocked in (each sale rung up, then put back to its
+  hour). Reports leads to the page: 20:00 and 21:00 are short of hands, 09:00
+  and 10:00 quiet, 11:00, 18:00 and 19:00 not marked, 23:00 kept with nobody;
+  the busiest hour is the weekday's 20:00; the sentences say eleven orders an
+  hour for one, five and a half with two, three on the clock with two left,
+  and how much of the orders came with nobody clocked in; a sentence opens the
+  weekday hour by hour, its two short hours in raspberry; the page in Arabic
+  and Kurdish; the cashier is sent elsewhere.
+- `waste` (round six): three batches of a stracciatella made yesterday, 4 kg
+  each, each used by a day after the one before; of each 28 cups of 100 g
+  sold, then the rest thrown away past its use-by, but 100 g of the last
+  tasted. Reports leads to the page: three batches, 12 kg made, 8.4 kg sold,
+  3.5 kg thrown away (29% of what went), 100 g tasted, none left, 14,000 IQD
+  at the cream's cost; batches of 2.8 kg would have covered what went, said
+  in words and among the bars; Production leads there too; Arabic and
+  Kurdish; the cashier is sent elsewhere.
+- `dayslip` (round six): after a sale today, the owner prints the day's close
+  from End of Day: the café's slip, 72 mm wide and printed alone, with the
+  day and who printed it, the day's net sales as the page says them, the
+  orders, voids and refunds and waste, how it was paid, the drawers, what
+  sold the most, each step of the close and lines to sign; in Arabic it
+  prints right to left, its date as written.
+- `tour` (round six): a cashier new to the till is offered its tour in the
+  empty order; step one lights the search, the keyboard on Next, and a letter
+  typed reaches no search; the arrows go on and back; every step in turn, the
+  last one's button Finish, which ends it, and the offer is not made again on
+  the device; the menu takes the tour again, and Escape ends it. On
+  Production, No thanks puts the offer away for good. The dashboard's tour in
+  Arabic, its left arrow going on.
 - `documents` (`0053`): a manager opens a delivery's 📎 on Purchasing (none
   kept yet) and keeps its delivery note: a phone's photo of 4 MB or so, made
   smaller in the browser (its longer side 2,000 pixels) and put in the bucket

@@ -37,6 +37,7 @@ import {
 } from "./model";
 import { Emblem, type BaristaTicket, type PrintJob } from "./PrintSlip";
 import { Icon } from "@/components/Icon";
+import { TourOffer } from "@/components/Tour";
 
 export interface Receipt extends SaleReceipt {
   tender: Tender;
@@ -595,6 +596,7 @@ export function OrderPanel({
           <div className="order-empty">
             <Emblem />
             <p>{t("pos.tapToAdd")}</p>
+            <TourOffer tourKey="pos" />
           </div>
         ) : (
           order.lines.map((l) => (

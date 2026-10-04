@@ -24,6 +24,7 @@ import places from "./places";
 import dashboard from "./dashboard";
 import insights from "./insights";
 import endofday from "./endofday";
+import tour from "./tour";
 
 /**
  * The areas' phrase books; "db" holds what the database refuses with, "alerts"
@@ -51,6 +52,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   dashboard,
   insights,
   endofday,
+  tour,
 };
 
 const byLocale = new Map<string, Record<string, string>>();
