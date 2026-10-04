@@ -733,6 +733,9 @@ export default async function ReportsPage({
         >
           {t("The month at a glance →")}
         </Link>
+        <Link className="drill" href="/reports/prices" data-testid="to-prices">
+          {t("Price watch: what came in dearer →")}
+        </Link>
         <Link
           className="drill"
           href={`/reports/stock?on=${to}${withPlace}`}

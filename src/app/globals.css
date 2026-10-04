@@ -4991,6 +4991,35 @@ a.card.stat[aria-current="true"] {
   padding: 0 14px;
 }
 
+/* The price watch: an item that came in dearer, and what it touches. */
+.price-rise {
+  display: grid;
+  gap: 10px;
+  border-inline-start: 4px solid var(--warn);
+}
+.price-rise-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.price-rise-head h2 {
+  margin: 0;
+}
+.price-rise-was {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.price-rise-month {
+  margin: 0;
+  font-weight: 600;
+  color: var(--warn);
+}
+.warn-text {
+  color: var(--warn);
+  font-weight: 650;
+}
+
 /* The till from a keyboard: what Enter adds, how many, and the keys listed. */
 /* A dialog takes the keyboard as it opens: itself, without a ring round it. */
 .pos-modal:focus {
