@@ -5,8 +5,9 @@
 // a payment asked for with a category is refused in words; the analysis
 // downloads as CSV; the stock's value on a day agrees with 1200; the
 // Purchasing section says what came in by supplier and by item; the cashier
-// is not shown the analysis; the screens speak Arabic and Kurdish; and the
-// books still tie.
+// is not shown the analysis; the week at a glance (round four) reads the seven
+// days to today against the seven before, as the analysis has them; the
+// screens speak Arabic and Kurdish; and the books still tie.
 import { BASE, chromium, check, done, open, signIn, sql, TODAY } from "./lib.mjs";
 import { english } from "./english.mjs";
 
@@ -147,6 +148,52 @@ console.log("▸ the stock's value on a day, and what came in");
   await ctx.close();
 }
 
+console.log("▸ the week at a glance: the seven days to today against the seven before");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, `/reports?from=${today}&to=${today}`);
+  await page.getByTestId("to-week").click();
+  await page.waitForURL(/\/reports\/week/);
+  await page.waitForLoadState("networkidle");
+  const fmt = (n) => `${Math.round(Number(n)).toLocaleString("en-US")} IQD`;
+  /** The sales of some days as the analysis keeps them: as paid, less what refunds gave back since. */
+  const kept = (from, to) =>
+    Number(
+      last(`select test.act_as('owner@example.com');
+            select coalesce((report_sales_analysis('${from}', '${to}', 'date')->'total'->>'kept')::numeric, 0)`),
+    );
+  const from = last(`select (${TODAY} - 6)::text`);
+  const beforeFrom = last(`select (${TODAY} - 13)::text`);
+  const beforeTo = last(`select (${TODAY} - 7)::text`);
+  const net = kept(from, today);
+  const tile = page.getByTestId("week-tiles").locator(".card.stat").first();
+  check(
+    (await tile.locator(".value").textContent()) === fmt(net) &&
+      (await tile.textContent()).includes(`${fmt(kept(beforeFrom, beforeTo))} the week before.`),
+    `the week's net sales are the analysis' ${fmt(net)}, beside the week before's`,
+  );
+  check(
+    (await page.getByTestId("week-period").textContent()) ===
+      `${from} to ${today}, against ${beforeFrom} to ${beforeTo}`,
+    `the seven days to today, against the seven before: ${from} to ${today}`,
+  );
+  check(
+    (await page.getByTestId("week-days").locator(".viz-slot").count()) === 7 &&
+      (await page.getByTestId("week-says").locator("li").count()) >= 2,
+    "seven days drawn, each beside the week before's, and what the week says in words",
+  );
+  await page.getByTestId("week-before").click();
+  await page.waitForURL(/end=/);
+  await page.waitForLoadState("networkidle");
+  check(
+    (await page.getByTestId("week-period").textContent()).startsWith(
+      `${beforeFrom} to ${beforeTo}`,
+    ) && (await page.getByTestId("week-after").count()) === 1,
+    "a week back, with the way forward again",
+  );
+  await ctx.close();
+}
+
 console.log("▸ the cashier is not shown the analysis");
 {
   const { ctx, page } = await signIn(browser, "cashier");
@@ -168,6 +215,7 @@ for (const locale of ["ar", "ckb"]) {
     `/reports/sales?from=${today}&to=${today}&by=weekday&then=payment`,
     `/reports/sales?from=${today}&to=${today}&by=category&then=employee`,
     `/reports/stock?on=${today}`,
+    `/reports/week`,
   ]) {
     await open(page, path);
     const words = await english(page, path);
