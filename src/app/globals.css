@@ -1322,6 +1322,26 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   color: var(--brand-ink);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
+/* The same choice as links: the page one is on, filled. */
+.seg a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 16px;
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.seg a:hover {
+  background: var(--surface);
+}
+.seg a[aria-current="page"] {
+  background: var(--brand);
+  color: var(--brand-ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
 
 .pos-grid {
   display: grid;
@@ -4452,6 +4472,17 @@ a.card.stat:focus-visible {
   .viz-xlabel:nth-last-child(even) {
     visibility: hidden;
   }
+  /* A month's days: one a week. */
+  .viz-sparse .viz-xlabel {
+    visibility: hidden;
+  }
+  .viz-sparse .viz-xlabel:nth-last-child(7n + 1) {
+    visibility: visible;
+  }
+  /* A month's line on a phone is the line: thirty dots would hide it. */
+  .viz-sparse .viz-dot {
+    display: none;
+  }
 }
 .viz-table > summary {
   cursor: pointer;
@@ -4956,11 +4987,15 @@ a.card.stat[aria-current="true"] {
   padding: 0 14px;
 }
 
-/* The week at a glance: the weeks a tap apart; what sold and what was lost side by side. */
+/* The week and the month at a glance: a week or a month, each a tap from the one before; what sold and what was lost side by side. */
 .week-nav {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
+}
+.week-nav > .seg {
+  margin-inline-end: 6px;
 }
 .week-two {
   display: grid;

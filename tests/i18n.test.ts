@@ -18,6 +18,7 @@ import {
   fill,
   flatPlurals,
   isolateDates,
+  wholeDates,
   messenger,
   pluralsWhole,
   translator,
@@ -167,20 +168,26 @@ describe("the translator", () => {
 
   it("keeps a date put in a phrase left to right for a right-to-left reader", () => {
     const [lri, pdi] = ["\u2066", "\u2069"];
+    // Its parts joined, too: a line never breaks inside a date.
+    const j = (d: string) => d.replace(/-/g, "\u2060-\u2060");
     const t = translator({ "From {from} to {to}": "من {from} إلى {to}" }, "rtl");
     expect(t("From {from} to {to}", { from: "2026-09-01", to: "2026-09-30" })).toBe(
-      `من ${lri}2026-09-01${pdi} إلى ${lri}2026-09-30${pdi}`,
+      `من ${lri}${j("2026-09-01")}${pdi} إلى ${lri}${j("2026-09-30")}${pdi}`,
     );
     // A month, a date and time, a date among other words; each date on its own.
-    expect(isolateDates("2026-09")).toBe(`${lri}2026-09${pdi}`);
+    expect(isolateDates("2026-09")).toBe(`${lri}${j("2026-09")}${pdi}`);
     expect(isolateDates("since 2026-09-30 14:05, open")).toBe(
-      `since ${lri}2026-09-30 14:05${pdi}, open`,
+      `since ${lri}${j("2026-09-30")} 14:05${pdi}, open`,
     );
     expect(isolateDates("2026-09-26 — 2026-10-02")).toBe(
-      `${lri}2026-09-26${pdi} — ${lri}2026-10-02${pdi}`,
+      `${lri}${j("2026-09-26")}${pdi} — ${lri}${j("2026-10-02")}${pdi}`,
     );
     // Marked once only, and never a longer number: an invoice's, a phone's.
-    expect(isolateDates(isolateDates("2026-09-30"))).toBe(`${lri}2026-09-30${pdi}`);
+    expect(isolateDates(isolateDates("2026-09-30"))).toBe(`${lri}${j("2026-09-30")}${pdi}`);
+    // A date already joined is marked off as one.
+    expect(isolateDates(wholeDates("on 2026-09-30"))).toBe(`on ${lri}${j("2026-09-30")}${pdi}`);
+    expect(wholeDates(wholeDates("2026-09"))).toBe(j("2026-09"));
+    expect(wholeDates("INV-2026-0012")).toBe("INV-2026-0012");
     expect(isolateDates("INV-2026-0012 · 12026-09-30 · 0750-123-4567")).toBe(
       "INV-2026-0012 · 12026-09-30 · 0750-123-4567",
     );
@@ -192,7 +199,7 @@ describe("the translator", () => {
     // A message from the database, too.
     expect(
       messenger({ "Open since {1}": "مفتوح منذ {1}" }, "rtl")("Open since 2026-09-30 03:29"),
-    ).toBe(`مفتوح منذ ${lri}2026-09-30 03:29${pdi}`);
+    ).toBe(`مفتوح منذ ${lri}${j("2026-09-30")} 03:29${pdi}`);
   });
 
   it("points an arrow on, or back, the way the language reads", () => {

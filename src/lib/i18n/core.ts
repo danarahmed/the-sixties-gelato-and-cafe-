@@ -38,17 +38,29 @@ export type Vars = Record<string, string | number>;
 /** Translate a key, filling its {placeholders}. */
 export type T = (key: string, vars?: Vars) => string;
 
-/** A date, a month or a time of day as the app writes one: 2026-09-30, 2026-09, 2026-09-30 14:05. */
-const DATE = /(?<![\d\u2066])\d{4}-\d{2}(?:-\d{2})?(?:[ T]\d{2}:\d{2}(?::\d{2})?)?(?!\d)/g;
+/**
+ * A date, a month or a time of day as the app writes one: 2026-09-30,
+ * 2026-09, 2026-09-30 14:05; its parts perhaps already joined (U+2060).
+ */
+const DATE =
+  /(?<![\d\u2066\u2060])\d{4}\u2060?-\u2060?\d{2}(?:\u2060?-\u2060?\d{2})?(?:[ T]\d{2}:\d{2}(?::\d{2})?)?(?![\d\u2060])/g;
+
+/** A date's parts joined: a line never breaks inside it (U+2060 shows as nothing). */
+const joined = (date: string) => date.replace(/\u2060/g, "").replace(/-/g, "\u2060-\u2060");
+
+/** The dates in a text, each kept whole on its line: never 2026- on one line and 09-30 on the next. */
+export function wholeDates(text: string): string {
+  return text.replace(DATE, joined);
+}
 
 /**
- * The dates in a text kept left to right, each on its own. Among Arabic or
- * Kurdish words a browser shows 2026-09-30 as 30-09-2026, while the same date
- * standing alone, in a table's cell, shows as it is written: marked off
- * (U+2066 … U+2069, which show as nothing), it shows as written everywhere.
+ * The dates in a text kept left to right, each on its own, and whole. Among
+ * Arabic or Kurdish words a browser shows 2026-09-30 as 30-09-2026, while the
+ * same date standing alone, in a table's cell, shows as it is written: marked
+ * off (U+2066 … U+2069, which show as nothing), it shows as written everywhere.
  */
 export function isolateDates(text: string): string {
-  return text.replace(DATE, (d) => `\u2066${d}\u2069`);
+  return text.replace(DATE, (d) => `\u2066${joined(d)}\u2069`);
 }
 
 /** A number as the app writes one: 3, 1,646, 2.36, -77. */

@@ -1,10 +1,11 @@
 /**
- * The week at a glance: the seven days to a day against the seven before
- * them, from the sales analysis (by day and by product, 0051) and the loss
- * report (0048). Pure: the page reads the figures and gives them here, and a
- * test can give its own.
+ * The week and the month at a glance: the seven days to a day against the
+ * seven before them, or a month against the same days of the month before,
+ * from the sales analysis (by day and by product, 0051) and the loss report
+ * (0048). Pure: the page reads the figures and gives them here, and a test
+ * can give its own.
  */
-import { addDays } from "@/lib/dates";
+import { addDays, daysBetween, monthEnd, monthStart } from "@/lib/dates";
 import { change } from "@/lib/insights";
 
 export interface WeekWindow {
@@ -144,9 +145,114 @@ export function movers(
   };
 }
 
-/** The best day of the week: the most sold, the latest first on a tie; null with no sales. */
+/** The best day of the week or the month: the most sold, the latest first on a tie; null with no sales. */
 export function bestDay<T extends { day: string; net: number }>(days: T[]): T | null {
   let best: T | null = null;
   for (const d of days) if (d.net > 0 && (!best || d.net >= best.net)) best = d;
   return best;
+}
+
+/**
+ * A month: from its first day to its last, or to today while it runs; against
+ * the same days of the month before while it runs, and all of the month
+ * before once it is over.
+ */
+export interface MonthWindow extends WeekWindow {
+  /** Its first day. */
+  month: string;
+  /** The first day of the month before. */
+  beforeMonth: string;
+  /** Its last day, and the month before's. */
+  last: string;
+  beforeLast: string;
+  /** Whether it is over: the window runs to its last day. */
+  whole: boolean;
+}
+
+/** The month a day falls in, to today at most, against the month before. */
+export function monthWindow(day: string, today: string): MonthWindow {
+  const month = monthStart(day);
+  const last = monthEnd(month);
+  const to = last < today ? last : today;
+  const whole = to === last;
+  const beforeMonth = monthStart(addDays(month, -1));
+  const beforeLast = addDays(month, -1);
+  // The same day of the month before; the 30th of March is the 28th of February.
+  const same = `${beforeMonth.slice(0, 8)}${to.slice(8)}`;
+  return {
+    from: month,
+    to,
+    beforeFrom: beforeMonth,
+    beforeTo: whole || same > beforeLast ? beforeLast : same,
+    month,
+    beforeMonth,
+    last,
+    beforeLast,
+    whole,
+  };
+}
+
+/** A day's place in its week, Monday first (0 to 6). */
+export const weekdayIndex = (day: string) => (new Date(`${day}T00:00:00Z`).getUTCDay() + 6) % 7;
+
+/**
+ * What each weekday sold on a usual day between two days: the average of the
+ * days it sold anything (a day closed is no usual day). A weekday with none
+ * has none.
+ */
+export function usualByWeekday(rows: DayFigures[], from: string, to: string): Map<number, number> {
+  const sums = new Map<number, { total: number; days: number }>();
+  for (const r of rows) {
+    if (r.day < from || r.day > to || r.net <= 0) continue;
+    const k = weekdayIndex(r.day);
+    const s = sums.get(k) ?? { total: 0, days: 0 };
+    s.total += r.net;
+    s.days += 1;
+    sums.set(k, s);
+  }
+  return new Map([...sums].map(([k, s]) => [k, s.total / s.days]));
+}
+
+/** Each day of the month with what it made, and what a usual day of its weekday made the month before. */
+export function monthDayByDay(
+  rows: DayFigures[],
+  w: MonthWindow,
+): { day: string; net: number; orders: number; usual: number | null }[] {
+  const byDay = new Map(rows.map((r) => [r.day, r]));
+  const usual = usualByWeekday(rows, w.beforeMonth, w.beforeLast);
+  return daysOf(w.from, w.to).map((day) => ({
+    day,
+    net: byDay.get(day)?.net ?? 0,
+    orders: byDay.get(day)?.orders ?? 0,
+    usual: usual.get(weekdayIndex(day)) ?? null,
+  }));
+}
+
+/**
+ * Where a month still running closes at its pace: what its full days sold on
+ * average, over all its days. Today is not a full day yet; null before a week
+ * of full days, and for a month that is over.
+ */
+export function monthPace(
+  rows: DayFigures[],
+  w: MonthWindow,
+  today: string,
+): { projected: number; days: number } | null {
+  if (w.whole) return null;
+  const end = w.to === today ? addDays(today, -1) : w.to;
+  const days = daysBetween(w.from, end) + 1;
+  if (days < 7) return null;
+  const sold = rows.filter((r) => r.day >= w.from && r.day <= end).reduce((s, r) => s + r.net, 0);
+  return { projected: Math.round((sold / days) * (daysBetween(w.from, w.last) + 1)), days };
+}
+
+/** The weekday that sold the most on a usual day, and the one that sold the least; null with fewer than two. */
+export function weekdaysApart(
+  usual: Map<number, number>,
+): { best: number; bestNet: number; worst: number; worstNet: number } | null {
+  const all = [...usual].sort((a, b) => b[1] - a[1] || a[0] - b[0]);
+  const best = all[0];
+  const worst = all[all.length - 1];
+  if (!best || !worst || all.length < 2 || best[1] === worst[1]) return null;
+  return { best: best[0], bestNet: best[1], worst: worst[0], worstNet: worst[1] };
 }

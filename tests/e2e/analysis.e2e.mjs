@@ -6,8 +6,10 @@
 // downloads as CSV; the stock's value on a day agrees with 1200; the
 // Purchasing section says what came in by supplier and by item; the cashier
 // is not shown the analysis; the week at a glance (round four) reads the seven
-// days to today against the seven before, as the analysis has them; the
-// screens speak Arabic and Kurdish; and the books still tie.
+// days to today against the seven before, as the analysis has them, and the
+// month at a glance (round five) the month to today against the same days of
+// the month before; the screens speak Arabic and Kurdish; and the books still
+// tie.
 import { BASE, chromium, check, done, open, signIn, sql, TODAY } from "./lib.mjs";
 import { english } from "./english.mjs";
 
@@ -49,6 +51,11 @@ async function rows(page, field = "net") {
     );
 }
 const sum = (list) => Math.round(list.reduce((s, r) => s + r.v, 0) * 100) / 100;
+/** Words as read, a date's parts unjoined (they are joined so a line never breaks inside one). */
+const read = async (locator) => ((await locator.textContent()) ?? "").replace(/\u2060/g, "");
+/** Text with its dates as the page writes them, their parts perhaps joined. */
+const withDates = (text) =>
+  new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/-/g, "\u2060?-\u2060?"));
 
 console.log("▸ the owner: today's sales by product, by the hour, by payment and person");
 {
@@ -169,11 +176,11 @@ console.log("▸ the week at a glance: the seven days to today against the seven
   const tile = page.getByTestId("week-tiles").locator(".card.stat").first();
   check(
     (await tile.locator(".value").textContent()) === fmt(net) &&
-      (await tile.textContent()).includes(`${fmt(kept(beforeFrom, beforeTo))} the week before.`),
+      (await tile.textContent()).includes(`${fmt(kept(beforeFrom, beforeTo))} in the week before.`),
     `the week's net sales are the analysis' ${fmt(net)}, beside the week before's`,
   );
   check(
-    (await page.getByTestId("week-period").textContent()) ===
+    (await read(page.getByTestId("week-period"))) ===
       `${from} to ${today}, against ${beforeFrom} to ${beforeTo}`,
     `the seven days to today, against the seven before: ${from} to ${today}`,
   );
@@ -185,7 +192,7 @@ console.log("▸ the week at a glance: the seven days to today against the seven
   await page.getByTestId("week-before").click();
   // The link moves within the page: wait for the week before to be drawn.
   const back = await page
-    .locator('[data-testid="week-period"]', { hasText: `${beforeFrom} to ${beforeTo},` })
+    .locator('[data-testid="week-period"]', { hasText: withDates(`${beforeFrom} to ${beforeTo},`) })
     .waitFor({ timeout: 10000 })
     .then(() => true)
     .catch(() => false);
@@ -194,6 +201,79 @@ console.log("▸ the week at a glance: the seven days to today against the seven
       new URL(page.url()).searchParams.get("end") === beforeTo &&
       (await page.getByTestId("week-after").count()) === 1,
     "a week back, with the way forward again",
+  );
+  await ctx.close();
+}
+
+console.log(
+  "▸ the month at a glance: the month to today against the same days of the month before",
+);
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, `/reports?from=${today}&to=${today}`);
+  await page.getByTestId("to-month").click();
+  await page.waitForURL(/\/reports\/month/);
+  await page.waitForLoadState("networkidle");
+  const fmt = (n) => `${Math.round(Number(n)).toLocaleString("en-US")} IQD`;
+  const kept = (from, to) =>
+    Number(
+      last(`select test.act_as('owner@example.com');
+            select coalesce((report_sales_analysis('${from}', '${to}', 'date')->'total'->>'kept')::numeric, 0)`),
+    );
+  // The month's first day; the month before's first and, while the month
+  // runs, the same day of it (its last at most), all of it once it is over.
+  const [from, beforeFrom, beforeTo] = last(
+    `select concat_ws(' ', m::text, (m - interval '1 month')::date::text,
+       case when ${TODAY} = (m + interval '1 month - 1 day')::date then (m - 1)::text
+            else least((m - interval '1 month')::date + (extract(day from ${TODAY})::int - 1), m - 1)::text end)
+       from (select date_trunc('month', ${TODAY})::date as m) x`,
+  ).split(" ");
+  const tile = page.getByTestId("month-tiles").locator(".card.stat").first();
+  const net = kept(from, today);
+  check(
+    (await tile.locator(".value").textContent()) === fmt(net) &&
+      (await read(tile)).includes(fmt(kept(beforeFrom, beforeTo))),
+    `the month's net sales are the analysis' ${fmt(net)}, beside the same days of the month before`,
+  );
+  check(
+    (await read(page.getByTestId("month-period"))) ===
+      `${from} to ${today}, against ${beforeFrom} to ${beforeTo}`,
+    `the month to today, against the month before: ${from} to ${today}, ${beforeFrom} to ${beforeTo}`,
+  );
+  const days = Number(last(`select ${TODAY} - '${from}'::date + 1`));
+  check(
+    (await page.getByTestId("month-days").locator(".viz-slot").count()) === days &&
+      (await page.getByTestId("month-says").locator("li").count()) >= 2 &&
+      (await page.getByTestId("span-month").getAttribute("aria-current")) === "page",
+    `each of the month's ${days} day(s) drawn, what the month says in words, and Month the one chosen`,
+  );
+  const beforeLast = last(`select ('${from}'::date - 1)::text`);
+  await page.getByTestId("month-before").click();
+  // The link moves within the page: wait for the month before to be drawn, all of it.
+  const back = await page
+    .locator('[data-testid="month-period"]', {
+      hasText: withDates(`${beforeFrom} to ${beforeLast}, against`),
+    })
+    .waitFor({ timeout: 10000 })
+    .then(() => true)
+    .catch(() => false);
+  check(
+    back &&
+      new URL(page.url()).searchParams.get("month") === beforeFrom.slice(0, 7) &&
+      (await page.getByTestId("month-after").count()) === 1,
+    `a month back is all of it (${beforeFrom} to ${beforeLast}), with the way forward again`,
+  );
+  // The week is a tap away: the one the month ends with.
+  await page.getByTestId("span-week").click();
+  await page.waitForURL(/\/reports\/week/);
+  const week = await page
+    .getByTestId("week-tiles")
+    .waitFor({ timeout: 10000 })
+    .then(() => true)
+    .catch(() => false);
+  check(
+    week && new URL(page.url()).searchParams.get("end") === beforeLast,
+    `the week a tap from the month: the one to ${beforeLast}`,
   );
   await ctx.close();
 }
@@ -220,6 +300,7 @@ for (const locale of ["ar", "ckb"]) {
     `/reports/sales?from=${today}&to=${today}&by=category&then=employee`,
     `/reports/stock?on=${today}`,
     `/reports/week`,
+    `/reports/month`,
   ]) {
     await open(page, path);
     const words = await english(page, path);
