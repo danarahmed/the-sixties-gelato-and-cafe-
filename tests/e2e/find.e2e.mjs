@@ -3,10 +3,11 @@
 // its receipt prints after "Sale", by its journal, by a refund's number and
 // the refund's journal; a Talabat sale by its order number, whatever its
 // capitals; a customer's sale by part of their name and by their phone typed
-// another way. On Products & Recipes, a product by part of its name, in
-// capitals or not, and by its Arabic and Kurdish names. On Journals, a journal
-// by its number and by words in it. A search that names nothing says so; in
-// Arabic and Kurdish, no English but the café's own names.
+// another way; Today, Yesterday and Last 7 days a tap each. On Products &
+// Recipes, a product by part of its name, in capitals or not, and by its
+// Arabic and Kurdish names. On Journals, a journal by its number and by words
+// in it. A search that names nothing says so; in Arabic and Kurdish, no
+// English but the café's own names.
 import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 import { english } from "./english.mjs";
 

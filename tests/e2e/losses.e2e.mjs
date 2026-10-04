@@ -1,5 +1,6 @@
 // Losses by kind, giveaways at the till and the loss report (0048, release V),
-// through the real screens: a manager records a loss of a product as made,
+// through the real screens: Inventory's forms a button each, one open at a
+// time, a link opening one; a manager records a loss of a product as made,
 // charged to 5310 as preparation waste, and one of a batch named; a cashier
 // gives two cream shots away as a staff meal, printed for the bar with its
 // number and no price; over the limit, a manager's PIN at the till lets one go
@@ -43,6 +44,60 @@ const differences = () =>
     .pop();
 const before = differences();
 const salesBefore = last(`select count(*) from sales_order`);
+
+console.log("▸ Inventory opens on the shelf: a button for each thing to do, one form at a time");
+{
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/inventory");
+  const forms = async () =>
+    (
+      await Promise.all(
+        ["record-loss", "correct-stock", "new-item-form"].map((id) => page.getByTestId(id).count()),
+      )
+    ).reduce((a, b) => a + b, 0);
+  const buttons = page.locator('[data-testid^="inv-open-"]');
+  check(
+    (await forms()) === 0 &&
+      (await buttons.count()) === 3 &&
+      (await page.locator("#stock").isVisible()),
+    "no form open at first: a loss, a correction and a new item a button each, then the stock",
+  );
+  await page.getByTestId("inv-open-loss").click();
+  await page.getByTestId("record-loss").waitFor({ timeout: 10000 });
+  check(
+    new URL(page.url()).hash === "#record-loss" &&
+      (await page.getByTestId("inv-open-loss").getAttribute("aria-expanded")) === "true",
+    "Record a loss opens its form, and the address names it",
+  );
+  await page.getByTestId("inv-open-correct").click();
+  await page.getByTestId("correct-stock").waitFor({ timeout: 10000 });
+  check((await page.getByTestId("record-loss").count()) === 0, "one form at a time");
+  await page.getByTestId("inv-open-correct").click();
+  await page.getByTestId("correct-stock").waitFor({ state: "detached", timeout: 10000 });
+  check(
+    (await forms()) === 0 && new URL(page.url()).hash === "",
+    "tapped again, it closes, and the address with it",
+  );
+  await open(page, "/dashboard");
+  await open(page, "/inventory#record-loss");
+  const linked = await page
+    .getByTestId("record-loss")
+    .waitFor({ timeout: 10000 })
+    .then(() => true)
+    .catch(() => false);
+  check(linked, "a link to /inventory#record-loss opens the loss form");
+  await ctx.close();
+}
+{
+  const { ctx, page } = await signIn(browser, "barista");
+  await open(page, "/inventory");
+  check(
+    (await page.locator('[data-testid^="inv-open-"]').count()) === 1 &&
+      (await page.getByTestId("record-loss").isVisible()),
+    "a barista, with only a loss to record, has its form open",
+  );
+  await ctx.close();
+}
 
 console.log("▸ a manager records a product lost in preparation, charged to 5310");
 {
