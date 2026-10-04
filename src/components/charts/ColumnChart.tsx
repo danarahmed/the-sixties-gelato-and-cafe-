@@ -138,7 +138,12 @@ export function ColumnChart({
         <div className="viz-plot">
           {ticks.map((v) => (
             <div key={v} className="viz-gridline" style={{ insetBlockEnd: pct(v) }}>
-              <span className="viz-tick">{Math.round(v).toLocaleString("en-US")}</span>
+              <span className="viz-tick">
+                {/* A step of a part (orders an hour) keeps its tenth: 0.5 and 2.5, not 1 and 3. */}
+                {v.toLocaleString("en-US", {
+                  maximumFractionDigits: Number.isInteger(step) ? 0 : 1,
+                })}
+              </span>
             </div>
           ))}
           {hasReference && (

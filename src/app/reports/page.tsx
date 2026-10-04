@@ -736,6 +736,15 @@ export default async function ReportsPage({
         <Link className="drill" href="/reports/prices" data-testid="to-prices">
           {t("Price watch: what came in dearer →")}
         </Link>
+        {seesStaff && (
+          <Link
+            className="drill"
+            href={`/reports/staffing${place && profile.worksAt === null ? `?location=${place}` : ""}`}
+            data-testid="to-staffing"
+          >
+            {t("Staffed when busy? Orders an hour against who was on the clock →")}
+          </Link>
+        )}
         <Link
           className="drill"
           href={`/reports/stock?on=${to}${withPlace}`}

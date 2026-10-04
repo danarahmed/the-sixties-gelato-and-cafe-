@@ -5207,3 +5207,150 @@ kbd {
   gap: 10px;
   align-content: start;
 }
+
+/* Staffed when busy? (round six): a day of the week chosen from a row that
+   wraps on a phone; the week as a grid of hours, each shaded by its orders
+   (one hue, light to deep) and marked where it was short of hands, quiet,
+   or kept with nobody on the clock. */
+.staffing-day {
+  display: grid;
+  gap: 12px;
+}
+.day-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  justify-self: start;
+}
+.day-pick a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+.day-pick a:hover {
+  background: var(--surface);
+}
+.day-pick a[aria-current="page"] {
+  background: var(--brand);
+  color: var(--brand-ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+.hour-grid-wrap {
+  margin-top: 10px;
+}
+.hour-grid {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 2px;
+}
+.hour-grid th,
+.hour-grid td {
+  padding: 0;
+  border: none;
+  background: none;
+}
+.hour-grid thead th {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: start;
+  white-space: nowrap;
+}
+.hour-grid thead th:first-child,
+.hour-grid tbody th {
+  width: 84px;
+}
+.hour-grid tbody th {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-inline-end: 6px;
+}
+.hour-grid tbody th a {
+  color: var(--text);
+}
+.hour-grid tbody th a:hover {
+  color: var(--brand);
+  text-decoration: underline;
+}
+.hg-c {
+  height: 26px;
+  border-radius: 4px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 0.72rem;
+  line-height: 1;
+  color: var(--text);
+}
+.hg-c.s0 {
+  background: var(--surface-2);
+}
+.hg-c.s1 {
+  background: color-mix(in oklab, var(--viz-1) 14%, var(--surface));
+}
+.hg-c.s2 {
+  background: color-mix(in oklab, var(--viz-1) 30%, var(--surface));
+}
+.hg-c.s3 {
+  background: color-mix(in oklab, var(--viz-1) 48%, var(--surface));
+}
+.hg-c.s4 {
+  background: color-mix(in oklab, var(--viz-1) 68%, var(--surface));
+  color: #fff;
+}
+.hg-c.s5 {
+  background: var(--viz-1);
+  color: #fff;
+}
+.hour-grid-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.hg-scale {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.hg-scale .hg-c {
+  display: inline-block;
+  width: 16px;
+  height: 12px;
+  border-radius: 3px;
+}
+.hg-scale .hg-c:first-of-type {
+  margin-inline-start: 4px;
+}
+.hg-scale .hg-c:last-of-type {
+  margin-inline-end: 4px;
+}
+@media (max-width: 560px) {
+  .hour-grid thead th:first-child,
+  .hour-grid tbody th {
+    width: 58px;
+  }
+  .hour-grid tbody th {
+    font-size: 0.7rem;
+  }
+  .hg-c {
+    height: 22px;
+    font-size: 0.62rem;
+  }
+}
