@@ -1615,6 +1615,96 @@ const phrases: PhraseBook = {
     ar: "{n, plural, one {استُبعدت مرة واحدة سُجّل فيها حضور دون انصراف.} two {استُبعدت مرتان سُجّل فيهما حضور دون انصراف.} few {استُبعدت # مرات سُجّل فيها حضور دون انصراف.} many {استُبعدت # مرة سُجّل فيها حضور دون انصراف.} other {استُبعدت # مرة سُجّل فيها حضور دون انصراف.}}",
     ckb: "{n} جار هاتن تۆمارکرا بەبێ ڕۆیشتن، ئەوانە لاوەنران.",
   },
+
+  // Waste by recipe (round six): what each recipe's batches came to.
+  "Waste by recipe": { ar: "الهدر حسب الوصفة", ckb: "بەفیڕۆچوون بەپێی ڕەسەتە" },
+  "Waste by recipe: made, sold and thrown away →": {
+    ar: "الهدر حسب الوصفة: ما صُنع وما بيع وما رُمي ←",
+    ckb: "بەفیڕۆچوون بەپێی ڕەسەتە: دروستکراو، فرۆشراو و فڕێدراو ←",
+  },
+  "Batches made {from} to {to}, each as it stands now": {
+    ar: "الدفعات المصنوعة من {from} إلى {to}، كلٌّ كما هو الآن",
+    ckb: "ئەو دەستانەی لە {from} تا {to} دروستکران، هەریەکە وەک ئێستا هەیە",
+  },
+  "No batches were made in these four weeks.": {
+    ar: "لم تُصنع أي دفعة في هذه الأسابيع الأربعة.",
+    ckb: "لەم چوار هەفتەیەدا هیچ دەستەیەک دروست نەکرا.",
+  },
+  "Each batch recorded on Production is followed here, to the last of it.": {
+    ar: "كل دفعة تُسجَّل في الإنتاج تُتتبَّع هنا حتى آخرها.",
+    ckb: "هەر دەستەیەک لە بەرهەمهێناندا تۆمار بکرێت لێرە تا کۆتایی بەدوای دەچین.",
+  },
+  "Thrown away": { ar: "ما رُمي", ckb: "فڕێدراو" },
+  "{pct} of what was made and has gone": {
+    ar: "{pct} مما صُنع ونفد",
+    ckb: "{pct}ی ئەوەی دروستکرا و ڕۆیشت",
+  },
+  "Batches made": { ar: "الدفعات المصنوعة", ckb: "دەستە دروستکراوەکان" },
+  "{n} recipe(s)": {
+    ar: "{n, plural, one {وصفة واحدة} two {وصفتان} few {# وصفات} many {# وصفة} other {# وصفة}}",
+    ckb: "{n} ڕەسەتە",
+  },
+  "Eaten or given away": { ar: "ما أُكل أو أُهدي", ckb: "خوراو یان بەخشراو" },
+  "Staff meals, gifts and tastings": {
+    ar: "وجبات الموظفين والهدايا والتذوق",
+    ckb: "خواردنی کارمەندان، دیاری و تامکردن",
+  },
+  "The most thrown away": { ar: "الأكثر رميًا", ckb: "زۆرترین فڕێدراو" },
+  "{pct} of what it made and has gone": {
+    ar: "{pct} مما صنعته ونفد",
+    ckb: "{pct}ی ئەوەی دروستی کرد و ڕۆیشت",
+  },
+  "What the batches say": { ar: "ما تقوله الدفعات", ckb: "دەستەکان چی دەڵێن" },
+  "{recipe}: {pct} of what went was thrown away, {amount}.": {
+    ar: "{recipe}: رُمي {pct} مما نفد، بقيمة {amount}.",
+    ckb: "{recipe}: {pct}ی ئەوەی ڕۆیشت فڕێدرا، بە {amount}.",
+  },
+  "Batches of about {made}, of which about {taken} was sold, used or eaten; most of the rest went past its use-by. Batches of about {better} would have covered what went.":
+    {
+      ar: "دفعات بنحو {made}، بيع منها أو استُعمل أو أُكل نحو {taken}؛ وتجاوز معظم الباقي موعد استعماله. دفعات بنحو {better} كانت ستكفي ما نفد.",
+      ckb: "دەستەکانی نزیکەی {made}، کە نزیکەی {taken}ی لێ فرۆشرا، بەکارهات یان خورا؛ زۆربەی ئەوەی مایەوە کاتی بەکارهێنانی بەسەرچوو. دەستەکانی نزیکەی {better} بەسی ئەوە دەبوون کە ڕۆیشت.",
+    },
+  "Most of it went past its use-by, unsold.": {
+    ar: "تجاوز معظمه موعد استعماله دون أن يُباع.",
+    ckb: "زۆربەی بێ فرۆشتن کاتی بەکارهێنانی بەسەرچوو.",
+  },
+  "Most of it was spilt, melted or spoilt in the making: a smaller batch would not help. Look at how it is made and kept.":
+    {
+      ar: "معظمه انسكب أو ذاب أو فسد أثناء الصنع: لن تفيد دفعة أصغر. انظروا في طريقة صنعه وحفظه.",
+      ckb: "زۆربەی ڕژا، توایەوە یان لە کاتی دروستکردندا تێکچوو: دەستەی بچووکتر یارمەتی نادات. سەیری چۆنیەتی دروستکردن و هەڵگرتنی بکەن.",
+    },
+  "Nothing made in these four weeks was thrown away.": {
+    ar: "لم يُرمَ شيء مما صُنع في هذه الأسابيع الأربعة.",
+    ckb: "هیچ شتێک لەوەی لەم چوار هەفتەیەدا دروستکرا فڕێ نەدرا.",
+  },
+  "No recipe threw away a tenth of what went.": {
+    ar: "لم ترمِ أي وصفة عُشر ما نفد منها.",
+    ckb: "هیچ ڕەسەتەیەک دەیەکی ئەوەی ڕۆیشت فڕێ نەدا.",
+  },
+  "{amount} of it was eaten by the staff, given away or tasted.": {
+    ar: "أكل الموظفون منه أو أُهدي أو تُذوِّق ما قيمته {amount}.",
+    ckb: "{amount}ی لێ لەلایەن کارمەندانەوە خورا، بەخشرا یان تامکرا.",
+  },
+  "{n} batch(es) are still in stock: what becomes of them is not counted yet.": {
+    ar: "{n, plural, one {دفعة واحدة ما زالت في المخزون} two {دفعتان ما زالتا في المخزون} few {# دفعات ما زالت في المخزون} many {# دفعة ما زالت في المخزون} other {# دفعة ما زالت في المخزون}}: لم يُحسب بعدُ ما سيصير إليه.",
+    ckb: "{n} دەستە هێشتا لە کۆگادان: ئەوەی بەسەریان دێت هێشتا نەژمێردراوە.",
+  },
+  "What was thrown away, by recipe": {
+    ar: "ما رُمي حسب الوصفة",
+    ckb: "ئەوەی فڕێدرا بەپێی ڕەسەتە",
+  },
+  "{pct} of what went, {qty}": { ar: "{pct} مما نفد، {qty}", ckb: "{pct}ی ئەوەی ڕۆیشت، {qty}" },
+  "Recipe by recipe": { ar: "وصفةً وصفة", ckb: "ڕەسەتە بە ڕەسەتە" },
+  Recipe: { ar: "الوصفة", ckb: "ڕەسەتە" },
+  "Sold or used": { ar: "بيع أو استُعمل", ckb: "فرۆشرا یان بەکارهات" },
+  "{pct} of what went": { ar: "{pct} مما نفد", ckb: "{pct}ی ئەوەی ڕۆیشت" },
+  "What it cost": { ar: "ما كلّفه", ckb: "تێچووەکەی" },
+  "A better batch": { ar: "دفعة أنسب", ckb: "دەستەیەکی گونجاوتر" },
+  "Each batch made in the four weeks, followed to now: what was sold and what went into other batches; what was thrown away — past its use-by, spoilt, spilt or melted, less any loss taken back on review; and what the staff ate, was given away or tasted. Its cost is the batch's own. A batch to cover what went is said only where most of what was thrown away went unsold, from two or more batches all gone: what each of them sold, used or gave, on average.":
+    {
+      ar: "كل دفعة صُنعت في الأسابيع الأربعة، مُتتبَّعة حتى الآن: ما بيع وما دخل في دفعات أخرى؛ وما رُمي — بتجاوز موعد استعماله أو فساده أو انسكابه أو ذوبانه، ناقصًا أي خسارة أُعيدت عند المراجعة؛ وما أكله الموظفون أو أُهدي أو تُذوِّق. وكلفته كلفة الدفعة نفسها. ولا تُذكر دفعة تكفي ما نفد إلا حيث بقي معظم المرمي دون بيع، ومن دفعتين أو أكثر نفدت كلها: متوسط ما باعته كلٌّ منها أو استعملته أو أعطته.",
+      ckb: "هەر دەستەیەک لەم چوار هەفتەیەدا دروستکرا، تا ئێستا بەدوای دەچین: ئەوەی فرۆشرا و ئەوەی چووە ناو دەستەکانی ترەوە؛ ئەوەی فڕێدرا — بە بەسەرچوونی کاتی بەکارهێنان، تێکچوون، ڕژان یان توانەوە، کەمتر هەر زیانێک کە لە پێداچوونەوەدا گەڕێنرایەوە؛ و ئەوەی کارمەندان خواردیان، بەخشرا یان تامکرا. تێچووەکەی تێچووی خودی دەستەکەیە. دەستەیەک کە بەسی ئەوە بێت کە ڕۆیشت تەنها لەو شوێنانە دەوترێت کە زۆربەی فڕێدراو بێ فرۆشتن مایەوە، لە دوو دەستە یان زیاتر کە هەموویان ڕۆیشتن: تێکڕای ئەوەی هەریەکەیان فرۆشتی، بەکاری هێنا یان بەخشی.",
+    },
 };
 
 export default phrases;

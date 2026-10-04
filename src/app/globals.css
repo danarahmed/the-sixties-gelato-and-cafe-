@@ -5354,3 +5354,71 @@ kbd {
     font-size: 0.62rem;
   }
 }
+
+/* Waste by recipe (round six): a figure's share, quieter, under it in its cell. */
+.cell-sub {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* The day's close on the receipt printer (round six): its parts ruled like the
+   check's, each step of the close ticked or crossed, and lines to sign. */
+.eod-prints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+@media print {
+  .sl-part {
+    margin-top: 7px;
+  }
+  .sl-part-title {
+    margin-bottom: 1px;
+    padding-bottom: 2px;
+    border-bottom: 1.5px solid #000;
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .sl-part .sl-row {
+    padding: 2px 0;
+    border-bottom: 1px dotted #000;
+    font-size: 11.5px;
+  }
+  .sl-part .sl-row span:first-child {
+    overflow-wrap: anywhere;
+  }
+  .sl-part .sl-row span:last-child {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .sl-check {
+    display: flex;
+    gap: 6px;
+    padding: 2px 0;
+    font-size: 11px;
+  }
+  .sl-check span:first-child {
+    flex: none;
+    width: 12px;
+    font-weight: 700;
+  }
+  .sl-sign {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .sl-sign div {
+    padding-bottom: 20px;
+    border-bottom: 1px solid #000;
+  }
+  .sl-sign span {
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}

@@ -177,6 +177,11 @@ export default async function ProductionPage({
           "What you make in batches: gelato, a base, syrup, dough. Recording a batch takes its ingredients out of stock and puts what came out in, valued at what the ingredients cost. Made items are then used like any other: in another batch (a base, then its flavours) or in a product's recipe on Products & Recipes (a cup of gelato).",
         )}
       </p>
+      {seesCost && (
+        <Link className="drill" href="/reports/waste" data-testid="to-waste-from-production">
+          {t("Waste by recipe: made, sold and thrown away →")}
+        </Link>
+      )}
 
       {canRecord && (
         <div className="card grid" style={{ gap: 12 }} id="record">

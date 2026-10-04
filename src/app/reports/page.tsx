@@ -747,6 +747,13 @@ export default async function ReportsPage({
         )}
         <Link
           className="drill"
+          href={`/reports/waste${place && profile.worksAt === null ? `?location=${place}` : ""}`}
+          data-testid="to-waste"
+        >
+          {t("Waste by recipe: made, sold and thrown away →")}
+        </Link>
+        <Link
+          className="drill"
           href={`/reports/stock?on=${to}${withPlace}`}
           data-testid="to-stock-value"
         >
