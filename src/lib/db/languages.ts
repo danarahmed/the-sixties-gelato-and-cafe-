@@ -4,6 +4,7 @@ import "server-only";
  * Every page reads them through src/lib/i18n/server.ts instead.
  */
 import { db, one, str } from "./client";
+import { writtenWords } from "@/lib/i18n/core";
 
 export interface AddedLanguage {
   code: string;
@@ -49,6 +50,6 @@ export async function getOwnWords(locale: string): Promise<Record<string, string
   const words: Record<string, string> = {};
   if (o?.phrases && typeof o.phrases === "object")
     for (const [k, v] of Object.entries(o.phrases as Record<string, unknown>))
-      if (typeof v === "string") words[k] = v;
+      if (typeof v === "string") words[k] = writtenWords(v);
   return words;
 }

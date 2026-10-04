@@ -2,8 +2,9 @@
 // G, 0032), through the real screens: in Arabic and in Kurdish each screen
 // shows no English but the café's own names; the owner adds Turkish, gives it
 // words, and every page speaks it; corrects a built-in Arabic word and takes it
-// back; adds Persian, written right to left; takes Turkish out of use; hands a
-// translator the words as a CSV and takes them back. A cashier cannot.
+// back; writes an Arabic count's forms; adds Persian, written right to left;
+// takes Turkish out of use; hands a translator the words as a CSV and takes
+// them back. A cashier cannot.
 import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 import { english } from "./english.mjs";
 
@@ -146,9 +147,7 @@ console.log("▸ the owner adds Turkish, and gives it words");
   await page.locator("#words input[type=file]").setInputFiles(back);
   await page.getByText("Read 1 phrase with new words from the file.").waitFor();
   await page.locator("#words").getByRole("button", { name: "Save 1 change" }).click();
-  await page
-    .getByText("Saved: 1 phrase with new words, 0 back to the built-in words.")
-    .waitFor();
+  await page.getByText("Saved: 1 phrase with new words, 0 back to the built-in words.").waitFor();
   // Saved, the page is refreshed: wait for the menu to be given the new words.
   const uploaded = await page
     .locator(".sidenav")
@@ -179,6 +178,61 @@ console.log("▸ a better Arabic word, and back to the built-in one");
   await page.waitForLoadState("networkidle");
   await page.locator("h1", { hasText: /^اللغات$/ }).waitFor({ timeout: 10000 });
   check(true, "and cleared, the built-in word is back");
+  await ctx.close();
+}
+
+console.log("▸ an Arabic count in the café's own words");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await ctx.addCookies([{ name: "locale", value: "ar", url: BASE }]);
+  await open(page, "/settings/languages?lang=ar");
+  const words = page.locator("#words");
+  const phrase = "Page {page} of {pages} · {n} phrase(s)";
+  const forms =
+    "صفحة {page} من {pages} · {n, plural, one {عبارة واحدة} two {عبارتان} few {# عبارات} other {# عبارة}}";
+  // The form Arabic gives n phrases.
+  const counted = (n) =>
+    ({ one: "عبارة واحدة", two: "عبارتان", few: `${n} عبارات` })[
+      new Intl.PluralRules("ar").select(n)
+    ] ?? `${n} عبارة`;
+  await words.getByLabel("بحث").fill("Page {page} of {pages}");
+  const box = words.locator("tbody textarea").first();
+  await box.fill(forms);
+  await words.getByRole("button", { name: "حفظ التغييرات (1)" }).click();
+  await page.waitForLoadState("networkidle");
+  const one = await words
+    .getByText("صفحة 1 من 1 · عبارة واحدة", { exact: true })
+    .waitFor({ timeout: 10000 })
+    .then(() => true)
+    .catch(() => false);
+  check(one, "the owner writes a count's forms, and one phrase found reads «عبارة واحدة»");
+  check(
+    sql(
+      `select position(chr(8291) in words) > 0 from app_phrase where locale = 'ar' and phrase = '${phrase}'`,
+    ) === "t",
+    "kept in the form the database's check reads",
+  );
+  check((await box.inputValue()) === forms, "and given back to edit as they were written");
+  await words.getByLabel("بحث").fill("saved:");
+  const n = await words.locator("tbody tr").count();
+  check(
+    n > 2 && (await words.getByText(`صفحة 1 من 1 · ${counted(n)}`, { exact: true }).isVisible()),
+    `${n} phrases found take the form Arabic gives ${n}`,
+  );
+  await words.getByLabel("بحث").fill("Page {page} of {pages}");
+  await words.locator("tbody textarea").first().fill("");
+  await words.getByRole("button", { name: "حفظ التغييرات (1)" }).click();
+  await page.waitForLoadState("networkidle");
+  const back = await words
+    .getByText("الصفحة 1 من 1 · العبارات: 1", { exact: true })
+    .waitFor({ timeout: 10000 })
+    .then(() => true)
+    .catch(() => false);
+  check(
+    back &&
+      sql(`select count(*) from app_phrase where locale = 'ar' and phrase = '${phrase}'`) === "0",
+    "cleared, the built-in words are back",
+  );
   await ctx.close();
 }
 

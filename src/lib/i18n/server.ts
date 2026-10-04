@@ -16,6 +16,7 @@ import {
   dirOf,
   messenger,
   translator,
+  writtenWords,
   type Language,
   type Locale,
   type Msg,
@@ -60,7 +61,7 @@ const cafeWords = cache(async (locale: string): Promise<CafeWords> => {
     const phrases: Words = {};
     if (o.phrases && typeof o.phrases === "object")
       for (const [k, v] of Object.entries(o.phrases as Record<string, unknown>))
-        if (typeof v === "string") phrases[k] = v;
+        if (typeof v === "string") phrases[k] = writtenWords(v);
     return { languages, phrases };
   } catch {
     // The words are a courtesy: a page is never refused for want of them.

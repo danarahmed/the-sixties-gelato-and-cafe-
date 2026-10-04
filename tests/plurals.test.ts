@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { agree, messenger, translator } from "@/lib/i18n/core";
+import {
+  agree,
+  flatPlurals,
+  keptMarks,
+  keptWords,
+  messenger,
+  pluralsWhole,
+  translator,
+  writtenWords,
+} from "@/lib/i18n/core";
 import { BOOKS } from "@/lib/i18n/phrases";
 
 const en = translator({});
@@ -136,5 +145,63 @@ describe("a count in Arabic takes the form Arabic gives its number", () => {
       "2 پسووڵە هێشتا کراوەن، کۆی گشتی 1 IQD.",
     );
     expect(en("<b>{n}</b> open bill(s)", { n: 1 })).toBe("<b>1</b> open bill");
+  });
+});
+
+describe("the café's own words may write a count's forms too", () => {
+  const page = "Page {page} of {pages} · {n} phrase(s)";
+  const words =
+    "صفحة {page} من {pages} · {n, plural, one {عبارة واحدة} two {عبارتان} few {# عبارات} other {# عبارة}}";
+  /** The database's check (0032, phrase_placeholders): each {name}, as often as it is there. */
+  const dbPlaceholders = (s: string) =>
+    [...s.matchAll(/\{([\p{L}\p{N}_]+)\}/gu)]
+      .map((m) => m[1])
+      .sort()
+      .join();
+
+  it("read as their other form, the count as its placeholder", () => {
+    expect(flatPlurals(words)).toBe("صفحة {page} من {pages} · {n} عبارة");
+    expect(flatPlurals("no count here")).toBe("no count here");
+  });
+
+  it("each count whole, or refused", () => {
+    expect(pluralsWhole(words)).toBe(true);
+    expect(pluralsWhole("{n} عبارة")).toBe(true);
+    // No other form; no number in it; a form left open; a form with a mark the others lack.
+    expect(pluralsWhole("{n, plural, one {عبارة واحدة}}")).toBe(false);
+    expect(pluralsWhole("{n, plural, one {عبارة} other {عبارات}}")).toBe(false);
+    expect(pluralsWhole("{n, plural, one {عبارة} other {# عبارات}")).toBe(false);
+    expect(pluralsWhole("{n, plural, one {<b>عبارة</b>} other {# عبارات}}")).toBe(false);
+  });
+
+  it("kept so the database's check finds the English's placeholders, and read back as written", () => {
+    const kept = keptWords(words);
+    expect(dbPlaceholders(kept)).toBe(dbPlaceholders(page));
+    expect(dbPlaceholders(words)).not.toBe(dbPlaceholders(page));
+    expect(writtenWords(kept)).toBe(words);
+    // A count's forms with marks and another value inside them.
+    const bills =
+      "{n, plural, one {<b>فاتورة واحدة</b> منذ {date}} other {<b>#</b> فاتورة منذ {date}}}";
+    expect(dbPlaceholders(keptWords(bills))).toBe("date,n");
+    expect(writtenWords(keptWords(bills))).toBe(bills);
+  });
+
+  it("words with no count are kept as they are", () => {
+    expect(keptWords("صفحة {page} من {pages}")).toBe("صفحة {page} من {pages}");
+    expect(writtenWords("صفحة {page} من {pages}")).toBe("صفحة {page} من {pages}");
+  });
+
+  it("the marks they are kept with are taken out of words as written", () => {
+    expect(keptMarks("a\u2063b ⟪c⟫")).toBe("ab c");
+  });
+
+  it("and a page shows them by the count", () => {
+    const ar = translator({ [page]: writtenWords(keptWords(words)) }, "rtl", "ar");
+    expect([1, 2, 3, 11].map((n) => ar(page, { page: 1, pages: 9, n }))).toEqual([
+      "صفحة 1 من 9 · عبارة واحدة",
+      "صفحة 1 من 9 · عبارتان",
+      "صفحة 1 من 9 · 3 عبارات",
+      "صفحة 1 من 9 · 11 عبارة",
+    ]);
   });
 });

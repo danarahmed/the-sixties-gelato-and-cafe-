@@ -13,7 +13,15 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { BOOKS } from "@/lib/i18n/phrases";
 import { getDictionary, builtInWords } from "@/lib/i18n/dictionaries";
-import { arrows, fill, isolateDates, messenger, pluralBlocks, translator } from "@/lib/i18n/core";
+import {
+  arrows,
+  fill,
+  flatPlurals,
+  isolateDates,
+  messenger,
+  pluralsWhole,
+  translator,
+} from "@/lib/i18n/core";
 import { parseRich, plain } from "@/lib/i18n/Rich";
 import { LABELS } from "@/lib/format";
 import { RULE_PHRASES } from "@/lib/rules";
@@ -25,19 +33,11 @@ import { scan, screens } from "../scripts/i18n-scan.mjs";
 import { raiseMessages } from "../scripts/db-messages.mjs";
 
 const ROOT = join(__dirname, "..");
-/** A phrase with each count's forms written as its "other" form, # as the count's placeholder. */
-const flat = (s: string) => {
-  let out = "";
-  let at = 0;
-  for (const b of pluralBlocks(s)) {
-    out += s.slice(at, b.start) + (b.forms.get("other") ?? "").replace(/#/g, `{${b.name}}`);
-    at = b.end;
-  }
-  return out + s.slice(at);
-};
-const placeholders = (s: string) => [...flat(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+/** A phrase's {placeholders} and <tags>, each count's forms read as its "other" form. */
+const placeholders = (s: string) =>
+  [...flatPlurals(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 const tags = (s: string) =>
-  [...flat(s).matchAll(/<\/?([a-z][a-z0-9]*)>/gi)].map((m) => m[0]).sort();
+  [...flatPlurals(s).matchAll(/<\/?([a-z][a-z0-9]*)>/gi)].map((m) => m[0]).sort();
 
 function files(dir: string, ext: RegExp): string[] {
   const out: string[] = [];
@@ -74,22 +74,9 @@ describe("the phrase books", () => {
 
   it("write each count's forms whole: an other form with the count, and the same words around", () => {
     const wrong = all.flatMap((p) =>
-      (["ar", "ckb"] as const).flatMap((l) => {
-        const text = p.t[l];
-        const blocks = pluralBlocks(text);
-        const heads = text.split(", plural,").length - 1;
-        const bad =
-          blocks.length !== heads ||
-          blocks.some((b) => {
-            const other = b.forms.get("other");
-            if (other === undefined || !other.includes("#")) return true;
-            const keep = (f: string) =>
-              [...placeholders(f), ...tags(f)].join() !==
-              [...placeholders(other), ...tags(other)].join();
-            return [...b.forms.values()].some(keep);
-          });
-        return bad ? [`${p.book} ${l}: ${p.en}`] : [];
-      }),
+      (["ar", "ckb"] as const)
+        .filter((l) => !pluralsWhole(p.t[l]))
+        .map((l) => `${p.book} ${l}: ${p.en}`),
     );
     expect(wrong).toEqual([]);
   });

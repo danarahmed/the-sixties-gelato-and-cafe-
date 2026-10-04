@@ -11,6 +11,7 @@ import { z } from "zod";
 import { callRpc, parse, type ActionResult } from "@/lib/db/rpc";
 import { text } from "@/lib/validation";
 import { englishOf } from "@/lib/i18n/catalogue";
+import { flatPlurals, keptMarks, keptWords, pluralsWhole } from "@/lib/i18n/core";
 
 const CODE = /^[a-z]{2,3}(-[a-z0-9]{2,8})?$/;
 
@@ -47,14 +48,18 @@ export async function saveLanguageAction(
   return { ok: true, data: { code: v.data.code } };
 }
 
-const placeholders = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
-const tags = (s: string) => [...s.matchAll(/<\/?([a-z][a-z0-9]*)>/gi)].map((m) => m[0]).sort();
+// A count's forms ({n, plural, one {…} other {# …}}) are read as their "other" form.
+const placeholders = (s: string) =>
+  [...flatPlurals(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+const tags = (s: string) =>
+  [...flatPlurals(s).matchAll(/<\/?([a-z][a-z0-9]*)>/gi)].map((m) => m[0]).sort();
 
 /**
  * The café's words for phrases in one language: { key: words }; empty words
  * give a phrase back its built-in words, or its English. Words keep every
- * {placeholder} and <mark> of the English. A key the app no longer has is
- * left out, and counted.
+ * {placeholder} and <mark> of the English, and may write a count's forms as
+ * the built-in Arabic does. A key the app no longer has is left out, and
+ * counted.
  */
 export async function savePhrasesAction(
   locale: string,
@@ -74,11 +79,16 @@ export async function savePhrasesAction(
       skipped++;
       continue;
     }
-    const words = String(raw ?? "").trim();
+    const words = keptMarks(String(raw ?? "")).trim();
     if (!words) {
       send[key] = null;
       continue;
     }
+    if (!pluralsWhole(words))
+      return {
+        ok: false,
+        error: `Write each count in the words for "${key.slice(0, 80)}" whole: one form after another in { }, and an "other" form with # for the number`,
+      };
     if (placeholders(words).join() !== placeholders(english).join()) {
       const want = placeholders(english)
         .map((p) => `{${p}}`)
@@ -95,7 +105,7 @@ export async function savePhrasesAction(
         ok: false,
         error: `Keep the marks <…> of the English in the words for "${key.slice(0, 80)}"`,
       };
-    send[key] = words;
+    send[key] = keptWords(words);
   }
   if (!Object.keys(send).length) return { ok: true, data: { set: 0, cleared: 0, skipped } };
   const r = await callRpc<{ set?: number; cleared?: number }>("save_phrases", {

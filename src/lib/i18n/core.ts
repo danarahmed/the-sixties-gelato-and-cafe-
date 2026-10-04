@@ -184,6 +184,66 @@ export function plurals(text: string, values: Record<string, unknown>, locale: s
 }
 
 /**
+ * A phrase with each count written in its "other" form, # as the count's
+ * {placeholder}: what its words must keep of the English, {placeholders} and
+ * <marks> alike.
+ */
+export function flatPlurals(text: string): string {
+  let out = "";
+  let at = 0;
+  for (const b of pluralBlocks(text)) {
+    out += text.slice(at, b.start) + (b.forms.get("other") ?? "").replace(/#/g, `{${b.name}}`);
+    at = b.end;
+  }
+  return out + text.slice(at);
+}
+
+const tagsOf = (s: string) => [...s.matchAll(/<\/?[a-z][a-z0-9]*>/gi)].map((m) => m[0]).sort();
+const namesOf = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+
+/**
+ * Whether each count in a phrase is written whole: every block read to its
+ * end, an "other" form with the count (#) in it, and each form with the same
+ * {placeholders} and <marks> as the "other" one.
+ */
+export function pluralsWhole(text: string): boolean {
+  const blocks = pluralBlocks(text);
+  if (blocks.length !== text.split(", plural,").length - 1) return false;
+  return blocks.every((b) => {
+    const other = b.forms.get("other");
+    if (other === undefined || !other.includes("#")) return false;
+    const marks = (f: string) => [...namesOf(f), ...tagsOf(f)].join();
+    return [...b.forms.values()].every((f) => marks(f) === marks(other));
+  });
+}
+
+/** What parts the café's words as the database keeps them from the words as written. */
+const KEPT = "⁣";
+
+/**
+ * The café's words as the database keeps them (0032). Its check wants each
+ * {placeholder} of the English as often as the English has it, and does not
+ * read a count's forms, so words with forms are kept as their flat words (each
+ * count in its "other" form), then, after an invisible separator, the words as
+ * written, their braces as ⟪ ⟫. Words with no forms are kept as they are.
+ */
+export function keptWords(words: string): string {
+  if (pluralBlocks(words).length === 0) return words;
+  const braces = words.replace(/[{}]/g, (c) => (c === "{" ? "⟪" : "⟫"));
+  return `${flatPlurals(words)}${KEPT}${braces}`;
+}
+
+/** The café's words as they were written, from the words the database keeps. */
+export function writtenWords(kept: string): string {
+  const at = kept.lastIndexOf(KEPT);
+  if (at < 0) return kept;
+  return kept.slice(at + KEPT.length).replace(/[⟪⟫]/g, (c) => (c === "⟪" ? "{" : "}"));
+}
+
+/** The marks the café's words are kept with, taken out of the words as written. */
+export const keptMarks = (words: string) => words.replace(/[⁣⟪⟫]/g, "");
+
+/**
  * {name} in a phrase, filled; a placeholder with no value is left as it is.
  * For a right-to-left reader, the dates in a value are kept left to right.
  * A count takes the form its language gives that number, and an English
