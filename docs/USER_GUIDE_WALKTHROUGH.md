@@ -19,7 +19,7 @@ each job.
 3. [Ideas used everywhere](#3-ideas-used-everywhere)
 4. [Dashboard](#4-dashboard) · `/dashboard`
 5. [POS](#5-pos) · `/pos`
-6. [End of Day](#6-end-of-day) · `/end-of-day`
+6. [End of Day](#6-end-of-day) · `/end-of-day` · [Start of Day](#start-of-day) · `/start-of-day`
 7. [Orders](#7-orders) · `/orders`
 8. [Sales](#8-sales) · `/sales`
 9. [Delivery Platforms](#9-delivery-platforms) · `/platforms`
@@ -120,7 +120,9 @@ Someone who works at one place reads their place's day, with its name by the
 title (`0057`): its sales and their costs, its orders, **Stock at** their
 place, and its items low or below zero. From four in the afternoon, whoever
 closes the day is offered **Closing up? The end of the day, step by step**
-beside the title (see [End of Day](#6-end-of-day)).
+beside the title (see [End of Day](#6-end-of-day)); in the morning, from four
+until noon, **Opening up? The start of the day, step by step** (see
+[Start of Day](#start-of-day)).
 
 **Needs you** comes first (`0029`): what the alert rules find in the books
 each time the page opens.
@@ -382,6 +384,37 @@ the same day last week and a usual one of its kind; and **How it was paid**,
 each payment method's share of net sales. **Today's reports** opens Reports
 for today. **Print or save as PDF** prints the page with its heading, without
 the menu or the buttons.
+
+### Start of Day
+
+**Location:** Sidebar → **Start of Day** · `/start-of-day` · **Who:** whoever
+opens the day (`day.close`, as for End of Day). From four in the morning until
+noon the Dashboard offers it too (**Opening up? The start of the day, step by
+step**).
+
+The morning, step by step, as End of Day is the evening: each step says where
+it stands now and is ticked once nothing of it is left, and the ring at the top
+counts them (**Everything is ready: open the doors.**). Each step's button
+opens where its work is done; a step you may not do is not shown.
+
+1. **Drawer open and counted:** the till's drawer, open (its session, who and
+   since when) or not yet. Not yet, it is opened right here: count what is in
+   it and **Open the drawer**. The count's answer stays on the page.
+2. **Everyone due in is in:** whoever's shift has begun and has not clocked
+   in, the longest waited for first, and who is due later with their time.
+   **Clock in on the till**.
+3. **What to make today:** the recipes the day's plan says to make, with their
+   batches and what they make, and any ingredient short for them. Once the
+   stock covers the day it is ticked. **Open the plan**.
+4. **Deliveries due:** the orders approved or sent and expected today or
+   before, the late first, by their number and supplier. **Receive them**.
+5. **Nothing low without an order:** the items at or below their reorder level
+   that are on no order yet (a draft counts); once each is on one, it is
+   ticked. **What to buy**.
+6. **Red alerts answered**, as on End of Day.
+
+**The day ahead:** today's target, and what the same weekday made last week
+and on a usual one (the four before).
 
 ## 7. Orders
 
@@ -1157,7 +1190,8 @@ What the café makes in batches: gelato, a base, syrup, cold brew, dough.
   batch is used by its recipe's shelf life from when it was made (the form
   says how long), or not at all without one. A manager ticks **Made earlier**
   for a batch made earlier today or yesterday, with when and why; it is
-  refused before the last approved count of its items.
+  refused before the last approved count of its items. Once it is recorded,
+  **Print … label(s)** prints its pans' labels there and then (see below).
 - **What to make on…:** the day's plan (today, or **Tomorrow**). For each thing
   you make: what it sold and was used in batches on the same weekday over the
   last four to eight weeks, on average; what is on hand, and what of it is due
@@ -1203,6 +1237,15 @@ What the café makes in batches: gelato, a base, syrup, cold brew, dough.
   count, still in stock — checked to add up to what was made, with every
   movement of it. Reports → **Production** lists the batches made in the
   dates.
+- **A batch's labels:** **Print … label(s)**, on its page and as soon as it is
+  recorded, prints a label a pan on the receipt printer, each cut on its own:
+  what is in the pan (in the reader's language), the batch's number and the
+  pan's (**Pan 1 of 2**), when it was made and, large and boxed, when it is to
+  be used by, both with the weekday; what the batch made, where and by whom,
+  and its lot. **Labels** says how many: one a pan when it was weighed in pans
+  (or tubs, or any container the café named), one when weighed in kilos,
+  litres or pieces; change it as needed (twenty at most). The freezer is then
+  used oldest first, and nothing past its use-by is sold by mistake.
 
 A made item is then used like any other: in another batch, or in a product's
 recipe on Products & Recipes (**Change the recipe…**), so a cup of gelato takes
@@ -1420,7 +1463,22 @@ to the analysis and the stock's value, and the CSVs, keep it. A line under the
 dates says which parts stay the whole café's. Someone who works at one place
 reads theirs and chooses no other.
 **Every journal line (CSV)** downloads the whole ledger for those dates, for the
-accountant's own tools. Two pages open from the top (`0051`):
+accountant's own tools. Pages open from the top (`0051`):
+
+- **The week at a glance** (`/reports/week`): the seven days to today against
+  the seven before them, to decide from. Four figures, each with its change:
+  net sales (and the week before's), the gross margin (its points up or down),
+  the orders (and what an order came to on average), and what was lost to
+  waste (its share of sales; less is better). **What the week says**, in
+  sentences: sales up or down and by how much, with the best day; the margin,
+  and when what was sold cost more than the sales grew, to check the recipes'
+  costs and the prices; what was lost, mostly of what; what sold the most, and
+  what rose and fell the most in dinars. Then **Sales day by day**, each day
+  beside the same weekday of the week before (a line), **What sold the most**
+  with each product's change, and **What was lost** by item, each opening the
+  analysis or the losses of the week. **The week before** and **The week
+  after** step back and forth. Sales are as the analysis has them: as paid,
+  less what refunds gave back since.
 
 - **Sales analysis** (`/reports/sales`): the sales of the dates **by** the
   hour, the day of the week, the date, the product, the category, the size,
@@ -1684,55 +1742,58 @@ a person's roles allows, then the café's.
 
 ## 25. Every feature, and where it is
 
-| Feature                                                                                                              | Where                                    | Who                                                                                   |
-| -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------- |
-| Sign in, create a login, reset password                                                                              | `/login`                                 | everyone                                                                              |
-| Change password, see your permissions                                                                                | My account `/account`                    | everyone                                                                              |
-| Language (EN / AR / CKB, right-to-left), light/dark                                                                  | top bar                                  | everyone                                                                              |
-| Today at a glance, low stock, books reconcile                                                                        | `/dashboard`                             | owner, managers, accountant, auditor                                                  |
-| What needs you: alerts answered or snoozed; yesterday's brief                                                        | `/dashboard`                             | owner, managers, accountant, auditor (answering: owner, managers, accountant)         |
-| Alert thresholds; how many days each vendor takes to deliver                                                         | Settings `/settings`, Vendors `/vendors` | owner, general manager; vendors: purchasing, managers                                 |
-| Sell by channel; cash, card, platform-paid                                                                           | `/pos`                                   | cashier, barista, managers, owner                                                     |
-| Retry a sale without recording it twice                                                                              | `/pos`                                   | the same                                                                              |
-| Void (until its session closes) and refund, whole or by the item, with a reason; a second person's PIN               | `/orders`                                | managers, owner                                                                       |
-| Discount over the cap approved by a manager's name and PIN                                                           | `/pos`                                   | cashiers ask; managers, owner approve                                                 |
-| Set your approval PIN                                                                                                | My account `/account`                    | managers, owner                                                                       |
-| Exceptions by person: voids, refunds, discounts, cancelled bills, items taken off, wrong PINs; CSV                   | `/reports`                               | owner, managers, accountant, auditor                                                  |
-| Daily summaries; the drawer in sessions; move cash between till, safe, bank and owner                                | `/sales`                                 | cost viewers; the drawer: whoever may open it                                         |
-| The end of the day, step by step: bills, clocked in, drawers (closed there), losses, card and platform money, alerts | `/end-of-day`                            | owner, general manager, branch managers                                               |
-| Platform orders; payout by journal                                                                                   | `/platforms`, `/journals`                | cost viewers                                                                          |
-| Vendor statements, bills, payments, cancel a bill, ageing; correct a vendor, take one out of use                     | `/vendors`                               | cost viewers (by permission)                                                          |
-| Expenses with a proposed account                                                                                     | `/expenses`                              | managers, accountant, owner                                                           |
-| Suppliers; receive goods at a price per unit, checked against the cost now; landed cost                              | `/purchasing`                            | purchasing, managers, owner                                                           |
-| Purchase orders: drafted, approved within a limit, sent, printed, received against, closed or cancelled              | `/purchasing`                            | purchasing, managers, owner; approving: owner, managers                               |
-| What to buy: each item's stock, use and levels, with why; draft orders for each supplier; an item's suppliers        | `/purchasing/buying-list`, `/inventory`  | cost viewers; drafting and suppliers: purchasing, managers, owner                     |
-| Return goods to a supplier; their credit notes, set against bills; a statement between two dates                     | `/purchasing`, `/vendors`                | purchasing, managers, owner; setting against bills: accountant, owner                 |
-| Products, recipes by channel, prices from a date, margins                                                            | `/products`                              | cost viewers; editing: owner, general manager                                         |
-| Sizes; add-ons in groups, priced by channel, with recipes; which sizes offer them                                    | `/products`                              | cost viewers; editing: owner, general manager                                         |
-| Sell a size with its add-ons, in one sheet                                                                           | `/pos`                                   | cashier, barista, managers, owner                                                     |
-| Sizes and add-ons sold                                                                                               | `/reports`                               | cost viewers                                                                          |
-| Stock board, add and correct items, pack units, price history, opening stock (owner), waste, corrections             | `/inventory`                             | cost viewers; waste: baristas too                                                     |
-| Blind count while trading, second-person approval, cancel a count                                                    | `/count`                                 | counter; reviewers                                                                    |
-| Journal register, manual journals, reversal                                                                          | `/journals`                              | cost viewers; posting: accountant, general manager, owner                             |
-| Owner's correction to a control account                                                                              | `/journals`                              | owner                                                                                 |
-| Trial balance, closing checklist, lock / reopen                                                                      | `/accounting`                            | cost viewers; lock: accountant, general manager, owner; reopen: owner                 |
-| Add an income or a cost account, rename it, take it out of use or bring it back                                      | `/accounting`                            | cost viewers see; changing: accountant, general manager, owner                        |
-| Reconcile the bank against its statement; undo the latest                                                            | `/accounting/bank`                       | cost viewers see; keeping: accountant, general manager, owner                         |
-| Who changed what, before and after, by kind and person; CSV                                                          | `/audit`                                 | owner, managers, accountant, auditor                                                  |
-| Reconciliation, P&L, channels, ageing, margins, CSV                                                                  | `/reports`                               | cost viewers                                                                          |
-| Post the stock the old app never journaled                                                                           | `/reports`                               | owner                                                                                 |
-| People and roles, business configuration                                                                             | `/settings`                              | owner, general manager                                                                |
-| Open, close and hand over the drawer, counted blind                                                                  | `/pos`, `/sales`                         | cashier, barista, managers, owner                                                     |
-| Cash sessions and each one's statement                                                                               | `/sales/sessions`                        | owner, managers, accountant, auditor                                                  |
-| Who works here, their PINs, the schedule, the hours corrected with why                                               | `/staff`                                 | owner, managers                                                                       |
-| Pay, advances, payroll drafted, approved and paid                                                                    | `/staff`, `/payroll`                     | owner, general manager, accountant; the auditor reads                                 |
-| Clock in and out with a name and a PIN                                                                               | `/pos`                                   | everyone who works here, at the till                                                  |
-| Customers found by their number or added at the till; a reward taken; a delivery to their address                    | `/pos`                                   | cashier, barista, managers, owner                                                     |
-| Customers, their addresses, what they bought and how their points moved; points by hand with why                     | `/customers`                             | owner, managers; the accountant and the auditor read; points by hand: owner, managers |
-| Points earned, spent and outstanding; rewards taken; who bought the most                                             | `/reports`                               | owner, managers, accountant, auditor                                                  |
-| Sales by hour, day, date, product, category, size, add-on, person, payment, channel or branch, and a second way; CSV | `/reports/sales`                         | cost viewers                                                                          |
-| The stock's value on a day against 1200; what came in by supplier and by item                                        | `/reports/stock`, `/reports`             | cost viewers                                                                          |
-| The balance sheet at the start and the end of the dates; the cash flow between; CSV                                  | `/reports/statements`                    | profit viewers                                                                        |
-| Stock sent between the café's places, on its way in 1210; received, what did not arrive lost; or cancelled           | `/inventory/transfers`                   | owner, managers, purchasing; readers: cost viewers                                    |
-| Photos and PDFs of a delivery note, a bill, a credit note, a return slip or a receipt, kept with its record (📎)     | `/purchasing`, `/vendors`, `/expenses`   | cost viewers; attaching: whoever records it                                           |
-| **Not built:** offline selling                                                                                       | [`LIMITATIONS.md`](LIMITATIONS.md)       | —                                                                                     |
+| Feature                                                                                                                                                          | Where                                    | Who                                                                                   |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------- |
+| Sign in, create a login, reset password                                                                                                                          | `/login`                                 | everyone                                                                              |
+| Change password, see your permissions                                                                                                                            | My account `/account`                    | everyone                                                                              |
+| Language (EN / AR / CKB, right-to-left), light/dark                                                                                                              | top bar                                  | everyone                                                                              |
+| Today at a glance, low stock, books reconcile                                                                                                                    | `/dashboard`                             | owner, managers, accountant, auditor                                                  |
+| What needs you: alerts answered or snoozed; yesterday's brief                                                                                                    | `/dashboard`                             | owner, managers, accountant, auditor (answering: owner, managers, accountant)         |
+| Alert thresholds; how many days each vendor takes to deliver                                                                                                     | Settings `/settings`, Vendors `/vendors` | owner, general manager; vendors: purchasing, managers                                 |
+| Sell by channel; cash, card, platform-paid                                                                                                                       | `/pos`                                   | cashier, barista, managers, owner                                                     |
+| Retry a sale without recording it twice                                                                                                                          | `/pos`                                   | the same                                                                              |
+| Void (until its session closes) and refund, whole or by the item, with a reason; a second person's PIN                                                           | `/orders`                                | managers, owner                                                                       |
+| Discount over the cap approved by a manager's name and PIN                                                                                                       | `/pos`                                   | cashiers ask; managers, owner approve                                                 |
+| Set your approval PIN                                                                                                                                            | My account `/account`                    | managers, owner                                                                       |
+| Exceptions by person: voids, refunds, discounts, cancelled bills, items taken off, wrong PINs; CSV                                                               | `/reports`                               | owner, managers, accountant, auditor                                                  |
+| Daily summaries; the drawer in sessions; move cash between till, safe, bank and owner                                                                            | `/sales`                                 | cost viewers; the drawer: whoever may open it                                         |
+| The end of the day, step by step: bills, clocked in, drawers (closed there), losses, card and platform money, alerts                                             | `/end-of-day`                            | owner, general manager, branch managers                                               |
+| The start of the day, step by step: the drawer (opened there), who is due in, what to make, deliveries due, anything low without an order, alerts; the day ahead | `/start-of-day`                          | owner, general manager, branch managers                                               |
+| Platform orders; payout by journal                                                                                                                               | `/platforms`, `/journals`                | cost viewers                                                                          |
+| Vendor statements, bills, payments, cancel a bill, ageing; correct a vendor, take one out of use                                                                 | `/vendors`                               | cost viewers (by permission)                                                          |
+| Expenses with a proposed account                                                                                                                                 | `/expenses`                              | managers, accountant, owner                                                           |
+| Suppliers; receive goods at a price per unit, checked against the cost now; landed cost                                                                          | `/purchasing`                            | purchasing, managers, owner                                                           |
+| Purchase orders: drafted, approved within a limit, sent, printed, received against, closed or cancelled                                                          | `/purchasing`                            | purchasing, managers, owner; approving: owner, managers                               |
+| What to buy: each item's stock, use and levels, with why; draft orders for each supplier; an item's suppliers                                                    | `/purchasing/buying-list`, `/inventory`  | cost viewers; drafting and suppliers: purchasing, managers, owner                     |
+| Return goods to a supplier; their credit notes, set against bills; a statement between two dates                                                                 | `/purchasing`, `/vendors`                | purchasing, managers, owner; setting against bills: accountant, owner                 |
+| Products, recipes by channel, prices from a date, margins                                                                                                        | `/products`                              | cost viewers; editing: owner, general manager                                         |
+| A batch's labels, a pan each, with its use-by, on the receipt printer                                                                                            | a batch's page; Production `/production` | whoever records batches                                                               |
+| Sizes; add-ons in groups, priced by channel, with recipes; which sizes offer them                                                                                | `/products`                              | cost viewers; editing: owner, general manager                                         |
+| Sell a size with its add-ons, in one sheet                                                                                                                       | `/pos`                                   | cashier, barista, managers, owner                                                     |
+| Sizes and add-ons sold                                                                                                                                           | `/reports`                               | cost viewers                                                                          |
+| Stock board, add and correct items, pack units, price history, opening stock (owner), waste, corrections                                                         | `/inventory`                             | cost viewers; waste: baristas too                                                     |
+| Blind count while trading, second-person approval, cancel a count                                                                                                | `/count`                                 | counter; reviewers                                                                    |
+| Journal register, manual journals, reversal                                                                                                                      | `/journals`                              | cost viewers; posting: accountant, general manager, owner                             |
+| Owner's correction to a control account                                                                                                                          | `/journals`                              | owner                                                                                 |
+| Trial balance, closing checklist, lock / reopen                                                                                                                  | `/accounting`                            | cost viewers; lock: accountant, general manager, owner; reopen: owner                 |
+| Add an income or a cost account, rename it, take it out of use or bring it back                                                                                  | `/accounting`                            | cost viewers see; changing: accountant, general manager, owner                        |
+| Reconcile the bank against its statement; undo the latest                                                                                                        | `/accounting/bank`                       | cost viewers see; keeping: accountant, general manager, owner                         |
+| Who changed what, before and after, by kind and person; CSV                                                                                                      | `/audit`                                 | owner, managers, accountant, auditor                                                  |
+| Reconciliation, P&L, channels, ageing, margins, CSV                                                                                                              | `/reports`                               | cost viewers                                                                          |
+| Post the stock the old app never journaled                                                                                                                       | `/reports`                               | owner                                                                                 |
+| People and roles, business configuration                                                                                                                         | `/settings`                              | owner, general manager                                                                |
+| Open, close and hand over the drawer, counted blind                                                                                                              | `/pos`, `/sales`                         | cashier, barista, managers, owner                                                     |
+| Cash sessions and each one's statement                                                                                                                           | `/sales/sessions`                        | owner, managers, accountant, auditor                                                  |
+| Who works here, their PINs, the schedule, the hours corrected with why                                                                                           | `/staff`                                 | owner, managers                                                                       |
+| Pay, advances, payroll drafted, approved and paid                                                                                                                | `/staff`, `/payroll`                     | owner, general manager, accountant; the auditor reads                                 |
+| Clock in and out with a name and a PIN                                                                                                                           | `/pos`                                   | everyone who works here, at the till                                                  |
+| Customers found by their number or added at the till; a reward taken; a delivery to their address                                                                | `/pos`                                   | cashier, barista, managers, owner                                                     |
+| Customers, their addresses, what they bought and how their points moved; points by hand with why                                                                 | `/customers`                             | owner, managers; the accountant and the auditor read; points by hand: owner, managers |
+| Points earned, spent and outstanding; rewards taken; who bought the most                                                                                         | `/reports`                               | owner, managers, accountant, auditor                                                  |
+| Sales by hour, day, date, product, category, size, add-on, person, payment, channel or branch, and a second way; CSV                                             | `/reports/sales`                         | cost viewers                                                                          |
+| The week at a glance: the seven days against the seven before, charted, and what changed said in words                                                           | `/reports/week`                          | cost viewers                                                                          |
+| The stock's value on a day against 1200; what came in by supplier and by item                                                                                    | `/reports/stock`, `/reports`             | cost viewers                                                                          |
+| The balance sheet at the start and the end of the dates; the cash flow between; CSV                                                                              | `/reports/statements`                    | profit viewers                                                                        |
+| Stock sent between the café's places, on its way in 1210; received, what did not arrive lost; or cancelled                                                       | `/inventory/transfers`                   | owner, managers, purchasing; readers: cost viewers                                    |
+| Photos and PDFs of a delivery note, a bill, a credit note, a return slip or a receipt, kept with its record (📎)                                                 | `/purchasing`, `/vendors`, `/expenses`   | cost viewers; attaching: whoever records it                                           |
+| **Not built:** offline selling                                                                                                                                   | [`LIMITATIONS.md`](LIMITATIONS.md)       | —                                                                                     |
