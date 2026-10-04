@@ -5,7 +5,7 @@
 // number and no price; over the limit, a manager's PIN at the till lets one go
 // on the house; the owner reads what was lost, and where it was charged, on
 // Reports, in English, Arabic and Kurdish. The books still tie.
-import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { BASE, chromium, check, done, inventoryForm, open, signIn, sql } from "./lib.mjs";
 import { english } from "./english.mjs";
 
 const browser = await chromium.launch();
@@ -48,7 +48,7 @@ console.log("▸ a manager records a product lost in preparation, charged to 531
 {
   const { ctx, page } = await signIn(browser, "manager");
   await open(page, "/inventory");
-  const form = page.getByTestId("record-loss");
+  const form = await inventoryForm(page, "loss", "record-loss");
   check(
     (await form.getByTestId("loss-kind-explain").textContent()).includes(
       "Charged to 5300 Waste & spoilage.",
@@ -97,7 +97,7 @@ console.log("▸ a loss from the batch named");
 {
   const { ctx, page } = await signIn(browser, "manager");
   await open(page, "/inventory");
-  const form = page.getByTestId("record-loss");
+  const form = await inventoryForm(page, "loss", "record-loss");
   await form.getByLabel("What kind of loss").selectOption("damaged");
   await form.getByLabel("Item").selectOption({ label: "Loss sorbet" });
   const from = form.getByLabel("From batch");
@@ -305,7 +305,7 @@ console.log("▸ a manager's correction says what it does, and a large one is as
   const before = moves();
   const { ctx, page } = await signIn(browser, "manager");
   await open(page, "/inventory");
-  const form = page.getByTestId("correct-stock");
+  const form = await inventoryForm(page, "correct", "correct-stock");
   await form.getByLabel("Item").selectOption({ label: "E2E Trays" });
   await form.getByLabel(/^Change/).fill("100");
   await form.getByLabel("Why (required)").fill("E2E recount");

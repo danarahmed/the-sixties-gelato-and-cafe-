@@ -6,7 +6,7 @@
 // from the invoice; a sale keeps the name it was sold under; and the owner
 // reads all of it on the audit trail, with the values before and after, and
 // downloads it. (Run last: it renames things the other suites do not use.)
-import { chromium, BASE, check, done, open, signIn, sql } from "./lib.mjs";
+import { chromium, BASE, check, done, inventoryForm, open, signIn, sql } from "./lib.mjs";
 
 const browser = await chromium.launch();
 
@@ -271,7 +271,7 @@ console.log(
 
   // On Inventory, the same warning; a look-alike opens its page.
   await open(page, "/inventory");
-  const add = page.getByTestId("new-item-form");
+  const add = await inventoryForm(page, "add", "new-item-form");
   await add.getByLabel("Name (English)").fill("E2E sparkling watr");
   await add.getByTestId("look-alikes").waitFor({ timeout: 10000 });
   check(

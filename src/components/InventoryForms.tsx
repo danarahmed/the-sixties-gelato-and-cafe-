@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { adjustStockAction, recordLossAction, recordOpeningStockAction } from "@/lib/actions/stock";
 import { fmtIQD, fmtQty, unitName } from "@/lib/format";
@@ -19,7 +19,7 @@ import { Field, Notice, inputStyle } from "@/components/ui";
 import { NewItemForm } from "@/components/NewItemForm";
 import { OperationStatus, useOperation } from "@/components/useOperation";
 import { ManagerApproval } from "@/components/ManagerApproval";
-import { Icon } from "@/components/Icon";
+import { Icon, type IconName } from "@/components/Icon";
 
 interface ItemOpt {
   id: string;
@@ -80,15 +80,57 @@ export function InventoryForms({
   /** Each item's stock here and what one base unit costs, for a correction to show its effect. */
   onHand?: Record<string, { qty: number; cost: number | null }>;
 }) {
-  if (!canAddItem && !canWaste && !canCorrect) return null;
+  const { t } = useT();
+  // What this person may do here, the most done first: each opens its form.
+  const actions: { key: Action; label: string; icon: IconName }[] = [
+    ...(canWaste
+      ? [{ key: "loss" as const, label: t("Record a loss"), icon: "trash" as const }]
+      : []),
+    ...(canCorrect
+      ? [{ key: "correct" as const, label: t("Correct stock (manager)"), icon: "pencil" as const }]
+      : []),
+    ...(canAddItem
+      ? [{ key: "add" as const, label: t("Add stock item"), icon: "plus" as const }]
+      : []),
+    ...(isOwner && unstocked.length > 0
+      ? [{ key: "opening" as const, label: t("Opening stock"), icon: "box" as const }]
+      : []),
+  ];
+  // One form at a time, below the buttons; someone with one thing to do here has it open.
+  const [open, setOpen] = useState<Action | null>(actions.length === 1 ? actions[0]!.key : null);
+  const keys = actions.map((a) => a.key).join();
+  // A link to a form opens it: /inventory#record-loss.
+  useEffect(() => {
+    const asked = (Object.keys(ANCHOR) as Action[]).find(
+      (k) => `#${ANCHOR[k]}` === window.location.hash,
+    );
+    if (asked && keys.split(",").includes(asked)) setOpen(asked);
+  }, [keys]);
+  if (actions.length === 0) return null;
+  function toggle(key: Action) {
+    const next = open === key ? null : key;
+    setOpen(next);
+    const { pathname, search } = window.location;
+    window.history.replaceState(null, "", next ? `#${ANCHOR[next]}` : `${pathname}${search}`);
+  }
   return (
-    <div
-      className="grid"
-      style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px,1fr))", gap: 16 }}
-    >
-      {isOwner && unstocked.length > 0 && <OpeningStock items={unstocked} />}
-      {canAddItem && <AddItem isOwner={isOwner} items={items} />}
-      {canWaste && (
+    <section className="grid inv-actions" style={{ gap: 12 }} data-testid="inventory-actions">
+      <div className="inv-buttons">
+        {actions.map((a) => (
+          <button
+            key={a.key}
+            type="button"
+            className={open === a.key ? "btn-soft active" : "btn-soft"}
+            aria-expanded={open === a.key}
+            data-testid={`inv-open-${a.key}`}
+            onClick={() => toggle(a.key)}
+          >
+            <Icon name={a.icon} size={16} /> {a.label}
+            {a.key === "opening" && <span className="badge warn">{unstocked.length}</span>}
+          </button>
+        ))}
+      </div>
+      {open === "loss" && (
         <RecordLoss
           items={items}
           products={products}
@@ -97,10 +139,22 @@ export function InventoryForms({
           lossWindow={lossWindow}
         />
       )}
-      {canCorrect && <CorrectStock items={items} onHand={onHand} lossLimit={lossLimit} />}
-    </div>
+      {open === "correct" && <CorrectStock items={items} onHand={onHand} lossLimit={lossLimit} />}
+      {open === "add" && <AddItem isOwner={isOwner} items={items} />}
+      {open === "opening" && <OpeningStock items={unstocked} />}
+    </section>
   );
 }
+
+type Action = "loss" | "correct" | "add" | "opening";
+
+/** The address of each form, for a link that opens it. */
+const ANCHOR: Record<Action, string> = {
+  loss: "record-loss",
+  correct: "correct-stock",
+  add: "add-item",
+  opening: "opening-stock",
+};
 
 function AddItem({ isOwner, items }: { isOwner: boolean; items: ItemOpt[] }) {
   const { t } = useT();
