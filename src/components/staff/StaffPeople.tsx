@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   saveEmployeeAction,
@@ -48,6 +48,12 @@ export function StaffPeople({
   const { t } = useT();
   const [open, setOpen] = useState<Open>(null);
   const [adding, setAdding] = useState(false);
+  // A link to the form opens it: Getting set up's /staff#add-person.
+  useEffect(() => {
+    if (!canManage || window.location.hash !== "#add-person") return;
+    setAdding(true);
+    document.getElementById("add-person")?.scrollIntoView({ block: "center" });
+  }, [canManage]);
   const seesPay = people.some((p) => p.pay !== null);
   const toggle = (what: NonNullable<Open>["what"], id: string) =>
     setOpen((o) => (o && o.what === what && o.id === id ? null : { what, id }));
@@ -98,7 +104,7 @@ export function StaffPeople({
       )}
       {canManage &&
         (adding ? (
-          <div className="card grid" style={{ gap: 10 }}>
+          <div className="card grid" style={{ gap: 10 }} id="add-person">
             <b>{t("Someone new")}</b>
             <PersonForm
               places={places}
@@ -114,6 +120,7 @@ export function StaffPeople({
             style={{ alignSelf: "start" }}
             onClick={() => setAdding(true)}
             data-testid="add-person"
+            id="add-person"
           >
             {t("+ Add someone who works here")}
           </button>

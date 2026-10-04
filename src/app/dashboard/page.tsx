@@ -35,6 +35,17 @@ import { Icon } from "@/components/Icon";
 import { isMorning } from "@/lib/startofday";
 import { getPriceRises } from "@/lib/db/prices";
 import { wholeDates } from "@/lib/i18n/core";
+import { cookies } from "next/headers";
+import { getSetupCounts } from "@/lib/db/setup";
+import {
+  SETUP_HIDE_COOKIE,
+  SETUP_SKIP_COOKIE,
+  setupShown,
+  setupSteps,
+  skippedFrom,
+  type SetupKey,
+} from "@/lib/setup";
+import { GettingSetUp } from "@/components/dashboard/GettingSetUp";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +95,12 @@ export default async function DashboardPage() {
   const risesRead = analyse
     ? getPriceRises(today, { days: 14, touches: false }).catch(() => [])
     : Promise.resolve([]);
+  // Getting set up (round seven): how far a new café has come. Never what
+  // keeps the dashboard from drawing.
+  const setupRead = getSetupCounts(
+    profile.timezone,
+    has(profile, "staff.manage") || has(profile, "attendance.edit") || has(profile, "payroll.view"),
+  ).catch(() => null);
   const [
     alerts,
     brief,
@@ -416,6 +433,28 @@ export default async function DashboardPage() {
   const usualByHour = new Map(usual.map((h) => [h.hour, h]));
   const hh = (h: number) => `${String(h).padStart(2, "0")}:00`;
 
+  // Each step is the person's to do if they may add what it asks for.
+  const setupCan: Record<SetupKey, boolean> = {
+    items:
+      has(profile, "settings.manage") ||
+      has(profile, "purchase.create") ||
+      has(profile, "inventory.adjust.approve"),
+    suppliers: has(profile, "purchase.create"),
+    recipes: has(profile, "recipe.edit"),
+    products: has(profile, "recipe.edit"),
+    tables: has(profile, "settings.manage") || has(profile, "day.close"),
+    staff: has(profile, "staff.manage"),
+    sale: has(profile, "sale.create"),
+  };
+  const jar = await cookies();
+  const setupCounts = await setupRead;
+  const setup = setupCounts
+    ? setupSteps(setupCounts, setupCan, skippedFrom(jar.get(SETUP_SKIP_COOKIE)?.value))
+    : [];
+  const showSetup =
+    setupCounts !== null &&
+    setupShown(setup, setupCounts, today, jar.get(SETUP_HIDE_COOKIE)?.value === "1");
+
   const closing = has(profile, "day.close") && (hour >= 16 || hour < 4);
   const opening = has(profile, "day.close") && isMorning(hour);
   const firstName = (profile.name ?? "").trim().split(/\s+/)[0] ?? "";
@@ -460,7 +499,12 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <TourOffer tourKey="dashboard" />
+      {showSetup && (
+        <GettingSetUp steps={setup} staffWithoutPin={setupCounts?.staffWithoutPin ?? 0} />
+      )}
+
+      {/* A café still being set up has its list first; the tour is a menu away. */}
+      {!showSetup && <TourOffer tourKey="dashboard" />}
 
       <NeedsYou
         alerts={alerts}

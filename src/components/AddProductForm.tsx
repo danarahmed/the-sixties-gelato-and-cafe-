@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import { createProductAction, setPriceAction } from "@/lib/actions/menu";
@@ -54,6 +55,12 @@ export function AddProductForm({
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
   const [open, setOpen] = useState(false);
+  // A link to the form opens it: Getting set up's /products#add-product.
+  useEffect(() => {
+    if (window.location.hash !== "#add-product") return;
+    setOpen(true);
+    document.getElementById("add-product")?.scrollIntoView({ block: "start" });
+  }, []);
   const [name, setName] = useState("");
   const [nameAr, setNameAr] = useState("");
   const [nameCkb, setNameCkb] = useState("");
@@ -123,17 +130,20 @@ export function AddProductForm({
 
   if (items.length === 0) {
     return (
-      <div className="card">
+      <div className="card" id="add-product">
         <strong>{t("Add a menu product")}</strong>
         <p className="muted" style={{ fontSize: ".9rem" }}>
           {t("First add stock items on Inventory, so the recipe has ingredients to use.")}
         </p>
+        <Link href="/inventory#paste-items" className="btn-soft" data-testid="product-needs-items">
+          <Icon name="plus" size={16} /> {t("Add stock items")}
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="card grid" style={{ gap: 12 }}>
+    <div className="card grid" style={{ gap: 12 }} id="add-product">
       <button
         className="btn-primary"
         onClick={() => setOpen((o) => !o)}
@@ -343,6 +353,12 @@ export function PriceChange({
   const { set, name: channelName } = useChannels();
   const [busy, start] = useTransition();
   const [open, setOpen] = useState(false);
+  // A link to the form opens it: Getting set up's /products#add-product.
+  useEffect(() => {
+    if (window.location.hash !== "#add-product") return;
+    setOpen(true);
+    document.getElementById("add-product")?.scrollIntoView({ block: "start" });
+  }, []);
   const [channel, setChannel] = useState<SalesChannel>("dine_in");
   const [price, setPrice] = useState("");
   const [from, setFrom] = useState(today);

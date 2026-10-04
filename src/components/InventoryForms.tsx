@@ -17,6 +17,7 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import { normaliseNumber } from "@/lib/validation";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { NewItemForm } from "@/components/NewItemForm";
+import { PasteItems } from "@/components/PasteItems";
 import { OperationStatus, useOperation } from "@/components/useOperation";
 import { ManagerApproval } from "@/components/ManagerApproval";
 import { Icon, type IconName } from "@/components/Icon";
@@ -99,11 +100,12 @@ export function InventoryForms({
   // One form at a time, below the buttons; someone with one thing to do here has it open.
   const [open, setOpen] = useState<Action | null>(actions.length === 1 ? actions[0]!.key : null);
   const keys = actions.map((a) => a.key).join();
-  // A link to a form opens it: /inventory#record-loss.
+  // A link to a form opens it: /inventory#record-loss, and #paste-items the list to paste.
   useEffect(() => {
-    const asked = (Object.keys(ANCHOR) as Action[]).find(
-      (k) => `#${ANCHOR[k]}` === window.location.hash,
-    );
+    const asked =
+      window.location.hash === `#${PASTE_ANCHOR}`
+        ? "add"
+        : (Object.keys(ANCHOR) as Action[]).find((k) => `#${ANCHOR[k]}` === window.location.hash);
     if (asked && keys.split(",").includes(asked)) setOpen(asked);
   }, [keys]);
   if (actions.length === 0) return null;
@@ -155,15 +157,63 @@ const ANCHOR: Record<Action, string> = {
   add: "add-item",
   opening: "opening-stock",
 };
+/** The new item form, open on its list to paste (round seven). */
+const PASTE_ANCHOR = "paste-items";
 
+/**
+ * A stock item added: one, in its form, or many, pasted from a spreadsheet
+ * (round seven). A café with no items yet, or a link to #paste-items, opens
+ * on the list to paste.
+ */
 function AddItem({ isOwner, items }: { isOwner: boolean; items: ItemOpt[] }) {
   const { t } = useT();
+  const [mode, setMode] = useState<"one" | "paste">(items.length === 0 ? "paste" : "one");
+  useEffect(() => {
+    if (window.location.hash === `#${PASTE_ANCHOR}`) setMode("paste");
+  }, []);
+  function choose(m: "one" | "paste") {
+    setMode(m);
+    const { pathname, search } = window.location;
+    window.history.replaceState(
+      null,
+      "",
+      `${pathname}${search}#${m === "paste" ? PASTE_ANCHOR : ANCHOR.add}`,
+    );
+  }
   return (
     <div className="card grid" style={{ gap: 10, alignContent: "start" }}>
-      <h3 style={{ margin: 0 }}>
-        <Icon name="plus" /> {t("Add stock item")}
-      </h3>
-      <NewItemForm items={items} isOwner={isOwner} />
+      <div className="add-item-head">
+        <h3 style={{ margin: 0 }}>
+          <Icon name="plus" /> {t("Add stock item")}
+        </h3>
+        <div className="seg" role="tablist" aria-label={t("Add stock item")}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "one"}
+            className={mode === "one" ? "active" : undefined}
+            onClick={() => choose("one")}
+            data-testid="add-one"
+          >
+            {t("One item")}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "paste"}
+            className={mode === "paste" ? "active" : undefined}
+            onClick={() => choose("paste")}
+            data-testid="add-paste"
+          >
+            {t("Paste a list")}
+          </button>
+        </div>
+      </div>
+      {mode === "one" ? (
+        <NewItemForm items={items} isOwner={isOwner} />
+      ) : (
+        <PasteItems items={items} isOwner={isOwner} />
+      )}
     </div>
   );
 }

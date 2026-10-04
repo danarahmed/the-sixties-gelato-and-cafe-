@@ -4969,6 +4969,100 @@ a.card.stat[aria-current="true"] {
 .inv-actions > .card {
   max-width: 760px;
 }
+/* Paste stock items in (round seven): the list is wider than one item's form. */
+.inv-actions > .card:has(.paste-items) {
+  max-width: 1080px;
+}
+.add-item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.paste-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: col;
+}
+.paste-cols li {
+  counter-increment: col;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 4px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 0.8rem;
+}
+.paste-cols li::before {
+  content: counter(col);
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface);
+  font-weight: 700;
+  font-size: 0.72rem;
+}
+.paste-cols li.needed {
+  font-weight: 700;
+}
+.paste-cols li.needed::before {
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+.paste-opts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+.paste-table td {
+  vertical-align: middle;
+}
+.paste-table .cell-sub {
+  display: block;
+}
+.paste-row-off td {
+  background: color-mix(in srgb, var(--err) 5%, transparent);
+}
+.paste-ok,
+.paste-warn,
+.paste-bad {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.paste-ok {
+  color: var(--ok);
+}
+.paste-warn {
+  color: var(--warn);
+}
+.paste-bad {
+  color: var(--err);
+}
+.paste-other {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-weight: 500;
+}
+.paste-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
 
 /* A batch's labels, on its page and as soon as it is recorded: how many, and print. */
 .label-print {
@@ -5576,5 +5670,241 @@ kbd {
   .tour-layer,
   .tour-offer {
     display: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Getting set up (round seven): a new café's steps, on the dashboard.
+   --------------------------------------------------------------------------- */
+.setup {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  margin-block-end: 14px;
+  overflow: hidden;
+}
+.setup::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--glow);
+}
+.setup-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.setup-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 650;
+}
+.setup-head p {
+  margin: 2px 0 0;
+  font-size: 0.88rem;
+}
+.setup-progress {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+.setup-bar {
+  display: block;
+  width: 160px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.setup-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--glow);
+  transition: width 0.3s ease;
+}
+.setup-steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.setup-step {
+  --chip: var(--f-caramel);
+  display: grid;
+  grid-template-columns: 28px 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.setup-step[data-step="items"] {
+  --chip: var(--f-mango);
+}
+.setup-step[data-step="suppliers"] {
+  --chip: var(--f-caramel);
+}
+.setup-step[data-step="recipes"] {
+  --chip: var(--f-pistachio);
+}
+.setup-step[data-step="products"] {
+  --chip: var(--f-raspberry);
+}
+.setup-step[data-step="tables"] {
+  --chip: var(--f-blueberry);
+}
+.setup-step[data-step="staff"] {
+  --chip: var(--f-mint);
+}
+.setup-step[data-step="sale"] {
+  --chip: var(--f-chocolate);
+}
+.setup-step.next {
+  border-color: color-mix(in oklab, var(--brand) 55%, var(--border));
+  background: color-mix(in oklab, var(--brand-soft) 45%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand-soft) 80%, transparent);
+}
+.setup-step.done {
+  background: color-mix(in oklab, var(--ok) 6%, var(--surface));
+}
+.setup-step.skipped {
+  background: var(--surface-2);
+}
+.setup-step.skipped .setup-body strong,
+.setup-step.skipped .setup-icon {
+  opacity: 0.6;
+}
+.setup-mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-weight: 750;
+  font-size: 0.85rem;
+}
+.setup-step.next .setup-mark {
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+.setup-step.done .setup-mark {
+  background: var(--ok);
+  color: #fff;
+}
+.setup-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--chip) 20%, var(--surface));
+  color: color-mix(in oklab, var(--chip) 62%, var(--text));
+}
+.setup-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.setup-body strong {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.setup-body .muted {
+  font-size: 0.85rem;
+}
+.badge.setup-next {
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-size: 0.7rem;
+  padding: 1px 8px;
+}
+.setup-note {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.setup-note a {
+  color: var(--warn);
+}
+.setup-act {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 10px;
+}
+.setup-act .btn-primary,
+.setup-act .btn-soft {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+.setup-count {
+  color: var(--ok);
+  font-weight: 700;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+.setup-theirs {
+  font-size: 0.82rem;
+  max-width: 220px;
+  text-align: end;
+}
+.setup-link {
+  min-height: 32px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.setup-link:hover {
+  color: var(--text);
+}
+.setup-foot {
+  display: flex;
+  justify-content: flex-end;
+}
+@media (max-width: 640px) {
+  .setup-step {
+    grid-template-columns: 28px minmax(0, 1fr);
+    grid-template-areas:
+      "mark body"
+      ". act";
+  }
+  .setup-mark {
+    grid-area: mark;
+  }
+  .setup-icon {
+    display: none;
+  }
+  .setup-body {
+    grid-area: body;
+  }
+  .setup-act {
+    grid-area: act;
+    justify-content: flex-start;
+  }
+  .setup-theirs {
+    text-align: start;
+  }
+  .setup-progress {
+    justify-items: start;
   }
 }
