@@ -45,6 +45,7 @@ export function ColumnChart({
   reference,
   labels,
   height = 180,
+  sparse = false,
 }: {
   title: string;
   columns: Column[];
@@ -55,6 +56,8 @@ export function ColumnChart({
   reference?: { value: number; label: string };
   labels: { table: string; heading: string };
   height?: number;
+  /** A month of columns: on a phone, a label a week, the last always among them. */
+  sparse?: boolean;
 }) {
   const [active, setActive] = useState<number | null>(null);
   const [focusIndex, setFocusIndex] = useState(Math.max(columns.length - 1, 0));
@@ -104,7 +107,10 @@ export function ColumnChart({
     : [];
 
   return (
-    <figure className="viz" style={{ ["--plot-h" as string]: `${height}px` }}>
+    <figure
+      className={sparse ? "viz viz-sparse" : "viz"}
+      style={{ ["--plot-h" as string]: `${height}px` }}
+    >
       <figcaption className="viz-head">
         <span className="viz-title">{title}</span>
         {(line || hasReference) && (

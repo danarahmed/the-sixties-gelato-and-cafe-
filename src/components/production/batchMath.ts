@@ -106,3 +106,19 @@ export function labelsFor(actual: number, entered: string, item: UnitsOf | undef
   if (!f || f <= 1 || !(actual > 0)) return 1;
   return Math.min(20, Math.max(1, Math.ceil(new Decimal(actual).div(f).toNumber() - 1e-9)));
 }
+
+/**
+ * Batches to record together, in an order that makes each before what is made
+ * from it: a base before the flavours that use it. Otherwise as given; a
+ * recipe that uses what another makes, and the other this, keep their order.
+ */
+export function makeOrder<T extends { outputItemId: string; uses: string[] }>(rows: T[]): T[] {
+  const left = [...rows];
+  const out: T[] = [];
+  while (left.length) {
+    // The first whose ingredients no other row still to come makes.
+    const i = left.findIndex((r) => left.every((o) => o === r || !r.uses.includes(o.outputItemId)));
+    out.push(...left.splice(i === -1 ? 0 : i, 1));
+  }
+  return out;
+}

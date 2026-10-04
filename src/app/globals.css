@@ -327,6 +327,10 @@ button:focus-visible {
   border-color: transparent;
   color: var(--brand-ink);
 }
+/* Ticks, choices and sliders in the café's raspberry, not the browser's blue. */
+html {
+  accent-color: var(--brand);
+}
 input,
 select,
 textarea {
@@ -1318,6 +1322,26 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   background: transparent;
 }
 .seg button.active {
+  background: var(--brand);
+  color: var(--brand-ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+/* The same choice as links: the page one is on, filled. */
+.seg a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 16px;
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.seg a:hover {
+  background: var(--surface);
+}
+.seg a[aria-current="page"] {
   background: var(--brand);
   color: var(--brand-ink);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
@@ -4452,6 +4476,17 @@ a.card.stat:focus-visible {
   .viz-xlabel:nth-last-child(even) {
     visibility: hidden;
   }
+  /* A month's days: one a week. */
+  .viz-sparse .viz-xlabel {
+    visibility: hidden;
+  }
+  .viz-sparse .viz-xlabel:nth-last-child(7n + 1) {
+    visibility: visible;
+  }
+  /* A month's line on a phone is the line: thirty dots would hide it. */
+  .viz-sparse .viz-dot {
+    display: none;
+  }
 }
 .viz-table > summary {
   cursor: pointer;
@@ -4956,11 +4991,211 @@ a.card.stat[aria-current="true"] {
   padding: 0 14px;
 }
 
-/* The week at a glance: the weeks a tap apart; what sold and what was lost side by side. */
+/* The price watch: an item that came in dearer, and what it touches. */
+.price-rise {
+  display: grid;
+  gap: 10px;
+  border-inline-start: 4px solid var(--warn);
+}
+.price-rise-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.price-rise-head h2 {
+  margin: 0;
+}
+.price-rise-was {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.price-rise-month {
+  margin: 0;
+  font-weight: 600;
+  color: var(--warn);
+}
+.warn-text {
+  color: var(--warn);
+  font-weight: 650;
+}
+
+/* The till from a keyboard: what Enter adds, how many, and the keys listed. */
+/* A dialog takes the keyboard as it opens: itself, without a ring round it. */
+.pos-modal:focus {
+  outline: none;
+}
+.product-tile.kb-on {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+  box-shadow: 0 6px 18px rgba(184, 55, 91, 0.25);
+}
+.kb-times {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+.kb-help-button {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+/* The keys are for a till with a keyboard: a touch screen has no use for the "?". */
+@media (hover: none), (pointer: coarse) {
+  .kb-help-button {
+    display: none;
+  }
+}
+.kb-help {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(43, 27, 20, 0.12);
+  font-size: 0.85rem;
+}
+.kb-help dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 6px 18px;
+  margin: 8px 0 0;
+}
+.kb-help dl > div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.kb-help dt {
+  flex: none;
+  min-width: 52px;
+}
+.kb-help dd {
+  margin: 0;
+  color: var(--text-muted);
+}
+kbd {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+  border-block-end-width: 2px;
+  background: var(--surface-2);
+  font:
+    600 0.78rem/1.4 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  color: var(--text);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* The day's plan recorded in one go: a row a recipe, filled in as the plan says. */
+.plan-all {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.plan-all > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 650;
+  color: var(--brand);
+  list-style: none;
+}
+.plan-all > summary::-webkit-details-marker {
+  display: none;
+}
+.plan-all[open] > summary {
+  border-block-end: 1px solid var(--border);
+}
+.plan-all-body {
+  display: grid;
+  gap: 12px;
+  padding: 12px 14px 14px;
+}
+.plan-all-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.plan-all-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border-inline-start: 3px solid var(--brand);
+}
+.plan-all-row[data-state="skipped"] {
+  opacity: 0.6;
+  border-inline-start-color: var(--border);
+}
+.plan-all-row.done {
+  border-inline-start-color: var(--ok);
+}
+.plan-all-row.refused {
+  border-inline-start-color: var(--err);
+}
+.plan-all-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 180px;
+  flex: 1 1 180px;
+  align-self: center;
+}
+.plan-all-pick input {
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  flex: none;
+}
+.plan-all-field {
+  display: grid;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.plan-all-said {
+  flex: 1 1 100%;
+  font-size: 0.85rem;
+}
+.plan-all-said.ok {
+  flex: 2 1 260px;
+  color: var(--ok);
+  align-self: center;
+}
+
+/* The week and the month at a glance: a week or a month, each a tap from the one before; what sold and what was lost side by side. */
 .week-nav {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
+}
+.week-nav > .seg {
+  margin-inline-end: 6px;
 }
 .week-two {
   display: grid;

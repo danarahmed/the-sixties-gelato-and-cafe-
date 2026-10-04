@@ -6,6 +6,7 @@ import type { PosItem } from "@/lib/db/pos";
 import { fmtIQD, fmtQty } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { addonNames, lineName, linePrice, type AddonMenu, type Order } from "./model";
+import { useDialogFocus } from "./dialogFocus";
 
 /**
  * One table, several payers: choose what moves to a bill of its own. That
@@ -32,6 +33,7 @@ export function SplitDialog({
   onClose: () => void;
 }) {
   const { t, locale } = useT();
+  const dialogBox = useDialogFocus<HTMLDivElement>();
   const [move, setMove] = useState<Record<string, number>>({});
   const [label, setLabel] = useState(defaultLabel);
   const lines = order.lines.filter((l) => l.lineId);
@@ -50,6 +52,8 @@ export function SplitDialog({
   return (
     <div className="pos-modal-back" onClick={() => !busy && onClose()}>
       <div
+        ref={dialogBox}
+        tabIndex={-1}
         className="pos-modal"
         role="dialog"
         aria-modal="true"

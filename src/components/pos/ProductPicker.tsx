@@ -1,11 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { PosItem } from "@/lib/db/pos";
 import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
-import { categoryName, fold, productName, type AddonChoice, type AddonMenu } from "./model";
+import {
+  categoryName,
+  fold,
+  productName,
+  searchedTimes,
+  type AddonChoice,
+  type AddonMenu,
+} from "./model";
 import { OptionsSheet } from "./OptionsSheet";
 
 const ALL = "all";
@@ -56,10 +69,41 @@ export function ProductThumb({
   return <span className={`tile-img tile-initials flavour-${h}`}>{initials}</span>;
 }
 
+/** The till's keys, as the "?" lists them: the key, and what it does. */
+const KEYS: [string, string][] = [
+  ["A–Z", "Find a product by its name"],
+  ["↑ ↓", "Choose among what is found"],
+  ["Enter", "Add it to the order"],
+  ["1–9", "How many of the next one: 3, then a product, adds three"],
+  ["F2", "Take cash: Enter then takes the exact amount"],
+  ["F4", "Take a card"],
+  ["Esc", "Clear what was typed"],
+  ["/", "Go to the search"],
+  ["?", "Show or hide these keys"],
+];
+
+/** Whether a key press is someone typing into a box, or a dialog's, not the till's. */
+function typingElsewhere(e: KeyboardEvent): boolean {
+  const el = e.target as HTMLElement | null;
+  const tag = el?.tagName;
+  return (
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    tag === "SELECT" ||
+    Boolean(el?.isContentEditable) ||
+    // Any dialog open over the till: the keys are its.
+    document.querySelector('[aria-modal="true"]') !== null
+  );
+}
+
 /**
  * The menu, built for a hundred products and more: favourites and categories
  * one tap away, a search that takes Arabic and Kurdish spellings, and a
  * picture on every tile. Only what can be sold on the channel is shown.
+ *
+ * With a keyboard (round five): a name typed anywhere on the till finds it,
+ * the arrows choose among what is found and Enter adds it; a number typed
+ * first adds that many of the next one; Escape clears; "?" lists the keys.
  */
 export function ProductPicker({
   items,
@@ -67,6 +111,7 @@ export function ProductPicker({
   channel,
   counts,
   disabled,
+  quiet = false,
   onAdd,
 }: {
   items: PosItem[];
@@ -76,12 +121,19 @@ export function ProductPicker({
   /** How many of each product the order already holds, shown on its tile. */
   counts: Map<string, number>;
   disabled: boolean;
-  onAdd: (variantId: string, addons: AddonChoice[]) => void;
+  /** One of the till's own dialogs is open: the keys are its. */
+  quiet?: boolean;
+  onAdd: (variantId: string, addons: AddonChoice[], qty: number) => void;
 }) {
-  const { t, locale } = useT();
+  const { t, locale, dir } = useT();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>(ALL);
-  const [choosing, setChoosing] = useState<Product | null>(null);
+  const [choosing, setChoosing] = useState<{ product: Product; qty: number } | null>(null);
+  // How many of the next product, typed as a number first.
+  const [times, setTimes] = useState("");
+  // Which of what is found Enter adds: the first, unless the arrows choose another.
+  const [hl, setHl] = useState(0);
+  const [help, setHelp] = useState(false);
   const search = useRef<HTMLInputElement>(null);
 
   const sellable = useMemo(
@@ -124,8 +176,10 @@ export function ProductPicker({
       ? category
       : ALL;
 
+  // "3*latte": three of what is found for "latte".
+  const asked = searchedTimes(query);
   const shown = useMemo(() => {
-    const q = fold(query);
+    const q = fold(searchedTimes(query).find);
     return products.filter((p) => {
       if (q) {
         const names = p.variants.flatMap((v) => [
@@ -143,27 +197,72 @@ export function ProductPicker({
     });
   }, [products, query, activeCategory]);
 
-  // "/" jumps to the search from anywhere on the till, as on most tills with a keyboard.
+  // The till's keys, from anywhere on it but a box being typed in or a dialog:
+  // "/" goes to the search, a letter starts one, a number is how many of the
+  // next product, Escape clears, "?" lists them.
+  const free = !quiet && !choosing;
   useEffect(() => {
+    if (!free) return;
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (e.key === "/" && tag !== "INPUT" && tag !== "TEXTAREA" && tag !== "SELECT") {
+      if (e.ctrlKey || e.metaKey || e.altKey || typingElsewhere(e)) return;
+      if (e.key === "/") {
         e.preventDefault();
+        search.current?.focus();
+      } else if (e.key === "?") {
+        e.preventDefault();
+        setHelp((h) => !h);
+      } else if (e.key === "Escape") {
+        setTimes("");
+        setQuery("");
+        setHelp(false);
+      } else if (/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        setTimes((n) => (n + e.key).replace(/^0+/, "").slice(0, 2));
+      } else if (e.key === "Backspace" && times) {
+        e.preventDefault();
+        setTimes((n) => n.slice(0, -1));
+      } else if (e.key.length === 1 && /\p{L}/u.test(e.key)) {
+        e.preventDefault();
+        setQuery(e.key);
+        setHl(0);
         search.current?.focus();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [free, times]);
 
+  // A number typed first and left: gone after ten seconds, so a key pressed by
+  // mistake never adds five of whatever is tapped next.
+  useEffect(() => {
+    if (!times) return;
+    const gone = setTimeout(() => setTimes(""), 10_000);
+    return () => clearTimeout(gone);
+  }, [times]);
+
+  /** Add a product: as many as typed first, or asked in the search; then the count is done with. */
   function pick(p: Product) {
     if (disabled) return;
+    const qty = asked.times ?? (Number(times) || 1);
+    setTimes("");
     const only = p.variants.length === 1 ? p.variants[0]! : null;
     // One size and nothing to add to it: added as it is tapped.
     if (only && addons.groupsFor(only.productId, only.variantId).length === 0)
-      onAdd(only.variantId, []);
-    else setChoosing(p);
+      onAdd(only.variantId, [], qty);
+    else setChoosing({ product: p, qty });
   }
+
+  /** The arrows along what is found: the next one is to the right in English, to the left in Arabic and Kurdish. */
+  function move(e: ReactKeyboardEvent<HTMLInputElement>) {
+    const forward = dir === "rtl" ? "ArrowLeft" : "ArrowRight";
+    const back = dir === "rtl" ? "ArrowRight" : "ArrowLeft";
+    if (e.key === "ArrowDown" || e.key === forward)
+      setHl((i) => Math.min(i + 1, Math.max(shown.length - 1, 0)));
+    else if (e.key === "ArrowUp" || e.key === back) setHl((i) => Math.max(i - 1, 0));
+    else return;
+    e.preventDefault();
+  }
+  const lit = query.trim() !== "" ? Math.min(hl, Math.max(shown.length - 1, 0)) : -1;
 
   const qtyOf = (p: Product) => p.variants.reduce((n, v) => n + (counts.get(v.variantId) ?? 0), 0);
   const priceOf = (p: Product) => {
@@ -191,22 +290,60 @@ export function ProductPicker({
           value={query}
           placeholder={t("pos.search")}
           aria-label={t("pos.search")}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setHl(0);
+          }}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && shown[0]) {
+            const chosen = shown[lit];
+            if (e.key === "Enter" && chosen) {
               e.preventDefault();
-              pick(shown[0]);
+              pick(chosen);
               setQuery("");
-            }
-            if (e.key === "Escape") setQuery("");
+              setHl(0);
+            } else if (e.key === "Escape") {
+              setQuery("");
+              setTimes("");
+            } else if (query.trim() !== "") move(e);
           }}
         />
+        {(asked.times ?? Number(times)) > 0 && (
+          <span className="kb-times" data-testid="kb-times" aria-live="polite">
+            × {asked.times ?? Number(times)}
+          </span>
+        )}
         {query && (
           <button className="linklike" onClick={() => setQuery("")}>
             {t("pos.clearSearch")}
           </button>
         )}
+        <button
+          type="button"
+          className="kb-help-button"
+          aria-expanded={help}
+          aria-controls="kb-help"
+          aria-label={t("Keys on the till")}
+          title={t("Keys on the till")}
+          onClick={() => setHelp((h) => !h)}
+        >
+          ?
+        </button>
       </div>
+      {help && (
+        <div id="kb-help" className="kb-help" role="note" data-testid="kb-help">
+          <strong>{t("Keys on the till")}</strong>
+          <dl>
+            {KEYS.map(([k, what]) => (
+              <div key={k}>
+                <dt>
+                  <kbd>{k}</kbd>
+                </dt>
+                <dd>{t(what)}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
 
       <div className="picker-body">
         {!query && (
@@ -264,13 +401,14 @@ export function ProductPicker({
             </p>
           ) : (
             <div className="product-grid">
-              {shown.map((p) => {
+              {shown.map((p, i) => {
                 const name = productName(p.item, locale);
                 const n = qtyOf(p);
                 return (
                   <button
                     key={p.productId}
-                    className={n > 0 ? "product-tile in-order" : "product-tile"}
+                    className={`product-tile${n > 0 ? " in-order" : ""}${i === lit ? " kb-on" : ""}`}
+                    aria-current={i === lit ? "true" : undefined}
                     onClick={() => pick(p)}
                     disabled={disabled}
                   >
@@ -304,11 +442,11 @@ export function ProductPicker({
 
       {choosing && (
         <OptionsSheet
-          variants={choosing.variants}
+          variants={choosing.product.variants}
           channel={channel}
           addons={addons}
           onAdd={(variantId, chosen) => {
-            onAdd(variantId, chosen);
+            onAdd(variantId, chosen, choosing.qty);
             setChoosing(null);
           }}
           onClose={() => setChoosing(null)}

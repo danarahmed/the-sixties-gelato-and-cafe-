@@ -42,16 +42,11 @@ export function BatchLabels({
   /** How many labels to start from: one a pan the batch filled. */
   pans?: number;
 }) {
-  const { t, locale, dir } = useT();
+  const { t } = useT();
   const [count, setCount] = useState(String(pans));
   const [printing, setPrinting] = useState<number | null>(null);
   usePrintOnce(printing, () => setPrinting(null));
   const n = Math.min(20, Math.max(1, Math.floor(Number(count)) || 1));
-  const when = (iso: string) => (
-    <>
-      {t(weekdayOf(iso, timezone))} <bdi dir="ltr">{dateTimeIn(timezone, iso)}</bdi>
-    </>
-  );
   return (
     <div className="label-print" data-testid="batch-labels">
       <label className="label-count">
@@ -75,47 +70,108 @@ export function BatchLabels({
       >
         <Icon name="tag" size={16} /> {t("Print {n} label(s)", { n })}
       </button>
-      {printing !== null &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div className="print-slip" dir={dir} lang={locale}>
-            {Array.from({ length: printing }, (_, i) => (
-              <div key={i} className="slip sl-label" data-testid="pan-label">
-                <div className="sl-label-head">
-                  <Emblem className="sl-label-emblem" />
-                  <span>{businessName}</span>
-                </div>
-                <div className="sl-label-name">{batch.name}</div>
-                <div className="sl-label-batch">
-                  {t("Batch {no}", { no: batch.batchNo })}
-                  {printing > 1 && <span> · {t("Pan {i} of {n}", { i: i + 1, n: printing })}</span>}
-                </div>
-                <table className="sl-label-dates">
-                  <tbody>
-                    <tr>
-                      <th>{t("Made")}</th>
-                      <td>{when(batch.madeAt)}</td>
-                    </tr>
-                    {batch.useBy && (
-                      <tr className="sl-label-useby">
-                        <th>{t("Use by")}</th>
-                        <td>{when(batch.useBy)}</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-                {!batch.useBy && <div className="sl-label-meta">{t("No use-by")}</div>}
-                <div className="sl-label-meta">
-                  {t("The batch made {made}", { made: batch.made })}
-                  {batch.place ? ` · ${batch.place}` : ""}
-                  {batch.madeBy ? ` · ${batch.madeBy}` : ""}
-                </div>
-                {batch.lot && <div className="sl-label-lot">{batch.lot}</div>}
-              </div>
-            ))}
-          </div>,
-          document.body,
-        )}
+      {printing !== null && (
+        <LabelSlips
+          batches={[{ batch, count: printing }]}
+          businessName={businessName}
+          timezone={timezone}
+        />
+      )}
     </div>
+  );
+}
+
+/**
+ * The labels of several batches printed at once: each batch's pans, one label
+ * a pan, every one cut on its own (round five: a day's plan recorded in one go).
+ */
+export function PrintAllLabels({
+  batches,
+  businessName,
+  timezone,
+}: {
+  batches: { batch: LabelBatch; count: number }[];
+  businessName: string;
+  timezone: string;
+}) {
+  const { t } = useT();
+  const [printing, setPrinting] = useState<number | null>(null);
+  usePrintOnce(printing, () => setPrinting(null));
+  const n = batches.reduce((s, b) => s + b.count, 0);
+  if (n === 0) return null;
+  return (
+    <div className="label-print" data-testid="plan-labels">
+      <button
+        type="button"
+        className="btn-soft"
+        data-testid="print-all-labels"
+        onClick={() => setPrinting(n)}
+      >
+        <Icon name="tag" size={16} /> {t("Print {n} label(s)", { n })}
+      </button>
+      {printing !== null && (
+        <LabelSlips batches={batches} businessName={businessName} timezone={timezone} />
+      )}
+    </div>
+  );
+}
+
+/** The slips themselves, for the printer: each batch's labels, one a pan. */
+function LabelSlips({
+  batches,
+  businessName,
+  timezone,
+}: {
+  batches: { batch: LabelBatch; count: number }[];
+  businessName: string;
+  timezone: string;
+}) {
+  const { t, locale, dir } = useT();
+  if (typeof document === "undefined") return null;
+  const when = (iso: string) => (
+    <>
+      {t(weekdayOf(iso, timezone))} <bdi dir="ltr">{dateTimeIn(timezone, iso)}</bdi>
+    </>
+  );
+  return createPortal(
+    <div className="print-slip" dir={dir} lang={locale}>
+      {batches.flatMap(({ batch, count }) =>
+        Array.from({ length: count }, (_, i) => (
+          <div key={`${batch.batchNo}-${i}`} className="slip sl-label" data-testid="pan-label">
+            <div className="sl-label-head">
+              <Emblem className="sl-label-emblem" />
+              <span>{businessName}</span>
+            </div>
+            <div className="sl-label-name">{batch.name}</div>
+            <div className="sl-label-batch">
+              {t("Batch {no}", { no: batch.batchNo })}
+              {count > 1 && <span> · {t("Pan {i} of {n}", { i: i + 1, n: count })}</span>}
+            </div>
+            <table className="sl-label-dates">
+              <tbody>
+                <tr>
+                  <th>{t("Made")}</th>
+                  <td>{when(batch.madeAt)}</td>
+                </tr>
+                {batch.useBy && (
+                  <tr className="sl-label-useby">
+                    <th>{t("Use by")}</th>
+                    <td>{when(batch.useBy)}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            {!batch.useBy && <div className="sl-label-meta">{t("No use-by")}</div>}
+            <div className="sl-label-meta">
+              {t("The batch made {made}", { made: batch.made })}
+              {batch.place ? ` · ${batch.place}` : ""}
+              {batch.madeBy ? ` · ${batch.madeBy}` : ""}
+            </div>
+            {batch.lot && <div className="sl-label-lot">{batch.lot}</div>}
+          </div>
+        )),
+      )}
+    </div>,
+    document.body,
   );
 }

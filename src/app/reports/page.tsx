@@ -728,6 +728,16 @@ export default async function ReportsPage({
         </Link>
         <Link
           className="drill"
+          href={`/reports/month?month=${(to > today ? today : to).slice(0, 7)}${place && profile.worksAt === null ? `&location=${place}` : ""}`}
+          data-testid="to-month"
+        >
+          {t("The month at a glance →")}
+        </Link>
+        <Link className="drill" href="/reports/prices" data-testid="to-prices">
+          {t("Price watch: what came in dearer →")}
+        </Link>
+        <Link
+          className="drill"
           href={`/reports/stock?on=${to}${withPlace}`}
           data-testid="to-stock-value"
         >

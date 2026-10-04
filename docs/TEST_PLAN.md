@@ -13,7 +13,7 @@ project.
 `npm run verify` runs formatting, types, lint and the unit layer. Run all three
 layers before every release.
 
-## 1. Unit (Vitest, 688 tests)
+## 1. Unit (Vitest, 702 tests)
 
 - `tests/primitives.test.ts`: exact money, unit conversions, moving average
   cost, journal balancing.
@@ -148,7 +148,12 @@ layers before every release.
   and Kurdish. A batch's labels (round four): one a pan when it was weighed in
   pans, the last part full; one when weighed in kilos, grams or pieces; twenty
   at most; one for a unit the item lacks or nothing made; and the weekday its
-  dates fall on in the café's time.
+  dates fall on in the café's time. The day's plan in one go (round five): a
+  base before the flavours made from it, the rest as given, and two recipes
+  that use each other as given. The till from a keyboard (round five): as many
+  of a product as typed first, onto its line or a new one; "3*latte", "12 x"
+  and "2×" in the search, a name with a number in it ("7up") searched as it
+  is, and nought of a thing none asked.
 - `tests/plurals.test.ts`: a plural a phrase leaves open, "{n} bill(s)",
   agreeing with the number nearest before it in English ("1 bill is", "3
   bills are", "1 month's share", "2 losses wait"), in a phrase and in a
@@ -175,6 +180,24 @@ layers before every release.
   average; day by day beside the same weekday of the week before; the best
   day; the best sellers, a product new this week, and the biggest rise and
   fall in dinars (a gone product falls; a small one's large share is no news).
+  The month at a glance (round five): a month running against the same days of
+  the month before (the 30th of March against the 28th of February), a month
+  over against all of the month before, January against December; a usual
+  weekday from the days it sold (a day closed is none); each day of the month
+  against a usual day of its weekday the month before; where a month running
+  closes at the pace of its full days (today not one; none before a week, nor
+  for a month over); the weekday that sells the most and the one that sells
+  the least.
+- `tests/prices.test.ts`: the price watch (round five) — an item's latest
+  delivery against the one before, with the freight shared out, a rise of 5%
+  or more since the day asked (none too long ago, too small, cheaper or with
+  nothing to compare, a delivery with no price passed over); what a base unit
+  of each made item uses of an item through every recipe (milk in the base,
+  the base in the gelato); what a serving uses, on its recipe and through what
+  is made from it, on its channel; and what the rise does to a serving: the
+  cost and margin before (the item on the recipe at its old price, whatever
+  the average on hand) and after, what it adds, and the price that keeps the
+  margin rounded up to 250 — none when that is under half a step.
 - `tests/batches.test.ts`: a read over a long list of ids (the lines of 500
   sales) asks 100 ids at a time and reads every row once; a batch whose rows
   fill a page is read again in halves, one id's many rows a page at a time;
@@ -188,7 +211,11 @@ layers before every release.
   (`scripts/i18n-scan.mjs`); every message a form, an action or the database
   gives (`scripts/db-messages.mjs`) translated; the alerts the database tests
   raise, and the daily brief, translated whole with their values, dates and
-  account names; a translator's CSV read back as it was written.
+  account names; a translator's CSV read back as it was written. A date put in
+  a phrase for a right-to-left reader kept left to right and whole (its parts
+  joined, round five, so a line never breaks inside it), once only, a date
+  already joined marked off as one, and an invoice's or a phone's number left
+  as it is.
 - `tests/statements.test.ts`: statements read from their files. A table
   split by tabs, semicolons or commas (whichever most of its lines use),
   quoted cells across lines, a quote left open read line by line, the marks
@@ -647,7 +674,12 @@ database, behind a small local stand-in for Supabase's auth service.
   stock as good, a manager records one made two hours earlier with why and a
   use-by already past, the dashboard says it is past its use-by (red), the
   manager changes its use-by with a reason (on the audit trail), its page
-  accounts for every litre, and the day's plan waits for history; and
+  accounts for every litre, and the day's plan waits for history; then
+  (round five) six weeks of history at no value give the plan a batch of the
+  base and one of the gelato, and a barista records the plan in one go: both
+  filled in as the plan says, the base first, what came out of the gelato
+  weighed (4.8 kg), one press for both, each recorded once and saying what it
+  became, and every label printed at once (the base's, then the gelato's); and
   a product's recipe is changed from today and costed on its card. The script
   refuses to start if servers from an earlier `E2E_KEEP` run still hold its
   ports, so the checks never run against an old build.
@@ -688,9 +720,14 @@ database, behind a small local stand-in for Supabase's auth service.
   what came in by supplier; the week at a glance from Reports, its net sales
   the analysis's for the seven days to today beside the seven before's, its
   dates, seven days drawn and what it says, a week back and the way forward
-  again; no analysis for the till's cashier; the pages, the week's too, in
+  again; the month at a glance (round five) from Reports, its net sales the
+  analysis's for the month to today beside the same days of the month
+  before's, its dates, each of its days drawn, what it says and Month the one
+  chosen, a month back being all of the month before with the way forward
+  again, and the week a tap away (the one the month ends with); no analysis
+  for the till's cashier; the pages, the week's and the month's too, in
   Arabic and Kurdish; and the books still tie. `languages` includes the two
-  pages.
+  pages. The week's and the month's dates are read with their parts joined.
 - `statements` (`0052`): the owner puts 25,000 in the bank; on the day the
   earlier suites traded, the balance sheet balances, its assets and its cash
   the books'; the cash flow starts and ends at the cash the books hold, its
@@ -827,6 +864,23 @@ database, behind a small local stand-in for Supabase's auth service.
   The branch manager has it too, a cashier is sent to the till, and the
   dashboard offers it only from four until noon; `pages` and `languages` open
   it as well.
+- `keys` (round five, after `close`): the cashier rings up a sale from the
+  keyboard alone — 3 typed first is how many (× 3), the name typed anywhere on
+  the till goes to the search with what Enter adds lit, Enter adds it and the
+  search and the count are done with; with the payment open (F4) letters are
+  not taken for a search; Enter records it, once, by card, three espressos for
+  what the payment showed; "2*" in the search is two; F2 takes cash at the
+  exact amount (or asks for the drawer while none is open); "?" lists the keys
+  and Escape puts them away.
+- `prices` (round five, last): the beans come in a third dearer than the
+  delivery before (30, then 40 a gram, as their price history has them);
+  Reports leads to the price watch, which says the beans came in 33% dearer,
+  30,000 to 40,000 IQD a kilo; a dine-in espresso uses what its recipe says of
+  them, the rise adds that times 10 IQD, its margin falls, and the price that
+  keeps it is above today's; the dashboard says the beans came in dearer and
+  leads there; the page in Arabic and Kurdish; and the dearer delivery
+  corrected to 31 a gram, the beans are off the watch (3%, under the 5% it
+  says from): a delivery is read as it stands now.
 - `documents` (`0053`): a manager opens a delivery's 📎 on Purchasing (none
   kept yet) and keeps its delivery note: a phone's photo of 4 MB or so, made
   smaller in the browser (its longer side 2,000 pixels) and put in the bucket

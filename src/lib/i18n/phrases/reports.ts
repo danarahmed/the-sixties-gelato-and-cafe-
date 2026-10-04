@@ -1253,9 +1253,20 @@ const phrases: PhraseBook = {
     ar: "{amount} للطلب في المتوسط",
     ckb: "بە تێکڕا {amount} بۆ هەر داواکارییەک",
   },
-  "{amount} the week before.": {
-    ar: "{amount} في الأسبوع السابق.",
-    ckb: "{amount} لە هەفتەی پێشوودا.",
+  // What a figure is set against: the week before, the same days of the month before, or all of it.
+  "the week before": { ar: "الأسبوع السابق", ckb: "هەفتەی پێشوو" },
+  "the same days of {month}": { ar: "الأيام نفسها من {month}", ckb: "هەمان ڕۆژەکانی {month}" },
+  "{amount} in {then}.": { ar: "{amount} في {then}.", ckb: "{amount} لە {then}دا." },
+  "{pct}% more than {then}": { ar: "أكثر بـ{pct}% من {then}", ckb: "{pct}% زیاتر لە {then}" },
+  "{pct}% less than {then}": { ar: "أقل بـ{pct}% من {then}", ckb: "{pct}% کەمتر لە {then}" },
+  "About the same as {then}": { ar: "قريب من {then}", ckb: "نزیکەی وەک {then}" },
+  "{n} point(s) more than {then}": {
+    ar: "أعلى بـ{n, plural, one {نقطة واحدة} two {نقطتين} few {# نقاط} many {# نقطة} other {# نقطة}} من {then}",
+    ckb: "{n} خاڵ زیاتر لە {then}",
+  },
+  "{n} point(s) less than {then}": {
+    ar: "أقل بـ{n, plural, one {نقطة واحدة} two {نقطتين} few {# نقاط} many {# نقطة} other {# نقطة}} من {then}",
+    ckb: "{n} خاڵ کەمتر لە {then}",
   },
   "What the week says": { ar: "ما يقوله الأسبوع", ckb: "هەفتەکە چی دەڵێت" },
   "Sales day by day": { ar: "المبيعات يومًا بيوم", ckb: "فرۆشتن ڕۆژ بە ڕۆژ" },
@@ -1280,21 +1291,21 @@ const phrases: PhraseBook = {
     ar: "أفضل يوم: {day}، {amount}.",
     ckb: "باشترین ڕۆژ: {day}، {amount}.",
   },
-  "Net sales {amount}: nothing sold the week before to compare with.": {
-    ar: "صافي المبيعات {amount}: لم يُبع شيء في الأسبوع السابق للمقارنة.",
-    ckb: "فرۆشتنی پوخت {amount}: لە هەفتەی پێشوودا هیچ نەفرۆشرا بۆ بەراوردکردن.",
+  "Net sales {amount}, and no sales in {then} to compare with.": {
+    ar: "صافي المبيعات {amount}، ولا مبيعات في {then} للمقارنة.",
+    ckb: "فرۆشتنی پوخت {amount}، و لە {then}دا هیچ فرۆشتنێک نییە بۆ بەراوردکردن.",
   },
-  "Net sales rose {pct}% on the week before: {amount} more.": {
-    ar: "ارتفع صافي المبيعات {pct}% عن الأسبوع السابق: {amount} أكثر.",
-    ckb: "فرۆشتنی پوخت {pct}% لە هەفتەی پێشوو زیادی کرد: {amount} زیاتر.",
+  "Net sales rose {pct}% against {then}: {amount} more.": {
+    ar: "ارتفع صافي المبيعات {pct}% عن {then}: {amount} أكثر.",
+    ckb: "فرۆشتنی پوخت {pct}% زیادی کرد بەراورد بە {then}: {amount} زیاتر.",
   },
-  "Net sales fell {pct}% on the week before: {amount} less.": {
-    ar: "انخفض صافي المبيعات {pct}% عن الأسبوع السابق: {amount} أقل.",
-    ckb: "فرۆشتنی پوخت {pct}% لە هەفتەی پێشوو کەمی کرد: {amount} کەمتر.",
+  "Net sales fell {pct}% against {then}: {amount} less.": {
+    ar: "انخفض صافي المبيعات {pct}% عن {then}: {amount} أقل.",
+    ckb: "فرۆشتنی پوخت {pct}% کەمی کرد بەراورد بە {then}: {amount} کەمتر.",
   },
-  "Net sales held steady against the week before.": {
-    ar: "بقي صافي المبيعات ثابتًا مقارنة بالأسبوع السابق.",
-    ckb: "فرۆشتنی پوخت بەراورد بە هەفتەی پێشوو وەک خۆی ماوەتەوە.",
+  "Net sales held steady against {then}.": {
+    ar: "بقي صافي المبيعات ثابتًا مقارنة مع {then}.",
+    ckb: "فرۆشتنی پوخت بەراورد بە {then} وەک خۆی ماوەتەوە.",
   },
   "The margin fell {n} point(s), to {pct}%.": {
     ar: "انخفض الهامش {n, plural, one {نقطة واحدة} two {نقطتين} few {# نقاط} many {# نقطة} other {# نقطة}}، إلى {pct}%.",
@@ -1329,16 +1340,131 @@ const phrases: PhraseBook = {
     ar: "{name} الأكثر مبيعًا: {amount}.",
     ckb: "{name} زۆرترین فرۆشرا: {amount}.",
   },
-  "{name} rose the most: {amount} more than the week before.": {
-    ar: "{name} ارتفع أكثر من غيره: {amount} أكثر من الأسبوع السابق.",
-    ckb: "{name} زۆرترین زیادبوونی هەبوو: {amount} زیاتر لە هەفتەی پێشوو.",
+  "{name} rose the most: {amount} more than {then}.": {
+    ar: "{name} ارتفع أكثر من غيره: {amount} أكثر من {then}.",
+    ckb: "{name} زۆرترین زیادبوونی هەبوو: {amount} زیاتر لە {then}.",
   },
-  "{name} fell the most: {amount} less than the week before.": {
-    ar: "{name} انخفض أكثر من غيره: {amount} أقل من الأسبوع السابق.",
-    ckb: "{name} زۆرترین کەمبوونەوەی هەبوو: {amount} کەمتر لە هەفتەی پێشوو.",
+  "{name} fell the most: {amount} less than {then}.": {
+    ar: "{name} انخفض أكثر من غيره: {amount} أقل من {then}.",
+    ckb: "{name} زۆرترین کەمبوونەوەی هەبوو: {amount} کەمتر لە {then}.",
   },
   // On Reports, beside the analysis and the statements.
   "The week at a glance →": { ar: "الأسبوع في لمحة ←", ckb: "هەفتە بە یەک سەیرکردن ←" },
+  "The month at a glance →": { ar: "الشهر في لمحة ←", ckb: "مانگ بە یەک سەیرکردن ←" },
+
+  // The price watch (round five): what came in dearer, and what it does to the margins.
+  "Price watch": { ar: "مراقبة الأسعار", ckb: "چاودێری نرخەکان" },
+  "Price watch: what came in dearer →": {
+    ar: "مراقبة الأسعار: ما وصل بسعر أعلى ←",
+    ckb: "چاودێری نرخەکان: ئەوەی گرانتر هات ←",
+  },
+  "Deliveries of the last {n} day(s), each against the one before": {
+    ar: "توريدات {n, plural, one {اليوم الأخير} two {اليومين الأخيرين} few {الأيام الـ# الأخيرة} many {الـ# يومًا الأخيرة} other {الـ# يوم الأخيرة}}، كلٌّ مقابل الذي قبله",
+    ckb: "گەیاندنەکانی {n} ڕۆژی کۆتایی، هەریەکە بەرامبەر ئەوەی پێشوو",
+  },
+  "Nothing came in dearer in the last {n} day(s).": {
+    ar: "لم يصل شيء بسعر أعلى في {n, plural, one {اليوم الأخير} two {اليومين الأخيرين} few {الأيام الـ# الأخيرة} many {الـ# يومًا الأخيرة} other {الـ# يوم الأخيرة}}.",
+    ckb: "لە {n} ڕۆژی کۆتاییدا هیچ شتێک گرانتر نەهات.",
+  },
+  "Each delivery is set against the one before it, item by item.": {
+    ar: "كل توريد يُقارن بالذي قبله، صنفًا صنفًا.",
+    ckb: "هەر گەیاندنێک بەرامبەر ئەوەی پێشووی دادەنرێت، کاڵا بە کاڵا.",
+  },
+  "Came in dearer": { ar: "وصل بسعر أعلى", ckb: "گرانتر هات" },
+  "{n} item(s), by 5% or more": {
+    ar: "{n, plural, one {صنف واحد} two {صنفان} few {# أصناف} many {# صنفًا} other {# صنف}}، بـ5% أو أكثر",
+    ckb: "{n} کاڵا، بە 5% یان زیاتر",
+  },
+  "What it comes to a month": { ar: "ما يكلّفه في الشهر", ckb: "لە مانگێکدا چەندی تێدەچێت" },
+  "At the last 30 days' sales": {
+    ar: "بمبيعات آخر 30 يومًا",
+    ckb: "بە فرۆشتنی 30 ڕۆژی کۆتایی",
+  },
+  "Sizes it touches": { ar: "الأحجام التي يمسّها", ckb: "ئەو قەبارانەی کاری تێدەکات" },
+  "{n} price(s) would keep the margin": {
+    ar: "{n, plural, zero {لا سعر يحفظ الهامش} one {سعر واحد يحفظ الهامش} two {سعران يحفظان الهامش} few {# أسعار تحفظ الهامش} many {# سعرًا تحفظ الهامش} other {# سعر يحفظ الهامش}}",
+    ckb: "{n} نرخ پەراوێزەکە دەپارێزن",
+  },
+  "{was} → {now} a {unit}, delivered {when}": {
+    ar: "{was} ← {now} لكل {unit}، وصل في {when}",
+    ckb: "{was} ← {now} بۆ هەر {unit}، لە {when} گەیشت",
+  },
+  "At the last 30 days' sales, it comes to about {amount} a month.": {
+    ar: "بمبيعات آخر 30 يومًا، يكلّف نحو {amount} في الشهر.",
+    ckb: "بە فرۆشتنی 30 ڕۆژی کۆتایی، نزیکەی {amount} لە مانگێکدا تێدەچێت.",
+  },
+  "No product uses it on its recipe, nor through what is made from it.": {
+    ar: "لا يستعمله أي منتج في وصفته، ولا عبر ما يُصنع منه.",
+    ckb: "هیچ بەرهەمێک لە ڕەسەتەکەیدا بەکاری ناهێنێت، نە لە ڕێگەی ئەوەی لێی دروست دەکرێت.",
+  },
+  "What it touches": { ar: "ما يمسّه", ckb: "ئەوەی کاری تێدەکات" },
+  "Margin, before → after": { ar: "الهامش، قبل ← بعد", ckb: "پەراوێز، پێش ← دوای" },
+  "Adds a serving": { ar: "يزيد على الحصة", ckb: "بۆ هەر بەشێک زیاد دەکات" },
+  "Sold in 30 days": { ar: "المباع في 30 يومًا", ckb: "فرۆشراو لە 30 ڕۆژدا" },
+  "Keeps the margin": { ar: "يحفظ الهامش", ckb: "پەراوێزەکە دەپارێزێت" },
+  "And {n} more, each adding less.": {
+    ar: "و{n, plural, one {واحد آخر} two {اثنان آخران} few {# أخرى} many {# أخرى} other {# أخرى}}، كلٌّ يزيد أقل.",
+    ckb: "و {n} ی تر، هەریەکە کەمتر زیاد دەکات.",
+  },
+  "Its deliveries and prices →": {
+    ar: "توريداته وأسعاره ←",
+    ckb: "گەیاندن و نرخەکانی ←",
+  },
+  "Each delivery against the one before it, a unit at a time, with freight shared out. A serving costs what a sale would post, with this item at its old price, then its new, once what was bought dearer is what is sold. The price that keeps the margin is rounded up to 250 IQD.":
+    {
+      ar: "كل توريد مقابل الذي قبله، وحدةً وحدة، مع توزيع أجور النقل. تكلّف الحصة ما يسجّله البيع، بهذا الصنف بسعره القديم ثم الجديد، حين يصير ما اشتُري أغلى هو ما يُباع. السعر الذي يحفظ الهامش مقرَّب صعودًا إلى 250 دينارًا.",
+      ckb: "هەر گەیاندنێک بەرامبەر ئەوەی پێشوو، یەکە بە یەکە، لەگەڵ دابەشکردنی کرێی گواستنەوە. بەشێک ئەوەندە تێدەچێت کە فرۆشتن تۆماری دەکات، بەم کاڵایە بە نرخە کۆنەکەی، پاشان بە نوێکەی، کاتێک ئەوەی گرانتر کڕدرا ئەوەیە کە دەفرۆشرێت. ئەو نرخەی پەراوێزەکە دەپارێزێت بۆ 250 دینار بەرز دەکرێتەوە.",
+    },
+
+  // On the dashboard, when a delivery came in dearer.
+  "{item} came in {pct}% dearer on {day}: see what it does to the margins.": {
+    ar: "وصل {item} أغلى بـ{pct}% في {day}: انظر ما يفعله بالهوامش.",
+    ckb: "{item} لە {day} بە {pct}% گرانتر هات: سەیر بکە چی لە پەراوێزەکان دەکات.",
+  },
+  "{n} items came in dearer over the last 14 days, {item} the most, by {pct}%: see what it does to the margins.":
+    {
+      ar: "وصلت {n, plural, two {صنفان} few {# أصناف} many {# صنفًا} other {# صنف}} أغلى خلال آخر 14 يومًا، أكثرها {item} بـ{pct}%: انظر ما يفعله بالهوامش.",
+      ckb: "{n} کاڵا لە 14 ڕۆژی کۆتاییدا گرانتر هاتن، زۆرترینیان {item} بە {pct}%: سەیر بکە چی لە پەراوێزەکان دەکات.",
+    },
+
+  // The month at a glance (round five), and the choice between it and the week.
+  "A week or a month": { ar: "أسبوع أو شهر", ckb: "هەفتەیەک یان مانگێک" },
+  Week: { ar: "الأسبوع", ckb: "هەفتە" },
+  "The month at a glance": { ar: "الشهر في لمحة", ckb: "مانگ بە یەک سەیرکردن" },
+  "What the month says": { ar: "ما يقوله الشهر", ckb: "مانگەکە چی دەڵێت" },
+  "No sales this month.": { ar: "لا مبيعات هذا الشهر.", ckb: "ئەم مانگە هیچ فرۆشتنێک نییە." },
+  "Nothing was lost this month.": {
+    ar: "لم يُفقد شيء هذا الشهر.",
+    ckb: "ئەم مانگە هیچ لەدەست نەچوو.",
+  },
+  "new this month": { ar: "جديد هذا الشهر", ckb: "ئەم مانگە نوێیە" },
+  "The sales analysis of the month →": {
+    ar: "تحليل مبيعات الشهر ←",
+    ckb: "شیکاری فرۆشتنی مانگەکە ←",
+  },
+  "The losses of the month →": { ar: "خسائر الشهر ←", ckb: "زیانەکانی مانگەکە ←" },
+  "The month before": { ar: "الشهر السابق", ckb: "مانگی پێشوو" },
+  "The month after": { ar: "الشهر التالي", ckb: "مانگی دواتر" },
+  "Usual for the weekday in {month}": {
+    ar: "المعتاد لليوم نفسه من الأسبوع في {month}",
+    ckb: "ئاسایی بۆ هەمان ڕۆژی هەفتە لە {month}دا",
+  },
+  "At this pace, {month} closes near {amount}.": {
+    ar: "بهذه الوتيرة، يُغلق {month} عند نحو {amount}.",
+    ckb: "بەم ڕێڕەوە، {month} بە نزیکەی {amount} کۆتایی دێت.",
+  },
+  "From {n} full day(s) so far; {month} closed at {amount}.": {
+    ar: "من {n, plural, one {يوم كامل واحد} two {يومين كاملين} few {# أيام كاملة} many {# يومًا كاملًا} other {# يوم كامل}} حتى الآن؛ وأُغلق {month} عند {amount}.",
+    ckb: "لە {n} ڕۆژی تەواوی تا ئێستا؛ {month} بە {amount} کۆتایی هات.",
+  },
+  "The month's target: {amount}.": {
+    ar: "هدف الشهر: {amount}.",
+    ckb: "ئامانجی مانگەکە: {amount}.",
+  },
+  "On average, {best} sold the most: {amount} a day; {worst} the least: {low}.": {
+    ar: "في المتوسط، كان يوم {best} الأكثر مبيعًا: {amount} في اليوم؛ ويوم {worst} الأقل: {low}.",
+    ckb: "بە تێکڕا، {best} زۆرترین فرۆشتنی هەبوو: {amount} لە ڕۆژێکدا؛ {worst} کەمترین: {low}.",
+  },
 };
 
 export default phrases;

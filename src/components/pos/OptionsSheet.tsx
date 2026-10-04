@@ -16,6 +16,7 @@ import {
   type AddonChoice,
   type AddonMenu,
 } from "./model";
+import { useDialogFocus } from "./dialogFocus";
 
 /** What a group asks for, in a few words: "Choose 1", "Up to 3", "1 to 3", "As many as you like". */
 export function asks(g: { min: number; max: number | null }, t: T): string {
@@ -46,6 +47,7 @@ export function OptionsSheet({
   onClose: () => void;
 }) {
   const { t, locale } = useT();
+  const dialogBox = useDialogFocus<HTMLDivElement>();
   const first = variants[0]!;
   const [size, setSize] = useState<PosItem | null>(variants.length === 1 ? first : null);
   const [chosen, setChosen] = useState<AddonChoice[]>([]);
@@ -97,12 +99,22 @@ export function OptionsSheet({
   return (
     <div className="pos-modal-back" onClick={onClose}>
       <div
+        ref={dialogBox}
+        tabIndex={-1}
         className="pos-modal options-sheet"
         role="dialog"
         aria-modal="true"
         aria-label={productName(first, locale)}
         data-testid="options-sheet"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") onClose();
+          // Enter on the sheet itself adds what is chosen; on a button, it is that button's.
+          else if (e.key === "Enter" && e.target === e.currentTarget && size && !missing) {
+            e.preventDefault();
+            onAdd(size.variantId, chosen);
+          }
+        }}
       >
         <h3 style={{ marginTop: 0 }}>{productName(first, locale)}</h3>
         {variants.length > 1 && (

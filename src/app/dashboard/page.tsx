@@ -32,6 +32,8 @@ import { BarList } from "@/components/charts/BarList";
 import { Sayings, type Saying } from "@/components/Sayings";
 import { Icon } from "@/components/Icon";
 import { isMorning } from "@/lib/startofday";
+import { getPriceRises } from "@/lib/db/prices";
+import { wholeDates } from "@/lib/i18n/core";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +78,11 @@ export default async function DashboardPage() {
   const maybe = (query: AnalysisQuery) =>
     analyse ? getSalesAnalysis(query) : Promise.resolve(null);
 
+  // What came in dearer over the fortnight (round five): read beside the rest,
+  // and never what keeps the dashboard from drawing.
+  const risesRead = analyse
+    ? getPriceRises(today, { days: 14, touches: false }).catch(() => [])
+    : Promise.resolve([]);
   const [
     alerts,
     brief,
@@ -355,6 +362,30 @@ export default async function DashboardPage() {
         ),
         href: "/products",
       });
+    // A delivery dearer than the one before: what it does to the margins is on the price watch.
+    const rises = await risesRead;
+    const most = [...rises].sort((a, b) => b.change - a.change)[0];
+    if (most) {
+      const item =
+        (locale === "ar" ? most.item.nameAr : locale === "ckb" ? most.item.nameCkb : null) ||
+        most.item.name;
+      sayings.push({
+        tone: "warn",
+        icon: "▲",
+        text:
+          rises.length === 1
+            ? t("{item} came in {pct}% dearer on {day}: see what it does to the margins.", {
+                item,
+                pct: Math.round(most.change * 100),
+                day: wholeDates(dateTimeIn(profile.timezone, most.on).slice(0, 10)),
+              })
+            : t(
+                "{n} items came in dearer over the last 14 days, {item} the most, by {pct}%: see what it does to the margins.",
+                { n: rises.length, item, pct: Math.round(most.change * 100) },
+              ),
+        href: "/reports/prices",
+      });
+    }
   }
   sayings.push(
     d.lowStock > 0

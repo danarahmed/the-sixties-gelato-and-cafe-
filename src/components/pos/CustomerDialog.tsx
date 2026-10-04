@@ -7,6 +7,7 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import { CustomerForm } from "@/components/customers/CustomerForm";
 import { AddressForm } from "@/components/customers/CustomerPanel";
 import type { OrderCustomer } from "./model";
+import { useDialogFocus } from "./dialogFocus";
 
 /**
  * The customer on an order (0050): found by their number, typed any way, or
@@ -33,6 +34,7 @@ export function CustomerDialog({
   onClose: () => void;
 }) {
   const { t, msg: say } = useT();
+  const dialogBox = useDialogFocus<HTMLDivElement>();
   const [phone, setPhone] = useState("");
   const [found, setFound] = useState<TillCustomer | null>(null);
   const [nobody, setNobody] = useState(false);
@@ -106,6 +108,8 @@ export function CustomerDialog({
   return (
     <div className="pos-modal-back" onClick={() => !busy && onClose()}>
       <div
+        ref={dialogBox}
+        tabIndex={-1}
         className="pos-modal"
         role="dialog"
         aria-modal="true"

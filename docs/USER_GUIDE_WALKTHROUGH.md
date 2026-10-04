@@ -108,6 +108,8 @@ Count**; the purchasing role on **Reports**.
   reopens one, with a reason.
 - **Before controls.** Entries recorded by the previous app carry this mark; see
   [`REMEDIATION.md`](REMEDIATION.md).
+- **Dates are written 2026-09-30**, left to right in Arabic and Kurdish too, and
+  a line never breaks inside one.
 
 ---
 
@@ -184,7 +186,10 @@ where to act on it:
 - the product that keeps the least of what it sells for, when that is under
   30%, it sold 3 times or more and it is costed — a product with no cost is
   never read as a fine margin (**Products & Recipes**);
-- how many items are at or below their reorder level (**Inventory**).
+- how many items are at or below their reorder level (**Inventory**);
+- an item that came in dearer over the last 14 days than the delivery before
+  it, by 5% or more: which, by how much and when, or how many and the most of
+  them (**Price watch**, under Reports).
 
 Then, drawn (for whoever sees costs):
 
@@ -232,6 +237,19 @@ back to **Tables**.
    names its add-ons under it (**+ Oat milk, Extra shot ×2**); the same drink
    with the same add-ons adds up on one line. The receipt and the barista's
    ticket list them under the drink, and a printed bill keeps their prices.
+
+   **With a keyboard** (round five), beside the touch buttons: type a
+   product's name anywhere on the till and it is found, the first match lit
+   in raspberry; **↑ ↓** choose another and **Enter** adds it. A number typed
+   first adds that many of the next one (**3**, then the name and **Enter**:
+   three, shown as **× 3** until then, and gone after ten seconds unused); **3\*latte** in the search does the
+   same. **F2** takes cash — **Enter** then takes the exact amount — and **F4**
+   a card; a delivery platform's order is the platform's either way. **Esc**
+   clears what was typed, **/** goes to the search, and **?** (or the small
+   **?** beside the search, on a screen with a pointer) lists the keys. A
+   dialog open over the till takes the keys as it opens: **Enter** and **Esc**
+   are its own, and nothing typed lands in the search behind it.
+
 3. **Cart.** **−** / **+** change quantities; **Clear** empties it. The total is
    shown. **🎁 Give away…** (a quick sale eaten in or taken away, `0048`)
    gives what is in the cart away instead of selling it: choose **Staff
@@ -1201,6 +1219,16 @@ What the café makes in batches: gelato, a base, syrup, cold brew, dough.
   **Record these** beside a row to make opens **Record a batch** with that
   recipe and its batches filled in: check what it uses and makes, change
   anything that was made otherwise, and **Record batch**.
+  **Record the plan in one go** (round five), under the plan, lists every
+  batch it says to make, filled in as it says, a base before the flavours made
+  from it: change what came out where it differs, untick what was not made,
+  and **Record … batch(es)** records them one after another, each its own
+  batch, checked as the batch form checks it and sent with its own key, so
+  none is recorded twice whatever the connection does. Beside each, what it
+  became and its use-by, or why it was not recorded with **Record it on its
+  own**; **Print … label(s)** prints every label of them at once. A shortage
+  is said when the batches ticked differ from the plan's (the plan says its
+  own below).
 - **In stock by batch:** every batch with something left, the one to be used
   first first, with its use-by and whether it is past it, due today, due
   within a day or good. Sales, losses and other batches take from them in
@@ -1477,8 +1505,32 @@ accountant's own tools. Pages open from the top (`0051`):
   beside the same weekday of the week before (a line), **What sold the most**
   with each product's change, and **What was lost** by item, each opening the
   analysis or the losses of the week. **The week before** and **The week
-  after** step back and forth. Sales are as the analysis has them: as paid,
-  less what refunds gave back since.
+  after** step back and forth, and **Month** is a tap away. Sales are as the
+  analysis has them: as paid, less what refunds gave back since.
+
+- **The month at a glance** (`/reports/month`, or **Month** on the week; round
+  five): the month to today against the same days of the month before, and
+  all of it against all of the month before once the month is over. The same
+  four figures and sentences, and: where a month still running closes at the
+  pace of its full days (from a week of them), against the month before and
+  the café's target for the month (a day's target times its days); and, from
+  two weeks, the weekday that sells the most on a usual day and the one that
+  sells the least. **Sales day by day** draws each day against a usual day of
+  its weekday the month before (a line); on a phone, a day a week is named.
+  **The month before** and **The month after** step back and forth.
+
+- **Price watch** (`/reports/prices`; round five): what came in dearer in the
+  last 30 days — each item's latest delivery against the one before it, a unit
+  at a time with freight shared out, by 5% or more — the most it comes to
+  first. For each: from what to what and when, and what the rise comes to over
+  a month at the last 30 days' sales; then every size it touches on each
+  channel, on its recipe or through what is made from it (milk in the base,
+  the base in a gelato): its price, the margin before → after, what the rise
+  adds to a serving, what sold in 30 days, and the price that keeps the
+  margin, rounded up to 250 IQD (none when the rise is lost in that rounding).
+  A serving costs what a sale would post, with the item at its old price, then
+  its new. On a phone, each size is a card. Each item opens its deliveries
+  and prices.
 
 - **Sales analysis** (`/reports/sales`): the sales of the dates **by** the
   hour, the day of the week, the date, the product, the category, the size,
@@ -1751,6 +1803,7 @@ a person's roles allows, then the café's.
 | What needs you: alerts answered or snoozed; yesterday's brief                                                                                                    | `/dashboard`                             | owner, managers, accountant, auditor (answering: owner, managers, accountant)         |
 | Alert thresholds; how many days each vendor takes to deliver                                                                                                     | Settings `/settings`, Vendors `/vendors` | owner, general manager; vendors: purchasing, managers                                 |
 | Sell by channel; cash, card, platform-paid                                                                                                                       | `/pos`                                   | cashier, barista, managers, owner                                                     |
+| The till from a keyboard: type to find, Enter to add, a number first for more, F2 cash, F4 card, ? for the keys                                                  | `/pos`                                   | cashier, barista, managers, owner                                                     |
 | Retry a sale without recording it twice                                                                                                                          | `/pos`                                   | the same                                                                              |
 | Void (until its session closes) and refund, whole or by the item, with a reason; a second person's PIN                                                           | `/orders`                                | managers, owner                                                                       |
 | Discount over the cap approved by a manager's name and PIN                                                                                                       | `/pos`                                   | cashiers ask; managers, owner approve                                                 |
@@ -1768,6 +1821,7 @@ a person's roles allows, then the café's.
 | Return goods to a supplier; their credit notes, set against bills; a statement between two dates                                                                 | `/purchasing`, `/vendors`                | purchasing, managers, owner; setting against bills: accountant, owner                 |
 | Products, recipes by channel, prices from a date, margins                                                                                                        | `/products`                              | cost viewers; editing: owner, general manager                                         |
 | A batch's labels, a pan each, with its use-by, on the receipt printer                                                                                            | a batch's page; Production `/production` | whoever records batches                                                               |
+| The day's plan recorded in one go, a base first; every label at once                                                                                             | Production `/production`                 | whoever records batches                                                               |
 | Sizes; add-ons in groups, priced by channel, with recipes; which sizes offer them                                                                                | `/products`                              | cost viewers; editing: owner, general manager                                         |
 | Sell a size with its add-ons, in one sheet                                                                                                                       | `/pos`                                   | cashier, barista, managers, owner                                                     |
 | Sizes and add-ons sold                                                                                                                                           | `/reports`                               | cost viewers                                                                          |
@@ -1792,6 +1846,8 @@ a person's roles allows, then the café's.
 | Points earned, spent and outstanding; rewards taken; who bought the most                                                                                         | `/reports`                               | owner, managers, accountant, auditor                                                  |
 | Sales by hour, day, date, product, category, size, add-on, person, payment, channel or branch, and a second way; CSV                                             | `/reports/sales`                         | cost viewers                                                                          |
 | The week at a glance: the seven days against the seven before, charted, and what changed said in words                                                           | `/reports/week`                          | cost viewers                                                                          |
+| The month at a glance: against the same days of the month before; where it closes at its pace; the weekdays that sell                                            | `/reports/month`                         | cost viewers                                                                          |
+| Price watch: what came in dearer, the margins it cuts, the price that keeps each                                                                                 | `/reports/prices`, `/dashboard`          | cost viewers                                                                          |
 | The stock's value on a day against 1200; what came in by supplier and by item                                                                                    | `/reports/stock`, `/reports`             | cost viewers                                                                          |
 | The balance sheet at the start and the end of the dates; the cash flow between; CSV                                                                              | `/reports/statements`                    | profit viewers                                                                        |
 | Stock sent between the café's places, on its way in 1210; received, what did not arrive lost; or cancelled                                                       | `/inventory/transfers`                   | owner, managers, purchasing; readers: cost viewers                                    |

@@ -7,6 +7,7 @@ import { Rich } from "@/lib/i18n/Rich";
 import { useChannels } from "@/components/ChannelsProvider";
 import { minutesSince } from "./model";
 import { Icon } from "@/components/Icon";
+import { useDialogFocus } from "./dialogFocus";
 
 function Elapsed({ at, now }: { at: string | null; now: number }) {
   const { t } = useT();
@@ -191,9 +192,12 @@ export function ChooseBill({
   onClose: () => void;
 }) {
   const { t } = useT();
+  const dialogBox = useDialogFocus<HTMLDivElement>();
   return (
     <div className="pos-modal-back" onClick={onClose}>
       <div
+        ref={dialogBox}
+        tabIndex={-1}
         className="pos-modal"
         role="dialog"
         aria-modal="true"

@@ -776,6 +776,34 @@ const phrases: PhraseBook = {
   },
   "Batch {no}": { ar: "الدفعة {no}", ckb: "دەستەی {no}" },
   "Pan {i} of {n}": { ar: "الوعاء {i} من {n}", ckb: "قاپی {i} لە {n}" },
+  // The day's plan recorded in one go (round five).
+  "Record the plan in one go": { ar: "سجّل الخطة دفعةً واحدة", ckb: "پلانەکە بە یەکجار تۆمار بکە" },
+  "Each as the plan says: change what came out where it differs, and untick what was not made.": {
+    ar: "كلٌّ كما تقول الخطة: غيّر ما خرج حيث يختلف، وألغِ تحديد ما لم يُصنع.",
+    ckb: "هەریەکە وەک پلانەکە دەڵێت: ئەوەی دەرچوو لەو شوێنەی جیاوازە بگۆڕە، و نیشانەی ئەوەی دروست نەکرا لابە.",
+  },
+  "Make {name}": { ar: "اصنع {name}", ckb: "{name} دروست بکە" },
+  "Batches of {name}": { ar: "دفعات {name}", ckb: "دەستەکانی {name}" },
+  "What came out of {name}": { ar: "ما خرج من {name}", ckb: "ئەوەی لە {name} دەرچوو" },
+  "Unit of what came out of {name}": {
+    ar: "وحدة ما خرج من {name}",
+    ckb: "یەکەی ئەوەی لە {name} دەرچوو",
+  },
+  "Enter how many batches, as a number above 0.": {
+    ar: "أدخل عدد الدفعات، رقمًا أكبر من 0.",
+    ckb: "ژمارەی دەستەکان بنووسە، ژمارەیەک لە 0 زیاتر.",
+  },
+  "Not recorded: {why}": { ar: "لم يُسجَّل: {why}", ckb: "تۆمار نەکرا: {why}" },
+  "Record it on its own": { ar: "سجّله وحده", ckb: "بە تەنها تۆماری بکە" },
+  "Short for these batches: {list}.": {
+    ar: "ينقص لهذه الدفعات: {list}.",
+    ckb: "بۆ ئەم دەستانە کەمە: {list}.",
+  },
+  "Recording {i} of {n}…": { ar: "جارٍ تسجيل {i} من {n}…", ckb: "تۆمارکردنی {i} لە {n}…" },
+  "Record {n} batch(es)": {
+    ar: "{n, plural, one {سجّل دفعة واحدة} two {سجّل دفعتين} few {سجّل # دفعات} many {سجّل # دفعة} other {سجّل # دفعة}}",
+    ckb: "{n} دەستە تۆمار بکە",
+  },
   "No use-by": { ar: "لا موعد استعمال", ckb: "کاتی بەکارهێنانی نییە" },
   "The batch made {made}": { ar: "أنتجت الدفعة {made}", ckb: "دەستەکە {made}ی دروستکرد" },
   "No use-by: its recipe keeps no shelf life.": {
