@@ -5028,8 +5028,12 @@ a.card.stat[aria-current="true"] {
 .paste-table .cell-sub {
   display: block;
 }
-.paste-row-off td {
-  background: color-mix(in srgb, var(--err) 5%, transparent);
+/* A row held back, over the table's stripes: red to put right, amber to answer. */
+.paste-table tbody tr.paste-row-off td {
+  background: color-mix(in oklab, var(--err) 7%, var(--surface));
+}
+.paste-table tbody tr.paste-row-ask td {
+  background: color-mix(in oklab, var(--warn) 9%, var(--surface));
 }
 .paste-ok,
 .paste-warn,
@@ -5844,12 +5848,19 @@ kbd {
   justify-content: flex-end;
   gap: 6px 10px;
 }
+/* Links that act as buttons: the café's pills, their words in the middle. */
 .setup-act .btn-primary,
 .setup-act .btn-soft {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 38px;
-  padding: 0 14px;
+  padding: 0 16px;
+  border-radius: 999px;
   font-size: 0.86rem;
+  font-weight: 650;
   white-space: nowrap;
+  text-decoration: none;
 }
 .setup-count {
   color: var(--ok);
@@ -5866,7 +5877,9 @@ kbd {
   min-height: 32px;
   padding: 0 4px;
   border: 0;
+  border-radius: 0;
   background: transparent;
+  box-shadow: none;
   color: var(--text-muted);
   font-size: 0.82rem;
   font-weight: 600;

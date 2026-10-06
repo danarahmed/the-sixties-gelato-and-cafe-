@@ -261,7 +261,13 @@ export function PasteItems({ items, isOwner }: { items: NamedItem[]; isOwner: bo
                   return (
                     <tr
                       key={`${row.line}:${row.text}`}
-                      className={ok ? undefined : "paste-row-off"}
+                      className={
+                        ok
+                          ? undefined
+                          : row.problems.length > 0 || failed[row.text]
+                            ? "paste-row-off"
+                            : "paste-row-ask"
+                      }
                       data-testid="paste-row"
                       data-ready={ok ? "yes" : "no"}
                     >
