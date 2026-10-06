@@ -151,7 +151,7 @@ select test.eq((
   'documents_for,'
   'draft_payroll,drawer_methods,drawer_status,employee_advances,exchange_dollars,find_customer,force_close_session,'
   'fx_status,give_away,hand_over_session,inventory_valuation,invite_member,item_costs,item_price_history,'
-  'language_settings,'
+  'labour_target,language_settings,'
   'legacy_unposted,link_phone_finish,link_phone_start,list_approvers,list_business_rules,list_members,lock_period,losses_waiting,'
   'mark_bill_printed,match_platform_statement,menu_branch_prices,menu_costing,menu_recipe_lines,menu_scheduled,money_accounts,move_cash,move_money,'
   'my_profile,next_bill_number,note_supplier_credit,open_cash_session,open_tab,pay_bill,pay_payroll,'

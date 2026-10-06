@@ -7,13 +7,18 @@ import { Sayings, type Saying } from "@/components/Sayings";
 import { getT } from "@/lib/i18n/server";
 import { wholeDates } from "@/lib/i18n/core";
 import { has, requirePermission } from "@/lib/auth/session";
-import { getStaffing } from "@/lib/db/staffing";
+import { getLabourTarget, getSalesByDayHour, getStaffing } from "@/lib/db/staffing";
+import { getStaff } from "@/lib/db/staff";
 import { WEEKDAYS } from "@/lib/analysis";
 import { addDays, businessToday, localClock, parseDay } from "@/lib/dates";
-import { fmtIQD } from "@/lib/format";
+import { fmtIQD, fmtQty } from "@/lib/format";
 import {
+  DAY_PARTS,
+  PART_LABEL,
   aboutText,
   busiestHour,
+  hourlyCost,
+  labourActual,
   dayProfile,
   hourGroups,
   hourText,
@@ -114,7 +119,36 @@ export default async function StaffingPage({
       </div>
     );
 
-  const data = await getStaffing(from, to, location);
+  const seesPay = has(profile, "payroll.view");
+  const [data, byDayHour, people, target] = await Promise.all([
+    getStaffing(from, to, location),
+    seesPay ? getSalesByDayHour(from, to, location) : null,
+    seesPay ? getStaff() : null,
+    seesPay ? getLabourTarget(location) : null,
+  ]);
+  // What the hours on the clock cost against sales, a week and a part of the
+  // day at a time (round ten): only for those who see pay.
+  const pays = new Map(
+    (people ?? []).map((p) => [
+      p.id,
+      hourlyCost(
+        p.pay ? { basis: p.pay.basis, rate: p.pay.rate, standardHours: p.pay.standardHours } : null,
+      ),
+    ]),
+  );
+  const labour =
+    byDayHour && people
+      ? labourActual(
+          data.staffSpans,
+          byDayHour,
+          (id) => pays.get(id) ?? null,
+          from,
+          to,
+          localClock(profile.timezone),
+        )
+      : null;
+  const share = (n: number | null) => (n === null ? "—" : `${fmtQty(Math.round(n))}%`);
+  const over = (n: number | null) => target !== null && target > 0 && n !== null && n > target;
   const s = staffing(
     data.sales,
     minutesOnClock(data.spans, from, to, localClock(profile.timezone)),
@@ -435,6 +469,109 @@ export default async function StaffingPage({
           ))}
         </div>
       </section>
+
+      {labour && (
+        <section className="card" aria-labelledby="staffing-labour" data-testid="staffing-labour">
+          <h2 id="staffing-labour" className="viz-title">
+            {t("What the hours cost against sales")}
+          </h2>
+          <p
+            className="muted"
+            style={{ margin: 0, fontSize: ".85rem" }}
+            data-testid="labour-target"
+          >
+            {target !== null && target > 0
+              ? t("The labour target: {pct} of net sales.", { pct: share(target) })
+              : t("No labour target is set: set one on Settings → Rules.")}
+          </p>
+          <div className="tw">
+            <table className="stack-table" data-testid="labour-weeks">
+              <thead>
+                <tr>
+                  <th>{t("Week")}</th>
+                  <th className="right">{t("Net sales")}</th>
+                  <th className="right">{t("Hours on the clock")}</th>
+                  <th className="right">{t("What they cost")}</th>
+                  <th className="right">{t("Share of sales")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {labour.weeks.map((w) => (
+                  <tr key={w.from} data-testid="labour-week" data-from={w.from}>
+                    <td>
+                      {t("{from} to {to}", { from: wholeDates(w.from), to: wholeDates(w.to) })}
+                    </td>
+                    <td className="right money" data-label={t("Net sales")}>
+                      {fmtIQD(Math.round(w.sales))}
+                    </td>
+                    <td className="right mono" data-label={t("Hours on the clock")}>
+                      {fmtQty(Math.round(w.hours * 10) / 10)}
+                    </td>
+                    <td className="right money" data-label={t("What they cost")}>
+                      {fmtIQD(Math.round(w.cost))}
+                    </td>
+                    <td
+                      className={`right mono${over(w.percent) ? " warn-text" : ""}`}
+                      data-label={t("Share of sales")}
+                      data-testid="labour-share"
+                    >
+                      {share(w.percent)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="tw">
+            <table className="stack-table" data-testid="labour-parts">
+              <thead>
+                <tr>
+                  <th>{t("Part of the day")}</th>
+                  <th className="right">{t("Net sales")}</th>
+                  <th className="right">{t("Hours on the clock")}</th>
+                  <th className="right">{t("What they cost")}</th>
+                  <th className="right">{t("Share of sales")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {DAY_PARTS.map((part) => {
+                  const p = labour.parts.find((x) => x.part === part)!;
+                  return (
+                    <tr key={part} data-testid="labour-part" data-part={part}>
+                      <td>{t(PART_LABEL[part])}</td>
+                      <td className="right money" data-label={t("Net sales")}>
+                        {fmtIQD(Math.round(p.sales))}
+                      </td>
+                      <td className="right mono" data-label={t("Hours on the clock")}>
+                        {fmtQty(Math.round(p.hours * 10) / 10)}
+                      </td>
+                      <td className="right money" data-label={t("What they cost")}>
+                        {fmtIQD(Math.round(p.cost))}
+                      </td>
+                      <td
+                        className={`right mono${over(p.percent) ? " warn-text" : ""}`}
+                        data-label={t("Share of sales")}
+                        data-testid="labour-share"
+                      >
+                        {share(p.percent)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="muted" style={{ margin: 0, fontSize: ".8rem" }}>
+            {t(
+              "Each person's hours on the clock at an hour of their pay: an hourly rate as it is, a day's pay over its hours, a month's over 30 days of them; overtime is not added. Morning is from five to noon, afternoon to five, evening from five until five in the morning.",
+            )}
+            {labour.weeks.reduce((n, w) => n + w.unpriced, 0) > 0 &&
+              ` ${t("{n} hour(s) of people whose pay is not set are not counted.", {
+                n: fmtQty(Math.round(labour.weeks.reduce((n, w) => n + w.unpriced, 0))),
+              })}`}
+          </p>
+        </section>
+      )}
 
       <p className="muted" style={{ margin: 0, fontSize: ".8rem" }}>
         {t(

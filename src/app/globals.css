@@ -4693,6 +4693,49 @@ a.card.stat:focus-visible {
   color: var(--brand-ink);
 }
 /* The day's plan: what to make, and the tap that records it. */
+/* The week's schedule against how busy it usually is (round ten). */
+.sched-check {
+  display: grid;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.check-table th,
+.check-table td {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.check-cell.short {
+  color: var(--warn);
+  font-weight: 600;
+}
+.check-cell.nobody {
+  color: var(--err);
+  font-weight: 600;
+}
+.check-cell.quiet {
+  color: var(--text-muted);
+}
+.check-cell.fine {
+  color: var(--ok);
+}
+.check-says {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+.check-says .warn {
+  color: var(--warn);
+}
+.check-says .err {
+  color: var(--err);
+}
+.check-says .ok {
+  color: var(--ok);
+}
 /* How many days a bought item keeps, said on What to buy (0070). */
 .keeps {
   display: flex;

@@ -2038,3 +2038,18 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   seven before, item by item, the costliest first: how much, its cost, how
   many times, on which weekdays, whether the café makes it, how long it
   keeps; and the two weeks' totals.
+
+### The labour cost the café aims for (`0071`)
+
+- **The rule `labour_target_percent`** (0 to 100, for the café or a place;
+  0, the default, is none): the share of net sales the café means to pay its
+  people, set on Settings → Rules with a reason and kept with its history,
+  as every rule is.
+- **Functions:** `labour_target(location)` (`payroll.view` or
+  `settings.manage`): a place's own target, else the café's (a share is the
+  same for every branch).
+- The schedule check on Staff and the labour cost on Reports → Staffed when
+  busy? read what the café keeps already: the orders by hour, the hours on
+  the clock, the schedule, and each person's pay for those who see it (an
+  hour of it: an hourly rate as it is, a day's over its hours, a month's over
+  30 days of them).

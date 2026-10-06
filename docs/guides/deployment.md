@@ -65,6 +65,7 @@ Plan a short window when the café is closed.
 | Clocking in by phone (`0068`)           | ✅ Applied by the owner in the SQL editor on 6 October (the connector held it), then compared object by object with the tested build: identical, permissions included, once the paste's line endings are set aside (see [After `0068`](#after-0068)). The screens were merged ([pull request #81](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/81)) and deployed                                                              |
 | Ways to pay (`0069`)                    | ⏳ Waiting for the owner to apply it in the SQL editor (see [After `0069`](#after-0069)). Until then the screens work as before: the till offers cash and the card, and Settings says the update is not applied                                                                                                                                                                                                                                  |
 | Plan learns, What to buy (`0070`)       | ⏳ Waiting for the owner to apply it in the SQL editor (see [After `0070`](#after-0070)). Until then the plan, What to buy and Reports → Waste work as before, and how long an item keeps is not offered                                                                                                                                                                                                                                         |
+| Labour target (`0071`)                  | ⏳ Waiting for the owner to apply it in the SQL editor (see [After `0071`](#after-0071)). Until then Staff checks the week's schedule as it will, and the labour target is not offered on Settings → Rules                                                                                                                                                                                                                                       |
 
 ## 0. Before you start
 
@@ -3360,6 +3361,52 @@ It is applied by the owner, in Supabase's SQL editor:
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run
    it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0071`
+
+Migration `0071` is the owner's answer on staffing, as chosen: a check of
+the week's schedule on **Staff**, and a labour cost target.
+
+- **The week checked** (on **Staff**, under the week's hours): each day's
+  morning (5 to 12), afternoon (12 to 5) and evening (5 until 5 in the
+  morning), the people scheduled at a time against about how many its orders
+  usually need, from the four weeks to yesterday and what a person usually
+  serves in an hour (as **Reports → Staffed when busy?** reads them): too
+  few, more than needed, or nobody when orders usually come. It changes as
+  the hours are typed, before they are saved. **The same hours as the week
+  before** fills next week in one press, as it did; the check then says what
+  to change. This part needs nothing from `0071`.
+- **The labour target** (**Settings → Rules → Labour cost the café aims
+  for**): the share of net sales the café means to pay its people; 0, the
+  default, is none. With pay seen (the owner, the general manager, the
+  accountant, the auditor), Staff says what the week's hours will cost
+  against what a usual week sells, and the target, a day and a part of the
+  day at a time; **Reports → Staffed when busy?** shows the last four weeks
+  as they were, week by week and by part of the day, from each person's
+  hours on the clock at an hour of their pay.
+
+What it changes:
+
+- **Replaced:** `rule_definitions` and `rule_defaults` (`0067`'s, with the
+  labour target added).
+- **New:** `labour_target(location)` (`payroll.view` or `settings.manage`): a
+  place's own target, else the café's.
+- Nothing recorded changes.
+
+Before it is applied, the rest of the screens work as before, the schedule
+check included; the labour target is not offered, and Staff says no target is
+set.
+
+It was rehearsed on the tested build (`scripts/test-sql.sh`), with its own
+suite (`tests/sql/labour_target.test.sql`).
+
+It is applied by the owner, in Supabase's SQL editor:
+
+1. Open the file `supabase/migrations/0071_labour_target.sql` on GitHub,
+   press **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**.
 3. **Success. No rows returned** is the answer.
 
 ## Clearing the test records

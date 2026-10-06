@@ -10,6 +10,8 @@ import { arrows } from "@/lib/i18n/core";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice, inputStyle } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { ScheduleCheck } from "@/components/staff/ScheduleCheck";
+import type { PlannedShift, Staffing } from "@/lib/staffing";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -36,6 +38,9 @@ export function ScheduleWeek({
   canManage,
   prevHref,
   nextHref,
+  usual = null,
+  costs = null,
+  target = null,
 }: {
   schedule: Schedule;
   /** The week before, to start from the same hours. */
@@ -47,6 +52,12 @@ export function ScheduleWeek({
   canManage: boolean;
   prevHref: string;
   nextHref: string;
+  /** How busy each hour of the week usually is (the four weeks to yesterday), to check the week against (round ten). */
+  usual?: Staffing | null;
+  /** Each person's hour of pay, for those who see pay. */
+  costs?: Record<string, number | null> | null;
+  /** The labour target, a share of net sales (0071). */
+  target?: number | null;
 }) {
   const op = useOperation();
   const { t, dir } = useT();
@@ -70,6 +81,16 @@ export function ScheduleWeek({
   const changed = Object.keys({ ...initial, ...cells }).some(
     (k) => (initial[k] ?? "") !== (cells[k] ?? ""),
   );
+
+  // The week as typed, for the check: each person's hours here, saved or not.
+  const planned: PlannedShift[] = [];
+  for (const [k, v] of Object.entries(cells)) {
+    const h = v.trim() ? typedHours(v) : null;
+    if (!h) continue;
+    const [employeeId = "", day = ""] = k.split("|");
+    const i = days.indexOf(day);
+    if (i >= 0) planned.push({ employeeId, day: i, ...h });
+  }
 
   function sameAsLastWeek() {
     const next: Record<string, string> = { ...cells };
@@ -237,6 +258,9 @@ export function ScheduleWeek({
       )}
       <OperationStatus op={op} />
       <Notice msg={msg} />
+      {usual && people.length > 0 && (
+        <ScheduleCheck staffing={usual} shifts={planned} costs={costs} target={target} />
+      )}
     </div>
   );
 }

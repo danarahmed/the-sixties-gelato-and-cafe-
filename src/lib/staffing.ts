@@ -334,3 +334,254 @@ export function aboutText(n: number): string {
   const r = n < 10 ? Math.round(n * 10) / 10 : Math.round(n);
   return r.toLocaleString("en-US", { maximumFractionDigits: 1 });
 }
+
+// ------------------------------------------------------------ round ten: the parts of the day
+
+/**
+ * The parts of the café's day (round ten): from five to noon, noon to five,
+ * and from five on, past midnight until five in the morning, which is still
+ * the evening before.
+ */
+export type DayPart = "morning" | "afternoon" | "evening";
+export const DAY_PARTS: readonly DayPart[] = ["morning", "afternoon", "evening"];
+/** Each part, as the screens name it: phrases, shown through t(). */
+export const PART_LABEL: Record<DayPart, string> = {
+  morning: "Morning",
+  afternoon: "Afternoon",
+  evening: "Evening",
+};
+/** The café's day begins at five: an hour before it is the evening before. */
+export const DAY_STARTS = 5;
+
+export function partOf(hour: number): DayPart {
+  if (hour < DAY_STARTS) return "evening";
+  if (hour < 12) return "morning";
+  if (hour < 17) return "afternoon";
+  return "evening";
+}
+
+/** The hours of a part of a day, as (day, hour) of the clock: the evening's go past midnight. */
+function partCells(day: number, part: DayPart): [number, number][] {
+  const span = (d: number, from: number, to: number) =>
+    Array.from({ length: to - from }, (_, i) => [d, from + i] as [number, number]);
+  if (part === "morning") return span(day, DAY_STARTS, 12);
+  if (part === "afternoon") return span(day, 12, 17);
+  return [...span(day, 17, 24), ...span(day + 1, 0, DAY_STARTS)];
+}
+
+/** What an hour of someone's work costs from their pay: an hourly rate, a day's over its hours, a month's over 30 days. */
+export function hourlyCost(
+  pay: {
+    basis: "monthly" | "daily" | "hourly" | null;
+    rate: number | null;
+    standardHours: number;
+  } | null,
+): number | null {
+  if (!pay || pay.basis === null || pay.rate === null) return null;
+  const hours = pay.standardHours > 0 ? pay.standardHours : 8;
+  if (pay.basis === "hourly") return pay.rate;
+  if (pay.basis === "daily") return pay.rate / hours;
+  return pay.rate / 30 / hours;
+}
+
+/** A shift as the week's grid holds it: whose, the day of the week shown (0 its Saturday), from and to ("08:00"). */
+export interface PlannedShift {
+  employeeId: string;
+  day: number;
+  starts: string;
+  ends: string;
+}
+
+const minutesOf = (hhmm: string) => {
+  const [h = "0", m = "0"] = hhmm.split(":");
+  return Number(h) * 60 + Number(m);
+};
+
+/**
+ * The people each hour of the week shown has scheduled, and what their hours
+ * cost, keyed "day|hour" of the clock (the day −1 … 7: a shift past midnight
+ * on the Friday ends in the Saturday after). Hours ending at or before they
+ * start end the next day.
+ */
+export function plannedHours(
+  shifts: PlannedShift[],
+  costOf: (employeeId: string) => number | null = () => null,
+): Map<string, { people: number; cost: number; unpriced: number }> {
+  const out = new Map<string, { people: number; cost: number; unpriced: number }>();
+  for (const s of shifts) {
+    const a = minutesOf(s.starts);
+    let b = minutesOf(s.ends);
+    if (b <= a) b += 24 * 60;
+    const rate = costOf(s.employeeId);
+    for (let m = a; m < b;) {
+      const next = Math.min(b, (Math.floor(m / 60) + 1) * 60);
+      const at = s.day * 24 + Math.floor(m / 60);
+      const key = `${Math.floor(at / 24)}|${at % 24}`;
+      const h = (next - m) / 60;
+      const c = out.get(key) ?? { people: 0, cost: 0, unpriced: 0 };
+      c.people += h;
+      if (rate === null) c.unpriced += h;
+      else c.cost += h * rate;
+      out.set(key, c);
+      m = next;
+    }
+  }
+  return out;
+}
+
+/** A part of a day of the week shown, against how busy it usually is. */
+export interface PartCheck {
+  /** The day of the week shown, 0 its Saturday, and the part. */
+  day: number;
+  part: DayPart;
+  /** What the part usually brings on its weekday, a day on average: orders and net sales, its hours added. */
+  orders: number;
+  net: number;
+  /** Its hours with orders or people. */
+  hours: number;
+  /** People scheduled at a time, on average over those hours, and the people its orders usually need. */
+  people: number;
+  needed: number | null;
+  flag: HourFlag | null;
+  /** What the hours scheduled cost, and the hours of those whose pay is not known. */
+  cost: number;
+  unpriced: number;
+}
+
+/**
+ * The week shown, part by part (round ten): the people scheduled against what
+ * each part of the day usually brings on its weekday (the four weeks before,
+ * as Staffed when busy? reads them) and what a person usually serves in an
+ * hour. Short of hands, quiet, or nobody, as an hour is marked there.
+ */
+export function weekCheck(
+  s: Staffing,
+  shifts: PlannedShift[],
+  costOf?: (employeeId: string) => number | null,
+): PartCheck[] {
+  const usual = new Map(s.hours.map((h) => [`${h.weekday}|${h.hour}`, h]));
+  const planned = plannedHours(shifts, costOf);
+  const out: PartCheck[] = [];
+  for (let day = 0; day < 7; day++)
+    for (const part of DAY_PARTS) {
+      let orders = 0;
+      let net = 0;
+      let hours = 0;
+      let people = 0;
+      let cost = 0;
+      let unpriced = 0;
+      for (const [d, hour] of partCells(day, part)) {
+        // The week shown starts on a Saturday: its day d is the café's weekday d.
+        const h = usual.get(`${((d % 7) + 7) % 7}|${hour}`);
+        const p = planned.get(`${d}|${hour}`);
+        const o = h?.orders ?? 0;
+        if (o <= 0 && !p?.people) continue;
+        hours += 1;
+        orders += o;
+        net += h?.net ?? 0;
+        people += p?.people ?? 0;
+        cost += p?.cost ?? 0;
+        unpriced += p?.unpriced ?? 0;
+      }
+      const perHour = hours ? orders / hours : 0;
+      const atATime = hours ? people / hours : 0;
+      out.push({
+        day,
+        part,
+        orders,
+        net,
+        hours,
+        people: atATime,
+        needed: s.usual && s.usual > 0 && orders > 0 ? perHour / s.usual : null,
+        flag: hours ? flagOf(perHour, atATime, s.usual, s.busy) : null,
+        cost,
+        unpriced,
+      });
+    }
+  return out;
+}
+
+/** A share of sales, as a percentage; null with no sales. */
+export const labourPercent = (cost: number, sales: number): number | null =>
+  sales > 0 ? (cost / sales) * 100 : null;
+
+/** Hours on the clock, whose they were. */
+export interface StaffSpan extends ClockSpan {
+  employeeId: string;
+}
+
+/** Net sales in an hour of a day of the café's clock. */
+export interface DayHourSales {
+  day: string;
+  hour: number;
+  net: number;
+}
+
+/** A stretch of days, or a part of their days: sales, what the hours on the clock cost, and the share. */
+export interface LabourFigures {
+  sales: number;
+  cost: number;
+  hours: number;
+  /** Hours on the clock of those whose pay is not known: not in the cost. */
+  unpriced: number;
+  percent: number | null;
+}
+
+/**
+ * What the café paid its people against what it sold, from `from` to `to`
+ * (round ten): each person's hours on the clock at their hour's pay, against
+ * net sales, a week (seven days, ending on `to`) at a time and by part of the
+ * day. An hour before five counts in the evening of the day before.
+ */
+export function labourActual(
+  spans: StaffSpan[],
+  sales: DayHourSales[],
+  costOf: (employeeId: string) => number | null,
+  from: string,
+  to: string,
+  local: LocalClock,
+): {
+  weeks: (LabourFigures & { from: string; to: string })[];
+  parts: (LabourFigures & { part: DayPart })[];
+} {
+  const blank = (): LabourFigures => ({ sales: 0, cost: 0, hours: 0, unpriced: 0, percent: null });
+  const weeks: (LabourFigures & { from: string; to: string })[] = [];
+  for (let end = to; end >= from; end = addDays(end, -7))
+    weeks.unshift({ ...blank(), from: addDays(end, -6) < from ? from : addDays(end, -6), to: end });
+  const parts = DAY_PARTS.map((part) => ({ ...blank(), part }));
+  const place = (day: string, hour: number) => {
+    const cafeDay = hour < DAY_STARTS ? addDays(day, -1) : day;
+    if (cafeDay < from || cafeDay > to) return null;
+    const week = weeks.find((w) => cafeDay >= w.from && cafeDay <= w.to);
+    const part = parts.find((p) => p.part === partOf(hour));
+    return week && part ? { week, part } : null;
+  };
+  for (const s of sales) {
+    const at = place(s.day, s.hour);
+    if (!at) continue;
+    at.week.sales += s.net;
+    at.part.sales += s.net;
+  }
+  for (const s of spans) {
+    const a = Date.parse(s.clockIn);
+    const b = Date.parse(s.clockOut);
+    if (!(b > a)) continue;
+    const rate = costOf(s.employeeId);
+    for (let at = a; at < b;) {
+      const next = Math.min(b, (Math.floor(at / QUARTER) + 1) * QUARTER);
+      const { day, hour } = local(at);
+      const into = place(day, hour);
+      if (into) {
+        const h = (next - at) / 3_600_000;
+        for (const f of [into.week, into.part]) {
+          f.hours += h;
+          if (rate === null) f.unpriced += h;
+          else f.cost += h * rate;
+        }
+      }
+      at = next;
+    }
+  }
+  for (const f of [...weeks, ...parts]) f.percent = labourPercent(f.cost, f.sales);
+  return { weeks, parts };
+}
