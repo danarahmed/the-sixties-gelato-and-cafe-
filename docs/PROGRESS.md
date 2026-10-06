@@ -1733,6 +1733,19 @@ Built and tested:
   before and none after. Every browser suite now also checks that no page is
   hydrated before it has all arrived.
 
+- **The same error, from code that comes late, found and fixed (6
+  October).** It still came, rarely: about one load in 160, on any page, the
+  first a new service worker served. A page's document had all arrived, but
+  the code of one of its parts had not: through the service worker, or on a
+  slow connection, a script can come after the page. React paused at that
+  part and resumed from the wrong place, as before. Made late on purpose
+  (each code file up to 1.5 s late, no service worker), it came on 4 of 60
+  loads. The page's head now notes each of its scripts as it runs, and the
+  shell holds hydration back until every one has, as well as the document (5
+  seconds at most); a page all here already is not held. With the same late
+  code: 120 loads and none. The `offline` browser suite now opens twelve
+  pages whose code comes late.
+
 - **Find a sale (the September audit's P2-20).** Orders showed the latest 300
   sales, or those of chosen days. A sale a customer brought back, or one a
   platform asked about, had to be found by eye. **Find a sale** on Orders
