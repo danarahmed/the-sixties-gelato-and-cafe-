@@ -175,6 +175,14 @@ const phrases: PhraseBook = {
     ckb: "لێرەیە لە {time}ەوە، لە {place}",
   },
   "Not clocked in": { ar: "لم يُسجَّل الحضور", ckb: "هاتن تۆمار نەکراوە" },
+  "When you leave, scan the shop's code again to clock out.": {
+    ar: "عند المغادرة، امسح رمز المحل مجددًا لتسجيل الانصراف.",
+    ckb: "کاتێک دەڕۆیت، دووبارە کۆدی دوکان سکان بکە بۆ تۆمارکردنی ڕۆیشتن.",
+  },
+  "Next time, scan the shop's code to clock in.": {
+    ar: "في المرة القادمة، امسح رمز المحل لتسجيل الحضور.",
+    ckb: "جاری داهاتوو، کۆدی دوکان سکان بکە بۆ تۆمارکردنی هاتن.",
+  },
   "Scan the code on the shop's clock screen with this phone's camera.": {
     ar: "امسح الرمز على شاشة الحضور في المحل بكاميرا هذا الهاتف.",
     ckb: "کۆدەکەی سەر شاشەی هاتن و ڕۆیشتنی دوکان بە کامێرای ئەم مۆبایلە سکان بکە.",

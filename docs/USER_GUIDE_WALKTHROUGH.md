@@ -1350,14 +1350,43 @@ payroll readers (the accountant, the auditor) see it too
 
 - **In now:** who is clocked in, and since when.
 - **People:** everyone who works here, with where, since when, their login,
-  whether they have a PIN, and, for those who see payroll, their pay and the
-  advances they still owe. **+ Add someone who works here** (name, what they
-  do, phone, where they work, the day they started, their login if they have
-  one); **Edit**; **Set a PIN** / **New PIN** (they type it, twice: 4 to 8
-  digits, not 1111 or 1234); **Set the pay…** (payroll: by the month, the day
-  or the hour, a day's hours, their own overtime percentage, why it changes);
-  **Last day…** (why; their shifts after it are taken off) or **Works here
-  again…**.
+  whether they have a PIN (and **Phone linked** when their own phone clocks
+  them), and, for those who see payroll, their pay and the advances they still
+  owe. **+ Add people who work here** opens rows, three to start and **Another
+  row** for more: each person's name, what they do, phone, where they work,
+  the day they started, their login if they have one, and a PIN if it is set
+  now (4 to 8 digits, not 1111 or 1234); rows left empty are not added, a row
+  with something to put right says what, and **Add 3 to the staff** adds them
+  all in one press. **Edit**; **Set a PIN** / **New PIN** (they type it,
+  twice); **Link their phone** (below); **Set the pay…** (payroll: by the
+  month, the day or the hour, a day's hours, their own overtime percentage,
+  why it changes); **Last day…** (why; their shifts after it are taken off) or
+  **Works here again…**.
+- **The shop's clock** (round eight, against clocking in from outside the
+  shop): a **clock screen** is a device at the shop — the till, or a tablet by
+  the door — that shows a code of 6 digits, and its square to scan, that
+  changes every 30 seconds; only a clock screen is told the code, so it is
+  seen only at the shop.
+  - The owner (or the general manager) opens Staff **on that device** and
+    presses **Make this device the shop's clock screen** (its name, The till
+    by default, and its branch). The list shows each clock screen, **This
+    device**, when it was last seen, and **Take out of use…** (with why).
+    **Show the code on the whole screen** opens `/clock/screen`, for a tablet
+    that shows nothing else; on the till, the code is in **Clock in or out**.
+  - **Link their phone**, on a person's row: a square appears; the person
+    points their own phone's camera at it, opens the link, and presses **Link
+    this phone**. The row says so by itself. The square works once, for ten
+    minutes; linking another phone ends the first. **Their phone…** then
+    shows since when it is linked and when it was last used, **Link a new
+    phone**, and **Unlink…** (with why: lost, changed).
+  - Each day, the person scans the shop's code with their phone's camera and
+    presses **Clock in** (or **Clock out**) on the page it opens: no PIN, no
+    queue at the till. The phone can also take the 6 digits typed. Five wrong
+    codes in ten minutes pause the phone for ten minutes. The hours say they
+    were clocked on their phone, with the clock screen's code, at its branch.
+  - Once the café has a clock screen, the till's PIN clock works only on a
+    clock screen (a till that is not one shows no clock), and only for those
+    without a linked phone. Until the first clock screen, nothing changes.
 - **The schedule:** a week, Saturday to Friday, for one branch (**← The week
   before** / **The week after →**, and the branches along the top). Type each
   person's hours as `08:00-16:00` (ending at or before the start: the next
@@ -1374,7 +1403,11 @@ payroll readers (the accountant, the auditor) see it too
   Payroll.
 
 Clocking in and out is on the till: **🕐** at the top, then the name and the
-PIN (see [POS](#5-pos)).
+PIN (see [POS](#5-pos)); on a clock screen, the shop's code to scan is shown
+above the names, and those whose phone is linked are marked **Clocks on their
+phone**. The phone's own pages — `/clock`, `/clock/link` and `/clock/screen`
+— open without signing in: a phone or a clock screen is known by the key it
+keeps.
 
 ## 19. Payroll
 
@@ -1937,6 +1970,7 @@ a person's roles allows, then the café's.
 | Open, close and hand over the drawer, counted blind                                                                                                              | `/pos`, `/sales`                         | cashier, barista, managers, owner                                                     |
 | Cash sessions and each one's statement                                                                                                                           | `/sales/sessions`                        | owner, managers, accountant, auditor                                                  |
 | Who works here, their PINs, the schedule, the hours corrected with why                                                                                           | `/staff`                                 | owner, managers                                                                       |
+| The shop's clock screens; each person's phone linked to clock in with the shop's code                                                                            | `/staff`, `/clock`                       | owner and general manager (screens); managers (phones); each person on their phone    |
 | Pay, advances, payroll drafted, approved and paid                                                                                                                | `/staff`, `/payroll`                     | owner, general manager, accountant; the auditor reads                                 |
 | Clock in and out with a name and a PIN                                                                                                                           | `/pos`                                   | everyone who works here, at the till                                                  |
 | Customers found by their number or added at the till; a reward taken; a delivery to their address                                                                | `/pos`                                   | cashier, barista, managers, owner                                                     |

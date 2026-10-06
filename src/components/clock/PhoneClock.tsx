@@ -69,7 +69,9 @@ export function PhoneClock({
   const tz = status.timezone;
   const isIn = status.inSince !== null;
   const direction: "in" | "out" = isIn ? "out" : "in";
-  const code = askDigits ? readCode(typed) : scanned;
+  // No code carried (or the one carried has run out): the digits typed.
+  const typing = askDigits || scanned === null;
+  const code = typing ? readCode(typed) : scanned;
   const hours = (minutes: number) => {
     const { h, m } = splitMinutes(minutes);
     return m === 0
@@ -149,40 +151,51 @@ export function PhoneClock({
         </div>
       )}
 
-      {askDigits && (
-        <div className="grid" style={{ gap: 6 }}>
-          <p style={{ margin: 0 }}>
-            {t("Scan the code on the shop's clock screen with this phone's camera.")}
-          </p>
-          <label className="muted" style={{ fontSize: ".85rem" }} htmlFor="phone-clock-code">
-            {t("Or type the 6 digits it shows")}
-          </label>
-          <input
-            id="phone-clock-code"
-            className="phone-clock-code"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            dir="ltr"
-            maxLength={CODE_DIGITS + 1}
-            value={typed}
-            onChange={(e) => setTyped(latinDigits(e.target.value).replace(/[^0-9 ]/g, ""))}
-            onKeyDown={(e) => e.key === "Enter" && clock()}
-            placeholder="000 000" // i18n-ignore: digits, the same in every language
-            data-testid="phone-clock-code"
-          />
-        </div>
+      {answer ? (
+        // Done: nothing more to press until they come back with the next code.
+        <p className="muted" data-testid="phone-clock-next">
+          {answer.direction === "in"
+            ? t("When you leave, scan the shop's code again to clock out.")
+            : t("Next time, scan the shop's code to clock in.")}
+        </p>
+      ) : (
+        typing && (
+          <div className="grid" style={{ gap: 6 }}>
+            <p style={{ margin: 0 }}>
+              {t("Scan the code on the shop's clock screen with this phone's camera.")}
+            </p>
+            <label className="muted" style={{ fontSize: ".85rem" }} htmlFor="phone-clock-code">
+              {t("Or type the 6 digits it shows")}
+            </label>
+            <input
+              id="phone-clock-code"
+              className="phone-clock-code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              dir="ltr"
+              maxLength={CODE_DIGITS + 1}
+              value={typed}
+              onChange={(e) => setTyped(latinDigits(e.target.value).replace(/[^0-9 ]/g, ""))}
+              onKeyDown={(e) => e.key === "Enter" && clock()}
+              placeholder="000 000" // i18n-ignore: digits, the same in every language
+              data-testid="phone-clock-code"
+            />
+          </div>
+        )
       )}
 
-      <button
-        type="button"
-        className={`btn-primary phone-clock-go${isIn ? " out" : ""}`}
-        disabled={busy || !code}
-        onClick={clock}
-        data-testid="phone-clock-go"
-        data-direction={direction}
-      >
-        <Icon name="clock" size={22} /> {busy ? "…" : isIn ? t("Clock out") : t("Clock in")}
-      </button>
+      {!answer && (
+        <button
+          type="button"
+          className={`btn-primary phone-clock-go${isIn ? " out" : ""}`}
+          disabled={busy || !code}
+          onClick={clock}
+          data-testid="phone-clock-go"
+          data-direction={direction}
+        >
+          <Icon name="clock" size={22} /> {busy ? "…" : isIn ? t("Clock out") : t("Clock in")}
+        </button>
+      )}
 
       {error && (
         <p className="red" style={{ margin: 0 }} role="alert" data-testid="phone-clock-error">

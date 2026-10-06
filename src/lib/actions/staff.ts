@@ -205,19 +205,22 @@ export async function clockAction(
   if (bad) return bad;
   const v = parse(clockInput, input);
   if (!v.ok) return v;
+  // A till that is no clock screen sends no key: the call is as it was before 0068.
+  const screen = await screenKey();
+  const onScreen = screen ? { p_screen: screen } : {};
   const r =
     v.data.direction === "in"
       ? await callRpc<unknown>("clock_in", {
           p_employee: v.data.employeeId,
           p_pin: v.data.pin,
           p_location: await tillForWrite(),
-          p_screen: await screenKey(),
+          ...onScreen,
           p_idempotency_key: key,
         })
       : await callRpc<unknown>("clock_out", {
           p_employee: v.data.employeeId,
           p_pin: v.data.pin,
-          p_screen: await screenKey(),
+          ...onScreen,
           p_idempotency_key: key,
         });
   if (!r.ok) return r;
