@@ -93,7 +93,7 @@ function wholePage(): Promise<void> {
     ),
   );
   // Never held for good: a script that never says it ran lets the page hydrate anyway.
-  const enough = new Promise<void>((done) => setTimeout(done, 8000));
+  const enough = new Promise<void>((done) => setTimeout(done, 5000));
   return Promise.race([arrived, enough])
     .then(() => new Promise<void>((done) => setTimeout(done)))
     .then(() => {
