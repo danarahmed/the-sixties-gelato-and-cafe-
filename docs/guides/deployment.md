@@ -62,7 +62,7 @@ Plan a short window when the café is closed.
 | Accounts and bank put right (`0062`)    | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0062`](#after-0062)). The screens were merged ([pull request #65](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/65)) and deployed                                                                         |
 | Review fixes (`0063`–`0066`)            | 🟡 `0063` applied on 2 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as the owner in transactions that were rolled back. `0064`–`0066` are not applied yet: the connector does not take their text (see [After `0066`](#after-0066)). The screens were merged ([pull request #67](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/67)) and deployed |
 | A day's sales target (`0067`)           | ✅ Migration applied on 3 October, its text checked byte for byte against the file, and checked on the live records as the owner in a transaction that was rolled back (see [After `0067`](#after-0067)). It went in on its own, before `0064`–`0066`                                                                                                                                                                                            |
-| Clocking in by phone (`0068`)           | ⏳ Not applied yet (see [After `0068`](#after-0068)). It touches nothing `0064`–`0066` change, so it applies on its own                                                                                                                                                                                                                                                                                                                          |
+| Clocking in by phone (`0068`)           | ⏳ To be applied by the owner in the SQL editor (see [After `0068`](#after-0068)): the connector holds it for a confirmation that does not reach anyone. It touches nothing `0064`–`0066` change, so it applies on its own. The screens work before it, as before                                                                                                                                                                                |
 
 ## 0. Before you start
 
@@ -3122,7 +3122,35 @@ What it changes:
   the public may call).
 
 The app's screens need it: before it is applied, Staff says the database is
-not ready for clock screens, and the till clocks as before.
+not ready for clock screens, and the till clocks as before (the browser suites
+`pages`, `staff` and `tour` pass against a database without it).
+
+It was rehearsed in the live database's own order (`0001`–`0063`, `0067`,
+then `0068`, without `0064`–`0066`), with the clock and staff tests passing
+on it. A read-only look at the live database on 6 October found what it
+expects: the till's clock as `0049` left it, none of the four tables, one
+person on the staff and no hours recorded, and pgcrypto's `hmac`, `digest`
+and `gen_random_bytes` in `extensions`. The only functions the public could
+call were the 47 of the `citext` extension, none of the café's.
+
+The connector held it: `apply_migration` was sent once, on 6 October, and the
+call went unanswered for its minute. Its text replaces the till's clock
+functions and the hours' list of sources, which the connector keeps for a
+person's confirmation, and that confirmation reaches nobody here. Nothing
+reached the database (no table, no function changed, no migration recorded,
+nothing running). It is applied by the owner instead, in Supabase's SQL
+editor:
+
+1. Open the file `supabase/migrations/0068_clock_by_phone.sql` on GitHub,
+   press **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems (it replaces
+   functions), choose to run it anyway.
+3. It runs as one transaction: all of it, or nothing. **Success. No rows
+   returned** is the answer.
+
+Run twice, it does no harm: every part of it is made only if it is missing,
+or replaced with the same.
 
 ## Clearing the test records
 
