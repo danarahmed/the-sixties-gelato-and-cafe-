@@ -164,8 +164,8 @@ export function ShopClock({
         <p style={{ margin: 0 }}>
           <Link href="/clock/screen" className="clock-screen-open" data-testid="clock-screen-open">
             <Icon name="expand" size={16} /> {t("Show the code on the whole screen")}
-          </Link>{" "}
-          <span className="muted" style={{ fontSize: ".85rem" }}>
+          </Link>
+          <span className="muted" style={{ display: "block", fontSize: ".85rem" }}>
             {t("On the till, the code is also in Clock in or out.")}
           </span>
         </p>

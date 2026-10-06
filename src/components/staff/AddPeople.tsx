@@ -295,7 +295,9 @@ export function AddPeople({
                 done: Math.min(adding.done + 1, adding.of),
                 of: adding.of,
               })
-            : t("Add {n} to the staff", { n: ready.length })}
+            : ready.length === 0
+              ? t("Add to the staff")
+              : t("Add {n} to the staff", { n: ready.length })}
         </button>
       </div>
       <OperationStatus op={op} />

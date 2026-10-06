@@ -64,7 +64,7 @@ export default async function StaffPage({
       <h1 style={{ margin: 0 }}>{t("nav.staff")}</h1>
       <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
         {t(
-          "Who works here, the schedule, and the hours. Each person clocks in and out at the till with their name and PIN. Lateness, leaving early, absence and overtime are shown here, and deducted from pay only when a manager says so on Payroll.",
+          "Who works here, the schedule, and the hours. Each person clocks in and out on their own phone, by scanning the shop's code, or at the till with their name and PIN. Lateness, leaving early, absence and overtime are shown here, and deducted from pay only when a manager says so on Payroll.",
         )}
       </p>
 

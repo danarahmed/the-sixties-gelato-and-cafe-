@@ -77,7 +77,7 @@ export function StaffPeople({
         </p>
       ) : (
         <div className="tw">
-          <table data-testid="staff-people">
+          <table className="stack-table" data-testid="staff-people">
             <thead>
               <tr>
                 <th>{t("Name")}</th>
@@ -202,8 +202,10 @@ function PersonRow({
             </div>
           )}
         </td>
-        <td>{p.location}</td>
-        <td className="mono" style={{ fontSize: ".85rem" }}>
+        <td className="stack-half" data-label={t("Where")}>
+          {p.location}
+        </td>
+        <td className="mono stack-half" style={{ fontSize: ".85rem" }} data-label={t("Started")}>
           {p.hiredOn}
           {p.leftOn && (
             <div className={p.leftOn < today ? "badge" : "badge warn"}>
@@ -212,8 +214,10 @@ function PersonRow({
           )}
           {p.hiredOn > today && <div className="badge warn">{t("Starts later")}</div>}
         </td>
-        <td>{p.login ?? "—"}</td>
-        <td>
+        <td className="stack-half" data-label={t("Login")}>
+          {p.login ?? "—"}
+        </td>
+        <td className="stack-half" data-label={t("PIN")}>
           {p.hasPin ? (
             <span className="badge ok">{t("Set")}</span>
           ) : (
@@ -228,7 +232,7 @@ function PersonRow({
           )}
         </td>
         {seesPay && (
-          <td data-testid="person-pay">
+          <td className="stack-half" data-testid="person-pay" data-label={t("Pay")}>
             {p.pay?.basis && p.pay.rate !== null ? (
               <>
                 {t(RATE_PER[p.pay.basis], { amount: fmtIQD(p.pay.rate) })}
@@ -244,7 +248,7 @@ function PersonRow({
           </td>
         )}
         {seesPay && (
-          <td className="right money">
+          <td className="right money stack-half" data-label={t("Advances owed")}>
             {p.pay && p.pay.advanceOwed !== 0 ? fmtIQD(p.pay.advanceOwed) : "—"}
           </td>
         )}
