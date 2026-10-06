@@ -190,8 +190,13 @@ export function AppShell({
   // Only the screens this person's roles open. The database enforces the
   // same limits on every read and write; this just keeps the menu honest.
   const nav = NAV.filter((n) => holdsAny(member.permissions, n.anyOf));
-  // The till takes the whole screen; the menu opens from the ☰ button.
-  const posMode = pathname === "/pos" || pathname?.startsWith("/pos/");
+  // The till takes the whole screen, and so does the clock (0068); the menu
+  // opens from the ☰ button.
+  const posMode =
+    pathname === "/pos" ||
+    pathname?.startsWith("/pos/") ||
+    pathname === "/clock" ||
+    pathname?.startsWith("/clock/");
   const lit = activeHref(
     pathname,
     nav.map((n) => n.href),

@@ -11,6 +11,7 @@ import { ChannelsProvider } from "@/components/ChannelsProvider";
 import { EmptyState } from "@/components/ui";
 import { BranchPicker, PlaceSwitch } from "@/components/PlaceSwitch";
 import { getPlace, tillChoice } from "@/lib/place";
+import { getScreenCheck } from "@/lib/db/clock";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export default async function PosPage() {
   }
   // The view this device was left on: Tables or the menu.
   const startView = (await cookies()).get("pos_view")?.value;
-  const [items, addons, tables, bills, channels, drawer, fx] = await Promise.all([
+  const [items, addons, tables, bills, channels, drawer, fx, clockScreen] = await Promise.all([
     getPosCatalogue(at),
     getPosAddons(at),
     getTables(at),
@@ -46,6 +47,7 @@ export default async function PosPage() {
     getChannels(),
     getDrawerState(at),
     getFxStatus(),
+    getScreenCheck(),
   ]);
 
   if (items.length === 0) {
@@ -88,6 +90,7 @@ export default async function PosPage() {
         fx={fx.usable && fx.rate !== null ? { rate: fx.rate, roundTo: fx.roundTo } : null}
         dollarsOffHours={!fx.usable && fx.rate !== null ? fx.ageHours : null}
         startView={startView === "floor" || startView === "menu" ? startView : null}
+        clockScreen={clockScreen}
       />
     </ChannelsProvider>
   );

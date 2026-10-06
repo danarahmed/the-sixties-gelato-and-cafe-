@@ -7,7 +7,8 @@
 --
 --   kept     the business, its locations and their drawers, the chart of
 --            accounts, the people (with their roles and approval PINs), who
---            works here (with their pay and clock PINs), the customers (with
+--            works here (with their pay and clock PINs, their linked phones),
+--            the shop's clock screens, the customers (with
 --            their addresses), the menu (products, their sizes, categories, photos, prices, recipes
 --            and their versions, add-ons with their groups, prices and
 --            recipes), the stock items and their units, suppliers and who
@@ -24,7 +25,7 @@
 --            stock movements and lots, the stock sent between places,
 --            losses and giveaways, stock counts,
 --            production batches, the schedule, the hours clocked and the PINs
---            typed, advances, payrolls and the salaries paid, the customers'
+--            typed, the links to make a phone someone's, advances, payrolls and the salaries paid, the customers'
 --            points,
 --            purchase orders, deliveries and their corrections, returns to
 --            suppliers, supplier bills, payments and credits, expenses, every
@@ -69,7 +70,8 @@ insert into reset_keep values
   ('delivery_platform'), ('platform_store_map'), ('platform_product_map'), ('promotion'),
   ('reason_code'), ('app_language'), ('app_phrase'), ('business_rule'), ('business_rule_history'),
   ('modifier_group'), ('modifier'), ('modifier_price'), ('modifier_recipe_line'), ('product_modifier_group'),
-  ('employee'), ('customer'), ('customer_address'), ('audit_log');
+  ('employee'), ('customer'), ('customer_address'), ('audit_log'),
+  ('clock_screen'), ('clock_secret'), ('staff_phone');
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');
@@ -113,7 +115,7 @@ truncate table
   journal_entry, journal_line,
   loss_review, lot_movement, loyalty_ledger,
   payroll_approval, payroll_line, payroll_run,
-  pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
+  phone_link, pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   pos_tab_line_modifier, prepaid_expense, prepaid_release,
   production_batch,
   purchase_invoice, purchase_order, purchase_order_line, receipt_correction, reconciliation_issue, request_log,

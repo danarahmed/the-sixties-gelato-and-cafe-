@@ -44,6 +44,7 @@ export const RUN_STATUS_LABEL: Record<string, string> = {
 export const SOURCE_LABEL: Record<string, string> = {
   till: "Clocked at the till",
   manager: "Added by a manager",
+  phone: "Clocked on their phone",
 };
 
 /** Whole hours and minutes of a number of minutes. */
@@ -162,6 +163,8 @@ export interface ClockPerson {
   name: string;
   title: string | null;
   hasPin: boolean;
+  /** Their own phone is linked (0068): with a clock screen in use, they clock with it. */
+  hasPhone: boolean;
   inSince: string | null;
   shiftStarts: string | null;
   shiftEnds: string | null;
@@ -173,6 +176,7 @@ export function clockBoardFrom(v: unknown): ClockPerson[] {
     name: str(r.name),
     title: strOrNull(r.title),
     hasPin: r.has_pin === true,
+    hasPhone: r.has_phone === true,
     inSince: strOrNull(r.in_since),
     shiftStarts: strOrNull(r.shift_starts),
     shiftEnds: strOrNull(r.shift_ends),

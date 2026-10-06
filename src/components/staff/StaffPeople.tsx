@@ -14,11 +14,15 @@ import { dateTimeIn } from "@/lib/dates";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { AddPeople } from "@/components/staff/AddPeople";
+import { Icon } from "@/components/Icon";
+import { PhonePanel } from "@/components/staff/PhonePanel";
+import type { LinkedPhone } from "@/lib/clock";
 
 type Msg = { ok: boolean; text: string } | null;
 type Place = { id: string; name: string };
 type Login = { id: string; name: string };
-type Open = { what: "edit" | "pin" | "pay" | "left"; id: string } | null;
+type Open = { what: "edit" | "pin" | "pay" | "left" | "phone"; id: string } | null;
 
 /**
  * Who works here (0049): each person, where they work, since when, their
@@ -34,6 +38,7 @@ export function StaffPeople({
   timezone,
   canManage,
   canPay,
+  phones = null,
 }: {
   people: StaffMember[];
   places: Place[];
@@ -44,10 +49,14 @@ export function StaffPeople({
   canManage: boolean;
   /** payroll.run: set pay. */
   canPay: boolean;
+  /** Whose own phone is linked to clock with (0068); null before the database has it. */
+  phones?: Record<string, LinkedPhone> | null;
 }) {
   const { t } = useT();
   const [open, setOpen] = useState<Open>(null);
   const [adding, setAdding] = useState(false);
+  // What the last people added came to, said under the list once the form is closed.
+  const [added, setAdded] = useState<Msg>(null);
   // A link to the form opens it: Getting set up's /staff#add-person.
   useEffect(() => {
     if (!canManage || window.location.hash !== "#add-person") return;
@@ -96,6 +105,7 @@ export function StaffPeople({
                   timezone={timezone}
                   canManage={canManage}
                   canPay={canPay}
+                  phones={phones}
                 />
               ))}
             </tbody>
@@ -105,12 +115,18 @@ export function StaffPeople({
       {canManage &&
         (adding ? (
           <div className="card grid" style={{ gap: 10 }} id="add-person">
-            <b>{t("Someone new")}</b>
-            <PersonForm
+            <b>{t("People to add")}</b>
+            <AddPeople
               places={places}
               logins={logins}
               today={today}
-              onDone={() => setAdding(false)}
+              onDone={(n, pinsNotSet) => {
+                setAdding(false);
+                setAdded({
+                  ok: pinsNotSet.length === 0,
+                  text: [t("{n} added to the staff.", { n }), ...pinsNotSet].join(" "),
+                });
+              }}
               onCancel={() => setAdding(false)}
             />
           </div>
@@ -118,13 +134,17 @@ export function StaffPeople({
           <button
             type="button"
             style={{ alignSelf: "start" }}
-            onClick={() => setAdding(true)}
+            onClick={() => {
+              setAdded(null);
+              setAdding(true);
+            }}
             data-testid="add-person"
             id="add-person"
           >
-            {t("+ Add someone who works here")}
+            {t("+ Add people who work here")}
           </button>
         ))}
+      {!adding && <Notice msg={added} />}
     </div>
   );
 }
@@ -141,6 +161,7 @@ function PersonRow({
   timezone,
   canManage,
   canPay,
+  phones,
 }: {
   p: StaffMember;
   seesPay: boolean;
@@ -153,9 +174,11 @@ function PersonRow({
   timezone: string;
   canManage: boolean;
   canPay: boolean;
+  phones: Record<string, LinkedPhone> | null;
 }) {
   const { t } = useT();
   const cols = 6 + (seesPay ? 2 : 0);
+  const phone = phones?.[p.id] ?? null;
   return (
     <>
       <tr
@@ -196,6 +219,13 @@ function PersonRow({
           ) : (
             <span className="badge warn">{t("None yet")}</span>
           )}
+          {phone && (
+            <div>
+              <span className="badge ok" data-testid="person-phone">
+                <Icon name="phone" size={13} /> {t("Phone linked")}
+              </span>
+            </div>
+          )}
         </td>
         {seesPay && (
           <td data-testid="person-pay">
@@ -235,6 +265,11 @@ function PersonRow({
                 {t("Set the pay…")}
               </button>
             )}
+            {canManage && phones !== null && p.worksNow && (
+              <button type="button" onClick={() => toggle("phone", p.id)} data-testid="link-phone">
+                <Icon name="phone" size={15} /> {phone ? t("Their phone…") : t("Link their phone")}
+              </button>
+            )}
             {canManage && (
               <button type="button" onClick={() => toggle("left", p.id)} data-testid="set-left">
                 {p.leftOn ? t("Works here again…") : t("Last day…")}
@@ -259,6 +294,15 @@ function PersonRow({
             {open === "pin" && <PinForm person={p} onDone={close} />}
             {open === "pay" && <PayForm person={p} onDone={close} />}
             {open === "left" && <LeftForm person={p} today={today} onDone={close} />}
+            {open === "phone" && (
+              <PhonePanel
+                employeeId={p.id}
+                name={p.name}
+                phone={phone}
+                timezone={timezone}
+                onClose={close}
+              />
+            )}
           </td>
         </tr>
       )}

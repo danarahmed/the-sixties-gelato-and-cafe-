@@ -245,34 +245,34 @@ select test.eq((select string_agg(x ->> 'name' || ':' || (x ->> 'has_pin'), ',' 
                   from jsonb_array_elements(clock_board()) x),
                'Ali:true,Dana:true,Karim:true,Layla:false,Noor:false,Omar:false,Sara:false',
                'the till lists who works here today');
-select test.eq(clock_in(pg_temp.person('Sara'), '2580', null, gen_random_uuid()) ->> 'error',
+select test.eq(clock_in(pg_temp.person('Sara'), '2580', null, null, gen_random_uuid()) ->> 'error',
                'Sara has no PIN yet: a manager sets one on Staff', 'no PIN, no clocking');
-select test.eq(clock_in(pg_temp.person('Ali'), '0000', null, gen_random_uuid()) ->> 'error', 'That PIN is not right',
+select test.eq(clock_in(pg_temp.person('Ali'), '0000', null, null, gen_random_uuid()) ->> 'error', 'That PIN is not right',
                'a wrong PIN');
 select test.eq(pg_temp.wrong_pins(), 1, 'the wrong PIN is kept');
-select clock_in(pg_temp.person('Ali'), '0001', null, gen_random_uuid());
-select clock_in(pg_temp.person('Ali'), '0002', null, gen_random_uuid());
-select test.eq(clock_in(pg_temp.person('Ali'), '7391', null, gen_random_uuid()) ->> 'error',
+select clock_in(pg_temp.person('Ali'), '0001', null, null, gen_random_uuid());
+select clock_in(pg_temp.person('Ali'), '0002', null, null, gen_random_uuid());
+select test.eq(clock_in(pg_temp.person('Ali'), '7391', null, null, gen_random_uuid()) ->> 'error',
                'Too many wrong PINs from this login: try again in 15 minutes', 'three wrong from one login pause it');
 select test.as_admin();
 delete from clock_attempt;
 select test.act_as('cashier@example.com');
-insert into res select 'ali_in', clock_in(pg_temp.person('Ali'), '7391', null, 'b0000000-0000-0000-0000-000000000001');
+insert into res select 'ali_in', clock_in(pg_temp.person('Ali'), '7391', null, null, 'b0000000-0000-0000-0000-000000000001');
 select test.ok((pg_temp.r('ali_in') ->> 'ok')::boolean and pg_temp.r('ali_in') ? 'attendance_id', 'Ali clocks in');
-select test.eq((clock_in(pg_temp.person('Ali'), '7391', null, 'b0000000-0000-0000-0000-000000000001')
+select test.eq((clock_in(pg_temp.person('Ali'), '7391', null, null, 'b0000000-0000-0000-0000-000000000001')
                 ->> 'attendance_id')::uuid, pg_temp.id('ali_in', 'attendance_id'), 'sent twice, clocked in once');
-select test.ok(clock_in(pg_temp.person('Ali'), '7391', null, gen_random_uuid()) ->> 'error' like 'Ali is clocked in already, since %',
+select test.ok(clock_in(pg_temp.person('Ali'), '7391', null, null, gen_random_uuid()) ->> 'error' like 'Ali is clocked in already, since %',
                'nobody clocks in twice');
 select test.as_admin();
 select test.eq((select count(*)::int from attendance where employee_id = pg_temp.person('Ali')), 1, 'one record');
 select test.act_as('cashier@example.com');
 select test.eq((select x ->> 'in_since' is not null from jsonb_array_elements(clock_board()) x where x ->> 'name' = 'Ali'),
                true, 'the till shows who is in');
-select test.eq(clock_out(pg_temp.person('Ali'), '0000', gen_random_uuid()) ->> 'error', 'That PIN is not right',
+select test.eq(clock_out(pg_temp.person('Ali'), '0000', null, gen_random_uuid()) ->> 'error', 'That PIN is not right',
                'clocking out takes the PIN too');
-insert into res select 'ali_out', clock_out(pg_temp.person('Ali'), '7391', gen_random_uuid());
+insert into res select 'ali_out', clock_out(pg_temp.person('Ali'), '7391', null, gen_random_uuid());
 select test.ok((pg_temp.r('ali_out') ->> 'ok')::boolean and (pg_temp.r('ali_out') ->> 'minutes')::int = 0, 'Ali clocks out');
-select test.eq(clock_out(pg_temp.person('Ali'), '7391', gen_random_uuid()) ->> 'error', 'Ali is not clocked in',
+select test.eq(clock_out(pg_temp.person('Ali'), '7391', null, gen_random_uuid()) ->> 'error', 'Ali is not clocked in',
                'nobody clocks out twice');
 select test.as_admin();
 select test.eq((select source || ':' || (recorded_by = pg_temp.member('cashier@example.com'))::text
@@ -282,20 +282,20 @@ insert into clock_attempt (business_id, employee_id, requested_by, ok)
 select '00000000-0000-0000-0000-0000000000b1', pg_temp.person('Karim'), pg_temp.member('owner@example.com'), false
   from generate_series(1, 20);
 select test.act_as('cashier@example.com');
-select test.eq(clock_in(pg_temp.person('Karim'), '8264', null, gen_random_uuid()) ->> 'error',
+select test.eq(clock_in(pg_temp.person('Karim'), '8264', null, null, gen_random_uuid()) ->> 'error',
                'Clocking by PIN is paused for Karim after too many wrong PINs today: a manager sets a new PIN on Staff',
                'twenty wrong PINs pause that person');
 select test.act_as('manager@example.com');
 select set_clock_pin(pg_temp.person('Karim'), '8265');
 select test.act_as('cashier@example.com');
-select test.ok((clock_in(pg_temp.person('Karim'), '8265', null, gen_random_uuid()) ->> 'ok')::boolean,
+select test.ok((clock_in(pg_temp.person('Karim'), '8265', null, null, gen_random_uuid()) ->> 'ok')::boolean,
                'a new PIN lifts the pause');
 -- Someone clocked in does not leave; their last day takes them off the schedule after it.
 select test.act_as('manager@example.com');
 select test.throws($$select set_employee_left(pg_temp.person('Karim'), test.today(), 'moved away', gen_random_uuid())$$,
                    'Karim is clocked in: clock them out first', 'someone clocked in has not left');
 select test.act_as('cashier@example.com');
-select clock_out(pg_temp.person('Karim'), '8265', gen_random_uuid());
+select clock_out(pg_temp.person('Karim'), '8265', null, gen_random_uuid());
 select test.act_as('manager@example.com');
 select save_schedule(null, test.today() + 1, test.today() + 1,
                      jsonb_build_array(jsonb_build_object('employee_id', pg_temp.person('Karim'), 'day', test.today() + 1,

@@ -212,12 +212,18 @@ const ACTION_LABEL: Record<string, string> = {
   "alert.snooze": "Alert snoozed",
   "business.clean_start": "Trial records cleared (clean start)",
   "business.reset_test_data": "Test records cleared",
+  "business.start_fresh": "Everything cleared to start fresh",
   // Staff, their hours and their pay (0049).
   "staff.save": "Person who works here saved",
   "staff.pay": "Pay set",
   "staff.left": "Last day set",
   "staff.clock_pin": "Clock-in PIN set",
   "staff.schedule": "Schedule saved",
+  // Clocking in on your own phone, with the shop's code (0068).
+  "staff.clock_screen": "Clock screen made",
+  "staff.clock_screen_removed": "Clock screen taken out of use",
+  "staff.phone_linked": "Phone linked for clocking in",
+  "staff.phone_unlinked": "Phone unlinked",
   "attendance.correct": "Hours corrected",
   "attendance.add": "Hours added",
   "attendance.cancel": "Hours cancelled",

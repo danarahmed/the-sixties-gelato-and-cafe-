@@ -50,11 +50,12 @@ console.log("▸ a manager adds someone who works here, sets their PIN, and sees
   await open(page, "/staff");
   await page.getByTestId("add-person").click();
   const form = page.getByTestId("person-form");
-  await form.getByLabel("Name").fill("Rana Staff");
-  await form.getByLabel("What they do").fill("Barista");
-  await form.getByLabel("Where they work").selectOption({ label: HERE });
-  await form.getByLabel("Started on").fill(MONTH);
-  await form.getByRole("button", { name: "Add them" }).click();
+  const first = form.getByTestId("add-person-row").first();
+  await first.getByLabel("Name").fill("Rana Staff");
+  await first.getByLabel("What they do").fill("Barista");
+  await first.getByLabel("Where they work").selectOption({ label: HERE });
+  await first.getByLabel("Started on").fill(MONTH);
+  await form.getByTestId("add-people-save").click();
   const row = page.locator('[data-testid="person-row"][data-name="Rana Staff"]');
   await row.waitFor({ timeout: 10000 });
   check((await row.textContent()).includes("None yet"), "added, with no PIN yet");
@@ -74,6 +75,7 @@ console.log("▸ a manager adds someone who works here, sets their PIN, and sees
   check(true, "the PIN is set, typed twice");
   await ctx.close();
 }
+
 const RANA = last(`select id from employee where full_name = 'Rana Staff'`);
 check(
   last(`select hired_on || ' ' || (clock_pin_hash is not null) || ' ' || (clock_pin_hash <> '5820')
@@ -455,6 +457,56 @@ for (const locale of ["ar", "ckb"]) {
 
 console.log("▸ the books still tie");
 check(differences() === before, `every subledger is where it was (${differences()})`);
+
+console.log("▸ a manager adds three people at once, their PINs with them (round eight)");
+{
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/staff");
+  await page.getByTestId("add-person").click();
+  const form = page.getByTestId("person-form");
+  const rows = form.getByTestId("add-person-row");
+  check((await rows.count()) === 3, "three empty rows to start with");
+  await rows.nth(0).getByLabel("Name").fill("Bulk One");
+  await rows.nth(0).getByLabel("PIN (optional)").fill("5821");
+  await rows.nth(1).getByLabel("Name").fill("Bulk Two");
+  await rows.nth(1).getByLabel("What they do").fill("Kitchen");
+  await rows.nth(1).getByLabel("PIN (optional)").fill("1111");
+  await rows.nth(2).getByLabel("What they do").fill("Cleaner");
+  const save = form.getByTestId("add-people-save");
+  check(
+    ((await rows.nth(1).textContent()) ?? "").includes("Choose a PIN that is harder to guess") &&
+      ((await rows.nth(2).textContent()) ?? "").includes("Give their name") &&
+      (await save.isDisabled()),
+    "a PIN too easy to guess and a row with no name are said, and nothing is added yet",
+  );
+  await rows.nth(1).getByLabel("PIN (optional)").fill("5822");
+  await rows.nth(2).getByLabel("Name").fill("Bulk Three");
+  await form.getByTestId("add-person-another").click();
+  check((await rows.count()) === 4, "another row when needed");
+  check(
+    ((await save.textContent()) ?? "").trim() === "Add 3 to the staff",
+    "the empty row is left out: Add 3 to the staff",
+  );
+  await save.click();
+  await page.getByText("3 added to the staff.").waitFor({ timeout: 20000 });
+  check(
+    (await page.getByTestId("person-form").count()) === 0,
+    "the form closes once all are added",
+  );
+  const pins = sql(
+    `select string_agg(full_name || '=' || (clock_pin_hash is not null)::text, ',' order by full_name)
+       from employee where full_name like 'Bulk %'`,
+  );
+  check(
+    pins === "Bulk One=true,Bulk Three=false,Bulk Two=true",
+    `three people added, two with their PINs set (${pins})`,
+  );
+  check(
+    sql("select title from employee where full_name = 'Bulk Two'") === "Kitchen",
+    "with what they do",
+  );
+  await ctx.close();
+}
 
 await browser.close();
 done("staff");

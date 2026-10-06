@@ -18,7 +18,8 @@
 --            alerts, the answers kept for retries), and the setup lists: the
 --            menu (products, sizes, categories, photos, prices, add-ons,
 --            promotions), recipes, stock items and their units, suppliers,
---            staff, customers and their addresses, dining tables; and the
+--            staff (their phones too), the shop's clock screens, customers and
+--            their addresses, dining tables; and the
 --            audit trail, which starts again with one line saying so.
 --            Numbers start again: journals at 1001, the rest at 1.
 --
@@ -85,7 +86,8 @@ end $$;
 
 truncate table
   accounting_period, ai_insight, ai_interaction_log, alert, approval, attendance, audit_log, bank_statement,
-  bank_statement_line, card_settlement, cash_event, cash_transfer, channel_price, clock_attempt, customer,
+  bank_statement_line, card_settlement, cash_event, cash_transfer, channel_price, clock_attempt, clock_screen,
+  clock_secret, customer,
   customer_address, dining_table, document_attachment, document_counter, employee, employee_advance, expense,
   fx_cash_event, fx_exchange, fx_rate, goods_receipt, goods_receipt_line, inventory_movement, item, item_lot,
   item_supplier, item_unit, journal_entry, journal_line, loss_review, lot_movement, loyalty_ledger, modifier,
@@ -93,10 +95,11 @@ truncate table
   platform_order, platform_product_map, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   pos_tab_line_modifier, prepaid_expense, prepaid_release, product, product_category, product_image,
   product_modifier_group, product_variant, production_batch, promotion, purchase_invoice, purchase_order,
-  purchase_order_line, receipt_correction, recipe, recipe_line, recipe_version, reconciliation_issue, request_log,
+  purchase_order_line, phone_link, receipt_correction, recipe, recipe_line, recipe_version, reconciliation_issue,
+  request_log,
   sale_adjustment, sale_refund, sale_refund_line, sale_refund_tender, salary_payment, salary_payment_line,
   sales_order, sales_order_line, sales_order_line_modifier, sales_tender, session_dollar_count, shift_schedule,
-  stock_count, stock_count_line, stock_loss, stock_loss_line, stock_transfer, stock_transfer_line, supplier,
+  staff_phone, stock_count, stock_count_line, stock_loss, stock_loss_line, stock_transfer, stock_transfer_line, supplier,
   supplier_credit, supplier_credit_allocation, supplier_payment, supplier_return, supplier_return_line, sync_log,
   variant_recipe, work_shift
   restart identity;

@@ -1931,3 +1931,40 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   several). A place not the café's is refused.
 - Nothing is recorded by it, and nothing but the dashboard reads it: no table
   changes.
+
+### Clocking in on your own phone, with the shop's code (`0068`)
+
+- **`clock_screen`**: a device at the shop the owner made a clock screen (the
+  till, a tablet by the door): its name, its place, the SHA-256 of its key (the
+  key itself is given once, to the device, and kept nowhere else), who made it
+  and when, when it last asked for its code, and when it was taken out of use,
+  by whom and why. **`clock_secret`**: one per café, the secret its codes are
+  made with. A screen's code is 6 digits of an HMAC of the screen and the
+  half-minute; a code is good for the half-minute it is shown and the next.
+- **`staff_phone`**: a phone linked to a person: the SHA-256 of its key, who
+  linked it and when, when it was last used, the wrong codes since the first
+  of them (five in ten minutes pause it), and when it stopped being theirs and
+  by whom. One linked phone a person. **`phone_link`**: a link to make a
+  phone someone's: the SHA-256 of its key, who made it, ten minutes to use it,
+  once.
+- **`attendance`** gains `phone_id` and `screen_id`, and `source` may be
+  `phone`: hours clocked on a phone say the phone and the screen whose code it
+  gave, and are at that screen's place; hours clocked at the till on a clock
+  screen say the screen.
+- **The rules.** With no clock screen, nothing changes. Once the café has one,
+  the till's clock (a name and a PIN) works only on a clock screen, at its
+  place, and not for someone whose phone is linked: they clock with it.
+- **Functions:** `register_clock_screen(location, name)` and
+  `remove_clock_screen(screen, reason)` (`settings.manage`), `clock_screens()`
+  (`settings.manage` or `staff.manage`), `clock_screen_check(key)` (signed in:
+  is this device a clock screen, and has the café any); `link_phone_start`,
+  `unlink_phone` and `staff_phones()` (`staff.manage`; the list also for
+  `attendance.edit` and `payroll.view`). `clock_in` and `clock_out` stay one
+  function each and take the screen's key (`p_screen`, none by default);
+  `clock_board` says who clocks on their own phone. The
+  only functions the public may call, each answering only to a key it gave
+  out: `clock_screen_code(key)` (the code a screen shows, and until when),
+  `link_phone_finish(link)`, `phone_status(phone)` and
+  `clock_by_phone(phone, code, direction)`, keyed like every write. The trail's
+  rows are `staff.clock_screen`, `staff.clock_screen_removed`,
+  `staff.phone_linked` and `staff.phone_unlinked`.

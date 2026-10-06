@@ -8,14 +8,29 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import { OperationStatus, useOperation } from "@/components/useOperation";
 import { Modal } from "./Dialogs";
 import { Icon } from "@/components/Icon";
+import { ShopCode } from "@/components/clock/ShopCode";
 
 /**
  * Clocking in and out at the till (0049): each person who works at this branch
  * chooses their name and types their PIN. Those in are shown since when; the
  * others, their shift today. A wrong PIN is counted by the database, and too
- * many pause clocking by PIN until a manager sets a new one on Staff.
+ * many pause clocking by PIN until a manager sets a new one on Staff. On one
+ * of the shop's clock screens (0068) it shows the shop's code first, for
+ * those who clock on their own phone; they are not offered the PIN.
  */
-export function ClockDialog({ timezone, onClose }: { timezone: string; onClose: () => void }) {
+export function ClockDialog({
+  timezone,
+  onScreen = false,
+  screensInUse = false,
+  onClose,
+}: {
+  timezone: string;
+  /** This till is one of the shop's clock screens. */
+  onScreen?: boolean;
+  /** The café has clock screens: whoever has a linked phone clocks with it. */
+  screensInUse?: boolean;
+  onClose: () => void;
+}) {
   const op = useOperation();
   const { t, msg: say } = useT();
   const [people, setPeople] = useState<ClockPerson[] | null>(null);
@@ -76,6 +91,14 @@ export function ClockDialog({ timezone, onClose }: { timezone: string; onClose: 
         <h3 style={{ margin: 0 }}>
           <Icon name="clock" /> {t("Clock in or out")}
         </h3>
+        {onScreen && (
+          <>
+            <ShopCode />
+            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+              {t("No phone? Choose your name and type your PIN.")}
+            </p>
+          </>
+        )}
 
         {done && (
           <div
@@ -132,7 +155,7 @@ export function ClockDialog({ timezone, onClose }: { timezone: string; onClose: 
                   type="button"
                   className={p.inSince ? "btn-primary" : undefined}
                   style={{ textAlign: "start", padding: "10px 12px" }}
-                  disabled={busy || !p.hasPin}
+                  disabled={busy || !p.hasPin || (screensInUse && p.hasPhone)}
                   onClick={() => {
                     setWho(p);
                     setPin("");
@@ -146,16 +169,27 @@ export function ClockDialog({ timezone, onClose }: { timezone: string; onClose: 
                   <b>{p.name}</b>
                   <br />
                   <span style={{ fontSize: ".8rem" }}>
-                    {p.inSince
-                      ? t("In since {time}", { time: clockTime(p.inSince, timezone) })
-                      : !p.hasPin
-                        ? t("No PIN yet: a manager sets one on Staff")
-                        : p.shiftStarts
-                          ? t("Shift {from}–{to}", {
-                              from: clockTime(p.shiftStarts, timezone),
-                              to: clockTime(p.shiftEnds, timezone),
+                    {screensInUse && p.hasPhone ? (
+                      <>
+                        <Icon name="phone" size={13} />{" "}
+                        {p.inSince
+                          ? t("In since {time}, on their phone", {
+                              time: clockTime(p.inSince, timezone),
                             })
-                          : t("Not on the schedule today")}
+                          : t("Clocks on their phone")}
+                      </>
+                    ) : p.inSince ? (
+                      t("In since {time}", { time: clockTime(p.inSince, timezone) })
+                    ) : !p.hasPin ? (
+                      t("No PIN yet: a manager sets one on Staff")
+                    ) : p.shiftStarts ? (
+                      t("Shift {from}–{to}", {
+                        from: clockTime(p.shiftStarts, timezone),
+                        to: clockTime(p.shiftEnds, timezone),
+                      })
+                    ) : (
+                      t("Not on the schedule today")
+                    )}
                   </span>
                 </button>
               ))}

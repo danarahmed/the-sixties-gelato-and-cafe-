@@ -15,6 +15,7 @@ import {
 } from "@/lib/staff";
 import { day, id, optionalNonNegative, optionalText, positive, text } from "@/lib/validation";
 import { tillForWrite } from "@/lib/place";
+import { screenKey } from "@/lib/clockDevice";
 
 const STAFF_PATHS = ["/staff", "/payroll", "/reports", "/pos"];
 
@@ -192,7 +193,9 @@ const clockInput = z.object({
 
 /**
  * Clocking in or out at the till, with a name and a PIN. A wrong PIN is an
- * answer, not a failure: it is counted, and the person is told.
+ * answer, not a failure: it is counted, and the person is told. The till says
+ * which clock screen it is, if it is one (0068): once the café has one, the
+ * till clocks only on a clock screen.
  */
 export async function clockAction(
   input: z.input<typeof clockInput>,
@@ -202,17 +205,22 @@ export async function clockAction(
   if (bad) return bad;
   const v = parse(clockInput, input);
   if (!v.ok) return v;
+  // A till that is no clock screen sends no key: the call is as it was before 0068.
+  const screen = await screenKey();
+  const onScreen = screen ? { p_screen: screen } : {};
   const r =
     v.data.direction === "in"
       ? await callRpc<unknown>("clock_in", {
           p_employee: v.data.employeeId,
           p_pin: v.data.pin,
           p_location: await tillForWrite(),
+          ...onScreen,
           p_idempotency_key: key,
         })
       : await callRpc<unknown>("clock_out", {
           p_employee: v.data.employeeId,
           p_pin: v.data.pin,
+          ...onScreen,
           p_idempotency_key: key,
         });
   if (!r.ok) return r;

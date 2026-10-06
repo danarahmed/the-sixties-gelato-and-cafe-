@@ -5989,3 +5989,327 @@ kbd {
     justify-items: start;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Several people added at once (round eight): a row each, on Staff.
+   --------------------------------------------------------------------------- */
+.add-people-table th {
+  white-space: nowrap;
+}
+.add-people-table td {
+  vertical-align: top;
+  padding: 6px 4px;
+}
+.add-people-table td:first-child input {
+  min-width: 150px;
+}
+.add-people-table tbody tr.add-row-off td {
+  background: color-mix(in oklab, var(--err) 6%, var(--surface));
+}
+.add-row-why {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  color: var(--err);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.add-row-remove {
+  min-height: 38px;
+  min-width: 38px;
+  color: var(--text-muted);
+}
+.add-people-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .add-people-table.stack-table tbody tr {
+    margin-block-end: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .add-people-table.stack-table tbody tr.add-row-off {
+    border-color: color-mix(in oklab, var(--err) 35%, var(--border));
+    background: color-mix(in oklab, var(--err) 6%, var(--surface));
+  }
+  .add-people-table.stack-table tbody tr td {
+    padding: 3px 0;
+    background: transparent;
+  }
+  .add-people-table td:first-child input {
+    min-width: 0;
+  }
+}
+
+/* --------------------------------------------- The shop's clock (round eight) */
+/* The code a clock screen shows: a square to scan, its digits, the time left. */
+.shop-code {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.shop-code-say {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 650;
+}
+.shop-code-square,
+.phone-panel-square {
+  background: #ffffff;
+  padding: 6px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  line-height: 0;
+}
+.qr {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.shop-code-digits {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--text);
+}
+.shop-code-time {
+  inline-size: min(240px, 80%);
+  block-size: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.shop-code-time span {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--glow);
+  transition: inline-size 0.25s linear;
+}
+.shop-code-left {
+  margin: 0;
+  font-size: 0.82rem;
+}
+.shop-code.full {
+  gap: 14px;
+  padding: 28px 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+}
+.shop-code.full .shop-code-say {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+}
+.shop-code.full .shop-code-digits {
+  font-size: clamp(2.6rem, 9vw, 4.4rem);
+}
+.clock-screen-page {
+  display: grid;
+  place-items: center;
+  min-height: calc(100dvh - 120px);
+  padding: 12px 0;
+}
+.clock-screen-page .shop-code {
+  inline-size: min(560px, 100%);
+}
+
+/* The phone's clock: one card the width of a phone, and one big button. */
+.phone-clock {
+  inline-size: min(440px, 100%);
+  margin: 8px auto;
+  display: grid;
+  gap: 14px;
+  padding: 20px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-lift);
+}
+.phone-clock p {
+  margin: 0;
+}
+.phone-clock-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.phone-clock-head h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+}
+.phone-clock-head p {
+  margin-block-start: 2px;
+  font-size: 0.88rem;
+}
+.phone-clock-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  color: var(--brand-2);
+}
+.phone-clock-state {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-weight: 650;
+}
+.phone-clock-state .dot {
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+.phone-clock-state.in .dot {
+  background: var(--ok);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 20%, transparent);
+}
+.phone-clock-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  inline-size: 100%;
+  min-block-size: 64px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-size: 1.2rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+.phone-clock-go.out,
+.phone-clock-go.out:hover:not(:disabled) {
+  background: var(--rail);
+  color: var(--rail-ink);
+}
+.phone-clock-code {
+  min-block-size: 56px;
+  border-radius: 12px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 1.8rem;
+  letter-spacing: 0.2em;
+  text-align: center;
+}
+.phone-clock-done {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ok) 12%, var(--surface));
+  color: var(--ok);
+  font-weight: 650;
+}
+
+/* Staff: the shop's clock screens, and a person's phone. */
+.clock-screens {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.clock-screens li {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.clock-screen-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+.clock-screen-line .sp {
+  flex: 1;
+}
+.clock-screen-remove {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.clock-screen-remove input {
+  flex: 1 1 220px;
+}
+.clock-screen-fields {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.clock-screen-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-end: 10px;
+  font-weight: 650;
+}
+.phone-panel {
+  display: grid;
+  gap: 10px;
+  padding: 8px 4px;
+}
+.phone-panel-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+}
+.phone-panel-link > .grid {
+  flex: 1 1 260px;
+}
+.phone-panel-steps {
+  margin: 0;
+  padding-inline-start: 1.2em;
+  display: grid;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+.phone-panel-wait {
+  animation: phone-wait 1.6s ease-in-out infinite;
+}
+@keyframes phone-wait {
+  50% {
+    opacity: 0.4;
+  }
+}
+.phone-panel-done {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  color: var(--ok);
+  font-weight: 650;
+}
+@media (prefers-reduced-motion: reduce) {
+  .phone-panel-wait {
+    animation: none;
+  }
+  .shop-code-time span {
+    transition: none;
+  }
+}
