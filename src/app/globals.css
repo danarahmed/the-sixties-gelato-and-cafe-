@@ -5067,6 +5067,74 @@ a.card.stat[aria-current="true"] {
   align-items: center;
   gap: 10px;
 }
+/* On a phone, each pasted row is a small card: its name, then its unit and
+   numbers side by side, then what the check says, then its type. */
+@media (max-width: 640px) {
+  .paste-table.stack-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-areas:
+      "name name name line"
+      "unit reorder shelf cost"
+      "check check check check"
+      "type type type type";
+    gap: 6px 8px;
+    margin-block-end: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .paste-table.stack-table tbody tr td {
+    padding: 0;
+    background: transparent;
+  }
+  .paste-table.stack-table tbody tr.paste-row-off {
+    border-color: color-mix(in oklab, var(--err) 35%, var(--border));
+    background: color-mix(in oklab, var(--err) 7%, var(--surface));
+  }
+  .paste-table.stack-table tbody tr.paste-row-ask {
+    border-color: color-mix(in oklab, var(--warn) 40%, var(--border));
+    background: color-mix(in oklab, var(--warn) 9%, var(--surface));
+  }
+  .paste-table td:nth-child(1) {
+    grid-area: line;
+    text-align: end;
+  }
+  .paste-table td:nth-child(1)::before {
+    display: inline;
+    content: attr(data-label) " ";
+  }
+  .paste-table td:nth-child(2) {
+    grid-area: name;
+  }
+  .paste-table td:nth-child(3) {
+    grid-area: unit;
+  }
+  .paste-table td:nth-child(4) {
+    grid-area: reorder;
+  }
+  .paste-table td:nth-child(5) {
+    grid-area: shelf;
+  }
+  .paste-table td:nth-child(6) {
+    grid-area: cost;
+  }
+  .paste-table td:nth-child(7) {
+    grid-area: type;
+  }
+  .paste-table td:nth-child(8) {
+    grid-area: check;
+  }
+  /* The name, the check and the type say what they are without a heading. */
+  .paste-table td:nth-child(2)::before,
+  .paste-table td:nth-child(7)::before,
+  .paste-table td:nth-child(8)::before {
+    display: none;
+  }
+  .paste-table td:nth-child(7) select {
+    width: 100%;
+  }
+}
 
 /* A batch's labels, on its page and as soon as it is recorded: how many, and print. */
 .label-print {
