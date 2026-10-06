@@ -2,7 +2,7 @@ import "server-only";
 import { db, str } from "@/lib/db/client";
 import { readInBatches } from "@/lib/db/batches";
 import { getProductionReport } from "@/lib/db/production";
-import type { WasteBatch } from "@/lib/waste";
+import { wasteWeekFrom, type WasteBatch, type WasteWeek } from "@/lib/waste";
 
 /**
  * Waste by recipe (round six): the batches made from `from` to `to`, at a
@@ -66,4 +66,16 @@ export async function getWasteBatches(
     story: b.story,
     losses: losses.get(b.batchId) ?? {},
   }));
+}
+
+/**
+ * What was thrown away unsold in the seven days to `to`, at a place or
+ * everywhere, against the seven before (0070, cost.view); null before 0070 is
+ * applied, and the page says nothing of it.
+ */
+export async function getWasteWeek(to: string, location: string | null): Promise<WasteWeek | null> {
+  const c = await db();
+  const r = await c.rpc("waste_coach", { p_to: to, ...(location ? { p_location: location } : {}) });
+  if (r.error) return null;
+  return wasteWeekFrom(r.data);
 }

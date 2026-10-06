@@ -7,10 +7,11 @@ import { Sayings, type Saying } from "@/components/Sayings";
 import { getT } from "@/lib/i18n/server";
 import { wholeDates } from "@/lib/i18n/core";
 import { requirePermission } from "@/lib/auth/session";
-import { getWasteBatches } from "@/lib/db/waste";
+import { getWasteBatches, getWasteWeek } from "@/lib/db/waste";
 import { addDays, businessToday, parseDay } from "@/lib/dates";
 import { fmtIQD, unitName } from "@/lib/format";
-import { bigQty, recipeWaste, WASTES } from "@/lib/waste";
+import { bigQty, recipeWaste, WASTES, wasteTip, weekWorst } from "@/lib/waste";
+import { WEEKDAY_NAME } from "@/lib/production";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,11 @@ export default async function WastePage({
   const place = location && profile.worksAt === null ? `&location=${location}` : "";
   const href = (end: string) => `/reports/waste?end=${end}${place}`;
 
-  const recipes = recipeWaste(await getWasteBatches(from, to, location));
+  const [madeBatches, week] = await Promise.all([
+    getWasteBatches(from, to, location),
+    getWasteWeek(to, location),
+  ]);
+  const recipes = recipeWaste(madeBatches);
   const qty = (base: number, unit: string, down = false) => {
     const q = bigQty(base, unit, down);
     return `${q.qty} ${unitName(q.unit, t)}`;
@@ -122,6 +127,72 @@ export default async function WastePage({
       }),
     });
 
+  // ------------------------------------------------------------ the last seven days (0070)
+  const weekSaid: Saying[] = [];
+  if (week) {
+    const amount = fmtIQD(Math.round(week.value));
+    const before = fmtIQD(Math.round(week.valueBefore));
+    if (week.value <= 0)
+      weekSaid.push({
+        tone: "ok",
+        icon: "✓",
+        text: t("Nothing was thrown away unsold in these seven days."),
+        detail:
+          week.valueBefore > 0
+            ? t("{amount} the seven days before.", { amount: before })
+            : undefined,
+      });
+    else
+      weekSaid.push({
+        tone: week.value > week.valueBefore ? "warn" : "ok",
+        icon: week.value > week.valueBefore ? "▲" : "▼",
+        text:
+          week.valueBefore <= 0
+            ? t(
+                "Thrown away unsold in these seven days: {amount}; nothing the seven days before.",
+                {
+                  amount,
+                },
+              )
+            : week.value > week.valueBefore
+              ? t(
+                  "Thrown away unsold in these seven days: {amount}, up from {before} the seven days before.",
+                  { amount, before },
+                )
+              : t(
+                  "Thrown away unsold in these seven days: {amount}, against {before} the seven days before.",
+                  { amount, before },
+                ),
+      });
+    for (const i of weekWorst(week)) {
+      const tip = wasteTip(i);
+      weekSaid.push({
+        tone: "warn",
+        icon: "!",
+        text: t("{item}: {qty} thrown away, {amount}, {n} time(s), on {days}.", {
+          item: i.item,
+          qty: qty(i.qty, i.unit),
+          amount: fmtIQD(Math.round(i.value)),
+          n: i.times,
+          days: i.weekdays.map((d) => t(WEEKDAY_NAME[d - 1] ?? "")).join(", "),
+        }),
+        detail:
+          tip === "made"
+            ? t(
+                "Made here: the day's plan already makes less of what is thrown away on half the days or more. Look at the batch made on these days.",
+              )
+            : tip === "say_keeps"
+              ? t(
+                  "Bought: say how many days it keeps on What to buy, and it is ordered for no more than that.",
+                )
+              : t("Bought, and it keeps {n} day(s): order less of it at a time, and more often.", {
+                  n: i.keepsDays ?? 0,
+                }),
+        href: tip === "made" ? "/production#plan" : "/purchasing/buying-list",
+      });
+    }
+  }
+
   const tiles = [
     {
       key: "thrown",
@@ -185,6 +256,15 @@ export default async function WastePage({
           </Link>
         )}
       </nav>
+
+      {week && (
+        <section className="card" aria-labelledby="waste-week-h" data-testid="waste-week">
+          <h2 id="waste-week-h" className="viz-title">
+            {t("The seven days to {day}", { day: wholeDates(week.to) })}
+          </h2>
+          <Sayings items={weekSaid} />
+        </section>
+      )}
 
       {recipes.length === 0 ? (
         <EmptyState

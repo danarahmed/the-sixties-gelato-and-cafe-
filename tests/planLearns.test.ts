@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { planFrom } from "@/lib/production";
 import { buyingLineFrom, buyingListFrom, reasonsOf } from "@/lib/buying";
+import { wasteTip, wasteWeekFrom, weekWorst } from "@/lib/waste";
 
 const recipe = {
   recipe_id: "r",
@@ -270,5 +271,57 @@ describe("What to buy looks ahead (0070)", () => {
       keepsDays: null,
       planExtra: 0,
     });
+  });
+});
+
+describe("a week's waste (0070)", () => {
+  const raw = {
+    from: "2026-09-30",
+    to: "2026-10-06",
+    value: 2000,
+    value_before: 3000,
+    items: [
+      {
+        item_id: "c",
+        item: "Cream",
+        unit: "ml",
+        qty: 1000,
+        value: 2000,
+        times: 2,
+        weekdays: [1, 4],
+        qty_before: 0,
+        value_before: 0,
+        made: false,
+        keeps_days: 3,
+      },
+      {
+        item_id: "l",
+        item: "Lemon sorbet",
+        unit: "g",
+        qty: 0,
+        value: 0,
+        times: 0,
+        weekdays: [],
+        qty_before: 1500,
+        value_before: 1500,
+        made: true,
+        keeps_days: null,
+      },
+    ],
+  };
+
+  it("reads the week, and the items worth a word", () => {
+    const w = wasteWeekFrom(raw);
+    expect(w).toMatchObject({ to: "2026-10-06", value: 2000, valueBefore: 3000 });
+    expect(w?.items[0]).toMatchObject({ item: "Cream", weekdays: [1, 4], keepsDays: 3 });
+    // Only what was thrown away this week is spoken of.
+    expect(weekWorst(w!).map((i) => i.item)).toEqual(["Cream"]);
+    expect(wasteWeekFrom(null)).toBeNull();
+  });
+
+  it("says what to try: the plan for what is made, how long it keeps for what is bought", () => {
+    expect(wasteTip({ made: true, keepsDays: null })).toBe("made");
+    expect(wasteTip({ made: false, keepsDays: null })).toBe("say_keeps");
+    expect(wasteTip({ made: false, keepsDays: 3 })).toBe("order_less");
   });
 });
