@@ -68,7 +68,13 @@ export const AUDIT_GROUPS = [
   {
     key: "settlements",
     label: "Card & platform settlements", // i18n-ignore
-    prefixes: ["card.", "platform.settlement", "platform.settlement_cancel"],
+    prefixes: [
+      "card.",
+      "platform.settlement",
+      "platform.settlement_cancel",
+      "payment_method.",
+      "money.",
+    ],
   },
   {
     key: "books",
@@ -220,6 +226,11 @@ const ACTION_LABEL: Record<string, string> = {
   "staff.clock_pin": "Clock-in PIN set",
   "staff.schedule": "Schedule saved",
   // Clocking in on your own phone, with the shop's code (0068).
+  // The café's own ways to pay, and money moved out of their accounts (0069).
+  "payment_method.add": "Way to pay added",
+  "payment_method.change": "Way to pay changed",
+  "money.move": "Money moved",
+  "money.move_cancel": "Move of money cancelled",
   "staff.clock_screen": "Clock screen made",
   "staff.clock_screen_removed": "Clock screen taken out of use",
   "staff.phone_linked": "Phone linked for clocking in",
@@ -623,7 +634,12 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
       return v
         .map((x) => {
           const o = x as Obj;
-          return `${tenderLabel(String(o.type))} ${showValue(o.amount, "amount", names)}`;
+          // One of the café's ways to pay by its name (0069).
+          const way =
+            o.type === "other" && o.method_name
+              ? String(o.method_name)
+              : tenderLabel(String(o.type));
+          return `${way} ${showValue(o.amount, "amount", names)}`;
         })
         .join(", ");
     if (key === "kinds") return v.map((k) => CORRECTION_KIND[String(k)] ?? String(k)).join(", ");
@@ -781,6 +797,11 @@ export function subjectOf(
       return pick("from") && pick("to")
         ? `Card takings ${pick("from")} to ${pick("to")}`
         : "Card takings";
+    // One of the café's ways to pay, by its name; a move of money out of one (0069).
+    case "payment_method":
+      return pick("name") ?? "A way to pay";
+    case "money_move":
+      return "A move of money";
     case "app_language":
       return pick("name") ?? `Language ${entityId ?? ""}`.trim();
     case "work_shift":
