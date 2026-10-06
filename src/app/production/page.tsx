@@ -17,6 +17,7 @@ import { fmtIQD, fmtQty } from "@/lib/format";
 import { addDays, businessToday, dateTimeIn, parseDay } from "@/lib/dates";
 import { PLAN_STATUS_LABEL, WEEKDAY_NAME, keepsLabel } from "@/lib/production";
 import { EmptyState } from "@/components/ui";
+import { OpenOnHash } from "@/components/OpenOnHash";
 import { PlaceSwitch } from "@/components/PlaceSwitch";
 import { placeChoice } from "@/lib/place";
 import type { ItemOpt } from "@/components/menu/RecipeLines";
@@ -363,13 +364,14 @@ export default async function ProductionPage({
       <section className="grid" style={{ gap: 10 }}>
         <h2 style={{ margin: "8px 0 0" }}>{t("What you make")}</h2>
         {canEdit && (
-          <details className="card pr-new">
+          <details className="card pr-new" id="new-recipe" open={recipes.length === 0}>
             <summary>
               <Icon name="plus" size={16} /> {t("Add something you make")}
             </summary>
             <BatchRecipeForm items={itemOpts} decimals={decimals} seesCost={seesCost} />
           </details>
         )}
+        {canEdit && <OpenOnHash id="new-recipe" />}
         {recipes.length === 0 ? (
           <EmptyState
             title={t("Nothing set up yet")}

@@ -378,6 +378,13 @@ export function PosClient({
   const op = useOperation();
   const [msg, setMsg] = useState<Msg>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  // A link to the tables opens them to set out: Getting set up's /pos#tables.
+  useEffect(() => {
+    if (!canManageTables || window.location.hash !== "#tables") return;
+    setView("floor");
+    setDialog({ kind: "tables" });
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  }, [canManageTables]);
   const [pending, setPending] = useState<Pending | null>(null);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   // What is waiting to print, one job after another: each job is one or more slips.
