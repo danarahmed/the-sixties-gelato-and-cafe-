@@ -145,9 +145,11 @@ let SCREEN = "";
     "and the tablet opens nothing of the café's without signing in",
   );
   await tablet.ctx.close();
-  await open(page, "/staff");
+  // The till stays on its code for the steps after this one.
+  await open(page, "/clock/screen");
+  await page.getByTestId("shop-code-digits").waitFor({ timeout: 10000 });
   check(
-    (await page.getByTestId("shop-clock").count()) === 1,
+    (await page.getByTestId("clock-screen-sign-out").count()) === 1,
     "the owner's own session goes on, signed in",
   );
 }
