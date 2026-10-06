@@ -139,7 +139,26 @@ beside the title (see [End of Day](#6-end-of-day)); in the morning, from four
 until noon, **Opening up? The start of the day, step by step** (see
 [Start of Day](#start-of-day)).
 
-**Needs you** comes first (`0029`): what the alert rules find in the books
+**Getting set up** (round seven) comes first while the café is new: before
+its first sale, and for a month after it. It lists what a café starting from
+nothing adds, in the order each needs the one before:
+
+1. **Stock items**, with what is on the shelf (**Add stock items** opens
+   Inventory's list to paste, see [Inventory](#15-inventory));
+2. **Suppliers**; 3. **Recipes**, what the kitchen makes;
+3. **Menu and prices**; 5. **Tables** (the till's tables editor);
+4. **Staff and their PINs**, saying how many have no PIN yet;
+5. **The first sale**.
+
+Each step ticks itself once the café has one (**12 added**), and its button
+opens the form it is added in; the next is lit. Suppliers, recipes, tables and
+staff a café may do without: **Not needed** puts one aside on this device,
+**Put back** brings it back. The list goes once every step is done or put
+aside, or with **Hide this list** on this device. Someone who may not add a
+step's things (a branch manager and the menu) sees **The owner or the general
+manager adds these.**; the list is not shown to those who may add none.
+
+**Needs you** comes next (`0029`): what the alert rules find in the books
 each time the page opens.
 
 - 🔴 **red** needs doing now, 🟠 **orange** soon; each says what happened, why
@@ -1035,7 +1054,7 @@ costs; baristas can record waste
   Dr Inventory, Cr Owner equity, so the item's sales are costed from the first
   one, and on the audit trail. An item with stock history is corrected by a
   count or a correction instead.
-- **➕ Add stock item:**
+- **➕ Add stock item**, **One item** at a time:
   - its name — one no other item in use has, whatever the capitals, spaces or
     punctuation (two "Milk"s would split the stock) — and its type
     (ingredient, packaging, consumable, finished good, resale);
@@ -1043,6 +1062,28 @@ costs; baristas can record waste
   - the owner only: an opening quantity and cost, and where it came from,
     posted as Dr Inventory, Cr Owner equity. Anyone else's new item gets its
     stock from a delivery.
+- **➕ Add stock item → Paste a list** (round seven; it opens on the list
+  when the café has no items yet, and at `/inventory#paste-items`): rows
+  copied from Excel or Google Sheets, one item a line, in this order —
+  **Name, Unit, Reorder at, On the shelf, Cost each, Arabic name, Kurdish
+  name**; only the name and the unit are needed. A first row naming the
+  columns is passed over.
+  - The unit is g, kg, ml, L or each (also written كغم, لتر, قطعة, کیلۆ,
+    دانە…), and the numbers are in it: 24 on the shelf of milk in **L** is 24
+    litres at what one litre cost. An item in kg or L is kept in g or ml and
+    can be bought in kg or L as well.
+  - Every row is checked and shown as it will be added. A row is held back,
+    saying what to put right, when its unit is not one of those, a number is
+    not a number or is below zero, stock on the shelf has no cost, its name is
+    an item's already in use, or it is in the list twice. A name that looks
+    like another (**Its name looks like "Milk".**) waits for **It is a
+    different item: add it**.
+  - **Add 5 items** adds every row ready, each as the one-item form adds it,
+    with its own key: pressed again, nothing is added twice. What was added
+    leaves the box; the rows not added stay in it, to put right and add.
+  - What is on the shelf is the owner's to record, with where it came from
+    (**The opening count**, unless changed), journaled as Dr 1200 / Cr 3000.
+    Anyone else's list adds its items without it, and says so.
 - **🗑️ Record a loss** (`0048`): first **what kind of loss** — the form says
   what each means and the account it is charged to: waste, spoilage,
   expired, damaged and melt to 5300; production waste (lost making a batch)
@@ -1909,6 +1950,8 @@ a person's roles allows, then the café's.
 | Waste by recipe: made, sold, thrown away, eaten or given; the batch that would have covered what went                                                            | `/reports/waste`, `/production`          | cost viewers                                                                          |
 | The day's close on the till's receipt printer, to keep with the cash                                                                                             | `/end-of-day`                            | owner, general manager, branch managers                                               |
 | A tour of the till, Production and the Dashboard for someone new; again from the menu                                                                            | `/pos`, `/production`, `/dashboard`      | everyone who opens them                                                               |
+| Getting set up: what a new café adds, in order, each step ticked from its records and opening its form                                                           | `/dashboard`                             | owner, general manager, branch managers                                               |
+| Stock items pasted in from a spreadsheet: every row checked, then added in one press                                                                             | `/inventory#paste-items`                 | owner, managers, purchasing (what is on the shelf: the owner)                         |
 | The stock's value on a day against 1200; what came in by supplier and by item                                                                                    | `/reports/stock`, `/reports`             | cost viewers                                                                          |
 | The balance sheet at the start and the end of the dates; the cash flow between; CSV                                                                              | `/reports/statements`                    | profit viewers                                                                        |
 | Stock sent between the café's places, on its way in 1210; received, what did not arrive lost; or cancelled                                                       | `/inventory/transfers`                   | owner, managers, purchasing; readers: cost viewers                                    |

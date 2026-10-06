@@ -16,9 +16,9 @@ const phrases: PhraseBook = {
   "Not needed here": { ar: "غير مطلوب هنا", ckb: "لێرە پێویست نییە" },
   "Put back": { ar: "أعِده", ckb: "بیگەڕێنەوە" },
   "Hide this list": { ar: "أخفِ هذه القائمة", ckb: "ئەم لیستە بشارەوە" },
-  "The owner or a manager adds these.": {
-    ar: "يضيفها المالك أو المدير.",
-    ckb: "خاوەن یان بەڕێوەبەر ئەمانە زیاد دەکات.",
+  "The owner or the general manager adds these.": {
+    ar: "يضيفها المالك أو المدير العام.",
+    ckb: "خاوەن یان بەڕێوەبەری گشتی ئەمانە زیاد دەکات.",
   },
   "{n} without a PIN yet": {
     ar: "{n, plural, one {شخص واحد بلا رمز PIN بعد} two {شخصان بلا رمز PIN بعد} few {# أشخاص بلا رمز PIN بعد} many {# شخصًا بلا رمز PIN بعد} other {# شخص بلا رمز PIN بعد}}",

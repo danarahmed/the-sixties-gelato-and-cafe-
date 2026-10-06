@@ -174,6 +174,6 @@ export const SETUP_PHRASES: readonly string[] = [
   "Put back",
   "Not needed here",
   "Hide this list",
-  "The owner or a manager adds these.",
+  "The owner or the general manager adds these.",
   "{n} without a PIN yet",
 ];

@@ -143,7 +143,7 @@ export function GettingSetUp({
                 </>
               ) : (
                 <span className="muted setup-theirs">
-                  {t("The owner or a manager adds these.")}
+                  {t("The owner or the general manager adds these.")}
                 </span>
               )}
             </div>

@@ -217,6 +217,21 @@ layers before every release.
 - `tests/tours.test.ts`: show me around (round six) — a tour for the till,
   Production and the dashboard and none elsewhere; each step points somewhere
   and says what it is for; every word in Arabic and in Kurdish.
+- `tests/itemPaste.test.ts`: paste stock items in (round seven) — g, kg, ml,
+  L and each however they are written, in English, Arabic or Kurdish; a line
+  split at its tabs, semicolons or bars, or a typed one read from its end; the
+  header and blank lines passed over; each row's problem said (no name, no
+  unit or one not known, a number that is not one or below zero, stock with no
+  cost), a name in use or in the list twice refused, a look-alike held back
+  until said to be another item; and what the one-item form would send: kg
+  and L kept in g and ml with their levels, stock and cost a base unit, bought
+  in kg or L too; stock on the shelf the owner's alone.
+- `tests/setup.test.ts`: getting set up (round seven) — the steps in order,
+  the ones a café may do without, the form each opens; done once the café has
+  one, the next the first neither done nor put aside; shown while the café is
+  new (no sale, or its first within the month), until every step is done or
+  put aside, to someone who may do one of those left, and not once hidden;
+  the device's choices read from its cookie; every word in Arabic and Kurdish.
 - `tests/batches.test.ts`: a read over a long list of ids (the lines of 500
   sales) asks 100 ids at a time and reads every row once; a batch whose rows
   fill a page is read again in halves, one id's many rows a page at a time;
@@ -932,6 +947,31 @@ database, behind a small local stand-in for Supabase's auth service.
   the device; the menu takes the tour again, and Escape ends it. On
   Production, No thanks puts the offer away for good. The dashboard's tour in
   Arabic, its left arrow going on.
+- `paste` (round seven): the owner pastes a list into Inventory's Add stock
+  item (`#paste-items` opens it): the header passed over, four rows ready and
+  five held back, each saying what to put right (a name in use, a unit not
+  known, a number that is not one, a name twice, a look-alike); the
+  look-alike said to be another item; one press adds five, as the database
+  then has them: kg kept in g and bought in kg, L in ml, pcs counted each,
+  their reorder levels, Arabic and Kurdish names, opening stock at its cost a
+  base unit and journaled Dr 1200 / Cr 3000; nothing held back added, nothing
+  twice. The rows not added stay in the box; one put right is added next. A
+  manager's list adds its item without the stock on the shelf, and says why.
+  In Arabic the checks and the count are Arabic, and لتر is read as L; a
+  cashier has no list to paste.
+- `setup` (round seven, run last: it clears the café): the test café is
+  cleared with `supabase/remediation/start-fresh.sql`, every record and the
+  setup lists gone, the logins and the chart of accounts kept, the audit
+  trail one line; then the owner's dashboard lists every step, the stock
+  items next, each button opening its form. Two items pasted in tick the
+  first step; the suppliers are put aside, still aside when the dashboard
+  opens again, and put back. Another device keeps its own choices and hides
+  the list for good there. A branch manager sees the menu as the owner's or
+  the general manager's, without a button. In Kurdish. Add recipes opens
+  Production's form; Add products opens the menu's form, and a product is
+  added from it; Add tables opens the till's tables, and the address forgets
+  it; Add staff opens someone new. With the rest put aside and the first
+  sale rung up, the list goes.
 - `documents` (`0053`): a manager opens a delivery's 📎 on Purchasing (none
   kept yet) and keeps its delivery note: a phone's photo of 4 MB or so, made
   smaller in the browser (its longer side 2,000 pixels) and put in the bucket

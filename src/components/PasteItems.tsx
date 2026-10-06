@@ -105,7 +105,8 @@ export function PasteItems({ items, isOwner }: { items: NamedItem[]; isOwner: bo
         .filter((line) => line.trim() !== "" && !added.has(line))
         .join("\n"),
     );
-    const notAdded = going.length - added.size;
+    // Every row left in the box: those held back, and any the database refused.
+    const notAdded = rows.length - added.size;
     setResult(
       notAdded === 0
         ? { ok: true, text: t("{n} item(s) added.", { n: added.size }) }

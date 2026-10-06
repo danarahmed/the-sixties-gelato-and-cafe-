@@ -503,8 +503,7 @@ export default async function DashboardPage() {
         <GettingSetUp steps={setup} staffWithoutPin={setupCounts?.staffWithoutPin ?? 0} />
       )}
 
-      {/* A café still being set up has its list first; the tour is a menu away. */}
-      {!showSetup && <TourOffer tourKey="dashboard" />}
+      <TourOffer tourKey="dashboard" />
 
       <NeedsYou
         alerts={alerts}
