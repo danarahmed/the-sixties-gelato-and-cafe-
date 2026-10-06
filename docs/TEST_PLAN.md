@@ -956,7 +956,7 @@ database, behind a small local stand-in for Supabase's auth service.
   leads there; the page in Arabic and Kurdish; and the dearer delivery
   corrected to 31 a gram, the beans are off the watch (3%, under the 5% it
   says from): a delivery is read as it stands now.
-- `staffing` (round six): on the last four of yesterday's weekday, one on the
+- `staffing` (round six): on the last four of the weekday three days back, one on the
   clock from 18:00 to 22:00 with two orders an hour, then twelve and ten;
   three from 09:00 to 12:00 with no order, then one, then six; and two orders
   at 23:00 with nobody clocked in (each sale rung up, then put back to its
