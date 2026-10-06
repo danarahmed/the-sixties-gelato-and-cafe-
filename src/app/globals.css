@@ -6026,6 +6026,41 @@ kbd {
   align-items: center;
   gap: 8px;
 }
+/* On a screen wider than a phone: every column in the card's width, none past its edge. */
+@media (min-width: 641px) {
+  .add-people-table {
+    table-layout: fixed;
+    width: 100%;
+  }
+  .add-people-table th {
+    white-space: normal;
+  }
+  .add-people-table th:nth-child(1) {
+    width: 19%;
+  }
+  .add-people-table th:nth-child(2),
+  .add-people-table th:nth-child(4) {
+    width: 13%;
+  }
+  .add-people-table th:nth-child(3) {
+    width: 11%;
+  }
+  .add-people-table th:nth-child(5) {
+    width: 15%;
+  }
+  .add-people-table th:nth-child(6) {
+    width: 14%;
+  }
+  .add-people-table th:nth-child(7) {
+    width: 10%;
+  }
+  .add-people-table th:nth-child(8) {
+    width: 5%;
+  }
+  .add-people-table td:first-child input {
+    min-width: 0;
+  }
+}
 @media (max-width: 640px) {
   .add-people-table.stack-table tbody tr {
     margin-block-end: 8px;

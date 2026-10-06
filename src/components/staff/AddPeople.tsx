@@ -14,7 +14,8 @@ type Msg = { ok: boolean; text: string } | null;
 type Place = { id: string; name: string };
 type Login = { id: string; name: string };
 
-const cell = { ...inputStyle, minHeight: 38 };
+// A cell's box: the form's own, a little smaller, so a row fits the card's width.
+const cell = { ...inputStyle, minHeight: 38, padding: "0 8px", fontSize: ".9rem" };
 
 /**
  * Several people added to the staff at once (round eight): a row each — their
