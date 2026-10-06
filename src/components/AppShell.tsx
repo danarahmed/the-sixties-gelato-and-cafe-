@@ -60,23 +60,66 @@ export function useOnline(): boolean {
   return online;
 }
 
+let pageWhole = false;
 let pageLoaded: Promise<void> | null = null;
 
 /**
+ * The page's own scripts that have not run yet. The root layout notes each
+ * one as it runs (`self.__ran`); a browser without that note waits for none.
+ */
+function scriptsToCome(): HTMLScriptElement[] {
+  const ran = (self as { __ran?: WeakSet<Element> }).__ran;
+  if (!ran) return [];
+  return Array.from(document.scripts).filter((s) => s.src !== "" && !s.noModule && !ran.has(s));
+}
+
+/** Once the document has loaded and every script of the page has run. */
+function wholePage(): Promise<void> {
+  const parsed =
+    document.readyState === "loading"
+      ? new Promise<void>((done) =>
+          document.addEventListener("DOMContentLoaded", () => done(), { once: true }),
+        )
+      : Promise.resolve();
+  const arrived = parsed.then(() =>
+    Promise.all(
+      scriptsToCome().map(
+        (s) =>
+          new Promise<void>((done) => {
+            s.addEventListener("load", () => done(), { once: true });
+            s.addEventListener("error", () => done(), { once: true });
+          }),
+      ),
+    ),
+  );
+  // Never held for good: a script that never says it ran lets the page hydrate anyway.
+  const enough = new Promise<void>((done) => setTimeout(done, 8000));
+  return Promise.race([arrived, enough])
+    .then(() => new Promise<void>((done) => setTimeout(done)))
+    .then(() => {
+      pageWhole = true;
+    });
+}
+
+/**
  * Holds hydration back, before the menu and the page, until the whole page
- * has arrived. A page's data comes after its HTML, in scripts at its end, and
- * a long page (the audit trail's 500 changes) is still arriving when React
- * starts to hydrate. React paused at an element for a part not there yet, and
- * when it came hydrated that element again from the wrong place: a hydration
- * error (React's #418), the page thrown away and drawn again. Nothing is
- * missing once the document has loaded, so the page is hydrated once, whole.
- * The server and the browser both draw nothing here.
+ * has arrived: its document, and the code of every part of it. A page's data
+ * comes after its HTML, in scripts at its end, and a long page (the audit
+ * trail's 500 changes) is still arriving when React starts to hydrate; a
+ * part's code can come late too (through the service worker, or on a slow
+ * connection). React paused at an element for a part not there yet, and when
+ * it came hydrated that element again from the wrong place: a hydration error
+ * (React's #418), the page thrown away and drawn again. Nothing is missing
+ * once both have arrived, so the page is hydrated once, whole; a page all here
+ * already is not held at all. The server and the browser both draw nothing.
  */
 function WholePage() {
-  if (typeof document === "undefined" || document.readyState !== "loading") return null;
-  pageLoaded ??= new Promise((done) =>
-    document.addEventListener("DOMContentLoaded", () => setTimeout(done), { once: true }),
-  );
+  if (typeof document === "undefined" || pageWhole) return null;
+  if (document.readyState !== "loading" && scriptsToCome().length === 0) {
+    pageWhole = true;
+    return null;
+  }
+  pageLoaded ??= wholePage();
   use(pageLoaded);
   return null;
 }

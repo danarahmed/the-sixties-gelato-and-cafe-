@@ -23,6 +23,13 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+/**
+ * Notes each of the page's scripts as it runs (or fails), before any of them
+ * can: AppShell's WholePage holds hydration back until all have, as a part
+ * whose code came late made React throw the page away and draw it again.
+ */
+const NOTE_SCRIPTS = `self.__ran=new WeakSet();["load","error"].forEach(function(t){document.addEventListener(t,function(e){var s=e.target;if(s&&s.tagName==="SCRIPT")self.__ran.add(s)},true)})`;
+
 /** The member for the shell, or null (signed out, not linked, or unreadable —
  * in the last case the page itself reports the error). */
 async function shellMember(): Promise<ShellMember | null> {
@@ -52,6 +59,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale} dir={dir} data-theme={theme}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: NOTE_SCRIPTS }} />
+      </head>
       <body>
         <I18nProvider locale={locale} dir={dir} languages={languages} words={words}>
           <AppShell locale={locale} theme={theme} member={member}>
