@@ -1372,7 +1372,9 @@ payroll readers (the accountant, the auditor) see it too
     by default, and its branch). The list shows each clock screen, **This
     device**, when it was last seen, and **Take out of use…** (with why).
     **Show the code on the whole screen** opens `/clock/screen`, for a tablet
-    that shows nothing else; on the till, the code is in **Clock in or out**.
+    that shows nothing else: no menu, nothing of whoever is signed in, and
+    **Sign out, keep the code** for them, as the tablet goes on showing the
+    code signed out. On the till, the code is in **Clock in or out**.
   - **Link their phone**, on a person's row: a square appears; the person
     points their own phone's camera at it, opens the link, and presses **Link
     this phone**. The row says so by itself. The square works once, for ten

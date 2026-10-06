@@ -212,10 +212,11 @@ export async function clockByPhoneAction(
 /**
  * Whoever is signed in on a clock screen signs out there, and the screen goes
  * on showing the code: its key is the device's, not theirs. A tablet by the
- * door is then nobody's way into the books.
+ * door is then nobody's way into the books. Only this device is signed out:
+ * the owner stays signed in on their own phone.
  */
 export async function signOutClockScreenAction(): Promise<void> {
   const supabase = await createServerSupabase();
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: "local" });
   redirect("/clock/screen");
 }
