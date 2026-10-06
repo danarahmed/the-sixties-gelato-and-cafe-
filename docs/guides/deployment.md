@@ -62,7 +62,7 @@ Plan a short window when the café is closed.
 | Accounts and bank put right (`0062`)    | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0062`](#after-0062)). The screens were merged ([pull request #65](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/65)) and deployed                                                                         |
 | Review fixes (`0063`–`0066`)            | 🟡 `0063` applied on 2 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as the owner in transactions that were rolled back. `0064`–`0066` are not applied yet: the connector does not take their text (see [After `0066`](#after-0066)). The screens were merged ([pull request #67](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/67)) and deployed |
 | A day's sales target (`0067`)           | ✅ Migration applied on 3 October, its text checked byte for byte against the file, and checked on the live records as the owner in a transaction that was rolled back (see [After `0067`](#after-0067)). It went in on its own, before `0064`–`0066`                                                                                                                                                                                            |
-| Clocking in by phone (`0068`)           | ⏳ To be applied by the owner in the SQL editor (see [After `0068`](#after-0068)): the connector holds it for a confirmation that does not reach anyone. It touches nothing `0064`–`0066` change, so it applies on its own. The screens work before it, as before                                                                                                                                                                                |
+| Clocking in by phone (`0068`)           | ✅ Applied by the owner in the SQL editor on 6 October (the connector held it), then compared object by object with the tested build: identical, permissions included, once the paste's line endings are set aside (see [After `0068`](#after-0068)). The screens were merged ([pull request #81](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/81)) and deployed                                                              |
 
 ## 0. Before you start
 
@@ -3151,6 +3151,40 @@ editor:
 
 Run twice, it does no harm: every part of it is made only if it is missing,
 or replaced with the same.
+
+**Applied on 6 October**, by the owner, in the SQL editor. A read-only
+comparison with the tested build (the rehearsal database, in the live order)
+found it all in place:
+
+- **The four tables**, with row-level security on and no table rights for the
+  public or the signed in; their columns, keys, checks and indexes identical.
+  One default reads `gen_random_bytes(32)` live and
+  `extensions.gen_random_bytes(32)` in the rehearsal: the same function
+  (`extensions.gen_random_bytes`, as the database's own record of what the
+  default depends on says), named without its schema because the live search
+  path includes `extensions`.
+- **`attendance`** with `phone_id` and `screen_id`, and `phone` among its
+  sources.
+- **All 27 functions** it makes or replaces identical in their arguments,
+  bodies, settings and permissions, once the line endings are set aside: the
+  paste gave every line of their text a Windows line ending, which the
+  database keeps as it was pasted. It changes nothing they do: none of their
+  words spans two lines, so no message, code or name holds one. The old
+  `clock_in` and `clock_out`, without the screen, are gone.
+- **Who may call what, as tested:** among the café's functions the public may
+  call exactly `clock_by_phone`, `clock_screen_code`, `link_phone_finish` and
+  `phone_status` (besides the 47 of `citext`); the internal ones are closed to
+  everyone, the signed-in ones open to the signed in only.
+- **Nothing else changed:** one person on the staff, no hours, no clock
+  screens, phones or links, and the audit trail still ends at 5. The café's
+  secret for the codes is made with its first clock screen.
+- **The app sees it without a restart:** PostgREST's watch on the database's
+  changes (`pgrst_ddl_watch`, `pgrst_drop_watch`) is on, so its list of
+  functions was read again when the SQL ran.
+
+As it was run in the SQL editor, it is not in Supabase's list of migrations
+(`supabase_migrations.schema_migrations`); a tool that applies what that list
+lacks would run it again, which does no harm.
 
 ## Clearing the test records
 
