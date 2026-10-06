@@ -62,6 +62,7 @@ Plan a short window when the café is closed.
 | Accounts and bank put right (`0062`)    | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0062`](#after-0062)). The screens were merged ([pull request #65](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/65)) and deployed                                                                         |
 | Review fixes (`0063`–`0066`)            | 🟡 `0063` applied on 2 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as the owner in transactions that were rolled back. `0064`–`0066` are not applied yet: the connector does not take their text (see [After `0066`](#after-0066)). The screens were merged ([pull request #67](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/67)) and deployed |
 | A day's sales target (`0067`)           | ✅ Migration applied on 3 October, its text checked byte for byte against the file, and checked on the live records as the owner in a transaction that was rolled back (see [After `0067`](#after-0067)). It went in on its own, before `0064`–`0066`                                                                                                                                                                                            |
+| Clocking in by phone (`0068`)           | ⏳ Not applied yet (see [After `0068`](#after-0068)). It touches nothing `0064`–`0066` change, so it applies on its own                                                                                                                                                                                                                                                                                                                          |
 
 ## 0. Before you start
 
@@ -3085,6 +3086,42 @@ was refused, in words. Nothing was kept: no rule row nor change to one, and
 the audit trail still ends at 280. The security advisor lists the same five
 kinds of notice as before, the reader among the functions a signed-in person
 may call, as every function the app calls is.
+
+## After `0068`
+
+Migration `0068` is the owner's answer to clocking in from outside the shop:
+staff clock in and out on their own phone, with a code shown only at the shop.
+
+- **The shop's clock screen.** On **Staff → The shop's clock**, the owner (or
+  the general manager) makes the device in front of them a clock screen: the
+  till, or a tablet by the door. The device keeps a key of its own, and shows
+  a code of 6 digits, with its square to scan, that changes every half-minute.
+- **Each person's own phone.** On **Staff**, a manager presses **Link their
+  phone** beside a person and lets them scan the square shown (or open its
+  link) within ten minutes. That phone then clocks its person in or out: they
+  scan the shop's code, and press **Clock in** or **Clock out**. Linking
+  another phone ends the first.
+- **Once the café has a clock screen**, the till's clock (a name and a PIN,
+  for those without a phone) works only on a clock screen, and someone whose
+  phone is linked clocks only with it. Until then, nothing changes.
+
+What it changes:
+
+- **New tables:** `clock_screen`, `staff_phone`, `phone_link`, `clock_secret`
+  (only these functions read them). `attendance` gains `phone_id` and
+  `screen_id`; its `source` may be `phone`.
+- **Replaced:** `clock_in` and `clock_out` (and their `__run`), each still one
+  function, now taking the screen's key, `p_screen`, which is none by default:
+  a till not yet updated still clocks, until the café has a clock screen.
+- **New:** `register_clock_screen`, `remove_clock_screen`, `clock_screens`,
+  `clock_screen_check`, `link_phone_start`, `unlink_phone`, `staff_phones`
+  (signed in, each checking its permission); `clock_screen_code`,
+  `link_phone_finish`, `phone_status`, `clock_by_phone` (signed in or not:
+  each answers only to a key it gave out, and these are the only functions
+  the public may call).
+
+The app's screens need it: before it is applied, Staff says the database is
+not ready for clock screens, and the till clocks as before.
 
 ## Clearing the test records
 
