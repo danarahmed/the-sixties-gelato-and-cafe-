@@ -4693,6 +4693,35 @@ a.card.stat:focus-visible {
   color: var(--brand-ink);
 }
 /* The day's plan: what to make, and the tap that records it. */
+/* How many days a bought item keeps, said on What to buy (0070). */
+.keeps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+.keeps input {
+  width: 56px;
+  text-align: end;
+}
+.keeps-bad {
+  color: var(--err);
+}
+/* What the day's plan learnt (0070): it sold out, or it was thrown away. */
+.plan-learnt {
+  font-size: 0.74rem;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+.plan-learnt.sold_out {
+  color: var(--ok);
+}
+.plan-learnt.waste {
+  color: var(--warn);
+}
 .plan-make {
   display: inline-flex;
   flex-wrap: wrap;

@@ -131,3 +131,33 @@ export async function removeItemSupplierAction(
   refresh(`/inventory/${v.data.itemId}`, "/purchasing/buying-list");
   return { ok: true, data: null };
 }
+
+const KEEPS = "An item keeps 1 to 365 days, or say nothing";
+const keepsInput = z.object({
+  itemId: id("an item"),
+  /** The days a bought item keeps once it comes; null to say nothing. */
+  days: z.number().int(KEEPS).min(1, KEEPS).max(365, KEEPS).nullable(),
+});
+
+/**
+ * How many days a bought item keeps (0070): What to buy orders it up to no
+ * more than those days use. Keyed; on the audit trail.
+ */
+export async function setItemKeepsAction(
+  input: z.input<typeof keepsInput>,
+  key: string,
+): Promise<ActionResult<{ days: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(keepsInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("set_item_keeps", {
+    p_item: v.data.itemId,
+    p_days: v.data.days,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(`/inventory/${v.data.itemId}`, "/purchasing/buying-list");
+  const days = r.data.keeps_days;
+  return { ok: true, data: { days: days === null || days === undefined ? null : Number(days) } };
+}

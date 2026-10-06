@@ -12,8 +12,10 @@ import { orderTotal } from "@/lib/purchasing";
 
 /** To order; enough on hand and coming; too new to judge; not used lately. */
 export type BuyStatus = "order" | "enough" | "no_history" | "not_used";
-/** The reorder level: the item's own, or worked out from its use. */
-export type ReorderFrom = "item" | "use";
+/** The reorder level: the item's own, worked out from its use, or what today's plan needs (0070). */
+export type ReorderFrom = "item" | "use" | "plan";
+/** How the days a delivery takes are judged (0070): each by its weekday, or a day on average. */
+export type Forecast = "weekday" | "average";
 /** What it is ordered up to: its par level, the most it holds, a week of use more, or the reorder level. */
 export type TargetFrom = "par" | "max" | "week" | "reorder";
 /** Why this supplier: the item's usual one, its last delivery's, or the one it was last set with. */
@@ -56,7 +58,20 @@ export interface BuyingLine {
   /** The days its use is judged over: 28, or its history when shorter. */
   days: number | null;
   used: number;
+  /** What was thrown away unsold over those days, left out of what it used (0070). */
+  wasted: number;
   dailyUse: number | null;
+  /** How the days until a delivery are judged, and what they use (0070); null without use. */
+  forecast: Forecast | null;
+  leadUse: number | null;
+  /** What today's plan needs of it, and how much of that is beyond its weekday's batches (0070). */
+  planNeed: number;
+  planExtra: number;
+  /** The days it keeps once it comes; null when not said (0070). */
+  keepsDays: number | null;
+  /** Ordered up to no more than those days use (0070), and that level. */
+  capped: boolean;
+  capLevel: number | null;
   leadTime: number;
   leadFrom: "supplier" | "cafe";
   reorderLevel: number | null;
@@ -88,6 +103,8 @@ export interface BuyingList {
   /** The café's own delivery days, for a supplier with none. */
   leadTime: number;
   items: BuyingLine[];
+  /** Whether the list looks ahead (0070 applied): how long an item keeps can be said. */
+  looksAhead: boolean;
 }
 
 /** Each status, as the screen names it (a phrase, said through t()). */
@@ -151,11 +168,19 @@ export function buyingLineFrom(r: Record<string, unknown>): BuyingLine {
     historyDays: numOrNull(r.history_days),
     days: numOrNull(r.days),
     used: num(r.used),
+    wasted: num(r.wasted),
     dailyUse: numOrNull(r.daily_use),
+    forecast: oneOf(r.forecast, ["weekday", "average"] as const),
+    leadUse: numOrNull(r.lead_use),
+    planNeed: num(r.plan_need),
+    planExtra: num(r.plan_extra),
+    keepsDays: numOrNull(r.keeps_days),
+    capped: r.capped === true,
+    capLevel: numOrNull(r.cap_level),
     leadTime: num(r.lead_time),
     leadFrom: r.lead_from === "supplier" ? "supplier" : "cafe",
     reorderLevel: numOrNull(r.reorder_level),
-    reorderFrom: oneOf(r.reorder_from, ["item", "use"] as const),
+    reorderFrom: oneOf(r.reorder_from, ["item", "use", "plan"] as const),
     safetyStock: numOrNull(r.safety_stock),
     targetLevel: numOrNull(r.target_level),
     targetFrom: oneOf(r.target_from, ["par", "max", "week", "reorder"] as const),
@@ -182,6 +207,7 @@ export function buyingListFrom(r: Record<string, unknown> | null | undefined): B
     windowDays: num(o.window_days) || 28,
     leadTime: num(o.lead_time),
     items: list(o.items).map(buyingLineFrom),
+    looksAhead: list(o.items).some((i) => "capped" in i),
   };
 }
 
@@ -334,29 +360,87 @@ export function reasonsOf(
           }),
   );
   const level = about(line.reorderLevel ?? 0);
-  if (line.reorderFrom === "item")
-    out.push(
-      line.status === "order"
-        ? t("Below its reorder level, set on the item: {level}.", { level })
-        : t("At or above its reorder level, set on the item: {level}.", { level }),
-    );
-  else {
-    out.push(
-      t(
-        "About {daily} a day over the last {days} days; a delivery takes {lead} day(s), and a day more: {level} is its reorder level.",
-        { daily: about(line.dailyUse ?? 0), days: line.days ?? 0, lead: line.leadTime, level },
-      ),
-    );
-    if (line.safetyStock)
-      out.push(t("With a safety stock of {qty}.", { qty: about(line.safetyStock) }));
+  const below = () =>
     out.push(
       line.status === "order"
         ? t("Below it: to order.")
         : t("At or above it: nothing to order yet."),
     );
+  // What today's plan needs beyond its weekday's batches, added to the level (0070).
+  const extra = () => {
+    if (line.planExtra > 0)
+      out.push(
+        t("With what today's plan needs beyond what its weekday's batches use: {qty}.", {
+          qty: about(line.planExtra),
+        }),
+      );
+  };
+  if (line.reorderFrom === "item") {
+    out.push(
+      line.status === "order"
+        ? t("Below its reorder level, set on the item: {level}.", { level })
+        : t("At or above its reorder level, set on the item: {level}.", { level }),
+    );
+    extra();
+  } else if (line.reorderFrom === "plan") {
+    out.push(
+      t("Not used here yet, but today's plan needs {qty}: {level} is its reorder level.", {
+        qty: about(line.planNeed),
+        level,
+      }),
+    );
+    if (line.safetyStock)
+      out.push(t("With a safety stock of {qty}.", { qty: about(line.safetyStock) }));
+    below();
+  } else {
+    out.push(
+      line.forecast === "weekday" && line.leadUse !== null
+        ? t(
+            "Each day judged by its weekday over the last 4 weeks: until a delivery comes, in {lead} day(s), and a day more, it uses about {use}: {level} is its reorder level.",
+            { lead: line.leadTime, use: about(line.leadUse), level },
+          )
+        : t(
+            "About {daily} a day over the last {days} days; a delivery takes {lead} day(s), and a day more: {level} is its reorder level.",
+            { daily: about(line.dailyUse ?? 0), days: line.days ?? 0, lead: line.leadTime, level },
+          ),
+    );
+    extra();
+    if (line.safetyStock)
+      out.push(t("With a safety stock of {qty}.", { qty: about(line.safetyStock) }));
+    below();
   }
+  if (line.wasted > 0)
+    out.push(
+      t("{qty} thrown away unsold in the last {days} days is not counted as use.", {
+        qty: about(line.wasted),
+        days: line.days ?? 0,
+      }),
+    );
   if (line.status !== "order") return out;
   const target = about(line.targetLevel ?? 0);
+  if (line.capped && line.keepsDays !== null) {
+    out.push(
+      (line.capLevel ?? 0) >= (line.reorderLevel ?? 0)
+        ? t("It keeps {n} day(s): ordered up to no more than they use, {target}.", {
+            n: line.keepsDays,
+            target,
+          })
+        : t(
+            "It keeps {n} day(s), but must last until the next delivery: ordered up to its reorder level, {target}.",
+            { n: line.keepsDays, target },
+          ),
+    );
+    out.push(
+      line.packFactor === 1
+        ? t("{qty} to order.", { qty: q(line.qtyBase) })
+        : t("{packs} × {pack} ({qty}), in whole packs.", {
+            packs: line.packs,
+            pack: packName(line.packUnit),
+            qty: q(line.qtyBase),
+          }),
+    );
+    return out;
+  }
   out.push(
     line.targetFrom === "par"
       ? t("Ordered up to its par level, {target}.", { target })

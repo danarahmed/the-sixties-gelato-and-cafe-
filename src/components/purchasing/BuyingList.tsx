@@ -3,7 +3,11 @@
 import { Fragment, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { draftOrdersFromListAction, type DraftedOrder } from "@/lib/actions/buying";
+import {
+  draftOrdersFromListAction,
+  setItemKeepsAction,
+  type DraftedOrder,
+} from "@/lib/actions/buying";
 import {
   bySupplier,
   draftOf,
@@ -41,12 +45,15 @@ export function BuyingListForm({
   units,
   suppliers,
   canCreate,
+  canKeep = false,
 }: {
   list: BuyingList;
   /** Each item's units, its base unit first. */
   units: Record<string, Unit[]>;
   suppliers: { id: string; name: string }[];
   canCreate: boolean;
+  /** Whether how long an item keeps can be said here (0070, and the right to change items). */
+  canKeep?: boolean;
 }) {
   const { t } = useT();
   const router = useRouter();
@@ -231,7 +238,10 @@ export function BuyingListForm({
                             style={{ fontSize: ".78rem", maxWidth: 340 }}
                             data-testid="buying-why"
                           >
-                            <Why reasons={reasonsOf(l, t, (code) => packName(l.itemId, code))} />
+                            <Why
+                              reasons={reasonsOf(l, t, (code) => packName(l.itemId, code))}
+                              extra={canKeep ? <KeepsBox line={l} /> : null}
+                            />
                             <div className="muted">
                               {sourceOf(l, t).join(" ")}
                               {l.orders.map((o) => (
@@ -429,7 +439,7 @@ export function BuyingListForm({
  * A line's why: what it has and what to order, first; how that was worked
  * out (its use, its level, what it is ordered up to) one tap away.
  */
-function Why({ reasons }: { reasons: string[] }) {
+function Why({ reasons, extra = null }: { reasons: string[]; extra?: React.ReactNode }) {
   const { t } = useT();
   const [have, ...rest] = reasons;
   const decided = rest.pop();
@@ -444,14 +454,77 @@ function Why({ reasons }: { reasons: string[] }) {
           </>
         )}
       </div>
-      {rest.length > 0 && (
+      {(rest.length > 0 || extra) && (
         <details className="why-more">
           <summary>{t("How it was worked out")}</summary>
           {rest.map((s, i) => (
             <div key={i}>{s}</div>
           ))}
+          {extra}
         </details>
       )}
     </>
+  );
+}
+
+/**
+ * How many days a bought item keeps once it comes (0070), said where its
+ * order is worked out: What to buy then orders it up to no more than those
+ * days use. Empty, nothing is said, and it is ordered as before.
+ */
+function KeepsBox({ line }: { line: BuyingLine }) {
+  const { t } = useT();
+  const router = useRouter();
+  const op = useOperation();
+  const [busy, start] = useTransition();
+  const [msg, setMsg] = useState<Msg>(null);
+  const [days, setDays] = useState(line.keepsDays === null ? "" : String(line.keepsDays));
+  const typed = days.trim() === "" ? null : Number(normaliseNumber(days));
+  const valid = typed === null || (Number.isInteger(typed) && typed >= 1 && typed <= 365);
+  const changed = typed !== line.keepsDays;
+
+  function save() {
+    if (!valid || !changed) return;
+    setMsg(null);
+    start(async () => {
+      const r = await op.run(`keeps:${line.itemId}`, (key) =>
+        setItemKeepsAction({ itemId: line.itemId, days: typed }, key),
+      );
+      if (!r.ok) {
+        setMsg({ ok: false, text: r.error });
+        return;
+      }
+      router.refresh();
+    });
+  }
+
+  return (
+    <div className="keeps" data-testid="buying-keeps">
+      <label htmlFor={`keeps-${line.itemId}`}>{t("Days it keeps once it comes")}</label>
+      <input
+        id={`keeps-${line.itemId}`}
+        className="amt"
+        inputMode="numeric"
+        placeholder="—"
+        value={days}
+        onChange={(e) => setDays(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") save();
+        }}
+      />
+      <button
+        type="button"
+        className="btn-soft"
+        disabled={busy || !valid || !changed}
+        onClick={save}
+      >
+        {busy ? t("Saving…") : t("Save")}
+      </button>
+      {!valid && (
+        <span className="keeps-bad">{t("An item keeps 1 to 365 days, or say nothing")}</span>
+      )}
+      <OperationStatus op={op} />
+      <Notice msg={msg} />
+    </div>
   );
 }

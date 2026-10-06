@@ -230,6 +230,10 @@ export default async function ProductionPage({
             {t(
               "From what each was sold, used in batches or sent to another place on the same weekday over the last 4 to 8 weeks, on average, less what is on hand and still good at the end of the day: in whole batches.",
             )}
+            {plan.learns &&
+              ` ${t(
+                "It makes more of what sold out on half those days or more and was never thrown away, and less of what was thrown away on half of them or more and never sold out, never below one batch.",
+              )}`}
           </p>
           {plan.recipes.length === 0 ? (
             <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
@@ -258,7 +262,35 @@ export default async function ProductionPage({
                         data-recipe={r.recipe}
                         data-status={r.status}
                       >
-                        <td>{r.recipe}</td>
+                        <td>
+                          {r.recipe}
+                          {r.learned && (
+                            <div
+                              className={`plan-learnt ${r.learned}`}
+                              data-testid="plan-learnt"
+                              data-learned={r.learned}
+                            >
+                              <span aria-hidden="true">
+                                {r.learned === "sold_out" ? "↑ " : "↓ "}
+                              </span>
+                              {r.learned === "sold_out"
+                                ? t("Sold out {n} of the last {weeks} weeks: makes {qty} more", {
+                                    n: r.soldOutDays,
+                                    weeks: r.weeks ?? 0,
+                                    qty: q(r.bump),
+                                  })
+                                : t(
+                                    "Thrown away {n} of the last {weeks} weeks, about {avg} a time: makes {qty} less",
+                                    {
+                                      n: r.wasteDays,
+                                      weeks: r.weeks ?? 0,
+                                      avg: q(r.wastedAvg),
+                                      qty: q(r.trim),
+                                    },
+                                  )}
+                            </div>
+                          )}
+                        </td>
                         <td className="right mono">
                           {r.demand === null ? (
                             <span className="muted" style={{ fontFamily: "inherit" }}>
@@ -268,7 +300,7 @@ export default async function ProductionPage({
                             </span>
                           ) : (
                             <>
-                              {q(r.demand)}
+                              {q(r.seen ?? r.demand)}
                               <div className="muted" style={{ fontSize: ".72rem" }}>
                                 {t("over {n} weeks", { n: r.weeks ?? 0 })}
                               </div>

@@ -91,10 +91,9 @@ const SAME = new Set(
     "Careem",
     "Toters",
     // The common ways to pay offered on Settings and Sales (0069), named as
-    // they name themselves ("FIB" passes as initials).
+    // they name themselves ("FIB" passes as initials, "Qi Card" below).
     "FastPay",
     "ZainCash",
-    "Qi",
     // Language codes, as the Languages screen gives them for examples.
     "tr",
     "fa",
@@ -122,6 +121,9 @@ const SAME = new Set(
     "xls",
   ].map((w) => w.toLowerCase()),
 );
+// Names of more than one word kept as they are, taken out whole so that their
+// words ("Card") are not allowed anywhere else: a way to pay's brand (0069).
+const SAME_NAMES = ["Qi Card"];
 // On Delivery Platforms, the column names of a platform's own report, which
 // the statement reader looks for as the platform writes them.
 const SAME_ON = { "/platforms": ["order", "payout", "commission", "fees", "id", "net"] };
@@ -155,7 +157,8 @@ export async function english(page, path = "") {
   });
   // A word is English when it is all Latin letters: "Türkçe" or "Kaydet" is not
   // taken for it.
-  const words = (text.match(/[\p{L}'’-]+/gu) ?? []).filter(
+  const kept = SAME_NAMES.reduce((t, n) => t.split(n).join(" "), text);
+  const words = (kept.match(/[\p{L}'’-]+/gu) ?? []).filter(
     (w) =>
       /^[A-Za-z]['’A-Za-z-]*[A-Za-z]$/.test(w) &&
       // Not a piece of an id ("3fa9c2e1…") nor initials or a code (GC, TLB).
