@@ -89,6 +89,24 @@ login if they have one. Then:
 hours as `08:00-16:00` (a shift ending at or before it starts ends the next
 day), or copy **the same hours as the week before**, and **Save the week**.
 
+**Is the week staffed for how busy it usually is?** Under the week's hours,
+each day's morning (5 to 12), afternoon (12 to 5) and evening (5 until 5 in
+the morning) shows the people scheduled at a time and about how many its
+orders usually need, from the four weeks to yesterday: ▲ too few, ▽ more than
+needed, ● nobody when orders usually come, ✓ about right. It changes as you
+type, before you save: a good way to plan next week is to copy the week
+before, then move hours to where the check says. Those who see pay also see
+what the week's hours will cost against what a usual week sells, by day and by
+part of the day, and the labour target.
+
+**The labour target** (**Settings → Rules → Labour cost the café aims for**):
+the share of net sales you mean to pay your people, say 25%; 0 is none. Staff
+measures the planned week against it, and **Reports → Staffed when busy?**
+shows the last four weeks as they were, week by week and by part of the day,
+from each person's hours on the clock at an hour of their pay (a month's pay
+over 30 days of their standard hours). A morning that costs half of what it
+sells is worth a look, even when one person is the fewest it can have.
+
 **The hours** show, day by day, who was on the schedule, when they clocked in
 and out, and who was late, left early, was absent or worked overtime (beyond
 their standard hours). A manager **corrects** a record (a forgotten clock-out),

@@ -3353,6 +3353,9 @@ It was rehearsed on the tested build (`scripts/test-sql.sh`), with its own
 suite (`tests/sql/plan_learns.test.sql`): a flavour that sold out, one thrown
 away, one that is already one batch, one with both; an ingredient used only on
 one weekday, one the plan needs, one that keeps three days; and a week's waste.
+A read-only look at the live database on 6 October found what it expects: the
+plan and What to buy as `0055` left them, word for word, and no `keeps_days`,
+index or `waste_coach` yet.
 
 It is applied by the owner, in Supabase's SQL editor:
 
@@ -3399,7 +3402,9 @@ check included; the labour target is not offered, and Staff says no target is
 set.
 
 It was rehearsed on the tested build (`scripts/test-sql.sh`), with its own
-suite (`tests/sql/labour_target.test.sql`).
+suite (`tests/sql/labour_target.test.sql`). A read-only look at the live
+database on 6 October found the rules' list and defaults as `0067` left them,
+word for word, and no labour target yet.
 
 It is applied by the owner, in Supabase's SQL editor:
 
