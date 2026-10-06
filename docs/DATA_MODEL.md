@@ -1960,7 +1960,8 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   is this device a clock screen, and has the café any); `link_phone_start`,
   `unlink_phone` and `staff_phones()` (`staff.manage`; the list also for
   `attendance.edit` and `payroll.view`). `clock_in` and `clock_out` stay one
-  function each and take the screen's key (`p_screen`, none by default). The
+  function each and take the screen's key (`p_screen`, none by default);
+  `clock_board` says who clocks on their own phone. The
   only functions the public may call, each answering only to a key it gave
   out: `clock_screen_code(key)` (the code a screen shows, and until when),
   `link_phone_finish(link)`, `phone_status(phone)` and

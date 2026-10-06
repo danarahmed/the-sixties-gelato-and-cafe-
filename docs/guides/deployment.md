@@ -3113,6 +3113,7 @@ What it changes:
 - **Replaced:** `clock_in` and `clock_out` (and their `__run`), each still one
   function, now taking the screen's key, `p_screen`, which is none by default:
   a till not yet updated still clocks, until the café has a clock screen.
+  `clock_board`, with the same arguments, says who clocks on their own phone.
 - **New:** `register_clock_screen`, `remove_clock_screen`, `clock_screens`,
   `clock_screen_check`, `link_phone_start`, `unlink_phone`, `staff_phones`
   (signed in, each checking its permission); `clock_screen_code`,

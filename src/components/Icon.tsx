@@ -234,6 +234,20 @@ const PATHS = {
       <path d="M12 7.5V12l3 2" />
     </>
   ),
+  phone: (
+    <>
+      <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+      <path d="M11 18.5h2" />
+    </>
+  ),
+  qr: (
+    <>
+      <rect x="3.5" y="3.5" width="6" height="6" rx="1" />
+      <rect x="14.5" y="3.5" width="6" height="6" rx="1" />
+      <rect x="3.5" y="14.5" width="6" height="6" rx="1" />
+      <path d="M14.5 14.5h2v2h-2zM18.5 18.5h2v2h-2zM14.5 20.5h2M20.5 14.5v2" />
+    </>
+  ),
   gift: (
     <>
       <rect x="3.5" y="8.5" width="17" height="4" rx="1" />

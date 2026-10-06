@@ -375,6 +375,7 @@ const phrases: PhraseBook = {
   "The owner, from their own pocket": { ar: "المالك، من ماله الخاص", ckb: "خاوەن، لە گیرفانی خۆی" },
   "Clocked at the till": { ar: "سُجّل على نقطة البيع", ckb: "لەسەر خاڵی فرۆشتن تۆمار کرا" },
   "Added by a manager": { ar: "أضافه مدير", ckb: "بەڕێوەبەرێک زیادی کرد" },
+  "Clocked on their phone": { ar: "سُجّل من هاتفه", ckb: "بە مۆبایلەکەی تۆمار کرا" },
   "someone who works here": { ar: "شخصًا يعمل هنا", ckb: "کەسێک کە لێرە کار دەکات" },
   "where they work": { ar: "مكان عمله", ckb: "شوێنی کارەکەی" },
   "a login": { ar: "حسابًا", ckb: "هەژمارێک" },

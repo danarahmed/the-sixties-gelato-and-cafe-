@@ -621,6 +621,10 @@ const phrases: PhraseBook = {
     ckb: "سڕینەوەی تۆمارە تاقیکارییەکان (دەستپێکی پاک)",
   },
   "Test records cleared": { ar: "مسح سجلات الاختبار", ckb: "سڕینەوەی تۆمارەکانی تاقیکردنەوە" },
+  "Everything cleared to start fresh": {
+    ar: "مسح كل شيء للبدء من جديد",
+    ckb: "سڕینەوەی هەموو شتێک بۆ دەستپێکردنەوە لە سەرەتاوە",
+  },
   // …and a change the database records itself: "{table} {verb}", in full.
   "Product added": { ar: "إضافة منتج", ckb: "زیادکردنی بەرهەم" },
   "Product changed": { ar: "تعديل منتج", ckb: "گۆڕینی بەرهەم" },
@@ -1165,6 +1169,16 @@ const phrases: PhraseBook = {
   "Last day set": { ar: "تحديد آخر يوم عمل", ckb: "دانانی دوایین ڕۆژی کار" },
   "Clock-in PIN set": { ar: "تعيين رمز PIN لتسجيل الحضور", ckb: "دانانی PIN ی تۆمارکردنی هاتن" },
   "Schedule saved": { ar: "حفظ جدول الدوام", ckb: "پاشەکەوتکردنی خشتەی دەوام" },
+  "Clock screen made": { ar: "إنشاء شاشة حضور", ckb: "دروستکردنی شاشەی هاتن و ڕۆیشتن" },
+  "Clock screen taken out of use": {
+    ar: "إيقاف شاشة حضور",
+    ckb: "لەکارخستنی شاشەی هاتن و ڕۆیشتن",
+  },
+  "Phone linked for clocking in": {
+    ar: "ربط هاتف لتسجيل الحضور",
+    ckb: "بەستنەوەی مۆبایل بۆ تۆمارکردنی هاتن",
+  },
+  "Phone unlinked": { ar: "فكّ ربط هاتف", ckb: "لابردنی بەستنەوەی مۆبایل" },
   "Hours corrected": { ar: "تصحيح الساعات", ckb: "ڕاستکردنەوەی کاتژمێرەکان" },
   "Hours added": { ar: "إضافة ساعات", ckb: "زیادکردنی کاتژمێر" },
   "Hours cancelled": { ar: "إلغاء ساعات", ckb: "هەڵوەشاندنەوەی کاتژمێر" },

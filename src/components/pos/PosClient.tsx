@@ -27,6 +27,7 @@ import { OrderPanel, type Receipt } from "./OrderPanel";
 import { PayDialog } from "./PayDialog";
 import { GiveAwayDialog } from "./GiveAwayDialog";
 import { ClockDialog } from "./ClockDialog";
+import { NO_SCREENS, type ScreenCheck } from "@/lib/clock";
 import { giveawayLabel } from "@/lib/losses";
 import { SplitDialog } from "./SplitDialog";
 import {
@@ -306,6 +307,7 @@ export function PosClient({
   dollarsOffHours = null,
   canAddCustomer = false,
   startView = null,
+  clockScreen = NO_SCREENS,
 }: {
   items: PosItem[];
   /** The add-ons, and which products offer them (0041). */
@@ -334,6 +336,12 @@ export function PosClient({
   dollarsOffHours?: number | null;
   /** The view this device was left on (a cookie): the till opens there again. */
   startView?: "floor" | "menu" | null;
+  /**
+   * Whether this till is one of the shop's clock screens (0068): then its clock
+   * shows the shop's code to scan. Once the café has one, a till that is not one
+   * clocks nobody, and shows no clock.
+   */
+  clockScreen?: ScreenCheck;
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -1594,15 +1602,17 @@ export function PosClient({
           <Icon name={drawer.open ? "unlock" : "lock"} size={18} />{" "}
           <span className="drawer-chip-label">{drawerLabel}</span>
         </button>
-        <button
-          className="icon-btn"
-          onClick={() => setDialog({ kind: "clock" })}
-          title={t("Clock in or out")}
-          aria-label={t("Clock in or out")}
-          data-testid="clock-button"
-        >
-          <Icon name="clock" />
-        </button>
+        {(!clockScreen.inUse || clockScreen.screen) && (
+          <button
+            className="icon-btn"
+            onClick={() => setDialog({ kind: "clock" })}
+            title={t("Clock in or out")}
+            aria-label={t("Clock in or out")}
+            data-testid="clock-button"
+          >
+            <Icon name="clock" />
+          </button>
+        )}
         <button
           className={`icon-btn print-btn${autoPrint ? " on" : ""}`}
           onClick={() => setDialog({ kind: "printing" })}
@@ -1885,7 +1895,12 @@ export function PosClient({
         </Modal>
       )}
       {dialog?.kind === "clock" && (
-        <ClockDialog timezone={timezone} onClose={() => setDialog(null)} />
+        <ClockDialog
+          timezone={timezone}
+          onScreen={clockScreen.screen !== null}
+          screensInUse={clockScreen.inUse}
+          onClose={() => setDialog(null)}
+        />
       )}
       {dialog?.kind === "customer" && (
         <CustomerDialog

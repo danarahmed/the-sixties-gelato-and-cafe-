@@ -346,6 +346,9 @@ select test.eq(phone_status('kawa-phone') ->> 'works', 'false', 'and their phone
 -- 6. The till's clock, once the café has clock screens
 -- =============================================================================
 select test.act_as('cashier@example.com');
+select test.eq((select string_agg(x ->> 'name' || ':' || (x ->> 'has_phone'), ',' order by x ->> 'name')
+                  from jsonb_array_elements(clock_board()) x),
+               'Dara:false,Rana:true', 'the till''s list says who clocks on their own phone');
 select test.eq(clock_in(pg_temp.person('Dara'), '7391', null, null, gen_random_uuid()),
                '{"ok": false, "error": "Clocking in and out is on the shop''s clock screen"}'::jsonb,
                'a till that is not a clock screen does not clock anyone');

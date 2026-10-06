@@ -429,6 +429,27 @@ begin
   return jsonb_build_object('ok', true, 'screen_id', s.id, 'location_id', s.location_id);
 end $$;
 
+-- Who clocks at the till (0049's), and who of them clocks on their own phone.
+create or replace function clock_board(p_location uuid default null) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare
+  v_business uuid := require_permission('sale.create', 'staff.manage', 'attendance.edit');
+  v_loc uuid := resolve_location(v_business, p_location);
+  v_today date := business_local_date(v_business, now());
+begin
+  return coalesce((
+    select jsonb_agg(jsonb_build_object(
+             'employee_id', e.id, 'name', e.full_name, 'title', e.title, 'has_pin', e.clock_pin_hash is not null,
+             'has_phone', exists (select 1 from staff_phone p where p.employee_id = e.id and p.ended_at is null),
+             'in_since', a.clock_in, 'shift_starts', s.starts_at, 'shift_ends', s.ends_at)
+           order by (a.id is null), e.full_name)
+      from employee e
+      left join attendance a on a.employee_id = e.id and a.clock_out is null and a.cancelled_at is null
+      left join shift_schedule s on s.employee_id = e.id and s.day = v_today
+     where e.business_id = v_business and works_on(e, v_today)
+       and (e.location_id = v_loc or s.location_id = v_loc or a.location_id = v_loc)), '[]'::jsonb);
+end $$;
+
 -- The till's clock, with a name and a PIN (0049), and now the clock screen it
 -- is on (its key, or none): on a clock screen, the hours are at the screen's
 -- place. Each stays one function under its name, the screen's key added.
@@ -596,4 +617,7 @@ revoke execute on function
 from public;
 grant execute on function
   clock_screen_code(text), link_phone_finish(text), phone_status(text), clock_by_phone(text, text, text, uuid)
-to anon, authenticated;
+to authenticated;
+grant execute on function
+  clock_screen_code(text), link_phone_finish(text), phone_status(text), clock_by_phone(text, text, text, uuid)
+to anon;

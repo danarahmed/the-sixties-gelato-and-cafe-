@@ -8,6 +8,9 @@ import { addDays, businessToday, dateTimeIn, parseDay } from "@/lib/dates";
 import { StaffPeople } from "@/components/staff/StaffPeople";
 import { ScheduleWeek } from "@/components/staff/ScheduleWeek";
 import { AttendanceList } from "@/components/staff/AttendanceList";
+import { ShopClock } from "@/components/staff/ShopClock";
+import { getClockScreens, getLinkedPhones, getScreenCheck } from "@/lib/db/clock";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -32,14 +35,20 @@ export default async function StaffPage({
   const canManage = has(profile, "staff.manage");
   const canEdit = has(profile, "attendance.edit");
   const canPay = has(profile, "payroll.run");
-  const [people, locations, logins, schedule, lastWeek, hours] = await Promise.all([
-    getStaff(),
-    getLocations(),
-    canManage ? getLogins() : Promise.resolve([]),
-    getSchedule(first, last, null),
-    getSchedule(addDays(first, -7), addDays(last, -7), null),
-    getAttendance(first, last),
-  ]);
+  const canSetUpClock = has(profile, "settings.manage");
+  const seesClock = canManage || canSetUpClock;
+  const [people, locations, logins, schedule, lastWeek, hours, screens, here, phones] =
+    await Promise.all([
+      getStaff(),
+      getLocations(),
+      canManage ? getLogins() : Promise.resolve([]),
+      getSchedule(first, last, null),
+      getSchedule(addDays(first, -7), addDays(last, -7), null),
+      getAttendance(first, last),
+      seesClock ? getClockScreens() : Promise.resolve(null),
+      seesClock ? getScreenCheck() : Promise.resolve(null),
+      canManage ? getLinkedPhones() : Promise.resolve(null),
+    ]);
   const places = locations
     .filter((l) => l.isActive && l.kind !== "warehouse")
     .map((l) => ({ id: l.id, name: l.name }));
@@ -87,6 +96,7 @@ export default async function StaffPage({
           timezone={timezone}
           canManage={canManage}
           canPay={canPay}
+          phones={phones}
         />
         {has(profile, "payroll.view") && (
           <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
@@ -94,6 +104,21 @@ export default async function StaffPage({
           </p>
         )}
       </section>
+
+      {seesClock && (
+        <section className="card grid" style={{ gap: 8 }} id="shop-clock">
+          <h2 style={{ margin: 0 }}>
+            <Icon name="qr" /> {t("The shop's clock")}
+          </h2>
+          <ShopClock
+            screens={screens}
+            thisScreen={here?.screen?.id ?? null}
+            places={places}
+            canSetUp={canSetUpClock}
+            timezone={timezone}
+          />
+        </section>
+      )}
 
       <section className="card grid" style={{ gap: 8 }} id="schedule">
         <h2 style={{ margin: 0 }}>{t("The schedule")}</h2>
