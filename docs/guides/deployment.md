@@ -3336,12 +3336,13 @@ what is made and bought is still the café's to record.
 What it changes:
 
 - **New column:** `item.keeps_days` (how many days a bought item keeps, or
-  none).
+  none). **New index:** `inventory_movement_item_time`, an item's movements
+  at a place by time, so the plan and What to buy read some days of an item
+  without its whole history.
 - **Replaced:** `production_plan` and `buying_list`; each still gives
   everything it gave, with what it learnt added.
 - **New:** `set_item_keeps` (whoever may change an item; keyed, on the audit
-  trail) and `waste_coach` (`cost.view`), signed in; `thrown_unsold` and
-  `use_not_waste`, which only the functions call.
+  trail) and `waste_coach` (`cost.view`), signed in.
 - Nothing recorded changes.
 
 The app's screens need it: before it is applied, the plan, What to buy and

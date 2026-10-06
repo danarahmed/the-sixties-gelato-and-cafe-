@@ -2005,6 +2005,9 @@ enough to apply in one call). No table changes, and nothing recorded changes.
 
 ### The plan learns, What to buy looks ahead, and a week's waste (`0070`)
 
+- **`inventory_movement`** gains an index by item, place and time
+  (`inventory_movement_item_time`): the plan and What to buy read some days
+  of an item's movements without its whole history.
 - **`item`** gains `keeps_days` (1 to 365, or none): how many days a bought
   item keeps once it comes. Set with `set_item_keeps(item, days)` (whoever may
   change an item: `settings.manage`, `purchase.create` or
@@ -2021,8 +2024,8 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   `bump`, `trim` and `learned` (`sold_out`, `waste` or none); each day judged
   gains `wasted` and `sold_out`.
 - **What to buy** (`buying_list`) judges use without what was thrown away
-  unsold (`wasted`, shown apart; `thrown_unsold` and `use_not_waste` say
-  which is which, a loss taken back on review with the loss). With four weeks
+  unsold (`wasted`, shown apart; a loss taken back on review goes with the
+  loss). With four weeks
   behind an item, the days a delivery takes are each judged by their weekday
   (`forecast` `weekday`, else `average`; `lead_use`). What today's plan needs
   of an ingredient beyond what its weekday's batches use is added

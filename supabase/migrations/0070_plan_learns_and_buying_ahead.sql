@@ -79,6 +79,12 @@ end $$;
 -- -----------------------------------------------------------------------------
 -- 2. The day's plan learns from what was thrown away and what sold out
 -- -----------------------------------------------------------------------------
+-- What an item did at a place over some days, read without its whole history:
+-- the plan reads each weekday it judges by, What to buy each weekday of four
+-- weeks.
+create index if not exists inventory_movement_item_time
+  on inventory_movement (item_id, location_id, occurred_at);
+
 -- 0055's production_plan, learning (0070): each day it judges by says what was
 -- thrown away unsold and whether it sold out. Sold out on half those days or
 -- more, never thrown away, it makes for a batch more for every day it sold
@@ -116,7 +122,10 @@ begin
     v_weeks := least(8, greatest(coalesce(v_history, 0), 0) / 7);
     v_days := '[]'; v_demand := null; v_seen := null; v_sold_out := 0; v_waste_days := 0;
     v_waste_avg := 0; v_bump := 0; v_trim := 0; v_learned := null;
+    v_on_hand := (item_position(v_business, r.item_id, v_loc)).qty;
     if v_weeks >= 4 then
+      -- What was left at a day's end: what is on hand now, less what moved
+      -- since (read from the day on, not the whole history).
       -- Each of the same weekdays before: what went (sold, into batches, sent
       -- away), what was thrown away unsold (0070), and whether it sold out:
       -- next to nothing left at the day's end (under 5% of a batch), none thrown.
@@ -141,10 +150,10 @@ begin
                                           and m.type in ('waste', 'spoilage', 'expired')
                                           and not exists (select 1 from loss_review lr where lr.movement_id = m.id
                                                              and lr.decision = 'reversed')), 0) as wst,
-                             coalesce((select sum(m.base_quantity_signed) from inventory_movement m
+                             v_on_hand - coalesce((select sum(m.base_quantity_signed) from inventory_movement m
                                         where m.business_id = v_business and m.item_id = r.item_id
                                           and m.location_id = v_loc
-                                          and m.occurred_at < (v_day - 7 * k + 1)::timestamp at time zone v_tz), 0)
+                                          and m.occurred_at >= (v_day - 7 * k + 1)::timestamp at time zone v_tz), 0)
                                as left_at_close
                         from generate_series(1, v_weeks) k) y) x;
       -- What it could have sold (0070). Sold out on half the days or more, and
@@ -161,7 +170,6 @@ begin
         v_trim := least(coalesce(v_waste_avg, 0), r.yield / 2);
       end if;
     end if;
-    v_on_hand := (item_position(v_business, r.item_id, v_loc)).qty;
     select coalesce(sum(lot.left_base), 0) into v_due
       from item_lot lot
      where lot.business_id = v_business and lot.item_id = r.item_id and lot.location_id = v_loc
@@ -221,26 +229,6 @@ end $$;
 -- -----------------------------------------------------------------------------
 -- 3. What to buy looks at the days ahead
 -- -----------------------------------------------------------------------------
--- What was thrown away unsold (0070): wasted, spoilt or expired, and the
--- taking back of one on review, so the two come to nothing together.
-create or replace function thrown_unsold(m inventory_movement) returns boolean
-language sql stable set search_path = public as $$
-  select m.type in ('waste', 'spoilage', 'expired')
-         or (m.type = 'reversal' and m.reference_type = 'loss_review'
-             and exists (select 1 from loss_review r join inventory_movement o on o.id = r.movement_id
-                          where r.id = m.reference_id and o.type in ('waste', 'spoilage', 'expired')))
-$$;
-
--- What a movement used of an item, not counting what was thrown away unsold
--- (0070): sold, into batches, sent away, and the other losses (eaten by the
--- staff, given away, spilt), which the café goes on using.
-create or replace function use_not_waste(m inventory_movement) returns boolean
-language sql stable set search_path = public as $$
-  select (stock_card_kind(m.type, m.reference_type, m.base_quantity_signed) in ('sold', 'batches', 'wasted')
-          or sent_away(m))
-         and not thrown_unsold(m)
-$$;
-
 -- 0055's buying_list, looking ahead (0070): use without what was thrown away
 -- unsold ('wasted', shown apart); the days a delivery takes each by its
 -- weekday ('lead_use'), with four weeks behind the item; what today's plan
@@ -262,18 +250,31 @@ declare
   v_packs numeric; v_price numeric; v_price_from text; v_price_on date;
   v_tz text := (select timezone from business where id = v_business);
   v_plan jsonb; v_wd numeric[]; v_forecast text; v_lead_use numeric; v_plan_need numeric; v_plan_extra numeric;
-  v_wd_batches numeric; v_cap numeric; v_capped boolean;
+  v_wd_batches numeric; v_cap numeric; v_capped boolean; v_back uuid[];
 begin
   -- What today's plan needs of each ingredient (0070).
   v_plan := coalesce(production_plan(v_today, v_loc) -> 'ingredients', '[]'::jsonb);
+  -- The losses taken back on review that had been thrown away unsold (0070).
+  select coalesce(array_agg(r.id), '{}') into v_back
+    from loss_review r join inventory_movement o on o.id = r.movement_id
+   where r.business_id = v_business and r.decision = 'reversed'
+     and o.type in ('waste', 'spoilage', 'expired');
   for x in
     with moves as (
       select m.item_id, sum(m.base_quantity_signed) as on_hand, min(m.occurred_at) as first_at,
              -sum(m.base_quantity_signed) filter (
-                where m.occurred_at >= v_now - interval '28 days' and use_not_waste(m))
+                where m.occurred_at >= v_now - interval '28 days'
+                  and ((stock_card_kind(m.type, m.reference_type, m.base_quantity_signed) in ('sold', 'batches', 'wasted')
+                        or sent_away(m))
+                       and not (m.type in ('waste', 'spoilage', 'expired')
+                       or (m.type = 'reversal' and m.reference_type = 'loss_review'
+                           and m.reference_id = any(v_back)))))
                as used,
              -sum(m.base_quantity_signed) filter (
-                where m.occurred_at >= v_now - interval '28 days' and thrown_unsold(m))
+                where m.occurred_at >= v_now - interval '28 days'
+                  and (m.type in ('waste', 'spoilage', 'expired')
+                       or (m.type = 'reversal' and m.reference_type = 'loss_review'
+                           and m.reference_id = any(v_back))))
                as wasted
         from inventory_movement m
        where m.business_id = v_business and m.location_id = v_loc
@@ -401,7 +402,12 @@ begin
                             -sum(m.base_quantity_signed) as qty
                        from inventory_movement m
                       where m.business_id = v_business and m.location_id = v_loc and m.item_id = x.id
-                        and m.occurred_at >= v_now - interval '28 days' and use_not_waste(m)
+                        and m.occurred_at >= v_now - interval '28 days'
+                        and ((stock_card_kind(m.type, m.reference_type, m.base_quantity_signed) in ('sold', 'batches', 'wasted')
+                        or sent_away(m))
+                       and not (m.type in ('waste', 'spoilage', 'expired')
+                       or (m.type = 'reversal' and m.reference_type = 'loss_review'
+                           and m.reference_id = any(v_back))))
                       group by 1) u on u.wd = d.wd;
         v_forecast := 'weekday';
       else
@@ -555,7 +561,6 @@ end $$;
 -- -----------------------------------------------------------------------------
 -- 5. Who may call what
 -- -----------------------------------------------------------------------------
-revoke execute on function set_item_keeps__run(uuid, int), use_not_waste(inventory_movement),
-  thrown_unsold(inventory_movement) from public, anon, authenticated;
+revoke execute on function set_item_keeps__run(uuid, int) from public, anon, authenticated;
 revoke execute on function set_item_keeps(uuid, int, uuid), waste_coach(date, uuid) from public, anon;
 grant execute on function set_item_keeps(uuid, int, uuid), waste_coach(date, uuid) to authenticated;
