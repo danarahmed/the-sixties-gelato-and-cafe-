@@ -239,7 +239,8 @@ const PAYMENT_LABEL: Record<string, string> = {
   card: "Card",
   platform_paid: "Platform-paid",
   mixed: "Mixed",
-  other: "Other",
+  // The café's own ways to pay (0069), together: Reports → Payments has each.
+  other: "Other ways to pay",
 };
 
 /** A share of the most in the list, for the bar beside a row (0–100). */

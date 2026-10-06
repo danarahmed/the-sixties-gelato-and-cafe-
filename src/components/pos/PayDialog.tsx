@@ -28,11 +28,26 @@ export function suggestedCash(total: number): number[] {
   return [...out].sort((a, b) => a - b).slice(0, 4);
 }
 
-/** A split starts as part by card and the rest in cash (0042). */
-const SPLIT_START: SplitRow[] = [
-  { type: "card", amount: "" },
-  { type: "cash", amount: "" },
-];
+/**
+ * A split starts as part by card and the rest in cash (0042); with no cash to
+ * take (the drawer closed), part by card and the rest by the café's first way
+ * to pay (0069).
+ */
+function splitStart(cash: boolean, methods: readonly { id: string }[]): SplitRow[] {
+  const first = methods[0];
+  return cash || !first
+    ? [
+        { type: "card", amount: "" },
+        { type: "cash", amount: "" },
+      ]
+    : [
+        { type: "card", amount: "" },
+        { type: "other", amount: "", method: first.id },
+      ];
+}
+
+/** What is chosen: a tender, dollars, a split, or one of the café's ways to pay ("m:" and its id). */
+type Choice = Tender | "split" | "usd" | `m:${string}`;
 
 /**
  * Taking the money. For cash, the cashier enters what was handed over (or
@@ -51,6 +66,10 @@ const SPLIT_START: SplitRow[] = [
  * more, the change is given in dinars; worth less, the rest is paid in dinars
  * or by card. The database values them again at the rate now, and refuses the
  * payment if the rate changed meanwhile.
+ *
+ * The café's own ways to pay (0069), FIB, FastPay…: each is a choice of its
+ * own, with the reference its app showed (if the cashier types it), and a
+ * part of a split.
  */
 export function PayDialog({
   title,
@@ -64,6 +83,8 @@ export function PayDialog({
   busy,
   error,
   reward = null,
+  methods = [],
+  initialMethod = null,
   onConfirm,
   onClose,
 }: {
@@ -98,6 +119,10 @@ export function PayDialog({
     each: number;
     blocked: string | null;
   } | null;
+  /** The café's own ways to pay in use (0069): offered beside cash and the card, alone or in a split. */
+  methods?: { id: string; name: string }[];
+  /** The way to pay pressed on the order, to start on. */
+  initialMethod?: string | null;
   onConfirm: (payments: Payment[], orderNo: string | null, rewards: number) => void;
   onClose: () => void;
 }) {
@@ -112,9 +137,15 @@ export function PayDialog({
   const taken = Math.min(rewards, maxRewards);
   const off = taken * (reward?.value ?? 0);
   const total = billed - off;
-  const [tender, setTender] = useState<Tender | "split" | "usd">(initialTender);
+  const [tender, setTender] = useState<Choice>(
+    initialTender === "other" && initialMethod ? `m:${initialMethod}` : initialTender,
+  );
   const [received, setReceived] = useState("");
-  const [rows, setRows] = useState<SplitRow[]>(SPLIT_START);
+  const [rows, setRows] = useState<SplitRow[]>(() => splitStart(tenders.includes("cash"), methods));
+  // One of the café's ways to pay, chosen (0069), and the reference its app showed.
+  const methodId = tender.startsWith("m:") ? tender.slice(2) : null;
+  const [reference, setReference] = useState("");
+  const refInput = useRef<HTMLInputElement>(null);
   const [splitReceived, setSplitReceived] = useState("");
   const [usdText, setUsdText] = useState("");
   const [restWay, setRestWay] = useState<RestWay>("cash");
@@ -122,8 +153,18 @@ export function PayDialog({
   // Dollars are cash: taken where cash is, at a rate recent enough.
   const canDollars = fx !== null && tenders.includes("cash");
   const usdInput = useRef<HTMLInputElement>(null);
-  // Part in cash and part by card: only where both can be taken.
-  const canSplit = tenders.includes("cash") && tenders.includes("card");
+  // Part in cash and part by card, where both can be taken; or a part by one
+  // of the café's ways to pay (0069) beside either.
+  const canSplit =
+    (tenders.includes("cash") && tenders.includes("card")) ||
+    (methods.length > 0 && (tenders.includes("cash") || tenders.includes("card")));
+  // The choices a part of a split takes: cash and the card where taken, and each way to pay.
+  const splitWays: { value: string; label: string }[] = [
+    ...tenders
+      .filter((x) => x === "cash" || x === "card")
+      .map((x) => ({ value: x, label: t(`pos.tender.${x}`) })),
+    ...methods.map((m) => ({ value: `m:${m.id}`, label: m.name })),
+  ];
   const [orderNo, setOrderNo] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const orderInput = useRef<HTMLInputElement>(null);
@@ -132,6 +173,7 @@ export function PayDialog({
     if (tender === "cash") input.current?.focus();
     if (tender === "platform_paid") orderInput.current?.focus();
     if (tender === "usd") usdInput.current?.focus();
+    if (tender.startsWith("m:")) refInput.current?.focus();
   }, [tender]);
 
   const typed = normaliseNumber(received);
@@ -163,6 +205,23 @@ export function PayDialog({
     }
     if (dollars) {
       if (dollars.payments) onConfirm(dollars.payments, null, taken);
+      return;
+    }
+    if (methodId) {
+      const ref = reference.trim().replace(/\s+/g, " ");
+      onConfirm(
+        [
+          {
+            type: "other",
+            amount: total,
+            received: null,
+            method: methodId,
+            ...(ref ? { reference: ref.slice(0, 60) } : {}),
+          },
+        ],
+        null,
+        taken,
+      );
       return;
     }
     const one = tender as Tender;
@@ -283,7 +342,7 @@ export function PayDialog({
           </div>
         )}
 
-        {tenders.length > 1 && (
+        {tenders.length + methods.length > 1 && (
           <div className="seg" role="radiogroup" aria-label={t("pos.howPaid")}>
             {tenders.map((x) => (
               <button
@@ -296,6 +355,19 @@ export function PayDialog({
               >
                 <Icon name={x === "cash" ? "cash" : x === "card" ? "card" : "receipt"} />{" "}
                 {t(`pos.tender.${x}`)}
+              </button>
+            ))}
+            {methods.map((m) => (
+              <button
+                key={m.id}
+                role="radio"
+                aria-checked={tender === `m:${m.id}`}
+                className={tender === `m:${m.id}` ? "active" : ""}
+                onClick={() => setTender(`m:${m.id}`)}
+                disabled={busy}
+                data-testid="pay-method-choice"
+              >
+                <Icon name="phone" /> <span dir="auto">{m.name}</span>
               </button>
             ))}
             {canDollars && (
@@ -381,6 +453,29 @@ export function PayDialog({
             </div>
           </div>
         )}
+        {methodId && (
+          <div className="cash-box" data-testid="pay-method-box">
+            <label className="muted" htmlFor="pay-reference" style={{ fontSize: ".85rem" }}>
+              {t("The reference {name} shows (if any)", {
+                name: methods.find((m) => m.id === methodId)?.name ?? "",
+              })}
+            </label>
+            <input
+              id="pay-reference"
+              ref={refInput}
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={60}
+              className="cash-input mono"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              disabled={busy}
+            />
+            <span className="muted" style={{ fontSize: ".85rem" }}>
+              {t("Check the money has come into the café's account before you confirm.")}
+            </span>
+          </div>
+        )}
         {split && (
           <div className="cash-box" data-testid="split-box">
             {rows.map((r, i) => {
@@ -390,13 +485,25 @@ export function PayDialog({
                 <div key={i} className="split-row" data-testid="split-row">
                   <select
                     aria-label={t("How payment {n} is made", { n: i + 1 })}
-                    value={r.type}
-                    onChange={(e) => setRow(i, { type: e.target.value as SplitRow["type"] })}
+                    value={r.type === "other" && r.method ? `m:${r.method}` : r.type}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setRow(
+                        i,
+                        v.startsWith("m:")
+                          ? { type: "other", method: v.slice(2) }
+                          : { type: v as SplitRow["type"], method: undefined },
+                      );
+                    }}
                     disabled={busy}
                   >
-                    {(["cash", "card"] as const).map((x) => (
-                      <option key={x} value={x} disabled={x === "cash" && cashElsewhere}>
-                        {t(`pos.tender.${x}`)}
+                    {splitWays.map((x) => (
+                      <option
+                        key={x.value}
+                        value={x.value}
+                        disabled={x.value === "cash" && cashElsewhere}
+                      >
+                        {x.label}
                       </option>
                     ))}
                   </select>

@@ -37,6 +37,8 @@ const SOURCE: Record<string, string> = {
   supplier_credit: "Supplier's credit",
   sale_void: "Void",
   production_cancel: "Batch cancelled",
+  // Money moved out of one of the café's ways to pay, or a charge it took (0069).
+  money_move: "Money moved",
   fx_exchange: "Dollars exchanged",
   session_dollars: "Dollars counted",
 };

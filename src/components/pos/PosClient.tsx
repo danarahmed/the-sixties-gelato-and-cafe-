@@ -194,8 +194,11 @@ function savePending(p: Pending | null) {
 }
 
 /** How a waiting payment is sent: each part (0042), or the one way a till loaded before took. */
-function paidAs(p: Pending): { tender?: Tender; tenders?: Payment[] } {
-  return p.payments && p.payments.length > 0 ? { tenders: p.payments } : { tender: p.tender };
+function paidAs(p: Pending): { tender?: Exclude<Tender, "other">; tenders?: Payment[] } {
+  // One of the café's ways to pay is always sent as a list: it names which (0069).
+  return (p.payments && p.payments.length > 0) || p.tender === "other"
+    ? { tenders: p.payments ?? [] }
+    : { tender: p.tender };
 }
 
 /** JSON from one of the till's own routes; null when offline, signed out or refused. */
@@ -235,6 +238,8 @@ type Dialog =
       kind: "pay";
       key: string;
       tender: Tender;
+      /** One of the café's ways to pay, when that was pressed (0069). */
+      method: string | null;
       order: Order;
       title: string;
       error: string | null;
@@ -308,6 +313,7 @@ export function PosClient({
   canAddCustomer = false,
   startView = null,
   clockScreen = NO_SCREENS,
+  payMethods = [],
 }: {
   items: PosItem[];
   /** The add-ons, and which products offer them (0041). */
@@ -342,6 +348,8 @@ export function PosClient({
    * clocks nobody, and shows no clock.
    */
   clockScreen?: ScreenCheck;
+  /** The café's own ways to pay in use (0069): FIB, FastPay… a button each, beside cash and the card. */
+  payMethods?: { id: string; name: string }[];
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -1115,7 +1123,7 @@ export function PosClient({
   }
 
   // ------------------------------------------------------------ taking the money
-  async function startPay(tender: Tender) {
+  async function startPay(tender: Tender, method?: string) {
     if (pending || busy || order.lines.length === 0) return;
     if (!navigator.onLine) {
       setMsg({ ok: false, text: t("pos.offlineBlocked") });
@@ -1164,6 +1172,7 @@ export function PosClient({
       kind: "pay",
       key: crypto.randomUUID(),
       tender,
+      method: method ?? null,
       order: o,
       title: title(o),
       error: null,
@@ -1232,7 +1241,10 @@ export function PosClient({
           : null,
         tender,
         received,
-        payments,
+        // One of the café's ways to pay is printed by its name (0069).
+        payments: payments.map((x) =>
+          x.method ? { ...x, methodName: payMethods.find((m) => m.id === x.method)?.name } : x,
+        ),
         platformOrderNo: isPlatform(o.channel) ? orderNo : null,
         turnNo: o.turnNo,
         at: new Date().toISOString(),
@@ -1678,6 +1690,7 @@ export function PosClient({
             onNote={setNote}
             onLabel={(label) => billRef.current && putBill({ ...billRef.current, label })}
             onPay={startPay}
+            payMethods={payMethods}
             onSave={saveAndClose}
             onPrintBill={printBill}
             onTicket={sendTicket}
@@ -1733,10 +1746,12 @@ export function PosClient({
           initialTender={
             isPlatform(dialog.order.channel)
               ? "platform_paid"
-              : drawer.open
-                ? dialog.tender
-                : "card"
+              : dialog.tender === "cash" && !drawer.open
+                ? "card"
+                : dialog.tender
           }
+          methods={isPlatform(dialog.order.channel) ? [] : payMethods}
+          initialMethod={dialog.method}
           platform={isPlatform(dialog.order.channel) ? channelName(dialog.order.channel) : null}
           fx={isPlatform(dialog.order.channel) ? null : fx}
           dollarsOffHours={isPlatform(dialog.order.channel) ? null : dollarsOffHours}

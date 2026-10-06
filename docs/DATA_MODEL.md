@@ -1968,3 +1968,37 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   `clock_by_phone(phone, code, direction)`, keyed like every write. The trail's
   rows are `staff.clock_screen`, `staff.clock_screen_removed`,
   `staff.phone_linked` and `staff.phone_unlinked`.
+
+### Ways to pay, each with its own account (`0069`)
+
+- **`payment_method`**: one of the café's ways to pay besides cash and the
+  card machine (FIB, FastPay, ZainCash, Qi Card…): its name (once, whatever
+  the letters' case), its account (an asset among the cash, `1030` to `1089`,
+  made with it, named after it and renamed with it), its place in the list,
+  whether it is in use, who added it and when. Everyone at the café reads
+  them; only the functions write them. One out of use is not offered at the
+  till and takes no new sale; its account keeps what it holds.
+- **`sales_tender`** gains `payment_method_id`: a payment of the tender
+  `other` names its way to pay, and only it does. Its `reference` (there since
+  `0004`) takes the reference the app or the card machine showed, for a card
+  or a way to pay only. **`sale_refund_tender`** gains `payment_method_id`: a
+  refund gives back the way the sale was paid, and credits that account.
+- **`money_move`**: money moved out of a way to pay's account to the bank
+  (`1020`), the safe (`1005`) or another way to pay, or into one from the bank
+  or the safe: what arrived, the fee the bank or the app kept (`6500`), the
+  day, a reference and a note, its journal, who and when; a charge alone has
+  no place to go and arrives with nothing. Cancelled with why: its journal is
+  reversed. A way to pay's account, and the safe, give no more than they hold.
+  The safe's tie-out counts what was moved in and out of it.
+- **The statements:** `cash_flow_line` counts `1030`–`1089` as cash, so the
+  balance sheet shows them in the cash and the cash-flow statement treats a
+  move between them, the bank and the safe as no flow.
+- **Functions:** `payment_methods()` (anyone who sells, keeps the books or
+  closes the day), `save_payment_method(method, name, active, position)`
+  (`settings.manage`), `move_money(from, to, amount, fee, on, reference, note)`
+  and `cancel_money_move(move, reason)` (`accounting.post`), `money_accounts()`
+  (`accounting.post` or `cost.view`), `drawer_methods(location)` (what each way
+  to pay took since the drawer was counted: `day.close` or `cost.view`) and
+  `report_payment_methods(from, to, location)` (`cost.view`). The trail's rows
+  are `payment_method.add`, `payment_method.change`, `money.move` and
+  `money.move_cancel`; a move's journal is `money_move`.

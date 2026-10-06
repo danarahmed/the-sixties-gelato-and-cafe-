@@ -12,6 +12,7 @@ import {
   checkRefundSplit,
   proportionalParts,
   refundSplitMessage,
+  wayKey,
   type LeftToGiveBack,
 } from "@/lib/payments";
 import { normaliseNumber } from "@/lib/validation";
@@ -77,7 +78,8 @@ export function RefundDialog({
     ways.map((w) => w.left),
     plan.total,
   );
-  const parts = typed ?? Object.fromEntries(ways.map((w, i) => [w.type, String(shares[i] ?? 0)]));
+  const parts =
+    typed ?? Object.fromEntries(ways.map((w, i) => [wayKey(w), String(shares[i] ?? 0)]));
   const split = splitting ? checkRefundSplit(ways, parts, plan.total) : null;
   // A new refund amount starts again from the shares.
   useEffect(() => setTyped(null), [plan.total]);
@@ -90,15 +92,29 @@ export function RefundDialog({
     void listApproversAction("refund").then((r) => setApprovers(r.ok ? r.data : []));
   }, []);
 
-  const how = (tender: string) =>
+  const how = (tender: string, name?: string) =>
     tender === "cash"
       ? t("in cash, from the drawer")
       : tender === "card"
         ? t("to the card it was paid with")
-        : t("off what the platform owes");
+        : tender === "other"
+          ? t("by {name}, the way it was paid", { name: name ?? "" })
+          : t("off what the platform owes");
   /** Each way's part, as a phrase: "333 in cash, from the drawer; 667 to the card it was paid with". */
-  const howEach = (list: { type: string; amount: number }[]) =>
-    list.map((x) => `${fmtIQD(x.amount)} ${how(x.type)}`).join("; ");
+  const howEach = (
+    list: { type: string; amount: number; methodName?: string; method?: string }[],
+  ) =>
+    list
+      .map(
+        (x) =>
+          `${fmtIQD(x.amount)} ${how(x.type, x.methodName ?? ways.find((w) => w.method && w.method === x.method)?.name)}`,
+      )
+      .join("; ");
+  /** A way of paying's name: one of the café's own by its name (0069). */
+  const wayName = (w: LeftToGiveBack) =>
+    w.type === "other" ? (w.name ?? t("Other way to pay")) : t(`pos.tender.${w.type}`);
+  // The one way a sale was paid, by its name when it is one of the café's.
+  const oneName = sale.left?.find((l) => l.type === sale.tender)?.name;
 
   const problem = (() => {
     const p = plan.problem;
@@ -162,11 +178,12 @@ export function RefundDialog({
         lines: r.lines.map((l) => ({ name: l.name, qty: l.qty, amount: l.amount, note: null })),
         total: r.refunded,
         tender: r.tender as PrintJob["tender"],
-        ...(r.tenders.length > 1
+        ...(r.tenders.length > 1 || r.tenders.some((x) => x.methodName)
           ? {
               payments: r.tenders.map((x) => ({
                 type: x.type as NonNullable<PrintJob["tender"]>,
                 amount: x.amount,
+                ...(x.methodName ? { methodName: x.methodName } : {}),
               })),
             }
           : {}),
@@ -197,7 +214,7 @@ export function RefundDialog({
                 : t("Refund {no}: {amount} given back {how} (journal {journal}).", {
                     no: done.refundNo,
                     amount: fmtIQD(done.refunded),
-                    how: how(done.tender),
+                    how: how(done.tender, done.tenders[0]?.methodName ?? oneName),
                     journal: done.journalNo ?? "—",
                   })}{" "}
               {done.whole
@@ -270,7 +287,7 @@ export function RefundDialog({
                     })
                   : t("Gives back {amount} {how}", {
                       amount: fmtIQD(plan.total),
-                      how: how(sale.tender),
+                      how: how(sale.tender, oneName),
                     })}
               </strong>
               {split && (
@@ -279,19 +296,19 @@ export function RefundDialog({
                   data-testid="refund-split"
                 >
                   {ways.map((w) => (
-                    <label key={w.type} className="muted" style={{ fontSize: ".85rem" }}>
+                    <label key={wayKey(w)} className="muted" style={{ fontSize: ".85rem" }}>
                       {t("{way}, at most {left}", {
-                        way: t(`pos.tender.${w.type}`),
+                        way: wayName(w),
                         left: fmtIQD(w.left),
                       })}{" "}
                       <input
-                        aria-label={t("Given back {way}", { way: t(`pos.tender.${w.type}`) })}
+                        aria-label={t("Given back {way}", { way: wayName(w) })}
                         className="amt"
                         inputMode="numeric"
                         style={{ width: 90, textAlign: "end" }}
-                        value={parts[w.type] ?? ""}
+                        value={parts[wayKey(w)] ?? ""}
                         onChange={(e) =>
-                          setTyped({ ...parts, [w.type]: normaliseNumber(e.target.value) })
+                          setTyped({ ...parts, [wayKey(w)]: normaliseNumber(e.target.value) })
                         }
                       />
                     </label>

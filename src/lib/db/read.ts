@@ -598,8 +598,8 @@ export interface OrderRow {
     at: string;
     reason: string | null;
     tender: string | null;
-    /** Each way it went back (0042). */
-    tenders: { type: string; amount: number }[];
+    /** Each way it went back (0042); one of the café's ways to pay by its name (0069). */
+    tenders: { type: string; amount: number; methodName?: string }[];
     by: string | null;
     approvedBy: string | null;
     lines: { name: string; qty: number; amount: number }[];
@@ -744,70 +744,98 @@ export async function getSalesOrders(
   const ids = orders.map((o) => str(o.id));
   // The sales' own rows, a batch of sales at a time: 500 sales' ids do not fit
   // in one request, and their lines may be more than a call returns.
-  const [lines, tenders, adjustments, variants, products, people, refundRows, addonRows] =
-    await Promise.all([
-      readInBatches(
-        ids,
-        (b) =>
-          c
-            .from("sales_order_line")
-            .select(
-              "id,sales_order_id,product_variant_id,product_name,quantity,unit_price,line_net",
-            )
-            .in("sales_order_id", b),
-        "sale lines",
+  const [
+    lines,
+    tenders,
+    adjustments,
+    variants,
+    products,
+    people,
+    refundRows,
+    addonRows,
+    tenderMethods,
+    methodNames,
+  ] = await Promise.all([
+    readInBatches(
+      ids,
+      (b) =>
+        c
+          .from("sales_order_line")
+          .select("id,sales_order_id,product_variant_id,product_name,quantity,unit_price,line_net")
+          .in("sales_order_id", b),
+      "sale lines",
+    ),
+    readInBatches(
+      ids,
+      (b) =>
+        c
+          .from("sales_tender")
+          .select(
+            "id,sales_order_id,tender_type,amount,received,change_given,position,currency,foreign_amount,rate,reference",
+          )
+          .in("sales_order_id", b)
+          .order("position")
+          .order("id"),
+      "tenders",
+    ),
+    readInBatches(
+      ids,
+      (b) =>
+        c
+          .from("sale_adjustment")
+          .select("id,sales_order_id,kind,amount,reason,created_at,requested_by,approved_by")
+          .in("sales_order_id", b),
+      "voids and refunds",
+    ),
+    c.from("product_variant").select("id,product_id,name"),
+    c.from("product").select("id,name"),
+    c.from("app_user").select("id,full_name"),
+    readInBatches(
+      ids,
+      (b) =>
+        c
+          .from("sale_refund")
+          .select(
+            "id,refund_no,sales_order_id,amount,cost_returned,reason,created_at,requested_by,approved_by",
+          )
+          .in("sales_order_id", b),
+      "refunds",
+    ),
+    // Each line's add-ons (0041), named with it: "Latte — Large (+ Oat milk, Extra shot ×2)".
+    readInBatches(
+      ids,
+      (b) =>
+        c
+          .from("sales_order_line_modifier")
+          .select("sales_order_line_id,name,qty,position")
+          .in("sales_order_id", b)
+          .order("position")
+          .order("id"),
+      "add-ons",
+    ),
+    // Which of the café's ways to pay each payment was (0069), and their
+    // names: none before 0069 is applied, when the column is not there.
+    readInBatches(
+      ids,
+      (b) =>
+        c
+          .from("sales_tender")
+          .select("id,payment_method_id")
+          .in("sales_order_id", b)
+          .not("payment_method_id", "is", null)
+          .order("id"),
+      "ways to pay",
+    ).catch(() => []),
+    c
+      .from("payment_method")
+      .select("id,name")
+      .then(
+        (r) => (r.error ? [] : ((r.data ?? []) as Record<string, unknown>[])),
+        () => [],
       ),
-      readInBatches(
-        ids,
-        (b) =>
-          c
-            .from("sales_tender")
-            .select(
-              "sales_order_id,tender_type,amount,received,change_given,position,currency,foreign_amount,rate",
-            )
-            .in("sales_order_id", b)
-            .order("position")
-            .order("id"),
-        "tenders",
-      ),
-      readInBatches(
-        ids,
-        (b) =>
-          c
-            .from("sale_adjustment")
-            .select("id,sales_order_id,kind,amount,reason,created_at,requested_by,approved_by")
-            .in("sales_order_id", b),
-        "voids and refunds",
-      ),
-      c.from("product_variant").select("id,product_id,name"),
-      c.from("product").select("id,name"),
-      c.from("app_user").select("id,full_name"),
-      readInBatches(
-        ids,
-        (b) =>
-          c
-            .from("sale_refund")
-            .select(
-              "id,refund_no,sales_order_id,amount,cost_returned,reason,created_at,requested_by,approved_by",
-            )
-            .in("sales_order_id", b),
-        "refunds",
-      ),
-      // Each line's add-ons (0041), named with it: "Latte — Large (+ Oat milk, Extra shot ×2)".
-      readInBatches(
-        ids,
-        (b) =>
-          c
-            .from("sales_order_line_modifier")
-            .select("sales_order_line_id,name,qty,position")
-            .in("sales_order_id", b)
-            .order("position")
-            .order("id"),
-        "add-ons",
-      ),
-    ]);
+  ]);
   const refundIds = refundRows.map((r) => str(r.id));
-  const [rLines, refundTenders] = await Promise.all([
+  const [rLines, refundTenders, refundMethods] = await Promise.all([
     readInBatches(
       refundIds,
       (b) =>
@@ -819,9 +847,22 @@ export async function getSalesOrders(
     ),
     readInBatches(
       refundIds,
-      (b) => c.from("sale_refund_tender").select("refund_id,tender_type,amount").in("refund_id", b),
+      (b) =>
+        c.from("sale_refund_tender").select("id,refund_id,tender_type,amount").in("refund_id", b),
       "refund payments",
     ),
+    // The way to pay each part went back to (0069); none before it is applied.
+    readInBatches(
+      refundIds,
+      (b) =>
+        c
+          .from("sale_refund_tender")
+          .select("id,payment_method_id")
+          .in("refund_id", b)
+          .not("payment_method_id", "is", null)
+          .order("id"),
+      "ways to pay given back",
+    ).catch(() => []),
   ]);
   const productName = new Map(rows(products, "products").map((p) => [str(p.id), str(p.name)]));
   const variantLabel = new Map<string, string>();
@@ -855,11 +896,21 @@ export async function getSalesOrders(
   const adjBy = group(adjustments, (a) => str(a.sales_order_id));
   const rLinesBy = group(rLines, (l) => str(l.refund_id));
   const rLinesByLine = group(rLines, (l) => str(l.sales_order_line_id));
+  // A payment's way to pay, by the payment's id, and each way to pay's name (0069).
+  const methodName = new Map(methodNames.map((m) => [str(m.id), str(m.name)]));
+  const methodOf = new Map(
+    [...tenderMethods, ...refundMethods].map((m) => [str(m.id), str(m.payment_method_id)]),
+  );
+  const way = (rowId: unknown) => {
+    const m = methodOf.get(str(rowId));
+    return m ? { method: m, methodName: methodName.get(m) ?? "" } : {};
+  };
   const rTenders = group(
     refundTenders.map((t) => ({
       refundId: str(t.refund_id),
       type: str(t.tender_type) as PayType,
       amount: num(t.amount),
+      ...way(t.id),
     })),
     (t) => t.refundId,
   );
@@ -880,6 +931,9 @@ export async function getSalesOrders(
       ...(str(t.currency) === "USD"
         ? { currency: "USD" as const, usd: num(t.foreign_amount), rate: num(t.rate) }
         : {}),
+      // One of the café's ways to pay (0069), and the reference shown.
+      ...way(t.id),
+      ...(strOrNull(t.reference) ? { reference: str(t.reference) } : {}),
     }));
     const refunded = adj
       .filter((a) => str(a.kind) === "refund")
@@ -923,7 +977,11 @@ export async function getSalesOrders(
           at: str(r.created_at),
           reason: strOrNull(r.reason),
           tender: rTenders.get(str(r.id))?.[0]?.type ?? null,
-          tenders: (rTenders.get(str(r.id)) ?? []).map(({ type, amount }) => ({ type, amount })),
+          tenders: (rTenders.get(str(r.id)) ?? []).map(({ type, amount, ...w }) => ({
+            type,
+            amount,
+            ...("methodName" in w ? { methodName: w.methodName } : {}),
+          })),
           by: who(r.requested_by),
           approvedBy: r.approved_by && r.approved_by !== r.requested_by ? who(r.approved_by) : null,
           // By name: the database returns a refund's lines in no set order.

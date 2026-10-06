@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui";
 import { BranchPicker, PlaceSwitch } from "@/components/PlaceSwitch";
 import { getPlace, tillChoice } from "@/lib/place";
 import { getScreenCheck } from "@/lib/db/clock";
+import { getPaymentMethods } from "@/lib/db/paymentMethods";
 
 export const dynamic = "force-dynamic";
 
@@ -39,16 +40,19 @@ export default async function PosPage() {
   }
   // The view this device was left on: Tables or the menu.
   const startView = (await cookies()).get("pos_view")?.value;
-  const [items, addons, tables, bills, channels, drawer, fx, clockScreen] = await Promise.all([
-    getPosCatalogue(at),
-    getPosAddons(at),
-    getTables(at),
-    getOpenBills(at),
-    getChannels(),
-    getDrawerState(at),
-    getFxStatus(),
-    getScreenCheck(),
-  ]);
+  const [items, addons, tables, bills, channels, drawer, fx, clockScreen, methods] =
+    await Promise.all([
+      getPosCatalogue(at),
+      getPosAddons(at),
+      getTables(at),
+      getOpenBills(at),
+      getChannels(),
+      getDrawerState(at),
+      getFxStatus(),
+      getScreenCheck(),
+      // The café's own ways to pay (0069); none before it is applied.
+      getPaymentMethods(),
+    ]);
 
   if (items.length === 0) {
     return (
@@ -91,6 +95,7 @@ export default async function PosPage() {
         dollarsOffHours={!fx.usable && fx.rate !== null ? fx.ageHours : null}
         startView={startView === "floor" || startView === "menu" ? startView : null}
         clockScreen={clockScreen}
+        payMethods={(methods ?? []).filter((m) => m.active).map(({ id, name }) => ({ id, name }))}
       />
     </ChannelsProvider>
   );

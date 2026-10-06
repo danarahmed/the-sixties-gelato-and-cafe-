@@ -63,6 +63,7 @@ Plan a short window when the café is closed.
 | Review fixes (`0063`–`0066`)            | ✅ `0063` applied on 2 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as the owner, and rolled back. `0064`–`0066` applied by the owner in the SQL editor on 6 October, each new version found live (see [After `0066`](#after-0066)). The screens were merged ([pull request #67](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/67)) and deployed |
 | A day's sales target (`0067`)           | ✅ Migration applied on 3 October, its text checked byte for byte against the file, and checked on the live records as the owner in a transaction that was rolled back (see [After `0067`](#after-0067)). It went in on its own, before `0064`–`0066`                                                                                                                                                                                            |
 | Clocking in by phone (`0068`)           | ✅ Applied by the owner in the SQL editor on 6 October (the connector held it), then compared object by object with the tested build: identical, permissions included, once the paste's line endings are set aside (see [After `0068`](#after-0068)). The screens were merged ([pull request #81](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/81)) and deployed                                                              |
+| Ways to pay (`0069`)                    | ⏳ Waiting for the owner to apply it in the SQL editor (see [After `0069`](#after-0069)). Until then the screens work as before: the till offers cash and the card, and Settings says the update is not applied                                                                                                                                                                                                                                  |
 
 ## 0. Before you start
 
@@ -3235,6 +3236,76 @@ found it all in place:
 As it was run in the SQL editor, it is not in Supabase's list of migrations
 (`supabase_migrations.schema_migrations`); a tool that applies what that list
 lacks would run it again, which does no harm.
+
+## After `0069`
+
+Migration `0069` is the owner's answer to telling the ways the café is paid
+apart (FIB, FastPay, ZainCash, Qi Card and the card machine), as chosen:
+"each stays in their account till they move it".
+
+- **Ways to pay.** On **Settings → Ways to pay**, the owner (or the general
+  manager) adds the apps and banks the café is paid through: FIB, FastPay,
+  ZainCash and Qi Card with one press each, any other by its name. Each is
+  given an account of its own among the cash, **1030** onwards, named after
+  it. One taken out of use is no longer offered at the till; its account keeps
+  what it holds. Cash and the card machine stay as they are: the card is
+  settled to the bank on **Sales → Card Takings**, as before.
+- **At the till**, each way to pay is a button under **Cash** and **Card**,
+  and a choice in the payment and in a split (cash + FIB, card + FastPay…),
+  with the reference the app shows, if the cashier types it. Its account is
+  debited with what it took; nothing goes in the drawer.
+- **A refund** gives back the way the sale was paid: FIB's part to FIB,
+  crediting its account.
+- **Money moved.** On **Sales → Ways to Pay**, what each account holds, with
+  the bank and the safe; **Move money** out of an account to the bank, the
+  safe or another way to pay (or into one from the bank or the safe), with
+  what the bank or the app kept as its fee (to 6500 Card and bank fees), or a
+  charge alone. Each move is one journal, and is cancelled with why.
+- **Reports.** The balance sheet and the cash-flow statement count the new
+  accounts as cash. **Reports → Sales by payment method** lists each way to
+  pay: what it took, gave back, moved out, its fees and what it held. The end
+  of the day says what each took today, to check against its own app.
+
+What it changes:
+
+- **New tables:** `payment_method` (the café's ways to pay; everyone at the
+  café reads them, only the functions write), `money_move` (only the
+  functions read and write it). `sales_tender` gains `payment_method_id`
+  (its `reference` column, there since `0004`, now takes the app's or the
+  card machine's reference); `sale_refund_tender` gains `payment_method_id`.
+  A payment of the tender `other` names its way to pay, and only it does.
+- **Replaced:** `sale_payments`, `post_sale`, `order_payments`,
+  `refund_lines_internal`, `refundable_payments` (made again: its columns
+  change, and only `refund_lines_internal` reads it), `cash_flow_line`,
+  `journal_source_hint`, and `reconciliation_checks` (`0061`'s, kept as
+  `reconciliation_checks_0061`, with the safe counting what was moved in and
+  out of it). A sale paid in cash or by card is recorded exactly as before.
+- **New:** `payment_methods`, `save_payment_method`, `move_money`,
+  `cancel_money_move`, `money_accounts`, `drawer_methods`,
+  `report_payment_methods` (signed in, each checking its permission; the
+  writes keyed, as every write is).
+- **The two clearing scripts** keep the ways to pay (with their accounts) and
+  clear the money moved.
+
+The app's screens need it: before it is applied, Settings says the update is
+not applied, the till offers cash and the card as it does today, and the rest
+is as before (the browser suites pass against a database without it).
+
+It was rehearsed on the tested build (`scripts/test-sql.sh`: every SQL suite,
+the upgrade from production's history, the clean start and the clearing of
+the test records), with its own suite (`tests/sql/payment_methods.test.sql`)
+selling, splitting, refunding, moving money and reading the statements. A
+read-only look at the live database on 6 October found what it expects: no
+payment recorded yet, no account between 1030 and 1089, neither table.
+
+It is applied by the owner, in Supabase's SQL editor:
+
+1. Open the file `supabase/migrations/0069_payment_methods.sql` on GitHub,
+   press **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems (it replaces
+   functions and drops one to make it again), choose to run it anyway.
+3. **Success. No rows returned** is the answer.
 
 ## Clearing the test records
 

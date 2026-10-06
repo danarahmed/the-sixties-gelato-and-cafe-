@@ -9,11 +9,13 @@
 --            accounts, the logins with their roles and permissions, and the
 --            settings: the café's rules and their history, the reasons for
 --            voids, refunds, discounts and cancelled bills, the languages and
---            the café's own words, expense categories, and the delivery
---            platforms with their stores
+--            the café's own words, expense categories, the delivery
+--            platforms with their stores, and the ways to pay (each with its
+--            account)
 --   cleared  every record of trading (sales, bills, payments, refunds, stock
 --            and its movements, deliveries, purchases, supplier bills and
---            payments, expenses, journals and periods, payroll, the hours
+--            payments, expenses, money moved out of the ways to pay,
+--            journals and periods, payroll, the hours
 --            clocked, cash sessions, batches, counts, transfers, losses,
 --            alerts, the answers kept for retries), and the setup lists: the
 --            menu (products, sizes, categories, photos, prices, add-ons,
@@ -55,7 +57,7 @@ create temp table fresh_keep (t text primary key) on commit drop;
 insert into fresh_keep values
   ('business'), ('location'), ('cash_drawer'), ('gl_account'), ('app_user'), ('user_role'), ('role_permission'),
   ('business_rule'), ('business_rule_history'), ('reason_code'), ('app_language'), ('app_phrase'),
-  ('expense_category'), ('delivery_platform'), ('platform_store_map');
+  ('expense_category'), ('delivery_platform'), ('platform_store_map'), ('payment_method');
 
 do $$
 begin
@@ -91,6 +93,7 @@ truncate table
   customer_address, dining_table, document_attachment, document_counter, employee, employee_advance, expense,
   fx_cash_event, fx_exchange, fx_rate, goods_receipt, goods_receipt_line, inventory_movement, item, item_lot,
   item_supplier, item_unit, journal_entry, journal_line, loss_review, lot_movement, loyalty_ledger, modifier,
+  money_move,
   modifier_group, modifier_price, modifier_recipe_line, payroll_approval, payroll_line, payroll_run, pin_attempt,
   platform_order, platform_product_map, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   pos_tab_line_modifier, prepaid_expense, prepaid_release, product, product_category, product_image,

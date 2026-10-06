@@ -157,7 +157,7 @@ begin
   end if;
   if p_method is null then
     v_code := payment_method_free_code(v_business);
-    if v_code is null then raise exception 'The café has 60 ways to pay already: take one out of use'; end if;
+    if v_code is null then raise exception 'The café has 60 ways to pay already: rename one out of use and bring it back'; end if;
     insert into gl_account (business_id, code, name, account_type, normal_balance, is_system)
     values (v_business, v_code, v_name, 'asset', 'debit', true);
     insert into payment_method (business_id, name, account_code, position, is_active, created_by)
@@ -1240,7 +1240,7 @@ language sql immutable set search_path = public as $$
   end
 $$;
 
--- 0060's hints, and a move of money's: cancelled on Money.
+-- 0060's hints, and a move of money's: cancelled on Sales.
 create or replace function journal_source_hint(p_ref_type text) returns text
 language sql immutable as $$
   select case p_ref_type
@@ -1271,7 +1271,7 @@ language sql immutable as $$
     when 'stock_transfer_receipt' then 'stock received from another place'
     when 'stock_transfer_cancel' then 'a transfer cancelled on its way'
     when 'prepaid_expense' then 'a prepaid expense (cancel it on Expenses)'
-    when 'money_move' then 'a move of money (cancel it on Money)'
+    when 'money_move' then 'a move of money (cancel it on Sales)'
     else 'a record of type ' || coalesce(p_ref_type, 'unknown') end
 $$;
 

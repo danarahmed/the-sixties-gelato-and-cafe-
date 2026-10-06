@@ -10,6 +10,7 @@ const TENDER_LABEL: Record<string, string> = {
   cash: "Cash",
   card: "Card",
   platform_paid: "Platform-paid",
+  other: "Other way to pay",
   bank: "Bank",
   transfer: "Bank transfer",
 };

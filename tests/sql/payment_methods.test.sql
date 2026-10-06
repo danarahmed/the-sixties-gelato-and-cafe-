@@ -329,7 +329,7 @@ insert into res select 'M1 journal', jsonb_build_object('id', journal_entry_id) 
  where id = (pg_temp.r('M1') ->> 'move_id')::uuid;
 select test.act_as('owner@example.com');
 select test.throws($$select reverse_journal(pg_temp.id('M1 journal'), 'By hand')$$,
-  '%a move of money (cancel it on Money)%', 'a move''s journal is not reversed by hand');
+  '%a move of money (cancel it on Sales)%', 'a move''s journal is not reversed by hand');
 select test.as_admin();
 select test.eq((select string_agg(action, ', ' order by occurred_at, id) from audit_log where action like 'money.%'),
   'money.move, money.move, money.move, money.move, money.move_cancel', 'each move, and the cancel, on the audit trail');

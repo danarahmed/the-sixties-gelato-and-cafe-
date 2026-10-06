@@ -80,6 +80,7 @@ const phrases: PhraseBook = {
   Hour: { ar: "الساعة", ckb: "کاتژمێر" },
   "Day of the week": { ar: "يوم الأسبوع", ckb: "ڕۆژی هەفتە" },
   Mixed: { ar: "مختلط", ckb: "تێکەڵ" },
+  "Other ways to pay": { ar: "طرق دفع أخرى", ckb: "ڕێگاکانی تری پارەدان" },
   "No one": { ar: "لا أحد", ckb: "هیچ کەس" },
   "Last 7 days": { ar: "آخر 7 أيام", ckb: "دوایین 7 ڕۆژ" },
 

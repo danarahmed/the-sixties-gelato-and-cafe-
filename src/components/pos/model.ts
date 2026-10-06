@@ -21,7 +21,8 @@ import { isPlatformChannel } from "@/lib/channels";
 import { reasonMissing } from "@/lib/reasons";
 import { normaliseNumber } from "@/lib/validation";
 
-export type Tender = "cash" | "card" | "platform_paid";
+/** How a sale is paid; "other" is one of the café's own ways to pay, named by its id (0069). */
+export type Tender = "cash" | "card" | "platform_paid" | "other";
 
 export interface Line {
   /** Stable key for the screen. */

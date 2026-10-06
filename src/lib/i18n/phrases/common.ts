@@ -110,6 +110,8 @@ const phrases: PhraseBook = {
   Cash: { ar: "نقدًا", ckb: "کاش" },
   Card: { ar: "بطاقة", ckb: "کارت" },
   "Platform-paid": { ar: "مدفوع عبر المنصة", ckb: "لە ڕێگەی پلاتفۆرمەوە پارەدراو" },
+  // One of the café's own ways to pay, unnamed (0069): a sale names which.
+  "Other way to pay": { ar: "طريقة دفع أخرى", ckb: "ڕێگایەکی تری پارەدان" },
   Bank: { ar: "البنك", ckb: "بانک" },
   "Bank transfer": { ar: "تحويل مصرفي", ckb: "گواستنەوەی بانکی" },
 

@@ -185,11 +185,15 @@ const refundInput = correction.extend({
   tenders: z
     .array(
       z.object({
-        type: z.enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" }),
+        type: z.enum(["cash", "card", "platform_paid", "other"], {
+          message: "Choose how it was paid",
+        }),
         amount: positive("Amount"),
+        /** One of the café's ways to pay (0069): which. */
+        method: z.string().uuid("The payments to give back cannot be read").nullish(),
       }),
     )
-    .max(3, "The payments to give back cannot be read")
+    .max(10, "The payments to give back cannot be read")
     .nullish(),
 });
 
@@ -198,8 +202,8 @@ export interface RefundResult {
   refundNo: number;
   refunded: number;
   tender: string;
-  /** Each way it went back (0042), in the order the sale was paid. */
-  tenders: { type: string; amount: number }[];
+  /** Each way it went back (0042), in the order the sale was paid; one of the café's ways to pay by name (0069). */
+  tenders: { type: string; amount: number; methodName?: string }[];
   status: string;
   whole: boolean;
   journalNo: number | null;
@@ -226,7 +230,13 @@ export async function refundLinesAction(
     p_reason: v.data.note,
     p_approval: v.data.approvalId ?? null,
     ...(v.data.tenders
-      ? { p_tenders: v.data.tenders.map((x) => ({ type: x.type, amount: Number(x.amount) })) }
+      ? {
+          p_tenders: v.data.tenders.map((x) => ({
+            type: x.type,
+            amount: Number(x.amount),
+            ...(x.type === "other" && x.method ? { method: x.method } : {}),
+          })),
+        }
       : {}),
     p_idempotency_key: key,
   });
@@ -243,6 +253,7 @@ export async function refundLinesAction(
         ? (d.tenders as Record<string, unknown>[]).map((x) => ({
             type: String(x.type),
             amount: Number(x.amount ?? 0),
+            ...(x.method_name ? { methodName: String(x.method_name) } : {}),
           }))
         : [],
       status: String(d.status ?? ""),

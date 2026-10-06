@@ -1908,6 +1908,48 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   background: color-mix(in srgb, var(--accent) 85%, #000);
   border-color: color-mix(in srgb, var(--accent) 85%, #000);
 }
+/* The café's own ways to pay (0069): a row of their own under cash and the
+   card, as big as a finger needs, in the accent's outline. */
+.order-actions.methods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 6px;
+}
+.order-actions.methods button {
+  min-height: 46px;
+  padding: 0 8px;
+  border-radius: 10px;
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+.order-actions.methods button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+/* Sales → Ways to pay (0069): what each account holds, the bank and the safe quieter. */
+.money-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.money-tile {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.money-tile .v {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+.money-tile .m {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.money-tile.quiet {
+  background: var(--surface-2);
+}
 .order-actions.secondary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));

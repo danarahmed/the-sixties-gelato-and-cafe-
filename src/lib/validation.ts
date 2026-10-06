@@ -169,11 +169,15 @@ export const lineAddons = z
  * over. Together the parts are the total; the database checks it. Cash in
  * dollars (0043) gives the dollars handed over and the rate the till showed,
  * and no cash received: the database works out what the dollars are worth.
+ * One of the café's own ways to pay (0069) is "other", with which, and the
+ * reference the app or the machine showed (a card's too).
  */
 export const payments = z
   .array(
     z.object({
-      type: z.enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" }),
+      type: z.enum(["cash", "card", "platform_paid", "other"], {
+        message: "Choose how it was paid",
+      }),
       amount: nonNegative("Amount"),
       received: optionalNonNegative("Cash received"),
       currency: z
@@ -185,6 +189,8 @@ export const payments = z
         .positive("Dollars are taken in whole dollars")
         .nullish(),
       rate: z.number().positive("The payments cannot be read").nullish(),
+      method: z.string().uuid("Choose which way to pay it was").nullish(),
+      reference: z.string().trim().max(60, "A payment's reference is at most 60 letters").nullish(),
     }),
   )
   .min(1, "Choose how it was paid")

@@ -25,6 +25,9 @@ export default async function OrdersPage({
     searchParams,
     getChannelNames(),
   ]);
+  // A payment's way: one of the café's own ways to pay by its name (0069).
+  const payName = (p: { type: string; methodName?: string }) =>
+    p.type === "other" ? p.methodName || t("Other way to pay") : t(tenderLabel(p.type));
   // Find a sale (the September audit's P2-20): by what the receipt, a refund,
   // the platform or the customer calls it, whatever its day.
   const find = typeof sp.q === "string" ? sp.q.trim().slice(0, SEARCH_MAX) : "";
@@ -252,10 +255,19 @@ export default async function OrdersPage({
                                     rate: fmtRate(p.rate ?? 0),
                                     amount: fmtIQD(p.received ?? p.amount),
                                   })
-                                : `${t(tenderLabel(p.type))} ${fmtIQD(p.amount)}`,
+                                : `${payName(p)} ${fmtIQD(p.amount)}`,
                             )
                             .join(" + ")
-                        : o.tenders.map((x) => t(tenderLabel(x))).join(", ")}
+                        : o.payments.length > 0
+                          ? [...new Set(o.payments.map(payName))].join(", ")
+                          : o.tenders.map((x) => t(tenderLabel(x))).join(", ")}
+                      {o.payments
+                        .filter((p) => p.reference)
+                        .map((p, i) => (
+                          <div key={i} className="mono" style={{ fontSize: ".75rem" }}>
+                            {t("Ref. {reference}", { reference: p.reference ?? "" })}
+                          </div>
+                        ))}
                     </td>
                     <td>
                       <span className={`badge ${o.status === "completed" ? "ok" : "warn"}`}>
@@ -268,8 +280,8 @@ export default async function OrdersPage({
                             amount: fmtIQD(r.amount),
                             items: r.lines.map((l) => `${l.name} ×${fmtQty(l.qty)}`).join(", "),
                           })}
-                          {r.tenders.length > 1 &&
-                            ` (${r.tenders.map((x) => `${t(tenderLabel(x.type))} ${fmtIQD(x.amount)}`).join(", ")})`}
+                          {(r.tenders.length > 1 || r.tenders.some((x) => x.methodName)) &&
+                            ` (${r.tenders.map((x) => `${payName(x)} ${fmtIQD(x.amount)}`).join(", ")})`}
                           {" · "}
                           {r.approvedBy
                             ? t("{reason} · {by}, approved by {approver}", {
