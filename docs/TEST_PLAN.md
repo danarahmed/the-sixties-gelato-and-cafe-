@@ -545,7 +545,8 @@ database, behind a small local stand-in for Supabase's auth service.
   and left out of the expenses' total; a cashier downloads no journal lines.
 - `retry`: a sale whose confirmation is lost is retried and recorded once —
   also when it is the database's answer to the app's server that is lost.
-- `offline`: offline, the till says so and refuses the sale, in each language.
+- `offline`: offline, the till says so and refuses the sale, in each language;
+  and twelve pages whose code comes late (up to 1.5 s), each hydrated once.
 - `resend` (`0035`): on each kind of screen the database does the work and its
   answer is lost — an expense, cash moved, a void, a refund of one item of two
   (`0037`), a journal, a bill kept open at the till, a delivery, a delivery's
