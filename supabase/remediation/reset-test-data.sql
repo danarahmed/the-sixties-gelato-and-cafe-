@@ -13,7 +13,8 @@
 --            and their versions, add-ons with their groups, prices and
 --            recipes), the stock items and their units, suppliers and who
 --            each item is bought from, dining tables, platform and promotion
---            settings, expense categories, the list of reasons for voids,
+--            settings, the ways to pay (each with its account), expense
+--            categories, the list of reasons for voids,
 --            refunds, discounts and cancelled bills, the languages the café
 --            added and its own words for phrases, and the audit trail (which
 --            gains one line saying the test records were cleared, and when)
@@ -21,7 +22,7 @@
 --            managers' approvals and PIN attempts, cash sessions and drawer
 --            counts, cash events and cash moved, the dollar rates set and
 --            the dollars taken, counted and exchanged, the answers kept for
---            retries, card settlements,
+--            retries, card settlements, money moved out of the ways to pay,
 --            stock movements and lots, the stock sent between places,
 --            losses and giveaways, stock counts,
 --            production batches, the schedule, the hours clocked and the PINs
@@ -71,7 +72,7 @@ insert into reset_keep values
   ('reason_code'), ('app_language'), ('app_phrase'), ('business_rule'), ('business_rule_history'),
   ('modifier_group'), ('modifier'), ('modifier_price'), ('modifier_recipe_line'), ('product_modifier_group'),
   ('employee'), ('customer'), ('customer_address'), ('audit_log'),
-  ('clock_screen'), ('clock_secret'), ('staff_phone');
+  ('clock_screen'), ('clock_secret'), ('staff_phone'), ('payment_method');
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');
@@ -113,7 +114,7 @@ truncate table
   cash_transfer, clock_attempt, document_attachment, document_counter, employee_advance,
   expense, fx_cash_event, fx_exchange, fx_rate, goods_receipt, goods_receipt_line, inventory_movement, item_lot,
   journal_entry, journal_line,
-  loss_review, lot_movement, loyalty_ledger,
+  loss_review, lot_movement, loyalty_ledger, money_move,
   payroll_approval, payroll_line, payroll_run,
   phone_link, pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   pos_tab_line_modifier, prepaid_expense, prepaid_release,

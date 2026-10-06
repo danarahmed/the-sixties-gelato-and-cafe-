@@ -1968,3 +1968,88 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   `clock_by_phone(phone, code, direction)`, keyed like every write. The trail's
   rows are `staff.clock_screen`, `staff.clock_screen_removed`,
   `staff.phone_linked` and `staff.phone_unlinked`.
+
+### Ways to pay, each with its own account (`0069`)
+
+- **`payment_method`**: one of the café's ways to pay besides cash and the
+  card machine (FIB, FastPay, ZainCash, Qi Card…): its name (once, whatever
+  the letters' case), its account (an asset among the cash, `1030` to `1089`,
+  made with it, named after it and renamed with it), its place in the list,
+  whether it is in use, who added it and when. Everyone at the café reads
+  them; only the functions write them. One out of use is not offered at the
+  till and takes no new sale; its account keeps what it holds.
+- **`sales_tender`** gains `payment_method_id`: a payment of the tender
+  `other` names its way to pay, and only it does. Its `reference` (there since
+  `0004`) takes the reference the app or the card machine showed, for a card
+  or a way to pay only. **`sale_refund_tender`** gains `payment_method_id`: a
+  refund gives back the way the sale was paid, and credits that account.
+- **`money_move`**: money moved out of a way to pay's account to the bank
+  (`1020`), the safe (`1005`) or another way to pay, or into one from the bank
+  or the safe: what arrived, the fee the bank or the app kept (`6500`), the
+  day, a reference and a note, its journal, who and when; a charge alone has
+  no place to go and arrives with nothing. Cancelled with why: its journal is
+  reversed. A way to pay's account, and the safe, give no more than they hold.
+  The safe's tie-out counts what was moved in and out of it.
+- **The statements:** `cash_flow_line` counts `1030`–`1089` as cash, so the
+  balance sheet shows them in the cash and the cash-flow statement treats a
+  move between them, the bank and the safe as no flow.
+- **Functions:** `payment_methods()` (anyone who sells, keeps the books or
+  closes the day), `save_payment_method(method, name, active, position)`
+  (`settings.manage`), `move_money(from, to, amount, fee, on, reference, note)`
+  and `cancel_money_move(move, reason)` (`accounting.post`), `money_accounts()`
+  (`accounting.post` or `cost.view`), `drawer_methods(location)` (what each way
+  to pay took since the drawer was counted: `day.close` or `cost.view`) and
+  `report_payment_methods(from, to, location)` (`cost.view`). The trail's rows
+  are `payment_method.add`, `payment_method.change`, `money.move` and
+  `money.move_cancel`; a move's journal is `money_move`.
+
+### The plan learns, What to buy looks ahead, and a week's waste (`0070`)
+
+- **`inventory_movement`** gains an index by item, place and time
+  (`inventory_movement_item_time`): the plan and What to buy read some days
+  of an item's movements without its whole history.
+- **`item`** gains `keeps_days` (1 to 365, or none): how many days a bought
+  item keeps once it comes. Set with `set_item_keeps(item, days)` (whoever may
+  change an item: `settings.manage`, `purchase.create` or
+  `inventory.adjust.approve`), on the trail as `item.keeps`.
+- **The day's plan** (`production_plan`) reads, for each of the same weekdays
+  it judges by, what was thrown away unsold (waste, spoilage, expired, not
+  taken back on review) and whether it sold out (next to nothing left that
+  night, under 5% of a batch, and none thrown away). Sold out on half those
+  days or more and never thrown away, it makes for a batch more for every day
+  it sold out out of the days judged (`bump`); thrown away on half or more
+  and never sold out, what was thrown away on average the less, half a batch
+  at most and never below one batch (`trim`). Each recipe's answer gains
+  `seen` (what went on average), `sold_out_days`, `waste_days`, `wasted_avg`,
+  `bump`, `trim` and `learned` (`sold_out`, `waste` or none); each day judged
+  gains `wasted` and `sold_out`.
+- **What to buy** (`buying_list`) judges use without what was thrown away
+  unsold (`wasted`, shown apart; a loss taken back on review goes with the
+  loss). With four weeks
+  behind an item, the days a delivery takes are each judged by their weekday
+  (`forecast` `weekday`, else `average`; `lead_use`). What today's plan needs
+  of an ingredient beyond what its weekday's batches use is added
+  (`plan_need`, `plan_extra`; an ingredient with no use yet is ordered for the
+  plan, `reorder_from` `plan`). An item that keeps only so many days is
+  ordered up to no more than they will use (`capped`, `cap_level`), in whole
+  packs rounded down, but never below its reorder level.
+- **A week's waste:** `waste_coach(to, location)` (`cost.view`): what was
+  thrown away unsold in the seven days to a day (today by default) and the
+  seven before, item by item, the costliest first: how much, its cost, how
+  many times, on which weekdays, whether the café makes it, how long it
+  keeps; and the two weeks' totals.
+
+### The labour cost the café aims for (`0071`)
+
+- **The rule `labour_target_percent`** (0 to 100, for the café or a place;
+  0, the default, is none): the share of net sales the café means to pay its
+  people, set on Settings → Rules with a reason and kept with its history,
+  as every rule is.
+- **Functions:** `labour_target(location)` (`payroll.view` or
+  `settings.manage`): a place's own target, else the café's (a share is the
+  same for every branch).
+- The schedule check on Staff and the labour cost on Reports → Staffed when
+  busy? read what the café keeps already: the orders by hour, the hours on
+  the clock, the schedule, and each person's pay for those who see it (an
+  hour of it: an hourly rate as it is, a day's over its hours, a month's over
+  30 days of them).

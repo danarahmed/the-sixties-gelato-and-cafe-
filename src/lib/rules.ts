@@ -6,6 +6,7 @@
 
 export const RULE_ORDER = [
   "daily_sales_target",
+  "labour_target_percent",
   "discount_cap_percent",
   "discount_round_to",
   "refund_approval_over",
@@ -30,6 +31,7 @@ export type ScopeType = "business" | "role" | "location" | "item_type" | "item";
 /** Each rule's name: a phrase, shown through t(). */
 export const RULE_LABEL: Record<RuleKey, string> = {
   daily_sales_target: "A day's net sales target",
+  labour_target_percent: "Labour cost the café aims for (% of net sales)",
   discount_cap_percent: "Discounts a manager approves",
   discount_round_to: "Discounts rounded to",
   refund_approval_over: "Refunds a second person approves",
@@ -53,6 +55,8 @@ export const RULE_LABEL: Record<RuleKey, string> = {
 export const RULE_HELP: Record<RuleKey, string> = {
   daily_sales_target:
     "The net sales the café aims to make in a day, after discounts and refunds. The dashboard measures today against it, and says where today should be by now from how a usual day of its kind sells. 0 is no target.",
+  labour_target_percent:
+    "The share of net sales the café means to pay its people. Staff checks the week's schedule against it, and Reports → Staffed when busy? shows each week's and each part of the day's, from the hours on the clock at each person's pay. Only those who see pay see it. 0 is no target.",
   discount_cap_percent:
     "Over this share of the bill, a discount needs a manager's name and PIN on the till; a manager gives it themselves. Set it for a role to let that role give more, or less.",
   discount_round_to:

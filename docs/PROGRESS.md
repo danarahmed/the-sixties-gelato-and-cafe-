@@ -2178,6 +2178,36 @@ Built and tested:
   `0064`–`0066` wait: the connector that applies migrations does not take
   their text (see [`guides/deployment.md`](guides/deployment.md#after-0066)).
 
+- **Round ten: ways to pay, waste and staffing (`0069`–`0071`).** The
+  owner's three upgrades, as chosen in their own words:
+  - **Ways to pay (`0069`).** FIB, FastPay, ZainCash, Qi Card or any other
+    the café is paid through, each with an account of its own among the
+    cash (from 1030) where its money stays until it is moved: a button each
+    at the till, in a split too, with the app's reference; a refund the way
+    it was paid; **Sales → Ways to Pay** to move money to the bank, the safe
+    or another, with the fee; each in the reports, the statements and the
+    end of the day.
+  - **Waste (`0070`).** The day's plan learns from the weekdays it judges by:
+    sold out on half of them and never thrown away, it makes more; thrown
+    away on half and never sold out, it makes less (half a batch at most,
+    never below one). What to buy leaves waste out of use, judges each day
+    until a delivery by its weekday, adds what today's plan needs, and orders
+    what keeps a few days up to no more than they use. Reports → Waste opens
+    with the last seven days against the seven before, with what to try.
+  - **Staffing (`0071`).** Staff checks the week's schedule, part of the day
+    by part, against how busy it usually is (too few, too many, nobody) as
+    it is typed; a labour target on Settings → Rules; with pay seen, the
+    planned week's cost against a usual week, and the four weeks' labour on
+    Staffed when busy?, week by week and by part of the day.
+
+  Built and tested: three SQL suites (ways to pay; the plan, What to buy and
+  the week's waste; the labour target), unit tests, and three browser suites
+  (`waystopay`, `learns`, `labour`), every screen in Arabic and Kurdish. The
+  main browser suites also pass on a database without `0069` and `0070`, so
+  the screens can go live before the owner applies them. A read-only look at
+  the live database on 6 October found every function the three replace as
+  the tested build has it, word for word.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open

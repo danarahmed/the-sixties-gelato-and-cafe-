@@ -11,6 +11,8 @@ export type LotStatus = "expired" | "today" | "soon" | "good";
 
 /** What the plan says of a recipe. */
 export type PlanStatus = "make" | "enough" | "no_history";
+/** What the day's plan learnt from the weeks it judged by (0070). */
+export type PlanLearned = "sold_out" | "waste";
 
 export const LOT_STATUS_LABEL: Record<LotStatus, string> = {
   expired: "Past its use-by",
@@ -202,10 +204,28 @@ export interface PlanRecipe {
   historyDays: number | null;
   /** The weeks judged by (4 to 8); null when there are not enough. */
   weeks: number | null;
-  /** Each same weekday judged by, the latest first, and what was used on it. */
-  days: { day: string; used: number }[];
-  /** What was used on that weekday, on average; null without enough history. */
+  /**
+   * Each same weekday judged by, the latest first: what was used on it, and
+   * (0070) what was thrown away unsold and whether it sold out.
+   */
+  days: { day: string; used: number; wasted: number; soldOut: boolean }[];
+  /**
+   * What the plan makes for on the day; null without enough history. Since
+   * 0070, what went on average and what it learnt (`bump`, `trim`).
+   */
   demand: number | null;
+  /** What went on that weekday, on average (before 0070, the demand itself). */
+  seen: number | null;
+  /** Of the days judged, those it sold out on and those some was thrown away on (0070). */
+  soldOutDays: number;
+  wasteDays: number;
+  /** What was thrown away on those days, on average. */
+  wastedAvg: number;
+  /** Made for more, for the days it sold out; and less, for what was thrown away. */
+  bump: number;
+  trim: number;
+  /** What it learnt: that it sold out, or that it was thrown away; null for neither. */
+  learned: PlanLearned | null;
   onHand: number;
   /** What is in lots due before the day is out. */
   due: number;
@@ -224,6 +244,8 @@ export interface ProductionPlan {
   recipes: PlanRecipe[];
   /** What all the batches to make need together, and what is short. */
   ingredients: PlanIngredient[];
+  /** Whether the plan learns from waste and sell-outs (0070 applied). */
+  learns: boolean;
 }
 
 const ingredientsFrom = (v: unknown): PlanIngredient[] =>
@@ -253,8 +275,20 @@ export function planFrom(v: unknown): ProductionPlan {
       status: oneOf(r.status, ["make", "enough", "no_history"] as const, "no_history"),
       historyDays: numOrNull(r.history_days),
       weeks: numOrNull(r.weeks),
-      days: list(r.days).map((d) => ({ day: str(d.day), used: num(d.used) })),
+      days: list(r.days).map((d) => ({
+        day: str(d.day),
+        used: num(d.used),
+        wasted: num(d.wasted),
+        soldOut: d.sold_out === true,
+      })),
       demand: numOrNull(r.demand),
+      seen: "seen" in r ? numOrNull(r.seen) : numOrNull(r.demand),
+      soldOutDays: num(r.sold_out_days),
+      wasteDays: num(r.waste_days),
+      wastedAvg: num(r.wasted_avg),
+      bump: num(r.bump),
+      trim: num(r.trim),
+      learned: r.learned === "sold_out" || r.learned === "waste" ? r.learned : null,
       onHand: num(r.on_hand),
       due: num(r.due),
       good: num(r.good),
@@ -264,6 +298,7 @@ export function planFrom(v: unknown): ProductionPlan {
       ingredients: ingredientsFrom(r.ingredients),
     })),
     ingredients: ingredientsFrom(o.ingredients),
+    learns: list(o.recipes).some((r) => "seen" in r),
   };
 }
 

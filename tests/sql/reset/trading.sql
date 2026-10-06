@@ -7,8 +7,8 @@
 -- café's own number, an expense, waste, a blind count, a production batch,
 -- stock sent to the central kitchen (one received, one on its way), the drawer's session closed with the takings to the safe and its dollars
 -- counted, the dollars exchanged into the bank, cash banked, a
--- manual journal and its reversal, and a bill left open. Set-up made along the way (a table, a
--- batch recipe) is set-up, and stays.
+-- manual journal and its reversal, a bill left open, and a sale paid by FIB with its money moved
+-- to the bank. Set-up made along the way (a table, a batch recipe, the way to pay) is set-up, and stays.
 -- =============================================================================
 \set ON_ERROR_STOP 1
 select test.golden_catalogue();
@@ -131,6 +131,18 @@ select record_sale(gen_random_uuid(), 'dine_in', 'card', '[{"variant_id":"d10000
                    p_customer => (select (r ->> 'customer_id')::uuid from hawre));
 select test.act_as('manager@example.com');
 select adjust_points((select (r ->> 'customer_id')::uuid from hawre), 50, 'From the paper card');
+
+-- A way to pay of the café's own, a sale paid by it, and its money moved to
+-- the bank with the app's fee (0069). The way to pay is set-up, and stays.
+select test.act_as('owner@example.com');
+create temp table fib as select save_payment_method(null, 'FIB') r;
+grant select on fib to public;
+select test.act_as('cashier@example.com');
+select record_sale(gen_random_uuid(), 'dine_in', null, '[{"variant_id":"d1000000-0000-0000-0000-000000000001","qty":1}]',
+  p_tenders => jsonb_build_array(jsonb_build_object('type', 'other', 'method', (select r ->> 'id' from fib),
+                                                    'amount', 2500)));
+select test.act_as('owner@example.com');
+select move_money('1030', '1020', 2000, 500);
 
 -- The owner opens the dashboard: its alerts are kept, one acknowledged; and a
 -- threshold is changed.

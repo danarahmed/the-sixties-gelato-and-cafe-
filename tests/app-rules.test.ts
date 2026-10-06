@@ -1997,6 +1997,8 @@ describe("card and platform money, reconciled (0030, the audit's P1-9)", () => {
       "card.",
       "platform.settlement",
       "platform.settlement_cancel",
+      "payment_method.",
+      "money.",
     ]);
     const none = new Map<string, string>();
     expect(

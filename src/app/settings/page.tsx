@@ -12,6 +12,8 @@ import { getAlertThresholds } from "@/lib/db/alerts";
 import { AlertThresholds } from "./AlertThresholds";
 import { getBusinessRules } from "@/lib/db/rules";
 import { CHOICE_LABEL, RULE_LABEL } from "@/lib/rules";
+import { getPaymentMethods } from "@/lib/db/paymentMethods";
+import { PaymentMethodsManager } from "@/components/settings/PaymentMethodsManager";
 
 export const dynamic = "force-dynamic";
 
@@ -26,12 +28,14 @@ export default async function SettingsPage() {
   const profile = await requirePermission("settings.manage");
   const t = await getT();
   const today = businessToday(profile.timezone);
-  const [cfg, locations, members, thresholds, rules] = await Promise.all([
+  const [cfg, locations, members, thresholds, rules, methods] = await Promise.all([
     getBusinessConfig(),
     getLocations(),
     getMembers(),
     getAlertThresholds(),
     getBusinessRules(),
+    // The café's own ways to pay (0069); null before it is applied.
+    getPaymentMethods(),
   ]);
   // The whole café's rules, as they stand; each has its own rows and history on Rules.
   const cafeRules = rules.definitions.flatMap((d) => {
@@ -138,6 +142,22 @@ export default async function SettingsPage() {
           </tbody>
         </table>
         <Link href="/settings/rules">{t("Open Rules →")}</Link>
+      </div>
+
+      <div className="card" data-testid="settings-pay-methods" id="ways-to-pay">
+        <h3 style={{ marginTop: 0 }}>{t("Ways to pay")}</h3>
+        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+          {t(
+            "Cash and the card machine are always taken. Add the apps and banks the café is paid through: each gets an account of its own, where its money stays until it is moved, on Sales.",
+          )}
+        </p>
+        {methods === null ? (
+          <p className="muted" style={{ fontSize: ".85rem" }} data-testid="pay-methods-missing">
+            {t("This needs the database update 0069, which has not been applied yet.")}
+          </p>
+        ) : (
+          <PaymentMethodsManager methods={methods} />
+        )}
       </div>
 
       <div className="card">

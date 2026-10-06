@@ -2,13 +2,15 @@
  * Split payments (0042): a sale paid in parts, as the till takes it and a
  * refund gives it back, worked out as the database works it out. Amounts are
  * whole dinars. A cash payment may be in dollars (0043): its dollars and the
- * rate shown go with it, and the database works out what they are worth.
+ * rate shown go with it, and the database works out what they are worth. A
+ * payment by one of the café's own ways to pay (FIB, FastPay…, 0069) is of
+ * the type "other" and names which, with the reference the app showed.
  */
 import type { SaleReceipt } from "@/lib/actions/sales";
 import { saleCustomerFrom } from "@/lib/customers";
 import { normaliseNumber } from "@/lib/validation";
 
-export type PayType = "cash" | "card" | "platform_paid";
+export type PayType = "cash" | "card" | "platform_paid" | "other";
 
 /** One payment: its part of the sale; for cash, what was handed over (null: not typed). */
 export interface Payment {
@@ -19,6 +21,9 @@ export interface Payment {
   currency?: "USD";
   usd?: number;
   rate?: number;
+  /** One of the café's ways to pay (0069): which, and the reference the app or the machine showed. */
+  method?: string;
+  reference?: string;
 }
 
 /** A payment as the database recorded it, with the change it gave. */
@@ -32,12 +37,18 @@ export interface PaidPart {
   currency?: "USD";
   usd?: number;
   rate?: number;
+  /** One of the café's ways to pay (0069): which, by name, and the reference shown. */
+  method?: string;
+  methodName?: string;
+  reference?: string;
 }
 
 /** A part of a split as the cashier typed it. The last one, left empty, takes what is left. */
 export interface SplitRow {
   type: PayType;
   amount: string;
+  /** For "other": which of the café's ways to pay (0069). */
+  method?: string;
 }
 
 export type SplitProblem =
@@ -126,6 +137,7 @@ export function checkSplit(total: number, rows: SplitRow[], receivedText: string
           type: row.type,
           amount: amounts[i] ?? 0,
           received: i === cashAt ? received : null,
+          ...(row.type === "other" && row.method ? { method: row.method } : {}),
         })),
   };
 }
@@ -147,14 +159,29 @@ export function paidPart(x: Record<string, unknown>): PaidPart {
     ...(x.currency === "USD"
       ? { currency: "USD" as const, usd: Number(x.usd ?? 0), rate: Number(x.rate ?? 0) }
       : {}),
+    ...(x.method ? { method: String(x.method) } : {}),
+    ...(x.method_name ? { methodName: String(x.method_name) } : {}),
+    ...(x.reference ? { reference: String(x.reference) } : {}),
   };
 }
 
-/** What is left of each way a sale was paid (refundable_payments), in the order it was first paid. */
+/**
+ * What is left of each way a sale was paid (refundable_payments), in the order
+ * it was first paid: by its type, and for one of the café's ways to pay
+ * (0069), by which, FIB apart from FastPay.
+ */
 export interface LeftToGiveBack {
   type: PayType;
+  /** One of the café's ways to pay: its id and name. */
+  method?: string;
+  name?: string;
   paid: number;
   left: number;
+}
+
+/** The key a way of paying is told apart by: its type, or "other:" and which. */
+export function wayKey(p: { type: PayType; method?: string | null }): string {
+  return p.type === "other" && p.method ? `other:${p.method}` : p.type;
 }
 
 /**
@@ -162,20 +189,28 @@ export interface LeftToGiveBack {
  * from before 0037 names no payment: it gave back the sale's one, the first.
  */
 export function leftToGiveBack(
-  paid: readonly { type: PayType; amount: number }[],
-  back: readonly { type: PayType; amount: number }[],
+  paid: readonly { type: PayType; amount: number; method?: string; methodName?: string }[],
+  back: readonly { type: PayType; amount: number; method?: string }[],
   unnamedBack = 0,
 ): LeftToGiveBack[] {
   const out: LeftToGiveBack[] = [];
   for (const p of paid) {
-    const had = out.find((x) => x.type === p.type);
+    const had = out.find((x) => wayKey(x) === wayKey(p));
     if (had) {
       had.paid += p.amount;
       had.left += p.amount;
-    } else out.push({ type: p.type, paid: p.amount, left: p.amount });
+    } else
+      out.push({
+        type: p.type,
+        ...(p.type === "other" && p.method
+          ? { method: p.method, ...(p.methodName ? { name: p.methodName } : {}) }
+          : {}),
+        paid: p.amount,
+        left: p.amount,
+      });
   }
   for (const b of back) {
-    const had = out.find((x) => x.type === b.type);
+    const had = out.find((x) => wayKey(x) === wayKey(b));
     if (had) had.left -= b.amount;
   }
   const first = out[0];
@@ -212,30 +247,39 @@ export function proportionalParts(lefts: readonly number[], amount: number): num
 
 export type RefundSplitProblem =
   | { kind: "notNumber" }
-  | { kind: "tooMuch"; type: PayType; left: number }
+  | { kind: "tooMuch"; type: PayType; left: number; name?: string }
   | { kind: "sum"; sum: number };
 
 /**
  * The parts of a refund as typed, one per way of paying (blank: nothing),
- * checked as the database checks them: each at most what is left of it,
- * together the refund.
+ * keyed by wayKey, checked as the database checks them: each at most what is
+ * left of it, together the refund.
  */
 export function checkRefundSplit(
   left: readonly LeftToGiveBack[],
   typed: Record<string, string>,
   total: number,
-): { parts: { type: PayType; amount: number }[]; problem: RefundSplitProblem | null } {
-  const parts: { type: PayType; amount: number }[] = [];
+): {
+  parts: { type: PayType; amount: number; method?: string }[];
+  problem: RefundSplitProblem | null;
+} {
+  const parts: { type: PayType; amount: number; method?: string }[] = [];
   let problem: RefundSplitProblem | null = null;
   for (const l of left) {
-    const v = whole(typed[l.type] ?? "");
+    const v = whole(typed[wayKey(l)] ?? "");
     if (v === null) {
       problem ??= { kind: "notNumber" };
       continue;
     }
     if (v === "" || v === 0) continue;
-    if (v > l.left) problem ??= { kind: "tooMuch", type: l.type, left: l.left };
-    parts.push({ type: l.type, amount: v });
+    if (v > l.left)
+      problem ??= {
+        kind: "tooMuch",
+        type: l.type,
+        left: l.left,
+        ...(l.name ? { name: l.name } : {}),
+      };
+    parts.push({ type: l.type, amount: v, ...(l.method ? { method: l.method } : {}) });
   }
   const sum = parts.reduce((s, p) => s + p.amount, 0);
   if (!problem && sum !== total) problem = { kind: "sum", sum };
@@ -256,6 +300,8 @@ export function howPaid(d: {
         currency?: "IQD" | "USD" | null;
         usd?: number | null;
         rate?: number | null;
+        method?: string | null;
+        reference?: string | null;
       }[]
     | null;
 }): { p_tender: PayType | null; p_tenders: Payment[] | null } | null {
@@ -273,6 +319,9 @@ export function howPaid(d: {
         ...(x.currency === "USD"
           ? { currency: "USD" as const, usd: Number(x.usd), rate: Number(x.rate) }
           : {}),
+        // One of the café's ways to pay (0069), and the reference shown.
+        ...(x.type === "other" && x.method ? { method: x.method } : {}),
+        ...(x.reference ? { reference: x.reference } : {}),
       })),
     };
   if (d.tender) return { p_tender: d.tender, p_tenders: null };
@@ -309,7 +358,9 @@ export function refundSplitMessage(p: RefundSplitProblem, total: number): string
         ? `Only ${p.left} of the cash paid is left to give back`
         : p.type === "card"
           ? `Only ${p.left} of the card payment is left to give back`
-          : `Only ${p.left} of the platform's payment is left to give back`;
+          : p.type === "other"
+            ? `Only ${p.left} of what ${p.name ?? ""} took is left to give back`
+            : `Only ${p.left} of the platform's payment is left to give back`;
     case "sum":
       return `The refund is ${total}, but the payments given back come to ${p.sum}`;
   }

@@ -1,5 +1,7 @@
 // Staffed when busy? (round six), through the real screens. On the last four
-// of yesterday's weekday: one person on the clock from 18:00 to 22:00, with
+// of the weekday three days back (not yesterday's: a run that goes past
+// midnight leaves yesterday the hours other suites clocked at the till, as it
+// was today): one person on the clock from 18:00 to 22:00, with
 // two orders an hour, then twelve and ten from 20:00 (short of hands); three
 // from 09:00 to 12:00, with no order, then one, then six (quiet, twice); and
 // two orders at 23:00 with nobody clocked in. Reports leads to the page,
@@ -16,10 +18,10 @@ const B = "00000000-0000-0000-0000-0000000000b1";
 const last = (q) => sql(q).split("\n").pop();
 const HERE = last(`select default_location('${B}')`);
 const WEEKDAYS = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-// Yesterday's weekday, as the café counts its week (Saturday first).
-const W = Number(last(`select (extract(isodow from ${TODAY} - 1)::int + 1) % 7`));
+// The weekday three days back, as the café counts its week (Saturday first).
+const W = Number(last(`select (extract(isodow from ${TODAY} - 3)::int + 1) % 7`));
 const day = WEEKDAYS[W];
-const DAYS = "unnest(array[1, 8, 15, 22]) k";
+const DAYS = "unnest(array[3, 10, 17, 24]) k";
 const HOURS = "(values (18, 2), (19, 2), (20, 12), (21, 10), (10, 1), (11, 6), (23, 2)) x(h, n)";
 
 console.log(`▸ four ${day}s: the hours on the clock, and the orders hour by hour`);
@@ -54,8 +56,8 @@ const sold = last(`select test.act_as('cashier@example.com');
       where o.idempotency_key = md5('staffing|' || s.k || '|' || s.h || '|' || s.i)::uuid;
      alter table sales_order enable trigger sales_order_financial_guard;
      select count(*) from sales_order
-      where business_id = '${B}' and business_local_date('${B}', placed_at) between ${TODAY} - 22 and ${TODAY} - 1
-        and extract(isodow from business_local_date('${B}', placed_at)) = extract(isodow from ${TODAY} - 1)`);
+      where business_id = '${B}' and business_local_date('${B}', placed_at) between ${TODAY} - 24 and ${TODAY} - 3
+        and extract(isodow from business_local_date('${B}', placed_at)) = extract(isodow from ${TODAY} - 3)`);
 check(Number(sold) >= 140, `140 orders over the four ${day}s: ${sold} on them`);
 
 /** A cell of the week's grid: its mark, if any. */

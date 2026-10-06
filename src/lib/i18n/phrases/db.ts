@@ -2878,6 +2878,104 @@ const phrases: PhraseBook = {
     ar: "القيد الذي حرّك نقد درج النقد أو الخزنة يُعكس اليوم، حين يُعدّ نقدهما",
     ckb: "تۆمارێک کە پارەی دەخیلە یان قاسەی جووڵاندبێت ئەمڕۆ هەڵدەگەڕێندرێتەوە، کاتێک دەژمێردرێن",
   },
+  // Ways to pay, each with its own account, and money moved out of them (0069).
+  "Choose which way to pay it was": {
+    ar: "اختر طريقة الدفع التي استُخدمت",
+    ckb: "دیاری بکە بە کام ڕێگای پارەدان دراوە",
+  },
+  "That way to pay is not one of the café's": {
+    ar: "طريقة الدفع هذه ليست من طرق دفع المقهى",
+    ckb: "ئەم ڕێگای پارەدانە هی کافێکە نییە",
+  },
+  "A payment's reference is at most 60 letters": {
+    ar: "مرجع الدفعة 60 حرفًا على الأكثر",
+    ckb: "ژمارەی ئاماژەی پارەدانێک لە 60 پیت زیاتر نابێت",
+  },
+  "This sale was not paid that way": {
+    ar: "لم يُدفع هذا البيع بهذه الطريقة",
+    ckb: "ئەم فرۆشتنە بەو ڕێگایە پارەی بۆ نەدراوە",
+  },
+  "Only {1} of what {2} took is left to give back": {
+    ar: "لم يتبقَّ لإعادته سوى {1} مما استلمته {2}",
+    ckb: "تەنها {1} لەوەی {2} وەریگرتووە ماوە بۆ گەڕاندنەوە",
+  },
+  "Name the way to pay, in 40 letters at most": {
+    ar: "اكتب اسم طريقة الدفع، بـ40 حرفًا على الأكثر",
+    ckb: "ناوی ڕێگای پارەدانەکە بنووسە، لە 40 پیت زیاتر نەبێت",
+  },
+  "The ways to pay cannot be read": {
+    ar: "تعذّرت قراءة طرق الدفع",
+    ckb: "ڕێگاکانی پارەدان ناخوێندرێنەوە",
+  },
+  "There is already a way to pay called {1}": {
+    ar: "توجد بالفعل طريقة دفع باسم {1}",
+    ckb: "ڕێگایەکی پارەدان بە ناوی {1} هەیە",
+  },
+  "The café has 60 ways to pay already: rename one out of use and bring it back": {
+    ar: "لدى المقهى 60 طريقة دفع بالفعل: غيّر اسم واحدة متوقفة وأعِدها إلى الاستخدام",
+    ckb: "کافێکە 60 ڕێگای پارەدانی هەیە: ناوی یەکێکی وەستاو بگۆڕە و بیگەڕێنەوە بۆ کار",
+  },
+  "{1} is no longer taken: choose another way to pay": {
+    ar: "لم تعد {1} مقبولة: اختر طريقة دفع أخرى",
+    ckb: "ئیتر {1} وەرناگیرێت: ڕێگایەکی تری پارەدان هەڵبژێرە",
+  },
+  "Choose where the money is moved from": {
+    ar: "اختر من أين تُنقل الأموال",
+    ckb: "دیاری بکە پارەکە لە کوێوە دەگوازرێتەوە",
+  },
+  "Choose where the money goes: the bank, the safe or another way to pay": {
+    ar: "اختر إلى أين تذهب الأموال: البنك أو الخزنة أو طريقة دفع أخرى",
+    ckb: "دیاری بکە پارەکە بۆ کوێ دەچێت: بانک، قاسە یان ڕێگایەکی تری پارەدان",
+  },
+  "Money is moved out of a way to pay's account, or into one": {
+    ar: "تُنقل الأموال من حساب طريقة دفع، أو إليه",
+    ckb: "پارە لە هەژماری ڕێگایەکی پارەدانەوە دەگوازرێتەوە، یان بۆ ناوی",
+  },
+  "Enter amounts of 0 or more": {
+    ar: "أدخل مبالغ تساوي 0 أو أكثر",
+    ckb: "بڕی 0 یان زیاتر بنووسە",
+  },
+  "A charge alone is what the bank or the app took: enter it as the fee": {
+    ar: "الرسوم وحدها هي ما أخذه البنك أو التطبيق: أدخلها في خانة الرسوم",
+    ckb: "کرێی تەنها ئەوەیە کە بانک یان ئەپەکە بردوویەتی: لە خانەی کرێدا بینووسە",
+  },
+  "Enter how much arrived": {
+    ar: "أدخل المبلغ الذي وصل",
+    ckb: "بنووسە چەند گەیشت",
+  },
+  "Money is moved on a day up to today": {
+    ar: "تُنقل الأموال في يوم حتى اليوم، لا بعده",
+    ckb: "پارە لە ڕۆژێکدا دەگوازرێتەوە تا ئەمڕۆ، نەک دوای ئەمڕۆ",
+  },
+  "A reference is at most 60 letters": {
+    ar: "المرجع 60 حرفًا على الأكثر",
+    ckb: "ژمارەی ئاماژە لە 60 پیت زیاتر نابێت",
+  },
+  "A note is at most 300 letters": {
+    ar: "الملاحظة 300 حرف على الأكثر",
+    ckb: "تێبینی لە 300 پیت زیاتر نابێت",
+  },
+  "The safe holds {1}: no more can be moved out of it": {
+    ar: "في الخزنة {1}: لا يمكن نقل أكثر من ذلك منها",
+    ckb: "{1} لە قاسەکەدا هەیە: لەوە زیاتر لێی ناگوازرێتەوە",
+  },
+  "{1} holds {2}: no more can be moved out of it": {
+    ar: "في {1} مبلغ {2}: لا يمكن نقل أكثر من ذلك منه",
+    ckb: "{2} لە {1} هەیە: لەوە زیاتر لێی ناگوازرێتەوە",
+  },
+  "That move of money is not in force": {
+    ar: "نقل الأموال هذا لم يعد ساريًا",
+    ckb: "ئەم گواستنەوەی پارەیە ئیتر لە کاردا نییە",
+  },
+  "a move of money (cancel it on Sales)": {
+    ar: "نقل أموال (ألغِه في شاشة «المبيعات»)",
+    ckb: "گواستنەوەی پارە (لە شاشەی «فرۆشتن» هەڵیبوەشێنەوە)",
+  },
+  // How long a bought item keeps, for What to buy (0070).
+  "An item keeps 1 to 365 days, or say nothing": {
+    ar: "تبقى المادة صالحة من يوم إلى 365 يومًا، أو اترك الخانة فارغة",
+    ckb: "کاڵایەک لە 1 تا 365 ڕۆژ دەمێنێتەوە، یان هیچ مەنووسە",
+  },
 };
 
 export default phrases;

@@ -345,6 +345,7 @@ export function OrderPanel({
   onDiscount,
   onAskApproval,
   onCustomer = null,
+  payMethods = [],
 }: {
   order: Order;
   title: string;
@@ -367,7 +368,10 @@ export function OrderPanel({
   onQty: (key: string, delta: number) => void;
   onNote: (key: string, note: string | null) => void;
   onLabel: (label: string) => void;
-  onPay: (tender: Tender) => void;
+  /** Take the money: one of the café's ways to pay names which (0069). */
+  onPay: (tender: Tender, method?: string) => void;
+  /** The café's ways to pay besides cash and the card, in use (0069): a button each. */
+  payMethods?: { id: string; name: string }[];
   onSave: () => void;
   onPrintBill: () => void;
   /** The barista's ticket for a bill: what the bar has not had yet, or the whole order again. */
@@ -397,6 +401,9 @@ export function OrderPanel({
 }) {
   const { t, dir } = useT();
   const { on } = arrows(dir);
+  /** A payment's way, as the receipt names it: one of the café's own by its name (0069). */
+  const payLabel = (p: { type: string; methodName?: string }) =>
+    p.type === "other" ? (p.methodName ?? t("pos.tender.other")) : t(`pos.tender.${p.type}`);
   const { name: channelName } = useChannels();
   const isBill = order.kind === "bill";
   const blocked = busy !== null || pending;
@@ -536,12 +543,16 @@ export function OrderPanel({
                             rate: fmtRate(p.rate ?? 0),
                             amount: fmtIQD(p.received ?? p.amount),
                           })
-                        : `${t(`pos.tender.${p.type}`)} ${fmtIQD(p.amount)}`}
+                        : `${payLabel(p)} ${fmtIQD(p.amount)}`}
                     </span>
                   ))}
                 </span>
               ) : (
-                <span className="badge ok">{t(`pos.tender.${receipt.tender}`)}</span>
+                <span className="badge ok">
+                  {receipt.payments[0]
+                    ? payLabel(receipt.payments[0])
+                    : payLabel({ type: receipt.tender })}
+                </span>
               )}
             </div>
             {receipt.turnNo !== null && (
@@ -705,6 +716,20 @@ export function OrderPanel({
                   </>
                 )}
               </div>
+              {!isPlatform(order.channel) && payMethods.length > 0 && (
+                <div className="order-actions methods" data-testid="pay-methods-row">
+                  {payMethods.map((m) => (
+                    <button
+                      key={m.id}
+                      disabled={blocked || !online || badDiscount}
+                      onClick={() => onPay("other", m.id)}
+                      data-testid="pay-method"
+                    >
+                      <Icon name="phone" /> <span dir="auto">{m.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="order-actions secondary">
                 {isBill ? (
                   <>

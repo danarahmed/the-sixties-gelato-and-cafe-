@@ -46,7 +46,8 @@ const ITEM_TYPES = [
 /** A rule's value as the café reads it: 10%, 25,000 IQD, or its choice. */
 function shownValue(def: RuleDefinition, v: number | string | null, t: T): string {
   if (v === null || v === "") return t("Default");
-  if (def.key === "daily_sales_target" && Number(v) === 0) return t("No target");
+  if ((def.key === "daily_sales_target" || def.key === "labour_target_percent") && Number(v) === 0)
+    return t("No target");
   if (def.kind === "percent") return `${fmtQty(Number(v))}%`;
   if (def.kind === "amount") return fmtIQD(Number(v));
   if (def.kind === "hours") return t("{n} hours", { n: fmtQty(Number(v)) });

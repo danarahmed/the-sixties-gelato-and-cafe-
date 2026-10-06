@@ -14,6 +14,8 @@ import { getCardTakings } from "@/lib/db/settlements";
 import { getDollarsReport, getFxStatus } from "@/lib/db/fx";
 import { DollarsPanel } from "@/components/cash/DollarsPanel";
 import { EmptyState } from "@/components/ui";
+import { getMoneyAccounts } from "@/lib/db/paymentMethods";
+import { MoneyAccountsPanel } from "@/components/books/MoneyAccountsPanel";
 import { tillChoice } from "@/lib/place";
 
 export const dynamic = "force-dynamic";
@@ -30,18 +32,21 @@ export default async function SalesPage() {
   const canMove = has(profile, "day.close") || has(profile, "accounting.post");
   // The drawer of the branch this device's till is at (0055).
   const { at: tillAt } = await tillChoice();
-  const [rows, sessions, uncounted, drawer, till, card, channels, fx, dollars] = await Promise.all([
-    getDailySales(from, today),
-    canSessions ? getCashSessions(from, today) : Promise.resolve([]),
-    getUnclosedDays(),
-    canMove ? getDrawerStatus(tillAt) : Promise.resolve(null),
-    canDrawer ? getDrawerState(tillAt) : Promise.resolve(null),
-    getCardTakings(),
-    getChannelNames(),
-    // US dollars (0043): the rate, and what the tills and the safe hold.
-    getFxStatus(),
-    getDollarsReport(today, today),
-  ]);
+  const [rows, sessions, uncounted, drawer, till, card, channels, fx, dollars, money] =
+    await Promise.all([
+      getDailySales(from, today),
+      canSessions ? getCashSessions(from, today) : Promise.resolve([]),
+      getUnclosedDays(),
+      canMove ? getDrawerStatus(tillAt) : Promise.resolve(null),
+      canDrawer ? getDrawerState(tillAt) : Promise.resolve(null),
+      getCardTakings(),
+      getChannelNames(),
+      // US dollars (0043): the rate, and what the tills and the safe hold.
+      getFxStatus(),
+      getDollarsReport(today, today),
+      // The café's own ways to pay and what their accounts hold (0069); null before it.
+      getMoneyAccounts(),
+    ]);
   const lastCount = sessions.find((s) => s.closedAt !== null) ?? null;
   // A day is counted once a session closes after its last sale: the café
   // trades past midnight, so one night's session may cover two calendar days.
@@ -223,6 +228,35 @@ export default async function SalesPage() {
           today={today}
         />
       </section>
+
+      {money && money.methods.length > 0 && (
+        <section className="panel" id="ways-to-pay" data-testid="ways-to-pay-panel">
+          <div className="panel-h">
+            <h3>{t("Ways to Pay")}</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              {t(
+                "FIB, FastPay and the like · what each account holds until it is moved · the fee to 6500",
+              )}
+            </span>
+          </div>
+          <MoneyAccountsPanel
+            accounts={money}
+            canMove={has(profile, "accounting.post")}
+            today={today}
+            timezone={profile.timezone}
+          />
+        </section>
+      )}
+      {money && money.methods.length === 0 && has(profile, "settings.manage") && (
+        <p
+          className="muted"
+          style={{ fontSize: ".85rem", margin: 0 }}
+          data-testid="ways-to-pay-hint"
+        >
+          {t("Paid through FIB, FastPay, ZainCash or Qi Card too?")}{" "}
+          <Link href="/settings#ways-to-pay">{t("Add them on Settings → Ways to pay.")}</Link>
+        </p>
+      )}
 
       {canSessions && sessions.length > 0 && (
         <section className="panel">

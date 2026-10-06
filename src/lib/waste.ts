@@ -181,3 +181,78 @@ export function bigQty(base: number, unit: string, down = false): { qty: string;
   }
   return { qty: round(base, 1).toLocaleString("en-US"), unit };
 }
+
+/** An item thrown away unsold in a week (0070's waste_coach), against the week before. */
+export interface WasteWeekItem {
+  itemId: string;
+  item: string;
+  unit: string;
+  qty: number;
+  value: number;
+  /** How many times it was thrown away, and on which weekdays (1 Monday … 7 Sunday). */
+  times: number;
+  weekdays: number[];
+  qtyBefore: number;
+  valueBefore: number;
+  /** Made here (a batch recipe's output), or bought. */
+  made: boolean;
+  /** The days it keeps once it comes, as said on What to buy; null when not said. */
+  keepsDays: number | null;
+}
+
+/** What was thrown away unsold in the seven days to a day, and the seven before (0070). */
+export interface WasteWeek {
+  from: string;
+  to: string;
+  value: number;
+  valueBefore: number;
+  items: WasteWeekItem[];
+}
+
+const n = (v: unknown): number => (v === null || v === undefined || v === "" ? 0 : Number(v));
+const s = (v: unknown): string => (v === null || v === undefined ? "" : String(v));
+
+export function wasteWeekFrom(v: unknown): WasteWeek | null {
+  if (!v || typeof v !== "object") return null;
+  const o = v as Record<string, unknown>;
+  const items = Array.isArray(o.items) ? (o.items as Record<string, unknown>[]) : [];
+  return {
+    from: s(o.from),
+    to: s(o.to),
+    value: n(o.value),
+    valueBefore: n(o.value_before),
+    items: items.map((i) => ({
+      itemId: s(i.item_id),
+      item: s(i.item),
+      unit: s(i.unit),
+      qty: n(i.qty),
+      value: n(i.value),
+      times: n(i.times),
+      weekdays: Array.isArray(i.weekdays)
+        ? i.weekdays.map(Number).filter((d) => d >= 1 && d <= 7)
+        : [],
+      qtyBefore: n(i.qty_before),
+      valueBefore: n(i.value_before),
+      made: i.made === true,
+      keepsDays: i.keeps_days === null || i.keeps_days === undefined ? null : Number(i.keeps_days),
+    })),
+  };
+}
+
+/**
+ * What to try about an item thrown away: made here, the day's plan already
+ * makes less of what is thrown away often (0070), and the batch on its days is
+ * worth a look; bought, say how long it keeps, so What to buy orders no more
+ * than it will use; said already, order less at a time.
+ */
+export type WasteTip = "made" | "say_keeps" | "order_less";
+
+export function wasteTip(i: Pick<WasteWeekItem, "made" | "keepsDays">): WasteTip {
+  if (i.made) return "made";
+  return i.keepsDays === null ? "say_keeps" : "order_less";
+}
+
+/** The week's items worth a word: thrown away this week, the costliest first. */
+export function weekWorst(w: WasteWeek, most = 5): WasteWeekItem[] {
+  return w.items.filter((i) => i.qty > 0).slice(0, most);
+}

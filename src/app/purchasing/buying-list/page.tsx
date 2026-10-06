@@ -46,12 +46,22 @@ export default async function BuyingListPage() {
         {t(
           "An item is to order when what it has on hand, on order and in draft orders is below its reorder level: its own, set on the item, or its use a day over the last 28 days for the days a delivery takes, and a day more. It is ordered up to its par level, or the reorder level and a week of use, in whole packs, from its usual supplier or the one its last delivery came from. Tick what to order, change what needs changing, and create the orders: a draft for each supplier, for a manager to approve.",
         )}
+        {list.looksAhead &&
+          ` ${t(
+            "What was thrown away is not counted as use. With four weeks behind an item, each day until a delivery is judged by its weekday, and what today's plan needs is added. An item that keeps only a few days (say how many under How it was worked out) is ordered up to no more than those days use.",
+          )}`}
       </p>
       <BuyingListForm
         list={list}
         units={units}
         suppliers={suppliers.map((s) => ({ id: s.id, name: s.name }))}
         canCreate={has(profile, "purchase.create")}
+        canKeep={
+          list.looksAhead &&
+          (has(profile, "settings.manage") ||
+            has(profile, "purchase.create") ||
+            has(profile, "inventory.adjust.approve"))
+        }
       />
     </div>
   );

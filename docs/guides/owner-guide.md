@@ -89,6 +89,24 @@ login if they have one. Then:
 hours as `08:00-16:00` (a shift ending at or before it starts ends the next
 day), or copy **the same hours as the week before**, and **Save the week**.
 
+**Is the week staffed for how busy it usually is?** Under the week's hours,
+each day's morning (5 to 12), afternoon (12 to 5) and evening (5 until 5 in
+the morning) shows the people scheduled at a time and about how many its
+orders usually need, from the four weeks to yesterday: ▲ too few, ▽ more than
+needed, ● nobody when orders usually come, ✓ about right. It changes as you
+type, before you save: a good way to plan next week is to copy the week
+before, then move hours to where the check says. Those who see pay also see
+what the week's hours will cost against what a usual week sells, by day and by
+part of the day, and the labour target.
+
+**The labour target** (**Settings → Rules → Labour cost the café aims for**):
+the share of net sales you mean to pay your people, say 25%; 0 is none. Staff
+measures the planned week against it, and **Reports → Staffed when busy?**
+shows the last four weeks as they were, week by week and by part of the day,
+from each person's hours on the clock at an hour of their pay (a month's pay
+over 30 days of their standard hours). A morning that costs half of what it
+sells is worth a look, even when one person is the fewest it can have.
+
 **The hours** show, day by day, who was on the schedule, when they clocked in
 and out, and who was late, left early, was absent or worked overtime (beyond
 their standard hours). A manager **corrects** a record (a forgotten clock-out),
@@ -457,6 +475,13 @@ the same way; one without goes on your review. Each sale keeps who gave its
 discount, why and who approved it. The 10% is a business setting (shown on
 **Settings**): to change it, ask for it to be changed in the database.
 
+- **Ways to pay** (**Settings → Ways to pay**): cash and the card machine are
+  always taken. Add the apps and banks the café is paid through: FIB,
+  FastPay, ZainCash and Qi Card with one press each, any other by its name.
+  Each gets an account of its own (from 1030), where its money stays until
+  you move it, and a button at the till under **Cash** and **Card**. One
+  taken out of use leaves the till; its account keeps what it holds.
+
 ## Every day
 
 - **Dashboard:** it opens on **what needs you** — 🔴 now, 🟠 soon. Each says
@@ -544,6 +569,11 @@ discount, why and who approved it. The 10% is a business setting (shown on
   many batches to make, with the ingredients that will be short. **Tomorrow**
   shows the next day. Until four weeks of history, it says there is not
   enough to judge by.
+- **The plan learns** from those same days. Sold out on half of them or
+  more, and never thrown away, it makes more: a batch more for every day it
+  sold out. Thrown away on half of them or more, and never sold out, it makes
+  what was thrown away on average the less: half a batch at most, never below
+  one batch. Under the flavour it says which, and why.
 - **Use-by dates:** give each recipe how long it keeps (**Change…**, _What it
   makes keeps for_), and every batch is used by then from when it was made,
   unless a date is given when it is recorded. **In stock by batch** lists
@@ -587,6 +617,18 @@ discount, why and who approved it. The 10% is a business setting (shown on
   **Create the orders**: a draft for each supplier, to approve as any order.
   On an item's page, **Bought from** keeps who sells it, in what pack, at what
   price, and the usual one.
+- **What to buy looks ahead.** What was thrown away is not counted as use, so
+  waste is not bought again. With four weeks behind an item, each day until a
+  delivery is judged by its weekday (a busy Friday as a Friday), and what
+  today's plan needs is added. For something that goes off (cream, fruit),
+  open **How it was worked out** on its line and say **Days it keeps once it
+  comes**: it is then ordered for no more than those days, but always enough
+  to last until the next delivery.
+- **A week's waste** (**Reports → Waste**, at the top): what was thrown away
+  unsold in the last seven days, against the seven before, item by item,
+  with what to try: made here, the plan already makes less, so look at the
+  batch on those days; bought, say how long it keeps, or order less at a
+  time.
 - **Purchase orders** (**Purchasing**): whoever buys drafts an order — the
   supplier, each item at the unit and price agreed, the day it is expected.
   A branch manager approves orders up to 250,000 IQD; above that, you or the
@@ -639,6 +681,13 @@ discount, why and who approved it. The 10% is a business setting (shown on
   say why in the note; it posts to 6300 Cash over / short. Days are settled in
   order; the latest settlement can be cancelled, with the reason, and settled
   again.
+- **FIB, FastPay and the other ways to pay** (**Sales → Ways to Pay**): what
+  each one's account holds, beside the bank and the safe. **Move money** to
+  the bank, the safe or another way to pay, with what the bank or the app
+  kept as its fee (6500 Card and bank fees), or a monthly charge alone. A
+  move made by mistake is cancelled with why. **End of Day** says what each
+  took today, to check against its own app, and **Reports** lists each:
+  what it took, gave back, moved out and still holds.
 - **Delivery platforms, when a statement comes:** on **Delivery Platforms →
   Match a Statement**, choose its file (**Read it from its file…**, Excel or
   CSV) or paste it, check what matched, what did not and which orders it left

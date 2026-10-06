@@ -41,6 +41,7 @@ import { LOSS_ACCOUNT_NAME, giveawayLabel, kindShare } from "@/lib/losses";
 import { CREDIT_KIND_LABEL, orderStage, STAGE_LABEL } from "@/lib/purchasing";
 import { fmtRate, fmtUSD } from "@/lib/fx";
 import { getChannelNames } from "@/lib/db/channels";
+import { getPaymentMethodReport } from "@/lib/db/paymentMethods";
 import { getCafePlaces } from "@/lib/place";
 import { pnlByPlace } from "@/lib/pnl";
 import {
@@ -118,6 +119,7 @@ export default async function ReportsPage({
     bought,
     byPlaceRows,
     pnlBefore,
+    methodRows,
   ] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to, place) : Promise.resolve([]),
     getReconciliation(to),
@@ -144,7 +146,19 @@ export default async function ReportsPage({
     seesProfit && from <= to
       ? getProfitAndLoss(before.from, before.to, place)
       : Promise.resolve([]),
+    // Each of the café's own ways to pay (0069); none before it is applied.
+    from <= to ? getPaymentMethodReport(from, to, place) : Promise.resolve([]),
   ]);
+  // The ways to pay with something in the dates; each by its name in place of their one row.
+  const methodsUsed = methodRows.filter(
+    (m) => m.taken > 0 || m.refunded > 0 || (m.movedOut ?? 0) > 0 || (m.fees ?? 0) > 0,
+  );
+  const paidWays = [
+    ...takings
+      .filter((r) => r.method !== "other" || methodsUsed.length === 0)
+      .map((r) => ({ key: r.method, name: t(tenderLabel(r.method)), net: r.net })),
+    ...methodsUsed.map((m) => ({ key: `other:${m.method}`, name: m.name, net: m.net })),
+  ];
   // The menu as it sells today: a platform out of use sells nothing.
   const menu = allMenu.filter((m) =>
     channels.channels.some((c) => c.code === m.channel && c.active),
@@ -1230,11 +1244,11 @@ export default async function ReportsPage({
             <div className="panel-b rep-chart">
               <BarList
                 label={t("Net sales by payment method")}
-                rows={[...takings]
+                rows={[...paidWays]
                   .sort((x, y) => y.net - x.net)
                   .map((r) => ({
-                    key: r.method,
-                    name: t(tenderLabel(r.method)),
+                    key: r.key,
+                    name: r.name,
                     value: r.net,
                     valueText: fmtIQD(r.net),
                     sub: t("{share}% of net sales", {
@@ -1306,6 +1320,63 @@ export default async function ReportsPage({
                 )}
               </p>
             </div>
+            {methodRows.length > 0 && (
+              <div className="tw" data-testid="payments-by-way">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>{t("Way to pay")}</th>
+                      <th className="right">{t("Sales")}</th>
+                      <th className="right">{t("Takings")}</th>
+                      <th className="right">{t("Refunds")}</th>
+                      <th className="right">{t("Net")}</th>
+                      {place === null && (
+                        <>
+                          <th className="right">{t("Moved out")}</th>
+                          <th className="right">{t("Fees")}</th>
+                          <th className="right">{t("In its account on {day}", { day: to })}</th>
+                        </>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {methodRows.map((m) => (
+                      <tr key={m.method} data-testid="payments-way">
+                        <td dir="auto">
+                          {m.name}
+                          {!m.active && <span className="muted"> · {t("out of use")}</span>}
+                        </td>
+                        <td className="right money">{m.sales}</td>
+                        <td className="right money">{fmtIQD(m.taken)}</td>
+                        <td className="right money">
+                          {m.refunded ? `(${fmtIQD(m.refunded)})` : "—"}
+                        </td>
+                        <td className="right money">{fmtIQD(m.net)}</td>
+                        {place === null && (
+                          <>
+                            <td className="right money">{m.movedOut ? fmtIQD(m.movedOut) : "—"}</td>
+                            <td className="right money">{m.fees ? fmtIQD(m.fees) : "—"}</td>
+                            <td className="right money">{fmtIQD(m.balance ?? 0)}</td>
+                          </>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p
+                  className="muted"
+                  style={{ fontSize: ".76rem", padding: "10px 16px 14px", lineHeight: 1.7 }}
+                >
+                  {place === null
+                    ? t(
+                        "The café's own ways to pay, each with its own account: what it took, what refunds gave back by it, what was moved out of its account in the dates and the fees the bank or the app kept, and what the account held at the end. Money is moved on Sales → Ways to Pay.",
+                      )
+                    : t(
+                        "The café's own ways to pay, at this place: what each took, and what refunds gave back by it. Their accounts are the café's: see them for all places.",
+                      )}
+                </p>
+              </div>
+            )}
           </>
         )}
       </section>

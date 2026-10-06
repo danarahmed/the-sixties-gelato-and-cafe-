@@ -9,6 +9,7 @@ import { getClockBoard } from "@/lib/db/staff";
 import { getLossesWaiting } from "@/lib/db/rules";
 import { getCurrentAlerts, getDailyBrief } from "@/lib/db/alerts";
 import { getCardTakings, getPlatformMoney } from "@/lib/db/settlements";
+import { getPaymentMethodReport } from "@/lib/db/paymentMethods";
 import { getPaymentTakings } from "@/lib/db/reports";
 import { getSalesAnalysis } from "@/lib/db/analysis";
 import { namesIn } from "@/lib/analysis";
@@ -85,33 +86,49 @@ export default async function EndOfDayPage() {
     drawer: has(profile, "cash.session") || has(profile, "cash.session.force"),
   };
   const [{ at: tillAt }, places] = await Promise.all([tillChoice(), getPlaces()]);
-  const [bills, sessions, boards, losses, alerts, card, platforms, takings, brief, drawer, sold] =
-    await Promise.all([
-      sees.bills ? getOpenBills(place) : Promise.resolve([]),
-      getCashSessions(today, today, place),
-      sees.staff ? Promise.all(places.map((p) => getClockBoard(p.id))) : Promise.resolve([]),
-      sees.losses ? getLossesWaiting() : Promise.resolve([]),
-      sees.alerts ? getCurrentAlerts() : Promise.resolve([]),
-      sees.money ? getCardTakings() : Promise.resolve(null),
-      sees.money ? getPlatformMoney() : Promise.resolve(null),
-      sees.money ? getPaymentTakings(today, today, place) : Promise.resolve([]),
-      sees.alerts ? getDailyBrief(today) : Promise.resolve(null),
-      sees.drawer ? getDrawerState(tillAt) : Promise.resolve(null),
-      // What sold the most today, for the day's slip (round six).
-      sees.money
-        ? getSalesAnalysis({
-            from: today,
-            to: today,
-            by: "product",
-            then: null,
-            channel: null,
-            location: place,
-            category: null,
-            cashier: null,
-          })
-        : Promise.resolve(null),
-    ]);
+  const [
+    bills,
+    sessions,
+    boards,
+    losses,
+    alerts,
+    card,
+    platforms,
+    takings,
+    brief,
+    drawer,
+    sold,
+    methodsToday,
+  ] = await Promise.all([
+    sees.bills ? getOpenBills(place) : Promise.resolve([]),
+    getCashSessions(today, today, place),
+    sees.staff ? Promise.all(places.map((p) => getClockBoard(p.id))) : Promise.resolve([]),
+    sees.losses ? getLossesWaiting() : Promise.resolve([]),
+    sees.alerts ? getCurrentAlerts() : Promise.resolve([]),
+    sees.money ? getCardTakings() : Promise.resolve(null),
+    sees.money ? getPlatformMoney() : Promise.resolve(null),
+    sees.money ? getPaymentTakings(today, today, place) : Promise.resolve([]),
+    sees.alerts ? getDailyBrief(today) : Promise.resolve(null),
+    sees.drawer ? getDrawerState(tillAt) : Promise.resolve(null),
+    // What sold the most today, for the day's slip (round six).
+    sees.money
+      ? getSalesAnalysis({
+          from: today,
+          to: today,
+          by: "product",
+          then: null,
+          channel: null,
+          location: place,
+          category: null,
+          cashier: null,
+        })
+      : Promise.resolve(null),
+    // What each of the café's ways to pay took today (0069); none before it.
+    sees.money ? getPaymentMethodReport(today, today, place) : Promise.resolve([]),
+  ]);
   const severalPlaces = places.length > 1;
+  // The ways to pay that took something today, each to be checked against its own app.
+  const methodsTook = methodsToday.filter((m) => m.taken > 0);
   const waiting = waitingAlerts(alerts);
   const steps: Step[] = [];
 
@@ -284,6 +301,13 @@ export default async function EndOfDayPage() {
             n: platforms.orders.length,
           })
         : null,
+      ...methodsTook.map((m) =>
+        t("{name} today: {amount} from {n} sale(s). Check it against {name}'s own list.", {
+          name: m.name,
+          amount: fmtIQD(m.net),
+          n: m.sales,
+        }),
+      ),
     ].filter((x): x is string => x !== null);
     steps.push({
       key: "money",
@@ -297,6 +321,7 @@ export default async function EndOfDayPage() {
         : t("Nothing is late."),
       go: [
         { href: "/sales#card", label: t("Card Takings") },
+        ...(methodsTook.length ? [{ href: "/sales#ways-to-pay", label: t("Ways to Pay") }] : []),
         ...(platforms && platforms.platforms.length
           ? [{ href: "/platforms", label: t("nav.platforms") }]
           : []),
@@ -331,12 +356,19 @@ export default async function EndOfDayPage() {
   // ------------------------------------------------------------ the day
   const f = brief?.facts;
   const c = brief?.calculations;
-  const paid = takings
+  // The café's own ways to pay each by its name (0069), in place of their one row.
+  const paidWays = [
+    ...takings
+      .filter((r) => r.method !== "other" || methodsTook.length === 0)
+      .map((r) => ({ method: r.method, label: t(tenderLabel(r.method)), net: r.net })),
+    ...methodsTook.map((m) => ({ method: `other:${m.method}`, label: m.name, net: m.net })),
+  ];
+  const paid = paidWays
     .filter((r) => r.net > 0)
     .sort((a, b) => b.net - a.net)
     .map((r) => ({
       key: r.method,
-      label: t(tenderLabel(r.method)),
+      label: r.label,
       value: r.net,
       valueText: fmtIQD(r.net),
       sub: t("{share}% of net sales", {

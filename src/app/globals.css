@@ -1908,6 +1908,48 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   background: color-mix(in srgb, var(--accent) 85%, #000);
   border-color: color-mix(in srgb, var(--accent) 85%, #000);
 }
+/* The café's own ways to pay (0069): a row of their own under cash and the
+   card, as big as a finger needs, in the accent's outline. */
+.order-actions.methods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 6px;
+}
+.order-actions.methods button {
+  min-height: 46px;
+  padding: 0 8px;
+  border-radius: 10px;
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+.order-actions.methods button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+/* Sales → Ways to pay (0069): what each account holds, the bank and the safe quieter. */
+.money-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.money-tile {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.money-tile .v {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+.money-tile .m {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.money-tile.quiet {
+  background: var(--surface-2);
+}
 .order-actions.secondary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
@@ -4651,6 +4693,78 @@ a.card.stat:focus-visible {
   color: var(--brand-ink);
 }
 /* The day's plan: what to make, and the tap that records it. */
+/* The week's schedule against how busy it usually is (round ten). */
+.sched-check {
+  display: grid;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.check-table th,
+.check-table td {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.check-cell.short {
+  color: var(--warn);
+  font-weight: 600;
+}
+.check-cell.nobody {
+  color: var(--err);
+  font-weight: 600;
+}
+.check-cell.quiet {
+  color: var(--text-muted);
+}
+.check-cell.fine {
+  color: var(--ok);
+}
+.check-says {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+.check-says .warn {
+  color: var(--warn);
+}
+.check-says .err {
+  color: var(--err);
+}
+.check-says .ok {
+  color: var(--ok);
+}
+/* How many days a bought item keeps, said on What to buy (0070). */
+.keeps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+.keeps input {
+  width: 56px;
+  text-align: end;
+}
+.keeps-bad {
+  color: var(--err);
+}
+/* What the day's plan learnt (0070): it sold out, or it was thrown away. */
+.plan-learnt {
+  font-size: 0.74rem;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+.plan-learnt.sold_out {
+  color: var(--ok);
+}
+.plan-learnt.waste {
+  color: var(--warn);
+}
 .plan-make {
   display: inline-flex;
   flex-wrap: wrap;

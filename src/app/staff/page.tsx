@@ -4,7 +4,9 @@ import { has, requirePermission } from "@/lib/auth/session";
 import { getLocations } from "@/lib/db/read";
 import { getAttendance, getLogins, getSchedule, getStaff } from "@/lib/db/staff";
 import { weekDays } from "@/lib/staff";
-import { addDays, businessToday, dateTimeIn, parseDay } from "@/lib/dates";
+import { addDays, businessToday, dateTimeIn, localClock, parseDay } from "@/lib/dates";
+import { getLabourTarget, getStaffing } from "@/lib/db/staffing";
+import { hourlyCost, minutesOnClock, staffing } from "@/lib/staffing";
 import { StaffPeople } from "@/components/staff/StaffPeople";
 import { ScheduleWeek } from "@/components/staff/ScheduleWeek";
 import { AttendanceList } from "@/components/staff/AttendanceList";
@@ -58,6 +60,35 @@ export default async function StaffPage({
   const working = people.filter(
     (p) => p.hiredOn <= last && (p.leftOn === null || p.leftOn >= first),
   );
+  // The week checked against how busy each part of the day usually is: the
+  // four weeks to yesterday, as Staffed when busy? reads them (round ten).
+  const seesPay = has(profile, "payroll.view");
+  const usualTo = addDays(today, -1);
+  const usualFrom = addDays(usualTo, -27);
+  const [busy, target] = await Promise.all([
+    place && has(profile, "cost.view") ? getStaffing(usualFrom, usualTo, place) : null,
+    place && seesPay ? getLabourTarget(place) : null,
+  ]);
+  const usual = busy
+    ? staffing(
+        busy.sales,
+        minutesOnClock(busy.spans, usualFrom, usualTo, localClock(timezone)),
+        usualFrom,
+        usualTo,
+      )
+    : null;
+  const costs = seesPay
+    ? Object.fromEntries(
+        people.map((p) => [
+          p.id,
+          hourlyCost(
+            p.pay
+              ? { basis: p.pay.basis, rate: p.pay.rate, standardHours: p.pay.standardHours }
+              : null,
+          ),
+        ]),
+      )
+    : null;
 
   return (
     <div className="grid" style={{ gap: 16 }}>
@@ -134,6 +165,9 @@ export default async function StaffPage({
             canManage={canManage}
             prevHref={weekHref(addDays(first, -7))}
             nextHref={weekHref(addDays(first, 7))}
+            usual={usual}
+            costs={costs}
+            target={target}
           />
         ) : (
           <p className="muted" style={{ margin: 0 }}>
