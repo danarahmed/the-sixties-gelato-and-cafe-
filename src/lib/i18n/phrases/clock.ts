@@ -71,6 +71,10 @@ const phrases: PhraseBook = {
     ckb: "بە مۆبایلەکەت سکان بکە بۆ تۆمارکردنی هاتن یان ڕۆیشتن",
   },
   "The shop's code to scan": { ar: "رمز المحل للمسح", ckb: "کۆدی دوکان بۆ سکانکردن" },
+  "The owner makes a device the clock screen on Staff, from that device.": {
+    ar: "يجعل المالك جهازًا شاشةً للحضور من شاشة «الموظفون»، على ذلك الجهاز نفسه.",
+    ckb: "خاوەن لە شاشەی «کارمەندان»، لەسەر هەمان ئامێر، ئامێرێک دەکات بە شاشەی هاتن و ڕۆیشتن.",
+  },
   "A new code in {n} s": { ar: "رمز جديد بعد {n} ث", ckb: "کۆدێکی نوێ دوای {n} چرکە" },
   "No phone? Choose your name and type your PIN.": {
     ar: "ليس لديك هاتف؟ اختر اسمك واكتب رمز PIN.",

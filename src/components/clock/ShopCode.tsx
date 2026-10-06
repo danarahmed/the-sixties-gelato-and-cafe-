@@ -71,6 +71,11 @@ export function ShopCode({ full = false }: { full?: boolean }) {
         <p className="red" style={{ margin: 0 }} role="alert" data-testid="shop-code-error">
           {say(code.error)}
         </p>
+        {full && (
+          <p className="muted" style={{ margin: 0, fontSize: ".88rem" }}>
+            {t("The owner makes a device the clock screen on Staff, from that device.")}
+          </p>
+        )}
       </div>
     );
   }
