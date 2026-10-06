@@ -112,10 +112,13 @@ console.log(`▸ Staff, the week of ${ON}: the ${DAY} checked as its hours are t
     `${DAY} afternoon: orders usually come, and nobody is scheduled`,
   );
   const says = (await box.textContent()) ?? "";
+  // Other suites' weekdays may be said in the same sentences, before or after this one.
   check(
-    says.includes(`Too few: ${DAY} evening (1 scheduled, about`) &&
-      says.includes(`Nobody scheduled when orders usually come: ${DAY} afternoon`),
-    "said in words: too few in the evening, nobody in the afternoon",
+    new RegExp(`Too few: [^.]*\\b${DAY} evening \\(1 scheduled, about \\d+ needed\\)`).test(says) &&
+      new RegExp(`Nobody scheduled when orders usually come: [^.]*\\b${DAY} afternoon\\b`).test(
+        says,
+      ),
+    `said in words: too few in the evening, nobody in the afternoon (${says.slice(0, 400)})`,
   );
   const cost = (await page.getByTestId("check-cost").textContent()) ?? "";
   check(
@@ -141,8 +144,8 @@ console.log(`▸ Staff, the week of ${ON}: the ${DAY} checked as its hours are t
   );
   check(
     /▽\s*3 · needs 1/.test((await morning.textContent()) ?? "") &&
-      ((await box.textContent()) ?? "").includes(
-        `More than needed: ${DAY} morning (3 scheduled, about 1 needed)`,
+      new RegExp(`More than needed: [^.]*\\b${DAY} morning \\(3 scheduled, about 1 needed\\)`).test(
+        (await box.textContent()) ?? "",
       ),
     "three typed in the morning: more than needed, said as typed, before anything is saved",
   );

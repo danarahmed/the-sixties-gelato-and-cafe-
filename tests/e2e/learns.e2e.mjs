@@ -69,8 +69,8 @@ lay([
 // days ago, a litre used each day since, and 600 ml spoilt three days ago; a
 // par level of 10 L.
 sql(`insert into item (business_id, sku, name, item_type, base_unit_code, dimension, returnable_to_stock)
-     values ('${B}', 'E2E-CREAM', 'E2E Cream', 'ingredient', 'ml', 'volume', false)`);
-const CREAM = last(`select id from item where business_id = '${B}' and name = 'E2E Cream'`);
+     values ('${B}', 'E2E-LEARN-CREAM', 'E2E Learn cream', 'ingredient', 'ml', 'volume', false)`);
+const CREAM = last(`select id from item where business_id = '${B}' and name = 'E2E Learn cream'`);
 sql(`insert into item_unit (item_id, code, label, dimension, factor_to_base)
      values ('${CREAM}', 'carton_1l', 'Carton of 1 L', 'volume', 1000)`);
 lay([
@@ -79,12 +79,12 @@ lay([
   move(CREAM, "spoilage", -600, 3, "18:00"),
 ]);
 sql(`select test.act_as('owner@example.com');
-     select update_item('${CREAM}', 'E2E Cream', 'ingredient', p_par_level => 10000)`);
+     select update_item('${CREAM}', 'E2E Learn cream', 'ingredient', p_par_level => 10000)`);
 // From its own creamery, a day away, by the carton.
 const CREAMERY = last(`select test.act_as('manager@example.com');
-                       select create_supplier('E2E Creamery', 'Rawa', '0750 555 0199')`);
+                       select create_supplier('E2E Learn creamery', 'Rawa', '0750 555 0199')`);
 sql(`select test.act_as('manager@example.com');
-     select update_supplier('${CREAMERY}', 'E2E Creamery', 'Rawa', '0750 555 0199', true, 'a day away', 1);
+     select update_supplier('${CREAMERY}', 'E2E Learn creamery', 'Rawa', '0750 555 0199', true, 'a day away', 1);
      select set_item_supplier('${CREAM}', '${CREAMERY}', 'carton_1l', 1500, true, gen_random_uuid())`);
 
 // ------------------------------------------------------------ the day's plan
@@ -126,7 +126,8 @@ console.log("▸ the day's plan says what it learnt");
 }
 
 // ------------------------------------------------------------ what to buy
-const creamLine = (page) => page.locator('[data-testid="buying-line"][data-item="E2E Cream"]');
+const creamLine = (page) =>
+  page.locator('[data-testid="buying-line"][data-item="E2E Learn cream"]');
 const creamWhy = async (page) =>
   (await creamLine(page).getByTestId("buying-why").textContent()) ?? "";
 console.log("▸ What to buy leaves what was thrown away out of use, and asks how long it keeps");
@@ -154,7 +155,7 @@ console.log("▸ What to buy leaves what was thrown away out of use, and asks ho
     () =>
       document
         .querySelector(
-          '[data-testid="buying-line"][data-item="E2E Cream"] [data-testid="buying-why"]',
+          '[data-testid="buying-line"][data-item="E2E Learn cream"] [data-testid="buying-why"]',
         )
         ?.textContent?.includes("It keeps 3 days"),
     null,
@@ -189,14 +190,14 @@ console.log("▸ Reports → Waste: the last seven days, and what to try");
     "it says what was thrown away unsold in the seven days, against the seven before",
   );
   const lemon = week.locator("li", { hasText: "E2E Lemon sorbet:" });
-  const cream = week.locator("li", { hasText: "E2E Cream:" });
+  const cream = week.locator("li", { hasText: "E2E Learn cream:" });
   check(
     ((await lemon.textContent()) ?? "").includes("Made here: the day's plan already makes less") &&
       (await lemon.locator('a[href="/production#plan"]').count()) > 0,
     "the lemon, made here: the plan already makes less, and a way to it",
   );
   check(
-    /E2E Cream: 600 ml thrown away, 600 IQD, 1 time, on \w+day\./.test(
+    /E2E Learn cream: 600 ml thrown away, 600 IQD, 1 time, on \w+day\./.test(
       (await cream.textContent()) ?? "",
     ) &&
       ((await cream.textContent()) ?? "").includes(
