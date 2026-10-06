@@ -5989,3 +5989,59 @@ kbd {
     justify-items: start;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Several people added at once (round eight): a row each, on Staff.
+   --------------------------------------------------------------------------- */
+.add-people-table th {
+  white-space: nowrap;
+}
+.add-people-table td {
+  vertical-align: top;
+  padding: 6px 4px;
+}
+.add-people-table td:first-child input {
+  min-width: 150px;
+}
+.add-people-table tbody tr.add-row-off td {
+  background: color-mix(in oklab, var(--err) 6%, var(--surface));
+}
+.add-row-why {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  color: var(--err);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.add-row-remove {
+  min-height: 38px;
+  min-width: 38px;
+  color: var(--text-muted);
+}
+.add-people-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .add-people-table.stack-table tbody tr {
+    margin-block-end: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .add-people-table.stack-table tbody tr.add-row-off {
+    border-color: color-mix(in oklab, var(--err) 35%, var(--border));
+    background: color-mix(in oklab, var(--err) 6%, var(--surface));
+  }
+  .add-people-table.stack-table tbody tr td {
+    padding: 3px 0;
+    background: transparent;
+  }
+  .add-people-table td:first-child input {
+    min-width: 0;
+  }
+}

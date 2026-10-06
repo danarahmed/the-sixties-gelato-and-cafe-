@@ -392,6 +392,31 @@ const phrases: PhraseBook = {
   "a payroll": { ar: "كشفَ رواتب", ckb: "لیستێکی مووچە" },
   "a salary payment": { ar: "دفعةَ راتب", ckb: "پارەدانێکی مووچە" },
   "an advance": { ar: "سلفةً", ckb: "پێشەکییەک" },
+  // Several people added at once (round eight)
+  "People to add": { ar: "الأشخاص المراد إضافتهم", ckb: "ئەو کەسانەی زیاد دەکرێن" },
+  "+ Add people who work here": {
+    ar: "+ أضف أشخاصًا يعملون هنا",
+    ckb: "+ ئەو کەسانە زیاد بکە کە لێرە کار دەکەن",
+  },
+  "A row for each person. A PIN can be set now, or later on their row: let each person type their own. Rows left empty are not added.":
+    {
+      ar: "صف لكل شخص. يمكن تعيين رمز PIN الآن، أو لاحقًا من صفه: دع كل شخص يكتب رمزه بنفسه. الصفوف الفارغة لا تُضاف.",
+      ckb: "ڕیزێک بۆ هەر کەسێک. دەتوانیت PIN ئێستا دابنێیت، یان دواتر لە ڕیزەکەی خۆیەوە: با هەر کەسێک PINی خۆی بنووسێت. ڕیزە بەتاڵەکان زیاد ناکرێن.",
+    },
+  "PIN (optional)": { ar: "رمز PIN (اختياري)", ckb: "PIN (ئارەزوومەندانە)" },
+  "Remove this row": { ar: "احذف هذا الصف", ckb: "ئەم ڕیزە لابە" },
+  "Another row": { ar: "صف آخر", ckb: "ڕیزێکی تر" },
+  "Add {n} to the staff": { ar: "أضف {n} إلى الموظفين", ckb: "{n} زیاد بکە بۆ کارمەندان" },
+  "{n} added to the staff.": { ar: "أُضيف {n} إلى الموظفين.", ckb: "{n} زیاد کرا بۆ کارمەندان." },
+  "{name} is added, but the PIN was not set: {why}": {
+    ar: "أُضيف {name}، لكن لم يُعيَّن رمز PIN: {why}",
+    ckb: "{name} زیاد کرا، بەڵام PIN دانەنرا: {why}",
+  },
+  "Give their name": { ar: "اكتب اسمه", ckb: "ناوەکەی بنووسە" },
+  "This login is chosen for someone else too": {
+    ar: "هذا الحساب مختار لشخص آخر أيضًا",
+    ckb: "ئەم هەژمارە بۆ کەسێکی تریش هەڵبژێردراوە",
+  },
 };
 
 export default phrases;
