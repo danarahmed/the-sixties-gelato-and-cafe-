@@ -113,6 +113,45 @@ let SCREEN = "";
     "and says when a new code comes",
   );
   await shot(page, "screen");
+  check(
+    (await page.locator(".menu-toggle").count()) === 0 &&
+      (await page.locator(".account-badge").count()) === 0,
+    "a tablet by the door: no menu, nothing of who is signed in",
+  );
+  check(
+    (await page.getByTestId("clock-screen-sign-out").count()) === 1,
+    "whoever is signed in is offered to sign out and keep the code",
+  );
+
+  // A tablet signed in as the owner, made the clock screen: signed out there,
+  // it goes on showing the code, and the owner is still signed in elsewhere.
+  const tablet = await signIn(browser, "owner");
+  await tablet.ctx.addCookies([cookie]);
+  await open(tablet.page, "/clock/screen");
+  await tablet.page.getByTestId("clock-screen-sign-out").click();
+  await tablet.page
+    .getByTestId("clock-screen-sign-out")
+    .waitFor({ state: "detached", timeout: 10000 })
+    .catch(() => {});
+  await tablet.page.getByTestId("shop-code-digits").waitFor({ timeout: 10000 });
+  check(
+    (await tablet.page.getByTestId("clock-screen-sign-out").count()) === 0 &&
+      new URL(tablet.page.url()).pathname === "/clock/screen",
+    "signed out there, the tablet still shows the code",
+  );
+  await tablet.page.goto(`${BASE}/dashboard`);
+  check(
+    new URL(tablet.page.url()).pathname === "/login",
+    "and the tablet opens nothing of the café's without signing in",
+  );
+  await tablet.ctx.close();
+  // The till stays on its code for the steps after this one.
+  await open(page, "/clock/screen");
+  await page.getByTestId("shop-code-digits").waitFor({ timeout: 10000 });
+  check(
+    (await page.getByTestId("clock-screen-sign-out").count()) === 1,
+    "the owner's own session goes on, signed in",
+  );
 }
 
 console.log("▸ a till that is not a clock screen shows no clock");

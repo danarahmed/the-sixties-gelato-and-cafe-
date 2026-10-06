@@ -443,6 +443,23 @@ select {
     text-transform: uppercase;
     color: var(--text-muted);
   }
+  /* Two short cells side by side (where and since when; in and out). */
+  .stack-table td.stack-half {
+    display: inline-block;
+    width: 50%;
+    vertical-align: top;
+  }
+  /* A cell with nothing in it says nothing on a card. */
+  .stack-table td:empty {
+    display: none;
+  }
+}
+/* A day's notes: its badges a little apart, wrapping as they need. */
+td.badges .badge {
+  margin-block: 2px;
+}
+td.badges .badge + .badge {
+  margin-inline-start: 4px;
 }
 /* A tick box or a choice keeps its own size: the rule above is for text. */
 input[type="checkbox"],
@@ -6159,6 +6176,17 @@ kbd {
 }
 .clock-screen-page .shop-code {
   inline-size: min(560px, 100%);
+}
+/* Whoever made it a clock screen, offered to leave it signed out. */
+.clock-screen-signed-in {
+  inline-size: min(560px, 100%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  font-size: 0.85rem;
+  text-align: center;
 }
 
 /* The phone's clock: one card the width of a phone, and one big button. */

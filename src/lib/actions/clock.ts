@@ -5,6 +5,7 @@
  * phone clocks its person in or out with the code the screen shows. The keys
  * stay in HTTP-only cookies on their devices and go only to the database.
  */
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import {
@@ -26,6 +27,7 @@ import {
   screenKey,
 } from "@/lib/clockDevice";
 import { id, text } from "@/lib/validation";
+import { createServerSupabase } from "@/lib/supabase/server";
 
 const CLOCK_PATHS = ["/staff", "/pos", "/clock", "/clock/screen"];
 
@@ -205,4 +207,16 @@ export async function clockByPhoneAction(
   const a = phoneClockAnswerFrom(r.data);
   if (a.ok) refresh("/clock", "/staff");
   return { ok: true, data: a };
+}
+
+/**
+ * Whoever is signed in on a clock screen signs out there, and the screen goes
+ * on showing the code: its key is the device's, not theirs. A tablet by the
+ * door is then nobody's way into the books. Only this device is signed out:
+ * the owner stays signed in on their own phone.
+ */
+export async function signOutClockScreenAction(): Promise<void> {
+  const supabase = await createServerSupabase();
+  await supabase.auth.signOut({ scope: "local" });
+  redirect("/clock/screen");
 }

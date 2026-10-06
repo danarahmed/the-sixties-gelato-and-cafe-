@@ -7,10 +7,10 @@ import type { PhraseBook } from "./types";
  */
 const phrases: PhraseBook = {
   Staff: { ar: "الموظفون", ckb: "کارمەندان" },
-  "Who works here, the schedule, and the hours. Each person clocks in and out at the till with their name and PIN. Lateness, leaving early, absence and overtime are shown here, and deducted from pay only when a manager says so on Payroll.":
+  "Who works here, the schedule, and the hours. Each person clocks in and out on their own phone, by scanning the shop's code, or at the till with their name and PIN. Lateness, leaving early, absence and overtime are shown here, and deducted from pay only when a manager says so on Payroll.":
     {
-      ar: "مَن يعمل هنا، وجدول الدوام، وساعات العمل. يسجّل كل شخص حضوره وانصرافه على نقطة البيع باسمه ورمز PIN الخاص به. يظهر هنا التأخر والمغادرة المبكرة والغياب والعمل الإضافي، ولا يُخصم شيء من الأجر إلا إذا قرر المدير ذلك في شاشة «الرواتب».",
-      ckb: "کێ لێرە کار دەکات، خشتەی دەوام و کاتژمێرەکانی کار. هەر کەسێک بە ناو و PIN ی خۆی لەسەر خاڵی فرۆشتن هاتن و ڕۆیشتنی خۆی تۆمار دەکات. دواکەوتن، زوو ڕۆیشتن، ئامادەنەبوون و کاتی زیادە لێرە دەردەکەون، و تەنها کاتێک لە مووچە دەبڕدرێن کە بەڕێوەبەرێک لە شاشەی «مووچە» بڵێت.",
+      ar: "مَن يعمل هنا، وجدول الدوام، وساعات العمل. يسجّل كل شخص حضوره وانصرافه من هاتفه بمسح رمز المحل، أو على نقطة البيع باسمه ورمز PIN الخاص به. يظهر هنا التأخر والمغادرة المبكرة والغياب والعمل الإضافي، ولا يُخصم شيء من الأجر إلا إذا قرر المدير ذلك في شاشة «الرواتب».",
+      ckb: "کێ لێرە کار دەکات، خشتەی دەوام و کاتژمێرەکانی کار. هەر کەسێک بە مۆبایلی خۆی، بە سکانکردنی کۆدی دوکان، یان بە ناو و PIN ی خۆی لەسەر خاڵی فرۆشتن هاتن و ڕۆیشتنی خۆی تۆمار دەکات. دواکەوتن، زوو ڕۆیشتن، ئامادەنەبوون و کاتی زیادە لێرە دەردەکەون، و تەنها کاتێک لە مووچە دەبڕدرێن کە بەڕێوەبەرێک لە شاشەی «مووچە» بڵێت.",
     },
   "In now": { ar: "الحاضرون الآن", ckb: "ئێستا لێرەن" },
   "Nobody is clocked in.": { ar: "لم يسجّل أحد حضوره.", ckb: "کەس هاتنی تۆمار نەکردووە." },
@@ -408,6 +408,7 @@ const phrases: PhraseBook = {
   "Remove this row": { ar: "احذف هذا الصف", ckb: "ئەم ڕیزە لابە" },
   "Another row": { ar: "صف آخر", ckb: "ڕیزێکی تر" },
   "Add {n} to the staff": { ar: "أضف {n} إلى الموظفين", ckb: "{n} زیاد بکە بۆ کارمەندان" },
+  "Add to the staff": { ar: "أضف إلى الموظفين", ckb: "زیاد بکە بۆ کارمەندان" },
   "{n} added to the staff.": { ar: "أُضيف {n} إلى الموظفين.", ckb: "{n} زیاد کرا بۆ کارمەندان." },
   "{name} is added, but the PIN was not set: {why}": {
     ar: "أُضيف {name}، لكن لم يُعيَّن رمز PIN: {why}",

@@ -65,7 +65,7 @@ export function AttendanceList({
         </p>
       ) : (
         <div className="tw">
-          <table data-testid="attendance-days">
+          <table className="stack-table" data-testid="attendance-days">
             <thead>
               <tr>
                 <th>{t("Day")}</th>
@@ -84,20 +84,22 @@ export function AttendanceList({
                   data-name={d.name}
                   data-day={d.day}
                 >
-                  <td className="mono when">{d.day}</td>
-                  <td>{d.name}</td>
-                  <td className="mono">
+                  <td className="mono when stack-half">{d.day}</td>
+                  <td className="stack-half">{d.name}</td>
+                  <td className="mono stack-half" data-label={t("Hours on the schedule")}>
                     {d.shiftStarts
                       ? `${clockTime(d.shiftStarts, timezone)}–${clockTime(d.shiftEnds, timezone)}`
                       : "—"}
                   </td>
-                  <td className="mono">
+                  <td className="mono stack-half" data-label={t("Clocked")}>
                     {d.firstIn
                       ? `${clockTime(d.firstIn, timezone)}–${d.stillIn ? "…" : clockTime(d.lastOut, timezone)}`
                       : "—"}
                   </td>
-                  <td className="right mono">{d.minutes > 0 ? hours(d.minutes) : "—"}</td>
-                  <td style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                  <td className="right mono stack-half" data-label={t("Worked")}>
+                    {d.minutes > 0 ? hours(d.minutes) : "—"}
+                  </td>
+                  <td className="badges">
                     {d.absent && (
                       <span className="badge err" data-testid="absent">
                         {t("Absent")}
@@ -134,7 +136,7 @@ export function AttendanceList({
         </p>
       ) : (
         <div className="tw">
-          <table data-testid="attendance-records">
+          <table className="stack-table" data-testid="attendance-records">
             <thead>
               <tr>
                 <th>{t("Who")}</th>
@@ -209,12 +211,16 @@ function RecordRow({
             <span className="badge err"> {t("Clocked in a long time")}</span>
           )}
         </td>
-        <td className="mono">{at(r.clockIn)}</td>
-        <td className="mono">
+        <td className="mono stack-half" data-label={t("In")}>
+          {at(r.clockIn)}
+        </td>
+        <td className="mono stack-half" data-label={t("Out")}>
           {r.clockOut ? at(r.clockOut) : <span className="badge ok">{t("Still in")}</span>}
         </td>
-        <td className="right mono">{hours(r.minutes)}</td>
-        <td style={{ fontSize: ".85rem" }}>
+        <td className="right mono stack-half" data-label={t("Worked")}>
+          {hours(r.minutes)}
+        </td>
+        <td className="stack-half" style={{ fontSize: ".85rem" }} data-label={t("How")}>
           {t(SOURCE_LABEL[r.source] ?? r.source)}
           {r.recordedBy && <span className="muted"> · {r.recordedBy}</span>}
           {r.editReason && (

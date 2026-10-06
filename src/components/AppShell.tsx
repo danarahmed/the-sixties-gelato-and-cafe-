@@ -212,7 +212,9 @@ export function AppShell({
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Signed out (sign-in, setup): no navigation, nothing about the business.
-  if (!member) {
+  // Nor on the shop's code on a whole screen (0068), a tablet by the door that
+  // anyone passing can touch: no menu, nothing of whoever is signed in.
+  if (!member || pathname === "/clock/screen") {
     return (
       <div className="app-shell">
         <WholePage />
