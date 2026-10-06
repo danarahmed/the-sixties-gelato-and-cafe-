@@ -2971,6 +2971,11 @@ const phrases: PhraseBook = {
     ar: "نقل أموال (ألغِه في شاشة «المبيعات»)",
     ckb: "گواستنەوەی پارە (لە شاشەی «فرۆشتن» هەڵیبوەشێنەوە)",
   },
+  // How long a bought item keeps, for What to buy (0070).
+  "An item keeps 1 to 365 days, or say nothing": {
+    ar: "تبقى المادة صالحة من يوم إلى 365 يومًا، أو اترك الخانة فارغة",
+    ckb: "کاڵایەک لە 1 تا 365 ڕۆژ دەمێنێتەوە، یان هیچ مەنووسە",
+  },
 };
 
 export default phrases;

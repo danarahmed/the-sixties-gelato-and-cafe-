@@ -2002,3 +2002,36 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   `report_payment_methods(from, to, location)` (`cost.view`). The trail's rows
   are `payment_method.add`, `payment_method.change`, `money.move` and
   `money.move_cancel`; a move's journal is `money_move`.
+
+### The plan learns, What to buy looks ahead, and a week's waste (`0070`)
+
+- **`item`** gains `keeps_days` (1 to 365, or none): how many days a bought
+  item keeps once it comes. Set with `set_item_keeps(item, days)` (whoever may
+  change an item: `settings.manage`, `purchase.create` or
+  `inventory.adjust.approve`), on the trail as `item.keeps`.
+- **The day's plan** (`production_plan`) reads, for each of the same weekdays
+  it judges by, what was thrown away unsold (waste, spoilage, expired, not
+  taken back on review) and whether it sold out (next to nothing left that
+  night, under 5% of a batch, and none thrown away). Sold out on half those
+  days or more and never thrown away, it makes for a batch more for every day
+  it sold out out of the days judged (`bump`); thrown away on half or more
+  and never sold out, what was thrown away on average the less, half a batch
+  at most and never below one batch (`trim`). Each recipe's answer gains
+  `seen` (what went on average), `sold_out_days`, `waste_days`, `wasted_avg`,
+  `bump`, `trim` and `learned` (`sold_out`, `waste` or none); each day judged
+  gains `wasted` and `sold_out`.
+- **What to buy** (`buying_list`) judges use without what was thrown away
+  unsold (`wasted`, shown apart; `thrown_unsold` and `use_not_waste` say
+  which is which, a loss taken back on review with the loss). With four weeks
+  behind an item, the days a delivery takes are each judged by their weekday
+  (`forecast` `weekday`, else `average`; `lead_use`). What today's plan needs
+  of an ingredient beyond what its weekday's batches use is added
+  (`plan_need`, `plan_extra`; an ingredient with no use yet is ordered for the
+  plan, `reorder_from` `plan`). An item that keeps only so many days is
+  ordered up to no more than they will use (`capped`, `cap_level`), in whole
+  packs rounded down, but never below its reorder level.
+- **A week's waste:** `waste_coach(to, location)` (`cost.view`): what was
+  thrown away unsold in the seven days to a day (today by default) and the
+  seven before, item by item, the costliest first: how much, its cost, how
+  many times, on which weekdays, whether the café makes it, how long it
+  keeps; and the two weeks' totals.

@@ -90,6 +90,11 @@ const SAME = new Set(
     "Lezzoo",
     "Careem",
     "Toters",
+    // The common ways to pay offered on Settings and Sales (0069), named as
+    // they name themselves ("FIB" passes as initials).
+    "FastPay",
+    "ZainCash",
+    "Qi",
     // Language codes, as the Languages screen gives them for examples.
     "tr",
     "fa",

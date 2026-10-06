@@ -174,12 +174,12 @@ select test.eq((
   'save_modifier,save_modifier_group,save_payment_method,save_phrases,save_po,save_schedule,save_tab,save_table,send_po,'
   'send_stock_transfer,'
   'set_account_in_use,set_alert_thresholds,set_batch_use_by,set_business_rule,set_clock_pin,set_employee_left,'
-  'set_employee_pay,set_fx_rate,set_item_supplier,set_member_active,set_member_place,set_member_roles,set_modifier_price,'
+  'set_employee_pay,set_fx_rate,set_item_keeps,set_item_supplier,set_member_active,set_member_place,set_member_roles,set_modifier_price,'
   'set_modifier_recipe,set_my_pin,set_no_stock,set_price,set_product_details,set_product_image,'
   'set_product_modifiers,settle_tab,snooze_alert,split_tab,staff_list,staff_phones,staff_schedule,start_stock_count,'
   'stock_card,stock_places,stock_transfers,submit_stock_count,supplier_statement,undo_bank_statement,unlink_phone,unlock_period,'
   'update_delivery_platform,update_item,'
-  'update_supplier,update_variant,void_sale',
+  'update_supplier,update_variant,void_sale,waste_coach',
   'signed-in users can call exactly the intended API');
 -- The public (the anon key is in every page) may call only the clock's four,
 -- each answering only to a key it gave out: a clock screen asking its code, a

@@ -64,6 +64,7 @@ Plan a short window when the café is closed.
 | A day's sales target (`0067`)           | ✅ Migration applied on 3 October, its text checked byte for byte against the file, and checked on the live records as the owner in a transaction that was rolled back (see [After `0067`](#after-0067)). It went in on its own, before `0064`–`0066`                                                                                                                                                                                            |
 | Clocking in by phone (`0068`)           | ✅ Applied by the owner in the SQL editor on 6 October (the connector held it), then compared object by object with the tested build: identical, permissions included, once the paste's line endings are set aside (see [After `0068`](#after-0068)). The screens were merged ([pull request #81](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/81)) and deployed                                                              |
 | Ways to pay (`0069`)                    | ⏳ Waiting for the owner to apply it in the SQL editor (see [After `0069`](#after-0069)). Until then the screens work as before: the till offers cash and the card, and Settings says the update is not applied                                                                                                                                                                                                                                  |
+| Plan learns, What to buy (`0070`)       | ⏳ Waiting for the owner to apply it in the SQL editor (see [After `0070`](#after-0070)). Until then the plan, What to buy and Reports → Waste work as before, and how long an item keeps is not offered                                                                                                                                                                                                                                         |
 
 ## 0. Before you start
 
@@ -3305,6 +3306,59 @@ It is applied by the owner, in Supabase's SQL editor:
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems (it replaces
    functions and drops one to make it again), choose to run it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0070`
+
+Migration `0070` is the owner's answer on waste, as chosen: the day's plan
+learns from what was thrown away and what sold out, What to buy looks at the
+days ahead, and a week's waste on **Reports → Waste**. Each only recommends:
+what is made and bought is still the café's to record.
+
+- **The day's plan** (on **Production**) still judges a flavour by the same
+  weekday of the weeks before. Sold out on half those days or more, and never
+  thrown away, it makes for more: a batch more for every day it sold out out
+  of the days judged. Thrown away on half the days or more, and never sold
+  out, it makes what was thrown away on average the less: half a batch at
+  most, and never below one batch. The plan says which it learnt, and why.
+- **What to buy** leaves what was thrown away out of what an item uses (and
+  shows it apart), so waste is not bought again. With four weeks behind an
+  item, the days a delivery takes are each judged by their weekday: a busy
+  Friday as a Friday. What today's plan needs of an ingredient beyond what its
+  weekday's batches use is added, and an ingredient the plan needs is ordered
+  even before it has been used. An item that keeps only a few days (say how
+  many on **What to buy**) is ordered up to no more than those days will use,
+  but never below what must last until the next delivery.
+- **A week's waste** (on **Reports → Waste**): what was thrown away unsold in
+  the last seven days, item by item, against the seven before: what it cost,
+  how often, on which days, and what to try.
+
+What it changes:
+
+- **New column:** `item.keeps_days` (how many days a bought item keeps, or
+  none).
+- **Replaced:** `production_plan` and `buying_list`; each still gives
+  everything it gave, with what it learnt added.
+- **New:** `set_item_keeps` (whoever may change an item; keyed, on the audit
+  trail) and `waste_coach` (`cost.view`), signed in; `thrown_unsold` and
+  `use_not_waste`, which only the functions call.
+- Nothing recorded changes.
+
+The app's screens need it: before it is applied, the plan, What to buy and
+Reports → Waste work as before, and how long an item keeps is not offered.
+
+It was rehearsed on the tested build (`scripts/test-sql.sh`), with its own
+suite (`tests/sql/plan_learns.test.sql`): a flavour that sold out, one thrown
+away, one that is already one batch, one with both; an ingredient used only on
+one weekday, one the plan needs, one that keeps three days; and a week's waste.
+
+It is applied by the owner, in Supabase's SQL editor:
+
+1. Open the file `supabase/migrations/0070_plan_learns_and_buying_ahead.sql`
+   on GitHub, press **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
 3. **Success. No rows returned** is the answer.
 
 ## Clearing the test records
