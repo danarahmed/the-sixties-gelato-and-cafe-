@@ -60,7 +60,7 @@ Plan a short window when the café is closed.
 | Prepaid expenses (`0060`)               | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0060`](#after-0060)). The screens were merged ([pull request #62](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/62)) and deployed                                                                    |
 | Prepaid and payments put right (`0061`) | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0061`](#after-0061)). The screens were merged ([pull request #64](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/64)) and deployed                                                                       |
 | Accounts and bank put right (`0062`)    | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0062`](#after-0062)). The screens were merged ([pull request #65](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/65)) and deployed                                                                         |
-| Review fixes (`0063`–`0066`)            | 🟡 `0063` applied on 2 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as the owner in transactions that were rolled back. `0064`–`0066` are not applied yet: the connector does not take their text (see [After `0066`](#after-0066)). The screens were merged ([pull request #67](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/67)) and deployed |
+| Review fixes (`0063`–`0066`)            | 🟡 `0063` applied on 2 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as the owner, and rolled back. `0064`–`0066` are for the owner to run in the SQL editor: the connector cannot take their text (see [After `0066`](#after-0066)). The screens were merged ([pull request #67](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/67)) and deployed |
 | A day's sales target (`0067`)           | ✅ Migration applied on 3 October, its text checked byte for byte against the file, and checked on the live records as the owner in a transaction that was rolled back (see [After `0067`](#after-0067)). It went in on its own, before `0064`–`0066`                                                                                                                                                                                            |
 | Clocking in by phone (`0068`)           | ✅ Applied by the owner in the SQL editor on 6 October (the connector held it), then compared object by object with the tested build: identical, permissions included, once the paste's line endings are set aside (see [After `0068`](#after-0068)). The screens were merged ([pull request #81](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/81)) and deployed                                                              |
 
@@ -3042,6 +3042,33 @@ each third of that part went through by itself. Until they are applied, the
 live database refuses what `0063` refuses, and payroll, the till and the
 safe, a delivery's share and credits, bills, suppliers, orders and the staff
 report work as they did. The app's changes need nothing from them.
+
+**The owner can apply them in the SQL editor**, as they applied `0068`. On 6
+October they were rehearsed in the order they would now reach the live
+database: `0001`–`0063`, `0067`, `0068`, then `0064`, `0065` and `0066`. Every
+SQL test file passed on it (53), and its schema is the build's in the files'
+own order, line for line: the functions (658), columns, constraints, indexes,
+policies, triggers and every table's and function's rights. `0064`–`0066`
+replace none of the functions `0067` and `0068` make or replace, and none of
+their words spans two lines, so the line endings a paste gives them change
+nothing. A read-only look at the live records the same day found none of the
+four above: no bill, delivery, payroll line, salary payment or expense yet,
+and no rule set, so stock below zero is the default for the café and every
+item: an alert, not a manager's approval.
+
+1. Open `supabase/migrations/0064_review_fixes_payroll_till.sql` on GitHub,
+   press **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems (it replaces
+   functions), choose to run it anyway. **Success. No rows returned** is the
+   answer.
+3. The same, in a new query each, for `0065_review_fixes_deliveries.sql`,
+   then `0066_review_fixes_bills_orders.sql`: in this order.
+
+Each runs as one transaction: all of it, or nothing. Run a second time by
+mistake, `0064` stops at its first renamed function (`record_expense__run_0055`
+already exists) and changes nothing; `0065` and `0066` replace their functions
+with the same.
 
 ## After `0067`
 
