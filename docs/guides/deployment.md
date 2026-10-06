@@ -60,7 +60,7 @@ Plan a short window when the café is closed.
 | Prepaid expenses (`0060`)               | ✅ Migration applied on 30 September, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0060`](#after-0060)). The screens were merged ([pull request #62](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/62)) and deployed                                                                    |
 | Prepaid and payments put right (`0061`) | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as three roles in a transaction that was rolled back (see [After `0061`](#after-0061)). The screens were merged ([pull request #64](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/64)) and deployed                                                                       |
 | Accounts and bank put right (`0062`)    | ✅ Migration applied on 1 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as two roles in a transaction that was rolled back (see [After `0062`](#after-0062)). The screens were merged ([pull request #65](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/65)) and deployed                                                                         |
-| Review fixes (`0063`–`0066`)            | 🟡 `0063` applied on 2 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as the owner, and rolled back. `0064`–`0066` are for the owner to run in the SQL editor: the connector cannot take their text (see [After `0066`](#after-0066)). The screens were merged ([pull request #67](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/67)) and deployed |
+| Review fixes (`0063`–`0066`)            | ✅ `0063` applied on 2 October, compared object by object with the tested build (identical, permissions included) and checked on the live records as the owner, and rolled back. `0064`–`0066` applied by the owner in the SQL editor on 6 October, each new version found live (see [After `0066`](#after-0066)). The screens were merged ([pull request #67](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/67)) and deployed |
 | A day's sales target (`0067`)           | ✅ Migration applied on 3 October, its text checked byte for byte against the file, and checked on the live records as the owner in a transaction that was rolled back (see [After `0067`](#after-0067)). It went in on its own, before `0064`–`0066`                                                                                                                                                                                            |
 | Clocking in by phone (`0068`)           | ✅ Applied by the owner in the SQL editor on 6 October (the connector held it), then compared object by object with the tested build: identical, permissions included, once the paste's line endings are set aside (see [After `0068`](#after-0068)). The screens were merged ([pull request #81](https://github.com/danarahmed/the-sixties-gelato-and-cafe-/pull/81)) and deployed                                                              |
 
@@ -3033,15 +3033,15 @@ Nothing was kept. Every table's count is as it was before the check; the
 journals still end at 1100 and the audit trail at 280. The security and
 performance advisors list the same notices as before.
 
-`0064`, `0065` and `0066` are not applied yet. The connector does not answer
-a call that carries their text: `0064` was sent twice, and each time the call
+`0064`, `0065` and `0066` could not be applied with the connector, which does
+not answer a call that carries their text: `0064` was sent twice, and each time the call
 went unanswered for its minute and nothing reached the database (no migration
 recorded, no function changed, nothing running). The text alone does it: a
 query that only measured part of `0064` stopped the same way, twice, while
-each third of that part went through by itself. Until they are applied, the
-live database refuses what `0063` refuses, and payroll, the till and the
+each third of that part went through by itself. Until they were applied (6
+October, below), the live database refused what `0063` refuses, and payroll, the till and the
 safe, a delivery's share and credits, bills, suppliers, orders and the staff
-report work as they did. The app's changes need nothing from them.
+report worked as they did. The app's changes need nothing from them.
 
 **The owner can apply them in the SQL editor**, as they applied `0068`. On 6
 October they were rehearsed in the order they would now reach the live
@@ -3069,6 +3069,29 @@ Each runs as one transaction: all of it, or nothing. Run a second time by
 mistake, `0064` stops at its first renamed function (`record_expense__run_0055`
 already exists) and changes nothing; `0065` and `0066` replace their functions
 with the same.
+
+**Applied on 6 October**, by the owner, in the SQL editor, in order. A
+read-only look at the live database then found every function the three
+replace in its new version, each known by a line only that version has, and
+one version of each:
+
+- in `0064`, `reopen_payroll__run`, `payroll_refresh`, `payroll_current`,
+  `pay_salaries` and `record_advance__run`, and the new `record_expense__run`
+  and `reverse_journal__run` beside the old ones, renamed
+  `record_expense__run_0055` and `reverse_journal__run_0035`;
+- in `0065`, `receipt_share_on_hand` and `record_supplier_credit__run`;
+- in `0066`, `record_bill__run`, `update_supplier`, `po_view`,
+  `cancel_po__run` and `report_staff`.
+
+Who may call them is as tested: the functions behind the keyed writes, the
+helpers and the two renamed versions are closed to everyone; `record_expense`,
+`reverse_journal`, `update_supplier` and `report_staff` are open to the signed
+in, and none of them to the public. The live database has 705 functions in
+`public`: the rehearsal's 658 and the 47 of `citext`. Nothing recorded
+changed: one person on the staff, one item, one journal, no sales and no
+hours, and the audit trail still ends at 5. As they were run in the SQL
+editor, they are not in Supabase's list of migrations. With them, every
+migration up to `0068` is live.
 
 ## After `0067`
 
