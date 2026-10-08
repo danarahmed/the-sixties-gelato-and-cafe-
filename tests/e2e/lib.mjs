@@ -90,3 +90,22 @@ export async function open(page, path) {
     check(false, `${path}: hydrated before the whole page had arrived`);
   return res;
 }
+
+/**
+ * A product's panel on Products & Recipes (round thirteen): its tile tapped,
+ * and the tab named, if one is ("Recipe", "Sizes & prices", "Add-ons").
+ */
+export async function openProduct(page, name, tab) {
+  await page.locator(`[data-testid="product-card"][data-name="${name}"] > button`).click();
+  const panel = page.getByTestId("product-panel");
+  await panel.waitFor({ timeout: 10000 });
+  if (tab) await panel.getByRole("tab", { name: tab, exact: true }).click();
+  return panel;
+}
+
+/** An ingredient chosen by typing part of its name, then picking it from the list. */
+export async function pickItem(scope, label, name) {
+  const box = scope.getByLabel(label, { exact: true });
+  await box.fill(name);
+  await scope.locator(`[role="option"][data-name="${name}"]`).first().click();
+}

@@ -4,7 +4,7 @@
 // price that leaves the target margin. Saved, the product's card shows the
 // same cost: the one a sale posts. (Run after the other suites: the costs are
 // read from the database, as their trading left them.)
-import { chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { chromium, check, done, open, openProduct, pickItem, signIn, sql } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const B = "00000000-0000-0000-0000-0000000000b1";
@@ -40,14 +40,14 @@ console.log("▸ owner prices a new drink from what its recipe costs");
     "an empty recipe asks for its ingredients",
   );
 
-  await page.getByLabel("Ingredient 1").selectOption({ label: "Golden beans" });
+  await pickItem(page, "Ingredient 1", "Golden beans");
   await page.getByLabel("Quantity 1").fill("18");
   check(
     (await page.getByTestId("cost-1").textContent()).startsWith(fmt(dineIn)),
     `18 g of beans cost ${fmt(dineIn)}, beside the line`,
   );
   await page.getByRole("button", { name: "+ Add ingredient" }).click();
-  await page.getByLabel("Ingredient 2").selectOption({ label: "Golden cup" });
+  await pickItem(page, "Ingredient 2", "Golden cup");
   await page.getByLabel("Quantity 2").fill("1");
   await page.getByLabel("Used for 2").selectOption("to_go");
   const total = await serving.textContent();
@@ -101,7 +101,7 @@ console.log("▸ owner prices a new drink from what its recipe costs");
   );
 
   await page.getByRole("button", { name: "+ Add ingredient" }).click();
-  await page.getByLabel("Ingredient 3").selectOption({ label: "Golden beans" });
+  await pickItem(page, "Ingredient 3", "Golden beans");
   await page.getByRole("button", { name: "Create product" }).click();
   await page.getByText("Recipe line 3: choose the ingredient and its quantity").waitFor();
   check(
@@ -134,9 +134,8 @@ console.log("▸ owner prices a new drink from what its recipe costs");
     "with the prices chosen, and none where it is not sold",
   );
 
-  const saved = page.locator(".card", { has: page.locator('input[value="Golden cortado"]') });
-  await saved.waitFor({ timeout: 10000 });
-  await saved.locator("summary").click();
+  await page.getByTestId("new-product-panel-close").click();
+  const saved = await openProduct(page, "Golden cortado", "Sizes & prices");
   const row = (label) =>
     saved.locator(".tw", { hasText: "Price & margin by channel" }).locator("tr", {
       hasText: label,
@@ -144,7 +143,7 @@ console.log("▸ owner prices a new drink from what its recipe costs");
   check(
     (await row("Dine-in").textContent()).includes(fmt(dineIn)) &&
       (await row("Takeaway").textContent()).includes(fmt(toGo)),
-    "the saved product's card shows the same costs: the ones a sale posts",
+    "the saved product's panel shows the same costs: the ones a sale posts",
   );
   await ctx.close();
 }
@@ -154,8 +153,7 @@ console.log("▸ owner schedules a price, sees it waiting, and withdraws it; the
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/products");
   const today = sql(`select business_local_date('${B}', now())`);
-  const card = page.locator(".card", { has: page.locator('input[value="Golden cortado"]') });
-  await card.locator("summary").click();
+  const card = await openProduct(page, "Golden cortado", "Sizes & prices");
   await card.getByRole("button", { name: "Change a price…" }).click();
   await card
     .locator("label", { hasText: /^Channel/ })
@@ -217,13 +215,12 @@ console.log("▸ a product with no recipe says why it uses no stock, or is flagg
     ) === "A table service charge",
     "with its reason, it is: it sells at no cost, and says why",
   );
-  const card = page.locator(".card", { has: page.locator('input[value="Golden service"]') });
-  await card.waitFor({ timeout: 10000 });
-  await card.locator("summary").click();
+  await page.getByTestId("new-product-panel-close").click();
+  const card = await openProduct(page, "Golden service", "Recipe");
   check(
     (await card.getByText("Uses no stock: A table service charge.").count()) === 1 &&
       (await card.getByTestId("cost-warning").count()) === 0,
-    "its card says so, and does not flag it",
+    "its panel says so, and does not flag it",
   );
   await card.getByRole("button", { name: "It does use stock" }).click();
   await card.getByTestId("cost-warning").waitFor({ timeout: 10000 });
