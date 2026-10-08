@@ -2212,6 +2212,23 @@ Built and tested:
   the paste's line endings are set aside, with the tables, the columns, the
   index and the permissions as built.
 
+- **Round eleven: the menu matrix and warnings on your phone (`0072`).** The
+  owner's choice of four ideas: two built, two to be explained first.
+  - **The menu matrix** (**Reports → Menu matrix**): every product sold in
+    four weeks or three months, the whole menu or a category, by what it
+    sells against what it earns on each one, in four groups — keep, raise
+    the price (by how much), show it more, change it or drop it — with a
+    chart and the lists. No migration: the sales analysis by product.
+  - **Warnings on your phone (`0072`)**: the dashboard's warnings sent to
+    the phones of those who see them, in each one's language, within about
+    five minutes: turned on for the café on Settings, then on each phone on
+    My account (every warning, or the urgent ones). The database's timer
+    queues what is new and calls the app's address with its own secret; the
+    app sends each in its phone's language.
+    Built and tested: the SQL suite `phone_warnings`, unit tests
+    (`menuMatrix`, `phoneWarnings`) and two browser suites (`menumatrix`,
+    `phonewarn`).
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
