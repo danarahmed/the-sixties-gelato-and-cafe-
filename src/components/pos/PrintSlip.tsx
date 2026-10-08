@@ -362,9 +362,7 @@ function CheckSlip({
 
       <div className="sl-sums">
         <div className="sl-row sl-small">
-          <span>
-            {fmtQty(count)} {t("pos.items")}
-          </span>
+          <span>{t("{n} item(s)", { n: fmtQty(count) })}</span>
           {discounted && <span>{money(job.subtotal ?? job.total + (job.discount ?? 0))}</span>}
         </div>
         {discounted && (
@@ -496,11 +494,7 @@ function TicketSlip({ ticket, time }: { ticket: BaristaTicket; time: string }) {
         </>
       )}
       <div className="tk-foot">
-        {count > 0 && (
-          <>
-            {fmtQty(count)} {t("pos.items")} ·{" "}
-          </>
-        )}
+        {count > 0 && <>{t("{n} item(s)", { n: fmtQty(count) })} · </>}
         {ticket.by}
       </div>
     </section>

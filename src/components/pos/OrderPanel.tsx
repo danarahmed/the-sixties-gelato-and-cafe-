@@ -631,9 +631,7 @@ export function OrderPanel({
             <div className="order-sub">
               <span>
                 {t("pos.subtotal")}{" "}
-                <span className="muted">
-                  · {fmtQty(count)} {t("pos.items")}
-                </span>
+                <span className="muted">· {t("{n} item(s)", { n: fmtQty(count) })}</span>
               </span>
               <span className="mono">{fmtIQD(subtotal.toNumber())}</span>
             </div>
@@ -667,9 +665,7 @@ export function OrderPanel({
             <span>
               {t("pos.total")}{" "}
               {!showDiscount && (
-                <span className="muted">
-                  · {fmtQty(count)} {t("pos.items")}
-                </span>
+                <span className="muted">· {t("{n} item(s)", { n: fmtQty(count) })}</span>
               )}
             </span>
             <strong className="mono">{fmtIQD(due.toNumber())}</strong>

@@ -21,6 +21,13 @@ describe("a plural a phrase leaves open agrees with its number", () => {
     expect(en(open, { n: 0, amount: "0 IQD" })).toBe("0 bills still open, 0 IQD in all.");
   });
 
+  it("the till's order and the receipt: 1 item, 3 items, 1.5 items", () => {
+    expect(en("{n} item(s)", { n: "1" })).toBe("1 item");
+    expect(en("{n} item(s)", { n: "3" })).toBe("3 items");
+    expect(en("{n} item(s)", { n: "1,250" })).toBe("1,250 items");
+    expect(en("{n} item(s)", { n: "1.5" })).toBe("1.5 items");
+  });
+
   it("the verb right after it agrees too", () => {
     expect(en("{n} red alert(s) wait for an answer.", { n: 1 })).toBe(
       "1 red alert waits for an answer.",
@@ -95,6 +102,15 @@ describe("a count in Arabic takes the form Arabic gives its number", () => {
   const ar = translator(book("ar"), "rtl", "ar");
   const bills = (n: number) =>
     ar("{n} bill(s) still open, {amount} in all.", { n, amount: "3,000 IQD" });
+
+  it("the till's item count in Arabic and Kurdish", () => {
+    expect(ar("{n} item(s)", { n: "1" })).toBe("صنف واحد");
+    expect(ar("{n} item(s)", { n: "2" })).toBe("صنفان");
+    expect(ar("{n} item(s)", { n: "5" })).toBe("5 أصناف");
+    expect(ar("{n} item(s)", { n: "12" })).toBe("12 صنفًا");
+    const ckb = translator(book("ckb"), "rtl", "ckb");
+    expect(ckb("{n} item(s)", { n: "1" })).toBe("1 کاڵا");
+  });
 
   it("one, two, three to ten, eleven to ninety-nine, and a hundred", () => {
     expect(bills(1)).toBe("فاتورة واحدة ما زالت مفتوحة، بمجموع 3,000 IQD.");
