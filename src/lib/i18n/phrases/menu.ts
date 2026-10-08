@@ -4,6 +4,59 @@ import type { PhraseBook } from "./types";
  * The menu: Products & Recipes, categories, recipe changes, Production and its batch recipes, and their forms and messages.
  */
 const phrases: PhraseBook = {
+  // Products & Recipes as tiles, each product in its own panel (round thirteen).
+  Basics: { ar: "الأساسيات", ckb: "بنەڕەتەکان" },
+  "Sizes & prices": { ar: "الأحجام والأسعار", ckb: "قەبارە و نرخەکان" },
+  "Tap a product to see and change its recipe, prices, sizes and add-ons. Costs are today's, worked out exactly as a sale posts them; a price or recipe changed from a date leaves the sales before it as they were.":
+    {
+      ar: "اضغط على منتج لترى وتغيّر وصفته وأسعاره وأحجامه وإضافاته. التكاليف هي تكاليف اليوم، محسوبة تمامًا كما تُسجّلها عملية البيع؛ والسعر أو الوصفة التي تتغيّر من تاريخ ما تترك المبيعات التي قبله كما كانت.",
+      ckb: "دەست لە بەرهەمێک بدە بۆ بینین و گۆڕینی ڕەچەتە، نرخ، قەبارە و زیادکراوەکانی. تێچووەکان هی ئەمڕۆن، ڕێک وەک فرۆشتنێک تۆماریان دەکات هەژمار کراون؛ نرخ یان ڕەچەتەیەک کە لە بەروارێکەوە دەگۆڕێت، فرۆشتنەکانی پێش ئەو وەک خۆیان دەهێڵێتەوە.",
+    },
+  "Add the first one with Add menu product.": {
+    ar: "أضف أول منتج بزر «إضافة منتج للقائمة».",
+    ckb: "یەکەمیان زیاد بکە بە «زیادکردنی بەرهەمی مێنیو».",
+  },
+  "Cost of the price": { ar: "التكلفة من السعر", ckb: "تێچوو لە نرخ" },
+  "{n} group(s)": {
+    ar: "{n, plural, one {مجموعة واحدة} two {مجموعتان} few {# مجموعات} other {# مجموعة}}",
+    ckb: "{n} گرووپ",
+  },
+  "No price yet": { ar: "لا سعر بعد", ckb: "هێشتا نرخی نییە" },
+  "Cost unknown": { ar: "التكلفة غير معروفة", ckb: "تێچوو نەزانراوە" },
+  "What one serving costs, as a share of its price": {
+    ar: "تكلفة الحصة الواحدة، كنسبة من سعرها",
+    ckb: "تێچووی یەک بەش، وەک ڕێژەیەک لە نرخەکەی",
+  },
+  "cost {pct}%": { ar: "التكلفة {pct}%", ckb: "تێچوو {pct}%" },
+  "{n} size(s)": {
+    ar: "{n, plural, one {حجم واحد} two {حجمان} few {# أحجام} other {# حجمًا}}",
+    ckb: "{n} قەبارە",
+  },
+  "+ add-ons": { ar: "+ إضافات", ckb: "+ زیادکراوەکان" },
+  "Type to find an ingredient…": {
+    ar: "اكتب لتجد مكوّنًا…",
+    ckb: "بنووسە بۆ دۆزینەوەی پێکهاتەیەک…",
+  },
+  "No stock item by that name.": {
+    ar: "لا صنف مخزون بهذا الاسم.",
+    ckb: "هیچ کاڵایەکی کۆگا بەم ناوە نییە.",
+  },
+  "Only {product} offers it.": {
+    ar: "{product} وحده يقدّمها.",
+    ckb: "تەنها {product} پێشکەشی دەکات.",
+  },
+  "Also offered with {products}: a change here changes it there too.": {
+    ar: "تُقدَّم أيضًا مع {products}: أي تغيير هنا يغيّرها هناك أيضًا.",
+    ckb: "هەروەها لەگەڵ {products} پێشکەش دەکرێت: گۆڕانکاری لێرە لەوێش دەیگۆڕێت.",
+  },
+  "+ New group for {product}": {
+    ar: "+ مجموعة جديدة لـ {product}",
+    ckb: "+ گرووپێکی نوێ بۆ {product}",
+  },
+  "For a {pct}% margin, rounded up to {step}": {
+    ar: "لهامش {pct}%، مقرّبًا صعودًا إلى {step}",
+    ckb: "بۆ قازانجی {pct}%، بەرەو سەرەوە خڕکراوەتەوە بۆ {step}",
+  },
   // Words the menu's screens share.
   Category: { ar: "الفئة", ckb: "پۆل" },
   Channel: { ar: "القناة", ckb: "کەناڵ" },

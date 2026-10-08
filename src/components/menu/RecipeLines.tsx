@@ -4,6 +4,7 @@
  * for a product, what it is used for — each with what it costs today. Shared by
  * the new-product form, a product's recipe change and a batch recipe.
  */
+import { useId, useState } from "react";
 import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import { NO_CHANNELS, type ChannelSet } from "@/lib/channels";
@@ -20,6 +21,7 @@ import {
   type LineUse,
 } from "@/components/menu/recipeCost";
 import { Icon, StatusMark } from "@/components/Icon";
+import { namesMatch, searchText } from "@/lib/find";
 
 export interface ItemOpt extends CostedItem {
   name: string;
@@ -105,6 +107,107 @@ export function filledLines(lines: LineDraft[], set: ChannelSet) {
 
 export const iqd = (d: Decimal) => fmtIQD(d.toNumber());
 
+/** How many matches the list shows at once. */
+const PICK_MAX = 8;
+
+/**
+ * An ingredient found by typing part of its name (round thirteen), in place of
+ * scrolling a long list: the matches show as it is typed, arrows and Enter
+ * pick one, and the line takes the item's own unit.
+ */
+export function ItemPicker({
+  items,
+  value,
+  label,
+  onPick,
+}: {
+  items: ItemOpt[];
+  value: string;
+  label: string;
+  onPick: (itemId: string) => void;
+}) {
+  const { t } = useT();
+  const list = useId();
+  const chosen = items.find((i) => i.id === value) ?? null;
+  const [typed, setTyped] = useState<string | null>(null);
+  const [active, setActive] = useState(0);
+  const open = typed !== null;
+  const q = searchText(typed ?? "");
+  const matches = (q ? items.filter((i) => namesMatch([i.name], q)) : items).slice(0, PICK_MAX);
+  const pick = (i: ItemOpt | undefined) => {
+    if (i) onPick(i.id);
+    setTyped(null);
+  };
+  return (
+    <div className="pf-ing item-pick">
+      <input
+        role="combobox"
+        aria-label={label}
+        aria-expanded={open}
+        aria-controls={list}
+        aria-autocomplete="list"
+        aria-activedescendant={open && matches[active] ? `${list}-${active}` : undefined}
+        autoComplete="off"
+        dir="auto"
+        style={inputStyle}
+        placeholder={t("Type to find an ingredient…")}
+        value={typed ?? chosen?.name ?? ""}
+        onFocus={(e) => e.currentTarget.select()}
+        onChange={(e) => {
+          setTyped(e.target.value);
+          setActive(0);
+        }}
+        onBlur={() => setTyped(null)}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            if (!open) setTyped("");
+            else setActive((a) => Math.min(a + 1, Math.max(matches.length - 1, 0)));
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setActive((a) => Math.max(a - 1, 0));
+          } else if (e.key === "Enter" && open) {
+            e.preventDefault();
+            pick(matches[active]);
+          } else if (e.key === "Escape" && open) {
+            e.stopPropagation();
+            setTyped(null);
+          }
+        }}
+      />
+      {open && (
+        <ul className="item-pick-list" id={list} role="listbox" aria-label={label}>
+          {matches.length === 0 ? (
+            <li className="muted item-pick-none">{t("No stock item by that name.")}</li>
+          ) : (
+            matches.map((i, k) => (
+              <li
+                key={i.id}
+                id={`${list}-${k}`}
+                role="option"
+                data-name={i.name}
+                aria-selected={k === active}
+                className={k === active ? "on" : undefined}
+                onMouseDown={(e) => {
+                  // Picked before the box loses its focus and closes the list.
+                  e.preventDefault();
+                  pick(i);
+                }}
+                onMouseEnter={() => setActive(k)}
+              >
+                {i.name}
+                <span className="muted">
+                  {unitName(i.units.find((u) => u.code === i.baseUnit)?.label ?? i.baseUnit, t)}
+                </span>
+              </li>
+            ))
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export function RecipeLinesEditor({
   items,
   lines,
@@ -166,25 +269,12 @@ export function RecipeLinesEditor({
         return (
           <div key={l.key} className="pf-line-wrap">
             <div className="pf-line">
-              <select
-                className="pf-ing"
-                aria-label={t("Ingredient {n}", { n })}
-                style={inputStyle}
+              <ItemPicker
+                items={items}
                 value={l.itemId}
-                onChange={(e) =>
-                  setLine(l.key, {
-                    itemId: e.target.value,
-                    unit: byId.get(e.target.value)?.baseUnit ?? "",
-                  })
-                }
-              >
-                <option value="">{t("Choose an ingredient…")}</option>
-                {items.map((i) => (
-                  <option key={i.id} value={i.id}>
-                    {i.name}
-                  </option>
-                ))}
-              </select>
+                label={t("Ingredient {n}", { n })}
+                onPick={(id) => setLine(l.key, { itemId: id, unit: byId.get(id)?.baseUnit ?? "" })}
+              />
               <input
                 className="pf-qty"
                 aria-label={t("Quantity {n}", { n })}

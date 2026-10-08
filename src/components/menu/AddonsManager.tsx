@@ -42,13 +42,13 @@ interface Names {
   ckb: string;
 }
 /** For those who edit the menu: the items a recipe may use, costed. */
-interface Editor {
+export interface Editor {
   items: ItemOpt[];
   decimals: number;
   today: string;
 }
 /** A size an add-on may have its own quantities for. */
-interface SizeOpt {
+export interface SizeOpt {
   id: string;
   label: string;
 }
@@ -126,14 +126,17 @@ function recipeSummary(
 }
 
 /** A group of add-ons, new or changed: its names, and the fewest and the most a line takes. */
-function GroupForm({
+export function GroupForm({
   group,
   nextSort,
   onDone,
+  onCreated,
 }: {
   group: MenuAddonGroup | null;
   nextSort: number;
   onDone: () => void;
+  /** A new group, made from a product's panel: that product offers it next. */
+  onCreated?: (groupId: string) => Promise<string | null>;
 }) {
   const op = useOperation();
   const { t } = useT();
@@ -184,10 +187,20 @@ function GroupForm({
           key,
         ),
       );
-      if (r.ok) {
-        router.refresh();
-        onDone();
-      } else setMsg({ ok: false, text: r.error });
+      if (!r.ok) {
+        setMsg({ ok: false, text: r.error });
+        return;
+      }
+      if (!group && onCreated) {
+        const failed = await onCreated(r.data.groupId);
+        if (failed) {
+          setMsg({ ok: false, text: failed });
+          router.refresh();
+          return;
+        }
+      }
+      router.refresh();
+      onDone();
     });
   }
 
@@ -745,19 +758,22 @@ function AddonRow({
 }
 
 /** A group: what it asks for, who offers it, its add-ons, and a new one added. */
-function GroupCard({
+export function GroupCard({
   group,
   editor,
   sizes,
   offeredOn,
   labelOf,
+  within,
 }: {
   group: MenuAddonGroup;
   editor: Editor | null;
   sizes: SizeOpt[];
-  /** The products that offer it. */
+  /** The products that offer it (the others, seen from a product's panel). */
   offeredOn: string[];
   labelOf: Map<string, string>;
+  /** Seen from this product's panel. */
+  within?: string;
 }) {
   const { t } = useT();
   const [mode, setMode] = useState<"none" | "edit" | "add">("none");
@@ -788,10 +804,16 @@ function GroupCard({
           </button>
         )}
       </div>
-      <p className="pf-hint">
-        {offeredOn.length === 0
-          ? t("No product offers it yet: choose it on a product's card, under Add-ons offered.")
-          : t("Offered with {products}", { products: offeredOn.join(", ") })}
+      <p className="pf-hint" data-testid="group-shared">
+        {within
+          ? offeredOn.length === 0
+            ? t("Only {product} offers it.", { product: within })
+            : t("Also offered with {products}: a change here changes it there too.", {
+                products: offeredOn.join(", "),
+              })
+          : offeredOn.length === 0
+            ? t("No product offers it yet: choose it on a product's card, under Add-ons offered.")
+            : t("Offered with {products}", { products: offeredOn.join(", ") })}
       </p>
       {editor && mode === "edit" && (
         <GroupForm group={group} nextSort={group.sortOrder} onDone={() => setMode("none")} />
@@ -838,6 +860,46 @@ function GroupCard({
  * for every size or a size's own. Products choose the groups they offer on
  * their own cards.
  */
+/** Each size's label: "Latte · Large", or the product's name when it has one size. */
+export function sizeLabels(products: MenuProduct[]): Map<string, string> {
+  const labelOf = new Map<string, string>();
+  for (const p of products)
+    for (const v of p.variants)
+      labelOf.set(
+        v.id,
+        p.variants.length > 1 || v.name !== p.name ? `${p.name} · ${v.name}` : p.name,
+      );
+  return labelOf;
+}
+
+/** The sizes a group is offered with, for an add-on's quantities of their own. */
+export function groupSizes(
+  groupId: string,
+  products: MenuProduct[],
+  offers: ProductAddonOffer[],
+  labelOf: Map<string, string>,
+): SizeOpt[] {
+  const out = new Map<string, string>();
+  for (const o of offers.filter((x) => x.groupId === groupId)) {
+    const p = products.find((x) => x.id === o.productId);
+    if (!p) continue;
+    for (const v of p.variants)
+      if (!v.soldAsBought && (o.variantId ? v.id === o.variantId : v.isActive))
+        out.set(v.id, labelOf.get(v.id) ?? v.name);
+  }
+  return [...out].map(([id, label]) => ({ id, label }));
+}
+
+/** The products that offer a group, by name. */
+export function groupProducts(
+  groupId: string,
+  products: MenuProduct[],
+  offers: ProductAddonOffer[],
+): MenuProduct[] {
+  const ids = new Set(offers.filter((o) => o.groupId === groupId).map((o) => o.productId));
+  return products.filter((p) => ids.has(p.id));
+}
+
 export function AddonsManager({
   groups,
   products,
@@ -852,30 +914,11 @@ export function AddonsManager({
 }) {
   const { t } = useT();
   const [adding, setAdding] = useState(false);
-  const labelOf = new Map<string, string>();
-  for (const p of products)
-    for (const v of p.variants)
-      labelOf.set(
-        v.id,
-        p.variants.length > 1 || v.name !== p.name ? `${p.name} · ${v.name}` : p.name,
-      );
+  const labelOf = sizeLabels(products);
   const nextSort = groups.reduce((m, g) => Math.max(m, g.sortOrder), 0) + 1;
-
-  function sizesFor(groupId: string): SizeOpt[] {
-    const out = new Map<string, string>();
-    for (const o of offers.filter((x) => x.groupId === groupId)) {
-      const p = products.find((x) => x.id === o.productId);
-      if (!p) continue;
-      for (const v of p.variants)
-        if (!v.soldAsBought && (o.variantId ? v.id === o.variantId : v.isActive))
-          out.set(v.id, labelOf.get(v.id) ?? v.name);
-    }
-    return [...out].map(([id, label]) => ({ id, label }));
-  }
-  function offeredOn(groupId: string): string[] {
-    const ids = new Set(offers.filter((o) => o.groupId === groupId).map((o) => o.productId));
-    return products.filter((p) => ids.has(p.id)).map((p) => p.name);
-  }
+  const sizesFor = (groupId: string) => groupSizes(groupId, products, offers, labelOf);
+  const offeredOn = (groupId: string) =>
+    groupProducts(groupId, products, offers).map((p) => p.name);
 
   if (groups.length === 0 && !editor) return null;
   return (

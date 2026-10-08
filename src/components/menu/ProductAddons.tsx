@@ -8,6 +8,14 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import { asks } from "@/components/pos/OptionsSheet";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import {
+  GroupCard,
+  GroupForm,
+  groupProducts,
+  groupSizes,
+  sizeLabels,
+  type Editor,
+} from "@/components/menu/AddonsManager";
 
 type Msg = { ok: boolean; text: string } | null;
 /** A group as ticked: offered or not, and with every size or the sizes ticked. */
@@ -210,6 +218,89 @@ export function ProductAddons({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * A product's add-ons, set up from its own panel (round thirteen, the owner's
+ * choice): which groups it offers and with which sizes; each group it offers,
+ * with its add-ons, prices and what they use, changed right here — a group
+ * stays shared, so the panel says which other products offer it and that a
+ * change here changes it there too; and a new group made for this product,
+ * which it offers as soon as it is saved.
+ */
+export function ProductAddonGroups({
+  product,
+  groups,
+  offers,
+  products,
+  editor,
+}: {
+  product: MenuProduct;
+  groups: MenuAddonGroup[];
+  offers: ProductAddonOffer[];
+  products: MenuProduct[];
+  /** Null for those who may look but not change. */
+  editor: Editor | null;
+}) {
+  const op = useOperation();
+  const { t } = useT();
+  const [adding, setAdding] = useState(false);
+  const labelOf = sizeLabels(products);
+  const mine = offers.filter((o) => o.productId === product.id);
+  const offered = groups.filter((g) => mine.some((o) => o.groupId === g.id));
+  const nextSort = groups.reduce((m, g) => Math.max(m, g.sortOrder), 0) + 1;
+
+  /** The new group offered with this product, beside those it offers already. */
+  async function offer(groupId: string): Promise<string | null> {
+    const r = await op.run(`productAddons:${product.id}`, (key) =>
+      setProductAddonsAction(
+        {
+          productId: product.id,
+          groups: [
+            ...mine.map((o) => ({ groupId: o.groupId, variantId: o.variantId })),
+            { groupId, variantId: null },
+          ],
+        },
+        key,
+      ),
+    );
+    return r.ok ? null : r.error;
+  }
+
+  return (
+    <div className="grid" style={{ gap: 14 }} data-testid="product-addon-groups">
+      <ProductAddons product={product} groups={groups} offers={offers} canEdit={editor !== null} />
+      {offered.map((g) => (
+        <GroupCard
+          key={g.id}
+          group={g}
+          editor={editor}
+          sizes={groupSizes(g.id, products, offers, labelOf)}
+          offeredOn={groupProducts(g.id, products, offers)
+            .filter((p) => p.id !== product.id)
+            .map((p) => p.name)}
+          labelOf={labelOf}
+          within={product.name}
+        />
+      ))}
+      {editor &&
+        (adding ? (
+          <GroupForm
+            group={null}
+            nextSort={nextSort}
+            onCreated={offer}
+            onDone={() => setAdding(false)}
+          />
+        ) : (
+          <div>
+            <button onClick={() => setAdding(true)} data-testid="group-new">
+              {t("+ New group for {product}", { product: product.name })}
+            </button>
+          </div>
+        ))}
+      <OperationStatus op={op} />
     </div>
   );
 }
