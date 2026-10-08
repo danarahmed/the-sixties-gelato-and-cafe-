@@ -4,6 +4,11 @@ import type { PhraseBook } from "./types";
  * Money coming in and going out at the counter: Sales, counting the drawer, moving cash, card takings, and Vendors (suppliers, bills and paying them), with their forms and messages.
  */
 const phrases: PhraseBook = {
+  // The count on the till's order and on the receipt: "1 item", "3 items".
+  "{n} item(s)": {
+    ar: "{n, plural, one {صنف واحد} two {صنفان} few {# أصناف} other {# صنفًا}}",
+    ckb: "{n} کاڵا",
+  },
   // Sales: the page's heading and its figures.
   "Last 30 trading days · {timezone}": {
     ar: "آخر 30 يوم عمل · {timezone}",
