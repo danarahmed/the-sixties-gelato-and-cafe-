@@ -60,7 +60,7 @@ export function PhoneWarningsSetup({
       {on ? (
         <>
           <p className="badge ok" style={{ margin: 0, justifySelf: "start" }}>
-            {t("On: {n} phone(s) get them", { n: phones ?? 0 })}
+            {t("On, for {n} phone(s)", { n: phones ?? 0 })}
           </p>
           {!canSend && (
             <p

@@ -72,7 +72,9 @@ insert into reset_keep values
   ('reason_code'), ('app_language'), ('app_phrase'), ('business_rule'), ('business_rule_history'),
   ('modifier_group'), ('modifier'), ('modifier_price'), ('modifier_recipe_line'), ('product_modifier_group'),
   ('employee'), ('customer'), ('customer_address'), ('audit_log'),
-  ('clock_screen'), ('clock_secret'), ('staff_phone'), ('payment_method');
+  ('clock_screen'), ('clock_secret'), ('staff_phone'), ('payment_method'),
+  -- Phone warnings (0072): on or off, and each login's phones; what waited is cleared.
+  ('push_config'), ('push_device');
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');
@@ -119,7 +121,8 @@ truncate table
   phone_link, pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   pos_tab_line_modifier, prepaid_expense, prepaid_release,
   production_batch,
-  purchase_invoice, purchase_order, purchase_order_line, receipt_correction, reconciliation_issue, request_log,
+  purchase_invoice, purchase_order, purchase_order_line, push_message, receipt_correction, reconciliation_issue,
+  request_log,
   sale_adjustment,
   sale_refund, sale_refund_line, sale_refund_tender,
   salary_payment, salary_payment_line,

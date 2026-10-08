@@ -250,6 +250,10 @@ export function MenuMatrixChart({
             style={{
               left: `${(px(shown.sold) / W) * 100}%`,
               top: `${(py(shown.perItem) / H) * 100}%`,
+              // Kept inside the chart: a mark near an edge has its label on the inner side.
+              transform: `translate(${
+                px(shown.sold) / W > 0.65 ? "-100%" : px(shown.sold) / W < 0.35 ? "0%" : "-50%"
+              }, calc(-100% - 10px))`,
             }}
           >
             <strong>{shown.name}</strong>
