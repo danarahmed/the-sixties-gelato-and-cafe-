@@ -66,6 +66,7 @@ Plan a short window when the café is closed.
 | Ways to pay (`0069`)                    | ✅ Applied by the owner in the SQL editor on 8 October, then compared object by object with the tested build: every new and replaced function identical once the paste's line endings are set aside, the two tables (row-level security on), the columns and permissions as built (see [After `0069`](#after-0069)). No way to pay is added yet                                                                                                  |
 | Plan learns, What to buy (`0070`)       | ✅ Applied by the owner in the SQL editor on 8 October, then compared with the tested build: the plan, What to buy, `set_item_keeps` and `waste_coach` identical once the paste's line endings are set aside, with `item.keeps_days` and the index `inventory_movement_item_time` (see [After `0070`](#after-0070))                                                                                                                              |
 | Labour target (`0071`)                  | ✅ Applied by the owner in the SQL editor on 8 October, then compared with the tested build: the rules' list and defaults and `labour_target` identical once the paste's line endings are set aside; the rule is offered on Settings → Rules, at 0 (none) until it is set (see [After `0071`](#after-0071))                                                                                                                                      |
+| Phone warnings (`0072`)                 | ⏳ Waiting for the owner to apply it in the SQL editor (see [After `0072`](#after-0072)). Until then Settings says the update is not applied, and My account shows nothing of it                                                                                                                                                                                                                                                                 |
 
 ## 0. Before you start
 
@@ -3412,6 +3413,65 @@ It is applied by the owner, in Supabase's SQL editor:
    press **Raw**, select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**.
+3. **Success. No rows returned** is the answer.
+
+## After `0072`
+
+Migration `0072` is the owner's choice of warnings on the phone: the warnings
+the dashboard shows under **Needs you** come to the phones of those who see
+them, in each one's language, within about five minutes, without opening the
+app.
+
+- **For the café** (Settings → **Phone warnings**): the owner, or the general
+  manager, presses **Turn phone warnings on for the café** once. The app makes
+  the café's pair of keys for sending and gives the database its production
+  address; the database keeps both, and a secret of its own.
+- **On a phone** (My account → **Warnings on this phone**): whoever sees the
+  dashboard's warnings (the owner, the general manager, a branch manager, the
+  accountant, the auditor) presses **Turn on warnings on this phone**, allows
+  notifications, and chooses every warning or the urgent (red) ones only; then
+  **Send a test**. On an iPhone the app must first be on the Home Screen
+  (Share → Add to Home Screen), and opened from there.
+- **What is sent:** each new warning, once, and again if it turns red; an
+  answered or snoozed one is not; more than three at once come as one, saying
+  how many. A tap opens the page to act on it. A phone that is gone (the app
+  removed, notifications turned off) is dropped by itself.
+
+What it changes:
+
+- **New tables:** `push_config`, `push_device`, `push_message` (only the
+  functions read and write them); `alert` gains `pushed_urgency`.
+- **New functions:** `phone_warnings`, `turn_on_phone_warnings`,
+  `turn_off_phone_warnings`, `save_push_device`, `remove_push_device`,
+  `send_test_warning` (signed in, each checking its permission; the writes
+  keyed); `push_take` and `push_done` (called by the app's `/api/push/send`
+  with no one signed in, each answering only to the database's secret);
+  `push_queue`, `push_kick`, `push_tick`, `member_has_permission` and
+  `push_can_send` (the database's own).
+- **Extensions:** it turns on `pg_net` (the database's calls out) and
+  `pg_cron` (its timer), and sets the timer to run `push_tick()` every five
+  minutes. If Supabase refuses either, the rest is applied all the same, and
+  Settings says the database cannot send; they are then turned on under
+  Database → Extensions, and the file run again.
+- Nothing recorded changes.
+
+The app's screens need it: before it is applied, Settings says the update is
+not applied and My account shows nothing of it.
+
+It was rehearsed on the tested build (`scripts/test-sql.sh`), with its own
+suite (`tests/sql/phone_warnings.test.sql`): turned on and off, phones saved
+and removed, the queue (red only, answered ones left out, more than three as
+one, a person no longer at the café left out), the secret, and who may call
+what. The timer and the calls out are Supabase's own: they are checked live
+once it is applied.
+
+It is applied by the owner, in Supabase's SQL editor:
+
+1. Open the file `supabase/migrations/0072_phone_warnings.sql` on GitHub,
+   press **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
 3. **Success. No rows returned** is the answer.
 
 ## Clearing the test records

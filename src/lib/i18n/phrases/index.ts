@@ -31,6 +31,7 @@ import payments from "./payments";
 import learning from "./learning";
 import staffcheck from "./staffcheck";
 import menumatrix from "./menumatrix";
+import phonewarnings from "./phonewarnings";
 
 /**
  * The areas' phrase books; "db" holds what the database refuses with, "alerts"
@@ -65,6 +66,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   learning,
   staffcheck,
   menumatrix,
+  phonewarnings,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

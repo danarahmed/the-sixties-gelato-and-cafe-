@@ -14,6 +14,8 @@ import { getBusinessRules } from "@/lib/db/rules";
 import { CHOICE_LABEL, RULE_LABEL } from "@/lib/rules";
 import { getPaymentMethods } from "@/lib/db/paymentMethods";
 import { PaymentMethodsManager } from "@/components/settings/PaymentMethodsManager";
+import { getPhoneWarnings } from "@/lib/db/push";
+import { PhoneWarningsSetup } from "@/components/push/PhoneWarningsSetup";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +30,7 @@ export default async function SettingsPage() {
   const profile = await requirePermission("settings.manage");
   const t = await getT();
   const today = businessToday(profile.timezone);
-  const [cfg, locations, members, thresholds, rules, methods] = await Promise.all([
+  const [cfg, locations, members, thresholds, rules, methods, phoneWarnings] = await Promise.all([
     getBusinessConfig(),
     getLocations(),
     getMembers(),
@@ -36,6 +38,8 @@ export default async function SettingsPage() {
     getBusinessRules(),
     // The café's own ways to pay (0069); null before it is applied.
     getPaymentMethods(),
+    // Warnings on phones (0072); null before it is applied.
+    getPhoneWarnings(),
   ]);
   // The whole café's rules, as they stand; each has its own rows and history on Rules.
   const cafeRules = rules.definitions.flatMap((d) => {
@@ -157,6 +161,26 @@ export default async function SettingsPage() {
           </p>
         ) : (
           <PaymentMethodsManager methods={methods} />
+        )}
+      </div>
+
+      <div className="card" data-testid="settings-phone-warnings" id="phone-warnings">
+        <h3 style={{ marginTop: 0 }}>{t("Phone warnings")}</h3>
+        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+          {t(
+            "The warnings of the dashboard, sent to the phones of those who see them, in each one's language, within about five minutes. Turned on here once for the café; then each person turns them on on a phone, on My account.",
+          )}
+        </p>
+        {phoneWarnings === null ? (
+          <p className="muted" style={{ fontSize: ".85rem" }} data-testid="phone-warnings-missing">
+            {t("This needs the database update 0072, which has not been applied yet.")}
+          </p>
+        ) : (
+          <PhoneWarningsSetup
+            on={phoneWarnings.on}
+            canSend={phoneWarnings.canSend}
+            phones={phoneWarnings.phones}
+          />
         )}
       </div>
 

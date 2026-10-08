@@ -119,7 +119,8 @@ export function homeFor(permissions: readonly string[]): string {
  * Addresses anyone may open without signing in. The clock (0068) is a phone
  * or a clock screen, known by the key it keeps, not by a sign-in.
  */
-export const PUBLIC_PATHS = ["/login", "/auth", "/setup", "/clock"];
+// /api/push: the database calls it with its own secret when phone warnings wait (0072).
+export const PUBLIC_PATHS = ["/login", "/auth", "/setup", "/clock", "/api/push"];
 
 export function isPublicPath(path: string): boolean {
   return PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`));

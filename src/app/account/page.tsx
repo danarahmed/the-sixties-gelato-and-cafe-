@@ -5,6 +5,8 @@ import { roleLabel } from "@/lib/format";
 import { signOutAction } from "@/lib/auth/actions";
 import { PasswordForm } from "./PasswordForm";
 import { PinForm } from "./PinForm";
+import { getPhoneWarnings } from "@/lib/db/push";
+import { PhoneWarnings } from "@/components/push/PhoneWarnings";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +16,8 @@ export default async function AccountPage() {
   const s = await getSession();
   if (!s.configured) redirect("/setup");
   if (!s.signedIn) redirect("/login");
+  // Warnings on this phone (0072), for whoever sees the dashboard's; null before 0072.
+  const warnings = s.profile ? await getPhoneWarnings() : null;
 
   return (
     <div className="grid" style={{ gap: 16, maxWidth: 720 }}>
@@ -78,6 +82,10 @@ export default async function AccountPage() {
             <PinForm hasPin={s.profile.hasPin} />
           </div>
         )}
+
+      {warnings?.mayReceive && (
+        <PhoneWarnings on={warnings.on} publicKey={warnings.publicKey} canSend={warnings.canSend} />
+      )}
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>{t("account.changePassword")}</h3>
