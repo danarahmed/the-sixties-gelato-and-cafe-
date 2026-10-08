@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   saveEmployeeAction,
@@ -22,13 +22,17 @@ import type { LinkedPhone } from "@/lib/clock";
 type Msg = { ok: boolean; text: string } | null;
 type Place = { id: string; name: string };
 type Login = { id: string; name: string };
-type Open = { what: "edit" | "pin" | "pay" | "left" | "phone"; id: string } | null;
+type Part = "edit" | "pin" | "pay" | "phone" | "left";
+
+/** With this many people or more, a box to find one by name. */
+const SEARCH_FROM = 6;
 
 /**
- * Who works here (0049): each person, where they work, since when, their
- * login and whether they have a PIN to clock with; their pay only for those
- * who see payroll. A manager adds people and sets their PINs; those who run
- * payroll set what they are paid.
+ * Who works here (0049), as the owner chose: a short line a person — their
+ * name and what they do, where, whether they are in, their PIN, their phone
+ * and their pay — and a tap on it opens a panel with everything else and each
+ * thing to change, a tab each (details, PIN, pay, phone, last day). The pay
+ * only for those who see payroll; the list downloads as a spreadsheet.
  */
 export function StaffPeople({
   people,
@@ -53,8 +57,9 @@ export function StaffPeople({
   phones?: Record<string, LinkedPhone> | null;
 }) {
   const { t } = useT();
-  const [open, setOpen] = useState<Open>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [find, setFind] = useState("");
   // What the last people added came to, said under the list once the form is closed.
   const [added, setAdded] = useState<Msg>(null);
   // A link to the form opens it: Getting set up's /staff#add-person.
@@ -64,76 +69,40 @@ export function StaffPeople({
     document.getElementById("add-person")?.scrollIntoView({ block: "center" });
   }, [canManage]);
   const seesPay = people.some((p) => p.pay !== null);
-  const toggle = (what: NonNullable<Open>["what"], id: string) =>
-    setOpen((o) => (o && o.what === what && o.id === id ? null : { what, id }));
+  const shown = useMemo(() => {
+    const q = find.trim().toLowerCase();
+    if (!q) return people;
+    return people.filter((p) =>
+      [p.name, p.title, p.phone, p.location].some((v) => v?.toLowerCase().includes(q)),
+    );
+  }, [people, find]);
+  const person = people.find((p) => p.id === openId) ?? null;
 
   return (
     <div className="grid" style={{ gap: 12 }}>
-      {people.length === 0 ? (
-        <p className="muted" style={{ margin: 0 }} data-testid="staff-empty">
-          {t(
-            "Nobody is on the staff list yet: add the people who work here, then set their PINs and pay.",
-          )}
-        </p>
-      ) : (
-        <div className="tw">
-          <table className="stack-table" data-testid="staff-people">
-            <thead>
-              <tr>
-                <th>{t("Name")}</th>
-                <th>{t("Where")}</th>
-                <th>{t("Started")}</th>
-                <th>{t("Login")}</th>
-                <th>{t("PIN")}</th>
-                {seesPay && <th>{t("Pay")}</th>}
-                {seesPay && <th className="right">{t("Advances owed")}</th>}
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {people.map((p) => (
-                <PersonRow
-                  key={p.id}
-                  p={p}
-                  seesPay={seesPay}
-                  open={open?.id === p.id ? open.what : null}
-                  toggle={toggle}
-                  close={() => setOpen(null)}
-                  places={places}
-                  logins={logins}
-                  today={today}
-                  timezone={timezone}
-                  canManage={canManage}
-                  canPay={canPay}
-                  phones={phones}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {canManage &&
-        (adding ? (
-          <div className="card grid" style={{ gap: 10 }} id="add-person">
-            <b>{t("People to add")}</b>
-            <AddPeople
-              places={places}
-              logins={logins}
-              today={today}
-              onDone={(n, pinsNotSet) => {
-                setAdding(false);
-                setAdded({
-                  ok: pinsNotSet.length === 0,
-                  text: [t("{n} added to the staff.", { n }), ...pinsNotSet].join(" "),
-                });
-              }}
-              onCancel={() => setAdding(false)}
-            />
-          </div>
-        ) : (
+      <div className="staff-tools">
+        {people.length >= SEARCH_FROM && (
+          <input
+            type="search"
+            className="staff-find"
+            style={inputStyle}
+            value={find}
+            onChange={(e) => setFind(e.target.value)}
+            placeholder={t("Find someone…")}
+            aria-label={t("Find someone…")}
+            data-testid="staff-find"
+          />
+        )}
+        <span style={{ flex: 1 }} />
+        {people.length > 0 && (
+          <a className="btn-link" href="/staff/export" download data-testid="staff-csv">
+            <Icon name="download" size={16} /> {t("Download CSV")}
+          </a>
+        )}
+        {canManage && !adding && (
           <button
             type="button"
-            style={{ alignSelf: "start" }}
+            className="btn-primary"
             onClick={() => {
               setAdded(null);
               setAdding(true);
@@ -141,20 +110,174 @@ export function StaffPeople({
             data-testid="add-person"
             id="add-person"
           >
-            {t("+ Add people who work here")}
+            <Icon name="plus" size={16} /> {t("Add people")}
           </button>
-        ))}
+        )}
+      </div>
+      {canManage && adding && (
+        <div className="card grid" style={{ gap: 10 }} id="add-person">
+          <b>{t("People to add")}</b>
+          <AddPeople
+            places={places}
+            logins={logins}
+            today={today}
+            onDone={(n, pinsNotSet) => {
+              setAdding(false);
+              setAdded({
+                ok: pinsNotSet.length === 0,
+                text: [t("{n} added to the staff.", { n }), ...pinsNotSet].join(" "),
+              });
+            }}
+            onCancel={() => setAdding(false)}
+          />
+        </div>
+      )}
       {!adding && <Notice msg={added} />}
+      {people.length === 0 ? (
+        <p className="muted" style={{ margin: 0 }} data-testid="staff-empty">
+          {t(
+            "Nobody is on the staff list yet: add the people who work here, then set their PINs and pay.",
+          )}
+        </p>
+      ) : (
+        <ul className="people-list" data-testid="staff-people">
+          {shown.map((p) => (
+            <PersonLine
+              key={p.id}
+              p={p}
+              seesPay={seesPay}
+              phone={phones?.[p.id] ?? null}
+              today={today}
+              timezone={timezone}
+              onOpen={() => setOpenId(p.id)}
+            />
+          ))}
+          {shown.length === 0 && (
+            <li className="muted" style={{ padding: "12px 4px" }}>
+              {t("Nobody by that name.")}
+            </li>
+          )}
+        </ul>
+      )}
+      {person && (
+        <PersonPanel
+          key={person.id}
+          p={person}
+          seesPay={seesPay}
+          places={places}
+          logins={logins}
+          today={today}
+          timezone={timezone}
+          canManage={canManage}
+          canPay={canPay}
+          phones={phones}
+          onClose={() => {
+            setOpenId(null);
+            // Back to the line it was opened from.
+            document
+              .querySelector<HTMLButtonElement>(
+                `[data-testid="person-row"][data-id="${person.id}"] button`,
+              )
+              ?.focus();
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function PersonRow({
+/** Two letters for a face: the first of the first two words. */
+function initials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  return words
+    .slice(0, 2)
+    .map((w) => Array.from(w)[0] ?? "")
+    .join("")
+    .toUpperCase();
+}
+
+/** One person, on one line: tapped, it opens their panel. */
+function PersonLine({
   p,
   seesPay,
-  open,
-  toggle,
-  close,
+  phone,
+  today,
+  timezone,
+  onOpen,
+}: {
+  p: StaffMember;
+  seesPay: boolean;
+  phone: LinkedPhone | null;
+  today: string;
+  timezone: string;
+  onOpen: () => void;
+}) {
+  const { t } = useT();
+  return (
+    <li
+      data-testid="person-row"
+      data-name={p.name}
+      data-id={p.id}
+      className={p.worksNow ? "person-line" : "person-line gone"}
+    >
+      <button type="button" onClick={onOpen} aria-label={t("{name}: open", { name: p.name })}>
+        <span className={p.inSince ? "person-face in" : "person-face"} aria-hidden="true">
+          {initials(p.name)}
+        </span>
+        <span className="person-who">
+          <b>{p.name}</b>
+          <span className="muted">{[p.title, p.location].filter(Boolean).join(" · ")}</span>
+        </span>
+        <span className="person-marks">
+          {p.inSince && (
+            <span className="badge ok" data-testid="person-in">
+              {t("In since {time}", { time: dateTimeIn(timezone, p.inSince).slice(11) })}
+            </span>
+          )}
+          {p.leftOn && (
+            <span className={p.leftOn < today ? "badge" : "badge warn"}>
+              {t("Last day {day}", { day: p.leftOn })}
+            </span>
+          )}
+          {p.hiredOn > today && <span className="badge warn">{t("Starts later")}</span>}
+          {p.hasPin ? (
+            <span className="badge ok">{t("PIN set")}</span>
+          ) : (
+            <span className="badge warn">{t("No PIN yet")}</span>
+          )}
+          {phone && (
+            <span className="badge ok" data-testid="person-phone">
+              <Icon name="phone" size={13} /> {t("Phone linked")}
+            </span>
+          )}
+          {seesPay && (
+            <span data-testid="person-pay">
+              {p.pay?.basis && p.pay.rate !== null ? (
+                <span className="badge">
+                  {t(RATE_PER[p.pay.basis], { amount: fmtIQD(p.pay.rate) })}
+                </span>
+              ) : (
+                <span className="badge warn">{t("Pay not set")}</span>
+              )}
+            </span>
+          )}
+        </span>
+        <span className="person-go" aria-hidden="true">
+          <Icon name="chevron" size={18} />
+        </span>
+      </button>
+    </li>
+  );
+}
+
+/**
+ * Everything about one person, beside the list: what is known of them at the
+ * top, then a tab for each thing to change. Closed by ✕, Escape, or a tap
+ * outside it.
+ */
+function PersonPanel({
+  p,
+  seesPay,
   places,
   logins,
   today,
@@ -162,12 +285,10 @@ function PersonRow({
   canManage,
   canPay,
   phones,
+  onClose,
 }: {
   p: StaffMember;
   seesPay: boolean;
-  open: NonNullable<Open>["what"] | null;
-  toggle: (what: NonNullable<Open>["what"], id: string) => void;
-  close: () => void;
   places: Place[];
   logins: Login[];
   today: string;
@@ -175,142 +296,183 @@ function PersonRow({
   canManage: boolean;
   canPay: boolean;
   phones: Record<string, LinkedPhone> | null;
+  onClose: () => void;
 }) {
   const { t } = useT();
-  const cols = 6 + (seesPay ? 2 : 0);
+  const box = useRef<HTMLDivElement | null>(null);
   const phone = phones?.[p.id] ?? null;
-  return (
-    <>
-      <tr
-        data-testid="person-row"
-        data-name={p.name}
-        style={p.worksNow ? undefined : { opacity: 0.6 }}
-      >
-        <td>
-          <b>{p.name}</b>
-          {p.title && <span className="muted"> · {p.title}</span>}
-          {p.inSince && (
-            <div>
-              <span className="badge ok" data-testid="person-in">
-                {t("In since {time}", { time: dateTimeIn(timezone, p.inSince).slice(11) })}
-              </span>
-            </div>
-          )}
-          {p.phone && (
-            <div className="muted mono" style={{ fontSize: ".8rem" }}>
-              {p.phone}
-            </div>
-          )}
-        </td>
-        <td className="stack-half" data-label={t("Where")}>
-          {p.location}
-        </td>
-        <td className="mono stack-half" style={{ fontSize: ".85rem" }} data-label={t("Started")}>
-          {p.hiredOn}
-          {p.leftOn && (
-            <div className={p.leftOn < today ? "badge" : "badge warn"}>
-              {t("Last day {day}", { day: p.leftOn })}
-            </div>
-          )}
-          {p.hiredOn > today && <div className="badge warn">{t("Starts later")}</div>}
-        </td>
-        <td className="stack-half" data-label={t("Login")}>
-          {p.login ?? "—"}
-        </td>
-        <td className="stack-half" data-label={t("PIN")}>
-          {p.hasPin ? (
-            <span className="badge ok">{t("Set")}</span>
-          ) : (
-            <span className="badge warn">{t("None yet")}</span>
-          )}
-          {phone && (
-            <div>
-              <span className="badge ok" data-testid="person-phone">
-                <Icon name="phone" size={13} /> {t("Phone linked")}
-              </span>
-            </div>
-          )}
-        </td>
-        {seesPay && (
-          <td className="stack-half" data-testid="person-pay" data-label={t("Pay")}>
-            {p.pay?.basis && p.pay.rate !== null ? (
-              <>
+  const parts: { id: Part; label: string; testId: string }[] = [
+    ...(canManage ? [{ id: "edit" as const, label: t("Details"), testId: "edit-person" }] : []),
+    ...(canManage
+      ? [{ id: "pin" as const, label: p.hasPin ? t("New PIN") : t("Set a PIN"), testId: "set-pin" }]
+      : []),
+    ...(canPay ? [{ id: "pay" as const, label: t("Pay"), testId: "set-pay" }] : []),
+    ...(canManage && phones !== null && p.worksNow
+      ? [{ id: "phone" as const, label: t("Their phone"), testId: "link-phone" }]
+      : []),
+    ...(canManage
+      ? [
+          {
+            id: "left" as const,
+            label: p.leftOn ? t("Works here again") : t("Last day"),
+            testId: "set-left",
+          },
+        ]
+      : []),
+  ];
+  const [part, setPart] = useState<Part | null>(parts[0]?.id ?? null);
+
+  useEffect(() => {
+    box.current?.focus();
+    const was = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = was;
+    };
+  }, []);
+
+  const facts: [string, React.ReactNode][] = [
+    [t("Where"), p.location],
+    [
+      t("Started"),
+      <span key="d" className="mono">
+        {p.hiredOn}
+      </span>,
+    ],
+    [
+      t("Phone"),
+      p.phone ? (
+        <span key="p" className="mono" dir="ltr">
+          {p.phone}
+        </span>
+      ) : (
+        "—"
+      ),
+    ],
+    [t("Login"), p.login ?? "—"],
+    [t("PIN"), p.hasPin ? t("Set") : t("None yet")],
+    ...(phones !== null
+      ? [[t("Their phone"), phone ? t("Phone linked") : t("Not linked")] as [string, string]]
+      : []),
+    ...(seesPay
+      ? ([
+          [
+            t("Pay"),
+            p.pay?.basis && p.pay.rate !== null ? (
+              <span key="pay">
                 {t(RATE_PER[p.pay.basis], { amount: fmtIQD(p.pay.rate) })}
-                <div className="muted" style={{ fontSize: ".8rem" }}>
+                <span className="muted" style={{ display: "block", fontSize: ".8rem" }}>
                   {t("{hours} hours a day", { hours: String(p.pay.standardHours) })}
                   {p.pay.overtimePercent !== null &&
                     ` · ${t("overtime at {percent}%", { percent: String(p.pay.overtimePercent) })}`}
-                </div>
-              </>
+                </span>
+              </span>
             ) : (
-              <span className="badge warn">{t("Not set")}</span>
-            )}
-          </td>
-        )}
-        {seesPay && (
-          <td className="right money stack-half" data-label={t("Advances owed")}>
-            {p.pay && p.pay.advanceOwed !== 0 ? fmtIQD(p.pay.advanceOwed) : "—"}
-          </td>
-        )}
-        <td>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {canManage && (
-              <button type="button" onClick={() => toggle("edit", p.id)} data-testid="edit-person">
-                {t("Edit")}
-              </button>
-            )}
-            {canManage && (
-              <button type="button" onClick={() => toggle("pin", p.id)} data-testid="set-pin">
-                {p.hasPin ? t("New PIN") : t("Set a PIN")}
-              </button>
-            )}
-            {canPay && (
-              <button type="button" onClick={() => toggle("pay", p.id)} data-testid="set-pay">
-                {t("Set the pay…")}
-              </button>
-            )}
-            {canManage && phones !== null && p.worksNow && (
-              <button type="button" onClick={() => toggle("phone", p.id)} data-testid="link-phone">
-                <Icon name="phone" size={15} /> {phone ? t("Their phone…") : t("Link their phone")}
-              </button>
-            )}
-            {canManage && (
-              <button type="button" onClick={() => toggle("left", p.id)} data-testid="set-left">
-                {p.leftOn ? t("Works here again…") : t("Last day…")}
-              </button>
-            )}
+              t("Not set")
+            ),
+          ],
+          [
+            t("Advances owed"),
+            <span key="adv" className="money">
+              {p.pay && p.pay.advanceOwed !== 0 ? fmtIQD(p.pay.advanceOwed) : "—"}
+            </span>,
+          ],
+        ] as [string, React.ReactNode][])
+      : []),
+  ];
+
+  return (
+    <div className="person-panel-back" onClick={onClose}>
+      <div
+        ref={box}
+        tabIndex={-1}
+        className="person-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="person-panel-name"
+        data-testid="person-panel"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") onClose();
+        }}
+      >
+        <div className="person-panel-head">
+          <span className={p.inSince ? "person-face in" : "person-face"} aria-hidden="true">
+            {initials(p.name)}
+          </span>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h3 id="person-panel-name" style={{ margin: 0 }}>
+              {p.name}
+            </h3>
+            <span className="muted" style={{ fontSize: ".85rem" }}>
+              {p.title ?? t("No job written yet")}
+              {p.inSince &&
+                ` · ${t("In since {time}", { time: dateTimeIn(timezone, p.inSince).slice(11) })}`}
+            </span>
           </div>
-        </td>
-      </tr>
-      {open && (
-        <tr>
-          <td colSpan={cols}>
-            {open === "edit" && (
-              <PersonForm
-                person={p}
-                places={places}
-                logins={logins}
-                today={today}
-                onDone={close}
-                onCancel={close}
-              />
-            )}
-            {open === "pin" && <PinForm person={p} onDone={close} />}
-            {open === "pay" && <PayForm person={p} onDone={close} />}
-            {open === "left" && <LeftForm person={p} today={today} onDone={close} />}
-            {open === "phone" && (
-              <PhonePanel
-                employeeId={p.id}
-                name={p.name}
-                phone={phone}
-                timezone={timezone}
-                onClose={close}
-              />
-            )}
-          </td>
-        </tr>
-      )}
-    </>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={onClose}
+            aria-label={t("Close")}
+            data-testid="person-panel-close"
+          >
+            <Icon name="close" size={18} />
+          </button>
+        </div>
+        <dl className="person-facts">
+          {facts.map(([k, v]) => (
+            <div key={k}>
+              <dt>{k}</dt>
+              <dd>{v}</dd>
+            </div>
+          ))}
+        </dl>
+        {parts.length > 0 && (
+          <>
+            <div className="seg person-parts" role="tablist" aria-label={p.name}>
+              {parts.map((x) => (
+                <button
+                  key={x.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={part === x.id}
+                  className={part === x.id ? "active" : undefined}
+                  onClick={() => setPart(x.id)}
+                  data-testid={x.testId}
+                >
+                  {x.label}
+                </button>
+              ))}
+            </div>
+            <div role="tabpanel" aria-label={parts.find((x) => x.id === part)?.label}>
+              {part === "edit" && (
+                <PersonForm
+                  person={p}
+                  places={places}
+                  logins={logins}
+                  today={today}
+                  onDone={onClose}
+                  onCancel={onClose}
+                />
+              )}
+              {part === "pin" && <PinForm person={p} onDone={onClose} />}
+              {part === "pay" && <PayForm person={p} onDone={onClose} />}
+              {part === "left" && <LeftForm person={p} today={today} onDone={onClose} />}
+              {part === "phone" && (
+                <PhonePanel
+                  employeeId={p.id}
+                  name={p.name}
+                  phone={phone}
+                  timezone={timezone}
+                  onClose={onClose}
+                />
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 

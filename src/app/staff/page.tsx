@@ -11,6 +11,7 @@ import { StaffPeople } from "@/components/staff/StaffPeople";
 import { ScheduleWeek } from "@/components/staff/ScheduleWeek";
 import { AttendanceList } from "@/components/staff/AttendanceList";
 import { ShopClock } from "@/components/staff/ShopClock";
+import { StaffTabs } from "@/components/staff/StaffTabs";
 import { getClockScreens, getLinkedPhones, getScreenCheck } from "@/lib/db/clock";
 import { Icon } from "@/components/Icon";
 
@@ -19,7 +20,8 @@ export const dynamic = "force-dynamic";
 /**
  * Who works here, the schedule and the hours (0049). A manager keeps the
  * people, their PINs and the schedule, and corrects the hours; those who run
- * payroll set the pay. Everyone clocks in and out at the till.
+ * payroll set the pay. Everyone clocks in and out at the till. Who is in now
+ * above everything; the rest a tab each (round twelve).
  */
 export default async function StaffPage({
   searchParams,
@@ -117,75 +119,106 @@ export default async function StaffPage({
         )}
       </section>
 
-      <section className="card grid" style={{ gap: 8 }} id="people">
-        <h2 style={{ margin: 0 }}>{t("People")}</h2>
-        <StaffPeople
-          people={people}
-          places={places}
-          logins={logins}
-          today={today}
-          timezone={timezone}
-          canManage={canManage}
-          canPay={canPay}
-          phones={phones}
-        />
-        {has(profile, "payroll.view") && (
-          <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
-            <Link href="/payroll">{t("Payroll and advances →")}</Link>
-          </p>
-        )}
-      </section>
-
-      {seesClock && (
-        <section className="card grid" style={{ gap: 8 }} id="shop-clock">
-          <h2 style={{ margin: 0 }}>
-            <Icon name="qr" /> {t("The shop's clock")}
-          </h2>
-          <ShopClock
-            screens={screens}
-            thisScreen={here?.screen?.id ?? null}
-            places={places}
-            canSetUp={canSetUpClock}
-            timezone={timezone}
-          />
-        </section>
-      )}
-
-      <section className="card grid" style={{ gap: 8 }} id="schedule">
-        <h2 style={{ margin: 0 }}>{t("The schedule")}</h2>
-        {place ? (
-          <ScheduleWeek
-            key={`${first}-${place}`}
-            schedule={schedule}
-            lastWeek={lastWeek}
-            days={days}
-            locationId={place}
-            places={places}
-            timezone={timezone}
-            canManage={canManage}
-            prevHref={weekHref(addDays(first, -7))}
-            nextHref={weekHref(addDays(first, 7))}
-            usual={usual}
-            costs={costs}
-            target={target}
-          />
-        ) : (
-          <p className="muted" style={{ margin: 0 }}>
-            {t("No branch is open yet.")}
-          </p>
-        )}
-      </section>
-
-      <section className="card grid" style={{ gap: 8 }} id="attendance">
-        <h2 style={{ margin: 0 }}>{t("The hours, {from} to {to}", { from: first, to: last })}</h2>
-        <AttendanceList
-          days={hours.days}
-          records={hours.records}
-          people={working.map((p) => ({ id: p.id, name: p.name }))}
-          timezone={timezone}
-          canEdit={canEdit}
-        />
-      </section>
+      <StaffTabs
+        label={t("Staff sections")}
+        tabs={[
+          {
+            id: "people",
+            label: t("People"),
+            also: ["add-person", "in-now"],
+            content: (
+              <section className="card grid" style={{ gap: 8 }} id="people">
+                <h2 style={{ margin: 0 }}>{t("People")}</h2>
+                <StaffPeople
+                  people={people}
+                  places={places}
+                  logins={logins}
+                  today={today}
+                  timezone={timezone}
+                  canManage={canManage}
+                  canPay={canPay}
+                  phones={phones}
+                />
+                {has(profile, "payroll.view") && (
+                  <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+                    <Link href="/payroll">{t("Payroll and advances →")}</Link>
+                  </p>
+                )}
+              </section>
+            ),
+          },
+          {
+            id: "schedule",
+            label: t("The schedule"),
+            content: (
+              <section className="card grid" style={{ gap: 8 }} id="schedule">
+                <h2 style={{ margin: 0 }}>{t("The schedule")}</h2>
+                {place ? (
+                  <ScheduleWeek
+                    key={`${first}-${place}`}
+                    schedule={schedule}
+                    lastWeek={lastWeek}
+                    days={days}
+                    locationId={place}
+                    places={places}
+                    timezone={timezone}
+                    canManage={canManage}
+                    prevHref={weekHref(addDays(first, -7))}
+                    nextHref={weekHref(addDays(first, 7))}
+                    usual={usual}
+                    costs={costs}
+                    target={target}
+                  />
+                ) : (
+                  <p className="muted" style={{ margin: 0 }}>
+                    {t("No branch is open yet.")}
+                  </p>
+                )}
+              </section>
+            ),
+          },
+          {
+            id: "attendance",
+            label: t("The hours"),
+            content: (
+              <section className="card grid" style={{ gap: 8 }} id="attendance">
+                <h2 style={{ margin: 0 }}>
+                  {t("The hours, {from} to {to}", { from: first, to: last })}
+                </h2>
+                <AttendanceList
+                  days={hours.days}
+                  records={hours.records}
+                  people={working.map((p) => ({ id: p.id, name: p.name }))}
+                  timezone={timezone}
+                  canEdit={canEdit}
+                />
+              </section>
+            ),
+          },
+          ...(seesClock
+            ? [
+                {
+                  id: "shop-clock",
+                  label: t("Shop's clock"),
+                  content: (
+                    <section className="card grid" style={{ gap: 8 }} id="shop-clock">
+                      <h2 style={{ margin: 0 }}>
+                        <Icon name="qr" /> {t("The shop's clock")}
+                      </h2>
+                      <ShopClock
+                        screens={screens}
+                        thisScreen={here?.screen?.id ?? null}
+                        places={places}
+                        canSetUp={canSetUpClock}
+                        timezone={timezone}
+                      />
+                    </section>
+                  ),
+                },
+              ]
+            : []),
+        ]}
+      />
     </div>
   );
 }

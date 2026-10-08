@@ -70,7 +70,7 @@ const till = await signIn(browser, "owner");
 let SCREEN = "";
 {
   const { ctx, page } = till;
-  await open(page, "/staff");
+  await open(page, "/staff#shop-clock");
   await page.getByTestId("clock-screen-make").click();
   check(
     (await page.getByTestId("clock-screen-name").inputValue()) === "The till",
@@ -172,7 +172,8 @@ phonePage.on("pageerror", (e) => check(false, `phone: browser error: ${e.message
   const { page } = manager;
   await open(page, "/staff");
   const row = page.locator('[data-testid="person-row"][data-name="Rana Phone"]');
-  await row.getByTestId("link-phone").click();
+  await row.getByRole("button").click();
+  await page.getByTestId("person-panel").getByTestId("link-phone").click();
   const panel = page.getByTestId("phone-panel");
   await panel.getByTestId("phone-link-qr").waitFor({ timeout: 10000 });
   const url = await panel.getByTestId("phone-link-url").inputValue();
@@ -387,7 +388,8 @@ console.log("▸ the phone unlinked, the screen taken out of use, the till as be
   const { page } = manager;
   await open(page, "/staff");
   const row = page.locator('[data-testid="person-row"][data-name="Rana Phone"]');
-  await row.getByTestId("link-phone").click();
+  await row.getByRole("button").click();
+  await page.getByTestId("person-panel").getByTestId("link-phone").click();
   const panel = page.getByTestId("phone-panel");
   await panel.getByTestId("phone-unlink").click();
   await panel.getByTestId("phone-unlink-reason").fill("She lost it");
@@ -412,7 +414,7 @@ console.log("▸ the phone unlinked, the screen taken out of use, the till as be
   check(true, "the lost phone clocks no one now");
 
   const { ctx, page: tp } = till;
-  await open(tp, "/staff");
+  await open(tp, "/staff#shop-clock");
   await tp.getByTestId("clock-screen-remove").click();
   await tp.getByTestId("clock-screen-reason").fill("Moving the till");
   await tp.getByTestId("clock-screen-remove-confirm").click();

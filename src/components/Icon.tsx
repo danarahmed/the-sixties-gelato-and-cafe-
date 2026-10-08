@@ -338,6 +338,10 @@ const PATHS = {
       <path d="M9 9l6 6M15 9l-6 6" />
     </>
   ),
+  /** Down into a file: a download. */
+  download: <path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14" />,
+  /** On, to the next: a row that opens. */
+  chevron: <path d="M9.5 6l6 6-6 6" />,
   /** A tag, for a batch's labels. */
   tag: (
     <>

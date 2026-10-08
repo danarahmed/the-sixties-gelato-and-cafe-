@@ -2228,6 +2228,23 @@ Built and tested:
     Built and tested: the SQL suite `phone_warnings`, unit tests
     (`menuMatrix`, `phoneWarnings`) and two browser suites (`menumatrix`,
     `phonewarn`).
+    The owner applied `0072` in the SQL editor on 8 October; compared with
+    the tested build, every function is identical once the paste's line
+    endings are set aside, `pg_cron` and `pg_net` are on, the five-minute
+    timer is set, and the tables, the column and the permissions are as built.
+
+- **Round twelve: Staff made simple, and the staff list as CSV.** The
+  owner's choices: **In now** at the top, then a tab each for People, the
+  schedule, the hours and the shop's clock (each tab its old anchor, so every
+  link to `/staff#schedule` and the like still opens it). People is a line a
+  person (name and job, branch, in now, PIN, phone, pay); a tap opens a panel
+  beside the list with their facts and a tab for details, PIN, pay, phone and
+  last day, in place of five buttons on each row. A box finds someone from six
+  people up. **Download CSV** (`/staff/export`) gives the list in the reader's
+  language; pay only for those who see payroll, linked phones only for those
+  who manage the staff, as the database gives the screen. No migration.
+  Tested: `tests/staffCsv.test.ts`, and the browser suites `staff`,
+  `phoneclock`, `pages`, `labour` and `setup` through the tabs and the panel.
 
 ## The August 2026 audit, finding by finding
 

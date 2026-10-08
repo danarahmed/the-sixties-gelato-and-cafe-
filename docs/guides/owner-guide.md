@@ -71,18 +71,29 @@ The exact matrix is under **Settings → Roles & what they may do**.
 
 ## Staff, their hours and their pay
 
-**Staff** (the owner and the managers) lists **who works here**: everyone
-paid, whether or not they have a login. **+ Add someone who works here** with
-their name, what they do, where they work and the day they started; link their
-login if they have one. Then:
+**Staff** (the owner and the managers) has **In now** at the top, then four
+tabs: **People**, **The schedule**, **The hours** and **Shop's clock**.
 
+**People** lists **who works here**: everyone paid, whether or not they have a
+login, a line each: their name and what they do, where, whether they are in
+now, their PIN, their phone and (for those who see payroll) their pay. With
+six people or more, a box finds someone by name. **Download CSV** gives the
+list as a spreadsheet: pay, a day's hours, overtime and advances owed only for
+those who see payroll. **Add people** with their name, what they do, where they
+work and the day they started; link their login if they have one. Then tap a
+person: a panel opens beside the list with what is known of them and a tab
+for each thing to change:
+
+- **Details**: their name, what they do, phone, branch, start day and login.
 - **Set a PIN** with them: they type 4 to 8 digits twice, and clock in and out
   at the till with their name and that PIN. A PIN like 1111 or 1234 is refused.
 - **Set the pay** (you, the general manager or the accountant): by the month,
   the day or the hour, a day's standard hours, and, if theirs differs from the
   café's rule, the overtime percentage. Only those who see payroll (you, the
   general manager, the accountant and the auditor) see anyone's pay.
-- **Last day…** when someone leaves: from the day after, they no longer clock
+- **Their phone**: a square for them to scan, so their own phone clocks them
+  in and out; or unlink a lost one.
+- **Last day** when someone leaves: from the day after, they no longer clock
   in and their shifts are taken off. Their records and pay stay.
 
 **The schedule** is a week at a time, Saturday to Friday: type each person's
