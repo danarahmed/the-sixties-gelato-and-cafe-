@@ -2228,6 +2228,10 @@ Built and tested:
     Built and tested: the SQL suite `phone_warnings`, unit tests
     (`menuMatrix`, `phoneWarnings`) and two browser suites (`menumatrix`,
     `phonewarn`).
+    The owner applied `0072` in the SQL editor on 8 October; compared with
+    the tested build, every function is identical once the paste's line
+    endings are set aside, `pg_cron` and `pg_net` are on, the five-minute
+    timer is set, and the tables, the column and the permissions are as built.
 
 ## The August 2026 audit, finding by finding
 
