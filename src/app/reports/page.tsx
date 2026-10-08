@@ -750,6 +750,13 @@ export default async function ReportsPage({
         <Link className="drill" href="/reports/prices" data-testid="to-prices">
           {t("Price watch: what came in dearer →")}
         </Link>
+        <Link
+          className="drill"
+          href={`/reports/menu${place && profile.worksAt === null ? `?location=${place}` : ""}`}
+          data-testid="to-menu"
+        >
+          {t("Menu matrix: what to keep, reprice, show more or drop →")}
+        </Link>
         {seesStaff && (
           <Link
             className="drill"
