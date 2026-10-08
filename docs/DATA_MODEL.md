@@ -2053,3 +2053,32 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   the clock, the schedule, and each person's pay for those who see it (an
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
+
+### Warnings on your phone (`0072`)
+
+- **`push_config`**: one row a café: phone warnings on or off, the app's
+  address the database calls, the café's pair of keys for sending (VAPID,
+  made by the app the first time they are turned on, and kept), and a secret
+  the database makes for itself. Read by the functions only.
+- **`push_device`**: a phone (a browser's push subscription) and whose it is:
+  its address, its keys, its language, and whether it takes every warning or
+  the urgent (red) ones only. Read by the functions only.
+- **`push_message`**: what waits to be sent to a phone: the warning as the
+  database writes it, in English (the app translates it), the page it opens,
+  whether it is urgent, and when it was taken and sent. A message is offered
+  three times at most, and let go after a day.
+- **`alert.pushed_urgency`**: what an alert was last sent as; an alert is sent
+  once, and again only if it turns red. What was open when the warnings were
+  turned on is not sent.
+- **Functions:** `phone_warnings(endpoint)` (anyone signed in: on or off,
+  the key a phone needs, whether the database can send, and this phone);
+  `turn_on_phone_warnings(site_url, public, private)` and
+  `turn_off_phone_warnings()` (`settings.manage`); `save_push_device`,
+  `remove_push_device` and `send_test_warning` (`profit.view`, a person's own
+  phone); `push_take(secret)` and `push_done(secret, sent, gone)` (the app's
+  address, with no one signed in: each answers only to the database's
+  secret); `push_queue`, `push_kick` and `push_tick` (the database's own).
+- **The timer:** where the database has pg_cron and pg_net (Supabase has
+  both), `push_tick()` runs every five minutes: it brings the alerts up to
+  date, queues what is new for each phone (more than three at once as one),
+  and calls the app's `/api/push/send` with the secret.

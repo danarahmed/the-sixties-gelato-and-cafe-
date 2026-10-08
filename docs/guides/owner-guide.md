@@ -482,6 +482,25 @@ discount, why and who approved it. The 10% is a business setting (shown on
   you move it, and a button at the till under **Cash** and **Card**. One
   taken out of use leaves the till; its account keeps what it holds.
 
+## Warnings on your phone
+
+The warnings the dashboard shows under **Needs you** can come to your phone,
+in your language, within about five minutes, without opening the app.
+
+- **Once, for the café:** **Settings → Phone warnings → Turn phone warnings
+  on for the café** (you or the general manager).
+- **On each phone:** open the app on the phone, **My account → Warnings on
+  this phone → Turn on warnings on this phone**, and allow notifications.
+  Tick **Only the urgent (red) ones** if you want fewer. **Send a test** to
+  see one come. On an iPhone, first add the app to the Home Screen (Share →
+  Add to Home Screen) and open it from there.
+- Each warning comes once (again if it turns red); one you have answered or
+  snoozed on the dashboard does not. A tap opens the page to act on it.
+  More than three at once come as one, saying how many.
+- Who gets them: whoever sees the dashboard's warnings (you, the general
+  manager, a branch manager, the accountant, the auditor), on the phones
+  they turned them on on. **Turn off on this phone** stops them there.
+
 ## Every day
 
 - **Dashboard:** it opens on **what needs you** — 🔴 now, 🟠 soon. Each says
@@ -629,6 +648,13 @@ discount, why and who approved it. The 10% is a business setting (shown on
   with what to try: made here, the plan already makes less, so look at the
   batch on those days; bought, say how long it keeps, or order less at a
   time.
+- **The menu matrix** (**Reports → Menu matrix**): every product sold in the
+  last four weeks (or three months; the whole menu, or one category to
+  compare like with like), by how much it sells against what it earns on
+  each one after its cost. **Keep** what sells a lot and earns well; **raise
+  the price** of what sells a lot but earns little (it says by about how
+  much); **show more** what earns well but few buy; **change or drop** what
+  does neither. A product with no cost on its recipe is left out and named.
 - **Purchase orders** (**Purchasing**): whoever buys drafts an order — the
   supplier, each item at the unit and price agreed, the day it is expected.
   A branch manager approves orders up to 250,000 IQD; above that, you or the

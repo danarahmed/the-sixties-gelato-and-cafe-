@@ -57,7 +57,9 @@ create temp table fresh_keep (t text primary key) on commit drop;
 insert into fresh_keep values
   ('business'), ('location'), ('cash_drawer'), ('gl_account'), ('app_user'), ('user_role'), ('role_permission'),
   ('business_rule'), ('business_rule_history'), ('reason_code'), ('app_language'), ('app_phrase'),
-  ('expense_category'), ('delivery_platform'), ('platform_store_map'), ('payment_method');
+  ('expense_category'), ('delivery_platform'), ('platform_store_map'), ('payment_method'),
+  -- Phone warnings (0072): on or off, and each login's phones; what waited is cleared.
+  ('push_config'), ('push_device');
 
 do $$
 begin
@@ -98,7 +100,7 @@ truncate table
   platform_order, platform_product_map, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
   pos_tab_line_modifier, prepaid_expense, prepaid_release, product, product_category, product_image,
   product_modifier_group, product_variant, production_batch, promotion, purchase_invoice, purchase_order,
-  purchase_order_line, phone_link, receipt_correction, recipe, recipe_line, recipe_version, reconciliation_issue,
+  purchase_order_line, phone_link, push_message, receipt_correction, recipe, recipe_line, recipe_version, reconciliation_issue,
   request_log,
   sale_adjustment, sale_refund, sale_refund_line, sale_refund_tender, salary_payment, salary_payment_line,
   sales_order, sales_order_line, sales_order_line_modifier, sales_tender, session_dollar_count, shift_schedule,

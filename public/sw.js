@@ -73,3 +73,49 @@ self.addEventListener("fetch", (event) => {
   }
   // Everything else (data, server actions) goes straight to the network.
 });
+
+/*
+ * Warnings on your phone (0072): the app sends each of the café's new
+ * warnings, already in this phone's language; the phone shows it, and a tap
+ * opens the page to act on it (only the app's own pages).
+ */
+self.addEventListener("push", (event) => {
+  let w = {};
+  try {
+    w = event.data ? event.data.json() : {};
+  } catch {
+    w = { title: event.data ? event.data.text() : "" };
+  }
+  const title = typeof w.title === "string" && w.title ? w.title : "The Sixty's Gelato & Café";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: typeof w.body === "string" ? w.body : "",
+      tag: typeof w.tag === "string" ? w.tag : undefined,
+      dir: w.dir === "rtl" ? "rtl" : "ltr",
+      lang: typeof w.lang === "string" ? w.lang : undefined,
+      icon: "/icon.svg",
+      badge: "/icon.svg",
+      requireInteraction: w.urgent === true,
+      data: { url: typeof w.url === "string" ? w.url : "/dashboard" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const path = event.notification.data && event.notification.data.url;
+  const url = new URL(
+    typeof path === "string" && path.startsWith("/") && !path.startsWith("//") ? path : "/dashboard",
+    self.location.origin,
+  ).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if (new URL(w.url).origin === self.location.origin && "focus" in w) {
+          return w.navigate(url).then((c) => (c || w).focus());
+        }
+      }
+      return self.clients.openWindow(url);
+    }),
+  );
+});

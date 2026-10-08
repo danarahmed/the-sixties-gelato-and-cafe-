@@ -265,6 +265,17 @@ layers before every release.
   three too many, an evening that sells with nobody; the labour share; the
   hours on the clock at each person's pay against sales, week by week and by
   part of the day, after midnight the evening's.
+- `tests/menuMatrix.test.ts`: the menu matrix (round eleven) — sells a lot
+  from 70% of an even share, earns well from the menu's average; the four
+  groups; a raise rounded up to 250 IQD and what it brings; what was sold
+  with no cost left out and named; fewer than two products, nothing to
+  compare; each group's most sold first; every word in Arabic and Kurdish.
+- `tests/phoneWarnings.test.ts`: warnings on your phone (round eleven,
+  `0072`) — each in its phone's language, right to left in Arabic and
+  Kurdish, a summary's count and list read; only the app's own pages opened;
+  short enough for a phone; a round says what went and which phones are gone
+  (404, 410), and what failed otherwise waits; nothing told when nothing
+  waits; the database's words in Arabic and Kurdish.
 - `tests/batches.test.ts`: a read over a long list of ids (the lines of 500
   sales) asks 100 ids at a time and reads every row once; a batch whose rows
   fill a page is read again in halves, one id's many rows a page at a time;
@@ -1047,6 +1058,23 @@ database, behind a small local stand-in for Supabase's auth service.
   last seven days: the lemon (made here: the plan already makes less) and the
   cream (keeps three days: order less at a time), each with its link. In
   Arabic and Kurdish; the books still tie.
+- `menumatrix` (round eleven, run before `setup`): many espressos and a few
+  bottles of water sold by card; Reports leads to the menu matrix, and each
+  product sold in four weeks is in the group the sales analysis puts it in
+  (sells a lot from 70% of an even share, earns well from the menu's average
+  after cost), with a mark on the chart for each and how the groups are cut
+  in words; three months and a category read the same way; the cashier is
+  not shown it; Arabic and Kurdish.
+- `phonewarn` (round eleven, run before `setup`): with phone warnings off, My
+  account says the owner has not turned them on; the owner turns them on on
+  Settings, which says this database cannot send (no timer, no calls out),
+  the app having given it its address and the café's keys. The branch
+  manager turns them on on a phone (its subscription made in the page, as a
+  phone's browser hands it over), the urgent ones only and then every one,
+  known again when the page opens, and sends a test, which waits in the
+  queue. The cashier is offered nothing. The app's /api/push/send refuses
+  without the database's secret and, with it, takes the queue. My account in
+  Arabic and Kurdish; off on the phone, then for the café.
 - `setup` (round seven, run last: it clears the café): the test café is
   cleared with `supabase/remediation/start-fresh.sql`, every record and the
   setup lists gone, the logins and the chart of accounts kept, the audit
