@@ -2246,6 +2246,30 @@ Built and tested:
   Tested: `tests/staffCsv.test.ts`, and the browser suites `staff`,
   `phoneclock`, `pages`, `labour` and `setup` through the tabs and the panel.
 
+- **One item, not 1 items.** The till's order, the receipt and the kitchen
+  ticket count their items with the phrase that agrees with its number, in
+  Arabic with its own forms (`tests/plurals.test.ts`).
+
+- **Round thirteen: Products & Recipes and Production made simple.** The
+  owner's choices:
+  - **The menu as tiles** with a side panel: each product's photo, price and
+    cost % (amber above 35%, red at a loss); a tap opens it beside the menu
+    with a tab each for Basics, Recipe, Sizes & prices and Add-ons, and a new
+    product opens in the same panel. Categories narrow the tiles in one tap;
+    the search by name in any language is kept.
+  - **Add-ons set up from each product**: its Add-ons tab makes a new group
+    and offers it with the product at once, and changes each group's add-ons,
+    prices and what they use right there. Groups stay shared, as chosen: each
+    says which other products offer it and that a change there changes it for
+    them too. The separate Add-ons section is gone.
+  - **Shortcuts**: an ingredient is found by typing part of its name (its unit
+    fills itself in), in every recipe; a price change offers the suggested
+    price for its channel's cost in one tap; and each tile shows its cost %.
+  - **Production's batch recipes** as tiles in the same panel.
+  - The panel is one piece shared with Staff. No migration. Tested through
+    the browser suites `menu`, `addons`, `bills`, `production`, `find`,
+    `tills`, `setup`, `staff`, `phoneclock`, `languages` and `pages`.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open

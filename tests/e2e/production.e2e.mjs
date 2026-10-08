@@ -10,7 +10,7 @@
 // history. Last, a product's recipe is changed from today on Products &
 // Recipes. (Run last: it adds a barista, and the espresso's costs are read as
 // the other suites left them.)
-import { chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { chromium, check, done, open, signIn, sql, openProduct, pickItem } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const B = "00000000-0000-0000-0000-0000000000b1";
@@ -45,7 +45,7 @@ const gapBefore = inventoryGap();
 /** Fill one line of a recipe editor. */
 async function line(page, n, item, qty, unit) {
   if (n > 1) await page.getByRole("button", { name: "+ Add ingredient" }).click();
-  await page.getByLabel(`Ingredient ${n}`).selectOption({ label: item });
+  await pickItem(page, `Ingredient ${n}`, item);
   await page.getByLabel(`Quantity ${n}`).fill(qty);
   if (unit) await page.getByLabel(`Unit ${n}`).selectOption(unit);
 }
@@ -234,10 +234,8 @@ console.log("▸ the base keeps three days; a barista's batch is used by then");
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/production");
   // The base's own card (the flavour's lists the base as an ingredient).
-  const baseCard = () =>
-    page
-      .locator(".pr-recipe")
-      .filter({ has: page.locator(".pr-recipe-head strong", { hasText: /^E2E base$/ }) });
+  await page.locator('[data-testid="recipe-card"][data-name="E2E base"] > button').click();
+  const baseCard = () => page.getByTestId("recipe-panel");
   const card = baseCard();
   await card.getByRole("button", { name: "Change…" }).click();
   await card.getByLabel("How long it keeps").fill("3");
@@ -246,7 +244,7 @@ console.log("▸ the base keeps three days; a barista's batch is used by then");
   await page.getByTestId("recipe-keeps").first().waitFor({ timeout: 10000 });
   check(
     (await baseCard().innerText()).includes("keeps 3 days"),
-    "the base keeps 3 days, as its card says",
+    "the base keeps 3 days, as its panel says",
   );
   check(
     sql("select shelf_life_hours from recipe where name = 'E2E base'") === "72",
@@ -518,8 +516,7 @@ console.log("▸ owner changes a product's recipe from today");
   );
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/products");
-  const card = page.locator(".card", { has: page.locator('input[value="Golden espresso"]') });
-  await card.locator("summary").click();
+  const card = await openProduct(page, "Golden espresso", "Recipe");
   await card.getByRole("button", { name: "Change the recipe…" }).click();
   check(
     (await card.getByLabel("Quantity 1").inputValue()) === "20" &&
@@ -537,6 +534,7 @@ console.log("▸ owner changes a product's recipe from today");
     ) === "18 g all; 1 each {takeaway,talabat}",
     "the new recipe is in force: 18 g, the cup still only for takeaway and Talabat",
   );
+  await card.getByRole("tab", { name: "Sizes & prices", exact: true }).click();
   const row = card
     .locator(".tw", { hasText: "Price & margin by channel" })
     .locator("tr", { hasText: "Dine-in" });
@@ -549,13 +547,12 @@ console.log("▸ owner changes a product's recipe from today");
         () => true,
         () => false,
       ),
-    `and the card costs a dine-in espresso at ${beans} IQD from today`,
+    `and the panel costs a dine-in espresso at ${beans} IQD from today`,
   );
+  await page.getByTestId("product-panel-close").click();
+  const water = await openProduct(page, "Golden water", "Recipe");
   check(
-    (await page
-      .locator(".card", { has: page.locator('input[value="Golden water"]') })
-      .getByRole("button", { name: "Change the recipe…" })
-      .count()) === 0,
+    (await water.getByRole("button", { name: "Change the recipe…" }).count()) === 0,
     "a product sold as bought has no recipe to change",
   );
   await ctx.close();

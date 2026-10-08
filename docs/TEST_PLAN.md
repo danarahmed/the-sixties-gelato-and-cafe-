@@ -726,9 +726,11 @@ database, behind a small local stand-in for Supabase's auth service.
   Purchasing and the audit trail say so; the new screens show no English in
   Arabic or Kurdish; the books still tie.
 - `addons` (`0041`): on Products the owner gives a latte a Large, its recipe
-  copied and its one size named Regular in the same step; makes a group of
-  milks the till asks for (whole, free; oat, 500, with its milk) and one of
-  extras (up to three shots at 750), the form saying what the till will ask;
+  copied and its one size named Regular in the same step; from the latte's own
+  panel (round thirteen) makes a group of milks the till asks for (whole, free; oat, 500, with its milk) and one of
+  extras (up to three shots at 750), the form saying what the till will ask,
+  each offered with the latte as soon as it is made and saying no other
+  product shares it;
   gives the Large its own oat milk; and offers the milks with every size, the
   extras with the Large only, each change on the audit trail. At the till the
   Large is one sheet: the milk asked for first, nothing added until it is
@@ -745,7 +747,8 @@ database, behind a small local stand-in for Supabase's auth service.
   margin (amber under the target, a loss in red) and a suggested price that one
   click takes; a line without its quantity stops the save; the recipe, where
   each line is used and the prices are saved as shown; and the saved product's
-  card shows the same costs, the ones a sale posts. Then (`0025`) a price
+  panel (its tile tapped, round thirteen) shows the same costs, the ones a
+  sale posts. Each ingredient is found by typing part of its name. Then (`0025`) a price
   dated yesterday is refused; one for next week is listed as scheduled and
   withdrawn with a reason; a product with no recipe is refused until it says
   why it uses no stock, and flagged "Costed at nothing" when that is taken
@@ -758,7 +761,7 @@ database, behind a small local stand-in for Supabase's auth service.
   a batch of the flavour weighed short and sees its cost per kg; batches (and
   their cancelling) leave the stock reconciliation where it was; a manager
   cancels the batch with a reason; then (`0046`) the base is given a shelf
-  life of 3 days on its card, a barista's batch is used by then and listed in
+  life of 3 days in its panel (its tile tapped, round thirteen), a barista's batch is used by then and listed in
   stock as good, a manager records one made two hours earlier with why and a
   use-by already past, the dashboard says it is past its use-by (red), the
   manager changes its use-by with a reason (on the audit trail), its page

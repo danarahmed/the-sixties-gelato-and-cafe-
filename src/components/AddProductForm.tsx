@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import Decimal from "decimal.js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { SalesChannel } from "@domain/sales/recipe.js";
@@ -30,6 +31,9 @@ import { Icon } from "@/components/Icon";
 
 type Msg = { ok: boolean; text: string } | null;
 
+/** The margin a suggested price leaves, as the new-product form starts with it. */
+const TARGET_MARGIN = 70;
+
 /** A price typed for each channel, by its code; a channel left out is not sold there. */
 type Prices = Record<SalesChannel, string>;
 
@@ -42,7 +46,10 @@ export function AddProductForm({
   items,
   categories = [],
   money: rules,
+  inPanel = false,
 }: {
+  /** In its own panel (Products & Recipes, round thirteen): open, with no button to hide it. */
+  inPanel?: boolean;
   items: ItemOpt[];
   categories?: { id: string; name: string }[];
   /** The currency's decimals, and the step suggested prices are rounded up to (250 IQD). */
@@ -54,19 +61,19 @@ export function AddProductForm({
   const { set, name: channelName } = useChannels();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(inPanel);
   // A link to the form opens it: Getting set up's /products#add-product.
   useEffect(() => {
-    if (window.location.hash !== "#add-product") return;
+    if (inPanel || window.location.hash !== "#add-product") return;
     setOpen(true);
     document.getElementById("add-product")?.scrollIntoView({ block: "start" });
-  }, []);
+  }, [inPanel]);
   const [name, setName] = useState("");
   const [nameAr, setNameAr] = useState("");
   const [nameCkb, setNameCkb] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [prices, setPrices] = useState<Prices>({});
-  const [target, setTarget] = useState("70");
+  const [target, setTarget] = useState(String(TARGET_MARGIN));
   const [lines, setLines] = useState<LineDraft[]>(() => [newLine()]);
   /** With no ingredients: why it uses no stock (a service charge, say). */
   const [noStock, setNoStock] = useState("");
@@ -130,7 +137,7 @@ export function AddProductForm({
 
   if (items.length === 0) {
     return (
-      <div className="card" id="add-product">
+      <div className={inPanel ? undefined : "card"} id="add-product">
         <strong>{t("Add a menu product")}</strong>
         <p className="muted" style={{ fontSize: ".9rem" }}>
           {t("First add stock items on Inventory, so the recipe has ingredients to use.")}
@@ -143,22 +150,24 @@ export function AddProductForm({
   }
 
   return (
-    <div className="card grid" style={{ gap: 12 }} id="add-product">
-      <button
-        className="btn-primary"
-        onClick={() => setOpen((o) => !o)}
-        style={{ alignSelf: "start" }}
-      >
-        {open ? (
-          <>
-            <Icon name="close" size={16} /> {t("Hide product form")}
-          </>
-        ) : (
-          <>
-            <Icon name="plus" size={16} /> {t("Add menu product")}
-          </>
-        )}
-      </button>
+    <div className={inPanel ? "grid" : "card grid"} style={{ gap: 12 }} id="add-product">
+      {!inPanel && (
+        <button
+          className="btn-primary"
+          onClick={() => setOpen((o) => !o)}
+          style={{ alignSelf: "start" }}
+        >
+          {open ? (
+            <>
+              <Icon name="close" size={16} /> {t("Hide product form")}
+            </>
+          ) : (
+            <>
+              <Icon name="plus" size={16} /> {t("Add menu product")}
+            </>
+          )}
+        </button>
+      )}
       {open && (
         <div className="pf">
           <section className="pf-step">
@@ -305,7 +314,7 @@ export function AddProductForm({
                         {m.percent && ` (${m.percent.toFixed(1)}%)`}
                       </div>
                     )}
-                    {suggested && (!m || thin || m.amount.lt(0)) && (
+                    {suggested && !(price && price.eq(suggested)) && (
                       <button
                         type="button"
                         className="pf-suggest"
@@ -342,10 +351,16 @@ export function PriceChange({
   variantId,
   today,
   branches = [],
+  costs = {},
+  priceStep = 250,
 }: {
   variantId: string;
   today: string;
   branches?: { id: string; name: string }[];
+  /** What one serving costs today on each channel, to suggest a price from (null: unknown). */
+  costs?: Record<string, number | null>;
+  /** The step a suggested price is rounded up to (250 IQD). */
+  priceStep?: number;
 }) {
   const op = useOperation();
   const { t } = useT();
@@ -364,6 +379,11 @@ export function PriceChange({
   const [from, setFrom] = useState(today);
   const [placeId, setPlaceId] = useState<string | null>(null);
   const [msg, setMsg] = useState<Msg>(null);
+  const cost = costs[channel];
+  const suggested =
+    cost === null || cost === undefined
+      ? null
+      : suggestedPrice(new Decimal(cost), new Decimal(TARGET_MARGIN), priceStep);
 
   if (!open) {
     return (
@@ -404,6 +424,20 @@ export function PriceChange({
           inputMode="decimal"
           style={{ width: 110 }}
         />
+        {suggested && (
+          <button
+            type="button"
+            className="pf-suggest"
+            data-testid="price-suggest"
+            title={t("For a {pct}% margin, rounded up to {step}", {
+              pct: TARGET_MARGIN,
+              step: fmtIQD(priceStep),
+            })}
+            onClick={() => setPrice(suggested.toString())}
+          >
+            {t("Use {amount}", { amount: iqd(suggested) })}
+          </button>
+        )}
       </label>
       <label>
         <div className="muted" style={{ fontSize: ".75rem" }}>

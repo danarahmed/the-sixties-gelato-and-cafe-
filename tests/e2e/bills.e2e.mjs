@@ -4,7 +4,7 @@
 // change given; a bill kept under a customer's name; and a cancelled bill.
 // (That an open bill holds the day open is checked in flows, before its day
 // close.)
-import { chromium, BASE, check, done, open, signIn, sql } from "./lib.mjs";
+import { BASE, check, chromium, done, open, openProduct, signIn, sql } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const ok = (m) => check(true, m);
@@ -48,9 +48,7 @@ console.log("▸ owner gives the espresso a photo, a category and a ★");
   await page.getByRole("button", { name: "＋ Add" }).click();
   await page.getByText("Saved “Golden drinks”.").waitFor({ timeout: 10000 });
   ok("a category is added");
-  const setup = page.locator(".product-setup", {
-    has: page.locator(`input[value="Golden espresso"]`),
-  });
+  const setup = (await openProduct(page, "Golden espresso")).locator(".product-setup");
   await setup.locator("select").selectOption({ label: "Golden drinks" });
   await setup.getByText("★ Favourite (shown first)").click();
   await setup.getByRole("button", { name: "Save" }).click();
@@ -61,12 +59,10 @@ console.log("▸ owner gives the espresso a photo, a category and a ★");
     ) === "Golden drinks,true",
     "the espresso is in its category, as a favourite",
   );
-  // Saving moves the card into its category's group, which replaces it; wait
-  // for that, as a person would (Add photo is disabled until the save is done),
-  // so the photo is not handed to the card being replaced.
+  // Saving moves its tile into its category's group; the panel stays open on it.
   await page
     .locator("section", { has: page.locator("h2", { hasText: "Golden drinks" }) })
-    .locator(".product-setup", { has: page.locator(`input[value="Golden espresso"]`) })
+    .locator('[data-testid="product-card"][data-name="Golden espresso"]')
     .waitFor({ timeout: 10000 });
   await setup
     .locator('input[type="file"]')
@@ -403,10 +399,7 @@ console.log(
   // Meanwhile the owner puts the espresso up to 3,000, from today.
   const owner = await signIn(browser, "owner");
   await open(owner.page, "/products");
-  const card = owner.page.locator(".card", {
-    has: owner.page.locator('input[value="Golden espresso"]'),
-  });
-  await card.locator("summary").click();
+  const card = await openProduct(owner.page, "Golden espresso", "Sizes & prices");
   await card.getByRole("button", { name: "Change a price…" }).click();
   const priceNow = (c) =>
     `select trim_scale(price_on('${ESPRESSO_SINGLE}', '${c}', null, business_local_date(business_id, now())))::text from product_variant where id = '${ESPRESSO_SINGLE}'`;

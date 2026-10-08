@@ -1,13 +1,14 @@
 // Sizes and add-ons (0041, release P), through the real screens. On Products
 // the owner gives a latte a second size, its recipe copied from the first;
-// makes a group of milks the till asks for and a group of extras it offers;
+// from the latte's own panel (round thirteen), makes a group of milks the till
+// asks for and a group of extras it offers;
 // gives the oat milk a Large's own quantity; and chooses which sizes offer
 // which. At the till a Large with oat milk and two extra shots is one sheet,
 // priced as it is chosen and as the database charges it; the receipt and the
 // barista's ticket list the add-ons under the drink. A table's bill printed
 // before a price rise is paid at the price the customer saw. Orders and the
 // report name the add-ons; a size is retired and brought back.
-import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { BASE, chromium, check, done, open, openProduct, pickItem, signIn, sql } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const last = (q) => sql(q).split("\n").pop();
@@ -52,8 +53,7 @@ console.log("▸ the owner gives the latte a Large, its recipe copied from the o
 {
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/products");
-  const card = page.locator(".card", { has: page.locator('input[value="Addon latte"]') });
-  await card.getByTestId("sizes-addons").locator("summary").click();
+  const card = await openProduct(page, "Addon latte", "Sizes & prices");
   await card.getByTestId("size-add").click();
   const form = card.getByTestId("size-form");
   check(
@@ -87,8 +87,11 @@ console.log("▸ the owner gives the latte a Large, its recipe copied from the o
     "with the Regular's recipe copied",
   );
 
-  console.log("▸ a group of milks the till asks for, and a group of extras");
-  const manager = page.getByTestId("addons-manager");
+  console.log(
+    "▸ from the latte's panel: a group of milks the till asks for, and a group of extras",
+  );
+  await card.getByRole("tab", { name: "Add-ons", exact: true }).click();
+  const manager = card;
   await manager.getByTestId("group-new").click();
   let group = manager.getByTestId("group-form");
   await group.getByLabel("Group name (English)").fill("Milk");
@@ -108,7 +111,7 @@ console.log("▸ the owner gives the latte a Large, its recipe copied from the o
     await f.getByLabel("Price · Dine-in").fill(String(price));
     await f.getByLabel("Price · Takeaway").fill(String(price));
     if (recipe) {
-      await f.getByLabel("Ingredient 1").selectOption({ label: recipe.item });
+      await pickItem(f, "Ingredient 1", recipe.item);
       await f.getByLabel("Quantity 1").fill(String(recipe.qty));
     }
     await f.getByTestId("addon-save").click();
@@ -149,9 +152,17 @@ console.log("▸ the owner gives the latte a Large, its recipe copied from the o
   );
 
   console.log("▸ the latte offers the milks with every size, the extras with the Large only");
+  check(
+    last(`select count(*) from product_modifier_group pm join product p on p.id = pm.product_id
+           where p.name = 'Addon latte'`) === "2",
+    "each group made from the latte's panel is offered with it at once",
+  );
   await card.getByTestId("product-addons-edit").click();
-  await card.getByLabel("Milk with Addon latte").check();
-  await card.getByLabel("Extras with Addon latte").check();
+  check(
+    (await card.getByLabel("Milk with Addon latte").isChecked()) &&
+      (await card.getByLabel("Extras with Addon latte").isChecked()),
+    "both ticked already",
+  );
   const extrasChoice = card.locator(".product-addon-choice", { hasText: "Extras" });
   await extrasChoice.getByLabel("Only:").check();
   await extrasChoice.getByLabel("Large").check();
@@ -164,17 +175,17 @@ console.log("▸ the owner gives the latte a Large, its recipe copied from the o
     null,
     { timeout: 10000 },
   );
-  check(true, "the card says so: Milk · Extras (Large)");
+  check(true, "the panel says so: Milk · Extras (Large)");
   check(
-    (await milk.textContent()).includes("Offered with Addon latte"),
-    "and the group says who offers it",
+    (await milk.getByTestId("group-shared").textContent()).includes("Only Addon latte offers it."),
+    "and the group says no other product shares it",
   );
 
   console.log("▸ a Large's oat milk is 200 ml, every other size's 150");
   const oat = milk.locator('[data-addon="Oat milk"]');
   await oat.getByRole("button", { name: "What it uses…" }).click();
   await oat.getByLabel("Applies to").selectOption({ label: "Addon latte · Large" });
-  await oat.getByLabel("Ingredient 1").selectOption({ label: "Addon oat milk" });
+  await pickItem(oat, "Ingredient 1", "Addon oat milk");
   await oat.getByLabel("Quantity 1").fill("200");
   await oat.getByRole("button", { name: "Save" }).click();
   await oat.getByText("Addon latte · Large: 200 ml Addon oat milk").waitFor({ timeout: 10000 });
@@ -331,8 +342,7 @@ console.log("▸ Orders and the report name the add-ons; a size is retired and b
   );
 
   await open(page, "/products");
-  const card = page.locator(".card", { has: page.locator('input[value="Addon latte"]') });
-  await card.getByTestId("sizes-addons").locator("summary").click();
+  const card = await openProduct(page, "Addon latte", "Sizes & prices");
   const large = card.locator('[data-testid="size-row"][data-size="Large"]');
   await large.getByRole("button", { name: "Retire…" }).click();
   await large.getByLabel("Why it is retired").fill("Cups ran out");
@@ -371,10 +381,11 @@ console.log("▸ in Arabic");
   const { ctx, page } = await signIn(browser, "owner");
   await ctx.addCookies([{ name: "locale", value: "ar", url: BASE }]);
   await open(page, "/products");
+  await page.locator('[data-testid="product-card"][data-name="Addon latte"] > button').click();
+  const tabs = await page.getByTestId("product-panel").getByRole("tab").allTextContents();
   check(
-    (await page.getByTestId("addons-manager").locator("h3").first().textContent()).trim() ===
-      "الإضافات",
-    "Products shows its add-ons in Arabic",
+    tabs.includes("الإضافات"),
+    `a product's panel shows its add-ons in Arabic (${tabs.join(" · ")})`,
   );
   await ctx.close();
 }

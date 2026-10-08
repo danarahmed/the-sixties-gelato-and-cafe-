@@ -7,7 +7,7 @@
 // the second's sale. The owner puts the cashier at the first branch on
 // Settings, and the product card lists the second branch's price. In Arabic
 // and Kurdish too.
-import { BASE, TODAY, chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { BASE, TODAY, chromium, check, done, open, signIn, sql, openProduct } from "./lib.mjs";
 import { english } from "./english.mjs";
 
 const browser = await chromium.launch();
@@ -198,11 +198,12 @@ console.log("▸ Settings: where each person works; the product card: each branc
   await page.getByText("Demo Cashier works everywhere.").waitFor({ timeout: 10000 });
 
   await open(page, "/products");
+  const espresso = await openProduct(page, "Golden espresso", "Sizes & prices");
   check(
-    (await page.getByTestId("branch-prices").first().textContent()).includes(
+    (await espresso.getByTestId("branch-prices").first().textContent()).includes(
       "At Second Branch: Dine-in 3,500",
     ),
-    "the product card lists the second branch's own price",
+    "the product's panel lists the second branch's own price",
   );
   await ctx.close();
 }

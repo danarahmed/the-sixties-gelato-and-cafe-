@@ -12,7 +12,7 @@
 // or put aside, and can be hidden. A branch manager sees the steps that are the
 // owner's as the owner's. In Kurdish, the list is in Kurdish.
 import { execFileSync } from "node:child_process";
-import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { BASE, chromium, check, done, open, signIn, sql, pickItem } from "./lib.mjs";
 
 const DB = process.env.E2E_DB || "sixties_e2e";
 const last = (q) => sql(q).split("\n").pop();
@@ -179,7 +179,13 @@ console.log("▸ the owner of a café with nothing is shown what to add, in orde
   await page.waitForURL(/\/production#new-recipe$/);
   await page.waitForLoadState("networkidle");
   check(
-    await page.locator("#new-recipe").evaluate((d) => d.open === true),
+    await page
+      .getByTestId("new-recipe-panel")
+      .waitFor({ timeout: 10000 })
+      .then(
+        () => true,
+        () => false,
+      ),
     "Add recipes: Production's form to add what you make, open",
   );
   await open(page, "/dashboard");
@@ -189,7 +195,7 @@ console.log("▸ the owner of a café with nothing is shown what to add, in orde
   await productName.waitFor({ timeout: 10000 });
   check(await productName.isVisible(), "Add products: the menu product's form, open");
   await productName.fill("Milkshake");
-  await page.getByLabel("Ingredient 1").selectOption({ label: "Milk" });
+  await pickItem(page, "Ingredient 1", "Milk");
   await page.getByLabel("Quantity 1").fill("250");
   await page.getByLabel("Dine-in price").fill("3000");
   await page.getByRole("button", { name: "Create product" }).click();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   saveEmployeeAction,
@@ -17,12 +17,12 @@ import { OperationStatus, useOperation } from "@/components/useOperation";
 import { AddPeople } from "@/components/staff/AddPeople";
 import { Icon } from "@/components/Icon";
 import { PhonePanel } from "@/components/staff/PhonePanel";
+import { PanelTabs, SidePanel, type PanelTab } from "@/components/SidePanel";
 import type { LinkedPhone } from "@/lib/clock";
 
 type Msg = { ok: boolean; text: string } | null;
 type Place = { id: string; name: string };
 type Login = { id: string; name: string };
-type Part = "edit" | "pin" | "pay" | "phone" | "left";
 
 /** With this many people or more, a box to find one by name. */
 const SEARCH_FROM = 6;
@@ -299,37 +299,72 @@ function PersonPanel({
   onClose: () => void;
 }) {
   const { t } = useT();
-  const box = useRef<HTMLDivElement | null>(null);
   const phone = phones?.[p.id] ?? null;
-  const parts: { id: Part; label: string; testId: string }[] = [
-    ...(canManage ? [{ id: "edit" as const, label: t("Details"), testId: "edit-person" }] : []),
+  const parts: PanelTab[] = [
     ...(canManage
-      ? [{ id: "pin" as const, label: p.hasPin ? t("New PIN") : t("Set a PIN"), testId: "set-pin" }]
+      ? [
+          {
+            id: "edit",
+            label: t("Details"),
+            testId: "edit-person",
+            content: (
+              <PersonForm
+                person={p}
+                places={places}
+                logins={logins}
+                today={today}
+                onDone={onClose}
+                onCancel={onClose}
+              />
+            ),
+          },
+          {
+            id: "pin",
+            label: p.hasPin ? t("New PIN") : t("Set a PIN"),
+            testId: "set-pin",
+            content: <PinForm person={p} onDone={onClose} />,
+          },
+        ]
       : []),
-    ...(canPay ? [{ id: "pay" as const, label: t("Pay"), testId: "set-pay" }] : []),
+    ...(canPay
+      ? [
+          {
+            id: "pay",
+            label: t("Pay"),
+            testId: "set-pay",
+            content: <PayForm person={p} onDone={onClose} />,
+          },
+        ]
+      : []),
     ...(canManage && phones !== null && p.worksNow
-      ? [{ id: "phone" as const, label: t("Their phone"), testId: "link-phone" }]
+      ? [
+          {
+            id: "phone",
+            label: t("Their phone"),
+            testId: "link-phone",
+            content: (
+              <PhonePanel
+                employeeId={p.id}
+                name={p.name}
+                phone={phone}
+                timezone={timezone}
+                onClose={onClose}
+              />
+            ),
+          },
+        ]
       : []),
     ...(canManage
       ? [
           {
-            id: "left" as const,
+            id: "left",
             label: p.leftOn ? t("Works here again") : t("Last day"),
             testId: "set-left",
+            content: <LeftForm person={p} today={today} onDone={onClose} />,
           },
         ]
       : []),
   ];
-  const [part, setPart] = useState<Part | null>(parts[0]?.id ?? null);
-
-  useEffect(() => {
-    box.current?.focus();
-    const was = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = was;
-    };
-  }, []);
 
   const facts: [string, React.ReactNode][] = [
     [t("Where"), p.location],
@@ -382,97 +417,36 @@ function PersonPanel({
   ];
 
   return (
-    <div className="person-panel-back" onClick={onClose}>
-      <div
-        ref={box}
-        tabIndex={-1}
-        className="person-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="person-panel-name"
-        data-testid="person-panel"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") onClose();
-        }}
-      >
-        <div className="person-panel-head">
+    <SidePanel
+      label={p.name}
+      onClose={onClose}
+      testId="person-panel"
+      head={
+        <div className="side-panel-who">
           <span className={p.inSince ? "person-face in" : "person-face"} aria-hidden="true">
             {initials(p.name)}
           </span>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <h3 id="person-panel-name" style={{ margin: 0 }}>
-              {p.name}
-            </h3>
+          <div style={{ minWidth: 0 }}>
+            <h3 style={{ margin: 0 }}>{p.name}</h3>
             <span className="muted" style={{ fontSize: ".85rem" }}>
               {p.title ?? t("No job written yet")}
               {p.inSince &&
                 ` · ${t("In since {time}", { time: dateTimeIn(timezone, p.inSince).slice(11) })}`}
             </span>
           </div>
-          <button
-            type="button"
-            className="icon-btn"
-            onClick={onClose}
-            aria-label={t("Close")}
-            data-testid="person-panel-close"
-          >
-            <Icon name="close" size={18} />
-          </button>
         </div>
-        <dl className="person-facts">
-          {facts.map(([k, v]) => (
-            <div key={k}>
-              <dt>{k}</dt>
-              <dd>{v}</dd>
-            </div>
-          ))}
-        </dl>
-        {parts.length > 0 && (
-          <>
-            <div className="seg person-parts" role="tablist" aria-label={p.name}>
-              {parts.map((x) => (
-                <button
-                  key={x.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={part === x.id}
-                  className={part === x.id ? "active" : undefined}
-                  onClick={() => setPart(x.id)}
-                  data-testid={x.testId}
-                >
-                  {x.label}
-                </button>
-              ))}
-            </div>
-            <div role="tabpanel" aria-label={parts.find((x) => x.id === part)?.label}>
-              {part === "edit" && (
-                <PersonForm
-                  person={p}
-                  places={places}
-                  logins={logins}
-                  today={today}
-                  onDone={onClose}
-                  onCancel={onClose}
-                />
-              )}
-              {part === "pin" && <PinForm person={p} onDone={onClose} />}
-              {part === "pay" && <PayForm person={p} onDone={onClose} />}
-              {part === "left" && <LeftForm person={p} today={today} onDone={onClose} />}
-              {part === "phone" && (
-                <PhonePanel
-                  employeeId={p.id}
-                  name={p.name}
-                  phone={phone}
-                  timezone={timezone}
-                  onClose={onClose}
-                />
-              )}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+      }
+    >
+      <dl className="panel-facts">
+        {facts.map(([k, v]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <PanelTabs tabs={parts} label={p.name} />
+    </SidePanel>
   );
 }
 
