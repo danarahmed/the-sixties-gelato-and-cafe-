@@ -58,15 +58,19 @@ console.log("▸ a manager adds someone who works here, sets their PIN, and sees
   await form.getByTestId("add-people-save").click();
   const row = page.locator('[data-testid="person-row"][data-name="Rana Staff"]');
   await row.waitFor({ timeout: 10000 });
-  check((await row.textContent()).includes("None yet"), "added, with no PIN yet");
+  check((await row.textContent()).includes("No PIN yet"), "added, with no PIN yet");
+  await row.getByRole("button").click();
+  const panel = page.getByTestId("person-panel");
+  await panel.waitFor({ timeout: 10000 });
   check(
     (await page.getByTestId("staff-people").textContent()).includes("Barista") &&
       (await page.getByTestId("person-pay").count()) === 0 &&
-      (await page.getByTestId("set-pay").count()) === 0,
-    "a branch manager sees no pay, and cannot set it",
+      (await panel.getByTestId("set-pay").count()) === 0 &&
+      (await panel.getByTestId("person-form").count()) === 1,
+    "a branch manager sees no pay, and cannot set it; their panel opens on their details",
   );
 
-  await row.getByTestId("set-pin").click();
+  await panel.getByTestId("set-pin").click();
   const pin = page.getByTestId("pin-form");
   await pin.getByLabel("PIN", { exact: true }).fill("5820");
   await pin.getByLabel("The same PIN again").fill("5820");
@@ -98,10 +102,11 @@ console.log("▸ the owner sets the pay");
   await open(page, "/staff");
   const row = page.locator('[data-testid="person-row"][data-name="Rana Staff"]');
   check(
-    (await row.getByTestId("person-pay").textContent()).includes("Not set"),
+    (await row.getByTestId("person-pay").textContent()).includes("Pay not set"),
     "the owner sees the pay: not set yet",
   );
-  await row.getByTestId("set-pay").click();
+  await row.getByRole("button").click();
+  await page.getByTestId("person-panel").getByTestId("set-pay").click();
   const form = page.getByTestId("pay-form");
   await form.getByLabel("How they are paid").selectOption("monthly");
   await form.getByLabel("Pay a month").fill("600,000");
@@ -125,7 +130,7 @@ check(
 console.log("▸ a manager plans the week");
 {
   const { ctx, page } = await signIn(browser, "manager");
-  await open(page, `/staff?place=${HERE_ID}`);
+  await open(page, `/staff?place=${HERE_ID}#schedule`);
   const today = last(`select ${TODAY}`);
   const cell = page.locator(
     `[data-testid="schedule-row"][data-name="Rana Staff"] [data-testid="schedule-cell"][data-day="${today}"]`,
@@ -198,7 +203,7 @@ console.log("▸ a manager corrects today's hours, and adds hours nobody clocked
 let todayRecord = "";
 {
   const { ctx, page } = await signIn(browser, "manager");
-  await open(page, "/staff");
+  await open(page, "/staff#attendance");
   const rec = page.locator('[data-testid="attendance-record"][data-name="Rana Staff"]').first();
   await rec.getByTestId("correct-hours").click();
   const form = page.getByTestId("correct-form");

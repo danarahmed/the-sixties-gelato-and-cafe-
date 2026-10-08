@@ -318,7 +318,7 @@ console.log(
       `in ${locale}, ${dates} dates on ${SCREENS.length} screens, none back to front${found.length ? `: ${found.slice(0, 3).join(" | ")}` : ""}`,
     );
     // The rota's weeks: the one before points back (right), the one after on (left).
-    await open(page, "/staff");
+    await open(page, "/staff#schedule");
     const before = (await page.getByTestId("week-before").textContent()).trim();
     const after = (await page.getByTestId("week-after").textContent()).trim();
     check(

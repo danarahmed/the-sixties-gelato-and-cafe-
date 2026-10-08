@@ -6569,3 +6569,222 @@ kbd {
   margin: 0;
   font-weight: 600;
 }
+
+/* ------------------------------------------------- staff: people and tabs */
+/* A link that looks like a button: Staff → Download CSV. */
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-link:hover,
+.btn-link:focus-visible {
+  background: var(--surface-2);
+  border-color: var(--rule);
+  color: var(--text);
+}
+.staff-tab-bar {
+  justify-self: start;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.staff-tab-bar button {
+  padding: 0 16px;
+  white-space: nowrap;
+}
+.staff-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.staff-tools .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.staff-find {
+  max-width: 280px;
+}
+/* The people: a line each, the whole line a button that opens their panel. */
+.people-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.person-line > button {
+  display: grid;
+  grid-template-columns: 40px minmax(140px, 1.1fr) minmax(0, 2fr) 20px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 12px;
+  text-align: start;
+  font-weight: 400;
+  border-radius: 12px;
+  background: var(--surface);
+}
+.person-line > button:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.person-line.gone > button {
+  opacity: 0.6;
+}
+.person-face {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  color: var(--brand-2);
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex: none;
+  position: relative;
+}
+/* In now: a green dot on their face. */
+.person-face.in::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  inset-inline-end: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.person-who {
+  display: grid;
+  min-width: 0;
+}
+.person-who b,
+.person-who .muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.person-who .muted {
+  font-size: 0.8rem;
+}
+.person-marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.person-go {
+  color: var(--text-muted);
+  display: inline-flex;
+}
+[dir="rtl"] .person-go .icon {
+  transform: scaleX(-1);
+}
+@media (max-width: 640px) {
+  .person-line > button {
+    grid-template-columns: 40px minmax(0, 1fr) 20px;
+  }
+  .person-marks {
+    grid-column: 2 / 3;
+    grid-row: 2;
+    justify-content: flex-start;
+  }
+  .person-go {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+/* A person's panel: beside the list on a wide screen, the whole screen on a phone. */
+.person-panel-back {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(10, 14, 20, 0.4);
+  display: flex;
+  justify-content: flex-end;
+}
+.person-panel {
+  width: min(560px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--surface);
+  color: var(--text);
+  border-inline-start: 1px solid var(--border);
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.18);
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  animation: person-panel-in 0.18s ease-out;
+}
+.person-panel:focus {
+  outline: none;
+}
+@keyframes person-panel-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+[dir="rtl"] .person-panel {
+  animation-name: person-panel-in-rtl;
+}
+@keyframes person-panel-in-rtl {
+  from {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .person-panel {
+    animation: none;
+  }
+}
+.person-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.person-facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px 16px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.person-facts dt {
+  font-size: 0.72rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.person-facts dd {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+}
+.person-parts {
+  max-width: 100%;
+  overflow-x: auto;
+  justify-self: start;
+}
+.person-parts button {
+  padding: 0 12px;
+  white-space: nowrap;
+}
