@@ -17,12 +17,12 @@ import { fmtIQD, fmtQty } from "@/lib/format";
 import { addDays, businessToday, dateTimeIn, parseDay } from "@/lib/dates";
 import { PLAN_STATUS_LABEL, WEEKDAY_NAME, keepsLabel } from "@/lib/production";
 import { EmptyState } from "@/components/ui";
-import { OpenOnHash } from "@/components/OpenOnHash";
 import { PlaceSwitch } from "@/components/PlaceSwitch";
 import { placeChoice } from "@/lib/place";
 import type { ItemOpt } from "@/components/menu/RecipeLines";
 import { RecordBatch } from "@/components/production/RecordBatch";
 import { RecordPlan } from "@/components/production/RecordPlan";
+import { RecipeGrid, type RecipeTile } from "@/components/production/RecipeGrid";
 import { BatchRecipeForm } from "@/components/production/BatchRecipeForm";
 import { CancelBatch, RecipeActions } from "@/components/production/RecipeActions";
 import { ProductionLots } from "@/components/production/Lots";
@@ -97,7 +97,8 @@ export default async function ProductionPage({
     .filter((r) => r.status === "make" && r.batches > 0 && active.some((x) => x.id === r.recipeId))
     .map((r) => ({ recipeId: r.recipeId, batches: r.batches }));
 
-  const recipeCard = (r: BatchRecipe) => {
+  /** A recipe as a tile, and its panel's body. */
+  const recipeTile = (r: BatchRecipe): RecipeTile => {
     const output = byId.get(r.outputItemId);
     const cost = seesCost
       ? batchCost(r.lines, new Decimal(1), (id) => byId.get(id)?.unitCost ?? "0", decimals)
@@ -110,62 +111,68 @@ export default async function ProductionPage({
     const yieldBase = new Decimal(r.yieldBase);
     const f = output?.units.find((u) => u.code === r.yieldUnit)?.factor ?? 1;
     const keeps = keepsLabel(r.shelfLifeHours);
-    return (
-      <div key={r.id} className="card pr-recipe">
-        <div className="pr-recipe-head">
-          <strong>{r.name}</strong>
-          <span className="muted">
+    const each = cost ? perUnit(cost, yieldBase.div(f), unitLabel(output, r.yieldUnit, t)) : null;
+    const lineText = (l: BatchRecipe["lines"][number]) =>
+      `${fmtQty(l.quantity)} ${unitLabel(byId.get(l.itemId), l.unitCode, t)} ${l.name}`;
+    return {
+      id: r.id,
+      name: r.name,
+      active: r.isActive,
+      makes: (
+        <Rich
+          text={
+            r.outputName !== r.name
+              ? t("one batch makes <qty>{qty}</qty> of {output}", {
+                  qty: showIn(yieldBase, output, r.yieldUnit, t),
+                  output: r.outputName,
+                })
+              : t("one batch makes <qty>{qty}</qty>", {
+                  qty: showIn(yieldBase, output, r.yieldUnit, t),
+                })
+          }
+          tags={{ qty: (c) => <span className="mono">{c}</span> }}
+        />
+      ),
+      cost:
+        cost && !cost.isZero() ? (
+          <span>
             <Rich
-              text={
-                r.outputName !== r.name
-                  ? t("one batch makes <qty>{qty}</qty> of {output}", {
-                      qty: showIn(yieldBase, output, r.yieldUnit, t),
-                      output: r.outputName,
-                    })
-                  : t("one batch makes <qty>{qty}</qty>", {
-                      qty: showIn(yieldBase, output, r.yieldUnit, t),
-                    })
-              }
-              tags={{ qty: (c) => <span className="mono">{c}</span> }}
+              text={t("costs <b>{amount}</b>", { amount: fmtIQD(cost.toNumber()) })}
+              tags={{ b: (c) => <strong className="mono">{c}</strong> }}
             />
+            {each && <span className="muted"> · {msg(each)}</span>}
           </span>
-          {cost && !cost.isZero() && (
-            <span className="pr-recipe-cost">
-              <Rich
-                text={t("costs <b>{amount}</b>", { amount: fmtIQD(cost.toNumber()) })}
-                tags={{ b: (c) => <strong className="mono">{c}</strong> }}
-              />
-              {(() => {
-                const each = perUnit(cost, yieldBase.div(f), unitLabel(output, r.yieldUnit, t));
-                return each ? <span className="muted"> · {msg(each)}</span> : null;
-              })()}
-            </span>
-          )}
+        ) : null,
+      noCost: missing.length > 0,
+      keeps: keeps ? t(keeps.text, keeps.vars) : null,
+      lines: r.lines.map(lineText),
+      body: (
+        <div className="grid pr-recipe" style={{ gap: 10 }}>
           {missing.length > 0 && (
-            <span className="pr-short pr-recipe-cost">
+            <p className="pr-short" style={{ margin: 0 }}>
               {t("No cost yet for {names}: never bought or made", { names: missing.join(", ") })}
-            </span>
+            </p>
           )}
-          {keeps && (
-            <span className="muted" data-testid="recipe-keeps">
-              {t(keeps.text, keeps.vars)}
-            </span>
-          )}
+          <div>
+            <h4 className="muted" style={{ margin: "0 0 6px" }}>
+              {t("What goes into one batch")}
+            </h4>
+            <ul className="pr-lines">
+              {r.lines.map((l, i) => (
+                <li key={`${l.itemId}-${i}`}>
+                  <span className="mono">
+                    {fmtQty(l.quantity)} {unitLabel(byId.get(l.itemId), l.unitCode, t)}
+                  </span>{" "}
+                  {l.name}
+                </li>
+              ))}
+            </ul>
+          </div>
+          {r.instructions && <p className="pr-instructions">{r.instructions}</p>}
+          {canEdit && <RecipeActions recipe={r} items={itemOpts} decimals={decimals} />}
         </div>
-        <ul className="pr-lines">
-          {r.lines.map((l, i) => (
-            <li key={`${l.itemId}-${i}`}>
-              <span className="mono">
-                {fmtQty(l.quantity)} {unitLabel(byId.get(l.itemId), l.unitCode, t)}
-              </span>{" "}
-              {l.name}
-            </li>
-          ))}
-        </ul>
-        {r.instructions && <p className="pr-instructions">{r.instructions}</p>}
-        {canEdit && <RecipeActions recipe={r} items={itemOpts} decimals={decimals} />}
-      </div>
-    );
+      ),
+    };
   };
 
   return (
@@ -395,37 +402,25 @@ export default async function ProductionPage({
 
       <section className="grid" style={{ gap: 10 }}>
         <h2 style={{ margin: "8px 0 0" }}>{t("What you make")}</h2>
-        {canEdit && (
-          <details className="card pr-new" id="new-recipe" open={recipes.length === 0}>
-            <summary>
-              <Icon name="plus" size={16} /> {t("Add something you make")}
-            </summary>
-            <BatchRecipeForm items={itemOpts} decimals={decimals} seesCost={seesCost} />
-          </details>
-        )}
-        {canEdit && <OpenOnHash id="new-recipe" />}
-        {recipes.length === 0 ? (
+        {recipes.length === 0 && (
           <EmptyState
             title={t("Nothing set up yet")}
             hint={
               canEdit
-                ? t("Add what you make above: its name, how much a batch makes, and what goes in.")
+                ? t("Add what you make: its name, how much a batch makes, and what goes in.")
                 : t("A manager who edits recipes adds what you make.")
             }
           />
-        ) : (
-          <div className="pr-recipes">{active.map(recipeCard)}</div>
         )}
-        {stopped.length > 0 && (
-          <details>
-            <summary className="muted">
-              {t("Not made any more ({n})", { n: stopped.length })}
-            </summary>
-            <div className="pr-recipes" style={{ marginTop: 10 }}>
-              {stopped.map(recipeCard)}
-            </div>
-          </details>
-        )}
+        <RecipeGrid
+          tiles={active.map(recipeTile)}
+          stopped={stopped.map(recipeTile)}
+          newRecipe={
+            canEdit ? (
+              <BatchRecipeForm items={itemOpts} decimals={decimals} seesCost={seesCost} />
+            ) : null
+          }
+        />
       </section>
 
       <section className="grid" style={{ gap: 10 }}>

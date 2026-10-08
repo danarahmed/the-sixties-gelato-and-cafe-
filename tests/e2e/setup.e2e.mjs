@@ -179,7 +179,13 @@ console.log("▸ the owner of a café with nothing is shown what to add, in orde
   await page.waitForURL(/\/production#new-recipe$/);
   await page.waitForLoadState("networkidle");
   check(
-    await page.locator("#new-recipe").evaluate((d) => d.open === true),
+    await page
+      .getByTestId("new-recipe-panel")
+      .waitFor({ timeout: 10000 })
+      .then(
+        () => true,
+        () => false,
+      ),
     "Add recipes: Production's form to add what you make, open",
   );
   await open(page, "/dashboard");

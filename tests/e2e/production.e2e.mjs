@@ -234,10 +234,8 @@ console.log("▸ the base keeps three days; a barista's batch is used by then");
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/production");
   // The base's own card (the flavour's lists the base as an ingredient).
-  const baseCard = () =>
-    page
-      .locator(".pr-recipe")
-      .filter({ has: page.locator(".pr-recipe-head strong", { hasText: /^E2E base$/ }) });
+  await page.locator('[data-testid="recipe-card"][data-name="E2E base"] > button').click();
+  const baseCard = () => page.getByTestId("recipe-panel");
   const card = baseCard();
   await card.getByRole("button", { name: "Change…" }).click();
   await card.getByLabel("How long it keeps").fill("3");
@@ -246,7 +244,7 @@ console.log("▸ the base keeps three days; a barista's batch is used by then");
   await page.getByTestId("recipe-keeps").first().waitFor({ timeout: 10000 });
   check(
     (await baseCard().innerText()).includes("keeps 3 days"),
-    "the base keeps 3 days, as its card says",
+    "the base keeps 3 days, as its panel says",
   );
   check(
     sql("select shelf_life_hours from recipe where name = 'E2E base'") === "72",

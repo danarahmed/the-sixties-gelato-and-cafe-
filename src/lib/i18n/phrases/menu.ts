@@ -6,6 +6,11 @@ import type { PhraseBook } from "./types";
 const phrases: PhraseBook = {
   // Products & Recipes as tiles, each product in its own panel (round thirteen).
   Basics: { ar: "الأساسيات", ckb: "بنەڕەتەکان" },
+  Keeps: { ar: "يُحفظ", ckb: "دەمێنێتەوە" },
+  "Add what you make: its name, how much a batch makes, and what goes in.": {
+    ar: "أضف ما تصنعه: اسمه، وكم تُنتج الدفعة، وما يدخل فيها.",
+    ckb: "ئەوەی دروستی دەکەیت زیاد بکە: ناوەکەی، دەفعەیەک چەندە دروست دەکات، و چی دەچێتە ناوی.",
+  },
   "Sizes & prices": { ar: "الأحجام والأسعار", ckb: "قەبارە و نرخەکان" },
   "Tap a product to see and change its recipe, prices, sizes and add-ons. Costs are today's, worked out exactly as a sale posts them; a price or recipe changed from a date leaves the sales before it as they were.":
     {

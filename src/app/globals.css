@@ -6971,3 +6971,22 @@ kbd {
 .side-panel .panel-tabs + [role="tabpanel"] .card {
   box-shadow: none;
 }
+/* What you make on Production, as tiles: no photo, the batch and its cost first. */
+.recipe-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.recipe-tile > button {
+  gap: 4px;
+  padding: 14px;
+}
+.recipe-tile-makes,
+.recipe-tile-cost {
+  font-size: 0.85rem;
+}
+.recipe-tile-lines {
+  font-size: 0.78rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
