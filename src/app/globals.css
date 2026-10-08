@@ -6593,10 +6593,11 @@ kbd {
   border-color: var(--rule);
   color: var(--text);
 }
+/* On a narrow screen the tabs go onto a second line rather than off the edge. */
 .staff-tab-bar {
   justify-self: start;
   max-width: 100%;
-  overflow-x: auto;
+  flex-wrap: wrap;
 }
 .staff-tab-bar button {
   padding: 0 16px;
@@ -6726,10 +6727,14 @@ kbd {
   border-inline-start: 1px solid var(--border);
   box-shadow: -12px 0 40px rgba(0, 0, 0, 0.18);
   padding: 20px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  align-content: start;
   animation: person-panel-in 0.18s ease-out;
+}
+/* Each part at its own height: the panel scrolls, nothing in it is squeezed. */
+.person-panel > * {
+  flex: none;
 }
 .person-panel:focus {
   outline: none;
@@ -6781,8 +6786,8 @@ kbd {
 }
 .person-parts {
   max-width: 100%;
-  overflow-x: auto;
-  justify-self: start;
+  flex-wrap: wrap;
+  align-self: flex-start;
 }
 .person-parts button {
   padding: 0 12px;
