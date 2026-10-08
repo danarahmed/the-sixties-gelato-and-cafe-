@@ -2207,6 +2207,10 @@ Built and tested:
   the screens can go live before the owner applies them. A read-only look at
   the live database on 6 October found every function the three replace as
   the tested build has it, word for word.
+  The owner applied all three in the SQL editor on 8 October; compared
+  with the tested build, every new and replaced function is identical once
+  the paste's line endings are set aside, with the tables, the columns, the
+  index and the permissions as built.
 
 ## The August 2026 audit, finding by finding
 
