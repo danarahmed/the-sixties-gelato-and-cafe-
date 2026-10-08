@@ -3446,8 +3446,8 @@ What it changes:
   `send_test_warning` (signed in, each checking its permission; the writes
   keyed); `push_take` and `push_done` (called by the app's `/api/push/send`
   with no one signed in, each answering only to the database's secret);
-  `push_queue`, `push_kick`, `push_tick`, `member_has_permission` and
-  `push_can_send` (the database's own).
+  `push_queue`, `push_kick`, `push_tick` and `push_can_send` (the
+  database's own).
 - **Extensions:** it turns on `pg_net` (the database's calls out) and
   `pg_cron` (its timer), and sets the timer to run `push_tick()` every five
   minutes. If Supabase refuses either, the rest is applied all the same, and

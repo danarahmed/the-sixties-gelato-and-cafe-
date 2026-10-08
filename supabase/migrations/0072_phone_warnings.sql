@@ -102,17 +102,6 @@ revoke all on sequence push_message_id_seq from public, anon, authenticated;
 -- -----------------------------------------------------------------------------
 -- 3. Helpers
 -- -----------------------------------------------------------------------------
--- Whether a member (not the caller) holds a permission: who a warning goes to.
-create or replace function member_has_permission(p_member uuid, p_permission text) returns boolean
-language sql stable security definer set search_path = public as $$
-  select exists (
-    select 1 from app_user au
-    join user_role ur on ur.app_user_id = au.id
-    join role_permission rp on rp.role = ur.role
-    where au.id = p_member and au.is_active and rp.permission = p_permission
-  )
-$$;
-
 -- Whether the database can send at all: its timer and its calls out.
 create or replace function push_can_send() returns boolean
 language sql stable set search_path = public as $$
@@ -327,6 +316,8 @@ begin
                                         'urgency', f.urgency) order by (f.urgency = 'red') desc, f.title) as items
       from push_device d
       join push_new f on (not d.urgent_only or f.urgency = 'red')
+      join app_user au on au.id = d.member_id and au.is_active
+     -- 0028's member_has_permission, as the approvals read it; a person no longer at the café gets nothing.
      where d.business_id = p_business and member_has_permission(d.member_id, 'profit.view')
      group by d.id
   loop
@@ -447,7 +438,7 @@ end $$;
 -- -----------------------------------------------------------------------------
 -- 10. Who may call what
 -- -----------------------------------------------------------------------------
-revoke execute on function member_has_permission(uuid, text), push_can_send(), push_queue(uuid), push_kick(uuid),
+revoke execute on function push_can_send(), push_queue(uuid), push_kick(uuid),
   push_tick(), turn_on_phone_warnings__run(text, text, text), turn_off_phone_warnings__run(),
   save_push_device__run(text, text, text, text, boolean)
   from public, anon, authenticated;
