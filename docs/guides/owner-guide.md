@@ -348,26 +348,35 @@ are retired.
 ## Setting up the till
 
 A café with a hundred products and twenty tables needs a till that finds things
-fast. Set it up once, on **Products** and on the till itself:
+fast. Set it up once, on **Products** and on the till itself.
 
-- **Categories** (Products, at the top): name each one in English, Arabic and
+**Products & Recipes** shows the menu as tiles, by the till's categories: each
+with its photo, its price and **cost %**, what one serving costs as a share of
+that price (green up to 35%, amber above, red when it costs the price or
+more), and a tap on a category above the tiles shows that category alone. Tap
+a tile and the product opens beside the menu, a tab for each part:
+**Basics** (its names, photo, category, ★ and On the till), **Recipe**,
+**Sizes & prices** and **Add-ons**. Wherever a recipe asks for an ingredient,
+type part of its name and pick it from the list: its unit fills itself in.
+
+- **Categories** (Products, under the menu): name each one in English, Arabic and
   Kurdish, and number them in the order the till should show them. Untick **On
   the till** to hide a whole category, a seasonal menu say, without touching its
   products.
-- **Each product** (Products): **Add photo** takes a picture from the phone or
+- **Each product** (its **Basics** tab): **Add photo** takes a picture from the phone or
   the computer. The browser shrinks it to a small file first, and only PNG, JPEG
   and WebP pictures are accepted, judged by their contents. Choose its
   **category**, tick **★ Favourite** for the ten or so things sold all day
   (they get a chip of their own), and untick **On the till** for anything not
   sold now. A hidden product keeps its recipe, prices and history, and comes
   back by ticking the box again.
-- **Photos for the till** (Products, under **Add menu product**): every
+- **Photos for the till** (Products, under the menu): every
   product on the till in one place, those still without a photo first, with
   how many have one. Tap a product, then take or choose its picture: one tap
   each, without opening the product. One with no photo keeps its colour and
   initials on the till.
-- **A new product** (Products, **Add menu product**): build its recipe
-  first. The form costs it as you type, at today's stock costs and exactly as a
+- **A new product** (Products, **Add menu product**, which opens beside the
+  menu): build its recipe first. The form costs it as you type, at today's stock costs and exactly as a
   sale will post it: each ingredient, then **Cost of one serving** (more for
   takeaway and delivery, where the cup and lid are used). Then choose the
   prices: each channel shows its cost and, as you type, the margin, in amber
@@ -381,9 +390,10 @@ fast. Set it up once, on **Products** and on the till itself:
   (a service charge, say) needs a reason for using no stock; without a recipe
   or a reason it is not created, since every sale of it would show full
   profit.
-- **Changing a price or a recipe** (Products, open **Recipe, prices, sizes and
-  add-ons**): **Change a price…** starts today or on a later date, never an
-  earlier one, so every sale keeps the price it was made at; each change is on
+- **Changing a price or a recipe** (a product's **Sizes & prices** and
+  **Recipe** tabs): **Change a price…** offers the suggested price for your
+  channel's cost, a 70% margin rounded up to 250 IQD, one tap to use it. A
+  price starts today or on a later date, never an earlier one, so every sale keeps the price it was made at; each change is on
   the audit trail (**price.set**). A change for a later date is listed under
   **Scheduled** on the product, and can be withdrawn with a reason until it
   starts. A recipe changed today does not cancel one scheduled for later: each
@@ -391,15 +401,18 @@ fast. Set it up once, on **Products** and on the till itself:
   minutes, or at once when its screen comes back to the front; a till that has
   not caught up yet is stopped at payment and fetches it then. A bill already
   printed is paid at the prices printed on it.
-- **Sizes and add-ons** (Products, `0041`): open **Recipe, prices, sizes and
-  add-ons** on a product's card. **+ Add a size** adds a Large beside the
-  Regular, at its own prices, copying the Regular's recipe to change
-  afterwards, or with its own.
-  Under **Add-ons** (a section of its own) make the groups the till asks for:
-  **Milk**, the fewest 1 and the most 1, so no latte is rung up without its
-  milk; **Extras**, the fewest 0 and the most 3. Give each add-on its price
-  per channel and what one uses. Then tick, on each product, the groups it
-  offers, with every size or some. Take the milk out of a latte's recipe and
+- **Sizes and add-ons** (Products, `0041`): on a product's **Sizes & prices**
+  tab, **+ Add a size** adds a Large beside the Regular, at its own prices,
+  copying the Regular's recipe to change afterwards, or with its own.
+  Add-ons are set up from each product's own **Add-ons** tab:
+  **+ New group for Latte** makes a group the till asks for and offers it with
+  that product at once — **Milk**, the fewest 1 and the most 1, so no latte is
+  rung up without its milk; **Extras**, the fewest 0 and the most 3. Give each
+  add-on its price per channel and what one uses, right there. A group is
+  shared: tick **Milk** on the cappuccino's Add-ons tab (**Choose the
+  add-ons…**) and both offer the same milks; each group says which other
+  products offer it, and a change made from one product changes it for all of
+  them. Each product offers a group with every size or some. Take the milk out of a latte's recipe and
   give each milk its own: every cup then counts the milk it was made with,
   and **Reports → Sizes and add-ons** shows which sizes and add-ons sell and
   what each leaves.
@@ -424,7 +437,9 @@ fast. Set it up once, on **Products** and on the till itself:
   it its recipe (or say why it uses no stock), or give the ingredient its cost.
   **Reports → Uncosted Sales** lists the sales it has affected; they keep the
   cost they were recorded with.
-- **What you make** (Production): set up each thing made in batches once, with
+- **What you make** (Production, shown as tiles: what a batch makes, what it
+  costs, how long it keeps; tap one to see its ingredients and change it, or
+  **Add something you make**): set up each thing made in batches once, with
   what one batch makes (roughly; weighing is optional) and what goes in. Make a
   base first and flavour it, or make each flavour from scratch: both work, since
   a batch may use anything in stock, bought or made. Then have whoever makes it
