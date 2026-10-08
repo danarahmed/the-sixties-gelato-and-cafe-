@@ -276,6 +276,11 @@ layers before every release.
   short enough for a phone; a round says what went and which phones are gone
   (404, 410), and what failed otherwise waits; nothing told when nothing
   waits; the database's words in Arabic and Kurdish.
+- `tests/staffCsv.test.ts`: Staff → Download CSV (round twelve) — a row a
+  person, headings in the reader's language (Kurdish included); pay, a day's
+  hours, overtime and advances only for those who see payroll; linked phones
+  only for those who manage the staff; amounts as plain numbers; a name that
+  looks like a formula defused; a byte-order mark for Arabic and Kurdish.
 - `tests/batches.test.ts`: a read over a long list of ids (the lines of 500
   sales) asks 100 ids at a time and reads every row once; a batch whose rows
   fill a page is read again in halves, one id's many rows a page at a time;
