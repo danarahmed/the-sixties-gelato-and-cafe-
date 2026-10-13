@@ -281,6 +281,12 @@ layers before every release.
   hours, overtime and advances only for those who see payroll; linked phones
   only for those who manage the staff; amounts as plain numbers; a name that
   looks like a formula defused; a byte-order mark for Arabic and Kurdish.
+- `tests/addonRules.test.ts`: a group of add-ons' rule as a card (round
+  fourteen) — the fewest and the most read as must pick one, optional one or
+  optional several, any other rule kept as its numbers, a card read back the
+  same; the ready-made groups each named in three languages, Kurdish in
+  Kurdish letters, the milk asked for, sugar and ice optional, only free
+  prices filled in.
 - `tests/batches.test.ts`: a read over a long list of ids (the lines of 500
   sales) asks 100 ids at a time and reads every row once; a batch whose rows
   fill a page is read again in halves, one id's many rows a page at a time;
@@ -730,7 +736,10 @@ database, behind a small local stand-in for Supabase's auth service.
   panel (round thirteen) makes a group of milks the till asks for (whole, free; oat, 500, with its milk) and one of
   extras (up to three shots at 750), the form saying what the till will ask,
   each offered with the latte as soon as it is made and saying no other
-  product shares it;
+  product shares it, its rule chosen as a card (round fourteen); at the till
+  the milk is marked as a must and ticked once chosen, the extras folded shut;
+  a ready-made Syrups group refuses to save without its prices, and a
+  ready-made Sugar group is made in one tap, free and named in Kurdish too;
   gives the Large its own oat milk; and offers the milks with every size, the
   extras with the Large only, each change on the audit trail. At the till the
   Large is one sheet: the milk asked for first, nothing added until it is

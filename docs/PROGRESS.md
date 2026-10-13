@@ -2270,6 +2270,17 @@ Built and tested:
     the browser suites `menu`, `addons`, `bills`, `production`, `find`,
     `tills`, `setup`, `staff`, `phoneclock`, `languages` and `pages`.
 
+- **Round fourteen: add-ons made simple, to set up and at the till.** The
+  owner's choices: a group's rule is one of three cards — must pick one,
+  optional one only, optional several (up to a number) — in place of the
+  fewest, the most and the order (a rule made before keeps its numbers); a new
+  group takes its choices and their prices at once; six ready-made groups
+  (milk, extra shots, syrups, sugar, ice, toppings) fill in the rule and the
+  choices in the three languages, the owner giving the prices; and the till
+  marks a must-pick group until it is answered, ticks it once it is, and folds
+  optional groups shut, with bigger buttons. No migration. Tested:
+  `tests/addonRules.test.ts` and the `addons` browser suite.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
