@@ -8,6 +8,7 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import { asks } from "@/components/pos/OptionsSheet";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { READY_GROUPS, type ReadyGroup } from "@/lib/addonRules";
 import {
   GroupCard,
   GroupForm,
@@ -245,8 +246,10 @@ export function ProductAddonGroups({
   editor: Editor | null;
 }) {
   const op = useOperation();
-  const { t } = useT();
+  const { t, locale } = useT();
   const [adding, setAdding] = useState(false);
+  // A ready-made group to start from (round fourteen), or none.
+  const [ready, setReady] = useState<ReadyGroup | undefined>(undefined);
   const labelOf = sizeLabels(products);
   const mine = offers.filter((o) => o.productId === product.id);
   const offered = groups.filter((g) => mine.some((o) => o.groupId === g.id));
@@ -288,16 +291,46 @@ export function ProductAddonGroups({
       {editor &&
         (adding ? (
           <GroupForm
+            key={ready?.key ?? "blank"}
             group={null}
             nextSort={nextSort}
+            ready={ready}
             onCreated={offer}
-            onDone={() => setAdding(false)}
+            onDone={() => {
+              setAdding(false);
+              setReady(undefined);
+            }}
           />
         ) : (
-          <div>
-            <button onClick={() => setAdding(true)} data-testid="group-new">
-              {t("+ New group for {product}", { product: product.name })}
-            </button>
+          <div className="grid" style={{ gap: 8 }}>
+            <div className="ready-groups" data-testid="ready-groups">
+              <span className="muted">{t("Ready-made:")}</span>
+              {READY_GROUPS.map((g) => (
+                <button
+                  key={g.key}
+                  type="button"
+                  className="chip"
+                  data-testid={`ready-${g.key}`}
+                  onClick={() => {
+                    setReady(g);
+                    setAdding(true);
+                  }}
+                >
+                  {locale === "ar" ? g.nameAr : locale === "ckb" ? g.nameCkb : g.name}
+                </button>
+              ))}
+            </div>
+            <div>
+              <button
+                onClick={() => {
+                  setReady(undefined);
+                  setAdding(true);
+                }}
+                data-testid="group-new"
+              >
+                {t("+ New group for {product}", { product: product.name })}
+              </button>
+            </div>
           </div>
         ))}
       <OperationStatus op={op} />

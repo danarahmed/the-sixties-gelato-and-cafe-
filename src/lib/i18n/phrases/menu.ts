@@ -6,6 +6,41 @@ import type { PhraseBook } from "./types";
 const phrases: PhraseBook = {
   // Products & Recipes as tiles, each product in its own panel (round thirteen).
   Basics: { ar: "الأساسيات", ckb: "بنەڕەتەکان" },
+  // A group of add-ons' rule as three cards, its choices typed at once, and the till's sheet (round fourteen).
+  "Must pick one": { ar: "يجب اختيار واحد", ckb: "دەبێت یەکێک هەڵبژێرێت" },
+  "Optional, one only": { ar: "اختياري، واحد فقط", ckb: "ئارەزوومەندانە، تەنها یەک" },
+  "Optional, several": { ar: "اختياري، عدة خيارات", ckb: "ئارەزوومەندانە، چەند دانەیەک" },
+  "e.g. the milk": { ar: "مثلًا الحليب", ckb: "بۆ نموونە شیر" },
+  "e.g. a syrup": { ar: "مثلًا نكهة", ckb: "بۆ نموونە شەربەتێک" },
+  "e.g. toppings": { ar: "مثلًا الإضافات فوقه", ckb: "بۆ نموونە سەرپۆشەکان" },
+  "How do customers choose?": { ar: "كيف يختار الزبائن؟", ckb: "کڕیاران چۆن هەڵدەبژێرن؟" },
+  "Up to": { ar: "حتى", ckb: "تا" },
+  any: { ar: "أي عدد", ckb: "هەر ژمارەیەک" },
+  "Up to how many": { ar: "حتى كم", ckb: "تا چەند" },
+  "Up to how many: a number from 1 to 20, or empty for any": {
+    ar: "حتى كم: رقم من 1 إلى 20، أو اتركه فارغًا لأي عدد",
+    ckb: "تا چەند: ژمارەیەک لە 1 تا 20، یان بەتاڵی بهێڵە بۆ هەر ژمارەیەک",
+  },
+  "Give {name} a price: 0 if it is free.": {
+    ar: "أعطِ {name} سعرًا: 0 إن كان مجانيًا.",
+    ckb: "نرخێک بدە بە {name}: 0 ئەگەر بەخۆڕاییە.",
+  },
+  "The choices, and what each adds to the price (0 if it is free)": {
+    ar: "الخيارات، وما يضيفه كل منها إلى السعر (0 إن كان مجانيًا)",
+    ckb: "هەڵبژاردەکان، و هەر یەکەیان چەند دەخاتە سەر نرخەکە (0 ئەگەر بەخۆڕاییە)",
+  },
+  "Choice {n}": { ar: "الخيار {n}", ckb: "هەڵبژاردەی {n}" },
+  "+ IQD": { ar: "+ دينار", ckb: "+ دینار" },
+  "Price of choice {n}": { ar: "سعر الخيار {n}", ckb: "نرخی هەڵبژاردەی {n}" },
+  "Remove choice {n}": { ar: "إزالة الخيار {n}", ckb: "لابردنی هەڵبژاردەی {n}" },
+  "+ Another choice": { ar: "+ خيار آخر", ckb: "+ هەڵبژاردەیەکی تر" },
+  "What each choice uses from stock (the oat milk, say) is set afterwards with What it uses…": {
+    ar: "ما يستهلكه كل خيار من المخزون (حليب الشوفان مثلًا) يُحدَّد بعدها من «ما تستخدمه…»",
+    ckb: "ئەوەی هەر هەڵبژاردەیەک لە کۆگا بەکاری دەهێنێت (شیری شۆفان بۆ نموونە) دواتر بە «ئەوەی بەکاری دەهێنێت…» دادەنرێت",
+  },
+  "Ready-made:": { ar: "جاهزة:", ckb: "ئامادە:" },
+  "must pick": { ar: "اختيار إلزامي", ckb: "دەبێت هەڵبژێردرێت" },
+  optional: { ar: "اختياري", ckb: "ئارەزوومەندانە" },
   Keeps: { ar: "يُحفظ", ckb: "دەمێنێتەوە" },
   "Add what you make: its name, how much a batch makes, and what goes in.": {
     ar: "أضف ما تصنعه: اسمه، وكم تُنتج الدفعة، وما يدخل فيها.",

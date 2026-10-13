@@ -132,11 +132,11 @@ export function OptionsSheet({
             ))}
           </div>
         )}
-        {groups.map((g) => (
-          <section key={g.id} className="addon-group" data-testid="addon-group">
-            <h4 className="addon-group-h">
-              {groupName(g, locale)} <span className="muted">· {asks(g, t)}</span>
-            </h4>
+        {groups.map((g) => {
+          // Round fourteen: what must be answered is marked, and ticked once it is;
+          // what is optional is folded shut, out of the cashier's way.
+          const picked = g.addons.reduce((n, a) => n + qtyOf(a.id), 0);
+          const chips = (
             <div className="addon-chips">
               {g.addons
                 .filter((a) => priced(a.id) !== undefined)
@@ -177,8 +177,30 @@ export function OptionsSheet({
                   );
                 })}
             </div>
-          </section>
-        ))}
+          );
+          return g.min > 0 ? (
+            <section key={g.id} className="addon-group must" data-testid="addon-group">
+              <h4 className="addon-group-h">
+                {groupName(g, locale)} <span className="muted">· {asks(g, t)}</span>{" "}
+                {picked >= g.min ? (
+                  <span className="badge ok addon-done">✓</span>
+                ) : (
+                  <span className="badge err">{t("must pick")}</span>
+                )}
+              </h4>
+              {chips}
+            </section>
+          ) : (
+            <details key={g.id} className="addon-group optional" data-testid="addon-group">
+              <summary className="addon-group-h">
+                {groupName(g, locale)} <span className="muted">· {asks(g, t)}</span>{" "}
+                <span className="muted">({t("optional")})</span>
+                {picked > 0 && <span className="badge ok"> {picked}</span>}
+              </summary>
+              {chips}
+            </details>
+          );
+        })}
         {size && groups.length > 0 && (
           <div className="options-foot">
             <span className="muted" role="status">
