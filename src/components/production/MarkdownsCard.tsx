@@ -60,7 +60,7 @@ export function MarkdownsCard({ board, timezone }: { board: MarkdownBoard; timez
         </p>
       )}
       {board.lots.map((l) => {
-        const sizes = l.sizes.filter((s) => s.price !== null);
+        const sizes = l.sizes;
         const ids = sizes.map((s) => s.variantId);
         return (
           <div key={l.lotId} className="markdown-lot" data-testid="markdown-lot" data-item={l.item}>

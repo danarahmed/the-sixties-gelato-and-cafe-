@@ -168,7 +168,8 @@ begin
                  select jsonb_agg(jsonb_build_object(
                           'variant_id', s.variant_id, 'product', s.product, 'size', s.size,
                           'servings', floor(lot.left_base / s.per_serving),
-                          'price', price_on(s.variant_id, 'takeaway', v_location, v_today),
+                          'price', coalesce(price_on(s.variant_id, 'takeaway', v_location, v_today),
+                                           price_on(s.variant_id, 'dine_in', v_location, v_today)),
                           'marked', markdown_now(s.variant_id, v_location))
                         order by s.product, s.size)
                    from (select pv.id as variant_id, p.name as product, pv.name as size, 1::numeric as per_serving
