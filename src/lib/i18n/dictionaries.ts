@@ -50,7 +50,7 @@ const en: Dict = {
   "common.theme": "Theme",
   "common.online": "Online",
   "common.offline":
-    "Offline — sales cannot be recorded until the connection returns. Nothing is being saved.",
+    "Offline — the till keeps quick sales and sends them when the connection returns. Nothing else is saved until then.",
   "dash.title": "Dashboard",
   "dash.netSales": "Net sales today",
   "dash.grossProfit": "Gross profit after waste & fees",
@@ -411,7 +411,8 @@ const ar: Dict = {
   "common.language": "اللغة",
   "common.theme": "المظهر",
   "common.online": "متصل",
-  "common.offline": "غير متصل — لا يمكن تسجيل المبيعات حتى يعود الاتصال. لا يُحفظ أي شيء.",
+  "common.offline":
+    "غير متصل — يحتفظ الصندوق بالمبيعات السريعة ويرسلها عند عودة الاتصال. لا يُحفظ شيء آخر حتى ذلك الحين.",
   "dash.title": "لوحة التحكم",
   "dash.netSales": "صافي مبيعات اليوم",
   "dash.grossProfit": "إجمالي الربح بعد الهدر والرسوم",
@@ -767,7 +768,7 @@ const ckb: Dict = {
   "common.theme": "ڕووکار",
   "common.online": "سەرهێڵ",
   "common.offline":
-    "دەرهێڵ — تا پەیوەندی نەگەڕێتەوە ناتوانرێت فرۆشتن تۆمار بکرێت. هیچ شتێک پاشەکەوت ناکرێت.",
+    "دەرهێڵ — سندوق فرۆشتنە خێراکان دەپارێزێت و کاتێک پەیوەندی گەڕایەوە دەیاننێرێت. هیچ شتێکی تر تا ئەو کاتە پاشەکەوت ناکرێت.",
   "dash.title": "داشبۆرد",
   "dash.netSales": "فرۆشی پوختی ئەمڕۆ",
   "dash.grossProfit": "قازانجی گشتی دوای بەفیڕۆچوون و کرێکان",

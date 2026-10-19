@@ -67,6 +67,7 @@ Plan a short window when the café is closed.
 | Plan learns, What to buy (`0070`)       | ✅ Applied by the owner in the SQL editor on 8 October, then compared with the tested build: the plan, What to buy, `set_item_keeps` and `waste_coach` identical once the paste's line endings are set aside, with `item.keeps_days` and the index `inventory_movement_item_time` (see [After `0070`](#after-0070))                                                                                                                              |
 | Labour target (`0071`)                  | ✅ Applied by the owner in the SQL editor on 8 October, then compared with the tested build: the rules' list and defaults and `labour_target` identical once the paste's line endings are set aside; the rule is offered on Settings → Rules, at 0 (none) until it is set (see [After `0071`](#after-0071))                                                                                                                                      |
 | Phone warnings (`0072`)                 | ✅ Applied by the owner in the SQL editor on 8 October, then compared with the tested build: every function identical once the paste's line endings are set aside; pg_cron and pg_net on, the five-minute timer set; the tables, column and permissions as built (see [After `0072`](#after-0072))                                                                                                                                               |
+| Selling without internet (`0073`)       | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0073`](#after-0073)). The till works before it: a kept sale is then sent as an ordinary sale                                                                                                                                                                                                                                                                                 |
 
 ## 0. Before you start
 
@@ -3468,6 +3469,42 @@ once it is applied.
 It is applied by the owner, in Supabase's SQL editor:
 
 1. Open the file `supabase/migrations/0072_phone_warnings.sql` on GitHub,
+   press **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0073`
+
+Migration `0073` is selling without internet (round fifteen): the till keeps
+the quick sales it takes while the café's internet is down and sends them when
+it is back, each once.
+
+What it changes:
+
+- **New column:** `sales_order.sold_offline_at`, when a sale made offline was
+  really sold (empty for every other sale).
+- **New function:** `record_offline_sale` (`sale.create`; keyed): a sale the
+  till kept, with when it was sold and who was signed in then.
+- **Replaced:** `post_sale` (a sale made offline earlier the same day keeps its
+  time: its day's prices, `placed_at` and journal; every other sale is as
+  before) and `stock_rules` (a sale made offline is not refused by an item's
+  rule on stock below zero, nor asks for a manager: the audit trail says it was
+  sold offline). Nothing else changes for any other sale.
+- Nothing recorded changes.
+
+Before it is applied the till still keeps quick sales offline, and sends each
+as an ordinary sale when the internet is back (at that time, and refused where
+an item's rule refuses).
+
+It was rehearsed on the tested build (`scripts/test-sql.sh`), with its own
+suite (`tests/sql/offline_sales.test.sql`), and through the till in the
+browser suite `offline`.
+
+It is applied by the owner, in Supabase's SQL editor:
+
+1. Open the file `supabase/migrations/0073_offline_sales.sql` on GitHub,
    press **Raw**, select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run

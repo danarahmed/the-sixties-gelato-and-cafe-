@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { DiningTable, OpenBill, PosAddons, PosItem } from "@/lib/db/pos";
-import { recordSaleAction } from "@/lib/actions/sales";
+import { recordOfflineSaleAction, recordSaleAction } from "@/lib/actions/sales";
 import { listApproversAction, requestApprovalAction, type Approver } from "@/lib/actions/approvals";
 import {
   cancelBillAction,
@@ -94,6 +94,16 @@ import { reasonKey } from "@/lib/reasons";
 import { changeGiven, type Payment } from "@/lib/payments";
 import { RATE_REFUSED } from "@/lib/fx";
 import { Icon } from "@/components/Icon";
+import {
+  loadOffline,
+  nextOfflineNo,
+  offlineBlock,
+  offlineTotals,
+  priceChanged,
+  saveOffline,
+  type OfflineSale,
+} from "./offline";
+import { OfflineDialog, OfflineStrip } from "./OfflinePanel";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string; uncertain?: boolean };
 type Msg = { ok: boolean; text: string } | null;
@@ -245,6 +255,8 @@ type Dialog =
       error: string | null;
       /** The order's customer and the rewards they could take (0050). */
       reward: PayReward | null;
+      /** Taken with no connection: kept on this till and sent when it is back (0073). */
+      offline?: boolean;
     }
   | { kind: "split"; order: Order; title: string }
   | { kind: "keep" }
@@ -275,7 +287,9 @@ type Dialog =
   /** Clocking in and out (0049): a name and a PIN. */
   | { kind: "clock" }
   /** The order's customer (0050); `why` when a delivery needs one. */
-  | { kind: "customer"; why: string | null };
+  | { kind: "customer"; why: string | null }
+  /** The sales made offline that the database refused, for a manager (0073). */
+  | { kind: "offline" };
 
 type PayReward = {
   name: string;
@@ -314,6 +328,8 @@ export function PosClient({
   startView = null,
   clockScreen = NO_SCREENS,
   payMethods = [],
+  cashierId = null,
+  tillPlace = null,
 }: {
   items: PosItem[];
   /** The add-ons, and which products offer them (0041). */
@@ -350,6 +366,9 @@ export function PosClient({
   clockScreen?: ScreenCheck;
   /** The café's own ways to pay in use (0069): FIB, FastPay… a button each, beside cash and the card. */
   payMethods?: { id: string; name: string }[];
+  /** Who is signed in, and the branch this till sells at: a sale made offline carries both (0073). */
+  cashierId?: string | null;
+  tillPlace?: string | null;
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -403,6 +422,14 @@ export function PosClient({
   }, [canManageTables]);
   const [pending, setPending] = useState<Pending | null>(null);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
+  // Selling without internet (0073): the sales kept on this till, and whether
+  // the database answered the last time the till asked. The browser can say it
+  // is online while the café's internet is down; the till goes by its answers.
+  const [offline, setOffline] = useState<OfflineSale[]>([]);
+  const [reachable, setReachable] = useState(true);
+  const [sending, setSending] = useState(false);
+  const connected = online && reachable;
+  const held = offlineTotals(offline, tillPlace);
   // What is waiting to print, one job after another: each job is one or more slips.
   const [printQueue, setPrintQueue] = useState<Slip[][]>([]);
   const [autoPrint, setAutoPrint] = useState(false);
@@ -485,6 +512,39 @@ export function PosClient({
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
+
+  // Selling without internet (0073): what this till keeps, read when it opens;
+  // while the database does not answer, asked again every fifteen seconds; and
+  // sent as soon as it does, and every half minute while any waits.
+  useEffect(() => {
+    setOffline(loadOffline());
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === null || e.key.startsWith("sixties.pos.offline")) setOffline(loadOffline());
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+  useEffect(() => {
+    if (reachable || !online) return;
+    const probe = window.setInterval(async () => {
+      try {
+        await fetch("/api/pos/bills", {
+          cache: "no-store",
+          headers: { accept: "application/json" },
+        });
+        setReachable(true);
+      } catch {
+        /* still no answer */
+      }
+    }, 15000);
+    return () => window.clearInterval(probe);
+  }, [reachable, online]);
+  useEffect(() => {
+    if (!connected || held.waiting === 0) return;
+    void sendRef.current();
+    const again = window.setInterval(() => void sendRef.current(), 30000);
+    return () => window.clearInterval(again);
+  }, [connected, held.waiting]);
 
   // A payment left unconfirmed before a reload is brought back for its retry.
   useEffect(() => {
@@ -1125,9 +1185,14 @@ export function PosClient({
   // ------------------------------------------------------------ taking the money
   async function startPay(tender: Tender, method?: string) {
     if (pending || busy || order.lines.length === 0) return;
-    if (!navigator.onLine) {
-      setMsg({ ok: false, text: t("pos.offlineBlocked") });
-      return;
+    // No connection: a quick sale is kept on this till and sent when it is back (0073).
+    const offlineSale = !navigator.onLine || !reachable;
+    if (offlineSale) {
+      const why = offlineBlock(order);
+      if (why) {
+        setMsg({ ok: false, text: t(why) });
+        return;
+      }
     }
     // Cash goes only into an open drawer (0036); a card needs none.
     if (tender === "cash" && !drawer.open) {
@@ -1153,7 +1218,7 @@ export function PosClient({
     }
     // The customer's points now, and the rewards they come to (0050).
     let reward: PayReward | null = null;
-    if (o.customer) {
+    if (o.customer && !offlineSale) {
       const r = await customerAtTillAction(o.customer.id);
       if (r.ok && r.data.loyalty) {
         reward = {
@@ -1177,6 +1242,7 @@ export function PosClient({
       title: title(o),
       error: null,
       reward,
+      offline: offlineSale,
     });
   }
 
@@ -1197,7 +1263,7 @@ export function PosClient({
     const rewardOffNow = rewards > 0 ? rewards * (dialog.reward?.value ?? 0) : 0;
     const tender = payments[0]?.type ?? dialog.tender;
     const received = payments.find((x) => x.type === "cash")?.received ?? null;
-    await sendPayment({
+    await (dialog.offline ? keepOffline : sendPayment)({
       kind: o.kind,
       key: dialog.key,
       tender,
@@ -1291,8 +1357,14 @@ export function PosClient({
               rewards: p.rewards ?? null,
             });
       if (!r.ok && r.uncertain) {
-        // No answer from the database: it may have been recorded. Freeze, and
-        // retry with the SAME key, which cannot record it twice.
+        // No answer from the database: it may have been recorded. A quick sale
+        // the till may take offline is kept on it and sent again with the SAME
+        // key (0073); anything else freezes, and is retried with it.
+        if (canKeepOffline(p)) {
+          setReachable(false);
+          keepOffline(p);
+          return;
+        }
         setPending(p);
         savePending(p);
         setDialog(null);
@@ -1385,8 +1457,13 @@ export function PosClient({
       // Two copies, cut apart: the customer's check, and the barista's ticket.
       if (autoPrint) print([job, autoTicket ? ticket : null]);
     } catch {
-      // No answer: it may or may not have been recorded. Freeze, and retry
-      // with the SAME key, which cannot record it twice.
+      // No answer: it may or may not have been recorded. Kept offline, or
+      // frozen, as above; either way sent again with the SAME key.
+      if (canKeepOffline(p)) {
+        setReachable(false);
+        keepOffline(p);
+        return;
+      }
       setPending(p);
       savePending(p);
       setDialog(null);
@@ -1437,6 +1514,193 @@ export function PosClient({
       // Catching up is a courtesy: the refusal stands, and is shown, either way.
       return false;
     }
+  }
+
+  // ------------------------------------------------------------ selling without internet (0073)
+  /** A payment the till may keep and send later: a quick sale with nothing that needs an answer. */
+  function canKeepOffline(p: Pending): boolean {
+    return (
+      p.kind === "quick" &&
+      p.channel !== "direct_delivery" &&
+      p.discountPercent === null &&
+      p.discountAmount === null &&
+      !p.customerId &&
+      !p.rewards &&
+      !(p.payments ?? []).some((x) => x.currency === "USD") &&
+      p.expectedNet !== null
+    );
+  }
+
+  /**
+   * Keep a quick sale on this till, to send when the connection is back: the
+   * customer has paid, so it is done here as any sale is — its receipt, the
+   * next customer — and the till says it is waiting to be sent.
+   */
+  function keepOffline(p: Pending) {
+    const list = loadOffline();
+    const no = nextOfflineNo(list);
+    const payments: Payment[] =
+      p.payments && p.payments.length > 0
+        ? p.payments
+        : [{ type: p.tender, amount: Number(p.expectedNet ?? 0), received: p.received }];
+    const job: PrintJob | null = p.job
+      ? {
+          ...p.job,
+          total: Number(p.expectedNet ?? p.job.total),
+          change:
+            p.received !== null
+              ? Decimal.max(0, new Decimal(p.received).minus(p.expectedNet ?? 0)).toNumber()
+              : null,
+          reference: t("Offline {n}", { n: String(no) }),
+          turnNo: null,
+        }
+      : null;
+    const sale: OfflineSale = {
+      key: p.key,
+      soldAt: new Date().toISOString(),
+      soldBy: cashierId,
+      soldByName: cashierName,
+      place: tillPlace,
+      no,
+      channel: p.channel,
+      payments,
+      lines: p.lines.map((l) => ({ variantId: l.variantId, qty: l.qty, addons: l.addons ?? [] })),
+      expectedNet: String(p.expectedNet ?? 0),
+      platformOrderNo: p.platformOrderNo,
+      title: p.title,
+      job,
+      state: "waiting",
+      error: null,
+    };
+    if (!saveOffline([...list.filter((s) => s.key !== p.key), sale])) {
+      // This till cannot keep it (its storage is closed): the payment waits, as before.
+      setPending(p);
+      savePending(p);
+      setDialog(null);
+      setMsg({ ok: false, text: t("pos.uncertain") });
+      return;
+    }
+    setOffline(loadOffline());
+    setPending(null);
+    savePending(null);
+    setDialog(null);
+    const net = Number(p.expectedNet ?? 0);
+    const change = job?.change ?? null;
+    const ticket = job ? ticketFor(job) : null;
+    const autoTicket = autoPrint && ticketOn && ticket !== null;
+    setReceipt({
+      orderId: "",
+      gross: net,
+      discount: 0,
+      net,
+      journalNo: null,
+      replayed: false,
+      platformOrderNo: p.platformOrderNo,
+      turnNo: null,
+      payments: payments.map((x) => ({ ...x, change: null })),
+      customer: null,
+      tender: p.tender,
+      change,
+      job: job ?? emptyJob(p, "", net, null),
+      ticket,
+      ticketPrinted: autoTicket,
+      offlineNo: no,
+    });
+    setMsg(null);
+    setQuick((q) => quickOrder(q.channel));
+    if (autoPrint) print([job, autoTicket ? ticket : null]);
+  }
+
+  /** Send what this till keeps, oldest first, while the database answers. */
+  const sendingRef = useRef(false);
+  async function sendOffline() {
+    if (sendingRef.current) return;
+    sendingRef.current = true;
+    setSending(true);
+    let sent = 0;
+    try {
+      for (;;) {
+        const next = loadOffline().find(
+          (s) =>
+            s.state === "waiting" &&
+            (s.place === null || tillPlace === null || s.place === tillPlace),
+        );
+        if (!next) break;
+        const single = next.payments.length === 1 ? next.payments[0] : null;
+        // A price changed since: a manager chose to record it at today's price.
+        const atToday = next.expectedNet === "" && single && single.type !== "other";
+        const r = await recordOfflineSaleAction({
+          key: next.key,
+          channel: next.channel,
+          ...(atToday
+            ? { tender: single.type as "cash" | "card" | "platform_paid" }
+            : {
+                tenders: next.payments.map((x) => ({
+                  type: x.type,
+                  amount: x.amount,
+                  received: x.received,
+                  ...(x.method ? { method: x.method } : {}),
+                  ...(x.reference ? { reference: x.reference } : {}),
+                })),
+              }),
+          lines: next.lines.map((l) => ({
+            variantId: l.variantId,
+            qty: String(l.qty),
+            addons: l.addons,
+          })),
+          expectedNet: atToday ? null : next.expectedNet,
+          platformOrderNo: next.platformOrderNo,
+          soldAt: next.soldAt,
+          soldBy: next.soldBy,
+          device: next.place,
+        }).catch(() => null);
+        if (!r || (!r.ok && r.uncertain)) {
+          setReachable(false);
+          break;
+        }
+        // Signed out: it waits for whoever signs in next.
+        if (!r.ok && /Sign in again/.test(r.error)) break;
+        setReachable(true);
+        const now = loadOffline();
+        saveOffline(
+          r.ok
+            ? now.filter((s) => s.key !== next.key)
+            : now.map((s) =>
+                s.key === next.key ? { ...s, state: "attention", error: r.error } : s,
+              ),
+        );
+        if (r.ok) sent++;
+        setOffline(loadOffline());
+      }
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
+      // The drawer holds their cash now.
+      if (sent > 0) router.refresh();
+    }
+  }
+  const sendRef = useRef(sendOffline);
+  sendRef.current = sendOffline;
+
+  /** A manager's answer to a sale the database refused: send it again, at today's price, or drop it. */
+  function settleOffline(key: string, how: "retry" | "today" | "remove") {
+    const list = loadOffline();
+    saveOffline(
+      how === "remove"
+        ? list.filter((s) => s.key !== key)
+        : list.map((s) =>
+            s.key === key
+              ? {
+                  ...s,
+                  state: "waiting",
+                  error: null,
+                  ...(how === "today" ? { expectedNet: "" } : {}),
+                }
+              : s,
+          ),
+    );
+    setOffline(loadOffline());
+    if (how !== "remove") void sendRef.current();
   }
 
   const emptyJob = (p: Pending, orderId: string, net: number, turnNo: number | null): PrintJob => ({
@@ -1604,6 +1868,13 @@ export function PosClient({
             </button>
           ))}
         </div>
+        <OfflineStrip
+          connected={connected}
+          waiting={held.waiting}
+          attention={held.attention}
+          sending={sending}
+          onOpen={() => setDialog({ kind: "offline" })}
+        />
         <button
           className={`strip-chip drawer-chip${drawer.open ? "" : " waiting"}`}
           onClick={() => setDialog({ kind: "drawer", why: null })}
@@ -1677,7 +1948,8 @@ export function PosClient({
             addons={menu}
             busy={busy}
             pending={pending !== null}
-            online={online}
+            online={connected}
+            offlineWhy={connected ? null : offlineBlock(order)}
             canVoid={canVoid}
             canSeeCost={canSeeCost}
             hasTables={floorTables.length > 0}
@@ -1735,7 +2007,13 @@ export function PosClient({
         <PayDialog
           title={dialog.title}
           total={orderDue(dialog.order, byId, money, menu).toNumber()}
-          note={discountNote(dialog.order)}
+          note={
+            dialog.offline
+              ? t(
+                  "No internet: this sale is kept on this till and sent when the connection is back.",
+                )
+              : discountNote(dialog.order)
+          }
           tenders={
             isPlatform(dialog.order.channel)
               ? ["platform_paid"]
@@ -1753,8 +2031,10 @@ export function PosClient({
           methods={isPlatform(dialog.order.channel) ? [] : payMethods}
           initialMethod={dialog.method}
           platform={isPlatform(dialog.order.channel) ? channelName(dialog.order.channel) : null}
-          fx={isPlatform(dialog.order.channel) ? null : fx}
-          dollarsOffHours={isPlatform(dialog.order.channel) ? null : dollarsOffHours}
+          fx={isPlatform(dialog.order.channel) || dialog.offline ? null : fx}
+          dollarsOffHours={
+            isPlatform(dialog.order.channel) || dialog.offline ? null : dollarsOffHours
+          }
           busy={busy === "pay"}
           error={dialog.error}
           reward={dialog.reward}
@@ -1894,6 +2174,19 @@ export function PosClient({
       {dialog?.kind === "tables" && (
         <TablesEditor tables={tables} onClose={() => setDialog(null)} />
       )}
+      {dialog?.kind === "offline" && (
+        <OfflineDialog
+          sales={offline.filter(
+            (s) => s.place === null || tillPlace === null || s.place === tillPlace,
+          )}
+          canRemove={canVoid}
+          sending={sending}
+          timezone={timezone}
+          priceChanged={priceChanged}
+          onSettle={settleOffline}
+          onClose={() => setDialog(null)}
+        />
+      )}
       {dialog?.kind === "drawer" && (
         <Modal label={t("The drawer")} onClose={() => setDialog(null)}>
           <h3 style={{ marginTop: 0 }}>{t("The drawer")}</h3>
@@ -1902,8 +2195,18 @@ export function PosClient({
               {dialog.why}
             </p>
           )}
-          {/* The bills open now, not when the page loaded: they are no cash yet. */}
-          <DrawerPanel state={{ ...drawer, openBills: bills.length }} timezone={timezone} />
+          {/* The sales kept offline have cash the database has not had yet (0073). */}
+          {drawer.open && held.count > 0 ? (
+            <p className="offline-wait" data-testid="drawer-offline-wait">
+              {t(
+                "{n} sale(s) made offline are not sent yet: the drawer is counted once they are, so its cash agrees.",
+                { n: String(held.count) },
+              )}
+            </p>
+          ) : (
+            /* The bills open now, not when the page loaded: they are no cash yet. */
+            <DrawerPanel state={{ ...drawer, openBills: bills.length }} timezone={timezone} />
+          )}
           <div style={{ marginBlockStart: 12 }}>
             <button onClick={() => setDialog(null)}>{t("pos.close")}</button>
           </div>

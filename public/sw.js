@@ -10,10 +10,11 @@
  *     next person, signed in or not.
  *   - When there is no connection, a page request gets the offline notice.
  *
- * Nothing is queued while offline: a sale cannot be recorded until the
- * connection returns, and the app says so (audit H-04). Each sale carries an
- * idempotency key minted by the till, so retrying after a dropped connection
- * never records it twice.
+ * Nothing is queued here. The till itself keeps the quick sales it takes
+ * while the café's internet is down, in its own storage, and sends them when
+ * the connection returns (0073); everything else waits for the connection,
+ * and the app says so (audit H-04). Each sale carries an idempotency key
+ * minted by the till, so sending it again never records it twice.
  */
 const CACHE = "sixties-static-v2";
 const PRECACHE = ["/offline.html", "/manifest.webmanifest", "/icon.svg", "/icon-maskable.svg"];

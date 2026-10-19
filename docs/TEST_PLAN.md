@@ -287,6 +287,12 @@ layers before every release.
   same; the ready-made groups each named in three languages, Kurdish in
   Kurdish letters, the milk asked for, sugar and ice optional, only free
   prices filled in.
+- `tests/offline.test.ts`: selling without internet (round fifteen, `0073`) —
+  a quick sale taken offline, a bill, a discount, a customer and the café's
+  own delivery left for the connection; the sales kept in order and read
+  back, what cannot be read left out; each numbered after the last, never
+  again; what waits at a branch and its cash; a price changed told apart from
+  other refusals.
 - `tests/batches.test.ts`: a read over a long list of ids (the lines of 500
   sales) asks 100 ids at a time and reads every row once; a batch whose rows
   fill a page is read again in halves, one id's many rows a page at a time;
@@ -534,6 +540,17 @@ connections:
   (`0055`): all ten sell, the new branch's five numbered 1 to 5 with none
   given twice or skipped, and the first branch's going on beside them.
 
+`offline_sales.test.sql` (round fifteen, `0073`): a sale made offline earlier
+today, sent by a manager, keeps the time it was sold (its journal too), is
+the sale of the cashier who made it, on the till it was made on, with the
+books and the drawer of any sale and the sender on the audit trail; sent
+again, or first sent the ordinary way, it is the one sale; sent on a later
+day it is that day's, with when it was sold kept; an item's rule refusing
+stock below zero does not refuse it, and the audit trail says it was sold
+offline (an online sale is still refused); a price changed since, a time to
+come, a week old, no time, dollars and the café's own delivery are refused
+with nothing recorded; the public cannot send one.
+
 Tests date things by the business's own day (`test.today()`), never by the
 server's clock: from 21:00 to midnight UTC, Baghdad is already on the next day.
 
@@ -592,8 +609,13 @@ database, behind a small local stand-in for Supabase's auth service.
   and left out of the expenses' total; a cashier downloads no journal lines.
 - `retry`: a sale whose confirmation is lost is retried and recorded once —
   also when it is the database's answer to the app's server that is lost.
-- `offline`: offline, the till says so and refuses the sale, in each language;
-  and twelve pages whose code comes late (up to 1.5 s), each hydrated once.
+- `offline`: offline, the till says so in each language and still takes a
+  quick sale (round fifteen, `0073`): kept on the till with its own receipt,
+  nothing reaching the database, then sent once the connection is back,
+  recorded once and at the time it was sold; with the internet down behind a
+  working network, a quick sale with no answer is kept, not frozen, and sent
+  once the database answers; and twelve pages whose code comes late (up to
+  1.5 s), each hydrated once.
 - `resend` (`0035`): on each kind of screen the database does the work and its
   answer is lost — an expense, cash moved, a void, a refund of one item of two
   (`0037`), a journal, a bill kept open at the till, a delivery, a delivery's
