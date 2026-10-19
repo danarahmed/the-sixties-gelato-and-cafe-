@@ -41,6 +41,8 @@ export interface PaidPart {
   method?: string;
   methodName?: string;
   reference?: string;
+  /** Paid by a pre-order's deposit, taken when it was ordered (0076). */
+  deposit?: boolean;
 }
 
 /** A part of a split as the cashier typed it. The last one, left empty, takes what is left. */
@@ -161,6 +163,7 @@ export function paidPart(x: Record<string, unknown>): PaidPart {
       : {}),
     ...(x.method ? { method: String(x.method) } : {}),
     ...(x.method_name ? { methodName: String(x.method_name) } : {}),
+    ...(x.deposit ? { deposit: true } : {}),
     ...(x.reference ? { reference: String(x.reference) } : {}),
   };
 }

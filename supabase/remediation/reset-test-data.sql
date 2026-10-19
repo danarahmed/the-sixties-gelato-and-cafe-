@@ -110,6 +110,15 @@ begin
   end loop;
 end $$;
 
+-- Pre-orders (0076), where the database has them: records of trading, cleared
+-- first (with the payments their deposits made), as they refer to the sales.
+do $$
+begin
+  if to_regclass('public.pre_order') is not null then
+    execute 'truncate table pre_order_line, pre_order restart identity cascade';
+  end if;
+end $$;
+
 -- Every record of trading, in one statement. TRUNCATE bypasses the row
 -- triggers that keep the ledger append-only, and fails, changing nothing, if a
 -- table left out still refers to one of these.

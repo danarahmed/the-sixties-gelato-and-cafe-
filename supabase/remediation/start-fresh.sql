@@ -88,6 +88,15 @@ begin
   end loop;
 end $$;
 
+-- Pre-orders (0076), where the database has them: they refer to the sales and
+-- the places cleared below, so they go first.
+do $$
+begin
+  if to_regclass('public.pre_order') is not null then
+    execute 'truncate table pre_order_line, pre_order restart identity cascade';
+  end if;
+end $$;
+
 truncate table
   accounting_period, ai_insight, ai_interaction_log, alert, approval, attendance, audit_log, bank_statement,
   bank_statement_line, card_settlement, cash_event, cash_transfer, channel_price, clock_attempt, clock_screen,

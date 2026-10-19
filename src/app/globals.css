@@ -7254,3 +7254,35 @@ kbd {
   align-items: center;
   gap: 8px;
 }
+
+/* ---------------------------------------------------------------- pre-orders (0076) */
+.preorders .field,
+.account-form label {
+  display: grid;
+  gap: 4px;
+}
+.preorders .field > span,
+.account-form label > span {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.preorders .field input,
+.account-form label input {
+  min-height: 44px;
+  border-radius: 8px;
+  padding: 0 12px;
+}
+.preorder-list {
+  display: grid;
+  gap: 8px;
+  max-height: 55vh;
+  overflow: auto;
+}
+.preorder-row {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+}
+.preorder-row.late {
+  border-inline-start: 4px solid var(--err);
+}

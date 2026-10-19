@@ -28,6 +28,8 @@ import { CancelBatch, RecipeActions } from "@/components/production/RecipeAction
 import { ProductionLots } from "@/components/production/Lots";
 import { batchCost, perUnit, showIn, showNice, unitLabel } from "@/components/production/batchMath";
 import { Icon } from "@/components/Icon";
+import { getPreOrders } from "@/lib/db/preOrders";
+import { PreOrdersToMake } from "@/components/production/PreOrdersToMake";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +60,7 @@ export default async function ProductionPage({
       : null;
   // Batches are made, planned and kept at this device's place (AB).
   const { places, place, at } = await placeChoice();
-  const [recipes, batches, items, costs, board, plan, lots] = await Promise.all([
+  const [recipes, batches, items, costs, board, plan, lots, preOrders] = await Promise.all([
     getBatchRecipes(),
     getBatches(50),
     getItems(),
@@ -66,6 +68,8 @@ export default async function ProductionPage({
     seesCost ? getStockBoard(at) : Promise.resolve([]),
     getProductionPlan(planDay, at),
     getProductionLots(at),
+    // What customers ordered ahead (0076); none before it is applied.
+    getPreOrders(at),
   ]);
 
   const itemOpts: ItemOpt[] = items.map((i) => ({
@@ -192,6 +196,15 @@ export default async function ProductionPage({
         </Link>
       )}
       <TourOffer tourKey="production" />
+      {preOrders && (
+        <PreOrdersToMake
+          list={preOrders}
+          timezone={profile.timezone}
+          today={today}
+          locale={locale}
+          t={t}
+        />
+      )}
 
       {canRecord && (
         <div className="card grid" style={{ gap: 12 }} id="record">

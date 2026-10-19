@@ -2054,6 +2054,25 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Pre-orders with deposits (`0076`)
+
+- **`pre_order`**: an order taken ahead — who it is for (name, phone), when
+  it is collected, the channel, a note for the kitchen, its total at the
+  prices agreed, and the deposit paid (how, and the account it went to). Open,
+  then collected (with its sale) or cancelled (why, and whether the deposit
+  was kept). Numbered in order for the café.
+- **`pre_order_line`**: what is on it: the size, how many, the price agreed,
+  and what to write on it.
+- **`sales_tender.pre_order_id`**: the payment of a collected pre-order's sale
+  that its deposit made (debited to `2300`). `sales_tender.on_account_customer`
+  is a payment charged to a customer's account (`1110`, round nineteen).
+- **Accounts:** `2300` Customer deposits (held until collected), `4300`
+  Deposits kept, `1110` Customer accounts.
+- **Functions:** `take_pre_order`, `collect_pre_order` (`sale.create`),
+  `cancel_pre_order` (`sale.void`), each keyed; `pre_orders` for the till and
+  the kitchen. A collected pre-order's sale is put right by voiding it: the
+  pre-order opens again, its deposit held again.
+
 ### Selling by weight (`0075`)
 
 - **`product_variant.sold_by_weight`**: a size sold by the kilo. Its price is

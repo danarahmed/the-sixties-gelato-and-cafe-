@@ -105,6 +105,8 @@ import {
 } from "./offline";
 import { OfflineDialog, OfflineStrip } from "./OfflinePanel";
 import { WeightSheet } from "./WeightSheet";
+import { PreOrdersDialog } from "./PreOrdersDialog";
+import type { PreOrderList } from "@/lib/preOrders";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string; uncertain?: boolean };
 type Msg = { ok: boolean; text: string } | null;
@@ -290,7 +292,9 @@ type Dialog =
   /** The order's customer (0050); `why` when a delivery needs one. */
   | { kind: "customer"; why: string | null }
   /** The sales made offline that the database refused, for a manager (0073). */
-  | { kind: "offline" };
+  | { kind: "offline" }
+  /** Pre-orders (0076): the open ones, collected or cancelled, and the order taken as one. */
+  | { kind: "preorders" };
 
 type PayReward = {
   name: string;
@@ -331,6 +335,7 @@ export function PosClient({
   payMethods = [],
   cashierId = null,
   tillPlace = null,
+  preOrders = null,
 }: {
   items: PosItem[];
   /** The add-ons, and which products offer them (0041). */
@@ -370,6 +375,8 @@ export function PosClient({
   /** Who is signed in, and the branch this till sells at: a sale made offline carries both (0073). */
   cashierId?: string | null;
   tillPlace?: string | null;
+  /** The open pre-orders at this branch (0076); null before 0076 is applied: no button. */
+  preOrders?: PreOrderList | null;
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -436,6 +443,8 @@ export function PosClient({
   const [autoPrint, setAutoPrint] = useState(false);
   const [ticketOn, setTicketOn] = useState(true);
   const [now, setNow] = useState(() => Date.now());
+  // How many pre-orders wait to be collected, for the till's button (0076).
+  const [preOpen, setPreOpen] = useState(preOrders?.orders.length ?? 0);
   const panel = useRef<HTMLDivElement>(null);
 
   // The bill being worked on, readable at once by code that runs after an await.
@@ -1881,6 +1890,18 @@ export function PosClient({
             </button>
           ))}
         </div>
+        {preOrders && (
+          <button
+            className={`strip-chip${preOpen > 0 ? " waiting" : ""}`}
+            onClick={() => setDialog({ kind: "preorders" })}
+            disabled={blocked}
+            title={t("Pre-orders")}
+            data-testid="preorders-button"
+          >
+            <Icon name="clock" size={16} /> {t("Pre-orders")}
+            {preOpen > 0 && <span className="chip-n">{preOpen}</span>}
+          </button>
+        )}
         <OfflineStrip
           connected={connected}
           waiting={held.waiting}
@@ -2070,6 +2091,31 @@ export function PosClient({
           addons={menu}
           busy={busy !== null}
           onConfirm={confirmSplit}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog?.kind === "preorders" && preOrders && (
+        <PreOrdersDialog
+          cart={
+            order.kind === "quick"
+              ? quick.lines.map((l) => ({
+                  variantId: l.variantId,
+                  qty: l.qty,
+                  note: l.note,
+                  name: lineName(l, byId, locale),
+                  amount: lineAmount(l, byId, quick.channel, menu)?.toNumber() ?? 0,
+                  hasAddons: l.addons.length > 0,
+                }))
+              : []
+          }
+          channel={quick.channel}
+          discounted={quick.discount !== null}
+          payMethods={payMethods}
+          timezone={timezone}
+          canCancel={canVoid}
+          initial={preOrders}
+          onTaken={() => setQuick((q) => quickOrder(q.channel))}
+          onChanged={setPreOpen}
           onClose={() => setDialog(null)}
         />
       )}
