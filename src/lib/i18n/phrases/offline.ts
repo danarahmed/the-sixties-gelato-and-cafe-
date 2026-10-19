@@ -80,6 +80,15 @@ const phrases: PhraseBook = {
   "Send again": { ar: "أرسل مجددًا", ckb: "دووبارە بنێرە" },
   "Record at today's price": { ar: "سجّل بسعر اليوم", ckb: "بە نرخی ئەمڕۆ تۆماری بکە" },
   "Take it off this till": { ar: "أزِله من هذا الصندوق", ckb: "لەسەر ئەم سندوقە لای ببە" },
+  // The audit trail.
+  "Sale made offline, then sent": {
+    ar: "بيع تمّ دون اتصال ثم أُرسل",
+    ckb: "فرۆشتنێکی بێ ئینتەرنێت، دواتر نێردرا",
+  },
+  "Sold offline": { ar: "بيع دون اتصال", ckb: "بێ ئینتەرنێت فرۆشرا" },
+  "Sold at": { ar: "وقت البيع", ckb: "کاتی فرۆشتن" },
+  "Sold by": { ar: "البائع", ckb: "فرۆشیار" },
+  "Sent by": { ar: "أرسله", ckb: "نێردرا لەلایەن" },
   "Take it off: its cash shows over in the drawer's count": {
     ar: "أزِله: سيظهر نقده زائدًا في عدّ الدرج",
     ckb: "لای ببە: پارەکەی لە ژماردنی چەکمەجەدا وەک زیادە دەردەکەوێت",

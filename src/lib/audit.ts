@@ -174,6 +174,8 @@ const ACTION_LABEL: Record<string, string> = {
   "sale.void": "Sale voided",
   "sale.refund": "Sale refunded",
   "sale.discount": "Discount given",
+  // Selling without internet (0073).
+  "sale.offline": "Sale made offline, then sent",
   "sale.giveaway": "Given away at the till",
   "bill.cancel": "Open bill cancelled",
   "bill.discount": "Discount on an open bill",
@@ -437,6 +439,12 @@ const FIELD_LABEL: Record<string, string> = {
   business_rule: "Rule",
   applies_to: "Applies to",
   approved_by: "Approved by",
+  // A sale made offline (0073): when and by whom, who sent it, and from which till.
+  offline: "Sold offline",
+  sold_at: "Sold at",
+  sold_by: "Sold by",
+  sent_by: "Sent by",
+  device: "Till",
   min_select: "Fewest to choose",
   max_select: "Most to choose",
   group_id: "Group of add-ons",
