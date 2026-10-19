@@ -287,6 +287,10 @@ layers before every release.
   same; the ready-made groups each named in three languages, Kurdish in
   Kurdish letters, the milk asked for, sugar and ice optional, only free
   prices filled in.
+- `tests/barcode.test.ts`: barcodes (round twenty, `0078`) — a scan found
+  by its code, a scale's label read as its size and weight, a wrong check
+  digit or an unknown code nothing; EAN-13 check digits; the café's own codes
+  valid; Code 128 drawn two digits a symbol, its widths right.
 - `tests/weight.test.ts`: selling by weight (round seventeen, `0075`) — a
   weight typed in grams or kilos, in any digits, read to the gram; nothing, a
   word, nought, under a gram, over 1,000 kg refused; shown in grams under a
@@ -548,6 +552,18 @@ connections:
   (`0055`): all ten sell, the new branch's five numbered 1 to 5 with none
   given twice or skipped, and the first branch's going on beside them.
 
+`barcodes.test.sql` (round twenty, `0078`): a barcode set once whatever its
+key is sent, spaces taken out, read by the till; one size only; too short or
+with other signs refused; a scale's short code; taken off; a cashier sets
+none; each change audited.
+
+`markdowns.test.sql` (round twenty-one, `0079`): a lot to go within the hour
+suggested at half off, its servings counted; under 5% or part percents
+refused; marked down once whatever its key is sent; the till's price halved
+and the percentage shown; sold at it; a cashier marks none down; a platform
+keeps its own price; marked down again, one running; stopped; over at its
+end; audited.
+
 `customer_accounts.test.sql` (round nineteen, `0077`): a cashier gives no
 credit; a customer not on account, a limit below 0, terms over a year or a
 wholesale price over 90% refused; an invoice at their price, numbered, due
@@ -652,6 +668,12 @@ database, behind a small local stand-in for Supabase's auth service.
   and left out of the expenses' total; a cashier downloads no journal lines.
 - `retry`: a sale whose confirmation is lost is retried and recorded once —
   also when it is the database's answer to the app's server that is lost.
+- `barcodes` (round twenty, `0078`): the owner gives the water its barcode
+  and prints its label, drawn in bars; at the till a scan adds it, never as a
+  count; a code no size has is said so.
+- `markdowns` (round twenty-one, `0079`): Production suggests half off the
+  water due within the hour; a tap marks it down, the till shows −50%, and a
+  tap stops it.
 - `accounts` (round nineteen, `0077`): the manager puts a hotel on account
   with a limit and 20% off, invoices ten espressos at their price, sees it on
   the customers' list, and receives part into the bank.

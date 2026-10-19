@@ -113,7 +113,7 @@ end $$;
 -- Every record of trading, in one statement. TRUNCATE bypasses the row
 -- triggers that keep the ledger append-only, and fails, changing nothing, if a
 -- table left out still refers to one of these. The pre-orders (0076) and
--- the customers' invoices and payments (0077) go with them where the
+-- the customers' invoices and payments (0077) and the markdowns (0079) go with them where the
 -- database has them.
 do $$
 begin
@@ -135,6 +135,7 @@ begin
        || case when to_regclass('public.pre_order') is not null then ', pre_order_line, pre_order' else '' end
        || case when to_regclass('public.customer_invoice') is not null
                then ', customer_invoice, customer_payment' else '' end
+       || case when to_regclass('public.price_markdown') is not null then ', price_markdown' else '' end
        || ' restart identity';
 end $$;
 

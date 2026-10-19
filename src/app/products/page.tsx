@@ -28,6 +28,8 @@ import { SectionsManager } from "@/components/menu/SectionsManager";
 import { getSectionSetup } from "@/lib/db/sections";
 import { getWeighedSizes } from "@/lib/db/weighed";
 import { WeighedSizes } from "@/components/menu/WeighedSizes";
+import { getBarcodes } from "@/lib/db/barcodes";
+import { BarcodeSizes } from "@/components/menu/BarcodeSizes";
 import { CostWarning, ScheduledChanges } from "@/components/menu/MenuChanges";
 import { ProductSetup } from "@/components/menu/ProductSetup";
 import { SizesPanel } from "@/components/menu/SizesPanel";
@@ -282,6 +284,7 @@ export default async function ProductsPage({
     places,
     sectionSetup,
     weighed,
+    barcodes,
   ] = await Promise.all([
     getMenuCosting(),
     getMenuRecipeLines(),
@@ -297,6 +300,8 @@ export default async function ProductsPage({
     getSectionSetup(),
     // The sizes sold by the kilo (0075); null before it.
     getWeighedSizes(),
+    // Each size's barcode (0078); null before it.
+    getBarcodes(),
   ]);
   // A price can be one branch's own once the café has more than one (0055).
   const branches = places.filter((p) => p.kind === "branch");
@@ -403,6 +408,17 @@ export default async function ProductsPage({
                         id: v.id,
                         name: v.name,
                         weighed: weighed.has(v.id),
+                      }))}
+                      canEdit={canEdit}
+                    />
+                  )}
+                  {barcodes && sizes.length > 0 && (
+                    <BarcodeSizes
+                      sizes={sizes.map((v) => ({
+                        id: v.id,
+                        name: v.name,
+                        barcode: barcodes.get(v.id) ?? null,
+                        weighed: weighed?.has(v.id) ?? false,
                       }))}
                       canEdit={canEdit}
                     />

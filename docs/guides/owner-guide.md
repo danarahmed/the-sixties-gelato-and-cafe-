@@ -371,6 +371,13 @@ type part of its name and pick it from the list: its unit fills itself in.
   on the bakery). **Reports → Café and bakery** shows each part's takings,
   cost and profit. A branch that sells only one part is set on **Settings →
   Locations**: tick its parts; with none ticked it sells everything.
+- **Barcodes** (a product's **Sizes & prices** tab; round twenty): scan or
+  type the barcode of what is bought in, or press **Make one** for your own;
+  **Print labels** prints them. A scale's label works for a size sold by
+  weight: give the size the scale's short code.
+- **End-of-day markdowns** (Production; round twenty-one): **Sell it before
+  it goes** lists what must be sold today, with a suggested markdown applied
+  in one tap until closing.
 - **Wholesale customers** (a customer's page; round nineteen): **Credit
   settings** puts a shop or a hotel on account with a credit limit, days to
   pay and a wholesale price. **New invoice** charges what they take; **Receive

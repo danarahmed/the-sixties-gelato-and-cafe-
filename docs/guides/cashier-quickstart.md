@@ -46,6 +46,12 @@ customer on the order (see
 - A number on a tile is how many are already in the order. A product sold in
   several sizes asks which one.
 
+### A barcode scanner
+
+Scan the item: it is added at once, nothing to tap. A label from the scale
+adds the item at its weight. If the till says no product has that barcode,
+find it by name instead and tell a manager.
+
 ### A pre-order (a cake for Friday)
 
 Add what they order to the till as usual, then press **Pre-orders → New

@@ -2352,6 +2352,24 @@ Built and tested:
   books agree. Before `0077` is applied nothing of it is shown. Tested: the SQL
   suite `customer_accounts` and the browser suite `accounts`.
 
+- **Round twenty: barcodes and labels (`0078`).** On Products & Recipes, a
+  size's barcode is scanned or typed in, or made by the café (an EAN-13
+  starting 29) with one tap; **Print labels** prints its name, price and
+  barcode. At the till a scanner adds the size at once, without a tap: its
+  keys come faster than anyone types, so they are never taken for a count; a
+  scale's label (20–29, 13 digits) adds the size sold by weight at its
+  weight; a code no size has is said so. Before `0078` nothing of it shows.
+  Tested: `barcodes` (SQL), `tests/barcode.test.ts`, and the browser suite
+  `barcodes`.
+- **Round twenty-one: end-of-day markdowns (`0079`).** Production shows **Sell
+  it before it goes**: each batch whose use-by ends today with some left, the
+  sizes that sell it and how many servings, with a suggested markdown (half
+  off with two hours or less, 30% with five, 20% else) applied in one tap
+  until the day ends. The till shows the marked-down price and a "−50%"
+  badge; the sale and its books read that price. Stopped with a tap. Before
+  `0079` nothing is marked down. Tested: `markdowns` (SQL) and the browser
+  suite `markdowns`.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open

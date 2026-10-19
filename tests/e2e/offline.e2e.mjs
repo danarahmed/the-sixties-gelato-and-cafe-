@@ -64,7 +64,9 @@ console.log("▸ a quick sale with no connection: kept on the till, sent once it
   await strip.waitFor({ state: "detached", timeout: 20000 });
   check(sales() === before + 1, "back online, the sale is sent by itself");
   check(
-    sql("select count(*) from sales_order where sold_offline_at is not null and placed_at <= now()") !== "0",
+    sql(
+      "select count(*) from sales_order where sold_offline_at is not null and placed_at <= now()",
+    ) !== "0",
     "recorded as sold offline, at the time it was sold",
   );
   await page.reload();
@@ -87,7 +89,10 @@ console.log("▸ the internet down behind a working network: the sale is kept, n
   await page.getByRole("button", { name: /^Card$/ }).click();
   await page.locator(".pay-confirm").click();
   await page.getByTestId("receipt-offline").waitFor({ timeout: 15000 });
-  check(true, "with no answer, the quick sale is kept on the till and the next customer can be served");
+  check(
+    true,
+    "with no answer, the quick sale is kept on the till and the next customer can be served",
+  );
   check(
     (await page.getByRole("button", { name: /Retry/ }).count()) === 0,
     "the till is not frozen waiting for a retry",
