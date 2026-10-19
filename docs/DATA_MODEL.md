@@ -2054,6 +2054,21 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### The café and the bakery on one till (`0074`)
+
+- **`menu_section`**: a part of the menu the café names, "Café" or "Bakery",
+  in the three languages, its place in the order, and whether it is in use.
+  Everyone at the café reads it; `save_section` writes it.
+- **`product_category.section_id`**: a category's part; its products are of
+  it. A product with no category, or of a category with none, is of no part.
+- **`location_section`**: the parts a branch sells. A branch with none sells
+  everything; one with some shows only those on its till, and the products of
+  no part. `set_place_sections` writes it.
+- **Functions:** `save_section`, `set_category_section` (`recipe.edit`),
+  `set_place_sections` (`settings.manage`), each keyed; `pos_catalogue` gives
+  each product its part. The reports tell the parts apart through the sales
+  analysis by category.
+
 ### Selling without internet (`0073`)
 
 - **`sales_order.sold_offline_at`**: when a sale the till kept while the

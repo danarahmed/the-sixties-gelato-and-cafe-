@@ -363,6 +363,14 @@ type part of its name and pick it from the list: its unit fills itself in.
   Kurdish, and number them in the order the till should show them. Untick **On
   the till** to hide a whole category, a seasonal menu say, without touching its
   products.
+- **The café and the bakery on one till** (Products, under the menu; round
+  sixteen): press **Add Café and Bakery** (or name parts of your own), then
+  give each category its part. One till sells both on one bill and into one
+  drawer; the till's **All · Café · Bakery** buttons show one part at a time,
+  and each till remembers the one it was left on (a second computer can stay
+  on the bakery). **Reports → Café and bakery** shows each part's takings,
+  cost and profit. A branch that sells only one part is set on **Settings →
+  Locations**: tick its parts; with none ticked it sells everything.
 - **Each product** (its **Basics** tab): **Add photo** takes a picture from the phone or
   the computer. The browser shrinks it to a small file first, and only PNG, JPEG
   and WebP pictures are accepted, judged by their contents. Choose its

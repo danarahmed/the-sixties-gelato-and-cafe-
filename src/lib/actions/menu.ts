@@ -224,6 +224,84 @@ export async function saveCategoryAction(
   return { ok: true, data: { id: String(r.data) } };
 }
 
+const sectionInput = z.object({
+  id: id("a section").nullable(),
+  name: text("The section's name", 40),
+  nameAr: optionalText(40),
+  nameCkb: optionalText(40),
+  isActive: z.boolean(),
+});
+
+/** Add or change a section of the menu (0074): "Café", "Bakery". */
+export async function saveSectionAction(
+  input: z.input<typeof sectionInput>,
+  key: string,
+): Promise<ActionResult<{ id: string }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(sectionInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<string>("save_section", {
+    p_id: v.data.id,
+    p_name: v.data.name,
+    p_name_ar: v.data.nameAr,
+    p_name_ckb: v.data.nameCkb,
+    p_is_active: v.data.isActive,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS, "/settings");
+  return { ok: true, data: { id: String(r.data) } };
+}
+
+const categorySectionInput = z.object({
+  categoryId: id("a category"),
+  sectionId: id("a section").nullable(),
+});
+
+/** A category's section (0074); its products go with it. */
+export async function setCategorySectionAction(
+  input: z.input<typeof categorySectionInput>,
+  key: string,
+): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(categorySectionInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("set_category_section", {
+    p_category: v.data.categoryId,
+    p_section: v.data.sectionId,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: null };
+}
+
+const placeSectionsInput = z.object({
+  placeId: id("a branch"),
+  sectionIds: z.array(id("a section")).max(20),
+});
+
+/** The sections a branch sells (0074); none, everything. */
+export async function setPlaceSectionsAction(
+  input: z.input<typeof placeSectionsInput>,
+  key: string,
+): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(placeSectionsInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("set_place_sections", {
+    p_location: v.data.placeId,
+    p_sections: v.data.sectionIds,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh("/settings", "/pos");
+  return { ok: true, data: null };
+}
+
 const detailsInput = z.object({
   productId: id("a product"),
   name: text("Product name", 120),

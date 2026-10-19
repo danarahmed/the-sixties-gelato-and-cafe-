@@ -995,6 +995,18 @@ const phrases: PhraseBook = {
     ckb: "{1} چیتر بەکارنایەت: لە شاشەی «پلاتفۆرمەکانی گەیاندن» بیگەڕێنەوە بۆ ئەوەی لە ڕێگەیەوە بفرۆشیت",
   },
   "Enter the {1} order number": { ar: "أدخل رقم طلب {1}", ckb: "ژمارەی داواکاریی {1} بنووسە" },
+  // The café and the bakery on one till (0074).
+  "Name the section": { ar: "سمِّ القسم", ckb: "بەشەکە ناو بنێ" },
+  "A section's name is at most 40 letters": {
+    ar: "اسم القسم 40 حرفًا على الأكثر",
+    ckb: "ناوی بەش لە 40 پیت زیاتر نییە",
+  },
+  "There is already a section called {1}": {
+    ar: "يوجد قسم باسم {1} بالفعل",
+    ckb: "پێشتر بەشێک بە ناوی {1} هەیە",
+  },
+  "Section not found": { ar: "القسم غير موجود", ckb: "بەشەکە نەدۆزرایەوە" },
+  "Place not found": { ar: "المكان غير موجود", ckb: "شوێنەکە نەدۆزرایەوە" },
   // Selling without internet (0073): a sale the till kept, sent later.
   "Say when the sale was made": { ar: "حدّد متى تمّ البيع", ckb: "بڵێ فرۆشتنەکە کەی کرا" },
   "This sale is dated later than now: check the till's clock": {

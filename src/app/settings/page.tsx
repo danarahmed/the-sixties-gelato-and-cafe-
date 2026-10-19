@@ -16,6 +16,8 @@ import { getPaymentMethods } from "@/lib/db/paymentMethods";
 import { PaymentMethodsManager } from "@/components/settings/PaymentMethodsManager";
 import { getPhoneWarnings } from "@/lib/db/push";
 import { PhoneWarningsSetup } from "@/components/push/PhoneWarningsSetup";
+import { getSectionSetup } from "@/lib/db/sections";
+import { PlaceSections } from "@/components/settings/PlaceSections";
 
 export const dynamic = "force-dynamic";
 
@@ -30,17 +32,21 @@ export default async function SettingsPage() {
   const profile = await requirePermission("settings.manage");
   const t = await getT();
   const today = businessToday(profile.timezone);
-  const [cfg, locations, members, thresholds, rules, methods, phoneWarnings] = await Promise.all([
-    getBusinessConfig(),
-    getLocations(),
-    getMembers(),
-    getAlertThresholds(),
-    getBusinessRules(),
-    // The café's own ways to pay (0069); null before it is applied.
-    getPaymentMethods(),
-    // Warnings on phones (0072); null before it is applied.
-    getPhoneWarnings(),
-  ]);
+  const [cfg, locations, members, thresholds, rules, methods, phoneWarnings, sectionSetup] =
+    await Promise.all([
+      getBusinessConfig(),
+      getLocations(),
+      getMembers(),
+      getAlertThresholds(),
+      getBusinessRules(),
+      // The café's own ways to pay (0069); null before it is applied.
+      getPaymentMethods(),
+      // Warnings on phones (0072); null before it is applied.
+      getPhoneWarnings(),
+      // The parts of the menu each branch sells (0074); null before it is applied.
+      getSectionSetup(),
+    ]);
+  const sectionsInUse = (sectionSetup?.sections ?? []).filter((s) => s.isActive);
   // The whole café's rules, as they stand; each has its own rows and history on Rules.
   const cafeRules = rules.definitions.flatMap((d) => {
     const r = rules.rows.find((x) => x.key === d.key && x.scopeType === "business");
@@ -220,6 +226,21 @@ export default async function SettingsPage() {
                 <td>{l.name}</td>
                 <td className="muted">{t(KIND_LABEL[l.kind] ?? l.kind)}</td>
                 <td className="muted">{l.isActive ? t("active") : t("inactive")}</td>
+                {sectionsInUse.length > 0 && (
+                  <td>
+                    {l.kind === "branch" && (
+                      <PlaceSections
+                        placeId={l.id}
+                        placeName={l.name}
+                        sections={sectionsInUse}
+                        selling={(sectionSetup?.placeSections[l.id] ?? []).filter((id) =>
+                          sectionsInUse.some((s) => s.id === id),
+                        )}
+                        canEdit
+                      />
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

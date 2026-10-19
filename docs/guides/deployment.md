@@ -68,6 +68,7 @@ Plan a short window when the café is closed.
 | Labour target (`0071`)                  | ✅ Applied by the owner in the SQL editor on 8 October, then compared with the tested build: the rules' list and defaults and `labour_target` identical once the paste's line endings are set aside; the rule is offered on Settings → Rules, at 0 (none) until it is set (see [After `0071`](#after-0071))                                                                                                                                      |
 | Phone warnings (`0072`)                 | ✅ Applied by the owner in the SQL editor on 8 October, then compared with the tested build: every function identical once the paste's line endings are set aside; pg_cron and pg_net on, the five-minute timer set; the tables, column and permissions as built (see [After `0072`](#after-0072))                                                                                                                                               |
 | Selling without internet (`0073`)       | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0073`](#after-0073)). The till works before it: a kept sale is then sent as an ordinary sale                                                                                                                                                                                                                                                                                 |
+| Café and bakery on one till (`0074`)    | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0074`](#after-0074)). Before it the screens show nothing of it                                                                                                                                                                                                                                                                                                               |
 
 ## 0. Before you start
 
@@ -3506,6 +3507,42 @@ It is applied by the owner, in Supabase's SQL editor:
 
 1. Open the file `supabase/migrations/0073_offline_sales.sql` on GitHub,
    press **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0074`
+
+Migration `0074` is the café and the bakery on one till (round sixteen): the
+parts of the menu the café names ("Café", "Bakery"), each category's part, and
+the parts each branch sells.
+
+What it changes:
+
+- **New tables:** `menu_section` (the parts, in the three languages, their
+  order, in use or not) and `location_section` (the parts a branch sells; a
+  branch with none sells everything). Everyone at the café reads them; only the
+  functions below write them.
+- **New column:** `product_category.section_id`, a category's part.
+- **New functions:** `save_section` and `set_category_section`
+  (`recipe.edit`), `set_place_sections` (`settings.manage`), each keyed and on
+  the audit trail.
+- **Replaced:** `pos_catalogue` gives each product its part, and at a branch
+  that sells only some parts, only those (and products of no part).
+- Nothing recorded changes. Until a part is named, the till is as it was.
+
+Before it is applied, Products & Recipes, Settings and Reports show nothing of
+it, and the till shows no parts.
+
+It was rehearsed on the tested build (`scripts/test-sql.sh`), with its own
+suite (`tests/sql/sections.test.sql`), and through the screens in the browser
+suite `sections`.
+
+It is applied by the owner, in Supabase's SQL editor, after `0073`:
+
+1. Open the file `supabase/migrations/0074_sections.sql` on GitHub, press
+   **Raw**, select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run
    it anyway.

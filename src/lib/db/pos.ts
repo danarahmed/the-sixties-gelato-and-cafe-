@@ -18,6 +18,12 @@ export interface PosItem {
   imageUrl: string | null;
   isFavourite: boolean;
   prices: Record<string, number>;
+  /** Its category's section of the menu, "Café" or "Bakery" (0074); none before it. */
+  sectionId?: string | null;
+  section?: string | null;
+  sectionAr?: string | null;
+  sectionCkb?: string | null;
+  sectionPosition?: number | null;
 }
 
 /** An add-on on the till (0041): its names, and its price today on each channel it sells on. */
@@ -113,6 +119,11 @@ export async function getPosCatalogue(place: string | null = null): Promise<PosI
       imageUrl: strOrNull(r.image_url),
       isFavourite: r.is_favourite === true,
       prices,
+      sectionId: strOrNull(r.section_id),
+      section: strOrNull(r.section),
+      sectionAr: strOrNull(r.section_ar),
+      sectionCkb: strOrNull(r.section_ckb),
+      sectionPosition: numOrNull(r.section_position),
     };
   });
 }

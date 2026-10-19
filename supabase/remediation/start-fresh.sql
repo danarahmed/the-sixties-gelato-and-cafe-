@@ -109,6 +109,14 @@ truncate table
   variant_recipe, work_shift
   restart identity;
 
+-- The parts of the menu and what each branch sells (0074), where the database has them.
+do $$
+begin
+  if to_regclass('public.menu_section') is not null then
+    execute 'truncate table location_section, menu_section restart identity cascade';
+  end if;
+end $$;
+
 -- Journals number from 1001 again.
 do $$
 begin

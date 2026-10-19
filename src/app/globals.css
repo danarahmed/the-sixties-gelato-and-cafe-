@@ -7171,3 +7171,49 @@ kbd {
   min-width: 48px;
   min-height: 52px;
 }
+
+/* The café and the bakery on one till (0074): the till's parts of the menu,
+   each category's part, what a branch sells, and each part's share of sales. */
+.section-seg {
+  margin-block-end: 8px;
+  flex-wrap: wrap;
+}
+.section-cats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+.section-cats li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.place-sections {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.share-bar {
+  display: inline-block;
+  vertical-align: middle;
+  width: calc(100% - 52px);
+  max-width: 160px;
+  height: 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--brand) 14%, var(--surface));
+  overflow: hidden;
+}
+.share-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--brand);
+}
