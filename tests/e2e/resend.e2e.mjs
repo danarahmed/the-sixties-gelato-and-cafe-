@@ -5,6 +5,12 @@
 // The quick sale's own version of this is tested in retry.
 import { TODAY, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 
+/** The suites before may have sold more cups than came in: going below zero is then accepted. */
+async function acceptBelowZero(dialog) {
+  const below = dialog.getByRole("checkbox");
+  if (await below.count()) await below.check();
+}
+
 const browser = await chromium.launch();
 const gateway = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321");
 /** The next call to `fn` reaches the database, which commits; its answer never arrives. */
@@ -236,6 +242,7 @@ console.log("▸ a delivery corrected with its answer lost is corrected once");
   await dialog.getByTestId("correction-plan").waitFor({ timeout: 10000 });
   await dialog.getByLabel("Why it is corrected").fill("One cup short, resent");
   await loseNextAnswer("correct_receipt");
+  await acceptBelowZero(dialog);
   await dialog.getByRole("button", { name: "Confirm the correction" }).click();
   check(await checking(page), "the correction checks too");
   await dialog.getByTestId("correction-answer").waitFor({ timeout: 15000 });

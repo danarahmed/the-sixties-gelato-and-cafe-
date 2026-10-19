@@ -5,6 +5,12 @@
 // corrected here; a journal whose record does not exist, found on Reports.
 import { TODAY, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 
+/** The suites before may have sold more cups than came in: going below zero is then accepted. */
+async function acceptBelowZero(dialog) {
+  const below = dialog.getByRole("checkbox");
+  if (await below.count()) await below.check();
+}
+
 const browser = await chromium.launch();
 const last = (q) => sql(q).split("\n").pop();
 const n = (q) => Number(last(q));
@@ -127,6 +133,7 @@ const cupsBefore = onHand(CUP);
     "all ten come off the delivery",
   );
   await dialog.getByLabel("Why it is corrected").fill("Entered twice");
+  await acceptBelowZero(dialog);
   await dialog.getByRole("button", { name: "Reverse the delivery" }).click();
   const answer = dialog.getByTestId("correction-answer");
   await answer.waitFor({ timeout: 15000 });
