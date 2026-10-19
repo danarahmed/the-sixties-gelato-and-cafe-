@@ -74,6 +74,7 @@ Plan a short window when the café is closed.
 | Customers on account (`0077`)           | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0077`](#after-0077)). Before it the customers' pages show no account                                                                                                                                                                                                                                                                                                         |
 | Barcodes (`0078`)                       | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0078`](#after-0078)). Before it the till reads no barcode                                                                                                                                                                                                                                                                                                                    |
 | End-of-day markdowns (`0079`)           | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0079`](#after-0079)). Before it nothing is marked down                                                                                                                                                                                                                                                                                                                       |
+| Two-step sign-in (`0080`)               | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0080`](#after-0080)). Before it the app still asks for the code, but the database does not check it                                                                                                                                                                                                                                                                          |
 
 ## 0. Before you start
 
@@ -3721,6 +3722,45 @@ It is applied by the owner, in Supabase's SQL editor, after `0078`:
    press **Run**. If Supabase says it found possible problems, choose to run
    it anyway.
 3. **Success. No rows returned** is the answer.
+
+## After `0080`
+
+Migration `0080` is two-step sign-in (round twenty-three): after the
+password, a six-digit code from an authenticator app on the phone (Google
+Authenticator, Microsoft Authenticator, or any like them). It is turned on by
+each person on their **Account** page, and nobody has it until they do.
+
+What it changes:
+
+- **New function:** `two_step_pending` (this person has a second step and
+  this session has not taken it).
+- **Replaced:** `require_permission`, `current_has_permission` and
+  `current_business_id`: a session with its second step still to take is
+  refused ("Finish signing in…") and the tables' rules show it nothing, so the
+  password alone opens nothing, even against the database directly.
+- No table is added and nothing recorded changes.
+
+Before it is applied, the app still asks for the code before any page, but
+the database does not check it. Rehearsed with `tests/sql/two_step.test.sql`
+and the browser suite `twostep`.
+
+Supabase must allow the authenticator-app step: the project →
+**Authentication** → **Sign In / Providers** → **Multi-Factor** → **TOTP
+(App Authenticator)** enabled (it is on by default).
+
+It is applied by the owner, in Supabase's SQL editor, after `0079`:
+
+1. Open the file `supabase/migrations/0080_two_step.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+If a phone with the app is lost: someone who looks after the system removes
+the person's factor in Supabase (**Authentication** → **Users** → the person →
+**Multi-Factor** → delete), and they sign in with the password and turn it on
+again.
 
 ## Clearing the test records
 

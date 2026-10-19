@@ -7,6 +7,8 @@ import { PasswordForm } from "./PasswordForm";
 import { PinForm } from "./PinForm";
 import { getPhoneWarnings } from "@/lib/db/push";
 import { PhoneWarnings } from "@/components/push/PhoneWarnings";
+import { twoStepState } from "@/lib/auth/twoStep";
+import { TwoStepCard } from "./TwoStepCard";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,8 @@ export default async function AccountPage() {
   if (!s.signedIn) redirect("/login");
   // Warnings on this phone (0072), for whoever sees the dashboard's; null before 0072.
   const warnings = s.profile ? await getPhoneWarnings() : null;
+  // Two-step sign-in (0080): whether it is on for them.
+  const twoStep = s.profile ? await twoStepState().catch(() => null) : null;
 
   return (
     <div className="grid" style={{ gap: 16, maxWidth: 720 }}>
@@ -68,6 +72,14 @@ export default async function AccountPage() {
             </div>
           </details>
         </div>
+      )}
+
+      {s.profile && twoStep && (
+        <TwoStepCard
+          on={twoStep.on}
+          factorId={twoStep.factorId}
+          owner={s.profile.roles.includes("owner")}
+        />
       )}
 
       {s.profile &&

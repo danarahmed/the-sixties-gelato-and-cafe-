@@ -40,14 +40,25 @@ await pick.selectOption(
 await form.getByTestId("invoice-qty").fill("10");
 await form.getByTestId("invoice-make").click();
 await card.getByTestId("account-done").waitFor({ timeout: 10000 });
+// The espresso's take-away price today (the suites before may have changed
+// it), 20% off, ten times.
+const total = Number(
+  sql(`select trim_scale(10 * money_round(so.business_id,
+                price_on(l.product_variant_id, 'takeaway', so.location_id, current_date) * 80 / 100))
+         from customer_invoice ci join sales_order so on so.id = ci.sales_order_id
+         join sales_order_line l on l.sales_order_id = so.id
+        where ci.customer_id = '${hotel}'`),
+);
+const iqd = (n) => n.toLocaleString("en-US");
 check(
-  ((await card.getByTestId("account-done").textContent()) ?? "").includes("20,000 IQD"),
-  "ten at 2,000: an invoice of 20,000",
+  total > 15000 &&
+    ((await card.getByTestId("account-done").textContent()) ?? "").includes(`${iqd(total)} IQD`),
+  `ten at 20% off: an invoice of ${iqd(total)}`,
 );
 check(
   sql(
     `select trim_scale(amount) || ' ' || status from customer_invoice where customer_id = '${hotel}'`,
-  ) === "20000 open",
+  ) === `${total} open`,
   "recorded, open",
 );
 
@@ -56,8 +67,8 @@ await open(page, "/customers");
 const list = page.getByTestId("accounts-list");
 await list.waitFor({ timeout: 10000 });
 check(
-  ((await list.getByTestId("account-row").first().textContent()) ?? "").includes("20,000"),
-  "the hotel owes 20,000",
+  ((await list.getByTestId("account-row").first().textContent()) ?? "").includes(iqd(total)),
+  `the hotel owes ${iqd(total)}`,
 );
 
 console.log("▸ a payment into the bank pays the invoice");
@@ -69,12 +80,14 @@ await pay.getByRole("radio", { name: "The bank" }).click();
 await pay.getByTestId("payment-receive").click();
 await card.getByTestId("account-done").waitFor({ timeout: 10000 });
 check(
-  ((await card.getByTestId("account-done").textContent()) ?? "").includes("5,000 IQD"),
-  "they owe 5,000 now",
+  ((await card.getByTestId("account-done").textContent()) ?? "").includes(
+    `${iqd(total - 15000)} IQD`,
+  ),
+  `they owe ${iqd(total - 15000)} now`,
 );
 await page.reload();
 check(
-  ((await card.getByTestId("account-balance").textContent()) ?? "").includes("5,000"),
+  ((await card.getByTestId("account-balance").textContent()) ?? "").includes(iqd(total - 15000)),
   "and the account says so",
 );
 

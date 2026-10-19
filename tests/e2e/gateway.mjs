@@ -69,10 +69,61 @@ function userObj(email) {
     is_anonymous: false,
   };
 }
-function session(email) {
+// Two-step sign-in (0080): each person's TOTP factors, kept in the scratch
+// database's auth.mfa_factors as Supabase Auth keeps them, so the database's
+// own check reads them. The secret is kept here too, to check codes.
+const factors = new Map(); // factor id -> { email, secret, status }
+const challenges = new Map(); // challenge id -> factor id
+const levels = new Map(); // refresh token -> "aal1" | "aal2"
+function factorsOf(email) {
+  return [...factors.entries()]
+    .filter(([, f]) => f.email === email)
+    .map(([id, f]) => ({
+      id,
+      friendly_name: "",
+      factor_type: "totp",
+      status: f.status,
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+    }));
+}
+const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+function base32(buf) {
+  let bits = "";
+  for (const b of buf) bits += b.toString(2).padStart(8, "0");
+  let out = "";
+  for (let i = 0; i + 5 <= bits.length; i += 5) out += B32[parseInt(bits.slice(i, i + 5), 2)];
+  return out;
+}
+function unbase32(text) {
+  let bits = "";
+  for (const ch of text.replace(/=+$/, "")) bits += B32.indexOf(ch).toString(2).padStart(5, "0");
+  const out = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8) out.push(parseInt(bits.slice(i, i + 8), 2));
+  return Buffer.from(out);
+}
+/** RFC 6238: the six digits for a time step (30 s). */
+export function totp(secret, step = Math.floor(Date.now() / 30000)) {
+  const msg = Buffer.alloc(8);
+  msg.writeBigUInt64BE(BigInt(step));
+  const h = crypto.createHmac("sha1", unbase32(secret)).update(msg).digest();
+  const o = h[h.length - 1] & 15;
+  const n = (h.readUInt32BE(o) & 0x7fffffff) % 1000000;
+  return String(n).padStart(6, "0");
+}
+function codeOk(secret, code) {
+  const now = Math.floor(Date.now() / 30000);
+  return [now - 1, now, now + 1].some((t) => totp(secret, t) === String(code));
+}
+function factorSql(query) {
+  return storageSql(query, {});
+}
+
+function session(email, aal = "aal1") {
   const now = Math.floor(Date.now() / 1000);
   const rt = crypto.randomUUID();
   refresh.set(rt, email);
+  levels.set(rt, aal);
   return {
     access_token: sign({
       sub: USERS[email],
@@ -82,7 +133,8 @@ function session(email) {
       iat: now,
       exp: now + 3600,
       session_id: crypto.randomUUID(),
-      aal: "aal1",
+      aal,
+      amr: aal === "aal2" ? [{ method: "totp", timestamp: now }, { method: "password", timestamp: now }] : [{ method: "password", timestamp: now }],
       is_anonymous: false,
       app_metadata: { provider: "email" },
       user_metadata: {},
@@ -91,7 +143,7 @@ function session(email) {
     expires_in: 3600,
     expires_at: now + 3600,
     refresh_token: rt,
-    user: userObj(email),
+    user: { ...userObj(email), factors: factorsOf(email) },
   };
 }
 function send(res, code, obj) {
@@ -355,14 +407,66 @@ http
             code: "refresh_token_not_found",
             msg: "Invalid Refresh Token",
           });
-        return send(res, 200, session(email));
+        return send(res, 200, session(email, levels.get(data.refresh_token) ?? "aal1"));
       }
       return send(res, 400, { msg: "unsupported grant" });
     }
     if (url.pathname === "/auth/v1/user") {
       const p = verify((req.headers.authorization || "").replace(/^Bearer /, ""));
       if (!p || !p.email) return send(res, 401, { code: "bad_jwt", msg: "invalid JWT" });
-      return send(res, 200, userObj(p.email));
+      return send(res, 200, { ...userObj(p.email), factors: factorsOf(p.email) });
+    }
+    // Two-step sign-in: enrol a TOTP factor, challenge it, verify a code,
+    // and take it off again.
+    if (url.pathname === "/auth/v1/factors" && req.method === "POST") {
+      const p = verify((req.headers.authorization || "").replace(/^Bearer /, ""));
+      if (!p || !p.email) return send(res, 401, { code: "bad_jwt", msg: "invalid JWT" });
+      const id = crypto.randomUUID();
+      const secret = base32(crypto.randomBytes(20));
+      factors.set(id, { email: p.email, secret, status: "unverified" });
+      factorSql(
+        `insert into auth.mfa_factors (id, user_id, factor_type, status) values ('${id}', '${p.sub}', 'totp', 'unverified')`,
+      );
+      const uri = `otpauth://totp/Sixties:${p.email}?secret=${secret}&issuer=Sixties`;
+      return send(res, 200, {
+        id,
+        type: "totp",
+        friendly_name: "",
+        totp: {
+          qr_code: `data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>`,
+          secret,
+          uri,
+        },
+      });
+    }
+    const factorPath = /^\/auth\/v1\/factors\/([0-9a-f-]{36})(\/challenge|\/verify)?$/.exec(url.pathname);
+    if (factorPath) {
+      const p = verify((req.headers.authorization || "").replace(/^Bearer /, ""));
+      if (!p || !p.email) return send(res, 401, { code: "bad_jwt", msg: "invalid JWT" });
+      const [, id, action] = factorPath;
+      const f = factors.get(id);
+      if (!f || f.email !== p.email) return send(res, 404, { code: "mfa_factor_not_found", msg: "Factor not found" });
+      if (action === "/challenge") {
+        const cid = crypto.randomUUID();
+        challenges.set(cid, id);
+        return send(res, 200, { id: cid, type: "totp", expires_at: Math.floor(Date.now() / 1000) + 300 });
+      }
+      if (action === "/verify") {
+        const data = JSON.parse((await body(req)) || "{}");
+        if (challenges.get(data.challenge_id) !== id || !codeOk(f.secret, data.code))
+          return send(res, 422, { code: "mfa_verification_failed", msg: "Invalid TOTP code entered" });
+        challenges.delete(data.challenge_id);
+        if (f.status !== "verified") {
+          f.status = "verified";
+          factorSql(`update auth.mfa_factors set status = 'verified' where id = '${id}'`);
+        }
+        return send(res, 200, session(p.email, "aal2"));
+      }
+      if (req.method === "DELETE") {
+        factors.delete(id);
+        factorSql(`delete from auth.mfa_factors where id = '${id}'`);
+        return send(res, 200, { id });
+      }
     }
     if (url.pathname === "/auth/v1/logout") return send(res, 204);
     if (url.pathname === "/auth/v1/recover") return send(res, 200, {});

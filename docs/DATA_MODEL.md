@@ -2054,6 +2054,14 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Two-step sign-in (`0080`)
+
+- No table. Supabase Auth keeps each person's authenticator-app key
+  (`auth.mfa_factors`) and puts in each session's token whether the code was
+  given (`aal2`). `two_step_pending` is true for a person with a confirmed
+  second step whose session has not taken it; `require_permission`,
+  `current_has_permission` and `current_business_id` then give nothing.
+
 ### End-of-day markdowns (`0079`)
 
 - **`price_markdown`**: a size sold so much off (5% to 90%, whole) at a

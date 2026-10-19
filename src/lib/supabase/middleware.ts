@@ -50,6 +50,32 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     if (path !== "/") url.searchParams.set("next", path);
     return withCookies(NextResponse.redirect(url), response);
   }
+  // Two-step sign-in (0080): a person with a second step who has given only
+  // the password is asked for the code before any page. Asked of Supabase
+  // Auth itself (their second steps are not in the token), and only when a
+  // page is opened: what a page then fetches or sends cannot be reached
+  // without one, and the database refuses such a session anyway.
+  if (
+    signedIn &&
+    data?.claims?.aal !== "aal2" &&
+    path !== "/login/verify" &&
+    !isPublicPath(path) &&
+    request.method === "GET" &&
+    !request.headers.has("rsc")
+  ) {
+    const { data: s } = await supabase.auth.getSession();
+    const token = s.session?.access_token;
+    const { data: level } = token
+      ? await supabase.auth.mfa.getAuthenticatorAssuranceLevel(token)
+      : { data: null };
+    if (level?.nextLevel === "aal2" && level.currentLevel !== "aal2") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login/verify";
+      url.search = "";
+      if (path !== "/") url.searchParams.set("next", path);
+      return withCookies(NextResponse.redirect(url), response);
+    }
+  }
   if (signedIn && path === "/login") {
     return withCookies(NextResponse.redirect(new URL("/", request.url)), response);
   }
