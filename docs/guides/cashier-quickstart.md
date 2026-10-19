@@ -270,11 +270,26 @@ own:
 
 ## If the connection drops
 
-- A red **Offline** banner appears and taking payment is blocked. **Nothing is
-  sold or saved while offline.** Take payment only once the banner is gone.
-- If the connection dropped **during** a payment, the till says it did not hear
-  back and freezes that order. Press **Retry** when you are back online. If the
-  payment went through, it is not recorded twice. **Never ring it up again.**
+- A red **Offline** banner appears. **Quick sales still work** (round fifteen):
+  take the payment as usual, by cash, card or one of the café's ways to pay.
+  The till keeps the sale, prints its receipt as **Offline 1**, **Offline 2**…,
+  and shows **No internet · 2 sales kept on this till** beside the drawer.
+  When the internet is back it sends them by itself, each once.
+- Offline the till does **not** take: a bill on a table, a discount, a
+  customer, dollars or the café's own delivery. Each waits for the internet.
+- If the internet drops **during** a quick sale's payment, the till keeps the
+  sale the same way and you serve the next customer. It is sent once the
+  internet answers; if it had gone through, it is not recorded twice.
+- If the connection dropped during a **bill's** payment, the till says it did
+  not hear back and freezes that order. Press **Retry** when you are back
+  online. If the payment went through, it is not recorded twice. **Never ring
+  it up again.**
+- The drawer is not counted while sales made offline are waiting: send them
+  first (they go by themselves once the internet is back).
+- A sale the database refuses when it is sent (a price changed since, say)
+  turns the chip red: **1 offline sale needs a manager**. A manager opens it and
+  sends it again, records it at today's price, or, last of all, takes it off the
+  till.
 - **Discard — a manager will check Orders** clears a frozen order from your
   till. Use it only if the customer left without paying, and tell a manager.
 - Everything else you save (a table's bill, a bill kept for later, a split, a

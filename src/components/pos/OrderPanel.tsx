@@ -46,6 +46,8 @@ export interface Receipt extends SaleReceipt {
   /** The barista's copy of a quick sale; a bill's went to the bar when it was saved. */
   ticket: BaristaTicket | null;
   ticketPrinted: boolean;
+  /** Kept on this till while offline (0073): its number there, "Offline 3". */
+  offlineNo?: number;
 }
 
 function OrderLine({
@@ -313,6 +315,7 @@ export function OrderPanel({
   busy,
   pending,
   online,
+  offlineWhy = null,
   canVoid,
   canSeeCost,
   hasTables,
@@ -355,6 +358,11 @@ export function OrderPanel({
   busy: string | null;
   pending: boolean;
   online: boolean;
+  /**
+   * With no connection, why this order cannot be sold (0073); null when it can
+   * be: a quick sale kept on the till and sent when the connection is back.
+   */
+  offlineWhy?: string | null;
   canVoid: boolean;
   canSeeCost: boolean;
   hasTables: boolean;
@@ -408,6 +416,8 @@ export function OrderPanel({
   const isBill = order.kind === "bill";
   const blocked = busy !== null || pending;
   const empty = order.lines.length === 0;
+  // Offline, a quick sale is still paid: kept on the till, sent later (0073).
+  const canPay = online || offlineWhy === null;
   const dirty = isDirty(order);
   const subtotal = orderSubtotal(order, byId, money, addons);
   const discount = discountAmount(order.discount, subtotal, money);
@@ -527,9 +537,18 @@ export function OrderPanel({
         {empty && receipt ? (
           <div className="receipt-card">
             <div className="rc-top">
-              <strong>
-                <Icon name="check" /> {t("pos.recorded")} · {receipt.orderId.slice(0, 8)}
-              </strong>
+              {receipt.offlineNo !== undefined ? (
+                <strong data-testid="receipt-offline">
+                  <Icon name="clock" />{" "}
+                  {t("Kept on this till · {ref}", {
+                    ref: t("Offline {n}", { n: String(receipt.offlineNo) }),
+                  })}
+                </strong>
+              ) : (
+                <strong>
+                  <Icon name="check" /> {t("pos.recorded")} · {receipt.orderId.slice(0, 8)}
+                </strong>
+              )}
               {receipt.payments.length > 1 || receipt.payments.some((p) => p.currency === "USD") ? (
                 <span
                   data-testid="receipt-payments"
@@ -688,7 +707,7 @@ export function OrderPanel({
                 {isPlatform(order.channel) ? (
                   <button
                     className="btn-primary big"
-                    disabled={blocked || !online || badDiscount}
+                    disabled={blocked || !canPay || badDiscount}
                     onClick={() => onPay("platform_paid")}
                   >
                     <Icon name="receipt" /> {t("pos.platformPaid")}
@@ -697,14 +716,14 @@ export function OrderPanel({
                   <>
                     <button
                       className="btn-primary big"
-                      disabled={blocked || !online || badDiscount}
+                      disabled={blocked || !canPay || badDiscount}
                       onClick={() => onPay("cash")}
                     >
                       <Icon name="cash" /> {t("pos.cash")}
                     </button>
                     <button
                       className="btn-primary big"
-                      disabled={blocked || !online || badDiscount}
+                      disabled={blocked || !canPay || badDiscount}
                       onClick={() => onPay("card")}
                     >
                       <Icon name="card" /> {t("pos.card")}
@@ -717,7 +736,7 @@ export function OrderPanel({
                   {payMethods.map((m) => (
                     <button
                       key={m.id}
-                      disabled={blocked || !online || badDiscount}
+                      disabled={blocked || !canPay || badDiscount}
                       onClick={() => onPay("other", m.id)}
                       data-testid="pay-method"
                     >
@@ -796,7 +815,18 @@ export function OrderPanel({
             </button>
           </div>
         )}
-        {!online && !pending && <p className="red order-offline">{t("pos.offlineBlocked")}</p>}
+        {!online && !pending && (
+          <p
+            className={`order-offline ${offlineWhy === null ? "warn" : "red"}`}
+            data-testid="order-offline"
+          >
+            {offlineWhy === null
+              ? t(
+                  "No internet: quick sales are kept on this till and sent when the connection is back.",
+                )
+              : `${t("pos.offlineBlocked")} ${t(offlineWhy)}`}
+          </p>
+        )}
 
         <Notice msg={msg} />
       </div>

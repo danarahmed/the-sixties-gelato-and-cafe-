@@ -5,7 +5,7 @@
  * together or not at all (audit C-04, C-06).
  */
 import { z } from "zod";
-import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { MISSING_UPDATE, badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { isPlatformChannel } from "@/lib/channels";
 import {
   discountAmount,
@@ -133,6 +133,79 @@ export async function recordSaleAction(
   if (!r.ok) return r;
   refresh(...SALE_PATHS, "/platforms");
   return { ok: true, data: saleReceipt(r.data) };
+}
+
+const offlineSaleInput = z.object({
+  /** Minted by the till when the sale was made offline, and sent with every try (0073). */
+  key: z.string().uuid("This sale has no idempotency key"),
+  channel: salesChannel,
+  tender: z
+    .enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" })
+    .nullish(),
+  tenders: payments.nullish(),
+  lines: z
+    .array(z.object({ variantId: id("a product"), qty: positive("Quantity"), addons: lineAddons }))
+    .min(1, "The cart is empty"),
+  expectedNet: optionalNonNegative("The total shown"),
+  platformOrderNo,
+  /** When the till took the money, and who was signed in on it then. */
+  soldAt: z.string().datetime({ offset: true, message: "Say when the sale was made" }),
+  soldBy: id("a person").nullish(),
+  device: optionalText(64),
+});
+
+/**
+ * A quick sale the till made while the café's internet was down, sent once it
+ * is back (0073): recorded once whatever happens, at the time it was made.
+ * Before the owner applies 0073 it is sent as an ordinary sale, now.
+ */
+export async function recordOfflineSaleAction(
+  input: z.input<typeof offlineSaleInput>,
+): Promise<ActionResult<SaleReceipt & { soldOfflineAt: string | null }>> {
+  const v = parse(offlineSaleInput, input);
+  if (!v.ok) return v;
+  const paid = howPaid(v.data);
+  if (!paid) return { ok: false, error: "Choose how it was paid" };
+  const orderNo = isPlatformChannel(v.data.channel) ? v.data.platformOrderNo : null;
+  const location = await tillForWrite();
+  const lines = v.data.lines.map((l) => ({
+    variant_id: l.variantId,
+    qty: l.qty,
+    modifiers: addonsToDb(l.addons),
+  }));
+  let r = await callRpc<Record<string, unknown>>("record_offline_sale", {
+    p_idempotency_key: v.data.key,
+    p_channel: v.data.channel,
+    p_lines: lines,
+    p_sold_at: v.data.soldAt,
+    p_tender: paid.p_tender,
+    p_tenders: paid.p_tenders,
+    p_location: location,
+    p_expected_net: v.data.expectedNet,
+    p_platform_order_no: orderNo,
+    p_sold_by: v.data.soldBy ?? null,
+    p_device: v.data.device ?? null,
+  });
+  if (!r.ok && r.error === MISSING_UPDATE)
+    r = await callRpc<Record<string, unknown>>("record_sale", {
+      p_location: location,
+      p_idempotency_key: v.data.key,
+      p_channel: v.data.channel,
+      p_tender: paid.p_tender,
+      p_tenders: paid.p_tenders,
+      p_lines: lines,
+      p_expected_net: v.data.expectedNet,
+      p_platform_order_no: orderNo,
+    });
+  if (!r.ok) return r;
+  refresh(...SALE_PATHS);
+  return {
+    ok: true,
+    data: {
+      ...saleReceipt(r.data),
+      soldOfflineAt: r.data.sold_offline_at == null ? null : String(r.data.sold_offline_at),
+    },
+  };
 }
 
 const correction = z.object({

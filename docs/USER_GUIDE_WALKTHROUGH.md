@@ -102,9 +102,9 @@ Count**; the purchasing role on **Reports**.
     reads as its language says it: "1 bill", "3 bills"; in Arabic "فاتورة
     واحدة", "فاتورتان", "3 فواتير", "11 فاتورة";
   - **☀️ / 🌙** for light or dark.
-- **Offline banner.** When the connection drops, a red banner says so. Selling and
-  saving stop until it is back: nothing is saved offline, so nothing is recorded
-  twice.
+- **Offline banner.** When the connection drops, a red banner says so. Saving
+  stops until it is back, but the till keeps taking quick sales and sends them
+  when the connection returns, each once (round fifteen, `0073`).
 
 ## 3. Ideas used everywhere
 
@@ -1992,4 +1992,4 @@ a person's roles allows, then the café's.
 | The balance sheet at the start and the end of the dates; the cash flow between; CSV                                                                              | `/reports/statements`                    | profit viewers                                                                        |
 | Stock sent between the café's places, on its way in 1210; received, what did not arrive lost; or cancelled                                                       | `/inventory/transfers`                   | owner, managers, purchasing; readers: cost viewers                                    |
 | Photos and PDFs of a delivery note, a bill, a credit note, a return slip or a receipt, kept with its record (📎)                                                 | `/purchasing`, `/vendors`, `/expenses`   | cost viewers; attaching: whoever records it                                           |
-| **Not built:** offline selling                                                                                                                                   | [`LIMITATIONS.md`](LIMITATIONS.md)       | —                                                                                     |
+| Quick sales kept on the till with no internet, sent when it is back, each once; refused ones for a manager                                                       | `/pos`                                   | cashiers; settling: managers (`sale.void`)                                            |

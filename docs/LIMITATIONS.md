@@ -84,11 +84,32 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - The plan is for the place the device works at, judged by what was sold,
     made with and, since `0055`, sent to another place there: the central
     kitchen plans by what it sends the branch.
-- **Offline selling (H-04).** The till needs a connection. Offline, it says so
-  and refuses the sale. A sale whose confirmation was lost is retried with the
-  same key and recorded once, and since `0035` so is every other write from the
-  app. An offline queue would need its own design for stock and prices that
-  change while the till is offline.
+- **Selling without internet (`0073`, round fifteen).** The till keeps quick
+  sales while the internet is down and sends them when it is back, each once.
+  What it does not cover:
+  - Only quick sales, in dinars: a bill on a table, a discount, a customer
+    (and their points), dollars and the café's own delivery wait for the
+    connection, as does every other screen.
+  - The till must stay open: the page is not kept for opening offline (no page
+    is cached, so a shared till never shows the last person's figures). Closed
+    or reloaded offline, it shows the offline notice; what it keeps is sent once
+    it opens again online, on the same computer and browser.
+  - What it keeps lives in that browser's storage: cleared, or another browser,
+    and it is gone. Its cash is then over in the drawer's count.
+  - Its prices are the ones the till last loaded. A price changed since makes
+    the sale wait for a manager, who may record it at today's price.
+  - A sale sent the same day keeps the time it was sold; one sent on a later
+    day is that day's sale (the reports and the books agree), with when it was
+    really sold kept on it. Its stock and its cash move when it is sent.
+  - An item's rule on selling below what the books hold does not refuse a sale
+    made offline (the money is taken already): it is sold, and the audit trail
+    says so. A stock count taken while sales wait to be sent counts what they
+    took as missing; count once they are sent.
+  - The drawer is not counted while this till keeps sales (another till's
+    are not known to it).
+  - Before `0073` is applied, a kept sale is sent as an ordinary sale when it
+    reaches the database: at that time, and refused where an item's rule
+    refuses.
 - **Retry keys, what they do not cover (`0035`).** A screen keeps the key of an
   unanswered submission while it stays open; reloaded, it forgets it (only the
   till keeps its unanswered payment across a reload), so after a reload look

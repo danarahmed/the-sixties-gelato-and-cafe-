@@ -2281,6 +2281,26 @@ Built and tested:
   optional groups shut, with bigger buttons. No migration. Tested:
   `tests/addonRules.test.ts` and the `addons` browser suite.
 
+- **Round fifteen: selling without internet (`0073`).** The owner's choice,
+  first of the list agreed on 19 October: when the café's internet drops, the
+  till keeps taking quick sales — cash, card, one of the café's ways to pay, or
+  a delivery platform's order — and keeps each on the till with the key it
+  made for it. Its receipt says **Offline 3**; beside the drawer the till says
+  how many it keeps. When the internet is back it sends them by itself, oldest
+  first, each recorded once; one the database refuses (a price changed since,
+  say) waits for a manager, who sends it again, records it at today's price,
+  or takes it off the till. The till goes by the database's answers, not the
+  browser's word: with the internet down behind a working network, a quick
+  sale with no answer is kept, not frozen. A bill on a table, a discount, a
+  customer, dollars and the café's own delivery still wait for the
+  connection, and the drawer is not counted while sales wait to be sent.
+  `0073` records each at the time it was sold the same day (a later day's on
+  the day it is sent, with when it was sold kept), as the sale of who was
+  signed in then, and not refused by an item's rule on stock below zero (the
+  money is taken already; the audit trail says so). Before `0073` is applied
+  the till sends a kept sale as an ordinary sale. Tested: the SQL suite
+  `offline_sales`, `tests/offline.test.ts`, and the browser suite `offline`.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open

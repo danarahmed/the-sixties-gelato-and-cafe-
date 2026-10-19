@@ -2054,6 +2054,19 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Selling without internet (`0073`)
+
+- **`sales_order.sold_offline_at`**: when a sale the till kept while the
+  internet was down was really sold; empty for every other sale. Sent the same
+  day, its `placed_at` is that time too; sent on a later day, `placed_at` is
+  when it was sent (the reports and the books agree), and this keeps the time
+  it was sold. `device_id` is the till's branch it was made at.
+- **Functions:** `record_offline_sale(key, channel, lines, sold_at, tender or
+tenders, location, expected_net, platform_order_no, sold_by, device)`
+  (`sale.create`; keyed: sent again, it is the sale recorded). `post_sale` and
+  `stock_rules` read two settings of their own transaction that only it sets:
+  the time it was sold, and that the money was taken already.
+
 ### Warnings on your phone (`0072`)
 
 - **`push_config`**: one row a café: phone warnings on or off, the app's

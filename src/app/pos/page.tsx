@@ -96,6 +96,8 @@ export default async function PosPage() {
         startView={startView === "floor" || startView === "menu" ? startView : null}
         clockScreen={clockScreen}
         payMethods={(methods ?? []).filter((m) => m.active).map(({ id, name }) => ({ id, name }))}
+        cashierId={profile.id}
+        tillPlace={branch.id}
       />
     </ChannelsProvider>
   );

@@ -17,12 +17,14 @@ export type ActionResult<T = unknown> =
   /** `uncertain`: no answer came back, so it may have been saved (see rpcOutcome.ts). */
   | { ok: false; error: string; uncertain?: boolean };
 
+/** What a screen is told when the database has not had the migration it needs. */
+export const MISSING_UPDATE =
+  "The database is missing an update this screen needs (a migration has not been applied yet).";
+
 /** A database error, in words the person at the screen can act on. */
 export function friendlyError(e: Pick<PostgrestError, "code" | "message">): string {
   const msg = e.message ?? "";
-  if (e.code === "PGRST202" || e.code === "42883") {
-    return "The database is missing an update this screen needs (a migration has not been applied yet).";
-  }
+  if (e.code === "PGRST202" || e.code === "42883") return MISSING_UPDATE;
   if (e.code === "28000") return "Your session has ended. Sign in again.";
   if (e.code === "42501") {
     // Our functions explain themselves; PostgreSQL's own denials do not.

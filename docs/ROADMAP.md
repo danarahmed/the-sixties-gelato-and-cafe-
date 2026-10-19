@@ -19,8 +19,8 @@ Stages 0–5 of the August 2026 audit's roadmap:
 - **Proved.** Golden accounting, controls, concurrency and upgrade tests on real
   PostgreSQL; browser tests as every role.
 
-The one exception is H-04: offline selling was resolved by making the till
-honest, not by building a queue.
+The one exception was H-04: offline selling was first resolved by making the
+till honest; round fifteen (`0073`) built the queue for quick sales.
 
 Since then, each in [`PROGRESS.md`](PROGRESS.md):
 
@@ -65,8 +65,9 @@ Since then, each in [`PROGRESS.md`](PROGRESS.md):
 2. **Accounts, further (M-06), if it is needed.** An asset, a debt or the
    owner's money added on screen, with where each goes on the balance sheet
    and in the cash flow.
-3. **Offline selling, if it is needed.** A queue with its own rules for prices
-   and stock that change while offline, and a reconciliation of what synced.
+3. **Offline selling, further, if it is needed.** Quick sales are kept and
+   sent since round fifteen (`0073`); bills on tables, discounts and customers
+   offline, and opening the till with no connection, are not.
 4. **Operations.** Error monitoring (what the database refuses, and a call
    with no answer, are written to the app's log already), a scheduled restore
    drill, and staging as a separate Supabase project.

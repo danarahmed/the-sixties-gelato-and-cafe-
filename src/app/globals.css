@@ -1966,6 +1966,56 @@ html[dir="rtl"] .app-shell.pos-mode .sidenav.open {
   font-size: 0.82rem;
   margin: 0;
 }
+.order-offline.warn {
+  color: var(--warn);
+}
+/* Selling without internet (0073): the till's word beside the drawer, the
+   drawer while sales wait, and a manager's list of those refused. */
+.strip-chip.offline-chip.bad {
+  border-color: var(--err);
+  color: var(--err);
+  background: color-mix(in srgb, var(--err) 8%, var(--surface));
+}
+.offline-wait {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, var(--surface));
+}
+.offline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.offline-row {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.offline-row.bad {
+  border-color: color-mix(in srgb, var(--err) 50%, var(--border));
+}
+.offline-row-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+.offline-row-top .mono {
+  margin-inline-start: auto;
+}
+.offline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 /* The sale just recorded: the customer's number, the change, the printouts. */
 .receipt-card {
   margin: 12px 0;

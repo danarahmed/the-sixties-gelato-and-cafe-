@@ -995,6 +995,24 @@ const phrases: PhraseBook = {
     ckb: "{1} چیتر بەکارنایەت: لە شاشەی «پلاتفۆرمەکانی گەیاندن» بیگەڕێنەوە بۆ ئەوەی لە ڕێگەیەوە بفرۆشیت",
   },
   "Enter the {1} order number": { ar: "أدخل رقم طلب {1}", ckb: "ژمارەی داواکاریی {1} بنووسە" },
+  // Selling without internet (0073): a sale the till kept, sent later.
+  "Say when the sale was made": { ar: "حدّد متى تمّ البيع", ckb: "بڵێ فرۆشتنەکە کەی کرا" },
+  "This sale is dated later than now: check the till's clock": {
+    ar: "تاريخ هذا البيع بعد الآن: تحقّق من ساعة الصندوق",
+    ckb: "بەرواری ئەم فرۆشتنە دوای ئێستایە: کاتژمێری سندوقەکە بپشکنە",
+  },
+  "This sale was made more than a week ago: a manager records it by hand": {
+    ar: "تمّ هذا البيع قبل أكثر من أسبوع: يسجّله المدير يدويًا",
+    ckb: "ئەم فرۆشتنە زیاتر لە هەفتەیەک لەمەوبەر کراوە: بەڕێوەبەر بە دەست تۆماری دەکات",
+  },
+  "A sale paid in dollars is not taken offline": {
+    ar: "لا يُقبل البيع المدفوع بالدولار دون اتصال",
+    ckb: "فرۆشتنی پارەدراو بە دۆلار بێ ئینتەرنێت وەرناگیرێت",
+  },
+  "{1} order {2} is already recorded": {
+    ar: "طلب {1} رقم {2} مسجّل بالفعل",
+    ckb: "داواکاریی {1} ژمارە {2} پێشتر تۆمار کراوە",
+  },
   "An order number is letters and digits, as the {1} tablet shows it": {
     ar: "رقم الطلب حروف وأرقام، كما يظهر على جهاز {1} اللوحي",
     ckb: "ژمارەی داواکاری پیت و ژمارەیە، وەک تابلێتی {1} پیشانی دەدات",
