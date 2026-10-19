@@ -53,6 +53,10 @@ const phrases: PhraseBook = {
   "The deposit": { ar: "العربون", ckb: "پێشەکییەکە" },
   "Give {amount} back": { ar: "أعِد {amount}", ckb: "{amount} بگەڕێنەوە" },
   "Cancel the pre-order": { ar: "ألغِ الطلب المسبق", ckb: "داواکارییە پێشوەختەکە هەڵبوەشێنەوە" },
+  // The accounts.
+  "Customer deposits": { ar: "عرابين الزبائن", ckb: "پێشەکیی کڕیاران" },
+  "Deposits kept": { ar: "عرابين محتفظ بها", ckb: "پێشەکیی هەڵگیراو" },
+  "Customer accounts": { ar: "حسابات الزبائن", ckb: "حیسابی کڕیاران" },
   // The kitchen.
   "Ordered ahead": { ar: "طُلب مسبقًا", ckb: "پێشوەخت داواکراو" },
   // A receipt's payments.
@@ -64,6 +68,12 @@ const phrases: PhraseBook = {
   "Pre-order number": { ar: "رقم الطلب المسبق", ckb: "ژمارەی داواکاریی پێشوەخت" },
   "Paid ahead": { ar: "المدفوع مقدمًا", ckb: "پێشوەخت دراو" },
   "Deposit kept": { ar: "العربون محتفظ به", ckb: "پێشەکییەکە هەڵگیرا" },
+  // Where a journal comes from.
+  "a pre-order's deposit (cancel the pre-order at the till)": {
+    ar: "عربون طلب مسبق (ألغِ الطلب المسبق من الصندوق)",
+    ckb: "پێشەکیی داواکارییەکی پێشوەخت (لە سندوقەوە داواکارییەکە هەڵبوەشێنەوە)",
+  },
+  "a pre-order cancelled": { ar: "طلب مسبق مُلغى", ckb: "داواکارییەکی پێشوەختی هەڵوەشاوە" },
   // Refusals.
   "a pre-order": { ar: "طلبًا مسبقًا", ckb: "داواکارییەکی پێشوەخت" },
   "A phone number is at most 40 characters": {

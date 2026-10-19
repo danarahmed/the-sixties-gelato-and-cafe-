@@ -2,7 +2,7 @@
 -- Pre-orders with deposits (0076, round eighteen): a cake ordered for Friday,
 -- part paid now. The deposit is the customer's money held (2300) until the
 -- order is collected, when it pays its part of the sale; given back, or kept
--- (4300), when it is cancelled. Espresso: 2,500 takeaway. The fixtures opened
+-- (4390), when it is cancelled. Espresso: 2,500 takeaway. The fixtures opened
 -- the drawer.
 -- =============================================================================
 select test.golden_catalogue();
@@ -30,14 +30,14 @@ declare v bigint; begin execute p into v; return v; end $$;
 create temp table friday as select now() + interval '3 days' as at;
 grant select on friday to public;
 create temp table b0 as select test.balance('2300') as held, test.balance('1000') as cash,
-                               test.balance('4300') as kept, test.balance('1010') as card;
+                               test.balance('4390') as kept, test.balance('1010') as card;
 grant select on b0 to public;
 
 -- ------------------------------------------------------------ taken, with a cash deposit
 select test.act_as('cashier@example.com');
 select test.ok(exists (select 1 from gl_account where code = '2300' and name = 'Customer deposits'),
   'the chart has Customer deposits (a liability) …');
-select test.ok(exists (select 1 from gl_account where code = '4300' and account_type = 'revenue'),
+select test.ok(exists (select 1 from gl_account where code = '4390' and account_type = 'revenue'),
   '… and Deposits kept (income)');
 insert into res select 'A', take_pre_order('  Shilan  ', (select at from friday),
   '[{"variant_id": "d1000000-0000-0000-0000-000000000001", "qty": 4, "note": "Happy birthday"}]',
@@ -144,7 +144,7 @@ select test.throws(format('select cancel_pre_order(%L, %L, true)', pg_temp.id('K
   'a cashier does not cancel one');
 select test.act_as('manager@example.com');
 select cancel_pre_order(pg_temp.id('K'), 'No-show', true);
-select test.eq(test.balance('4300') - (select kept from b0), -2500::numeric, 'a deposit kept is income');
+select test.eq(test.balance('4390') - (select kept from b0), -2500::numeric, 'a deposit kept is income');
 select test.eq(test.balance('1010') - (select card from b0), 2500::numeric, 'and stays with the card takings (the voided sale''s 6,000 reversed)');
 
 -- ------------------------------------------------------------ all paid ahead; none

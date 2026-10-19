@@ -3591,7 +3591,7 @@ for Friday, part paid now.
 What it changes:
 
 - **New accounts:** `2300` Customer deposits (what customers paid ahead, held
-  until they collect), `4300` Deposits kept (a deposit kept when an order is
+  until they collect), `4390` Deposits kept (a deposit kept when an order is
   cancelled), and `1110` Customer accounts (what customers on account owe,
   for round nineteen). No journal by hand moves `2300` or `1110`.
 - **New tables:** `pre_order` and `pre_order_line`, read only through the
@@ -3604,7 +3604,8 @@ What it changes:
   and the kitchen), each keyed and on the audit trail.
 - **Replaced:** `sale_payments`, `post_sale` and `order_payments` (a deposit
   pays its part of the sale), `provision_chart_of_accounts`,
-  `manual_journal_blocked` and `cash_flow_line` (the new accounts).
+  `manual_journal_blocked` and `cash_flow_line` (the new accounts), and
+  `journal_source_hint` (where a pre-order's journals come from).
 - **New trigger:** a collected pre-order's sale voided opens it again, its
   deposit held again.
 - Nothing recorded changes.

@@ -15,7 +15,7 @@
 --    customer pays the rest, as any sale. Its stock and its cost go then.
 --  * cancel_pre_order gives the deposit back the way it was paid (Dr 2300, Cr
 --    it; cash out of the drawer), or, by the shop's terms, keeps it (Dr 2300,
---    Cr 4300 Deposits kept).
+--    Cr 4390 Deposits kept).
 --  * A sale of a collected pre-order voided puts the deposit back as held and
 --    the pre-order open again. Refunding such a sale by the item is not done
 --    at the till (its deposit is no way to pay back): a manager voids it.
@@ -27,10 +27,20 @@
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
--- 1. 2300 Customer deposits, 4300 Deposits kept
+-- 1. 2300 Customer deposits, 4390 Deposits kept
 -- -----------------------------------------------------------------------------
 -- 0060's chart, with the two, and 1110 Customer accounts: what customers who
 -- buy on account owe (round nineteen; it moves only with their invoices).
+-- The new codes are the café's own: an account added by hand with one of them
+-- is not taken over (only an income or a cost is added by hand: 4390).
+do $$
+begin
+  if exists (select 1 from gl_account where code in ('1110', '2300', '4390') and not is_system) then
+    raise exception 'An account added by hand has the code %: give it another code on Settings → Chart of accounts, then run this again',
+      (select string_agg(distinct code, ', ') from gl_account where code in ('1110', '2300', '4390') and not is_system);
+  end if;
+end $$;
+
 create or replace function provision_chart_of_accounts(p_business uuid) returns void
 language plpgsql as $$
 begin
@@ -61,7 +71,7 @@ begin
     ('4000','Sales revenue',              'revenue',   'credit'),
     ('4100','Merchant-funded discount',   'revenue',   'debit'),
     ('4200','Sales returns & refunds',    'revenue',   'debit'),
-    ('4300','Deposits kept',              'revenue',   'credit'),
+    ('4390','Deposits kept',              'revenue',   'credit'),
     ('5000','Cost of goods sold',         'expense',   'debit'),
     ('5050','Purchase price variance',    'expense',   'debit'),
     ('5100','Platform commission',        'expense',   'debit'),
@@ -109,6 +119,43 @@ language sql immutable set search_path = public as $$
     when p_code in ('1300', '2100') or p_code like '61%' then 'staff'
     else 'running'
   end
+$$;
+
+-- 0069's journal_source_hint: a pre-order's journals say where they come from.
+create or replace function journal_source_hint(p_ref_type text) returns text
+language sql immutable as $$
+  select case p_ref_type
+    when 'sales_order' then 'a sale (void or refund it on Orders)'
+    when 'sale_adjustment' then 'a refund'
+    when 'sale_refund' then 'a refund (refund the rest of the sale on Orders if more should go back)'
+    when 'goods_receipt' then 'a goods receipt (correct it on Purchasing)'
+    when 'receipt_correction' then 'a delivery''s correction (correct the delivery again on Purchasing)'
+    when 'purchase_invoice' then 'a bill (cancel it on Vendors)'
+    when 'supplier_payment' then 'a supplier payment'
+    when 'inventory_movement' then 'a stock record (correct stock with a count or a stock correction)'
+    when 'stock_count' then 'a stock count (correct stock with a new count)'
+    when 'work_shift' then 'a drawer count'
+    when 'session_opening' then 'the opening count of a cash session'
+    when 'session_dollars' then 'the dollars counted at a drawer''s close'
+    when 'fx_exchange' then 'an exchange of dollars'
+    when 'supplier_return' then 'a return to a supplier (record a credit on Vendors if more is owed back)'
+    when 'supplier_credit' then 'a supplier''s credit'
+    when 'cash_transfer' then 'a movement of cash (move it back instead)'
+    when 'reversal' then 'a reversal (post the entry again instead)'
+    when 'card_settlement' then 'a card settlement (cancel it on Sales)'
+    when 'platform_settlement' then 'a platform settlement (cancel it on Delivery Platforms)'
+    when 'stock_loss' then 'a loss (correct stock with a count or a stock correction)'
+    when 'payroll_approval' then 'a payroll''s approval (reopen the payroll on Payroll while nothing is paid from it)'
+    when 'employee_advance' then 'an advance to someone who works here (cancel it on Payroll)'
+    when 'salary_payment' then 'a salary payment (cancel it on Payroll)'
+    when 'stock_transfer' then 'stock sent to another place (cancel the transfer on Inventory while it is on its way)'
+    when 'stock_transfer_receipt' then 'stock received from another place'
+    when 'stock_transfer_cancel' then 'a transfer cancelled on its way'
+    when 'prepaid_expense' then 'a prepaid expense (cancel it on Expenses)'
+    when 'money_move' then 'a move of money (cancel it on Sales)'
+    when 'pre_order' then 'a pre-order''s deposit (cancel the pre-order at the till)'
+    when 'pre_order_cancel' then 'a pre-order cancelled'
+    else 'a record of type ' || coalesce(p_ref_type, 'unknown') end
 $$;
 
 -- -----------------------------------------------------------------------------
@@ -801,7 +848,7 @@ begin
       v_journal := post_journal(v_business, now(), 'Pre-order ' || o.order_no || ' cancelled, deposit kept',
         'pre_order_cancel', o.id,
         jsonb_build_array(jsonb_build_object('code', '2300', 'debit', o.deposit),
-                          jsonb_build_object('code', '4300', 'credit', o.deposit)));
+                          jsonb_build_object('code', '4390', 'credit', o.deposit)));
     else
       v_journal := post_journal(v_business, now(), 'Pre-order ' || o.order_no || ' cancelled, deposit given back',
         'pre_order_cancel', o.id,

@@ -226,6 +226,17 @@ export function PreOrdersDialog({
               {t("pos.back")}
             </button>
           )}
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={onClose}
+            disabled={busy}
+            aria-label={t("Close")}
+            title={t("Close")}
+            data-testid="preorders-close"
+          >
+            <Icon name="close" />
+          </button>
         </div>
 
         {view.kind === "list" && (

@@ -2066,7 +2066,7 @@ enough to apply in one call). No table changes, and nothing recorded changes.
 - **`sales_tender.pre_order_id`**: the payment of a collected pre-order's sale
   that its deposit made (debited to `2300`). `sales_tender.on_account_customer`
   is a payment charged to a customer's account (`1110`, round nineteen).
-- **Accounts:** `2300` Customer deposits (held until collected), `4300`
+- **Accounts:** `2300` Customer deposits (held until collected), `4390`
   Deposits kept, `1110` Customer accounts.
 - **Functions:** `take_pre_order`, `collect_pre_order` (`sale.create`),
   `cancel_pre_order` (`sale.void`), each keyed; `pre_orders` for the till and

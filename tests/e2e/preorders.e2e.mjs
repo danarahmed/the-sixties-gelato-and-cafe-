@@ -13,6 +13,8 @@ async function menu(page) {
   await page.getByRole("button", { name: "Takeaway" }).click();
 }
 const espresso = (page) => page.locator(".product-tile", { hasText: "Golden espresso" });
+const ESPRESSO = "d1000000-0000-0000-0000-000000000001";
+const money = (n) => `${Number(n).toLocaleString("en-US")} IQD`;
 
 /** Two espressos on the till, taken as a pre-order for `name`, `paid` now by card. */
 async function take(page, name, paid) {
@@ -35,9 +37,10 @@ console.log("▸ a pre-order taken from the till, part paid now");
   await menu(page);
   await take(page, "Shilan", 2000);
   check(
-    sql(`select customer_name || ' ' || trim_scale(total) || ' ' || trim_scale(deposit) || ' ' || status
-           from pre_order where customer_name = 'Shilan'`) === "Shilan 5000 2000 open",
-    "Shilan's two espressos, 5,000, 2,000 paid ahead, open",
+    sql(`select total = 2 * price_on('${ESPRESSO}', 'takeaway', location_id, current_date)
+                and deposit = 2000 and status = 'open'
+           from pre_order where customer_name = 'Shilan'`) === "t",
+    "Shilan's two espressos at today's take-away price, 2,000 paid ahead, open",
   );
   check(
     ((await page.getByTestId("preorder-row").first().textContent()) ?? "").includes(
@@ -45,7 +48,7 @@ console.log("▸ a pre-order taken from the till, part paid now");
     ),
     "the till's list says what was paid ahead",
   );
-  await page.keyboard.press("Escape");
+  await page.getByTestId("preorders-close").click();
   check(
     (await page.locator(".order-line").count()) === 0,
     "the till's order is cleared once it is a pre-order",
@@ -77,9 +80,12 @@ console.log("▸ collected: the deposit pays its part, the rest paid with a tap"
     .getByTestId("preorder-collect")
     .click();
   const collecting = page.getByTestId("preorder-collecting");
+  const left = Number(
+    sql(`select trim_scale(total - deposit) from pre_order where customer_name = 'Shilan'`),
+  );
   check(
-    ((await collecting.textContent()) ?? "").includes("To pay now: 3,000 IQD"),
-    "3,000 left to pay",
+    ((await collecting.textContent()) ?? "").includes(`To pay now: ${money(left)}`),
+    `${money(left)} left to pay: the total less what was paid ahead`,
   );
   await collecting.getByTestId("preorder-pay").nth(1).click(); // card
   await page.getByTestId("preorder-collected").waitFor({ timeout: 10000 });
@@ -87,8 +93,8 @@ console.log("▸ collected: the deposit pays its part, the rest paid with a tap"
     sql(`select string_agg(tender_type::text || ' ' || trim_scale(amount) || case when pre_order_id is null then ''
                   else ' deposit' end, ', ' order by amount)
            from sales_tender where sales_order_id = (select sales_order_id from pre_order where customer_name = 'Shilan')`) ===
-      "other 2000 deposit, card 3000",
-    "the sale paid 2,000 by its deposit and 3,000 by card",
+      `other 2000 deposit, card ${left}`,
+    "the sale paid 2,000 by its deposit and the rest by card",
   );
   check(
     sql(`select status from pre_order where customer_name = 'Shilan'`) === "collected",
