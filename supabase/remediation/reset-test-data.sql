@@ -75,6 +75,9 @@ insert into reset_keep values
   ('clock_screen'), ('clock_secret'), ('staff_phone'), ('payment_method'),
   -- Phone warnings (0072): on or off, and each login's phones; what waited is cleared.
   ('push_config'), ('push_device');
+-- The parts of the menu and what each branch sells (0074), where the database has them.
+insert into reset_keep
+select t from (values ('menu_section'), ('location_section')) v(t) where to_regclass('public.' || t) is not null;
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');
