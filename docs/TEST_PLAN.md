@@ -287,6 +287,10 @@ layers before every release.
   same; the ready-made groups each named in three languages, Kurdish in
   Kurdish letters, the milk asked for, sugar and ice optional, only free
   prices filled in.
+- `tests/sections.test.ts`: the café and the bakery told apart (round
+  sixteen, `0074`) — each category counted in its part, in the parts' order,
+  refunds taken off; a category of no part, or of a part gone, apart and last;
+  nothing of a part that sold nothing.
 - `tests/offline.test.ts`: selling without internet (round fifteen, `0073`) —
   a quick sale taken offline, a bill, a discount, a customer and the café's
   own delivery left for the connection; the sales kept in order and read
@@ -540,6 +544,14 @@ connections:
   (`0055`): all ten sell, the new branch's five numbered 1 to 5 with none
   given twice or skipped, and the first branch's going on beside them.
 
+`sections.test.sql` (round sixteen, `0074`): parts named once whatever their
+letters, each after the last, and the same one when sent again with its key; a
+product of its category's part, one of no category of none; a branch selling
+only the bakery shows its products and those of none, both parts or none
+everything; a part out of use shows its products as of none; only a branch
+sells, a part the café does not have refused; a cashier reads the parts and
+changes none, the public neither; every change on the audit trail.
+
 `offline_sales.test.sql` (round fifteen, `0073`): a sale made offline earlier
 today, sent by a manager, keeps the time it was sold (its journal too), is
 the sale of the cashier who made it, on the till it was made on, with the
@@ -609,6 +621,11 @@ database, behind a small local stand-in for Supabase's auth service.
   and left out of the expenses' total; a cashier downloads no journal lines.
 - `retry`: a sale whose confirmation is lost is retried and recorded once —
   also when it is the database's answer to the app's server that is lost.
+- `sections` (round sixteen, `0074`): the owner adds Café and Bakery in one
+  tap and gives each category its part; one till shows both, or one, as it was
+  left, a search finding in every part; a branch set to sell only the bakery
+  shows only its products, and everything again once untied; Reports shows
+  each part's takings in their order.
 - `offline`: offline, the till says so in each language and still takes a
   quick sale (round fifteen, `0073`): kept on the till with its own receipt,
   nothing reaching the database, then sent once the connection is back,

@@ -3,6 +3,8 @@ import { Fragment } from "react";
 import { PrintButton } from "@/components/PrintButton";
 import { PrintHead } from "@/components/PrintHead";
 import { getLocale, getMsg, getT } from "@/lib/i18n/server";
+import { getSectionSetup } from "@/lib/db/sections";
+import { bySection } from "@/lib/sections";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getDailySales, getVendorBook, ageBills, salesTotals } from "@/lib/db/books";
@@ -34,7 +36,7 @@ import { getPurchasingReport } from "@/lib/db/purchasing";
 import { getProductionReport } from "@/lib/db/production";
 import { getStaffReport } from "@/lib/db/staff";
 import { getCustomerReport } from "@/lib/db/customers";
-import { getPurchases } from "@/lib/db/analysis";
+import { getPurchases, getSalesAnalysis } from "@/lib/db/analysis";
 import { itemNameIn } from "@/lib/analysis";
 import { monthText, splitMinutes } from "@/lib/staff";
 import { LOSS_ACCOUNT_NAME, giveawayLabel, kindShare } from "@/lib/losses";
@@ -149,6 +151,34 @@ export default async function ReportsPage({
     // Each of the café's own ways to pay (0069); none before it is applied.
     from <= to ? getPaymentMethodReport(from, to, place) : Promise.resolve([]),
   ]);
+  // The café's and the bakery's takings and profit (0074), once the menu has
+  // parts: the sales analysis by category, each counted in its part.
+  const sectionSetup = await getSectionSetup();
+  const partsInUse = (sectionSetup?.sections ?? []).filter((s) => s.isActive);
+  const parts =
+    sectionSetup && partsInUse.length > 0 && from <= to && daysBetween(from, to) <= 366
+      ? bySection(
+          (
+            await getSalesAnalysis({
+              from,
+              to,
+              by: "category",
+              then: null,
+              channel: null,
+              location: place,
+              category: null,
+              cashier: null,
+            })
+          ).rows,
+          sectionSetup.categorySection,
+          partsInUse.map((s) => ({
+            id: s.id,
+            position: s.position,
+            name: (locale === "ar" && s.nameAr) || (locale === "ckb" && s.nameCkb) || s.name,
+          })),
+          t("No section"),
+        )
+      : null;
   // The ways to pay with something in the dates; each by its name in place of their one row.
   const methodsUsed = methodRows.filter(
     (m) => m.taken > 0 || m.refunded > 0 || (m.movedOut ?? 0) > 0 || (m.fees ?? 0) > 0,
@@ -968,6 +998,62 @@ export default async function ReportsPage({
       <h2 className="rep-group" id="g-sales">
         {t("Sales")}
       </h2>
+
+      {/* ---- The café's and the bakery's parts (0074) ---- */}
+      {parts && (
+        <section className="panel" id="sections" data-testid="sections-report">
+          <div className="panel-h">
+            <h3>{t("Café and bakery")}</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              {t("Each part of the menu, {from} to {to}", { from, to })}
+            </span>
+          </div>
+          <div className="panel-b">
+            {parts.length === 0 ? (
+              <p className="muted">{t("No sales in these dates.")}</p>
+            ) : (
+              <div className="tw">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>{t("Part of the menu")}</th>
+                      <th className="right">{t("Sales")}</th>
+                      <th style={{ width: "28%" }}>{t("Share of sales")}</th>
+                      <th className="right">{t("Cost")}</th>
+                      <th className="right">{t("Profit")}</th>
+                      <th className="right">{t("Margin")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parts.map((p) => (
+                      <tr key={p.id ?? "none"} data-testid="section-line" data-name={p.name}>
+                        <td dir="auto">{p.name}</td>
+                        <td className="right money">{fmtIQD(p.sales)}</td>
+                        <td>
+                          <span className="share-bar" aria-hidden="true">
+                            <span style={{ width: `${Math.max(0, Math.min(100, p.share))}%` }} />
+                          </span>{" "}
+                          <span className="muted mono">{p.share}%</span>
+                        </td>
+                        <td className="right money">{fmtIQD(p.cost)}</td>
+                        <td className={`right money ${p.profit < 0 ? "red" : ""}`}>
+                          {fmtIQD(p.profit)}
+                        </td>
+                        <td className="right mono">{p.margin === null ? "—" : `${p.margin}%`}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <p className="muted" style={{ fontSize: ".78rem", marginBlockEnd: 0 }}>
+              {t(
+                "Sales after discounts, less what refunds gave back; the cost is what those sales used. Rent, wages and other costs the parts share are in the profit and loss.",
+              )}
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* ---- Sales by channel ---- */}
       <section className="panel" id="channel">

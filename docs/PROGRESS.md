@@ -2299,7 +2299,22 @@ Built and tested:
   signed in then, and not refused by an item's rule on stock below zero (the
   money is taken already; the audit trail says so). Before `0073` is applied
   the till sends a kept sale as an ordinary sale. Tested: the SQL suite
-  `offline_sales`, `tests/offline.test.ts`, and the browser suite `offline`.
+  `offline_sales`, `tests/offline.test.ts`, and the browser suites `offline`
+  and `retry`.
+
+- **Round sixteen: the café and the bakery on one till (`0074`).** The
+  owner's choice (option A, one till for both) and a menu for each place. On
+  Products & Recipes, **Add Café and Bakery** names the two parts in the three
+  languages in one tap (or the owner names their own), and each category is
+  given its part: a few categories, not every product. One till sells both on
+  one bill and into one drawer; its **All · Café · Bakery** buttons show one
+  part at a time, each till remembering the one it was left on, and a search
+  finds in every part. A branch that sells only some parts is set on
+  **Settings → Locations**, and its till shows only those. **Reports → Café
+  and bakery** shows each part's sales, share, cost, profit and margin, from
+  the sales analysis by category. Before `0074` is applied the screens show
+  nothing of it. Tested: the SQL suite `sections`, `tests/sections.test.ts`,
+  and the browser suite `sections`.
 
 ## The August 2026 audit, finding by finding
 

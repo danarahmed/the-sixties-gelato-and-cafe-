@@ -24,6 +24,8 @@ import { AddProductForm, PriceChange } from "@/components/AddProductForm";
 import { ChangeRecipe } from "@/components/menu/ChangeRecipe";
 import type { ItemOpt } from "@/components/menu/RecipeLines";
 import { CategoriesManager } from "@/components/menu/CategoriesManager";
+import { SectionsManager } from "@/components/menu/SectionsManager";
+import { getSectionSetup } from "@/lib/db/sections";
 import { CostWarning, ScheduledChanges } from "@/components/menu/MenuChanges";
 import { ProductSetup } from "@/components/menu/ProductSetup";
 import { SizesPanel } from "@/components/menu/SizesPanel";
@@ -265,19 +267,32 @@ export default async function ProductsPage({
   const find = typeof sp.q === "string" ? (searchText(sp.q) ?? "") : "";
   const today = businessToday(profile.timezone);
   const canEdit = has(profile, "recipe.edit");
-  const [menu, lines, items, itemCosts, setup, scheduled, channels, addons, branchPrices, places] =
-    await Promise.all([
-      getMenuCosting(),
-      getMenuRecipeLines(),
-      canEdit ? getItems() : Promise.resolve([]),
-      getItemCosts(),
-      getMenuSetup(),
-      getMenuScheduled(),
-      getChannelNames(),
-      getAddonSetup(today),
-      getMenuBranchPrices(),
-      getCafePlaces(),
-    ]);
+  const [
+    menu,
+    lines,
+    items,
+    itemCosts,
+    setup,
+    scheduled,
+    channels,
+    addons,
+    branchPrices,
+    places,
+    sectionSetup,
+  ] = await Promise.all([
+    getMenuCosting(),
+    getMenuRecipeLines(),
+    canEdit ? getItems() : Promise.resolve([]),
+    getItemCosts(),
+    getMenuSetup(),
+    getMenuScheduled(),
+    getChannelNames(),
+    getAddonSetup(today),
+    getMenuBranchPrices(),
+    getCafePlaces(),
+    // The café's and the bakery's parts of the menu (0074); null before it.
+    getSectionSetup(),
+  ]);
   // A price can be one branch's own once the café has more than one (0055).
   const branches = places.filter((p) => p.kind === "branch");
   const branchChoice = branches.length > 1 ? branches.map((b) => ({ id: b.id, name: b.name })) : [];
@@ -528,6 +543,15 @@ export default async function ProductsPage({
         )}
 
         {canEdit && <MenuPhotos products={products} />}
+
+        {sectionSetup && (
+          <SectionsManager
+            sections={sectionSetup.sections}
+            categories={categories}
+            categorySection={sectionSetup.categorySection}
+            canEdit={canEdit}
+          />
+        )}
 
         <CategoriesManager categories={categories} counts={counts} canEdit={canEdit} />
       </div>

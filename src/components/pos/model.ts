@@ -463,6 +463,11 @@ export function categoryName(i: PosItem, locale: Locale): string | null {
   return i.category ? inLocale(i.category, i.categoryAr, i.categoryCkb, locale) : null;
 }
 
+/** A product's section of the menu (0074) in the reader's language: "Café", "Bakery". */
+export function sectionName(i: PosItem, locale: Locale): string | null {
+  return i.section ? inLocale(i.section, i.sectionAr ?? null, i.sectionCkb ?? null, locale) : null;
+}
+
 export function lineName(l: Line, byId: Map<string, PosItem>, locale: Locale): string {
   const i = byId.get(l.variantId);
   return i ? itemName(i, locale) : (l.fallbackName ?? "—");

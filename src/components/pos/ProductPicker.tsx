@@ -14,6 +14,7 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import {
   categoryName,
   fold,
+  sectionName,
   productName,
   searchedTimes,
   type AddonChoice,
@@ -24,6 +25,8 @@ import { OptionsSheet } from "./OptionsSheet";
 const ALL = "all";
 const FAVOURITES = "fav";
 const NONE = "none";
+/** The section this till shows (0074), kept on the device: "all", or a section's id. */
+const SECTION_KEY = "sixties.pos.section";
 
 interface Product {
   productId: string;
@@ -128,6 +131,25 @@ export function ProductPicker({
   const { t, locale, dir } = useT();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>(ALL);
+  // The café's and the bakery's products on one till (0074): every section, or
+  // one, as this device was left. A product of no section shows in each.
+  const [section, setSection] = useState<string>(ALL);
+  useEffect(() => {
+    try {
+      setSection(localStorage.getItem(SECTION_KEY) ?? ALL);
+    } catch {
+      /* no storage: every section */
+    }
+  }, []);
+  function chooseSection(id: string) {
+    setSection(id);
+    setCategory(ALL);
+    try {
+      localStorage.setItem(SECTION_KEY, id);
+    } catch {
+      /* kept for this visit only */
+    }
+  }
   const [choosing, setChoosing] = useState<{ product: Product; qty: number } | null>(null);
   // How many of the next product, typed as a number first.
   const [times, setTimes] = useState("");
@@ -141,7 +163,7 @@ export function ProductPicker({
     [items, channel],
   );
 
-  const products = useMemo(() => {
+  const everything = useMemo(() => {
     const byProduct = new Map<string, Product>();
     for (const i of sellable) {
       const p = byProduct.get(i.productId);
@@ -150,6 +172,31 @@ export function ProductPicker({
     }
     return [...byProduct.values()];
   }, [sellable]);
+
+  const sections = useMemo(() => {
+    const seen = new Map<string, { name: string; position: number; count: number }>();
+    for (const p of everything) {
+      const id = p.item.sectionId;
+      if (!id) continue;
+      const s = seen.get(id);
+      if (s) s.count++;
+      else
+        seen.set(id, {
+          name: sectionName(p.item, locale) ?? "",
+          position: p.item.sectionPosition ?? 0,
+          count: 1,
+        });
+    }
+    return [...seen.entries()].sort((a, b) => a[1].position - b[1].position);
+  }, [everything, locale]);
+  const activeSection = section !== ALL && sections.some(([id]) => id === section) ? section : ALL;
+  const products = useMemo(
+    () =>
+      activeSection === ALL
+        ? everything
+        : everything.filter((p) => !p.item.sectionId || p.item.sectionId === activeSection),
+    [everything, activeSection],
+  );
 
   const categories = useMemo(() => {
     const seen = new Map<string, string>();
@@ -180,7 +227,8 @@ export function ProductPicker({
   const asked = searchedTimes(query);
   const shown = useMemo(() => {
     const q = fold(searchedTimes(query).find);
-    return products.filter((p) => {
+    // A search finds in every section; the chips show the one chosen.
+    return (q ? everything : products).filter((p) => {
       if (q) {
         const names = p.variants.flatMap((v) => [
           v.productName,
@@ -195,7 +243,7 @@ export function ProductPicker({
       if (activeCategory !== ALL) return p.item.categoryId === activeCategory;
       return true;
     });
-  }, [products, query, activeCategory]);
+  }, [everything, products, query, activeCategory]);
 
   // The till's keys, from anywhere on it but a box being typed in or a dialog:
   // "/" goes to the search, a letter starts one, a number is how many of the
@@ -346,6 +394,35 @@ export function ProductPicker({
       )}
 
       <div className="picker-body">
+        {!query && sections.length > 1 && (
+          <div
+            className="seg section-seg"
+            role="tablist"
+            aria-label={t("Sections of the menu")}
+            data-testid="till-sections"
+          >
+            <button
+              role="tab"
+              aria-selected={activeSection === ALL}
+              className={activeSection === ALL ? "active" : ""}
+              onClick={() => chooseSection(ALL)}
+            >
+              {t("pos.all")}
+            </button>
+            {sections.map(([id, s]) => (
+              <button
+                key={id}
+                role="tab"
+                aria-selected={activeSection === id}
+                className={activeSection === id ? "active" : ""}
+                onClick={() => chooseSection(id)}
+                data-testid="till-section"
+              >
+                <span dir="auto">{s.name}</span> <span className="chip-n">{s.count}</span>
+              </button>
+            ))}
+          </div>
+        )}
         {!query && (
           <div className="chips cat-rail" role="tablist" aria-label={t("pos.categories")}>
             <button
