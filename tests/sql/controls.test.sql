@@ -157,7 +157,7 @@ select test.eq((
   'post_legacy_unposted,post_platform_settlement,prepaid_expenses,preview_receipt_correction,production_batches,'
   'production_lots,production_plan,production_recipes,publish_journal,purchase_order,purchase_orders,'
   'purchase_orders_from_list,push_done,push_take,receive_goods,receive_stock_transfer,record_advance,record_bill,'
-  'record_card_settlement,record_count,record_expense,record_loss,record_opening_stock,record_prepaid_expense,'
+  'record_card_settlement,record_count,record_expense,record_loss,record_offline_sale,record_opening_stock,record_prepaid_expense,'
   'record_production,record_sale,record_supplier_credit,record_waste,refund_sale,refund_sale_lines,'
   'register_clock_screen,reject_stock_count,release_prepaid,remove_clock_screen,remove_item_supplier,'
   'remove_push_device,rename_account,reopen_payroll,report_balance_sheet,report_cash_flow,report_customers,'
