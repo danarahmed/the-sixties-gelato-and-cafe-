@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { PosItem } from "@/lib/db/pos";
 import type { SaleReceipt } from "@/lib/actions/sales";
+import { fmtWeight } from "@/lib/weight";
 import { fmtIQD, fmtQty } from "@/lib/format";
 import { fmtRate, fmtUSD } from "@/lib/fx";
 import { arrows } from "@/lib/i18n/core";
@@ -58,6 +59,7 @@ function OrderLine({
   locked,
   onQty,
   onNote,
+  onWeigh,
 }: {
   line: Line;
   order: Order;
@@ -66,6 +68,8 @@ function OrderLine({
   locked: boolean;
   onQty: (key: string, delta: number) => void;
   onNote: (key: string, note: string | null) => void;
+  /** A size sold by weight: weigh it again (0075). */
+  onWeigh?: (key: string) => void;
 }) {
   const { t, locale } = useT();
   const [editing, setEditing] = useState(false);
@@ -73,6 +77,7 @@ function OrderLine({
   const price = linePrice(line, byId, order.channel, addons);
   const amount = lineAmount(line, byId, order.channel, addons);
   const withAddons = addonNames(line.addons, addons, locale, line.addons);
+  const weighed = byId.get(line.variantId)?.soldByWeight === true;
   const save = () => {
     onNote(line.key, note.trim() || null);
     setEditing(false);
@@ -88,27 +93,52 @@ function OrderLine({
             </span>
           )}
           <span className="ol-sub muted">
-            {price === null ? t("pos.noPrice") : fmtIQD(price)}
+            {price === null
+              ? t("pos.noPrice")
+              : weighed
+                ? t("{price} a kilo", { price: fmtIQD(price) })
+                : fmtIQD(price)}
             {line.note && <em className="ol-note"> · {line.note}</em>}
           </span>
         </div>
-        <div className="stepper">
-          <button
-            aria-label={`${t("pos.less")} ${lineName(line, byId, locale)}`}
-            onClick={() => onQty(line.key, -1)}
-            disabled={locked}
-          >
-            −
-          </button>
-          <span className="mono">{fmtQty(line.qty)}</span>
-          <button
-            aria-label={`${t("pos.more")} ${lineName(line, byId, locale)}`}
-            onClick={() => onQty(line.key, 1)}
-            disabled={locked}
-          >
-            +
-          </button>
-        </div>
+        {weighed ? (
+          <div className="stepper weighed">
+            <button
+              aria-label={`${t("Take off")} ${lineName(line, byId, locale)}`}
+              onClick={() => onQty(line.key, -line.qty)}
+              disabled={locked}
+            >
+              ×
+            </button>
+            <button
+              className="mono weigh-btn"
+              aria-label={t("Weigh {name} again", { name: lineName(line, byId, locale) })}
+              onClick={() => onWeigh?.(line.key)}
+              disabled={locked || !onWeigh}
+              data-testid="line-weight"
+            >
+              {fmtWeight(line.qty, { g: t("g"), kg: t("kg") })}
+            </button>
+          </div>
+        ) : (
+          <div className="stepper">
+            <button
+              aria-label={`${t("pos.less")} ${lineName(line, byId, locale)}`}
+              onClick={() => onQty(line.key, -1)}
+              disabled={locked}
+            >
+              −
+            </button>
+            <span className="mono">{fmtQty(line.qty)}</span>
+            <button
+              aria-label={`${t("pos.more")} ${lineName(line, byId, locale)}`}
+              onClick={() => onQty(line.key, 1)}
+              disabled={locked}
+            >
+              +
+            </button>
+          </div>
+        )}
         <span className="ol-amt mono">{amount === null ? "—" : fmtIQD(amount.toNumber())}</span>
         <button
           className="ol-note-btn"
@@ -326,6 +356,7 @@ export function OrderPanel({
   ticketOn,
   onQty,
   onNote,
+  onWeigh,
   onLabel,
   onPay,
   onSave,
@@ -375,6 +406,8 @@ export function OrderPanel({
   ticketOn: boolean;
   onQty: (key: string, delta: number) => void;
   onNote: (key: string, note: string | null) => void;
+  /** Weigh a line sold by weight again (0075). */
+  onWeigh?: (key: string) => void;
   onLabel: (label: string) => void;
   /** Take the money: one of the café's ways to pay names which (0069). */
   onPay: (tender: Tender, method?: string) => void;
@@ -426,7 +459,7 @@ export function OrderPanel({
   const badDiscount =
     discountInvalid(order.discount) ||
     discountNeeds(order.discount, subtotal, discountRules) !== null;
-  const count = itemCount(order);
+  const count = itemCount(order, byId);
   const opened = minutesSince(order.openedAt, now);
   const savedWithItems = order.tabId !== null && savedHasItems(order);
   const [discountOpen, setDiscountOpen] = useState(false);
@@ -639,6 +672,7 @@ export function OrderPanel({
               locked={blocked}
               onQty={onQty}
               onNote={onNote}
+              onWeigh={onWeigh}
             />
           ))
         )}

@@ -302,6 +302,30 @@ export async function setPlaceSectionsAction(
   return { ok: true, data: null };
 }
 
+const weighedInput = z.object({
+  variantId: id("a size"),
+  weighed: z.boolean(),
+});
+
+/** A size sold by the kilo (0075): its price is a kilo's, the till asks its weight. */
+export async function setVariantWeighedAction(
+  input: z.input<typeof weighedInput>,
+  key: string,
+): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(weighedInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("set_variant_weighed", {
+    p_variant: v.data.variantId,
+    p_weighed: v.data.weighed,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: null };
+}
+
 const detailsInput = z.object({
   productId: id("a product"),
   name: text("Product name", 120),

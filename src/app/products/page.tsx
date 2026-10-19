@@ -26,6 +26,8 @@ import type { ItemOpt } from "@/components/menu/RecipeLines";
 import { CategoriesManager } from "@/components/menu/CategoriesManager";
 import { SectionsManager } from "@/components/menu/SectionsManager";
 import { getSectionSetup } from "@/lib/db/sections";
+import { getWeighedSizes } from "@/lib/db/weighed";
+import { WeighedSizes } from "@/components/menu/WeighedSizes";
 import { CostWarning, ScheduledChanges } from "@/components/menu/MenuChanges";
 import { ProductSetup } from "@/components/menu/ProductSetup";
 import { SizesPanel } from "@/components/menu/SizesPanel";
@@ -279,6 +281,7 @@ export default async function ProductsPage({
     branchPrices,
     places,
     sectionSetup,
+    weighed,
   ] = await Promise.all([
     getMenuCosting(),
     getMenuRecipeLines(),
@@ -292,6 +295,8 @@ export default async function ProductsPage({
     getCafePlaces(),
     // The café's and the bakery's parts of the menu (0074); null before it.
     getSectionSetup(),
+    // The sizes sold by the kilo (0075); null before it.
+    getWeighedSizes(),
   ]);
   // A price can be one branch's own once the café has more than one (0055).
   const branches = places.filter((p) => p.kind === "branch");
@@ -392,6 +397,16 @@ export default async function ProductsPage({
               content: (
                 <div className="grid" style={{ gap: 16 }}>
                   <SizesPanel product={p} items={itemOpts} decimals={decimals} canEdit={canEdit} />
+                  {weighed && sizes.length > 0 && (
+                    <WeighedSizes
+                      sizes={sizes.map((v) => ({
+                        id: v.id,
+                        name: v.name,
+                        weighed: weighed.has(v.id),
+                      }))}
+                      canEdit={canEdit}
+                    />
+                  )}
                   {sizes.map((v) => (
                     <PricesPart
                       key={v.id}

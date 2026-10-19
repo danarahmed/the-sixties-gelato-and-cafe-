@@ -372,9 +372,11 @@ export function addLine(
   variantId: string,
   addons: AddonChoice[] = [],
   qty = 1,
+  /** A weighing is a line of its own (0075): two bags of cookies are two lines. */
+  merge = true,
 ): Line[] {
   const key = addonsKey(addons);
-  let i = lines.length - 1;
+  let i = merge ? lines.length - 1 : -1;
   while (
     i >= 0 &&
     !(lines[i]!.variantId === variantId && !lines[i]!.note && addonsKey(lines[i]!.addons) === key)
@@ -694,8 +696,9 @@ export function discountWhy(d: Discount | null): {
   };
 }
 
-export function itemCount(o: Order): number {
-  return o.lines.reduce((n, l) => n + l.qty, 0);
+export function itemCount(o: Order, byId?: Map<string, PosItem>): number {
+  // A weighing counts as one item, whatever it weighs (0075).
+  return o.lines.reduce((n, l) => n + (byId?.get(l.variantId)?.soldByWeight ? 1 : l.qty), 0);
 }
 
 /** What a bill is called on the screen and on paper. */

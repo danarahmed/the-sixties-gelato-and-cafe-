@@ -1007,6 +1007,11 @@ const phrases: PhraseBook = {
   },
   "Section not found": { ar: "القسم غير موجود", ckb: "بەشەکە نەدۆزرایەوە" },
   "Place not found": { ar: "المكان غير موجود", ckb: "شوێنەکە نەدۆزرایەوە" },
+  // Selling by weight (0075).
+  "A weight is from 1 g to 1,000 kg, to the gram": {
+    ar: "الوزن من 1 غرام إلى 1,000 كغ، بدقة الغرام",
+    ckb: "کێش لە 1 گرامەوە تا 1,000 کگم، بە وردی گرام",
+  },
   // Selling without internet (0073): a sale the till kept, sent later.
   "Say when the sale was made": { ar: "حدّد متى تمّ البيع", ckb: "بڵێ فرۆشتنەکە کەی کرا" },
   "This sale is dated later than now: check the till's clock": {

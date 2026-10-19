@@ -24,6 +24,8 @@ export interface PosItem {
   sectionAr?: string | null;
   sectionCkb?: string | null;
   sectionPosition?: number | null;
+  /** Sold by the kilo (0075): its price is a kilo's, its quantity a weight. */
+  soldByWeight?: boolean;
 }
 
 /** An add-on on the till (0041): its names, and its price today on each channel it sells on. */
@@ -124,6 +126,7 @@ export async function getPosCatalogue(place: string | null = null): Promise<PosI
       sectionAr: strOrNull(r.section_ar),
       sectionCkb: strOrNull(r.section_ckb),
       sectionPosition: numOrNull(r.section_position),
+      soldByWeight: r.sold_by_weight === true,
     };
   });
 }

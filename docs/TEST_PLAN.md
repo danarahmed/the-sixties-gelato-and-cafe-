@@ -287,6 +287,10 @@ layers before every release.
   same; the ready-made groups each named in three languages, Kurdish in
   Kurdish letters, the milk asked for, sugar and ice optional, only free
   prices filled in.
+- `tests/weight.test.ts`: selling by weight (round seventeen, `0075`) — a
+  weight typed in grams or kilos, in any digits, read to the gram; nothing, a
+  word, nought, under a gram, over 1,000 kg refused; shown in grams under a
+  kilo and in kilos from one.
 - `tests/sections.test.ts`: the café and the bakery told apart (round
   sixteen, `0074`) — each category counted in its part, in the parts' order,
   refunds taken off; a category of no part, or of a part gone, apart and last;
@@ -544,6 +548,12 @@ connections:
   (`0055`): all ten sell, the new branch's five numbered 1 to 5 with none
   given twice or skipped, and the first branch's going on beside them.
 
+`sell_by_weight.test.sql` (round seventeen, `0075`): a size set as sold by
+weight once with its key, and the till told; sold at its weight to the gram,
+its price a kilo's, its stock the weight sold; under a gram, over 1,000 kg or
+past the gram refused, every other size's quantity as before; only who edits
+recipes sets it.
+
 `sections.test.sql` (round sixteen, `0074`): parts named once whatever their
 letters, each after the last, and the same one when sent again with its key; a
 product of its category's part, one of no category of none; a branch selling
@@ -621,6 +631,10 @@ database, behind a small local stand-in for Supabase's auth service.
   and left out of the expenses' total; a cashier downloads no journal lines.
 - `retry`: a sale whose confirmation is lost is retried and recorded once —
   also when it is the database's answer to the app's server that is lost.
+- `weight` (round seventeen, `0075`): the owner ticks the water as sold by
+  the kilo; its tile says "/ kg", and a tap asks its weight, its price shown
+  before it is added; each weighing a line of its own, weighed again with a
+  tap; recorded at the weights to the gram.
 - `sections` (round sixteen, `0074`): the owner adds Café and Bakery in one
   tap and gives each category its part; one till shows both, or one, as it was
   left, a search finding in every part; a branch set to sell only the bakery

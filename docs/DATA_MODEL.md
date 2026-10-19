@@ -2054,6 +2054,16 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Selling by weight (`0075`)
+
+- **`product_variant.sold_by_weight`**: a size sold by the kilo. Its price is
+  a kilo's, its recipe is for a kilo, and a line of it is the weight sold in
+  kilos, from 1 g to 1,000 kg, to the gram (checked as the line is written), so
+  its stock used is the weight sold. Every other size is sold by the piece, as
+  before.
+- **Functions:** `set_variant_weighed` (`recipe.edit`, keyed); `pos_catalogue`
+  says which sizes are sold by weight.
+
 ### The café and the bakery on one till (`0074`)
 
 - **`menu_section`**: a part of the menu the café names, "Café" or "Bakery",

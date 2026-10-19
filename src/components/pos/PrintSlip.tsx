@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { fmtQty } from "@/lib/format";
+import { fmtWeight } from "@/lib/weight";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { Tender } from "./model";
 import { phoneText } from "@/lib/customers";
@@ -17,6 +18,8 @@ export interface PrintJob {
   lines: {
     name: string;
     qty: number;
+    /** Sold by weight (0075): its quantity is kilos, printed as "750 g". */
+    weighed?: boolean;
     /** The price of one; missing on a receipt kept by an older till page. */
     price?: number | null;
     amount: number | null;
@@ -78,6 +81,8 @@ export interface PrintJob {
 export interface TicketItem {
   name: string;
   qty: number;
+  /** Sold by weight (0075). */
+  weighed?: boolean;
   note: string | null;
   /** What goes into it besides (0041): made as it says. */
   addons?: string[];
@@ -113,7 +118,13 @@ export function ticketFor(job: PrintJob): BaristaTicket {
     title: job.title,
     channelLabel: job.channelLabel,
     platformOrderNo: job.platformOrderNo ?? null,
-    lines: job.lines.map(({ name, qty, note, addons }) => ({ name, qty, note, addons })),
+    lines: job.lines.map(({ name, qty, note, addons, weighed }) => ({
+      name,
+      qty,
+      note,
+      addons,
+      ...(weighed ? { weighed } : {}),
+    })),
     at: job.at,
     by: job.by,
   };
@@ -251,7 +262,7 @@ function CheckSlip({
   when: string;
 }) {
   const { t } = useT();
-  const count = job.lines.reduce((n, l) => n + l.qty, 0);
+  const count = job.lines.reduce((n, l) => n + (l.weighed ? 1 : l.qty), 0);
   const discounted = job.discount != null && job.discount > 0;
   const reference = [
     job.reference ? `${t("print.sale")} ${job.reference}` : null,
@@ -342,7 +353,9 @@ function CheckSlip({
             const price = unitPrice(l);
             return (
               <tr key={i}>
-                <td className="q">{fmtQty(l.qty)}</td>
+                <td className="q">
+                  {l.weighed ? fmtWeight(l.qty, { g: t("g"), kg: t("kg") }) : fmtQty(l.qty)}
+                </td>
                 <td className="n">
                   {l.name}
                   {(l.addons ?? []).map((a, j) => (
@@ -444,12 +457,14 @@ function CheckSlip({
 /** The barista's ticket: the number, who it is for, and what to make. */
 function TicketSlip({ ticket, time }: { ticket: BaristaTicket; time: string }) {
   const { t } = useT();
-  const count = ticket.lines.reduce((n, l) => n + l.qty, 0);
+  const count = ticket.lines.reduce((n, l) => n + (l.weighed ? 1 : l.qty), 0);
   const items = (lines: TicketItem[], off: boolean) => (
     <ul className={off ? "tk-items off" : "tk-items"}>
       {lines.map((l, i) => (
         <li key={i}>
-          <span className="tk-q">{fmtQty(l.qty)}</span>
+          <span className="tk-q">
+            {l.weighed ? fmtWeight(l.qty, { g: t("g"), kg: t("kg") }) : fmtQty(l.qty)}
+          </span>
           <span className="tk-n">
             {l.name}
             {(l.addons ?? []).map((a, j) => (

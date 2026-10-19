@@ -181,6 +181,8 @@ const ACTION_LABEL: Record<string, string> = {
   "section.change": "Part of the menu changed",
   "category.section": "A category's part of the menu set",
   "place.sections": "What a branch sells set",
+  // Selling by weight (0075).
+  "variant.weighed": "Sold by weight set",
   "sale.giveaway": "Given away at the till",
   "bill.cancel": "Open bill cancelled",
   "bill.discount": "Discount on an open bill",
@@ -453,6 +455,8 @@ const FIELD_LABEL: Record<string, string> = {
   // The parts of the menu (0074).
   section: "Part of the menu",
   sections: "Parts it sells",
+  // Selling by weight (0075).
+  sold_by_weight: "Sold by weight",
   min_select: "Fewest to choose",
   max_select: "Most to choose",
   group_id: "Group of add-ons",
