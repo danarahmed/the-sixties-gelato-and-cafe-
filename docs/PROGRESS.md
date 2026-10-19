@@ -2326,6 +2326,19 @@ Built and tested:
   not shown and the till sells by the piece. Tested: the SQL suite
   `sell_by_weight`, `tests/weight.test.ts`, and the browser suite `weight`.
 
+- **Round eighteen: pre-orders with deposits (`0076`).** At the till, what the
+  customer orders is added as usual, then **Pre-orders → New pre-order** takes
+  their name, phone, when they collect it, a note for the kitchen, and what
+  they pay now (half or all in one tap; cash, card or one of the café's ways
+  to pay). The deposit is held in Customer deposits, not counted as a sale.
+  Production shows **Ordered ahead**, by the day each is collected, with what
+  to write on it. Collected, its deposit pays its part and the rest is paid
+  with one tap; the sale, its stock and its cost are recorded then. A manager
+  cancels one, giving the deposit back the way it was paid or keeping it
+  (Deposits kept). Before `0076` is applied the till shows no Pre-orders
+  button. Tested: the SQL suite `pre_orders` and the browser suite
+  `preorders`.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open

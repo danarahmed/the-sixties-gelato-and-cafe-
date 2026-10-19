@@ -50,6 +50,8 @@ export interface PrintJob {
     rate?: number;
     /** One of the café's ways to pay (0069), printed by its name. */
     methodName?: string;
+    /** Paid by a pre-order's deposit (0076). */
+    deposit?: boolean;
   }[];
   change?: number | null;
   reference?: string | null;
@@ -404,9 +406,11 @@ function CheckSlip({
                           usd: `$${money(p.usd ?? 0)}`,
                           rate: money(p.rate ?? 0),
                         })
-                      : p.type === "other"
-                        ? (p.methodName ?? t("pos.tender.other"))
-                        : t(`pos.tender.${p.type}`)}
+                      : p.deposit
+                        ? t("Deposit paid")
+                        : p.type === "other"
+                          ? (p.methodName ?? t("pos.tender.other"))
+                          : t(`pos.tender.${p.type}`)}
                   </span>
                   <span>{money(p.received ?? p.amount)}</span>
                 </div>

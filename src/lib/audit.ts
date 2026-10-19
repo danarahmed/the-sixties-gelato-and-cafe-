@@ -183,6 +183,10 @@ const ACTION_LABEL: Record<string, string> = {
   "place.sections": "What a branch sells set",
   // Selling by weight (0075).
   "variant.weighed": "Sold by weight set",
+  // Pre-orders (0076).
+  "pre_order.take": "Pre-order taken",
+  "pre_order.collect": "Pre-order collected",
+  "pre_order.cancel": "Pre-order cancelled",
   "sale.giveaway": "Given away at the till",
   "bill.cancel": "Open bill cancelled",
   "bill.discount": "Discount on an open bill",
@@ -457,6 +461,12 @@ const FIELD_LABEL: Record<string, string> = {
   sections: "Parts it sells",
   // Selling by weight (0075).
   sold_by_weight: "Sold by weight",
+  // Pre-orders (0076).
+  order_no: "Pre-order number",
+  pickup_at: "Collected on",
+  deposit: "Paid ahead",
+  deposit_kept: "Deposit kept",
+  sale: "Sale",
   min_select: "Fewest to choose",
   max_select: "Most to choose",
   group_id: "Group of add-ons",

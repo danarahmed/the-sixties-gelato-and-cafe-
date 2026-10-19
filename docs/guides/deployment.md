@@ -70,6 +70,7 @@ Plan a short window when the café is closed.
 | Selling without internet (`0073`)       | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0073`](#after-0073)). The till works before it: a kept sale is then sent as an ordinary sale                                                                                                                                                                                                                                                                                 |
 | Café and bakery on one till (`0074`)    | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0074`](#after-0074)). Before it the screens show nothing of it                                                                                                                                                                                                                                                                                                               |
 | Sell by weight (`0075`)                 | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0075`](#after-0075)). Before it the till sells every size by the piece                                                                                                                                                                                                                                                                                                       |
+| Pre-orders (`0076`)                     | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0076`](#after-0076)). Before it the till shows no Pre-orders button                                                                                                                                                                                                                                                                                                          |
 
 ## 0. Before you start
 
@@ -3577,6 +3578,49 @@ It is applied by the owner, in Supabase's SQL editor, after `0074`:
 
 1. Open the file `supabase/migrations/0075_sell_by_weight.sql` on GitHub,
    press **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0076`
+
+Migration `0076` is pre-orders with deposits (round eighteen): a cake ordered
+for Friday, part paid now.
+
+What it changes:
+
+- **New accounts:** `2300` Customer deposits (what customers paid ahead, held
+  until they collect), `4390` Deposits kept (a deposit kept when an order is
+  cancelled), and `1110` Customer accounts (what customers on account owe,
+  for round nineteen). No journal by hand moves `2300` or `1110`.
+- **New tables:** `pre_order` and `pre_order_line`, read only through the
+  functions below.
+- **New column:** `sales_tender.pre_order_id`, a sale's payment made by a
+  pre-order's deposit (and `sales_tender.on_account_customer`, for round
+  nineteen).
+- **New functions:** `take_pre_order` (`sale.create`), `collect_pre_order`
+  (`sale.create`), `cancel_pre_order` (`sale.void`), `pre_orders` (the till
+  and the kitchen), each keyed and on the audit trail.
+- **Replaced:** `sale_payments`, `post_sale` and `order_payments` (a deposit
+  pays its part of the sale), `provision_chart_of_accounts`,
+  `manual_journal_blocked` and `cash_flow_line` (the new accounts), and
+  `journal_source_hint` (where a pre-order's journals come from).
+- **New trigger:** a collected pre-order's sale voided opens it again, its
+  deposit held again.
+- Nothing recorded changes.
+
+Before it is applied, the till shows no Pre-orders button and Production no
+Ordered ahead card.
+
+It was rehearsed on the tested build (`scripts/test-sql.sh`), with its own
+suite (`tests/sql/pre_orders.test.sql`), and through the screens in the
+browser suite `preorders`.
+
+It is applied by the owner, in Supabase's SQL editor, after `0075`:
+
+1. Open the file `supabase/migrations/0076_pre_orders.sql` on GitHub, press
+   **Raw**, select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run
    it anyway.

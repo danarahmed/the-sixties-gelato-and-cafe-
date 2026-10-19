@@ -112,28 +112,28 @@ end $$;
 
 -- Every record of trading, in one statement. TRUNCATE bypasses the row
 -- triggers that keep the ledger append-only, and fails, changing nothing, if a
--- table left out still refers to one of these.
-truncate table
-  accounting_period, ai_insight, ai_interaction_log, alert, approval, attendance, bank_statement,
-  bank_statement_line, card_settlement, cash_event,
-  cash_transfer, clock_attempt, document_attachment, document_counter, employee_advance,
-  expense, fx_cash_event, fx_exchange, fx_rate, goods_receipt, goods_receipt_line, inventory_movement, item_lot,
-  journal_entry, journal_line,
-  loss_review, lot_movement, loyalty_ledger, money_move,
-  payroll_approval, payroll_line, payroll_run,
-  phone_link, pin_attempt, platform_order, platform_settlement, platform_settlement_line, pos_tab, pos_tab_line,
-  pos_tab_line_modifier, prepaid_expense, prepaid_release,
-  production_batch,
-  purchase_invoice, purchase_order, purchase_order_line, push_message, receipt_correction, reconciliation_issue,
-  request_log,
-  sale_adjustment,
-  sale_refund, sale_refund_line, sale_refund_tender,
-  salary_payment, salary_payment_line,
-  sales_order, sales_order_line, sales_order_line_modifier, sales_tender, session_dollar_count, shift_schedule,
-  stock_count, stock_count_line, stock_loss, stock_loss_line, stock_transfer, stock_transfer_line,
-  supplier_credit, supplier_credit_allocation, supplier_payment, supplier_return, supplier_return_line, sync_log,
-  work_shift
-  restart identity;
+-- table left out still refers to one of these. The pre-orders (0076) go with
+-- them where the database has them.
+do $$
+begin
+  execute 'truncate table '
+       || 'accounting_period, ai_insight, ai_interaction_log, alert, approval, attendance, bank_statement, ' ||
+       'bank_statement_line, card_settlement, cash_event, cash_transfer, clock_attempt, ' ||
+       'document_attachment, document_counter, employee_advance, expense, fx_cash_event, fx_exchange, ' ||
+       'fx_rate, goods_receipt, goods_receipt_line, inventory_movement, item_lot, journal_entry, ' ||
+       'journal_line, loss_review, lot_movement, loyalty_ledger, money_move, payroll_approval, ' ||
+       'payroll_line, payroll_run, phone_link, pin_attempt, platform_order, platform_settlement, ' ||
+       'platform_settlement_line, pos_tab, pos_tab_line, pos_tab_line_modifier, prepaid_expense, ' ||
+       'prepaid_release, production_batch, purchase_invoice, purchase_order, purchase_order_line, ' ||
+       'push_message, receipt_correction, reconciliation_issue, request_log, sale_adjustment, ' ||
+       'sale_refund, sale_refund_line, sale_refund_tender, salary_payment, salary_payment_line, ' ||
+       'sales_order, sales_order_line, sales_order_line_modifier, sales_tender, session_dollar_count, ' ||
+       'shift_schedule, stock_count, stock_count_line, stock_loss, stock_loss_line, stock_transfer, ' ||
+       'stock_transfer_line, supplier_credit, supplier_credit_allocation, supplier_payment, ' ||
+       'supplier_return, supplier_return_line, sync_log, work_shift'
+       || case when to_regclass('public.pre_order') is not null then ', pre_order_line, pre_order' else '' end
+       || ' restart identity';
+end $$;
 
 -- Journals number from 1001 again (document_counter above; this older
 -- sequence is kept in step with it).

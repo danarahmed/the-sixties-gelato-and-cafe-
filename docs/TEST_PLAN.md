@@ -548,6 +548,17 @@ connections:
   (`0055`): all ten sell, the new branch's five numbered 1 to 5 with none
   given twice or skipped, and the first branch's going on beside them.
 
+`pre_orders.test.sql` (round eighteen, `0076`): a pre-order taken with a cash
+deposit, held in 2300 and in the drawer, once whatever its key is sent;
+listed for the till with its notes, the books for the owner only; no name, a
+time past, nothing on it, a platform, a deposit over the total or a channel
+with no price refused; collected, its deposit paying its part and the card the
+rest, once, 2300 emptied; a deposit only for its own pre-order; a refund by
+the item refused, a void opening it again with the deposit held; cancelled,
+the cash given back out of the drawer, once; a deposit kept as income, by a
+manager only; paid in full ahead, or nothing ahead and paid at collection;
+today's collected and cancelled on asking; every step audited.
+
 `sell_by_weight.test.sql` (round seventeen, `0075`): a size set as sold by
 weight once with its key, and the till told; sold at its weight to the gram,
 its price a kilo's, its stock the weight sold; under a gram, over 1,000 kg or
@@ -631,6 +642,10 @@ database, behind a small local stand-in for Supabase's auth service.
   and left out of the expenses' total; a cashier downloads no journal lines.
 - `retry`: a sale whose confirmation is lost is retried and recorded once —
   also when it is the database's answer to the app's server that is lost.
+- `preorders` (round eighteen, `0076`): the cashier takes two espressos as a
+  pre-order with 2,000 paid by card, the till cleared; the kitchen sees both
+  pre-orders on Production; one collected, its deposit and 3,000 by card
+  paying the sale; the other cancelled by a manager, the deposit kept.
 - `weight` (round seventeen, `0075`): the owner ticks the water as sold by
   the kilo; its tile says "/ kg", and a tap asks its weight, its price shown
   before it is added; each weighing a line of its own, weighed again with a

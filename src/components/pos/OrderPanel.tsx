@@ -443,8 +443,12 @@ export function OrderPanel({
   const { t, dir } = useT();
   const { on } = arrows(dir);
   /** A payment's way, as the receipt names it: one of the café's own by its name (0069). */
-  const payLabel = (p: { type: string; methodName?: string }) =>
-    p.type === "other" ? (p.methodName ?? t("pos.tender.other")) : t(`pos.tender.${p.type}`);
+  const payLabel = (p: { type: string; methodName?: string; deposit?: boolean }) =>
+    p.deposit
+      ? t("Deposit paid")
+      : p.type === "other"
+        ? (p.methodName ?? t("pos.tender.other"))
+        : t(`pos.tender.${p.type}`);
   const { name: channelName } = useChannels();
   const isBill = order.kind === "bill";
   const blocked = busy !== null || pending;

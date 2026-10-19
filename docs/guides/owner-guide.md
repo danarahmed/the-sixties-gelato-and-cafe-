@@ -371,6 +371,11 @@ type part of its name and pick it from the list: its unit fills itself in.
   on the bakery). **Reports → Café and bakery** shows each part's takings,
   cost and profit. A branch that sells only one part is set on **Settings →
   Locations**: tick its parts; with none ticked it sells everything.
+- **Pre-orders** (the till's **Pre-orders** button; round eighteen): a cake
+  for Friday, part paid now. What is paid ahead is held in Customer deposits
+  (2300), not counted as a sale, until it is collected; Production shows
+  **Ordered ahead** by day. Cancelling one (managers) gives the deposit back,
+  or keeps it as Deposits kept (4390).
 - **Selling by weight** (a product's **Prices** tab; round seventeen): tick
   **Sold by weight** on a size sold by the kilo, cookies or cake by the slice
   of a tray say. Its price is then a kilo's, and its recipe is for a kilo. The

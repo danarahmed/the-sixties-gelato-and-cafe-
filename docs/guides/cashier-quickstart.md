@@ -46,6 +46,15 @@ customer on the order (see
 - A number on a tile is how many are already in the order. A product sold in
   several sizes asks which one.
 
+### A pre-order (a cake for Friday)
+
+Add what they order to the till as usual, then press **Pre-orders → New
+pre-order**. Type their name, phone (optional), when they collect it, and a
+note for the kitchen. If they pay something now, type it (or press **Half** or
+**All of it**) and choose how they pay. When they come back, press
+**Pre-orders**, find them and press **Collect**: what they paid ahead counts,
+and you take the rest with one tap. Only a manager cancels a pre-order.
+
 ### Sold by weight
 
 A product whose tile says **/ kg** is sold by the kilo. Tap it, put it on the

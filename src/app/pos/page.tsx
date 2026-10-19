@@ -13,6 +13,7 @@ import { BranchPicker, PlaceSwitch } from "@/components/PlaceSwitch";
 import { getPlace, tillChoice } from "@/lib/place";
 import { getScreenCheck } from "@/lib/db/clock";
 import { getPaymentMethods } from "@/lib/db/paymentMethods";
+import { getPreOrders } from "@/lib/db/preOrders";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export default async function PosPage() {
   }
   // The view this device was left on: Tables or the menu.
   const startView = (await cookies()).get("pos_view")?.value;
-  const [items, addons, tables, bills, channels, drawer, fx, clockScreen, methods] =
+  const [items, addons, tables, bills, channels, drawer, fx, clockScreen, methods, preOrders] =
     await Promise.all([
       getPosCatalogue(at),
       getPosAddons(at),
@@ -52,6 +53,8 @@ export default async function PosPage() {
       getScreenCheck(),
       // The café's own ways to pay (0069); none before it is applied.
       getPaymentMethods(),
+      // The open pre-orders (0076); none before it is applied.
+      getPreOrders(at),
     ]);
 
   if (items.length === 0) {
@@ -98,6 +101,7 @@ export default async function PosPage() {
         payMethods={(methods ?? []).filter((m) => m.active).map(({ id, name }) => ({ id, name }))}
         cashierId={profile.id}
         tillPlace={branch.id}
+        preOrders={preOrders}
       />
     </ChannelsProvider>
   );
