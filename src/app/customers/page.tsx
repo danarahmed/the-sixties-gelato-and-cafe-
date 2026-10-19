@@ -2,6 +2,8 @@ import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getCustomers } from "@/lib/db/customers";
 import { CustomersList } from "@/components/customers/CustomersList";
+import { AccountsList } from "@/components/customers/AccountsList";
+import { getCustomerAccounts } from "@/lib/db/accounts";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function CustomersPage() {
   const profile = await requirePermission("customer.view");
   const t = await getT();
-  const customers = await getCustomers();
+  const [customers, accounts] = await Promise.all([getCustomers(), getCustomerAccounts()]);
 
   return (
     <div className="grid" style={{ gap: 16 }}>
@@ -22,6 +24,7 @@ export default async function CustomersPage() {
           "Who buys from the café, found at the till by their phone number. Each earns points on what they pay, and takes a reward off a bill once they have enough (the rules are on Settings).",
         )}
       </p>
+      {accounts && <AccountsList rows={accounts.rows} books={accounts.books} t={t} />}
       <section className="card">
         <CustomersList
           customers={customers}

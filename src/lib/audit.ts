@@ -187,6 +187,10 @@ const ACTION_LABEL: Record<string, string> = {
   "pre_order.take": "Pre-order taken",
   "pre_order.collect": "Pre-order collected",
   "pre_order.cancel": "Pre-order cancelled",
+  // Customers on account (0077).
+  "customer.account": "A customer's account set",
+  "customer.invoice": "Invoice made",
+  "customer.payment": "Payment received from a customer",
   "sale.giveaway": "Given away at the till",
   "bill.cancel": "Open bill cancelled",
   "bill.discount": "Discount on an open bill",
@@ -467,6 +471,12 @@ const FIELD_LABEL: Record<string, string> = {
   deposit: "Paid ahead",
   deposit_kept: "Deposit kept",
   sale: "Sale",
+  // Customers on account (0077).
+  on_account: "Buys on account",
+  credit_limit: "Credit limit",
+  terms_days: "Days to pay",
+  wholesale_percent: "Wholesale % off",
+  due_on: "Due on",
   min_select: "Fewest to choose",
   max_select: "Most to choose",
   group_id: "Group of add-ons",

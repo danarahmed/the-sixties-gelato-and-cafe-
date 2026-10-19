@@ -2054,6 +2054,24 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Customers on account (`0077`)
+
+- **`customer`** gains `on_account` (they may buy and pay later),
+  `credit_limit` (what they may owe at most), `terms_days` (days to pay each
+  invoice) and `wholesale_percent` (their standing price: so much off the
+  menu's take-away price).
+- **`customer_invoice`**: a sale charged to their account (`1110`): its
+  number in the café's order, the sale, the amount, the day issued and the
+  day due; open, or void when its sale is voided.
+- **`customer_payment`**: what they paid, when, where it went (the till's
+  drawer `1000`, the bank `1020`, or a way to pay's account) and its
+  reference. Payments pay the oldest open invoices first; what is left of
+  each, and how late, is worked out, not kept.
+- **Functions:** `set_customer_account`, `invoice_customer` (refused past
+  their limit), `receive_customer_payment` (at most what they owe), all
+  `credit.manage` and keyed; `customer_account` and `customer_accounts`
+  (`customer.view`).
+
 ### Pre-orders with deposits (`0076`)
 
 - **`pre_order`**: an order taken ahead — who it is for (name, phone), when

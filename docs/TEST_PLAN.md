@@ -548,6 +548,16 @@ connections:
   (`0055`): all ten sell, the new branch's five numbered 1 to 5 with none
   given twice or skipped, and the first branch's going on beside them.
 
+`customer_accounts.test.sql` (round nineteen, `0077`): a cashier gives no
+credit; a customer not on account, a limit below 0, terms over a year or a
+wholesale price over 90% refused; an invoice at their price, numbered, due
+after their terms, charged to 1110 and to sales, no cash moved, once whatever
+its key is sent; past their limit refused; an account charged only by an
+invoice; a payment over what they owe, or to a place that is none, refused;
+paid into the bank once, the oldest invoice first, cash into the drawer;
+late invoices by how late, the books agreeing; an invoice's sale voided voids
+it; every step audited.
+
 `pre_orders.test.sql` (round eighteen, `0076`): a pre-order taken with a cash
 deposit, held in 2300 and in the drawer, once whatever its key is sent;
 listed for the till with its notes, the books for the owner only; no name, a
@@ -642,6 +652,9 @@ database, behind a small local stand-in for Supabase's auth service.
   and left out of the expenses' total; a cashier downloads no journal lines.
 - `retry`: a sale whose confirmation is lost is retried and recorded once —
   also when it is the database's answer to the app's server that is lost.
+- `accounts` (round nineteen, `0077`): the manager puts a hotel on account
+  with a limit and 20% off, invoices ten espressos at their price, sees it on
+  the customers' list, and receives part into the bank.
 - `preorders` (round eighteen, `0076`): the cashier takes two espressos as a
   pre-order with 2,000 paid by card, the till cleared; the kitchen sees both
   pre-orders on Production; one collected, its deposit and 3,000 by card

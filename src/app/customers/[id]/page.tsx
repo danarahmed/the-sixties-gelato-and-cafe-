@@ -8,6 +8,10 @@ import { getChannelNames } from "@/lib/db/channels";
 import { fmtIQD, orderStatusLabel } from "@/lib/format";
 import { dateIn, dateTimeIn } from "@/lib/dates";
 import { CustomerPanel } from "@/components/customers/CustomerPanel";
+import { AccountCard, type InvoiceProduct } from "@/components/customers/AccountCard";
+import { getCustomerAccount } from "@/lib/db/accounts";
+import { getPosCatalogue } from "@/lib/db/pos";
+import { getPaymentMethods } from "@/lib/db/paymentMethods";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +23,36 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
   const t = await getT();
   const { id } = await params;
   if (!UUID.test(id)) notFound();
-  const [customer, channels] = await Promise.all([getCustomer(id), getChannelNames()]);
+  const canCredit = has(profile, "credit.manage");
+  const [customer, channels, account] = await Promise.all([
+    getCustomer(id),
+    getChannelNames(),
+    // Their account (0077); null before it is applied: not shown.
+    getCustomerAccount(id),
+  ]);
   if (!customer) notFound();
+  // What an invoice may hold: the menu at its take-away prices.
+  let products: InvoiceProduct[] = [];
+  let methods: { id: string; name: string }[] = [];
+  if (account && canCredit) {
+    try {
+      products = (await getPosCatalogue())
+        .filter((i) => i.prices.takeaway !== undefined)
+        .map((i) => ({
+          variantId: i.variantId,
+          name:
+            i.variantName && i.variantName !== i.productName
+              ? `${i.productName} (${i.variantName})`
+              : i.productName,
+          price: i.prices.takeaway!,
+        }));
+    } catch {
+      products = [];
+    }
+    methods = ((await getPaymentMethods()) ?? [])
+      .filter((m) => m.active)
+      .map(({ id, name }) => ({ id, name }));
+  }
   const tz = profile.timezone;
 
   return (
@@ -34,6 +66,18 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
         canEdit={has(profile, "customer.edit")}
         canAdjust={has(profile, "loyalty.adjust")}
       />
+      {account && (
+        <div id="account">
+          <AccountCard
+            account={account}
+            products={products}
+            payMethods={methods}
+            timezone={tz}
+            canManage={canCredit}
+            decimals={profile.currencyDecimals}
+          />
+        </div>
+      )}
 
       <section className="card grid" style={{ gap: 8 }} id="orders">
         <h2 style={{ margin: 0 }}>{t("What they bought")}</h2>

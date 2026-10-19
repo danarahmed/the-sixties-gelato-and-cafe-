@@ -2339,6 +2339,19 @@ Built and tested:
   button. Tested: the SQL suite `pre_orders` and the browser suite
   `preorders`.
 
+- **Round nineteen: wholesale customers on account (`0077`).** On a
+  customer's page, **Credit settings** puts a shop, an office or a hotel on
+  account: a credit limit, days to pay, and a wholesale price (so much off the
+  menu). **New invoice** charges what they take to their account at their
+  price, numbered and due after their terms, refused past their limit; its
+  stock and its cost go as any sale's. **Receive a payment** takes what they
+  pay into the till's drawer, the bank or a way to pay, and pays the oldest
+  invoices first. Their page shows what they owe, invoice by invoice, how late,
+  and prints as a statement; the customers' list shows **On account**: who
+  owes what, how much is 1–30, 31–60 or over 60 days late, and whether the
+  books agree. Before `0077` is applied nothing of it is shown. Tested: the SQL
+  suite `customer_accounts` and the browser suite `accounts`.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open
