@@ -2369,6 +2369,12 @@ Built and tested:
   badge; the sale and its books read that price. Stopped with a tap. Before
   `0079` nothing is marked down. Tested: `markdowns` (SQL) and the browser
   suite `markdowns`.
+- **Round twenty-three: two-step sign-in (`0080`).** On **Account**, anyone
+  (the owner first) turns on a second step: the QR code is scanned into an
+  authenticator app and the six digits it shows confirm it. From then on,
+  after the password the app asks for the code before any page, and the
+  database itself refuses a session that has not given it. Turned off from
+  the same card. Tested: `two_step` (SQL) and the browser suite `twostep`.
 
 ## The August 2026 audit, finding by finding
 

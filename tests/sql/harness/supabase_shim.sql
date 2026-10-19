@@ -76,6 +76,24 @@ $$;
 
 grant execute on function auth.uid(), auth.role() to public;
 
+-- What the token says in full (two-step sign-in reads its "aal", 0080), and
+-- each person's second steps, as Supabase Auth keeps them.
+create or replace function auth.jwt() returns jsonb
+language sql stable as $$
+  select coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb, '{}'::jsonb)
+$$;
+grant execute on function auth.jwt() to public;
+create table if not exists auth.mfa_factors (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null,
+  friendly_name text,
+  factor_type   text not null default 'totp',
+  status        text not null default 'unverified',
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+grant select, references on auth.mfa_factors to sb_admin;
+
 -- Supabase Storage, as far as the migrations use it (0053): the buckets and
 -- the objects in them, owned by the storage service's own role with row-level
 -- security on, and the helper its rules use to read a path's folders. The

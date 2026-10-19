@@ -557,6 +557,12 @@ key is sent, spaces taken out, read by the till; one size only; too short or
 with other signs refused; a scale's short code; taken off; a cashier sets
 none; each change audited.
 
+`two_step.test.sql` (round twenty-three, `0080`): with no second step the
+password is enough, as before; with one confirmed, a password-only session is
+refused by the database and its tables show nothing; with the code given it
+is let in; a cashier without one sells as before; a step begun and never
+confirmed locks no one out.
+
 `markdowns.test.sql` (round twenty-one, `0079`): a lot to go within the hour
 suggested at half off, its servings counted; under 5% or part percents
 refused; marked down once whatever its key is sent; the till's price halved
@@ -671,6 +677,10 @@ database, behind a small local stand-in for Supabase's auth service.
 - `barcodes` (round twenty, `0078`): the owner gives the water its barcode
   and prints its label, drawn in bars; at the till a scan adds it, never as a
   count; a code no size has is said so.
+- `twostep` (round twenty-three, `0080`): the owner turns on the second
+  step from Account with a code from the app, signs out, signs in with the
+  password, is asked for the code before any page, a wrong code is refused,
+  the right one lets them in, and they turn it off.
 - `markdowns` (round twenty-one, `0079`): Production suggests half off the
   water due within the hour; a tap marks it down, the till shows −50%, and a
   tap stops it.

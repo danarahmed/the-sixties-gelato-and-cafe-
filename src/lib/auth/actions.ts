@@ -36,7 +36,7 @@ export async function signInAction(_prev: AuthFormState, form: FormData): Promis
   if (!parsed.success)
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Check the form" };
   const supabase = await createServerSupabase();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
     return {
       ok: false,
@@ -45,7 +45,13 @@ export async function signInAction(_prev: AuthFormState, form: FormData): Promis
         : "That email and password do not match.",
     };
   }
-  redirect(safeNext(form.get("next")));
+  // Two-step sign-in (0080): with a second step on, the code comes next. The
+  // action's own redirect does not pass the middleware, so it is sent there.
+  const next = safeNext(form.get("next"));
+  if (data.user?.factors?.some((f) => f.status === "verified")) {
+    redirect(next === "/" ? "/login/verify" : `/login/verify?next=${encodeURIComponent(next)}`);
+  }
+  redirect(next);
 }
 
 /**
