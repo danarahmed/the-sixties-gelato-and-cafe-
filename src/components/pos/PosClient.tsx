@@ -104,6 +104,7 @@ import {
   type OfflineSale,
 } from "./offline";
 import { OfflineDialog, OfflineStrip } from "./OfflinePanel";
+import { WeightSheet } from "./WeightSheet";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string; uncertain?: boolean };
 type Msg = { ok: boolean; text: string } | null;
@@ -659,6 +660,7 @@ export function PosClient({
       amount: lineAmount(l, byId, o.channel, menu)?.toNumber() ?? null,
       note: l.note,
       addons: addonNames(l.addons, menu, locale, l.addons),
+      ...(byId.get(l.variantId)?.soldByWeight ? { weighed: true } : {}),
     }));
 
   /** Send slips to the printer, after whatever is printing now. */
@@ -680,6 +682,7 @@ export function PosClient({
         qty: l.qty,
         note: l.note,
         addons: addonNames(l.addons, menu, locale, line?.addons ?? []),
+        ...(item?.soldByWeight ? { weighed: true } : {}),
       };
     });
 
@@ -736,8 +739,18 @@ export function PosClient({
     if (pending || busy) return;
     setReceipt(null);
     setMsg(null);
-    patchOrder((o) => ({ ...o, lines: addLine(o.lines, variantId, chosen, qty) }));
+    // A size sold by weight is a line a weighing, never added onto another (0075).
+    const weighed = byId.get(variantId)?.soldByWeight === true;
+    patchOrder((o) => ({ ...o, lines: addLine(o.lines, variantId, chosen, qty, !weighed) }));
   }
+  /** A weighed line weighed again (0075): its weight as typed, exactly. */
+  function setWeight(key: string, kg: number) {
+    patchOrder((o) => ({
+      ...o,
+      lines: o.lines.map((l) => (l.key === key ? { ...l, qty: kg } : l)),
+    }));
+  }
+  const [weighing, setWeighing] = useState<string | null>(null);
   function changeQty(key: string, delta: number) {
     patchOrder((o) => ({
       ...o,
@@ -1848,7 +1861,7 @@ export function PosClient({
             disabled={blocked}
           >
             <Icon name="bolt" size={16} /> {t("pos.quickSale")}
-            {quick.lines.length > 0 && <span className="chip-n">{itemCount(quick)}</span>}
+            {quick.lines.length > 0 && <span className="chip-n">{itemCount(quick, byId)}</span>}
           </button>
           {strip.map((b) => (
             <button
@@ -1936,6 +1949,7 @@ export function PosClient({
               disabled={blocked}
               quiet={dialog !== null}
               onAdd={add}
+              decimals={money.decimals}
             />
           )}
         </div>
@@ -1960,6 +1974,7 @@ export function PosClient({
             ticketOn={ticketOn}
             onQty={changeQty}
             onNote={setNote}
+            onWeigh={(key) => setWeighing(key)}
             onLabel={(label) => billRef.current && putBill({ ...billRef.current, label })}
             onPay={startPay}
             payMethods={payMethods}
@@ -1997,7 +2012,7 @@ export function PosClient({
           onClick={() => panel.current?.scrollIntoView({ behavior: "smooth" })}
         >
           <span>
-            <Icon name="bag" size={18} /> {itemCount(order)} · {title(order)}
+            <Icon name="bag" size={18} /> {itemCount(order, byId)} · {title(order)}
           </span>
           <strong className="mono">{fmtIQD(total.toNumber())}</strong>
         </button>
@@ -2174,6 +2189,25 @@ export function PosClient({
       {dialog?.kind === "tables" && (
         <TablesEditor tables={tables} onClose={() => setDialog(null)} />
       )}
+      {weighing &&
+        (() => {
+          const line = order.lines.find((l) => l.key === weighing);
+          const item = line ? byId.get(line.variantId) : undefined;
+          if (!line || !item) return null;
+          return (
+            <WeightSheet
+              name={lineName(line, byId, locale)}
+              perKg={item.prices[order.channel] ?? null}
+              decimals={money.decimals}
+              initialKg={line.qty}
+              onAdd={(kg) => {
+                setWeight(line.key, kg);
+                setWeighing(null);
+              }}
+              onClose={() => setWeighing(null)}
+            />
+          );
+        })()}
       {dialog?.kind === "offline" && (
         <OfflineDialog
           sales={offline.filter(

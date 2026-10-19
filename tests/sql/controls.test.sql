@@ -173,7 +173,7 @@ select test.eq((
   'set_account_in_use,set_alert_thresholds,set_batch_use_by,set_business_rule,set_category_section,set_clock_pin,set_employee_left,'
   'set_employee_pay,set_fx_rate,set_item_keeps,set_item_supplier,set_member_active,set_member_place,'
   'set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_place_sections,set_price,set_product_details,'
-  'set_product_image,set_product_modifiers,settle_tab,snooze_alert,split_tab,staff_list,staff_phones,'
+  'set_product_image,set_product_modifiers,set_variant_weighed,settle_tab,snooze_alert,split_tab,staff_list,staff_phones,'
   'staff_schedule,start_stock_count,stock_card,stock_places,stock_transfers,submit_stock_count,'
   'supplier_statement,turn_off_phone_warnings,turn_on_phone_warnings,undo_bank_statement,unlink_phone,'
   'unlock_period,update_delivery_platform,update_item,update_supplier,update_variant,void_sale,waste_coach',

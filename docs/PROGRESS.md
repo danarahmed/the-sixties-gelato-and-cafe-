@@ -2316,6 +2316,16 @@ Built and tested:
   nothing of it. Tested: the SQL suite `sections`, `tests/sections.test.ts`,
   and the browser suite `sections`.
 
+- **Round seventeen: selling by weight (`0075`).** On Products & Recipes, a
+  size's **Sold by weight** box makes its price a kilo's. At the till its tile
+  says "/ kg", and a tap asks how much it weighs: 100 g, 250 g, 500 g or 1 kg
+  in one tap, or typed in grams or kilos, the price shown before it is added.
+  Each weighing is a line of its own, weighed again with a tap on its weight.
+  The sale is recorded at the weight to the gram, the stock used is the weight
+  sold, and the receipt says it in grams. Before `0075` is applied the box is
+  not shown and the till sells by the piece. Tested: the SQL suite
+  `sell_by_weight`, `tests/weight.test.ts`, and the browser suite `weight`.
+
 ## The August 2026 audit, finding by finding
 
 ✅ closed · 🟡 partly · ⬜ open

@@ -69,6 +69,7 @@ Plan a short window when the café is closed.
 | Phone warnings (`0072`)                 | ✅ Applied by the owner in the SQL editor on 8 October, then compared with the tested build: every function identical once the paste's line endings are set aside; pg_cron and pg_net on, the five-minute timer set; the tables, column and permissions as built (see [After `0072`](#after-0072))                                                                                                                                               |
 | Selling without internet (`0073`)       | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0073`](#after-0073)). The till works before it: a kept sale is then sent as an ordinary sale                                                                                                                                                                                                                                                                                 |
 | Café and bakery on one till (`0074`)    | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0074`](#after-0074)). Before it the screens show nothing of it                                                                                                                                                                                                                                                                                                               |
+| Sell by weight (`0075`)                 | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0075`](#after-0075)). Before it the till sells every size by the piece                                                                                                                                                                                                                                                                                                       |
 
 ## 0. Before you start
 
@@ -3543,6 +3544,39 @@ It is applied by the owner, in Supabase's SQL editor, after `0073`:
 
 1. Open the file `supabase/migrations/0074_sections.sql` on GitHub, press
    **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0075`
+
+Migration `0075` is selling by weight (round seventeen): a size sold by the
+kilo, its price a kilo's, the till asking its weight.
+
+What it changes:
+
+- **New column:** `product_variant.sold_by_weight`, whether a size is sold by
+  the kilo.
+- **New function:** `set_variant_weighed` (`recipe.edit`), keyed and on the
+  audit trail.
+- **New check:** a line of a size sold by weight is a weight from 1 g to
+  1,000 kg, to the gram (the trigger `line_quantity` on `sales_order_line`).
+  Every other line is as before.
+- **Replaced:** `pos_catalogue` says which sizes are sold by weight.
+- Nothing recorded changes. Until a size is ticked, the till is as it was.
+
+Before it is applied, the box on Products & Recipes is not shown, and the till
+sells every size by the piece.
+
+It was rehearsed on the tested build (`scripts/test-sql.sh`), with its own
+suite (`tests/sql/sell_by_weight.test.sql`), and through the screens in the
+browser suite `weight`.
+
+It is applied by the owner, in Supabase's SQL editor, after `0074`:
+
+1. Open the file `supabase/migrations/0075_sell_by_weight.sql` on GitHub,
+   press **Raw**, select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run
    it anyway.

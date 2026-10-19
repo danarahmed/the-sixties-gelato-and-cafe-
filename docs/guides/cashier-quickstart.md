@@ -46,6 +46,13 @@ customer on the order (see
 - A number on a tile is how many are already in the order. A product sold in
   several sizes asks which one.
 
+### Sold by weight
+
+A product whose tile says **/ kg** is sold by the kilo. Tap it, put it on the
+scale, then tap **100 g**, **250 g**, **500 g** or **1 kg**, or type the
+weight (grams or kilos). The price shows before you add it. Each weighing is a
+line of its own; tap its weight on the order to weigh it again.
+
 ## Clocking in and out
 
 Everyone who works here clocks in when they start and out when they leave, on

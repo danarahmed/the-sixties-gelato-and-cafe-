@@ -371,6 +371,10 @@ type part of its name and pick it from the list: its unit fills itself in.
   on the bakery). **Reports → Café and bakery** shows each part's takings,
   cost and profit. A branch that sells only one part is set on **Settings →
   Locations**: tick its parts; with none ticked it sells everything.
+- **Selling by weight** (a product's **Prices** tab; round seventeen): tick
+  **Sold by weight** on a size sold by the kilo, cookies or cake by the slice
+  of a tray say. Its price is then a kilo's, and its recipe is for a kilo. The
+  till asks how much it weighs each time.
 - **Each product** (its **Basics** tab): **Add photo** takes a picture from the phone or
   the computer. The browser shrinks it to a small file first, and only PNG, JPEG
   and WebP pictures are accepted, judged by their contents. Choose its

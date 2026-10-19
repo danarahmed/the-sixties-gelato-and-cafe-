@@ -21,6 +21,7 @@ import {
   type AddonMenu,
 } from "./model";
 import { OptionsSheet } from "./OptionsSheet";
+import { WeightSheet } from "./WeightSheet";
 
 const ALL = "all";
 const FAVOURITES = "fav";
@@ -116,6 +117,7 @@ export function ProductPicker({
   disabled,
   quiet = false,
   onAdd,
+  decimals = 0,
 }: {
   items: PosItem[];
   /** The add-ons, and which sizes offer them (0041). */
@@ -127,6 +129,8 @@ export function ProductPicker({
   /** One of the till's own dialogs is open: the keys are its. */
   quiet?: boolean;
   onAdd: (variantId: string, addons: AddonChoice[], qty: number) => void;
+  /** The currency's decimals: a weighing's amount is rounded as the database rounds it. */
+  decimals?: number;
 }) {
   const { t, locale, dir } = useT();
   const [query, setQuery] = useState("");
@@ -151,6 +155,8 @@ export function ProductPicker({
     }
   }
   const [choosing, setChoosing] = useState<{ product: Product; qty: number } | null>(null);
+  // A size sold by weight (0075): how much it weighs is asked before it is added.
+  const [weighing, setWeighing] = useState<{ item: PosItem; addons: AddonChoice[] } | null>(null);
   // How many of the next product, typed as a number first.
   const [times, setTimes] = useState("");
   // Which of what is found Enter adds: the first, unless the arrows choose another.
@@ -248,7 +254,7 @@ export function ProductPicker({
   // The till's keys, from anywhere on it but a box being typed in or a dialog:
   // "/" goes to the search, a letter starts one, a number is how many of the
   // next product, Escape clears, "?" lists them.
-  const free = !quiet && !choosing;
+  const free = !quiet && !choosing && !weighing;
   useEffect(() => {
     if (!free) return;
     const onKey = (e: KeyboardEvent) => {
@@ -294,10 +300,12 @@ export function ProductPicker({
     const qty = asked.times ?? (Number(times) || 1);
     setTimes("");
     const only = p.variants.length === 1 ? p.variants[0]! : null;
-    // One size and nothing to add to it: added as it is tapped.
-    if (only && addons.groupsFor(only.productId, only.variantId).length === 0)
-      onAdd(only.variantId, [], qty);
-    else setChoosing({ product: p, qty });
+    // One size and nothing to add to it: added as it is tapped; weighed first
+    // when it is sold by weight.
+    if (only && addons.groupsFor(only.productId, only.variantId).length === 0) {
+      if (only.soldByWeight) setWeighing({ item: only, addons: [] });
+      else onAdd(only.variantId, [], qty);
+    } else setChoosing({ product: p, qty });
   }
 
   /** The arrows along what is found: the next one is to the right in English, to the left in Arabic and Kurdish. */
@@ -507,7 +515,10 @@ export function ProductPicker({
                           {p.variants.length} {t("pos.options")}
                         </span>
                       )}
-                      <span className="price mono">{priceOf(p)}</span>
+                      <span className="price mono">
+                        {priceOf(p)}
+                        {p.variants.length === 1 && p.item.soldByWeight ? ` / ${t("kg")}` : ""}
+                      </span>
                     </span>
                   </button>
                 );
@@ -523,10 +534,24 @@ export function ProductPicker({
           channel={channel}
           addons={addons}
           onAdd={(variantId, chosen) => {
-            onAdd(variantId, chosen, choosing.qty);
+            const v = choosing.product.variants.find((x) => x.variantId === variantId);
+            if (v?.soldByWeight) setWeighing({ item: v, addons: chosen });
+            else onAdd(variantId, chosen, choosing.qty);
             setChoosing(null);
           }}
           onClose={() => setChoosing(null)}
+        />
+      )}
+      {weighing && (
+        <WeightSheet
+          name={productName(weighing.item, locale)}
+          perKg={weighing.item.prices[channel] ?? null}
+          decimals={decimals}
+          onAdd={(kg) => {
+            onAdd(weighing.item.variantId, weighing.addons, kg);
+            setWeighing(null);
+          }}
+          onClose={() => setWeighing(null)}
         />
       )}
     </div>

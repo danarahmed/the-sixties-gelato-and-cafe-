@@ -7217,3 +7217,40 @@ kbd {
   border-radius: 4px;
   background: var(--brand);
 }
+
+/* Selling by weight (0075): the till's weighing, a weighed line, and the
+   switch on a size. */
+.weight-sheet .weight-quick {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-block-end: 10px;
+}
+.weight-sheet .weight-quick button {
+  min-height: 48px;
+  font-size: 1.05rem;
+}
+.weight-sheet .weight-entry {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.weight-sheet .weight-entry input {
+  flex: 1 1 140px;
+  font-size: 1.4rem;
+  text-align: center;
+  min-height: 48px;
+}
+.weight-sheet .weight-total {
+  min-height: 1.5em;
+  font-weight: 600;
+}
+.stepper.weighed .weigh-btn {
+  min-width: 76px;
+}
+.weighed-sizes .check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
