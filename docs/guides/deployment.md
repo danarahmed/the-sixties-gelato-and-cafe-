@@ -75,6 +75,7 @@ Plan a short window when the café is closed.
 | Barcodes (`0078`)                       | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0078`](#after-0078)). Before it the till reads no barcode                                                                                                                                                                                                                                                                                                                    |
 | End-of-day markdowns (`0079`)           | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0079`](#after-0079)). Before it nothing is marked down                                                                                                                                                                                                                                                                                                                       |
 | Two-step sign-in (`0080`)               | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0080`](#after-0080)). Before it the app still asks for the code, but the database does not check it                                                                                                                                                                                                                                                                          |
+| The books completed (`0081`)            | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0081`](#after-0081)). Before it Accounting shows no equipment and the chart adds only incomes and costs                                                                                                                                                                                                                                                                      |
 
 ## 0. Before you start
 
@@ -3761,6 +3762,40 @@ If a phone with the app is lost: someone who looks after the system removes
 the person's factor in Supabase (**Authentication** → **Users** → the person →
 **Multi-Factor** → delete), and they sign in with the password and turn it on
 again.
+
+## After `0081`
+
+Migration `0081` completes the books (round twenty-four): the equipment and
+its monthly depreciation, the owner's money, and another bank, a loan or a
+kind of equipment added to the chart on the screen.
+
+What it changes:
+
+- **New tables:** `fixed_asset` (a piece of equipment: what it cost, what it
+  is worth at the end, the months it is used, how it was paid, and when it
+  went), `depreciation_run` (one month's depreciation, posted once) and
+  `asset_depreciation` (each piece's share of that month).
+- **New functions:** `add_fixed_asset`, `depreciate_to` and
+  `dispose_fixed_asset` (those who post to the books), keyed and audited;
+  `fixed_assets` and `owner_money` (those who see the profit).
+- **Replaced:** `create_account__run` (also a bank 1021–1029, a loan
+  2400–2499 and a kind of equipment 1501–1589), `cash_flow_line` (another
+  bank is cash, a loan is financing) and `journal_source_hint` (the
+  equipment's journals and a customer's payment say where they come from).
+- Nothing recorded changes.
+
+Before it is applied, Accounting shows no Equipment or owner's money card,
+and the chart adds only incomes and costs, as before. Rehearsed with
+`tests/sql/equipment.test.sql` and the browser suite `equipment`.
+
+It is applied by the owner, in Supabase's SQL editor, after `0080`:
+
+1. Open the file `supabase/migrations/0081_equipment.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
 
 ## Clearing the test records
 

@@ -72,7 +72,8 @@ select test.eq(pg_temp.words('ar', 'Catering'), null, 'a name given no other wor
 
 -- ------------------------------------------------------------------ refused
 select test.throws($$select create_account('1400', 'Prepaid rent', 'asset')$$,
-  'An account added here is an income or a cost%', 'an asset is added by a migration');
+  'An account added here is an income, a cost, a bank, a loan or a kind of equipment%',
+  'any other asset is added by a migration');
 select test.throws($$select create_account('7000', 'Other costs', 'expense')$$, 'A cost''s code is from 5000 to 6999%',
   'a cost from 5000 to 6999');
 select test.throws($$select create_account('3900', 'Tips', 'revenue')$$, 'An income''s code is from 4000 to 4999',

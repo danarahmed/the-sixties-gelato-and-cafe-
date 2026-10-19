@@ -17,7 +17,7 @@ import {
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
-import { nextFreeCode } from "@/lib/chart";
+import { type AddableKind, nextFreeCode } from "@/lib/chart";
 
 export interface ChartAccount {
   code: string;
@@ -256,7 +256,7 @@ function AddAccount({ accounts, onDone }: { accounts: ChartAccount[]; onDone: (m
   const { t } = useT();
   const router = useRouter();
   const [busy, start] = useTransition();
-  const [type, setType] = useState<"expense" | "revenue">("expense");
+  const [type, setType] = useState<AddableKind>("expense");
   const [code, setCode] = useState(() => nextFreeCode(accounts, "expense"));
   const [name, setName] = useState("");
   const [nameAr, setNameAr] = useState("");
@@ -293,13 +293,20 @@ function AddAccount({ accounts, onDone }: { accounts: ChartAccount[]; onDone: (m
             style={inputStyle}
             value={type}
             onChange={(e) => {
-              const k = e.target.value === "revenue" ? "revenue" : "expense";
+              const k = (
+                ["revenue", "bank", "loan", "equipment"].includes(e.target.value)
+                  ? e.target.value
+                  : "expense"
+              ) as AddableKind;
               setType(k);
               setCode(nextFreeCode(accounts, k));
             }}
           >
             <option value="expense">{t("A cost")}</option>
             <option value="revenue">{t("An income")}</option>
+            <option value="bank">{t("Another bank account")}</option>
+            <option value="loan">{t("A loan")}</option>
+            <option value="equipment">{t("A kind of equipment")}</option>
           </select>
         </Field>
         <Field label={t("Code")}>
@@ -347,12 +354,15 @@ function AddAccount({ accounts, onDone }: { accounts: ChartAccount[]; onDone: (m
       <p className="muted" style={{ margin: 0, fontSize: ".8rem" }}>
         {type === "revenue"
           ? t("An income's code is from 4000 to 4999.")
-          : t(
-              "A cost's code is from 5000 to 6999: 5… for the cost of what was sold, 6… for the running costs.",
-            )}{" "}
-        {t(
-          "An asset, a debt or the owner's money is added by whoever looks after the system, so that the balance sheet and the cash flow know where it goes.",
-        )}
+          : type === "bank"
+            ? t("Another bank's code is from 1021 to 1029. It counts as cash in the cash flow.")
+            : type === "loan"
+              ? t("A loan's code is from 2400 to 2499. Money borrowed and paid back moves it.")
+              : type === "equipment"
+                ? t("A kind of equipment's code is from 1501 to 1589.")
+                : t(
+                    "A cost's code is from 5000 to 6999: 5… for the cost of what was sold, 6… for the running costs.",
+                  )}
       </p>
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <button

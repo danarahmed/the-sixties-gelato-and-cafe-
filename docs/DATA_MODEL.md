@@ -2054,6 +2054,24 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### The books completed (`0081`)
+
+- **`fixed_asset`**: a piece of equipment: its name, the account it sits in
+  (`1500` or a kind of equipment `1501`–`1589`), what it cost, what it is
+  worth at the end, the months it is used, the day it was bought, how it was
+  paid (the bank, the safe, the owner, a supplier's bill or a loan; none when
+  it was in the books already), and the day it went and what it fetched.
+- **`depreciation_run`**: one month's depreciation for all the equipment,
+  once a month (Dr `6400`, Cr `1590`), with its journal.
+- **`asset_depreciation`**: each piece's share of that month: the same each
+  month, the last month what is left.
+- **Functions:** `add_fixed_asset`, `depreciate_to` (every month gone not yet
+  posted, never this month), `dispose_fixed_asset` (what it was still worth
+  leaves the books; a loss or a gain in `6900`), `fixed_assets`,
+  `owner_money` (put in to `3000`, taken out of `3000` and `3200`).
+- The chart gains, on the screen: another bank (`1021`–`1029`, cash in the
+  cash flow), a loan (`2400`–`2499`, financing) and a kind of equipment.
+
 ### Two-step sign-in (`0080`)
 
 - No table. Supabase Auth keeps each person's authenticator-app key

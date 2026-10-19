@@ -32,7 +32,10 @@ console.log("▸ the owner turns it on");
   const card = page.getByTestId("two-step");
   await card.getByTestId("two-step-start").click();
   secret = (await card.getByTestId("two-step-secret").textContent()) ?? "";
-  check(/^[A-Z2-7]{16,}$/.test(secret), "a key for the authenticator app, as a code to scan and as text");
+  check(
+    /^[A-Z2-7]{16,}$/.test(secret),
+    "a key for the authenticator app, as a code to scan and as text",
+  );
   await card.getByTestId("two-step-code").fill(totp(secret));
   await card.getByTestId("two-step-confirm").click();
   await card.getByTestId("two-step-on").waitFor({ timeout: 10000 });
