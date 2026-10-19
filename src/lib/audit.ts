@@ -176,6 +176,11 @@ const ACTION_LABEL: Record<string, string> = {
   "sale.discount": "Discount given",
   // Selling without internet (0073).
   "sale.offline": "Sale made offline, then sent",
+  // The café and the bakery on one till (0074).
+  "section.add": "Part of the menu added",
+  "section.change": "Part of the menu changed",
+  "category.section": "A category's part of the menu set",
+  "place.sections": "What a branch sells set",
   "sale.giveaway": "Given away at the till",
   "bill.cancel": "Open bill cancelled",
   "bill.discount": "Discount on an open bill",
@@ -445,6 +450,9 @@ const FIELD_LABEL: Record<string, string> = {
   sold_by: "Sold by",
   sent_by: "Sent by",
   device: "Till",
+  // The parts of the menu (0074).
+  section: "Part of the menu",
+  sections: "Parts it sells",
   min_select: "Fewest to choose",
   max_select: "Most to choose",
   group_id: "Group of add-ons",

@@ -9,6 +9,12 @@ const browser = await chromium.launch();
 const ESPRESSO = "d0000000-0000-0000-0000-000000000001";
 const WATER = "d0000000-0000-0000-0000-000000000002";
 const BUSINESS = "00000000-0000-0000-0000-0000000000b1";
+/** The till on its menu, dine-in (the café's tables may open it on Tables). */
+async function menu(page) {
+  const tab = page.getByRole("tab", { name: "Menu", exact: true });
+  if (await tab.count()) await tab.click();
+  await page.getByRole("button", { name: "Dine-in" }).click();
+}
 
 // Two categories, the espresso in one and the water in the other.
 sql(`insert into product_category (business_id, name) select '${BUSINESS}', n
@@ -51,7 +57,7 @@ console.log("▸ one till sells both; a till can show one part, and keeps to it"
   const { ctx, page } = await signIn(browser, "cashier");
   await open(page, "/pos");
   // The water is sold dine-in: both parts are on that channel.
-  await page.getByRole("button", { name: "Dine-in" }).click();
+  await menu(page);
   const parts = page.getByTestId("till-sections");
   await parts.waitFor({ timeout: 10000 });
   const tile = (name) => page.locator(".product-tile", { hasText: name });
@@ -65,7 +71,7 @@ console.log("▸ one till sells both; a till can show one part, and keeps to it"
     "the bakery's part: the water, not the espresso",
   );
   await page.reload();
-  await page.getByRole("button", { name: "Dine-in" }).click();
+  await menu(page);
   await page.getByTestId("till-sections").waitFor();
   check((await tile("Golden espresso").count()) === 0, "the till opens on the part it was left on");
   const find = page.locator('input[type="search"]').first();
@@ -90,7 +96,7 @@ console.log("▸ a branch that sells only the bakery");
   );
   const till = await signIn(browser, "cashier");
   await open(till.page, "/pos");
-  await till.page.getByRole("button", { name: "Dine-in" }).click();
+  await menu(till.page);
   check(
     (await till.page.locator(".product-tile", { hasText: "Golden espresso" }).count()) === 0 &&
       (await till.page.locator(".product-tile", { hasText: "Golden water" }).count()) === 1,
@@ -105,7 +111,7 @@ console.log("▸ a branch that sells only the bakery");
   await owner.page.waitForTimeout(1000);
   check(sql("select count(*) from location_section") === "0", "untick it: it sells everything");
   await open(till.page, "/pos");
-  await till.page.getByRole("button", { name: "Dine-in" }).click();
+  await menu(till.page);
   check(
     (await till.page.locator(".product-tile", { hasText: "Golden espresso" }).count()) === 1,
     "and its till shows everything again",
