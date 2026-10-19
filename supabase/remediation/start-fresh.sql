@@ -89,7 +89,8 @@ begin
 end $$;
 
 -- In one statement: the tables that refer to each other go together. The
--- pre-orders (0076) go with them where the database has them.
+-- pre-orders (0076) and the customers' invoices and payments (0077) go with
+-- them where the database has them.
 do $$
 begin
   execute 'truncate table '
@@ -112,6 +113,8 @@ begin
        'stock_transfer_line, supplier, supplier_credit, supplier_credit_allocation, supplier_payment, ' ||
        'supplier_return, supplier_return_line, sync_log, variant_recipe, work_shift'
        || case when to_regclass('public.pre_order') is not null then ', pre_order_line, pre_order' else '' end
+       || case when to_regclass('public.customer_invoice') is not null
+               then ', customer_invoice, customer_payment' else '' end
        || ' restart identity';
 end $$;
 

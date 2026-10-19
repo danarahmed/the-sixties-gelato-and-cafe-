@@ -36,6 +36,7 @@ import offline from "./offline";
 import sections from "./sections";
 import weight from "./weight";
 import preOrders from "./preOrders";
+import accounts from "./accounts";
 
 /**
  * The areas' phrase books; "db" holds what the database refuses with, "alerts"
@@ -75,6 +76,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   sections,
   weight,
   preOrders,
+  accounts,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

@@ -371,6 +371,12 @@ type part of its name and pick it from the list: its unit fills itself in.
   on the bakery). **Reports → Café and bakery** shows each part's takings,
   cost and profit. A branch that sells only one part is set on **Settings →
   Locations**: tick its parts; with none ticked it sells everything.
+- **Wholesale customers** (a customer's page; round nineteen): **Credit
+  settings** puts a shop or a hotel on account with a credit limit, days to
+  pay and a wholesale price. **New invoice** charges what they take; **Receive
+  a payment** records what they pay, oldest invoices first. **Customers → On
+  account** shows who owes what and how late. **Statement** prints their
+  account.
 - **Pre-orders** (the till's **Pre-orders** button; round eighteen): a cake
   for Friday, part paid now. What is paid ahead is held in Customer deposits
   (2300), not counted as a sale, until it is collected; Production shows

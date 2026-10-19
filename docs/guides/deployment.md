@@ -71,6 +71,7 @@ Plan a short window when the café is closed.
 | Café and bakery on one till (`0074`)    | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0074`](#after-0074)). Before it the screens show nothing of it                                                                                                                                                                                                                                                                                                               |
 | Sell by weight (`0075`)                 | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0075`](#after-0075)). Before it the till sells every size by the piece                                                                                                                                                                                                                                                                                                       |
 | Pre-orders (`0076`)                     | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0076`](#after-0076)). Before it the till shows no Pre-orders button                                                                                                                                                                                                                                                                                                          |
+| Customers on account (`0077`)           | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0077`](#after-0077)). Before it the customers' pages show no account                                                                                                                                                                                                                                                                                                         |
 
 ## 0. Before you start
 
@@ -3621,6 +3622,44 @@ It is applied by the owner, in Supabase's SQL editor, after `0075`:
 
 1. Open the file `supabase/migrations/0076_pre_orders.sql` on GitHub, press
    **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0077`
+
+Migration `0077` is wholesale customers on account (round nineteen): a shop,
+an office or a hotel that buys and pays later.
+
+What it changes:
+
+- **New permission:** `credit.manage` (the owner, the general manager, a
+  branch manager and the accountant): a customer put on account, an invoice
+  made, a payment received.
+- **New columns on `customer`:** `on_account`, `credit_limit`, `terms_days`
+  and `wholesale_percent`.
+- **New tables:** `customer_invoice` (an invoice: a sale charged to the
+  customer's account, numbered in order, due after their terms) and
+  `customer_payment` (what they paid, and where it went). Read by those who
+  see customers.
+- **New functions:** `set_customer_account`, `invoice_customer`,
+  `receive_customer_payment` (`credit.manage`, keyed, on the audit trail),
+  `customer_account` and `customer_accounts` (`customer.view`).
+- **New trigger:** an invoice's sale voided voids the invoice.
+- It uses `1110` Customer accounts and the payment charged to an account,
+  both added by `0076`. Nothing recorded changes.
+
+Before it is applied, the customers' pages show no account.
+
+It was rehearsed on the tested build (`scripts/test-sql.sh`), with its own
+suite (`tests/sql/customer_accounts.test.sql`), and through the screens in
+the browser suite `accounts`.
+
+It is applied by the owner, in Supabase's SQL editor, after `0076`:
+
+1. Open the file `supabase/migrations/0077_customer_accounts.sql` on GitHub,
+   press **Raw**, select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run
    it anyway.
