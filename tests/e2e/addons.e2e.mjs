@@ -95,11 +95,11 @@ console.log("▸ the owner gives the latte a Large, its recipe copied from the o
   await manager.getByTestId("group-new").click();
   let group = manager.getByTestId("group-form");
   await group.getByLabel("Group name (English)").fill("Milk");
-  await group.getByLabel("Fewest a line takes").fill("1");
-  await group.getByLabel("Most a line takes").fill("1");
+  // Round fourteen: the rule is a card, not the fewest and the most.
+  await group.getByLabel("Must pick one").check();
   check(
     (await group.textContent()).includes("The till says: Choose 1"),
-    "the form says what the till will ask: Choose 1",
+    "the card says what the till will ask: Choose 1",
   );
   await group.getByTestId("group-save").click();
   const milk = manager.locator('[data-testid="addon-group-card"][data-group="Milk"]');
@@ -131,8 +131,8 @@ console.log("▸ the owner gives the latte a Large, its recipe copied from the o
   await manager.getByTestId("group-new").click();
   group = manager.getByTestId("group-form");
   await group.getByLabel("Group name (English)").fill("Extras");
-  await group.getByLabel("Fewest a line takes").fill("0");
-  await group.getByLabel("Most a line takes").fill("3");
+  await group.getByLabel("Optional, several").check();
+  await group.getByLabel("Up to how many").fill("3");
   check(
     (await group.textContent()).includes("The till says: Up to 3"),
     "extras are optional: up to 3",
@@ -225,7 +225,18 @@ const oatBefore = oatOnHand();
     (await add.isDisabled()) && (await sheet.getByRole("status").textContent()) === "Choose Milk",
     "it cannot be added until a milk is chosen",
   );
+  const milkGroup = sheet.locator(".addon-group.must", { hasText: "Milk" });
+  check(
+    (await milkGroup.getByText("must pick").count()) === 1 &&
+      !(await sheet.locator("details.addon-group", { hasText: "Extras" }).evaluate((d) => d.open)),
+    "the milk is marked as a must, the extras folded shut",
+  );
   await sheet.locator(".addon-name", { hasText: "Oat milk" }).click();
+  check(
+    (await milkGroup.locator(".addon-done").count()) === 1,
+    "once a milk is chosen, the group is ticked",
+  );
+  await sheet.locator("details.addon-group > summary", { hasText: "Extras" }).click();
   await sheet.locator(".addon-name", { hasText: "Extra shot" }).click();
   await sheet.getByRole("button", { name: "One more Extra shot" }).click();
   check(
@@ -372,6 +383,50 @@ console.log("▸ Orders and the report name the add-ons; a size is retired and b
     last(`select pv.is_active from product_variant pv join product p on p.id = pv.product_id
            where p.name = 'Addon latte' and pv.name = 'Large'`) === "t",
     "and back on it",
+  );
+  await ctx.close();
+}
+
+console.log("▸ a ready-made group: its choices filled in, the prices asked for");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/products");
+  const panel = await openProduct(page, "Addon latte", "Add-ons");
+  await panel.getByTestId("ready-syrups").click();
+  let form = panel.getByTestId("group-form");
+  check(
+    (await form.getByLabel("Group name (English)").inputValue()) === "Syrups" &&
+      (await form.getByLabel("Optional, one only").isChecked()) &&
+      (await form.getByTestId("group-choice").count()) === 3,
+    "Syrups: optional, one only, with vanilla, caramel and hazelnut",
+  );
+  await form.getByTestId("group-save").click();
+  await form.getByText("Give Vanilla a price: 0 if it is free.").waitFor({ timeout: 10000 });
+  check(
+    last(`select count(*) from modifier_group where name = 'Syrups'`) === "0",
+    "a choice without its price stops the save",
+  );
+  await form.getByRole("button", { name: "Cancel" }).click();
+  await panel.getByTestId("ready-sugar").click();
+  form = panel.getByTestId("group-form");
+  await form.getByTestId("group-save").click();
+  await panel
+    .locator('[data-testid="addon-group-card"][data-group="Sugar"]')
+    .waitFor({ timeout: 10000 });
+  check(
+    last(`select g.min_select || '-' || g.max_select || ' ' || g.name_ckb || ' ' ||
+                 (select string_agg(m.name || '=' || trim_scale(mp.price), ',' order by m.sort_order)
+                    from modifier m join modifier_price mp on mp.modifier_id = m.id and mp.channel = 'dine_in'
+                   where m.group_id = g.id)
+            from modifier_group g where g.name = 'Sugar'`) ===
+      "0-1 شەکر No sugar=0,Less sugar=0,Extra sugar=0",
+    "Sugar is made in one tap: optional, its three choices free, named in Kurdish too",
+  );
+  check(
+    last(`select count(*) from product_modifier_group pm join product p on p.id = pm.product_id
+           join modifier_group g on g.id = pm.group_id where p.name = 'Addon latte' and g.name = 'Sugar'`) ===
+      "1",
+    "and offered with the latte at once",
   );
   await ctx.close();
 }

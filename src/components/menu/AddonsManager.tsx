@@ -34,6 +34,13 @@ import {
   type LineDraft,
 } from "@/components/menu/RecipeLines";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import {
+  limitsOf,
+  ruleOf,
+  type AddonRule,
+  type ReadyChoice,
+  type ReadyGroup,
+} from "@/lib/addonRules";
 
 type Msg = { ok: boolean; text: string } | null;
 interface Names {
@@ -125,49 +132,114 @@ function recipeSummary(
     }));
 }
 
-/** A group of add-ons, new or changed: its names, and the fewest and the most a line takes. */
+/** A choice typed in a new group: its three names and one price for every channel. */
+interface ChoiceDraft {
+  key: number;
+  name: string;
+  ar: string;
+  ckb: string;
+  price: string;
+}
+let choiceSeq = 0;
+const choiceDraft = (c?: ReadyChoice): ChoiceDraft => ({
+  key: ++choiceSeq,
+  name: c?.name ?? "",
+  ar: c?.nameAr ?? "",
+  ckb: c?.nameCkb ?? "",
+  price: c?.price === null || c?.price === undefined ? "" : String(c.price),
+});
+
+/**
+ * A group of add-ons, new or changed (round fourteen, the owner's choice): its
+ * names, and how customers choose from it as one of three cards — must pick
+ * one, optional one, or optional several up to a number — in place of the
+ * fewest and the most a line takes. A group made before with another rule
+ * keeps its numbers. A new group takes its choices and their prices at once,
+ * and may start from a ready-made one (Milk, Syrups…).
+ */
 export function GroupForm({
   group,
   nextSort,
   onDone,
   onCreated,
+  ready,
 }: {
   group: MenuAddonGroup | null;
   nextSort: number;
   onDone: () => void;
   /** A new group, made from a product's panel: that product offers it next. */
   onCreated?: (groupId: string) => Promise<string | null>;
+  /** A ready-made group to start from. */
+  ready?: ReadyGroup;
 }) {
   const op = useOperation();
   const { t } = useT();
   const router = useRouter();
+  const { set } = useChannels();
   const [busy, start] = useTransition();
   const [names, setNames] = useState<Names>({
-    name: group?.name ?? "",
-    ar: group?.nameAr ?? "",
-    ckb: group?.nameCkb ?? "",
+    name: group?.name ?? ready?.name ?? "",
+    ar: group?.nameAr ?? ready?.nameAr ?? "",
+    ckb: group?.nameCkb ?? ready?.nameCkb ?? "",
   });
+  const [rule, setRule] = useState<AddonRule>(
+    group ? ruleOf(group.min, group.max) : (ready?.rule ?? "must"),
+  );
+  const [upTo, setUpTo] = useState(
+    group ? (group.max === null ? "" : String(group.max)) : ready?.upTo ? String(ready.upTo) : "",
+  );
+  // A rule made before the cards (two to four, say): kept as its numbers.
   const [min, setMin] = useState(String(group?.min ?? 0));
-  const [max, setMax] = useState(group ? (group.max === null ? "" : String(group.max)) : "1");
-  const [sort, setSort] = useState(String(group?.sortOrder ?? nextSort));
+  const [max, setMax] = useState(group?.max === null ? "" : String(group?.max ?? ""));
   const [active, setActive] = useState(group?.isActive ?? true);
+  const [choices, setChoices] = useState<ChoiceDraft[]>(() =>
+    group ? [] : ready ? ready.choices.map(choiceDraft) : [choiceDraft()],
+  );
   const [msg, setMsg] = useState<Msg>(null);
-  const fewest = whole(min.trim() === "" ? "0" : min);
-  const most = max.trim() === "" ? null : whole(max);
+
+  const several = upTo.trim() === "" ? null : whole(upTo);
+  const limits =
+    rule === "custom"
+      ? { min: whole(min.trim() === "" ? "0" : min), max: max.trim() === "" ? null : whole(max) }
+      : limitsOf(rule, several);
   const readable =
-    !Number.isNaN(fewest) &&
-    (most === null || (!Number.isNaN(most) && most >= Math.max(1, fewest)));
+    !Number.isNaN(limits.min) &&
+    (limits.max === null || (!Number.isNaN(limits.max) && limits.max >= Math.max(1, limits.min)));
+  const putChoice = (key: number, patch: Partial<ChoiceDraft>) =>
+    setChoices((cs) => cs.map((c) => (c.key === key ? { ...c, ...patch } : c)));
 
   function save() {
     setMsg(null);
-    if (Number.isNaN(fewest) || fewest > 20) {
-      setMsg({ ok: false, text: t("The fewest to choose is a number from 0 to 20") });
+    if (
+      rule === "several" &&
+      several !== null &&
+      (Number.isNaN(several) || several < 1 || several > 20)
+    ) {
+      setMsg({ ok: false, text: t("Up to how many: a number from 1 to 20, or empty for any") });
       return;
     }
-    if (most !== null && (Number.isNaN(most) || most < 1 || most > 20 || most < fewest)) {
+    if (rule === "custom") {
+      if (Number.isNaN(limits.min) || limits.min > 20) {
+        setMsg({ ok: false, text: t("The fewest to choose is a number from 0 to 20") });
+        return;
+      }
+      if (
+        limits.max !== null &&
+        (Number.isNaN(limits.max) || limits.max < 1 || limits.max > 20 || limits.max < limits.min)
+      ) {
+        setMsg({
+          ok: false,
+          text: t("The most to choose is a number from 1 to 20, and no fewer than the fewest"),
+        });
+        return;
+      }
+    }
+    const typed = choices.filter((c) => c.name.trim() !== "");
+    const unpriced = typed.find((c) => c.price.trim() === "");
+    if (unpriced) {
       setMsg({
         ok: false,
-        text: t("The most to choose is a number from 1 to 20, and no fewer than the fewest"),
+        text: t("Give {name} a price: 0 if it is free.", { name: unpriced.name.trim() }),
       });
       return;
     }
@@ -179,9 +251,9 @@ export function GroupForm({
             name: names.name,
             nameAr: names.ar,
             nameCkb: names.ckb,
-            min: fewest,
-            max: most,
-            sort: order(sort),
+            min: limits.min,
+            max: limits.max,
+            sort: group?.sortOrder ?? nextSort,
             isActive: active,
           },
           key,
@@ -190,6 +262,30 @@ export function GroupForm({
       if (!r.ok) {
         setMsg({ ok: false, text: r.error });
         return;
+      }
+      // Its choices, each at its price on every channel in use.
+      for (const [i, c] of typed.entries()) {
+        const a = await op.run(`saveAddon:new:${r.data.groupId}:${i}`, (key) =>
+          saveAddonAction(
+            {
+              modifierId: null,
+              groupId: r.data.groupId,
+              name: c.name,
+              nameAr: c.ar,
+              nameCkb: c.ckb,
+              sort: i + 1,
+              isActive: true,
+              prices: Object.fromEntries(set.inUse.map((ch) => [ch, c.price.trim()])),
+              recipe: [],
+            },
+            key,
+          ),
+        );
+        if (!a.ok) {
+          setMsg({ ok: false, text: `${c.name}: ${a.error}` });
+          router.refresh();
+          return;
+        }
       }
       if (!group && onCreated) {
         const failed = await onCreated(r.data.groupId);
@@ -204,64 +300,154 @@ export function GroupForm({
     });
   }
 
+  const cards: { rule: Exclude<AddonRule, "custom">; title: string; example: string }[] = [
+    { rule: "must", title: t("Must pick one"), example: t("e.g. the milk") },
+    { rule: "one", title: t("Optional, one only"), example: t("e.g. a syrup") },
+    { rule: "several", title: t("Optional, several"), example: t("e.g. toppings") },
+  ];
+
   return (
-    <div className="pf-change grid" style={{ gap: 10 }} data-testid="group-form">
+    <div className="pf-change grid" style={{ gap: 12 }} data-testid="group-form">
       <NameFields
         label={t("Group name (English)")}
         value={names}
         onChange={setNames}
         placeholder={t("e.g. Milk")}
       />
-      <div className="addon-counts">
-        <Field label={t("Fewest a line takes")}>
-          <input
-            style={inputStyle}
-            inputMode="numeric"
-            value={min}
-            aria-label={t("Fewest a line takes")}
-            onChange={(e) => setMin(e.target.value)}
-          />
-        </Field>
-        <Field label={t("Most a line takes")}>
-          <input
-            style={inputStyle}
-            inputMode="numeric"
-            value={max}
-            placeholder={t("no limit")}
-            aria-label={t("Most a line takes")}
-            onChange={(e) => setMax(e.target.value)}
-          />
-        </Field>
-        <Field label={t("pos.order")}>
-          <input
-            style={inputStyle}
-            inputMode="numeric"
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-          />
-        </Field>
-        {group && (
-          <label className="addon-active">
+      <fieldset className="rule-cards">
+        <legend>{t("How do customers choose?")}</legend>
+        {cards.map((c) => (
+          <label key={c.rule} className={rule === c.rule ? "rule-card on" : "rule-card"}>
             <input
-              type="checkbox"
-              className="check"
-              checked={active}
-              onChange={(e) => setActive(e.target.checked)}
-            />{" "}
-            {t("On the till")}
+              type="radio"
+              name={`rule-${group?.id ?? "new"}`}
+              checked={rule === c.rule}
+              onChange={() => setRule(c.rule)}
+              aria-label={c.title}
+            />
+            <strong>{c.title}</strong>
+            <span className="muted">{c.example}</span>
+            {c.rule === "several" && rule === "several" && (
+              <span className="rule-upto">
+                {t("Up to")}{" "}
+                <input
+                  inputMode="numeric"
+                  value={upTo}
+                  placeholder={t("any")}
+                  aria-label={t("Up to how many")}
+                  onChange={(e) => setUpTo(e.target.value)}
+                />
+              </span>
+            )}
           </label>
-        )}
-      </div>
-      <p className="pf-hint">
-        {t(
-          "1 or more makes it a choice the till asks for (the milk, say); 0 makes it optional (extras). Leave the most empty for no limit.",
-        )}{" "}
-        {readable && (
-          <strong>
-            {t("The till says: {asks}", { asks: asks({ min: fewest, max: most }, t) })}
-          </strong>
-        )}
-      </p>
+        ))}
+      </fieldset>
+      {rule === "custom" && (
+        <div className="addon-counts">
+          <Field label={t("Fewest a line takes")}>
+            <input
+              style={inputStyle}
+              inputMode="numeric"
+              value={min}
+              aria-label={t("Fewest a line takes")}
+              onChange={(e) => setMin(e.target.value)}
+            />
+          </Field>
+          <Field label={t("Most a line takes")}>
+            <input
+              style={inputStyle}
+              inputMode="numeric"
+              value={max}
+              placeholder={t("no limit")}
+              aria-label={t("Most a line takes")}
+              onChange={(e) => setMax(e.target.value)}
+            />
+          </Field>
+        </div>
+      )}
+      {group && (
+        <label className="addon-active">
+          <input
+            type="checkbox"
+            className="check"
+            checked={active}
+            onChange={(e) => setActive(e.target.checked)}
+          />{" "}
+          {t("On the till")}
+        </label>
+      )}
+      {readable && (
+        <p className="pf-hint" style={{ margin: 0 }}>
+          <strong>{t("The till says: {asks}", { asks: asks(limits, t) })}</strong>
+        </p>
+      )}
+      {!group && (
+        <div className="grid" style={{ gap: 6 }} data-testid="group-choices">
+          <div className="muted" style={{ fontSize: ".85rem" }}>
+            {t("The choices, and what each adds to the price (0 if it is free)")}
+          </div>
+          {choices.map((c, i) => (
+            <div key={c.key} className="choice-row" data-testid="group-choice">
+              <input
+                style={inputStyle}
+                value={c.name}
+                maxLength={60}
+                placeholder={t("e.g. Oat milk")}
+                aria-label={t("Choice {n}", { n: i + 1 })}
+                onChange={(e) => putChoice(c.key, { name: e.target.value })}
+              />
+              <input
+                style={inputStyle}
+                dir="rtl"
+                value={c.ar}
+                maxLength={60}
+                placeholder="العربية"
+                aria-label={`${t("Choice {n}", { n: i + 1 })} · العربية`}
+                onChange={(e) => putChoice(c.key, { ar: e.target.value })}
+              />
+              <input
+                style={inputStyle}
+                dir="rtl"
+                value={c.ckb}
+                maxLength={60}
+                placeholder="کوردی"
+                aria-label={`${t("Choice {n}", { n: i + 1 })} · کوردی`}
+                onChange={(e) => putChoice(c.key, { ckb: e.target.value })}
+              />
+              <input
+                style={inputStyle}
+                inputMode="decimal"
+                value={c.price}
+                placeholder={t("+ IQD")}
+                aria-label={t("Price of choice {n}", { n: i + 1 })}
+                onChange={(e) => putChoice(c.key, { price: e.target.value })}
+              />
+              <button
+                type="button"
+                className="pf-remove"
+                aria-label={t("Remove choice {n}", { n: i + 1 })}
+                onClick={() => setChoices((cs) => cs.filter((x) => x.key !== c.key))}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          <div>
+            <button
+              type="button"
+              onClick={() => setChoices((cs) => [...cs, choiceDraft()])}
+              data-testid="group-choice-add"
+            >
+              {t("+ Another choice")}
+            </button>
+          </div>
+          <p className="pf-hint" style={{ margin: 0 }}>
+            {t(
+              "What each choice uses from stock (the oat milk, say) is set afterwards with What it uses…",
+            )}
+          </p>
+        </div>
+      )}
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         <button
           className="btn-primary"

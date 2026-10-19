@@ -6990,3 +6990,134 @@ kbd {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ------------------------------------------------- add-ons, round fourteen */
+/* A group's rule as three cards, in place of the fewest and the most. */
+.rule-cards {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+}
+.rule-cards legend {
+  font-size: 0.85rem;
+  font-weight: 650;
+  margin-bottom: 6px;
+}
+.rule-card {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.rule-card input[type="radio"] {
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 12px;
+  accent-color: var(--brand);
+}
+.rule-card.on {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+.rule-card .muted {
+  font-size: 0.8rem;
+}
+.rule-upto {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+.rule-upto input {
+  width: 64px;
+  min-height: 32px;
+}
+/* A new group's choices: three names, a price, and a way to take one out. */
+.choice-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.4fr) minmax(90px, 1fr) minmax(90px, 1fr) 96px 36px;
+  gap: 6px;
+  align-items: center;
+}
+/* On a phone: the English name across, the Arabic and Kurdish under it, then the price. */
+@media (max-width: 640px) {
+  .choice-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "name name"
+      "ar ckb"
+      "price rm";
+    padding-block-end: 8px;
+    border-block-end: 1px solid var(--border);
+  }
+  .choice-row > :nth-child(1) {
+    grid-area: name;
+  }
+  .choice-row > :nth-child(2) {
+    grid-area: ar;
+  }
+  .choice-row > :nth-child(3) {
+    grid-area: ckb;
+  }
+  .choice-row > :nth-child(4) {
+    grid-area: price;
+  }
+  .choice-row > :nth-child(5) {
+    grid-area: rm;
+    justify-self: end;
+  }
+}
+.ready-groups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.ready-groups .chip {
+  min-height: 34px;
+  font-size: 0.85rem;
+}
+/* At the till: a must-pick group marked until it is answered; optional ones folded shut. */
+.options-sheet .addon-group.must {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid color-mix(in srgb, var(--err) 35%, var(--border));
+}
+.options-sheet .addon-group.must:has(.addon-done) {
+  border-color: color-mix(in srgb, var(--ok) 40%, var(--border));
+}
+.options-sheet details.addon-group.optional {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+.options-sheet details.addon-group.optional > summary {
+  cursor: pointer;
+  margin: 0;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.options-sheet details.addon-group.optional[open] > summary {
+  margin-bottom: 8px;
+}
+.options-sheet .addon-chip .addon-name {
+  min-height: 52px;
+  padding: 0 18px;
+  font-size: 1rem;
+}
+.options-sheet .addon-chip .addon-more {
+  min-width: 48px;
+  min-height: 52px;
+}

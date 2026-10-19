@@ -404,11 +404,18 @@ type part of its name and pick it from the list: its unit fills itself in.
 - **Sizes and add-ons** (Products, `0041`): on a product's **Sizes & prices**
   tab, **+ Add a size** adds a Large beside the Regular, at its own prices,
   copying the Regular's recipe to change afterwards, or with its own.
-  Add-ons are set up from each product's own **Add-ons** tab:
-  **+ New group for Latte** makes a group the till asks for and offers it with
-  that product at once — **Milk**, the fewest 1 and the most 1, so no latte is
-  rung up without its milk; **Extras**, the fewest 0 and the most 3. Give each
-  add-on its price per channel and what one uses, right there. A group is
+  Add-ons are set up from each product's own **Add-ons** tab. Tap a
+  **Ready-made** group (Milk, Extra shots, Syrups, Sugar, Ice, Toppings) to
+  start with its choices already named in the three languages, or
+  **+ New group for Latte** for your own. Choose how customers pick with one
+  of three cards: **Must pick one** (the milk: no latte is rung up without
+  it), **Optional, one only** (a syrup) or **Optional, several**, up to a
+  number or as many as they like (toppings). Type the choices and what each
+  adds to the price (0 if it is free), and **Add the group**: it is offered
+  with that product at once. What each choice uses from stock (the oat milk)
+  is set afterwards with **What it uses…**. At the till a must-pick group is
+  marked in red until it is answered, then ticked; optional groups are folded
+  shut, a tap opens them. A group is
   shared: tick **Milk** on the cappuccino's Add-ons tab (**Choose the
   add-ons…**) and both offer the same milks; each group says which other
   products offer it, and a change made from one product changes it for all of
