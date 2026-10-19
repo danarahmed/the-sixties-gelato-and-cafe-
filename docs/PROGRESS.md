@@ -2375,6 +2375,15 @@ Built and tested:
   after the password the app asks for the code before any page, and the
   database itself refuses a session that has not given it. Turned off from
   the same card. Tested: `two_step` (SQL) and the browser suite `twostep`.
+- **Round twenty-four: the books completed (`0081`).** Accounting shows the
+  **Equipment**: each piece, what it cost, its share a month and what it is
+  worth now; its depreciation for the months gone posted with one press;
+  sold or thrown out with the loss or gain worked out. **The owner's money**:
+  what was put in and taken out, and either done in two taps. The chart adds
+  another bank, a loan and a kind of equipment. Every CSV opens in Excel with
+  its Arabic and Kurdish right. Not done: a price between places for what one
+  sends another, and a balance sheet for each place. Tested: `equipment`
+  (SQL) and the browser suite `equipment`.
 
 ## The August 2026 audit, finding by finding
 

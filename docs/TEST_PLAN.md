@@ -557,6 +557,14 @@ key is sent, spaces taken out, read by the till; one size only; too short or
 with other signs refused; a scale's short code; taken off; a cashier sets
 none; each change audited.
 
+`equipment.test.sql` (round twenty-four, `0081`): an oven bought from the
+bank, once whatever its key is sent; no cost, no months, a worth at the end
+over the cost, a day to come refused; a fridge in the books already posts
+nothing; three months gone posted, 50,000 and 25,000 a month, once; the oven
+worth 1,050,000; the fridge sold for 200,000, a loss of 50,000, once; a bank,
+a loan and a kind of equipment added in their ranges and read by the cash
+flow; a mixer bought with the loan; a cashier neither posts nor reads it.
+
 `two_step.test.sql` (round twenty-three, `0080`): with no second step the
 password is enough, as before; with one confirmed, a password-only session is
 refused by the database and its tables show nothing; with the code given it
@@ -677,6 +685,10 @@ database, behind a small local stand-in for Supabase's auth service.
 - `barcodes` (round twenty, `0078`): the owner gives the water its barcode
   and prints its label, drawn in bars; at the till a scan adds it, never as a
   count; a code no size has is said so.
+- `equipment` (round twenty-four, `0081`): the owner adds an oven bought two
+  months ago from the bank, posts its two months' depreciation with one
+  press, adds another bank to the chart, puts money in, and downloads a CSV
+  that starts with Excel's mark.
 - `twostep` (round twenty-three, `0080`): the owner turns on the second
   step from Account with a code from the app, signs out, signs in with the
   password, is asked for the code before any page, a wrong code is refused,

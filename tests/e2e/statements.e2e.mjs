@@ -98,7 +98,7 @@ console.log("▸ the owner: the balance sheet at the end of today, and the cash 
   );
 
   const bs = await page.request.get(`${BASE}/reports/export?report=balance_sheet&on=${today}`);
-  const bsCsv = await bs.text();
+  const bsCsv = (await bs.text()).replace(/^\uFEFF/, "");
   check(
     bs.ok() &&
       bsCsv.startsWith("section,group,code,account,amount") &&
@@ -108,7 +108,7 @@ console.log("▸ the owner: the balance sheet at the end of today, and the cash 
   const cf = await page.request.get(
     `${BASE}/reports/export?report=cash_flow&from=${today}&to=${today}`,
   );
-  const cfCsv = await cf.text();
+  const cfCsv = (await cf.text()).replace(/^\uFEFF/, "");
   check(
     cf.ok() &&
       cfCsv.startsWith("section,line,code,account,in,out,amount") &&

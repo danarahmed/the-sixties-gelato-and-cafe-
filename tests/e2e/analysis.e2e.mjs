@@ -107,7 +107,7 @@ console.log("▸ the owner: today's sales by product, by the hour, by payment an
   const res = await page.request.get(
     `${BASE}/reports/export?report=sales_analysis&from=${today}&to=${today}&by=product`,
   );
-  const csv = await res.text();
+  const csv = (await res.text()).replace(/^\uFEFF/, "");
   check(
     res.ok() && csv.startsWith("product,product_name,orders,qty,gross,discount,net,cost,margin"),
     "the analysis downloads as CSV",

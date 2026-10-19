@@ -375,7 +375,7 @@ console.log("▸ the owner reads who changed what, with the values before and af
   );
 
   const res = await page.request.get(`${BASE}/reports/export?report=audit&group=suppliers`);
-  const body = await res.text();
+  const body = (await res.text()).replace(/^\uFEFF/, "");
   check(
     res.ok() &&
       (res.headers()["content-type"] ?? "").includes("text/csv") &&

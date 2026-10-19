@@ -242,7 +242,7 @@ console.log("▸ the books by place: each place's profit and loss, side by side 
     "the places add up to the café's net revenue, as the profit and loss has it",
   );
   const res = await page.request.get(`${BASE}/reports/export?report=pnl_by_place`);
-  const csv = await res.text();
+  const csv = (await res.text()).replace(/^\uFEFF/, "");
   check(
     res.ok() &&
       csv.startsWith("code,account,section,place,amount") &&

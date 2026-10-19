@@ -196,6 +196,10 @@ const ACTION_LABEL: Record<string, string> = {
   // End-of-day markdowns (0079).
   "price.markdown": "Marked down",
   "price.markdown_stop": "Markdown stopped",
+  // Equipment (0081).
+  "asset.add": "Equipment added",
+  "asset.depreciate": "Depreciation posted",
+  "asset.dispose": "Equipment sold or thrown out",
   "sale.giveaway": "Given away at the till",
   "bill.cancel": "Open bill cancelled",
   "bill.discount": "Discount on an open bill",

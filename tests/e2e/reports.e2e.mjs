@@ -100,7 +100,7 @@ console.log("▸ owner: the reports agree, and each figure opens");
     res.ok() && (res.headers()["content-type"] ?? "").includes("text/csv"),
     "every journal line downloads as CSV",
   );
-  const rows = parseCsv(await res.text()).filter((r) => r.length > 1);
+  const rows = parseCsv((await res.text()).replace(/^\uFEFF/, "")).filter((r) => r.length > 1);
   const [header, ...lines] = rows;
   check(header.slice(0, 4).join(",") === "journal_no,when,day,account", "with its columns named");
   const debit = lines.reduce((s, r) => s + Number(r[5]), 0);
@@ -200,7 +200,7 @@ console.log("▸ owner reads the exceptions, by person (0028)");
   const manager = ex.getByTestId("exceptions-by-person").locator("tr", { hasText: "Demo Manager" });
   check((await manager.count()) === 1, "each person's exceptions are counted together");
   const res = await page.request.get(`${BASE}/reports/export?report=exceptions`);
-  const rows = parseCsv(await res.text());
+  const rows = parseCsv((await res.text()).replace(/^\uFEFF/, ""));
   check(
     res.ok() &&
       rows[0]?.join(",") ===

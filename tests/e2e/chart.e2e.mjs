@@ -224,7 +224,8 @@ console.log("▸ the audit trail");
   await open(page, "/audit?group=books");
   const trail = await page.getByTestId("audit-trail").textContent();
   check(
-    (await page.locator('tr[data-action="account.create"]').count()) === 1 &&
+    (await page.locator('tr[data-action="account.create"]').filter({ hasText: "6010" }).count()) ===
+      1 &&
       (await page.locator('tr[data-action="account.rename"]').count()) === 1 &&
       (await page.locator('tr[data-action="account.in_use"]').count()) === 2,
     "each change is on the trail, under Books & periods",

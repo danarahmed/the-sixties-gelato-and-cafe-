@@ -18,6 +18,9 @@ import { businessToday, monthEnd, monthStart } from "@/lib/dates";
 import { PeriodControl } from "@/components/books/PeriodControl";
 import { ChartOfAccounts } from "@/components/books/ChartOfAccounts";
 import { Icon } from "@/components/Icon";
+import { getEquipment, getOwnerMoney } from "@/lib/db/equipment";
+import { EquipmentCard } from "@/components/books/EquipmentCard";
+import { OwnerMoneyCard } from "@/components/books/OwnerMoneyCard";
 
 export const dynamic = "force-dynamic";
 
@@ -50,10 +53,13 @@ export default async function AccountingPage({
     has(profile, "accounting.period.lock") ||
     has(profile, "accounting.post") ||
     has(profile, "audit.view");
-  const [trial, checklist, accounts] = await Promise.all([
+  const [trial, checklist, accounts, equipment, ownerMoney] = await Promise.all([
     getTrialBalance(from, to),
     chosen && canSeeChecklist ? getCloseChecklist(chosen.id) : Promise.resolve([] as CheckRow[]),
     getGlAccounts(),
+    // The equipment and the owner's money (0081); null before it is applied.
+    has(profile, "profit.view") ? getEquipment() : Promise.resolve(null),
+    has(profile, "profit.view") ? getOwnerMoney() : Promise.resolve(null),
   ]);
 
   const totalDebit = trial.reduce((s, r) => s + r.debit, 0);
@@ -223,6 +229,19 @@ export default async function AccountingPage({
         </Link>
       </p>
 
+      {equipment && (
+        <EquipmentCard
+          board={equipment}
+          canPost={has(profile, "accounting.post")}
+          today={today}
+          loans={accounts
+            .filter((a) => a.code >= "2400" && a.code <= "2499")
+            .map((a) => ({ code: a.code, name: a.name }))}
+        />
+      )}
+      {ownerMoney && (has(profile, "day.close") || has(profile, "accounting.post")) && (
+        <OwnerMoneyCard invested={ownerMoney.putIn} drawn={ownerMoney.takenOut} />
+      )}
       <ChartOfAccounts
         accounts={accounts.map((a) => ({
           code: a.code,

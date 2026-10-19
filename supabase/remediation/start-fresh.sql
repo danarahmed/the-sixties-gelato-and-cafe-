@@ -116,6 +116,8 @@ begin
        || case when to_regclass('public.customer_invoice') is not null
                then ', customer_invoice, customer_payment' else '' end
        || case when to_regclass('public.price_markdown') is not null then ', price_markdown' else '' end
+       || case when to_regclass('public.fixed_asset') is not null
+               then ', asset_depreciation, depreciation_run, fixed_asset' else '' end
        || ' restart identity';
 end $$;
 

@@ -39,6 +39,7 @@ import preOrders from "./preOrders";
 import accounts from "./accounts";
 import barcodes from "./barcodes";
 import markdowns from "./markdowns";
+import equipment from "./equipment";
 import twoStep from "./twoStep";
 
 /**
@@ -82,6 +83,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   accounts,
   barcodes,
   markdowns,
+  equipment,
   twoStep,
 };
 
