@@ -72,6 +72,8 @@ Plan a short window when the café is closed.
 | Sell by weight (`0075`)                 | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0075`](#after-0075)). Before it the till sells every size by the piece                                                                                                                                                                                                                                                                                                       |
 | Pre-orders (`0076`)                     | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0076`](#after-0076)). Before it the till shows no Pre-orders button                                                                                                                                                                                                                                                                                                          |
 | Customers on account (`0077`)           | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0077`](#after-0077)). Before it the customers' pages show no account                                                                                                                                                                                                                                                                                                         |
+| Barcodes (`0078`)                       | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0078`](#after-0078)). Before it the till reads no barcode                                                                                                                                                                                                                                                                                                                    |
+| End-of-day markdowns (`0079`)           | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0079`](#after-0079)). Before it nothing is marked down                                                                                                                                                                                                                                                                                                                       |
 
 ## 0. Before you start
 
@@ -3660,6 +3662,61 @@ It is applied by the owner, in Supabase's SQL editor, after `0076`:
 
 1. Open the file `supabase/migrations/0077_customer_accounts.sql` on GitHub,
    press **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0078`
+
+Migration `0078` is barcodes (round twenty): a size's barcode, read by the
+till's scanner, and printed on the café's own labels.
+
+What it changes:
+
+- **New column:** `product_variant.barcode` (4 to 32 letters and digits, once
+  in the café).
+- **New function:** `set_variant_barcode` (`recipe.edit`), keyed and on the
+  audit trail.
+- **Replaced:** `pos_catalogue` gives each size's barcode.
+- Nothing recorded changes.
+
+Before it is applied, Products & Recipes shows no barcode box and the till
+reads no scan. Rehearsed with `tests/sql/barcodes.test.sql` and the browser
+suite `barcodes`.
+
+It is applied by the owner, in Supabase's SQL editor, after `0077`:
+
+1. Open the file `supabase/migrations/0078_barcodes.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0079`
+
+Migration `0079` is end-of-day markdowns (round twenty-one): what must be
+sold today, sold off cheaper before it is thrown away.
+
+What it changes:
+
+- **New table:** `price_markdown` (a size so much off at a branch until a
+  time, on dine-in and take-away).
+- **New functions:** `mark_down`, `stop_markdown` and `markdown_suggestions`
+  (those who approve discounts or record production), keyed and audited.
+- **Replaced:** `price_on` (a running markdown's price, on dine-in and
+  take-away, today) and `pos_catalogue` (by how much a size is marked down).
+- Nothing recorded changes.
+
+Before it is applied, nothing is marked down and Production shows no "Sell it
+before it goes" card. Rehearsed with `tests/sql/markdowns.test.sql` and the
+browser suite `markdowns`.
+
+It is applied by the owner, in Supabase's SQL editor, after `0078`:
+
+1. Open the file `supabase/migrations/0079_markdowns.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run
    it anyway.

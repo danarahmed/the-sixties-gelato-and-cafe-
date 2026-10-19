@@ -2054,6 +2054,24 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### End-of-day markdowns (`0079`)
+
+- **`price_markdown`**: a size sold so much off (5% to 90%, whole) at a
+  branch, from when it was set until the end of the café's day (or a time
+  given), on dine-in and take-away; stopped by hand, or by its end. `price_on`
+  gives the marked-down price while one runs, so the till, an open bill and
+  the sale read one price.
+- **Functions:** `mark_down`, `stop_markdown`, `markdown_suggestions` (the
+  lots whose use-by ends today, the sizes that sell them, servings left, and
+  a suggested percentage by the hours left).
+
+### Barcodes (`0078`)
+
+- **`product_variant.barcode`**: the size's barcode (4 to 32 letters and
+  digits, once in the café). A size sold by weight carries its scale's short
+  code; the till reads a scale's label (`2…`, 13 digits) as that size and its
+  weight. `set_variant_barcode` sets it; `pos_catalogue` gives it.
+
 ### Customers on account (`0077`)
 
 - **`customer`** gains `on_account` (they may buy and pay later),

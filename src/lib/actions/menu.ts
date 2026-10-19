@@ -326,6 +326,36 @@ export async function setVariantWeighedAction(
   return { ok: true, data: null };
 }
 
+const barcodeInput = z.object({
+  variantId: id("a size"),
+  barcode: z
+    .string()
+    .transform((v) => v.replace(/\s+/g, ""))
+    .refine(
+      (v) => v === "" || /^[0-9A-Za-z.-]{4,32}$/.test(v),
+      "A barcode is 4 to 32 letters and digits",
+    ),
+});
+
+/** A size's barcode (0078): set, changed, or taken off (empty). */
+export async function setVariantBarcodeAction(
+  input: z.input<typeof barcodeInput>,
+  key: string,
+): Promise<ActionResult<null>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(barcodeInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc("set_variant_barcode", {
+    p_variant: v.data.variantId,
+    p_barcode: v.data.barcode || null,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...MENU_PATHS);
+  return { ok: true, data: null };
+}
+
 const detailsInput = z.object({
   productId: id("a product"),
   name: text("Product name", 120),

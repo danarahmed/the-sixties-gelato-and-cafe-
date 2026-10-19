@@ -30,6 +30,8 @@ import { batchCost, perUnit, showIn, showNice, unitLabel } from "@/components/pr
 import { Icon } from "@/components/Icon";
 import { getPreOrders } from "@/lib/db/preOrders";
 import { PreOrdersToMake } from "@/components/production/PreOrdersToMake";
+import { getMarkdowns } from "@/lib/db/markdowns";
+import { MarkdownsCard } from "@/components/production/MarkdownsCard";
 
 export const dynamic = "force-dynamic";
 
@@ -60,17 +62,20 @@ export default async function ProductionPage({
       : null;
   // Batches are made, planned and kept at this device's place (AB).
   const { places, place, at } = await placeChoice();
-  const [recipes, batches, items, costs, board, plan, lots, preOrders] = await Promise.all([
-    getBatchRecipes(),
-    getBatches(50),
-    getItems(),
-    seesCost ? getItemCosts() : Promise.resolve(new Map<string, string>()),
-    seesCost ? getStockBoard(at) : Promise.resolve([]),
-    getProductionPlan(planDay, at),
-    getProductionLots(at),
-    // What customers ordered ahead (0076); none before it is applied.
-    getPreOrders(at),
-  ]);
+  const [recipes, batches, items, costs, board, plan, lots, preOrders, markdowns] =
+    await Promise.all([
+      getBatchRecipes(),
+      getBatches(50),
+      getItems(),
+      seesCost ? getItemCosts() : Promise.resolve(new Map<string, string>()),
+      seesCost ? getStockBoard(at) : Promise.resolve([]),
+      getProductionPlan(planDay, at),
+      getProductionLots(at),
+      // What customers ordered ahead (0076); none before it is applied.
+      getPreOrders(at),
+      // What must be sold today, to mark down (0079); none before it is applied.
+      has(profile, "discount.approve") || canRecord ? getMarkdowns(at) : Promise.resolve(null),
+    ]);
 
   const itemOpts: ItemOpt[] = items.map((i) => ({
     id: i.id,
@@ -196,6 +201,7 @@ export default async function ProductionPage({
         </Link>
       )}
       <TourOffer tourKey="production" />
+      {markdowns && <MarkdownsCard board={markdowns} timezone={profile.timezone} />}
       {preOrders && (
         <PreOrdersToMake
           list={preOrders}

@@ -37,6 +37,8 @@ import sections from "./sections";
 import weight from "./weight";
 import preOrders from "./preOrders";
 import accounts from "./accounts";
+import barcodes from "./barcodes";
+import markdowns from "./markdowns";
 
 /**
  * The areas' phrase books; "db" holds what the database refuses with, "alerts"
@@ -77,6 +79,8 @@ export const BOOKS: Record<string, PhraseBook> = {
   weight,
   preOrders,
   accounts,
+  barcodes,
+  markdowns,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

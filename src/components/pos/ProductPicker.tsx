@@ -11,6 +11,7 @@ import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { PosItem } from "@/lib/db/pos";
 import { fmtIQD } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { readScan } from "@/lib/barcode";
 import {
   categoryName,
   fold,
@@ -163,6 +164,10 @@ export function ProductPicker({
   const [hl, setHl] = useState(0);
   const [help, setHelp] = useState(false);
   const search = useRef<HTMLInputElement>(null);
+  // A barcode scanner types its code faster than anyone can, then Enter (0078):
+  // keys that come within 40 ms of each other are a scan, not a count.
+  const scanned = useRef({ buf: "", at: 0 });
+  const [scanMiss, setScanMiss] = useState<string | null>(null);
 
   const sellable = useMemo(
     () => items.filter((i) => i.prices[channel] !== undefined),
@@ -269,9 +274,22 @@ export function ProductPicker({
         setTimes("");
         setQuery("");
         setHelp(false);
+      } else if (e.key === "Enter" && scanned.current.buf.length >= 4) {
+        // The end of a scan.
+        e.preventDefault();
+        const code = scanned.current.buf;
+        scanned.current = { buf: "", at: 0 };
+        scan(code);
       } else if (/^[0-9]$/.test(e.key)) {
         e.preventDefault();
-        setTimes((n) => (n + e.key).replace(/^0+/, "").slice(0, 2));
+        const now = performance.now();
+        const sc = scanned.current;
+        const fast = now - sc.at < 40;
+        sc.buf = fast ? sc.buf + e.key : e.key;
+        sc.at = now;
+        // A scan is not a count: the digits go to the scan, not to "how many".
+        if (fast) setTimes("");
+        else setTimes((n) => (n + e.key).replace(/^0+/, "").slice(0, 2));
       } else if (e.key === "Backspace" && times) {
         e.preventDefault();
         setTimes((n) => n.slice(0, -1));
@@ -293,6 +311,33 @@ export function ProductPicker({
     const gone = setTimeout(() => setTimes(""), 10_000);
     return () => clearTimeout(gone);
   }, [times]);
+
+  /** A scan (0078): the size with that barcode, or a scale's label, its size and weight. */
+  function scan(code: string): boolean {
+    const hit = readScan(
+      code,
+      sellable.map((i) => ({
+        variantId: i.variantId,
+        barcode: i.barcode ?? null,
+        soldByWeight: i.soldByWeight === true,
+      })),
+    );
+    if (!hit) {
+      setScanMiss(code);
+      return false;
+    }
+    setScanMiss(null);
+    setTimes("");
+    const item = sellable.find((i) => i.variantId === hit.variantId)!;
+    if (disabled) return true;
+    if (hit.kg !== null) onAdd(item.variantId, [], hit.kg);
+    else if (addons.groupsFor(item.productId, item.variantId).length > 0) {
+      const product = everything.find((p) => p.productId === item.productId);
+      if (product) setChoosing({ product: { ...product, variants: [item] }, qty: 1 });
+    } else if (item.soldByWeight) setWeighing({ item, addons: [] });
+    else onAdd(item.variantId, [], 1);
+    return true;
+  }
 
   /** Add a product: as many as typed first, or asked in the search; then the count is done with. */
   function pick(p: Product) {
@@ -352,7 +397,14 @@ export function ProductPicker({
           }}
           onKeyDown={(e) => {
             const chosen = shown[lit];
-            if (e.key === "Enter" && chosen) {
+            if (
+              e.key === "Enter" &&
+              /^[0-9A-Za-z.-]{4,32}$/.test(query.trim()) &&
+              shown.length === 0
+            ) {
+              e.preventDefault();
+              if (scan(query.trim())) setQuery("");
+            } else if (e.key === "Enter" && chosen) {
               e.preventDefault();
               pick(chosen);
               setQuery("");
@@ -366,6 +418,11 @@ export function ProductPicker({
         {(asked.times ?? Number(times)) > 0 && (
           <span className="kb-times" data-testid="kb-times" aria-live="polite">
             × {asked.times ?? Number(times)}
+          </span>
+        )}
+        {scanMiss && (
+          <span className="red kb-scan-miss" role="alert" data-testid="scan-miss">
+            {t("No product has the barcode {code}", { code: scanMiss })}
           </span>
         )}
         {query && (
@@ -506,6 +563,11 @@ export function ProductPicker({
                     {p.item.isFavourite && (
                       <span className="tile-fav" aria-hidden>
                         ★
+                      </span>
+                    )}
+                    {p.variants.some((v) => v.markdownPercent) && (
+                      <span className="tile-markdown" data-testid="tile-markdown">
+                        −{Math.max(...p.variants.map((v) => v.markdownPercent ?? 0))}%
                       </span>
                     )}
                     <span className="tile-name">{name}</span>

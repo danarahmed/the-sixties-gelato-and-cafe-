@@ -26,6 +26,10 @@ export interface PosItem {
   sectionPosition?: number | null;
   /** Sold by the kilo (0075): its price is a kilo's, its quantity a weight. */
   soldByWeight?: boolean;
+  /** Its barcode (0078), read by the till's scanner; null when it has none. */
+  barcode?: string | null;
+  /** Marked down now (0079): by this percentage; its prices are the marked-down ones already. */
+  markdownPercent?: number | null;
 }
 
 /** An add-on on the till (0041): its names, and its price today on each channel it sells on. */
@@ -127,6 +131,8 @@ export async function getPosCatalogue(place: string | null = null): Promise<PosI
       sectionCkb: strOrNull(r.section_ckb),
       sectionPosition: numOrNull(r.section_position),
       soldByWeight: r.sold_by_weight === true,
+      barcode: r.barcode == null ? null : String(r.barcode),
+      markdownPercent: r.markdown_percent == null ? null : Number(r.markdown_percent),
     };
   });
 }

@@ -191,6 +191,11 @@ const ACTION_LABEL: Record<string, string> = {
   "customer.account": "A customer's account set",
   "customer.invoice": "Invoice made",
   "customer.payment": "Payment received from a customer",
+  // Barcodes (0078).
+  "variant.barcode": "Barcode set",
+  // End-of-day markdowns (0079).
+  "price.markdown": "Marked down",
+  "price.markdown_stop": "Markdown stopped",
   "sale.giveaway": "Given away at the till",
   "bill.cancel": "Open bill cancelled",
   "bill.discount": "Discount on an open bill",
@@ -477,6 +482,7 @@ const FIELD_LABEL: Record<string, string> = {
   terms_days: "Days to pay",
   wholesale_percent: "Wholesale % off",
   due_on: "Due on",
+  barcode: "Barcode",
   min_select: "Fewest to choose",
   max_select: "Most to choose",
   group_id: "Group of add-ons",
