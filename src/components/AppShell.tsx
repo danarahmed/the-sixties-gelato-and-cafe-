@@ -8,6 +8,7 @@ import type { Locale } from "@/lib/i18n/core";
 import { NAV, activeHref, holdsAny } from "@/lib/auth/routes";
 import { BrandMark, Icon, type IconName } from "@/components/Icon";
 import { TourMenuItem, TourRunner } from "@/components/Tour";
+import { ProblemButton } from "@/components/ProblemButton";
 
 /** Each screen's icon in the menu, beside its name. */
 const NAV_ICONS: Record<string, IconName> = {
@@ -313,6 +314,27 @@ export function AppShell({
               {t("nav.account")}
             </Link>
             <TourMenuItem />
+            <Link
+              href="/devices"
+              className={pathname === "/devices" ? "active" : ""}
+              aria-current={pathname === "/devices" ? "page" : undefined}
+              data-testid="devices-link"
+            >
+              <Icon name="print" size={18} />
+              {t("Test your devices")}
+            </Link>
+            <ProblemButton />
+            {holdsAny(member.permissions, ["audit.view", "settings.manage"]) && (
+              <Link
+                href="/problems"
+                className={pathname === "/problems" ? "active" : ""}
+                aria-current={pathname === "/problems" ? "page" : undefined}
+                data-testid="problems-link"
+              >
+                <Icon name="orders" size={18} />
+                {t("Reported problems")}
+              </Link>
+            )}
           </div>
         </nav>
         <main className="content" id="content" tabIndex={-1}>

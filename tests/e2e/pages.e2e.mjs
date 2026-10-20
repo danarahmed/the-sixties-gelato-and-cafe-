@@ -30,6 +30,8 @@ const PAGES = [
   "/reports",
   "/audit",
   "/settings",
+  "/problems",
+  "/devices",
   "/account",
 ];
 const browser = await chromium.launch();
@@ -76,7 +78,7 @@ for (const who of ["owner", "manager", "cashier", "counter"]) {
     else if (res.status() >= 500) problems.push(`${p}: HTTP ${res.status()}`);
     else if (menu.includes(p) && path !== p)
       problems.push(`${p}: offered but redirected to ${path}`);
-    else if (!menu.includes(p) && p !== "/account" && path === p)
+    else if (!menu.includes(p) && p !== "/account" && p !== "/devices" && path === p)
       problems.push(`${p}: not offered but shown`);
   }
   check(
@@ -87,7 +89,10 @@ for (const who of ["owner", "manager", "cashier", "counter"]) {
 }
 
 // What each role is offered, exactly.
-const expected = { cashier: ["/pos", "/account"], counter: ["/count", "/account"] };
+const expected = {
+  cashier: ["/pos", "/account", "/devices"],
+  counter: ["/count", "/account", "/devices"],
+};
 for (const [who, want] of Object.entries(expected)) {
   const { ctx, page } = await signIn(browser, who);
   const menu = await page.$$eval("nav.sidenav a", (as) => as.map((a) => a.getAttribute("href")));

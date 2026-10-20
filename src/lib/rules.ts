@@ -16,6 +16,7 @@ export const RULE_ORDER = [
   "usd_rate_max_age_hours",
   "usd_round_to",
   "po_approve_up_to",
+  "transfer_markup_percent",
   "overtime_percent",
   "late_after_minutes",
   "clocked_in_alert_hours",
@@ -49,6 +50,7 @@ export const RULE_LABEL: Record<RuleKey, string> = {
   loyalty_point_per: "A customer earns a point for every",
   loyalty_reward_points: "A reward takes",
   loyalty_reward_value: "A reward is worth",
+  transfer_markup_percent: "Stock sent to another branch is charged at cost plus (%)",
 };
 
 /** What each rule does: a phrase, shown through t(). */
@@ -91,6 +93,8 @@ export const RULE_HELP: Record<RuleKey, string> = {
     "The points one reward takes. A customer takes as many rewards as their points come to, if the bill comes to at least what they take off.",
   loyalty_reward_value:
     "What one reward takes off a bill: it is the bill's discount (4100), taken whole.",
+  transfer_markup_percent:
+    "What a branch charges another for stock it sends: its cost and this share on top. What is added is the sending branch's revenue and the receiving branch's cost in the profit by branch; within the café it is the same money, so the café's own books do not change. Set for a branch, it is what that branch charges. 0 is at cost.",
 };
 
 /** The choices of a choice rule: phrases, shown through t(). */

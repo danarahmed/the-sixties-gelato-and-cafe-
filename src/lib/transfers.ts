@@ -33,6 +33,9 @@ export interface Transfer {
   value: number;
   valueReceived: number | null;
   valueShort: number | null;
+  /** The share added at the transfer price when it was received (0084), and what it added. */
+  markupPercent: number;
+  margin: number;
   sentAt: string;
   sentBy: string | null;
   receivedAt: string | null;
@@ -77,6 +80,8 @@ export function transfersFrom(raw: unknown): Transfer[] {
     value: n(t.value),
     valueReceived: nOrNull(t.value_received),
     valueShort: nOrNull(t.value_short),
+    markupPercent: n(t.markup_percent),
+    margin: n(t.margin),
     sentAt: s(t.sent_at),
     sentBy: sOrNull(t.sent_by),
     receivedAt: sOrNull(t.received_at),

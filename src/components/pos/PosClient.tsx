@@ -10,6 +10,7 @@ import { listApproversAction, requestApprovalAction, type Approver } from "@/lib
 import {
   cancelBillAction,
   payBillAction,
+  payBillOfflineAction,
   printBillAction,
   saveBillAction,
   splitBillAction,
@@ -95,12 +96,17 @@ import { changeGiven, type Payment } from "@/lib/payments";
 import { RATE_REFUSED } from "@/lib/fx";
 import { Icon } from "@/components/Icon";
 import {
+  keptId,
+  loadKeptBills,
   loadOffline,
   nextOfflineNo,
   offlineBlock,
   offlineTotals,
   priceChanged,
+  saveKeptBills,
   saveOffline,
+  type BillSave,
+  type KeptBill,
   type OfflineSale,
 } from "./offline";
 import { OfflineDialog, OfflineStrip } from "./OfflinePanel";
@@ -434,6 +440,17 @@ export function PosClient({
   // the database answered the last time the till asked. The browser can say it
   // is online while the café's internet is down; the till goes by its answers.
   const [offline, setOffline] = useState<OfflineSale[]>([]);
+  // Bills changed while the connection was down (0082): kept, saved when it is back.
+  const [kept, setKept] = useState<KeptBill[]>([]);
+  const keptHere = kept.filter(
+    (b) => b.place === null || tillPlace === null || b.place === tillPlace,
+  );
+  const keptWaiting = keptHere.filter((b) => b.error === null).length;
+  const keptAttention = keptHere.length - keptWaiting;
+  // Bills paid on this till while offline: they leave the tables at once.
+  const paidOffline = new Set(
+    offline.flatMap((x) => (x.tab ? [x.tab.id] : [])) as (string | null)[],
+  );
   const [reachable, setReachable] = useState(true);
   const [sending, setSending] = useState(false);
   const connected = online && reachable;
@@ -528,8 +545,10 @@ export function PosClient({
   // sent as soon as it does, and every half minute while any waits.
   useEffect(() => {
     setOffline(loadOffline());
+    setKept(loadKeptBills());
     const onStorage = (e: StorageEvent) => {
       if (e.key === null || e.key.startsWith("sixties.pos.offline")) setOffline(loadOffline());
+      if (e.key === null || e.key.startsWith("sixties.pos.keptBills")) setKept(loadKeptBills());
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -550,11 +569,11 @@ export function PosClient({
     return () => window.clearInterval(probe);
   }, [reachable, online]);
   useEffect(() => {
-    if (!connected || held.waiting === 0) return;
+    if (!connected || held.waiting + keptWaiting === 0) return;
     void sendRef.current();
     const again = window.setInterval(() => void sendRef.current(), 30000);
     return () => window.clearInterval(again);
-  }, [connected, held.waiting]);
+  }, [connected, held.waiting, keptWaiting]);
 
   // A payment left unconfirmed before a reload is brought back for its retry.
   useEffect(() => {
@@ -636,8 +655,12 @@ export function PosClient({
    * submission; with no answer it is sent again, with the same key, and a
    * change the database already made is answered, not made twice.
    */
+  /** The last change sent got no answer: the connection is down, as far as the till knows. */
+  const noAnswer = useRef(false);
   async function run<T>(label: string, fn: (key: string) => Promise<Result<T>>): Promise<T | null> {
+    noAnswer.current = false;
     if (!navigator.onLine) {
+      noAnswer.current = true;
       setMsg({ ok: false, text: t("pos.offlineBlocked") });
       return null;
     }
@@ -647,12 +670,14 @@ export function PosClient({
     try {
       const r = await op.run(label, fn);
       if (!r.ok) {
+        if (r.uncertain) noAnswer.current = true;
         setMsg({ ok: false, text: r.error });
         if (approvalRefused(r.error)) dropApproval();
         return null;
       }
       return r.data;
     } catch {
+      noAnswer.current = true;
       setMsg({ ok: false, text: t("pos.noAnswer") });
       return null;
     } finally {
@@ -895,28 +920,55 @@ export function PosClient({
    * now has it. A till that prints by itself sends the bar a ticket for what
    * changed, unless the caller prints it (the Barista ticket button).
    */
+  /** What saving the bill sends: kept as it is when the connection is down (0082). */
+  function billSave(o: Order): BillSave {
+    return {
+      tabId: o.tabId,
+      version: o.version,
+      channel: o.channel,
+      tableId: o.tableId,
+      label: o.label?.trim() || null,
+      lines: o.lines.map((l) => ({
+        variantId: l.variantId,
+        qty: String(l.qty),
+        note: l.note,
+        addons: l.addons.map(({ modifierId, qty }) => ({ modifierId, qty })),
+      })),
+      ...discountParams(o.discount),
+      ...discountWhy(o.discount),
+      customer: o.customer ? { id: o.customer.id, addressId: o.customer.addressId } : null,
+    };
+  }
+
+  /**
+   * Keep the bill's changes on this till while the connection is down (0082):
+   * the bill is this till's own until they are saved, once it is back.
+   */
+  function keepBill(o: Order) {
+    const list = loadKeptBills();
+    const id = keptId(o) ?? `local-${crypto.randomUUID()}`;
+    const order = o.tabId ? o : { ...o, localId: id };
+    const prev = list.find((b) => b.id === id);
+    const same = prev && JSON.stringify(billSave(prev.order)) === JSON.stringify(billSave(order));
+    const next: KeptBill = {
+      id,
+      order,
+      // The same changes are sent with the same key; new ones with a new key.
+      saveKey: same && prev ? prev.saveKey : crypto.randomUUID(),
+      keptAt: new Date().toISOString(),
+      place: tillPlace,
+      error: null,
+    };
+    if (!saveKeptBills([...list.filter((b) => b.id !== id), next])) return false;
+    setKept(loadKeptBills());
+    return true;
+  }
+
+  /** The bill kept on this till for a bill or a table, if any. */
+  const keptFor = (id: string | null) => (id ? kept.find((b) => b.id === id) : undefined);
+
   async function saveBill(o: Order, tellBar = true): Promise<Order | null> {
-    const data = await run(`save:${o.tabId ?? "new"}`, (key) =>
-      saveBillAction(
-        {
-          tabId: o.tabId,
-          version: o.version,
-          channel: o.channel,
-          tableId: o.tableId,
-          label: o.label?.trim() || null,
-          lines: o.lines.map((l) => ({
-            variantId: l.variantId,
-            qty: String(l.qty),
-            note: l.note,
-            addons: l.addons.map(({ modifierId, qty }) => ({ modifierId, qty })),
-          })),
-          ...discountParams(o.discount),
-          ...discountWhy(o.discount),
-          customer: o.customer ? { id: o.customer.id, addressId: o.customer.addressId } : null,
-        },
-        key,
-      ),
-    );
+    const data = await run(`save:${o.tabId ?? "new"}`, (key) => saveBillAction(billSave(o), key));
     if (!data) return null;
     const fresh = data.bills?.find((b) => b.tabId === data.tabId);
     const saved = fresh
@@ -946,16 +998,45 @@ export function PosClient({
     const cur = billRef.current;
     if (!cur) return true;
     if (!(cur.tabId === null && cur.lines.length === 0) && isDirty(cur)) {
-      if (!(await saveBill(cur))) return false;
+      if (!(await saveOrKeep(cur))) return false;
     }
     putBill(null);
     setShowBill(false);
     return true;
   }
 
+  /** Save the bill; with no connection, keep its changes on this till (0082). */
+  async function saveOrKeep(o: Order): Promise<boolean> {
+    if (navigator.onLine && reachable) {
+      if (await saveBill(o)) {
+        dropKept(keptId(o));
+        return true;
+      }
+      if (!noAnswer.current) return false;
+      setReachable(false);
+    }
+    if (!keepBill(o)) return false;
+    setMsg({
+      ok: true,
+      text: `${title(o)} — ${t("Kept on this till: saved when the internet is back")}`,
+    });
+    return true;
+  }
+
+  function dropKept(id: string | null) {
+    if (!id) return;
+    const list = loadKeptBills();
+    if (!list.some((b) => b.id === id)) return;
+    saveKeptBills(list.filter((b) => b.id !== id));
+    setKept(loadKeptBills());
+  }
+
   async function openTable(tb: DiningTable) {
     if (pending || busy) return;
-    const own = bills.filter((b) => b.tableId === tb.id);
+    const own = bills.filter((b) => b.tableId === tb.id && !paidOffline.has(b.tabId));
+    // A bill opened at this table while the connection was down (0082).
+    const local = keptHere.filter((b) => b.order.tabId === null && b.order.tableId === tb.id);
+    if (own.length === 0 && local.length === 1) return openKept(local[0]!.id);
     if (own.length > 1) {
       setDialog({ kind: "choose", table: tb });
       return;
@@ -983,7 +1064,26 @@ export function PosClient({
       return;
     }
     if (!(await leaveBill())) return;
-    putBill(orderFromBill(b));
+    putBill(keptFor(b.tabId)?.order ?? orderFromBill(b));
+    setShowBill(true);
+    setView("menu");
+    setReceipt(null);
+    setMsg(null);
+  }
+
+  /** A bill kept on this till (0082), opened as the till has it. */
+  async function openKept(id: string) {
+    if (pending || busy) return;
+    const k = keptFor(id);
+    if (!k) return;
+    setDialog(null);
+    if (billRef.current && keptId(billRef.current) === id) {
+      setShowBill(true);
+      setView("menu");
+      return;
+    }
+    if (!(await leaveBill())) return;
+    putBill(k.order);
     setShowBill(true);
     setView("menu");
     setReceipt(null);
@@ -1059,11 +1159,19 @@ export function PosClient({
   async function saveAndClose() {
     const cur = billRef.current;
     if (!cur) return;
-    const saved = await saveBill(cur);
-    if (!saved) return;
+    if (!navigator.onLine || !reachable) {
+      if (!(await saveOrKeep(cur))) return;
+    } else {
+      const saved = await saveBill(cur);
+      if (!saved) {
+        if (!noAnswer.current || !(await saveOrKeep(cur))) return;
+      } else {
+        dropKept(keptId(cur));
+        setMsg({ ok: true, text: `${title(saved)} — ${t("pos.saved")}` });
+      }
+    }
     putBill(null);
     setShowBill(false);
-    setMsg({ ok: true, text: `${title(saved)} — ${t("pos.saved")}` });
     if (floorTables.length > 0) setView("floor");
   }
 
@@ -1233,7 +1341,7 @@ export function PosClient({
       return;
     }
     let o = order;
-    if (o.kind === "bill") {
+    if (o.kind === "bill" && !offlineSale) {
       const saved = await current();
       if (!saved) return;
       o = saved;
@@ -1285,7 +1393,7 @@ export function PosClient({
     const rewardOffNow = rewards > 0 ? rewards * (dialog.reward?.value ?? 0) : 0;
     const tender = payments[0]?.type ?? dialog.tender;
     const received = payments.find((x) => x.type === "cash")?.received ?? null;
-    await (dialog.offline ? keepOffline : sendPayment)({
+    const paying: Pending = {
       kind: o.kind,
       key: dialog.key,
       tender,
@@ -1338,7 +1446,9 @@ export function PosClient({
         at: new Date().toISOString(),
         by: cashierName,
       },
-    });
+    };
+    if (dialog.offline) keepOffline(paying, o.kind === "bill" ? o : null);
+    else await sendPayment(paying);
   }
 
   async function sendPayment(p: Pending) {
@@ -1558,7 +1668,7 @@ export function PosClient({
    * customer has paid, so it is done here as any sale is — its receipt, the
    * next customer — and the till says it is waiting to be sent.
    */
-  function keepOffline(p: Pending) {
+  function keepOffline(p: Pending, bill: Order | null = null) {
     const list = loadOffline();
     const no = nextOfflineNo(list);
     const payments: Payment[] =
@@ -1591,6 +1701,17 @@ export function PosClient({
       platformOrderNo: p.platformOrderNo,
       title: p.title,
       job,
+      // A bill already on the database is paid as itself, its changes saved
+      // first (0082); one opened offline is sent as a quick sale.
+      tab:
+        bill && bill.tabId && bill.version !== null
+          ? {
+              id: bill.tabId,
+              version: bill.version,
+              save: isDirty(bill) ? billSave(bill) : null,
+              saveKey: keptFor(bill.tabId)?.saveKey ?? crypto.randomUUID(),
+            }
+          : null,
       state: "waiting",
       error: null,
     };
@@ -1629,7 +1750,12 @@ export function PosClient({
       offlineNo: no,
     });
     setMsg(null);
-    setQuick((q) => quickOrder(q.channel));
+    if (bill) {
+      // The bill is paid, as far as this till goes: it leaves the tables.
+      dropKept(keptId(bill));
+      putBill(null);
+      setShowBill(false);
+    } else setQuick((q) => quickOrder(q.channel));
     if (autoPrint) print([job, autoTicket ? ticket : null]);
   }
 
@@ -1641,6 +1767,38 @@ export function PosClient({
     setSending(true);
     let sent = 0;
     try {
+      // Bills changed offline first, oldest first: a sale of one may follow.
+      for (;;) {
+        const nextBill = loadKeptBills()
+          .filter(
+            (b) =>
+              b.error === null && (b.place === null || tillPlace === null || b.place === tillPlace),
+          )
+          .sort((a, b) => a.keptAt.localeCompare(b.keptAt))[0];
+        if (!nextBill) break;
+        // Not the bill on screen: it is still being worked on.
+        if (billRef.current && keptId(billRef.current) === nextBill.id) break;
+        const r = await saveBillAction(billSave(nextBill.order), nextBill.saveKey).catch(
+          () => null,
+        );
+        if (!r || (!r.ok && r.uncertain)) {
+          setReachable(false);
+          return;
+        }
+        if (!r.ok && /Sign in again/.test(r.error)) return;
+        setReachable(true);
+        const now = loadKeptBills();
+        saveKeptBills(
+          r.ok
+            ? now.filter((b) => b.id !== nextBill.id)
+            : now.map((b) => (b.id === nextBill.id ? { ...b, error: r.error } : b)),
+        );
+        setKept(loadKeptBills());
+        if (r.ok) {
+          sent++;
+          if (r.data.bills) applyBills(r.data.bills);
+        }
+      }
       for (;;) {
         const next = loadOffline().find(
           (s) =>
@@ -1651,32 +1809,79 @@ export function PosClient({
         const single = next.payments.length === 1 ? next.payments[0] : null;
         // A price changed since: a manager chose to record it at today's price.
         const atToday = next.expectedNet === "" && single && single.type !== "other";
-        const r = await recordOfflineSaleAction({
-          key: next.key,
-          channel: next.channel,
-          ...(atToday
-            ? { tender: single.type as "cash" | "card" | "platform_paid" }
-            : {
-                tenders: next.payments.map((x) => ({
-                  type: x.type,
-                  amount: x.amount,
-                  received: x.received,
-                  ...(x.method ? { method: x.method } : {}),
-                  ...(x.reference ? { reference: x.reference } : {}),
+        const tab = next.tab ?? null;
+        // A bill's changes made here are saved first, once (0082).
+        let version = tab?.version ?? null;
+        if (tab?.save) {
+          const s = await saveBillAction({ ...tab.save, version: tab.version }, tab.saveKey).catch(
+            () => null,
+          );
+          if (!s || (!s.ok && s.uncertain)) {
+            setReachable(false);
+            break;
+          }
+          if (!s.ok && /Sign in again/.test(s.error)) break;
+          const now = loadOffline();
+          saveOffline(
+            s.ok
+              ? now.map((x) =>
+                  x.key === next.key
+                    ? { ...x, tab: { ...tab, version: s.data.version, save: null } }
+                    : x,
+                )
+              : now.map((x) =>
+                  x.key === next.key ? { ...x, state: "attention", error: s.error } : x,
+                ),
+          );
+          setOffline(loadOffline());
+          if (!s.ok) continue;
+          version = s.data.version;
+        }
+        const tenders = next.payments.map((x) => ({
+          type: x.type,
+          amount: x.amount,
+          received: x.received,
+          ...(x.method ? { method: x.method } : {}),
+          ...(x.reference ? { reference: x.reference } : {}),
+        }));
+        const r =
+          tab && version !== null
+            ? await payBillOfflineAction({
+                tabId: tab.id,
+                version,
+                key: next.key,
+                tenders,
+                expectedNet: atToday ? null : next.expectedNet,
+                soldAt: next.soldAt,
+                soldBy: next.soldBy,
+                device: next.place,
+              }).catch(() => null)
+            : await recordOfflineSaleAction({
+                key: next.key,
+                channel: next.channel,
+                ...(atToday
+                  ? { tender: single.type as "cash" | "card" | "platform_paid" }
+                  : {
+                      tenders: next.payments.map((x) => ({
+                        type: x.type,
+                        amount: x.amount,
+                        received: x.received,
+                        ...(x.method ? { method: x.method } : {}),
+                        ...(x.reference ? { reference: x.reference } : {}),
+                      })),
+                    }),
+                lines: next.lines.map((l) => ({
+                  variantId: l.variantId,
+                  qty: String(l.qty),
+                  addons: l.addons,
                 })),
-              }),
-          lines: next.lines.map((l) => ({
-            variantId: l.variantId,
-            qty: String(l.qty),
-            addons: l.addons,
-          })),
-          expectedNet: atToday ? null : next.expectedNet,
-          platformOrderNo: next.platformOrderNo,
-          soldAt: next.soldAt,
-          soldBy: next.soldBy,
-          device: next.place,
-        }).catch(() => null);
-        if (!r || (!r.ok && r.uncertain)) {
+                expectedNet: atToday ? null : next.expectedNet,
+                platformOrderNo: next.platformOrderNo,
+                soldAt: next.soldAt,
+                soldBy: next.soldBy,
+                device: next.place,
+              }).catch(() => null);
+        if (!r || (!r.ok && "uncertain" in r && r.uncertain)) {
           setReachable(false);
           break;
         }
@@ -1905,7 +2110,8 @@ export function PosClient({
         <OfflineStrip
           connected={connected}
           waiting={held.waiting}
-          attention={held.attention}
+          attention={held.attention + keptAttention}
+          bills={keptWaiting}
           sending={sending}
           onOpen={() => setDialog({ kind: "offline" })}
         />
@@ -1953,7 +2159,14 @@ export function PosClient({
           {view === "floor" && hasFloor ? (
             <FloorView
               tables={floorTables}
-              bills={bills}
+              bills={bills.filter((b) => !paidOffline.has(b.tabId))}
+              kept={keptHere.map((b) => ({
+                id: b.id,
+                title: title(b.order),
+                error: b.error,
+                isNew: b.order.tabId === null,
+              }))}
+              onKept={openKept}
               now={now}
               activeTabId={showBill ? (bill?.tabId ?? null) : null}
               onTable={openTable}
@@ -2269,6 +2482,23 @@ export function PosClient({
           timezone={timezone}
           priceChanged={priceChanged}
           onSettle={settleOffline}
+          bills={keptHere.map((b) => ({
+            id: b.id,
+            title: title(b.order),
+            keptAt: b.keptAt,
+            items: b.order.lines.reduce((n, l) => n + l.qty, 0),
+            error: b.error,
+          }))}
+          onBill={(id, how) => {
+            const list = loadKeptBills();
+            saveKeptBills(
+              how === "remove"
+                ? list.filter((b) => b.id !== id)
+                : list.map((b) => (b.id === id ? { ...b, error: null } : b)),
+            );
+            setKept(loadKeptBills());
+            if (how === "retry") void sendRef.current();
+          }}
           onClose={() => setDialog(null)}
         />
       )}

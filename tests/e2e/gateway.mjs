@@ -134,7 +134,13 @@ function session(email, aal = "aal1") {
       exp: now + 3600,
       session_id: crypto.randomUUID(),
       aal,
-      amr: aal === "aal2" ? [{ method: "totp", timestamp: now }, { method: "password", timestamp: now }] : [{ method: "password", timestamp: now }],
+      amr:
+        aal === "aal2"
+          ? [
+              { method: "totp", timestamp: now },
+              { method: "password", timestamp: now },
+            ]
+          : [{ method: "password", timestamp: now }],
       is_anonymous: false,
       app_metadata: { provider: "email" },
       user_metadata: {},
@@ -439,22 +445,32 @@ http
         },
       });
     }
-    const factorPath = /^\/auth\/v1\/factors\/([0-9a-f-]{36})(\/challenge|\/verify)?$/.exec(url.pathname);
+    const factorPath = /^\/auth\/v1\/factors\/([0-9a-f-]{36})(\/challenge|\/verify)?$/.exec(
+      url.pathname,
+    );
     if (factorPath) {
       const p = verify((req.headers.authorization || "").replace(/^Bearer /, ""));
       if (!p || !p.email) return send(res, 401, { code: "bad_jwt", msg: "invalid JWT" });
       const [, id, action] = factorPath;
       const f = factors.get(id);
-      if (!f || f.email !== p.email) return send(res, 404, { code: "mfa_factor_not_found", msg: "Factor not found" });
+      if (!f || f.email !== p.email)
+        return send(res, 404, { code: "mfa_factor_not_found", msg: "Factor not found" });
       if (action === "/challenge") {
         const cid = crypto.randomUUID();
         challenges.set(cid, id);
-        return send(res, 200, { id: cid, type: "totp", expires_at: Math.floor(Date.now() / 1000) + 300 });
+        return send(res, 200, {
+          id: cid,
+          type: "totp",
+          expires_at: Math.floor(Date.now() / 1000) + 300,
+        });
       }
       if (action === "/verify") {
         const data = JSON.parse((await body(req)) || "{}");
         if (challenges.get(data.challenge_id) !== id || !codeOk(f.secret, data.code))
-          return send(res, 422, { code: "mfa_verification_failed", msg: "Invalid TOTP code entered" });
+          return send(res, 422, {
+            code: "mfa_verification_failed",
+            msg: "Invalid TOTP code entered",
+          });
         challenges.delete(data.challenge_id);
         if (f.status !== "verified") {
           f.status = "verified";

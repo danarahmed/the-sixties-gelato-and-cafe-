@@ -2054,6 +2054,41 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Each branch's books (`0084`)
+
+- No table. **`stock_transfer`** gains `markup_percent` and `margin`: the
+  share of the transfer price (the rule `transfer_markup_percent`, the
+  sending branch's own or the café's) and what it added to the cost of what
+  arrived, kept when it is received.
+- **Accounts `4950` Sold to other branches and `5950` Bought from other
+  branches**, read only in the profit by place (`pnl_by_place`): a transfer's
+  margin is the sender's revenue and the receiver's cost there, and no
+  journal. The café's own books are as they were.
+- **Functions:** `branch_position` (`profit.view`): each branch's till, stock
+  at cost, stock sent not yet received, equipment at book value, what
+  customers owe on its invoices, the deposits it holds, its profit this year
+  and what it sold to and bought from the other branches; and the café's,
+  no one branch's (the safe, the bank, card and platform money to come in,
+  what is owed to suppliers and staff).
+
+### Something's wrong (`0083`)
+
+- **`problem_report`**: what someone said went wrong (2 to 500 letters), the
+  screen (`page`), who said it, at which branch, when, and what the app knew
+  (`context`: the connection, the screen's size, the language, the browser,
+  the last error the page saw); `open` until marked `done`, by whom and when,
+  with a note.
+- **Functions:** `report_problem` (anyone signed in, keyed: sent twice, one
+  report), `problem_reports` (open ones first, newest first) and
+  `settle_problem` (dealt with or opened again, on the audit trail).
+
+### Table bills without internet (`0082`)
+
+- No table. `settle_tab_offline` pays a bill as `settle_tab` does, for a
+  payment the till took while the connection was down: dated when it was
+  taken (`sales_order.placed_at`, `sold_offline_at`), not stopped for stock,
+  and refused when another till changed or paid the bill meanwhile.
+
 ### The books completed (`0081`)
 
 - **`fixed_asset`**: a piece of equipment: its name, the account it sits in

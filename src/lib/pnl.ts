@@ -3,7 +3,9 @@
  * places, what belongs to none of them ("Shared": the bank's card fees, a
  * journal by hand), and the café's total, as the reports lay it out. The
  * places add up to the café, account by account: the database shares out what
- * spans them (a platform's payout, a payroll) before it gets here.
+ * spans them (a platform's payout, a payroll) before it gets here. What one
+ * branch sold another at the transfer price (0084) is in each branch's column
+ * and nets to nothing in the café's: within the café it is the same money.
  */
 export type PnlSection = "revenue" | "cost_of_sales" | "operating_expenses";
 
@@ -48,6 +50,9 @@ export interface PnlByPlace {
   /** The café's. */
   total: PnlTotals;
 }
+
+/** Sold to and bought from other branches (0084): each branch's, never the café's. */
+export const BETWEEN_BRANCHES = new Set(["4950", "5950"]);
 
 function totalsOf(lines: PnlPlaceLine[], at: (l: PnlPlaceLine) => number): PnlTotals {
   const sum = (s: PnlSection) =>
@@ -96,7 +101,7 @@ export function pnlByPlace(
     }
     const at = columns.findIndex((c) => c.id === r.placeId);
     line.amounts[at] = (line.amounts[at] ?? 0) + r.amount;
-    line.total += r.amount;
+    if (!BETWEEN_BRANCHES.has(r.code)) line.total += r.amount;
   }
   const lines = [...byCode.values()].sort((a, b) => a.code.localeCompare(b.code));
   return {

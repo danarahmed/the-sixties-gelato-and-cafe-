@@ -4,6 +4,8 @@ import { PrintHead } from "@/components/PrintHead";
 import { getMsg, getT } from "@/lib/i18n/server";
 import { requirePermission } from "@/lib/auth/session";
 import { getBalanceSheet, getCashFlow } from "@/lib/db/statements";
+import { getBranchPosition } from "@/lib/db/branchPosition";
+import { BRANCH_HOLDS } from "@/lib/branchPosition";
 import {
   balanceRows,
   CASH_FLOW_SECTIONS,
@@ -49,9 +51,14 @@ export default async function StatementsPage({
           ? "Choose today or a day before it"
           : null;
   const before = addDays(from, -1);
-  const [start, end, flow] = problem
-    ? [null, null, null]
-    : await Promise.all([getBalanceSheet(before), getBalanceSheet(to), getCashFlow(from, to)]);
+  const [start, end, flow, position] = await Promise.all([
+    problem ? null : getBalanceSheet(before),
+    problem ? null : getBalanceSheet(to),
+    problem ? null : getCashFlow(from, to),
+    getBranchPosition(),
+  ]);
+  // Each branch's position is for a café of more than one place.
+  const places = position && position.places.length > 1 ? position.places : null;
   const rows = start && end ? balanceRows(start, end) : null;
 
   const lastMonthEnd = addDays(monthStart(today), -1);
@@ -282,6 +289,176 @@ export default async function StatementsPage({
               </span>
             )}
           </div>
+        </section>
+      )}
+
+      {position && places && (
+        <section className="panel" data-testid="branch-position">
+          <div className="panel-h">
+            <h3>{t("Each branch, now")}</h3>
+          </div>
+          <div className="panel-b">
+            <p className="muted" style={{ margin: "0 0 8px", fontSize: ".8rem", lineHeight: 1.6 }}>
+              {t(
+                "What each branch holds and owes as of now, read from its till, its stock and its records, with its profit this year. Stock sent to another branch is charged at cost plus the share set on Settings → Rules: what is added is the sender's revenue and the receiver's cost, and is the same money within the café.",
+              )}
+            </p>
+          </div>
+          <div className="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th />
+                  {places.map((p) => (
+                    <th key={p.id} className="right">
+                      {p.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {BRANCH_HOLDS.map((h) => (
+                  <tr key={h.key} data-testid="bp-row" data-key={h.key}>
+                    <td style={{ paddingInlineStart: 14 }}>{t(h.label)}</td>
+                    {places.map((p) => (
+                      <td
+                        key={p.id}
+                        className="right money"
+                        data-place={p.name}
+                        data-amount={p[h.key]}
+                      >
+                        {fmtIQD(Number(p[h.key]))}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+                <tr data-testid="bp-row" data-key="holds">
+                  <td style={{ fontWeight: 600 }}>{t("What it holds")}</td>
+                  {places.map((p) => (
+                    <td
+                      key={p.id}
+                      className="right money"
+                      style={{ fontWeight: 600 }}
+                      data-place={p.name}
+                      data-amount={p.holds}
+                    >
+                      {fmtIQD(p.holds)}
+                    </td>
+                  ))}
+                </tr>
+                <tr data-testid="bp-row" data-key="deposits">
+                  <td style={{ paddingInlineStart: 14 }}>
+                    {t("Less deposits it holds for pre-orders")}
+                  </td>
+                  {places.map((p) => (
+                    <td
+                      key={p.id}
+                      className="right money"
+                      data-place={p.name}
+                      data-amount={p.deposits}
+                    >
+                      {fmtIQD(-p.deposits)}
+                    </td>
+                  ))}
+                </tr>
+                <tr className="grand" data-testid="bp-row" data-key="net">
+                  <td>{t("Its own")}</td>
+                  {places.map((p) => (
+                    <td
+                      key={p.id}
+                      className={`right money ${p.net < 0 ? "red" : ""}`}
+                      data-place={p.name}
+                      data-amount={p.net}
+                    >
+                      {fmtIQD(p.net)}
+                    </td>
+                  ))}
+                </tr>
+                <tr data-testid="bp-row" data-key="profitThisYear">
+                  <td style={{ paddingInlineStart: 14 }}>{t("Profit this year")}</td>
+                  {places.map((p) => (
+                    <td
+                      key={p.id}
+                      className={`right money ${p.profitThisYear < 0 ? "red" : ""}`}
+                      data-place={p.name}
+                      data-amount={p.profitThisYear}
+                    >
+                      {fmtIQD(p.profitThisYear)}
+                    </td>
+                  ))}
+                </tr>
+                <tr data-testid="bp-row" data-key="soldToBranches">
+                  <td style={{ paddingInlineStart: 14 }}>
+                    {t("Sold to other branches this year")}
+                  </td>
+                  {places.map((p) => (
+                    <td
+                      key={p.id}
+                      className="right money"
+                      data-place={p.name}
+                      data-amount={p.soldToBranches}
+                    >
+                      {fmtIQD(p.soldToBranches)}
+                    </td>
+                  ))}
+                </tr>
+                <tr data-testid="bp-row" data-key="boughtFromBranches">
+                  <td style={{ paddingInlineStart: 14 }}>
+                    {t("Bought from other branches this year")}
+                  </td>
+                  {places.map((p) => (
+                    <td
+                      key={p.id}
+                      className="right money"
+                      data-place={p.name}
+                      data-amount={p.boughtFromBranches}
+                    >
+                      {fmtIQD(p.boughtFromBranches)}
+                    </td>
+                  ))}
+                </tr>
+                <tr data-testid="bp-row" data-key="markupPercent">
+                  <td style={{ paddingInlineStart: 14 }}>{t("Charges other branches")}</td>
+                  {places.map((p) => (
+                    <td
+                      key={p.id}
+                      className="right"
+                      data-place={p.name}
+                      data-amount={p.markupPercent}
+                    >
+                      {p.markupPercent > 0
+                        ? t("Cost plus {pct}%", { pct: p.markupPercent })
+                        : t("At cost")}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          {position.cafe && (
+            <div className="panel-b" data-testid="bp-cafe">
+              <p className="muted" style={{ margin: 0, fontSize: ".8rem", lineHeight: 1.7 }}>
+                {t(
+                  "The café's, no one branch's: the safe {safe}, the bank {bank}, card and platform money to come in {toComeIn}, owed to suppliers {suppliers}, owed to staff {staff}.",
+                  {
+                    safe: fmtIQD(position.cafe.safe),
+                    bank: fmtIQD(position.cafe.bank),
+                    toComeIn: fmtIQD(position.cafe.toComeIn),
+                    suppliers: fmtIQD(position.cafe.owedToSuppliers),
+                    staff: fmtIQD(position.cafe.owedToStaff),
+                  },
+                )}
+                {(position.cafe.equipment !== 0 || position.cafe.customersOwe !== 0) &&
+                  ` ${t(
+                    "Equipment of no branch {equipment}; customers owe on invoices of no branch {owe}.",
+                    {
+                      equipment: fmtIQD(position.cafe.equipment),
+                      owe: fmtIQD(position.cafe.customersOwe),
+                    },
+                  )}`}
+              </p>
+            </div>
+          )}
         </section>
       )}
 

@@ -302,12 +302,63 @@ console.log("▸ the books, the journals and the audit trail");
   await ctx.close();
 }
 
+console.log("▸ at cost plus the owner's 10%: the kitchen's revenue, the branch's cost (0084)");
+{
+  sql(`select test.act_as('owner@example.com');
+    select set_business_rule('transfer_markup_percent', 'business', '', '10', 'The kitchen earns its work')`);
+  const sent = last(`select test.act_as('owner@example.com');
+    select send_stock_transfer('${kitchen}', '${branch}',
+      jsonb_build_array(jsonb_build_object('item_id', '${milk}', 'qty', 1, 'unit_code', 'L')),
+      'At the transfer price', p_idempotency_key => gen_random_uuid()) ->> 'transfer_id'`);
+  sql(`select test.act_as('owner@example.com');
+    select receive_stock_transfer('${sent}', null, null, gen_random_uuid())`);
+  const sentNo = last(`select transfer_no from stock_transfer where id = '${sent}'`);
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/inventory/transfers");
+  const priced = page.locator(
+    `[data-testid="transfers-settled"] [data-testid="transfer"][data-no="${sentNo}"]`,
+  );
+  await priced.waitFor();
+  const margin = (await priced.getByTestId("transfer-margin").textContent()) ?? "";
+  check(
+    margin.includes("Main Branch") && margin.includes("10%") && margin.includes("2,200"),
+    `received at the branch: charged at cost plus 10%, 2,200 for 2,000 (${margin.trim()})`,
+  );
+  await open(page, "/reports/statements");
+  const panel = page.getByTestId("branch-position");
+  await panel.waitFor();
+  const cell = (key, place) =>
+    panel.locator(`[data-testid="bp-row"][data-key="${key}"] td[data-place="${place}"]`);
+  const sold = Number(await cell("soldToBranches", "Central Kitchen").getAttribute("data-amount"));
+  const bought = Number(
+    await cell("boughtFromBranches", "Main Branch").getAttribute("data-amount"),
+  );
+  check(
+    sold >= 2200 &&
+      bought >= 2200 &&
+      ((await cell("markupPercent", "Central Kitchen").textContent()) ?? "").includes("10%"),
+    "Balance sheet shows each branch: what the kitchen sold to the branch at the transfer price",
+  );
+  check(
+    (await panel.getByTestId("bp-cafe").textContent())?.includes("owed to suppliers") === true,
+    "and what is the café's, no one branch's, apart",
+  );
+  await ctx.close();
+  sql(`select test.act_as('owner@example.com');
+    select set_business_rule('transfer_markup_percent', 'business', '', null, 'Back to cost')`);
+}
+
 console.log("▸ in Arabic and in Kurdish");
 for (const locale of ["ar", "ckb"]) {
   const { ctx, page } = await signIn(browser, "owner");
   await ctx.addCookies([{ name: "locale", value: locale, url: BASE }]);
   const words = [];
-  for (const path of ["/inventory/transfers", "/inventory", "/audit?group=stock"]) {
+  for (const path of [
+    "/inventory/transfers",
+    "/inventory",
+    "/audit?group=stock",
+    "/reports/statements",
+  ]) {
     await open(page, path);
     words.push(...(await english(page, path)));
   }

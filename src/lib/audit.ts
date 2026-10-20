@@ -200,6 +200,9 @@ const ACTION_LABEL: Record<string, string> = {
   "asset.add": "Equipment added",
   "asset.depreciate": "Depreciation posted",
   "asset.dispose": "Equipment sold or thrown out",
+  // "Something's wrong" (0083).
+  "problem.done": "Problem dealt with",
+  "problem.reopen": "Problem opened again",
   "sale.giveaway": "Given away at the till",
   "bill.cancel": "Open bill cancelled",
   "bill.discount": "Discount on an open bill",

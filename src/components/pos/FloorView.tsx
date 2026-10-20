@@ -52,6 +52,8 @@ export function FloorView({
   onBill,
   onNamedBill,
   onEditTables,
+  kept = [],
+  onKept,
 }: {
   tables: DiningTable[];
   bills: OpenBill[];
@@ -61,6 +63,9 @@ export function FloorView({
   onBill: (b: OpenBill) => void;
   onNamedBill: () => void;
   onEditTables: (() => void) | null;
+  /** Bills changed on this till while the connection was down (0082). */
+  kept?: { id: string; title: string; error: string | null; isNew: boolean }[];
+  onKept?: (id: string) => void;
 }) {
   const { t } = useT();
   const { name: channelName } = useChannels();
@@ -87,6 +92,30 @@ export function FloorView({
         <button onClick={onNamedBill}>＋ {t("pos.billForName")}</button>
         {onEditTables && <button onClick={onEditTables}>{t("pos.editTables")}</button>}
       </div>
+
+      {kept.length > 0 && (
+        <div className="card kept-bills" data-testid="kept-bills">
+          <div className="muted" style={{ fontSize: ".85rem", marginBottom: 6 }}>
+            <Icon name="clock" size={14} />{" "}
+            {t("Kept on this till: saved when the internet is back")}
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {kept.map((k) => (
+              <button
+                key={k.id}
+                type="button"
+                className={k.error ? "btn-danger" : undefined}
+                onClick={() => onKept?.(k.id)}
+                title={k.error ? t(k.error) : undefined}
+                data-testid="kept-bill"
+              >
+                {k.title}
+                {k.isNew ? ` · ${t("new")}` : ""}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {tables.length === 0 ? (
         <div className="card muted" style={{ fontSize: ".9rem" }}>

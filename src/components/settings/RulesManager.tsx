@@ -48,6 +48,7 @@ function shownValue(def: RuleDefinition, v: number | string | null, t: T): strin
   if (v === null || v === "") return t("Default");
   if ((def.key === "daily_sales_target" || def.key === "labour_target_percent") && Number(v) === 0)
     return t("No target");
+  if (def.key === "transfer_markup_percent" && Number(v) === 0) return t("At cost");
   if (def.kind === "percent") return `${fmtQty(Number(v))}%`;
   if (def.kind === "amount") return fmtIQD(Number(v));
   if (def.kind === "hours") return t("{n} hours", { n: fmtQty(Number(v)) });

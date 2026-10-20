@@ -65,8 +65,25 @@ describe("what the till takes offline", () => {
     expect(offlineBlock(quick)).toBeNull();
     expect(offlineBlock({ ...quick, channel: "talabat" })).toBeNull();
   });
+  it("takes a bill on a table, as it was saved (0082)", () => {
+    const saved = JSON.stringify([[], ["percent", "10"]]);
+    const bill = { ...quick, kind: "bill" as const, tabId: "t1", saved, savedCustomer: "" };
+    // Its saved discount stays: the database checked it then.
+    expect(
+      offlineBlock({ ...bill, discount: { kind: "percent", value: "10" } as never }),
+    ).toBeNull();
+    // A new or changed one needs the database.
+    expect(offlineBlock({ ...bill, discount: { kind: "percent", value: "20" } as never })).toMatch(
+      /discount/,
+    );
+    expect(offlineBlock({ ...bill, saved: JSON.stringify([[], null]) })).toBeNull();
+    expect(
+      offlineBlock({ ...bill, saved: JSON.stringify([[], null]), customer: { id: "c" } as never }),
+    ).toMatch(/customer/);
+    // A bill opened offline is sent as a quick sale.
+    expect(offlineBlock({ ...quick, kind: "bill", tabId: null })).toBeNull();
+  });
   it("leaves what needs the database's answer", () => {
-    expect(offlineBlock({ ...quick, kind: "bill" })).toMatch(/bill on a table/);
     expect(offlineBlock({ ...quick, channel: "direct_delivery" })).toMatch(/own delivery/);
     expect(offlineBlock({ ...quick, discount: { kind: "percent", value: "10" } as never })).toMatch(
       /discount/,
