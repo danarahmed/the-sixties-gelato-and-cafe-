@@ -64,7 +64,7 @@ begin
   if not v_paid then
     perform audit_event(v_business, 'sale.offline', 'sales_order', v_order::text, null, null,
       jsonb_build_object('sold_at', p_sold_at, 'sold_by', p_sold_by, 'sent_by', (current_member()).id,
-                         'device', p_device, 'net', r -> 'net', 'tab', p_tab));
+                         'device', p_device, 'net', r -> 'net', 'bill', p_tab));
   end if;
   return r || jsonb_build_object('sold_offline_at', (select sold_offline_at from sales_order where id = v_order));
 end $$;

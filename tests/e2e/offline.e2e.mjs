@@ -121,7 +121,7 @@ console.log(
   // Cancelled again, as a manager does, so no bill is left open for the suites after.
   sql(`select test.act_as('manager@example.com');
        select cancel_tab('${id}', (select version from pos_tab where id = '${id}'),
-                         p_reason_code => 'customer_left')`);
+                         p_reason_code => 'opened_by_mistake')`);
 }
 
 console.log("▸ a table's bill paid with no connection: paid as itself, at the time it was paid");

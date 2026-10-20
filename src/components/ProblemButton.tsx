@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { usePathname } from "next/navigation";
+import { createPortal } from "react-dom";
 import { reportProblemAction } from "@/lib/actions/problems";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Modal } from "@/components/pos/Dialogs";
@@ -84,62 +85,65 @@ export function ProblemButton() {
         <Icon name="alert" size={18} />
         {t("Something's wrong?")}
       </button>
-      {open && (
-        <Modal label={t("Something's wrong?")} busy={busy} onClose={() => setOpen(false)}>
-          <div className="grid" style={{ gap: 10 }} data-testid="problem-dialog">
-            <h3 style={{ margin: 0 }}>
-              <Icon name="alert" /> {t("Something's wrong?")}
-            </h3>
-            {sent ? (
-              <p role="status" style={{ margin: 0 }} data-testid="problem-sent">
-                {t("Thank you. The owner will see it, with this screen.")}
-              </p>
-            ) : (
-              <>
-                <p className="muted" style={{ margin: 0 }}>
-                  {t(
-                    "Say in a word or two what went wrong. The screen you are on goes with it, so nobody has to ask.",
-                  )}
+      {/* Over the page, not in the menu: the menu slides away as it is tapped. */}
+      {open &&
+        createPortal(
+          <Modal label={t("Something's wrong?")} busy={busy} onClose={() => setOpen(false)}>
+            <div className="grid" style={{ gap: 10 }} data-testid="problem-dialog">
+              <h3 style={{ margin: 0 }}>
+                <Icon name="alert" /> {t("Something's wrong?")}
+              </h3>
+              {sent ? (
+                <p role="status" style={{ margin: 0 }} data-testid="problem-sent">
+                  {t("Thank you. The owner will see it, with this screen.")}
                 </p>
-                <textarea
-                  value={what}
-                  rows={3}
-                  maxLength={500}
-                  autoFocus
-                  aria-label={t("What went wrong?")}
-                  placeholder={t("The receipt printed twice")}
-                  onChange={(e) => setWhat(e.target.value)}
-                  data-testid="problem-what"
-                />
-                <span className="muted" style={{ fontSize: ".8rem" }}>
-                  {t("On: {page}", { page: pathname ?? "/" })}
-                </span>
-              </>
-            )}
-            {error && (
-              <p className="red" role="alert" style={{ margin: 0 }}>
-                {msg(error)}
-              </p>
-            )}
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button type="button" onClick={() => setOpen(false)} disabled={busy}>
-                {t("Close")}
-              </button>
-              {!sent && (
-                <button
-                  type="button"
-                  className="btn-primary"
-                  disabled={busy || what.trim().length < 2}
-                  onClick={send}
-                  data-testid="problem-send"
-                >
-                  {busy ? "…" : t("Send")}
-                </button>
+              ) : (
+                <>
+                  <p className="muted" style={{ margin: 0 }}>
+                    {t(
+                      "Say in a word or two what went wrong. The screen you are on goes with it, so nobody has to ask.",
+                    )}
+                  </p>
+                  <textarea
+                    value={what}
+                    rows={3}
+                    maxLength={500}
+                    autoFocus
+                    aria-label={t("What went wrong?")}
+                    placeholder={t("The receipt printed twice")}
+                    onChange={(e) => setWhat(e.target.value)}
+                    data-testid="problem-what"
+                  />
+                  <span className="muted" style={{ fontSize: ".8rem" }}>
+                    {t("On: {page}", { page: pathname ?? "/" })}
+                  </span>
+                </>
               )}
+              {error && (
+                <p className="red" role="alert" style={{ margin: 0 }}>
+                  {msg(error)}
+                </p>
+              )}
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <button type="button" onClick={() => setOpen(false)} disabled={busy}>
+                  {t("Close")}
+                </button>
+                {!sent && (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    disabled={busy || what.trim().length < 2}
+                    onClick={send}
+                    data-testid="problem-send"
+                  >
+                    {busy ? "…" : t("Send")}
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        </Modal>
-      )}
+          </Modal>,
+          document.body,
+        )}
     </>
   );
 }
