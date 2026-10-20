@@ -2405,6 +2405,17 @@ Built and tested:
   said so); a scale's label read as product and weight; the phone warnings'
   test. Each that fails says what to do; nothing is sold or booked. Tested:
   the browser suite `devices`.
+- **G2: speed under a rush (`0085`).** Tried on a copy, never the live
+  database: eight tills and managers at once, then a year of trading
+  (110,000 sales). A sale added up the stock's whole history, slower month by
+  month: stock is now kept as it moves, and a sale stays at about 14 ms. The
+  cash flow for a month did not finish in five minutes; now half a second.
+  The books' checks 5 s → 0.8 s, the dashboard 0.4 s → 0.02 s, each branch's
+  position 4.9 s → 1.3 s, with the same answers; the reports are not compiled
+  first (JIT). The live screens take 0.7–2.5 s mostly because the app's
+  server is in the United States and the database is not: each of a screen's
+  trips to it costs about 0.2 s. Tested: `stock_balance` (SQL) and every
+  suite.
 - **G3: each branch's books (`0084`).** Stock sent from one branch to
   another is charged at cost plus a share the owner sets on Settings → Rules
   (for the café, or for the branch that sends; 0 is at cost), kept on the

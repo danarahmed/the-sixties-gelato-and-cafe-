@@ -3899,24 +3899,26 @@ It is applied by the owner, in Supabase's SQL editor, after `0083`:
 
 ## After `0085`
 
-Migration `0085` is speed under a rush (G2). What a place holds of each item
-was added up from every movement it ever had, on every sale; a café a year
-old has a hundred thousand movements of its coffee, and each sale grew
-slower. Now each item's quantity and value at each place is kept as it moves
-(`stock_balance`, kept by the movements themselves), and read in one row.
-The last price an item was bought at, and an account's balance, are found
-from indexes.
+Migration `0085` is speed under a rush (G2), measured on a copy with a year
+of trading (110,000 sales):
 
-What it changes:
+- **A sale no longer adds up the stock's whole history.** What a place holds
+  of each item is kept as it moves (`stock_balance`, kept by the movements
+  themselves) and read in one row. A sale took 40 ms at 14,500 sales and
+  grew month by month; it takes 14 ms and stays there.
+- **The dashboard** reads today's stock from it: 0.4 s, now 0.02 s.
+- **The cash flow** for a month had not finished in five minutes; it takes
+  half a second (it joined each journal's lines to themselves).
+- **The books' checks** (Reports) 5 s, now 0.8 s; **each branch's position**
+  4.9 s, now 1.3 s; **the profit by place** quicker. Each gives the same
+  answer as before (compared on the copy).
+- **The reports are not compiled first** (Postgres's JIT), which cost seconds
+  for each.
+- New indexes: `inventory_movement_last_cost`, `journal_line_account`,
+  `journal_entry_reference`.
+- Nothing recorded changes.
 
-- **New table:** `stock_balance`, filled from the movements when it is
-  pasted and kept by them after; cleared with them.
-- **Changed:** `item_position` and the `current_stock` view read it.
-- **New indexes:** `inventory_movement_last_cost`, `journal_line_account`.
-- Nothing recorded changes. Measured on a copy with 14,500 sales: a sale took
-  40 ms before and 14 ms after, and no longer grows with the café's history.
-
-Rehearsed with `tests/sql/stock_balance.test.sql`.
+Rehearsed with `tests/sql/stock_balance.test.sql` and every other test.
 
 It is applied by the owner, in Supabase's SQL editor, after `0084`:
 
