@@ -37,7 +37,7 @@ console.log("▸ a pre-order taken from the till, part paid now");
   await menu(page);
   await take(page, "Shilan", 2000);
   check(
-    sql(`select total = 2 * price_on('${ESPRESSO}', 'takeaway', location_id, current_date)
+    sql(`select total = 2 * price_on('${ESPRESSO}', 'takeaway', location_id, business_local_date(business_id, now()))
                 and deposit = 2000 and status = 'open'
            from pre_order where customer_name = 'Shilan'`) === "t",
     "Shilan's two espressos at today's take-away price, 2,000 paid ahead, open",

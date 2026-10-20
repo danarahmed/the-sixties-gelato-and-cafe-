@@ -2,7 +2,7 @@
 // lot of water must be sold within the hour; Production says so, with half
 // off suggested; a tap marks it down, the till sells it at half, and it is
 // stopped with a tap.
-import { chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { chromium, check, done, open, signIn, sql, TODAY } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const WATER = "d1000000-0000-0000-0000-000000000002";
@@ -12,7 +12,7 @@ sql(`insert into item_lot (business_id, item_id, lot_code, use_by, location_id, 
                   ((((now() at time zone b.timezone)::date + 1)::timestamp) at time zone b.timezone) - interval '1 minute'),
             (select id from location where kind = 'branch' order by created_at limit 1), 6
        from business b limit 1`);
-const before = Number(sql(`select price_on('${WATER}', 'dine_in', null, current_date)`));
+const before = Number(sql(`select price_on('${WATER}', 'dine_in', null, ${TODAY})`));
 
 console.log("▸ Production: what must go today, half off suggested");
 {
@@ -52,7 +52,7 @@ console.log("▸ stopped with a tap");
   await page.getByTestId("markdowns").getByTestId("markdown-stop").first().click();
   await page.waitForTimeout(1200);
   check(
-    Number(sql(`select price_on('${WATER}', 'dine_in', null, current_date)`)) === before,
+    Number(sql(`select price_on('${WATER}', 'dine_in', null, ${TODAY})`)) === before,
     "and the water is at its price again",
   );
   await ctx.close();

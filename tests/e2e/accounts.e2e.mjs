@@ -44,7 +44,7 @@ await card.getByTestId("account-done").waitFor({ timeout: 10000 });
 // it), 20% off, ten times.
 const total = Number(
   sql(`select trim_scale(10 * money_round(so.business_id,
-                price_on(l.product_variant_id, 'takeaway', so.location_id, current_date) * 80 / 100))
+                price_on(l.product_variant_id, 'takeaway', so.location_id, business_local_date(so.business_id, now())) * 80 / 100))
          from customer_invoice ci join sales_order so on so.id = ci.sales_order_id
          join sales_order_line l on l.sales_order_id = so.id
         where ci.customer_id = '${hotel}'`),

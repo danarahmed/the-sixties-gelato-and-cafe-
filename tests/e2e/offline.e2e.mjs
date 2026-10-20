@@ -4,7 +4,7 @@
 // recorded once; and (0082) a table's bill keeps taking orders and can be paid,
 // its changes saved and the bill paid once the connection is back. And on a slow
 // connection, each page is hydrated once.
-import { chromium, BASE, check, done, open, signIn, sql } from "./lib.mjs";
+import { chromium, BASE, check, done, open, signIn, sql, TODAY } from "./lib.mjs";
 
 const browser = await chromium.launch();
 const sales = () => Number(sql("select count(*) from sales_order"));
@@ -153,7 +153,7 @@ console.log("▸ a table's bill paid with no connection: paid as itself, at the 
   check(
     sql(`select o.sold_offline_at is not null
                 and abs(extract(epoch from o.placed_at) * 1000 - ${paidAt}) < 30000
-                and o.net_amount = 2 * price_on('d1000000-0000-0000-0000-000000000001', 'dine_in', o.location_id, current_date)
+                and o.net_amount = 2 * price_on('d1000000-0000-0000-0000-000000000001', 'dine_in', o.location_id, ${TODAY})
            from sales_order o join pos_tab t on t.sales_order_id = o.id where t.id = '${id}'`) ===
       "t",
     "recorded as sold offline, when the money was taken, at the bill's price",
