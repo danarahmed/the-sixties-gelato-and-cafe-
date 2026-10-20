@@ -37,6 +37,7 @@ import { getPriceRises } from "@/lib/db/prices";
 import { wholeDates } from "@/lib/i18n/core";
 import { cookies } from "next/headers";
 import { getSetupCounts } from "@/lib/db/setup";
+import { getProblems } from "@/lib/db/problems";
 import {
   SETUP_HIDE_COOKIE,
   SETUP_SKIP_COOKIE,
@@ -448,6 +449,9 @@ export default async function DashboardPage() {
   };
   const jar = await cookies();
   const setupCounts = await setupRead;
+  // What staff said went wrong (G5, 0083), still open: for those who read the list.
+  const problems =
+    has(profile, "audit.view") || has(profile, "settings.manage") ? await getProblems() : null;
   const setup = setupCounts
     ? setupSteps(setupCounts, setupCan, skippedFrom(jar.get(SETUP_SKIP_COOKIE)?.value))
     : [];
@@ -501,6 +505,12 @@ export default async function DashboardPage() {
 
       {showSetup && (
         <GettingSetUp steps={setup} staffWithoutPin={setupCounts?.staffWithoutPin ?? 0} />
+      )}
+      {problems && problems.open > 0 && (
+        <Link href="/problems" className="card dash-problems" data-testid="dash-problems">
+          <Icon name="alert" size={18} />{" "}
+          {t("{n} problem(s) reported by staff, not dealt with yet", { n: problems.open })}
+        </Link>
       )}
 
       <TourOffer tourKey="dashboard" />

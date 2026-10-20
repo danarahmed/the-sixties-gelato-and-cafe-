@@ -77,6 +77,7 @@ Plan a short window when the café is closed.
 | Two-step sign-in (`0080`)               | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new table, column or function then confirmed present on the live database                                                                                                                                                                                                                                                                     |
 | The books completed (`0081`)            | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new table, column or function then confirmed present on the live database                                                                                                                                                                                                                                                                     |
 | Table bills without internet (`0082`)   | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0082`](#after-0082)). Before it a bill paid offline is recorded when it is sent, not when it was paid                                                                                                                                                                                                                                                                        |
+| Something's wrong (`0083`)              | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0083`](#after-0083)). Before it the button says the report cannot be kept yet                                                                                                                                                                                                                                                                                                |
 
 ## 0. Before you start
 
@@ -3820,6 +3821,35 @@ browser suite `offline`.
 It is applied by the owner, in Supabase's SQL editor, after `0081`:
 
 1. Open the file `supabase/migrations/0082_offline_bills.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0083`
+
+Migration `0083` is the "Something's wrong?" button (G5): whoever is signed
+in, on any screen, says in a word or two what went wrong; the screen and what
+the app knew then go with it. The owner and the managers see the list on
+**Reported problems**, mark each one dealt with, and copy one to send on.
+
+What it changes:
+
+- **New table:** `problem_report` (what was said, the screen, who, when, the
+  till's branch and what the app knew; open until dealt with, with a note).
+- **New functions:** `report_problem` (anyone signed in, keyed),
+  `problem_reports` and `settle_problem` (those who see the audit trail or
+  change the settings; dealing with one is on the audit trail).
+- Nothing recorded changes.
+
+Before it is applied, the button is there but a report cannot be kept, and
+Reported problems says the update is needed. Rehearsed with
+`tests/sql/problem_reports.test.sql` and the browser suite `problems`.
+
+It is applied by the owner, in Supabase's SQL editor, after `0082`:
+
+1. Open the file `supabase/migrations/0083_problem_reports.sql` on GitHub, press **Raw**,
    select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run

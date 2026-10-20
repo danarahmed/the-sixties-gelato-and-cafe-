@@ -138,6 +138,7 @@ begin
        || case when to_regclass('public.price_markdown') is not null then ', price_markdown' else '' end
        || case when to_regclass('public.fixed_asset') is not null
                then ', asset_depreciation, depreciation_run, fixed_asset' else '' end
+       || case when to_regclass('public.problem_report') is not null then ', problem_report' else '' end
        || ' restart identity';
 end $$;
 

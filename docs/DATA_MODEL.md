@@ -2054,6 +2054,17 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Something's wrong (`0083`)
+
+- **`problem_report`**: what someone said went wrong (2 to 500 letters), the
+  screen (`page`), who said it, at which branch, when, and what the app knew
+  (`context`: the connection, the screen's size, the language, the browser,
+  the last error the page saw); `open` until marked `done`, by whom and when,
+  with a note.
+- **Functions:** `report_problem` (anyone signed in, keyed: sent twice, one
+  report), `problem_reports` (open ones first, newest first) and
+  `settle_problem` (dealt with or opened again, on the audit trail).
+
 ### Table bills without internet (`0082`)
 
 - No table. `settle_tab_offline` pays a bill as `settle_tab` does, for a

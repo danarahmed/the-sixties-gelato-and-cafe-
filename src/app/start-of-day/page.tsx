@@ -366,6 +366,15 @@ export default async function StartOfDayPage() {
         ))}
       </ol>
 
+      {/* The till's devices, tried before the doors open (G4). */}
+      <p className="muted" style={{ margin: 0 }}>
+        <Link href="/devices" data-testid="sod-devices">
+          {t("Test your devices")}
+        </Link>
+        {": "}
+        {t("the printer, the drawer, the scanner and the internet, before the first customer.")}
+      </p>
+
       {sees.alerts && (
         <section className="panel" data-testid="sod-ahead">
           <div className="panel-h">

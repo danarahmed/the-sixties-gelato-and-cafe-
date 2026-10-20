@@ -2392,6 +2392,19 @@ Built and tested:
   bill opened offline is sent as a quick sale. A bill changed or paid on
   another till meanwhile waits on the till for a manager. Tested: `offline_bills`
   (SQL) and the browser suite `offline`.
+- **G5: "Something's wrong?" (`0083`).** In the menu, on every screen, for
+  everyone: a word or two about what went wrong, sent with the screen, the
+  connection and the last error the page saw. The owner and the managers see
+  them on **Reported problems** (and a card on the dashboard while any is
+  open), mark each one dealt with with a note, and copy one to send on.
+  Tested: `problem_reports` (SQL) and the browser suite `problems`.
+- **G4: Test your devices.** In everyone's menu, and linked from Start of
+  Day: the internet timed against the database; a test receipt (marked not a
+  sale) and whether the drawer opened with it; a test label; the scanner read
+  as the till reads it (a scan told apart from typing, a code no product has
+  said so); a scale's label read as product and weight; the phone warnings'
+  test. Each that fails says what to do; nothing is sold or booked. Tested:
+  the browser suite `devices`.
 
 ## The August 2026 audit, finding by finding
 

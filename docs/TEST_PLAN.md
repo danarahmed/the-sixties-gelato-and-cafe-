@@ -557,6 +557,11 @@ key is sent, spaces taken out, read by the till; one size only; too short or
 with other signs refused; a scale's short code; taken off; a cashier sets
 none; each change audited.
 
+`problem_reports.test.sql` (G5, `0083`): a cashier's report kept with its
+screen and what the app knew; sent twice, one; nothing said, or over 500
+letters, refused; a cashier reads no list; the owner sees it open, deals with
+it with a note, opens it again; both on the audit trail.
+
 `offline_bills.test.sql` (G1, `0082`): a table's bill paid offline is paid
 at what it showed, at the time the money was taken, marked sold offline, on
 its till; sent twice, one sale; paid on another till meanwhile, refused and
@@ -691,6 +696,16 @@ database, behind a small local stand-in for Supabase's auth service.
 - `barcodes` (round twenty, `0078`): the owner gives the water its barcode
   and prints its label, drawn in bars; at the till a scan adds it, never as a
   count; a code no size has is said so.
+- `devices` (G4): the cashier checks the connection, prints a test receipt
+  that says it is not a sale, says the drawer did not open and is told what
+  to do; a scan names its product, typing is told apart, a code no product
+  has says so, and a scale's label no product has needs attention.
+- `problems` (G5, `0083`): the cashier reports a problem from the till's
+  menu, kept with its screen; the owner sees it on the dashboard and on
+  Reported problems, and deals with it with a note.
+- `offline` (G1, `0082`) also: a table's bill with no connection keeps what
+  is added and saves it once the connection is back; a bill paid with no
+  connection is saved and paid as itself, once, at the time it was paid.
 - `equipment` (round twenty-four, `0081`): the owner adds an oven bought two
   months ago from the bank, posts its two months' depreciation with one
   press, adds another bank to the chart, puts money in, and downloads a CSV
