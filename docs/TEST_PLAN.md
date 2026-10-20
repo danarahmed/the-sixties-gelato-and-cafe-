@@ -557,6 +557,12 @@ key is sent, spaces taken out, read by the till; one size only; too short or
 with other signs refused; a scale's short code; taken off; a cashier sets
 none; each change audited.
 
+`stock_balance.test.sql` (G2, `0085`): the balance starts as the movements
+add up; after an item opened with stock, sales, a table's bill, stock sent,
+received short and cancelled, it still does, item by item and place by place;
+what a place holds is read from it, the stock screens read the same, and it
+is cleared with the movements.
+
 `branch_books.test.sql` (G3, `0084`): the kitchen sends to the branch at
 the owner's 10%; nothing added before it is received, 10% of its cost kept on
 it then; the kitchen's revenue and the branch's cost at their places, nothing
