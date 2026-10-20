@@ -2054,6 +2054,12 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### A count withdrawn by its counter (`0087`)
+
+- No table. `trg_stock_count_guard` keeps only approving from the person who
+  counted: they may reject (withdraw) their own submitted count, which posts
+  nothing.
+
 ### What the books hold now (`0086`)
 
 - No table. `branch_position`, `pre_orders` and `customer_accounts` read an
