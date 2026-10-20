@@ -2108,6 +2108,11 @@ export function PosClient({
                 }))
               : []
           }
+          customer={
+            order.customer
+              ? { id: order.customer.id, name: order.customer.name, phone: order.customer.phone }
+              : null
+          }
           channel={quick.channel}
           discounted={quick.discount !== null}
           payMethods={payMethods}
