@@ -137,7 +137,7 @@ select test.eq((
   'acknowledge_alert,add_attendance,add_delivery_platform,add_fixed_asset,add_item_unit,add_variant,'
   'adjust_payroll_line,adjust_points,adjust_stock,alert_thresholds,allocate_credit,app_words,'
   'approve_payroll,approve_po,approve_stock_count,attach_document,attendance_list,bank_book,'
-  'batch_reconciliation,buying_list,cancel_advance,cancel_attendance,cancel_bill,'
+  'batch_reconciliation,branch_position,buying_list,cancel_advance,cancel_attendance,cancel_bill,'
   'cancel_card_settlement,cancel_money_move,cancel_platform_settlement,cancel_po,cancel_pre_order,'
   'cancel_prepaid_expense,cancel_production,cancel_salary_payment,cancel_scheduled_price,'
   'cancel_scheduled_recipe,cancel_stock_count,cancel_stock_transfer,cancel_tab,card_takings,'

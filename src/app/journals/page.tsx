@@ -31,7 +31,8 @@ export const dynamic = "force-dynamic";
  * advances given on pay and the salaries owed (0049), the stock on its way
  * between places (0054), the prepaid expenses (0060), and the sales revenue,
  * its discounts and its refunds, tied to the sales recorded (0062): money in
- * that is not a sale goes to an income account the café adds.
+ * that is not a sale goes to an income account the café adds. The transfer
+ * price between branches (4950, 5950: 0084) carries no journal at all.
  */
 const BLOCKED = new Set([
   "1000",
@@ -51,6 +52,8 @@ const BLOCKED = new Set([
   "4000",
   "4100",
   "4200",
+  "4950",
+  "5950",
 ]);
 
 export default async function JournalsPage({

@@ -2381,8 +2381,8 @@ Built and tested:
   sold or thrown out with the loss or gain worked out. **The owner's money**:
   what was put in and taken out, and either done in two taps. The chart adds
   another bank, a loan and a kind of equipment. Every CSV opens in Excel with
-  its Arabic and Kurdish right. Not done: a price between places for what one
-  sends another, and a balance sheet for each place. Tested: `equipment`
+  its Arabic and Kurdish right. A price between places for what one sends
+  another, and each place's position, came with G3 (`0084`). Tested: `equipment`
   (SQL) and the browser suite `equipment`.
 - **G1: table bills without internet (`0082`).** With the connection down, a
   table's bill keeps taking orders: its changes are kept on the till (shown
@@ -2405,6 +2405,19 @@ Built and tested:
   said so); a scale's label read as product and weight; the phone warnings'
   test. Each that fails says what to do; nothing is sold or booked. Tested:
   the browser suite `devices`.
+- **G3: each branch's books (`0084`).** Stock sent from one branch to
+  another is charged at cost plus a share the owner sets on Settings → Rules
+  (for the café, or for the branch that sends; 0 is at cost), kept on the
+  transfer when it is received and shown on Transfers. What it adds is the
+  sending branch's revenue (4950) and the receiving branch's cost (5950) in
+  the profit by branch and every report read for one branch; the café's own
+  books do not change (the same money, within the café), and the database
+  refuses any journal on either account. Balance sheet and cash flow shows
+  **Each branch, now**: its till, stock at cost, stock sent not yet received,
+  equipment at book value, what customers owe on its invoices, less the
+  deposits it holds; its profit this year; what it sold to and bought from
+  the others; and the café's, no one branch's, apart. Tested: `branch_books`
+  (SQL) and the browser suite `transfers`.
 
 ## The August 2026 audit, finding by finding
 

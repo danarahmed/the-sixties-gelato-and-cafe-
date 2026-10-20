@@ -616,6 +616,15 @@ function TransferList({
                 })}
                 {(x.valueShort ?? 0) > 0 &&
                   ` · ${t("{short} lost on the way", { short: fmtIQD(x.valueShort ?? 0) })}`}
+                {x.margin > 0 && (
+                  <span data-testid="transfer-margin">
+                    {` · ${t("Charged to {to} at cost plus {pct}%: {amount}", {
+                      to: x.to,
+                      pct: fmtQty(x.markupPercent),
+                      amount: fmtIQD((x.valueReceived ?? 0) + x.margin),
+                    })}`}
+                  </span>
+                )}
                 {x.receiveNote ? ` · “${x.receiveNote}”` : ""}
               </p>
             )}

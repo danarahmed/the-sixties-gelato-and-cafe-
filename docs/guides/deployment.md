@@ -78,6 +78,7 @@ Plan a short window when the café is closed.
 | The books completed (`0081`)            | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new table, column or function then confirmed present on the live database                                                                                                                                                                                                                                                                     |
 | Table bills without internet (`0082`)   | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0082`](#after-0082)). Before it a bill paid offline is recorded when it is sent, not when it was paid                                                                                                                                                                                                                                                                        |
 | Something's wrong (`0083`)              | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0083`](#after-0083)). Before it the button says the report cannot be kept yet                                                                                                                                                                                                                                                                                                |
+| Each branch's books (`0084`)            | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0084`](#after-0084)). Before it stock moves between branches at cost and Balance sheet shows no branch's position                                                                                                                                                                                                                                                            |
 
 ## 0. Before you start
 
@@ -3855,6 +3856,45 @@ It is applied by the owner, in Supabase's SQL editor, after `0082`:
    press **Run**. If Supabase says it found possible problems, choose to run
    it anyway.
 3. **Success. No rows returned** is the answer.
+
+## After `0084`
+
+Migration `0084` is each branch's books (G3): stock sent from one branch to
+another is charged at cost plus a share the owner sets (Settings → Rules →
+"Stock sent to another branch is charged at cost plus", for the café or for
+the branch that sends; 0, the default, is at cost). What it adds is the
+sending branch's revenue (`4950` Sold to other branches) and the receiving
+branch's cost (`5950` Bought from other branches) in the profit by branch;
+within the café it is the same money, so the café's own books, trial balance
+and statements do not change. Balance sheet and cash flow gains **Each
+branch, now**: what each branch holds and owes, its profit this year, and what
+it sold to and bought from the others.
+
+What it changes:
+
+- **New rule:** `transfer_markup_percent`.
+- **New accounts:** `4950` and `5950`, which carry no journal of their own and
+  none by hand.
+- **New columns:** `stock_transfer.markup_percent` and `margin`, kept when a
+  transfer is received, so a later change of the rule rewrites nothing.
+- **New function:** `branch_position` (`profit.view`); `pnl_by_place`,
+  `stock_transfers`, the rules' list and defaults, the chart and the accounts
+  blocked by hand are the earlier ones with the above added.
+- Nothing recorded changes.
+
+Before it is applied, transfers move at cost as they did, and Balance sheet
+shows no branch's position. Rehearsed with `tests/sql/branch_books.test.sql`
+and the browser suite `transfers`.
+
+It is applied by the owner, in Supabase's SQL editor, after `0083`:
+
+1. Open the file `supabase/migrations/0084_branch_books.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned**, or a row headed `provision_chart_of_accounts`
+   with an empty value (it added the two accounts): either is right.
 
 ## Clearing the test records
 

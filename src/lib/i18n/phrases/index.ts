@@ -41,6 +41,7 @@ import barcodes from "./barcodes";
 import markdowns from "./markdowns";
 import equipment from "./equipment";
 import problems from "./problems";
+import branchBooks from "./branchBooks";
 import devices from "./devices";
 import twoStep from "./twoStep";
 
@@ -87,6 +88,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   markdowns,
   equipment,
   problems,
+  branchBooks,
   devices,
   twoStep,
 };

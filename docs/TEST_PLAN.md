@@ -557,6 +557,15 @@ key is sent, spaces taken out, read by the till; one size only; too short or
 with other signs refused; a scale's short code; taken off; a cashier sets
 none; each change audited.
 
+`branch_books.test.sql` (G3, `0084`): the kitchen sends to the branch at
+the owner's 10%; nothing added before it is received, 10% of its cost kept on
+it then; the kitchen's revenue and the branch's cost at their places, nothing
+in the café's own profit, no journal on either account by hand or any other
+way, and the books tie; a later change of the rule rewrites nothing; a
+place's own share is its own; each branch's stock, what is on its way, what
+it sold and bought at the transfer price; the branches' profit and the
+café's add up to the café's; a cashier does not read it.
+
 `problem_reports.test.sql` (G5, `0083`): a cashier's report kept with its
 screen and what the app knew; sent twice, one; nothing said, or over 500
 letters, refused; a cashier reads no list; the owner sees it open, deals with
@@ -700,6 +709,10 @@ database, behind a small local stand-in for Supabase's auth service.
   that says it is not a sale, says the drawer did not open and is told what
   to do; a scan names its product, typing is told apart, a code no product
   has says so, and a scale's label no product has needs attention.
+- `transfers` (G3, `0084`) also: at the owner's 10%, a litre sent from the
+  kitchen is charged to the branch at 2,200 for 2,000 on Transfers; Balance
+  sheet shows each branch, what the kitchen sold the branch, and the café's
+  apart.
 - `problems` (G5, `0083`): the cashier reports a problem from the till's
   menu, kept with its screen; the owner sees it on the dashboard and on
   Reported problems, and deals with it with a note.
