@@ -76,9 +76,10 @@ Plan a short window when the café is closed.
 | End-of-day markdowns (`0079`)           | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new table, column or function then confirmed present on the live database                                                                                                                                                                                                                                                                     |
 | Two-step sign-in (`0080`)               | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new table, column or function then confirmed present on the live database                                                                                                                                                                                                                                                                     |
 | The books completed (`0081`)            | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new table, column or function then confirmed present on the live database                                                                                                                                                                                                                                                                     |
-| Table bills without internet (`0082`)   | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0082`](#after-0082)). Before it a bill paid offline is recorded when it is sent, not when it was paid                                                                                                                                                                                                                                                                        |
-| Something's wrong (`0083`)              | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0083`](#after-0083)). Before it the button says the report cannot be kept yet                                                                                                                                                                                                                                                                                                |
-| Each branch's books (`0084`)            | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0084`](#after-0084)). Before it stock moves between branches at cost and Balance sheet shows no branch's position                                                                                                                                                                                                                                                            |
+| Table bills without internet (`0082`)   | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new function, page or rule then confirmed on the live site                                                                                                                                                                                                                                                                                    |
+| Something's wrong (`0083`)              | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new function, page or rule then confirmed on the live site                                                                                                                                                                                                                                                                                    |
+| Each branch's books (`0084`)            | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new function, page or rule then confirmed on the live site                                                                                                                                                                                                                                                                                    |
+| Stock kept as it moves (`0085`)         | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0085`](#after-0085)). Before it each sale adds up the stock's whole history, slower month by month                                                                                                                                                                                                                                                                           |
 
 ## 0. Before you start
 
@@ -3895,6 +3896,36 @@ It is applied by the owner, in Supabase's SQL editor, after `0083`:
    it anyway.
 3. **Success. No rows returned**, or a row headed `provision_chart_of_accounts`
    with an empty value (it added the two accounts): either is right.
+
+## After `0085`
+
+Migration `0085` is speed under a rush (G2). What a place holds of each item
+was added up from every movement it ever had, on every sale; a café a year
+old has a hundred thousand movements of its coffee, and each sale grew
+slower. Now each item's quantity and value at each place is kept as it moves
+(`stock_balance`, kept by the movements themselves), and read in one row.
+The last price an item was bought at, and an account's balance, are found
+from indexes.
+
+What it changes:
+
+- **New table:** `stock_balance`, filled from the movements when it is
+  pasted and kept by them after; cleared with them.
+- **Changed:** `item_position` and the `current_stock` view read it.
+- **New indexes:** `inventory_movement_last_cost`, `journal_line_account`.
+- Nothing recorded changes. Measured on a copy with 14,500 sales: a sale took
+  40 ms before and 14 ms after, and no longer grows with the café's history.
+
+Rehearsed with `tests/sql/stock_balance.test.sql`.
+
+It is applied by the owner, in Supabase's SQL editor, after `0084`:
+
+1. Open the file `supabase/migrations/0085_stock_balance.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
 
 ## Clearing the test records
 

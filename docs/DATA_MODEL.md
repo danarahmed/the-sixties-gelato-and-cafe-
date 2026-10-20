@@ -2054,6 +2054,15 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Stock kept as it moves (`0085`)
+
+- **`stock_balance`**: each item's quantity and value at each place, what its
+  movements add up to, kept by a trigger on `inventory_movement` (whatever
+  records a movement) and cleared with them. Stock written at a place is
+  written one transaction after another (a lock for the place until it is
+  saved), so tills never wait on each other for ever.
+- `item_position` and `current_stock` read it; the movements stay the record.
+
 ### Each branch's books (`0084`)
 
 - No table. **`stock_transfer`** gains `markup_percent` and `margin`: the
