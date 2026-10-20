@@ -67,15 +67,15 @@ select test.eq(coalesce(pg_temp.pnl('4950', (select branch from ids)), '0') || '
 select test.eq(pg_temp.pnl('4950', null) || ' ' || pg_temp.pnl('5950', null), '0 0',
   'within the café it is the same money: nothing in the café''s own profit');
 select test.eq(pg_temp.journal_lines('4950') + pg_temp.journal_lines('5950'), 0::bigint, 'and no journal posted');
-select test.ok(manual_journal_blocked('4950') and manual_journal_blocked('5950'), 'nor any by hand');
 select test.as_admin();
+select test.ok(manual_journal_blocked('4950') and manual_journal_blocked('5950'), 'nor any by hand');
 select test.throws($$select post_journal('00000000-0000-0000-0000-0000000000b1', now(), 'By the back door', 'manual', null,
   jsonb_build_array(jsonb_build_object('code', '5950', 'debit', 10), jsonb_build_object('code', '1020', 'credit', 10)))$$,
   '%carry no journal%', 'nor any other way');
-select test.act_as('owner@example.com');
 select test.eq((select string_agg(check_key || '=' || trim_scale(difference), ', ' order by check_key)
                   from reconciliation_checks('00000000-0000-0000-0000-0000000000b1', test.today())
                  where check_key in ('inventory', 'transit')), 'inventory=0, transit=0', 'the books tie as before');
+select test.act_as('owner@example.com');
 
 -- ------------------------------------------------------------------ the rule changes: nothing is rewritten
 select set_business_rule('transfer_markup_percent', 'business', '', '20', 'More for the kitchen');

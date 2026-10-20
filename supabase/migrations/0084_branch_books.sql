@@ -217,7 +217,7 @@ $$;
 
 -- Nor any other way: a journal line on either is refused, wherever it comes from.
 create or replace function trg_journal_line_not_transfer_price() returns trigger
-language plpgsql set search_path = public as $$
+language plpgsql security definer set search_path = public as $$
 begin
   if exists (select 1 from gl_account a where a.id = new.account_id and a.code in ('4950', '5950')) then
     raise exception 'The accounts of the transfer price between branches carry no journal';
@@ -238,7 +238,7 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 create or replace function trg_stock_transfer_margin() returns trigger
-language plpgsql set search_path = public as $$
+language plpgsql security definer set search_path = public as $$
 declare v_pct numeric;
 begin
   if new.status = 'received' and old.status is distinct from 'received' then
