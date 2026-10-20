@@ -147,7 +147,8 @@ console.log("▸ a customer the café knows: found by their number, only the tim
       (await form.getByTestId("preorder-name").count()) === 0,
     "their name comes from the customer: nothing to type",
   );
-  await form.getByRole("radio", { name: "Today" }).click();
+  // Tomorrow: today's 16:30 is gone by the evening, and a time gone is refused.
+  await form.getByRole("radio", { name: "Tomorrow" }).click();
   await form.getByTestId("preorder-time").fill("16:30");
   await form.getByTestId("preorder-take").click();
   await page
@@ -155,9 +156,9 @@ console.log("▸ a customer the café knows: found by their number, only the tim
     .waitFor({ timeout: 10000 });
   check(
     sql(`select customer_phone || ' ' || to_char(pickup_at at time zone 'Asia/Baghdad', 'HH24:MI')
-                || ' ' || ((pickup_at at time zone 'Asia/Baghdad')::date = (now() at time zone 'Asia/Baghdad')::date)
+                || ' ' || ((pickup_at at time zone 'Asia/Baghdad')::date = (now() at time zone 'Asia/Baghdad')::date + 1)
            from pre_order where customer_name = 'Hawre Karim'`) === "+9647504445566 16:30 true",
-    "taken with their number, for today at 16:30",
+    "taken with their number, for tomorrow at 16:30",
   );
   await ctx.close();
 }
