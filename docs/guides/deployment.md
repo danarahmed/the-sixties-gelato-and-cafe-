@@ -3920,6 +3920,11 @@ of trading (110,000 sales):
 
 Rehearsed with `tests/sql/stock_balance.test.sql` and every other test.
 
+The app's server runs in Frankfurt (`vercel.json`: `fra1`), where the
+database is (Supabase, Central EU): a screen's trips to the database cost a
+few milliseconds each instead of about 0.2 s from Washington, where it ran
+before 20 October.
+
 It is applied by the owner, in Supabase's SQL editor, after `0084`:
 
 1. Open the file `supabase/migrations/0085_stock_balance.sql` on GitHub, press **Raw**,
