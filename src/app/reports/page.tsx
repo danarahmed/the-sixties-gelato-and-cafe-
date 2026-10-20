@@ -122,6 +122,7 @@ export default async function ReportsPage({
     byPlaceRows,
     pnlBefore,
     methodRows,
+    sectionSetup,
   ] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to, place) : Promise.resolve([]),
     getReconciliation(to),
@@ -150,10 +151,11 @@ export default async function ReportsPage({
       : Promise.resolve([]),
     // Each of the café's own ways to pay (0069); none before it is applied.
     from <= to ? getPaymentMethodReport(from, to, place) : Promise.resolve([]),
+    // The café's and the bakery's parts of the menu (0074), read with the rest.
+    getSectionSetup(),
   ]);
   // The café's and the bakery's takings and profit (0074), once the menu has
   // parts: the sales analysis by category, each counted in its part.
-  const sectionSetup = await getSectionSetup();
   const partsInUse = (sectionSetup?.sections ?? []).filter((s) => s.isActive);
   const parts =
     sectionSetup && partsInUse.length > 0 && from <= to && daysBetween(from, to) <= 366
