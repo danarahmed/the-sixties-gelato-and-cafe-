@@ -39,7 +39,22 @@ export function showIn(
   t?: (key: string) => string,
 ): string {
   const f = unitFactor(item, code) ?? 1;
-  return `${fmtQty(base.div(f).toDecimalPlaces(3).toNumber())} ${unitLabel(item, code, t)}`;
+  const qty = base.div(f).toDecimalPlaces(3).toNumber();
+  return `${fmtQty(qty)} ${countedLabel(qty, unitLabel(item, code), t)}`;
+}
+
+/**
+ * A unit after its number, agreeing with it: "24 pieces", "1 piece", "2 Pans",
+ * "750 g". A pack the café named in English takes an s past one; a measure, or
+ * a name in another script, is left as it is.
+ */
+export function countedLabel(qty: number, label: string, t?: (key: string) => string): string {
+  if (label === "each")
+    return t ? t(qty === 1 ? "piece" : "pieces") : qty === 1 ? "piece" : "pieces";
+  if (qty !== 1 && !isMeasure(label) && /^[A-Za-z]+$/.test(label) && !/s$/i.test(label)) {
+    return `${label}s`;
+  }
+  return label;
 }
 
 /** The number of batches typed, or null while it is not a number above zero. */
@@ -92,7 +107,7 @@ export function showNice(
   const unit = item?.baseUnit ?? baseUnit;
   return big && base.abs().gte(1000)
     ? showIn(base, item, big.code, t)
-    : `${fmtQty(base.toDecimalPlaces(3).toNumber())} ${t ? unitName(unit, t) : unit}`;
+    : `${fmtQty(base.toDecimalPlaces(3).toNumber())} ${countedLabel(base.toDecimalPlaces(3).toNumber(), unit, t)}`;
 }
 
 /**

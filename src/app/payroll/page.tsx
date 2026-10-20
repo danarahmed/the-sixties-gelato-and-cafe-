@@ -35,7 +35,15 @@ export default async function PayrollPage() {
   ]);
   const thisMonth = monthStart(today);
   const lastMonth = monthStart(addDays(thisMonth, -1));
-  const months = [lastMonth, thisMonth].map((m) => ({ month: m, label: monthText(m) }));
+  // Last month only when someone worked here in it: a café that opened this
+  // month has nothing to draft for the one before.
+  const workedLastMonth = people.some(
+    (p) => p.hiredOn < thisMonth && (!p.leftOn || p.leftOn >= lastMonth),
+  );
+  const months = (workedLastMonth ? [lastMonth, thisMonth] : [thisMonth]).map((m) => ({
+    month: m,
+    label: monthText(m),
+  }));
   // An advance goes to someone who works here today (the database refuses anyone else).
   const working = people.filter((p) => p.worksNow).map((p) => ({ id: p.id, name: p.name }));
 

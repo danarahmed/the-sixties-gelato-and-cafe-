@@ -119,6 +119,11 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
       if (!ok) break;
       made++;
     }
+    // The next table added by hand goes after these.
+    setFresh((f) => ({
+      ...f,
+      sortOrder: String(Math.max(Math.trunc(Number(f.sortOrder) || 0), from + made)),
+    }));
     if (made === n) setMsg({ ok: true, text: `${made} ${t("pos.tablesAdded")}` });
     setBusy(false);
   }

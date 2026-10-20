@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { markDownAction, stopMarkdownAction } from "@/lib/actions/markdowns";
 import { markedDown, type MarkdownBoard } from "@/lib/markdowns";
 import { dateTimeIn } from "@/lib/dates";
-import { fmtIQD } from "@/lib/format";
+import { fmtIQD, withSize } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { OperationStatus, useOperation } from "@/components/useOperation";
 import { Icon } from "@/components/Icon";
@@ -80,7 +80,7 @@ export function MarkdownsCard({ board, timezone }: { board: MarkdownBoard; timez
                   {sizes
                     .map(
                       (s) =>
-                        `${s.product}${s.size ? ` (${s.size})` : ""}: ${t("{n} to sell", { n: s.servings })}`,
+                        `${withSize(s.product, s.size)}: ${t("{n} to sell", { n: s.servings })}`,
                     )
                     .join(" · ")}
                 </div>
@@ -113,8 +113,7 @@ export function MarkdownsCard({ board, timezone }: { board: MarkdownBoard; timez
           <ul style={{ margin: 0, paddingInlineStart: 18 }}>
             {board.running.map((m) => (
               <li key={m.id} data-testid="markdown-running">
-                {m.product}
-                {m.size ? ` (${m.size})` : ""} · {t("{percent}% off", { percent: m.percent })} ·{" "}
+                {withSize(m.product, m.size)} · {t("{percent}% off", { percent: m.percent })} ·{" "}
                 {t("until {time}", { time: time(m.endsAt) })}{" "}
                 <button
                   type="button"

@@ -1,5 +1,6 @@
 import { byPickupDay, type PreOrderList } from "@/lib/preOrders";
 import { dateIn, dateTimeIn } from "@/lib/dates";
+import { withSize } from "@/lib/format";
 import type { Locale, T } from "@/lib/i18n/core";
 import { Icon } from "@/components/Icon";
 
@@ -43,7 +44,7 @@ export function PreOrdersToMake({
                     const name =
                       (locale === "ar" ? l.productAr : locale === "ckb" ? l.productCkb : null) ||
                       l.product;
-                    return `${l.qty} × ${name}${l.size ? ` (${l.size})` : ""}${l.note ? ` — “${l.note}”` : ""}`;
+                    return `${l.qty} × ${withSize(name, l.size, l.product)}${l.note ? ` — “${l.note}”` : ""}`;
                   })
                   .join(", ")}
                 {o.note ? <span className="muted"> · {o.note}</span> : null}

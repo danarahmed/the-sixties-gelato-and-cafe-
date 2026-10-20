@@ -18,7 +18,7 @@ export interface ProductTile {
   imageUrl: string | null;
   isActive: boolean;
   isFavourite: boolean;
-  /** The first size's price on the first channel that sells it; null with none. */
+  /** The cheapest size's price on the first channel that sells it; null with none. */
   price: number | null;
   /** What one serving costs, as a share of that price; null when it cannot be costed. */
   costPct: number | null;
@@ -255,7 +255,7 @@ function Tile({ p, onOpen }: { p: ProductTile; onOpen: () => void }) {
           {p.price === null ? (
             <span className="badge warn">{t("No price yet")}</span>
           ) : (
-            fmtIQD(p.price)
+            <>{p.sizes > 1 ? `${t("pos.from")} ${fmtIQD(p.price)}` : fmtIQD(p.price)}</>
           )}
         </span>
         <span className="menu-tile-marks">

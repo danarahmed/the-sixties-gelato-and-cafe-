@@ -174,7 +174,11 @@ export function CountSheet({ countId, lines }: { countId: string; lines: SheetLi
   );
 }
 
-/** Approve or reject a submitted count — by someone other than the counter. */
+/**
+ * Approve or reject a submitted count. Only someone other than the counter
+ * approves it; the counter, if they may review counts, can withdraw their own
+ * for a recount — nothing is posted either way.
+ */
 export function ReviewActions({ countId, countedByMe }: { countId: string; countedByMe: boolean }) {
   const op = useOperation();
   const { t } = useT();
@@ -183,47 +187,48 @@ export function ReviewActions({ countId, countedByMe }: { countId: string; count
   const [reason, setReason] = useState("");
   const [msg, setMsg] = useState<Msg>(null);
 
-  if (countedByMe) {
-    return (
-      <p className="muted" style={{ fontSize: ".85rem" }}>
-        {t("You counted this one, so someone else must approve it.")}
-      </p>
-    );
-  }
   return (
     <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-      <button
-        className="btn-primary"
-        disabled={busy}
-        onClick={() =>
-          start(async () => {
-            const r = await op.run("approveCount", (key) => approveCountAction({ countId }, key));
-            if (r.ok) {
-              setMsg({
-                ok: true,
-                text: r.data.journalNo
-                  ? t("Approved — loss {loss}, gain {gain} (journal {journal}).", {
-                      loss: fmtIQD(r.data.loss),
-                      gain: fmtIQD(r.data.gain),
-                      journal: r.data.journalNo,
-                    })
-                  : t("Approved — loss {loss}, gain {gain}.", {
-                      loss: fmtIQD(r.data.loss),
-                      gain: fmtIQD(r.data.gain),
-                    }),
-              });
-              router.refresh();
-            } else setMsg({ ok: false, text: r.error });
-          })
-        }
-      >
-        {t("Approve and post variances")}
-      </button>
+      {countedByMe && (
+        <p className="muted" style={{ fontSize: ".85rem", flexBasis: "100%", margin: 0 }}>
+          {t("You counted this one, so someone else must approve it.")}{" "}
+          {t("If it is wrong, withdraw it and count again: nothing is posted.")}
+        </p>
+      )}
+      {!countedByMe && (
+        <button
+          className="btn-primary"
+          disabled={busy}
+          onClick={() =>
+            start(async () => {
+              const r = await op.run("approveCount", (key) => approveCountAction({ countId }, key));
+              if (r.ok) {
+                setMsg({
+                  ok: true,
+                  text: r.data.journalNo
+                    ? t("Approved — loss {loss}, gain {gain} (journal {journal}).", {
+                        loss: fmtIQD(r.data.loss),
+                        gain: fmtIQD(r.data.gain),
+                        journal: r.data.journalNo,
+                      })
+                    : t("Approved — loss {loss}, gain {gain}.", {
+                        loss: fmtIQD(r.data.loss),
+                        gain: fmtIQD(r.data.gain),
+                      }),
+                });
+                router.refresh();
+              } else setMsg({ ok: false, text: r.error });
+            })
+          }
+        >
+          {t("Approve and post variances")}
+        </button>
+      )}
       <input
         value={reason}
         onChange={(e) => setReason(e.target.value)}
-        placeholder={t("Reason to reject (recount)")}
-        aria-label={t("Reason to reject (recount)")}
+        placeholder={countedByMe ? t("What was wrong with it") : t("Reason to reject (recount)")}
+        aria-label={countedByMe ? t("What was wrong with it") : t("Reason to reject (recount)")}
         style={{ minHeight: 36, minWidth: 200 }}
         maxLength={300}
       />
@@ -235,13 +240,18 @@ export function ReviewActions({ countId, countedByMe }: { countId: string; count
               rejectCountAction({ countId, reason }, key),
             );
             if (r.ok) {
-              setMsg({ ok: true, text: t("Rejected — nothing was posted.") });
+              setMsg({
+                ok: true,
+                text: countedByMe
+                  ? t("Withdrawn — nothing was posted. Start a new count.")
+                  : t("Rejected — nothing was posted."),
+              });
               router.refresh();
             } else setMsg({ ok: false, text: r.error });
           })
         }
       >
-        {t("Reject")}
+        {countedByMe ? t("Withdraw for a recount") : t("Reject")}
       </button>
       <OperationStatus op={op} />
       <Notice msg={msg} />

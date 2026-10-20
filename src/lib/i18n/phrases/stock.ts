@@ -491,6 +491,16 @@ const phrases: PhraseBook = {
     ar: "أنت من أجرى هذا الجرد، لذا يجب أن يوافق عليه شخص آخر.",
     ckb: "تۆ ئەمەت ژماردووە، بۆیە دەبێت کەسێکی تر پەسەندی بکات.",
   },
+  "If it is wrong, withdraw it and count again: nothing is posted.": {
+    ar: "إن كان خاطئًا فاسحبه وأعد الجرد: لا يُرحَّل شيء.",
+    ckb: "ئەگەر هەڵەیە، بیکێشەرەوە و دووبارە بژمێرە: هیچ تۆمار ناکرێت.",
+  },
+  "What was wrong with it": { ar: "ما الخطأ فيه", ckb: "چی هەڵە بوو تێیدا" },
+  "Withdraw for a recount": { ar: "سحبه لإعادة الجرد", ckb: "کێشانەوە بۆ دووبارە ژماردن" },
+  "Withdrawn — nothing was posted. Start a new count.": {
+    ar: "سُحب — لم يُرحَّل شيء. ابدأ جردًا جديدًا.",
+    ckb: "کێشرایەوە — هیچ تۆمار نەکرا. ژماردنێکی نوێ دەست پێ بکە.",
+  },
   "Approved — loss {loss}, gain {gain} (journal {journal}).": {
     ar: "اعتُمد — النقص {loss}، الزيادة {gain} (القيد {journal}).",
     ckb: "پەسەند کرا — کەمبوون {loss}، زیادبوون {gain} (تۆماری {journal}).",

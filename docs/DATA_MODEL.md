@@ -2054,6 +2054,12 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### What the books hold now (`0086`)
+
+- No table. `branch_position`, `pre_orders` and `customer_accounts` read an
+  account's balance from every published entry (`gl_balance_at(…, 'infinity')`),
+  not those before now: an entry dated today is booked at noon.
+
 ### Stock kept as it moves (`0085`)
 
 - **`stock_balance`**: each item's quantity and value at each place, what its

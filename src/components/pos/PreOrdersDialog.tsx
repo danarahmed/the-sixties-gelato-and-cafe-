@@ -10,7 +10,7 @@ import {
 } from "@/lib/actions/preOrders";
 import { isLate, leftToPay, type PreOrder, type PreOrderList } from "@/lib/preOrders";
 import { addDays, businessToday, dateTimeIn, localTimeToIso } from "@/lib/dates";
-import { fmtIQD } from "@/lib/format";
+import { fmtIQD, withSize } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { Locale } from "@/lib/i18n/core";
 import { Modal } from "./Dialogs";
@@ -37,7 +37,7 @@ type View =
 function productName(l: PreOrder["lines"][number], locale: Locale): string {
   const name =
     (locale === "ar" ? l.productAr : locale === "ckb" ? l.productCkb : null) || l.product;
-  return l.size ? `${name} (${l.size})` : name;
+  return withSize(name, l.size, l.product);
 }
 
 /**

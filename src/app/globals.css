@@ -2259,6 +2259,17 @@ input.check {
   min-height: 48px;
   font-size: 1rem;
 }
+/* Every way to pay on view: cash, card, the café's phone payments, dollars and
+   split wrap onto a second row rather than running past the dialog's edge. */
+.pay-modal .seg[role="radiogroup"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+}
+.pay-modal .seg[role="radiogroup"] button {
+  min-width: 0;
+  padding: 4px 6px;
+  overflow-wrap: anywhere;
+}
 .cash-box {
   display: flex;
   flex-direction: column;
@@ -2290,9 +2301,15 @@ input.check {
 .split-row button {
   min-height: 44px;
 }
-.split-row input {
-  flex: 1;
+/* How a part is paid takes what its name needs; the amount the rest. */
+.split-row select {
+  flex: 0 1 45%;
+  width: auto;
   min-width: 0;
+}
+.split-row input {
+  flex: 1 1 110px;
+  min-width: 90px;
   min-height: 44px;
   font-size: 1.15rem;
   text-align: end;

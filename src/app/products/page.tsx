@@ -354,11 +354,20 @@ export default async function ProductsPage({
   /** A product as a tile, and each part of its panel. */
   const tileOf = (p: MenuProduct): ProductTile => {
     const sizes = p.variants.filter((v) => v.isActive);
-    const first = sizes[0] ?? null;
-    // Its first size's price on the first channel in use that sells it.
-    const row = first
-      ? (costing.get(first.id)?.rows ?? []).find((m) => inUse.has(m.channel))
-      : undefined;
+    // Its cheapest size's price on the first channel in use that sells it:
+    // a product in two sizes is "from" the smaller.
+    const priced = sizes
+      .map((v) => ({
+        v,
+        row: (costing.get(v.id)?.rows ?? []).find((m) => inUse.has(m.channel)),
+      }))
+      .filter((x) => x.row !== undefined);
+    const cheapest = priced.reduce<(typeof priced)[number] | null>(
+      (best, x) => (!best || x.row!.price < best.row!.price ? x : best),
+      null,
+    );
+    const first = cheapest?.v ?? sizes[0] ?? null;
+    const row = cheapest?.row;
     const costPct =
       row && row.unitCost !== null && row.price > 0 ? (row.unitCost / row.price) * 100 : null;
     const many = sizes.length > 1;

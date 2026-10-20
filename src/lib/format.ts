@@ -96,6 +96,20 @@ export const LABELS: readonly string[] = [
 ];
 
 /** Whole-IQD formatter, e.g. 12345 → "12,345 IQD". Display only: the database does the arithmetic. */
+/**
+ * A product with its size in brackets — "Latte (Large)" — unless the size only
+ * repeats the product's name, as a product sold in one size often does.
+ */
+export function withSize(
+  name: string,
+  size: string | null | undefined,
+  ...sameAs: string[]
+): string {
+  const s = (size ?? "").trim();
+  const same = (a: string) => a.trim().toLowerCase() === s.toLowerCase();
+  return s && !same(name) && !sameAs.some(same) ? `${name} (${s})` : name;
+}
+
 export function fmtIQD(n: number): string {
   return `${Math.round(n).toLocaleString("en-US")} IQD`;
 }

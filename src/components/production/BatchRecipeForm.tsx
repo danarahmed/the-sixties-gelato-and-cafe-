@@ -140,7 +140,11 @@ export function BatchRecipeForm({
     seesCost && costLines.length > 0
       ? batchCost(costLines, new Decimal(1), (id) => itemOf(id)?.unitCost ?? "0", decimals)
       : null;
-  const yieldLabel = yieldUnits.find((u) => u.code === yieldUnit)?.label ?? yieldUnit;
+  // "799 IQD per piece": one of them, though the batch makes pieces.
+  const yieldLabel =
+    yieldUnit === "each"
+      ? t("piece")
+      : (yieldUnits.find((u) => u.code === yieldUnit)?.label ?? yieldUnit);
 
   function pickMeasure(v: Measure) {
     setMeasure(v);
