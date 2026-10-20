@@ -80,6 +80,7 @@ Plan a short window when the café is closed.
 | Something's wrong (`0083`)              | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new function, page or rule then confirmed on the live site                                                                                                                                                                                                                                                                                    |
 | Each branch's books (`0084`)            | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new function, page or rule then confirmed on the live site                                                                                                                                                                                                                                                                                    |
 | Stock kept as it moves (`0085`)         | ✅ Applied by the owner in the SQL editor on 20 October; the live screens then checked, and timed from Frankfurt                                                                                                                                                                                                                                                                                                                                 |
+| What the books hold now (`0086`)        | ⏳ To apply: paste it in the SQL editor (below)                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ## 0. Before you start
 
@@ -3928,6 +3929,28 @@ before 20 October.
 It is applied by the owner, in Supabase's SQL editor, after `0084`:
 
 1. Open the file `supabase/migrations/0085_stock_balance.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0086`
+
+Migration `0086` puts right what Reports → Balance sheet → **Each branch, now**
+said between midnight and noon. An expense, a payment or a bill dated a day is
+booked at that day's noon in the café's time; read "as of now" in the small
+hours, the morning's were still to come, and the safe and the bank were shown
+as they were before the day's bills (found on the live site at 01:23: the safe
+347,000 IQD where it held 12,000). The branch panel, the deposits the books
+hold (Pre-orders) and what customers owe in the books (Customers) now read
+every published entry. Nothing recorded changes.
+
+Rehearsed with `tests/sql/now_reads_all.test.sql` and every other test.
+
+It is applied by the owner, in Supabase's SQL editor, after `0085`:
+
+1. Open the file `supabase/migrations/0086_now_reads_all.sql` on GitHub, press **Raw**,
    select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run
