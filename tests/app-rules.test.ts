@@ -48,7 +48,7 @@ import {
   lossReportFrom,
   lossesWaitingFrom,
 } from "@/lib/losses";
-import { fmtAbout, movementLabel, unitName } from "@/lib/format";
+import { fmtAbout, movementLabel, unitName, withSize } from "@/lib/format";
 import { normaliseNumber, positive, signedNonZero } from "@/lib/validation";
 import { getBookkeeper } from "@/lib/bookkeeping/rules";
 import { isUncertainFailure, rpcLogLine } from "@/lib/db/rpcOutcome";
@@ -259,6 +259,7 @@ import {
   labelsFor,
   makeOrder,
   perUnit,
+  countedLabel,
   showIn,
   showNice,
   unitFactor,
@@ -791,11 +792,14 @@ describe("a batch, as the production form shows it before it is recorded", () =>
     expect(unitFactor(gelato, "tray")).toBeNull();
     expect(showIn(new Decimal(4600), gelato, "kg")).toBe("4.6 kg");
     expect(showIn(new Decimal(5000), gelato, "pan")).toBe("1 Pan");
+    // The unit agrees with its number.
+    expect(showIn(new Decimal(10000), gelato, "pan")).toBe("2 Pans");
     expect(showIn(new Decimal(4600), gelato, "g")).toBe("4,600 g");
   });
 
   it("says a unit counted one by one in the reader's language, and a symbol as it is", () => {
-    const ckb = (k: string) => ({ each: "دانە" })[k] ?? k;
+    const ckb = (k: string) =>
+      (({ each: "دانە", piece: "دانە", pieces: "دانە" }) as Record<string, string>)[k] ?? k;
     expect(unitName("each", ckb)).toBe("دانە");
     expect(unitName("g", ckb)).toBe("g");
     expect(unitName("Carton of 24", ckb)).toBe("Carton of 24");
@@ -803,8 +807,25 @@ describe("a batch, as the production form shows it before it is recorded", () =>
     expect(showIn(new Decimal(3), cup, "each", ckb)).toBe("3 دانە");
     expect(showNice(new Decimal(3), cup, "each", ckb)).toBe("3 دانە");
     // Without the reader's words, as before: in English.
-    expect(showIn(new Decimal(3), cup, "each")).toBe("3 each");
+    expect(showIn(new Decimal(3), cup, "each")).toBe("3 pieces");
+    expect(showIn(new Decimal(1), cup, "each")).toBe("1 piece");
     expect(showIn(new Decimal(4600), gelato, "kg", ckb)).toBe("4.6 kg");
+  });
+
+  it("names a size only when it says something", () => {
+    expect(withSize("Latte", "Large")).toBe("Latte (Large)");
+    expect(withSize("Celebration cake", "Celebration cake")).toBe("Celebration cake");
+    expect(withSize("کێکی بۆنە", "Celebration cake", "Celebration cake")).toBe("کێکی بۆنە");
+    expect(withSize("Water", null)).toBe("Water");
+  });
+
+  it("says a count's unit agreeing with it", () => {
+    expect(countedLabel(24, "each")).toBe("pieces");
+    expect(countedLabel(1, "each")).toBe("piece");
+    expect(countedLabel(2, "Pan")).toBe("Pans");
+    expect(countedLabel(1, "Pan")).toBe("Pan");
+    expect(countedLabel(4.6, "kg")).toBe("kg");
+    expect(countedLabel(3, "تاوە")).toBe("تاوە");
   });
 
   it("gives the cost of each unit made", () => {

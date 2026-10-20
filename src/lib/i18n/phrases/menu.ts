@@ -431,6 +431,7 @@ const phrases: PhraseBook = {
   "Measured (ml, L)": { ar: "بالحجم (ml, L)", ckb: "بە قەبارە (ml, L)" },
   "Counted in pieces": { ar: "يُعدّ بالقطعة", ckb: "بە دانە دەژمێردرێت" },
   pieces: { ar: "قطعة", ckb: "دانە" },
+  piece: { ar: "قطعة", ckb: "دانە" },
   "Added “{name}”.": { ar: "أُضيف «{name}».", ckb: "«{name}» زیاد کرا." },
   "What it makes": { ar: "ما تُنتجه", ckb: "ئەوەی بەرهەمی دەهێنێت" },
   "Name of what it makes": { ar: "اسم ما تُنتجه", ckb: "ناوی ئەوەی بەرهەمی دەهێنێت" },
