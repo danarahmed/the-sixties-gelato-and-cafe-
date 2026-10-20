@@ -19,15 +19,18 @@ export function OfflineStrip({
   attention,
   sending,
   onOpen,
+  bills = 0,
 }: {
   connected: boolean;
   waiting: number;
   attention: number;
   sending: boolean;
   onOpen: () => void;
+  /** Bills changed offline, waiting to be saved (0082). */
+  bills?: number;
 }) {
   const { t } = useT();
-  if (connected && waiting === 0 && attention === 0) return null;
+  if (connected && waiting === 0 && attention === 0 && bills === 0) return null;
   const text =
     attention > 0
       ? t("{n} offline sale(s) need a manager", { n: String(attention) })
@@ -49,6 +52,9 @@ export function OfflineStrip({
       aria-live="polite"
     >
       <Icon name={attention > 0 ? "alert" : "clock"} size={16} /> {text}
+      {bills > 0 && attention === 0 && (
+        <> · {t("{n} bill(s) kept on this till", { n: String(bills) })}</>
+      )}
     </button>
   );
 }
@@ -67,7 +73,12 @@ export function OfflineDialog({
   priceChanged,
   onSettle,
   onClose,
+  bills = [],
+  onBill,
 }: {
+  /** Bills changed offline (0082): sent again, or a manager drops the changes. */
+  bills?: { id: string; title: string; keptAt: string; items: number; error: string | null }[];
+  onBill?: (id: string, how: "retry" | "remove") => void;
   sales: OfflineSale[];
   canRemove: boolean;
   sending: boolean;
@@ -160,6 +171,53 @@ export function OfflineDialog({
             );
           })}
         </ul>
+      )}
+      {bills.length > 0 && (
+        <>
+          <h4 style={{ marginBlock: "14px 6px" }}>{t("Bills changed offline")}</h4>
+          <ul className="offline-list" data-testid="kept-list">
+            {bills.map((b) => (
+              <li
+                key={b.id}
+                className={b.error ? "offline-row bad" : "offline-row"}
+                data-testid="kept-row"
+              >
+                <div className="offline-row-top">
+                  <strong>{b.title}</strong>
+                  <span className="muted mono" dir="ltr">
+                    {time(b.keptAt)}
+                  </span>
+                  <span className="muted">{t("{n} item(s)", { n: String(b.items) })}</span>
+                </div>
+                {b.error === null ? (
+                  <p className="muted" style={{ margin: 0 }}>
+                    {sending ? t("Sending…") : t("Waiting for the internet")}
+                  </p>
+                ) : (
+                  <>
+                    <p className="red" style={{ margin: 0 }}>
+                      {t(b.error)}
+                    </p>
+                    <div className="offline-actions">
+                      <button type="button" onClick={() => onBill?.(b.id, "retry")}>
+                        {t("Send again")}
+                      </button>
+                      {canRemove && (
+                        <button
+                          type="button"
+                          onClick={() => onBill?.(b.id, "remove")}
+                          data-testid="kept-remove"
+                        >
+                          {t("Drop these changes")}
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
       )}
       <div style={{ marginBlockStart: 12 }}>
         <button type="button" onClick={onClose}>

@@ -6,6 +6,29 @@ import type { PhraseBook } from "./types";
  * and a manager's list of those the database refused.
  */
 const phrases: PhraseBook = {
+  // Bills changed or paid while the connection is down (0082).
+  "Kept on this till: saved when the internet is back": {
+    ar: "محفوظ على هذا الصندوق: يُحفظ عند عودة الإنترنت",
+    ckb: "لەسەر ئەم سندوقە پارێزراوە: کاتێک ئینتەرنێت گەڕایەوە پاشەکەوت دەکرێت",
+  },
+  new: { ar: "جديد", ckb: "نوێ" },
+  "No internet: this bill is kept on this till and sent when the connection is back.": {
+    ar: "لا يوجد إنترنت: تُحفظ هذه الفاتورة على هذا الصندوق وتُرسل عند عودة الاتصال.",
+    ckb: "ئینتەرنێت نییە: ئەم حسابە لەسەر ئەم سندوقە دەپارێزرێت و کاتێک پەیوەندی گەڕایەوە دەنێردرێت.",
+  },
+  "{n} bill(s) kept on this till": {
+    ar: "{n} فاتورة محفوظة على هذا الصندوق",
+    ckb: "{n} حساب لەسەر ئەم سندوقە پارێزراوە",
+  },
+  "Bills changed offline": {
+    ar: "فواتير تغيّرت دون إنترنت",
+    ckb: "حسابە گۆڕاوەکان بەبێ ئینتەرنێت",
+  },
+  "Drop these changes": { ar: "تجاهل هذه التغييرات", ckb: "ئەم گۆڕانکارییانە لابدە" },
+  "This bill was paid on another till while this one was offline: give back what was taken twice": {
+    ar: "دُفعت هذه الفاتورة على صندوق آخر بينما كان هذا دون إنترنت: أعد ما أُخذ مرتين",
+    ckb: "ئەم حسابە لە سندوقێکی تر دراوە کاتێک ئەمە بێ ئینتەرنێت بوو: ئەوەی دوو جار وەرگیراوە بیگەڕێنەوە",
+  },
   // The pay dialog and the order, with no connection.
   "No internet: this sale is kept on this till and sent when the connection is back.": {
     ar: "لا يوجد إنترنت: يُحفظ هذا البيع على هذا الصندوق ويُرسل عند عودة الاتصال.",

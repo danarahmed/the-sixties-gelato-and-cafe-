@@ -181,11 +181,11 @@ select test.eq((
   'set_employee_left,set_employee_pay,set_fx_rate,set_item_keeps,set_item_supplier,set_member_active,'
   'set_member_place,set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,'
   'set_place_sections,set_price,set_product_details,set_product_image,set_product_modifiers,'
-  'set_variant_barcode,set_variant_weighed,settle_tab,snooze_alert,split_tab,staff_list,staff_phones,'
-  'staff_schedule,start_stock_count,stock_card,stock_places,stock_transfers,stop_markdown,'
-  'submit_stock_count,supplier_statement,take_pre_order,turn_off_phone_warnings,turn_on_phone_warnings,'
-  'undo_bank_statement,unlink_phone,unlock_period,update_delivery_platform,update_item,update_supplier,'
-  'update_variant,void_sale,waste_coach',
+  'set_variant_barcode,set_variant_weighed,settle_tab,settle_tab_offline,snooze_alert,split_tab,'
+  'staff_list,staff_phones,staff_schedule,start_stock_count,stock_card,stock_places,stock_transfers,'
+  'stop_markdown,submit_stock_count,supplier_statement,take_pre_order,turn_off_phone_warnings,'
+  'turn_on_phone_warnings,undo_bank_statement,unlink_phone,unlock_period,update_delivery_platform,'
+  'update_item,update_supplier,update_variant,void_sale,waste_coach',
   'signed-in users can call exactly the intended API');
 -- The public (the anon key is in every page) may call only the clock's four,
 -- each answering only to a key it gave out: a clock screen asking its code, a

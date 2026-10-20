@@ -2384,6 +2384,14 @@ Built and tested:
   its Arabic and Kurdish right. Not done: a price between places for what one
   sends another, and a balance sheet for each place. Tested: `equipment`
   (SQL) and the browser suite `equipment`.
+- **G1: table bills without internet (`0082`).** With the connection down, a
+  table's bill keeps taking orders: its changes are kept on the till (shown
+  on Tables as kept, the bill opened as the till has it) and saved once the
+  connection is back. A bill can be paid offline too: the bill's changes are
+  saved first and the bill paid as itself, at the time the money was taken; a
+  bill opened offline is sent as a quick sale. A bill changed or paid on
+  another till meanwhile waits on the till for a manager. Tested: `offline_bills`
+  (SQL) and the browser suite `offline`.
 
 ## The August 2026 audit, finding by finding
 

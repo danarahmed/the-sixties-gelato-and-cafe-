@@ -786,11 +786,11 @@ export function OrderPanel({
               <div className="order-actions secondary">
                 {isBill ? (
                   <>
+                    {/* With no connection, saving keeps the changes on this till (0082). */}
                     <button
                       onClick={onSave}
-                      disabled={
-                        blocked || !online || badDiscount || !(dirty || order.tabId === null)
-                      }
+                      disabled={blocked || badDiscount || !(dirty || order.tabId === null)}
+                      data-testid="bill-save"
                     >
                       <Icon name="save" /> {t("pos.save")}
                     </button>
@@ -859,9 +859,13 @@ export function OrderPanel({
             data-testid="order-offline"
           >
             {offlineWhy === null
-              ? t(
-                  "No internet: quick sales are kept on this till and sent when the connection is back.",
-                )
+              ? isBill
+                ? t(
+                    "No internet: this bill is kept on this till and sent when the connection is back.",
+                  )
+                : t(
+                    "No internet: quick sales are kept on this till and sent when the connection is back.",
+                  )
               : `${t("pos.offlineBlocked")} ${t(offlineWhy)}`}
           </p>
         )}

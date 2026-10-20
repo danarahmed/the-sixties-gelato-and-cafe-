@@ -1,7 +1,8 @@
 // Offline (audit H-04, then round fifteen, 0073): the app says plainly there
 // is no connection, in English, Arabic and Kurdish, right to left where the
-// language is; a bill on a table waits for the connection, and a quick sale
-// is kept on the till and sent once it is back, recorded once. And on a slow
+// language is; a quick sale is kept on the till and sent once it is back,
+// recorded once; and (0082) a table's bill keeps taking orders and can be paid,
+// its changes saved and the bill paid once the connection is back. And on a slow
 // connection, each page is hydrated once.
 import { chromium, BASE, check, done, open, signIn, sql } from "./lib.mjs";
 
@@ -59,7 +60,6 @@ console.log("▸ a quick sale with no connection: kept on the till, sent once it
   const strip = page.getByTestId("offline-strip");
   check((await strip.getAttribute("data-waiting")) === "1", "the till says one sale is kept on it");
   check(sales() === before, "nothing reaches the database while there is no connection");
-  // A bill waits for the connection.
   await ctx.setOffline(false);
   await strip.waitFor({ state: "detached", timeout: 20000 });
   check(sales() === before + 1, "back online, the sale is sent by itself");
@@ -72,6 +72,88 @@ console.log("▸ a quick sale with no connection: kept on the till, sent once it
   await page.reload();
   await page.waitForTimeout(1500);
   check(sales() === before + 1, "and sent once: reopening the till sends nothing again");
+  await ctx.close();
+}
+
+// A named bill opened by the cashier, with one espresso on it (0082).
+function openBill(label) {
+  sql(`select test.act_as('cashier@example.com');
+       select open_tab('dine_in', p_label => '${label}',
+         p_lines => '[{"variant_id": "d1000000-0000-0000-0000-000000000001", "qty": 1}]')`);
+  return sql(`select id from pos_tab where label = '${label}' and status = 'open'`);
+}
+async function toBill(page, label) {
+  await page.getByRole("tab", { name: /Tables/ }).click();
+  await page.locator(".bill-row", { hasText: label }).click();
+}
+const espresso = (page) => page.locator(".product-tile", { hasText: "Golden espresso" });
+
+console.log(
+  "▸ a table's bill with no connection: what is added is kept, and saved once it is back",
+);
+{
+  const id = openBill("Offline K");
+  // A manager: the Tables view is there even before the café sets out its tables.
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/pos");
+  await ctx.setOffline(true);
+  await page.waitForTimeout(300);
+  await toBill(page, "Offline K");
+  await espresso(page).click();
+  check(
+    ((await page.getByTestId("order-offline").textContent()) ?? "").includes("this bill is kept"),
+    "the bill says it is kept on this till",
+  );
+  await page.getByTestId("bill-save").click();
+  await page.getByRole("tab", { name: /Tables/ }).click();
+  await page.getByTestId("kept-bill").first().waitFor({ timeout: 10000 });
+  check(
+    sql(`select sum(qty) from pos_tab_line where tab_id = '${id}'`) === "1",
+    "nothing reaches the database while there is no connection",
+  );
+  await ctx.setOffline(false);
+  await page.getByTestId("kept-bills").waitFor({ state: "detached", timeout: 40000 });
+  check(
+    sql(`select sum(qty) from pos_tab_line where tab_id = '${id}'`) === "2",
+    "back online, the second espresso is saved on the bill, once",
+  );
+  await ctx.close();
+}
+
+console.log("▸ a table's bill paid with no connection: paid as itself, at the time it was paid");
+{
+  const id = openBill("Offline P");
+  const before = sales();
+  const { ctx, page } = await signIn(browser, "manager");
+  await open(page, "/pos");
+  await ctx.setOffline(true);
+  await page.waitForTimeout(300);
+  await toBill(page, "Offline P");
+  await espresso(page).click();
+  await page.getByRole("button", { name: /^Card$/ }).click();
+  await page.locator(".pay-confirm").click();
+  await page.getByTestId("receipt-offline").waitFor();
+  check(
+    sql(`select status from pos_tab where id = '${id}'`) === "open" && sales() === before,
+    "nothing reaches the database while there is no connection",
+  );
+  const paidAt = Date.now();
+  await ctx.setOffline(false);
+  await page.getByTestId("offline-strip").waitFor({ state: "detached", timeout: 40000 });
+  check(
+    sql(`select status || ' ' || (select sum(qty) from pos_tab_line where tab_id = t.id)
+           from pos_tab t where id = '${id}'`) === "paid 2",
+    "back online, the bill is saved with both espressos and paid",
+  );
+  check(sales() === before + 1, "one sale");
+  check(
+    sql(`select o.sold_offline_at is not null
+                and abs(extract(epoch from o.placed_at) * 1000 - ${paidAt}) < 30000
+                and o.net_amount = 2 * price_on('d1000000-0000-0000-0000-000000000001', 'dine_in', o.location_id, current_date)
+           from sales_order o join pos_tab t on t.sales_order_id = o.id where t.id = '${id}'`) ===
+      "t",
+    "recorded as sold offline, when the money was taken, at the bill's price",
+  );
   await ctx.close();
 }
 

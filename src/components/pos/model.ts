@@ -184,6 +184,8 @@ export interface Order {
   /** Its customer (0050), and the one the bill was last saved with (customerKey). */
   customer: OrderCustomer | null;
   savedCustomer: string;
+  /** A bill opened while the connection was down: this till's own id for it (0082). */
+  localId?: string;
 }
 
 /** A line as the barista's ticket has it: what to make, how many, and how. */

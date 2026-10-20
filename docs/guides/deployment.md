@@ -76,6 +76,7 @@ Plan a short window when the café is closed.
 | End-of-day markdowns (`0079`)           | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new table, column or function then confirmed present on the live database                                                                                                                                                                                                                                                                     |
 | Two-step sign-in (`0080`)               | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new table, column or function then confirmed present on the live database                                                                                                                                                                                                                                                                     |
 | The books completed (`0081`)            | ✅ Applied by the owner in the SQL editor on 20 October, in order after the one before; each one's new table, column or function then confirmed present on the live database                                                                                                                                                                                                                                                                     |
+| Table bills without internet (`0082`)   | ⏳ Waiting for the owner to paste it in the SQL editor (see [After `0082`](#after-0082)). Before it a bill paid offline is recorded when it is sent, not when it was paid                                                                                                                                                                                                                                                                        |
 
 ## 0. Before you start
 
@@ -3791,6 +3792,34 @@ and the chart adds only incomes and costs, as before. Rehearsed with
 It is applied by the owner, in Supabase's SQL editor, after `0080`:
 
 1. Open the file `supabase/migrations/0081_equipment.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0082`
+
+Migration `0082` lets a bill on a table be paid without internet (G1): the
+till keeps the payment, and the changes made to the bill, and sends them when
+the connection is back.
+
+What it changes:
+
+- **New function:** `settle_tab_offline` (anyone who sells): a bill paid
+  offline is recorded at the time the money was taken, marked sold offline,
+  once whatever happens. If another till changed the bill meanwhile it is
+  refused; if another till paid it, it is refused with that said. Either way
+  it waits on the till for a manager.
+- No table is added and nothing recorded changes.
+
+Before it is applied, a bill paid offline is still sent and paid, but at the
+time it is sent. Rehearsed with `tests/sql/offline_bills.test.sql` and the
+browser suite `offline`.
+
+It is applied by the owner, in Supabase's SQL editor, after `0081`:
+
+1. Open the file `supabase/migrations/0082_offline_bills.sql` on GitHub, press **Raw**,
    select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run

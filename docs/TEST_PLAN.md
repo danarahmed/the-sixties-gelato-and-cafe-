@@ -557,6 +557,12 @@ key is sent, spaces taken out, read by the till; one size only; too short or
 with other signs refused; a scale's short code; taken off; a cashier sets
 none; each change audited.
 
+`offline_bills.test.sql` (G1, `0082`): a table's bill paid offline is paid
+at what it showed, at the time the money was taken, marked sold offline, on
+its till; sent twice, one sale; paid on another till meanwhile, refused and
+not taken as sent; changed on another till since, refused and left open; a
+time to come, dollars and a bill not the café's refused.
+
 `equipment.test.sql` (round twenty-four, `0081`): an oven bought from the
 bank, once whatever its key is sent; no cost, no months, a worth at the end
 over the cost, a day to come refused; a fridge in the books already posts

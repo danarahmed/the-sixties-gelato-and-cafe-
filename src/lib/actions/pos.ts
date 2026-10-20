@@ -10,7 +10,7 @@
  * shows the same thing.
  */
 import { z } from "zod";
-import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { MISSING_UPDATE, badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { parseOpenBills, type OpenBill } from "@/lib/db/pos";
 import {
   discountAmount,
@@ -220,6 +220,52 @@ export async function payBillAction(
   refresh(...PAID_PATHS);
   // A bill is never a delivery platform's: the database opens none for them.
   return withBills({ ...saleReceipt(r.data), platformOrderNo: null });
+}
+
+const offlinePayInput = tabRef.extend({
+  key: z.string().uuid("This payment has no idempotency key"),
+  tenders: payments,
+  expectedNet: optionalNonNegative("The total shown"),
+  /** When the till took the money, and who was signed in on it then. */
+  soldAt: z.string().datetime({ offset: true, message: "Say when the sale was made" }),
+  soldBy: id("a person").nullish(),
+  device: optionalText(64),
+});
+
+/**
+ * A bill paid while the café's internet was down, sent once it is back (0082):
+ * paid once whatever happens, at the time the money was taken. Before the
+ * owner applies 0082 it is paid as any bill is, now.
+ */
+export async function payBillOfflineAction(
+  input: z.input<typeof offlinePayInput>,
+): Promise<ActionResult<SaleReceipt>> {
+  const v = parse(offlinePayInput, input);
+  if (!v.ok) return v;
+  const paid = howPaid(v.data);
+  if (!paid) return { ok: false, error: "Choose how it was paid" };
+  let r = await callRpc<Record<string, unknown>>("settle_tab_offline", {
+    p_tab: v.data.tabId,
+    p_version: v.data.version,
+    p_idempotency_key: v.data.key,
+    p_sold_at: v.data.soldAt,
+    p_tenders: paid.p_tenders,
+    p_expected_net: v.data.expectedNet,
+    p_sold_by: v.data.soldBy ?? null,
+    p_device: v.data.device ?? null,
+  });
+  if (!r.ok && r.error === MISSING_UPDATE)
+    r = await callRpc<Record<string, unknown>>("settle_tab", {
+      p_tab: v.data.tabId,
+      p_version: v.data.version,
+      p_idempotency_key: v.data.key,
+      p_tender: paid.p_tender,
+      p_tenders: paid.p_tenders,
+      p_expected_net: v.data.expectedNet,
+    });
+  if (!r.ok) return r;
+  refresh(...PAID_PATHS);
+  return { ok: true, data: { ...saleReceipt(r.data), platformOrderNo: null } };
 }
 
 const splitInput = tabRef.extend({

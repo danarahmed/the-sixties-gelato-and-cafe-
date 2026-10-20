@@ -2054,6 +2054,13 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Table bills without internet (`0082`)
+
+- No table. `settle_tab_offline` pays a bill as `settle_tab` does, for a
+  payment the till took while the connection was down: dated when it was
+  taken (`sales_order.placed_at`, `sold_offline_at`), not stopped for stock,
+  and refused when another till changed or paid the bill meanwhile.
+
 ### The books completed (`0081`)
 
 - **`fixed_asset`**: a piece of equipment: its name, the account it sits in
