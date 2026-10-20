@@ -4879,6 +4879,18 @@ describe("the books by place (0056, release AB)", () => {
       "m",
       "s",
     ]);
+    // What the kitchen sold the branch at the transfer price (0084): each one's, not the café's.
+    const priced = pnlByPlace(
+      [
+        ...rows,
+        row("4950", "revenue", "k", "Central Kitchen", 300),
+        row("5950", "cost_of_sales", "m", "Main Branch", 300),
+      ],
+      places,
+    );
+    expect(priced.totals.map((x) => x.net)).toEqual([7050, 5500, -200, -200, -1000]);
+    expect(priced.lines.find((l) => l.code === "4950")?.total).toBe(0);
+    expect(priced.total).toEqual(table.total);
   });
 });
 
