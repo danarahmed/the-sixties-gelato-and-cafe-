@@ -127,5 +127,40 @@ console.log("▸ cancelled by a manager, the deposit kept");
   await ctx.close();
 }
 
+console.log("▸ a customer the café knows: found by their number, only the time to choose");
+{
+  sql(`insert into customer (business_id, full_name, phone)
+       select '00000000-0000-0000-0000-0000000000b1', 'Hawre Karim', '+9647504445566'
+        where not exists (select 1 from customer where phone = '+9647504445566')`);
+  const { ctx, page } = await signIn(browser, "cashier");
+  await open(page, "/pos");
+  await menu(page);
+  await espresso(page).click();
+  await page.getByTestId("preorders-button").click();
+  const form = page.getByTestId("preorder-form");
+  await form.waitFor();
+  await form.getByTestId("preorder-phone").fill("07504445566");
+  await form.getByTestId("preorder-find").click();
+  await form.getByTestId("preorder-who").waitFor({ timeout: 10000 });
+  check(
+    ((await form.getByTestId("preorder-who").textContent()) ?? "").includes("Hawre Karim") &&
+      (await form.getByTestId("preorder-name").count()) === 0,
+    "their name comes from the customer: nothing to type",
+  );
+  await form.getByRole("radio", { name: "Today" }).click();
+  await form.getByTestId("preorder-time").fill("16:30");
+  await form.getByTestId("preorder-take").click();
+  await page
+    .locator(`[data-testid="preorder-row"]`, { hasText: "Hawre Karim" })
+    .waitFor({ timeout: 10000 });
+  check(
+    sql(`select customer_phone || ' ' || to_char(pickup_at at time zone 'Asia/Baghdad', 'HH24:MI')
+                || ' ' || ((pickup_at at time zone 'Asia/Baghdad')::date = (now() at time zone 'Asia/Baghdad')::date)
+           from pre_order where customer_name = 'Hawre Karim'`) === "+9647504445566 16:30 true",
+    "taken with their number, for today at 16:30",
+  );
+  await ctx.close();
+}
+
 await browser.close();
 done("preorders");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { findCustomerAction } from "@/lib/actions/customers";
 import {
   cancelPreOrderAction,
   collectPreOrderAction,
@@ -43,11 +44,13 @@ function productName(l: PreOrder["lines"][number], locale: Locale): string {
  * Pre-orders at the till (0076): the open ones, soonest first, each
  * collected — its deposit paying its part, the rest paid with a tap — or
  * cancelled, the deposit given back or kept; and the order on the till taken
- * as a new one, with the customer's name, when it is collected, and what they
+ * as a new one: the order's customer (or one found by their number) named
+ * on it without typing, the day and the time it is collected, and what they
  * pay now.
  */
 export function PreOrdersDialog({
   cart,
+  customer = null,
   channel,
   discounted,
   payMethods,
@@ -59,6 +62,8 @@ export function PreOrdersDialog({
   onClose,
 }: {
   cart: CartLine[];
+  /** The customer already on the order at the till: their name and number are used. */
+  customer?: { id: string; name: string; phone: string } | null;
   channel: string;
   /** The order on the till carries a discount: a pre-order is at the menu's prices. */
   discounted: boolean;
@@ -98,15 +103,35 @@ export function PreOrdersDialog({
   useEffect(reload, []);
 
   // ------------------------------------------------------------ a new one
-  const tomorrow = `${addDays(businessToday(timezone), 1)}T10:00`;
+  const today = businessToday(timezone);
+  const tomorrow = addDays(today, 1);
   const [form, setForm] = useState({
     customer: "",
     phone: "",
-    pickup: tomorrow,
+    day: tomorrow,
+    time: "10:00",
     note: "",
     deposit: "",
     way: 0,
   });
+  // Whose it is: the order's customer, or one found here by their number.
+  const [who, setWho] = useState<{ name: string; phone: string } | null>(
+    customer ? { name: customer.name, phone: customer.phone } : null,
+  );
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [nobody, setNobody] = useState(false);
+  function find() {
+    if (!form.phone.trim()) return;
+    setError(null);
+    setNobody(false);
+    start(async () => {
+      const r = await findCustomerAction(form.phone);
+      if (!r.ok) return setError(r.error);
+      if (r.data) setWho({ name: r.data.name, phone: r.data.phone });
+      else setNobody(true);
+    });
+  }
+  const name = who?.name ?? form.customer;
   const takeKey = useRef(crypto.randomUUID());
   const cartTotal = cart.reduce((s, l) => s + l.amount, 0);
   const withAddons = cart.some((l) => l.hasAddons);
@@ -114,7 +139,7 @@ export function PreOrdersDialog({
 
   function take() {
     setError(null);
-    const pickupAt = localTimeToIso(form.pickup, timezone);
+    const pickupAt = localTimeToIso(`${form.day}T${form.time}`, timezone);
     if (!pickupAt) return setError("Say when it is collected");
     const amount = form.deposit.trim() === "" ? 0 : Number(form.deposit.replace(/,/g, ""));
     if (!Number.isFinite(amount) || amount < 0) return setError("The payments cannot be read");
@@ -122,8 +147,8 @@ export function PreOrdersDialog({
     start(async () => {
       const r = await takePreOrderAction(
         {
-          customer: form.customer,
-          phone: form.phone || null,
+          customer: name,
+          phone: (who?.phone ?? form.phone) || null,
           pickupAt,
           note: form.note || null,
           channel: channel as "takeaway" | "dine_in",
@@ -337,65 +362,145 @@ export function PreOrdersDialog({
                     : t("A pre-order is at the menu's prices: take the discount off first.")}
               </p>
             )}
-            <label className="field">
-              <span>{t("Whose order is it?")}</span>
-              <input
-                value={form.customer}
-                maxLength={80}
-                autoFocus
-                onChange={(e) => setForm({ ...form, customer: e.target.value })}
-                data-testid="preorder-name"
-              />
-            </label>
-            <label className="field">
-              <span>{t("Phone (optional)")}</span>
-              <input
-                value={form.phone}
-                inputMode="tel"
-                maxLength={40}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              />
-            </label>
-            <label className="field">
+            {who ? (
+              <div
+                className="card"
+                style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
+                data-testid="preorder-who"
+              >
+                <Icon name="user" />
+                <b>
+                  <bdi>{who.name}</bdi>
+                </b>
+                {who.phone && (
+                  <span className="muted mono">
+                    <bdi>{who.phone}</bdi>
+                  </span>
+                )}
+                <span style={{ flex: 1 }} />
+                <button
+                  type="button"
+                  className="linklike"
+                  onClick={() => {
+                    setWho(null);
+                    setForm({ ...form, customer: "", phone: "" });
+                  }}
+                >
+                  {t("Change")}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="field">
+                  <span>{t("Their phone, to find them")}</span>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <input
+                      value={form.phone}
+                      inputMode="tel"
+                      maxLength={40}
+                      autoFocus
+                      aria-label={t("Their phone, to find them")}
+                      onChange={(e) => {
+                        setNobody(false);
+                        setForm({ ...form, phone: e.target.value });
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          find();
+                        }
+                      }}
+                      data-testid="preorder-phone"
+                    />
+                    <button
+                      type="button"
+                      disabled={busy || !form.phone.trim()}
+                      onClick={find}
+                      data-testid="preorder-find"
+                    >
+                      {t("Find")}
+                    </button>
+                  </div>
+                  {nobody && (
+                    <span className="muted" style={{ fontSize: ".85rem" }}>
+                      {t("No customer has this number: write their name below.")}
+                    </span>
+                  )}
+                </div>
+                <label className="field">
+                  <span>{t("Whose order is it?")}</span>
+                  <input
+                    value={form.customer}
+                    maxLength={80}
+                    onChange={(e) => setForm({ ...form, customer: e.target.value })}
+                    data-testid="preorder-name"
+                  />
+                </label>
+              </>
+            )}
+            <div className="field">
               <span>{t("Collected on")}</span>
-              <input
-                type="datetime-local"
-                value={form.pickup}
-                onChange={(e) => setForm({ ...form, pickup: e.target.value })}
-                data-testid="preorder-pickup"
-              />
-            </label>
-            <label className="field">
-              <span>{t("Note for the kitchen (optional)")}</span>
-              <input
-                value={form.note}
-                maxLength={500}
-                onChange={(e) => setForm({ ...form, note: e.target.value })}
-              />
-            </label>
-            <label className="field">
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                <div className="seg" role="radiogroup" aria-label={t("Collected on")}>
+                  {[
+                    { day: today, label: t("Today") },
+                    { day: tomorrow, label: t("Tomorrow") },
+                  ].map((d) => (
+                    <button
+                      key={d.day}
+                      type="button"
+                      role="radio"
+                      aria-checked={form.day === d.day}
+                      className={form.day === d.day ? "active" : ""}
+                      onClick={() => setForm({ ...form, day: d.day })}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="date"
+                  value={form.day}
+                  min={today}
+                  aria-label={t("Day")}
+                  onChange={(e) => e.target.value && setForm({ ...form, day: e.target.value })}
+                  data-testid="preorder-day"
+                />
+                <input
+                  type="time"
+                  value={form.time}
+                  step={300}
+                  aria-label={t("Time")}
+                  onChange={(e) => e.target.value && setForm({ ...form, time: e.target.value })}
+                  data-testid="preorder-time"
+                />
+              </div>
+            </div>
+            <div className="field">
               <span>{t("Paid now (optional)")}</span>
-              <input
-                inputMode="numeric"
-                value={form.deposit}
-                placeholder="0"
-                onChange={(e) => setForm({ ...form, deposit: e.target.value })}
-                data-testid="preorder-deposit"
-              />
-            </label>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={() => setForm({ ...form, deposit: String(Math.round(cartTotal / 2)) })}
-              >
-                {t("Half")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setForm({ ...form, deposit: String(cartTotal) })}
-              >
-                {t("All of it")}
-              </button>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, deposit: String(Math.round(cartTotal / 2)) })}
+                >
+                  {t("Half")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, deposit: String(cartTotal) })}
+                >
+                  {t("All of it")}
+                </button>
+                <input
+                  inputMode="numeric"
+                  value={form.deposit}
+                  placeholder="0"
+                  aria-label={t("Paid now (optional)")}
+                  style={{ maxWidth: 140 }}
+                  onChange={(e) => setForm({ ...form, deposit: e.target.value })}
+                  data-testid="preorder-deposit"
+                />
+              </div>
             </div>
             {form.deposit.trim() !== "" && Number(form.deposit) > 0 && (
               <div className="seg" role="radiogroup" aria-label={t("How is it paid?")}>
@@ -413,6 +518,23 @@ export function PreOrdersDialog({
                 ))}
               </div>
             )}
+            {noteOpen || form.note ? (
+              <label className="field">
+                <span>{t("Note for the kitchen (optional)")}</span>
+                <input
+                  value={form.note}
+                  maxLength={500}
+                  autoFocus
+                  onChange={(e) => setForm({ ...form, note: e.target.value })}
+                />
+              </label>
+            ) : (
+              <div>
+                <button type="button" className="linklike" onClick={() => setNoteOpen(true)}>
+                  ＋ {t("Note for the kitchen (optional)")}
+                </button>
+              </div>
+            )}
             {error && (
               <p className="red" role="alert" style={{ margin: 0 }}>
                 {say(error)}
@@ -422,7 +544,7 @@ export function PreOrdersDialog({
               <button
                 type="button"
                 className="btn-primary"
-                disabled={busy || !form.customer.trim() || withAddons || discounted || wrongChannel}
+                disabled={busy || !name.trim() || withAddons || discounted || wrongChannel}
                 onClick={take}
                 data-testid="preorder-take"
               >

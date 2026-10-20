@@ -32,6 +32,12 @@ const phrases: PhraseBook = {
     ckb: "داواکاریی پێشوەخت بە نرخی لیستەکەیە: سەرەتا داشکاندنەکە لابە.",
   },
   "Whose order is it?": { ar: "طلب من هذا؟", ckb: "ئەم داواکارییە هی کێیە؟" },
+  "Their phone, to find them": { ar: "هاتفه، للعثور عليه", ckb: "تەلەفۆنەکەی، بۆ دۆزینەوەی" },
+  "No customer has this number: write their name below.": {
+    ar: "لا يوجد زبون بهذا الرقم: اكتب اسمه أدناه.",
+    ckb: "هیچ کڕیارێک ئەم ژمارەیەی نییە: ناوەکەی لە خوارەوە بنووسە.",
+  },
+  Time: { ar: "الوقت", ckb: "کات" },
   "Phone (optional)": { ar: "الهاتف (اختياري)", ckb: "تەلەفۆن (ئارەزوومەندانە)" },
   "Collected on": { ar: "يُستلم في", ckb: "ڕۆژی وەرگرتن" },
   "Note for the kitchen (optional)": {
