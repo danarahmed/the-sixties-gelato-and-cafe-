@@ -13,8 +13,9 @@
 --    cancel_po, approve_payroll), with its own checks: nothing here approves.
 --  * approvals_waiting_count(): how many, for the menu.
 --  * The alert approvals_waiting: a count submitted, or an order drafted and
---    left an hour, opens it; its subject is the newest one waiting, so each
---    new arrival is a new alert and reaches a phone (0072).
+--    left an hour, opens it; its subject is the one that came last (a count
+--    when it is submitted, an order when its hour is up), so each new arrival
+--    is a new alert and reaches a phone (0072).
 --
 -- Nothing recorded changes.
 -- =============================================================================
@@ -153,7 +154,7 @@ language sql stable set search_path = public as $$
                     from stock_count c
                    where c.business_id = p_business and c.status = 'submitted' and c.submitted_at <= p_now
                   union all
-                  select 'order', o.id, coalesce(o.updated_at, o.ordered_at)
+                  select 'order', o.id, coalesce(o.updated_at, o.ordered_at) + interval '1 hour'
                     from purchase_order o
                    where o.business_id = p_business and po_waits(o, p_now)) w) x
    where x.n > 0

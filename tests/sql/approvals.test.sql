@@ -75,13 +75,22 @@ insert into res select 'PO', save_po(null,
   test.today() + 2, 'For the weekend', null, gen_random_uuid());
 select test.eq(pg_temp.kinds(), 'count,loss', 'an order just written is still being written');
 select pg_temp.age_po((pg_temp.r('PO') ->> 'po_no')::bigint);
-select test.eq(pg_temp.kinds(), 'count,loss,order', 'left an hour, it waits');
+select test.eq(pg_temp.kinds(), 'order,count,loss', 'left an hour, it waits: the oldest, first');
 select test.eq((pg_temp.one('order') ->> 'value') || ' ' || (pg_temp.one('order') ->> 'reason') || ' '
                || (pg_temp.one('order') ->> 'may_approve'),
   '18000 For the weekend true', 'its total, its note, and the owner may approve it');
-select test.ok(pg_temp.alert() like (pg_temp.r('PO') ->> 'po_id') || ' orange 2 waiting % 1 count(s), 1 order(s)',
-  'a new arrival is a new alert: its subject the order now');
-select test.eq(approvals_waiting_count(), 3, 'the menu counts three');
+select test.ok(pg_temp.alert() like (pg_temp.r('C1') #>> '{}') || ' orange 2 waiting % 1 count(s), 1 order(s)',
+  'the alert counts it; the count, which came after its hour was up, is still the last to come');
+-- A second count, submitted now, comes last: a new subject, a new alert for the phone.
+select test.act_as('manager@example.com');
+insert into res select 'C2', to_jsonb(start_stock_count(array['c0000000-0000-0000-0000-000000000003'::uuid]));
+select record_count((pg_temp.r('C2') #>> '{}')::uuid, 'c0000000-0000-0000-0000-000000000003', 24, 'each');
+select submit_stock_count((pg_temp.r('C2') #>> '{}')::uuid);
+select test.act_as('owner@example.com');
+select test.ok(pg_temp.alert() like (pg_temp.r('C2') #>> '{}') || ' orange 3 waiting % 2 count(s), 1 order(s)',
+  'a new arrival is a new alert: its subject the new count');
+select reject_stock_count((pg_temp.r('C2') #>> '{}')::uuid, 'Counted twice');
+select test.eq(approvals_waiting_count(), 3, 'the menu counts three, the second count sent back');
 
 -- ------------------------------------------------------------ decided where they are decided
 select approve_stock_count((pg_temp.r('C1') #>> '{}')::uuid);
