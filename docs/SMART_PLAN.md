@@ -233,10 +233,12 @@ by itself at the hour; a bill keeps the price it was rung at. Migration
 with its tests.
 
 **F3 · Tips and a service charge.** A tip added when paying (by card, cash
-or phone), kept apart from sales (account 2400 Tips owed to staff) and
-shared on Payroll by hours worked or equally, as the owner sets. A service
-charge per channel or for tables (a percentage), shown on the bill and the
-receipt, counted as revenue apart from sales. Migration with its tests.
+or phone), kept apart from sales (account 2200 Tips owed to staff: 2400 is
+kept for loans) and shared between the people the owner ticks, each day's
+at the end of that day, paid with their salary (as the owner chose). A
+service charge (a percentage) on any of the café's own ways of selling, or
+off everywhere (as the owner chose), shown on the bill and the receipt,
+counted as revenue apart from sales (4300). Migration with its tests.
 
 **F4 · A dashboard each role chooses.** Cards picked and ordered per role
 (and per person), favourite reports pinned to the top of Reports; the
@@ -257,7 +259,7 @@ and printed by the test on Test your devices.
 | 2 ✓  | E4 find anything, E6 each role's first screen, E8 photos on the till         | —         |
 | 3 ✓  | E5 the approvals inbox, E7 undo                                              | `0088`    |
 | 4 ✓  | F1 meal deals, F2 prices by time of day                                      | `0089`    |
-| 5    | F3 tips and a service charge                                                 | `0090`    |
+| 5 ✓  | F3 tips and a service charge                                                 | `0090`    |
 | 6    | F4 the dashboard each role chooses, F5 the café's own receipt                | `0091`    |
 | 7    | The simulated year on the copy, with the planted problems; the backtest tool | —         |
 | 8    | Part 3, smarter buying (parts 5 and 6 use its drafts and lead times)         | `0092`    |
@@ -289,6 +291,17 @@ only in its hours. **Meal deals** are two to eight places (a size, or any of
 a category's), a price per way of selling, days and hours; each thing is
 sold as itself and the deal's give-away is its discount. A deal is paid at
 the counter: it is not kept on a table's bill, nor sold on a platform.
+The **service charge** is set on Settings for each of the café's own ways
+of selling (none on a delivery platform, which sets what its customers
+pay); the till adds it on what the products come to after discounts when a
+sale or a table's bill is paid, never to a pre-order collected or a customer
+invoiced; someone who may give discounts can take it off a sale. A **tip**
+is added on the way to pay ("keep the change" in cash). On Payroll the owner
+ticks who shares the tips; each day's are split equally between those
+ticked who clocked in that day (all of them when nobody did) and added to
+each one's pay for the month; approving it takes them out of 2200, not out
+of the salaries' cost. A refund gives back what was bought; voiding a sale
+takes back all of it.
 
 Easier and more flexible first: every user feels them from the first day,
 and the smart parts then learn from deals, tips and time-of-day prices too.

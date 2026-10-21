@@ -1288,6 +1288,14 @@ database, behind a small local stand-in for Supabase's auth service.
   refused: a deal is paid at the counter. Sales analysis lists the deal and
   the 500 it gave away. The price stopped, the espresso is back to its usual
   price.
+- `tips` (`0090`, run before `setup`): the owner sets a service charge of
+  10% at a table on Settings (a delivery platform is offered none) and ticks
+  two people to share the tips on Payroll. At the till an espresso at a table
+  shows the 10% on the way to pay; a tip of 500 is added, and the card pays
+  all three, recorded apart: the service charge, the tip and the espresso. A
+  second espresso is paid with the service charge taken off. Payroll shows
+  today's tips shared between the two; Sales analysis shows what the till
+  took of both. The service charge is turned off again for the suites after.
 - `setup` (round seven, run last: it clears the café): the test café is
   cleared with `supabase/remediation/start-fresh.sql`, every record and the
   setup lists gone, the logins and the chart of accounts kept, the audit

@@ -21,8 +21,9 @@ const latest = () =>
           from sales_order o order by created_at desc limit 1`);
 
 // Two people who work here, made now when no suite before made them.
+const MAIN = last(`select default_location('${B}')`);
 sql(`select test.act_as('owner@example.com');
-     select save_employee(null, n, null, 'Waiter', default_location('${B}'),
+     select save_employee(null, n, null, 'Waiter', '${MAIN}',
                           (now() at time zone '${tz}')::date - 30, null, gen_random_uuid())
        from unnest(array['Tip Avin', 'Tip Bana']) n
       where not exists (select 1 from employee where full_name = n)`);
