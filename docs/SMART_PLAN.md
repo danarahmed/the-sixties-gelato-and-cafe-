@@ -320,6 +320,19 @@ reviews page or none, and a line at the foot; the bill, the receipt, a
 refund's slip and the device test print it (a refund's slip has no QR
 code).
 
+**The simplification round** (asked for by the owner between steps 6 and
+7, for every role; no migration). Nobody loses a screen: the menu shows each
+person's daily screens and folds the rest under **More**, which opens with a
+tap and by itself on one of its screens (owner and general manager 25 → 16
+shown, branch manager 23 → 12, accountant 19 → 10, auditor 18 → 7,
+purchasing 14 → 5; cashier, barista and counter unchanged at 1–3).
+**Settings** is six folded groups — Selling, People and roles, Rules and
+warnings, Places, Languages, the café's details — each heading saying what
+is turned on inside it, with **Not set up yet** at the top listing what is
+off and what each gives; a link into Settings (`/settings#receipt`) opens its
+group. The Dashboard's setup list is folded to one line for anyone but the
+owner and a general manager.
+
 Easier and more flexible first: every user feels them from the first day,
 and the smart parts then learn from deals, tips and time-of-day prices too.
 

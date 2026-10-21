@@ -47,7 +47,7 @@ async function ring(page, n) {
 console.log("▸ the owner adds FIB and FastPay on Settings, one press each");
 {
   const { ctx, page } = await signIn(browser, "owner");
-  await open(page, "/settings");
+  await open(page, "/settings#ways-to-pay");
   const card = page.getByTestId("settings-pay-methods");
   check(
     (await card.locator("h3").textContent()) === "Ways to pay",
@@ -277,7 +277,7 @@ console.log("▸ Reports and the end of the day list FIB");
 console.log("▸ taken out of use: the till offers cash and the card again");
 {
   const { ctx, page } = await signIn(browser, "owner");
-  await open(page, "/settings");
+  await open(page, "/settings#ways-to-pay");
   const card = page.getByTestId("settings-pay-methods");
   for (const name of ["FIB", "FastPay"]) {
     const row = card.getByTestId("pay-method-row").filter({ hasText: name });

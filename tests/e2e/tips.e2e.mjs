@@ -31,7 +31,7 @@ sql(`select test.act_as('owner@example.com');
 console.log("▸ the owner sets the service charge, and who shares the tips");
 {
   const { ctx, page } = await signIn(browser, "owner");
-  await open(page, "/settings");
+  await open(page, "/settings#service-charge");
   const row = page.locator('[data-testid="service-row"][data-channel="dine_in"]');
   await row.getByTestId("service-percent").fill("10");
   await row.getByTestId("service-save").click();

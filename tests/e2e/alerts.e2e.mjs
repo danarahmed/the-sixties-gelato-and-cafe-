@@ -165,7 +165,7 @@ journal("E2E money into the bank from the owner", [
 console.log("▸ the owner sets a threshold; a manager, a vendor's delivery time");
 {
   const { ctx, page } = await signIn(browser, "owner");
-  await open(page, "/settings");
+  await open(page, "/settings#alerts");
   const form = page.getByTestId("alert-thresholds");
   await form.getByLabel("Margin target (%)").fill("96");
   await form.getByRole("button", { name: "Save thresholds" }).click();

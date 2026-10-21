@@ -34,7 +34,7 @@ sql(`insert into auth.users (id, email) values ('a0000000-0000-0000-0000-0000000
 console.log("▸ the owner changes a rule with a reason, sets one for a role, and sets one back");
 {
   const { ctx, page } = await signIn(browser, "owner");
-  await open(page, "/settings");
+  await open(page, "/settings#rules");
   check(
     (await page.getByTestId("settings-rules").textContent()).includes("25,000 IQD"),
     "Settings shows the café's rules as they stand: refunds over 25,000 IQD",

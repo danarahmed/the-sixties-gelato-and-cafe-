@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { BUILT_IN_LANGUAGES } from "@/lib/i18n/core";
-import { has, requirePermission } from "@/lib/auth/session";
+import { requirePermission } from "@/lib/auth/session";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
 import { getBusinessConfig, getLocations } from "@/lib/db/read";
 import { getMembers } from "@/lib/db/reports";
@@ -25,6 +25,16 @@ import { channelName, isPlatformChannel } from "@/lib/channels";
 import { getLocale } from "@/lib/i18n/server";
 import { getReceiptSetup } from "@/lib/db/receipt";
 import { ReceiptManager } from "@/components/settings/ReceiptManager";
+import { SettingsGroup } from "@/components/settings/SettingsGroup";
+import {
+  notSetUp,
+  peopleStatus,
+  placesStatus,
+  rulesStatus,
+  sellingStatus,
+  type Said,
+  type SettingsFacts,
+} from "@/lib/settingsOverview";
 
 export const dynamic = "force-dynamic";
 
@@ -126,190 +136,113 @@ export default async function SettingsPage() {
       ]
     : [];
 
+  // What each group has turned on, said on its heading, and what is not set
+  // up yet (the simplification round).
+  const facts: SettingsFacts = {
+    waysToPay: methods === null ? null : methods.filter((m) => m.active).length,
+    serviceCharges:
+      serviceCharges === null
+        ? null
+        : Object.entries(serviceCharges).map(([code, percent]) => ({
+            name: channelName(channels, code, locale, t),
+            percent,
+          })),
+    receipt,
+    phoneWarnings: phoneWarnings === null ? null : phoneWarnings.on,
+    people: members.filter((m) => m.isActive).length,
+    branches: locations.filter((l) => l.isActive && l.kind === "branch").length,
+    places: locations.filter((l) => l.isActive).length,
+  };
+  const say = (xs: Said[]) => xs.map(([phrase, values]) => t(phrase, values));
+  const todo = notSetUp(facts);
+
   return (
     <div className="grid" style={{ gap: 16 }}>
       <h1 style={{ margin: 0 }}>{t("nav.settings")}</h1>
+      <p className="muted" style={{ margin: 0 }}>
+        {t("Each heading says what is turned on inside it. Open one to change it.")}
+      </p>
 
-      <div className="card" data-testid="settings-languages">
-        <h3 style={{ marginTop: 0 }}>{t("Languages")}</h3>
-        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
-          {t(
-            "Every screen is in English, Arabic and Kurdish. Add another language, or give any phrase the café's own words.",
-          )}
-        </p>
-        <Link href="/settings/languages">{t("Open Languages →")}</Link>
-      </div>
-
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>{t("People")}</h3>
-        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
-          {t(
-            "Add a person with their email and role. They then open this app, choose “First time here?”, and create their login with that same email; once they confirm it, they are in — with exactly what their role allows. Deactivating someone takes effect on their very next click.",
-          )}
-        </p>
-        <PeopleManager
-          members={members}
-          myId={profile.id}
-          isOwner={profile.roles.includes("owner")}
-          places={locations.filter((l) => l.isActive).map((l) => ({ id: l.id, name: l.name }))}
-        />
-      </div>
-
-      <div className="card" data-testid="settings-rules">
-        <h3 style={{ marginTop: 0 }}>{t("Rules")}</h3>
-        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
-          {t(
-            "The discount a cashier gives without a manager, the refunds and losses a second person approves, and what happens when more stock is used than the books hold. Each is changed on Rules, with a reason, and every change is kept.",
-          )}
-        </p>
-        <table>
-          <tbody>
-            {cafeRules.map((r) => (
-              <tr key={r.key}>
-                <td className="muted">{t(RULE_LABEL[r.key])}</td>
-                <td>
-                  {r.value}
-                  {r.others > 0 && (
-                    <span className="muted" style={{ fontSize: ".8rem" }}>
-                      {" "}
-                      · {t("{n} more for roles or items", { n: r.others })}
-                    </span>
-                  )}
-                </td>
-              </tr>
+      {todo.length > 0 && (
+        <section className="card settings-todo" data-testid="settings-todo">
+          <h2 className="dash-h" style={{ margin: 0 }}>
+            {t("Not set up yet")}
+          </h2>
+          <ul>
+            {todo.map((x) => (
+              <li key={x.anchor} data-testid="settings-todo-item" data-anchor={x.anchor}>
+                <a href={`#${x.anchor}`}>{t(x.title)}</a>
+                <span className="muted"> — {t(x.why)}</span>
+              </li>
             ))}
-          </tbody>
-        </table>
-        <Link href="/settings/rules">{t("Open Rules →")}</Link>
-      </div>
+          </ul>
+        </section>
+      )}
 
-      <div className="card" data-testid="settings-pay-methods" id="ways-to-pay">
-        <h3 style={{ marginTop: 0 }}>{t("Ways to pay")}</h3>
-        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
-          {t(
-            "Cash and the card machine are always taken. Add the apps and banks the café is paid through: each gets an account of its own, where its money stays until it is moved, on Sales.",
-          )}
-        </p>
-        {methods === null ? (
-          <p className="muted" style={{ fontSize: ".85rem" }} data-testid="pay-methods-missing">
-            {t("This needs the database update 0069, which has not been applied yet.")}
+      <SettingsGroup id="selling" title={t("Selling")} status={say(sellingStatus(facts))}>
+        <section className="sg-part" data-testid="settings-pay-methods" id="ways-to-pay">
+          <h3 style={{ marginTop: 0 }}>{t("Ways to pay")}</h3>
+          <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+            {t(
+              "Cash and the card machine are always taken. Add the apps and banks the café is paid through: each gets an account of its own, where its money stays until it is moved, on Sales.",
+            )}
           </p>
-        ) : (
-          <PaymentMethodsManager methods={methods} />
-        )}
-      </div>
+          {methods === null ? (
+            <p className="muted" style={{ fontSize: ".85rem" }} data-testid="pay-methods-missing">
+              {t("This needs the database update 0069, which has not been applied yet.")}
+            </p>
+          ) : (
+            <PaymentMethodsManager methods={methods} />
+          )}
+        </section>
+        <section className="sg-part" data-testid="settings-service" id="service-charge">
+          <h3 style={{ marginTop: 0 }}>{t("Service charge")}</h3>
+          <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+            {t(
+              "A percentage added to what the products come to, on each way of selling you choose — or on none. The till adds it when a sale or a table's bill is paid, and the receipt shows it. It is the café's own money, kept apart from the sales.",
+            )}
+          </p>
+          {serviceCharges === null ? (
+            <p className="muted" style={{ fontSize: ".85rem" }}>
+              {t("This needs the database update 0090, which has not been applied yet.")}
+            </p>
+          ) : (
+            <ServiceChargeManager channels={shopChannels} charges={serviceCharges} />
+          )}
+        </section>
+        <section className="sg-part" data-testid="settings-receipt" id="receipt">
+          <h3 style={{ marginTop: 0 }}>{t("The receipt")}</h3>
+          <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+            {t(
+              "What the bill, the receipt and a refund's slip print besides the sale: your logo, your name and thanks in the three languages, your pages, the Wi-Fi, and a QR code to your menu or your reviews.",
+            )}
+          </p>
+          {receipt === null ? (
+            <p className="muted" style={{ fontSize: ".85rem" }}>
+              {t("This needs the database update 0091, which has not been applied yet.")}
+            </p>
+          ) : (
+            <ReceiptManager setup={receipt} timezone={profile.timezone} />
+          )}
+        </section>
+      </SettingsGroup>
 
-      <div className="card" data-testid="settings-service" id="service-charge">
-        <h3 style={{ marginTop: 0 }}>{t("Service charge")}</h3>
-        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
-          {t(
-            "A percentage added to what the products come to, on each way of selling you choose — or on none. The till adds it when a sale or a table's bill is paid, and the receipt shows it. It is the café's own money, kept apart from the sales.",
-          )}
-        </p>
-        {serviceCharges === null ? (
-          <p className="muted" style={{ fontSize: ".85rem" }}>
-            {t("This needs the database update 0090, which has not been applied yet.")}
+      <SettingsGroup id="people" title={t("People and roles")} status={say(peopleStatus(facts))}>
+        <section className="sg-part" id="people-list">
+          <h3 style={{ marginTop: 0 }}>{t("People")}</h3>
+          <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+            {t(
+              "Add a person with their email and role. They then open this app, choose “First time here?”, and create their login with that same email; once they confirm it, they are in — with exactly what their role allows. Deactivating someone takes effect on their very next click.",
+            )}
           </p>
-        ) : (
-          <ServiceChargeManager channels={shopChannels} charges={serviceCharges} />
-        )}
-      </div>
-
-      <div className="card" data-testid="settings-receipt" id="receipt">
-        <h3 style={{ marginTop: 0 }}>{t("The receipt")}</h3>
-        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
-          {t(
-            "What the bill, the receipt and a refund's slip print besides the sale: your logo, your name and thanks in the three languages, your pages, the Wi-Fi, and a QR code to your menu or your reviews.",
-          )}
-        </p>
-        {receipt === null ? (
-          <p className="muted" style={{ fontSize: ".85rem" }}>
-            {t("This needs the database update 0091, which has not been applied yet.")}
-          </p>
-        ) : (
-          <ReceiptManager setup={receipt} timezone={profile.timezone} />
-        )}
-      </div>
-
-      <div className="card" data-testid="settings-phone-warnings" id="phone-warnings">
-        <h3 style={{ marginTop: 0 }}>{t("Phone warnings")}</h3>
-        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
-          {t(
-            "The warnings of the dashboard, sent to the phones of those who see them, in each one's language, within about five minutes. Turned on here once for the café; then each person turns them on on a phone, on My account.",
-          )}
-        </p>
-        {phoneWarnings === null ? (
-          <p className="muted" style={{ fontSize: ".85rem" }} data-testid="phone-warnings-missing">
-            {t("This needs the database update 0072, which has not been applied yet.")}
-          </p>
-        ) : (
-          <PhoneWarningsSetup
-            on={phoneWarnings.on}
-            canSend={phoneWarnings.canSend}
-            phones={phoneWarnings.phones}
+          <PeopleManager
+            members={members}
+            myId={profile.id}
+            isOwner={profile.roles.includes("owner")}
+            places={locations.filter((l) => l.isActive).map((l) => ({ id: l.id, name: l.name }))}
           />
-        )}
-      </div>
-
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>{t("Business configuration")}</h3>
-        <table>
-          <tbody>
-            {config.map(([k, v]) => (
-              <tr key={k}>
-                <td className="muted">{t(k)}</td>
-                <td>{v}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="muted" style={{ fontSize: ".8rem" }}>
-          {t("These are changed in the database by the owner; there is no screen for them yet.")}
-        </p>
-      </div>
-
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>{t("Alerts")}</h3>
-        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
-          {t(
-            "The dashboard checks the books against these each time it opens, and says what needs someone: red now, orange soon. Leave a box empty to follow its default. How long a supplier takes to deliver is set on each vendor (Vendors → Edit); this is for the rest.",
-          )}
-        </p>
-        <AlertThresholds thresholds={thresholds} />
-      </div>
-
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>{t("Locations")}</h3>
-        <table>
-          <tbody>
-            {locations.map((l) => (
-              <tr key={l.id}>
-                <td>{l.name}</td>
-                <td className="muted">{t(KIND_LABEL[l.kind] ?? l.kind)}</td>
-                <td className="muted">{l.isActive ? t("active") : t("inactive")}</td>
-                {sectionsInUse.length > 0 && (
-                  <td>
-                    {l.kind === "branch" && (
-                      <PlaceSections
-                        placeId={l.id}
-                        placeName={l.name}
-                        sections={sectionsInUse}
-                        selling={(sectionSetup?.placeSections[l.id] ?? []).filter((id) =>
-                          sectionsInUse.some((s) => s.id === id),
-                        )}
-                        canEdit
-                      />
-                    )}
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {has(profile, "settings.manage") && (
-        <div className="card">
+        </section>
+        <section className="sg-part" id="roles">
           <h3 style={{ marginTop: 0 }}>{t("Roles & what they may do")}</h3>
           <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
             {t(
@@ -336,8 +269,145 @@ export default async function SettingsPage() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        </section>
+      </SettingsGroup>
+
+      <SettingsGroup
+        id="rules-and-warnings"
+        title={t("Rules and warnings")}
+        status={say(rulesStatus(facts))}
+      >
+        <section className="sg-part" data-testid="settings-rules" id="rules">
+          <h3 style={{ marginTop: 0 }}>{t("Rules")}</h3>
+          <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+            {t(
+              "The discount a cashier gives without a manager, the refunds and losses a second person approves, and what happens when more stock is used than the books hold. Each is changed on Rules, with a reason, and every change is kept.",
+            )}
+          </p>
+          <table>
+            <tbody>
+              {cafeRules.map((r) => (
+                <tr key={r.key}>
+                  <td className="muted">{t(RULE_LABEL[r.key])}</td>
+                  <td>
+                    {r.value}
+                    {r.others > 0 && (
+                      <span className="muted" style={{ fontSize: ".8rem" }}>
+                        {" "}
+                        · {t("{n} more for roles or items", { n: r.others })}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <Link href="/settings/rules">{t("Open Rules →")}</Link>
+        </section>
+        <section className="sg-part" id="alerts">
+          <h3 style={{ marginTop: 0 }}>{t("Alerts")}</h3>
+          <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+            {t(
+              "The dashboard checks the books against these each time it opens, and says what needs someone: red now, orange soon. Leave a box empty to follow its default. How long a supplier takes to deliver is set on each vendor (Vendors → Edit); this is for the rest.",
+            )}
+          </p>
+          <AlertThresholds thresholds={thresholds} />
+        </section>
+        <section className="sg-part" data-testid="settings-phone-warnings" id="phone-warnings">
+          <h3 style={{ marginTop: 0 }}>{t("Phone warnings")}</h3>
+          <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+            {t(
+              "The warnings of the dashboard, sent to the phones of those who see them, in each one's language, within about five minutes. Turned on here once for the café; then each person turns them on on a phone, on My account.",
+            )}
+          </p>
+          {phoneWarnings === null ? (
+            <p
+              className="muted"
+              style={{ fontSize: ".85rem" }}
+              data-testid="phone-warnings-missing"
+            >
+              {t("This needs the database update 0072, which has not been applied yet.")}
+            </p>
+          ) : (
+            <PhoneWarningsSetup
+              on={phoneWarnings.on}
+              canSend={phoneWarnings.canSend}
+              phones={phoneWarnings.phones}
+            />
+          )}
+        </section>
+      </SettingsGroup>
+
+      <SettingsGroup id="places" title={t("Places")} status={say(placesStatus(facts))}>
+        <section className="sg-part" id="locations">
+          <h3 style={{ marginTop: 0 }}>{t("Locations")}</h3>
+          <table>
+            <tbody>
+              {locations.map((l) => (
+                <tr key={l.id}>
+                  <td>{l.name}</td>
+                  <td className="muted">{t(KIND_LABEL[l.kind] ?? l.kind)}</td>
+                  <td className="muted">{l.isActive ? t("active") : t("inactive")}</td>
+                  {sectionsInUse.length > 0 && (
+                    <td>
+                      {l.kind === "branch" && (
+                        <PlaceSections
+                          placeId={l.id}
+                          placeName={l.name}
+                          sections={sectionsInUse}
+                          selling={(sectionSetup?.placeSections[l.id] ?? []).filter((id) =>
+                            sectionsInUse.some((s) => s.id === id),
+                          )}
+                          canEdit
+                        />
+                      )}
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      </SettingsGroup>
+
+      <SettingsGroup
+        id="languages"
+        title={t("Languages")}
+        status={[t("English, Arabic and Kurdish")]}
+      >
+        <section className="sg-part" data-testid="settings-languages">
+          <h3 style={{ marginTop: 0 }}>{t("Languages")}</h3>
+          <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+            {t(
+              "Every screen is in English, Arabic and Kurdish. Add another language, or give any phrase the café's own words.",
+            )}
+          </p>
+          <Link href="/settings/languages">{t("Open Languages →")}</Link>
+        </section>
+      </SettingsGroup>
+
+      <SettingsGroup
+        id="details"
+        title={t("The café's details")}
+        status={cfg ? [`${cfg.currencyCode} · ${t(cfg.timezone)}`] : []}
+      >
+        <section className="sg-part">
+          <h3 style={{ marginTop: 0 }}>{t("Business configuration")}</h3>
+          <table>
+            <tbody>
+              {config.map(([k, v]) => (
+                <tr key={k}>
+                  <td className="muted">{t(k)}</td>
+                  <td>{v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="muted" style={{ fontSize: ".8rem" }}>
+            {t("These are changed in the database by the owner; there is no screen for them yet.")}
+          </p>
+        </section>
+      </SettingsGroup>
     </div>
   );
 }

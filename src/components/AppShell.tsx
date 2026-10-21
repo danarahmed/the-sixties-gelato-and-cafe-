@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { Locale } from "@/lib/i18n/core";
-import { NAV, activeHref, holdsAny } from "@/lib/auth/routes";
+import { NAV, activeHref, holdsAny, splitMenu } from "@/lib/auth/routes";
 import { BrandMark, Icon, type IconName } from "@/components/Icon";
 import { TourMenuItem, TourRunner } from "@/components/Tour";
 import { ProblemButton } from "@/components/ProblemButton";
@@ -229,6 +229,8 @@ export function AppShell({
   const { t } = useT();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  // More in the menu, opened or closed by hand; until then, open on one of its screens.
+  const [moreChosen, setMoreChosen] = useState<boolean | null>(null);
 
   // Signed out (sign-in, setup): no navigation, nothing about the business.
   // Nor on the shop's code on a whole screen (0068), a tablet by the door that
@@ -278,6 +280,28 @@ export function AppShell({
     pathname,
     nav.map((n) => n.href),
   );
+  // Each person's daily screens first; the rest under More (the simplification round).
+  const { daily, more } = splitMenu(member.permissions, nav);
+  const inMore = more.some((n) => n.href === lit);
+  const moreOpen = moreChosen ?? inMore;
+  const navLink = (n: (typeof nav)[number]) => {
+    const active = n.href === lit;
+    return (
+      <Link
+        href={n.href}
+        className={active ? "active" : ""}
+        aria-current={active ? "page" : undefined}
+      >
+        {NAV_ICONS[n.href] && <Icon name={NAV_ICONS[n.href]!} size={18} />}
+        {t(n.key)}
+        {n.href === "/approvals" && (member.approvals ?? 0) > 0 && (
+          <span className="nav-count" data-testid="approvals-count">
+            {member.approvals}
+          </span>
+        )}
+      </Link>
+    );
+  };
 
   return (
     <div className={`app-shell${posMode ? " pos-mode" : ""}`}>
@@ -318,28 +342,36 @@ export function AppShell({
           className={`sidenav ${menuOpen ? "open" : ""}`}
           onClick={() => setMenuOpen(false)}
         >
-          {nav.map((n, i) => {
-            const active = n.href === lit;
-            const heading = n.group && n.group !== nav[i - 1]?.group ? n.group : null;
+          {daily.map((n, i) => {
+            const heading = n.group && n.group !== daily[i - 1]?.group ? n.group : null;
             return (
               <div key={n.href}>
                 {heading && <div className="navgroup">{t(heading)}</div>}
-                <Link
-                  href={n.href}
-                  className={active ? "active" : ""}
-                  aria-current={active ? "page" : undefined}
-                >
-                  {NAV_ICONS[n.href] && <Icon name={NAV_ICONS[n.href]!} size={18} />}
-                  {t(n.key)}
-                  {n.href === "/approvals" && (member.approvals ?? 0) > 0 && (
-                    <span className="nav-count" data-testid="approvals-count">
-                      {member.approvals}
-                    </span>
-                  )}
-                </Link>
+                {navLink(n)}
               </div>
             );
           })}
+          {more.length > 0 && (
+            // The screens a person opens now and then: one tap away, and open
+            // by itself on one of them.
+            <details className="nav-more" open={moreOpen} data-testid="nav-more">
+              <summary
+                className="navgroup"
+                onClick={(e) => {
+                  // Opening More keeps a phone's menu open.
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setMoreChosen(!moreOpen);
+                }}
+              >
+                {t("nav.group.more")}
+                <span className="nav-count nav-more-n">{more.length}</span>
+              </summary>
+              {more.map((n) => (
+                <div key={n.href}>{navLink(n)}</div>
+              ))}
+            </details>
+          )}
           <div>
             <div className="navgroup">{t("nav.group.you")}</div>
             <Link
