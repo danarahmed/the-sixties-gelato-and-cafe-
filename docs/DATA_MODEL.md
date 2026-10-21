@@ -2070,7 +2070,9 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   table's bill settled (`record_sale`, `settle_tab` and their offline
   forms, which take `p_tip` and `p_no_service`); a pre-order collected or a
   customer invoiced pays what was agreed. A refund gives back what was
-  bought; voiding takes back all of it.
+  bought and the service charge on it (`sale_refund.service_amount`, debited
+  to `4300`): its share, or all that is left of it with the last of the
+  sale; the tip stays the staff's. Voiding takes back all of it.
 - **`tip_sharer`**: who shares the tips, `from_day` and `until_day`
   (`set_tip_sharers`, `payroll.run`). `tip_shares` splits each day's tips at
   each branch equally between those ticked that day who work there (or at

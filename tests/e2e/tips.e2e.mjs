@@ -62,6 +62,7 @@ console.log("▸ the owner sets the service charge, and who shares the tips");
 }
 
 console.log("▸ the till");
+let tipped = "";
 const price = espresso();
 const service = Math.round(price / 10);
 {
@@ -87,6 +88,7 @@ const service = Math.round(price / 10);
   );
   await page.locator(".pay-confirm").click();
   await page.getByText("Sale recorded").waitFor({ timeout: 15000 });
+  tipped = last(`select id from sales_order order by created_at desc limit 1`);
   check(
     latest() === `${service} 500 ${price} ${price + service + 500}`,
     "recorded: the service charge and the tip apart, the card paid all of it",
@@ -124,6 +126,37 @@ console.log("▸ Payroll and Reports");
   check(
     ((await extras.getByTestId("extras-tips").textContent()) ?? "").includes("500"),
     "Sales analysis shows the service charge and the tips",
+  );
+  await ctx.close();
+}
+
+console.log("▸ a refund gives back the service charge too, not the tip");
+{
+  const { ctx, page } = await signIn(browser, "owner");
+  await open(page, "/orders");
+  await page
+    .locator("tbody tr", { hasText: tipped.slice(0, 8) })
+    .getByRole("button", { name: "Refund" })
+    .click();
+  const dialog = page.getByTestId("refund-dialog");
+  check(
+    ((await dialog.getByTestId("refund-total").textContent()) ?? "").includes(
+      (price + service).toLocaleString("en"),
+    ) &&
+      ((await dialog.getByTestId("refund-service").textContent()) ?? "").includes(
+        service.toLocaleString("en"),
+      ),
+    `it gives back ${(price + service).toLocaleString("en")}: the espresso and its service charge`,
+  );
+  await dialog.getByLabel("Why refund it?").selectOption("changed_mind");
+  await dialog.getByRole("button", { name: "Confirm refund" }).click();
+  await dialog.getByTestId("refund-answer").waitFor({ timeout: 15000 });
+  check(
+    last(`select r.amount || ' ' || r.service_amount || ' '
+                 || (select sum(t.amount) from sale_refund_tender t where t.refund_id = r.id)
+            from sale_refund r where r.sales_order_id = '${tipped}'`) ===
+      `${price} ${service} ${price + service}`,
+    "recorded: the espresso, its service charge, all of it back to the card; the tip stays",
   );
   await ctx.close();
 }

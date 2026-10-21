@@ -300,8 +300,9 @@ is added on the way to pay ("keep the change" in cash). On Payroll the owner
 ticks who shares the tips; each day's are split equally between those
 ticked who clocked in that day (all of them when nobody did) and added to
 each one's pay for the month; approving it takes them out of 2200, not out
-of the salaries' cost. A refund gives back what was bought; voiding a sale
-takes back all of it.
+of the salaries' cost. A refund gives back what was bought and the service
+charge on it (as the owner asked); the tip stays the staff's; voiding a
+sale takes back all of it.
 
 Easier and more flexible first: every user feels them from the first day,
 and the smart parts then learn from deals, tips and time-of-day prices too.

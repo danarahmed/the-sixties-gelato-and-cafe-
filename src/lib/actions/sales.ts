@@ -300,7 +300,10 @@ const refundInput = correction.extend({
 /** What a refund by the item did, as the database reported it. */
 export interface RefundResult {
   refundNo: number;
+  /** All the money given back, the service charge on the items included (0090). */
   refunded: number;
+  /** Of it, the service charge given back with the items (0090). */
+  service: number;
   tender: string;
   /** Each way it went back (0042), in the order the sale was paid; one of the café's ways to pay by name (0069). */
   tenders: { type: string; amount: number; methodName?: string }[];
@@ -347,7 +350,9 @@ export async function refundLinesAction(
     ok: true,
     data: {
       refundNo: Number(d.refund_no ?? 0),
-      refunded: Number(d.refunded ?? 0),
+      // All the money given back: the items, and the service charge on them (0090).
+      refunded: Number(d.given_back ?? d.refunded ?? 0),
+      service: Number(d.service ?? 0),
       tender: String(d.tender ?? ""),
       tenders: Array.isArray(d.tenders)
         ? (d.tenders as Record<string, unknown>[]).map((x) => ({

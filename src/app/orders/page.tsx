@@ -344,6 +344,10 @@ export default async function OrdersPage({
                             left: o.refundLeft,
                             channelLabel: channels.name(o.channel),
                             approvalOver: profile.refundApprovalOver,
+                            service:
+                              o.service > 0
+                                ? { amount: o.service, back: o.serviceBack, net: o.net }
+                                : null,
                           }}
                           businessName={profile.businessName}
                           timezone={profile.timezone}

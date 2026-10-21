@@ -4050,8 +4050,9 @@ Migration `0090` brings tips and a service charge:
   is added to their pay for the month. Approving the payroll takes the tips
   out of 2200, not out of the salaries' cost.
 
-Nothing recorded changes. A refund gives back what was bought; the service
-charge and the tip stay. Voiding a sale takes back all of it. Rehearsed with
+Nothing recorded changes. A refund gives back what was bought and the
+service charge on it; the tip stays with the staff. Voiding a sale takes
+back all of it. Rehearsed with
 `tests/sql/tips_and_service.test.sql` and every other test.
 
 If the café already made an account of its own numbered 2200 or 4300 on the

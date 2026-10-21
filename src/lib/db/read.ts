@@ -588,6 +588,12 @@ export interface OrderRow {
     refundedQty: number;
     refundedAmount: number;
   }[];
+  /**
+   * The service charge it took (0090), and what refunds gave back of it: a
+   * refund gives back the service charge on what it refunds. 0 before 0090.
+   */
+  service: number;
+  serviceBack: number;
   /** Every refund, and the cost of what went back on the shelf. */
   refunded: number;
   costReturned: number;
@@ -742,6 +748,13 @@ export async function getSalesOrders(
   const orders = rows(await q.order("placed_at", { ascending: false }).limit(limit), "sales");
   if (orders.length === 0) return [];
   const ids = orders.map((o) => str(o.id));
+  // The service charge each took (0090): none before it, when the column is not there.
+  const serviceRows = await readInBatches(
+    ids,
+    (b) => c.from("sales_order").select("id,service_amount").in("id", b).gt("service_amount", 0),
+    "service charges",
+  ).catch(() => []);
+  const serviceOf = new Map(serviceRows.map((r) => [str(r.id), num(r.service_amount)]));
   // The sales' own rows, a batch of sales at a time: 500 sales' ids do not fit
   // in one request, and their lines may be more than a call returns.
   const [
@@ -968,6 +981,13 @@ export async function getSalesOrders(
         };
       }),
       refunded,
+      service: serviceOf.get(id) ?? 0,
+      // Given back with refunds beyond their items: the service charge on them.
+      serviceBack: docs.reduce(
+        (s, r) =>
+          s + (rTenders.get(str(r.id)) ?? []).reduce((t, x) => t + x.amount, 0) - num(r.amount),
+        0,
+      ),
       costReturned: docs.reduce((s, r) => s + num(r.cost_returned), 0),
       refunds: docs
         .sort((x, y) => num(x.refund_no) - num(y.refund_no))

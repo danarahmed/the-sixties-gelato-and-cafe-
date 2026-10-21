@@ -25,6 +25,15 @@ $$;
 create function pg_temp.key_of(p_order uuid) returns uuid language sql security definer as $$
   select idempotency_key from sales_order where id = p_order
 $$;
+create function pg_temp.posted_refund(p_refund uuid) returns text language sql security definer as $$
+  select string_agg(a.code || ' ' || trim_scale(l.debit - l.credit), ', ' order by a.code)
+    from sale_refund r join journal_line l on l.journal_entry_id = r.journal_entry_id
+    join gl_account a on a.id = l.account_id
+   where r.id = p_refund and a.code in ('1000', '1010', '4200', '4300')
+$$;
+create function pg_temp.line_of(p_order uuid) returns uuid language sql security definer as $$
+  select id from sales_order_line where sales_order_id = p_order limit 1
+$$;
 create function pg_temp.person(p_name text) returns uuid language sql security definer as $$
   select id from employee where full_name = p_name
 $$;
@@ -136,8 +145,24 @@ select test.eq((pg_temp.r('B1P') ->> 'service')::numeric || '+' || (pg_temp.r('B
 -- ------------------------------------------------------------ refunds and voids
 select test.act_as('owner@example.com');
 insert into res select 'R1', refund_sale_lines(pg_temp.order_of('S1'), null, 'changed_mind');
-select test.eq((pg_temp.r('R1') ->> 'refunded')::numeric || '/' || (pg_temp.r('R1') ->> 'status'), '2500/refunded',
-  'a refund gives back what was bought; the service charge stays');
+select test.eq((pg_temp.r('R1') ->> 'refunded')::numeric || '+' || (pg_temp.r('R1') ->> 'service')::numeric || '='
+               || (pg_temp.r('R1') ->> 'given_back')::numeric || ' ' || (pg_temp.r('R1') ->> 'status'),
+  '2500+250=2750 refunded', 'a refund gives back what was bought, and the service charge on it');
+select test.eq(pg_temp.posted_refund((pg_temp.r('R1') ->> 'refund_id')::uuid),
+  '1000 -2750, 4200 2500, 4300 250', 'its journal: the sales returns and the service charge, the cash back');
+-- In two parts: each gives back its share; the last, what is left of it.
+select test.act_as('cashier@example.com');
+insert into res select 'S5', record_sale(gen_random_uuid(), 'dine_in', 'card',
+  '[{"variant_id":"d1000000-0000-0000-0000-000000000002","qty":3}]');
+select test.eq((pg_temp.r('S5') ->> 'net')::numeric || '+' || (pg_temp.r('S5') ->> 'service')::numeric, '3000+300',
+  'three waters at a table: 3,000 and 300 service');
+select test.act_as('owner@example.com');
+insert into res select 'R2', refund_sale_lines(pg_temp.order_of('S5'),
+  jsonb_build_array(jsonb_build_object('line_id', pg_temp.line_of(pg_temp.order_of('S5')), 'qty', 1)), 'changed_mind');
+select test.eq((pg_temp.r('R2') ->> 'given_back')::numeric, 1100::numeric, 'one of the three: 1,000 and its 100');
+insert into res select 'R3', refund_sale_lines(pg_temp.order_of('S5'), null, 'changed_mind');
+select test.eq((pg_temp.r('R3') ->> 'given_back')::numeric || ' ' || (pg_temp.r('R3') ->> 'status'),
+  '2200 refunded', 'the other two, and the rest of the service charge');
 insert into res select 'V1', void_sale(pg_temp.order_of('T2'), null, 'rang_twice');
 select test.eq(pg_temp.posted(pg_temp.order_of('T2'), '2200') || '/' || pg_temp.posted(pg_temp.order_of('T2'), '4300'),
   '0/0', 'voided: its tip and its service charge are taken back too');
@@ -203,4 +228,4 @@ select test.eq((select sum(x.value::numeric) from payroll_approval pa, jsonb_eac
 select test.act_as('owner@example.com');
 select test.eq((select (x ->> 'service')::numeric || '/' || (x ->> 'tips')::numeric
                   from report_tips_and_service(test.today(), test.today()) x),
-  '700/500', 'today: 250 + 200 + the bill''s 250 of service (the voided sale''s not), and the bill''s 500 tip');
+  '1000/500', 'today: 250 + 200 + the bill''s 250 + 300 of service (the voided sale''s not), and the bill''s 500 tip');

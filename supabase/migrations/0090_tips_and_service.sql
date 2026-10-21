@@ -30,11 +30,14 @@
 --  * tip_sharer (who shares the tips, from and until when); set_tip_sharers;
 --    tip_shares (each day's split); tips_month (the month on Payroll).
 --  * payroll_line.tips; the payroll drafts, adjusts and approves with them.
+--  * refund_lines_internal gives back the service charge with what it
+--    refunds; sale_refund.service_amount keeps it.
 --  * report_tips_and_service: what the till took of both, for Reports and
 --    the end of the day.
 --
--- Nothing recorded changes. A refund gives back what was bought; the
--- service charge and the tip stay. Voiding a sale takes back all of it.
+-- Nothing recorded changes. A refund gives back what was bought and the
+-- service charge on it (as the owner asked); the tip stays the staff's.
+-- Voiding a sale takes back all of it.
 -- =============================================================================
 
 -- =============================================================================
@@ -590,6 +593,316 @@ begin
     'journal_no', (select journal_no from journal_entry where id = v_journal), 'replayed', false,
     'turn_no', v_turn, 'payments', order_payments(v_order))
     || sale_cost_view(v_cogs);
+end $$;
+
+-- A refund gives back the service charge on what it refunds (0090).
+alter table sale_refund add column if not exists service_amount numeric not null default 0;
+do $$ begin
+  alter table sale_refund add constraint sale_refund_service check (service_amount >= 0);
+exception when duplicate_object then null; end $$;
+
+-- 0069's refund_lines_internal: the service charge given back with what is refunded (0090).
+create or replace function refund_lines_internal(p_business uuid, p_me uuid, p_order uuid, p_lines jsonb, p_reason_code text,
+                                      p_reason text, p_approval uuid, p_tenders jsonb default null)
+returns jsonb language plpgsql set search_path = public as $$
+declare
+  o sales_order; v_paid numeric; v_reason text; v_code text;
+  v_approver uuid := p_me; a approval; v_id uuid := gen_random_uuid(); v_no bigint;
+  v_has_lines boolean; v_legacy boolean; l record; it record;
+  v_left numeric; v_left_amount numeric; v_want numeric; v_line_amount numeric; v_line_cost numeric;
+  v_restocked boolean; v_q numeric; v_v numeric; v_rest boolean := false;
+  v_plan jsonb := '[]'; v_moves jsonb := '[]'; v_amount numeric := 0; v_cost numeric := 0;
+  v_journal uuid; v_status order_status; p jsonb; v_items text; v_before numeric;
+  v_types tender_type[]; v_methods uuid[]; v_lefts numeric[]; v_parts numeric[]; v_left_total numeric; pt jsonb;
+  i int;
+  v_back jsonb := '[]';
+  -- The service charge given back with what is refunded (0090), and all the money back.
+  v_svc numeric := 0; v_svc_left numeric; v_back_total numeric;
+begin
+  select * into o from sales_order where id = p_order and business_id = p_business for update;
+  if not found then raise exception 'Sale not found'; end if;
+  if o.status = 'refunded' then raise exception 'This sale has been refunded in full already'; end if;
+  if o.status = 'voided' then raise exception 'This sale was voided: there is nothing to refund'; end if;
+  if o.status not in ('completed', 'partially_refunded') then
+    raise exception 'Only a completed sale can be refunded; this one is %', o.status;
+  end if;
+  select array_agg(rp.tender_type order by rp.ord), array_agg(rp.method order by rp.ord),
+         array_agg(rp.left_amount order by rp.ord), sum(rp.paid)
+    into v_types, v_methods, v_lefts, v_paid
+    from refundable_payments(p_order) with ordinality rp(tender_type, method, paid, refunded, left_amount, ord);
+  if v_types is null or exists (select 1 from unnest(v_types, v_methods) u(t, m)
+                                 where tender_account(u.t) is null and u.m is null) then
+    raise exception 'This sale''s tender cannot be refunded here';
+  end if;
+  v_reason := reason_text('refund', p_reason_code, p_reason);
+  v_code := coalesce(nullif(trim(p_reason_code), ''), 'other');
+  if p_approval is not null then
+    a := use_approval(p_business, p_approval, 'refund', p_order::text);
+    if a.scope ->> 'order_id' is distinct from p_order::text then
+      raise exception 'That approval is for another sale';
+    end if;
+    v_approver := a.approver_id;
+  end if;
+
+  if p_lines is not null then
+    if jsonb_typeof(p_lines) <> 'array' or jsonb_array_length(p_lines) = 0 then
+      raise exception 'Choose what to refund';
+    end if;
+    if exists (select 1 from jsonb_array_elements(p_lines) x
+                where jsonb_typeof(x) <> 'object'
+                   or coalesce(x ->> 'line_id', '') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+                   or coalesce(x ->> 'qty', '') !~ '^[0-9]+(\.[0-9]+)?$') then
+      raise exception 'The items to refund cannot be read';
+    end if;
+    if exists (select 1 from jsonb_array_elements(p_lines) x
+                where not exists (select 1 from sales_order_line sl
+                                   where sl.id = (x ->> 'line_id')::uuid and sl.sales_order_id = p_order)) then
+      raise exception 'That item is not on this sale';
+    end if;
+    if (select count(*) from jsonb_array_elements(p_lines)) <>
+       (select count(distinct x ->> 'line_id') from jsonb_array_elements(p_lines) x) then
+      raise exception 'An item is named twice';
+    end if;
+  end if;
+  if p_tenders is not null then
+    if jsonb_typeof(p_tenders) <> 'array' or jsonb_array_length(p_tenders) = 0
+       or exists (select 1 from jsonb_array_elements(p_tenders) x
+                   where case when jsonb_typeof(x) = 'object' and jsonb_typeof(x -> 'amount') = 'number'
+                                   and (coalesce(x ->> 'type', '') in ('cash', 'card', 'platform_paid')
+                                          and x ->> 'method' is null
+                                        or x ->> 'type' = 'other' and jsonb_typeof(x -> 'method') = 'string'
+                                           and x ->> 'method'
+                                               ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+                              then (x ->> 'amount')::numeric <= 0
+                                   or (x ->> 'amount')::numeric <> money_round(p_business, (x ->> 'amount')::numeric)
+                              else true end) then
+      raise exception 'The payments to give back cannot be read';
+    end if;
+    if (select count(*) from jsonb_array_elements(p_tenders)) <>
+       (select count(distinct (x ->> 'type') || ':' || coalesce(lower(x ->> 'method'), ''))
+          from jsonb_array_elements(p_tenders) x) then
+      raise exception 'A payment is named twice';
+    end if;
+  end if;
+
+  v_has_lines := exists (select 1 from sales_order_line where sales_order_id = p_order);
+  -- Recorded before 0037: its stock movements do not name its lines.
+  v_legacy := not v_has_lines
+              or exists (select 1 from inventory_movement mv
+                          where mv.reference_type = 'sales_order' and mv.reference_id = p_order
+                            and mv.type = 'sale_consumption' and mv.sales_order_line_id is null);
+
+  for l in
+    select sl.id, sl.quantity, sl.line_net, coalesce(nullif(sl.product_name, ''), pr.name, pv.name) as name,
+           coalesce((select sum(rl.qty) from sale_refund_line rl where rl.sales_order_line_id = sl.id), 0) as done_qty,
+           coalesce((select sum(rl.amount) from sale_refund_line rl where rl.sales_order_line_id = sl.id), 0)
+             as done_amount,
+           (select (x ->> 'qty')::numeric from jsonb_array_elements(coalesce(p_lines, '[]'::jsonb)) x
+             where (x ->> 'line_id')::uuid = sl.id) as asked
+      from sales_order_line sl
+      left join product_variant pv on pv.id = sl.product_variant_id
+      left join product pr on pr.id = pv.product_id
+     where sl.sales_order_id = p_order
+     order by sl.id
+  loop
+    v_left := l.quantity - l.done_qty;
+    v_left_amount := l.line_net - l.done_amount;
+    v_want := case when p_lines is null then v_left else coalesce(l.asked, 0) end;
+    if v_want > v_left then
+      raise exception 'Only % of % is left to refund', trim_scale(v_left), l.name;
+    end if;
+    if v_want > 0 then
+      v_line_amount := case when v_want = v_left then v_left_amount
+                            else least(v_left_amount, money_round(p_business, l.line_net * v_want / l.quantity)) end;
+      v_line_cost := 0;
+      v_restocked := false;
+      if not v_legacy then
+        -- The line's own stock that can go back on the shelf, in proportion:
+        -- what it took, less what earlier refunds of it gave back.
+        for it in
+          select mv.item_id, -sum(mv.base_quantity_signed) as sold_q, coalesce(sum(mv.value), 0) as sold_v,
+                 coalesce((select sum(r.base_quantity_signed) from inventory_movement r
+                            where r.sales_order_line_id = l.id and r.item_id = mv.item_id
+                              and r.type = 'refund_return_to_stock'), 0) as back_q,
+                 coalesce((select sum(r.value) from inventory_movement r
+                            where r.sales_order_line_id = l.id and r.item_id = mv.item_id
+                              and r.type = 'refund_return_to_stock'), 0) as back_v
+            from inventory_movement mv join item i on i.id = mv.item_id
+           where mv.sales_order_line_id = l.id and mv.type = 'sale_consumption' and i.returnable_to_stock
+           group by mv.item_id
+           order by mv.item_id
+        loop
+          if v_want = v_left then
+            v_q := it.sold_q - it.back_q;
+            v_v := it.sold_v - it.back_v;
+          else
+            v_q := round(it.sold_q * v_want / l.quantity, 6);
+            v_v := least(it.sold_v - it.back_v, money_round(p_business, it.sold_v * v_want / l.quantity));
+          end if;
+          if v_q > 0 then
+            v_moves := v_moves || jsonb_build_object('line_id', l.id, 'item_id', it.item_id, 'qty', v_q, 'value', v_v);
+            v_line_cost := v_line_cost + v_v;
+            v_restocked := true;
+          end if;
+        end loop;
+      end if;
+      v_plan := v_plan || jsonb_build_object('line_id', l.id, 'name', l.name, 'qty', v_want, 'amount', v_line_amount,
+                                             'cost_returned', v_line_cost, 'restocked', v_restocked);
+      v_amount := v_amount + v_line_amount;
+      v_cost := v_cost + v_line_cost;
+    end if;
+    if v_left - v_want > 0 then v_rest := true; end if;
+  end loop;
+
+  if v_legacy then
+    -- Refunded whole, as before 0037: every movement of the sale's that can
+    -- go back on the shelf does.
+    if v_rest then raise exception 'This sale was recorded before refunds by item: refund all of it'; end if;
+    for it in
+      select mv.item_id, -mv.base_quantity_signed as q, coalesce(mv.value, 0) as v
+        from inventory_movement mv join item i on i.id = mv.item_id
+       where mv.reference_type = 'sales_order' and mv.reference_id = p_order
+         and mv.type = 'sale_consumption' and i.returnable_to_stock
+       order by mv.id
+    loop
+      v_moves := v_moves || jsonb_build_object('line_id', null, 'item_id', it.item_id, 'qty', it.q, 'value', it.v);
+      v_cost := v_cost + it.v;
+    end loop;
+    if not v_has_lines then v_amount := o.net_amount - sale_refunded(p_order); end if;
+  elsif jsonb_array_length(v_plan) = 0 then
+    raise exception 'Choose what to refund';
+  end if;
+  if v_amount <= 0 then
+    raise exception 'The items chosen were sold for nothing: there is no money to give back';
+  end if;
+  v_before := sale_refunded(p_order);
+  -- The service charge goes back with what it was charged on (0090): its
+  -- share of what is refunded, or all that is left of it with the last of
+  -- the sale. Given back so far: what the refunds paid back beyond their items.
+  if o.service_amount > 0 and o.net_amount > 0 then
+    v_svc_left := o.service_amount
+      - coalesce((select sum(rt.amount) from sale_refund r join sale_refund_tender rt on rt.refund_id = r.id
+                   where r.sales_order_id = p_order), 0)
+      + coalesce((select sum(r.amount) from sale_refund r where r.sales_order_id = p_order), 0);
+    v_svc := greatest(case when v_rest then least(v_svc_left, money_round(p_business, v_amount * o.service_amount
+                                                                                    / o.net_amount))
+                           else v_svc_left end, 0);
+  end if;
+  v_back_total := v_amount + v_svc;
+  select sum(t) into v_left_total from unnest(v_lefts) t;
+  if v_back_total > v_left_total then
+    raise exception 'This refund is more than is left of what was paid (%)', trim_scale(v_left_total);
+  end if;
+  -- Over the limit of the refunder's roles, a second person approves it (0040).
+  if p_approval is null and v_back_total > member_rule_number(p_business, 'refund_approval_over', p_me) then
+    raise exception 'A refund over % needs a second person to approve it',
+      alert_money(member_rule_number(p_business, 'refund_approval_over', p_me));
+  end if;
+
+  -- The money back, per way it was paid (0042).
+  v_parts := array_fill(0::numeric, array[cardinality(v_types)]);
+  if p_tenders is not null then
+    for pt in select * from jsonb_array_elements(p_tenders) loop
+      -- The way it was paid: its type, and for a way to pay, which (0069).
+      select u.ord into i from unnest(v_types, v_methods) with ordinality u(t, m, ord)
+       where u.t = (pt ->> 'type')::tender_type and u.m is not distinct from (pt ->> 'method')::uuid;
+      if i is null or (pt ->> 'amount')::numeric > v_lefts[i] then
+        if pt ->> 'type' = 'cash' then
+          raise exception 'Only % of the cash paid is left to give back', trim_scale(coalesce(v_lefts[i], 0));
+        elsif pt ->> 'type' = 'card' then
+          raise exception 'Only % of the card payment is left to give back', trim_scale(coalesce(v_lefts[i], 0));
+        elsif pt ->> 'type' = 'other' then
+          if i is null then raise exception 'This sale was not paid that way'; end if;
+          raise exception 'Only % of what % took is left to give back', trim_scale(v_lefts[i]),
+            (select m.name from payment_method m where m.id = v_methods[i]);
+        end if;
+        raise exception 'Only % of the platform''s payment is left to give back', trim_scale(coalesce(v_lefts[i], 0));
+      end if;
+      v_parts[i] := (pt ->> 'amount')::numeric;
+    end loop;
+    if (select sum(t) from unnest(v_parts) t) <> v_back_total then
+      raise exception 'The refund is %, but the payments given back come to %', trim_scale(v_back_total),
+        trim_scale((select sum(t) from unnest(v_parts) t));
+    end if;
+  else
+    -- In proportion to what is left of each, in whole units, adding up to the
+    -- refund exactly (the rounding receipts use for landed costs).
+    v_parts := allocate_landed(p_business, (select array_agg(greatest(u.t, 0) order by u.ord)
+                                              from unnest(v_lefts) with ordinality u(t, ord)),
+                               v_back_total - (select sum(greatest(t, 0)) from unnest(v_lefts) t));
+  end if;
+  for i in 1 .. cardinality(v_types) loop
+    if v_parts[i] > 0 then
+      v_back := v_back || (jsonb_build_object('type', v_types[i], 'amount', v_parts[i])
+                           || case when v_methods[i] is not null
+                                   then jsonb_build_object('method', v_methods[i], 'method_name',
+                                          (select m.name from payment_method m where m.id = v_methods[i]))
+                                   else '{}'::jsonb end);
+    end if;
+  end loop;
+
+  -- The adjustment first: the refund is the sale's adjustment (0037).
+  insert into sale_adjustment (id, business_id, sales_order_id, kind, amount, reason, reason_code, requested_by,
+                               approved_by)
+  values (v_id, p_business, p_order, 'refund', v_amount, v_reason, v_code, p_me, v_approver);
+  v_no := next_document_no(p_business, 'refund', 1);
+  if jsonb_array_length(v_moves) > 0 then
+    perform lock_items(array(select distinct (x ->> 'item_id')::uuid from jsonb_array_elements(v_moves) x));
+  end if;
+  v_journal := post_journal(p_business, now(),
+    'Refund ' || v_no || ' of sale ' || left(p_order::text, 8) || ': ' || v_reason, 'sale_refund', v_id,
+    jsonb_build_array(jsonb_build_object('code', '4200', 'debit', v_amount),
+                      jsonb_build_object('code', '4300', 'debit', v_svc))
+    || coalesce((select jsonb_agg(jsonb_build_object('code',
+                                    coalesce((select m.account_code from payment_method m
+                                               where m.id = (b ->> 'method')::uuid),
+                                             tender_account((b ->> 'type')::tender_type)),
+                                                     'credit', (b ->> 'amount')::numeric) order by e.ord)
+                   from jsonb_array_elements(v_back) with ordinality e(b, ord)), '[]'::jsonb)
+    || jsonb_build_array(
+      jsonb_build_object('code', '1200', 'debit', v_cost),
+      jsonb_build_object('code', '5000', 'credit', v_cost)));
+  insert into sale_refund (id, business_id, refund_no, sales_order_id, location_id, work_shift_id, amount,
+                           cost_returned, reason_code, reason, requested_by, approved_by, approval_id,
+                           journal_entry_id, whole, service_amount)
+  values (v_id, p_business, v_no, p_order, o.location_id, open_session_at(p_business, o.location_id), v_amount,
+          v_cost, v_code, v_reason, p_me, v_approver, p_approval, v_journal, not v_rest, v_svc);
+  for p in select * from jsonb_array_elements(v_plan) loop
+    insert into sale_refund_line (business_id, refund_id, sales_order_line_id, qty, amount, cost_returned, restocked)
+    values (p_business, v_id, (p ->> 'line_id')::uuid, (p ->> 'qty')::numeric, (p ->> 'amount')::numeric,
+            (p ->> 'cost_returned')::numeric, (p ->> 'restocked')::boolean);
+  end loop;
+  -- Each way it goes back; the cash leaves the drawer's open session, which
+  -- must hold it (trg_cash_from_refund_tender).
+  for p in select * from jsonb_array_elements(v_back) loop
+    insert into sale_refund_tender (business_id, refund_id, tender_type, amount, payment_method_id)
+    values (p_business, v_id, (p ->> 'type')::tender_type, (p ->> 'amount')::numeric, (p ->> 'method')::uuid);
+  end loop;
+  for p in select * from jsonb_array_elements(v_moves) loop
+    insert into inventory_movement (business_id, item_id, location_id, type, base_quantity_signed, unit_cost, value,
+                                    reference_type, reference_id, app_user_id, reason, sales_order_line_id)
+    values (p_business, (p ->> 'item_id')::uuid, o.location_id, 'refund_return_to_stock', (p ->> 'qty')::numeric,
+            (p ->> 'value')::numeric / (p ->> 'qty')::numeric, (p ->> 'value')::numeric,
+            'sale_refund', v_id, p_me, 'Refund: ' || v_reason, (p ->> 'line_id')::uuid);
+  end loop;
+
+  v_status := case when v_rest then 'partially_refunded' else 'refunded' end::order_status;
+  if v_status is distinct from o.status then
+    update sales_order set status = v_status where id = p_order;
+  end if;
+  select string_agg((x ->> 'name') || ' ×' || trim_scale((x ->> 'qty')::numeric), ', ')
+    into v_items from jsonb_array_elements(v_plan) x;
+  perform audit_event(p_business, 'sale.refund', 'sales_order', p_order::text, v_reason,
+    jsonb_build_object('status', o.status, 'net', o.net_amount, 'refunded', v_before),
+    jsonb_build_object('status', v_status, 'refund_no', v_no, 'refunded', v_before + v_amount,
+                       'amount', v_amount, 'service', v_svc, 'items', v_items, 'returned_to_stock', v_cost,
+                       'approved_by', v_approver)
+    || case when jsonb_array_length(v_back) > 1 then jsonb_build_object('tenders', v_back) else '{}'::jsonb end);
+  return jsonb_build_object('order_id', p_order, 'refund_id', v_id, 'refund_no', v_no, 'refunded', v_amount,
+    'service', v_svc, 'given_back', v_back_total,
+    'returned_to_stock', v_cost, 'tender', v_back -> 0 ->> 'type', 'tenders', v_back, 'status', v_status,
+    'whole', not v_rest, 'lines', v_plan,
+    'journal_no', (select journal_no from journal_entry where id = v_journal));
 end $$;
 
 -- =============================================================================

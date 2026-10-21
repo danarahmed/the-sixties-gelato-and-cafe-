@@ -45,6 +45,11 @@ const phrases: PhraseBook = {
   Tips: { ar: "الإكراميات", ckb: "تیپەکان" },
   "Keep the change as a tip": { ar: "أبقِ الباقي إكرامية", ckb: "باقییەکە وەک تیپ بهێڵەوە" },
 
+  "With the service charge on it: {amount}": {
+    ar: "مع رسوم الخدمة عليها: {amount}",
+    ckb: "لەگەڵ کرێی خزمەتگوزارییەکەی: {amount}",
+  },
+
   // Settings.
   "A percentage added to what the products come to, on each way of selling you choose — or on none. The till adds it when a sale or a table's bill is paid, and the receipt shows it. It is the café's own money, kept apart from the sales.":
     {
