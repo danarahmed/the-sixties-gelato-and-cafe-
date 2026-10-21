@@ -73,7 +73,12 @@ const NOT_FOR_BILLS = new Set([
   "5950",
 ]);
 
-export default async function VendorsPage() {
+export default async function VendorsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ vendor?: string }>;
+}) {
+  const { vendor: askedVendor } = await searchParams;
   const profile = await requirePermission("cost.view");
   const t = await getT();
   const today = businessToday(profile.timezone);
@@ -149,6 +154,7 @@ export default async function VendorsPage() {
 
       <VendorsClient
         vendors={vendors}
+        initialVendor={askedVendor}
         bills={openBills}
         receipts={receipts
           .filter((r) => r.billable)

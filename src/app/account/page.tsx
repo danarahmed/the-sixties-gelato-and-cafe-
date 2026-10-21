@@ -9,6 +9,8 @@ import { getPhoneWarnings } from "@/lib/db/push";
 import { PhoneWarnings } from "@/components/push/PhoneWarnings";
 import { twoStepState } from "@/lib/auth/twoStep";
 import { TwoStepCard } from "./TwoStepCard";
+import { FirstScreenForm } from "./FirstScreenForm";
+import { NAV, holdsAny, roleHome } from "@/lib/auth/routes";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +24,11 @@ export default async function AccountPage() {
   const warnings = s.profile ? await getPhoneWarnings() : null;
   // Two-step sign-in (0080): whether it is on for them.
   const twoStep = s.profile ? await twoStepState().catch(() => null) : null;
+
+  // The screens they may start on (E6): those the menu offers them.
+  const mine = s.profile ? NAV.filter((n) => holdsAny(s.profile!.permissions, n.anyOf)) : [];
+  const roleScreen = s.profile ? roleHome(s.profile.permissions) : "/account";
+  const roleScreenKey = NAV.find((n) => n.href === roleScreen)?.key ?? "nav.account";
 
   return (
     <div className="grid" style={{ gap: 16, maxWidth: 720 }}>
@@ -71,6 +78,20 @@ export default async function AccountPage() {
               ))}
             </div>
           </details>
+        </div>
+      )}
+
+      {s.profile && mine.length > 1 && (
+        <div className="card" data-testid="first-screen-card">
+          <h3 style={{ marginTop: 0 }}>{t("First screen")}</h3>
+          <p className="muted" style={{ marginTop: 0, fontSize: ".88rem" }}>
+            {t("Where you start after signing in, on any phone or till.")}
+          </p>
+          <FirstScreenForm
+            screens={mine.map((n) => ({ href: n.href, label: t(n.key) }))}
+            chosen={s.profile.firstScreen}
+            roleScreen={t(roleScreenKey)}
+          />
         </div>
       )}
 

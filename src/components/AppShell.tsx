@@ -9,6 +9,8 @@ import { NAV, activeHref, holdsAny } from "@/lib/auth/routes";
 import { BrandMark, Icon, type IconName } from "@/components/Icon";
 import { TourMenuItem, TourRunner } from "@/components/Tour";
 import { ProblemButton } from "@/components/ProblemButton";
+import { FindAnything, type Screen } from "@/components/FindAnything";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 /** Each screen's icon in the menu, beside its name. */
 const NAV_ICONS: Record<string, IconName> = {
@@ -197,6 +199,19 @@ function Controls({ locale, theme }: { locale: Locale; theme: "light" | "dark" }
   );
 }
 
+/** The reports' own pages, found by name from anywhere. */
+const REPORT_PAGES: [string, string][] = [
+  ["/reports/sales", "Sales analysis"],
+  ["/reports/statements", "Balance sheet and cash flow"],
+  ["/reports/week", "The week at a glance"],
+  ["/reports/month", "The month at a glance"],
+  ["/reports/menu", "Menu matrix"],
+  ["/reports/prices", "Price watch"],
+  ["/reports/staffing", "Staffed when busy?"],
+  ["/reports/waste", "Waste by recipe"],
+  ["/reports/stock", "Stock value on a day"],
+];
+
 export function AppShell({
   locale,
   theme,
@@ -243,6 +258,19 @@ export function AppShell({
     pathname?.startsWith("/pos/") ||
     pathname === "/clock" ||
     pathname?.startsWith("/clock/");
+  // Every screen this person may open, for Find anything: the menu's, the
+  // reports' own pages, and their own.
+  const english = getDictionary("en");
+  const screens: Screen[] = [
+    ...nav.map((n) => ({ href: n.href, label: t(n.key), english: english[n.key] ?? n.key })),
+    ...(nav.some((n) => n.href === "/reports") ? REPORT_PAGES : []).map(([href, name]) => ({
+      href,
+      label: t(name),
+      english: name,
+    })),
+    { href: "/account", label: t("nav.account"), english: english["nav.account"] ?? "My account" },
+    { href: "/devices", label: t("Test your devices"), english: "Test your devices" },
+  ];
   const lit = activeHref(
     pathname,
     nav.map((n) => n.href),
@@ -271,6 +299,7 @@ export function AppShell({
           {member.businessName || t("app.name")}
         </span>
         <span className="spacer" />
+        <FindAnything screens={screens} />
         <Controls locale={locale} theme={theme} />
         <Link href="/account" className="badge account-badge" title={t("nav.account")}>
           <span className="account-name" dir="auto">

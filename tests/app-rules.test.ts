@@ -10,7 +10,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
-import { NAV, activeHref, holdsAny, homeFor, isPublicPath } from "@/lib/auth/routes";
+import { NAV, activeHref, holdsAny, homeFor, isPublicPath, roleHome } from "@/lib/auth/routes";
 import {
   addDays,
   dateIn,
@@ -363,6 +363,26 @@ describe("where each role lands", () => {
     const entry = NAV.find((n) => n.href === home);
     expect(entry, `${home} is not in the navigation`).toBeDefined();
     expect(holdsAny(perms(role), entry!.anyOf)).toBe(true);
+  });
+
+  it("each role starts where its work is (E6)", () => {
+    expect(homeFor(perms("owner"))).toBe("/dashboard");
+    expect(homeFor(perms("branch_manager"))).toBe("/dashboard");
+    expect(homeFor(perms("accountant"))).toBe("/reports");
+    expect(homeFor(perms("auditor"))).toBe("/reports");
+    expect(homeFor(perms("barista"))).toBe("/production");
+    expect(homeFor(perms("inventory_counter"))).toBe("/count");
+    expect(homeFor(perms("purchasing"))).toBe("/purchasing");
+  });
+
+  it("a chosen first screen is kept only while the menu offers it", () => {
+    expect(homeFor(perms("owner"), "/pos")).toBe("/pos");
+    expect(homeFor(perms("barista"), "/pos")).toBe("/pos");
+    // Not theirs, not a screen, or another site: their role's instead.
+    expect(homeFor(perms("cashier"), "/reports")).toBe("/pos");
+    expect(homeFor(perms("cashier"), "/nowhere")).toBe("/pos");
+    expect(homeFor(perms("owner"), "https://example.com")).toBe("/dashboard");
+    expect(homeFor(perms("owner"), null)).toBe(roleHome(perms("owner")));
   });
 
   it("a cashier starts at the till and is not offered the books", () => {

@@ -24,6 +24,7 @@ import {
   type HourSales,
   type ProductSales,
 } from "@/lib/dashboard";
+import { PhoneMore } from "@/components/dashboard/PhoneMore";
 import { NeedsYou } from "@/components/dashboard/NeedsYou";
 import { DailyBrief } from "@/components/dashboard/DailyBrief";
 import { ColumnChart } from "@/components/charts/ColumnChart";
@@ -599,180 +600,182 @@ export default async function DashboardPage() {
 
       {/* What the figures say comes first, for a phone and a screen reader;
           a wide screen sets it atop the side column. */}
-      <div className="dash-grid">
-        <section className="card dash-say" aria-labelledby="dash-say">
-          <h3 id="dash-say" className="viz-title">
-            {t("What the figures say")}
-          </h3>
-          <Sayings items={sayings} />
-        </section>
+      <PhoneMore>
+        <div className="dash-grid">
+          <section className="card dash-say" aria-labelledby="dash-say">
+            <h3 id="dash-say" className="viz-title">
+              {t("What the figures say")}
+            </h3>
+            <Sayings items={sayings} />
+          </section>
 
-        <div className="dash-main">
-          {analyse && (
-            <section className="card">
-              <ColumnChart
-                title={t("Sales, the last 14 days")}
-                columnsName={t("Net sales")}
-                labels={{ table: t("Show as a table"), heading: t("Day") }}
-                reference={
-                  dailyAverage > 0
-                    ? {
-                        value: dailyAverage,
-                        label: t("Average: {amount} a day", { amount: fmtIQD(dailyAverage) }),
-                      }
-                    : undefined
-                }
-                columns={fortnight.map((x) => ({
-                  key: x.day,
-                  label: x.day === today ? t("Today") : x.day.slice(8).replace(/^0/, ""),
-                  value: Math.max(x.net, 0),
-                  valueText: fmtIQD(x.net),
-                  detail: `${t(WEEKDAY(x.day))} ${months(x.day)} · ${t("{n} order(s)", { n: x.orders })}`,
-                  emphasis: x.day === today,
-                }))}
-              />
-            </section>
-          )}
-          {analyse && (
-            <section className="card">
-              {hoursDrawn.length > 0 ? (
+          <div className="dash-main">
+            {analyse && (
+              <section className="card">
                 <ColumnChart
-                  title={t("Today, hour by hour")}
-                  columnsName={t("Today")}
-                  labels={{ table: t("Show as a table"), heading: t("Hour") }}
-                  line={
-                    usual.length
+                  title={t("Sales, the last 14 days")}
+                  columnsName={t("Net sales")}
+                  labels={{ table: t("Show as a table"), heading: t("Day") }}
+                  reference={
+                    dailyAverage > 0
                       ? {
-                          name: t("A usual {weekday}", { weekday: t(weekday) }),
-                          points: hoursDrawn.map((h) => ({
-                            key: String(h),
-                            value: usualByHour.get(h)?.net ?? 0,
-                            valueText: fmtIQD(usualByHour.get(h)?.net ?? 0),
-                          })),
+                          value: dailyAverage,
+                          label: t("Average: {amount} a day", { amount: fmtIQD(dailyAverage) }),
                         }
                       : undefined
                   }
-                  columns={hoursDrawn.map((h) => ({
-                    key: String(h),
-                    label: String(h),
-                    value: Math.max(todayByHour.get(h)?.net ?? 0, 0),
-                    valueText: fmtIQD(todayByHour.get(h)?.net ?? 0),
-                    detail: `${hh(h)}–${hh(h + 1)} · ${t("{n} order(s)", { n: todayByHour.get(h)?.orders ?? 0 })}`,
-                    emphasis: true,
+                  columns={fortnight.map((x) => ({
+                    key: x.day,
+                    label: x.day === today ? t("Today") : x.day.slice(8).replace(/^0/, ""),
+                    value: Math.max(x.net, 0),
+                    valueText: fmtIQD(x.net),
+                    detail: `${t(WEEKDAY(x.day))} ${months(x.day)} · ${t("{n} order(s)", { n: x.orders })}`,
+                    emphasis: x.day === today,
                   }))}
                 />
+              </section>
+            )}
+            {analyse && (
+              <section className="card">
+                {hoursDrawn.length > 0 ? (
+                  <ColumnChart
+                    title={t("Today, hour by hour")}
+                    columnsName={t("Today")}
+                    labels={{ table: t("Show as a table"), heading: t("Hour") }}
+                    line={
+                      usual.length
+                        ? {
+                            name: t("A usual {weekday}", { weekday: t(weekday) }),
+                            points: hoursDrawn.map((h) => ({
+                              key: String(h),
+                              value: usualByHour.get(h)?.net ?? 0,
+                              valueText: fmtIQD(usualByHour.get(h)?.net ?? 0),
+                            })),
+                          }
+                        : undefined
+                    }
+                    columns={hoursDrawn.map((h) => ({
+                      key: String(h),
+                      label: String(h),
+                      value: Math.max(todayByHour.get(h)?.net ?? 0, 0),
+                      valueText: fmtIQD(todayByHour.get(h)?.net ?? 0),
+                      detail: `${hh(h)}–${hh(h + 1)} · ${t("{n} order(s)", { n: todayByHour.get(h)?.orders ?? 0 })}`,
+                      emphasis: true,
+                    }))}
+                  />
+                ) : (
+                  <>
+                    <h3 className="viz-title">{t("Today, hour by hour")}</h3>
+                    <p className="muted">{t("No sales yet today.")}</p>
+                  </>
+                )}
+              </section>
+            )}
+            <DailyBrief
+              brief={brief}
+              heading={t("dash.yesterday")}
+              labels={{
+                facts: t("dash.facts"),
+                calculations: t("dash.calculations"),
+                toDo: t("dash.toDo"),
+              }}
+              t={t}
+              msg={msg}
+            />
+          </div>
+
+          <div className="dash-side">
+            {analyse && top.length > 0 && (
+              <section className="card" aria-labelledby="dash-sells">
+                <h3 id="dash-sells" className="viz-title">
+                  {t("What sells, the last 7 days")}
+                </h3>
+                <BarList
+                  label={t("What sells, the last 7 days")}
+                  rows={top.map((x, i) => {
+                    const k = kept(x);
+                    return {
+                      key: `${i}-${x.name}`,
+                      name: x.name,
+                      value: x.net,
+                      valueText: fmtIQD(x.net),
+                      sub:
+                        k === null
+                          ? t("{n} sold · not costed yet", { n: fmtQty(x.qty) })
+                          : t("{n} sold · {kept}% kept", {
+                              n: fmtQty(x.qty),
+                              kept: Math.round(k * 100),
+                            }),
+                    };
+                  })}
+                />
+              </section>
+            )}
+
+            <section className="card" aria-labelledby="dash-stock">
+              <h3 id="dash-stock" className="viz-title">
+                <Link href="/inventory">
+                  {d.location ? t("Stock at {place}", { place: d.location }) : t("Stock value")}
+                </Link>
+              </h3>
+              <p className="dash-stock-value">{fmtIQD(d.inventoryValue)}</p>
+              {board.length === 0 ? (
+                <span className="muted">{t("No items yet.")}</span>
+              ) : low.length === 0 ? (
+                <span className="badge ok">{t("All above reorder level")}</span>
               ) : (
                 <>
-                  <h3 className="viz-title">{t("Today, hour by hour")}</h3>
-                  <p className="muted">{t("No sales yet today.")}</p>
+                  {low.slice(0, LOW_SHOWN).map((s) => (
+                    <div key={s.itemId} className="deduction-row">
+                      <span>{s.name}</span>
+                      <span className={`badge mono ${s.isNegative ? "err" : "warn"}`}>
+                        {fmtQty(s.onHandBase)}
+                        {s.reorderBase === null ? "" : ` / ${fmtQty(s.reorderBase)}`}{" "}
+                        {unitName(s.unit, t)}
+                      </span>
+                    </div>
+                  ))}
+                  {low.length > LOW_SHOWN && (
+                    <p className="dash-more">
+                      <Link href="/inventory">
+                        {t("…and {n} more", { n: low.length - LOW_SHOWN })}
+                      </Link>
+                    </p>
+                  )}
                 </>
               )}
             </section>
-          )}
-          <DailyBrief
-            brief={brief}
-            heading={t("dash.yesterday")}
-            labels={{
-              facts: t("dash.facts"),
-              calculations: t("dash.calculations"),
-              toDo: t("dash.toDo"),
-            }}
-            t={t}
-            msg={msg}
-          />
-        </div>
 
-        <div className="dash-side">
-          {analyse && top.length > 0 && (
-            <section className="card" aria-labelledby="dash-sells">
-              <h3 id="dash-sells" className="viz-title">
-                {t("What sells, the last 7 days")}
+            <section className="card" aria-labelledby="dash-recent">
+              <h3 id="dash-recent" className="viz-title">
+                {t("Recent sales")}
               </h3>
-              <BarList
-                label={t("What sells, the last 7 days")}
-                rows={top.map((x, i) => {
-                  const k = kept(x);
-                  return {
-                    key: `${i}-${x.name}`,
-                    name: x.name,
-                    value: x.net,
-                    valueText: fmtIQD(x.net),
-                    sub:
-                      k === null
-                        ? t("{n} sold · not costed yet", { n: fmtQty(x.qty) })
-                        : t("{n} sold · {kept}% kept", {
-                            n: fmtQty(x.qty),
-                            kept: Math.round(k * 100),
-                          }),
-                  };
-                })}
-              />
-            </section>
-          )}
-
-          <section className="card" aria-labelledby="dash-stock">
-            <h3 id="dash-stock" className="viz-title">
-              <Link href="/inventory">
-                {d.location ? t("Stock at {place}", { place: d.location }) : t("Stock value")}
-              </Link>
-            </h3>
-            <p className="dash-stock-value">{fmtIQD(d.inventoryValue)}</p>
-            {board.length === 0 ? (
-              <span className="muted">{t("No items yet.")}</span>
-            ) : low.length === 0 ? (
-              <span className="badge ok">{t("All above reorder level")}</span>
-            ) : (
-              <>
-                {low.slice(0, LOW_SHOWN).map((s) => (
-                  <div key={s.itemId} className="deduction-row">
-                    <span>{s.name}</span>
-                    <span className={`badge mono ${s.isNegative ? "err" : "warn"}`}>
-                      {fmtQty(s.onHandBase)}
-                      {s.reorderBase === null ? "" : ` / ${fmtQty(s.reorderBase)}`}{" "}
-                      {unitName(s.unit, t)}
+              {recent.length === 0 ? (
+                <span className="muted">{t("No sales yet.")}</span>
+              ) : (
+                recent.map((o) => (
+                  <div key={o.id} className="deduction-row">
+                    <span>
+                      <span className="muted mono recent-time">
+                        {dateTimeIn(profile.timezone, o.placedAt).slice(11)}
+                      </span>{" "}
+                      <span className="badge">{channels.name(o.channel)}</span>{" "}
+                      {o.lines.map((l) => `${l.name} ×${l.qty}`).join(", ") || "—"}
+                      {o.status !== "completed" && (
+                        <>
+                          {" "}
+                          <span className="badge warn">{t(o.status)}</span>
+                        </>
+                      )}
                     </span>
+                    <span className="mono">{fmtIQD(o.net)}</span>
                   </div>
-                ))}
-                {low.length > LOW_SHOWN && (
-                  <p className="dash-more">
-                    <Link href="/inventory">
-                      {t("…and {n} more", { n: low.length - LOW_SHOWN })}
-                    </Link>
-                  </p>
-                )}
-              </>
-            )}
-          </section>
-
-          <section className="card" aria-labelledby="dash-recent">
-            <h3 id="dash-recent" className="viz-title">
-              {t("Recent sales")}
-            </h3>
-            {recent.length === 0 ? (
-              <span className="muted">{t("No sales yet.")}</span>
-            ) : (
-              recent.map((o) => (
-                <div key={o.id} className="deduction-row">
-                  <span>
-                    <span className="muted mono recent-time">
-                      {dateTimeIn(profile.timezone, o.placedAt).slice(11)}
-                    </span>{" "}
-                    <span className="badge">{channels.name(o.channel)}</span>{" "}
-                    {o.lines.map((l) => `${l.name} ×${l.qty}`).join(", ") || "—"}
-                    {o.status !== "completed" && (
-                      <>
-                        {" "}
-                        <span className="badge warn">{t(o.status)}</span>
-                      </>
-                    )}
-                  </span>
-                  <span className="mono">{fmtIQD(o.net)}</span>
-                </div>
-              ))
-            )}
-          </section>
+                ))
+              )}
+            </section>
+          </div>
         </div>
-      </div>
+      </PhoneMore>
     </div>
   );
 }

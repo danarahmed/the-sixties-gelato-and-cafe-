@@ -3,7 +3,10 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { getSession } from "./session";
+import { mayOpen } from "./routes";
 
 export interface AuthFormState {
   ok: boolean;
@@ -109,6 +112,26 @@ export async function updatePasswordAction(
   const { error } = await supabase.auth.updateUser({ password: password.data });
   if (error) return { ok: false, message: error.message };
   return { ok: true, message: "Your password is changed." };
+}
+
+/**
+ * The screen a person starts on (E6), kept with their sign-in so it follows
+ * them to any phone or till; "" goes back to their role's. Only a screen the
+ * menu offers them is taken.
+ */
+export async function setFirstScreenAction(href: string): Promise<AuthFormState> {
+  const s = await getSession();
+  if (!s.profile) return { ok: false, message: "Sign in first" };
+  const chosen = href === "" ? null : href;
+  if (chosen && !mayOpen(s.profile.permissions, chosen))
+    return { ok: false, message: "That screen is not one of yours." };
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.auth.updateUser({ data: { first_screen: chosen } });
+  if (error) return { ok: false, message: error.message };
+  // A fresh sign-in token carries the choice now, not when the old one runs out.
+  await supabase.auth.refreshSession();
+  revalidatePath("/account");
+  return { ok: true, message: "Saved: you start there from now on." };
 }
 
 export async function signOutAction(): Promise<void> {

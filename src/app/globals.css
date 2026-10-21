@@ -7350,3 +7350,82 @@ details.page-intro[open] .page-intro-more::after {
 details.page-intro > p {
   margin: 6px 0 0;
 }
+
+/* Find anything (E4): one box, from the top bar or Ctrl+K. */
+.find-back {
+  align-items: flex-start;
+  padding-top: 12vh;
+}
+.find-modal {
+  width: min(620px, 100%);
+  padding: 0;
+  overflow: hidden;
+}
+.find-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.find-input input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 1.1rem;
+  min-height: 40px;
+  outline: none;
+}
+.find-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+.find-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.find-list li.on {
+  background: var(--brand-soft);
+}
+.find-label {
+  font-weight: 600;
+}
+.find-detail {
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.find-kind {
+  margin-inline-start: auto;
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.find-none {
+  cursor: default;
+}
+.pos-mode .find-button {
+  display: none;
+}
+
+/* The owner's short home on a phone (E6): the rest one tap away. */
+.phone-more-button {
+  display: none;
+}
+@media (max-width: 700px) {
+  .phone-more-button {
+    display: block;
+    width: 100%;
+  }
+  .phone-more:not(.open) {
+    display: none;
+  }
+}

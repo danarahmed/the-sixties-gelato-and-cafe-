@@ -42,6 +42,7 @@ import markdowns from "./markdowns";
 import equipment from "./equipment";
 import problems from "./problems";
 import branchBooks from "./branchBooks";
+import find from "./find";
 import devices from "./devices";
 import twoStep from "./twoStep";
 
@@ -89,6 +90,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   equipment,
   problems,
   branchBooks,
+  find,
   devices,
   twoStep,
 };
