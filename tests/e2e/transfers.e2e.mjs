@@ -49,7 +49,11 @@ let no;
   );
   await Promise.all([
     page.waitForURL("**/inventory/transfers"),
-    page.getByTestId("to-transfers").click(),
+    page
+      .getByTestId("page-intro")
+      .locator("summary")
+      .click()
+      .then(() => page.getByTestId("to-transfers").click()),
   ]);
   const form = page.getByTestId("send-transfer");
   check(

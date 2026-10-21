@@ -10,6 +10,7 @@ import { addDays, businessToday, dateTimeIn, monthEnd, monthStart, parseDay } fr
 import { EmptyState } from "@/components/ui";
 import { PlaceSwitch } from "@/components/PlaceSwitch";
 import { placeChoice } from "@/lib/place";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -66,14 +67,13 @@ export default async function UsagePage({
         <PrintButton />
         <span className="sc">{t("{from} to {to} · between each item's counts", { from, to })}</span>
       </div>
-      <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        <Rich
-          text={t(
-            "Between two approved counts of an item: what came in, what the recipes of what was sold and made say was used, and what was recorded as lost. <b>Used</b> is what the counts say went, less the losses recorded; the <b>difference</b> is what no recipe and no recorded loss explains. More used than the recipes is stock gone: bigger portions, waste not recorded, sales not rung up. Less is a smaller portion, or a delivery that was never entered. Count again on <count>Stock Count</count> to see the next stretch.",
-          )}
-          tags={{ count: (c) => <Link href="/count">{c}</Link> }}
-        />
-      </p>
+      <PageIntro
+        text={t(
+          "Between two approved counts of an item: what came in, what the recipes of what was sold and made say was used, and what was recorded as lost. <b>Used</b> is what the counts say went, less the losses recorded; the <b>difference</b> is what no recipe and no recorded loss explains. More used than the recipes is stock gone: bigger portions, waste not recorded, sales not rung up. Less is a smaller portion, or a delivery that was never entered. Count again on <count>Stock Count</count> to see the next stretch.",
+        )}
+        tags={{ count: (c) => <Link href="/count">{c}</Link> }}
+        more={t("How this works")}
+      />
 
       <form
         className="card"

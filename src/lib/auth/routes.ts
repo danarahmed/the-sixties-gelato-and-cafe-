@@ -24,6 +24,13 @@ const BOOKS = "nav.group.books";
 
 export const NAV: NavEntry[] = [
   { group: null, href: "/dashboard", key: "nav.dashboard", anyOf: ["profit.view"] },
+  // Everything waiting for a manager, in one place (0088).
+  {
+    group: null,
+    href: "/approvals",
+    key: "nav.approvals",
+    anyOf: ["inventory.adjust.approve", "waste.approve", "purchase.approve", "payroll.run"],
+  },
 
   { group: REVENUE, href: "/sales", key: "nav.sales", anyOf: ["cost.view"] },
   { group: REVENUE, href: "/platforms", key: "nav.platforms", anyOf: ["cost.view"] },
@@ -105,14 +112,36 @@ export function activeHref(pathname: string | null, hrefs: readonly string[]): s
   return best;
 }
 
-/** Where a person starts: the first screen their work begins on. */
-export function homeFor(permissions: readonly string[]): string {
-  if (permissions.includes("profit.view")) return "/dashboard";
-  if (permissions.includes("sale.create")) return "/pos";
-  if (permissions.includes("inventory.count")) return "/count";
-  if (permissions.includes("waste.record")) return "/inventory";
-  if (permissions.includes("cost.view")) return "/reports";
+/** Whether the menu offers them this screen. */
+export function mayOpen(permissions: readonly string[], href: string): boolean {
+  const entry = NAV.find((n) => n.href === href);
+  return entry !== undefined && holdsAny(permissions, entry.anyOf);
+}
+
+/**
+ * Where a role's work starts (E6): whoever runs the café, on the Dashboard;
+ * the books' people, on Reports; the barista, on Production; the cashier, at
+ * the till; the counter, on the count; purchasing, on Purchasing.
+ */
+export function roleHome(permissions: readonly string[]): string {
+  const has = (p: string) => permissions.includes(p);
+  if (has("profit.view")) return has("sale.create") ? "/dashboard" : "/reports";
+  if (has("production.record")) return "/production";
+  if (has("sale.create")) return "/pos";
+  if (has("inventory.count")) return "/count";
+  if (has("purchase.create")) return "/purchasing";
+  if (has("waste.record")) return "/inventory";
+  if (has("cost.view")) return "/reports";
   return "/account";
+}
+
+/**
+ * Where a person starts: the first screen they chose on My account, while
+ * they may still open it, or else their role's.
+ */
+export function homeFor(permissions: readonly string[], chosen?: string | null): string {
+  if (chosen && mayOpen(permissions, chosen)) return chosen;
+  return roleHome(permissions);
 }
 
 /**

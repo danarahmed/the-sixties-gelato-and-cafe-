@@ -3,6 +3,7 @@ import { requireMember } from "@/lib/auth/session";
 import { getPosCatalogue } from "@/lib/db/pos";
 import { tillChoice } from "@/lib/place";
 import { DevicesCheck } from "./DevicesCheck";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -25,11 +26,12 @@ export default async function DevicesPage() {
     <div className="grid" style={{ gap: 16 }}>
       <div>
         <h1 style={{ margin: 0 }}>{t("Test your devices")}</h1>
-        <p className="muted" style={{ margin: "4px 0 0" }}>
-          {t(
+        <PageIntro
+          text={t(
             "Before opening, try each one in turn. Anything that does not work says what to do. Nothing here is a sale or goes in the books.",
           )}
-        </p>
+          more={t("How this works")}
+        />
       </div>
       <DevicesCheck
         businessName={profile.businessName}

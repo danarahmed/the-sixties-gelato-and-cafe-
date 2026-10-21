@@ -10,6 +10,7 @@ import { arrows } from "@/lib/i18n/core";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice, inputStyle } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { useUndo } from "@/components/Undo";
 import { ScheduleCheck } from "@/components/staff/ScheduleCheck";
 import type { PlannedShift, Staffing } from "@/lib/staffing";
 
@@ -72,6 +73,7 @@ export function ScheduleWeek({
     here.map((s) => [cellKey(s.employeeId, s.day), hoursOf(s, timezone)]),
   );
   const [cells, setCells] = useState<Record<string, string>>(initial);
+  const undo = useUndo();
   const people = schedule.people.filter(
     (p) => p.locationId === locationId || here.some((s) => s.employeeId === p.id),
   );
@@ -103,23 +105,34 @@ export function ScheduleWeek({
     setCells(next);
   }
 
-  function save() {
-    setMsg(null);
+  /** The cells as shifts to save, or the first one that is not hours. */
+  function shiftsOf(from: Record<string, string>) {
     const shifts: { employeeId: string; day: string; starts: string; ends: string }[] = [];
-    for (const [k, v] of Object.entries(cells)) {
+    for (const [k, v] of Object.entries(from)) {
       if (!v.trim()) continue;
       const [employeeId = "", day = ""] = k.split("|");
       const h = typedHours(v);
-      if (!h) {
-        const who = schedule.people.find((p) => p.id === employeeId)?.name ?? "";
-        setMsg({
-          ok: false,
-          text: t("Give {name}'s hours on {day} as 08:00-16:00", { name: who, day }),
-        });
-        return;
-      }
+      if (!h) return { bad: { employeeId, day } };
       shifts.push({ employeeId, day, ...h });
     }
+    return { shifts };
+  }
+
+  function save() {
+    setMsg(null);
+    const typed = shiftsOf(cells);
+    if (!typed.shifts) {
+      const who = schedule.people.find((p) => p.id === typed.bad.employeeId)?.name ?? "";
+      setMsg({
+        ok: false,
+        text: t("Give {name}'s hours on {day} as 08:00-16:00", { name: who, day: typed.bad.day }),
+      });
+      return;
+    }
+    const shifts = typed.shifts;
+    // The week as it was saved, to put back for a few seconds after (E7).
+    const before = shiftsOf(initial).shifts ?? [];
+    const was = initial;
     start(async () => {
       const r = await op.run("saveSchedule", (key) =>
         saveScheduleAction({ locationId, from: first, to: last, shifts }, key),
@@ -128,7 +141,17 @@ export function ScheduleWeek({
         setMsg({ ok: false, text: r.error });
         return;
       }
-      setMsg({ ok: true, text: t("The week's hours are saved.") });
+      undo.offer(t("The week's hours are saved."), async () => {
+        const back = await saveScheduleAction(
+          { locationId, from: first, to: last, shifts: before },
+          crypto.randomUUID(),
+        );
+        if (back.ok) {
+          setCells(was);
+          router.refresh();
+        }
+        return back.ok ? { ok: true } : { ok: false, error: back.error };
+      });
       router.refresh();
     });
   }
@@ -152,6 +175,11 @@ export function ScheduleWeek({
                 key={l.id}
                 href={`?week=${first}&place=${l.id}#schedule`}
                 className={l.id === locationId ? "badge ok" : "badge"}
+                aria-current={l.id === locationId ? "true" : undefined}
+                // The place chosen here is the device's, as on every screen.
+                onClick={() => {
+                  document.cookie = `place=${l.id}; path=/; max-age=31536000; samesite=lax`;
+                }}
               >
                 {l.name}
               </Link>
@@ -258,6 +286,7 @@ export function ScheduleWeek({
       )}
       <OperationStatus op={op} />
       <Notice msg={msg} />
+      {undo.node}
       {usual && people.length > 0 && (
         <ScheduleCheck staffing={usual} shifts={planned} costs={costs} target={target} />
       )}

@@ -2054,6 +2054,16 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### One approvals inbox (`0088`)
+
+- No table. `approvals_waiting()` gathers, for the reader's permissions and
+  place, the stock counts submitted, the losses waiting (`losses_waiting`),
+  the purchase orders drafted and left an hour (`po_waits`) and the payroll
+  runs in draft, each with who asked, when, why, how much and whether the
+  reader may decide it; `approvals_waiting_count()` counts them for the
+  menu. The alert `approvals_waiting` names the newest count or order
+  waiting, so each arrival is a new alert.
+
 ### A count withdrawn by its counter (`0087`)
 
 - No table. `trg_stock_count_guard` keeps only approving from the person who

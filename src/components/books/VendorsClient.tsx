@@ -41,6 +41,7 @@ type Msg = { ok: boolean; text: string } | null;
 
 export function VendorsClient({
   vendors,
+  initialVendor,
   bills,
   receipts,
   accounts,
@@ -57,6 +58,8 @@ export function VendorsClient({
   docs = {},
   cash = null,
 }: {
+  /** The supplier opened first: one found from anywhere (Find anything). */
+  initialVendor?: string;
   vendors: VendorRow[];
   bills: OpenBill[];
   receipts: ReceiptOption[];
@@ -84,7 +87,9 @@ export function VendorsClient({
   const { t } = useT();
   const router = useRouter();
   // By id, not position: a vendor renamed or taken out of use moves in the list.
-  const [selId, setSelId] = useState(vendors[0]?.id ?? "");
+  const [selId, setSelId] = useState(
+    vendors.find((v) => v.id === initialVendor)?.id ?? vendors[0]?.id ?? "",
+  );
   const [tab, setTab] = useState<Tab>("statement");
   const vendor = vendors.find((v) => v.id === selId) ?? vendors[0];
 

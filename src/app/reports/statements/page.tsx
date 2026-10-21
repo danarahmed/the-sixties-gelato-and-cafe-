@@ -23,6 +23,7 @@ import {
   parseDay,
   yearStart,
 } from "@/lib/dates";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -159,11 +160,12 @@ export default async function StatementsPage({
           </Link>
         </span>
       </div>
-      <p className="muted" style={{ margin: 0, fontSize: ".85rem", lineHeight: 1.6 }}>
-        {t(
+      <PageIntro
+        text={t(
           "What the café owned and owed when the day before the dates ended and when they ended, and where its cash came from and went in between: from the published journals, as the trial balance has them.",
         )}
-      </p>
+        more={t("How this works")}
+      />
       <form
         className="card"
         style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}

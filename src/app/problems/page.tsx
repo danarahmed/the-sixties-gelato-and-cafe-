@@ -2,6 +2,7 @@ import { getT } from "@/lib/i18n/server";
 import { requirePermission } from "@/lib/auth/session";
 import { getProblems } from "@/lib/db/problems";
 import { ProblemsList } from "./ProblemsList";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +19,12 @@ export default async function ProblemsPage() {
     <div className="grid" style={{ gap: 16 }}>
       <div>
         <h1 style={{ margin: 0 }}>{t("Reported problems")}</h1>
-        <p className="muted" style={{ margin: "4px 0 0" }}>
-          {t(
+        <PageIntro
+          text={t(
             "What staff said went wrong, with the screen they were on. Mark each one dealt with once it is put right; copy one to send it on.",
           )}
-        </p>
+          more={t("How this works")}
+        />
       </div>
       {list === null ? (
         <p className="muted">

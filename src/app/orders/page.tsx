@@ -10,6 +10,7 @@ import { getChannelNames } from "@/lib/db/channels";
 import { addDays, businessToday, dateTimeIn, dayStart, parseDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui";
 import { OrderActions } from "@/components/OrderActions";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -78,13 +79,12 @@ export default async function OrdersPage({
   return (
     <div className="grid" style={{ gap: 16 }}>
       <h1 style={{ margin: 0 }}>{t("nav.orders")}</h1>
-      <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        <Rich
-          text={t(
-            "A sale is never edited. A sale rung in error is <b>voided</b> until the drawer's session holding it closes — revenue, payment, cost and stock all come back exactly. After that, money goes back to the customer by a <b>refund</b> of some of its items or all of them, through Sales returns, the way it was paid; only goods that can go back on the shelf return to stock. Both take a reason from the list and are on the audit trail; one approved by a second person (their name and PIN) is marked so, and one without waits for the owner on the exceptions report.",
-          )}
-        />
-      </p>
+      <PageIntro
+        text={t(
+          "A sale is never edited. A sale rung in error is <b>voided</b> until the drawer's session holding it closes — revenue, payment, cost and stock all come back exactly. After that, money goes back to the customer by a <b>refund</b> of some of its items or all of them, through Sales returns, the way it was paid; only goods that can go back on the shelf return to stock. Both take a reason from the list and are on the audit trail; one approved by a second person (their name and PIN) is marked so, and one without waits for the owner on the exceptions report.",
+        )}
+        more={t("How this works")}
+      />
 
       <form
         className="card"

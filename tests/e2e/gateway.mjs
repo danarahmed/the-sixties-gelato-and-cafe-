@@ -52,6 +52,7 @@ function verify(token) {
   return p;
 }
 const refresh = new Map(); // refresh token -> email
+const metadata = new Map(); // email -> user_metadata, as each person last saved it
 function userObj(email) {
   return {
     id: USERS[email],
@@ -62,7 +63,7 @@ function userObj(email) {
     phone: "",
     confirmed_at: "2026-01-01T00:00:00Z",
     app_metadata: { provider: "email", providers: ["email"] },
-    user_metadata: {},
+    user_metadata: metadata.get(email) ?? {},
     identities: [],
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
@@ -133,6 +134,7 @@ function session(email, aal = "aal1") {
       iat: now,
       exp: now + 3600,
       session_id: crypto.randomUUID(),
+      user_metadata: metadata.get(email) ?? {},
       aal,
       amr:
         aal === "aal2"
@@ -143,7 +145,6 @@ function session(email, aal = "aal1") {
           : [{ method: "password", timestamp: now }],
       is_anonymous: false,
       app_metadata: { provider: "email" },
-      user_metadata: {},
     }),
     token_type: "bearer",
     expires_in: 3600,
@@ -420,6 +421,12 @@ http
     if (url.pathname === "/auth/v1/user") {
       const p = verify((req.headers.authorization || "").replace(/^Bearer /, ""));
       if (!p || !p.email) return send(res, 401, { code: "bad_jwt", msg: "invalid JWT" });
+      // updateUser({ data }): the person's own metadata, merged as Supabase does.
+      if (req.method === "PUT") {
+        const change = JSON.parse((await body(req)) || "{}");
+        if (change.data && typeof change.data === "object")
+          metadata.set(p.email, { ...(metadata.get(p.email) ?? {}), ...change.data });
+      }
       return send(res, 200, { ...userObj(p.email), factors: factorsOf(p.email) });
     }
     // Two-step sign-in: enrol a TOTP factor, challenge it, verify a code,

@@ -9,6 +9,7 @@ import { ProductThumb } from "@/components/pos/ProductPicker";
 import { Icon } from "@/components/Icon";
 import { Notice } from "@/components/ui";
 import { shrinkPhoto } from "./photo";
+import { matchPhotos } from "@/lib/photoMatch";
 
 /** A product's name in the reader's language, when it has one there. */
 function nameIn(p: MenuProduct, locale: string): string {
@@ -29,7 +30,10 @@ export function MenuPhotos({ products }: { products: MenuProduct[] }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const file = useRef<HTMLInputElement>(null);
+  const many = useRef<HTMLInputElement>(null);
   const forId = useRef<string | null>(null);
+  const [progress, setProgress] = useState<string | null>(null);
+  const [left, setLeft] = useState<string[]>([]);
 
   const shown = products
     .filter((p) => p.isActive)
@@ -65,6 +69,43 @@ export function MenuPhotos({ products }: { products: MenuProduct[] }) {
     }
   }
 
+  // Many photos at once (E8): each to the product its file is named for.
+  async function uploadMany(files: File[]) {
+    setMsg(null);
+    setLeft([]);
+    const { matched, unmatched, repeated } = matchPhotos(
+      files,
+      shown.map((p) => ({ id: p.id, names: [p.name, p.nameAr ?? "", p.nameCkb ?? ""] })),
+    );
+    setBusy("many");
+    let saved = 0;
+    const failed: string[] = [];
+    try {
+      for (const [i, m] of matched.entries()) {
+        setProgress(t("{n} of {total}…", { n: i + 1, total: matched.length }));
+        try {
+          const photo = await shrinkPhoto(m.file);
+          const r = await setProductImageAction({ productId: m.productId, ...photo });
+          if (r.ok) saved++;
+          else failed.push(m.file.name);
+        } catch {
+          failed.push(m.file.name);
+        }
+      }
+    } finally {
+      setBusy(null);
+      setProgress(null);
+      if (many.current) many.current.value = "";
+    }
+    const notPlaced = [...unmatched, ...repeated].map((f) => f.name).concat(failed);
+    setLeft(notPlaced);
+    setMsg({
+      ok: saved > 0 && notPlaced.length === 0,
+      text: t("{n} photo(s) saved; {m} not placed.", { n: saved, m: notPlaced.length }),
+    });
+    if (saved > 0) router.refresh();
+  }
+
   return (
     <details className="card menu-photos" data-testid="menu-photos">
       <summary>
@@ -78,7 +119,25 @@ export function MenuPhotos({ products }: { products: MenuProduct[] }) {
           "Tap a product to give it a photo, or a new one: a phone offers its camera or its pictures. One with no photo shows its colour and its initials.",
         )}
       </p>
+      <div className="row" style={{ gap: 8, alignItems: "center", marginBlockEnd: 10 }}>
+        <button
+          type="button"
+          disabled={busy !== null}
+          onClick={() => many.current?.click()}
+          data-testid="photos-many"
+        >
+          <Icon name="plus" size={14} /> {t("Add many at once")}
+        </button>
+        <span className="muted" style={{ fontSize: ".82rem" }}>
+          {progress ?? t("Name each file as its product: latte.jpg goes on Latte.")}
+        </span>
+      </div>
       <Notice msg={msg} />
+      {left.length > 0 && (
+        <p className="muted" style={{ fontSize: ".82rem" }} data-testid="photos-left">
+          {t("Not placed (give these a photo by hand):")} <span dir="auto">{left.join(", ")}</span>
+        </p>
+      )}
       <ul className="photo-grid" aria-label={t("Photos for the till")}>
         {shown.map((p) => {
           const name = nameIn(p, locale);
@@ -119,6 +178,19 @@ export function MenuPhotos({ products }: { products: MenuProduct[] }) {
         onChange={(e) => {
           const f = e.target.files?.[0];
           if (f) void upload(f);
+        }}
+      />
+      <input
+        ref={many}
+        type="file"
+        multiple
+        accept="image/png,image/jpeg,image/webp,image/*"
+        hidden
+        aria-label={t("Add many at once")}
+        data-testid="photos-many-input"
+        onChange={(e) => {
+          const fs = [...(e.target.files ?? [])];
+          if (fs.length) void uploadMany(fs);
         }}
       />
     </details>

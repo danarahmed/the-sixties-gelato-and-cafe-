@@ -8,6 +8,7 @@ import { RUN_STATUS_LABEL, monthText } from "@/lib/staff";
 import { fmtIQD } from "@/lib/format";
 import { addDays, businessToday, dateTimeIn, monthStart } from "@/lib/dates";
 import { Advances, DraftPayroll } from "@/components/payroll/PayrollHome";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -50,11 +51,12 @@ export default async function PayrollPage() {
   return (
     <div className="grid" style={{ gap: 16 }}>
       <h1 style={{ margin: 0 }}>{t("nav.payroll")}</h1>
-      <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        {t(
+      <PageIntro
+        text={t(
           "Each month's pay comes from the pay set on Staff and the hours worked. A draft is checked, adjusted with what is added or deducted and why, and approved once the month is over: the salaries are then owed, and paid from the bank, the safe, the till or by the owner.",
         )}
-      </p>
+        more={t("How this works")}
+      />
 
       {canRun && (
         <section className="card grid" style={{ gap: 8 }}>

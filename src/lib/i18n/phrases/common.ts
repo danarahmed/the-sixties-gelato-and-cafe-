@@ -308,6 +308,7 @@ const phrases: PhraseBook = {
     ar: "شاهد أرقام اليوم وما تعنيه",
     ckb: "ژمارەکانی ڕۆژ و مانایان ببینە",
   },
+  "How this works": { ar: "كيف يعمل هذا", ckb: "ئەمە چۆن کار دەکات" },
 };
 
 export default phrases;

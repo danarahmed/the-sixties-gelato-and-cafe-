@@ -4,8 +4,8 @@ import { homeFor } from "@/lib/auth/routes";
 
 export const dynamic = "force-dynamic";
 
-/** Everyone starts where their work starts: the till, the count, the books. */
+/** Everyone starts where their work starts, or on the screen they chose (E6). */
 export default async function Home() {
   const profile = await requireMember();
-  redirect(homeFor(profile.permissions));
+  redirect(homeFor(profile.permissions, profile.firstScreen));
 }

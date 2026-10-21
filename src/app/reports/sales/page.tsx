@@ -21,6 +21,7 @@ import {
 import { fmtIQD, fmtQty } from "@/lib/format";
 import { ColumnChart, type Column } from "@/components/charts/ColumnChart";
 import { addDays, businessToday, daysBetween, monthEnd, monthStart, parseDay } from "@/lib/dates";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -170,11 +171,12 @@ export default async function SalesAnalysisPage({
           </Link>
         </span>
       </div>
-      <p className="muted" style={{ margin: 0, fontSize: ".85rem", lineHeight: 1.6 }}>
-        {t(
+      <PageIntro
+        text={t(
           "The sales of the dates, seen one way and, if you like, a second. Each sale counts as it was paid; what its refunds gave back since is taken off it, whenever they were made. Voided sales are left out.",
         )}
-      </p>
+        more={t("How this works")}
+      />
 
       <form className="card grid" style={{ gap: 12 }} data-testid="analysis-form">
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>

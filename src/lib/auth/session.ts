@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import type { Permission } from "@domain/auth/permissions.js";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { supabaseConfig } from "@/lib/supabase/config";
-import { homeFor } from "./routes";
+import { roleHome } from "./routes";
 
 /** Who is signed in, as the database knows them (my_profile()). */
 export interface Profile {
@@ -33,6 +33,8 @@ export interface Profile {
   /** The place they work at (0055); null when they work everywhere. */
   worksAt: string | null;
   worksAtName: string | null;
+  /** The first screen they chose on My account (E6); null for their role's. */
+  firstScreen: string | null;
 }
 
 export interface SessionState {
@@ -54,6 +56,9 @@ export const getSession = cache(async (): Promise<SessionState> => {
   const sub = claims?.claims?.sub;
   if (!sub) return { configured: true, signedIn: false, email: null, profile: null };
   const email = typeof claims.claims.email === "string" ? claims.claims.email : null;
+  // Kept with their sign-in, so it follows them from phone to till.
+  const meta = claims.claims.user_metadata as Record<string, unknown> | undefined;
+  const firstScreen = typeof meta?.first_screen === "string" ? meta.first_screen : null;
 
   const { data, error } = await db.rpc("my_profile");
   if (error) throw new Error(`Could not load your profile: ${error.message}`);
@@ -84,6 +89,7 @@ export const getSession = cache(async (): Promise<SessionState> => {
       // Before 0055 everyone worked everywhere.
       worksAt: p.works_at == null ? null : String(p.works_at),
       worksAtName: p.works_at_name == null ? null : String(p.works_at_name),
+      firstScreen,
     },
   };
 });
@@ -104,7 +110,8 @@ export async function requireMember(): Promise<Profile> {
  */
 export async function requirePermission(...anyOf: Permission[]): Promise<Profile> {
   const profile = await requireMember();
-  if (!anyOf.some((p) => profile.permissions.includes(p))) redirect(homeFor(profile.permissions));
+  // Their role's own screen, never the chosen one: that could be this very screen.
+  if (!anyOf.some((p) => profile.permissions.includes(p))) redirect(roleHome(profile.permissions));
   return profile;
 }
 

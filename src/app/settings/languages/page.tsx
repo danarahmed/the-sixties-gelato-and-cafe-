@@ -5,6 +5,7 @@ import { BUILT_IN_LANGUAGES } from "@/lib/i18n/core";
 import { catalogue } from "@/lib/i18n/catalogue";
 import { getLanguageSettings, getOwnWords } from "@/lib/db/languages";
 import { LanguagesManager, type LanguageRow } from "@/components/settings/LanguagesManager";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -57,11 +58,12 @@ export default async function LanguagesPage({
           <Link href="/settings">{t("nav.settings")}</Link>
         </div>
         <h1 style={{ margin: 0 }}>{t("Languages")}</h1>
-        <p className="muted" style={{ margin: "6px 0 0", maxWidth: 760 }}>
-          {t(
+        <PageIntro
+          text={t(
             "Every screen is in English, Arabic and Kurdish. Add another language here, and give any phrase the café's own words: a whole new language, or a better word for the Arabic or Kurdish. A phrase with no words in a language shows its English.",
           )}
-        </p>
+          more={t("How this works")}
+        />
       </div>
       <LanguagesManager
         languages={languages}

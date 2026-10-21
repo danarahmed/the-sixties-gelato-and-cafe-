@@ -271,6 +271,12 @@ const PATHS = {
   table: <path d="M3.5 8.5h17M5.5 8.5v11M18.5 8.5v11M5.5 13.5h13" />,
   expand: <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />,
   check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
+  search: (
+    <>
+      <circle cx="10.5" cy="10.5" r="6" />
+      <path d="M15 15l5 5" />
+    </>
+  ),
   key: (
     <>
       <circle cx="8" cy="15" r="4" />

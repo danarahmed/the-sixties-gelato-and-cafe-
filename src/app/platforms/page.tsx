@@ -13,6 +13,7 @@ import { ChannelsProvider } from "@/components/ChannelsProvider";
 import { PlatformsManager } from "@/components/platforms/PlatformsManager";
 import { StatementMatcher } from "@/components/platforms/StatementMatcher";
 import { PlatformSettlements } from "@/components/platforms/PlatformSettlements";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -38,13 +39,12 @@ export default async function PlatformsPage() {
     <ChannelsProvider channels={channels.channels}>
       <div className="grid" style={{ gap: 16 }}>
         <h1 style={{ margin: 0 }}>{t("nav.platforms")}</h1>
-        <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-          <Rich
-            text={t(
-              "A delivery-platform order is platform-paid: the customer pays the platform, and the sale sits in <b>1100 Platform receivable</b> until the platform pays out. Each sale carries the order number from the platform's tablet, and the platform's statement is matched to the sales by it. Direct delivery is not a platform sale — it is taken as cash or card.",
-            )}
-          />
-        </p>
+        <PageIntro
+          text={t(
+            "A delivery-platform order is platform-paid: the customer pays the platform, and the sale sits in <b>1100 Platform receivable</b> until the platform pays out. Each sale carries the order number from the platform's tablet, and the platform's statement is matched to the sales by it. Direct delivery is not a platform sale — it is taken as cash or card.",
+          )}
+          more={t("How this works")}
+        />
 
         <section className="panel" id="manage">
           <div className="panel-h">

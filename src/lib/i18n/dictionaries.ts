@@ -16,6 +16,7 @@ type Dict = Record<string, string>;
 const en: Dict = {
   "app.name": "The Sixty's Gelato & Café",
   "nav.dashboard": "Dashboard",
+  "nav.approvals": "Approvals",
   "nav.sales": "Sales",
   "nav.vendors": "Vendors",
   "nav.expenses": "Expenses",
@@ -378,6 +379,7 @@ const en: Dict = {
 const ar: Dict = {
   "app.name": "جيلاتو وكافيه السِتّينات",
   "nav.dashboard": "لوحة التحكم",
+  "nav.approvals": "الموافقات",
   "nav.sales": "المبيعات",
   "nav.vendors": "المورّدون",
   "nav.expenses": "المصروفات",
@@ -734,6 +736,7 @@ const ar: Dict = {
 const ckb: Dict = {
   "app.name": "جیلاتۆ و کافێی شەستەکان",
   "nav.dashboard": "داشبۆرد",
+  "nav.approvals": "پەسەندکردنەکان",
   "nav.sales": "فرۆشتن",
   "nav.vendors": "دابینکەران",
   "nav.expenses": "خەرجییەکان",

@@ -82,6 +82,7 @@ Plan a short window when the café is closed.
 | Stock kept as it moves (`0085`)           | ✅ Applied by the owner in the SQL editor on 20 October; the live screens then checked, and timed from Frankfurt                                                                                                                                                                                                                                                                                                                                 |
 | What the books hold now (`0086`)          | ✅ Applied by the owner in the SQL editor on 21 October; the branch panel then read 12,000 IQD for the safe, as the balance sheet                                                                                                                                                                                                                                                                                                                |
 | A count withdrawn by its counter (`0087`) | ⏳ To apply: paste it in the SQL editor (below)                                                                                                                                                                                                                                                                                                                                                                                                  |
+| One approvals inbox (`0088`)              | ⏳ To apply: paste it in the SQL editor (below)                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ## 0. Before you start
 
@@ -3971,6 +3972,27 @@ Rehearsed with `tests/sql/count_withdrawn.test.sql` and every other test.
 It is applied by the owner, in Supabase's SQL editor, after `0086`:
 
 1. Open the file `supabase/migrations/0087_count_withdrawn.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0088`
+
+Migration `0088` gathers what waits for a manager in one list, **Approvals**
+on the menu with how many beside it: stock counts submitted, losses saved to
+wait, purchase orders drafted and left an hour, and the month's pay drafted.
+Each is approved, or sent back with why, by the database function its own
+screen uses, with the same checks. A count or an order waiting raises an
+alert, so a phone with warnings on hears of each one. Nothing recorded
+changes.
+
+Rehearsed with `tests/sql/approvals.test.sql` and every other test.
+
+It is applied by the owner, in Supabase's SQL editor, after `0087`:
+
+1. Open the file `supabase/migrations/0088_approvals.sql` on GitHub, press **Raw**,
    select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run

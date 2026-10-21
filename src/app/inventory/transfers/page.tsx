@@ -9,6 +9,7 @@ import { fmtIQD } from "@/lib/format";
 import { EmptyState } from "@/components/ui";
 import { PlaceSwitch } from "@/components/PlaceSwitch";
 import { SendTransfer, TransferBoard } from "@/components/inventory/Transfers";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -48,11 +49,12 @@ export default async function TransfersPage() {
           <Link href="/inventory">{t("Back to Inventory")}</Link>
         </div>
       </div>
-      <p className="muted" style={{ margin: 0, fontSize: ".88rem" }}>
-        {t(
+      <PageIntro
+        text={t(
           "Stock sent from one of the café's places to another leaves at its cost where it was, is on its way until the other place receives it, and what did not arrive is written off as waste. A batch keeps its use-by at the place it goes to.",
         )}
-      </p>
+        more={t("How this works")}
+      />
       <details className="booked" data-testid="transfers-booked">
         <summary>{t("How it is booked")}</summary>
         <p className="muted" style={{ margin: "6px 0 0", fontSize: ".85rem" }}>

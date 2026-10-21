@@ -135,7 +135,7 @@ select test.eq((
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'execute')),
   'acknowledge_alert,add_attendance,add_delivery_platform,add_fixed_asset,add_item_unit,add_variant,'
-  'adjust_payroll_line,adjust_points,adjust_stock,alert_thresholds,allocate_credit,app_words,'
+  'adjust_payroll_line,adjust_points,adjust_stock,alert_thresholds,allocate_credit,app_words,approvals_waiting,approvals_waiting_count,'
   'approve_payroll,approve_po,approve_stock_count,attach_document,attendance_list,bank_book,'
   'batch_reconciliation,branch_position,buying_list,cancel_advance,cancel_attendance,cancel_bill,'
   'cancel_card_settlement,cancel_money_move,cancel_platform_settlement,cancel_po,cancel_pre_order,'

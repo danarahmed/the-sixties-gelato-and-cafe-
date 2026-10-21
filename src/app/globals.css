@@ -7322,3 +7322,176 @@ kbd {
   padding-block: 8px;
   border-block-start: 1px solid var(--line, rgba(0, 0, 0, 0.08));
 }
+
+/* A page's explanation in one line; the rest under "How this works". */
+.page-intro {
+  margin: 0;
+  font-size: 0.9rem;
+}
+details.page-intro > summary {
+  list-style: none;
+  cursor: pointer;
+}
+details.page-intro > summary::-webkit-details-marker {
+  display: none;
+}
+.page-intro-more {
+  color: var(--brand);
+  font-weight: 600;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.page-intro-more::after {
+  content: " ▾";
+}
+details.page-intro[open] .page-intro-more::after {
+  content: " ▴";
+}
+details.page-intro > p {
+  margin: 6px 0 0;
+}
+
+/* Find anything (E4): one box, from the top bar or Ctrl+K. */
+.find-back {
+  align-items: flex-start;
+  padding-top: 12vh;
+}
+.find-modal {
+  width: min(620px, 100%);
+  padding: 0;
+  overflow: hidden;
+}
+.find-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.find-input input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 1.1rem;
+  min-height: 40px;
+  outline: none;
+}
+.find-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+.find-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.find-list li.on {
+  background: var(--brand-soft);
+}
+.find-label {
+  font-weight: 600;
+}
+.find-detail {
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.find-kind {
+  margin-inline-start: auto;
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.find-none {
+  cursor: default;
+}
+.pos-mode .find-button {
+  display: none;
+}
+
+/* The owner's short home on a phone (E6): the rest one tap away. */
+.phone-more-button {
+  display: none;
+}
+@media (max-width: 700px) {
+  .phone-more-button {
+    display: block;
+    width: 100%;
+  }
+  .phone-more:not(.open) {
+    display: none;
+  }
+}
+
+/* The approvals inbox (0088): a card each, the count on the menu. */
+.nav-count {
+  margin-inline-start: auto;
+  min-width: 1.4em;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.5;
+}
+.approvals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.approval {
+  display: grid;
+  gap: 6px;
+}
+.approval-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.approval-value {
+  margin-inline-start: auto;
+  font-weight: 700;
+}
+.approval-meta {
+  font-size: 0.85rem;
+}
+.approval-why {
+  font-size: 0.9rem;
+}
+.approval-acts,
+.approval-back {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.approval-open {
+  margin-inline-start: auto;
+  font-size: 0.85rem;
+}
+
+/* Undo for a few seconds (E7). */
+.undo-bar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  white-space: normal;
+}
+.undo-button {
+  min-height: 32px;
+  padding: 2px 12px;
+  font-weight: 700;
+}
