@@ -40,6 +40,11 @@ const phrases: PhraseBook = {
   // The audit log.
   "The receipt set": { ar: "ضُبط الإيصال", ckb: "پسوولە ڕێکخرا" },
   "The receipt's logo set": { ar: "ضُبط شعار الإيصال", ckb: "لۆگۆی پسوولە دانرا" },
+  "Thank-you line in English": { ar: "سطر الشكر بالإنجليزية", ckb: "دێڕی سوپاس بە ئینگلیزی" },
+  "Thank-you line in Arabic": { ar: "سطر الشكر بالعربية", ckb: "دێڕی سوپاس بە عەرەبی" },
+  "Thank-you line in Kurdish": { ar: "سطر الشكر بالكردية", ckb: "دێڕی سوپاس بە کوردی" },
+  "Size (bytes)": { ar: "الحجم (بايت)", ckb: "قەبارە (بایت)" },
+  Percentage: { ar: "النسبة المئوية", ckb: "ڕێژەی سەدی" },
 
   // Settings.
   "The receipt": { ar: "الإيصال", ckb: "پسوولە" },
