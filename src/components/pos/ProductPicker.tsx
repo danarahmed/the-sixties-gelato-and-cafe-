@@ -287,7 +287,7 @@ export function ProductPicker({
         e.preventDefault();
         const code = scanned.current.buf;
         scanned.current = { buf: "", at: 0 };
-        scan(code);
+        scanNow.current(code);
       } else if (/^[0-9]$/.test(e.key)) {
         e.preventDefault();
         const now = performance.now();
@@ -346,6 +346,11 @@ export function ProductPicker({
     else onAdd(item.variantId, [], 1);
     return true;
   }
+  // The key listener reads the scan through this, so it always looks in the
+  // menu on the screen now, not the one shown when the listener was made: a
+  // scan right after the way of selling changes finds what is sold on it.
+  const scanNow = useRef(scan);
+  scanNow.current = scan;
 
   /** Add a product: as many as typed first, or asked in the search; then the count is done with. */
   function pick(p: Product) {

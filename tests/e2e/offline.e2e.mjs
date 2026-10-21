@@ -14,6 +14,9 @@ for (const locale of ["en", "ar", "ckb"]) {
   await open(page, "/pos");
   const dir = await page.evaluate(() => document.documentElement.dir);
   check(dir === (locale === "en" ? "ltr" : "rtl"), `${locale}: written ${dir}`);
+  // The till may open on its tables, where a suite before this one left it.
+  const menuTab = page.locator('.pos-top [role="tablist"] [role="tab"]').last();
+  if (await menuTab.count()) await menuTab.click();
   await page.locator(".product-tile").first().click();
   await ctx.setOffline(true);
   await page.waitForTimeout(300);

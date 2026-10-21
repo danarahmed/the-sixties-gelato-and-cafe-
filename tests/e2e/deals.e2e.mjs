@@ -16,10 +16,13 @@ const ESPRESSO = "d1000000-0000-0000-0000-000000000001";
 const tz = last(`select timezone from business limit 1`);
 const from = last(`select to_char((now() - interval '1 minute') at time zone '${tz}', 'HH24:MI')`);
 const until = last(`select to_char((now() + interval '2 hours') at time zone '${tz}', 'HH24:MI')`);
-const usualEspresso = Number(
-  last(`select price from channel_price where product_variant_id = '${ESPRESSO}' and channel = 'dine_in'
-         order by effective_from desc, created_at desc limit 1`),
-);
+// The espresso's usual price today, as the till reads it once no hour's price runs.
+const usualEspresso = () =>
+  Number(
+    last(
+      `select price_on_0079('${ESPRESSO}', 'dine_in', null, (now() at time zone '${tz}')::date)`,
+    ),
+  );
 
 console.log("▸ the owner makes a deal, and a price by the hour");
 {
@@ -150,9 +153,9 @@ console.log("▸ Reports, and the hour's price stopped");
   const espresso = page.locator(".product-tile", { hasText: "Golden espresso" });
   check(
     ((await espresso.locator(".price").textContent()) ?? "").includes(
-      usualEspresso.toLocaleString("en"),
+      usualEspresso().toLocaleString("en"),
     ),
-    `stopped: the espresso is back to ${usualEspresso.toLocaleString("en")}`,
+    `stopped: the espresso is back to ${usualEspresso().toLocaleString("en")}`,
   );
   await ctx.close();
 }
