@@ -240,13 +240,15 @@ service charge (a percentage) on any of the café's own ways of selling, or
 off everywhere (as the owner chose), shown on the bill and the receipt,
 counted as revenue apart from sales (4300). Migration with its tests.
 
-**F4 · A dashboard each role chooses.** Cards picked and ordered per role
-(and per person), favourite reports pinned to the top of Reports; the
-owner sets the default for each role.
+**F4 · A dashboard arranged for each role.** As the owner chose: nobody
+arranges their own. The system arranges each role's Dashboard itself — the
+cards that role works with, what needs attention now first — and Reports
+puts each person's most-opened reports first, learned from what they open.
 
 **F5 · The café's own receipt.** The logo, the café's name in the three
-languages, a thank-you line, social links, the Wi-Fi password, a QR code
-(menu or review page), and what the footer says; previewed before printing,
+languages, a thank-you line in the three languages, social links, the Wi-Fi
+password, a QR code to the menu or to a review page (a choice on Settings,
+as the owner chose), and what the footer says; previewed before printing,
 and printed by the test on Test your devices.
 
 ---
@@ -260,7 +262,7 @@ and printed by the test on Test your devices.
 | 3 ✓  | E5 the approvals inbox, E7 undo                                              | `0088`    |
 | 4 ✓  | F1 meal deals, F2 prices by time of day                                      | `0089`    |
 | 5 ✓  | F3 tips and a service charge                                                 | `0090`    |
-| 6    | F4 the dashboard each role chooses, F5 the café's own receipt                | `0091`    |
+| 6 ✓  | F4 the dashboard arranged for each role, F5 the café's own receipt           | `0091`    |
 | 7    | The simulated year on the copy, with the planted problems; the backtest tool | —         |
 | 8    | Part 3, smarter buying (parts 5 and 6 use its drafts and lead times)         | `0092`    |
 | 9    | Part 5, cash planning                                                        | `0093`    |
@@ -303,6 +305,20 @@ each one's pay for the month; approving it takes them out of 2200, not out
 of the salaries' cost. A refund gives back what was bought and the service
 charge on it (as the owner asked); the tip stays the staff's; voiding a
 sale takes back all of it.
+Nobody arranges their own screens: the **Dashboard** is arranged for each
+role (the owner and a general manager: today first, sales leading the
+figures; a branch manager: what needs them first, the hour by hour and the
+stock ahead; an accountant or an auditor: gross profit, yesterday's brief
+and the latest sales first), and anything red brings what needs them to
+the top for anyone. **Reports** puts first the reports each person opens
+most, from the third time, learned from what they open. **The receipt** is
+set on Settings with a preview beside it: the logo (made small and printed
+in black and white), the café's name in Arabic and Kurdish, a thank-you
+line in each of the three languages (the app's own when none is given),
+Instagram, Facebook and TikTok, the Wi-Fi, a QR code to the menu or a
+reviews page or none, and a line at the foot; the bill, the receipt, a
+refund's slip and the device test print it (a refund's slip has no QR
+code).
 
 Easier and more flexible first: every user feels them from the first day,
 and the smart parts then learn from deals, tips and time-of-day prices too.

@@ -8,6 +8,7 @@ import { itemNameIn } from "@/lib/analysis";
 import { fmtIQD, fmtQty, itemTypeLabel, unitName } from "@/lib/format";
 import { businessToday, parseDay } from "@/lib/dates";
 import { getCafePlaces } from "@/lib/place";
+import { ReportVisit } from "@/components/reports/ReportVisit";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,7 @@ export default async function StockValuePage({
 
   return (
     <div className="grid" style={{ gap: 16 }}>
+      <ReportVisit path="/reports/stock" />
       <PrintHead
         business={profile.businessName}
         title={t("Stock value on a day")}

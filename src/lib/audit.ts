@@ -260,6 +260,8 @@ const ACTION_LABEL: Record<string, string> = {
   "sale.no_service": "Service charge taken off a sale",
   "settings.service_charge": "Service charge set",
   "payroll.tip_sharers": "Who shares the tips set",
+  "settings.receipt": "The receipt set",
+  "settings.receipt_logo": "The receipt's logo set",
   "payment_method.add": "Way to pay added",
   "payment_method.change": "Way to pay changed",
   "money.move": "Money moved",
@@ -578,6 +580,25 @@ const FIELD_LABEL: Record<string, string> = {
   months: "Months",
   released: "Shares posted",
   shares_reversed: "Shares reversed",
+  // Tips and the service charge (0090).
+  service: "Service charge",
+  given_back: "Given back",
+  percent: "Percentage",
+  employees: "Who shares the tips",
+  // The café's own receipt (0091).
+  thanks_en: "Thank-you line in English",
+  thanks_ar: "Thank-you line in Arabic",
+  thanks_ckb: "Thank-you line in Kurdish",
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  wifi_name: "The Wi-Fi's name",
+  wifi_password: "Its password",
+  qr: "QR code",
+  menu_url: "The link to your menu",
+  review_url: "The link to your reviews page",
+  footer: "A line at the foot",
+  bytes: "Size (bytes)",
 };
 
 /**
@@ -649,6 +670,9 @@ export function showValue(v: Json | undefined, key: string, names: Names): strin
       return BUSINESS_RULE_LABEL[v as keyof typeof BUSINESS_RULE_LABEL] ?? v;
     if (key === "applies_to") return roleLabel(v) !== v ? roleLabel(v) : itemTypeLabel(v);
     if (key === "value" && CHOICE_LABEL[v]) return CHOICE_LABEL[v];
+    // Where the receipt's QR code leads (0091).
+    if (key === "qr")
+      return v === "menu" ? "Our menu" : v === "review" ? "Tell us how we did" : "No QR code";
     if (key === "dir") return v === "rtl" ? "Right to left" : v === "ltr" ? "Left to right" : v;
     if (PURCHASING_VALUE[key]?.[v]) return PURCHASING_VALUE[key]![v]!;
     return v;

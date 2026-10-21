@@ -7,6 +7,9 @@ import { fmtWeight } from "@/lib/weight";
 import { useT } from "@/lib/i18n/I18nProvider";
 import type { Tender } from "./model";
 import { phoneText } from "@/lib/customers";
+import { QrCode } from "@/components/QrCode";
+import { useReceipt } from "@/components/ReceiptProvider";
+import { receiptOtherNames, receiptQrLink, receiptThanks, type ReceiptSetup } from "@/lib/receipt";
 
 /** The check: a bill handed over before payment, the receipt after it, or a refund's slip (0037). */
 export interface PrintJob {
@@ -155,14 +158,21 @@ export function PrintSlip({
   slips,
   businessName,
   timezone,
+  receipt,
   onDone,
 }: {
   slips: Slip[] | null;
   businessName: string;
   timezone: string;
+  /**
+   * The café's own receipt (0091): its logo, names, thanks and the rest; none,
+   * the app's own. Left out: the page's (ReceiptProvider).
+   */
+  receipt?: ReceiptSetup | null;
   onDone: () => void;
 }) {
   const { locale, dir } = useT();
+  const pageReceipt = useReceipt();
   usePrintOnce(slips && slips.length > 0 ? slips : null, onDone);
 
   if (!slips || slips.length === 0 || typeof document === "undefined") return null;
@@ -182,7 +192,12 @@ export function PrintSlip({
           {s.kind === "ticket" ? (
             <TicketSlip ticket={s} time={at(s.at, false)} />
           ) : (
-            <CheckSlip job={s} businessName={businessName} when={at(s.at, true)} />
+            <CheckSlip
+              job={s}
+              businessName={businessName}
+              receipt={receipt === undefined ? pageReceipt : receipt}
+              when={at(s.at, true)}
+            />
           )}
         </Fragment>
       ))}
@@ -257,14 +272,39 @@ function Ornament() {
   );
 }
 
-/** The full check, for the customer and the cashier. */
-function CheckSlip({
+/**
+ * The check as it prints, on the screen: Settings shows the café's receipt
+ * while it is set up, with a sale made up to fill it.
+ */
+export function ReceiptPreview({
   job,
   businessName,
+  receipt,
   when,
 }: {
   job: PrintJob;
   businessName: string;
+  receipt: ReceiptSetup | null;
+  when: string;
+}) {
+  const { locale, dir } = useT();
+  return (
+    <div className="slip-preview" dir={dir} lang={locale} data-testid="receipt-preview">
+      <CheckSlip job={job} businessName={businessName} receipt={receipt} when={when} />
+    </div>
+  );
+}
+
+/** The full check, for the customer and the cashier. */
+function CheckSlip({
+  job,
+  businessName,
+  receipt,
+  when,
+}: {
+  job: PrintJob;
+  businessName: string;
+  receipt: ReceiptSetup | null;
   when: string;
 }) {
   const { t } = useT();
@@ -280,8 +320,18 @@ function CheckSlip({
   return (
     <section className="slip">
       <header className="sl-head">
-        <Emblem />
+        {receipt?.logo ? (
+          // eslint-disable-next-line @next/next/no-img-element -- a data address, printed as it is
+          <img className="sl-logo" src={receipt.logo} alt="" data-testid="slip-logo" />
+        ) : (
+          <Emblem />
+        )}
         <div className="sl-brand">{businessName}</div>
+        {receiptOtherNames(receipt).map((n) => (
+          <div key={n} className="sl-brand-alt" dir="rtl" data-testid="slip-name">
+            {n}
+          </div>
+        ))}
         <div className="sl-kind">
           <span>
             {job.kind === "bill"
@@ -479,10 +529,77 @@ function CheckSlip({
           reference && <div>{reference}</div>
         )}
         {job.kind === "refund" && job.note && <div>{job.note}</div>}
-        <div className="sl-thanks">{t("print.thanks")}</div>
-        <Ornament />
+        <ReceiptFoot receipt={receipt} refund={job.kind === "refund"} />
       </footer>
     </section>
+  );
+}
+
+/**
+ * The foot of the check: the café's thanks in each language it gave (or the
+ * app's own), its pages, the Wi-Fi, the QR code to its menu or its reviews,
+ * and its own line.
+ */
+function ReceiptFoot({ receipt, refund }: { receipt: ReceiptSetup | null; refund: boolean }) {
+  const { t } = useT();
+  const thanks = receiptThanks(receipt);
+  // A handle as given, with or without its @ (Settings' preview shows it as typed).
+  const handle = (v: string | null) => (v ? v.trim().replace(/^@+/, "") : "");
+  const pages = receipt
+    ? [
+        handle(receipt.instagram) ? `Instagram @${handle(receipt.instagram)}` : null,
+        receipt.facebook?.trim() ? `Facebook ${receipt.facebook.trim()}` : null,
+        handle(receipt.tiktok) ? `TikTok @${handle(receipt.tiktok)}` : null,
+      ].filter((x): x is string => !!x)
+    : [];
+  const link = receiptQrLink(receipt);
+  return (
+    <>
+      {thanks.length > 0 ? (
+        thanks.map((x, i) => (
+          <div
+            key={i}
+            className="sl-thanks"
+            dir={/[\u0600-\u06ff]/.test(x) ? "rtl" : "ltr"}
+            data-testid="slip-thanks"
+          >
+            {x}
+          </div>
+        ))
+      ) : (
+        <div className="sl-thanks">{t("print.thanks")}</div>
+      )}
+      <Ornament />
+      {pages.length > 0 && (
+        <div className="sl-pages" dir="ltr" data-testid="slip-pages">
+          {pages.map((p) => (
+            <span key={p}>{p}</span>
+          ))}
+        </div>
+      )}
+      {receipt?.wifiName && (
+        <div className="sl-wifi" data-testid="slip-wifi">
+          <span>{t("Wi-Fi")}</span> <bdi>{receipt.wifiName}</bdi>
+          {receipt.wifiPassword && (
+            <>
+              {" · "}
+              <span>{t("Password")}</span> <bdi>{receipt.wifiPassword}</bdi>
+            </>
+          )}
+        </div>
+      )}
+      {link && !refund && (
+        <div className="sl-qr" data-testid="slip-qr">
+          <QrCode
+            text={link}
+            size={96}
+            label={receipt?.qr === "menu" ? t("Our menu") : t("Tell us how we did")}
+          />
+          <div>{receipt?.qr === "menu" ? t("Our menu") : t("Tell us how we did")}</div>
+        </div>
+      )}
+      {receipt?.footer && <div className="sl-own">{receipt.footer}</div>}
+    </>
   );
 }
 

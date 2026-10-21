@@ -24,6 +24,7 @@ import {
   yearStart,
 } from "@/lib/dates";
 import { PageIntro } from "@/components/PageIntro";
+import { ReportVisit } from "@/components/reports/ReportVisit";
 
 export const dynamic = "force-dynamic";
 
@@ -145,6 +146,7 @@ export default async function StatementsPage({
 
   return (
     <div className="grid" style={{ gap: 16 }}>
+      <ReportVisit path="/reports/statements" />
       <PrintHead
         business={profile.businessName}
         title={t("Balance sheet and cash flow")}

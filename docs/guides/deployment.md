@@ -84,7 +84,8 @@ Plan a short window when the café is closed.
 | A count withdrawn by its counter (`0087`)  | ✅ Applied by the owner in the SQL editor on 21 October; the count was then withdrawn and recounted live                                                                                                                                                                                                                                                                                                                                         |
 | One approvals inbox (`0088`)               | ✅ Applied by the owner in the SQL editor on 21 October; Approvals then listed the 02:18 count, the menu counted 1, the Dashboard raised its alert                                                                                                                                                                                                                                                                                               |
 | Meal deals and prices by the hour (`0089`) | ✅ Applied by the owner in the SQL editor on 21 October; Products & Recipes then showed Meal deals and Prices by the time of day, the till as before                                                                                                                                                                                                                                                                                             |
-| Tips and a service charge (`0090`)         | ⏳ To apply: paste it in the SQL editor (below)                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Tips and a service charge (`0090`)         | ✅ Applied by the owner in the SQL editor on 21 October; Settings then offered the service charge on the three ways of selling, Payroll the tips                                                                                                                                                                                                                                                                                                 |
+| The café's own receipt (`0091`)            | ⏳ Waiting for the owner to apply it in the SQL editor                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ## 0. Before you start
 
@@ -4062,6 +4063,40 @@ another number, then run it again.
 It is applied by the owner, in Supabase's SQL editor, after `0089`:
 
 1. Open the file `supabase/migrations/0090_tips_and_service.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0091`
+
+Migration `0091` brings the café's own receipt, and each person's reports
+first:
+
+- **The receipt:** on Settings → The receipt, the café's logo, its name in
+  Arabic and Kurdish beside its own, a thank-you line in English, Arabic and
+  Kurdish, its Instagram, Facebook and TikTok, the Wi-Fi's name and password,
+  a QR code that leads to the menu or to a reviews page (a choice, each a
+  link the owner gives) or to nothing, and a line at the foot. The receipt
+  beside the form shows each change as it will print. The bill, the receipt,
+  a refund's slip and the test print on Test your devices print it; a till
+  with no connection prints it too (the logo is kept with the page).
+- **Reports, each person's most opened first:** each report a person opens
+  is counted for them, and Reports puts the ones they open most first (from
+  the third time). Nobody arranges anything.
+
+The Dashboard arranged for each role needs no migration: the owner and a
+general manager see today first, a branch manager what needs them first,
+an accountant or an auditor gross profit and yesterday's brief first;
+something red puts what needs them at the top for anyone.
+
+Nothing recorded changes. Rehearsed with
+`tests/sql/receipt_and_reports.test.sql` and every other test.
+
+It is applied by the owner, in Supabase's SQL editor, after `0090`:
+
+1. Open the file `supabase/migrations/0091_receipt_and_reports.sql` on GitHub, press **Raw**,
    select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run

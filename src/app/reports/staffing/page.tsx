@@ -12,6 +12,7 @@ import { getStaff } from "@/lib/db/staff";
 import { WEEKDAYS } from "@/lib/analysis";
 import { addDays, businessToday, localClock, parseDay } from "@/lib/dates";
 import { fmtIQD, fmtQty } from "@/lib/format";
+import { ReportVisit } from "@/components/reports/ReportVisit";
 import {
   DAY_PARTS,
   PART_LABEL,
@@ -331,6 +332,7 @@ export default async function StaffingPage({
 
   return (
     <div className="grid staffing" style={{ gap: 18 }}>
+      <ReportVisit path="/reports/staffing" />
       {head}
 
       <div className="kpis" data-testid="staffing-tiles">

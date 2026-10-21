@@ -94,6 +94,10 @@ const SAME = new Set(
     // they name themselves ("FIB" passes as initials, "Qi Card" below).
     "FastPay",
     "ZainCash",
+    // The café's pages on the receipt (0091), named as they name themselves.
+    "Instagram",
+    "Facebook",
+    "TikTok",
     // Language codes, as the Languages screen gives them for examples.
     "tr",
     "fa",
@@ -122,8 +126,9 @@ const SAME = new Set(
   ].map((w) => w.toLowerCase()),
 );
 // Names of more than one word kept as they are, taken out whole so that their
-// words ("Card") are not allowed anywhere else: a way to pay's brand (0069).
-const SAME_NAMES = ["Qi Card"];
+// words ("Card") are not allowed anywhere else: a way to pay's brand (0069);
+// where to find the link for reviews (0091): "Google Maps".
+const SAME_NAMES = ["Qi Card", "Google Maps"];
 // On Delivery Platforms, the column names of a platform's own report, which
 // the statement reader looks for as the platform writes them.
 const SAME_ON = { "/platforms": ["order", "payout", "commission", "fees", "id", "net"] };

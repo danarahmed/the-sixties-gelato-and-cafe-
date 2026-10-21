@@ -9,6 +9,7 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import { Icon } from "@/components/Icon";
 import { PrintSlip, usePrintOnce, type PrintJob } from "@/components/pos/PrintSlip";
 import { Barcode } from "@/app/products/labels/LabelSheet";
+import type { ReceiptSetup } from "@/lib/receipt";
 
 type State = "untested" | "ok" | "problem" | "none";
 type Key = "internet" | "printer" | "drawer" | "labels" | "scanner" | "scale" | "phone";
@@ -46,10 +47,12 @@ const FIX: Record<Key, string> = {
 export function DevicesCheck({
   businessName,
   timezone,
+  receipt = null,
   items,
 }: {
   businessName: string;
   timezone: string;
+  receipt?: ReceiptSetup | null;
   items: Item[];
 }) {
   const { t } = useT();
@@ -306,6 +309,7 @@ export function DevicesCheck({
           slips={slips}
           businessName={businessName}
           timezone={timezone}
+          receipt={receipt}
           onDone={() => setSlips(slips.length ? [] : null)}
         />
       )}

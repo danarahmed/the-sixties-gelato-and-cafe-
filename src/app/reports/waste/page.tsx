@@ -12,6 +12,7 @@ import { addDays, businessToday, parseDay } from "@/lib/dates";
 import { fmtIQD, unitName } from "@/lib/format";
 import { bigQty, recipeWaste, WASTES, wasteTip, weekWorst } from "@/lib/waste";
 import { WEEKDAY_NAME } from "@/lib/production";
+import { ReportVisit } from "@/components/reports/ReportVisit";
 
 export const dynamic = "force-dynamic";
 
@@ -225,6 +226,7 @@ export default async function WastePage({
 
   return (
     <div className="grid waste" style={{ gap: 18 }}>
+      <ReportVisit path="/reports/waste" />
       <PrintHead
         business={profile.businessName}
         title={t("Waste by recipe")}

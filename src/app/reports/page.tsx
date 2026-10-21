@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getMyReportVisits } from "@/lib/db/receipt";
+import { mostOpenedFirst } from "@/lib/reportVisits";
 import { Fragment } from "react";
 import { PrintButton } from "@/components/PrintButton";
 import { PrintHead } from "@/components/PrintHead";
@@ -123,6 +125,7 @@ export default async function ReportsPage({
     pnlBefore,
     methodRows,
     sectionSetup,
+    visits,
   ] = await Promise.all([
     seesProfit ? getProfitAndLoss(from, to, place) : Promise.resolve([]),
     getReconciliation(to),
@@ -153,7 +156,78 @@ export default async function ReportsPage({
     from <= to ? getPaymentMethodReport(from, to, place) : Promise.resolve([]),
     // The café's and the bakery's parts of the menu (0074), read with the rest.
     getSectionSetup(),
+    // The reports this person opens most (0091): theirs first, learned. None before it.
+    getMyReportVisits(),
   ]);
+  // The reports of their own: as the owner chose (F4), nobody arranges them;
+  // those each person opens most come first, the rest as they stand.
+  const placeQ = place && profile.worksAt === null ? place : null;
+  const upTo = to > today ? today : to;
+  const reportPages = [
+    {
+      path: "/reports/sales",
+      testId: "to-analysis",
+      href: `/reports/sales?from=${from}&to=${to}${placeQ ? `&location=${placeQ}` : ""}`,
+      label: t("Sales analysis: by hour, day, product, person, payment… →"),
+    },
+    {
+      path: "/reports/week",
+      testId: "to-week",
+      href: `/reports/week?end=${upTo}${placeQ ? `&location=${placeQ}` : ""}`,
+      label: t("The week at a glance →"),
+    },
+    {
+      path: "/reports/month",
+      testId: "to-month",
+      href: `/reports/month?month=${upTo.slice(0, 7)}${placeQ ? `&location=${placeQ}` : ""}`,
+      label: t("The month at a glance →"),
+    },
+    {
+      path: "/reports/prices",
+      testId: "to-prices",
+      href: "/reports/prices",
+      label: t("Price watch: what came in dearer →"),
+    },
+    {
+      path: "/reports/menu",
+      testId: "to-menu",
+      href: `/reports/menu${placeQ ? `?location=${placeQ}` : ""}`,
+      label: t("Menu matrix: what to keep, reprice, show more or drop →"),
+    },
+    ...(seesStaff
+      ? [
+          {
+            path: "/reports/staffing",
+            testId: "to-staffing",
+            href: `/reports/staffing${placeQ ? `?location=${placeQ}` : ""}`,
+            label: t("Staffed when busy? Orders an hour against who was on the clock →"),
+          },
+        ]
+      : []),
+    {
+      path: "/reports/waste",
+      testId: "to-waste",
+      href: `/reports/waste${placeQ ? `?location=${placeQ}` : ""}`,
+      label: t("Waste by recipe: made, sold and thrown away →"),
+    },
+    {
+      path: "/reports/stock",
+      testId: "to-stock-value",
+      href: `/reports/stock?on=${to}${withPlace}`,
+      label: t("Stock value on a day →"),
+    },
+    ...(seesProfit
+      ? [
+          {
+            path: "/reports/statements",
+            testId: "to-statements",
+            href: `/reports/statements?from=${from}&to=${to}`,
+            label: t("Balance sheet and cash flow →"),
+          },
+        ]
+      : []),
+  ];
+  const reportsLearned = mostOpenedFirst(reportPages, visits);
   // The café's and the bakery's takings and profit (0074), once the menu has
   // parts: the sales analysis by category, each counted in its part.
   const partsInUse = (sectionSetup?.sections ?? []).filter((s) => s.isActive);
@@ -755,72 +829,25 @@ export default async function ReportsPage({
       {/* ---- The analysis and the stock's value on a day (0051); the statements (0052) ---- */}
       <div
         className="card"
-        style={{ display: "flex", gap: 16, flexWrap: "wrap" }}
+        style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "baseline" }}
         data-testid="report-pages"
       >
-        <Link
-          className="drill"
-          href={`/reports/sales?from=${from}&to=${to}${place && profile.worksAt === null ? `&location=${place}` : ""}`}
-          data-testid="to-analysis"
-        >
-          {t("Sales analysis: by hour, day, product, person, payment… →")}
-        </Link>
-        <Link
-          className="drill"
-          href={`/reports/week?end=${to > today ? today : to}${place && profile.worksAt === null ? `&location=${place}` : ""}`}
-          data-testid="to-week"
-        >
-          {t("The week at a glance →")}
-        </Link>
-        <Link
-          className="drill"
-          href={`/reports/month?month=${(to > today ? today : to).slice(0, 7)}${place && profile.worksAt === null ? `&location=${place}` : ""}`}
-          data-testid="to-month"
-        >
-          {t("The month at a glance →")}
-        </Link>
-        <Link className="drill" href="/reports/prices" data-testid="to-prices">
-          {t("Price watch: what came in dearer →")}
-        </Link>
-        <Link
-          className="drill"
-          href={`/reports/menu${place && profile.worksAt === null ? `?location=${place}` : ""}`}
-          data-testid="to-menu"
-        >
-          {t("Menu matrix: what to keep, reprice, show more or drop →")}
-        </Link>
-        {seesStaff && (
-          <Link
-            className="drill"
-            href={`/reports/staffing${place && profile.worksAt === null ? `?location=${place}` : ""}`}
-            data-testid="to-staffing"
-          >
-            {t("Staffed when busy? Orders an hour against who was on the clock →")}
-          </Link>
+        {reportsLearned && (
+          <span className="muted rep-learned" data-testid="reports-learned">
+            {t("The ones you open most, first:")}
+          </span>
         )}
-        <Link
-          className="drill"
-          href={`/reports/waste${place && profile.worksAt === null ? `?location=${place}` : ""}`}
-          data-testid="to-waste"
-        >
-          {t("Waste by recipe: made, sold and thrown away →")}
-        </Link>
-        <Link
-          className="drill"
-          href={`/reports/stock?on=${to}${withPlace}`}
-          data-testid="to-stock-value"
-        >
-          {t("Stock value on a day →")}
-        </Link>
-        {seesProfit && (
+        {reportPages.map((r) => (
           <Link
+            key={r.path}
             className="drill"
-            href={`/reports/statements?from=${from}&to=${to}`}
-            data-testid="to-statements"
+            href={r.href}
+            data-testid={r.testId}
+            data-visits={visits[r.path] ?? 0}
           >
-            {t("Balance sheet and cash flow →")}
+            {r.label}
           </Link>
-        )}
+        ))}
       </div>
 
       {seesProfit && (

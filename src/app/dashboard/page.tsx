@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import { getLocale, getMsg, getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getDailySalesTarget, getDashboard, getReconciliation } from "@/lib/db/reports";
@@ -49,6 +50,8 @@ import {
 } from "@/lib/setup";
 import { GettingSetUp } from "@/components/dashboard/GettingSetUp";
 import { PageIntro } from "@/components/PageIntro";
+import { sortAlerts } from "@/lib/alerts";
+import { dashLayout, inOrder } from "@/lib/dashboardLayout";
 
 export const dynamic = "force-dynamic";
 
@@ -196,8 +199,9 @@ export default async function DashboardPage() {
 
   // Each figure opens what is behind it (audit P1-2).
   const span = `from=${today}&to=${today}`;
-  const kpis = [
+  const kpiList = [
     {
+      key: "net" as const,
       label: t("dash.netSales"),
       value: fmtIQD(d.netRevenue),
       href: `/reports?${span}#channel`,
@@ -205,6 +209,7 @@ export default async function DashboardPage() {
       spark: before.map((x) => x.net),
     },
     {
+      key: "orders" as const,
       label: t("dash.orders"),
       value: String(d.orders),
       href: `/orders?${span}`,
@@ -212,6 +217,7 @@ export default async function DashboardPage() {
       spark: before.map((x) => x.orders),
     },
     {
+      key: "average" as const,
       label: t("dash.avgOrder"),
       value: fmtIQD(d.averageOrder),
       href: `/orders?${span}`,
@@ -219,6 +225,7 @@ export default async function DashboardPage() {
       spark: before.map((x) => (x.orders ? x.net / x.orders : 0)),
     },
     {
+      key: "profit" as const,
       label: t("dash.grossProfit"),
       value: fmtIQD(d.grossProfit),
       tone: d.grossProfit < 0 ? "err" : undefined,
@@ -229,6 +236,13 @@ export default async function DashboardPage() {
           : null,
     },
   ];
+  // Arranged for the person's role (F4): what they decide from comes first;
+  // something red brings what needs them to the top.
+  const layout = dashLayout(
+    profile.roles,
+    sortAlerts(alerts).needsYou.filter((a) => a.urgency === "red").length,
+  );
+  const kpis = layout.figures.map((f) => kpiList.find((k) => k.key === f)!);
 
   // ------------------------------------------------------- the target
   const shareText = (x: number) => String(Math.floor(x * 100));
@@ -473,7 +487,7 @@ export default async function DashboardPage() {
         : t("Good evening, {name}", { name: firstName });
 
   return (
-    <div className="dash">
+    <div className="dash" data-arranged={layout.lead} data-urgent={layout.urgent || undefined}>
       <header className="dash-hero">
         <div>
           <h1>{greeting}</h1>
@@ -517,265 +531,305 @@ export default async function DashboardPage() {
 
       <TourOffer tourKey="dashboard" />
 
-      <section aria-labelledby="dash-today">
-        <h2 id="dash-today" className="dash-h">
-          {t("dash.today")}
-        </h2>
-        {goal && (
-          <section
-            className={`card dash-target${goal.reached ? " reached" : behind ? " behind" : ""}`}
-            data-testid="dash-target"
-            data-state={goal.reached ? "reached" : behind ? "behind" : "on-pace"}
-            aria-labelledby="dash-target-h"
-          >
-            <div className="dash-target-top">
-              <div>
-                <h3 id="dash-target-h" className="viz-title">
-                  {t("Today's target")}
-                </h3>
-                <p className="dash-target-num">
-                  <b>{fmtIQD(goal.net)}</b>{" "}
-                  <span className="muted">{t("of {target}", { target: fmtIQD(goal.target) })}</span>
-                </p>
-              </div>
-              <span className="dash-target-pct" data-testid="dash-target-pct">
-                {shareText(goal.share)}%
-              </span>
-            </div>
-            <div
-              className="target-bar"
-              role="progressbar"
-              aria-labelledby="dash-target-h"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.floor(filled * 100)}
-              aria-valuetext={t("{pct}% of the target", { pct: shareText(goal.share) })}
-            >
-              <span className="target-fill" style={{ inlineSize: `${filled * 100}%` }} />
-              {goal.usualShareByNow !== null && !goal.reached && (
-                <span
-                  className="target-now"
-                  style={{ insetInlineStart: `${goal.usualShareByNow * 100}%` }}
-                  aria-hidden="true"
-                />
-              )}
-            </div>
-            <p className="dash-target-say" data-testid="dash-target-say">
-              {goalWords}
-            </p>
-          </section>
-        )}
-        <div className="kpis">
-          {kpis.map((k) => (
-            <Link key={k.label} href={k.href} className="card stat">
-              <span className="label">{k.label}</span>
-              <span className={`value${k.tone ? ` ${k.tone}` : ""}`}>{k.value}</span>
-              {k.delta ?? (k.note ? <span className="delta">{k.note}</span> : null)}
-              {k.spark && analyse && <Sparkline values={k.spark} />}
-            </Link>
-          ))}
-        </div>
-        <div className="dash-note">
-          <PageIntro
-            text={t(
-              "These are the profit and loss's own figures for today. Gross profit is after waste, count differences, price differences on deliveries and platform fees. Open a figure to see what is behind it.",
-            )}
-            more={t("How this works")}
-          />
-          {!goal && has(profile, "settings.manage") && (
-            <Link href="/settings/rules#rule-daily_sales_target" data-testid="dash-set-target">
-              {t("Give the café a day's sales target, and today is measured against it.")}
-            </Link>
-          )}
-        </div>
-      </section>
-
-      <NeedsYou
-        alerts={alerts}
-        canAct={has(profile, "sale.void") || has(profile, "accounting.post")}
-        myId={profile.id}
-        today={today}
-        timezone={profile.timezone}
-      />
-
-      {/* What the figures say comes first, for a phone and a screen reader;
-          a wide screen sets it atop the side column. */}
-      <PhoneMore>
-        <div className="dash-grid">
-          <section className="card dash-say" aria-labelledby="dash-say">
-            <h3 id="dash-say" className="viz-title">
-              {t("What the figures say")}
-            </h3>
-            <Sayings items={sayings} />
-          </section>
-
-          <div className="dash-main">
-            {analyse && (
-              <section className="card">
-                <ColumnChart
-                  title={t("Sales, the last 14 days")}
-                  columnsName={t("Net sales")}
-                  labels={{ table: t("Show as a table"), heading: t("Day") }}
-                  reference={
-                    dailyAverage > 0
-                      ? {
-                          value: dailyAverage,
-                          label: t("Average: {amount} a day", { amount: fmtIQD(dailyAverage) }),
-                        }
-                      : undefined
-                  }
-                  columns={fortnight.map((x) => ({
-                    key: x.day,
-                    label: x.day === today ? t("Today") : x.day.slice(8).replace(/^0/, ""),
-                    value: Math.max(x.net, 0),
-                    valueText: fmtIQD(x.net),
-                    detail: `${t(WEEKDAY(x.day))} ${months(x.day)} · ${t("{n} order(s)", { n: x.orders })}`,
-                    emphasis: x.day === today,
-                  }))}
-                />
-              </section>
-            )}
-            {analyse && (
-              <section className="card">
-                {hoursDrawn.length > 0 ? (
-                  <ColumnChart
-                    title={t("Today, hour by hour")}
-                    columnsName={t("Today")}
-                    labels={{ table: t("Show as a table"), heading: t("Hour") }}
-                    line={
-                      usual.length
-                        ? {
-                            name: t("A usual {weekday}", { weekday: t(weekday) }),
-                            points: hoursDrawn.map((h) => ({
-                              key: String(h),
-                              value: usualByHour.get(h)?.net ?? 0,
-                              valueText: fmtIQD(usualByHour.get(h)?.net ?? 0),
-                            })),
-                          }
-                        : undefined
-                    }
-                    columns={hoursDrawn.map((h) => ({
-                      key: String(h),
-                      label: String(h),
-                      value: Math.max(todayByHour.get(h)?.net ?? 0, 0),
-                      valueText: fmtIQD(todayByHour.get(h)?.net ?? 0),
-                      detail: `${hh(h)}–${hh(h + 1)} · ${t("{n} order(s)", { n: todayByHour.get(h)?.orders ?? 0 })}`,
-                      emphasis: true,
-                    }))}
-                  />
-                ) : (
-                  <>
-                    <h3 className="viz-title">{t("Today, hour by hour")}</h3>
-                    <p className="muted">{t("No sales yet today.")}</p>
-                  </>
-                )}
-              </section>
-            )}
-            <DailyBrief
-              brief={brief}
-              heading={t("dash.yesterday")}
-              labels={{
-                facts: t("dash.facts"),
-                calculations: t("dash.calculations"),
-                toDo: t("dash.toDo"),
-              }}
-              t={t}
-              msg={msg}
-            />
-          </div>
-
-          <div className="dash-side">
-            {analyse && top.length > 0 && (
-              <section className="card" aria-labelledby="dash-sells">
-                <h3 id="dash-sells" className="viz-title">
-                  {t("What sells, the last 7 days")}
-                </h3>
-                <BarList
-                  label={t("What sells, the last 7 days")}
-                  rows={top.map((x, i) => {
-                    const k = kept(x);
-                    return {
-                      key: `${i}-${x.name}`,
-                      name: x.name,
-                      value: x.net,
-                      valueText: fmtIQD(x.net),
-                      sub:
-                        k === null
-                          ? t("{n} sold · not costed yet", { n: fmtQty(x.qty) })
-                          : t("{n} sold · {kept}% kept", {
-                              n: fmtQty(x.qty),
-                              kept: Math.round(k * 100),
-                            }),
-                    };
-                  })}
-                />
-              </section>
-            )}
-
-            <section className="card" aria-labelledby="dash-stock">
-              <h3 id="dash-stock" className="viz-title">
-                <Link href="/inventory">
-                  {d.location ? t("Stock at {place}", { place: d.location }) : t("Stock value")}
-                </Link>
-              </h3>
-              <p className="dash-stock-value">{fmtIQD(d.inventoryValue)}</p>
-              {board.length === 0 ? (
-                <span className="muted">{t("No items yet.")}</span>
-              ) : low.length === 0 ? (
-                <span className="badge ok">{t("All above reorder level")}</span>
-              ) : (
-                <>
-                  {low.slice(0, LOW_SHOWN).map((s) => (
-                    <div key={s.itemId} className="deduction-row">
-                      <span>{s.name}</span>
-                      <span className={`badge mono ${s.isNegative ? "err" : "warn"}`}>
-                        {fmtQty(s.onHandBase)}
-                        {s.reorderBase === null ? "" : ` / ${fmtQty(s.reorderBase)}`}{" "}
-                        {unitName(s.unit, t)}
+      {inOrder(layout.blocks, {
+        today: (
+          <section key="today" aria-labelledby="dash-today">
+            <h2 id="dash-today" className="dash-h">
+              {t("dash.today")}
+            </h2>
+            {goal && (
+              <section
+                className={`card dash-target${goal.reached ? " reached" : behind ? " behind" : ""}`}
+                data-testid="dash-target"
+                data-state={goal.reached ? "reached" : behind ? "behind" : "on-pace"}
+                aria-labelledby="dash-target-h"
+              >
+                <div className="dash-target-top">
+                  <div>
+                    <h3 id="dash-target-h" className="viz-title">
+                      {t("Today's target")}
+                    </h3>
+                    <p className="dash-target-num">
+                      <b>{fmtIQD(goal.net)}</b>{" "}
+                      <span className="muted">
+                        {t("of {target}", { target: fmtIQD(goal.target) })}
                       </span>
-                    </div>
-                  ))}
-                  {low.length > LOW_SHOWN && (
-                    <p className="dash-more">
-                      <Link href="/inventory">
-                        {t("…and {n} more", { n: low.length - LOW_SHOWN })}
-                      </Link>
                     </p>
-                  )}
-                </>
-              )}
-            </section>
-
-            <section className="card" aria-labelledby="dash-recent">
-              <h3 id="dash-recent" className="viz-title">
-                {t("Recent sales")}
-              </h3>
-              {recent.length === 0 ? (
-                <span className="muted">{t("No sales yet.")}</span>
-              ) : (
-                recent.map((o) => (
-                  <div key={o.id} className="deduction-row">
-                    <span>
-                      <span className="muted mono recent-time">
-                        {dateTimeIn(profile.timezone, o.placedAt).slice(11)}
-                      </span>{" "}
-                      <span className="badge">{channels.name(o.channel)}</span>{" "}
-                      {o.lines.map((l) => `${l.name} ×${l.qty}`).join(", ") || "—"}
-                      {o.status !== "completed" && (
-                        <>
-                          {" "}
-                          <span className="badge warn">{t(o.status)}</span>
-                        </>
-                      )}
-                    </span>
-                    <span className="mono">{fmtIQD(o.net)}</span>
                   </div>
-                ))
+                  <span className="dash-target-pct" data-testid="dash-target-pct">
+                    {shareText(goal.share)}%
+                  </span>
+                </div>
+                <div
+                  className="target-bar"
+                  role="progressbar"
+                  aria-labelledby="dash-target-h"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.floor(filled * 100)}
+                  aria-valuetext={t("{pct}% of the target", { pct: shareText(goal.share) })}
+                >
+                  <span className="target-fill" style={{ inlineSize: `${filled * 100}%` }} />
+                  {goal.usualShareByNow !== null && !goal.reached && (
+                    <span
+                      className="target-now"
+                      style={{ insetInlineStart: `${goal.usualShareByNow * 100}%` }}
+                      aria-hidden="true"
+                    />
+                  )}
+                </div>
+                <p className="dash-target-say" data-testid="dash-target-say">
+                  {goalWords}
+                </p>
+              </section>
+            )}
+            <div className="kpis">
+              {kpis.map((k) => (
+                <Link key={k.label} href={k.href} className="card stat">
+                  <span className="label">{k.label}</span>
+                  <span className={`value${k.tone ? ` ${k.tone}` : ""}`}>{k.value}</span>
+                  {k.delta ?? (k.note ? <span className="delta">{k.note}</span> : null)}
+                  {k.spark && analyse && <Sparkline values={k.spark} />}
+                </Link>
+              ))}
+            </div>
+            <div className="dash-note">
+              <PageIntro
+                text={t(
+                  "These are the profit and loss's own figures for today. Gross profit is after waste, count differences, price differences on deliveries and platform fees. Open a figure to see what is behind it.",
+                )}
+                more={t("How this works")}
+              />
+              {!goal && has(profile, "settings.manage") && (
+                <Link href="/settings/rules#rule-daily_sales_target" data-testid="dash-set-target">
+                  {t("Give the café a day's sales target, and today is measured against it.")}
+                </Link>
               )}
-            </section>
-          </div>
-        </div>
-      </PhoneMore>
+            </div>
+          </section>
+        ),
+        needs: (
+          <NeedsYou
+            key="needs"
+            alerts={alerts}
+            canAct={has(profile, "sale.void") || has(profile, "accounting.post")}
+            myId={profile.id}
+            today={today}
+            timezone={profile.timezone}
+          />
+        ),
+        // What the figures say comes first, for a phone and a screen reader;
+        // a wide screen sets it atop the side column.
+        more: (
+          <PhoneMore key="more">
+            <div className="dash-grid">
+              <section className="card dash-say" aria-labelledby="dash-say">
+                <h3 id="dash-say" className="viz-title">
+                  {t("What the figures say")}
+                </h3>
+                <Sayings items={sayings} />
+              </section>
+
+              <div className="dash-main">
+                {inOrder(layout.main, {
+                  fortnight: (
+                    <Fragment key="fortnight">
+                      {analyse && (
+                        <section className="card">
+                          <ColumnChart
+                            title={t("Sales, the last 14 days")}
+                            columnsName={t("Net sales")}
+                            labels={{ table: t("Show as a table"), heading: t("Day") }}
+                            reference={
+                              dailyAverage > 0
+                                ? {
+                                    value: dailyAverage,
+                                    label: t("Average: {amount} a day", {
+                                      amount: fmtIQD(dailyAverage),
+                                    }),
+                                  }
+                                : undefined
+                            }
+                            columns={fortnight.map((x) => ({
+                              key: x.day,
+                              label:
+                                x.day === today ? t("Today") : x.day.slice(8).replace(/^0/, ""),
+                              value: Math.max(x.net, 0),
+                              valueText: fmtIQD(x.net),
+                              detail: `${t(WEEKDAY(x.day))} ${months(x.day)} · ${t("{n} order(s)", { n: x.orders })}`,
+                              emphasis: x.day === today,
+                            }))}
+                          />
+                        </section>
+                      )}
+                    </Fragment>
+                  ),
+                  hours: (
+                    <Fragment key="hours">
+                      {analyse && (
+                        <section className="card">
+                          {hoursDrawn.length > 0 ? (
+                            <ColumnChart
+                              title={t("Today, hour by hour")}
+                              columnsName={t("Today")}
+                              labels={{ table: t("Show as a table"), heading: t("Hour") }}
+                              line={
+                                usual.length
+                                  ? {
+                                      name: t("A usual {weekday}", { weekday: t(weekday) }),
+                                      points: hoursDrawn.map((h) => ({
+                                        key: String(h),
+                                        value: usualByHour.get(h)?.net ?? 0,
+                                        valueText: fmtIQD(usualByHour.get(h)?.net ?? 0),
+                                      })),
+                                    }
+                                  : undefined
+                              }
+                              columns={hoursDrawn.map((h) => ({
+                                key: String(h),
+                                label: String(h),
+                                value: Math.max(todayByHour.get(h)?.net ?? 0, 0),
+                                valueText: fmtIQD(todayByHour.get(h)?.net ?? 0),
+                                detail: `${hh(h)}–${hh(h + 1)} · ${t("{n} order(s)", { n: todayByHour.get(h)?.orders ?? 0 })}`,
+                                emphasis: true,
+                              }))}
+                            />
+                          ) : (
+                            <>
+                              <h3 className="viz-title">{t("Today, hour by hour")}</h3>
+                              <p className="muted">{t("No sales yet today.")}</p>
+                            </>
+                          )}
+                        </section>
+                      )}
+                    </Fragment>
+                  ),
+                  brief: (
+                    <Fragment key="brief">
+                      <DailyBrief
+                        brief={brief}
+                        heading={t("dash.yesterday")}
+                        labels={{
+                          facts: t("dash.facts"),
+                          calculations: t("dash.calculations"),
+                          toDo: t("dash.toDo"),
+                        }}
+                        t={t}
+                        msg={msg}
+                      />
+                    </Fragment>
+                  ),
+                })}
+              </div>
+
+              <div className="dash-side">
+                {inOrder(layout.side, {
+                  sells: (
+                    <Fragment key="sells">
+                      {analyse && top.length > 0 && (
+                        <section className="card" aria-labelledby="dash-sells">
+                          <h3 id="dash-sells" className="viz-title">
+                            {t("What sells, the last 7 days")}
+                          </h3>
+                          <BarList
+                            label={t("What sells, the last 7 days")}
+                            rows={top.map((x, i) => {
+                              const k = kept(x);
+                              return {
+                                key: `${i}-${x.name}`,
+                                name: x.name,
+                                value: x.net,
+                                valueText: fmtIQD(x.net),
+                                sub:
+                                  k === null
+                                    ? t("{n} sold · not costed yet", { n: fmtQty(x.qty) })
+                                    : t("{n} sold · {kept}% kept", {
+                                        n: fmtQty(x.qty),
+                                        kept: Math.round(k * 100),
+                                      }),
+                              };
+                            })}
+                          />
+                        </section>
+                      )}
+                    </Fragment>
+                  ),
+                  stock: (
+                    <Fragment key="stock">
+                      <section className="card" aria-labelledby="dash-stock">
+                        <h3 id="dash-stock" className="viz-title">
+                          <Link href="/inventory">
+                            {d.location
+                              ? t("Stock at {place}", { place: d.location })
+                              : t("Stock value")}
+                          </Link>
+                        </h3>
+                        <p className="dash-stock-value">{fmtIQD(d.inventoryValue)}</p>
+                        {board.length === 0 ? (
+                          <span className="muted">{t("No items yet.")}</span>
+                        ) : low.length === 0 ? (
+                          <span className="badge ok">{t("All above reorder level")}</span>
+                        ) : (
+                          <>
+                            {low.slice(0, LOW_SHOWN).map((s) => (
+                              <div key={s.itemId} className="deduction-row">
+                                <span>{s.name}</span>
+                                <span className={`badge mono ${s.isNegative ? "err" : "warn"}`}>
+                                  {fmtQty(s.onHandBase)}
+                                  {s.reorderBase === null ? "" : ` / ${fmtQty(s.reorderBase)}`}{" "}
+                                  {unitName(s.unit, t)}
+                                </span>
+                              </div>
+                            ))}
+                            {low.length > LOW_SHOWN && (
+                              <p className="dash-more">
+                                <Link href="/inventory">
+                                  {t("…and {n} more", { n: low.length - LOW_SHOWN })}
+                                </Link>
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </section>
+                    </Fragment>
+                  ),
+                  recent: (
+                    <Fragment key="recent">
+                      <section className="card" aria-labelledby="dash-recent">
+                        <h3 id="dash-recent" className="viz-title">
+                          {t("Recent sales")}
+                        </h3>
+                        {recent.length === 0 ? (
+                          <span className="muted">{t("No sales yet.")}</span>
+                        ) : (
+                          recent.map((o) => (
+                            <div key={o.id} className="deduction-row">
+                              <span>
+                                <span className="muted mono recent-time">
+                                  {dateTimeIn(profile.timezone, o.placedAt).slice(11)}
+                                </span>{" "}
+                                <span className="badge">{channels.name(o.channel)}</span>{" "}
+                                {o.lines.map((l) => `${l.name} ×${l.qty}`).join(", ") || "—"}
+                                {o.status !== "completed" && (
+                                  <>
+                                    {" "}
+                                    <span className="badge warn">{t(o.status)}</span>
+                                  </>
+                                )}
+                              </span>
+                              <span className="mono">{fmtIQD(o.net)}</span>
+                            </div>
+                          ))
+                        )}
+                      </section>
+                    </Fragment>
+                  ),
+                })}
+              </div>
+            </div>
+          </PhoneMore>
+        ),
+      })}
     </div>
   );
 }
