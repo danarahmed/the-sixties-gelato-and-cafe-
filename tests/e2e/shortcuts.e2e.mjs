@@ -8,6 +8,14 @@
 // owner's Dashboard is short: the rest one tap away.
 import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 
+/** Where a sign-in lands, once the home page has sent them on. */
+async function landed(page) {
+  await page.waitForURL((u) => u.pathname !== "/" && !u.pathname.startsWith("/login"), {
+    timeout: 15000,
+  });
+  return new URL(page.url()).pathname;
+}
+
 const browser = await chromium.launch();
 const last = (q) => sql(q).split("\n").pop();
 const B = "00000000-0000-0000-0000-0000000000b1";
@@ -102,12 +110,12 @@ console.log("▸ find anything");
 console.log("▸ each role's first screen");
 {
   const { ctx, page } = await signIn(browser, "barista");
-  check(new URL(page.url()).pathname === "/production", "the barista starts on Production");
+  check((await landed(page)) === "/production", "the barista starts on Production");
   await ctx.close();
 }
 {
   const { ctx, page } = await signIn(browser, "counter");
-  check(new URL(page.url()).pathname === "/count", "the counter starts on the count");
+  check((await landed(page)) === "/count", "the counter starts on the count");
   await open(page, "/account");
   check(
     (await page.getByTestId("first-screen-card").count()) === 0,
@@ -117,7 +125,7 @@ console.log("▸ each role's first screen");
 }
 {
   const { ctx, page } = await signIn(browser, "owner");
-  check(new URL(page.url()).pathname === "/dashboard", "the owner starts on the Dashboard");
+  check((await landed(page)) === "/dashboard", "the owner starts on the Dashboard");
   await open(page, "/account");
   await page.getByTestId("first-screen").selectOption("/pos");
   await page.getByText("Saved: you start there from now on.").waitFor({ timeout: 15000 });
@@ -125,10 +133,7 @@ console.log("▸ each role's first screen");
   check(new URL(page.url()).pathname === "/pos", "the chosen screen is where home is at once");
   await ctx.close();
   const again = await signIn(browser, "owner");
-  check(
-    new URL(again.page.url()).pathname === "/pos",
-    "and on signing in again, on another browser",
-  );
+  check((await landed(again.page)) === "/pos", "and on signing in again, on another browser");
   await open(again.page, "/account");
   await again.page.getByTestId("first-screen").selectOption("");
   await again.page.getByText("Saved: you start there from now on.").waitFor({ timeout: 15000 });

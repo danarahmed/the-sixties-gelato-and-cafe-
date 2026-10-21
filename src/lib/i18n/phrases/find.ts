@@ -35,8 +35,8 @@ const phrases: PhraseBook = {
   },
   "Add many at once": { ar: "أضف عدة صور معًا", ckb: "چەندانێک پێکەوە زیاد بکە" },
   "Name each file as its product: latte.jpg goes on Latte.": {
-    ar: "سمِّ كل ملف باسم منتجه: latte.jpg تذهب إلى Latte.",
-    ckb: "هەر فایلێک بە ناوی بەرهەمەکەی ناو بنێ: latte.jpg دەچێتە سەر Latte.",
+    ar: "سمِّ كل ملف باسم منتجه، فيذهب إليه.",
+    ckb: "هەر فایلێک بە ناوی بەرهەمەکەی ناو بنێ، دەچێتە سەری.",
   },
   "{n} of {total}…": { ar: "{n} من {total}…", ckb: "{n} لە {total}…" },
   "{n} photo(s) saved; {m} not placed.": {
