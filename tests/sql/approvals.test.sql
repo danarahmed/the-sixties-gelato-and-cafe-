@@ -18,8 +18,9 @@ create function pg_temp.alert() returns text language sql security definer as $$
   select coalesce(string_agg(c.subject || ' ' || c.urgency || ' ' || c.title, '; '), 'none')
     from alert_conditions('00000000-0000-0000-0000-0000000000b1', now()) c where c.rule = 'approvals_waiting'
 $$;
-create function pg_temp.age_po(p_no bigint) returns void language sql security definer as $$
-  update purchase_order set updated_at = now() - interval '2 hours'
+create function pg_temp.age_po(p_no bigint, p_by interval default interval '2 hours') returns void
+language sql security definer as $$
+  update purchase_order set updated_at = now() - p_by
    where business_id = '00000000-0000-0000-0000-0000000000b1' and po_no = p_no
 $$;
 
@@ -81,16 +82,17 @@ select test.eq((pg_temp.one('order') ->> 'value') || ' ' || (pg_temp.one('order'
   '18000 For the weekend true', 'its total, its note, and the owner may approve it');
 select test.ok(pg_temp.alert() like (pg_temp.r('C1') #>> '{}') || ' orange 2 waiting % 1 count(s), 1 order(s)',
   'the alert counts it; the count, which came after its hour was up, is still the last to come');
--- A second count, submitted now, comes last: a new subject, a new alert for the phone.
-select test.act_as('manager@example.com');
-insert into res select 'C2', to_jsonb(start_stock_count(array['c0000000-0000-0000-0000-000000000003'::uuid]));
-select record_count((pg_temp.r('C2') #>> '{}')::uuid, 'c0000000-0000-0000-0000-000000000003', 24, 'each');
-select submit_stock_count((pg_temp.r('C2') #>> '{}')::uuid);
-select test.act_as('owner@example.com');
-select test.ok(pg_temp.alert() like (pg_temp.r('C2') #>> '{}') || ' orange 3 waiting % 2 count(s), 1 order(s)',
-  'a new arrival is a new alert: its subject the new count');
-select reject_stock_count((pg_temp.r('C2') #>> '{}')::uuid, 'Counted twice');
-select test.eq(approvals_waiting_count(), 3, 'the menu counts three, the second count sent back');
+-- A second order, its hour up just now, comes last: a new subject, a new alert for the phone.
+insert into res select 'PO2', save_po(null,
+  (select id from supplier where business_id = '00000000-0000-0000-0000-0000000000b1' and name = 'Kurdistan Coffee Imports'),
+  jsonb_build_array(jsonb_build_object('item_id', 'c0000000-0000-0000-0000-000000000001', 'qty', 1, 'unit_code', 'kg',
+                                       'unit_price', 9000)),
+  test.today() + 2, 'More beans', null, gen_random_uuid());
+select pg_temp.age_po((pg_temp.r('PO2') ->> 'po_no')::bigint, interval '1 hour');
+select test.ok(pg_temp.alert() like (pg_temp.r('PO2') ->> 'po_id') || ' orange 3 waiting % 1 count(s), 2 order(s)',
+  'a new arrival is a new alert: its subject the new order');
+select cancel_po((pg_temp.r('PO2') ->> 'po_id')::uuid, 'Ordered twice');
+select test.eq(approvals_waiting_count(), 3, 'the menu counts three, the second order cancelled');
 
 -- ------------------------------------------------------------ decided where they are decided
 select approve_stock_count((pg_temp.r('C1') #>> '{}')::uuid);
