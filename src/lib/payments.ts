@@ -339,6 +339,8 @@ export function saleReceipt(d: Record<string, unknown>): SaleReceipt {
     gross: Number(d.gross ?? net),
     discount: Number(d.discount ?? 0),
     net,
+    service: Number(d.service ?? 0),
+    tip: Number(d.tip ?? 0),
     ...(d.cogs !== undefined ? { cogs: Number(d.cogs) } : {}),
     journalNo: d.journal_no == null ? null : Number(d.journal_no),
     replayed: Boolean(d.replayed),

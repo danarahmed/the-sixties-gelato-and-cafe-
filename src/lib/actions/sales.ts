@@ -24,6 +24,8 @@ import {
   lineDeal,
   payments,
   rewardsTaken,
+  extrasToDb,
+  saleExtras,
 } from "@/lib/validation";
 import { howPaid, saleReceipt, type PaidPart } from "@/lib/payments";
 import type { SaleCustomer } from "@/lib/customers";
@@ -81,6 +83,7 @@ const saleInput = z.object({
   customerId: id("the customer").nullish(),
   addressId: id("the address").nullish(),
   rewards: rewardsTaken,
+  ...saleExtras,
 });
 
 export interface SaleReceipt {
@@ -88,8 +91,11 @@ export interface SaleReceipt {
   /** Before the discount. */
   gross: number;
   discount: number;
-  /** What the customer paid. */
+  /** What the products came to after the discount. */
   net: number;
+  /** The service charge and the tip added to it (0090): what was paid is the three together. */
+  service: number;
+  tip: number;
   /** Only for people allowed to see costs. */
   cogs?: number;
   journalNo: number | null;
@@ -139,6 +145,7 @@ export async function recordSaleAction(
     p_customer: v.data.customerId ?? null,
     p_address: v.data.addressId ?? null,
     p_rewards: v.data.rewards,
+    ...extrasToDb(v.data),
   });
   if (!r.ok) return r;
   refresh(...SALE_PATHS, "/platforms");
@@ -169,6 +176,7 @@ const offlineSaleInput = z.object({
   soldAt: z.string().datetime({ offset: true, message: "Say when the sale was made" }),
   soldBy: id("a person").nullish(),
   device: optionalText(64),
+  ...saleExtras,
 });
 
 /**
@@ -203,6 +211,7 @@ export async function recordOfflineSaleAction(
     p_platform_order_no: orderNo,
     p_sold_by: v.data.soldBy ?? null,
     p_device: v.data.device ?? null,
+    ...extrasToDb(v.data),
   });
   if (!r.ok && r.error === MISSING_UPDATE)
     r = await callRpc<Record<string, unknown>>("record_sale", {

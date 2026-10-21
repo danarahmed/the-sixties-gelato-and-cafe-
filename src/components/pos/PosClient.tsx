@@ -25,7 +25,7 @@ import { DrawerPanel } from "@/components/cash/DrawerPanel";
 import { ProductPicker } from "./ProductPicker";
 import { ChooseBill, FloorView } from "./FloorView";
 import { OrderPanel, type Receipt } from "./OrderPanel";
-import { PayDialog } from "./PayDialog";
+import { PayDialog, type SaleExtras } from "./PayDialog";
 import { GiveAwayDialog } from "./GiveAwayDialog";
 import { ClockDialog } from "./ClockDialog";
 import { NO_SCREENS, type ScreenCheck } from "@/lib/clock";
@@ -76,6 +76,7 @@ import {
   orderSubtotal,
   parseNumber,
   quickOrder,
+  roundMoney,
   savedHasItems,
   signature,
   ticketChanges,
@@ -162,6 +163,15 @@ interface Pending {
   customerId?: string | null;
   addressId?: string | null;
   rewards?: number | null;
+  /** The tip, the service charge taken off, and the service charge shown (0090), sent again with the retry. */
+  tip?: number | null;
+  noService?: boolean;
+  service?: number;
+}
+
+/** What a waiting payment comes to: the products, the service charge and the tip (0090). */
+function pendingDue(p: Pending): number {
+  return Number(p.expectedNet ?? 0) + (p.service ?? 0) + (p.tip ?? 0);
 }
 
 const PENDING_KEY = "sixties.pos.pending";
@@ -209,6 +219,9 @@ function loadPending(): Pending | null {
       expectedNet: p.expectedNet ?? null,
       platformOrderNo: p.platformOrderNo ?? null,
       stockApprovalId: p.stockApprovalId ?? null,
+      tip: p.tip ?? null,
+      noService: p.noService ?? false,
+      service: p.service ?? 0,
     };
   } catch {
     return null;
@@ -369,6 +382,7 @@ export function PosClient({
   preOrders = null,
   deals: initialDeals = [],
   nextChange: initialNextChange = null,
+  service = null,
 }: {
   items: PosItem[];
   /** The meal deals on now (0089), and when the menu next changes by itself. */
@@ -413,6 +427,11 @@ export function PosClient({
   tillPlace?: string | null;
   /** The open pre-orders at this branch (0076); null before 0076 is applied: no button. */
   preOrders?: PreOrderList | null;
+  /**
+   * The service charge on each way of selling that takes one (0090), as a
+   * percentage; null before 0090 is applied: no service charge, and no tips.
+   */
+  service?: Record<string, number> | null;
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -804,16 +823,26 @@ export function PosClient({
     return `${t("pos.discount")}${tt.discountLabel ? ` ${tt.discountLabel}` : ""} · −${fmtIQD(tt.discount)}`;
   };
 
-  /** Subtotal, discount and what is due, for a printed bill or receipt. */
+  /** The service charge's percentage on an order's way of selling (0090), if it takes one. */
+  const servicePercent = (o: Order): number | null =>
+    service && !isPlatform(o.channel) ? (service[o.channel] ?? null) : null;
+
+  /** Subtotal, discount, the service charge and what is due, for a printed bill or receipt. */
   const printTotals = (o: Order) => {
     const subtotal = orderSubtotal(o, byId, money, menu);
     const discount = discountAmount(o.discount, subtotal, money);
     const pct = o.discount?.kind === "percent" ? parseNumber(o.discount.value) : null;
+    const sp = servicePercent(o);
+    const charge = sp
+      ? roundMoney(subtotal.minus(discount).times(sp).dividedBy(100), money.decimals)
+      : new Decimal(0);
     return {
       subtotal: subtotal.toNumber(),
       discount: discount.toNumber(),
       discountLabel: pct && discount.gt(0) ? `${pct.toString()}%` : null,
-      total: subtotal.minus(discount).toNumber(),
+      service: charge.toNumber(),
+      servicePercent: sp,
+      total: subtotal.minus(discount).plus(charge).toNumber(),
     };
   };
 
@@ -1474,10 +1503,16 @@ export function PosClient({
     setDialog(null);
   }
 
-  async function confirmPay(payments: Payment[], orderNo: string | null, rewards = 0) {
+  async function confirmPay(
+    payments: Payment[],
+    orderNo: string | null,
+    rewards = 0,
+    extras: SaleExtras = { tip: 0, noService: false, service: 0 },
+  ) {
     if (dialog?.kind !== "pay" || busy || payments.length === 0) return;
     const o = dialog.order;
     const rewardOffNow = rewards > 0 ? rewards * (dialog.reward?.value ?? 0) : 0;
+    const due = orderDue(o, byId, money, menu).minus(rewardOffNow);
     const tender = payments[0]?.type ?? dialog.tender;
     const received = payments.find((x) => x.type === "cash")?.received ?? null;
     const paying: Pending = {
@@ -1513,12 +1548,19 @@ export function PosClient({
       customerId: o.kind === "quick" ? (o.customer?.id ?? null) : null,
       addressId: o.kind === "quick" ? (o.customer?.addressId ?? null) : null,
       rewards: rewards > 0 ? rewards : null,
+      tip: extras.tip > 0 ? extras.tip : null,
+      noService: extras.noService,
+      service: extras.service,
       job: {
         kind: "receipt",
         title: dialog.title,
         channelLabel: channelName(o.channel),
         lines: printLines(o),
         ...printTotals(o),
+        // As the customer pays it: the service charge as shown (or taken off), and the tip.
+        service: extras.service,
+        tip: extras.tip,
+        total: due.plus(extras.service).plus(extras.tip).toNumber(),
         ...(rewards > 0 ? { discountLabel: t("Loyalty reward") } : {}),
         customer: o.customer
           ? { name: o.customer.name, phone: o.customer.phone, address: o.customer.address }
@@ -1567,6 +1609,8 @@ export function PosClient({
               customerId: p.customerId ?? null,
               addressId: p.addressId ?? null,
               rewards: p.rewards ?? null,
+              tip: p.tip ?? null,
+              noService: p.noService ?? false,
             })
           : await payBillAction({
               tabId: p.tabId!,
@@ -1576,6 +1620,8 @@ export function PosClient({
               expectedNet: p.expectedNet,
               stockApprovalId: p.stockApprovalId ?? null,
               rewards: p.rewards ?? null,
+              tip: p.tip ?? null,
+              noService: p.noService ?? false,
             });
       if (!r.ok && r.uncertain) {
         // No answer from the database: it may have been recorded. A quick sale
@@ -1619,20 +1665,24 @@ export function PosClient({
         return;
       }
       const net = r.data.net;
+      // What was paid: the products, the service charge and the tip (0090).
+      const paidTotal = net + r.data.service + r.data.tip;
       // The change as the database recorded it (0042); the till's own sum for a
       // payment an older till left waiting, which sent no cash handed over.
       const change =
         changeGiven(r.data.payments) ??
         (p.received !== null
-          ? Decimal.max(0, new Decimal(p.received).minus(net)).toNumber()
+          ? Decimal.max(0, new Decimal(p.received).minus(paidTotal)).toNumber()
           : null);
       // The printed receipt shows what the database recorded, discount included.
       const job: PrintJob | null = p.job
         ? {
             ...p.job,
-            total: net,
+            total: paidTotal,
             subtotal: r.data.gross,
             discount: r.data.discount,
+            service: r.data.service,
+            tip: r.data.tip,
             change,
             ...(r.data.payments.length > 0 ? { payments: r.data.payments } : {}),
             reference: r.data.orderId.slice(0, 8),
@@ -1762,17 +1812,18 @@ export function PosClient({
   function keepOffline(p: Pending, bill: Order | null = null) {
     const list = loadOffline();
     const no = nextOfflineNo(list);
+    const due = pendingDue(p);
     const payments: Payment[] =
       p.payments && p.payments.length > 0
         ? p.payments
-        : [{ type: p.tender, amount: Number(p.expectedNet ?? 0), received: p.received }];
+        : [{ type: p.tender, amount: due, received: p.received }];
     const job: PrintJob | null = p.job
       ? {
           ...p.job,
-          total: Number(p.expectedNet ?? p.job.total),
+          total: p.expectedNet !== null ? due : p.job.total,
           change:
             p.received !== null
-              ? Decimal.max(0, new Decimal(p.received).minus(p.expectedNet ?? 0)).toNumber()
+              ? Decimal.max(0, new Decimal(p.received).minus(due)).toNumber()
               : null,
           reference: t("Offline {n}", { n: String(no) }),
           turnNo: null,
@@ -1795,6 +1846,8 @@ export function PosClient({
       })),
       expectedNet: String(p.expectedNet ?? 0),
       platformOrderNo: p.platformOrderNo,
+      ...(p.tip ? { tip: p.tip } : {}),
+      ...(p.noService ? { noService: true } : {}),
       title: p.title,
       job,
       // A bill already on the database is paid as itself, its changes saved
@@ -1832,6 +1885,8 @@ export function PosClient({
       gross: net,
       discount: 0,
       net,
+      service: p.service ?? 0,
+      tip: p.tip ?? 0,
       journalNo: null,
       replayed: false,
       platformOrderNo: p.platformOrderNo,
@@ -1951,6 +2006,8 @@ export function PosClient({
                 soldAt: next.soldAt,
                 soldBy: next.soldBy,
                 device: next.place,
+                tip: next.tip ?? null,
+                noService: next.noService ?? false,
               }).catch(() => null)
             : await recordOfflineSaleAction({
                 key: next.key,
@@ -1977,6 +2034,8 @@ export function PosClient({
                 soldAt: next.soldAt,
                 soldBy: next.soldBy,
                 device: next.place,
+                tip: next.tip ?? null,
+                noService: next.noService ?? false,
               }).catch(() => null);
         if (!r || (!r.ok && "uncertain" in r && r.uncertain)) {
           setReachable(false);
@@ -2404,6 +2463,13 @@ export function PosClient({
           busy={busy === "pay"}
           error={dialog.error}
           reward={dialog.reward}
+          service={
+            servicePercent(dialog.order) !== null
+              ? { percent: servicePercent(dialog.order)!, canWaive: canDiscount }
+              : null
+          }
+          tips={service !== null && !isPlatform(dialog.order.channel)}
+          decimals={money.decimals}
           onConfirm={confirmPay}
           onClose={() => setDialog(null)}
         />

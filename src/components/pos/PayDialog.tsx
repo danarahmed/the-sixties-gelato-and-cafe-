@@ -14,9 +14,16 @@ import {
   suggestedDollars,
   type RestWay,
 } from "@/lib/fx";
-import type { Tender } from "./model";
+import { roundMoney, type Tender } from "./model";
 import { Icon } from "@/components/Icon";
 import { useDialogFocus } from "./dialogFocus";
+
+/** What the till sends besides the payments (0090): the tip, the service charge taken off, and its amount shown. */
+export interface SaleExtras {
+  tip: number;
+  noService: boolean;
+  service: number;
+}
 
 /** Notes a customer is likely to hand over for this total: the next round sums above it. */
 export function suggestedCash(total: number): number[] {
@@ -85,6 +92,9 @@ export function PayDialog({
   reward = null,
   methods = [],
   initialMethod = null,
+  service = null,
+  tips = false,
+  decimals = 0,
   onConfirm,
   onClose,
 }: {
@@ -123,7 +133,21 @@ export function PayDialog({
   methods?: { id: string; name: string }[];
   /** The way to pay pressed on the order, to start on. */
   initialMethod?: string | null;
-  onConfirm: (payments: Payment[], orderNo: string | null, rewards: number) => void;
+  /**
+   * The service charge of this way of selling (0090), on what the products
+   * come to: a percentage, and whether this person may take it off the sale.
+   */
+  service?: { percent: number; canWaive: boolean } | null;
+  /** A tip may be added (0090): not on a delivery platform's order, nor before 0090. */
+  tips?: boolean;
+  /** The currency's decimals, rounding the service charge as the database does. */
+  decimals?: number;
+  onConfirm: (
+    payments: Payment[],
+    orderNo: string | null,
+    rewards: number,
+    extras: SaleExtras,
+  ) => void;
   onClose: () => void;
 }) {
   const { t, msg } = useT();
@@ -136,7 +160,20 @@ export function PayDialog({
       : 0;
   const taken = Math.min(rewards, maxRewards);
   const off = taken * (reward?.value ?? 0);
-  const total = billed - off;
+  // What the products come to; then the service charge and the tip on top
+  // (0090): the payments come to all three.
+  const base = billed - off;
+  const [waived, setWaived] = useState(false);
+  const serviceAmount =
+    service && !waived
+      ? roundMoney(new Decimal(base).times(service.percent).dividedBy(100), decimals).toNumber()
+      : 0;
+  const [tipText, setTipText] = useState("");
+  const tipTyped = normaliseNumber(tipText).trim();
+  const tipBad = tipTyped !== "" && !/^\d+$/.test(tipTyped);
+  const tip = tips && !tipBad && tipTyped !== "" ? Number(tipTyped) : 0;
+  const total = base + serviceAmount + tip;
+  const extras: SaleExtras = { tip, noService: waived && service !== null, service: serviceAmount };
   const [tender, setTender] = useState<Choice>(
     initialTender === "other" && initialMethod ? `m:${initialMethod}` : initialTender,
   );
@@ -190,6 +227,7 @@ export function PayDialog({
       : null;
   const canConfirm =
     !busy &&
+    !tipBad &&
     (split
       ? split.payments !== null
       : dollars
@@ -200,11 +238,11 @@ export function PayDialog({
   function confirm() {
     if (!canConfirm) return;
     if (split) {
-      if (split.payments) onConfirm(split.payments, null, taken);
+      if (split.payments) onConfirm(split.payments, null, taken, extras);
       return;
     }
     if (dollars) {
-      if (dollars.payments) onConfirm(dollars.payments, null, taken);
+      if (dollars.payments) onConfirm(dollars.payments, null, taken, extras);
       return;
     }
     if (methodId) {
@@ -221,6 +259,7 @@ export function PayDialog({
         ],
         null,
         taken,
+        extras,
       );
       return;
     }
@@ -235,6 +274,7 @@ export function PayDialog({
       ],
       one === "platform_paid" ? number : null,
       taken,
+      extras,
     );
   }
 
@@ -294,6 +334,63 @@ export function PayDialog({
             </span>
           )}
         </div>
+
+        {(service || tips) && (
+          <div className="pay-extras" data-testid="pay-extras">
+            {service && (
+              <div className="pay-extra-row" data-testid="pay-service">
+                <span>{t("Service charge {percent}%", { percent: String(service.percent) })}</span>
+                <span className="mono" data-testid="pay-service-amount">
+                  {waived ? t("taken off") : `+${fmtIQD(serviceAmount)}`}
+                </span>
+                {service.canWaive && (
+                  <button
+                    type="button"
+                    className="btn-link"
+                    onClick={() => setWaived((w) => !w)}
+                    disabled={busy}
+                    data-testid="pay-service-toggle"
+                  >
+                    {waived ? t("Add it back") : t("Take it off")}
+                  </button>
+                )}
+              </div>
+            )}
+            {tips && (
+              <div className="pay-extra-row">
+                <label htmlFor="pay-tip">{t("Tip")}</label>
+                <input
+                  id="pay-tip"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  className="mono pay-tip-input"
+                  placeholder="0"
+                  value={tipText}
+                  onChange={(e) => setTipText(e.target.value)}
+                  disabled={busy}
+                  aria-invalid={tipBad}
+                  data-testid="pay-tip"
+                />
+                {[500, 1000, 2000].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    className="chip"
+                    onClick={() => setTipText(String(tip + n))}
+                    disabled={busy}
+                  >
+                    +{fmtIQD(n)}
+                  </button>
+                ))}
+                {tipBad && (
+                  <span className="red" role="alert" style={{ fontSize: ".85rem" }}>
+                    {t("A tip is a whole amount of 0 or more")}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {reward && (
           <div className="card grid" style={{ gap: 6, padding: 10 }} data-testid="pay-reward">
@@ -448,6 +545,17 @@ export function PayDialog({
                 <>
                   <span>{t("pos.changeDue")}</span>
                   <strong className="mono change-amt">{fmtIQD(change?.toNumber() ?? 0)}</strong>
+                  {tips && change !== null && change.gt(0) && (
+                    <button
+                      type="button"
+                      className="btn-link"
+                      onClick={() => setTipText(String(change.plus(tip).toNumber()))}
+                      disabled={busy}
+                      data-testid="pay-keep-change"
+                    >
+                      {t("Keep the change as a tip")}
+                    </button>
+                  )}
                 </>
               )}
             </div>

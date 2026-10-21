@@ -5,6 +5,7 @@ import { getLocale, getMsg, getT } from "@/lib/i18n/server";
 import { requirePermission } from "@/lib/auth/session";
 import { getSalesAnalysis } from "@/lib/db/analysis";
 import { getDealsReport } from "@/lib/db/deals";
+import { getTipsAndService } from "@/lib/db/tips";
 import { getChannelNames } from "@/lib/db/channels";
 import {
   analysisProblem,
@@ -74,12 +75,14 @@ export default async function SalesAnalysisPage({
       : daysBetween(from, to) > 366
         ? "Choose at most a year of dates"
         : analysisProblem(by, then, category);
-  const [a, deals] = problem
-    ? [null, null]
+  const [a, deals, extras] = problem
+    ? [null, null, null]
     : await Promise.all([
         getSalesAnalysis({ from, to, by, then, channel, location, category, cashier }),
         // The meal deals sold (0089); none before it.
         getDealsReport(from, to, location),
+        // The service charge and the tips the till took (0090); none before it.
+        getTipsAndService(from, to, location),
       ]);
 
   const name = (dim: SalesDimension, key: string, names: AnalysisRow["names"]) => {
@@ -515,12 +518,46 @@ export default async function SalesAnalysisPage({
           </div>
         </section>
       )}
+      {extras && (extras.service > 0 || extras.tips > 0) && (
+        <section className="panel" data-testid="extras-report">
+          <div className="panel-h">
+            <h3>{t("Service charge and tips")}</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              {t(
+                "Taken with the sales, on top of them: the service charge is the café's own, the tips the staff's.",
+              )}
+            </span>
+          </div>
+          <div className="tw">
+            <table>
+              <tbody>
+                <tr data-testid="extras-service">
+                  <td>{t("Service charge")}</td>
+                  <td className="right muted">
+                    {t("{n} sale(s)", { n: String(extras.serviceSales) })}
+                  </td>
+                  <td className="right money">{fmtIQD(extras.service)}</td>
+                </tr>
+                <tr data-testid="extras-tips">
+                  <td>{t("Tips")}</td>
+                  <td className="right muted">
+                    {t("{n} sale(s)", { n: String(extras.tipSales) })}
+                  </td>
+                  <td className="right money">{fmtIQD(extras.tips)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
       {deals && deals.length > 0 && (
         <section className="panel" data-testid="deals-report">
           <div className="panel-h">
             <h3>{t("Meal deals sold")}</h3>
             <span className="muted" style={{ fontSize: ".74rem" }}>
-              {t("Each deal's things at their own prices, what was paid for them, and what the deal gave away")}
+              {t(
+                "Each deal's things at their own prices, what was paid for them, and what the deal gave away",
+              )}
             </span>
           </div>
           <div className="tw">

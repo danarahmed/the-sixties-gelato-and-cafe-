@@ -160,6 +160,28 @@ export function dealToDb(d: { dealId: string; key: string } | null | undefined) 
   return d ? { deal: { deal_id: d.dealId, key: d.key } } : {};
 }
 
+/**
+ * What the till sends besides the lines (0090): the tip, and the service
+ * charge taken off this sale. Sent only when used, so a database before 0090
+ * takes the sale as it always did.
+ */
+export const saleExtras = {
+  tip: z
+    .number()
+    .int("A tip is a whole amount of 0 or more")
+    .min(0, "A tip is a whole amount of 0 or more")
+    .nullish(),
+  noService: z.boolean().nullish(),
+};
+
+/** The extras as the database takes them: none sent when none are used. */
+export function extrasToDb(v: { tip?: number | null; noService?: boolean | null }) {
+  return {
+    ...(v.tip ? { p_tip: v.tip } : {}),
+    ...(v.noService ? { p_no_service: true } : {}),
+  };
+}
+
 export const lineAddons = z
   .array(
     z.object({

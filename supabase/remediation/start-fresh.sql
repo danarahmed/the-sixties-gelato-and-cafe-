@@ -60,6 +60,9 @@ insert into fresh_keep values
   ('expense_category'), ('delivery_platform'), ('platform_store_map'), ('payment_method'),
   -- Phone warnings (0072): on or off, and each login's phones; what waited is cleared.
   ('push_config'), ('push_device');
+-- The service charge on each way of selling (0090) is a setting: kept.
+insert into fresh_keep
+select t from (values ('service_charge')) v(t) where to_regclass('public.' || t) is not null;
 
 do $$
 begin
@@ -121,6 +124,7 @@ begin
        || case when to_regclass('public.problem_report') is not null then ', problem_report' else '' end
        || case when to_regclass('public.sale_deal') is not null
                then ', sale_deal, deal_slot_variant, deal_slot, deal_price, deal, time_price' else '' end
+       || case when to_regclass('public.tip_sharer') is not null then ', tip_sharer' else '' end
        || ' restart identity';
 end $$;
 

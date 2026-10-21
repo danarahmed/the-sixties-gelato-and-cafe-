@@ -256,6 +256,10 @@ const ACTION_LABEL: Record<string, string> = {
   "staff.schedule": "Schedule saved",
   // Clocking in on your own phone, with the shop's code (0068).
   // The café's own ways to pay, and money moved out of their accounts (0069).
+  // Tips and the service charge (0090).
+  "sale.no_service": "Service charge taken off a sale",
+  "settings.service_charge": "Service charge set",
+  "payroll.tip_sharers": "Who shares the tips set",
   "payment_method.add": "Way to pay added",
   "payment_method.change": "Way to pay changed",
   "money.move": "Money moved",

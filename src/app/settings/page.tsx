@@ -18,6 +18,11 @@ import { getPhoneWarnings } from "@/lib/db/push";
 import { PhoneWarningsSetup } from "@/components/push/PhoneWarningsSetup";
 import { getSectionSetup } from "@/lib/db/sections";
 import { PlaceSections } from "@/components/settings/PlaceSections";
+import { getServiceCharges } from "@/lib/db/tips";
+import { ServiceChargeManager } from "@/components/settings/ServiceChargeManager";
+import { getChannels } from "@/lib/db/channels";
+import { channelName, isPlatformChannel } from "@/lib/channels";
+import { getLocale } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -32,20 +37,39 @@ export default async function SettingsPage() {
   const profile = await requirePermission("settings.manage");
   const t = await getT();
   const today = businessToday(profile.timezone);
-  const [cfg, locations, members, thresholds, rules, methods, phoneWarnings, sectionSetup] =
-    await Promise.all([
-      getBusinessConfig(),
-      getLocations(),
-      getMembers(),
-      getAlertThresholds(),
-      getBusinessRules(),
-      // The café's own ways to pay (0069); null before it is applied.
-      getPaymentMethods(),
-      // Warnings on phones (0072); null before it is applied.
-      getPhoneWarnings(),
-      // The parts of the menu each branch sells (0074); null before it is applied.
-      getSectionSetup(),
-    ]);
+  const [
+    cfg,
+    locations,
+    members,
+    thresholds,
+    rules,
+    methods,
+    phoneWarnings,
+    sectionSetup,
+    serviceCharges,
+    channels,
+    locale,
+  ] = await Promise.all([
+    getBusinessConfig(),
+    getLocations(),
+    getMembers(),
+    getAlertThresholds(),
+    getBusinessRules(),
+    // The café's own ways to pay (0069); null before it is applied.
+    getPaymentMethods(),
+    // Warnings on phones (0072); null before it is applied.
+    getPhoneWarnings(),
+    // The parts of the menu each branch sells (0074); null before it is applied.
+    getSectionSetup(),
+    // The service charge on each way of selling (0090); null before it is applied.
+    getServiceCharges(),
+    getChannels(),
+    getLocale(),
+  ]);
+  // The café's own ways of selling, in use: a delivery platform sets what its customers pay.
+  const shopChannels = channels
+    .filter((c) => c.active && !isPlatformChannel(c.code))
+    .map((c) => ({ code: c.code, name: channelName(channels, c.code, locale, t) }));
   const sectionsInUse = (sectionSetup?.sections ?? []).filter((s) => s.isActive);
   // The whole café's rules, as they stand; each has its own rows and history on Rules.
   const cafeRules = rules.definitions.flatMap((d) => {
@@ -167,6 +191,22 @@ export default async function SettingsPage() {
           </p>
         ) : (
           <PaymentMethodsManager methods={methods} />
+        )}
+      </div>
+
+      <div className="card" data-testid="settings-service" id="service-charge">
+        <h3 style={{ marginTop: 0 }}>{t("Service charge")}</h3>
+        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+          {t(
+            "A percentage added to what the products come to, on each way of selling you choose — or on none. The till adds it when a sale or a table's bill is paid, and the receipt shows it. It is the café's own money, kept apart from the sales.",
+          )}
+        </p>
+        {serviceCharges === null ? (
+          <p className="muted" style={{ fontSize: ".85rem" }}>
+            {t("This needs the database update 0090, which has not been applied yet.")}
+          </p>
+        ) : (
+          <ServiceChargeManager channels={shopChannels} charges={serviceCharges} />
         )}
       </div>
 

@@ -84,6 +84,7 @@ Plan a short window when the café is closed.
 | A count withdrawn by its counter (`0087`)  | ✅ Applied by the owner in the SQL editor on 21 October; the count was then withdrawn and recounted live                                                                                                                                                                                                                                                                                                                                         |
 | One approvals inbox (`0088`)               | ✅ Applied by the owner in the SQL editor on 21 October; Approvals then listed the 02:18 count, the menu counted 1, the Dashboard raised its alert                                                                                                                                                                                                                                                                                               |
 | Meal deals and prices by the hour (`0089`) | ✅ Applied by the owner in the SQL editor on 21 October; Products & Recipes then showed Meal deals and Prices by the time of day, the till as before                                                                                                                                                                                                                                                                                             |
+| Tips and a service charge (`0090`)         | ⏳ To apply: paste it in the SQL editor (below)                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ## 0. Before you start
 
@@ -4024,6 +4025,42 @@ and every other test.
 It is applied by the owner, in Supabase's SQL editor, after `0088`:
 
 1. Open the file `supabase/migrations/0089_deals_and_hours.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0090`
+
+Migration `0090` brings tips and a service charge:
+
+- **Service charge:** on Settings, a percentage for each of the café's own
+  ways of selling (at a table, to take away, delivered by the café), or none
+  anywhere; never on a delivery platform, which sets what its customers pay.
+  The till adds it when a sale or a table's bill is paid, on what the
+  products come to after discounts; the bill and the receipt show it, and
+  someone who may give discounts can take it off a sale. It is the café's
+  own money, on its own account (4300 Service charge), apart from the sales.
+- **Tips:** added when paying, by any way to pay ("keep the change" in
+  cash). They are not sales: the café holds them for the staff (2200 Tips
+  owed to staff). On Payroll the owner ticks who shares them; each day's
+  tips are shared equally at the end of the day between those ticked who
+  clocked in that day (all of them when nobody did), and each person's share
+  is added to their pay for the month. Approving the payroll takes the tips
+  out of 2200, not out of the salaries' cost.
+
+Nothing recorded changes. A refund gives back what was bought; the service
+charge and the tip stay. Voiding a sale takes back all of it. Rehearsed with
+`tests/sql/tips_and_service.test.sql` and every other test.
+
+If the café already made an account of its own numbered 2200 or 4300 on the
+chart of accounts, the migration stops and says so: give that account
+another number, then run it again.
+
+It is applied by the owner, in Supabase's SQL editor, after `0089`:
+
+1. Open the file `supabase/migrations/0090_tips_and_service.sql` on GitHub, press **Raw**,
    select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run

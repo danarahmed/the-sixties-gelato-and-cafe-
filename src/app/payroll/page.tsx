@@ -9,6 +9,8 @@ import { fmtIQD } from "@/lib/format";
 import { addDays, businessToday, dateTimeIn, monthStart } from "@/lib/dates";
 import { Advances, DraftPayroll } from "@/components/payroll/PayrollHome";
 import { PageIntro } from "@/components/PageIntro";
+import { TipsCard } from "@/components/payroll/TipsCard";
+import { getTipsMonth } from "@/lib/db/tips";
 
 export const dynamic = "force-dynamic";
 
@@ -28,13 +30,15 @@ export default async function PayrollPage() {
   // them (AK); to those who may read them (the drawer's status asks for
   // cost.view or day.close).
   const seesCash = canRun && (has(profile, "cost.view") || has(profile, "day.close"));
-  const [runs, { advances, owed }, people, cash] = await Promise.all([
+  const thisMonth = monthStart(today);
+  const [runs, { advances, owed }, people, cash, tips] = await Promise.all([
     getPayrollRuns(),
     getAdvances(),
     getStaff(),
     seesCash ? tillForWrite().then(getCashOnHand) : Promise.resolve(null),
+    // This month's tips, and who shares them (0090); null before it is applied.
+    getTipsMonth(thisMonth),
   ]);
-  const thisMonth = monthStart(today);
   const lastMonth = monthStart(addDays(thisMonth, -1));
   // Last month only when someone worked here in it: a café that opened this
   // month has nothing to draft for the one before.
@@ -119,6 +123,18 @@ export default async function PayrollPage() {
           </div>
         )}
       </section>
+
+      {tips && (
+        <section className="card grid" style={{ gap: 8 }} id="tips">
+          <h2 style={{ margin: 0 }}>{t("Tips")}</h2>
+          <p className="muted" style={{ margin: 0, fontSize: ".85rem" }}>
+            {t(
+              "Each day's tips are shared at the end of that day, equally, between the people ticked here who clocked in that day (all of them, when nobody did). Each one's share is added to their pay for the month.",
+            )}
+          </p>
+          <TipsCard tips={tips} people={working} canRun={canRun} />
+        </section>
+      )}
 
       <section className="card grid" style={{ gap: 8 }} id="advances">
         <h2 style={{ margin: 0 }}>{t("Advances on pay")}</h2>

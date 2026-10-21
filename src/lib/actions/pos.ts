@@ -25,6 +25,8 @@ import {
   lineAddons,
   payments,
   rewardsTaken,
+  extrasToDb,
+  saleExtras,
 } from "@/lib/validation";
 import type { SaleReceipt } from "@/lib/actions/sales";
 import { howPaid, saleReceipt } from "@/lib/payments";
@@ -194,6 +196,8 @@ const payInput = tabRef.extend({
   customerId: id("the customer").nullish(),
   addressId: id("the address").nullish(),
   rewards: rewardsTaken,
+  /** The tip, and the service charge taken off (0090). */
+  ...saleExtras,
 });
 
 /** Take the money: the bill becomes one sale. Paying twice returns the sale already recorded. */
@@ -215,6 +219,7 @@ export async function payBillAction(
     p_customer: v.data.customerId ?? null,
     p_address: v.data.addressId ?? null,
     p_rewards: v.data.rewards,
+    ...extrasToDb(v.data),
   });
   if (!r.ok) return r;
   refresh(...PAID_PATHS);
@@ -230,6 +235,7 @@ const offlinePayInput = tabRef.extend({
   soldAt: z.string().datetime({ offset: true, message: "Say when the sale was made" }),
   soldBy: id("a person").nullish(),
   device: optionalText(64),
+  ...saleExtras,
 });
 
 /**
@@ -253,6 +259,7 @@ export async function payBillOfflineAction(
     p_expected_net: v.data.expectedNet,
     p_sold_by: v.data.soldBy ?? null,
     p_device: v.data.device ?? null,
+    ...extrasToDb(v.data),
   });
   if (!r.ok && r.error === MISSING_UPDATE)
     r = await callRpc<Record<string, unknown>>("settle_tab", {

@@ -47,9 +47,9 @@ console.log("▸ the owner adds a cost: Repairs");
   );
   await add.getByLabel("Type").selectOption("revenue");
   check(
-    (await add.getByLabel("Code").inputValue()) === "4300" &&
+    (await add.getByLabel("Code").inputValue()) === "4310" &&
       (await add.textContent()).includes("An income's code is from 4000 to 4999."),
-    "an income, 4300, and the codes an income may have",
+    "an income, 4310 (4300 is the service charge), and the codes an income may have",
   );
   await add.getByLabel("Type").selectOption("expense");
   await add.getByLabel("Code").fill("6000");

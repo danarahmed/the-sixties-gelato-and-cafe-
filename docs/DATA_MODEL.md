@@ -2054,6 +2054,36 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Tips and a service charge (`0090`)
+
+- **Accounts `2200` Tips owed to staff** (a liability: the café holds the
+  tips for its staff) **and `4300` Service charge** (revenue, apart from the
+  products' sales). Only the till and the payroll post to them.
+- **`service_charge`**: a percentage (over 0, at most 50) for each of the
+  café's own ways of selling (`channel`) that takes one; none on a delivery
+  platform. Set with `set_service_charge` (`settings.manage`), read with
+  `service_charges`.
+- **`sales_order.service_percent`, `service_amount`, `tip_amount`**: what a
+  sale took besides its products. The payments come to `net_amount` (the
+  products after discounts) plus both; the journal credits `4300` and
+  `2200`. The service charge is added only to a sale paid at the till or a
+  table's bill settled (`record_sale`, `settle_tab` and their offline
+  forms, which take `p_tip` and `p_no_service`); a pre-order collected or a
+  customer invoiced pays what was agreed. A refund gives back what was
+  bought; voiding takes back all of it.
+- **`tip_sharer`**: who shares the tips, `from_day` and `until_day`
+  (`set_tip_sharers`, `payroll.run`). `tip_shares` splits each day's tips at
+  each branch equally between those ticked that day who work there (or at
+  every branch) — those of them who clocked in, or all of them when nobody
+  did — the first by name taking what rounding leaves; `tips_month` shows
+  the month on Payroll.
+- **`payroll_line.tips`**: a person's share of the month's tips, in their
+  `gross`. Approving the payroll debits `2200` with the tips and `6100`
+  Salaries with the rest; the salaries' cost by place
+  (`payroll_gross_by_place`) leaves the tips out.
+- `report_tips_and_service` (`cost.view`): the service charge and tips the
+  sales of some days took, for Sales analysis and the end of the day.
+
 ### Meal deals and prices by the hour (`0089`)
 
 - **`time_price`**: a size's price at set hours (`starts`, `ends`; past

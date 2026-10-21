@@ -32,7 +32,9 @@ export const dynamic = "force-dynamic";
  * between places (0054), the prepaid expenses (0060), and the sales revenue,
  * its discounts and its refunds, tied to the sales recorded (0062): money in
  * that is not a sale goes to an income account the café adds. The transfer
- * price between branches (4950, 5950: 0084) carries no journal at all.
+ * price between branches (4950, 5950: 0084) carries no journal at all; the
+ * tips owed to staff and the service charge (2200, 4300: 0090) only the till
+ * and the payroll post to.
  */
 const BLOCKED = new Set([
   "1000",
@@ -47,11 +49,13 @@ const BLOCKED = new Set([
   "2000",
   "2050",
   "2100",
+  "2200",
   "2300",
   "3100",
   "4000",
   "4100",
   "4200",
+  "4300",
   "4950",
   "5950",
 ]);

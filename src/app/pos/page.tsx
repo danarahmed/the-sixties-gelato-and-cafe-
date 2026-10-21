@@ -5,6 +5,7 @@ import { has, requirePermission } from "@/lib/auth/session";
 import { getOpenBills, getPosAddons, getPosCatalogue, getTables } from "@/lib/db/pos";
 import { getChannels } from "@/lib/db/channels";
 import { getMenuNextChange, getPosDeals } from "@/lib/db/deals";
+import { getServiceCharges } from "@/lib/db/tips";
 import { getDrawerState } from "@/lib/db/cash";
 import { getFxStatus } from "@/lib/db/fx";
 import { PosClient } from "@/components/pos/PosClient";
@@ -55,6 +56,7 @@ export default async function PosPage() {
     preOrders,
     deals,
     nextChange,
+    service,
   ] = await Promise.all([
     getPosCatalogue(at),
     getPosAddons(at),
@@ -71,6 +73,8 @@ export default async function PosPage() {
     // The meal deals on now, and when the menu next changes by itself (0089).
     getPosDeals(at),
     getMenuNextChange(at),
+    // The service charge on each way of selling (0090); null before it: no tips either.
+    getServiceCharges(),
   ]);
 
   if (items.length === 0) {
@@ -120,6 +124,7 @@ export default async function PosPage() {
         cashierId={profile.id}
         tillPlace={branch.id}
         preOrders={preOrders}
+        service={service}
       />
     </ChannelsProvider>
   );
