@@ -33,7 +33,13 @@ export interface OfflineSale {
   no: number;
   channel: SalesChannel;
   payments: Payment[];
-  lines: { variantId: string; qty: number; addons: AddonChoice[] }[];
+  lines: {
+    variantId: string;
+    qty: number;
+    addons: AddonChoice[];
+    /** One of a meal deal's places (0089). */
+    deal?: { dealId: string; key: string };
+  }[];
   /** The total the customer was shown and paid. */
   expectedNet: string;
   platformOrderNo: string | null;

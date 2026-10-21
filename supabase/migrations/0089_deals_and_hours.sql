@@ -742,7 +742,7 @@ begin
     end if;
     select price into v_dprice from deal_price where deal_id = v_deal_row.id and channel = p_channel;
     if v_dprice is null or is_platform_channel(p_channel) then
-      raise exception 'That deal is not sold %', replace(p_channel::text, '_', '-');
+      raise exception 'That deal is not sold on this channel';
     end if;
     if not deal_fills(v_deal_row.id, (select array_agg(v_variants[ix] order by ix) from unnest(v_idx) ix),
                       (select array_agg(v_qtys[ix] order by ix) from unnest(v_idx) ix)) then

@@ -125,7 +125,7 @@ select test.throws($$select record_sale(gen_random_uuid(), 'takeaway', 'cash', j
                      'deal', jsonb_build_object('deal_id', (select v #>> '{}' from res where k = 'D'), 'key', 'x')),
   jsonb_build_object('variant_id', 'd1000000-0000-0000-0000-000000000002', 'qty', 1,
                      'deal', jsonb_build_object('deal_id', (select v #>> '{}' from res where k = 'D'), 'key', 'x'))))$$,
-  'That deal is not sold takeaway', 'on a channel it has no price on, refused');
+  'That deal is not sold on this channel', 'on a channel it has no price on, refused');
 
 -- Off: not sold.
 select test.act_as('owner@example.com');

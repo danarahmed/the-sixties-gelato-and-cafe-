@@ -150,6 +150,16 @@ export const platformOrderNo = z
   );
 
 /** A line's add-ons (0041): which, and how many for each one of the line. */
+/** A line that is one of a meal deal's places (0089): which deal, and which one of it on the order. */
+export const lineDeal = z
+  .object({ dealId: id("a deal"), key: z.string().min(1).max(64) })
+  .nullish();
+
+/** A line's deal as the database takes it. */
+export function dealToDb(d: { dealId: string; key: string } | null | undefined) {
+  return d ? { deal: { deal_id: d.dealId, key: d.key } } : {};
+}
+
 export const lineAddons = z
   .array(
     z.object({

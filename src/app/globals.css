@@ -7495,3 +7495,36 @@ details.page-intro > p {
   padding: 2px 12px;
   font-weight: 700;
 }
+
+/* Meal deals at the till (0089): a rail of tiles above the categories, and a
+   deal on the order as one block. */
+.deal-rail {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-block-end: 4px;
+}
+.deal-tile {
+  display: grid;
+  gap: 2px;
+  min-width: 140px;
+  min-height: 56px;
+  padding: 8px 12px;
+  text-align: start;
+  border-radius: var(--radius, 12px);
+  background: var(--brand-soft);
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--brand) 40%, transparent);
+}
+.deal-name {
+  font-weight: 700;
+}
+.deal-price {
+  color: var(--text-muted);
+}
+.deal-block .ol-addons {
+  display: block;
+}
+.deal-mark {
+  color: var(--brand);
+}

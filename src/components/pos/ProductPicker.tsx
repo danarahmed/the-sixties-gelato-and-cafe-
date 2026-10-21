@@ -10,6 +10,7 @@ import {
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { PosItem } from "@/lib/db/pos";
 import { fmtIQD } from "@/lib/format";
+import { dealName, type Deal } from "@/lib/deals";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { readScan } from "@/lib/barcode";
 import {
@@ -119,7 +120,12 @@ export function ProductPicker({
   quiet = false,
   onAdd,
   decimals = 0,
+  deals = [],
+  onDeal,
 }: {
+  /** The meal deals on now (0089): a tap starts one. */
+  deals?: Deal[];
+  onDeal?: (d: Deal) => void;
   items: PosItem[];
   /** The add-ons, and which sizes offer them (0041). */
   addons: AddonMenu;
@@ -169,6 +175,8 @@ export function ProductPicker({
   const scanned = useRef({ buf: "", at: 0 });
   const [scanMiss, setScanMiss] = useState<string | null>(null);
 
+  // The deals sold on this channel (0089), each a tile above the categories.
+  const dealsHere = deals.filter((d) => d.prices[channel] !== undefined);
   const sellable = useMemo(
     () => items.filter((i) => i.prices[channel] !== undefined),
     [items, channel],
@@ -484,6 +492,26 @@ export function ProductPicker({
                 data-testid="till-section"
               >
                 <span dir="auto">{s.name}</span> <span className="chip-n">{s.count}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {!query && dealsHere.length > 0 && (
+          <div className="deal-rail" role="group" aria-label={t("Deals")} data-testid="till-deals">
+            {dealsHere.map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                className="deal-tile"
+                disabled={disabled}
+                onClick={() => onDeal?.(d)}
+                data-testid="till-deal"
+                data-deal={d.name}
+              >
+                <span className="deal-name" dir="auto">
+                  {dealName(d, locale)}
+                </span>
+                <span className="deal-price mono">{fmtIQD(d.prices[channel]!)}</span>
               </button>
             ))}
           </div>

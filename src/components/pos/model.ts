@@ -42,6 +42,17 @@ export interface Line {
   billPrice: number | null;
   /** Its add-ons (0041), in the order they were chosen; none for most lines. */
   addons: LineAddon[];
+  /** One of a meal deal's places (0089): the deal and which one of it. */
+  deal?: LineDeal;
+}
+
+/** A meal deal a line is part of (0089): its prices are the deal's, by channel. */
+export interface LineDeal {
+  dealId: string;
+  /** Which deal on the order: two of the same deal are two keys. */
+  key: string;
+  name: string;
+  prices: Record<string, number>;
 }
 
 /** An add-on on a line: how many for each one of the line. */
@@ -381,7 +392,12 @@ export function addLine(
   let i = merge ? lines.length - 1 : -1;
   while (
     i >= 0 &&
-    !(lines[i]!.variantId === variantId && !lines[i]!.note && addonsKey(lines[i]!.addons) === key)
+    !(
+      lines[i]!.variantId === variantId &&
+      !lines[i]!.note &&
+      !lines[i]!.deal &&
+      addonsKey(lines[i]!.addons) === key
+    )
   )
     i--;
   if (i >= 0) return lines.map((l, j) => (j === i ? { ...l, qty: l.qty + qty } : l));
@@ -406,6 +422,72 @@ export function addLine(
       })),
     },
   ];
+}
+
+/** A meal deal added (0089): one line for each of its places, one each, never merged. */
+export function addDeal(
+  lines: Line[],
+  deal: Omit<LineDeal, "key">,
+  picks: { variantId: string; addons: AddonChoice[] }[],
+): Line[] {
+  const key = `d${lineKey()}`;
+  return [
+    ...lines,
+    ...picks.map((p) => ({
+      key: lineKey(),
+      variantId: p.variantId,
+      qty: 1,
+      note: null,
+      lineId: null,
+      fallbackName: null,
+      billPrice: null,
+      addons: p.addons.map((a) => ({ modifierId: a.modifierId, qty: a.qty, billPrice: null })),
+      deal: { ...deal, key },
+    })),
+  ];
+}
+
+/** The order's deals, each with its lines, in the order they were added. */
+export function dealGroups(lines: Line[]): { deal: LineDeal; lines: Line[] }[] {
+  const out = new Map<string, { deal: LineDeal; lines: Line[] }>();
+  for (const l of lines) {
+    if (!l.deal) continue;
+    const g = out.get(l.deal.key);
+    if (g) g.lines.push(l);
+    else out.set(l.deal.key, { deal: l.deal, lines: [l] });
+  }
+  return [...out.values()];
+}
+
+/**
+ * What a deal comes to, as the database works it out (post_sale, 0089): its
+ * price on the channel and its add-ons on top, never more than its things at
+ * their own prices. Null when a thing has no price, or the deal none here.
+ */
+export function dealAmount(
+  g: { deal: LineDeal; lines: Line[] },
+  byId: Map<string, PosItem>,
+  channel: SalesChannel,
+  menu: AddonMenu,
+  decimals: number,
+): Decimal | null {
+  let full = new Decimal(0);
+  let extras = new Decimal(0);
+  for (const l of g.lines) {
+    const a = lineAmount(l, byId, channel, menu);
+    if (a === null) return null;
+    full = full.plus(roundMoney(a, decimals));
+    let unit = new Decimal(0);
+    for (const x of l.addons) {
+      const ap = menu.byId.get(x.modifierId)?.prices[channel];
+      if (ap === undefined || ap === null) return null;
+      unit = unit.plus(new Decimal(ap).times(x.qty));
+    }
+    extras = extras.plus(roundMoney(unit.times(l.qty), decimals));
+  }
+  const price = g.deal.prices[channel];
+  if (price === undefined) return null;
+  return Decimal.min(full, new Decimal(price).plus(extras));
 }
 
 /** A bill's add-ons on a line as the database has them, and as the till shows them. */
@@ -574,10 +656,20 @@ export function orderSubtotal(
   money: MoneyRules,
   menu: AddonMenu,
 ): Decimal {
-  return o.lines.reduce((sum, l) => {
+  const alone = o.lines.reduce((sum, l) => {
+    if (l.deal) return sum;
     const a = lineAmount(l, byId, o.channel, menu);
     return a === null ? sum : sum.plus(roundMoney(a, money.decimals));
   }, new Decimal(0));
+  // A deal (0089) at its own price, its things at theirs when it has none here.
+  return dealGroups(o.lines).reduce((sum, g) => {
+    const d = dealAmount(g, byId, o.channel, menu, money.decimals);
+    if (d !== null) return sum.plus(d);
+    return g.lines.reduce((s2, l) => {
+      const a = lineAmount(l, byId, o.channel, menu);
+      return a === null ? s2 : s2.plus(roundMoney(a, money.decimals));
+    }, sum);
+  }, alone);
 }
 
 /**

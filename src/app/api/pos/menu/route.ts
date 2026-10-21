@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPosAddons, getPosCatalogue } from "@/lib/db/pos";
 import { tillChoice } from "@/lib/place";
+import { getMenuNextChange, getPosDeals } from "@/lib/db/deals";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +15,13 @@ export async function GET() {
   const headers = { "Cache-Control": "private, no-store" };
   try {
     const { at } = await tillChoice();
-    const [items, addons] = await Promise.all([getPosCatalogue(at), getPosAddons(at)]);
-    return NextResponse.json({ ok: true, items, addons }, { headers });
+    const [items, addons, deals, nextChange] = await Promise.all([
+      getPosCatalogue(at),
+      getPosAddons(at),
+      getPosDeals(at),
+      getMenuNextChange(at),
+    ]);
+    return NextResponse.json({ ok: true, items, addons, deals, nextChange }, { headers });
   } catch {
     return NextResponse.json({ ok: false }, { status: 503, headers });
   }
