@@ -24,6 +24,7 @@ import { fmtIQD, fmtQty } from "@/lib/format";
 import { ColumnChart, type Column } from "@/components/charts/ColumnChart";
 import { addDays, businessToday, daysBetween, monthEnd, monthStart, parseDay } from "@/lib/dates";
 import { PageIntro } from "@/components/PageIntro";
+import { ReportVisit } from "@/components/reports/ReportVisit";
 
 export const dynamic = "force-dynamic";
 
@@ -164,6 +165,7 @@ export default async function SalesAnalysisPage({
 
   return (
     <div className="grid" style={{ gap: 16 }}>
+      <ReportVisit path="/reports/sales" />
       <PrintHead
         business={profile.businessName}
         title={t("Sales analysis")}

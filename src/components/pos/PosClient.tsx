@@ -118,6 +118,7 @@ import { OfflineDialog, OfflineStrip } from "./OfflinePanel";
 import { WeightSheet } from "./WeightSheet";
 import { PreOrdersDialog } from "./PreOrdersDialog";
 import type { PreOrderList } from "@/lib/preOrders";
+import type { ReceiptSetup } from "@/lib/receipt";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string; uncertain?: boolean };
 type Msg = { ok: boolean; text: string } | null;
@@ -383,6 +384,7 @@ export function PosClient({
   deals: initialDeals = [],
   nextChange: initialNextChange = null,
   service = null,
+  receiptSetup = null,
 }: {
   items: PosItem[];
   /** The meal deals on now (0089), and when the menu next changes by itself. */
@@ -432,6 +434,8 @@ export function PosClient({
    * percentage; null before 0090 is applied: no service charge, and no tips.
    */
   service?: Record<string, number> | null;
+  /** The café's own receipt (0091); null before it: the app's own. */
+  receiptSetup?: ReceiptSetup | null;
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -2743,6 +2747,7 @@ export function PosClient({
         slips={printQueue[0] ?? null}
         businessName={businessName}
         timezone={timezone}
+        receipt={receiptSetup}
         onDone={nextPrint}
       />
     </div>

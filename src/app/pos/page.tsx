@@ -6,6 +6,7 @@ import { getOpenBills, getPosAddons, getPosCatalogue, getTables } from "@/lib/db
 import { getChannels } from "@/lib/db/channels";
 import { getMenuNextChange, getPosDeals } from "@/lib/db/deals";
 import { getServiceCharges } from "@/lib/db/tips";
+import { getReceiptSetup } from "@/lib/db/receipt";
 import { getDrawerState } from "@/lib/db/cash";
 import { getFxStatus } from "@/lib/db/fx";
 import { PosClient } from "@/components/pos/PosClient";
@@ -57,6 +58,7 @@ export default async function PosPage() {
     deals,
     nextChange,
     service,
+    receipt,
   ] = await Promise.all([
     getPosCatalogue(at),
     getPosAddons(at),
@@ -75,6 +77,8 @@ export default async function PosPage() {
     getMenuNextChange(at),
     // The service charge on each way of selling (0090); null before it: no tips either.
     getServiceCharges(),
+    // The café's own receipt (0091); null before it: the app's own.
+    getReceiptSetup(),
   ]);
 
   if (items.length === 0) {
@@ -125,6 +129,7 @@ export default async function PosPage() {
         tillPlace={branch.id}
         preOrders={preOrders}
         service={service}
+        receiptSetup={receipt}
       />
     </ChannelsProvider>
   );

@@ -23,6 +23,8 @@ import { ServiceChargeManager } from "@/components/settings/ServiceChargeManager
 import { getChannels } from "@/lib/db/channels";
 import { channelName, isPlatformChannel } from "@/lib/channels";
 import { getLocale } from "@/lib/i18n/server";
+import { getReceiptSetup } from "@/lib/db/receipt";
+import { ReceiptManager } from "@/components/settings/ReceiptManager";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +51,7 @@ export default async function SettingsPage() {
     serviceCharges,
     channels,
     locale,
+    receipt,
   ] = await Promise.all([
     getBusinessConfig(),
     getLocations(),
@@ -65,6 +68,8 @@ export default async function SettingsPage() {
     getServiceCharges(),
     getChannels(),
     getLocale(),
+    // The café's own receipt (0091); null before it is applied.
+    getReceiptSetup(),
   ]);
   // The café's own ways of selling, in use: a delivery platform sets what its customers pay.
   const shopChannels = channels
@@ -207,6 +212,22 @@ export default async function SettingsPage() {
           </p>
         ) : (
           <ServiceChargeManager channels={shopChannels} charges={serviceCharges} />
+        )}
+      </div>
+
+      <div className="card" data-testid="settings-receipt" id="receipt">
+        <h3 style={{ marginTop: 0 }}>{t("The receipt")}</h3>
+        <p className="muted" style={{ fontSize: ".85rem", marginTop: 0 }}>
+          {t(
+            "What the bill, the receipt and a refund's slip print besides the sale: your logo, your name and thanks in the three languages, your pages, the Wi-Fi, and a QR code to your menu or your reviews.",
+          )}
+        </p>
+        {receipt === null ? (
+          <p className="muted" style={{ fontSize: ".85rem" }}>
+            {t("This needs the database update 0091, which has not been applied yet.")}
+          </p>
+        ) : (
+          <ReceiptManager setup={receipt} timezone={profile.timezone} />
         )}
       </div>
 

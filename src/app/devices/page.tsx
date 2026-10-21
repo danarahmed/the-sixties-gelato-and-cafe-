@@ -1,6 +1,7 @@
 import { getT } from "@/lib/i18n/server";
 import { requireMember } from "@/lib/auth/session";
 import { getPosCatalogue } from "@/lib/db/pos";
+import { getReceiptSetup } from "@/lib/db/receipt";
 import { tillChoice } from "@/lib/place";
 import { DevicesCheck } from "./DevicesCheck";
 import { PageIntro } from "@/components/PageIntro";
@@ -17,7 +18,11 @@ export default async function DevicesPage() {
   const profile = await requireMember();
   const t = await getT();
   const { at } = await tillChoice().catch(() => ({ at: null }));
-  const items = await getPosCatalogue(at).catch(() => []);
+  const [items, receipt] = await Promise.all([
+    getPosCatalogue(at).catch(() => []),
+    // The test receipt prints as the café's own does (0091).
+    getReceiptSetup().catch(() => null),
+  ]);
   const name = (i: (typeof items)[number]) =>
     i.variantName && i.variantName !== i.productName
       ? `${i.productName} (${i.variantName})`
@@ -36,6 +41,7 @@ export default async function DevicesPage() {
       <DevicesCheck
         businessName={profile.businessName}
         timezone={profile.timezone}
+        receipt={receipt}
         items={items.map((i) => ({
           variantId: i.variantId,
           name: name(i),

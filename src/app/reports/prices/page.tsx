@@ -10,6 +10,7 @@ import { addDays, businessToday, dateTimeIn } from "@/lib/dates";
 import { fmtIQD, fmtQty, unitName } from "@/lib/format";
 import { wholeDates } from "@/lib/i18n/core";
 import { EmptyState } from "@/components/ui";
+import { ReportVisit } from "@/components/reports/ReportVisit";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,7 @@ export default async function PricesPage() {
 
   return (
     <div className="grid prices" style={{ gap: 18 }}>
+      <ReportVisit path="/reports/prices" />
       <PrintHead
         business={profile.businessName}
         title={t("Price watch")}

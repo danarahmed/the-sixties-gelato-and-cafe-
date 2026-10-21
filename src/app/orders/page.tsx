@@ -10,6 +10,8 @@ import { getChannelNames } from "@/lib/db/channels";
 import { addDays, businessToday, dateTimeIn, dayStart, parseDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui";
 import { OrderActions } from "@/components/OrderActions";
+import { ReceiptProvider } from "@/components/ReceiptProvider";
+import { getReceiptSetup } from "@/lib/db/receipt";
 import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
@@ -75,6 +77,8 @@ export default async function OrdersPage({
   );
   const canVoid = has(profile, "sale.void");
   const canRefund = has(profile, "sale.refund");
+  // The café's own receipt (0091), for a refund's slip; null before it.
+  const receipt = canRefund ? await getReceiptSetup().catch(() => null) : null;
 
   return (
     <div className="grid" style={{ gap: 16 }}>
@@ -207,159 +211,164 @@ export default async function OrdersPage({
         )
       ) : (
         <div className="card tw">
-          <table>
-            <thead>
-              <tr>
-                <th>{t("Sale")}</th>
-                <th>{t("When")}</th>
-                <th>{t("Channel")}</th>
-                <th>{t("Items")}</th>
-                <th>{t("orders.paidBy")}</th>
-                <th>{t("Status")}</th>
-                <th className="right">{t("Net")}</th>
-                <th className="right">{t("Margin")}</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((o) => {
-                const margin = o.net - o.cogs;
-                const pct = o.net > 0 ? ((margin / o.net) * 100).toFixed(0) : "0";
-                const adj = o.adjustments[0];
-                return (
-                  <tr key={o.id}>
-                    <td className="mono" data-testid="sale-no">
-                      {o.id.slice(0, 8)}
-                    </td>
-                    <td className="mono muted" style={{ fontSize: ".8rem", whiteSpace: "nowrap" }}>
-                      {dateTimeIn(profile.timezone, o.placedAt)}
-                    </td>
-                    <td>
-                      <span className="badge">{channels.name(o.channel)}</span>
-                    </td>
-                    <td>
-                      {o.lines.map((l) => `${l.name} ×${l.qty}`).join(", ")}
-                      {o.cashier && (
-                        <div className="muted" style={{ fontSize: ".75rem" }}>
-                          {o.cashier}
-                        </div>
-                      )}
-                    </td>
-                    <td className="muted" data-testid="order-payments">
-                      {o.payments.length > 1 || o.payments.some((p) => p.currency === "USD")
-                        ? o.payments
-                            .map((p) =>
-                              p.currency === "USD"
-                                ? t("{usd} at {rate} = {amount}", {
-                                    usd: fmtUSD(p.usd ?? 0),
-                                    rate: fmtRate(p.rate ?? 0),
-                                    amount: fmtIQD(p.received ?? p.amount),
-                                  })
-                                : `${payName(p)} ${fmtIQD(p.amount)}`,
-                            )
-                            .join(" + ")
-                        : o.payments.length > 0
-                          ? [...new Set(o.payments.map(payName))].join(", ")
-                          : o.tenders.map((x) => t(tenderLabel(x))).join(", ")}
-                      {o.payments
-                        .filter((p) => p.reference)
-                        .map((p, i) => (
-                          <div key={i} className="mono" style={{ fontSize: ".75rem" }}>
-                            {t("Ref. {reference}", { reference: p.reference ?? "" })}
+          <ReceiptProvider receipt={receipt}>
+            <table>
+              <thead>
+                <tr>
+                  <th>{t("Sale")}</th>
+                  <th>{t("When")}</th>
+                  <th>{t("Channel")}</th>
+                  <th>{t("Items")}</th>
+                  <th>{t("orders.paidBy")}</th>
+                  <th>{t("Status")}</th>
+                  <th className="right">{t("Net")}</th>
+                  <th className="right">{t("Margin")}</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((o) => {
+                  const margin = o.net - o.cogs;
+                  const pct = o.net > 0 ? ((margin / o.net) * 100).toFixed(0) : "0";
+                  const adj = o.adjustments[0];
+                  return (
+                    <tr key={o.id}>
+                      <td className="mono" data-testid="sale-no">
+                        {o.id.slice(0, 8)}
+                      </td>
+                      <td
+                        className="mono muted"
+                        style={{ fontSize: ".8rem", whiteSpace: "nowrap" }}
+                      >
+                        {dateTimeIn(profile.timezone, o.placedAt)}
+                      </td>
+                      <td>
+                        <span className="badge">{channels.name(o.channel)}</span>
+                      </td>
+                      <td>
+                        {o.lines.map((l) => `${l.name} ×${l.qty}`).join(", ")}
+                        {o.cashier && (
+                          <div className="muted" style={{ fontSize: ".75rem" }}>
+                            {o.cashier}
                           </div>
-                        ))}
-                    </td>
-                    <td>
-                      <span className={`badge ${o.status === "completed" ? "ok" : "warn"}`}>
-                        {t(orderStatusLabel(o.status))}
-                      </span>
-                      {o.refunds.map((r) => (
-                        <div key={r.no} className="muted" style={{ fontSize: ".75rem" }}>
-                          {t("Refund {no}: {amount} for {items}", {
-                            no: r.no,
-                            amount: fmtIQD(r.amount),
-                            items: r.lines.map((l) => `${l.name} ×${fmtQty(l.qty)}`).join(", "),
-                          })}
-                          {(r.tenders.length > 1 || r.tenders.some((x) => x.methodName)) &&
-                            ` (${r.tenders.map((x) => `${payName(x)} ${fmtIQD(x.amount)}`).join(", ")})`}
-                          {" · "}
-                          {r.approvedBy
-                            ? t("{reason} · {by}, approved by {approver}", {
-                                reason: msg(r.reason ?? ""),
-                                by: r.by ?? "—",
-                                approver: r.approvedBy,
-                              })
-                            : t("{reason} · {by}, no second person", {
-                                reason: msg(r.reason ?? ""),
-                                by: r.by ?? "—",
-                              })}
-                        </div>
-                      ))}
-                      {adj && (
-                        <div className="muted" style={{ fontSize: ".75rem" }}>
-                          {adj.by
-                            ? adj.approvedBy
+                        )}
+                      </td>
+                      <td className="muted" data-testid="order-payments">
+                        {o.payments.length > 1 || o.payments.some((p) => p.currency === "USD")
+                          ? o.payments
+                              .map((p) =>
+                                p.currency === "USD"
+                                  ? t("{usd} at {rate} = {amount}", {
+                                      usd: fmtUSD(p.usd ?? 0),
+                                      rate: fmtRate(p.rate ?? 0),
+                                      amount: fmtIQD(p.received ?? p.amount),
+                                    })
+                                  : `${payName(p)} ${fmtIQD(p.amount)}`,
+                              )
+                              .join(" + ")
+                          : o.payments.length > 0
+                            ? [...new Set(o.payments.map(payName))].join(", ")
+                            : o.tenders.map((x) => t(tenderLabel(x))).join(", ")}
+                        {o.payments
+                          .filter((p) => p.reference)
+                          .map((p, i) => (
+                            <div key={i} className="mono" style={{ fontSize: ".75rem" }}>
+                              {t("Ref. {reference}", { reference: p.reference ?? "" })}
+                            </div>
+                          ))}
+                      </td>
+                      <td>
+                        <span className={`badge ${o.status === "completed" ? "ok" : "warn"}`}>
+                          {t(orderStatusLabel(o.status))}
+                        </span>
+                        {o.refunds.map((r) => (
+                          <div key={r.no} className="muted" style={{ fontSize: ".75rem" }}>
+                            {t("Refund {no}: {amount} for {items}", {
+                              no: r.no,
+                              amount: fmtIQD(r.amount),
+                              items: r.lines.map((l) => `${l.name} ×${fmtQty(l.qty)}`).join(", "),
+                            })}
+                            {(r.tenders.length > 1 || r.tenders.some((x) => x.methodName)) &&
+                              ` (${r.tenders.map((x) => `${payName(x)} ${fmtIQD(x.amount)}`).join(", ")})`}
+                            {" · "}
+                            {r.approvedBy
                               ? t("{reason} · {by}, approved by {approver}", {
-                                  reason: msg(adj.reason ?? ""),
-                                  by: adj.by,
-                                  approver: adj.approvedBy,
+                                  reason: msg(r.reason ?? ""),
+                                  by: r.by ?? "—",
+                                  approver: r.approvedBy,
                                 })
                               : t("{reason} · {by}, no second person", {
-                                  reason: msg(adj.reason ?? ""),
-                                  by: adj.by,
-                                })
-                            : msg(adj.reason ?? "")}
-                        </div>
-                      )}
-                    </td>
-                    <td className="right mono">
-                      {fmtIQD(o.net)}
-                      {o.refunded > 0 && (
-                        <div className="muted" style={{ fontSize: ".75rem" }}>
-                          −{fmtIQD(o.refunded)}
-                        </div>
-                      )}
-                    </td>
-                    <td
-                      className="right mono"
-                      style={{ color: margin < 0 ? "var(--err)" : "var(--ok)" }}
-                    >
-                      {fmtIQD(margin)} ({pct}%)
-                    </td>
-                    <td className="right">
-                      {/* Kept for a sale refunded whole, with nothing to offer, so the
+                                  reason: msg(r.reason ?? ""),
+                                  by: r.by ?? "—",
+                                })}
+                          </div>
+                        ))}
+                        {adj && (
+                          <div className="muted" style={{ fontSize: ".75rem" }}>
+                            {adj.by
+                              ? adj.approvedBy
+                                ? t("{reason} · {by}, approved by {approver}", {
+                                    reason: msg(adj.reason ?? ""),
+                                    by: adj.by,
+                                    approver: adj.approvedBy,
+                                  })
+                                : t("{reason} · {by}, no second person", {
+                                    reason: msg(adj.reason ?? ""),
+                                    by: adj.by,
+                                  })
+                              : msg(adj.reason ?? "")}
+                          </div>
+                        )}
+                      </td>
+                      <td className="right mono">
+                        {fmtIQD(o.net)}
+                        {o.refunded > 0 && (
+                          <div className="muted" style={{ fontSize: ".75rem" }}>
+                            −{fmtIQD(o.refunded)}
+                          </div>
+                        )}
+                      </td>
+                      <td
+                        className="right mono"
+                        style={{ color: margin < 0 ? "var(--err)" : "var(--ok)" }}
+                      >
+                        {fmtIQD(margin)} ({pct}%)
+                      </td>
+                      <td className="right">
+                        {/* Kept for a sale refunded whole, with nothing to offer, so the
                           refund's answer stays until it is closed. */}
-                      {o.status !== "voided" && (canVoid || canRefund) && (
-                        <OrderActions
-                          orderId={o.id}
-                          canVoid={canVoid && o.status === "completed"}
-                          canRefund={
-                            canRefund &&
-                            (o.status === "completed" || o.status === "partially_refunded")
-                          }
-                          refund={{
-                            orderId: o.id,
-                            lines: o.lines,
-                            tender: o.tenders[0] ?? "cash",
-                            left: o.refundLeft,
-                            channelLabel: channels.name(o.channel),
-                            approvalOver: profile.refundApprovalOver,
-                            service:
-                              o.service > 0
-                                ? { amount: o.service, back: o.serviceBack, net: o.net }
-                                : null,
-                          }}
-                          businessName={profile.businessName}
-                          timezone={profile.timezone}
-                          me={profile.name}
-                        />
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                        {o.status !== "voided" && (canVoid || canRefund) && (
+                          <OrderActions
+                            orderId={o.id}
+                            canVoid={canVoid && o.status === "completed"}
+                            canRefund={
+                              canRefund &&
+                              (o.status === "completed" || o.status === "partially_refunded")
+                            }
+                            refund={{
+                              orderId: o.id,
+                              lines: o.lines,
+                              tender: o.tenders[0] ?? "cash",
+                              left: o.refundLeft,
+                              channelLabel: channels.name(o.channel),
+                              approvalOver: profile.refundApprovalOver,
+                              service:
+                                o.service > 0
+                                  ? { amount: o.service, back: o.serviceBack, net: o.net }
+                                  : null,
+                            }}
+                            businessName={profile.businessName}
+                            timezone={profile.timezone}
+                            me={profile.name}
+                          />
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </ReceiptProvider>
           {!find && !filtered && orders.length === latest && latest < 300 && (
             <p style={{ marginBottom: 0 }}>
               <Link href="/orders?more=1" data-testid="orders-more">

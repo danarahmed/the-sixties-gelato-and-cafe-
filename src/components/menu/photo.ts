@@ -29,10 +29,16 @@ function encode(canvas: HTMLCanvasElement, type: string, quality: number): Promi
 
 export type PhotoType = "image/webp" | "image/jpeg";
 
-export async function shrinkPhoto(file: File): Promise<{ contentType: PhotoType; data: string }> {
+/** The receipt's logo (0091): smaller still, as it prints at most a few centimetres wide. */
+export const LOGO = { maxSide: 320, maxBytes: 58_000 };
+
+export async function shrinkPhoto(
+  file: File,
+  { maxSide = MAX_SIDE, maxBytes = MAX_BYTES }: { maxSide?: number; maxBytes?: number } = {},
+): Promise<{ contentType: PhotoType; data: string }> {
   // An <img> applies the photo's own rotation (a phone's portrait shot stays upright).
   const img = await load(file);
-  const scale = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+  const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
   canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
@@ -44,9 +50,9 @@ export async function shrinkPhoto(file: File): Promise<{ contentType: PhotoType;
 
   let blob = await encode(canvas, "image/webp", 0.82);
   if (!blob || blob.type !== "image/webp") blob = await encode(canvas, "image/jpeg", 0.85);
-  if (blob && blob.size > MAX_BYTES) blob = await encode(canvas, "image/jpeg", 0.6);
+  if (blob && blob.size > maxBytes) blob = await encode(canvas, "image/jpeg", 0.6);
   if (!blob) throw new Error("This browser cannot prepare the picture.");
-  if (blob.size > MAX_BYTES) throw new Error("The picture is still too large; try a smaller one.");
+  if (blob.size > maxBytes) throw new Error("The picture is still too large; try a smaller one.");
 
   const bytes = new Uint8Array(await blob.arrayBuffer());
   let binary = "";

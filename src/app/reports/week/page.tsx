@@ -1,6 +1,7 @@
 import { requirePermission } from "@/lib/auth/session";
 import { businessToday, parseDay } from "@/lib/dates";
 import { Glance } from "@/components/reports/Glance";
+import { ReportVisit } from "@/components/reports/ReportVisit";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,14 @@ export default async function WeekPage({
   const asked = parseDay(sp.end, today);
   const location = typeof sp.location === "string" && UUID.test(sp.location) ? sp.location : null;
   return (
-    <Glance profile={profile} span="week" at={asked > today ? today : asked} location={location} />
+    <>
+      <ReportVisit path="/reports/week" />
+      <Glance
+        profile={profile}
+        span="week"
+        at={asked > today ? today : asked}
+        location={location}
+      />
+    </>
   );
 }

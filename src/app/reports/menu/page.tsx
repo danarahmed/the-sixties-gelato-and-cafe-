@@ -10,6 +10,7 @@ import { getSalesAnalysis } from "@/lib/db/analysis";
 import { namesIn } from "@/lib/analysis";
 import { addDays, businessToday } from "@/lib/dates";
 import { fmtIQD, fmtQty } from "@/lib/format";
+import { ReportVisit } from "@/components/reports/ReportVisit";
 import {
   GROUP_DO,
   GROUP_LABEL,
@@ -119,6 +120,7 @@ export default async function MenuMatrixPage({
 
   return (
     <div className="grid menu-matrix" style={{ gap: 18 }}>
+      <ReportVisit path="/reports/menu" />
       <PrintHead
         business={profile.businessName}
         title={t("Menu matrix")}

@@ -2801,6 +2801,326 @@ a.card.stat:focus-visible {
 .print-only {
   display: none;
 }
+/* The check, on paper and in its preview on Settings (.slip-preview). The
+   classes are the slip's own, so they stand outside the print rules. */
+.slip-preview {
+  width: 72mm;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 14px 10px 18px;
+  border-radius: 4px;
+  background: #fff;
+  color: #000;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), 0 8px 24px -12px rgba(60, 30, 10, 0.35);
+  font:
+    12px/1.35 "Plus Jakarta Sans",
+    Arial,
+    "Noto Sans Arabic",
+    system-ui,
+    sans-serif;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.slip-preview[dir="rtl"] * {
+  letter-spacing: 0 !important;
+  font-style: normal !important;
+}
+.sl-cut {
+  margin: 10px 0;
+  border-top: 1px dashed #000;
+}
+
+/* The check */
+.sl-head {
+  text-align: center;
+}
+.sl-emblem {
+  display: block;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 3px;
+}
+.sl-brand {
+  font:
+    700 17px/1.2 "Fraunces",
+    Georgia,
+    serif;
+}
+.sl-kind {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0 2px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+.sl-kind::before,
+.sl-kind::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid #000;
+}
+.sl-copy {
+  font-size: 10px;
+}
+.sl-turn {
+  width: 58%;
+  margin: 7px auto 5px;
+  padding: 3px 0 5px;
+  border: 2px solid #000;
+  border-radius: 9px;
+  text-align: center;
+}
+.sl-turn-label {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.sl-turn-no {
+  display: block;
+  font:
+    700 36px/1 "Fraunces",
+    Georgia,
+    serif;
+}
+.sl-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 10px;
+  margin: 6px 0 4px;
+  padding: 5px 0;
+  border-block: 1px dashed #000;
+  font-size: 11px;
+}
+.sl-meta span {
+  display: block;
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sl-meta strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.sl-meta .sl-wide {
+  grid-column: 1 / -1;
+  font-size: 12px;
+}
+.sl-items {
+  width: 100%;
+  border-collapse: collapse;
+}
+.sl-items th {
+  padding: 2px 0 3px;
+  border-bottom: 1.5px solid #000;
+  color: #000;
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-align: start;
+  text-transform: uppercase;
+}
+/* Ruled like a ticket, not banded like the ledger's tables. */
+.sl-items td {
+  padding: 4px 0 3px;
+  border-bottom: 1px dotted #000;
+  background: none !important;
+  font-size: 12px;
+  vertical-align: top;
+}
+.sl-items .q {
+  width: 1%;
+  padding-inline-end: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sl-items td.n {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.sl-items .p,
+.sl-items .a {
+  padding-inline-start: 6px;
+  text-align: end;
+  white-space: nowrap;
+}
+.sl-items td.p {
+  font-size: 11px;
+}
+.sl-items td.a {
+  font-weight: 700;
+}
+.sl-note {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 400;
+  font-style: italic;
+}
+.sl-addon {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+}
+.sl-sums {
+  margin-top: 4px;
+}
+.sl-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.sl-small {
+  font-size: 10px;
+}
+.sl-strong {
+  font-weight: 700;
+  font-size: 13px;
+}
+.sl-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+  margin: 5px 0;
+  padding: 5px 0 4px;
+  border-block: 3px double #000;
+  font:
+    700 19px/1.1 "Fraunces",
+    Georgia,
+    serif;
+}
+.sl-total small {
+  font:
+    700 10px "Plus Jakarta Sans",
+    Arial,
+    sans-serif;
+}
+.sl-foot {
+  margin-top: 7px;
+  font-size: 10px;
+  text-align: center;
+}
+.sl-unpaid {
+  padding: 3px;
+  border: 1.5px solid #000;
+  font-weight: 700;
+}
+.sl-thanks {
+  margin-top: 7px;
+  font:
+    italic 600 13px/1.25 "Fraunces",
+    Georgia,
+    serif;
+}
+.sl-orn {
+  display: block;
+  width: 55%;
+  height: 8px;
+  margin: 5px auto 0;
+}
+/* The café's own (0091): its logo, its other names, its pages, Wi-Fi and QR. */
+.sl-logo {
+  display: block;
+  max-width: 46mm;
+  max-height: 22mm;
+  margin: 0 auto 4px;
+  object-fit: contain;
+  filter: grayscale(1) contrast(1.15);
+}
+.sl-brand-alt {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.sl-pages {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1px 10px;
+  margin-top: 6px;
+  font-weight: 600;
+}
+.sl-wifi {
+  margin-top: 4px;
+}
+.sl-wifi span {
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sl-wifi bdi {
+  font-weight: 700;
+}
+.sl-qr {
+  margin-top: 6px;
+  font-weight: 600;
+}
+.sl-qr .qr {
+  display: block;
+  margin: 0 auto 2px;
+}
+.sl-own {
+  margin-top: 5px;
+}
+
+/* The receipt on Settings (0091): the form, and beside it the receipt as it prints. */
+.receipt-setup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+  gap: 22px;
+  align-items: start;
+}
+.receipt-preview-wrap {
+  position: sticky;
+  top: 76px;
+  padding: 14px;
+  border-radius: 14px;
+  background: repeating-linear-gradient(
+      135deg,
+      transparent 0 10px,
+      color-mix(in srgb, var(--brand) 5%, transparent) 10px 20px
+    ),
+    var(--surface-2);
+}
+.receipt-group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.receipt-group legend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-weight: 700;
+}
+.receipt-group .seg {
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.receipt-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px 12px;
+}
+.receipt-logo-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--border);
+}
+@media (max-width: 760px) {
+  .receipt-setup {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .receipt-preview-wrap {
+    position: static;
+  }
+}
+
 /* A report printed or saved as a PDF (release AA): the page as it stands,
    without the menu, the forms or the buttons, black on white, its tables
    running on from page to page with their headings. */
@@ -2967,202 +3287,6 @@ a.card.stat:focus-visible {
   .print-slip[dir="rtl"] * {
     letter-spacing: 0 !important;
     font-style: normal !important;
-  }
-  .sl-cut {
-    margin: 10px 0;
-    border-top: 1px dashed #000;
-  }
-
-  /* The check */
-  .sl-head {
-    text-align: center;
-  }
-  .sl-emblem {
-    display: block;
-    width: 44px;
-    height: 44px;
-    margin: 0 auto 3px;
-  }
-  .sl-brand {
-    font:
-      700 17px/1.2 "Fraunces",
-      Georgia,
-      serif;
-  }
-  .sl-kind {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 5px 0 2px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.32em;
-    text-transform: uppercase;
-  }
-  .sl-kind::before,
-  .sl-kind::after {
-    content: "";
-    flex: 1;
-    border-top: 1px solid #000;
-  }
-  .sl-copy {
-    font-size: 10px;
-  }
-  .sl-turn {
-    width: 58%;
-    margin: 7px auto 5px;
-    padding: 3px 0 5px;
-    border: 2px solid #000;
-    border-radius: 9px;
-    text-align: center;
-  }
-  .sl-turn-label {
-    display: block;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
-  .sl-turn-no {
-    display: block;
-    font:
-      700 36px/1 "Fraunces",
-      Georgia,
-      serif;
-  }
-  .sl-meta {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px 10px;
-    margin: 6px 0 4px;
-    padding: 5px 0;
-    border-block: 1px dashed #000;
-    font-size: 11px;
-  }
-  .sl-meta span {
-    display: block;
-    font-size: 8.5px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .sl-meta strong {
-    display: block;
-    overflow-wrap: anywhere;
-  }
-  .sl-meta .sl-wide {
-    grid-column: 1 / -1;
-    font-size: 12px;
-  }
-  .sl-items {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  .sl-items th {
-    padding: 2px 0 3px;
-    border-bottom: 1.5px solid #000;
-    color: #000;
-    font-size: 8.5px;
-    letter-spacing: 0.08em;
-    text-align: start;
-    text-transform: uppercase;
-  }
-  /* Ruled like a ticket, not banded like the ledger's tables. */
-  .sl-items td {
-    padding: 4px 0 3px;
-    border-bottom: 1px dotted #000;
-    background: none !important;
-    font-size: 12px;
-    vertical-align: top;
-  }
-  .sl-items .q {
-    width: 1%;
-    padding-inline-end: 8px;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-  .sl-items td.n {
-    font-weight: 600;
-    overflow-wrap: anywhere;
-  }
-  .sl-items .p,
-  .sl-items .a {
-    padding-inline-start: 6px;
-    text-align: end;
-    white-space: nowrap;
-  }
-  .sl-items td.p {
-    font-size: 11px;
-  }
-  .sl-items td.a {
-    font-weight: 700;
-  }
-  .sl-note {
-    display: block;
-    font-size: 10.5px;
-    font-weight: 400;
-    font-style: italic;
-  }
-  .sl-addon {
-    display: block;
-    font-size: 11px;
-    font-weight: 400;
-  }
-  .sl-sums {
-    margin-top: 4px;
-  }
-  .sl-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 6px;
-  }
-  .sl-small {
-    font-size: 10px;
-  }
-  .sl-strong {
-    font-weight: 700;
-    font-size: 13px;
-  }
-  .sl-total {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 6px;
-    margin: 5px 0;
-    padding: 5px 0 4px;
-    border-block: 3px double #000;
-    font:
-      700 19px/1.1 "Fraunces",
-      Georgia,
-      serif;
-  }
-  .sl-total small {
-    font:
-      700 10px "Plus Jakarta Sans",
-      Arial,
-      sans-serif;
-  }
-  .sl-foot {
-    margin-top: 7px;
-    font-size: 10px;
-    text-align: center;
-  }
-  .sl-unpaid {
-    padding: 3px;
-    border: 1.5px solid #000;
-    font-weight: 700;
-  }
-  .sl-thanks {
-    margin-top: 7px;
-    font:
-      italic 600 13px/1.25 "Fraunces",
-      Georgia,
-      serif;
-  }
-  .sl-orn {
-    display: block;
-    width: 55%;
-    height: 8px;
-    margin: 5px auto 0;
   }
 
   /* The barista's ticket */
