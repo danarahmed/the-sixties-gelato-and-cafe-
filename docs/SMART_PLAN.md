@@ -1,9 +1,13 @@
-# The smarter café — plan
+# The smarter, easier café — plan
 
 Chosen by the owner on 21 October 2026 from the ideas after the live run:
-**2 · spotting problems people hide**, **3 · smarter buying**, **5 · cash
-planning**, **6 · the Monday brief**. Not started: it begins when the owner
-says _start_.
+
+- **Smarter:** 2 · spotting problems people hide, 3 · smarter buying,
+  5 · cash planning, 6 · the Monday brief.
+- **Easier to use:** E1–E8, all of them (below).
+- **More flexible:** F1–F5, all of them (below).
+
+Not started: it begins when the owner says _start_.
 
 Every part works from the café's own records, with rules and plain
 statistics — no outside AI service, no monthly cost. Each says how sure it
@@ -162,16 +166,108 @@ it useful.
 
 ---
 
+## Easier to use (E1–E8)
+
+Found while running the café on the live site. Each is checked with the
+browser tests in English, Arabic and Kurdish, on a phone and in dark.
+
+**E1 · Shorter pages.** Most screens open with a paragraph of explanation.
+It becomes one line, with **How this works** to open the rest; what staff
+need to act stays in view. _Passes when_ no page opens with more than one
+line before its first figure or form.
+
+**E2 · The Dashboard, numbers first.** Today (target, sales, profit,
+orders) at the top; the alerts below it, folded to one row per kind with
+the count ("Margin: 11 · Use-by: 2 · Bills due: 1"), opened with a tap; the
+red ones stay open. _Passes when_ today's figures are seen without scrolling
+on a laptop and on a phone.
+
+**E3 · One place switch.** Every screen that works at a place follows the
+one at the top (the staff schedule, Production, the counts and the reports
+had their own); the choice is remembered per device and shown in each
+screen's title ("Inventory · Main Branch").
+
+**E4 · Find anything with one key.** `Ctrl+K` (or the search button on a
+phone) opens one box for screens, products, stock items, customers,
+suppliers, staff, sales by number and journals, in any of the three
+languages, with what each person may open. Enter goes there.
+
+**E5 · One approvals inbox.** Everything waiting for a manager in one place
+— discounts and giveaways over the limit, refunds, stock counts, purchase
+orders, losses, corrections of hours, payroll — with who asked, why, and
+Approve / Reject there; a count on the menu and a phone warning when one
+arrives. Migration: `approvals_waiting()` gathering what each kind already
+keeps.
+
+**E6 · Each role lands where it works.** The cashier opens on the till, the
+barista on Production, the counter on Stock Count, the accountant on
+Reports; the owner on a phone gets a short home: today's numbers, the
+approvals, the alerts. Each person can choose their own first screen on My
+account.
+
+**E7 · Undo for a few seconds.** After saving where nothing is posted to
+the books yet — a table edited, the schedule, a product's details, a rule —
+an **Undo** for 10 seconds. Sales, payments and anything in the books keep
+their own way to correct (void, refund, reverse), as now.
+
+**E8 · Photos on the till.** The till's tiles show initials today. Photos
+added many at once, matched to products by file name (latte.jpg → Latte),
+made small for the till; the owner gives the photos (the café's own are
+best). The tile keeps the initials when there is none.
+
+---
+
+## More flexible (F1–F5)
+
+**F1 · Meal deals.** "Latte + croissant = 5,000": a deal with its items (or
+a choice: any hot drink + any pastry), its price per channel, and the days
+and hours it is on. At the till it is a product; each item's stock and cost
+go down as if sold alone, the discount kept apart so each product's margin
+stays true. Reports show deals sold and what they gave away. Migration with
+its tests.
+
+**F2 · Prices by time of day.** A price that applies at set hours and days
+— gelato after 21:00, a breakfast menu from 08:00 to 11:00 — on top of each
+channel's price; a menu section shown only in its hours. The till changes
+by itself at the hour; a bill keeps the price it was rung at. Migration
+with its tests.
+
+**F3 · Tips and a service charge.** A tip added when paying (by card, cash
+or phone), kept apart from sales (account 2400 Tips owed to staff) and
+shared on Payroll by hours worked or equally, as the owner sets. A service
+charge per channel or for tables (a percentage), shown on the bill and the
+receipt, counted as revenue apart from sales. Migration with its tests.
+
+**F4 · A dashboard each role chooses.** Cards picked and ordered per role
+(and per person), favourite reports pinned to the top of Reports; the
+owner sets the default for each role.
+
+**F5 · The café's own receipt.** The logo, the café's name in the three
+languages, a thank-you line, social links, the Wi-Fi password, a QR code
+(menu or review page), and what the footer says; previewed before printing,
+and printed by the test on Test your devices.
+
+---
+
 ## Order and size
 
 | Step | What                                                                         | Migration |
 | ---- | ---------------------------------------------------------------------------- | --------- |
-| 0    | The simulated year on the copy, with the planted problems; the backtest tool | —         |
-| 1    | Part 3, smarter buying (parts 5 and 6 use its drafts and lead times)         | `0088`    |
-| 2    | Part 5, cash planning                                                        | `0089`    |
-| 3    | Part 2, the watch list                                                       | `0090`    |
-| 4    | Part 6, the Monday brief (gathers 2, 3 and 5)                                | `0091`    |
-| 5    | The guide brought up to date with the new screens                            | —         |
+| 1    | E1 shorter pages, E2 the Dashboard numbers first, E3 one place switch        | —         |
+| 2    | E4 find anything, E6 each role's first screen, E8 photos on the till         | —         |
+| 3    | E5 the approvals inbox, E7 undo                                              | `0088`    |
+| 4    | F1 meal deals, F2 prices by time of day                                      | `0089`    |
+| 5    | F3 tips and a service charge                                                 | `0090`    |
+| 6    | F4 the dashboard each role chooses, F5 the café's own receipt                | `0091`    |
+| 7    | The simulated year on the copy, with the planted problems; the backtest tool | —         |
+| 8    | Part 3, smarter buying (parts 5 and 6 use its drafts and lead times)         | `0092`    |
+| 9    | Part 5, cash planning                                                        | `0093`    |
+| 10   | Part 2, the watch list                                                       | `0094`    |
+| 11   | Part 6, the Monday brief (gathers 2, 3 and 5, and the new deals and tips)    | `0095`    |
+| 12   | The guide brought up to date with every new screen                           | —         |
+
+Easier and more flexible first: every user feels them from the first day,
+and the smart parts then learn from deals, tips and time-of-day prices too.
 
 Each step is its own pull request, tested, published, its migration pasted
 by the owner, then checked on the live site and reported in English and
@@ -183,5 +279,11 @@ Kurdish, as before.
   the watch list only says "worth a look".
 - It does not judge from little: a pattern needs enough cases, and new
   staff and new items are given time.
+- It does not take a correction away: undo is only where nothing is in the
+  books yet; sales and payments are corrected as now (void, refund, reverse).
 - It is only as good as what is recorded: the more of the café's day goes
   through the system, the better it learns.
+
+Not in this plan, offered separately: a usability check with two or three
+staff (ten real tasks, clicks and seconds measured) and a design round from
+what it shows.
