@@ -91,6 +91,90 @@ export const NAV: NavEntry[] = [
   { group: BOOKS, href: "/settings", key: "nav.settings", anyOf: ["settings.manage"] },
 ];
 
+/**
+ * Whose daily work a menu is cut for (the simplification round): the same
+ * person may open every screen they could before, but the menu shows their
+ * daily screens and folds the rest under More. Decided from what they may
+ * do, the most senior first.
+ */
+export type MenuLead = "owner" | "branch" | "books" | "audit" | "buying" | "floor";
+
+export function menuLead(permissions: readonly string[]): MenuLead {
+  const may = (p: string) => permissions.includes(p);
+  if (may("settings.manage")) return "owner";
+  if (may("profit.view") && may("sale.create")) return "branch";
+  if (may("accounting.post")) return "books";
+  if (may("profit.view")) return "audit";
+  if (may("purchase.create")) return "buying";
+  return "floor";
+}
+
+/** Each lead's daily screens; null: every screen is daily (a short menu). */
+const DAILY: Record<MenuLead, readonly string[] | null> = {
+  owner: [
+    "/dashboard",
+    "/approvals",
+    "/sales",
+    "/customers",
+    "/vendors",
+    "/expenses",
+    "/purchasing",
+    "/payroll",
+    "/pos",
+    "/orders",
+    "/products",
+    "/inventory",
+    "/production",
+    "/staff",
+    "/reports",
+    "/settings",
+  ],
+  branch: [
+    "/dashboard",
+    "/approvals",
+    "/pos",
+    "/start-of-day",
+    "/end-of-day",
+    "/orders",
+    "/purchasing",
+    "/inventory",
+    "/count",
+    "/production",
+    "/staff",
+    "/reports",
+  ],
+  books: [
+    "/dashboard",
+    "/approvals",
+    "/sales",
+    "/vendors",
+    "/expenses",
+    "/payroll",
+    "/journals",
+    "/accounting",
+    "/reports",
+    "/audit",
+  ],
+  audit: ["/dashboard", "/sales", "/orders", "/journals", "/accounting", "/reports", "/audit"],
+  buying: ["/purchasing", "/vendors", "/inventory", "/inventory/transfers", "/reports"],
+  floor: null,
+};
+
+/**
+ * The menu as it is shown: the daily screens, then the rest under More. More
+ * is kept only when it would hold two or more; one screen alone stays out.
+ */
+export function splitMenu<E extends { href: string }>(
+  permissions: readonly string[],
+  entries: readonly E[],
+): { daily: E[]; more: E[] } {
+  const daily = DAILY[menuLead(permissions)];
+  if (!daily) return { daily: [...entries], more: [] };
+  const more = entries.filter((e) => !daily.includes(e.href));
+  if (more.length < 2) return { daily: [...entries], more: [] };
+  return { daily: entries.filter((e) => daily.includes(e.href)), more };
+}
+
 export function holdsAny(permissions: readonly string[], anyOf: readonly string[]): boolean {
   return anyOf.some((p) => permissions.includes(p));
 }

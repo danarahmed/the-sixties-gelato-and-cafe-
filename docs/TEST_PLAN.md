@@ -1296,6 +1296,11 @@ database, behind a small local stand-in for Supabase's auth service.
   second espresso is paid with the service charge taken off. Payroll shows
   today's tips shared between the two; Sales analysis shows what the till
   took of both. The service charge is turned off again for the suites after.
+- The simplification round (no suite of its own): `tests/menu.test.ts` (each
+  role's daily screens and More, every screen still offered once) and
+  `tests/settingsOverview.test.ts` (each group's status, Not set up yet, every
+  phrase translated); the suites that use Settings open it at their group
+  (`/settings#ways-to-pay`, `#receipt`, `#people-list`…), as a link does.
 - `receipt` (`0091`, run before `setup`): the owner fills in the receipt on
   Settings — the names in Arabic and Kurdish, a thank-you line in the three
   languages, Instagram, the Wi-Fi and a QR code to a reviews page — and the

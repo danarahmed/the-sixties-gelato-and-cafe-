@@ -502,8 +502,9 @@ console.log("▸ the keyboard: a way past the menu, and where it is (AL)");
   await page.getByTestId("advance-form").getByLabel("To", { exact: true }).focus();
   await page.keyboard.press("Tab");
   seen.push(await ring(page));
-  await open(page, "/settings");
-  const box = page.locator('input[type="checkbox"]').first();
+  // Settings folds its groups (the simplification round): opened at People.
+  await open(page, "/settings#people-list");
+  const box = page.locator('#people-list input[type="checkbox"]').first();
   await box.focus();
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Tab");

@@ -19,7 +19,7 @@ const PNG = Buffer.from(
 console.log("▸ the owner sets up the receipt on Settings");
 {
   const { ctx, page } = await signIn(browser, "owner");
-  await open(page, "/settings");
+  await open(page, "/settings#receipt");
   const card = page.getByTestId("settings-receipt");
   const preview = card.getByTestId("receipt-preview");
   await card.getByTestId("receipt-nameAr").fill("الستينات");

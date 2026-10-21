@@ -56,7 +56,7 @@ console.log("▸ off: Settings offers to turn them on; My account says the owner
 console.log("▸ the owner turns them on for the café");
 {
   const { ctx, page } = await signIn(browser, "owner");
-  await open(page, "/settings");
+  await open(page, "/settings#phone-warnings");
   await page.getByTestId("phone-warnings-turn-on").click();
   await page
     .locator('[data-testid="phone-warnings-setup"][data-on="yes"]')
@@ -175,7 +175,7 @@ console.log("▸ off on the phone, then for the café");
 }
 {
   const { ctx, page } = await signIn(browser, "owner");
-  await open(page, "/settings");
+  await open(page, "/settings#phone-warnings");
   await page.getByRole("button", { name: /Turn phone warnings off/ }).click();
   await page
     .locator('[data-testid="phone-warnings-setup"][data-on="no"]')

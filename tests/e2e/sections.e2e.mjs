@@ -86,7 +86,7 @@ console.log("▸ one till sells both; a till can show one part, and keeps to it"
 console.log("▸ a branch that sells only the bakery");
 {
   const owner = await signIn(browser, "owner");
-  await open(owner.page, "/settings");
+  await open(owner.page, "/settings#locations");
   const branch = owner.page.locator('[data-testid="place-sections"]').first();
   await branch.getByRole("button", { name: "Bakery" }).click();
   await owner.page.waitForTimeout(1000);
@@ -102,7 +102,7 @@ console.log("▸ a branch that sells only the bakery");
       (await till.page.locator(".product-tile", { hasText: "Golden water" }).count()) === 1,
     "its till shows only the bakery's products",
   );
-  await open(owner.page, "/settings");
+  await open(owner.page, "/settings#locations");
   await owner.page
     .locator('[data-testid="place-sections"]')
     .first()

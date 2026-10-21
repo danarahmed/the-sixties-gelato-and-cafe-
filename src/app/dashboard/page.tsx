@@ -519,9 +519,22 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      {showSetup && (
-        <GettingSetUp steps={setup} staffWithoutPin={setupCounts?.staffWithoutPin ?? 0} />
-      )}
+      {showSetup &&
+        (has(profile, "settings.manage") ? (
+          <GettingSetUp steps={setup} staffWithoutPin={setupCounts?.staffWithoutPin ?? 0} />
+        ) : (
+          // Setting the café up is the owner's work: anyone else who may help
+          // sees it folded to one line (the simplification round).
+          <details className="card setup-folded" data-testid="setup-folded">
+            <summary>
+              {t("Getting set up: {done} of {n} done", {
+                done: setup.filter((x) => x.done || x.skipped).length,
+                n: setup.length,
+              })}
+            </summary>
+            <GettingSetUp steps={setup} staffWithoutPin={setupCounts?.staffWithoutPin ?? 0} />
+          </details>
+        ))}
       {problems && problems.open > 0 && (
         <Link href="/problems" className="card dash-problems" data-testid="dash-problems">
           <Icon name="alert" size={18} />{" "}

@@ -173,7 +173,7 @@ sql(`update user_role set location_id = null
 console.log("▸ Settings: where each person works; the product card: each branch's price");
 {
   const { ctx, page } = await signIn(browser, "owner");
-  await open(page, "/settings");
+  await open(page, "/settings#people-list");
   const cashier = last(`select id from app_user where email = 'cashier@example.com'`);
   const cell = page.getByTestId(`works-at-${cashier}`);
   await cell.locator("select").selectOption(main);
