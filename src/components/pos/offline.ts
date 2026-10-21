@@ -40,8 +40,11 @@ export interface OfflineSale {
     /** One of a meal deal's places (0089). */
     deal?: { dealId: string; key: string };
   }[];
-  /** The total the customer was shown and paid. */
+  /** The total of the products the customer was shown. */
   expectedNet: string;
+  /** The tip, and the service charge taken off (0090): what was paid is in the payments. */
+  tip?: number;
+  noService?: boolean;
   platformOrderNo: string | null;
   title: string;
   /** Its receipt, as printed. */

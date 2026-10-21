@@ -271,10 +271,15 @@ function LineRow({
         <td className="right money">{fmtIQD(l.basePay)}</td>
         <td className="right money">{l.overtimePay ? fmtIQD(l.overtimePay) : "—"}</td>
         <td className="right money">
-          {l.additions ? fmtIQD(l.additions) : "—"}
+          {l.additions ? fmtIQD(l.additions) : l.tips ? "" : "—"}
           {l.additionsNote && (
             <div className="muted" style={{ fontSize: ".75rem" }}>
               {l.additionsNote}
+            </div>
+          )}
+          {l.tips > 0 && (
+            <div data-testid="payroll-tips" style={{ fontSize: ".85rem" }}>
+              {t("Tips")} +{fmtIQD(l.tips)}
             </div>
           )}
         </td>

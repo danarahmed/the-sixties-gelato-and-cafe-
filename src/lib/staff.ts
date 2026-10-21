@@ -404,6 +404,8 @@ export interface PayrollLine {
   stillIn: boolean;
   basePay: number;
   overtimePay: number;
+  /** Their share of the month's tips (0090), in the pay; 0 before it. */
+  tips: number;
   additions: number;
   additionsNote: string | null;
   deductions: number;
@@ -494,6 +496,7 @@ export function payrollDetailFrom(v: unknown): PayrollDetail {
       stillIn: l.still_in === true,
       basePay: num(l.base_pay),
       overtimePay: num(l.overtime_pay),
+      tips: num(l.tips),
       additions: num(l.additions),
       additionsNote: strOrNull(l.additions_note),
       deductions: num(l.deductions),

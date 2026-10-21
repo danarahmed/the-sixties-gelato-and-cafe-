@@ -100,3 +100,34 @@ export function allThatIsLeft(lines: RefundableLine[]): Record<string, string> {
     lines.map((l) => [l.id, leftOf(l).qty > 0 ? String(leftOf(l).qty) : ""]),
   );
 }
+
+/** A sale's service charge (0090), and what refunds gave back of it so far. */
+export interface RefundService {
+  amount: number;
+  back: number;
+  /** What the products came to after discounts: the service charge was a share of it. */
+  net: number;
+}
+
+/**
+ * The service charge a refund gives back with what it refunds (0090), as the
+ * database works it out: all that is left of it when nothing of the sale is
+ * left after this refund; otherwise its share of what is refunded, in whole
+ * dinars, half to even, never more than is left of it.
+ */
+export function serviceBack(
+  lines: RefundableLine[],
+  wants: Record<string, string>,
+  service: RefundService | null | undefined,
+  refunded: number,
+): number {
+  if (!service || service.amount <= 0 || service.net <= 0 || refunded <= 0) return 0;
+  const left = Math.max(service.amount - service.back, 0);
+  const rest = lines.some((l) => {
+    const raw = normaliseNumber(wants[l.id] ?? "");
+    const want = /^\d+(\.\d+)?$/.test(raw) ? Number(raw) : 0;
+    return leftOf(l).qty - want > 0;
+  });
+  if (!rest) return left;
+  return Math.max(Math.min(left, shareOf(refunded, service.amount, service.net)), 0);
+}

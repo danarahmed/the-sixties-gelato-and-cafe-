@@ -33,6 +33,7 @@ import { PrintButton } from "@/components/PrintButton";
 import { PrintHead } from "@/components/PrintHead";
 import { DaySlipButton, type DaySlipData, type DaySlipPart } from "@/components/endofday/DaySlip";
 import { Icon } from "@/components/Icon";
+import { getTipsAndService } from "@/lib/db/tips";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +100,7 @@ export default async function EndOfDayPage() {
     drawer,
     sold,
     methodsToday,
+    extras,
   ] = await Promise.all([
     sees.bills ? getOpenBills(place) : Promise.resolve([]),
     getCashSessions(today, today, place),
@@ -125,6 +127,8 @@ export default async function EndOfDayPage() {
       : Promise.resolve(null),
     // What each of the café's ways to pay took today (0069); none before it.
     sees.money ? getPaymentMethodReport(today, today, place) : Promise.resolve([]),
+    // The service charge and the tips taken today (0090); none before it.
+    sees.money ? getTipsAndService(today, today, place) : Promise.resolve(null),
   ]);
   const severalPlaces = places.length > 1;
   // The ways to pay that took something today, each to be checked against its own app.
@@ -438,6 +442,16 @@ export default async function EndOfDayPage() {
           : []),
       ],
     },
+    extras && (extras.service > 0 || extras.tips > 0)
+      ? {
+          key: "extras",
+          title: t("Service charge and tips"),
+          rows: [
+            { label: t("Service charge"), value: fmtIQD(extras.service) },
+            { label: t("Tips, for the staff"), value: fmtIQD(extras.tips) },
+          ],
+        }
+      : null,
     top.length
       ? {
           key: "top",

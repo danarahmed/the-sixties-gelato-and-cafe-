@@ -32,6 +32,10 @@ export interface PrintJob {
   discount?: number;
   /** "10%" when the discount was a percentage. */
   discountLabel?: string | null;
+  /** The service charge (0090), and its percentage when known; the tip given. Both are in the total. */
+  service?: number;
+  servicePercent?: number | null;
+  tip?: number;
   /** What is to be paid, or was paid. */
   total: number;
   tender?: Tender;
@@ -266,6 +270,7 @@ function CheckSlip({
   const { t } = useT();
   const count = job.lines.reduce((n, l) => n + (l.weighed ? 1 : l.qty), 0);
   const discounted = job.discount != null && job.discount > 0;
+  const extras = (job.service ?? 0) > 0 || (job.tip ?? 0) > 0;
   const reference = [
     job.reference ? `${t("print.sale")} ${job.reference}` : null,
     job.journalNo != null ? `${t("pos.journal")} ${job.journalNo}` : null,
@@ -378,7 +383,14 @@ function CheckSlip({
       <div className="sl-sums">
         <div className="sl-row sl-small">
           <span>{t("{n} item(s)", { n: fmtQty(count) })}</span>
-          {discounted && <span>{money(job.subtotal ?? job.total + (job.discount ?? 0))}</span>}
+          {(discounted || extras) && (
+            <span>
+              {money(
+                job.subtotal ??
+                  job.total + (job.discount ?? 0) - (job.service ?? 0) - (job.tip ?? 0),
+              )}
+            </span>
+          )}
         </div>
         {discounted && (
           <div className="sl-row">
@@ -387,6 +399,22 @@ function CheckSlip({
               {job.discountLabel ? ` ${job.discountLabel}` : ""}
             </span>
             <span>−{money(job.discount ?? 0)}</span>
+          </div>
+        )}
+        {(job.service ?? 0) > 0 && (
+          <div className="sl-row" data-testid="slip-service">
+            <span>
+              {job.servicePercent
+                ? t("Service charge {percent}%", { percent: String(job.servicePercent) })
+                : t("Service charge")}
+            </span>
+            <span>+{money(job.service ?? 0)}</span>
+          </div>
+        )}
+        {(job.tip ?? 0) > 0 && (
+          <div className="sl-row" data-testid="slip-tip">
+            <span>{t("Tip")}</span>
+            <span>+{money(job.tip ?? 0)}</span>
           </div>
         )}
         <div className="sl-total">

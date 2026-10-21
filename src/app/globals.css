@@ -7573,3 +7573,23 @@ details.page-intro > p {
     grid-template-columns: 1fr;
   }
 }
+
+/* The service charge and the tip, under the total (0090). */
+.pay-extras {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.pay-extra-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.pay-tip-input {
+  width: 8ch;
+  padding: 6px 8px;
+}

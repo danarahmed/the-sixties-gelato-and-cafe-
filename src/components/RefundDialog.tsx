@@ -7,7 +7,14 @@ import { listApproversAction, requestApprovalAction, type Approver } from "@/lib
 import { fmtIQD, fmtQty } from "@/lib/format";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { REASONS, reasonKey, reasonMissing } from "@/lib/reasons";
-import { allThatIsLeft, leftOf, refundPlan, type RefundableLine } from "@/lib/refunds";
+import {
+  allThatIsLeft,
+  leftOf,
+  refundPlan,
+  serviceBack,
+  type RefundService,
+  type RefundableLine,
+} from "@/lib/refunds";
 import {
   checkRefundSplit,
   proportionalParts,
@@ -31,6 +38,8 @@ export interface RefundableSale {
   channelLabel: string;
   /** Over this, the refunder's limit, a second person approves it (0040); null: no limit known. */
   approvalOver?: number | null;
+  /** Its service charge (0090), given back with what is refunded. */
+  service?: RefundService | null;
 }
 
 /**
@@ -68,7 +77,10 @@ export function RefundDialog({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<RefundResult | null>(null);
   const [slip, setSlip] = useState<PrintJob[] | null>(null);
-  const plan = refundPlan(sale.lines, wants);
+  const items = refundPlan(sale.lines, wants);
+  // The service charge on what is refunded goes back with it (0090).
+  const service = serviceBack(sale.lines, wants, sale.service, items.total);
+  const plan = { ...items, total: items.total + service };
   // Paid more than one way (0042): each way gives back its part, in proportion
   // to what is left of it unless the refunder types otherwise.
   const ways = (sale.left ?? []).filter((l) => l.left > 0);
@@ -177,6 +189,7 @@ export function RefundDialog({
         channelLabel: sale.channelLabel,
         lines: r.lines.map((l) => ({ name: l.name, qty: l.qty, amount: l.amount, note: null })),
         total: r.refunded,
+        ...(r.service > 0 ? { service: r.service, subtotal: r.refunded - r.service } : {}),
         tender: r.tender as PrintJob["tender"],
         ...(r.tenders.length > 1 || r.tenders.some((x) => x.methodName)
           ? {
@@ -290,6 +303,11 @@ export function RefundDialog({
                       how: how(sale.tender, oneName),
                     })}
               </strong>
+              {service > 0 && (
+                <div className="muted" style={{ fontSize: ".85rem" }} data-testid="refund-service">
+                  {t("With the service charge on it: {amount}", { amount: fmtIQD(service) })}
+                </div>
+              )}
               {split && (
                 <div
                   style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}

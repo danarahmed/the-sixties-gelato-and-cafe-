@@ -688,7 +688,9 @@ export function OrderPanel({
               </p>
             )}
             <p className="rc-facts muted">
-              {fmtIQD(receipt.net)}
+              {fmtIQD(receipt.net + (receipt.service ?? 0) + (receipt.tip ?? 0))}
+              {receipt.service > 0 ? ` · ${t("Service charge")} ${fmtIQD(receipt.service)}` : ""}
+              {receipt.tip > 0 ? ` · ${t("Tip")} ${fmtIQD(receipt.tip)}` : ""}
               {receipt.platformOrderNo
                 ? ` · ${t("print.orderNo").replace("{no}", receipt.platformOrderNo)}`
                 : ""}

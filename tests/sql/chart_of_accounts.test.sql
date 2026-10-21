@@ -66,8 +66,8 @@ select test.eq(pg_temp.audits('account.create'), 1, 'on the audit trail once');
 select test.eq(pg_temp.trail('account.create'),
   'gl_account 6010 - {"name": "Repairs", "names": {"ar": "الإصلاحات", "ckb": "چاککردنەوە"}, "account_type": "expense"}',
   'the trail names it by its code, and keeps its name, its other names and its class');
-insert into res select 'I', create_account('4300', 'Catering', 'revenue');
-select test.eq(pg_temp.acct('4300'), 'Catering revenue credit in use own', 'an income is kept on the credit side');
+insert into res select 'I', create_account('4320', 'Catering', 'revenue');
+select test.eq(pg_temp.acct('4320'), 'Catering revenue credit in use own', 'an income is kept on the credit side');
 select test.eq(pg_temp.words('ar', 'Catering'), null, 'a name given no other words shows as it is typed');
 
 -- ------------------------------------------------------------------ refused

@@ -45,6 +45,7 @@ import branchBooks from "./branchBooks";
 import find from "./find";
 import approvals from "./approvals";
 import deals from "./deals";
+import tips from "./tips";
 import devices from "./devices";
 import twoStep from "./twoStep";
 
@@ -95,6 +96,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   find,
   approvals,
   deals,
+  tips,
   devices,
   twoStep,
 };
