@@ -39,13 +39,18 @@ export function ReceiptManager({ setup, timezone }: { setup: ReceiptSetup; timez
   const set = (k: TextKey) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [k]: e.target.value });
 
-  const text = (k: TextKey, label: string, opts: { max: number; rtl?: boolean; ltr?: boolean }) => (
+  const text = (
+    k: TextKey,
+    label: string,
+    opts: { max: number; rtl?: boolean; ltr?: boolean; placeholder?: string },
+  ) => (
     <Field label={label}>
       <input
         style={inputStyle}
         value={blank(form[k])}
         onChange={set(k)}
         maxLength={opts.max}
+        placeholder={opts.placeholder}
         dir={opts.rtl ? "rtl" : opts.ltr ? "ltr" : undefined}
         disabled={busy}
         data-testid={`receipt-${k}`}
@@ -226,11 +231,16 @@ export function ReceiptManager({ setup, timezone }: { setup: ReceiptSetup; timez
             ))}
           </div>
           {form.qr === "menu" &&
-            text("menuUrl", t("The link to your menu (https://…)"), { max: 300, ltr: true })}
-          {form.qr === "review" &&
-            text("reviewUrl", t("The link to your reviews page (https://…)"), {
+            text("menuUrl", t("The link to your menu"), {
               max: 300,
               ltr: true,
+              placeholder: t("https://…"),
+            })}
+          {form.qr === "review" &&
+            text("reviewUrl", t("The link to your reviews page"), {
+              max: 300,
+              ltr: true,
+              placeholder: t("https://…"),
             })}
           <p className="muted" style={{ fontSize: ".8rem", margin: "6px 0 0" }}>
             {t(

@@ -543,11 +543,13 @@ function CheckSlip({
 function ReceiptFoot({ receipt, refund }: { receipt: ReceiptSetup | null; refund: boolean }) {
   const { t } = useT();
   const thanks = receiptThanks(receipt);
+  // A handle as given, with or without its @ (Settings' preview shows it as typed).
+  const handle = (v: string | null) => (v ? v.trim().replace(/^@+/, "") : "");
   const pages = receipt
     ? [
-        receipt.instagram ? `Instagram @${receipt.instagram}` : null,
-        receipt.facebook ? `Facebook ${receipt.facebook}` : null,
-        receipt.tiktok ? `TikTok @${receipt.tiktok}` : null,
+        handle(receipt.instagram) ? `Instagram @${handle(receipt.instagram)}` : null,
+        receipt.facebook?.trim() ? `Facebook ${receipt.facebook.trim()}` : null,
+        handle(receipt.tiktok) ? `TikTok @${handle(receipt.tiktok)}` : null,
       ].filter((x): x is string => !!x)
     : [];
   const link = receiptQrLink(receipt);

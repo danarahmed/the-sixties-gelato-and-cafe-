@@ -63,6 +63,10 @@ insert into fresh_keep values
 -- The service charge on each way of selling (0090) is a setting: kept.
 insert into fresh_keep
 select t from (values ('service_charge')) v(t) where to_regclass('public.' || t) is not null;
+-- The café's own receipt and the reports each person opens most (0091): kept.
+insert into fresh_keep
+select t from (values ('receipt_setup'), ('receipt_logo'), ('report_visit')) v(t)
+ where to_regclass('public.' || t) is not null;
 
 do $$
 begin

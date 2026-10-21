@@ -85,6 +85,10 @@ select t from (values ('deal'), ('deal_price'), ('deal_slot'), ('deal_slot_varia
 -- The service charge and who shares the tips (0090) are settings: kept.
 insert into reset_keep
 select t from (values ('service_charge'), ('tip_sharer')) v(t) where to_regclass('public.' || t) is not null;
+-- The café's own receipt and the reports each person opens most (0091): kept.
+insert into reset_keep
+select t from (values ('receipt_setup'), ('receipt_logo'), ('report_visit')) v(t)
+ where to_regclass('public.' || t) is not null;
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');

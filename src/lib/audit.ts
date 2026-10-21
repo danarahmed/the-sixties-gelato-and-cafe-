@@ -260,6 +260,8 @@ const ACTION_LABEL: Record<string, string> = {
   "sale.no_service": "Service charge taken off a sale",
   "settings.service_charge": "Service charge set",
   "payroll.tip_sharers": "Who shares the tips set",
+  "settings.receipt": "The receipt set",
+  "settings.receipt_logo": "The receipt's logo set",
   "payment_method.add": "Way to pay added",
   "payment_method.change": "Way to pay changed",
   "money.move": "Money moved",

@@ -1296,6 +1296,17 @@ database, behind a small local stand-in for Supabase's auth service.
   second espresso is paid with the service charge taken off. Payroll shows
   today's tips shared between the two; Sales analysis shows what the till
   took of both. The service charge is turned off again for the suites after.
+- `receipt` (`0091`, run before `setup`): the owner fills in the receipt on
+  Settings — the names in Arabic and Kurdish, a thank-you line in the three
+  languages, Instagram, the Wi-Fi and a QR code to a reviews page — and the
+  receipt beside the form shows each as it is typed; a link that is not
+  https is refused; saved, it is kept as given. A logo is chosen and shows on
+  the preview. The test print on Test your devices prints all of it, the QR
+  code leading to the reviews' link. Reports: the waste report opened three
+  times comes first for the owner, and the cashier's Reports are not
+  touched; the Dashboard is arranged for the owner (today first) and for a
+  branch manager (what needs them first). The receipt is cleared again for
+  the suites after.
 - `setup` (round seven, run last: it clears the café): the test café is
   cleared with `supabase/remediation/start-fresh.sql`, every record and the
   setup lists gone, the logins and the chart of accounts kept, the audit

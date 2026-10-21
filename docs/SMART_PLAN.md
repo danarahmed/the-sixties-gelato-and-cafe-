@@ -262,7 +262,7 @@ and printed by the test on Test your devices.
 | 3 ✓  | E5 the approvals inbox, E7 undo                                              | `0088`    |
 | 4 ✓  | F1 meal deals, F2 prices by time of day                                      | `0089`    |
 | 5 ✓  | F3 tips and a service charge                                                 | `0090`    |
-| 6    | F4 the dashboard arranged for each role, F5 the café's own receipt           | `0091`    |
+| 6 ✓  | F4 the dashboard arranged for each role, F5 the café's own receipt           | `0091`    |
 | 7    | The simulated year on the copy, with the planted problems; the backtest tool | —         |
 | 8    | Part 3, smarter buying (parts 5 and 6 use its drafts and lead times)         | `0092`    |
 | 9    | Part 5, cash planning                                                        | `0093`    |
@@ -305,6 +305,20 @@ each one's pay for the month; approving it takes them out of 2200, not out
 of the salaries' cost. A refund gives back what was bought and the service
 charge on it (as the owner asked); the tip stays the staff's; voiding a
 sale takes back all of it.
+Nobody arranges their own screens: the **Dashboard** is arranged for each
+role (the owner and a general manager: today first, sales leading the
+figures; a branch manager: what needs them first, the hour by hour and the
+stock ahead; an accountant or an auditor: gross profit, yesterday's brief
+and the latest sales first), and anything red brings what needs them to
+the top for anyone. **Reports** puts first the reports each person opens
+most, from the third time, learned from what they open. **The receipt** is
+set on Settings with a preview beside it: the logo (made small and printed
+in black and white), the café's name in Arabic and Kurdish, a thank-you
+line in each of the three languages (the app's own when none is given),
+Instagram, Facebook and TikTok, the Wi-Fi, a QR code to the menu or a
+reviews page or none, and a line at the foot; the bill, the receipt, a
+refund's slip and the device test print it (a refund's slip has no QR
+code).
 
 Easier and more flexible first: every user feels them from the first day,
 and the smart parts then learn from deals, tips and time-of-day prices too.

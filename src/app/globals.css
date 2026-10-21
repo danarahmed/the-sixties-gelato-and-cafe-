@@ -3029,6 +3029,11 @@ a.card.stat:focus-visible {
   object-fit: contain;
   filter: grayscale(1) contrast(1.15);
 }
+/* Arabic and Kurdish are not written slanted, nor in the Latin serif. */
+.sl-thanks[dir="rtl"] {
+  font-family: inherit;
+  font-style: normal;
+}
 .sl-brand-alt {
   font-size: 13px;
   font-weight: 700;

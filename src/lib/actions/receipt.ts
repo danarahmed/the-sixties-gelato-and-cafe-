@@ -12,14 +12,9 @@ const RECEIPT_PATHS = ["/settings", "/pos", "/orders", "/devices"];
 
 const line = (max: number) =>
   z.string().trim().max(max, `A line of the receipt is at most ${max} letters`).nullable();
-const link = z
-  .string()
-  .trim()
-  .max(300, "A line of the receipt is at most 300 letters")
-  .refine((v) => v === "" || /^https:\/\/[^\s/$.?#]\S*$/i.test(v), {
-    message: "A link starts with https:// and has no spaces",
-  })
-  .nullable();
+const link = line(300).refine((v) => !v || /^https:\/\/[^\s/$.?#]\S*$/i.test(v), {
+  message: "A link starts with https:// and has no spaces",
+});
 
 const setupInput = z.object({
   nameAr: line(60),

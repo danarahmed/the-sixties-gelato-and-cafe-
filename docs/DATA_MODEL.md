@@ -2054,6 +2054,25 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### The café's own receipt, and each person's reports first (`0091`)
+
+- **`receipt_setup`** (one row per café): what the bill, the receipt and a
+  refund's slip print besides the sale — `name_ar`, `name_ckb` (the café's
+  name beside its own), `thanks_en`, `thanks_ar`, `thanks_ckb`,
+  `instagram`, `facebook`, `tiktok`, `wifi_name`, `wifi_password`, `qr`
+  (`none`, `menu` or `review`) with `menu_url` and `review_url` (https), and
+  `footer`. Set with `set_receipt_setup` (`settings.manage`), each line
+  trimmed and of limited length; read by anyone of the café with
+  `receipt_setup`, which also gives the café's name and the logo.
+- **`receipt_logo`**: the logo, a PNG, JPEG or WebP of at most 60 KB, its
+  bytes checked (`set_receipt_logo`, `clear_receipt_logo`). `receipt_setup`
+  gives it as a data address, so a till prints it with no connection.
+- **`report_visit`**: how often each person (`app_user_id`) opened each
+  report (`path`, a page under `/reports`), and when last. Counted with
+  `note_report_visit`; `my_report_visits` gives the person signed in their
+  own, the most opened first, for Reports to put first. Each reads only
+  their own.
+
 ### Tips and a service charge (`0090`)
 
 - **Accounts `2200` Tips owed to staff** (a liability: the café holds the
