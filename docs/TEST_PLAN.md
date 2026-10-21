@@ -1257,6 +1257,18 @@ database, behind a small local stand-in for Supabase's auth service.
   queue. The cashier is offered nothing. The app's /api/push/send refuses
   without the database's secret and, with it, takes the queue. My account in
   Arabic and Kurdish; off on the phone, then for the café.
+- `shortcuts` (SMART_PLAN step 2, run before `setup`): Ctrl+K opens one box,
+  focused; a screen is found by part of its name, a product by part of its
+  name in any capitals, a journal by its number, and Enter goes to the first;
+  a search that finds nothing says so. The till shows no search button; the
+  cashier's box offers neither Inventory nor a journal. The barista starts
+  on Production, the counter on the count (with nothing to choose on My
+  account), the owner on the Dashboard; the owner chooses the till on My
+  account, is sent there at once and on signing in again, and goes back to
+  the Dashboard. Two photos added at once: `golden-espresso.png` goes on
+  Golden espresso, `IMG_2041.png` is named to place by hand. On a phone the
+  owner's Dashboard shows today first and the rest behind one tap; a wide
+  screen shows everything.
 - `setup` (round seven, run last: it clears the café): the test café is
   cleared with `supabase/remediation/start-fresh.sql`, every record and the
   setup lists gone, the logins and the chart of accounts kept, the audit

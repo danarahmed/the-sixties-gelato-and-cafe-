@@ -253,8 +253,8 @@ and printed by the test on Test your devices.
 
 | Step | What                                                                         | Migration |
 | ---- | ---------------------------------------------------------------------------- | --------- |
-| 1    | E1 shorter pages, E2 the Dashboard numbers first, E3 one place switch        | —         |
-| 2    | E4 find anything, E6 each role's first screen, E8 photos on the till         | —         |
+| 1 ✓  | E1 shorter pages, E2 the Dashboard numbers first, E3 one place switch        | —         |
+| 2 ✓  | E4 find anything, E6 each role's first screen, E8 photos on the till         | —         |
 | 3    | E5 the approvals inbox, E7 undo                                              | `0088`    |
 | 4    | F1 meal deals, F2 prices by time of day                                      | `0089`    |
 | 5    | F3 tips and a service charge                                                 | `0090`    |
@@ -265,6 +265,16 @@ and printed by the test on Test your devices.
 | 10   | Part 2, the watch list                                                       | `0094`    |
 | 11   | Part 6, the Monday brief (gathers 2, 3 and 5, and the new deals and tips)    | `0095`    |
 | 12   | The guide brought up to date with every new screen                           | —         |
+
+As built (✓): a page's explanation is its first sentence, the rest under
+**How this works**; the Dashboard opens on today, then what needs you (the
+orange alerts folded, counted on one line); the place chosen on a device
+(stock, the till, the schedule) is remembered for every screen of it, while
+Reports keep their own "whole café" choice. **Find anything** is Ctrl+K or
+the search button. The first screen chosen on My account is kept with the
+person's sign-in (their account's own settings, no migration), so it
+follows them to any device; a screen they may no longer open is ignored.
+Photos added many at once go to the product their file is named for.
 
 Easier and more flexible first: every user feels them from the first day,
 and the smart parts then learn from deals, tips and time-of-day prices too.
