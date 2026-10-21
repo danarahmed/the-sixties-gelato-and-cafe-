@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveSectionAction, setCategorySectionAction } from "@/lib/actions/menu";
+import { setSectionHoursAction } from "@/lib/actions/deals";
 import type { MenuCategory } from "@/lib/db/menu";
 import type { MenuSection } from "@/lib/db/sections";
 import { useT } from "@/lib/i18n/I18nProvider";
@@ -148,6 +149,7 @@ export function SectionsManager({
                 <th>العربية</th>
                 <th>کوردی</th>
                 <th style={{ width: 80 }}>{t("In use")}</th>
+                <th>{t("Shown")}</th>
                 {canEdit && <th />}
               </tr>
             </thead>
@@ -194,6 +196,9 @@ export function SectionsManager({
                         aria-label={t("{name} in use", { name: s.name })}
                         onChange={(e) => edit(s, { isActive: e.target.checked })}
                       />
+                    </td>
+                    <td>
+                      <SectionHours section={s} canEdit={canEdit} />
                     </td>
                     {canEdit && (
                       <td>
@@ -294,5 +299,63 @@ export function SectionsManager({
       <OperationStatus op={op} />
       <Notice msg={msg} />
     </div>
+  );
+}
+
+/**
+ * The hours a part of the menu is shown at the till (0089): a breakfast part
+ * from 08:00 to 11:00; empty, always. The till changes by itself at the hour.
+ */
+function SectionHours({ section, canEdit }: { section: MenuSection; canEdit: boolean }) {
+  const { t } = useT();
+  const router = useRouter();
+  const [from, setFrom] = useState(section.shownFrom ?? "");
+  const [until, setUntil] = useState(section.shownUntil ?? "");
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, start] = useTransition();
+  const changed = from !== (section.shownFrom ?? "") || until !== (section.shownUntil ?? "");
+  return (
+    <span className="row" style={{ gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+      <input
+        type="time"
+        value={from}
+        disabled={!canEdit}
+        aria-label={t("Shown from")}
+        onChange={(e) => setFrom(e.target.value)}
+        data-testid="section-from"
+      />
+      –
+      <input
+        type="time"
+        value={until}
+        disabled={!canEdit}
+        aria-label={t("Shown until")}
+        onChange={(e) => setUntil(e.target.value)}
+        data-testid="section-until"
+      />
+      {canEdit && changed && (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() =>
+            start(async () => {
+              setErr(null);
+              const r = await setSectionHoursAction({
+                sectionId: section.id,
+                from: from || null,
+                until: until || null,
+              });
+              if (!r.ok) setErr(r.error);
+              else router.refresh();
+            })
+          }
+          data-testid="section-hours-save"
+        >
+          {t("Save")}
+        </button>
+      )}
+      {!from && !until && <span className="muted">{t("Always")}</span>}
+      {err && <span className="badge err">{err}</span>}
+    </span>
   );
 }

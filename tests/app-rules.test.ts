@@ -228,6 +228,9 @@ import {
   orderDue,
   orderFromBill,
   orderSubtotal,
+  addDeal,
+  dealAmount,
+  dealGroups,
   percentOf,
   quickOrder,
   searchedTimes,
@@ -2544,6 +2547,32 @@ describe("sizes and add-ons at the till (0041)", () => {
     const o = { ...quickOrder("dine_in"), lines };
     // 2 × 6,000 + 4,000
     expect(orderSubtotal(o, byId, money, menu).toFixed()).toBe("16000");
+  });
+
+  it("prices a meal deal as the database does: its price, its add-ons on top (0089)", () => {
+    const deal = { dealId: "d1", name: "Two coffees", prices: { dine_in: 5000 } };
+    const picks = [
+      { variantId: "v-reg", addons: [{ modifierId: "m-oat", qty: 1 }] },
+      { variantId: "v-tri", addons: [{ modifierId: "m-whole", qty: 1 }] },
+    ];
+    const lines = addDeal([], deal, picks);
+    expect(lines).toHaveLength(2);
+    expect(new Set(lines.map((l) => l.deal!.key)).size).toBe(1);
+    // A deal's line is never added onto.
+    expect(addLine(lines, "v-reg", [{ modifierId: "m-oat", qty: 1 }])).toHaveLength(3);
+    const g = dealGroups(lines)[0]!;
+    // 2,500 + 500 and 4,000 + 0 at their own prices; the deal 5,000 and the oat milk 500 on top.
+    expect(dealAmount(g, byId, "dine_in", menu, 0)?.toFixed()).toBe("5500");
+    // Never more than its things at their own prices; none on a channel it has no price on.
+    const dear = addDeal([], { ...deal, prices: { dine_in: 9000 } }, picks);
+    expect(dealAmount(dealGroups(dear)[0]!, byId, "dine_in", menu, 0)?.toFixed()).toBe("7000");
+    expect(dealAmount(g, byId, "takeaway", menu, 0)).toBeNull();
+    // On the order: the deal at its price, and a coffee besides.
+    const o = {
+      ...quickOrder("dine_in"),
+      lines: addLine(lines, "v-reg", [{ modifierId: "m-whole", qty: 1 }]),
+    };
+    expect(orderSubtotal(o, byId, money, menu).toFixed()).toBe("8000");
   });
 
   it("keeps a printed bill's price for an add-on, for more of it too", () => {

@@ -13,6 +13,9 @@ export interface MenuSection {
   nameCkb: string | null;
   position: number;
   isActive: boolean;
+  /** Shown at the till only in these hours (0089); null: always. */
+  shownFrom: string | null;
+  shownUntil: string | null;
 }
 
 export interface SectionSetup {
@@ -25,12 +28,12 @@ export interface SectionSetup {
 
 export async function getSectionSetup(): Promise<SectionSetup | null> {
   const c = await db();
-  const [secs, cats, places] = await Promise.all([
-    c
-      .from("menu_section")
-      .select("id,name,name_ar,name_ckb,position,is_active")
-      .order("position")
-      .order("name"),
+  const read = (cols: string) =>
+    c.from("menu_section").select(cols).order("position").order("name");
+  // The hours a section is shown (0089); before it, the columns are not there.
+  let secs = await read("id,name,name_ar,name_ckb,position,is_active,shown_from,shown_until");
+  if (secs.error) secs = await read("id,name,name_ar,name_ckb,position,is_active");
+  const [cats, places] = await Promise.all([
     c.from("product_category").select("id,section_id"),
     c.from("location_section").select("location_id,section_id"),
   ]);
@@ -43,13 +46,15 @@ export async function getSectionSetup(): Promise<SectionSetup | null> {
   for (const r of (places.data ?? []) as Row[])
     (placeSections[str(r.location_id)] ??= []).push(str(r.section_id));
   return {
-    sections: ((secs.data ?? []) as Row[]).map((r) => ({
+    sections: ((secs.data ?? []) as unknown as Row[]).map((r) => ({
       id: str(r.id),
       name: str(r.name),
       nameAr: strOrNull(r.name_ar),
       nameCkb: strOrNull(r.name_ckb),
       position: num(r.position),
       isActive: r.is_active === true,
+      shownFrom: typeof r.shown_from === "string" ? r.shown_from.slice(0, 5) : null,
+      shownUntil: typeof r.shown_until === "string" ? r.shown_until.slice(0, 5) : null,
     })),
     categorySection,
     placeSections,

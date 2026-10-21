@@ -4,6 +4,7 @@ import { PrintHead } from "@/components/PrintHead";
 import { getLocale, getMsg, getT } from "@/lib/i18n/server";
 import { requirePermission } from "@/lib/auth/session";
 import { getSalesAnalysis } from "@/lib/db/analysis";
+import { getDealsReport } from "@/lib/db/deals";
 import { getChannelNames } from "@/lib/db/channels";
 import {
   analysisProblem,
@@ -73,9 +74,13 @@ export default async function SalesAnalysisPage({
       : daysBetween(from, to) > 366
         ? "Choose at most a year of dates"
         : analysisProblem(by, then, category);
-  const a = problem
-    ? null
-    : await getSalesAnalysis({ from, to, by, then, channel, location, category, cashier });
+  const [a, deals] = problem
+    ? [null, null]
+    : await Promise.all([
+        getSalesAnalysis({ from, to, by, then, channel, location, category, cashier }),
+        // The meal deals sold (0089); none before it.
+        getDealsReport(from, to, location),
+      ]);
 
   const name = (dim: SalesDimension, key: string, names: AnalysisRow["names"]) => {
     const n = rowName(dim, key, names, locale, channels.name);
@@ -507,6 +512,40 @@ export default async function SalesAnalysisPage({
                       "Each line as it was sold, its add-ons with it, so the products, the categories and the sizes add up to the sales. The margin is what they came to less the cost of what they used; kept, less what refunds gave back and the cost they put back.",
                     )}
             </p>
+          </div>
+        </section>
+      )}
+      {deals && deals.length > 0 && (
+        <section className="panel" data-testid="deals-report">
+          <div className="panel-h">
+            <h3>{t("Meal deals sold")}</h3>
+            <span className="muted" style={{ fontSize: ".74rem" }}>
+              {t("Each deal's things at their own prices, what was paid for them, and what the deal gave away")}
+            </span>
+          </div>
+          <div className="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>{t("Deal")}</th>
+                  <th className="right">{t("Sold")}</th>
+                  <th className="right">{t("At their own prices")}</th>
+                  <th className="right">{t("Paid")}</th>
+                  <th className="right">{t("Given away")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deals.map((d) => (
+                  <tr key={d.dealId} data-testid="deal-sold" data-deal={d.name}>
+                    <td dir="auto">{d.name}</td>
+                    <td className="right mono">{fmtQty(d.sold)}</td>
+                    <td className="right money">{fmtIQD(d.full)}</td>
+                    <td className="right money">{fmtIQD(d.paid)}</td>
+                    <td className="right money">{fmtIQD(d.given)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
       )}
