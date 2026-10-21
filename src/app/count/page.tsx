@@ -10,6 +10,7 @@ import { CancelCount, CountSheet, ReviewActions, StartCount } from "@/components
 import { EmptyState } from "@/components/ui";
 import { PlaceSwitch } from "@/components/PlaceSwitch";
 import { placeChoice } from "@/lib/place";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -87,13 +88,12 @@ export default async function CountPage({
         <h1>{t("nav.count")}</h1>
         <PlaceSwitch places={places} current={place?.id ?? null} />
       </div>
-      <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        <Rich
-          text={t(
-            "<b>Blind count.</b> Count what is on the shelf; the expected quantities are never shown to the person counting. Each item is compared with the stock at the moment it is counted, so the café can keep trading during a count. When the count is submitted, a manager — never the counter — reviews it and approves the variances into the books.",
-          )}
-        />
-      </p>
+      <PageIntro
+        text={t(
+          "<b>Blind count.</b> Count what is on the shelf; the expected quantities are never shown to the person counting. Each item is compared with the stock at the moment it is counted, so the café can keep trading during a count. When the count is submitted, a manager — never the counter — reviews it and approves the variances into the books.",
+        )}
+        more={t("How this works")}
+      />
 
       {canCount && mine && (
         <>

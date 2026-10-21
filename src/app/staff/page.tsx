@@ -14,6 +14,8 @@ import { ShopClock } from "@/components/staff/ShopClock";
 import { StaffTabs } from "@/components/staff/StaffTabs";
 import { getClockScreens, getLinkedPhones, getScreenCheck } from "@/lib/db/clock";
 import { Icon } from "@/components/Icon";
+import { PageIntro } from "@/components/PageIntro";
+import { getPlace } from "@/lib/place";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +58,13 @@ export default async function StaffPage({
   const places = locations
     .filter((l) => l.isActive && l.kind !== "warehouse")
     .map((l) => ({ id: l.id, name: l.name }));
-  const place = places.find((p) => p.id === sp.place)?.id ?? places[0]?.id ?? "";
+  // The week shown is at the place asked for, else this device's place.
+  const devicePlace = (await getPlace())?.id;
+  const place =
+    places.find((p) => p.id === sp.place)?.id ??
+    places.find((p) => p.id === devicePlace)?.id ??
+    places[0]?.id ??
+    "";
   const inNow = people.filter((p) => p.inSince);
   const weekHref = (day: string) => `?week=${day}&place=${place}#schedule`;
   const working = people.filter(
@@ -95,11 +103,12 @@ export default async function StaffPage({
   return (
     <div className="grid" style={{ gap: 16 }}>
       <h1 style={{ margin: 0 }}>{t("nav.staff")}</h1>
-      <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        {t(
+      <PageIntro
+        text={t(
           "Who works here, the schedule, and the hours. Each person clocks in and out on their own phone, by scanning the shop's code, or at the till with their name and PIN. Lateness, leaving early, absence and overtime are shown here, and deducted from pay only when a manager says so on Payroll.",
         )}
-      </p>
+        more={t("How this works")}
+      />
 
       <section className="card grid" style={{ gap: 8 }} id="in-now" data-testid="in-now">
         <h2 style={{ margin: 0 }}>{t("In now")}</h2>

@@ -47,6 +47,7 @@ import {
   type SetupKey,
 } from "@/lib/setup";
 import { GettingSetUp } from "@/components/dashboard/GettingSetUp";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -515,14 +516,6 @@ export default async function DashboardPage() {
 
       <TourOffer tourKey="dashboard" />
 
-      <NeedsYou
-        alerts={alerts}
-        canAct={has(profile, "sale.void") || has(profile, "accounting.post")}
-        myId={profile.id}
-        today={today}
-        timezone={profile.timezone}
-      />
-
       <section aria-labelledby="dash-today">
         <h2 id="dash-today" className="dash-h">
           {t("dash.today")}
@@ -581,20 +574,28 @@ export default async function DashboardPage() {
             </Link>
           ))}
         </div>
-        <p className="muted dash-note">
-          {t(
-            "These are the profit and loss's own figures for today. Gross profit is after waste, count differences, price differences on deliveries and platform fees. Open a figure to see what is behind it.",
-          )}
+        <div className="dash-note">
+          <PageIntro
+            text={t(
+              "These are the profit and loss's own figures for today. Gross profit is after waste, count differences, price differences on deliveries and platform fees. Open a figure to see what is behind it.",
+            )}
+            more={t("How this works")}
+          />
           {!goal && has(profile, "settings.manage") && (
-            <>
-              {" "}
-              <Link href="/settings/rules#rule-daily_sales_target" data-testid="dash-set-target">
-                {t("Give the café a day's sales target, and today is measured against it.")}
-              </Link>
-            </>
+            <Link href="/settings/rules#rule-daily_sales_target" data-testid="dash-set-target">
+              {t("Give the café a day's sales target, and today is measured against it.")}
+            </Link>
           )}
-        </p>
+        </div>
       </section>
+
+      <NeedsYou
+        alerts={alerts}
+        canAct={has(profile, "sale.void") || has(profile, "accounting.post")}
+        myId={profile.id}
+        today={today}
+        timezone={profile.timezone}
+      />
 
       {/* What the figures say comes first, for a phone and a screen reader;
           a wide screen sets it atop the side column. */}

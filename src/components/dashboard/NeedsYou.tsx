@@ -22,12 +22,11 @@ import { Notice } from "@/components/ui";
 type Msg = { ok: boolean; text: string } | null;
 
 /**
- * What needs the owner, at the top of the dashboard (0029, the audit's P1-8):
+ * What needs the owner, on the dashboard below today's figures (0029, P1-8):
  * 🔴 and 🟠 waiting for someone, 🟢 when nothing does, and 🔵 what has been
  * answered or snoozed — still open until its condition clears. Red ones are
  * always shown, the first two of a rule on the page and any more under one
- * red row saying how many. Orange ones can wait: while anything is red they
- * fold into one row saying how many and of what, and those of one rule fold
+ * red row saying how many. Orange ones can wait: they fold into one row saying how many and of what, and those of one rule fold
  * again into a row of their own.
  */
 export function NeedsYou({
@@ -96,23 +95,19 @@ export function NeedsYou({
             </Fragment>
           ))}
           {orange.length > 0 && (
-            // What can wait folds into one row while something is red, so the
-            // red stays at the top of the page; open when nothing is.
-            <details
-              className="alert-row orange alert-wait"
-              data-testid="alerts-can-wait"
-              open={red.length === 0}
-            >
+            // What can wait is one row, folded, with how many of each kind:
+            // today's figures stay in view above it, the red stays open.
+            <details className="alert-row orange alert-wait" data-testid="alerts-can-wait">
               <summary>
                 <span className="alert-title">
                   🟠 {t("{n} orange alert(s) can wait for a quiet moment.", { n: orange.length })}
                 </span>{" "}
                 <span className="alert-why">
                   {orangeGroups
-                    .slice(0, 3)
-                    .map((g) => msg(ruleLabel(g.rule)))
+                    .slice(0, 4)
+                    .map((g) => `${msg(ruleLabel(g.rule))}: ${g.alerts.length}`)
                     .join(" · ")}
-                  {orangeGroups.length > 3 ? " …" : ""}
+                  {orangeGroups.length > 4 ? " …" : ""}
                 </span>
               </summary>
               <div className="alerts" style={{ marginTop: 8 }}>

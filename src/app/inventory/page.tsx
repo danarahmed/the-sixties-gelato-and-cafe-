@@ -14,6 +14,7 @@ import { getProductionLots } from "@/lib/db/production";
 import { EmptyState } from "@/components/ui";
 import { PlaceSwitch } from "@/components/PlaceSwitch";
 import { placeChoice } from "@/lib/place";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -78,41 +79,44 @@ export default async function InventoryPage({
         <h1>{t("nav.inventory")}</h1>
         <PlaceSwitch places={places} current={place?.id ?? null} />
       </div>
-      <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        <Rich
-          text={t(
-            "Stock here is added up from everything recorded — deliveries, sales, counts, losses and transfers — so there is no figure to type over. Each change below is recorded, costed and booked in one step.",
-          )}
-        />
-        {seesCost && (
-          <>
-            {" "}
-            <Rich
-              text={t(
-                "<usage>Usage</usage> sets what each item used between two counts against what its recipes say.",
-              )}
-              tags={{ usage: (c) => <Link href="/inventory/usage">{c}</Link> }}
-            />
-          </>
+      <PageIntro
+        text={t(
+          "Stock here is added up from everything recorded — deliveries, sales, counts, losses and transfers — so there is no figure to type over. Each change below is recorded, costed and booked in one step.",
         )}
-        {places.length > 1 && (seesCost || has(profile, "stock.transfer")) && (
+        more={t("How this works")}
+        extra={
           <>
-            {" "}
-            <Rich
-              text={t(
-                "<transfers>Transfers</transfers> send stock from one of the café's places to another.",
-              )}
-              tags={{
-                transfers: (c) => (
-                  <Link href="/inventory/transfers" data-testid="to-transfers">
-                    {c}
-                  </Link>
-                ),
-              }}
-            />
+            {seesCost && (
+              <>
+                {" "}
+                <Rich
+                  text={t(
+                    "<usage>Usage</usage> sets what each item used between two counts against what its recipes say.",
+                  )}
+                  tags={{ usage: (c) => <Link href="/inventory/usage">{c}</Link> }}
+                />
+              </>
+            )}
+            {places.length > 1 && (seesCost || has(profile, "stock.transfer")) && (
+              <>
+                {" "}
+                <Rich
+                  text={t(
+                    "<transfers>Transfers</transfers> send stock from one of the café's places to another.",
+                  )}
+                  tags={{
+                    transfers: (c) => (
+                      <Link href="/inventory/transfers" data-testid="to-transfers">
+                        {c}
+                      </Link>
+                    ),
+                  }}
+                />
+              </>
+            )}
           </>
-        )}
-      </p>
+        }
+      />
 
       {seesCost && (
         <div

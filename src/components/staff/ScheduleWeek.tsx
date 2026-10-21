@@ -152,6 +152,11 @@ export function ScheduleWeek({
                 key={l.id}
                 href={`?week=${first}&place=${l.id}#schedule`}
                 className={l.id === locationId ? "badge ok" : "badge"}
+                aria-current={l.id === locationId ? "true" : undefined}
+                // The place chosen here is the device's, as on every screen.
+                onClick={() => {
+                  document.cookie = `place=${l.id}; path=/; max-age=31536000; samesite=lax`;
+                }}
               >
                 {l.name}
               </Link>

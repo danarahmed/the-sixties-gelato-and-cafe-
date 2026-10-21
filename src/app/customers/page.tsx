@@ -4,6 +4,7 @@ import { getCustomers } from "@/lib/db/customers";
 import { CustomersList } from "@/components/customers/CustomersList";
 import { AccountsList } from "@/components/customers/AccountsList";
 import { getCustomerAccounts } from "@/lib/db/accounts";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -19,11 +20,12 @@ export default async function CustomersPage() {
   return (
     <div className="grid" style={{ gap: 16 }}>
       <h1 style={{ margin: 0 }}>{t("nav.customers")}</h1>
-      <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        {t(
+      <PageIntro
+        text={t(
           "Who buys from the café, found at the till by their phone number. Each earns points on what they pay, and takes a reward off a bill once they have enough (the rules are on Settings).",
         )}
-      </p>
+        more={t("How this works")}
+      />
       {accounts && <AccountsList rows={accounts.rows} books={accounts.books} t={t} />}
       <section className="card">
         <CustomersList

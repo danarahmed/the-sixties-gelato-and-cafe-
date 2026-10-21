@@ -39,6 +39,7 @@ import type { PanelTab } from "@/components/SidePanel";
 import { EmptyState } from "@/components/ui";
 import { namesMatch, SEARCH_MAX, searchText } from "@/lib/find";
 import { MenuPhotos } from "@/components/menu/MenuPhotos";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -544,11 +545,12 @@ export default async function ProductsPage({
     <ChannelsProvider channels={channels.channels}>
       <div className="grid" style={{ gap: 16 }}>
         <h1 style={{ margin: 0 }}>{t("nav.products")}</h1>
-        <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-          {t(
+        <PageIntro
+          text={t(
             "Tap a product to see and change its recipe, prices, sizes and add-ons. Costs are today's, worked out exactly as a sale posts them; a price or recipe changed from a date leaves the sales before it as they were.",
           )}
-        </p>
+          more={t("How this works")}
+        />
 
         <ProductGrid
           sections={sections}

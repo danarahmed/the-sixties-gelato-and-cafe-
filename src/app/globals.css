@@ -7322,3 +7322,31 @@ kbd {
   padding-block: 8px;
   border-block-start: 1px solid var(--line, rgba(0, 0, 0, 0.08));
 }
+
+/* A page's explanation in one line; the rest under "How this works". */
+.page-intro {
+  margin: 0;
+  font-size: 0.9rem;
+}
+details.page-intro > summary {
+  list-style: none;
+  cursor: pointer;
+}
+details.page-intro > summary::-webkit-details-marker {
+  display: none;
+}
+.page-intro-more {
+  color: var(--brand);
+  font-weight: 600;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.page-intro-more::after {
+  content: " ▾";
+}
+details.page-intro[open] .page-intro-more::after {
+  content: " ▴";
+}
+details.page-intro > p {
+  margin: 6px 0 0;
+}

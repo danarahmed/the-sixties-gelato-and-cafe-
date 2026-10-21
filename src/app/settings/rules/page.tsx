@@ -4,6 +4,7 @@ import { getT } from "@/lib/i18n/server";
 import { getBusinessRules } from "@/lib/db/rules";
 import { getItems } from "@/lib/db/read";
 import { RulesManager } from "@/components/settings/RulesManager";
+import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -24,11 +25,12 @@ export default async function RulesPage() {
           {t("Back to Settings")}
         </Link>
       </div>
-      <p className="muted" style={{ marginTop: 0, fontSize: ".9rem" }}>
-        {t(
+      <PageIntro
+        text={t(
           "How the café works: the discount a cashier gives without a manager, the refunds and losses a second person approves, and what happens when more stock is used than the books hold. A rule set for a role, a kind of item or one item is used before the whole café's. Every change takes a reason, and is kept below and on the audit trail.",
         )}
-      </p>
+        more={t("How this works")}
+      />
       <RulesManager
         rules={rules}
         items={items.map((i) => ({ id: i.id, name: i.name }))}
