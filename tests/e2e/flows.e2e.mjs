@@ -613,7 +613,7 @@ console.log("▸ owner adds a person");
 {
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/settings");
-  await page.locator("label", { hasText: "Name" }).last().locator("input").fill("New Barista");
+  await page.locator("label", { hasText: /^Name$/ }).last().locator("input").fill("New Barista");
   await page.locator('input[type="email"]').fill("new.barista@example.com");
   await page.getByLabel("Barista / production").last().check();
   await page.getByRole("button", { name: "Add person" }).click();
