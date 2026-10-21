@@ -4,6 +4,7 @@ import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getOpenBills, getPosAddons, getPosCatalogue, getTables } from "@/lib/db/pos";
 import { getChannels } from "@/lib/db/channels";
+import { getMenuNextChange, getPosDeals } from "@/lib/db/deals";
 import { getDrawerState } from "@/lib/db/cash";
 import { getFxStatus } from "@/lib/db/fx";
 import { PosClient } from "@/components/pos/PosClient";
@@ -41,21 +42,36 @@ export default async function PosPage() {
   }
   // The view this device was left on: Tables or the menu.
   const startView = (await cookies()).get("pos_view")?.value;
-  const [items, addons, tables, bills, channels, drawer, fx, clockScreen, methods, preOrders] =
-    await Promise.all([
-      getPosCatalogue(at),
-      getPosAddons(at),
-      getTables(at),
-      getOpenBills(at),
-      getChannels(),
-      getDrawerState(at),
-      getFxStatus(),
-      getScreenCheck(),
-      // The café's own ways to pay (0069); none before it is applied.
-      getPaymentMethods(),
-      // The open pre-orders (0076); none before it is applied.
-      getPreOrders(at),
-    ]);
+  const [
+    items,
+    addons,
+    tables,
+    bills,
+    channels,
+    drawer,
+    fx,
+    clockScreen,
+    methods,
+    preOrders,
+    deals,
+    nextChange,
+  ] = await Promise.all([
+    getPosCatalogue(at),
+    getPosAddons(at),
+    getTables(at),
+    getOpenBills(at),
+    getChannels(),
+    getDrawerState(at),
+    getFxStatus(),
+    getScreenCheck(),
+    // The café's own ways to pay (0069); none before it is applied.
+    getPaymentMethods(),
+    // The open pre-orders (0076); none before it is applied.
+    getPreOrders(at),
+    // The meal deals on now, and when the menu next changes by itself (0089).
+    getPosDeals(at),
+    getMenuNextChange(at),
+  ]);
 
   if (items.length === 0) {
     return (
@@ -81,6 +97,8 @@ export default async function PosPage() {
       <PosClient
         items={items}
         addons={addons}
+        deals={deals}
+        nextChange={nextChange}
         tables={tables}
         initialBills={bills}
         canSeeCost={has(profile, "cost.view")}

@@ -19,7 +19,9 @@ import {
   salesChannel,
   text,
   addonsToDb,
+  dealToDb,
   lineAddons,
+  lineDeal,
   payments,
   rewardsTaken,
 } from "@/lib/validation";
@@ -49,7 +51,14 @@ const saleInput = z.object({
     .nullish(),
   tenders: payments.nullish(),
   lines: z
-    .array(z.object({ variantId: id("a product"), qty: positive("Quantity"), addons: lineAddons }))
+    .array(
+      z.object({
+        variantId: id("a product"),
+        qty: positive("Quantity"),
+        addons: lineAddons,
+        deal: lineDeal,
+      }),
+    )
     .min(1, "The cart is empty"),
   /** At most one of the two: a percentage of the bill, or an amount off it. */
   discountPercent,
@@ -117,6 +126,7 @@ export async function recordSaleAction(
       variant_id: l.variantId,
       qty: l.qty,
       modifiers: addonsToDb(l.addons),
+      ...dealToDb(l.deal),
     })),
     p_discount_percent: v.data.discountPercent,
     p_discount_amount: v.data.discountAmount,
@@ -144,7 +154,14 @@ const offlineSaleInput = z.object({
     .nullish(),
   tenders: payments.nullish(),
   lines: z
-    .array(z.object({ variantId: id("a product"), qty: positive("Quantity"), addons: lineAddons }))
+    .array(
+      z.object({
+        variantId: id("a product"),
+        qty: positive("Quantity"),
+        addons: lineAddons,
+        deal: lineDeal,
+      }),
+    )
     .min(1, "The cart is empty"),
   expectedNet: optionalNonNegative("The total shown"),
   platformOrderNo,
@@ -172,6 +189,7 @@ export async function recordOfflineSaleAction(
     variant_id: l.variantId,
     qty: l.qty,
     modifiers: addonsToDb(l.addons),
+    ...dealToDb(l.deal),
   }));
   let r = await callRpc<Record<string, unknown>>("record_offline_sale", {
     p_idempotency_key: v.data.key,

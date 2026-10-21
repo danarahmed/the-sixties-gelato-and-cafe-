@@ -21,6 +21,7 @@ import {
   isPlatform,
   itemCount,
   addonNames,
+  dealAmount,
   lineAmount,
   lineName,
   linePrice,
@@ -49,6 +50,65 @@ export interface Receipt extends SaleReceipt {
   ticketPrinted: boolean;
   /** Kept on this till while offline (0073): its number there, "Offline 3". */
   offlineNo?: number;
+}
+
+/** A meal deal on the order (0089): its name and price, and what it holds. */
+function DealBlock({
+  lines,
+  order,
+  byId,
+  addons,
+  decimals,
+  locked,
+  onRemove,
+}: {
+  lines: Line[];
+  order: Order;
+  byId: Map<string, PosItem>;
+  addons: AddonMenu;
+  decimals: number;
+  locked: boolean;
+  onRemove: () => void;
+}) {
+  const { t, locale } = useT();
+  const deal = lines[0]!.deal!;
+  const amount = dealAmount({ deal, lines }, byId, order.channel, addons, decimals);
+  return (
+    <div className="order-line deal-block" data-testid="order-deal" data-deal={deal.name}>
+      <div className="ol-row">
+        <div className="ol-main">
+          <span className="ol-name">
+            <span className="deal-mark" aria-hidden="true">
+              ★{" "}
+            </span>
+            {deal.name}
+          </span>
+          {lines.map((l) => {
+            const extra = addonNames(l.addons, addons, locale, l.addons);
+            return (
+              <span key={l.key} className="ol-addons">
+                {lineName(l, byId, locale)}
+                {extra.length > 0 && ` + ${extra.join(", ")}`}
+              </span>
+            );
+          })}
+        </div>
+        <div className="stepper">
+          <button
+            aria-label={`${t("Take off")} ${deal.name}`}
+            onClick={onRemove}
+            disabled={locked}
+            data-testid="deal-remove"
+          >
+            ×
+          </button>
+        </div>
+        <span className="ol-amt mono" data-testid="deal-amount">
+          {amount === null ? t("pos.noPrice") : fmtIQD(amount.toNumber())}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function OrderLine({
@@ -666,19 +726,35 @@ export function OrderPanel({
             <TourOffer tourKey="pos" />
           </div>
         ) : (
-          order.lines.map((l) => (
-            <OrderLine
-              key={l.key}
-              line={l}
-              order={order}
-              byId={byId}
-              addons={addons}
-              locked={blocked}
-              onQty={onQty}
-              onNote={onNote}
-              onWeigh={onWeigh}
-            />
-          ))
+          order.lines.map((l, i) =>
+            l.deal ? (
+              // A meal deal (0089): one block, at the deal's price, where its first line is.
+              order.lines.findIndex((x) => x.deal?.key === l.deal!.key) === i ? (
+                <DealBlock
+                  key={l.deal.key}
+                  lines={order.lines.filter((x) => x.deal?.key === l.deal!.key)}
+                  order={order}
+                  byId={byId}
+                  addons={addons}
+                  decimals={money.decimals}
+                  locked={blocked}
+                  onRemove={() => onQty(l.key, -1)}
+                />
+              ) : null
+            ) : (
+              <OrderLine
+                key={l.key}
+                line={l}
+                order={order}
+                byId={byId}
+                addons={addons}
+                locked={blocked}
+                onQty={onQty}
+                onNote={onNote}
+                onWeigh={onWeigh}
+              />
+            ),
+          )
         )}
       </div>
 

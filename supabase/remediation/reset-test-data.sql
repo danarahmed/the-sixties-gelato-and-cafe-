@@ -78,6 +78,10 @@ insert into reset_keep values
 -- The parts of the menu and what each branch sells (0074), where the database has them.
 insert into reset_keep
 select t from (values ('menu_section'), ('location_section')) v(t) where to_regclass('public.' || t) is not null;
+-- The meal deals and the prices by the hour (0089) are the menu's: kept; the deals sold go.
+insert into reset_keep
+select t from (values ('deal'), ('deal_price'), ('deal_slot'), ('deal_slot_variant'), ('time_price')) v(t)
+ where to_regclass('public.' || t) is not null;
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');
@@ -139,6 +143,7 @@ begin
        || case when to_regclass('public.fixed_asset') is not null
                then ', asset_depreciation, depreciation_run, fixed_asset' else '' end
        || case when to_regclass('public.problem_report') is not null then ', problem_report' else '' end
+       || case when to_regclass('public.sale_deal') is not null then ', sale_deal' else '' end
        || ' restart identity';
 end $$;
 

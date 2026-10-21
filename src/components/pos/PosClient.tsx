@@ -49,6 +49,7 @@ import {
   type TicketItem,
 } from "./PrintSlip";
 import {
+  addDeal,
   addLine,
   addonMenu,
   addonNames,
@@ -88,7 +89,10 @@ import {
   type OrderCustomer,
   type Tender,
   type TicketLine,
+  type LineDeal,
 } from "./model";
+import { dealName, type Deal } from "@/lib/deals";
+import { DealFlow } from "./DealFlow";
 import { CustomerDialog } from "./CustomerDialog";
 import { customerAtTillAction } from "@/lib/actions/customers";
 import { reasonKey } from "@/lib/reasons";
@@ -126,7 +130,13 @@ interface Pending {
   tender: Tender;
   payments?: Payment[];
   channel: SalesChannel;
-  lines: { variantId: string; qty: number; note: string | null; addons?: AddonChoice[] }[];
+  lines: {
+    variantId: string;
+    qty: number;
+    note: string | null;
+    addons?: AddonChoice[];
+    deal?: LineDeal;
+  }[];
   tabId: string | null;
   version: number | null;
   title: string;
@@ -184,6 +194,7 @@ function loadPending(): Pending | null {
         qty: Number(l.qty),
         note: l.note ?? null,
         addons: Array.isArray(l.addons) ? l.addons : [],
+        ...(l.deal ? { deal: l.deal } : {}),
       })),
       tabId: p.tabId ?? null,
       version: p.version ?? null,
@@ -237,12 +248,26 @@ async function fetchBills(): Promise<OpenBill[] | null> {
 }
 
 /** The menu and its add-ons at today's prices (0025, 0041): a till left open still sells at them. */
-async function fetchMenu(): Promise<{ items: PosItem[]; addons: PosAddons | null } | null> {
-  const body = await fetchJson<{ ok?: boolean; items?: PosItem[]; addons?: PosAddons }>(
-    "/api/pos/menu",
-  );
+async function fetchMenu(): Promise<{
+  items: PosItem[];
+  addons: PosAddons | null;
+  deals: Deal[] | null;
+  nextChange: string | null;
+} | null> {
+  const body = await fetchJson<{
+    ok?: boolean;
+    items?: PosItem[];
+    addons?: PosAddons;
+    deals?: Deal[];
+    nextChange?: string | null;
+  }>("/api/pos/menu");
   return body?.ok && Array.isArray(body.items) && body.items.length > 0
-    ? { items: body.items, addons: body.addons ?? null }
+    ? {
+        items: body.items,
+        addons: body.addons ?? null,
+        deals: Array.isArray(body.deals) ? body.deals : null,
+        nextChange: body.nextChange ?? null,
+      }
     : null;
 }
 
@@ -342,8 +367,13 @@ export function PosClient({
   cashierId = null,
   tillPlace = null,
   preOrders = null,
+  deals: initialDeals = [],
+  nextChange: initialNextChange = null,
 }: {
   items: PosItem[];
+  /** The meal deals on now (0089), and when the menu next changes by itself. */
+  deals?: Deal[];
+  nextChange?: string | null;
   /** The add-ons, and which products offer them (0041). */
   addons: PosAddons;
   tables: DiningTable[];
@@ -394,6 +424,9 @@ export function PosClient({
   const [items, setItems] = useState<PosItem[]>(initialItems);
   const byId = useMemo(() => new Map(items.map((i) => [i.variantId, i])), [items]);
   const [addons, setAddons] = useState<PosAddons>(initialAddons);
+  const [deals, setDeals] = useState<Deal[]>(initialDeals);
+  const [nextChange, setNextChange] = useState<string | null>(initialNextChange);
+  const [dealing, setDealing] = useState<Deal | null>(null);
   const menu = useMemo(() => addonMenu(addons), [addons]);
   // The channels in use that sell something: a platform the café added is one more tab.
   const channels = useMemo(
@@ -521,6 +554,8 @@ export function PosClient({
       if (fresh && menuQuiet.current) {
         setItems(fresh.items);
         if (fresh.addons) setAddons(fresh.addons);
+        if (fresh.deals) setDeals(fresh.deals);
+        setNextChange(fresh.nextChange);
       }
     };
     const poll = window.setInterval(tick, 15000);
@@ -539,6 +574,23 @@ export function PosClient({
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
+
+  // The menu changes by itself at the hour (0089): an hour's price, a section
+  // shown, a deal on. Asked for again just after that moment.
+  useEffect(() => {
+    if (!nextChange) return;
+    const wait = Date.parse(nextChange) - Date.now() + 1500;
+    if (!(wait > 0) || wait > 2 ** 31 - 1) return;
+    const timer = window.setTimeout(async () => {
+      const fresh = await fetchMenu();
+      if (!fresh) return;
+      setItems(fresh.items);
+      if (fresh.addons) setAddons(fresh.addons);
+      if (fresh.deals) setDeals(fresh.deals);
+      setNextChange(fresh.nextChange);
+    }, wait);
+    return () => window.clearTimeout(timer);
+  }, [nextChange]);
 
   // Selling without internet (0073): what this till keeps, read when it opens;
   // while the database does not answer, asked again every fifteen seconds; and
@@ -594,6 +646,7 @@ export function PosClient({
       fallbackName: null,
       billPrice: null,
       addons: (l.addons ?? []).map((a) => ({ ...a, billPrice: null })),
+      ...(l.deal ? { deal: l.deal } : {}),
     }));
     setPending(p);
     if (p.kind === "quick") {
@@ -777,6 +830,24 @@ export function PosClient({
     const weighed = byId.get(variantId)?.soldByWeight === true;
     patchOrder((o) => ({ ...o, lines: addLine(o.lines, variantId, chosen, qty, !weighed) }));
   }
+  /** A meal deal (0089): one of each of its places, as chosen, sold at the counter. */
+  function addDealToOrder(d: Deal, picks: { variantId: string; addons: AddonChoice[] }[]) {
+    setDealing(null);
+    if (pending || busy) return;
+    if (showBill) {
+      setMsg({
+        ok: false,
+        text: t("A deal is sold at the counter: pay for it now, not on a bill."),
+      });
+      return;
+    }
+    setReceipt(null);
+    setMsg(null);
+    patchOrder((o) => ({
+      ...o,
+      lines: addDeal(o.lines, { dealId: d.id, name: dealName(d, locale), prices: d.prices }, picks),
+    }));
+  }
   /** A weighed line weighed again (0075): its weight as typed, exactly. */
   function setWeight(key: string, kg: number) {
     patchOrder((o) => ({
@@ -786,12 +857,19 @@ export function PosClient({
   }
   const [weighing, setWeighing] = useState<string | null>(null);
   function changeQty(key: string, delta: number) {
-    patchOrder((o) => ({
-      ...o,
-      lines: o.lines
-        .map((l) => (l.key === key ? { ...l, qty: l.qty + delta } : l))
-        .filter((l) => l.qty > 0),
-    }));
+    patchOrder((o) => {
+      // A deal's line is one of it: taken off, the deal goes whole (0089).
+      const deal = o.lines.find((l) => l.key === key)?.deal;
+      if (deal && delta < 0)
+        return { ...o, lines: o.lines.filter((l) => l.deal?.key !== deal.key) };
+      if (deal) return o;
+      return {
+        ...o,
+        lines: o.lines
+          .map((l) => (l.key === key ? { ...l, qty: l.qty + delta } : l))
+          .filter((l) => l.qty > 0),
+      };
+    });
   }
   function setNote(key: string, note: string | null) {
     patchOrder((o) => ({ ...o, lines: o.lines.map((l) => (l.key === key ? { ...l, note } : l)) }));
@@ -1108,6 +1186,15 @@ export function PosClient({
   /** A quick sale the customer will pay for later: kept open under their name or at a table. */
   async function keepForLater(choice: { label: string | null; tableId: string | null }) {
     const o = quick;
+    // A deal is sold at the counter (0089): a bill keeps no deal.
+    if (o.lines.some((l) => l.deal)) {
+      setDialog(null);
+      setMsg({
+        ok: false,
+        text: t("A deal is sold at the counter: pay for it now, not on a bill."),
+      });
+      return;
+    }
     const data = await run("save:new", (key) =>
       saveBillAction(
         {
@@ -1404,6 +1491,7 @@ export function PosClient({
         qty: l.qty,
         note: l.note,
         addons: l.addons.map(({ modifierId, qty }) => ({ modifierId, qty })),
+        ...(l.deal ? { deal: l.deal } : {}),
       })),
       tabId: o.tabId,
       version: o.version,
@@ -1466,6 +1554,7 @@ export function PosClient({
                 variantId: l.variantId,
                 qty: String(l.qty),
                 addons: l.addons ?? [],
+                deal: l.deal ? { dealId: l.deal.dealId, key: l.deal.key } : null,
               })),
               discountPercent: p.discountPercent,
               discountAmount: p.discountAmount,
@@ -1619,6 +1708,8 @@ export function PosClient({
       if (fresh) {
         setItems(fresh.items);
         if (fresh.addons) setAddons(fresh.addons);
+        if (fresh.deals) setDeals(fresh.deals);
+        setNextChange(fresh.nextChange);
       }
       if (list) applyRef.current(list);
       if (p.kind === "bill") {
@@ -1696,7 +1787,12 @@ export function PosClient({
       no,
       channel: p.channel,
       payments,
-      lines: p.lines.map((l) => ({ variantId: l.variantId, qty: l.qty, addons: l.addons ?? [] })),
+      lines: p.lines.map((l) => ({
+        variantId: l.variantId,
+        qty: l.qty,
+        addons: l.addons ?? [],
+        ...(l.deal ? { deal: { dealId: l.deal.dealId, key: l.deal.key } } : {}),
+      })),
       expectedNet: String(p.expectedNet ?? 0),
       platformOrderNo: p.platformOrderNo,
       title: p.title,
@@ -1874,6 +1970,7 @@ export function PosClient({
                   variantId: l.variantId,
                   qty: String(l.qty),
                   addons: l.addons,
+                  deal: l.deal ?? null,
                 })),
                 expectedNet: atToday ? null : next.expectedNet,
                 platformOrderNo: next.platformOrderNo,
@@ -2181,9 +2278,21 @@ export function PosClient({
               channel={order.channel}
               counts={counts}
               disabled={blocked}
-              quiet={dialog !== null}
+              quiet={dialog !== null || dealing !== null}
               onAdd={add}
               decimals={money.decimals}
+              deals={order.kind === "quick" ? deals : []}
+              onDeal={(d) => setDealing(d)}
+            />
+          )}
+          {dealing && (
+            <DealFlow
+              deal={dealing}
+              byId={byId}
+              channel={order.channel}
+              addons={menu}
+              onDone={(picks) => addDealToOrder(dealing, picks)}
+              onClose={() => setDealing(null)}
             />
           )}
         </div>
@@ -2218,7 +2327,15 @@ export function PosClient({
             onSplit={openSplit}
             onMove={() => setDialog({ kind: "move" })}
             onCancelBill={askCancel}
-            onKeepForLater={() => setDialog({ kind: "keep" })}
+            onKeepForLater={() =>
+              // A deal is sold at the counter (0089): a bill keeps no deal.
+              quick.lines.some((l) => l.deal)
+                ? setMsg({
+                    ok: false,
+                    text: t("A deal is sold at the counter: pay for it now, not on a bill."),
+                  })
+                : setDialog({ kind: "keep" })
+            }
             onGiveAway={
               order.kind !== "bill" && (order.channel === "dine_in" || order.channel === "takeaway")
                 ? () => setDialog({ kind: "giveaway" })

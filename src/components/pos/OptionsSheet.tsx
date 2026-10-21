@@ -38,9 +38,15 @@ export function OptionsSheet({
   addons,
   onAdd,
   onClose,
+  title,
+  inDeal = false,
 }: {
   /** The product's sizes on sale on this channel. */
   variants: PosItem[];
+  /** Its heading, when it is one of a deal's places (0089): the deal and the place. */
+  title?: string;
+  /** One of a deal's places: sizes by their product's name too, the deal's price, not theirs. */
+  inDeal?: boolean;
   channel: SalesChannel;
   addons: AddonMenu;
   onAdd: (variantId: string, chosen: AddonChoice[]) => void;
@@ -104,7 +110,7 @@ export function OptionsSheet({
         className="pos-modal options-sheet"
         role="dialog"
         aria-modal="true"
-        aria-label={productName(first, locale)}
+        aria-label={title ?? productName(first, locale)}
         data-testid="options-sheet"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
@@ -116,7 +122,7 @@ export function OptionsSheet({
           }
         }}
       >
-        <h3 style={{ marginTop: 0 }}>{productName(first, locale)}</h3>
+        <h3 style={{ marginTop: 0 }}>{title ?? productName(first, locale)}</h3>
         {variants.length > 1 && (
           <div className="variant-list" role="group" aria-label={t("Size")}>
             {variants.map((v) => (
@@ -126,8 +132,12 @@ export function OptionsSheet({
                 aria-pressed={size?.variantId === v.variantId}
                 onClick={() => pickSize(v)}
               >
-                <span>{variantLabel(v) ?? productName(v, locale)}</span>
-                <span className="price mono">{fmtIQD(v.prices[channel]!)}</span>
+                <span>
+                  {inDeal
+                    ? [productName(v, locale), variantLabel(v)].filter(Boolean).join(" — ")
+                    : (variantLabel(v) ?? productName(v, locale))}
+                </span>
+                {!inDeal && <span className="price mono">{fmtIQD(v.prices[channel]!)}</span>}
               </button>
             ))}
           </div>
@@ -218,7 +228,13 @@ export function OptionsSheet({
               disabled={missing !== null}
               onClick={() => onAdd(size.variantId, chosen)}
             >
-              {t("Add")} · <span className="mono">{fmtIQD(each!.toNumber())}</span>
+              {t("Add")}
+              {!inDeal && (
+                <>
+                  {" "}
+                  · <span className="mono">{fmtIQD(each!.toNumber())}</span>
+                </>
+              )}
             </button>
           </div>
         )}

@@ -38,6 +38,9 @@ import { ProductGrid, type ProductTile, type TileSection } from "@/components/me
 import type { PanelTab } from "@/components/SidePanel";
 import { EmptyState } from "@/components/ui";
 import { namesMatch, SEARCH_MAX, searchText } from "@/lib/find";
+import { DealsManager } from "@/components/menu/DealsManager";
+import { TimePricesManager } from "@/components/menu/TimePricesManager";
+import { getDeals, getTimePrices } from "@/lib/db/deals";
 import { MenuPhotos } from "@/components/menu/MenuPhotos";
 import { PageIntro } from "@/components/PageIntro";
 
@@ -286,6 +289,8 @@ export default async function ProductsPage({
     sectionSetup,
     weighed,
     barcodes,
+    deals,
+    timePrices,
   ] = await Promise.all([
     getMenuCosting(),
     getMenuRecipeLines(),
@@ -303,6 +308,9 @@ export default async function ProductsPage({
     getWeighedSizes(),
     // Each size's barcode (0078); null before it.
     getBarcodes(),
+    // Meal deals and prices by the hour (0089); null before it.
+    getDeals(),
+    getTimePrices(),
   ]);
   // A price can be one branch's own once the café has more than one (0055).
   const branches = places.filter((p) => p.kind === "branch");
@@ -327,6 +335,28 @@ export default async function ProductsPage({
   const decimals = profile.currencyDecimals;
 
   const { categories, products } = setup;
+  // Each size once, by its product's name, for a deal's places and a price by the hour (0089).
+  const sizeCount = new Map<string, number>();
+  const seenSize = new Map<
+    string,
+    { id: string; label: string; productId: string; variant: string }
+  >();
+  for (const m of menu)
+    if (!seenSize.has(m.variantId))
+      seenSize.set(m.variantId, {
+        id: m.variantId,
+        label: m.productName,
+        productId: m.productId,
+        variant: m.variantName,
+      });
+  for (const v of seenSize.values())
+    sizeCount.set(v.productId, (sizeCount.get(v.productId) ?? 0) + 1);
+  const dealSizes = [...seenSize.values()]
+    .map((v) => ({
+      id: v.id,
+      label: (sizeCount.get(v.productId) ?? 0) > 1 ? `${v.label} — ${v.variant}` : v.label,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
   const counts = new Map<string, number>();
   for (const p of products)
     if (p.categoryId) counts.set(p.categoryId, (counts.get(p.categoryId) ?? 0) + 1);
@@ -585,6 +615,19 @@ export default async function ProductsPage({
         )}
 
         {canEdit && <MenuPhotos products={products} />}
+
+        {canEdit && deals && (
+          <DealsManager
+            deals={deals}
+            sizes={dealSizes}
+            categories={categories
+              .filter((c) => c.isActive)
+              .map((c) => ({ id: c.id, name: c.name }))}
+          />
+        )}
+        {canEdit && timePrices && (
+          <TimePricesManager prices={timePrices} sizes={dealSizes} branches={branchChoice} />
+        )}
 
         {sectionSetup && (
           <SectionsManager

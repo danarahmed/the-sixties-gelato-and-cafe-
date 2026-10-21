@@ -256,7 +256,7 @@ and printed by the test on Test your devices.
 | 1 ✓  | E1 shorter pages, E2 the Dashboard numbers first, E3 one place switch        | —         |
 | 2 ✓  | E4 find anything, E6 each role's first screen, E8 photos on the till         | —         |
 | 3 ✓  | E5 the approvals inbox, E7 undo                                              | `0088`    |
-| 4    | F1 meal deals, F2 prices by time of day                                      | `0089`    |
+| 4 ✓  | F1 meal deals, F2 prices by time of day                                      | `0089`    |
 | 5    | F3 tips and a service charge                                                 | `0090`    |
 | 6    | F4 the dashboard each role chooses, F5 the café's own receipt                | `0091`    |
 | 7    | The simulated year on the copy, with the planted problems; the backtest tool | —         |
@@ -281,6 +281,14 @@ given there and then with a manager's PIN, as before, and are not queued.
 **Undo** is offered for ten seconds after saving a product's details, the
 week's schedule or a table; a rule keeps its own history with why, so it is
 changed back as it was changed.
+**Prices by the hour** take the place of a size's usual price at set hours
+and days (dine-in and take-away unless a way of selling is named); a sale
+is priced at its own moment, a bill keeps the price it was rung at, and the
+till asks for its menu again at the hour; a part of the menu can be shown
+only in its hours. **Meal deals** are two to eight places (a size, or any of
+a category's), a price per way of selling, days and hours; each thing is
+sold as itself and the deal's give-away is its discount. A deal is paid at
+the counter: it is not kept on a table's bill, nor sold on a platform.
 
 Easier and more flexible first: every user feels them from the first day,
 and the smart parts then learn from deals, tips and time-of-day prices too.

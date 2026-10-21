@@ -2054,6 +2054,28 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Meal deals and prices by the hour (`0089`)
+
+- **`time_price`**: a size's price at set hours (`starts`, `ends`; past
+  midnight when `ends` is at or before `starts`) on set `days` (Monday 1 to
+  Sunday 7; null every day), on one `channel` or (null) dine-in and take-away,
+  at one branch or every one; running until `stopped_at`. `price_on` reads it
+  on the day of the sale at the sale's own moment (`sixties.sale_placed_at`
+  or now); a markdown still comes off it. A bill's line added while one runs
+  carries the price (`trg_tab_line_hour_price`).
+- **`menu_section.shown_from`, `shown_until`, `shown_days`**: the hours a
+  part of the menu is shown at the till (`pos_catalogue`).
+- **`deal`**: a meal deal: its names in three languages, `is_active`, and the
+  `days`, `starts`, `ends` it is on (null: always). **`deal_price`**: its
+  price on each channel it is sold on (none on a platform). **`deal_slot`**:
+  each of its places, in order, with a `label` and either sizes named
+  (**`deal_slot_variant`**) or any size of a `category_id`.
+- **`sale_deal`**: each deal sold: the sale, the deal, its key on the bill,
+  its name then, `full_amount` (its things at their own prices),
+  `deal_amount` (what was paid for them) and `given` (the difference, shared
+  over its lines as their `line_discount`). Never changed after.
+- **`sales_order_line.sale_deal_id`**: the deal a line was sold in, if any.
+
 ### One approvals inbox (`0088`)
 
 - No table. `approvals_waiting()` gathers, for the reader's permissions and

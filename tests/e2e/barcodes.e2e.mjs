@@ -37,8 +37,14 @@ console.log("▸ a scan at the till adds it");
   if (await tab.count()) await tab.click();
   await page.getByRole("button", { name: "Dine-in" }).click();
   await page.evaluate(() => document.activeElement?.blur?.());
-  await page.keyboard.type(CODE, { delay: 5 });
-  await page.keyboard.press("Enter");
+  // As a scanner sends it: every key at once, then Enter, right after the way
+  // of selling changed. Typed one by one, a busy test machine can leave more
+  // than a scanner's 40 ms between keys; and all at once, the till must look
+  // the code up in the menu shown now, not the one before Dine-in was chosen.
+  await page.evaluate((code) => {
+    for (const key of [...code, "Enter"])
+      document.body.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+  }, CODE);
   await page.locator(".order-line", { hasText: "Golden water" }).waitFor({ timeout: 10000 });
   check(true, "the water is on the order");
   check(
