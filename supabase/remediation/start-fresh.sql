@@ -119,6 +119,8 @@ begin
        || case when to_regclass('public.fixed_asset') is not null
                then ', asset_depreciation, depreciation_run, fixed_asset' else '' end
        || case when to_regclass('public.problem_report') is not null then ', problem_report' else '' end
+       || case when to_regclass('public.sale_deal') is not null
+               then ', sale_deal, deal_slot_variant, deal_slot, deal_price, deal, time_price' else '' end
        || ' restart identity';
 end $$;
 

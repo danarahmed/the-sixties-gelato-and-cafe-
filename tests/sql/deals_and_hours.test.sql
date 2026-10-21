@@ -71,6 +71,26 @@ select test.eq(pg_temp.dine(:E), 2500::numeric, 'stopped: back to its usual pric
 select test.eq((select subtotal from pos_open_bills() where tab_id = (pg_temp.r('B1') ->> 'tab_id')::uuid),
   1500::numeric, 'and the bill keeps the price it was rung at');
 
+-- ------------------------------------------------------------ a part of the menu shown in its hours
+select test.act_as('owner@example.com');
+insert into res select 'SEC', to_jsonb(save_section(null, 'Breakfast'));
+insert into res select 'CAT', to_jsonb(save_category(null, 'Morning'));
+select set_category_section((pg_temp.r('CAT') #>> '{}')::uuid, (pg_temp.r('SEC') #>> '{}')::uuid);
+select test.as_admin();
+update product set category_id = (select v #>> '{}' from res where k = 'CAT')::uuid
+ where id = 'd0000000-0000-0000-0000-000000000002';
+select test.act_as('owner@example.com');
+select test.ok(pg_temp.dine(:W) is not null, 'the water, in Breakfast, is on the till');
+select set_section_hours((pg_temp.r('SEC') #>> '{}')::uuid,
+  ((now() + interval '3 hours') at time zone (select timezone from business limit 1))::time,
+  ((now() + interval '4 hours') at time zone (select timezone from business limit 1))::time);
+select test.ok(pg_temp.dine(:W) is null, 'outside Breakfast''s hours, it is not');
+select test.throws(format('select set_section_hours(%L, %L, null)', pg_temp.r('SEC') #>> '{}', '08:00'),
+  'Give the hours it is shown, from and until, or neither', 'from and until together');
+select set_section_hours((pg_temp.r('SEC') #>> '{}')::uuid, pg_temp.now_from(), pg_temp.now_until());
+select test.ok(pg_temp.dine(:W) is not null, 'in its hours, it is again');
+select set_section_hours((pg_temp.r('SEC') #>> '{}')::uuid, null, null);
+
 -- ------------------------------------------------------------ a meal deal
 select test.act_as('cashier@example.com');
 select test.throws($$select save_deal(null, 'Nope', '{"dine_in": 1}',

@@ -2327,7 +2327,15 @@ export function PosClient({
             onSplit={openSplit}
             onMove={() => setDialog({ kind: "move" })}
             onCancelBill={askCancel}
-            onKeepForLater={() => setDialog({ kind: "keep" })}
+            onKeepForLater={() =>
+              // A deal is sold at the counter (0089): a bill keeps no deal.
+              quick.lines.some((l) => l.deal)
+                ? setMsg({
+                    ok: false,
+                    text: t("A deal is sold at the counter: pay for it now, not on a bill."),
+                  })
+                : setDialog({ kind: "keep" })
+            }
             onGiveAway={
               order.kind !== "bill" && (order.channel === "dine_in" || order.channel === "takeaway")
                 ? () => setDialog({ kind: "giveaway" })

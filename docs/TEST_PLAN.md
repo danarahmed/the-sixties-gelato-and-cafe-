@@ -1278,6 +1278,16 @@ database, behind a small local stand-in for Supabase's auth service.
   cancels the order with why (as on Purchasing), and nothing waits. The
   cashier is offered no Approvals and is taken to the till from it. A
   product renamed on Products & Recipes is put back with Undo.
+- `deals` (`0089`, run before `setup`): the owner makes a deal of two waters
+  at 1,500 at a table on Products & Recipes, and a price by the hour for the
+  espresso, 1,500 from a minute ago for two hours, on now. The cashier's till
+  shows the espresso at 1,500 and the deal as a tile; the deal goes on the
+  order as one block at 1,500, is taken off whole, put back and paid by
+  card: each water sold at its own 1,000 with 250 of discount, 2,000 less
+  500 paid 1,500, the deal kept with the sale. Kept open to pay later, it is
+  refused: a deal is paid at the counter. Sales analysis lists the deal and
+  the 500 it gave away. The price stopped, the espresso is back to its usual
+  price.
 - `setup` (round seven, run last: it clears the café): the test café is
   cleared with `supabase/remediation/start-fresh.sql`, every record and the
   setup lists gone, the logins and the chart of accounts kept, the audit

@@ -45,15 +45,20 @@ export function DealFlow({
   const simple =
     sizes.length === 1 && addons.groupsFor(sizes[0]!.productId, sizes[0]!.variantId).length === 0;
 
+  // A place with nothing to choose is filled at once; the deal goes on the
+  // order when the last is filled. Each step once, whatever renders between.
+  const filled = useRef(-1);
+  const autoSize = simple ? sizes[0]!.variantId : null;
   useEffect(() => {
     if (empty >= 0 || done.current) return;
     if (at >= places.length) {
       done.current = true;
       onDone(picks);
-    } else if (simple) {
-      setPicks((p) => [...p, { variantId: sizes[0]!.variantId, addons: [] }]);
+    } else if (autoSize && filled.current < at) {
+      filled.current = at;
+      setPicks((p) => (p.length === at ? [...p, { variantId: autoSize, addons: [] }] : p));
     }
-  }, [at, empty, places.length, picks, simple, sizes, onDone]);
+  }, [at, empty, places.length, picks, autoSize, onDone]);
 
   if (empty >= 0) {
     return (
