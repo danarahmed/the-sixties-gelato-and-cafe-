@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import { AppShell, type ShellMember } from "@/components/AppShell";
+import { getApprovalsCount } from "@/lib/db/approvals";
 import { getDir, getLanguages, getLocale, getWords } from "@/lib/i18n/server";
 import { getSession } from "@/lib/auth/session";
 
@@ -31,16 +32,21 @@ export const viewport: Viewport = {
  */
 const NOTE_SCRIPTS = `self.__ran=new WeakSet();["load","error"].forEach(function(t){document.addEventListener(t,function(e){var s=e.target;if(s&&s.tagName==="SCRIPT")self.__ran.add(s)},true)});Array.prototype.forEach.call(document.scripts,function(s){if(s.src&&performance.getEntriesByName(s.src).length)self.__ran.add(s)})`;
 
+const APPROVES = ["inventory.adjust.approve", "waste.approve", "purchase.approve", "payroll.run"];
+
 /** The member for the shell, or null (signed out, not linked, or unreadable —
  * in the last case the page itself reports the error). */
 async function shellMember(): Promise<ShellMember | null> {
   try {
     const s = await getSession();
     if (!s.profile) return null;
+    const approver = APPROVES.some((p) => s.profile!.permissions.includes(p));
     return {
       name: s.profile.name,
       businessName: s.profile.businessName,
       permissions: s.profile.permissions,
+      // What waits for them, counted on the menu (0088).
+      approvals: approver ? await getApprovalsCount() : 0,
     };
   } catch {
     return null;

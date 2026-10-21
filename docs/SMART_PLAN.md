@@ -255,7 +255,7 @@ and printed by the test on Test your devices.
 | ---- | ---------------------------------------------------------------------------- | --------- |
 | 1 ✓  | E1 shorter pages, E2 the Dashboard numbers first, E3 one place switch        | —         |
 | 2 ✓  | E4 find anything, E6 each role's first screen, E8 photos on the till         | —         |
-| 3    | E5 the approvals inbox, E7 undo                                              | `0088`    |
+| 3 ✓  | E5 the approvals inbox, E7 undo                                              | `0088`    |
 | 4    | F1 meal deals, F2 prices by time of day                                      | `0089`    |
 | 5    | F3 tips and a service charge                                                 | `0090`    |
 | 6    | F4 the dashboard each role chooses, F5 the café's own receipt                | `0091`    |
@@ -275,6 +275,12 @@ the search button. The first screen chosen on My account is kept with the
 person's sign-in (their account's own settings, no migration), so it
 follows them to any device; a screen they may no longer open is ignored.
 Photos added many at once go to the product their file is named for.
+**Approvals** gathers stock counts, losses saved to wait, purchase orders
+drafted and left an hour, and the month's pay; the till's own approvals are
+given there and then with a manager's PIN, as before, and are not queued.
+**Undo** is offered for ten seconds after saving a product's details, the
+week's schedule or a table; a rule keeps its own history with why, so it is
+changed back as it was changed.
 
 Easier and more flexible first: every user feels them from the first day,
 and the smart parts then learn from deals, tips and time-of-day prices too.

@@ -1269,6 +1269,15 @@ database, behind a small local stand-in for Supabase's auth service.
   Golden espresso, `IMG_2041.png` is named to place by hand. On a phone the
   owner's Dashboard shows today first and the rest behind one tap; a wide
   screen shows everything.
+- `approvals` (`0088`, run before `setup`): the manager's count of the cups
+  submitted, the barista's loss of beans saved to wait, and an order of
+  beans drafted and left two hours wait on Approvals. The manager may only
+  withdraw their own count. The owner's menu counts what waits; the loss
+  says why and who; the owner approves the count (approved, as on Stock
+  Count), reverses the loss only once why is given (as on Inventory) and
+  cancels the order with why (as on Purchasing), and nothing waits. The
+  cashier is offered no Approvals and is taken to the till from it. A
+  product renamed on Products & Recipes is put back with Undo.
 - `setup` (round seven, run last: it clears the café): the test café is
   cleared with `supabase/remediation/start-fresh.sql`, every record and the
   setup lists gone, the logins and the chart of accounts kept, the audit

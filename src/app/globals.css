@@ -7429,3 +7429,69 @@ details.page-intro > p {
     display: none;
   }
 }
+
+/* The approvals inbox (0088): a card each, the count on the menu. */
+.nav-count {
+  margin-inline-start: auto;
+  min-width: 1.4em;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.5;
+}
+.approvals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.approval {
+  display: grid;
+  gap: 6px;
+}
+.approval-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.approval-value {
+  margin-inline-start: auto;
+  font-weight: 700;
+}
+.approval-meta {
+  font-size: 0.85rem;
+}
+.approval-why {
+  font-size: 0.9rem;
+}
+.approval-acts,
+.approval-back {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.approval-open {
+  margin-inline-start: auto;
+  font-size: 0.85rem;
+}
+
+/* Undo for a few seconds (E7). */
+.undo-bar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  white-space: normal;
+}
+.undo-button {
+  min-height: 32px;
+  padding: 2px 12px;
+  font-weight: 700;
+}

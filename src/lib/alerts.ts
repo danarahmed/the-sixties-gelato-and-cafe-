@@ -43,6 +43,7 @@ export const RULE_LABEL: Record<string, string> = {
   payroll_due: "Salaries due",
   bank_unreconciled: "Bank not reconciled",
   prepaid_due: "Prepaid expenses due",
+  approvals_waiting: "Waiting for approval",
 };
 
 export function ruleLabel(rule: string): string {

@@ -6,6 +6,7 @@ import { saveTableAction } from "@/lib/actions/pos";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
 import { OperationStatus, useOperation } from "@/components/useOperation";
+import { useUndo } from "@/components/Undo";
 import { useDialogFocus } from "./dialogFocus";
 
 interface Draft {
@@ -47,6 +48,7 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
   const dialogBox = useDialogFocus<HTMLDivElement>();
   const [edits, setEdits] = useState<Record<string, Draft>>({});
   const [busy, setBusy] = useState(false);
+  const undo = useUndo();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const next = tables.reduce((m, tb) => Math.max(m, tb.sortOrder), 0) + 1;
   const [fresh, setFresh] = useState<Draft>({
@@ -81,7 +83,12 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
         delete rest[tb.id];
         return rest;
       });
-      setMsg({ ok: true, text: t("pos.saved") });
+      // The table as it was, put back for a few seconds after (E7).
+      const before = toDraft(tb);
+      undo.offer(t("pos.saved"), async () => {
+        const back = await saveTableAction(input(before, tb.id), crypto.randomUUID());
+        return back.ok ? { ok: true } : { ok: false, error: back.error };
+      });
     }
     setBusy(false);
   }
@@ -286,6 +293,7 @@ export function TablesEditor({ tables, onClose }: { tables: DiningTable[]; onClo
         <div style={{ marginTop: 8 }}>
           <OperationStatus op={op} />
           <Notice msg={msg} />
+          {undo.node}
         </div>
         <div className="pay-actions">
           <button onClick={onClose} disabled={busy}>

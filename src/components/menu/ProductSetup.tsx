@@ -12,6 +12,7 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import { ProductThumb } from "@/components/pos/ProductPicker";
 import { Notice } from "@/components/ui";
 import { shrinkPhoto } from "./photo";
+import { useUndo } from "@/components/Undo";
 
 /**
  * How a product appears on the till: its photo, its names in the three
@@ -49,9 +50,20 @@ export function ProductSetup({
     d.isActive !== product.isActive ||
     d.isFavourite !== product.isFavourite;
   const busy = pending || photoBusy;
+  const undo = useUndo();
 
   function save() {
     setMsg(null);
+    // What it was, to put back for a few seconds after (E7).
+    const before = {
+      productId: product.id,
+      name: product.name,
+      nameAr: product.nameAr,
+      nameCkb: product.nameCkb,
+      categoryId: product.categoryId,
+      isActive: product.isActive,
+      isFavourite: product.isFavourite,
+    };
     start(async () => {
       const r = await setProductDetailsAction({
         productId: product.id,
@@ -62,8 +74,26 @@ export function ProductSetup({
         isActive: d.isActive,
         isFavourite: d.isFavourite,
       });
-      setMsg(r.ok ? { ok: true, text: t("Saved.") } : { ok: false, text: r.error });
-      if (r.ok) router.refresh();
+      if (!r.ok) {
+        setMsg({ ok: false, text: r.error });
+        return;
+      }
+      undo.offer(t("Saved."), async () => {
+        const back = await setProductDetailsAction(before);
+        if (back.ok) {
+          setD({
+            name: before.name,
+            nameAr: before.nameAr ?? "",
+            nameCkb: before.nameCkb ?? "",
+            categoryId: before.categoryId ?? "",
+            isActive: before.isActive,
+            isFavourite: before.isFavourite,
+          });
+          router.refresh();
+        }
+        return back.ok ? { ok: true } : { ok: false, error: back.error };
+      });
+      router.refresh();
     });
   }
 
@@ -209,6 +239,7 @@ export function ProductSetup({
           )}
         </div>
         <Notice msg={msg} />
+        {undo.node}
       </div>
     </div>
   );

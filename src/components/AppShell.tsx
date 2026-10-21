@@ -15,6 +15,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 /** Each screen's icon in the menu, beside its name. */
 const NAV_ICONS: Record<string, IconName> = {
   "/dashboard": "dashboard",
+  "/approvals": "check",
   "/sales": "sales",
   "/platforms": "platforms",
   "/customers": "customers",
@@ -44,6 +45,8 @@ export interface ShellMember {
   name: string;
   businessName: string;
   permissions: string[];
+  /** What waits for their approval (0088), counted beside Approvals. */
+  approvals?: number;
 }
 
 /** Whether the browser is online, kept current. */
@@ -328,6 +331,11 @@ export function AppShell({
                 >
                   {NAV_ICONS[n.href] && <Icon name={NAV_ICONS[n.href]!} size={18} />}
                   {t(n.key)}
+                  {n.href === "/approvals" && (member.approvals ?? 0) > 0 && (
+                    <span className="nav-count" data-testid="approvals-count">
+                      {member.approvals}
+                    </span>
+                  )}
                 </Link>
               </div>
             );

@@ -24,6 +24,13 @@ const BOOKS = "nav.group.books";
 
 export const NAV: NavEntry[] = [
   { group: null, href: "/dashboard", key: "nav.dashboard", anyOf: ["profit.view"] },
+  // Everything waiting for a manager, in one place (0088).
+  {
+    group: null,
+    href: "/approvals",
+    key: "nav.approvals",
+    anyOf: ["inventory.adjust.approve", "waste.approve", "purchase.approve", "payroll.run"],
+  },
 
   { group: REVENUE, href: "/sales", key: "nav.sales", anyOf: ["cost.view"] },
   { group: REVENUE, href: "/platforms", key: "nav.platforms", anyOf: ["cost.view"] },
