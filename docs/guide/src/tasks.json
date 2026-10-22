@@ -1,0 +1,4404 @@
+[
+  {
+    "title": "Sign in for the first time",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "cashier",
+      "barista",
+      "inventory_counter",
+      "purchasing",
+      "accountant",
+      "auditor"
+    ],
+    "when": "once (setting up)",
+    "why": "You need your own login before you can use the app. The owner or general manager invites your email first.",
+    "before": [
+      "The owner or general manager added your email on Settings → People and roles."
+    ],
+    "steps": [
+      {
+        "do": "Open the app. You see the sign-in page “Welcome back”.",
+        "shot": "login"
+      },
+      {
+        "do": "Press “First time here? Create your login”."
+      },
+      {
+        "do": "Type the email the owner invited, and a password of at least 8 characters. Press “Create my login”.",
+        "see": "“Check your email and open the confirmation link. If the owner invited this address, you can then sign in.”"
+      },
+      {
+        "do": "Open the email and press the confirmation link."
+      },
+      {
+        "do": "Come back to the app. Type your email and password and press “Sign in”.",
+        "see": "The app opens on your first screen: the till for a cashier, Production for a barista, Stock Count for a counter, Purchasing for purchasing, Reports for the accountant and auditor, the Dashboard for managers."
+      },
+      {
+        "do": "Choose your language in the top bar (English, العربية, کوردی). The page reloads in it."
+      },
+      {
+        "do": "If you want to start on another screen: press your name at the top right (My account) and choose it under “First screen”.",
+        "see": "“Saved: you start there from now on.”",
+        "shot": "account"
+      }
+    ],
+    "if": [
+      {
+        "case": "It says “Your login is not linked to the business yet”",
+        "do": "You used a different email from the one invited. Ask the owner to add that email on Settings → People and roles, then sign out and sign in again."
+      },
+      {
+        "case": "You forgot your password",
+        "do": "On the sign-in page press “Forgot password?”, type your email and press “Send me a reset link”. Open the link in the email."
+      },
+      {
+        "case": "No confirmation email came",
+        "do": "Check the spam folder. The email must be exactly the one the owner typed."
+      }
+    ],
+    "screens": [
+      "/login",
+      "/",
+      "/account"
+    ]
+  },
+  {
+    "title": "Keep your login safe and set your approval PIN",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "cashier",
+      "barista",
+      "inventory_counter",
+      "purchasing",
+      "accountant",
+      "auditor"
+    ],
+    "when": "once (setting up)",
+    "why": "Two-step sign-in stops anyone who learns your password. Managers also need an approval PIN to approve discounts, refunds, voids and losses.",
+    "before": [
+      "An authenticator app on your phone (Google Authenticator, Microsoft Authenticator…) for two-step sign-in."
+    ],
+    "steps": [
+      {
+        "do": "Press your name at the top right to open My account.",
+        "shot": "account"
+      },
+      {
+        "do": "Under “Two-step sign-in” press “Turn on two-step sign-in”. Scan the code with the authenticator app (or type the key shown)."
+      },
+      {
+        "do": "Type the six digits the app shows in “Then type the six digits it shows” and press “Turn it on”.",
+        "see": "From now on, after your password, the page “One more step” asks for the six digits.",
+        "shot": "account-two-step"
+      },
+      {
+        "do": "Managers only (owner, general manager, branch manager): under “Your approval PIN” type a PIN in “New PIN” and again in “The same PIN again”. Press “Save the PIN”.",
+        "see": "“Your PIN is saved.”"
+      },
+      {
+        "do": "To change your password: type it in “New password” and “Repeat the new password”, then press “Save password”.",
+        "see": "“Your password is changed.”"
+      }
+    ],
+    "if": [
+      {
+        "case": "At the till a manager sees “{name} has not set a PIN yet (My account)”",
+        "do": "That manager opens My account and saves an approval PIN."
+      },
+      {
+        "case": "“Approvals by PIN are paused for {name} after too many wrong PINs today”",
+        "do": "That manager sets a new PIN on My account."
+      },
+      {
+        "case": "You lost the phone with the authenticator app",
+        "do": "The app has no screen to get back in. Ask whoever looks after the system to remove the second step; then turn it on again with the new phone."
+      }
+    ],
+    "screens": [
+      "/account",
+      "/login/verify"
+    ]
+  },
+  {
+    "title": "Add the ways the café is paid, and a service charge",
+    "roles": [
+      "owner",
+      "general_manager"
+    ],
+    "when": "once (setting up)",
+    "why": "Cash and the card machine are always there. Add FIB, FastPay, ZainCash, Qi Card or a bank, so the till offers them and each keeps its own money apart.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Settings (Menu → Accountant → Settings) and open the group “Selling”."
+      },
+      {
+        "do": "Under Ways to pay, press “+ FIB”, “+ FastPay”, “+ ZainCash” or “+ Qi Card” for each one the café takes.",
+        "see": "“{name} added: the till offers it now.”",
+        "shot": "settings-ways-to-pay"
+      },
+      {
+        "do": "For another app or bank, type its name in “Another, by its name” and press “Add”."
+      },
+      {
+        "do": "For a service charge: under Service charge, type the percentage in “Service charge on {way} (%)” (for example Dine-in) and press “Save”. Leave other ways empty for none."
+      },
+      {
+        "do": "Open the till and check the new ways show under the total."
+      }
+    ],
+    "if": [
+      {
+        "case": "A way to pay has a wrong name",
+        "do": "Press “Rename”, type the new name and press “Save”. Its account is renamed too."
+      },
+      {
+        "case": "The café stops taking one",
+        "do": "Press “Take out of use”. Its money stays in its account; move it on Sales → Ways to Pay."
+      },
+      {
+        "case": "The part says “This needs the database update 0069, which has not been applied yet.”",
+        "do": "Ask whoever looks after the system to apply the update."
+      }
+    ],
+    "screens": [
+      "/settings",
+      "/pos"
+    ]
+  },
+  {
+    "title": "Set up your own receipt",
+    "roles": [
+      "owner",
+      "general_manager"
+    ],
+    "when": "once (setting up)",
+    "why": "Every receipt can carry your logo, the café's name in Arabic and Kurdish, a thank-you line, your pages, the Wi-Fi and a QR code.",
+    "before": [
+      "A logo picture (PNG, JPEG or WebP). A dark logo on a light background prints best."
+    ],
+    "steps": [
+      {
+        "do": "Open Settings → Selling → The receipt.",
+        "shot": "settings-receipt"
+      },
+      {
+        "do": "Press “Choose a logo” and pick the picture. It is saved at once."
+      },
+      {
+        "do": "Fill the boxes you want: “The café's name” (In Arabic, In Kurdish), “Thank-you line” in each language, “Your pages” (Instagram, Facebook, TikTok), “Wi-Fi” (name and password), and “A line at the foot” (address, phone, hours)."
+      },
+      {
+        "do": "Choose where the QR code leads: “No QR code”, “Our menu” or “Tell us how we did”, and paste the link (it starts with https://)."
+      },
+      {
+        "do": "Press “Save the receipt”.",
+        "see": "“Saved: every receipt prints it from now on.”"
+      },
+      {
+        "do": "On the till, press Printing and then “Test print” to see it on paper."
+      }
+    ],
+    "if": [
+      {
+        "case": "The logo is too big",
+        "do": "It must be smaller than 60 KB after it is made small. Use a simpler picture."
+      },
+      {
+        "case": "You want the café's emblem again",
+        "do": "Press “Take the logo off”."
+      }
+    ],
+    "screens": [
+      "/settings",
+      "/pos"
+    ]
+  },
+  {
+    "title": "Add a new person: their login, roles and PIN",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "when needed",
+    "why": "Each person who uses the app needs a login with roles; each person who works shifts needs to be on Staff with a PIN to clock in.",
+    "before": [
+      "The person's email address.",
+      "For Staff: at least one active branch or central kitchen."
+    ],
+    "steps": [
+      {
+        "do": "Owner or general manager: open Settings → People and roles. Under “Add a person” type the Name and Email.",
+        "shot": "settings-people"
+      },
+      {
+        "do": "Tick their roles (Cashier is ticked to start with). With more than one place, choose “Works at”. Press “Add person”.",
+        "see": "“Added. Ask them to create their login with {email}.” They show as “invited”."
+      },
+      {
+        "do": "Ask them to sign in the first time with “First time here? Create your login”, using exactly that email."
+      },
+      {
+        "do": "Open Staff (Menu → Operations → Staff) and press “Add people”.",
+        "shot": "staff-add-people"
+      },
+      {
+        "do": "Fill a row: Name, What they do, Phone, Where they work, Started on. In “Their login, if they have one” choose their login."
+      },
+      {
+        "do": "Let them type their own PIN in “PIN (optional)” (4 to 8 digits, not 1111 or 1234). Press “Add to the staff”.",
+        "see": "“{n} added to the staff.”"
+      },
+      {
+        "do": "Check them on the list. Open their line to see their panel.",
+        "shot": "staff-people"
+      }
+    ],
+    "if": [
+      {
+        "case": "A branch manager cannot open Settings",
+        "do": "Only the owner and general manager give logins and roles. A branch manager adds the person on Staff only."
+      },
+      {
+        "case": "The Owner or General manager role is greyed: “Only the owner can give this role”",
+        "do": "Only the owner gives those two roles."
+      },
+      {
+        "case": "The new cashier still cannot sign in",
+        "do": "Check the Login column: “invited” means they have not created their login yet."
+      },
+      {
+        "case": "Two people have the same name",
+        "do": "The screen refuses it. Add a surname or a nickname."
+      }
+    ],
+    "screens": [
+      "/settings#people",
+      "/staff",
+      "/login"
+    ]
+  },
+  {
+    "title": "Set a person's pay",
+    "roles": [
+      "owner",
+      "general_manager",
+      "accountant"
+    ],
+    "when": "once (setting up)",
+    "why": "Payroll is drafted from each person's pay and their hours. Without pay, the month's payroll cannot be approved.",
+    "before": [
+      "The person is on Staff."
+    ],
+    "steps": [
+      {
+        "do": "Open Staff and press the person's line.",
+        "shot": "staff-person-panel"
+      },
+      {
+        "do": "Open the “Pay” tab."
+      },
+      {
+        "do": "Choose how they are paid: “By the month”, “By the day” or “By the hour”, and type the rate (“Pay a month”, “Pay a day” or “Pay an hour”)."
+      },
+      {
+        "do": "Check “A day's hours” (8 to start) and “Overtime at”. Empty overtime uses the café's rule (150%)."
+      },
+      {
+        "do": "Type “Why it changes (optional)” and press “Save the pay”. The next payroll draft uses it."
+      }
+    ],
+    "if": [
+      {
+        "case": "A branch manager cannot see the Pay tab",
+        "do": "Only the owner, general manager and accountant see and set pay."
+      }
+    ],
+    "screens": [
+      "/staff",
+      "/payroll"
+    ]
+  },
+  {
+    "title": "Add stock items and their opening stock",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "purchasing"
+    ],
+    "when": "once (setting up)",
+    "why": "Every ingredient, cup and bottle is a stock item. Recipes, deliveries, counts and the till all use them.",
+    "before": [
+      "A list of items, ideally in Excel or Google Sheets (name, unit, reorder level, and for the owner what is on the shelf and its cost)."
+    ],
+    "steps": [
+      {
+        "do": "Open Inventory (Menu → Operations → Inventory) and press “Add stock item”."
+      },
+      {
+        "do": "For many items: open “Paste a list”, copy the rows from the spreadsheet and paste them in “The list to add”. Choose “Type for all the rows”.",
+        "shot": "inventory-paste"
+      },
+      {
+        "do": "Fix any row marked red, then press “Add {n} item(s)”.",
+        "see": "“{n} item(s) added.” Rows not added stay in the box with what to put right."
+      },
+      {
+        "do": "For one item: open “One item”. Type “Name (English)” (and Arabic and Kurdish), choose “Type” and “Measured in”, the pack it is bought in and “Holds”, and the “Reorder level”. Press “Add item”.",
+        "shot": "inventory-add-one"
+      },
+      {
+        "do": "Owner only: type what is on the shelf in “Opening stock”, its “Cost per {unit} (IQD)” and “Where the opening stock came from” (for example “the opening count on the first day”)."
+      },
+      {
+        "do": "Owner, for an item added without stock: press “Opening stock”, choose the item, type “Quantity on the shelf”, its unit and cost, and “Where it came from”. Press “Record opening stock”.",
+        "see": "“Opening stock of {name}: {qty} {unit}, worth {value} (journal {no}).”"
+      }
+    ],
+    "if": [
+      {
+        "case": "The name looks like an existing item",
+        "do": "If it is the same thing, open the existing one (“Open it”). If it is different, press “It is a different item: add it”."
+      },
+      {
+        "case": "Others see “Its stock comes in with a delivery. Opening stock, the owner's capital, is the owner's to record.”",
+        "do": "Only the owner records opening stock. Others add the item; its stock comes with a delivery."
+      },
+      {
+        "case": "You chose the wrong base unit",
+        "do": "The base unit never changes later. Take the item out of use on its stock card and add it again correctly."
+      }
+    ],
+    "screens": [
+      "/inventory"
+    ]
+  },
+  {
+    "title": "Add a supplier and what you buy from them",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "purchasing"
+    ],
+    "when": "once (setting up)",
+    "why": "Deliveries, bills and What to buy need the supplier. An item's usual supplier, pack and price let What to buy fill itself in.",
+    "before": [
+      "The stock items exist on Inventory."
+    ],
+    "steps": [
+      {
+        "do": "Open Vendors (Menu → Spending → Vendors) and open the “New vendor” tab."
+      },
+      {
+        "do": "Type “Vendor name”, “What they supply” and “Phone”. Press “Add vendor”.",
+        "see": "“Added {name}.”"
+      },
+      {
+        "do": "Optional: open “Edit vendor” and type “Days a delivery takes” and “Delivers every (days)”. Press “Save changes”.",
+        "shot": "vendors-edit"
+      },
+      {
+        "do": "Open Inventory and press the item's name to open its stock card."
+      },
+      {
+        "do": "Under “Bought from” choose the Supplier, the Pack, and type “Price of a pack”. Tick “The usual supplier”. Press “Save the supplier”.",
+        "shot": "stock-card-edit"
+      },
+      {
+        "do": "Do the same for each item you buy from them."
+      }
+    ],
+    "if": [
+      {
+        "case": "A supplier with the same name exists",
+        "do": "Two suppliers in use cannot share a name. Use the existing one."
+      },
+      {
+        "case": "The pack you need is not offered",
+        "do": "On the stock card, under Units, add it: “New unit” (for example case_24), “Label”, “Holds”, then “Add unit”."
+      },
+      {
+        "case": "You are on Purchasing",
+        "do": "You can also add a supplier there under “Add supplier” and press “Add”."
+      }
+    ],
+    "screens": [
+      "/vendors",
+      "/inventory/[itemId]",
+      "/purchasing"
+    ]
+  },
+  {
+    "title": "Add something you make in batches (gelato, a base, dough)",
+    "roles": [
+      "owner",
+      "general_manager"
+    ],
+    "when": "once (setting up)",
+    "why": "A batch recipe tells Production what one batch takes from stock and what it makes, so stock and cost stay right.",
+    "before": [
+      "The ingredients exist as stock items."
+    ],
+    "steps": [
+      {
+        "do": "Open Production and scroll to “What you make”. Press “Add something you make”.",
+        "shot": "production-recipe-new"
+      },
+      {
+        "do": "Type the “Name”. In “It is” choose “Something new to keep in stock” (or “An item already kept” and choose the Item)."
+      },
+      {
+        "do": "Choose “How it is counted”. If it is kept in pans, type “pan” in “Kept in a container? (optional)” and how much one holds."
+      },
+      {
+        "do": "Type how much “One batch makes” and its unit, and “How long it keeps” in days or hours."
+      },
+      {
+        "do": "For each ingredient: type part of its name in “Ingredient {n}”, pick it, then type the Quantity and choose the Unit. Press “+ Add ingredient” for more lines."
+      },
+      {
+        "do": "Write the steps in “How to make it”. Press “Add it”.",
+        "see": "“Added “{name}”.” A new tile shows under What you make.",
+        "shot": "production-recipe-tiles"
+      }
+    ],
+    "if": [
+      {
+        "case": "You make a white base, then flavours",
+        "do": "Add the base first. Then add each flavour and choose the base as an ingredient."
+      },
+      {
+        "case": "The recipe changes later",
+        "do": "Open its tile, press “Change…”, change it and press “Save changes”. Batches already recorded keep what they used."
+      },
+      {
+        "case": "You stopped making it",
+        "do": "Open it and press “Stop making it”. “Make it again” brings it back."
+      }
+    ],
+    "screens": [
+      "/production"
+    ]
+  },
+  {
+    "title": "Add a product to the menu with its recipe and prices",
+    "roles": [
+      "owner",
+      "general_manager"
+    ],
+    "when": "once (setting up)",
+    "why": "The till sells only products with a price. The recipe takes the right stock out at each sale and shows the margin.",
+    "before": [
+      "The stock items for the recipe exist (otherwise the panel links to Inventory)."
+    ],
+    "steps": [
+      {
+        "do": "Open Products & Recipes (Menu → Operations → Products & Recipes) and press “Add menu product”.",
+        "shot": "products-new"
+      },
+      {
+        "do": "Type “Product name (English)”, the Arabic and Kurdish names, and choose “Category on the till”."
+      },
+      {
+        "do": "Under “2 Recipe”, add each ingredient for one serving: Ingredient, Quantity, Unit. In “Used for” choose “Takeaway & delivery” for cups and lids."
+      },
+      {
+        "do": "Under “3 Prices (IQD)” type a price for each way of selling. Press “Use {amount}” to take the suggested price for the target margin."
+      },
+      {
+        "do": "Press “Create product”.",
+        "see": "“Created “{name}”.” The tile shows its price and cost.",
+        "shot": "products-grid"
+      },
+      {
+        "do": "Open the tile → Basics to add a photo (“Add photo”), tick “★ Favourite (shown first)”, and Save.",
+        "shot": "products-panel-basics"
+      }
+    ],
+    "if": [
+      {
+        "case": "It uses no stock (a service)",
+        "do": "Leave the recipe empty and say why in “Why it uses no stock”."
+      },
+      {
+        "case": "A channel should not sell it",
+        "do": "Leave that channel's price empty."
+      },
+      {
+        "case": "A tile says “cost 120%”",
+        "do": "It sells at a loss: raise the price on Sizes & prices, or check the recipe."
+      }
+    ],
+    "screens": [
+      "/products"
+    ]
+  },
+  {
+    "title": "Add sizes, add-ons and barcodes to a product",
+    "roles": [
+      "owner",
+      "general_manager"
+    ],
+    "when": "once (setting up)",
+    "why": "Sizes (Regular, Large) and add-ons (milk, extra shot, syrup) have their own prices and use their own stock. A barcode lets the scanner add the product.",
+    "before": [
+      "The product exists."
+    ],
+    "steps": [
+      {
+        "do": "Open Products & Recipes and press the product's tile. Open “Sizes & prices”.",
+        "shot": "products-sizes"
+      },
+      {
+        "do": "Press “+ Add a size”. If asked, name the current size in “The size sold now is called” (for example Regular). Type “New size (English)”, a price for each channel, choose “The recipe of” another size to copy it, and press “Add the size”.",
+        "see": "“Added the size “{name}”.”"
+      },
+      {
+        "do": "Open the “Add-ons” tab. Under New group press a ready-made group (Milk, Extra shots, Syrups, Sugar, Ice, Toppings), or “+ New group for {product}”.",
+        "shot": "products-addons"
+      },
+      {
+        "do": "Check “How do customers choose?” and each choice's price (0 if free). Press “Add the group”."
+      },
+      {
+        "do": "For each add-on that uses stock, press “What it uses…” and add its recipe lines; Save."
+      },
+      {
+        "do": "Back on “Sizes & prices”, under Barcodes scan the code into “Barcode of {size}” and press “Save”, or press “Make one” for your own labels."
+      },
+      {
+        "do": "Press “Print labels”, type how many in “Labels of {name}” and press “Print {n} labels”.",
+        "shot": "labels-sheet"
+      }
+    ],
+    "if": [
+      {
+        "case": "A size is sold by weight (cookies by the kilo)",
+        "do": "Under “Sold by weight” tick the size. Its price is per kilo and its recipe is for a kilo."
+      },
+      {
+        "case": "Another product should offer the same group",
+        "do": "On that product's Add-ons tab press “Choose the add-ons…”, tick the group and Save."
+      },
+      {
+        "case": "A size is no longer sold",
+        "do": "Press “Retire…” on it, say why and press “Retire it”."
+      }
+    ],
+    "screens": [
+      "/products",
+      "/products/labels"
+    ]
+  },
+  {
+    "title": "Arrange the till's menu: categories, café and bakery, meal deals",
+    "roles": [
+      "owner",
+      "general_manager"
+    ],
+    "when": "once (setting up)",
+    "why": "Categories and parts of the menu decide what the till shows and when. Meal deals and prices by the hour sell more at quiet times.",
+    "before": [
+      "Products exist."
+    ],
+    "steps": [
+      {
+        "do": "Open Products & Recipes and scroll below the tiles to “Categories on the till”. Type a new category (for example Hot drinks) and press “＋ Add”. Set “Order on the till” and Save."
+      },
+      {
+        "do": "Give each product its category: open it → Basics → “Category” → Save."
+      },
+      {
+        "do": "If the till sells café and bakery: under “Café and bakery on one till” press “Add Café and Bakery”, then give each category its part. Set “Shown from” and “Shown until” if a part is only for some hours."
+      },
+      {
+        "do": "If a branch sells only one part: open Settings → Places and, on that branch's row, tap the part so it says “Sells only:”."
+      },
+      {
+        "do": "For a meal deal: under Meal deals press “New deal”. Type the Name, choose Thing 1, Thing 2…, type “Its price” for each channel, choose Days and From / Until. Tick “On sale” and press “Save”.",
+        "shot": "products-deal"
+      },
+      {
+        "do": "For a cheaper price at some hours: press “New price by the hour”, choose the Product, Price, Days, From and Until, and Save.",
+        "shot": "products-time-price"
+      }
+    ],
+    "if": [
+      {
+        "case": "A seasonal category is over",
+        "do": "Untick “{name} on the till” and Save. Its products are kept."
+      },
+      {
+        "case": "A product should not be sold for a while",
+        "do": "Open it → Basics, untick “On the till”, Save."
+      }
+    ],
+    "screens": [
+      "/products",
+      "/settings"
+    ]
+  },
+  {
+    "title": "Set up the tables",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "once (setting up)",
+    "why": "With tables on the till, staff keep each table's bill open and take payment when the customers leave.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open POS and press the “Tables” tab (or open it from the floor)."
+      },
+      {
+        "do": "Press “Edit tables”.",
+        "shot": "pos-edit-tables"
+      },
+      {
+        "do": "To add many: in “Add several” type how many, the name (Table) and “Starting at”, then press “Add”.",
+        "see": "“{n} tables added”"
+      },
+      {
+        "do": "To add one: type its name, area and seats in the last row (New table) and press “＋ Add”."
+      },
+      {
+        "do": "Change a table's Area, Seats or order and press its “Save”. Press “Close” when done.",
+        "shot": "pos-floor"
+      }
+    ],
+    "if": [
+      {
+        "case": "“This table has an open bill; take payment or cancel it first”",
+        "do": "A table with a bill cannot be taken out of use. Close the bill first."
+      },
+      {
+        "case": "“There is already a table called {name}”",
+        "do": "Each table needs its own name."
+      }
+    ],
+    "screens": [
+      "/pos"
+    ]
+  },
+  {
+    "title": "Add a delivery platform (Talabat, Lezzoo…)",
+    "roles": [
+      "owner",
+      "general_manager"
+    ],
+    "when": "once (setting up)",
+    "why": "Each platform is a way of selling with its own prices. Its orders are matched later to the payout it sends.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Delivery Platforms (Menu → Revenue → Delivery Platforms) and press “+ Add a delivery platform”.",
+        "shot": "platforms-owed"
+      },
+      {
+        "do": "Type “Name, as its customers know it” and its names in the other languages."
+      },
+      {
+        "do": "In “Its orders take the packaging of” choose the way of selling it is like (usually Takeaway), and choose to take its prices too. Press “Add the platform”.",
+        "see": "“{name} is added.”"
+      },
+      {
+        "do": "Change the platform's prices on Products & Recipes → a product → Sizes & prices if they differ."
+      }
+    ],
+    "if": [
+      {
+        "case": "The café stops working with a platform",
+        "do": "Press “Take out of use…” and “Take it out of use”. What it owes stays."
+      },
+      {
+        "case": "Prices and packaging should come from another way of selling later",
+        "do": "Press “Copy prices & packaging…”, choose it and press Copy."
+      }
+    ],
+    "screens": [
+      "/platforms",
+      "/products"
+    ]
+  },
+  {
+    "title": "Set the café's rules and alert limits",
+    "roles": [
+      "owner",
+      "general_manager"
+    ],
+    "when": "once (setting up)",
+    "why": "Rules decide the discount a cashier gives alone, when a second person approves, the dollar rate's life, loyalty points, pay and more. Alert limits decide when the Dashboard warns.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Settings → Rules and warnings → “Open Rules →”.",
+        "shot": "rules-refunds"
+      },
+      {
+        "do": "On a rule's row press “Change”. Type the new value and the reason in “Why (required)”. Press “Save”."
+      },
+      {
+        "do": "To set it for one role (for example cashiers may give 15%), press “+ Set it for a role”, choose the role, the value and why, and Save."
+      },
+      {
+        "do": "Check “Every change” at the bottom: each change shows who, when and why.",
+        "shot": "rules-history"
+      },
+      {
+        "do": "Back on Settings → Rules and warnings → Alerts, type a new limit in any box (empty uses the default). Press “Save thresholds”.",
+        "see": "“Saved, and on the audit trail. The dashboard uses them now.”",
+        "shot": "settings-alerts"
+      },
+      {
+        "do": "Under Phone warnings press “Turn phone warnings on for the café”. Then each manager turns them on on their own phone (My account → “Turn on warnings on this phone”)."
+      }
+    ],
+    "if": [
+      {
+        "case": "A change was a mistake",
+        "do": "Press “Back to default” (or Change back) with a reason. Both changes stay in “Every change”."
+      },
+      {
+        "case": "You want a sales target for one branch only",
+        "do": "This screen cannot add a branch row. Set the whole café's target."
+      },
+      {
+        "case": "Nobody gets phone warnings",
+        "do": "Check it says “On, for {n} phone(s)”. With 0 phones, each manager must turn them on on My account."
+      }
+    ],
+    "screens": [
+      "/settings/rules",
+      "/settings",
+      "/account"
+    ]
+  },
+  {
+    "title": "Make a clock screen and link staff phones",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "once (setting up)",
+    "why": "With a clock screen by the door, staff clock in by scanning its code with their own phone. Nobody types a PIN.",
+    "before": [
+      "Open Staff on the device that will be the clock screen (the till or a tablet).",
+      "Owner or general manager to make the clock screen."
+    ],
+    "steps": [
+      {
+        "do": "On that device open Staff → “Shop's clock” and press “Make this device the shop's clock screen”.",
+        "shot": "staff-shop-clock"
+      },
+      {
+        "do": "Type “The clock screen's name” (The till), choose “Where it is”, and press “Make it the clock screen”.",
+        "see": "“This device is the clock screen “{name}” now.”"
+      },
+      {
+        "do": "For a tablet by the door press “Show the code on the whole screen”. Press “Sign out, keep the code” so nobody uses your login.",
+        "shot": "clock-screen"
+      },
+      {
+        "do": "To link a person's phone: open Staff → their line → “Their phone”. A square shows.",
+        "shot": "staff-phone-link"
+      },
+      {
+        "do": "The person opens the phone's camera, points it at the square, opens the link and presses “Link this phone”.",
+        "see": "“Linked: {name}'s phone clocks them in and out now.”",
+        "shot": "clock-link"
+      }
+    ],
+    "if": [
+      {
+        "case": "“This square is too old.”",
+        "do": "Press “Make a new one”. A square works once, for 10 minutes."
+      },
+      {
+        "case": "The link opened inside a chat app",
+        "do": "Open it in the phone's own browser (Chrome or Safari) and press “Link this phone” there."
+      },
+      {
+        "case": "The tablet broke",
+        "do": "Press “Take out of use…” on its row with why. On the new tablet, make it a clock screen again."
+      },
+      {
+        "case": "A branch manager cannot make a clock screen",
+        "do": "Only the owner and general manager make or remove one. A branch manager can link phones."
+      }
+    ],
+    "screens": [
+      "/staff#shop-clock",
+      "/staff",
+      "/clock/screen",
+      "/clock/link"
+    ]
+  },
+  {
+    "title": "Test the till's devices before opening",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "daily",
+    "why": "Check the internet, receipt printer, cash drawer, label printer and scanner before the first customer, not during the rush.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Menu → You → Test your devices.",
+        "shot": "devices"
+      },
+      {
+        "do": "Press “Check the connection”.",
+        "see": "“Good: the database answered in {ms} ms.” (or Slow)"
+      },
+      {
+        "do": "Press “Print a test receipt”. Answer “Did it print, easy to read?” and “Did the drawer open when the test receipt printed?”."
+      },
+      {
+        "do": "Press “Print a test label” if you have a label printer, and answer."
+      },
+      {
+        "do": "Click in “Click here, then scan any barcode” and scan a product.",
+        "see": "“Scanned: {code}, which is {name}.”"
+      },
+      {
+        "do": "On the till, press the printer button (Printing). Turn on “Print by itself” if every receipt should print, and keep “Print the barista's ticket” on for the bar.",
+        "shot": "pos-printing"
+      }
+    ],
+    "if": [
+      {
+        "case": "The receipt prints too small or cut",
+        "do": "In the print dialog set the paper to 80 mm and margins to none, then print the test again."
+      },
+      {
+        "case": "A device is not used here",
+        "do": "Press “No scanner here”, “No label printer here” or “Nothing is sold by weight here”."
+      }
+    ],
+    "screens": [
+      "/devices",
+      "/pos"
+    ]
+  },
+  {
+    "title": "Put better words on the screens, or add a language",
+    "roles": [
+      "owner",
+      "general_manager"
+    ],
+    "when": "when needed",
+    "why": "Every screen is in English, Arabic and Kurdish. You can give any phrase the café's own words, or add a new language for staff.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Settings → Languages → “Open Languages →”."
+      },
+      {
+        "do": "Press the language's badge (for example کوردی). Type the English words in “Search”.",
+        "shot": "languages-words"
+      },
+      {
+        "do": "Type the better words in the box “Words for: {phrase}”. Keep every {placeholder} as it is."
+      },
+      {
+        "do": "Press “Save {n} change(s)”.",
+        "see": "“Saved: {set} phrase(s) with new words, {cleared} back to the built-in words.”"
+      },
+      {
+        "do": "To add a language: under “Add a language” type the Code (for example tr), “Name, as its speakers write it” and “Written”. Press “Add the language”. Use “Download CSV” and “Upload CSV” for a translator."
+      }
+    ],
+    "if": [
+      {
+        "case": "A saved word broke a sentence",
+        "do": "Empty that box and Save: the built-in words come back."
+      }
+    ],
+    "screens": [
+      "/settings/languages"
+    ]
+  },
+  {
+    "title": "Open the drawer at the start of your shift",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "daily",
+    "why": "Cash is taken only while a drawer session is open. Counting first shows any difference from the last close.",
+    "before": [
+      "You are at the till (POS)."
+    ],
+    "steps": [
+      {
+        "do": "On POS press the drawer button (“Open the drawer”, with a lock)."
+      },
+      {
+        "do": "Press “Open the drawer”. Count the cash now, before putting anything in.",
+        "shot": "pos-drawer-open"
+      },
+      {
+        "do": "Type the total in “Cash counted (IQD)”, or press “Count note by note” and type how many of each note."
+      },
+      {
+        "do": "Managers only: if you add change from the safe, type it in “Cash put in from the safe now (optional)”."
+      },
+      {
+        "do": "Press “Open the drawer”.",
+        "see": "“Session {no} is open. Counted {counted}; the last session left {expected}: {difference}.” The button now shows the session number."
+      }
+    ],
+    "if": [
+      {
+        "case": "The count differs from last night",
+        "do": "Count again. If it still differs, open anyway: the difference is recorded and the manager sees it on Sales → Cash Sessions."
+      },
+      {
+        "case": "“Count whole notes.”",
+        "do": "Type whole notes only in the note boxes."
+      },
+      {
+        "case": "You only take card today",
+        "do": "A card sale needs no drawer."
+      }
+    ],
+    "screens": [
+      "/pos",
+      "/start-of-day"
+    ]
+  },
+  {
+    "title": "Clock in and out",
+    "roles": [
+      "cashier",
+      "barista",
+      "inventory_counter",
+      "purchasing",
+      "branch_manager"
+    ],
+    "when": "daily",
+    "why": "Your hours come from your clock-ins. They make the schedule check and the payroll.",
+    "before": [
+      "You are on Staff with a PIN, or your phone is linked."
+    ],
+    "steps": [
+      {
+        "do": "With a PIN: on the till press “Clock in or out” (the clock button).",
+        "shot": "pos-clock"
+      },
+      {
+        "do": "Press your name. Type your PIN in “Your PIN” and press “Clock in” (or Enter).",
+        "see": "“{name} is clocked in, at {time}.”"
+      },
+      {
+        "do": "At the end of the shift do the same and press “Clock out”.",
+        "see": "“{name} is clocked out, at {time}: {hours} today.”"
+      },
+      {
+        "do": "With your phone: scan the code on the clock screen with the phone's camera, open the link, and press “Clock in” (or “Clock out”).",
+        "shot": "clock-phone-ready"
+      }
+    ],
+    "if": [
+      {
+        "case": "Your name is greyed",
+        "do": "You have no PIN yet (a manager sets one on Staff), or you clock with your phone."
+      },
+      {
+        "case": "The scanned code has changed",
+        "do": "Type the 6 digits the screen shows now in “Or type the 6 digits it shows” and press the button."
+      },
+      {
+        "case": "You forgot to clock out yesterday",
+        "do": "Ask a manager to correct your hours on Staff → The hours."
+      },
+      {
+        "case": "“Too many wrong PINs”",
+        "do": "Ask a manager to set a new PIN for you on Staff."
+      }
+    ],
+    "screens": [
+      "/pos#clock",
+      "/clock"
+    ]
+  },
+  {
+    "title": "Sell at the counter and take cash",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "daily",
+    "why": "Most sales are quick sales: tap the products, take the money, give the change.",
+    "before": [
+      "The drawer is open for cash."
+    ],
+    "steps": [
+      {
+        "do": "On POS, check the way of selling at the top of the order (Dine-in, Takeaway…). Tap it to change.",
+        "shot": "pos-menu"
+      },
+      {
+        "do": "Tap each product. Type a number first (3, then the product) to add three. Or type its name, or scan its barcode."
+      },
+      {
+        "do": "Press “Cash” (or F2).",
+        "shot": "pos-pay-cash"
+      },
+      {
+        "do": "Type what the customer gave in “Cash received”, or tap a note button, or “Exact”."
+      },
+      {
+        "do": "Press “Confirm payment · {total}”.",
+        "see": "“Sale recorded”. The change to give shows in big, with the customer's number."
+      },
+      {
+        "do": "Press “Print receipt” (or “Print receipt + barista ticket”). Call the customer by the number when ready."
+      }
+    ],
+    "if": [
+      {
+        "case": "You rang the wrong item",
+        "do": "Press − on its line (× for a weighed line or a deal). Nothing is recorded until payment."
+      },
+      {
+        "case": "A product is sold by weight",
+        "do": "Tap it, tap 100 g / 250 g / 500 g / 1 kg or type the weight, and press “Add”."
+      },
+      {
+        "case": "The customer wants a meal deal",
+        "do": "Tap the deal tile and choose each thing in turn. A deal is paid at the counter, not kept on a bill."
+      },
+      {
+        "case": "The customer leaves the change as a tip",
+        "do": "Type the cash received, press “Keep the change as a tip”, then Confirm."
+      },
+      {
+        "case": "“The total is {1} now, not the {2} shown: a price has changed.”",
+        "do": "Tell the customer the new total and take payment again."
+      },
+      {
+        "case": "“Open the drawer first: count the cash in it. A card sale needs no drawer.”",
+        "do": "Open the drawer first (see “Open the drawer at the start of your shift”)."
+      },
+      {
+        "case": "The screen says the connection dropped after Confirm",
+        "do": "Press “Retry” when the internet is back. It is never recorded twice. Only if you must, press “Discard — a manager will check Orders” and tell a manager."
+      }
+    ],
+    "screens": [
+      "/pos"
+    ]
+  },
+  {
+    "title": "Sell a drink with a size and add-ons",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "daily",
+    "why": "Sizes and add-ons change the price and the stock taken. Choosing them on the till keeps both right.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Tap the product. The size and add-ons sheet opens.",
+        "shot": "pos-addons"
+      },
+      {
+        "do": "Tap the size (for example Large)."
+      },
+      {
+        "do": "Tap each add-on (oat milk, extra shot). Tap again to take one off; press + for more of the same."
+      },
+      {
+        "do": "Press “Add · {price}”.",
+        "see": "The line shows the size and add-ons."
+      },
+      {
+        "do": "For a note (no sugar), press ✎ on the line, type it and press “OK”."
+      },
+      {
+        "do": "Take payment as usual."
+      }
+    ],
+    "if": [
+      {
+        "case": "“Add” stays grey and it says “Choose {group}”",
+        "do": "That group must have a choice (for example the milk). Choose one."
+      },
+      {
+        "case": "“At most {n} from {group}”",
+        "do": "Take one add-on off."
+      }
+    ],
+    "screens": [
+      "/pos"
+    ]
+  },
+  {
+    "title": "Give a discount, with a manager's PIN when it is big",
+    "roles": [
+      "cashier",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "when needed",
+    "why": "Every discount needs a reason. Above your limit (10% unless the rules say otherwise) a manager approves with their PIN.",
+    "before": [
+      "Something on the order. Not on a delivery platform's order."
+    ],
+    "steps": [
+      {
+        "do": "Press “＋ Discount” under the order."
+      },
+      {
+        "do": "Type a percentage in the % box, or an amount in IQD."
+      },
+      {
+        "do": "Choose the reason in “Why?”. For “Other” write a few words in “In a few words”."
+      },
+      {
+        "do": "If it says “Over {cap}%: a manager approves it.”, press “Ask a manager”.",
+        "shot": "pos-discount-approval"
+      },
+      {
+        "do": "The manager chooses their name, types their PIN and presses “Approve”.",
+        "see": "“Approved by {name}”"
+      },
+      {
+        "do": "Take payment."
+      }
+    ],
+    "if": [
+      {
+        "case": "“No manager has set a PIN yet: they set one on My account.”",
+        "do": "A manager must save an approval PIN on My account first."
+      },
+      {
+        "case": "“Someone else approves it: that is the point of asking”",
+        "do": "Another manager must approve, not you."
+      },
+      {
+        "case": "“That approval has run out: ask again”",
+        "do": "Ask the manager again: an approval lasts a few minutes and is good once."
+      },
+      {
+        "case": "“The bill has been printed: only a manager can change its discount.”",
+        "do": "Ask a manager."
+      },
+      {
+        "case": "A barista sees no “＋ Discount”",
+        "do": "Baristas cannot give discounts. Ask a cashier or a manager."
+      },
+      {
+        "case": "The customer has points for a reward",
+        "do": "A reward is the bill's only discount. Take the discount off first."
+      }
+    ],
+    "screens": [
+      "/pos",
+      "/account"
+    ]
+  },
+  {
+    "title": "Take payment by card or by an app (FIB, FastPay…)",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "daily",
+    "why": "Card and app payments are recorded apart from cash, so each one's money can be checked when it reaches the bank.",
+    "before": [
+      "For an app: it was added on Settings → Ways to pay."
+    ],
+    "steps": [
+      {
+        "do": "Press “Card” (or F4), or the app's button (for example FIB) under the total."
+      },
+      {
+        "do": "For an app: type the reference the app shows (if any). Check the money has come into the café's account."
+      },
+      {
+        "do": "Press “Confirm payment · {total}”.",
+        "see": "“Sale recorded”",
+        "shot": "pos-receipt-card"
+      },
+      {
+        "do": "Print the receipt if the customer wants it."
+      }
+    ],
+    "if": [
+      {
+        "case": "“{name} is no longer taken: choose another way to pay”",
+        "do": "That way was taken out of use. Ask for another way."
+      },
+      {
+        "case": "The card machine refused the card",
+        "do": "Press “Back”. Nothing is recorded. Take another way."
+      }
+    ],
+    "screens": [
+      "/pos"
+    ]
+  },
+  {
+    "title": "Split a payment between card and cash",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "when needed",
+    "why": "A customer can pay part by card, part in cash, or several ways (up to 10). Each part is recorded the way it was paid.",
+    "before": [
+      "For the cash part, the drawer is open."
+    ],
+    "steps": [
+      {
+        "do": "Press “Card” or “Cash”, then open the “Split” tab.",
+        "shot": "pos-pay-split"
+      },
+      {
+        "do": "In the first row choose the way (“How payment 1 is made”) and type its amount."
+      },
+      {
+        "do": "The last row takes what is left. Press “+ Add a payment” for more ways."
+      },
+      {
+        "do": "For the cash part, type what the customer gave."
+      },
+      {
+        "do": "Press “Confirm payment · {total}”.",
+        "see": "“Sale recorded”"
+      }
+    ],
+    "if": [
+      {
+        "case": "“The payments come to {amount} more than the total”",
+        "do": "Lower one of the amounts."
+      },
+      {
+        "case": "“Amounts are whole dinars”",
+        "do": "Type whole numbers only."
+      },
+      {
+        "case": "Two cash parts",
+        "do": "Only one cash part is allowed."
+      }
+    ],
+    "screens": [
+      "/pos"
+    ]
+  },
+  {
+    "title": "Take dollars",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "when needed",
+    "why": "Dollars are cash. The till uses today's rate and gives the change in dinars.",
+    "before": [
+      "The drawer is open.",
+      "A manager set today's rate on Sales → Dollars (it lasts 36 hours unless the rules say otherwise)."
+    ],
+    "steps": [
+      {
+        "do": "Press “Cash” and open the “$ Dollars” tab.",
+        "shot": "pos-pay-dollars"
+      },
+      {
+        "do": "Type the dollars handed over, or tap a dollar amount.",
+        "see": "“{usd} are {amount}” at “{rate} dinars a dollar”."
+      },
+      {
+        "do": "If the dollars are worth more, give the “Change, in dinars”. If less, choose how “The other {amount} is paid” (Cash or Card)."
+      },
+      {
+        "do": "Press “Confirm payment · {total}”."
+      }
+    ],
+    "if": [
+      {
+        "case": "“No dollars now: the rate was set {n} hours ago. A manager sets today's on Sales → Dollars.”",
+        "do": "Ask a manager to set today's rate, or take dinars."
+      },
+      {
+        "case": "“The drawer does not hold the {amount} change in dinars”",
+        "do": "Take the payment in dinars, or a manager puts cash in the till first."
+      },
+      {
+        "case": "“Dollars are taken in whole dollars”",
+        "do": "Type whole dollars only."
+      }
+    ],
+    "screens": [
+      "/pos",
+      "/sales"
+    ]
+  },
+  {
+    "title": "Add a customer to the sale and give them their points",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "daily",
+    "why": "A customer on the sale earns points. When they have enough, a reward comes off their bill.",
+    "before": [
+      "Loyalty is on in the rules (it is on unless changed)."
+    ],
+    "steps": [
+      {
+        "do": "Press “Customer” on the order.",
+        "shot": "pos-customer"
+      },
+      {
+        "do": "Type “Their phone number” and press “Find”.",
+        "see": "Their name, “{n} points” and “{n} rewards to take”."
+      },
+      {
+        "do": "If not found: press “Add them as a customer”, type Name and Phone, and press “Add the customer”."
+      },
+      {
+        "do": "Press “Put them on the order”."
+      },
+      {
+        "do": "Take payment. If they have enough points, press + beside the rewards in the payment window to take a reward.",
+        "see": "The sale card shows “Points earned: {n}” and “{n} points now”."
+      }
+    ],
+    "if": [
+      {
+        "case": "“That number is {name}'s already”",
+        "do": "Find that customer instead of adding a new one."
+      },
+      {
+        "case": "“A reward is the bill's discount: take the other discount off first”",
+        "do": "Remove the discount, then take the reward."
+      },
+      {
+        "case": "The customer says points are missing",
+        "do": "A manager checks “How their points moved” on the customer's page and can give points there."
+      }
+    ],
+    "screens": [
+      "/pos",
+      "/customers/[id]"
+    ]
+  },
+  {
+    "title": "Keep a table's bill open and take payment later",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "daily",
+    "why": "A table orders over time and pays at the end. Nothing reaches the books or the stock until the bill is paid.",
+    "before": [
+      "Tables are set up, or you keep the bill by the customer's name."
+    ],
+    "steps": [
+      {
+        "do": "Open the “Tables” tab and tap the table. (Or press “＋ Bill for a customer”, type the “Customer's name” and press “Keep open”.)",
+        "shot": "pos-floor"
+      },
+      {
+        "do": "Tap the products and press “Save”. With the barista's ticket on, the bar gets what is new.",
+        "see": "“{bill} — saved”"
+      },
+      {
+        "do": "When they order more, open the table (or its chip at the top), add and press “Save” again."
+      },
+      {
+        "do": "When they ask for the bill, press “Print bill”. The chip turns yellow: Waiting for payment."
+      },
+      {
+        "do": "Open the bill and press Cash, Card or another way. Confirm.",
+        "see": "“Sale recorded”"
+      }
+    ],
+    "if": [
+      {
+        "case": "A quick sale should become a bill",
+        "do": "Press “Keep open, pay later”, then type a name and press “Keep open”, or tap a table."
+      },
+      {
+        "case": "“This bill was changed on another till. Open it again to see the latest.”",
+        "do": "Open the bill again and add your change."
+      },
+      {
+        "case": "“Only a manager can take items off a bill that has been printed”",
+        "do": "Ask a manager."
+      },
+      {
+        "case": "The table leaves without ordering, or the bill was opened by mistake",
+        "do": "An empty bill just closes with “Cancel bill”. With items, a manager presses “Cancel bill”, chooses the Reason, and confirms."
+      }
+    ],
+    "screens": [
+      "/pos"
+    ]
+  },
+  {
+    "title": "Split a table's bill, or move it to another table",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "when needed",
+    "why": "Friends often pay separately, or move tables. Split and Move keep each bill right.",
+    "before": [
+      "A saved bill with 2 items or more (to split)."
+    ],
+    "steps": [
+      {
+        "do": "Open the table's bill and press “Split bill”.",
+        "shot": "pos-split"
+      },
+      {
+        "do": "For each line, choose how many move with − and + (or All / None)."
+      },
+      {
+        "do": "Check “Name of the new bill” and press “Move to a new bill · {amount}”.",
+        "see": "“Split. The new bill is on screen, ready to be paid.”"
+      },
+      {
+        "do": "Take that person's payment. The rest stays on the table."
+      },
+      {
+        "do": "To move the whole bill: open it, press “Move”, and tap the new table.",
+        "see": "“Moved to {table}”"
+      }
+    ],
+    "if": [
+      {
+        "case": "“That is the whole bill: move the bill to another table instead.”",
+        "do": "Use “Move” instead of Split."
+      }
+    ],
+    "screens": [
+      "/pos"
+    ]
+  },
+  {
+    "title": "Take a pre-order and hand it over later",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "when needed",
+    "why": "A cake for Friday, paid half now: the deposit is kept apart until the customer collects.",
+    "before": [
+      "Pre-orders are switched on (the till shows “Pre-orders”).",
+      "The drawer is open for a cash deposit."
+    ],
+    "steps": [
+      {
+        "do": "Put what they order on the quick sale, on Takeaway or Dine-in, with no add-ons and no discount."
+      },
+      {
+        "do": "Press “Pre-orders” and then “＋ New pre-order”.",
+        "shot": "pos-preorder-new"
+      },
+      {
+        "do": "Type “Their phone, to find them” and press “Find”, or type “Whose order is it?”."
+      },
+      {
+        "do": "Choose “Collected on” (day and time)."
+      },
+      {
+        "do": "Under “Paid now (optional)” press Half, All of it, or type an amount, and choose how it is paid. Add a “Note for the kitchen” if needed."
+      },
+      {
+        "do": "Press “Take the pre-order”."
+      },
+      {
+        "do": "When they come: press “Pre-orders”, find theirs, press “Collect”.",
+        "shot": "pos-preorder-list"
+      },
+      {
+        "do": "Press how they pay the rest (Cash, Card…), or “Paid in full: hand it over”.",
+        "see": "“Collected: the sale is recorded.”"
+      }
+    ],
+    "if": [
+      {
+        "case": "“A pre-order takes no add-ons: write what they want in the line's note.”",
+        "do": "Take the add-ons off and write them in the note."
+      },
+      {
+        "case": "“A pre-order is at the menu's prices: take the discount off first.”",
+        "do": "Remove the discount."
+      },
+      {
+        "case": "The customer cancels",
+        "do": "A manager presses “Cancel”, writes “Why (required)”, chooses “Give {amount} back” or “Keep it”, and presses “Cancel the pre-order”. Cashiers cannot cancel."
+      },
+      {
+        "case": "At collection: “Only … is in stock: record the delivery or the batch first, or count it”",
+        "do": "Ask a manager: the batch or delivery must be recorded first."
+      }
+    ],
+    "screens": [
+      "/pos"
+    ]
+  },
+  {
+    "title": "Ring up a delivery order (a platform or your own driver)",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "daily",
+    "why": "A platform collects the money and pays the café later, matched by its order number. Your own driver's order needs the customer's address.",
+    "before": [
+      "The platform is added on Delivery Platforms (for platform orders)."
+    ],
+    "steps": [
+      {
+        "do": "Platform order: tap the way of selling at the top and choose the platform (for example Talabat)."
+      },
+      {
+        "do": "Add the items. Press “Complete (paid through the platform)”.",
+        "shot": "pos-pay-platform"
+      },
+      {
+        "do": "Type the order number the platform's tablet shows in “{platform} order number”. Press “Confirm payment · {total}”."
+      },
+      {
+        "do": "Own driver: choose “Direct delivery”. Press “Customer”, find them, choose the address in “Deliver to” (or “+ Add an address”), and press “Put them on the order”."
+      },
+      {
+        "do": "Add the items and take payment as usual."
+      }
+    ],
+    "if": [
+      {
+        "case": "“{platform} order {number} is already recorded, on the sale of {sale}”",
+        "do": "That number was used already. Check the tablet's number."
+      },
+      {
+        "case": "“A delivery by the café's own driver needs the customer and their address”",
+        "do": "Put the customer and an address on the order first."
+      },
+      {
+        "case": "No discount, tip or customer on a platform order",
+        "do": "A platform sets its own discounts and keeps its own customers."
+      }
+    ],
+    "screens": [
+      "/pos",
+      "/platforms"
+    ]
+  },
+  {
+    "title": "Give away a staff meal, something on the house, or a sample",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "when needed",
+    "why": "Free food is not a sale and not a 100% discount. Giving it away takes the stock out and books its cost to the right place.",
+    "before": [
+      "A quick sale on Dine-in or Takeaway. The internet is on."
+    ],
+    "steps": [
+      {
+        "do": "Ring the items up as a quick sale."
+      },
+      {
+        "do": "Press “Give away…”.",
+        "shot": "pos-giveaway"
+      },
+      {
+        "do": "Choose “Staff meal”, “On the house” or “Sample”. Type “Why (required)”."
+      },
+      {
+        "do": "Press “Give it away”.",
+        "see": "“Given away: {what}, number {n}.” The bar makes it by that number."
+      }
+    ],
+    "if": [
+      {
+        "case": "“A manager approves it now, with their PIN:”",
+        "do": "It is over the loss limit. A manager chooses their name, types their PIN and approves."
+      },
+      {
+        "case": "“Nothing given uses any stock: there is nothing to record”",
+        "do": "The products have no recipe. Nothing is needed."
+      }
+    ],
+    "screens": [
+      "/pos"
+    ]
+  },
+  {
+    "title": "Sell when the internet is down",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "when needed",
+    "why": "The till keeps selling without internet. Quick sales are kept on the till and sent by themselves when it returns, never twice.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Look at the top bar: the chip says “No internet · selling offline”.",
+        "shot": "pos-offline"
+      },
+      {
+        "do": "Keep selling quick sales by Cash, Card or an app. Table bills can be saved too: “Kept on this till: saved when the internet is back”."
+      },
+      {
+        "do": "Do not give discounts, add customers, take dollars, give away, split or move bills until it is back."
+      },
+      {
+        "do": "Do not close the browser or clear its data."
+      },
+      {
+        "do": "When the internet returns the chip shows “Sending {n} sales made offline…”.",
+        "see": "“Every sale made offline has been sent.”"
+      },
+      {
+        "do": "If a sale shows red (“{n} offline sales need a manager”), press the chip and call a manager.",
+        "shot": "pos-offline-window"
+      },
+      {
+        "do": "Manager: press “Send again”, or “Record at today's price” when a price changed. Only as a last choice press “Take it off this till”."
+      }
+    ],
+    "if": [
+      {
+        "case": "You must close the drawer while sales wait to send",
+        "do": "Wait: “{n} sales made offline are not sent yet: the drawer is counted once they are, so its cash agrees.”"
+      },
+      {
+        "case": "A refused bill's changes should be dropped",
+        "do": "A manager presses “Drop these changes” in the Sales made offline window."
+      }
+    ],
+    "screens": [
+      "/pos"
+    ]
+  },
+  {
+    "title": "Close the drawer, or hand it to the next person",
+    "roles": [
+      "cashier",
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "daily",
+    "why": "Counting at the end of a shift shows if the drawer is short or over. Handing over closes your session and opens one for the next person.",
+    "before": [
+      "Your drawer session is open."
+    ],
+    "steps": [
+      {
+        "do": "On POS press the drawer button (Session {no})."
+      },
+      {
+        "do": "Press “Close the drawer” (or “Hand over” when someone takes over).",
+        "shot": "pos-drawer-close"
+      },
+      {
+        "do": "Count the cash and type it in “Cash counted (IQD)”, or use “Count note by note”. You do not see what it should hold until the count is in."
+      },
+      {
+        "do": "If the till took dollars, count them too in “Dollars counted ($)”."
+      },
+      {
+        "do": "Type what “Stays in the drawer” (empty keeps all of it). Choose where “The other {amount} goes to”: the safe or the bank."
+      },
+      {
+        "do": "For a hand over, choose the person in “Hand the drawer to”."
+      },
+      {
+        "do": "Press “Close the drawer” (or “Hand over”).",
+        "see": "“Session {no} is closed. It should have held {expected}; counted {counted}: {difference}.”"
+      }
+    ],
+    "if": [
+      {
+        "case": "The count is short",
+        "do": "Count again before you press the button. If it is still short, close: the difference is recorded and a manager sees it."
+      },
+      {
+        "case": "“{n} bills are still open: they are no cash yet, and are paid in the next session.”",
+        "do": "That is fine: open bills are paid in the next session."
+      },
+      {
+        "case": "“What stays in the drawer must be between 0 and the cash counted.”",
+        "do": "Type a smaller amount to stay."
+      }
+    ],
+    "screens": [
+      "/pos",
+      "/end-of-day"
+    ]
+  },
+  {
+    "title": "Tell the owner something is wrong with the app",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "cashier",
+      "barista",
+      "inventory_counter",
+      "purchasing",
+      "accountant",
+      "auditor"
+    ],
+    "when": "when needed",
+    "why": "A report goes with the screen you were on and what the app knew, so the problem can be found.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open the menu (☰) and press “Something's wrong?”.",
+        "shot": "problem-dialog"
+      },
+      {
+        "do": "Type what happened in “What went wrong?” (for example: The receipt printed twice)."
+      },
+      {
+        "do": "Press “Send”.",
+        "see": "“Thank you. The owner will see it, with this screen.”"
+      }
+    ],
+    "if": [
+      {
+        "case": "A screen says “This screen could not be loaded”",
+        "do": "Press “Try again”. If it repeats, send a report."
+      }
+    ],
+    "screens": [
+      "(menu, every screen) Something's wrong?",
+      "(every screen)"
+    ]
+  },
+  {
+    "title": "Record a batch and print its use-by labels",
+    "roles": [
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "daily",
+    "why": "Recording a batch takes the ingredients out of stock and puts what you made in, with its use-by. The labels tell everyone when to use it by.",
+    "before": [
+      "The recipe exists under “What you make”.",
+      "With more than one place, “Stock at” shows where you made it."
+    ],
+    "steps": [
+      {
+        "do": "Open Production. Look at “What to make on {weekday}” for today's plan. Press “Record these” on a line to fill the form.",
+        "shot": "production-plan"
+      },
+      {
+        "do": "Under “Record a batch”, choose “What did you make?” and type how many “Batches”.",
+        "shot": "production-record"
+      },
+      {
+        "do": "If you weighed it, type “What came out (optional)” and its unit. Leave it empty to use the recipe's amount."
+      },
+      {
+        "do": "Change “Use by (optional)” only if it is not the recipe's shelf life. Add a note if useful."
+      },
+      {
+        "do": "Press “Record batch”.",
+        "see": "“Recorded as batch {no}: {made} of {output} into stock. The ingredients cost {amount}. Use it by {when}.”"
+      },
+      {
+        "do": "Check “Labels” (one per pan) and press “Print {n} label(s)”. Stick one on each pan.",
+        "shot": "production-recorded-labels"
+      },
+      {
+        "do": "If you made the whole plan: open “Record the plan in one go”, untick what you did not make, change what came out, press “Record {n} batch(es)” and then “Print {n} label(s)”.",
+        "shot": "production-plan-all"
+      }
+    ],
+    "if": [
+      {
+        "case": "An ingredient shows “only … in stock”",
+        "do": "Usually a delivery is not entered. Ask a manager. If the rule allows it, a manager approves with their PIN under “A manager approves using more than the books hold, with their PIN:”."
+      },
+      {
+        "case": "The plan says “Not enough history”",
+        "do": "It needs 28 days of sales. Until then decide yourself how much to make."
+      },
+      {
+        "case": "You made it before opening and forgot to record it",
+        "do": "A manager ticks “Made earlier: yesterday or today, recorded now”, gives the time and why, and records it."
+      }
+    ],
+    "screens": [
+      "/production"
+    ]
+  },
+  {
+    "title": "Sell a batch cheaper before it goes off",
+    "roles": [
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "daily",
+    "why": "Selling at a lower price is better than throwing it away. The markdown lasts until the café's day ends.",
+    "before": [
+      "A batch with a use-by soon shows under “Sell it before it goes”."
+    ],
+    "steps": [
+      {
+        "do": "Open Production and look at “Sell it before it goes”.",
+        "shot": "production-markdowns"
+      },
+      {
+        "do": "Press the suggested “{percent}% off · {price}” button (or another).",
+        "see": "The till sells it at that price until the day ends."
+      },
+      {
+        "do": "To end it early, press “Stop”."
+      }
+    ],
+    "if": [
+      {
+        "case": "A batch went soft and must be sold today",
+        "do": "A manager uses “Change the use-by…” in “In stock by batch”, gives today's time and why. It then shows here."
+      }
+    ],
+    "screens": [
+      "/production",
+      "/pos"
+    ]
+  },
+  {
+    "title": "Look after a batch: its age, labels, use-by, or a mistake",
+    "roles": [
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "when needed",
+    "why": "Each batch has its own page: when it was made, its use-by, and what became of it. Managers can fix its use-by or cancel it.",
+    "before": [
+      "The batch was recorded on Production."
+    ],
+    "steps": [
+      {
+        "do": "Open Production and press the batch number in “Batches” or “In stock by batch”.",
+        "shot": "batch-story"
+      },
+      {
+        "do": "Read “Made {when}” and “To be used by {when}”. “What became of it” shows what was sold, used, thrown away and left."
+      },
+      {
+        "do": "Labels fell off? Type how many in “Labels” and press “Print {n} label(s)”."
+      },
+      {
+        "do": "Manager: to change the use-by, press “Change the use-by…”, choose the date and time, type “Why the use-by changes”, and press “Save the use-by”."
+      },
+      {
+        "do": "Manager: if it was recorded twice, press “Cancel…” on it in Batches, type why (“recorded twice”), and press “Cancel the batch”.",
+        "see": "The ingredients go back into stock.",
+        "shot": "production-batches-cancel"
+      }
+    ],
+    "if": [
+      {
+        "case": "Cancel is refused because some was already used, sold or moved",
+        "do": "Record what is left as a loss on Inventory instead."
+      },
+      {
+        "case": "Some of the batch is missing",
+        "do": "Look at “Each movement of the batch”. If it was thrown away and not recorded, record a loss and choose this batch in “From batch”."
+      }
+    ],
+    "screens": [
+      "/production/batches/[id]",
+      "/production"
+    ]
+  },
+  {
+    "title": "Record waste or a loss",
+    "roles": [
+      "barista",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "daily",
+    "why": "Thrown away, expired, broken, dropped or eaten by staff: recording it keeps the stock right and shows where money is lost.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Inventory and press “Record a loss” (a barista sees the form at once).",
+        "shot": "inventory-loss-form"
+      },
+      {
+        "do": "Choose “What kind of loss” (Waste, Spoilage, Expired, Damaged, Staff consumption…)."
+      },
+      {
+        "do": "For an ingredient press “An item”: choose the Item, the batch in “From batch” if asked, “Quantity lost” and Unit."
+      },
+      {
+        "do": "For a made drink dropped: press “A product, as made”, choose the Product and “How many”."
+      },
+      {
+        "do": "Type “Why (required)” and press “Record the loss”.",
+        "see": "“Recorded — {value} written off (journal {no}).”"
+      }
+    ],
+    "if": [
+      {
+        "case": "It asks for a manager (over the loss limit)",
+        "do": "A manager here chooses their name and types their PIN, then “Approve”. Or press “Save it to wait for a manager's approval”."
+      },
+      {
+        "case": "You typed the wrong quantity",
+        "do": "If it waits for approval, a manager reverses it and you record it again. If approved, a manager corrects the stock."
+      },
+      {
+        "case": "Spoiled milk was paid as an expense",
+        "do": "Do not post losses on Expenses. Record them here."
+      }
+    ],
+    "screens": [
+      "/inventory"
+    ]
+  },
+  {
+    "title": "Count the stock",
+    "roles": [
+      "inventory_counter",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "weekly",
+    "why": "A blind count finds what really is on the shelf. A manager then approves it and the books follow the shelf.",
+    "before": [
+      "No other count is open at this place."
+    ],
+    "steps": [
+      {
+        "do": "Open Stock Count (Menu → Operations → Stock Count). Check “Stock at” is your place."
+      },
+      {
+        "do": "Press “Start count”.",
+        "see": "Every item in use is listed."
+      },
+      {
+        "do": "Count each item and type it in its box, in the unit shown. Type 0 for anything not there. Each box saves when you leave it (✓).",
+        "shot": "count-sheet"
+      },
+      {
+        "do": "When every item has a number, press “Submit count”.",
+        "see": "“Count submitted for a manager to review.”"
+      }
+    ],
+    "if": [
+      {
+        "case": "“Count every item before submitting — enter 0 for anything not there.”",
+        "do": "Find the empty box and type its number."
+      },
+      {
+        "case": "“A count is already {status} here (started {when} by {who}). Finish or cancel it first”",
+        "do": "Only one count at a time. Finish that count, or a manager cancels it."
+      },
+      {
+        "case": "The count was started by mistake",
+        "do": "Press “Cancel this count…”, type why and press “Cancel the count”."
+      }
+    ],
+    "screens": [
+      "/count"
+    ]
+  },
+  {
+    "title": "Review and approve a stock count",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "weekly",
+    "why": "Approving posts the differences between the books and the shelf. Someone other than the counter must approve.",
+    "before": [
+      "A count was submitted."
+    ],
+    "steps": [
+      {
+        "do": "Open Stock Count (or Approvals) and press “Review” on the submitted count.",
+        "shot": "count-review"
+      },
+      {
+        "do": "Read Expected, Counted, Variance and Value for each item."
+      },
+      {
+        "do": "If it looks right, press “Approve and post variances”.",
+        "see": "“Approved — loss {loss}, gain {gain} (journal {no}).”"
+      },
+      {
+        "do": "If something is wrong (a delivery not entered), type “Reason to reject (recount)” and press “Reject”. Fix the cause, then count again."
+      }
+    ],
+    "if": [
+      {
+        "case": "“A count must be approved by someone other than the person who counted it”",
+        "do": "Another manager approves. You can “Withdraw for a recount”."
+      },
+      {
+        "case": "A big loss shows on one item",
+        "do": "Check Purchasing for a delivery not entered and Inventory for losses not recorded before approving."
+      }
+    ],
+    "screens": [
+      "/count",
+      "/approvals"
+    ]
+  },
+  {
+    "title": "Open the day with Start of Day",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "daily",
+    "why": "One list for the morning: the drawer counted, people clocked in, what to make, deliveries due, nothing low without an order, red alerts answered.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Start of Day (Menu → Operations → Start of Day; for the owner and general manager under More). From 04:00 the Dashboard also shows “Opening up? The start of the day, step by step”.",
+        "shot": "start-of-day-steps"
+      },
+      {
+        "do": "Step “Drawer open and counted”: press “Open the drawer”, count, and add a float from the safe if needed."
+      },
+      {
+        "do": "Step “Everyone due in is in”: late people clock in on the till (“Clock in on the till”)."
+      },
+      {
+        "do": "Step “What to make today”: press “Open the plan” and tell the kitchen."
+      },
+      {
+        "do": "Step “Deliveries due”: press “Receive them” when they come. Step “Nothing low without an order”: press “What to buy”."
+      },
+      {
+        "do": "Step “Red alerts answered”: press “Answer them”."
+      },
+      {
+        "do": "When all are ticked:",
+        "see": "“Everything is ready: open the doors.”",
+        "shot": "start-of-day-ready"
+      }
+    ],
+    "if": [
+      {
+        "case": "The opening count differs from last night's close",
+        "do": "Count again. If it still differs, open anyway: the difference is recorded."
+      },
+      {
+        "case": "A delivery is late",
+        "do": "It stays in Deliveries due. Call the supplier and receive it when it comes."
+      }
+    ],
+    "screens": [
+      "/start-of-day",
+      "/dashboard"
+    ]
+  },
+  {
+    "title": "Approve what is waiting for a manager",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant"
+    ],
+    "when": "daily",
+    "why": "Counts, losses over the limit, purchase orders and the month's pay wait for a manager. Approvals shows them all, oldest first.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Approvals (at the top of the menu; the number shows how many wait).",
+        "shot": "approvals-inbox"
+      },
+      {
+        "do": "Read each card: what it is, who asked, when and why. Press “Open its page” to see more."
+      },
+      {
+        "do": "Press “Approve” if it is right."
+      },
+      {
+        "do": "If not: press “Send back for a recount…”, “Reverse…” (a loss) or “Cancel the order…”, type why, and press “Confirm”.",
+        "shot": "approvals-send-back"
+      },
+      {
+        "do": "Losses can also be approved on Inventory under “Losses waiting for approval”: “Approve”, or “Reverse…” and “Reverse the loss: the stock goes back”.",
+        "shot": "inventory-losses-waiting"
+      }
+    ],
+    "if": [
+      {
+        "case": "No Approve button on a count or loss",
+        "do": "You asked for it yourself. Another manager approves it."
+      },
+      {
+        "case": "An order shows “Over your limit”",
+        "do": "The owner or general manager approves it."
+      },
+      {
+        "case": "The month's pay looks wrong",
+        "do": "Open its page and reopen or draft it again there. There is no send-back for pay."
+      },
+      {
+        "case": "The accountant sees only the month's pay",
+        "do": "That is right: the accountant approves pay only."
+      }
+    ],
+    "screens": [
+      "/approvals",
+      "/inventory"
+    ]
+  },
+  {
+    "title": "Void a sale rung by mistake",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "when needed",
+    "why": "A void takes the whole sale back exactly: money, stock and points. It is possible only until the drawer session is closed.",
+    "before": [
+      "The drawer session that holds the sale is still open."
+    ],
+    "steps": [
+      {
+        "do": "Open Orders (Menu → Operations → Orders) and press “Today”, or type the 8 letters after “Sale” on the receipt in “Find a sale” and press “Find”.",
+        "shot": "orders-list"
+      },
+      {
+        "do": "On the sale press “Void”.",
+        "shot": "orders-void"
+      },
+      {
+        "do": "Choose “Why void it?” (Rang twice, Rang the wrong item…) and add a note."
+      },
+      {
+        "do": "In “Approved by” choose a second manager and let them type their PIN, or “No second person (the owner reviews it)”."
+      },
+      {
+        "do": "Press “Confirm void”.",
+        "see": "“Voided (journal {no}).” The cash leaves the drawer's session."
+      }
+    ],
+    "if": [
+      {
+        "case": "The drawer was already closed",
+        "do": "Use “Refund” instead."
+      },
+      {
+        "case": "A cashier asks for a void",
+        "do": "Cashiers cannot open Orders. A manager does it."
+      },
+      {
+        "case": "The till discarded a payment that may have gone through",
+        "do": "Look for the sale here. If it is there and was not paid, void it."
+      }
+    ],
+    "screens": [
+      "/orders"
+    ]
+  },
+  {
+    "title": "Refund part of a sale",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "when needed",
+    "why": "When the customer brings something back after the drawer is closed, a refund gives the money back the way it was paid.",
+    "before": [
+      "The sale is Completed or Part-refunded."
+    ],
+    "steps": [
+      {
+        "do": "Open Orders and find the sale (by its number, the customer's name or phone, or the day)."
+      },
+      {
+        "do": "Press “Refund”.",
+        "shot": "orders-refund"
+      },
+      {
+        "do": "In “Refund now” set how many of each item go back. Set the others to 0."
+      },
+      {
+        "do": "Choose “Why refund it?”. If it is over the refund limit, choose who approves and let them type their PIN."
+      },
+      {
+        "do": "Press “Confirm refund”.",
+        "see": "“Refund {no}: {amount} given back {how} (journal {no}).”"
+      },
+      {
+        "do": "Give the money back and press “Print the refund slip”."
+      }
+    ],
+    "if": [
+      {
+        "case": "“Over {limit}, a second person approves it: choose who, and they type their PIN.”",
+        "do": "Ask another manager to approve."
+      },
+      {
+        "case": "The sale was paid in two ways",
+        "do": "Type how much goes back on each way (at most what is left on each)."
+      },
+      {
+        "case": "The tip",
+        "do": "A tip is never given back."
+      }
+    ],
+    "screens": [
+      "/orders"
+    ]
+  },
+  {
+    "title": "Close the day with End of Day",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "daily",
+    "why": "One list for closing: bills paid, everyone clocked out, drawers counted, losses approved, card and platform money, red alerts. Then the day in numbers.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open End of Day (Menu → Operations → End of Day). From 16:00 the Dashboard shows “Closing up? The end of the day, step by step”.",
+        "shot": "end-of-day-steps"
+      },
+      {
+        "do": "Step “Bills paid”: take payment for open bills on the till (“Open the till”)."
+      },
+      {
+        "do": "Step “Everyone clocked out”: “Open the hours” and fix anyone still in."
+      },
+      {
+        "do": "Step “Drawers closed and counted”: press “Close the drawer” on each, count, and close."
+      },
+      {
+        "do": "Step “Losses approved”: press “Approve them”. Step “Card and platform money”: check card takings."
+      },
+      {
+        "do": "Read “The day in numbers”. Press “Print or save as PDF”, or “Print the slip for the till”.",
+        "shot": "end-of-day-slip"
+      }
+    ],
+    "if": [
+      {
+        "case": "A cashier went home with the drawer open",
+        "do": "Press “Close it for them”, write “Why it is closed”, and count if you can. Press “Close the session”, or “Close it without a count”."
+      },
+      {
+        "case": "The count is short",
+        "do": "Count again. If still short, close: the difference shows on the slip and on Sales → Cash Sessions."
+      },
+      {
+        "case": "A table did not pay",
+        "do": "Leave the bill open for the next session, or cancel it on the till with the reason if it will never be paid."
+      }
+    ],
+    "screens": [
+      "/end-of-day",
+      "/pos"
+    ]
+  },
+  {
+    "title": "Move cash between the till, the safe and the bank",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant"
+    ],
+    "when": "daily",
+    "why": "A float into the till, the day's cash to the bank: each move is recorded so the till, safe and bank stay right.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Sales (Menu → Revenue → Sales) and go to “Move Cash”.",
+        "shot": "sales-move-cash"
+      },
+      {
+        "do": "Choose From (the till, the safe, the bank, the owner) and To."
+      },
+      {
+        "do": "Type “Amount (IQD)” and a note (for example Deposit at the bank)."
+      },
+      {
+        "do": "Press “Move cash”.",
+        "see": "“Moved {amount} from {from} to {to} (journal {no}).”"
+      }
+    ],
+    "if": [
+      {
+        "case": "Money to or from the owner",
+        "do": "Only the owner can take cash for the owner, and a reason is required."
+      },
+      {
+        "case": "The bank and an app (FIB)",
+        "do": "Money from a way to pay moves on Sales → Ways to Pay, not here."
+      }
+    ],
+    "screens": [
+      "/sales"
+    ]
+  },
+  {
+    "title": "Set today's dollar rate and change dollars for dinars",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant"
+    ],
+    "when": "daily",
+    "why": "The till takes dollars only with a fresh rate. Dollars taken go to the safe and are changed later.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Sales → Dollars.",
+        "shot": "sales-dollars"
+      },
+      {
+        "do": "Owner, general manager or branch manager: type “Today's rate: dinars a dollar” and “Where it comes from” (for example the exchange office this morning). Press “Set the rate”.",
+        "see": "“The rate is {rate} dinars a dollar.”"
+      },
+      {
+        "do": "To change dollars: under “Exchange dollars for dinars” choose From (the safe or a till), type the Dollars and the “Dinars received”, choose Into, and press “Exchange”.",
+        "see": "“{usd} exchanged for {received}: they were taken at {value}.”"
+      }
+    ],
+    "if": [
+      {
+        "case": "The accountant cannot set the rate",
+        "do": "Only the owner, general manager and branch manager set it. The accountant can record an exchange."
+      },
+      {
+        "case": "A cashier says dollars are not offered",
+        "do": "The rate is too old. Set today's rate."
+      }
+    ],
+    "screens": [
+      "/sales"
+    ]
+  },
+  {
+    "title": "Send stock to another place, and receive it",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "purchasing"
+    ],
+    "when": "when needed",
+    "why": "The kitchen sends gelato to a branch: the stock leaves one place at its cost and arrives at the other. What does not arrive is written off.",
+    "before": [
+      "The café has two or more places."
+    ],
+    "steps": [
+      {
+        "do": "At the sending place open Transfers (Menu → Operations → Transfers)."
+      },
+      {
+        "do": "Choose From and To. Add each Item, Quantity and Unit; “+ Add line” for more. Add a note.",
+        "shot": "transfers-send"
+      },
+      {
+        "do": "Press “Send it”.",
+        "see": "“Transfer {no} is on its way to {to}: {value}.”"
+      },
+      {
+        "do": "At the other place, under “On their way”, press “Received: all of it”.",
+        "see": "“Transfer {no} received: all of it.”"
+      },
+      {
+        "do": "If some did not arrive: press “Not all of it arrived…”, type “What arrived of {item}” and a note, then “Receive what arrived”.",
+        "shot": "transfers-short"
+      }
+    ],
+    "if": [
+      {
+        "case": "Sent to the wrong place",
+        "do": "At the sending place, while it is on its way: “Cancel it…”, type why, “Cancel the transfer”. Then send again."
+      },
+      {
+        "case": "It warns stock goes below zero",
+        "do": "Usually a batch or delivery is not recorded. Fix that, or press “Send it all the same” if you are sure."
+      }
+    ],
+    "screens": [
+      "/inventory/transfers"
+    ]
+  },
+  {
+    "title": "Make next week's schedule",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "weekly",
+    "why": "The schedule says who works when. Late, early and absent are worked out from it, and it is checked against how busy each hour usually is.",
+    "before": [
+      "People are on Staff with “Where they work”."
+    ],
+    "steps": [
+      {
+        "do": "Open Staff → “The schedule” and press “The week after”.",
+        "shot": "staff-schedule-week"
+      },
+      {
+        "do": "Press “The same hours as the week before” to copy last week."
+      },
+      {
+        "do": "Change what differs: type hours like 08:00-16:00 in a person's box; empty means not working."
+      },
+      {
+        "do": "Read the check “Is the week staffed for how busy it usually is?” under the grid."
+      },
+      {
+        "do": "Press “Save the week”.",
+        "see": "“The week's hours are saved.”"
+      },
+      {
+        "do": "For a closer look, open Reports → “Staffed when busy? Orders an hour against who was on the clock →”.",
+        "shot": "staffing-week"
+      }
+    ],
+    "if": [
+      {
+        "case": "A shift goes past midnight",
+        "do": "Type 18:00-02:00. It ends the next morning."
+      },
+      {
+        "case": "You saved the wrong week",
+        "do": "Press “Undo ({n})” within 10 seconds, or correct and save again."
+      },
+      {
+        "case": "A day cannot change",
+        "do": "That month's pay is approved. Reopen the payroll first."
+      }
+    ],
+    "screens": [
+      "/staff#schedule",
+      "/reports/staffing"
+    ]
+  },
+  {
+    "title": "Correct someone's hours",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "weekly",
+    "why": "Forgot to clock out, the till was down, the wrong person clocked in: correct the hours before the payroll.",
+    "before": [
+      "The month's payroll is not approved yet."
+    ],
+    "steps": [
+      {
+        "do": "Open Staff → “The hours”.",
+        "shot": "staff-hours"
+      },
+      {
+        "do": "Find the record (for example “Still in”). Press “Correct…”.",
+        "shot": "staff-hours-correct"
+      },
+      {
+        "do": "Type the right In and Out times and “Why”. Press “Save the correction”."
+      },
+      {
+        "do": "Nobody clocked? Press “+ Add hours nobody clocked…”, choose Who, In, Out and Why, and press “Add the hours”."
+      },
+      {
+        "do": "Wrong person? Press “Cancel…” on that record, type why, and press “Cancel this record”."
+      }
+    ],
+    "if": [
+      {
+        "case": "Late or absent: do they lose pay?",
+        "do": "Not by itself. Deduct it on the payroll line with “Adjust…” if the café decides so."
+      }
+    ],
+    "screens": [
+      "/staff#attendance",
+      "/payroll/[id]"
+    ]
+  },
+  {
+    "title": "When someone forgets their PIN, loses their phone or leaves",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "when needed",
+    "why": "A new PIN or phone keeps them clocking in. A last day stops their clock-ins and schedule, but keeps their records and pay.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Staff and press the person's line."
+      },
+      {
+        "do": "Forgot the PIN: open “New PIN”, let them type a PIN twice, press “Save the PIN”.",
+        "see": "“{name} clocks in with this PIN now.”"
+      },
+      {
+        "do": "Lost the phone: open “Their phone”, press “Unlink…”, type why, “Unlink the phone”. Later press “Link a new phone”."
+      },
+      {
+        "do": "Leaving: make sure they are clocked out. Open “Last day”, choose the date, type why, press “Save their last day”."
+      },
+      {
+        "do": "Owner or general manager: on Settings → People and roles press “Deactivate” on their row so their login stops."
+      }
+    ],
+    "if": [
+      {
+        "case": "They come back",
+        "do": "Open their line → “Works here again”, type why, press “They work here again”. On Settings press “Reactivate”."
+      },
+      {
+        "case": "“Too many wrong PINs”",
+        "do": "A new PIN also lifts the pause."
+      }
+    ],
+    "screens": [
+      "/staff",
+      "/settings#people"
+    ]
+  },
+  {
+    "title": "Correct stock outside a count",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "when needed",
+    "why": "You found a box not in the books, or the books show stock that is not there and no count is due.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Inventory and press “Correct stock (manager)”."
+      },
+      {
+        "do": "Choose the Item. Type the change in “Change (− to reduce)” (for example -250) and the Unit."
+      },
+      {
+        "do": "For an addition, type “Cost per base unit (additions)” if you know it."
+      },
+      {
+        "do": "Type “Why (required)” and press “Post correction”.",
+        "see": "“Corrected — {value} (journal {no}).”"
+      },
+      {
+        "do": "A large change asks again: press “Yes, post it”, or “Change it” to fix the numbers.",
+        "shot": "inventory-correct-confirm"
+      }
+    ],
+    "if": [
+      {
+        "case": "An item shows negative stock",
+        "do": "Usually a delivery was not entered. Enter it on Purchasing instead of correcting."
+      },
+      {
+        "case": "A count is due soon",
+        "do": "Count instead; the count corrects everything at once."
+      }
+    ],
+    "screens": [
+      "/inventory"
+    ]
+  },
+  {
+    "title": "Answer or snooze an alert on the Dashboard",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant"
+    ],
+    "when": "daily",
+    "why": "Red alerts need someone now; orange can wait. Answering says what was done, so the next person does not check again.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open the Dashboard and look at “Needs you”.",
+        "shot": "dashboard-owner"
+      },
+      {
+        "do": "Press the alert's “{action} →” link to go where it is fixed. Fix it."
+      },
+      {
+        "do": "If it is fine, press “Answer”, write “What was done, or why it is fine”, and press “Save the answer”.",
+        "shot": "dashboard-answer"
+      },
+      {
+        "do": "If it can wait, press “Snooze”, choose “Snooze until”, write “Why it can wait”, and press “Snooze it”."
+      }
+    ],
+    "if": [
+      {
+        "case": "The alert names you (your own exceptions)",
+        "do": "You cannot answer it. Another manager or the owner reviews it."
+      },
+      {
+        "case": "An alert disappeared by itself",
+        "do": "Its cause cleared (the drawer counted, the bill paid). Nothing to do."
+      },
+      {
+        "case": "Alerts come too often",
+        "do": "The owner or general manager changes the limits on Settings → Alerts."
+      }
+    ],
+    "screens": [
+      "/dashboard"
+    ]
+  },
+  {
+    "title": "Change a customer's details or give them points",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "when needed",
+    "why": "Fix a name or phone, add a delivery address, or give points that were missed.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Customers (Menu → Revenue → Customers). Search by name or 3+ digits of the number.",
+        "shot": "customers-list"
+      },
+      {
+        "do": "Press the customer's name.",
+        "shot": "customer-page"
+      },
+      {
+        "do": "Press “Change their details”, change Name, Phone or Notes, and Save."
+      },
+      {
+        "do": "For an address press “+ Add an address” and “Add the address”."
+      },
+      {
+        "do": "For points: type “Points” (50, or -20 to take), “Why”, and press “Give or take them”.",
+        "see": "“Done: they have {n} points.”"
+      }
+    ],
+    "if": [
+      {
+        "case": "The customer should no longer show at the till",
+        "do": "Press “Put them away”. Their history stays; “Bring back” returns them."
+      },
+      {
+        "case": "A cashier cannot open Customers",
+        "do": "Cashiers add customers at the till only."
+      }
+    ],
+    "screens": [
+      "/customers",
+      "/customers/[id]"
+    ]
+  },
+  {
+    "title": "Make this week's orders with What to buy",
+    "roles": [
+      "purchasing",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "weekly",
+    "why": "What to buy works out what is low and what is coming, and suggests packs, supplier and price. The ticked lines become draft orders.",
+    "before": [
+      "Items have a usual supplier and a price, or past deliveries."
+    ],
+    "steps": [
+      {
+        "do": "Open Purchasing and press “Open What to buy”.",
+        "shot": "buying-list"
+      },
+      {
+        "do": "Each supplier has a card. Check the ticked lines: Quantity, Pack, “Price of a pack” and Supplier."
+      },
+      {
+        "do": "Press “How it was worked out” on a line to see why.",
+        "shot": "buying-why"
+      },
+      {
+        "do": "Untick what you do not want. For an extra item, open “Not to order now” and press “Add to an order”."
+      },
+      {
+        "do": "Press “Create the orders”.",
+        "see": "“{n} draft orders made, for a manager to approve:”",
+        "shot": "buying-made"
+      },
+      {
+        "do": "Faster: on Purchasing press “Draft the orders now” to make every draft in one press.",
+        "shot": "purchasing-draft-now"
+      }
+    ],
+    "if": [
+      {
+        "case": "Another supplier is cheaper",
+        "do": "Press “Order from {supplier}, {pct} cheaper”. Tick “Make it the usual one” to keep using them."
+      },
+      {
+        "case": "The quantity is too much for the shelf",
+        "do": "Lower it, or type “Days it keeps once it comes” under How it was worked out and press Save."
+      },
+      {
+        "case": "No price is known",
+        "do": "Type the price of a pack. It is remembered next time."
+      }
+    ],
+    "screens": [
+      "/purchasing/buying-list",
+      "/purchasing"
+    ]
+  },
+  {
+    "title": "Make a purchase order by hand",
+    "roles": [
+      "purchasing",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "when needed",
+    "why": "For an item not on What to buy, or a special order for an event.",
+    "before": [
+      "The supplier and the items exist."
+    ],
+    "steps": [
+      {
+        "do": "Open Purchasing and press “New order”.",
+        "shot": "purchasing-order-form"
+      },
+      {
+        "do": "Choose the Supplier. Type the Expected day and a “Note for the supplier” if needed."
+      },
+      {
+        "do": "For each line choose the Item, type Quantity, choose the Unit and type “Price per unit”. Press “Add a line” for more."
+      },
+      {
+        "do": "Press “Save the draft”.",
+        "see": "“Order {no} saved as a draft: {total}. A manager approves it next.”",
+        "shot": "purchasing-orders"
+      }
+    ],
+    "if": [
+      {
+        "case": "“Save the draft” stays grey",
+        "do": "Every line needs an item, a quantity above zero and a price."
+      }
+    ],
+    "screens": [
+      "/purchasing"
+    ]
+  },
+  {
+    "title": "Approve, send, close or cancel a purchase order",
+    "roles": [
+      "purchasing",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "weekly",
+    "why": "An order is approved by a manager within their limit, then sent to the supplier. It is closed when the rest will not come.",
+    "before": [
+      "A draft order exists."
+    ],
+    "steps": [
+      {
+        "do": "Open Purchasing → Purchase orders."
+      },
+      {
+        "do": "Manager: press “Approve”, or “Approve and send” to approve and mark it sent in one tap.",
+        "see": "“Order {no} approved and marked as sent to the supplier.”"
+      },
+      {
+        "do": "To give the supplier a paper copy, press the order number and “Print the order”.",
+        "shot": "po-page"
+      },
+      {
+        "do": "Purchasing (or a manager) after sending an approved order: press “Mark as sent”."
+      },
+      {
+        "do": "If the rest will never come: press “Close”, type “Why is the rest not coming?”, press “Close the order”."
+      },
+      {
+        "do": "Wrong order and nothing came: press “Cancel”, type “Why cancel it?”, press “Cancel the order”."
+      }
+    ],
+    "if": [
+      {
+        "case": "“Over your limit: the owner or the general manager approves it”",
+        "do": "It waits for them on Approvals."
+      },
+      {
+        "case": "A wrong price on an approved order not yet sent",
+        "do": "Press “Change”, fix it and save. It is a draft again and is approved again."
+      },
+      {
+        "case": "Purchasing sees no Approve button",
+        "do": "Purchasing cannot approve. A manager does."
+      }
+    ],
+    "screens": [
+      "/purchasing",
+      "/purchasing/orders/[id]",
+      "/approvals"
+    ]
+  },
+  {
+    "title": "Receive a delivery",
+    "roles": [
+      "purchasing",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "daily",
+    "why": "Receiving brings the goods into stock at what they really cost, with freight shared over the lines. The bill is recorded later on Vendors.",
+    "before": [
+      "The supplier exists. For an order: it is Approved or Sent."
+    ],
+    "steps": [
+      {
+        "do": "Open Purchasing → “Receive stock (goods receipt)”.",
+        "shot": "purchasing-receive-order"
+      },
+      {
+        "do": "Choose the Supplier. If there is an order, choose it in “Against a purchase order”: the lines fill in."
+      },
+      {
+        "do": "Change each line's Quantity to what came. Check the Unit and type “Price per {unit} (IQD)” exactly as the invoice gives it."
+      },
+      {
+        "do": "Type “Freight (IQD)” or “Other landed costs” if on the invoice, and the delivery note number in Note."
+      },
+      {
+        "do": "Press “Receive goods”.",
+        "see": "“Receipt {no} — {value} into stock against order {po}, awaiting its bill.”"
+      },
+      {
+        "do": "If a warning card asks about a price, check it. Press “The price is right: receive it” or “Let me correct it”.",
+        "shot": "purchasing-price-check"
+      },
+      {
+        "do": "Press the paperclip on the delivery to keep a photo of the delivery note."
+      }
+    ],
+    "if": [
+      {
+        "case": "The item is not in Inventory yet",
+        "do": "On the line choose “+ New item (not in Inventory yet)…”, fill it in and add it."
+      },
+      {
+        "case": "Only part of the order came",
+        "do": "Receive what came. The order shows Partly received; receive the rest later or close it."
+      },
+      {
+        "case": "The invoice is in kilograms but the item is kept in grams",
+        "do": "Choose the kg unit on the line and type the price per kg."
+      }
+    ],
+    "screens": [
+      "/purchasing",
+      "/documents/[kind]/[record]"
+    ]
+  },
+  {
+    "title": "Correct or reverse a delivery entered wrong",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "when needed",
+    "why": "A wrong quantity, price, item, supplier or date on a delivery can be fixed before its bill is recorded.",
+    "before": [
+      "The delivery is not billed (cancel its bill on Vendors first) and its month is not locked."
+    ],
+    "steps": [
+      {
+        "do": "Open Purchasing → “Recent goods receipts”.",
+        "shot": "purchasing-receipts"
+      },
+      {
+        "do": "Press “Correct” on the delivery.",
+        "shot": "purchasing-correction"
+      },
+      {
+        "do": "Change the Supplier, “The day it came”, or the lines (Item, Quantity, Unit, Price per unit)."
+      },
+      {
+        "do": "Press “Show what it would do” and read the answer."
+      },
+      {
+        "do": "Type “Why it is corrected” and press “Confirm the correction”.",
+        "see": "“Correction {no} of delivery {receipt}: {what}.”"
+      },
+      {
+        "do": "Entered twice? Press “Reverse”, type why, and press “Reverse the delivery”."
+      }
+    ],
+    "if": [
+      {
+        "case": "No Correct button",
+        "do": "It is billed, reversed or old. Cancel the bill on Vendors first (only if nothing is paid on it)."
+      },
+      {
+        "case": "It leaves stock below zero",
+        "do": "Tick “This leaves {items} below zero: correct it all the same” if you are sure."
+      }
+    ],
+    "screens": [
+      "/purchasing",
+      "/vendors"
+    ]
+  },
+  {
+    "title": "Send goods back to a supplier",
+    "roles": [
+      "purchasing",
+      "branch_manager",
+      "general_manager",
+      "owner"
+    ],
+    "when": "when needed",
+    "why": "Damaged, out of date or wrong goods go back. The stock goes out and the supplier owes the café for them.",
+    "before": [
+      "The goods are in stock at this place."
+    ],
+    "steps": [
+      {
+        "do": "Open Purchasing → “Return goods to a supplier”.",
+        "shot": "purchasing-return"
+      },
+      {
+        "do": "Choose the Supplier and, if you can, “The delivery they came in”."
+      },
+      {
+        "do": "Choose the Item, Quantity and Unit for each line."
+      },
+      {
+        "do": "Type “Why they are going back” and press “Return them”.",
+        "see": "“Return {no}: {value} back to the supplier, off what the delivery's bill will clear.”"
+      },
+      {
+        "do": "Press the paperclip under “Recent returns to suppliers” to keep a photo of the return note."
+      }
+    ],
+    "if": [
+      {
+        "case": "The bill was already paid",
+        "do": "Name the delivery. The return becomes a credit; set it against the next bill on Vendors → Credit notes."
+      },
+      {
+        "case": "It would leave stock below zero",
+        "do": "Check the item. Press “Return it all the same” if you are sure."
+      }
+    ],
+    "screens": [
+      "/purchasing",
+      "/vendors"
+    ]
+  },
+  {
+    "title": "Keep a photo of a delivery note, bill or receipt",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "purchasing",
+      "accountant"
+    ],
+    "when": "daily",
+    "why": "The paper is kept with its record, so anyone checking later can see it.",
+    "before": [
+      "The record exists (a delivery, a return, a bill, a credit note or an expense)."
+    ],
+    "steps": [
+      {
+        "do": "Press the paperclip next to the record (“No documents kept with it yet”).",
+        "shot": "documents-list"
+      },
+      {
+        "do": "Press “Take a photo” (on a phone) or “Choose a picture or a PDF”."
+      },
+      {
+        "do": "Check the Name, add a Note if useful, and press “Attach”.",
+        "see": "“Attached: {name}”"
+      }
+    ],
+    "if": [
+      {
+        "case": "The wrong photo was attached",
+        "do": "Press “Take off”, type why (“wrong photo”), press “Take it off”, and attach the right one."
+      },
+      {
+        "case": "The photo is huge",
+        "do": "Attach it: pictures over 1.5 MB are made smaller first."
+      }
+    ],
+    "screens": [
+      "/documents/[kind]/[record]",
+      "/purchasing",
+      "/vendors",
+      "/expenses"
+    ]
+  },
+  {
+    "title": "Record a supplier's bill",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "purchasing",
+      "accountant"
+    ],
+    "when": "weekly",
+    "why": "The bill turns a delivery into money owed to the supplier, with its due date. Services and rent are billed too.",
+    "before": [
+      "For goods: the delivery was received on Purchasing."
+    ],
+    "steps": [
+      {
+        "do": "Open Vendors (Menu → Spending → Vendors), press the supplier, and open “Bills & payments”."
+      },
+      {
+        "do": "Choose “For goods received” and the delivery in “Goods receipt”. (For rent or repairs choose “For a service or asset” and “Charge to account”.)",
+        "shot": "vendors-record-bill"
+      },
+      {
+        "do": "Type the supplier's own number over “Invoice no.”, the “Invoice date” and the “Amount (IQD)” from the invoice."
+      },
+      {
+        "do": "Choose Terms (Due now, Net 7, 15 or 30 days)."
+      },
+      {
+        "do": "Press “Record bill”.",
+        "see": "“Bill {bill} recorded (journal {no}).”"
+      }
+    ],
+    "if": [
+      {
+        "case": "The bill is more or less than the delivery",
+        "do": "If the delivery was entered wrong, correct it on Purchasing first. If the supplier really charged it, record it: the difference goes to 5050 Purchase price variance."
+      },
+      {
+        "case": "A bill was entered twice",
+        "do": "Owner, general manager or accountant: press “Cancel” on it, type why, choose the date, “Confirm”. Only while nothing is paid on it."
+      },
+      {
+        "case": "“(no unbilled receipts)”",
+        "do": "This supplier has no delivery waiting for a bill. Receive the delivery first."
+      }
+    ],
+    "screens": [
+      "/vendors"
+    ]
+  },
+  {
+    "title": "Pay a supplier's bill",
+    "roles": [
+      "accountant",
+      "general_manager",
+      "owner"
+    ],
+    "when": "weekly",
+    "why": "Paying records where the money came from and lowers what is owed. Part payments are fine.",
+    "before": [
+      "The bill is recorded. From the till: the drawer is open and holds enough. From the safe: it holds enough."
+    ],
+    "steps": [
+      {
+        "do": "Open Vendors, press the supplier and open “Bills & payments”."
+      },
+      {
+        "do": "Under “Pay bill” choose the bill. The amount fills with what is outstanding.",
+        "shot": "vendors-pay-bill"
+      },
+      {
+        "do": "Change “Amount (IQD)” for a part payment."
+      },
+      {
+        "do": "Choose “Paid from” (The till, The safe, The bank, A card, The owner, personally)."
+      },
+      {
+        "do": "Press “Record payment”.",
+        "see": "“Payment recorded (journal {no}). {amount} still outstanding on that bill.”"
+      }
+    ],
+    "if": [
+      {
+        "case": "The owner paid from his own pocket",
+        "do": "Choose “The owner, personally”. It is booked as money the owner put in."
+      },
+      {
+        "case": "A branch manager or purchasing cannot pay",
+        "do": "Only the owner, general manager and accountant pay bills."
+      },
+      {
+        "case": "Which bills first?",
+        "do": "Look at the ageing at the top of Vendors and pay the oldest first."
+      }
+    ],
+    "screens": [
+      "/vendors"
+    ]
+  },
+  {
+    "title": "Record a supplier's credit note and use it",
+    "roles": [
+      "owner",
+      "general_manager",
+      "accountant",
+      "branch_manager",
+      "purchasing"
+    ],
+    "when": "when needed",
+    "why": "A credit is money the supplier owes back: goods returned after the bill, a lower price agreed, or an overcharge.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Vendors, press the supplier, and open “Credit notes”.",
+        "shot": "vendors-credits"
+      },
+      {
+        "do": "For a return already listed (“Awaiting their note”): type the number on their credit note and press “Record it”."
+      },
+      {
+        "do": "For a new credit: under “Record their credit note” choose “A lower price on a delivery that was billed” or “Other: a service, an overcharge”."
+      },
+      {
+        "do": "Type “The number on their credit note”, “Amount (IQD)”, choose the delivery or the bill and account, and type “What it is for”. Press “Record the credit”."
+      },
+      {
+        "do": "Owner, general manager or accountant: on a credit with something left choose a bill in “Set it against”, check the Amount, press “Set against it”.",
+        "see": "“Set against the bill: {left} of the credit left.”"
+      }
+    ],
+    "if": [
+      {
+        "case": "The supplier's number was used already",
+        "do": "Each credit note number is accepted once per supplier."
+      }
+    ],
+    "screens": [
+      "/vendors"
+    ]
+  },
+  {
+    "title": "Record an expense (rent, electricity, a small purchase)",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant"
+    ],
+    "when": "when needed",
+    "why": "Money spent that is not stock goes to an expense account, from the till, safe, bank, card or the owner.",
+    "before": [
+      "The month is open. From the till: the drawer is open and holds enough."
+    ],
+    "steps": [
+      {
+        "do": "Open Expenses (Menu → Spending → Expenses).",
+        "shot": "expense-entry"
+      },
+      {
+        "do": "Type “Narration” (for example September shop rent). An account is proposed from the words."
+      },
+      {
+        "do": "Type “Amount (IQD)” and the Date. From the till or safe the date must be today."
+      },
+      {
+        "do": "Choose “Paid from” and check the “Account”."
+      },
+      {
+        "do": "Press “Post expense”.",
+        "see": "“Posted to {account} {name} (journal {no}).”"
+      },
+      {
+        "do": "Press the paperclip on the new line to keep the receipt's photo."
+      }
+    ],
+    "if": [
+      {
+        "case": "It warns a payment like this was posted in the last 3 days",
+        "do": "If it is the same payment, do not post. If it is a second payment, tick “It is another payment, not the same one” and post."
+      },
+      {
+        "case": "The words say waste, expired or damaged",
+        "do": "That is a stock loss: record it on Inventory → Record a loss."
+      },
+      {
+        "case": "Wrong account or amount after posting",
+        "do": "It cannot be edited. The accountant reverses its journal on Journals, then you post it again."
+      }
+    ],
+    "screens": [
+      "/expenses",
+      "/journals"
+    ]
+  },
+  {
+    "title": "Record a payment made ahead for months (rent, insurance)",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant"
+    ],
+    "when": "when needed",
+    "why": "Three months' rent paid today belongs to three months. Each month takes its share.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Expenses. Type the Narration, Amount, “Paid from” and Account."
+      },
+      {
+        "do": "Tick “Paid ahead for months to come (next month's rent, a year's insurance): each month takes its share”.",
+        "shot": "expense-prepaid"
+      },
+      {
+        "do": "Choose “First month” and type “How many months”."
+      },
+      {
+        "do": "Press “Post prepaid expense”.",
+        "see": "“Paid into Prepaid expenses (journal {no}): {n} months, {first} to {last}.”"
+      },
+      {
+        "do": "Each new month: under Prepaid Expenses press “Release what is due ({n})”.",
+        "see": "“{n} month(s)' share posted as an expense of its month.”",
+        "shot": "expense-prepaid-list"
+      }
+    ],
+    "if": [
+      {
+        "case": "It was entered with the wrong months",
+        "do": "Owner, general manager or accountant: press “Cancel”, type why, “Confirm”. Then record it again."
+      },
+      {
+        "case": "The Dashboard says a prepaid share is due",
+        "do": "Press “Release what is due”."
+      }
+    ],
+    "screens": [
+      "/expenses"
+    ]
+  },
+  {
+    "title": "Check the bank against its statement",
+    "roles": [
+      "accountant",
+      "general_manager",
+      "owner"
+    ],
+    "when": "monthly",
+    "why": "Ticking each bank line the statement shows proves the books' bank agrees with the real bank, and finds what is missing.",
+    "before": [
+      "The bank's statement as a file (.xlsx, .csv) or copied from the bank's site."
+    ],
+    "steps": [
+      {
+        "do": "Open Chart of Accounts → “The bank against its statement →”."
+      },
+      {
+        "do": "Press “Read it from its file…” and choose the file (or “or paste it”).",
+        "shot": "bank-read"
+      },
+      {
+        "do": "For a line not in the books: press “Record it” (a bank charge opens Expenses; interest opens a journal). Card money goes on Sales → Card Takings; platform money on Delivery Platforms."
+      },
+      {
+        "do": "Type “The statement's last day” and “The balance on the statement”."
+      },
+      {
+        "do": "Tick each line in “On the statement”, or press “Tick every line to this day”.",
+        "shot": "bank-ties"
+      },
+      {
+        "do": "When it ties, press “Keep the statement”.",
+        "see": "“Statement {no} is kept: the bank ties to {date}.”",
+        "shot": "bank-statements"
+      }
+    ],
+    "if": [
+      {
+        "case": "A transfer is in the books but not yet on the statement",
+        "do": "Leave it unticked. It waits for the next statement."
+      },
+      {
+        "case": "A statement was kept by mistake",
+        "do": "Press “Undo…” on the latest, type why, “Undo the statement”."
+      },
+      {
+        "case": "The file is .xls or PDF",
+        "do": "Save it as .xlsx or .csv from Excel first."
+      }
+    ],
+    "screens": [
+      "/accounting/bank",
+      "/expenses",
+      "/sales"
+    ]
+  },
+  {
+    "title": "Record card and app money reaching the bank",
+    "roles": [
+      "accountant",
+      "general_manager",
+      "owner"
+    ],
+    "when": "weekly",
+    "why": "Card and app money waits in its own account until it reaches the bank. Settling moves it and records the fee.",
+    "before": [
+      "The terminal's report, and the bank's statement or app's report."
+    ],
+    "steps": [
+      {
+        "do": "Open Sales → “Card Takings”.",
+        "shot": "sales-card"
+      },
+      {
+        "do": "Choose “Settle the days up to”. Type “The terminal's total (IQD)” or press “Same as the till”."
+      },
+      {
+        "do": "Type “Reached the bank (IQD)”, “Arrived on” and the “Bank reference (optional)”."
+      },
+      {
+        "do": "If the till and the terminal differ, write why in the Note. Press “Record the settlement”.",
+        "see": "“Settled (journal {no}): {fee} card fee; the till and the terminal agree.”"
+      },
+      {
+        "do": "For FIB, FastPay and others: in “Ways to Pay” choose From (the app) and To (the bank), type “What arrived (IQD)”, “Fee kept (IQD)” and the Day. Press “Move money”."
+      }
+    ],
+    "if": [
+      {
+        "case": "A settlement was wrong",
+        "do": "Press “Cancel…” on the latest settlement, type why, and press “Cancel it”. Its days wait again."
+      },
+      {
+        "case": "A branch manager cannot settle",
+        "do": "Only the owner, general manager and accountant settle card takings."
+      }
+    ],
+    "screens": [
+      "/sales",
+      "/accounting/bank"
+    ]
+  },
+  {
+    "title": "Match a delivery platform's payout",
+    "roles": [
+      "accountant",
+      "general_manager",
+      "owner"
+    ],
+    "when": "weekly",
+    "why": "The platform pays for many orders at once, less its commission. Matching its statement to the orders checks every order was paid.",
+    "before": [
+      "The platform's statement (Excel or CSV) and the payout in the bank."
+    ],
+    "steps": [
+      {
+        "do": "Open Delivery Platforms → “Match a Statement”. Choose the Platform.",
+        "shot": "platforms-match"
+      },
+      {
+        "do": "Press “Read it from its file…” (or paste the rows in “The statement”)."
+      },
+      {
+        "do": "Press “Match to the orders waiting” and read: orders matched, paid, not explained."
+      },
+      {
+        "do": "Type “Statement number or date” and “The payout arrived on”. If some lines do not match, say why in the Note."
+      },
+      {
+        "do": "Press “Post the payout”.",
+        "see": "“Posted (journal {no}): {n} {platform} orders paid out.”"
+      }
+    ],
+    "if": [
+      {
+        "case": "An order on the statement is not found",
+        "do": "Check its number on Orders. If it was rung with a wrong number, write it in the note and post the rest."
+      },
+      {
+        "case": "A branch manager sees “The owner or the accountant posts the payout.”",
+        "do": "They can match, but only the owner, general manager or accountant posts."
+      }
+    ],
+    "screens": [
+      "/platforms",
+      "/orders"
+    ]
+  },
+  {
+    "title": "Post or reverse a journal by hand",
+    "roles": [
+      "accountant",
+      "general_manager",
+      "owner"
+    ],
+    "when": "when needed",
+    "why": "For entries no screen makes (an accrual, interest), or to undo a wrong manual journal or expense with a mirror entry.",
+    "before": [
+      "The month of the date is open."
+    ],
+    "steps": [
+      {
+        "do": "Open Journals (Menu → Accountant → Journals) and press “New Journal”.",
+        "shot": "journals-new"
+      },
+      {
+        "do": "Type “Date *” and “Notes *” (what it is for)."
+      },
+      {
+        "do": "On each line choose the Account and type Debits or Credits. Press “+ Add line” for more."
+      },
+      {
+        "do": "Press “Save and publish” when debits equal credits (or “Save as draft”, then “Publish” later).",
+        "see": "“Journal {no} published.”"
+      },
+      {
+        "do": "To undo a journal: press its number in the register, press “Reverse”, choose “Date of the reversal”, type “Why is it being reversed?”, press “Post reversal”.",
+        "shot": "journals-reverse"
+      }
+    ],
+    "if": [
+      {
+        "case": "A sale's or bill's journal is wrong",
+        "do": "It has no Reverse button. Void or refund the sale on Orders, or cancel the bill on Vendors."
+      },
+      {
+        "case": "“Debits and credits must agree”",
+        "do": "Fix the amounts until both sides are equal."
+      },
+      {
+        "case": "An account is missing from the list",
+        "do": "Accounts with their own records (till, stock, payables…) are posted only by their screens."
+      }
+    ],
+    "screens": [
+      "/journals"
+    ]
+  },
+  {
+    "title": "Run the month's payroll and pay salaries",
+    "roles": [
+      "accountant",
+      "general_manager",
+      "owner"
+    ],
+    "when": "monthly",
+    "why": "The payroll is drafted from each person's pay and hours, adjusted with reasons, approved, and then paid.",
+    "before": [
+      "Everyone's pay is set on Staff.",
+      "Hours are corrected and everyone is clocked out.",
+      "To approve: the month is over."
+    ],
+    "steps": [
+      {
+        "do": "Open Payroll (Menu → Spending → Payroll). Choose “The month” and press “Draft the payroll”.",
+        "shot": "payroll-home"
+      },
+      {
+        "do": "Read each line. Press “Adjust…” to add a bonus or a deduction with what it is for, or the advance to take back. Save.",
+        "shot": "payroll-run-draft"
+      },
+      {
+        "do": "If hours or pay changed since, press “Draft it again”."
+      },
+      {
+        "do": "Press “Approve the payroll”.",
+        "see": "“Approved, and posted.”"
+      },
+      {
+        "do": "Choose “Paid from” and press “Pay everyone still owed ({amount})”, or “Pay…” on one line.",
+        "see": "“Paid.”",
+        "shot": "payroll-run-approved"
+      },
+      {
+        "do": "Press “Print or save as PDF” for the paper copy."
+      }
+    ],
+    "if": [
+      {
+        "case": "Approved with a mistake",
+        "do": "If nothing is paid: “Reopen…” with why, fix, “Draft it again”, approve. If paid: cancel the payments first under Salaries paid."
+      },
+      {
+        "case": "“Approve the payroll” stays grey",
+        "do": "The month is not over yet, or the draft is out of date: press “Draft it again”."
+      },
+      {
+        "case": "Paid the wrong person",
+        "do": "Under Salaries paid press “Cancel…” with why, then pay the right line."
+      }
+    ],
+    "screens": [
+      "/payroll",
+      "/payroll/[id]",
+      "/staff"
+    ]
+  },
+  {
+    "title": "Give an advance on pay",
+    "roles": [
+      "accountant",
+      "general_manager",
+      "owner"
+    ],
+    "when": "when needed",
+    "why": "Money given before payday. The next payroll takes it back by itself.",
+    "before": [
+      "From the till: a drawer is open here and holds enough."
+    ],
+    "steps": [
+      {
+        "do": "Open Payroll and press “+ Give an advance…”.",
+        "shot": "payroll-advance-form"
+      },
+      {
+        "do": "Choose To, type the Amount, choose “Paid from” (The safe to start), and type what it is for."
+      },
+      {
+        "do": "Press “Give the advance”."
+      }
+    ],
+    "if": [
+      {
+        "case": "It was entered twice",
+        "do": "Press “Cancel…” on the extra one with why. Only before a payroll took any of it back."
+      },
+      {
+        "case": "The drawer does not hold enough",
+        "do": "Choose The safe or The bank."
+      }
+    ],
+    "screens": [
+      "/payroll"
+    ]
+  },
+  {
+    "title": "Close the month",
+    "roles": [
+      "accountant",
+      "general_manager",
+      "owner"
+    ],
+    "when": "monthly",
+    "why": "Locking a month stops any more posting into it, so its figures stay as reported.",
+    "before": [
+      "Every trading day's cash counted, no stock count waiting, no draft journals, earlier months locked, payroll approved."
+    ],
+    "steps": [
+      {
+        "do": "Open Chart of Accounts (Menu → Accountant → Chart of Accounts) and press the month.",
+        "shot": "accounting-trial-balance"
+      },
+      {
+        "do": "Read the checklist under “Close {period}”. Fix each failing check: its line says what is wrong.",
+        "shot": "accounting-close-failing"
+      },
+      {
+        "do": "Type a “Note for the audit trail (optional)”."
+      },
+      {
+        "do": "Press “Lock {period}”.",
+        "see": "“{period} is locked. Corrections now go in by reversing entries in an open period.”",
+        "shot": "accounting-close-locked"
+      }
+    ],
+    "if": [
+      {
+        "case": "“Every trading day's cash is counted” fails with “Not counted: {day}”",
+        "do": "Close and count that day's drawer on End of Day, then reload."
+      },
+      {
+        "case": "“Resolve the {n} failing check(s) first.”",
+        "do": "The button stays grey until every blocking check passes."
+      },
+      {
+        "case": "A mistake is found in a locked month",
+        "do": "Correct it in the open month (reverse with today's date). Only the owner reopens, with a reason: “Why must it be reopened? (required)” and “Reopen {period}” (the latest locked month only)."
+      }
+    ],
+    "screens": [
+      "/accounting"
+    ]
+  },
+  {
+    "title": "Add equipment, or a new account, to the books",
+    "roles": [
+      "accountant",
+      "general_manager",
+      "owner"
+    ],
+    "when": "monthly",
+    "why": "An oven or gelato machine loses value each month. The books show what it cost and what it is worth now. New kinds of cost, a second bank or a loan need their own account.",
+    "before": [
+      "To pay it with a loan, add the loan account first."
+    ],
+    "steps": [
+      {
+        "do": "Open Chart of Accounts and scroll to Equipment. Press “＋ Add equipment”.",
+        "shot": "accounting-equipment"
+      },
+      {
+        "do": "Type “What is it?”, “What it cost”, “Months it will be used”, “Worth at the end (0 if nothing)” and “Bought on”."
+      },
+      {
+        "do": "Choose “How was it paid?” and press “Add it”."
+      },
+      {
+        "do": "Each month press “Post it” to post the depreciation for months gone."
+      },
+      {
+        "do": "Sold or thrown out: press “Sold or thrown out”, type When and “What it fetched”, and Save."
+      }
+    ],
+    "if": [
+      {
+        "case": "It was bought years ago and is in the opening balances",
+        "do": "Choose “Bought before: in the books already”: no money moves."
+      },
+      {
+        "case": "You need a new account (a kind of cost, a second bank, a loan)",
+        "do": "In the accounts list choose “Type (Add an account)” (A cost, An income, Another bank account, A loan, A kind of equipment). The Code fills itself. Type “Name (English)” and press “Add the account”."
+      },
+      {
+        "case": "An account is no longer used",
+        "do": "Press “Take out of use…” on it, type why and confirm. Its history stays in reports."
+      }
+    ],
+    "screens": [
+      "/accounting"
+    ]
+  },
+  {
+    "title": "Record the owner putting money in or taking it out",
+    "roles": [
+      "owner",
+      "general_manager",
+      "accountant"
+    ],
+    "when": "when needed",
+    "why": "Money between the owner and the bank or safe is not income or expense. It is the owner's money.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Chart of Accounts and scroll to “The owner's money”.",
+        "shot": "accounting-owner-money"
+      },
+      {
+        "do": "Choose “The owner puts money in” or “The owner takes money out”, and The bank or The safe."
+      },
+      {
+        "do": "Type the Amount and “What it is for (required)”. Press “Record it”.",
+        "see": "“Recorded.”"
+      }
+    ],
+    "if": [
+      {
+        "case": "“Only the owner takes money out for themselves”",
+        "do": "Only the owner records taking money out."
+      },
+      {
+        "case": "The owner paid a bill from his pocket",
+        "do": "Record it on Expenses with “Paid from: The owner, personally”, not here."
+      }
+    ],
+    "screens": [
+      "/accounting",
+      "/expenses"
+    ]
+  },
+  {
+    "title": "Sell on account to a business and receive their payment",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant"
+    ],
+    "when": "when needed",
+    "why": "A hotel or office takes goods now and pays later. Each invoice is kept on their account until paid.",
+    "before": [
+      "The business is a customer (Customers → “+ Add a customer”)."
+    ],
+    "steps": [
+      {
+        "do": "Open Customers and press the customer's name. Press “Credit settings”.",
+        "shot": "customer-account"
+      },
+      {
+        "do": "Tick “Buys on account (pays later)”, type “Credit limit”, “Days to pay” and any wholesale % off. Save."
+      },
+      {
+        "do": "Press “＋ New invoice”. Add each Product and Quantity, and press “Make the invoice”.",
+        "see": "“Invoice {no} made: {amount}, due {date}.”"
+      },
+      {
+        "do": "When they pay: press “Receive a payment”, type the Amount, choose “Where did the money go?”, press “Receive it”.",
+        "see": "“Payment received. They owe {amount}.”"
+      },
+      {
+        "do": "Press “Statement” to print their account."
+      }
+    ],
+    "if": [
+      {
+        "case": "The invoice is over their limit",
+        "do": "Raise the limit in Credit settings, or take a payment first."
+      }
+    ],
+    "screens": [
+      "/customers/[id]",
+      "/customers"
+    ]
+  },
+  {
+    "title": "Read today's figures on the Dashboard",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant",
+      "auditor"
+    ],
+    "when": "daily",
+    "why": "Today against a usual day and the target, what needs someone, and what the figures say in words.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open the Dashboard (first in the menu).",
+        "shot": "dashboard-owner"
+      },
+      {
+        "do": "Read the four figures: “Net sales today”, “Orders”, “Average order value”, “Gross profit after waste & fees”. Tap one to see what is behind it."
+      },
+      {
+        "do": "Read “Needs you” and deal with the red alerts first."
+      },
+      {
+        "do": "Read “What the figures say” and “Yesterday” (the daily brief). Each sentence links to where to act."
+      },
+      {
+        "do": "Check the badge “Books reconcile” at the top. If it says “{n} reconciliation difference(s)”, open it.",
+        "shot": "dashboard-books"
+      }
+    ],
+    "if": [
+      {
+        "case": "No target card",
+        "do": "Set the daily sales target on Settings → Rules (owner or general manager)."
+      },
+      {
+        "case": "On a phone the charts are hidden",
+        "do": "Press “Show the rest: charts, stock, recent sales”."
+      }
+    ],
+    "screens": [
+      "/dashboard",
+      "/settings/rules"
+    ]
+  },
+  {
+    "title": "Read the month's reports and print them",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant",
+      "auditor"
+    ],
+    "when": "monthly",
+    "why": "The profit and loss, sales, buying, losses, staff and the balance sheet, for any dates and any place.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Reports (Menu → Accountant → Reports). Press “Last month” (or type From and To and press “Show”).",
+        "shot": "reports-top"
+      },
+      {
+        "do": "With more than one place, choose the Place."
+      },
+      {
+        "do": "Read “The period at a glance” and “What the period says”."
+      },
+      {
+        "do": "Jump to Profit & Loss. Press an account line to see its journal lines.",
+        "shot": "reports-pnl"
+      },
+      {
+        "do": "Press “The month at a glance →” for the month against the one before.",
+        "shot": "month-glance"
+      },
+      {
+        "do": "Press “Balance sheet and cash flow →” for what the café owns and owes.",
+        "shot": "statements"
+      },
+      {
+        "do": "Open the parts you want, then press “Print or save as PDF”."
+      }
+    ],
+    "if": [
+      {
+        "case": "“This screen could not be loaded” after changing dates",
+        "do": "From must be on or before To. Fix the dates."
+      },
+      {
+        "case": "An expense is missing",
+        "do": "It may be a draft journal (not counted) or have another date."
+      }
+    ],
+    "screens": [
+      "/reports",
+      "/reports#g-profit",
+      "/reports/month",
+      "/reports/statements"
+    ]
+  },
+  {
+    "title": "Check that the books tie",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant",
+      "auditor"
+    ],
+    "when": "weekly",
+    "why": "Each record (drawers, stock, suppliers, cards, platforms) must agree with its account. A difference means something to fix.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Reports → Checks → “Do the books tie?”.",
+        "shot": "reports-rec-ok"
+      },
+      {
+        "do": "Open the table. Each row shows the Subledger, the Ledger and the difference."
+      },
+      {
+        "do": "For a difference, press “{n} record(s)” to see the records to look into, and press each one to open where it is kept.",
+        "shot": "reports-rec-bad"
+      },
+      {
+        "do": "Fix the cause there (an uncounted drawer, a missing journal), then look again."
+      }
+    ],
+    "if": [
+      {
+        "case": "The drawer check does not tie",
+        "do": "Usually a session is not closed or counted. Open “Drawer sessions”."
+      },
+      {
+        "case": "Inventory (1200) does not tie and old app records are listed",
+        "do": "Owner only: check them, type why, press “Post these {n} journal(s)”."
+      }
+    ],
+    "screens": [
+      "/reports#g-checks",
+      "/dashboard"
+    ]
+  },
+  {
+    "title": "Look at voids, refunds and discounts",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant",
+      "auditor"
+    ],
+    "when": "weekly",
+    "why": "Exceptions show every void, refund, discount, cancelled bill and giveaway with who did it and why.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Reports, choose the dates, and jump to Checks → Exceptions.",
+        "shot": "reports-exceptions"
+      },
+      {
+        "do": "Read each row: who, when, the reason, and if a second person approved."
+      },
+      {
+        "do": "Rows without a second person need review. Talk to the person if a pattern shows."
+      },
+      {
+        "do": "Press “CSV” to keep the list."
+      }
+    ],
+    "if": [
+      {
+        "case": "A cashier has many voids",
+        "do": "Read each reason and time. From now on ask a second person to approve voids."
+      }
+    ],
+    "screens": [
+      "/reports#g-checks",
+      "/orders"
+    ]
+  },
+  {
+    "title": "Decide what to keep, reprice or drop on the menu",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant",
+      "auditor",
+      "purchasing"
+    ],
+    "when": "monthly",
+    "why": "The menu matrix shows what sells and what earns. Price watch shows what came in dearer and the price that keeps the margin.",
+    "before": [
+      "Products have recipes with costs."
+    ],
+    "steps": [
+      {
+        "do": "Open Reports → “Menu matrix: what to keep, reprice, show more or drop →”.",
+        "shot": "menu-matrix"
+      },
+      {
+        "do": "Choose “The last 4 weeks” or “The last 3 months”, and a category to compare like with like."
+      },
+      {
+        "do": "Read the four groups: Keep, Raise the price, Show it more, Change it or drop it."
+      },
+      {
+        "do": "Open Reports → “Price watch: what came in dearer →”.",
+        "shot": "prices-rise"
+      },
+      {
+        "do": "Owner or general manager: press “Set it” beside a price to sell it at that price from today.",
+        "see": "“Set from today”"
+      }
+    ],
+    "if": [
+      {
+        "case": "A new product shows “Change it or drop it”",
+        "do": "It may just be new. Look again over The last 3 months."
+      },
+      {
+        "case": "The rise was a one-off",
+        "do": "Do not change the price. The next delivery will show."
+      }
+    ],
+    "screens": [
+      "/reports/menu",
+      "/reports/prices",
+      "/products"
+    ]
+  },
+  {
+    "title": "Check the cash will last the next 30 days",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant",
+      "auditor"
+    ],
+    "when": "weekly",
+    "why": "Cash ahead shows the bank and the safe day by day, with bills due and usual takings, and warns before money runs short.",
+    "before": [
+      "Four weeks of takings, and supplier bills with due dates."
+    ],
+    "steps": [
+      {
+        "do": "Open Reports → “Cash ahead: the next 30 days of the bank and the safe →”.",
+        "shot": "cash-ahead-warning"
+      },
+      {
+        "do": "Read the warnings at the top. Each says when and what to do."
+      },
+      {
+        "do": "Look at “Day by day” and “What is due and expected”."
+      },
+      {
+        "do": "Act: move cash, delay a bill, or chase customers who owe (“Customers”)."
+      }
+    ],
+    "if": [
+      {
+        "case": "The Dashboard says money is short ahead",
+        "do": "Open Cash ahead, read the warning, do its action, look again."
+      }
+    ],
+    "screens": [
+      "/reports/cash-ahead",
+      "/vendors"
+    ]
+  },
+  {
+    "title": "Look at the watch list",
+    "roles": [
+      "owner",
+      "general_manager"
+    ],
+    "when": "weekly",
+    "why": "Patterns that stand out: voids far more than others, discounts just under the limit, a drawer short again and again.",
+    "before": [
+      "Four weeks of sales. The general manager reads it only if the owner allows it."
+    ],
+    "steps": [
+      {
+        "do": "Open Reports → “Watch list: patterns worth a look →” (or the Dashboard's watch list card).",
+        "shot": "watch-finding"
+      },
+      {
+        "do": "Read each finding. Press “The sales of those days” to see the sales."
+      },
+      {
+        "do": "Write “A note (on the audit trail)” and press “Explained” or “Looked into”."
+      },
+      {
+        "do": "Owner: to let the general manager help, tick “The general manager reads the watch list too” on Settings."
+      }
+    ],
+    "if": [
+      {
+        "case": "A finding has a good reason (an agreed discount)",
+        "do": "Write it and press “Explained”."
+      }
+    ],
+    "screens": [
+      "/reports/watch",
+      "/settings"
+    ]
+  },
+  {
+    "title": "Find who changed something",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant",
+      "auditor"
+    ],
+    "when": "when needed",
+    "why": "The audit trail keeps every change with the value before and after, who did it and why. Nobody can change it.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Audit trail (Menu → Accountant → Audit trail).",
+        "shot": "audit-books"
+      },
+      {
+        "do": "Choose From and To, “What” (for example Prices) and “Who”. Press “Show”."
+      },
+      {
+        "do": "Read the rows. Press “CSV” to download the whole list."
+      }
+    ],
+    "if": [
+      {
+        "case": "A change shows “No one signed in”",
+        "do": "It was made in the database directly. Ask whoever looks after the system."
+      },
+      {
+        "case": "Why was a month reopened?",
+        "do": "Choose What → Books & periods; the Why column has the owner's reason."
+      }
+    ],
+    "screens": [
+      "/audit"
+    ]
+  },
+  {
+    "title": "Deal with problems staff reported",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant",
+      "auditor"
+    ],
+    "when": "weekly",
+    "why": "Staff report problems from “Something's wrong?”. Mark each one dealt with so nobody checks it twice.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Menu → You → Reported problems (or the Dashboard card “{n} problem(s) reported by staff”).",
+        "shot": "problems-list"
+      },
+      {
+        "do": "Read the report: the screen, who, when and what went wrong."
+      },
+      {
+        "do": "Type “What was done (optional)” and press “Dealt with”."
+      },
+      {
+        "do": "If it needs whoever looks after the system, press “Copy to send on” and paste it into a message."
+      }
+    ],
+    "if": [
+      {
+        "case": "It happens again",
+        "do": "Press “Open again” on the report."
+      }
+    ],
+    "screens": [
+      "/problems",
+      "/dashboard"
+    ]
+  },
+  {
+    "title": "Check stock use, waste and stock value",
+    "roles": [
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "accountant",
+      "auditor",
+      "purchasing"
+    ],
+    "when": "monthly",
+    "why": "Usage compares what the counts say was used with what the recipes say. Waste by recipe shows what is thrown away. Stock value shows what stock was worth.",
+    "before": [
+      "Two approved counts of each item in the dates (for Usage)."
+    ],
+    "steps": [
+      {
+        "do": "Open Usage (Menu → Operations → Usage). Press “Last month” or choose dates.",
+        "shot": "usage-table"
+      },
+      {
+        "do": "Read the difference for each item. Press “What it is made of” to see why."
+      },
+      {
+        "do": "Open Reports → “Waste by recipe: made, sold and thrown away →”.",
+        "shot": "waste-by-recipe"
+      },
+      {
+        "do": "Open Reports → “Stock value on a day →”. Choose the day in On and press “Show”.",
+        "shot": "stock-value"
+      }
+    ],
+    "if": [
+      {
+        "case": "Milk shows a big difference",
+        "do": "Check losses not recorded and portion sizes. Count again next week."
+      },
+      {
+        "case": "Stock value differs from 1200 Inventory",
+        "do": "Check Do the books tie? on Reports."
+      }
+    ],
+    "screens": [
+      "/inventory/usage",
+      "/reports/waste",
+      "/reports/stock"
+    ]
+  },
+  {
+    "title": "Check a drawer session's cash",
+    "roles": [
+      "auditor",
+      "accountant",
+      "owner",
+      "general_manager",
+      "branch_manager"
+    ],
+    "when": "weekly",
+    "why": "Each session shows what it opened with, every cash movement, what it should have held, what was counted and the difference.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Sales → Cash Sessions → “All sessions”.",
+        "shot": "sales-sessions"
+      },
+      {
+        "do": "Choose From and To and press “Show”."
+      },
+      {
+        "do": "Press a Session to open its statement.",
+        "shot": "sales-session"
+      },
+      {
+        "do": "Read every cash movement: sales, refunds, voids, paid out, taken to the safe or bank. Press “Print” for paper."
+      }
+    ],
+    "if": [
+      {
+        "case": "A session is short",
+        "do": "Look at its voids, refunds and paid-outs. Compare with the exceptions on Reports."
+      }
+    ],
+    "screens": [
+      "/sales/sessions",
+      "/sales/sessions/[id]"
+    ]
+  },
+  {
+    "title": "Download the books for checking",
+    "roles": [
+      "auditor",
+      "accountant",
+      "owner",
+      "general_manager"
+    ],
+    "when": "monthly",
+    "why": "Every journal line, the trial balance and the audit trail can be downloaded for Excel.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Reports, choose the dates, and press “every journal line (CSV)”."
+      },
+      {
+        "do": "Open Chart of Accounts, choose the month, and press “Download CSV” for the trial balance."
+      },
+      {
+        "do": "Press an account name to see its lines; press “CSV” there.",
+        "shot": "journals-ledger"
+      },
+      {
+        "do": "Open Journals to read each entry: press its number to see its lines.",
+        "shot": "journals-register"
+      },
+      {
+        "do": "Open Audit trail and press “CSV”."
+      }
+    ],
+    "if": [
+      {
+        "case": "The journal lines CSV is the whole café",
+        "do": "It always is, whatever place is chosen."
+      }
+    ],
+    "screens": [
+      "/reports",
+      "/accounting",
+      "/journals?account={code}&from={day}&to={day}",
+      "/journals",
+      "/audit"
+    ]
+  },
+  {
+    "title": "Check a supplier's statement and the papers behind it",
+    "roles": [
+      "auditor",
+      "accountant",
+      "owner",
+      "general_manager",
+      "branch_manager",
+      "purchasing"
+    ],
+    "when": "monthly",
+    "why": "The statement shows each bill, payment and credit with the balance. The papers show the invoice behind each line.",
+    "before": [],
+    "steps": [
+      {
+        "do": "Open Vendors and press the supplier. On the Statement tab press “A statement between two dates, to print”.",
+        "shot": "vendors-statement"
+      },
+      {
+        "do": "Choose From and To and press “Show”.",
+        "shot": "supplier-statement"
+      },
+      {
+        "do": "Press a paperclip to see the invoice or credit note kept with that line.",
+        "shot": "documents-readonly"
+      },
+      {
+        "do": "Press “Print the statement” for paper."
+      }
+    ],
+    "if": [
+      {
+        "case": "The supplier says the café owes a different amount",
+        "do": "Print the statement for their dates and go through it line by line. Record any missing bill or credit on Vendors."
+      }
+    ],
+    "screens": [
+      "/vendors",
+      "/vendors/[id]/statement",
+      "/documents/[kind]/[record]"
+    ]
+  }
+]

@@ -29,3 +29,11 @@ yet: they wait for the owner's word.
 - Till: "Discard" tells a cashier a manager will check Orders, a screen the
   cashier cannot open (fine as information, but worth wording).
 - Till: the main screen has no heading ("Point of Sale" shows only when empty).
+
+Missing features the task guides ran into (described as they are):
+
+- No screen changes the café's details (name, currency, time zone, default
+  language, bill numbers); Settings only shows them.
+- Places (branches, the kitchen, the warehouse) cannot be added or renamed on
+  a screen.
+- An earlier sale's receipt cannot be printed again (Orders prints refund slips only).
