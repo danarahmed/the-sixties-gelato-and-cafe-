@@ -3,7 +3,8 @@
 Chosen by the owner on 21 October 2026 from the ideas after the live run:
 
 - **Smarter:** 2 · spotting problems people hide, 3 · smarter buying,
-  5 · cash planning, 6 · the Monday brief.
+  5 · cash planning (6 · the Monday brief was dropped by the owner on
+  22 October 2026).
 - **Easier to use:** E1–E8, all of them (below).
 - **More flexible:** F1–F5, all of them (below).
 
@@ -136,33 +137,9 @@ least 3 days before.
 
 ---
 
-## Part 6 — The Monday brief
+## Part 6 — The Monday brief (dropped)
 
-**What the owner gets.** Every Monday morning (07:30, Erbil time), on the
-phone and on the Dashboard, in the owner's own language (English, Arabic or
-Kurdish):
-
-- **Last week in plain words:** sales and profit against the week before and
-  the same week last month; the best and worst sellers; waste; labour cost
-  against its target.
-- **What changed from normal:** anything well above or below its usual level
-  (a product selling less, a cost rising, a branch falling behind).
-- **The three things to do this week**, chosen from parts 2, 3 and 5 and the
-  alerts: the watch list's strongest item, the orders to approve, a cash
-  shortfall ahead, a price to raise.
-- A link to the full brief, which can be printed or saved as a PDF.
-
-**Build.** Migration: `weekly_brief(p_week)` putting the week's numbers
-and the chosen actions together (from the reports that already exist), a
-`brief` table kept per week, a Monday pg_cron job, and a phone warning.
-Screen: Dashboard card, **Reports → Monday brief** (this week and past
-weeks). Words in the three languages. Tests: SQL (the numbers agree with
-the reports, three actions chosen in order of what matters most), unit
-(the sentences in each language), browser (the card, the page, the PDF).
-
-**Passes when** every number in the brief agrees with the report it comes
-from, and the owner reads a sample brief from the simulated year and finds
-it useful.
+Dropped by the owner on 22 October 2026, after steps 7–10; not built.
 
 ---
 
@@ -264,11 +241,10 @@ and printed by the test on Test your devices.
 | 5 ✓  | F3 tips and a service charge                                                 | `0090`    |
 | 6 ✓  | F4 the dashboard arranged for each role, F5 the café's own receipt           | `0091`    |
 | 7 ✓  | The simulated year on the copy, with the planted problems; the backtest tool | —         |
-| 8 ✓  | Part 3, smarter buying (parts 5 and 6 use its drafts and lead times)         | `0092`    |
+| 8 ✓  | Part 3, smarter buying (part 5 uses its drafts and lead times)               | `0092`    |
 | 9 ✓  | Part 5, cash planning                                                        | `0093`    |
 | 10 ✓ | Part 2, the watch list                                                       | `0094`    |
-| 11   | Part 6, the Monday brief (gathers 2, 3 and 5, and the new deals and tips)    | `0095`    |
-| 12   | The guide brought up to date with every new screen                           | —         |
+| 11   | The guide brought up to date with every new screen                           | —         |
 
 As built (✓): a page's explanation is its first sentence, the rest under
 **How this works**; the Dashboard opens on today, then what needs you (the
