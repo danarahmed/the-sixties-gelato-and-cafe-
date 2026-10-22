@@ -161,6 +161,10 @@ class Year:
             self.live(day)
             day += dt.timedelta(days=1)
             n += 1
+            if n % 7 == 0:
+                # The clock stands still between days, so the server's own
+                # statistics would never be refreshed (a café's would be).
+                self.sql("analyze;")
         self.admin()
         self.sql("select 'the year ends';")
 

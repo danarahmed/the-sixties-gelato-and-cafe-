@@ -44,6 +44,9 @@ def load_baselines():
     out = subprocess.run(DB + ["-f", os.path.join(HERE, "baselines.sql")], capture_output=True, text=True)
     if out.returncode != 0:
         sys.exit(f"✗ baselines: {out.stderr.strip()}")
+    # The copy's clock stood still, so its statistics may never have been
+    # refreshed; without them a balance takes minutes, not a moment.
+    q("analyze")
 
 
 def year():
