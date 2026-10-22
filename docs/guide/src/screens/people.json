@@ -3443,13 +3443,13 @@
     "parts": [
       {
         "name": "The card",
-        "shows": "“This phone will clock you in and out at the shop, without a PIN. Press the button on your own phone only.” If the phone was already linked: “This phone clocks in {name} now: linking it makes it the new person's.”",
+        "shows": "“This phone will clock you in and out at the shop, without a PIN. Press the button on your own phone only.” If the phone was already linked: “This phone clocks in {name} now: linking it makes it the new person's.” (A manager should then unlink the earlier person's phone on Staff.)",
         "controls": [
           {
             "label": "Link this phone",
             "kind": "button",
             "does": "Links the phone; it keeps a key of its own from now on. Nothing happens until it is pressed, so a chat app opening the link does not use it.",
-            "after": "The phone clocks this person in and out; a phone linked before for them stops working; the previous person (if this phone was someone else's) is no longer linked to it. Staff shows “Phone linked”. Recorded in the audit trail."
+            "after": "The phone clocks this person in and out; a phone linked before for them stops working; if this phone was someone else's, it forgets their key and no longer clocks them, but the database still counts that person's phone as linked (Staff shows “Phone linked”, and with a clock screen in use the till refuses their PIN) until a manager presses Unlink… on their line. Staff shows “Phone linked”. Recorded in the audit trail."
           },
           {
             "label": "Open the clock",

@@ -37,3 +37,9 @@ Missing features the task guides ran into (described as they are):
 - Places (branches, the kitchen, the warehouse) cannot be added or renamed on
   a screen.
 - An earlier sale's receipt cannot be printed again (Orders prints refund slips only).
+- Clock: linking a phone to a second person makes the phone forget the first
+  person's key, but the database still counts the first person's phone as
+  linked: Staff shows "Phone linked" and the till refuses their PIN while a
+  clock screen is in use, until a manager presses Unlink.
+- Purchasing: a delivery priced entirely at 0 cannot be received ("Goods value
+  must be greater than zero…"), even with no freight.

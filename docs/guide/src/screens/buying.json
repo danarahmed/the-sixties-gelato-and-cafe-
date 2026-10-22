@@ -93,7 +93,7 @@
             "does": "In one press, makes a draft purchase order for each supplier from everything What to buy says is to order and has a supplier and a price, in the packs suggested, plus the items that supplier would top up (items with enough, but less than halfway to their level). The button says \"Drafting…\" while it works. It then lists each draft (\"Order {no} · supplier · total\", each a link to the order), or says there is nothing to order, and names items that are to order but have no supplier or price.",
             "rules": "Each draft is expected on today plus the days the supplier's deliveries take. Items already in a draft count as coming, so pressing again does not order them twice.",
             "who": "Only those who may create orders (owner, general manager, branch manager, purchasing).",
-            "after": "Draft orders appear in the list below and on Approvals. Nothing happens to stock, money or the books until an order is approved, sent and received. Each supplier's pack and price for the item is remembered."
+            "after": "Draft orders appear in the list below at once, and on Approvals once they have been left an hour (a draft still being changed is not shown there). Nothing happens to stock, money or the books until an order is approved, sent and received. Each supplier's pack and price for the item is remembered."
           },
           {
             "label": "How each supplier delivers",
@@ -184,7 +184,7 @@
             "kind": "button",
             "does": "Saves the order as a draft (\"Saving…\" while it works) and closes the form with \"Order {no} saved as a draft: {total}. A manager approves it next.\"",
             "rules": "Enabled only when a supplier is chosen and every line has an item, a quantity above zero and a price.",
-            "after": "A draft order exists (it shows on Approvals and counts as \"in draft\" on What to buy). No stock or money moves. On the audit trail."
+            "after": "A draft order exists (it shows on Approvals once it has been left unchanged for an hour, if it comes to more than nothing, and it counts as \"in draft\" on What to buy). No stock or money moves. On the audit trail."
           },
           {
             "label": "Back",
@@ -599,13 +599,13 @@
       },
       {
         "case": "A branch manager's order is over their limit",
-        "do": "It waits for the owner or general manager, on Approvals or here."
+        "do": "It waits for the owner or general manager, here at once, and on Approvals once the draft has been left an hour."
       }
     ],
     "tips": [
       "Draft the orders now is the fastest way: one press makes every supplier's draft; then Approve and send each.",
       "An approved order is printed from its own page (press its number), then Print the order.",
-      "Orders also appear on Approvals, where managers approve or cancel them."
+      "Draft orders also appear on Approvals once they have been left an hour, where managers approve or cancel them."
     ],
     "related": [
       "/purchasing/buying-list",
@@ -735,7 +735,7 @@
             "label": "Rebate (−)",
             "kind": "box",
             "does": "A discount off the whole invoice, taken off the lines by value.",
-            "rules": "Optional, zero or more; may not be more than a line's value.",
+            "rules": "Optional, zero or more; may not be more than the goods' value plus freight and other costs.",
             "after": "Lowers each line's landed cost."
           },
           {
@@ -1062,13 +1062,13 @@
       {
         "text": "Goods value must be greater than zero to allocate landed costs",
         "kind": "error",
-        "when": "Freight or other costs were typed but every line's price is 0.",
-        "do": "Type the lines' prices, or leave freight empty."
+        "when": "Every line's price is 0, so the delivery's goods come to nothing (refused even with no freight). Free goods cannot be received at a price of 0 alone.",
+        "do": "Type the lines' prices from the invoice; at least one line must cost more than 0."
       },
       {
         "text": "The rebate exceeds the value of a received line",
         "kind": "error",
-        "when": "The rebate is bigger than a line's share can carry.",
+        "when": "The rebate is more than the goods' value plus freight and other costs, so a line would come in below nothing.",
         "do": "Check the rebate against the invoice."
       },
       {
@@ -1557,7 +1557,7 @@
     ],
     "get_there": "Menu → Spending → Purchasing (owner, general manager, branch manager and the purchasing role have it in the main menu; the accountant and the auditor find it under More). The purchasing role starts on this screen when signing in. The table is at the bottom.",
     "before": [
-      "To correct: the delivery is not billed (cancel its bill on Vendors first) and its month is not locked."
+      "To correct: the delivery is not billed (cancel its bill on Vendors first), no goods from it have gone back to the supplier, and its month is not locked."
     ],
     "parts": [
       {
@@ -1906,7 +1906,7 @@
         "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
         "kind": "error",
         "when": "The step would write to the books in a month that has been locked (closed).",
-        "do": "Use a date in an open month, or ask the accountant or owner to unlock the month."
+        "do": "Use a date in an open month, or ask the owner to unlock the month (only the owner may unlock one)."
       },
       {
         "text": "Your previous submission may already have been saved. Checking…",
@@ -2162,7 +2162,7 @@
             "does": "Makes a draft purchase order for each supplier from the ticked lines (\"Saving…\" while it works), and shows the drafts made at the top of the page.",
             "rules": "Enabled when at least one line is ticked and every ticked line has a supplier, a quantity above zero and a price. Each draft is expected on today plus the days that supplier's deliveries take.",
             "who": "Owner, general manager, branch manager, purchasing.",
-            "after": "Draft orders appear on Purchasing and Approvals for a manager to approve; the items now count as \"in draft\" and drop off the to-order list. Each supplier's pack and price for the item is remembered (and the usual supplier, if ticked). No stock or money moves."
+            "after": "Draft orders appear on Purchasing at once, and on Approvals once they have been left an hour, for a manager to approve; the items now count as \"in draft\" and drop off the to-order list. Each supplier's pack and price for the item is remembered (and the usual supplier, if ticked). No stock or money moves."
           }
         ]
       },
@@ -3451,7 +3451,7 @@
         "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
         "kind": "error",
         "when": "The step would write to the books in a month that has been locked (closed).",
-        "do": "Use a date in an open month, or ask the accountant or owner to unlock the month."
+        "do": "Use a date in an open month, or ask the owner to unlock the month (only the owner may unlock one)."
       },
       {
         "text": "Your previous submission may already have been saved. Checking…",
@@ -3936,7 +3936,7 @@
         "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
         "kind": "error",
         "when": "The step would write to the books in a month that has been locked (closed).",
-        "do": "Use a date in an open month, or ask the accountant or owner to unlock the month."
+        "do": "Use a date in an open month, or ask the owner to unlock the month (only the owner may unlock one)."
       },
       {
         "text": "Your previous submission may already have been saved. Checking…",
@@ -4524,7 +4524,7 @@
         "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
         "kind": "error",
         "when": "The step would write to the books in a month that has been locked (closed).",
-        "do": "Use a date in an open month, or ask the accountant or owner to unlock the month."
+        "do": "Use a date in an open month, or ask the owner to unlock the month (only the owner may unlock one)."
       },
       {
         "text": "Your previous submission may already have been saved. Checking…",
@@ -4784,7 +4784,7 @@
         "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
         "kind": "error",
         "when": "The step would write to the books in a month that has been locked (closed).",
-        "do": "Use a date in an open month, or ask the accountant or owner to unlock the month."
+        "do": "Use a date in an open month, or ask the owner to unlock the month (only the owner may unlock one)."
       },
       {
         "text": "Your previous submission may already have been saved. Checking…",

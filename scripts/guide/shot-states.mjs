@@ -91,7 +91,7 @@ export const STATE_SHOTS = [
   {
     name: "settings-ways-to-pay",
     role: "owner",
-    path: "/settings#ways-to-pay",
+    path: "/settings?at=ways#ways-to-pay",
     then: async (page) => {
       const card = page.getByTestId("settings-pay-methods");
       for (const m of ["fib", "fastpay"]) {
@@ -108,7 +108,7 @@ export const STATE_SHOTS = [
   {
     name: "settings-receipt",
     role: "owner",
-    path: "/settings#receipt",
+    path: "/settings?at=receipt#receipt",
     then: async (page) => {
       const card = page.getByTestId("settings-receipt");
       await card.getByTestId("receipt-nameAr").fill("الستينات");
@@ -131,7 +131,7 @@ export const STATE_SHOTS = [
   {
     name: "settings-alerts",
     role: "owner",
-    path: "/settings#alerts",
+    path: "/settings?at=alerts#alerts",
     sql: `update business set alert_settings = alert_settings - 'session_open_hours' where id = '${B}'`,
     then: async (page) => {
       const form = page.getByTestId("alert-thresholds");
@@ -189,7 +189,7 @@ export const STATE_SHOTS = [
   {
     name: "settings-people",
     role: "owner",
-    path: "/settings#people-list",
+    path: "/settings?at=people#people-list",
     sql: `delete from user_role where app_user_id in (select id from app_user where email in ('rawa@example.com', 'hezha@example.com'));
           delete from app_user where email in ('rawa@example.com', 'hezha@example.com') and auth_user_id is null;`,
     then: async (page) => {
@@ -301,7 +301,7 @@ export const STATE_SHOTS = [
   {
     name: "production-plan",
     role: "manager",
-    path: "/production#plan",
+    path: "/production?at=plan#plan",
     then: async (page) => {
       await toTop(page.getByTestId("plan"), 80);
     },
@@ -309,7 +309,7 @@ export const STATE_SHOTS = [
   {
     name: "production-plan-all",
     role: "barista",
-    path: "/production#plan",
+    path: "/production?at=plan#plan",
     then: async (page) => {
       const all = page.getByTestId("plan-all");
       await all.locator("summary").click();
@@ -336,7 +336,7 @@ export const STATE_SHOTS = [
   {
     name: "production-lots",
     role: "manager",
-    path: "/production#lots",
+    path: "/production?at=lots#lots",
     sql: `update item_lot set use_by = ((${TODAY} + time '22:00') at time zone 'Asia/Baghdad')
            where lot_code = 'B1143' and item_id = (select id from item where name = 'Vanilla gelato');
           update production_batch set use_by = ((${TODAY} + time '22:00') at time zone 'Asia/Baghdad') where batch_no = 1143;`,
@@ -461,7 +461,7 @@ export const STATE_SHOTS = [
   {
     name: "inventory-losses-waiting",
     role: "manager",
-    path: "/inventory#losses-waiting",
+    path: "/inventory?at=losses#losses-waiting",
     sql: `select test.act_as('barista@example.com');
           select record_loss('spoilage', (select id from item where name = 'Milk'), null, 12, 'L',
                              'The fridge was left open overnight', p_wait => true)
@@ -488,7 +488,7 @@ export const STATE_SHOTS = [
   {
     name: "inventory-paste",
     role: "owner",
-    path: "/inventory#paste-items",
+    path: "/inventory?at=paste#paste-items",
     then: async (page) => {
       const list = [
         "Name\tUnit\tReorder at\tOn the shelf\tCost each",
@@ -1181,14 +1181,15 @@ export const STATE_SHOTS = [
       await page.locator("input.amt").first().fill("85000");
       await page.getByLabel("Paid from", { exact: true }).selectOption("safe");
       await page.getByLabel("Account", { exact: true }).selectOption("6200");
-      await page.getByRole("button", { name: "Post expense" }).click();
+      await page.waitForTimeout(500);
+      await page.getByRole("button", { name: "Post expense" }).click({ timeout: 5000 }).catch(() => {});
       await soft(page.getByTestId("same-payment"), 15000);
     },
   },
   {
     name: "expense-prepaid-list",
     role: "kitchenboss",
-    path: "/expenses#prepaid",
+    path: "/expenses?at=prepaid#prepaid",
     get sql() {
       return prepaidSetup();
     },
