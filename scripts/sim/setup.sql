@@ -256,7 +256,8 @@ grant insert on sim.refused to authenticated;
 -- A sale as the acting cashier: p_items 'latte*2,croissant*1'. Returns the
 -- sale, or null when the café's own rules refuse it (kept in sim.refused).
 create or replace function sim.sale(p_channel sales_channel, p_tender tender_type, p_items text,
-                                    p_discount numeric default null, p_order_no text default null)
+                                    p_discount numeric default null, p_order_no text default null,
+                                    p_reason text default 'regular')
 returns uuid language plpgsql security definer set search_path = public, sim as $$
 declare v_lines jsonb := '[]'; x text; v jsonb;
 begin
@@ -269,14 +270,14 @@ begin
   end loop;
   v := record_sale(gen_random_uuid(), p_channel, p_tender, v_lines, sim.main(),
                    p_discount_percent => p_discount,
-                   p_discount_reason => case when p_discount is not null then 'regular' end,
+                   p_discount_reason => case when p_discount is not null then p_reason end,
                    p_platform_order_no => p_order_no);
   return (v ->> 'order_id')::uuid;
 exception when others then
   insert into sim.refused (cashier, items, reason) values ((current_member()).full_name, p_items, sqlerrm);
   return null;
 end $$;
-grant execute on function sim.sale(sales_channel, tender_type, text, numeric, text) to authenticated;
+grant execute on function sim.sale(sales_channel, tender_type, text, numeric, text, text) to authenticated;
 
 -- The acting manager voids the last completed sale a cashier took in cash
 -- (a planted void, or an honest mistake put right).

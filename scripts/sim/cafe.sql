@@ -118,25 +118,26 @@ select test.act_as('owner@example.com');
 select set_item_supplier(item, supplier, unit, price, true, gen_random_uuid()) from sim.supply_ids;
 
 -- ---------------------------------------------------------------- opening money
--- The owner puts 40,000,000 IQD in the bank to start the year (a journal by
--- hand, as the owner would enter it on Journals).
+-- The owner puts 6,000,000 IQD in the bank to start the year (a journal by
+-- hand, as the owner would enter it on Journals): little, as a café runs, so
+-- the quarter's rent, the owner's drawings and the new machine bite.
 select test.act_as('owner@example.com');
 select save_journal(current_date, 'Opening capital (simulated year)',
-  jsonb_build_array(jsonb_build_object('code', '1020', 'debit', 40000000),
-                    jsonb_build_object('code', '3000', 'credit', 40000000)),
+  jsonb_build_array(jsonb_build_object('code', '1020', 'debit', 6000000),
+                    jsonb_build_object('code', '3000', 'credit', 6000000)),
   true, null, null, gen_random_uuid());
 select test.as_admin();
 
 -- ---------------------------------------------------------------- the answer key
 insert into sim.planted (kind, who, starts, ends, problem, note) values
   ('discounts',    'Dara',   '2025-12-20', '2026-10-21', true,
-   'Gives a 9% discount (just under the 10% a cashier may give alone) on about one sale in seven, from 20 December; before, like everyone else'),
+   'Gives a 9% discount (just under the 10% a cashier may give alone) on about one sale in fourteen, from 20 December; before, like everyone else. Not to be confused with the students'' 8% (a promotion everyone gives in the afternoons from February)'),
   ('voids',        'Karwan', '2026-03-15', '2026-10-21', true,
-   'About one in twenty-five of his cash sales voided a few minutes later, from 15 March'),
+   'About one in thirty of his cash sales voided a few minutes later, from 15 March. The evening has more honest voids for everyone on it (customers gone before the coffee came)'),
   ('drawer_short', 'Bana',   '2026-05-07', '2026-10-21', true,
-   'Her Thursday evening drawer is 15,000–30,000 IQD short, from 7 May'),
+   'Her Thursday evening drawer is 6,000–14,000 IQD short, from 7 May'),
   ('new_staff',    'Lana',   '2026-08-01', '2026-08-21', false,
-   'New: voids about one sale in fifty in her first three weeks while she learns, then like everyone else. Not a problem: a good watch list gives new staff time');
+   'New: voids about one sale in fifty, and half her drawers 2,000–9,000 short, in her first three weeks while she learns; then like everyone else. Not a problem: a good watch list gives new staff time');
 
 insert into sim.config values ('start', '2025-10-23'), ('end', '2026-10-21')
 on conflict (key) do update set value = excluded.value;

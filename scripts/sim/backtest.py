@@ -9,7 +9,7 @@ stands in: the simplest rule it must beat.
 
     python3 scripts/sim/backtest.py summary            # is the year believable?
     python3 scripts/sim/backtest.py watch [--fn F]     # part 2: problems people hide
-    python3 scripts/sim/backtest.py cash [--fn F]      # part 5: cash ahead
+    python3 scripts/sim/backtest.py cash [--fn F] [--short-fn G]  # part 5: cash ahead, shortfalls
     python3 scripts/sim/backtest.py buying             # part 3: the habit against the drafts year
     python3 scripts/sim/backtest.py all
 
@@ -174,6 +174,40 @@ def cash(fn, days=7):
     return passed
 
 
+def shortfalls(fn):
+    """Part 5's second mark: every real shortfall (a day the bank ends below nothing)
+    warned of at least 3 days before. F(as_of date) returns the days it warns of."""
+    start, end = year()
+    days = [start + dt.timedelta(days=k) for k in range((end - start).days + 1)]
+    below = {dt.date.fromisoformat(d) for d, in q(
+        f"select d::date from generate_series('{start}'::date, '{end}'::date, '1 day') d where sim.bank_on(d::date) < 0")}
+    episodes = [d for d in days if d in below and d - dt.timedelta(days=1) not in below]
+    print(f"Shortfall backtest: {fn}; the bank below nothing on {len(below)} days, in {len(episodes)} spells\n")
+    warned_all = True
+    for first in episodes:
+        spell = set()
+        d = first
+        while d in below:
+            spell.add(d)
+            d += dt.timedelta(days=1)
+        warned = None
+        for back in range(14, 2, -1):
+            as_of = first - dt.timedelta(days=back)
+            if as_of < start:
+                continue
+            said = {dt.date.fromisoformat(x) for x, in q(f"select * from {fn}('{as_of}')")}
+            if said & spell:
+                warned = back
+                break
+        warned_all = warned_all and warned is not None
+        print(f"  {'✓' if warned else '✗'} from {first}, {len(spell)} day(s): "
+              + (f"warned {warned} days before" if warned else "not warned 3 days or more before"))
+    passed = warned_all
+    print(f"\n  {'PASSES' if passed else 'DOES NOT PASS'} SMART_PLAN's mark for part 5 "
+          f"(every real shortfall warned of at least 3 days before)")
+    return passed
+
+
 # ---------------------------------------------------------------------- buying
 def stock_story(db, port, first, last):
     """For each item the café buys: its stock at each day's end, what it used
@@ -271,6 +305,7 @@ def main():
     a.add_argument("what", choices=["summary", "watch", "cash", "buying", "all"])
     a.add_argument("--fn", default=None)
     a.add_argument("--days", type=int, default=7)
+    a.add_argument("--short-fn", default=None, help="for cash: F(as_of) returning the days it warns of")
     args = a.parse_args()
     load_baselines()
     if args.what in ("summary", "all"):
@@ -284,6 +319,8 @@ def main():
         if not args.fn:
             print()
             cash("sim.naive_cash_trend", args.days)
+        print()
+        shortfalls(args.short_fn or "sim.naive_short")
         print()
     if args.what in ("buying", "all"):
         buying([("The café's own habit", os.environ.get("SIM_DB", "sixties_sim"), None),

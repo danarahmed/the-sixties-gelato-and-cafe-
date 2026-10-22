@@ -59,3 +59,18 @@ create or replace function sim.naive_cash_trend(p_as_of date, p_days int)
 returns numeric language sql stable as $$
   select sim.cash_on(p_as_of) + (sim.cash_on(p_as_of) - sim.cash_on(p_as_of - 28)) / 28 * p_days
 $$;
+
+-- What the bank holds at the end of a day.
+create or replace function sim.bank_on(p_day date) returns numeric
+language sql stable as $$
+  select coalesce(gl_balance_at(sim.business(), '1020',
+           ((p_day + 1)::timestamp at time zone 'Asia/Baghdad') - interval '1 microsecond'), 0)
+$$;
+
+-- The shortfall warning's baseline: the bank's last four weeks' average day
+-- goes on; the days of the next fortnight when that leaves it below nothing.
+create or replace function sim.naive_short(p_as_of date)
+returns table (day date) language sql stable as $$
+  with t as (select sim.bank_on(p_as_of) as now, (sim.bank_on(p_as_of) - sim.bank_on(p_as_of - 28)) / 28 as per_day)
+  select p_as_of + k from t, generate_series(1, 14) k where t.now + t.per_day * k < 0
+$$;

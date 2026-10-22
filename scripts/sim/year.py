@@ -45,6 +45,9 @@ DARA_DISCOUNTS_FROM = dt.date(2025, 12, 20)
 KARWAN_VOIDS_FROM = dt.date(2026, 3, 15)
 BANA_SHORT_FROM = dt.date(2026, 5, 7)
 LANA_LEARNING_UNTIL = dt.date(2026, 8, 21)
+# Honest look-alikes: the students' 8% in the afternoons (a promotion, given by
+# whoever is on), from February.
+STUDENTS_FROM = dt.date(2026, 2, 1)
 
 # Ramadan 1447 and the days around it.
 RAMADAN = (dt.date(2026, 2, 18), dt.date(2026, 3, 19))
@@ -87,6 +90,9 @@ def in_ramadan(day):
 class Year:
     def __init__(self, seed, days, buying="habit"):
         self.r = random.Random(seed)
+        # The honest look-alikes (the students' promotion, the evening's
+        # voids, a new cashier's drawers) draw from their own numbers.
+        self.r2 = random.Random(seed + 1)
         self.days = days
         # How the café buys: its own simple habit (each supplier's delivery
         # on its days, ordered as it comes), or, from the fifth week, through
@@ -233,8 +239,14 @@ class Year:
             ev(10, 15, ("cards",))
         if day.weekday() == 6:
             ev(10, 0, ("bills", r.choice([0, 0, 0, 3])))
-        if day.day == 1:
-            ev(10, 5, ("expense", "Rent", 2500000, "6000"))
+        # The rent, three months at a time; the owner's drawings on the 20th;
+        # a second gelato machine in June.
+        if day.day == 1 and day.month in (1, 4, 7, 10):
+            ev(10, 5, ("expense", "Rent, three months", 7500000, "6000"))
+        if day.day == 20:
+            ev(12, 0, ("drawings", 12000000))
+        if day == dt.date(2026, 6, 8):
+            ev(12, 30, ("machine", 18000000))
         if day.day == 5:
             power = int(round(450000 + 650000 * heat(day), -4))
             ev(10, 10, ("expense", "Electricity and generator", power, "6200"))
@@ -281,12 +293,15 @@ class Year:
             k += 1
 
     def short(self, day, cashier, shift):
-        """How much short a drawer closes: Bana's planted Thursdays, or a small honest difference."""
+        """How much short a drawer closes: Bana's planted Thursdays, a new cashier's
+        honest mistakes, or a small honest difference."""
+        u, amount, honest = self.r.random(), self.r.randrange(6, 15) * 1000, self.r.choice([-1000, -500, -250, 250, 500, 1000])
+        u2, learning = self.r2.random(), self.r2.randrange(2, 10) * 1000
         if cashier == "Bana" and shift == "evening" and day.weekday() == 3 and day >= BANA_SHORT_FROM:
-            return self.r.randrange(15, 31) * 1000
-        if self.r.random() < 0.1:
-            return self.r.choice([-1000, -500, -250, 250, 500, 1000])
-        return 0
+            return amount
+        if cashier == "Lana" and day <= LANA_LEARNING_UNTIL and u2 < 0.5:
+            return learning
+        return honest if u < 0.1 else 0
 
     # ------------------------------------------------------------------ doing
     def do(self, day, secs, action):
@@ -320,6 +335,20 @@ class Year:
             _, what, amount, code = action
             self.act(OWNER)
             self.sql(f"select record_expense('{what}', {amount}, '{code}', 'bank', current_date, sim.main(), false, gen_random_uuid());")
+        elif kind == "drawings":
+            self.act(OWNER)
+            self.sql(
+                "select save_journal(current_date, 'Owner''s drawings', jsonb_build_array("
+                f"jsonb_build_object('code', '3200', 'debit', {action[1]}), "
+                f"jsonb_build_object('code', '1020', 'credit', {action[1]})), true, null, null, gen_random_uuid());"
+            )
+        elif kind == "machine":
+            self.act(OWNER)
+            self.sql(
+                "select save_journal(current_date, 'A second gelato machine', jsonb_build_array("
+                f"jsonb_build_object('code', '1500', 'debit', {action[1]}), "
+                f"jsonb_build_object('code', '1020', 'credit', {action[1]})), true, null, null, gen_random_uuid());"
+            )
         elif kind == "arrivals":
             self.act(OWNER)
             self.sql("select sim.receive_due();")
@@ -338,36 +367,46 @@ class Year:
         return 0
 
     def sale(self, day, secs, cashier):
-        r = self.r
+        r, r2 = self.r, self.r2
         hour = secs // 3600
         channel = self.channel(hour)
-        if channel == "talabat":
-            tender = "platform_paid"
-        else:
-            tender = "cash" if r.random() < 0.62 else "card"
-        discount = "null"
+        # The same draws for every sale, whatever they come to, so a change
+        # to one rate leaves the customers as they were.
+        u_tender, u_dara, u_regular, u_karwan, u_lana, u_honest, u_kind = (r.random() for _ in range(7))
+        minutes = r.randrange(1, 11)
+        u_promo, u_evening = r2.random(), r2.random()
+        tender = "platform_paid" if channel == "talabat" else ("cash" if u_tender < 0.62 else "card")
+        discount, reason = "null", "regular"
         if channel != "talabat":
-            if cashier == "Dara" and day >= DARA_DISCOUNTS_FROM and r.random() < 0.14:
+            if cashier == "Dara" and day >= DARA_DISCOUNTS_FROM and u_dara < 0.07:
                 discount = "9"
-            elif r.random() < 0.02:
+            elif u_regular < 0.02:
                 discount = "10"
+            elif day >= STUDENTS_FROM and 12 <= hour < 18 and u_promo < 0.06:
+                # The students' 8% (honest: everyone on in the afternoon gives it).
+                discount, reason = "8", "promotion"
         order_no = "null"
         if channel == "talabat":
             self.order_no += 1
             order_no = f"'{self.order_no}'"
         self.act(EMAIL[cashier])
-        self.sql(f"select sim.sale('{channel}', '{tender}', '{self.basket(day, hour)}', {discount}, {order_no});")
+        self.sql(
+            f"select sim.sale('{channel}', '{tender}', '{self.basket(day, hour)}', {discount}, {order_no}, '{reason}');"
+        )
 
-        # A void a few minutes later, by the manager: an honest mistake now
-        # and then; Karwan's planted ones; Lana's while she learns.
+        # A void a few minutes later, by the manager: Karwan's planted ones;
+        # Lana's while she learns; an honest mistake now and then, more often
+        # in the busy evening (a customer gone before the coffee came).
         void = None
         if tender == "cash":
-            if cashier == "Karwan" and day >= KARWAN_VOIDS_FROM and r.random() < 0.04:
-                void = ("customer_left", r.randrange(3, 11))
-            elif cashier == "Lana" and day <= LANA_LEARNING_UNTIL and r.random() < 0.02:
-                void = ("rang_wrong_item", r.randrange(1, 4))
-            elif r.random() < 0.004:
-                void = (r.choice(["rang_twice", "rang_wrong_item"]), r.randrange(1, 5))
+            if cashier == "Karwan" and day >= KARWAN_VOIDS_FROM and u_karwan < 0.033:
+                void = ("customer_left", max(3, minutes))
+            elif cashier == "Lana" and day <= LANA_LEARNING_UNTIL and u_lana < 0.02:
+                void = ("rang_wrong_item", min(3, minutes))
+            elif u_honest < 0.004:
+                void = ("rang_twice" if u_kind < 0.5 else "rang_wrong_item", min(4, minutes))
+            elif hour >= 16 and u_evening < 0.006:
+                void = ("customer_left", min(4, minutes))
         if void and secs + void[1] * 60 < 23 * 3600 + 57 * 60:
             t = secs + void[1] * 60
             self.at(day, t // 3600, (t % 3600) // 60, t % 60)

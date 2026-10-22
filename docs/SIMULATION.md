@@ -27,9 +27,16 @@ refused, a void needs a reason from the list.
 ```sh
 sudo apt-get install faketime                    # once
 scripts/test-sql.sh tests/sql/smoke.test.sql     # (re)builds the template
-scripts/sim/run.sh                               # about 30 minutes
-python3 scripts/sim/backtest.py all              # is it believable; the baselines' scores
+scripts/sim/run.sh                               # about 40 minutes
+SIM_DB=sixties_sim_drafts scripts/sim/run.sh --buying drafts
+                                                 # the same year, bought through
+                                                 # What to buy's drafts (step 8)
+python3 scripts/sim/backtest.py all              # is it believable; the scores
 ```
+
+The server has one clock, so one year at a time; a second server on another
+port (`SIM_PORT=5434 SIM_DIR=/var/lib/postgresql/sim2`) lives another beside
+it (`SIM_DRAFTS_PORT=5434` for the backtest then).
 
 ## The year's life
 
@@ -54,31 +61,55 @@ python3 scripts/sim/backtest.py all              # is it believable; the baselin
   rise: coffee in January and September, milk and cream in April, pistachio
   in June, cups in July. Each delivery is billed, due in 30 days, paid on a
   Sunday (now and then a few days late).
-- **Money:** the safe banked twice a week, the card machine's money arriving
-  twice a week less the bank's 1.5%, rent on the 1st, electricity on the 5th
-  (dearer in summer), last month's salaries on the 1st.
+- **Money, kept tight on purpose:** the owner starts the year with only
+  6,000,000 IQD in the bank and takes 12,000,000 out on the 20th of every
+  month; the rent is paid three months at a time (7,500,000 on 1 January,
+  April, July and October); a second gelato machine is bought on 8 June
+  (18,000,000). The safe is banked twice a week, the card machine's money
+  arrives twice a week less the bank's 1.5%, electricity on the 5th (dearer
+  in summer), last month's salaries on the 1st. So the bank runs short now
+  and then — the shortfalls cash ahead (step 9) must warn of.
 
 ## The answer key (`sim.planted`)
 
-| Who    | What                                                                                   | From        | Problem? |
-| ------ | -------------------------------------------------------------------------------------- | ----------- | -------- |
-| Dara   | A 9% discount (just under the 10% a cashier may give alone) on about one sale in seven | 20 Dec 2025 | yes      |
-| Karwan | About one in twenty-five of his cash sales voided a few minutes later                  | 15 Mar 2026 | yes      |
-| Bana   | Her Thursday evening drawer 15,000–30,000 IQD short                                    | 7 May 2026  | yes      |
-| Lana   | New (from 1 August): voids one sale in fifty while she learns, for three weeks         | 1 Aug 2026  | **no**   |
+| Who    | What                                                                                                  | From        | Problem? |
+| ------ | ----------------------------------------------------------------------------------------------------- | ----------- | -------- |
+| Dara   | A 9% discount (just under the 10% a cashier may give alone) on about one sale in fourteen             | 20 Dec 2025 | yes      |
+| Karwan | About one in thirty of his cash sales voided a few minutes later                                      | 15 Mar 2026 | yes      |
+| Bana   | Her Thursday evening drawer 6,000–14,000 IQD short                                                    | 7 May 2026  | yes      |
+| Lana   | New (from 1 August): voids one sale in fifty, and half her drawers 2,000–9,000 short, for three weeks | 1 Aug 2026  | **no**   |
 
-Everyone else makes honest mistakes: a void now and then, a 10% discount for a
-regular, a drawer a few hundred dinars out. A good watch list finds the three
-problems and leaves Lana and the honest mistakes alone.
+And honest look-alikes, so a rule that only counts is fooled:
+
+- **The students' 8%** (a promotion, its reason given as such): from
+  February, whoever is on in the afternoon gives it on about one sale in
+  seventeen — near the limit, like Dara's, but everyone's and explained.
+- **The busy evening:** a customer gone before the coffee came is voided
+  more often in the evening, whoever is on (1 cash sale in 100, against 1 in
+  250 in the morning) — Karwan and Bana are the evening's.
+- Everyone makes honest mistakes: a 10% discount for a regular, a drawer a
+  few hundred dinars out.
+
+A good watch list finds the three problems, compares each person with those
+on the same shifts, reads a discount's reason, and leaves Lana, the students
+and the evening alone.
+
+Every sale draws the same random numbers whatever they come to, and the
+look-alikes draw from their own, so a rate changed leaves the customers as
+they were; and the year bought through the drafts has the same customers as
+the year bought by habit.
 
 ## What each feature must pass (SMART_PLAN's marks)
 
 - **Watch list (step 10):** every planted problem found within two weeks of
   its start; at most one false alarm a month.
-- **Smarter buying (step 8):** no sale lost to something out of stock; at most
-  25% more stock held than needed, on average.
+- **Smarter buying (step 8):** no sale lost to something bought running out;
+  at most 25% more stock held than needed, on average. _Needed_ is what a café
+  that knew each day's use would hold with the same deliveries: at each day's
+  end, just what lasts until the next delivery comes.
 - **Cash ahead (step 9):** 7 days ahead, within 10% of what happened, every
-  week; every real shortfall warned of at least 3 days before.
+  week; every real shortfall (a day the bank ends below nothing) warned of at
+  least 3 days before.
 - **Monday brief (step 11):** every number agrees with the report it comes
   from; the owner reads a sample and finds it useful.
 
