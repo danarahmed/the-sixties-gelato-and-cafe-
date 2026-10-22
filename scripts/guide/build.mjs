@@ -203,6 +203,18 @@ function screenHtml(s) {
   </article>`;
 }
 
+const WHEN = [
+  ["once", "Once, when setting up"],
+  ["daily", "Every day"],
+  ["weekly", "Every week"],
+  ["monthly", "Every month"],
+  ["when needed", "When it is needed"],
+];
+const whenOf = (t) => {
+  const w = String(t.when || "").toLowerCase();
+  return w.startsWith("once") ? "once" : WHEN.some(([k]) => k === w) ? w : "when needed";
+};
+
 function taskHtml(t, i) {
   const roles = (t.roles || []).map(roleKey).filter(Boolean);
   return `
@@ -283,7 +295,9 @@ const html = `<title>The Sixty's Guide</title>
     <p class="tochead">Contents</p>
     <ul>
       <li><a href="#start">Start here</a></li>
-      <li><a href="#tasks">How do I…</a></li>
+      <li><a href="#tasks">How do I…</a><ul>${WHEN.filter(([w]) => tasks.some((t) => whenOf(t) === w))
+        .map(([w, label]) => `<li><a href="#when-${slug(w)}">${e(label)}</a></li>`)
+        .join("")}</ul></li>
       ${nav}
       <li><a href="#messages">Every message, A–Z</a></li>
     </ul>
@@ -316,7 +330,12 @@ const html = `<title>The Sixty's Guide</title>
     <section id="tasks">
       <h2 class="area">How do I…</h2>
       <p class="areanote">Step-by-step tasks, grouped by who does them.</p>
-      ${tasks.map(taskHtml).join("")}
+      ${WHEN.map(([w, label]) => {
+        const list = tasks.map((t, i) => [t, i]).filter(([t]) => whenOf(t) === w);
+        return list.length
+          ? `<h3 class="when" id="when-${slug(w)}">${e(label)}</h3>${list.map(([t, i]) => taskHtml(t, i)).join("")}`
+          : "";
+      }).join("")}
     </section>
 
     ${AREAS.filter(([k]) => screens.some((s) => s.areaKey === k))

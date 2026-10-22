@@ -244,7 +244,7 @@ and printed by the test on Test your devices.
 | 8 ✓  | Part 3, smarter buying (part 5 uses its drafts and lead times)               | `0092`    |
 | 9 ✓  | Part 5, cash planning                                                        | `0093`    |
 | 10 ✓ | Part 2, the watch list                                                       | `0094`    |
-| 11   | The guide brought up to date with every new screen                           | —         |
+| 11 ✓ | The guide: every screen in full, and step-by-step tasks for each role        | —         |
 
 As built (✓): a page's explanation is its first sentence, the rest under
 **How this works**; the Dashboard opens on today, then what needs you (the
@@ -340,6 +340,15 @@ staff not judged for three weeks; explained or looked into with a note; a
 nightly look-over; the Dashboard and the phone say only that something is
 worth a look. What the year showed against each mark is in
 `docs/SIMULATION.md` (_What the year showed_).
+
+**The guide** (step 11, asked for by the owner to tell everything that can
+happen on each screen): `docs/guide/src` holds each screen's entry, written
+from the code and then checked against it (every part and button with what it
+does to the stock, the money and the books; every way the screen can look;
+every message, with what to do; what-ifs), 90 tasks by role and by how often,
+and what the writing found (`FINDINGS.md`). `scripts/guide` serves the app on
+a copy of the simulated year, takes the pictures, builds the searchable page
+and prints a PDF for each role.
 
 Easier and more flexible first: every user feels them from the first day,
 and the smart parts then learn from deals, tips and time-of-day prices too.

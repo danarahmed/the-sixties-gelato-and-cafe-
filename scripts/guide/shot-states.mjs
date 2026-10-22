@@ -5,12 +5,35 @@
 // Everything here runs on the copy of the simulated year (sixties_guide) only.
 // Some pictures change records to reach their state (a sale rung up, a loss
 // saved to wait…); they are written so that running them again still works.
-import { sql } from "../../tests/e2e/lib.mjs";
+import { createHmac } from "node:crypto";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { BASE, open, sql } from "../../tests/e2e/lib.mjs";
+
+const CLOCK_AT = readFileSync(process.env.GUIDE_CLOCK_FILE || "/tmp/sixties-guide/clock", "utf8").trim();
 
 const B = "00000000-0000-0000-0000-0000000000b1";
 const TODAY = "(now() at time zone 'Asia/Baghdad')::date";
 const MAIN = `(select id from location where name = 'Main Branch' limit 1)`;
 const one = (q) => sql(q).split("\n").pop()?.trim();
+const B2 = "00000000-0000-0000-0000-0000000000b2";
+/** The ids a query finds, as a list for `in (…)`: never empty. */
+const ids = (q) => sql(q).split("\n").map((x) => x.trim()).filter((x) => /^[0-9a-f-]{36}$/.test(x)).map((x) => `'${x}'`).join(",") || "null";
+/** A change made for one picture only: `undo()` puts it back, even on the next run if this one stops. */
+const RESTORE = "/tmp/sixties-guide/restore-after-picture.sql";
+let meanwhileFor = null;
+function meanwhile(key, change, back) {
+  if (meanwhileFor === key && existsSync(RESTORE)) return; // a shot's sql is read more than once
+  undo();
+  writeFileSync(RESTORE, back);
+  sql(change);
+  meanwhileFor = key;
+}
+function undo() {
+  meanwhileFor = null;
+  if (!existsSync(RESTORE)) return;
+  sql(readFileSync(RESTORE, "utf8"));
+  unlinkSync(RESTORE);
+}
 
 /**
  * The people the pictures sign in as, besides the four fixture people: the
@@ -29,11 +52,12 @@ const person = (email, auth, name, role, place = null) => `
     select id, '${role}', ${place ?? "null"} from app_user where email = '${email}';`;
 const BARISTA = person("barista@example.com", "a0000000-0000-0000-0000-00000000000e", "Demo Barista", "barista", MAIN);
 const ACCOUNTANT = person("kitchenboss@example.com", "a0000000-0000-0000-0000-0000000000f7", "Demo Accountant", "accountant");
-const HELPER = (role, name) => person("barista2@example.com", "a0000000-0000-0000-0000-0000000000f1", name, role);
-const PURCHASING = HELPER("purchasing", "Demo Buyer");
-const AUDITOR = HELPER("auditor", "Demo Auditor");
-const GM = HELPER("general_manager", "Demo General Manager");
+const HELPER = (role) => person("barista2@example.com", "a0000000-0000-0000-0000-0000000000f1", "Hana", role);
+const PURCHASING = HELPER("purchasing");
+const AUDITOR = HELPER("auditor");
+const GM = HELPER("general_manager");
 // Everyone made at the start, so they show in lists the same way in every picture.
+undo(); // a picture's passing change left behind by a run that stopped half way
 sql(BARISTA + ACCOUNTANT + PURCHASING);
 // The managers' approval PINs (24680), for the approvals the pictures show.
 sql(`update app_user set pin_hash = extensions.crypt('24680', extensions.gen_salt('bf', 8))
@@ -462,10 +486,12 @@ export const STATE_SHOTS = [
     name: "inventory-losses-waiting",
     role: "manager",
     path: "/inventory?at=losses#losses-waiting",
-    sql: `select test.act_as('barista@example.com');
+    get sql() {
+      if (one(`select count(*) from stock_loss where reason = 'The fridge was left open overnight'`) !== "0") return "select 1";
+      return `select test.act_as('barista@example.com');
           select record_loss('spoilage', (select id from item where name = 'Milk'), null, 12, 'L',
-                             'The fridge was left open overnight', p_wait => true)
-           where not exists (select 1 from stock_loss where status = 'pending');`,
+                             'The fridge was left open overnight', p_wait => true);`;
+    },
     then: async (page) => {
       await soft(page.getByTestId("loss-waiting"));
       await toTop(page.getByTestId("losses-waiting"), 90);
@@ -1212,7 +1238,1794 @@ export const STATE_SHOTS = [
       await toTop(page.getByTestId("expense-register"), 90);
     },
   },
+
+  // ───────────────────────── People and pay: Staff ─────────────────────────
+  {
+    name: "staff-people",
+    role: "owner",
+    path: "/staff",
+    get sql() {
+      return staffSetup();
+    },
+  },
+  {
+    name: "staff-add-people",
+    role: "manager",
+    path: "/staff",
+    then: async (page) => {
+      await page.getByTestId("add-person").click();
+      const form = page.getByTestId("person-form");
+      const rows = form.getByTestId("add-person-row");
+      while ((await rows.count()) < 3) await form.getByTestId("add-person-another").click();
+      const fill = async (i, name, job) => {
+        if (name) await rows.nth(i).getByLabel("Name").fill(name);
+        await rows.nth(i).getByLabel("What they do").fill(job);
+      };
+      await fill(0, "Hawre", "Barista");
+      await fill(1, "Sozan", "Cashier");
+      await fill(2, "", "Cleaner");
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    name: "staff-person-panel",
+    role: "owner",
+    path: "/staff",
+    then: async (page) => {
+      await page.locator('[data-testid="person-row"][data-name="Avin"]').getByRole("button").first().click();
+      await page.getByTestId("person-panel").getByTestId("set-pay").click();
+      await page.waitForTimeout(400);
+    },
+  },
+  {
+    name: "staff-phone-link",
+    role: "manager",
+    path: "/staff",
+    then: async (page) => {
+      await page.locator('[data-testid="person-row"][data-name="Bana"]').getByRole("button").first().click();
+      await page.getByTestId("person-panel").getByTestId("link-phone").click();
+      await soft(page.getByText("Waiting for the phone…"), 10000);
+    },
+  },
+  {
+    name: "staff-schedule-week",
+    role: "owner",
+    path: "/staff?at=schedule#schedule",
+    then: async (page) => {
+      await soft(page.getByTestId("schedule-check"));
+      await toTop(page.getByTestId("schedule"), 80);
+    },
+  },
+  {
+    name: "staff-schedule-undo",
+    role: "manager",
+    path: "/staff?at=schedule#schedule",
+    then: async (page) => {
+      const cell = page.locator('[data-testid="schedule-row"][data-name="Lana"] [data-testid="schedule-cell"][data-day="2026-10-22"]');
+      await cell.fill("12:00-20:00");
+      await page.getByTestId("save-schedule").click();
+      await soft(page.getByTestId("undo-bar"), 10000);
+      await toTop(page.getByTestId("schedule"), 80);
+    },
+    after: async (page) => {
+      const undo = page.getByTestId("undo");
+      if (await undo.count()) await undo.first().click();
+      await page.waitForTimeout(1500);
+    },
+  },
+  {
+    name: "staff-hours",
+    role: "manager",
+    path: "/staff?week=2026-10-21&at=hours#attendance",
+    then: async (page) => {
+      await toTop(page.getByTestId("attendance-days").or(page.getByTestId("attendance-records")).first(), 80);
+    },
+  },
+  {
+    name: "staff-hours-correct",
+    role: "manager",
+    path: "/staff?week=2026-10-21&at=hours#attendance",
+    then: async (page) => {
+      const rec = page.locator('[data-testid="attendance-record"][data-name="Dara"]').first();
+      await rec.getByTestId("correct-hours").click();
+      await page.getByTestId("correct-form").getByLabel("Why").fill("Forgot to clock out at closing");
+      await toTop(rec, 160);
+    },
+  },
+  {
+    name: "staff-shop-clock",
+    role: "owner",
+    path: "/staff",
+    then: async (page) =>
+      elsewhere(page, "owner", {}, async (p) => {
+        await open(p, "/staff?at=clock#shop-clock");
+        if ((await p.getByTestId("clock-screen-this").count()) === 0) {
+          await p.getByTestId("clock-screen-make").click();
+          await p.getByTestId("clock-screen-name").fill("The till");
+          await p.getByTestId("clock-screen-save").click();
+          await soft(p.getByTestId("clock-screen-this"), 10000);
+        }
+        CLOCK_SCREEN_COOKIES = await p.context().cookies();
+        await toTop(p.getByTestId("shop-clock"), 80);
+      }),
+  },
+  {
+    name: "clock-screen",
+    role: "owner",
+    path: "/staff",
+    then: async (page) =>
+      elsewhere(page, "owner", {}, async (p) => {
+        if (CLOCK_SCREEN_COOKIES) await p.context().addCookies(CLOCK_SCREEN_COOKIES.filter((c) => !/auth|sb-/.test(c.name)));
+        await open(p, "/clock/screen");
+        const out = p.getByTestId("clock-screen-sign-out");
+        if (await out.count()) {
+          await out.click();
+          await soft(p.getByTestId("shop-code-digits"), 10000);
+        }
+        await p.waitForTimeout(500);
+      }),
+  },
+
+  {
+    name: "clock-link",
+    role: "barista",
+    phone: true,
+    path: "/account",
+    then: async (page) =>
+      elsewhere(page, null, PHONE, async (p) => {
+        await p.goto(`${BASE}/clock/link?k=${phoneLinkKey("Shno")}`);
+        await p.waitForLoadState("networkidle");
+      }),
+  },
+  {
+    name: "pos-clock",
+    role: "cashier",
+    path: "/pos",
+    get sql() {
+      return removeScreens();
+    },
+    then: async (page) => {
+      await page.getByTestId("clock-button").click();
+      await soft(page.getByTestId("clock-dialog"));
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    name: "account",
+    role: "manager",
+    path: "/account",
+  },
+  {
+    name: "account-two-step",
+    role: "owner",
+    path: "/account",
+    then: async (page) =>
+      elsewhere(page, "owner", {}, async (p) => {
+        await open(p, "/account");
+        const card = p.getByTestId("two-step");
+        await card.getByTestId("two-step-start").click();
+        await soft(card.getByTestId("two-step-secret"), 10000);
+        await card.getByTestId("two-step-code").fill("");
+        await toTop(card, 90);
+      }),
+  },
+  {
+    name: "devices",
+    role: "cashier",
+    path: "/devices",
+    then: async (page) => {
+      await page.evaluate(() => {
+        window.print = () => {};
+      });
+      await page.getByTestId("device-internet-test").click();
+      await soft(page.locator('[data-testid="device-internet"][data-state="ok"]'), 15000);
+      await page.getByTestId("device-printer-test").click();
+      await soft(page.getByTestId("device-printer-no"), 5000);
+      await page.getByTestId("device-printer-no").click();
+      await soft(page.getByTestId("device-printer-fix"), 5000);
+      await page.waitForTimeout(300);
+    },
+  },
+  {
+    name: "login",
+    role: "cashier",
+    phone: true,
+    path: "/account",
+    then: async (page) =>
+      elsewhere(page, null, PHONE, async (p) => {
+        await p.goto(`${BASE}/login`);
+        await p.waitForLoadState("networkidle");
+      }),
+  },
+  {
+    name: "login-verify",
+    role: "owner",
+    path: "/account",
+    sql: GM,
+    then: async (page) => {
+      // Two-step turned on for the helper's login, its sign-in asked for the code, then turned off again.
+      const browser = page.context().browser();
+      const on = await browser.newContext({ viewport: page.viewportSize() });
+      try {
+        const p = await on.newPage();
+        await p.goto(`${BASE}/login`);
+        await p.fill('input[name="email"]', "barista2@example.com");
+        await p.fill('input[name="password"]', "password123");
+        await Promise.all([p.waitForURL((u) => !u.pathname.startsWith("/login")), p.click('button[type="submit"]')]);
+        await open(p, "/account");
+        const card = p.getByTestId("two-step");
+        await card.getByTestId("two-step-start").click();
+        const secret = ((await card.getByTestId("two-step-secret").textContent()) ?? "").replace(/\s+/g, "");
+        await card.getByTestId("two-step-code").fill(totp(secret));
+        await card.getByTestId("two-step-confirm").click();
+        await card.getByTestId("two-step-on").waitFor({ timeout: 10000 });
+        await elsewhere(page, null, {}, async (q) => {
+          await q.goto(`${BASE}/login`);
+          await q.fill('input[name="email"]', "barista2@example.com");
+          await q.fill('input[name="password"]', "password123");
+          await q.click('button[type="submit"]');
+          await q.getByTestId("verify-code").waitFor({ timeout: 15000 });
+          await q.getByTestId("verify-code").pressSequentially("481");
+        });
+        await card.getByTestId("two-step-off").click();
+        await card.getByTestId("two-step-start").waitFor({ timeout: 10000 });
+      } finally {
+        await on.close();
+        sql(PURCHASING);
+      }
+    },
+  },
+
+  // ───────────────────────── People and pay: Payroll ───────────────────────
+  {
+    name: "payroll-home",
+    role: "owner",
+    path: "/payroll",
+    get sql() {
+      return payrollSetup();
+    },
+  },
+  {
+    name: "payroll-advance-form",
+    role: "kitchenboss",
+    path: "/payroll",
+    then: async (page) => {
+      await page.getByTestId("give-advance").click();
+      const form = page.getByTestId("advance-form");
+      await form.getByLabel("To").selectOption({ label: "Karwan" });
+      await form.getByLabel("Amount").fill("75000");
+      await form.getByLabel("Paid from").selectOption("safe");
+      await form.getByLabel("What it is for").fill("School fees");
+      await page.waitForTimeout(500);
+      await toTop(form, 120);
+    },
+  },
+  {
+    name: "payroll-run-draft",
+    role: "owner",
+    // September's, its payment cancelled and the payroll reopened: a draft that can be approved.
+    path: () => `/payroll/${one(`select id from payroll_run where month = '2026-09-01'`)}`,
+    sql: `select test.act_as('owner@example.com');
+          select cancel_salary_payment(sp.id, 'Paid from the wrong account')
+            from salary_payment sp join payroll_run r on r.id = sp.run_id
+           where r.month = '2026-09-01' and sp.cancelled_at is null;
+          select reopen_payroll(id, 'A bonus was left out') from payroll_run where month = '2026-09-01' and status = 'approved';
+          select draft_payroll('2026-09-01') from payroll_run where month = '2026-09-01' and status = 'draft';`,
+    then: async (page) => {
+      const line = page.locator('[data-testid="payroll-line"]', { hasText: "Shno" }).first();
+      if (!(await line.textContent()).includes("Eid bonus")) {
+        await line.getByTestId("adjust-line").click();
+        const form = page.getByTestId("adjust-form");
+        await form.getByLabel("Added").fill("50000");
+        await form.getByLabel("What it is for").first().fill("Eid bonus");
+        await form.getByRole("button", { name: /^Save/ }).click();
+        await page.waitForTimeout(1500);
+      }
+    },
+  },
+  {
+    name: "payroll-run-approved",
+    role: "kitchenboss",
+    path: () => `/payroll/${one(`select id from payroll_run where month = '2026-09-01'`)}`,
+    sql: `select test.act_as('owner@example.com');
+          select draft_payroll('2026-09-01') from payroll_run where month = '2026-09-01' and status = 'draft';
+          select approve_payroll(id) from payroll_run where month = '2026-09-01' and status = 'draft';`,
+    then: async (page) => {
+      const from = page.getByTestId("run-actions").getByLabel("Paid from");
+      if (await from.count()) await from.first().selectOption("bank");
+      await page.waitForTimeout(400);
+    },
+  },
+
+  // ───────────────────────── The books ─────────────────────────────────────
+  {
+    name: "accounting-trial-balance",
+    role: "kitchenboss",
+    path: "/accounting",
+  },
+  {
+    name: "accounting-equipment",
+    role: "owner",
+    path: "/accounting",
+    then: async (page) => {
+      const card = page.getByTestId("equipment");
+      if ((await card.getByTestId("equipment-row").filter({ hasText: "Oven" }).count()) === 0) {
+        await card.getByTestId("equipment-add").click();
+        const form = card.getByTestId("equipment-form");
+        await form.getByTestId("equipment-name").fill("Oven");
+        await form.getByTestId("equipment-cost").fill("2400000");
+        await form.getByTestId("equipment-life").fill("48");
+        await form.locator('input[type="date"]').fill(one(`select (${TODAY} - interval '2 months')::date`));
+        const paid = form.getByTestId("equipment-paid");
+        if (await paid.count()) await paid.selectOption("bank").catch(() => {});
+        await form.getByTestId("equipment-save").click();
+        await soft(card.getByTestId("equipment-row").filter({ hasText: "Oven" }), 10000);
+      }
+      await toTop(card, 90);
+    },
+  },
+  {
+    name: "accounting-owner-money",
+    role: "owner",
+    path: "/accounting",
+    then: async (page) => {
+      await toTop(page.getByTestId("owner-money"), 90);
+    },
+  },
+  {
+    name: "accounting-chart-add",
+    role: "kitchenboss",
+    path: "/accounting",
+    then: async (page) => {
+      const add = page.getByTestId("chart-add");
+      await add.getByLabel("Type").selectOption("expense");
+      await add.getByLabel("Name (English)").fill("Repairs and upkeep");
+      await toTop(add, 120);
+    },
+  },
+  {
+    name: "bank-statements",
+    role: "owner",
+    path: "/accounting/bank",
+    then: async (page) => {
+      for (const day of ["2025-10-31", "2025-11-30"]) {
+        if ((await page.getByTestId("bank-statement").count()) >= (day === "2025-10-31" ? 1 : 2)) continue;
+        await keepStatement(page, day);
+      }
+      await toTop(page.getByTestId("bank-statements"), 90);
+    },
+  },
+  {
+    name: "bank-ties",
+    role: "owner",
+    path: "/accounting/bank",
+    then: async (page) => {
+      await page.getByTestId("bank-date").fill("2025-12-15");
+      await page.getByRole("button", { name: "Tick every line to this day" }).click();
+      await page.getByTestId("bank-closing").fill(String(bankBalance("2025-12-15")));
+      await soft(page.getByTestId("bank-difference").filter({ hasText: "It ties" }));
+      await toTop(page.getByTestId("bank-difference"), 300);
+    },
+  },
+  {
+    name: "bank-read",
+    role: "kitchenboss",
+    path: "/accounting/bank",
+    then: async (page) => {
+      const rows = sql(`select to_char((e.occurred_at at time zone 'Asia/Baghdad')::date, 'DD/MM/YYYY') || E'\\t' ||
+                               case when l.debit > 0 then 'Deposit' else 'Payment' end || E'\\t' ||
+                               case when l.credit > 0 then trim_scale(l.credit)::text else '' end || E'\\t' ||
+                               case when l.debit > 0 then trim_scale(l.debit)::text else '' end
+                          from journal_line l join journal_entry e on e.id = l.journal_entry_id
+                          join gl_account a on a.id = l.account_id
+                         where a.code = '1020' and a.business_id = '${B}' and e.status = 'published'
+                           and (e.occurred_at at time zone 'Asia/Baghdad')::date between date '2025-12-01' and date '2025-12-12'
+                         order by e.occurred_at`).split("\n");
+      rows.push("10/12/2025\tBank charge\t5,000\t");
+      const text = ["Date\tDescription\tDebit\tCredit", ...rows].join("\n");
+      await page.getByRole("button", { name: "or paste it" }).click();
+      await page.getByTestId("bank-statement-text").fill(text);
+      await soft(page.getByTestId("bank-read-summary"));
+      await page.waitForTimeout(500);
+      await toTop(page.getByTestId("bank-read"), 90);
+    },
+  },
+  {
+    name: "journals-new",
+    role: "kitchenboss",
+    path: "/journals",
+    then: async (page) => {
+      await page.getByRole("button", { name: "New Journal" }).click();
+      await page.getByPlaceholder("Being the reason this entry is made").fill("Being the generator repaired");
+      const lines = page.getByTestId("journal-line");
+      const pick = async (i, code, dr, cr) => {
+        const acct = lines.nth(i).getByLabel("Account");
+        const v = await acct.locator("option", { hasText: new RegExp(`^${code}`) }).first().getAttribute("value");
+        await acct.selectOption(v);
+        await lines.nth(i).getByLabel("Description").fill(i === 0 ? "Generator repair" : "Paid by transfer");
+        if (dr) await lines.nth(i).getByLabel("Debits").fill(dr);
+        if (cr) await lines.nth(i).getByLabel("Credits").fill(cr);
+      };
+      await pick(0, "6900", "75000", "");
+      await pick(1, "1020", "", "75000");
+      await page.waitForTimeout(400);
+    },
+  },
+  {
+    name: "journals-register",
+    role: "kitchenboss",
+    path: "/journals",
+    get sql() {
+      return journalsSetup();
+    },
+    then: async (page) => {
+      const manual = page.getByRole("button", { name: /Manual and reversals/ }).or(page.getByRole("link", { name: /Manual and reversals/ }));
+      if (await manual.count()) await manual.first().click();
+      await page.waitForTimeout(800);
+      const no = one(`select journal_no from journal_entry where description = 'Being the generator repaired' and status = 'published' limit 1`);
+      const row = page.locator(`[data-testid="journal-row"][data-no="${no}"]`);
+      const link = row.getByRole("button", { name: `Journal ${no}` }).or(row.getByRole("link", { name: `Journal ${no}` }));
+      if (await link.count()) await link.first().click();
+      await page.waitForTimeout(500);
+      await toTop(page.getByTestId("journal-row").first(), 160);
+    },
+  },
+  {
+    name: "journals-reverse",
+    role: "owner",
+    path: "/journals",
+    get sql() {
+      return journalsSetup();
+    },
+    then: async (page) => {
+      const no = one(`select journal_no from journal_entry where description = 'Being the generator repaired' and status = 'published' limit 1`);
+      const row = page.locator(`[data-testid="journal-row"][data-no="${no}"]`);
+      await row.getByRole("button", { name: "Reverse" }).click();
+      await page.getByLabel("Why is it being reversed?").fill("Charged to the wrong account");
+      await toTop(row, 160);
+    },
+  },
+  {
+    name: "journals-ledger",
+    role: "kitchenboss",
+    path: "/journals?account=1020&from=2026-09-01&to=2026-09-30",
+  },
+  {
+    name: "documents-list",
+    role: "barista2",
+    path: () => `/documents/goods_receipt/${one(`select id from goods_receipt where note = 'Delivery note 4471' limit 1`)}`,
+    sql: PURCHASING,
+    then: async (page) => {
+      if ((await page.getByTestId("document-row").count()) < 2) {
+        const pdf = async (title) => {
+          const p = await page.context().newPage();
+          await p.setContent(`<h1>${title}</h1><p>City Packaging Supplies — 100 cones at 150 = 15,000 IQD</p>`);
+          const buf = await p.pdf({ format: "A4" });
+          await p.close();
+          return buf;
+        };
+        for (const [file, name] of [["invoice-4471.pdf", "Their invoice"], ["delivery-note.pdf", "Delivery note"]]) {
+          await page.getByTestId("document-file").setInputFiles({ name: file, mimeType: "application/pdf", buffer: await pdf(name) });
+          await page.getByTestId("document-name").fill(name);
+          await page.getByTestId("document-attach").click();
+          await soft(page.locator(`[data-testid="document-row"][data-name="${name}"]`), 15000);
+        }
+      }
+      await page.getByTestId("document-note").fill("").catch(() => {});
+    },
+  },
+  {
+    name: "documents-readonly",
+    role: "barista2",
+    path: () => `/documents/goods_receipt/${one(`select id from goods_receipt where note = 'Delivery note 4471' limit 1`)}`,
+    sql: AUDITOR,
+    after: async () => sql(PURCHASING),
+  },
+  {
+    name: "approvals-inbox",
+    role: "owner",
+    path: "/approvals",
+  },
+  {
+    name: "approvals-send-back",
+    role: "owner",
+    path: "/approvals",
+    then: async (page) => {
+      const card = page.locator('[data-testid="approval"][data-kind="loss"]').first();
+      await card.getByTestId("send-back").click();
+      await card.getByTestId("send-back-why").fill("It was found in the other fridge");
+      await toTop(card, 120);
+    },
+  },
+  {
+    name: "audit-books",
+    role: "barista2",
+    path: "/audit?group=books",
+    sql: AUDITOR,
+    then: async (page) => {
+      const what = page.getByLabel("What");
+      if (await what.count()) {
+        const v = await what.locator("option", { hasText: /Books/ }).first().getAttribute("value");
+        if (v && (await what.inputValue()) !== v) {
+          await what.selectOption(v);
+          await page.getByRole("button", { name: "Show" }).click();
+          await page.waitForLoadState("networkidle");
+        }
+      }
+    },
+    after: async () => sql(PURCHASING),
+  },
+  {
+    name: "problem-dialog",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await page.getByRole("button", { name: "Menu" }).click();
+      await page.getByTestId("problem-button").click();
+      await page.getByTestId("problem-dialog").getByTestId("problem-what").fill("The receipt printed twice for one sale");
+      await page.waitForTimeout(300);
+    },
+    after: async (page) => {
+      const dialog = page.getByTestId("problem-dialog");
+      await dialog.getByTestId("problem-send").click();
+      await soft(dialog.getByTestId("problem-sent"), 10000);
+    },
+  },
+  {
+    name: "problems-list",
+    role: "owner",
+    path: "/problems",
+    get sql() {
+      if (one(`select count(*) from problem_report where what like 'The card machine said declined%'`) !== "0") return "select 1";
+      return `select test.act_as('cashier@example.com');
+          select report_problem('/pos', 'The card machine said declined but the money went', '{}'::jsonb);
+          select test.act_as('owner@example.com');
+          select settle_problem(id, true, 'The bank refunded the customer')
+            from (select id from problem_report where what like 'The card machine said declined%' and settled_at is null) x;`;
+    },
+  },
+
+  // ───────────────────────── Reports ───────────────────────────────────────
+  {
+    name: "reports-top",
+    role: "owner",
+    path: "/reports",
+  },
+  {
+    name: "reports-place",
+    role: "owner",
+    path: () => `/reports?place=${one(`select id from location where name = 'Main Branch'`)}`,
+    then: async (page) => {
+      await soft(page.getByTestId("reports-place-note"));
+    },
+  },
+  {
+    name: "reports-learned",
+    role: "owner",
+    path: "/reports/menu",
+    then: async (page) => {
+      for (let i = 0; i < 3; i++) {
+        await open(page, "/reports/menu");
+        await page.waitForTimeout(400);
+      }
+      await open(page, "/reports");
+      const learned = page.getByTestId("reports-learned");
+      await soft(learned);
+      await toTop(page.getByTestId("report-pages"), 90);
+    },
+  },
+  {
+    name: "reports-pnl",
+    role: "owner",
+    path: "/reports?at=pnl#pnl",
+    then: async (page) => toTop(page.locator("#pnl"), 80),
+  },
+  {
+    name: "reports-pnl-places",
+    role: "owner",
+    path: "/reports?at=places#pnl-places",
+    then: async (page) => toTop(page.locator("#pnl-places"), 80),
+  },
+  {
+    name: "reports-channel",
+    role: "owner",
+    path: "/reports?at=channel#channel",
+    then: async (page) => toTop(page.locator("#channel"), 80),
+  },
+  {
+    name: "reports-losses",
+    role: "owner",
+    path: "/reports?at=losses#losses",
+    get sql() {
+      if (one(`select count(*) from stock_loss where reason = 'A box was crushed in the store room'`) !== "0") return "select 1";
+      return `select test.act_as('barista@example.com');
+          select record_loss('damaged', (select id from item where name = 'Cone'), null, 40, 'each',
+                             'A box was crushed in the store room', p_wait => true);`;
+    },
+    then: async (page) => {
+      const m = one(`select m.id from inventory_movement m join stock_loss l on l.id = m.reference_id
+                      where l.reason = 'A box was crushed in the store room'
+                        and not exists (select 1 from loss_review r where r.movement_id = m.id) limit 1`);
+      if (m) {
+        sql(`select test.act_as('owner@example.com');
+             select review_loss('${m}', 'reverse', 'The box was fine: the cones were counted again');`);
+        await open(page, "/reports?at=losses#losses");
+      }
+      await toTop(page.getByTestId("loss-list"), 80);
+    },
+  },
+  {
+    name: "reports-ageing",
+    role: "kitchenboss",
+    path: "/reports?at=ageing#ageing",
+    then: async (page) => toTop(page.locator("#ageing"), 80),
+  },
+  {
+    name: "reports-staff",
+    role: "owner",
+    path: "/reports?from=2026-09-01&to=2026-09-30#staff",
+    then: async (page) => toTop(page.locator("#staff"), 80),
+  },
+  {
+    name: "reports-rec-ok",
+    role: "owner",
+    path: "/reports?at=rec#reconciliation",
+    then: async (page) => toTop(page.locator("#reconciliation"), 80),
+  },
+  {
+    name: "reports-exceptions",
+    role: "owner",
+    path: "/reports?at=exceptions#exceptions",
+    then: async (page) => toTop(page.locator("#exceptions"), 80),
+  },
+  {
+    name: "analysis-hour",
+    role: "owner",
+    path: "/reports/sales?by=hour",
+  },
+  {
+    name: "analysis-two",
+    role: "owner",
+    path: "/reports/sales?by=employee&then=payment",
+  },
+  {
+    name: "week-glance",
+    role: "owner",
+    path: "/reports/week?end=2026-10-21",
+  },
+  {
+    name: "month-glance",
+    role: "owner",
+    path: "/reports/month",
+    sql: rule("daily_sales_target", "business", "null", "1500000", "What a good day brings"),
+  },
+  {
+    name: "menu-matrix",
+    role: "owner",
+    path: "/reports/menu",
+  },
+  {
+    name: "prices-rise",
+    role: "owner",
+    path: "/reports/prices",
+    get sql() {
+      if (one(`select count(*) from goods_receipt where note = 'Milk at the new price'`) !== "0") return "select 1";
+      const milk = one(`select id from item where name = 'Milk'`);
+      sql(`select test.act_as('manager@example.com');
+           select receive_goods((select id from supplier where name = 'Sulaymaniyah Dairy Co.'),
+             '[{"item_id":"${milk}","qty":24,"unit_code":"L","unit_price":1700}]'::jsonb,
+             p_note => 'Milk at the new price', p_location => ${MAIN}, p_confirm => true);`);
+      return "select 1";
+    },
+    then: async (page) => {
+      const card = page.locator('[data-testid="price-rise"][data-item="Milk"]');
+      if (await card.count()) await toTop(card, 90);
+    },
+  },
+  {
+    name: "dashboard-owner",
+    role: "owner",
+    path: "/dashboard",
+    // The owner took money for the house and the car: the bank is below nothing.
+    sql: `select test.act_as('owner@example.com');
+          select move_cash('bank', 'owner', 10700000, 'Money for the house')
+           where not exists (select 1 from cash_transfer where note = 'Money for the house');
+          select move_cash('bank', 'owner', 2500000, 'Money for the car')
+           where not exists (select 1 from cash_transfer where note = 'Money for the car');`,
+  },
+  {
+    name: "dashboard-answer",
+    role: "manager",
+    path: "/dashboard",
+    then: async (page) => {
+      const red = page.getByTestId("needs-you").locator('[data-urgency="red"]').first();
+      await red.getByRole("button", { name: "Answer" }).click();
+      await red.getByLabel("What was done, or why it is fine").fill("Moved money in from the safe this morning");
+      await toTop(red, 160);
+    },
+  },
+  {
+    name: "dashboard-books",
+    role: "kitchenboss",
+    path: "/dashboard",
+  },
+  {
+    name: "dashboard-phone",
+    role: "owner",
+    phone: true,
+    path: "/dashboard",
+    then: async (page) => {
+      const more = page.getByRole("button", { name: /Show the rest/ });
+      if (await more.count()) await more.first().scrollIntoViewIfNeeded();
+    },
+  },
+  {
+    name: "stock-value",
+    role: "owner",
+    path: "/reports/stock?on=2026-09-30",
+  },
+  {
+    name: "waste-by-recipe",
+    role: "owner",
+    path: "/reports/waste",
+  },
+  {
+    name: "staffing-week",
+    role: "owner",
+    path: "/reports/staffing",
+  },
+  {
+    name: "staffing-cost",
+    role: "owner",
+    path: "/reports/staffing",
+    sql: rule("labour_target_percent", "business", "null", "25", "A quarter of sales at most"),
+    then: async (page) => {
+      const cost = page.getByText(/What the hours cost/).first();
+      if (await cost.count()) await toTop(cost, 120);
+    },
+  },
+  {
+    name: "statements",
+    role: "kitchenboss",
+    path: "/reports/statements?from=2026-09-01&to=2026-09-30",
+    then: async (page) => toTop(page.getByTestId("bs-balances"), 400),
+  },
+  {
+    name: "cash-ahead-warning",
+    role: "owner",
+    path: "/reports/cash-ahead",
+    // The espresso machine's yearly service, billed and due tomorrow.
+    sql: `select test.act_as('owner@example.com');
+          select record_bill((select id from supplier where name = 'Kurdistan Coffee Imports'), 'KCI-SV-2026', ${TODAY},
+                             3000000, 1, null, '6900')
+           where not exists (select 1 from purchase_invoice where invoice_no = 'KCI-SV-2026');`,
+  },
+  {
+    name: "watch-finding",
+    role: "owner",
+    path: "/reports/watch",
+    then: async (page) => {
+      const card = page.getByText(/sales voided far more often/).first();
+      if (await card.count()) await toTop(card, 120);
+    },
+  },
+
+  // ───────────────────────── Selling: the till ─────────────────────────────
+  {
+    name: "pos-drawer-open",
+    role: "cashier",
+    path: "/pos",
+    get sql() {
+      return sellingSetup();
+    },
+    then: async (page) => {
+      await page.getByTestId("drawer-button").click();
+      const drawer = page.getByTestId("drawer-panel");
+      await drawer.getByRole("button", { name: "Open the drawer" }).first().click();
+      const notes = drawer.getByText("Count note by note");
+      if (await notes.count()) await notes.first().click();
+      await page.waitForTimeout(400);
+      const boxes = drawer.locator('input[inputmode="numeric"], input[type="number"]');
+      const n = await boxes.count();
+      const counts = ["2", "3", "0", "1", "4"];
+      for (let i = 0; i < Math.min(n - 1, counts.length); i++) await boxes.nth(i).fill(counts[i]).catch(() => {});
+      await page.waitForTimeout(300);
+    },
+  },
+  {
+    name: "pos-menu",
+    role: "cashier",
+    path: "/pos",
+    get sql() {
+      return openDrawer("cashier");
+    },
+    then: async (page) => {
+      await freshSale(page, "Takeaway");
+      await tile(page, "Americano").click();
+      await tile(page, "Croissant").click();
+      await page.waitForTimeout(300);
+    },
+  },
+  {
+    name: "pos-addons",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await freshSale(page, "Takeaway");
+      await tile(page, "Latte").click();
+      const sheet = page.getByTestId("options-sheet");
+      await soft(sheet);
+      await sheet.locator(".variant-list button", { hasText: "Large" }).click();
+      await page.waitForTimeout(400);
+    },
+  },
+  {
+    name: "pos-weight",
+    role: "cashier",
+    path: "/pos",
+    sql: `update product_variant set sold_by_weight = true where name = 'Single / Chocolate'
+            and product_id = (select id from product where name = 'Gelato Cup')`,
+    then: async (page) => {
+      await freshSale(page, "Takeaway");
+      await tile(page, "Gelato Cup").click();
+      await chooseOptions(page, "Chocolate");
+      const sheet = page.getByTestId("weight-sheet");
+      await soft(sheet);
+      await sheet.getByTestId("weight-input").fill("750");
+      await page.waitForTimeout(300);
+    },
+    after: async (page) => {
+      await page.keyboard.press("Escape");
+      sql(`update product_variant set sold_by_weight = false where name = 'Single / Chocolate'
+             and product_id = (select id from product where name = 'Gelato Cup')`);
+    },
+  },
+  {
+    name: "pos-discount-approval",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await freshSale(page, "Dine-in");
+      await tile(page, "Latte").click();
+      await chooseOptions(page);
+      await tile(page, "Croissant").click();
+      await page.getByRole("button", { name: /Discount/ }).first().click();
+      await page.getByLabel("Discount as a percentage").fill("20");
+      const why = page.getByLabel("Why?");
+      await why.selectOption({ index: 1 });
+      await page.getByRole("button", { name: "Ask a manager" }).click();
+      await page.waitForTimeout(600);
+    },
+  },
+  {
+    name: "pos-customer",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await freshSale(page, "Takeaway");
+      await page.getByRole("button", { name: "Customer", exact: true }).click();
+      const dialog = page.getByTestId("customer-dialog");
+      await dialog.getByTestId("customer-phone").fill("0750 412 3344");
+      await dialog.getByTestId("customer-find").click();
+      await soft(dialog.getByTestId("customer-found"), 10000);
+    },
+  },
+  {
+    name: "pos-giveaway",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await freshSale(page, "Takeaway");
+      await tile(page, "Espresso").click();
+      await page.getByRole("button", { name: /Give away/ }).click();
+      await soft(page.getByTestId("giveaway-dialog"));
+      await page.waitForTimeout(300);
+    },
+  },
+  {
+    name: "pos-pay-cash",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await freshSale(page, "Takeaway");
+      await page.getByRole("button", { name: "Customer", exact: true }).click();
+      const dialog = page.getByTestId("customer-dialog");
+      await dialog.getByTestId("customer-phone").fill("0750 412 3344");
+      await dialog.getByTestId("customer-find").click();
+      await soft(dialog.getByTestId("customer-found"), 10000);
+      await dialog.getByTestId("customer-choose").first().click();
+      await tile(page, "Iced Latte").click();
+      await chooseOptions(page);
+      await tile(page, "Croissant").click();
+      await tile(page, "Espresso").click();
+      await page.getByRole("button", { name: /^Cash/ }).click();
+      await page.locator(".cash-quick button", { hasText: "10,000" }).first().click();
+      await page.waitForTimeout(300);
+    },
+    after: async (page) => paid(page),
+  },
+  {
+    name: "pos-pay-split",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await freshSale(page, "Dine-in");
+      await tile(page, "Vanilla Latte").click();
+      await chooseOptions(page);
+      await tile(page, "Croissant").click();
+      await page.getByRole("button", { name: /^Cash/ }).click();
+      await page.getByTestId("pay-split").click();
+      const box = page.getByTestId("split-box");
+      await box.getByLabel("How payment 1 is made").selectOption("card");
+      await box.getByLabel("Amount of payment 1").fill("4000");
+      await page.waitForTimeout(300);
+    },
+    after: async (page) => paid(page),
+  },
+  {
+    name: "pos-pay-dollars",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await freshSale(page, "Takeaway");
+      await tile(page, "Gelato Cone").click();
+      await chooseOptions(page);
+      await tile(page, "Vanilla Latte").click();
+      await chooseOptions(page);
+      await page.getByRole("button", { name: /^Cash/ }).click();
+      await page.getByTestId("pay-usd").click();
+      await page.locator("#usd-received").fill("20");
+      await page.waitForTimeout(300);
+    },
+    after: async (page) => paid(page),
+  },
+  {
+    name: "pos-pay-platform",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await freshSale(page, "Talabat");
+      await tile(page, "Latte").click();
+      await chooseOptions(page);
+      await page.locator(".pos-grid .order-actions button.btn-primary").last().click();
+      await page.waitForTimeout(500);
+    },
+    // Two Talabat orders rung up, with their numbers: Delivery Platforms shows them owed.
+    after: async (page) => {
+      await page.locator("#platform-order-no").fill("TB-40871");
+      await paid(page);
+      await tile(page, "Americano").click();
+      await chooseOptions(page);
+      await page.locator(".pos-grid .order-actions button.btn-primary").last().click();
+      await page.locator("#platform-order-no").fill("TB-40872");
+      await paid(page);
+    },
+  },
+  {
+    name: "pos-receipt-card",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await freshSale(page, "Takeaway");
+      await page.getByRole("button", { name: "Customer", exact: true }).click();
+      const dialog = page.getByTestId("customer-dialog");
+      await dialog.getByTestId("customer-phone").fill("0750 412 3344");
+      await dialog.getByTestId("customer-find").click();
+      await soft(dialog.getByTestId("customer-found"), 10000);
+      await dialog.getByTestId("customer-choose").first().click();
+      await tile(page, "Latte").click();
+      await chooseOptions(page);
+      await tile(page, "Croissant").click();
+      await page.getByRole("button", { name: /^Cash/ }).click();
+      await page.locator(".cash-quick button", { hasText: "10,000" }).first().click();
+      await page.locator(".pay-confirm").click();
+      await soft(page.getByText("Sale recorded"), 15000);
+      await page.waitForTimeout(400);
+    },
+  },
+  {
+    name: "pos-retry",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await freshSale(page, "Takeaway");
+      await page.getByRole("button", { name: "Customer", exact: true }).click();
+      const dialog = page.getByTestId("customer-dialog");
+      await dialog.getByTestId("customer-phone").fill("0750 412 3344");
+      await dialog.getByTestId("customer-find").click();
+      await soft(dialog.getByTestId("customer-found"), 10000);
+      await dialog.getByTestId("customer-choose").first().click();
+      await tile(page, "Americano").click();
+      await page.getByRole("button", { name: /^Card/ }).click();
+      await page.locator(".pay-confirm").waitFor({ timeout: 10000 });
+      let dropped = false;
+      await page.route("**/pos", async (route) => {
+        if (route.request().method() === "POST" && !dropped) {
+          dropped = true;
+          return route.abort("failed");
+        }
+        return route.continue();
+      });
+      await page.locator(".pay-confirm").click();
+      await page.waitForTimeout(1500);
+      await page.unroute("**/pos");
+    },
+    after: async (page) => {
+      // Discarded: nothing was recorded (the request never reached the server).
+      const discard = page.getByRole("button", { name: /Discard/ });
+      if (await discard.count()) await discard.first().click();
+      await page.waitForTimeout(500);
+    },
+  },
+
+  {
+    name: "pos-edit-tables",
+    role: "manager",
+    path: "/pos",
+    then: async (page) => {
+      await page.getByRole("tab", { name: /Tables/ }).click().catch(() => {});
+      await page.getByRole("button", { name: "Edit tables" }).click();
+      if ((await page.locator(".table-tile").count()) === 0 && (await page.getByLabel("How many").count())) {
+        await page.getByLabel("How many").fill("6");
+        await page.locator(".bulk-add button").click();
+        await soft(page.getByText(/tables added/), 15000);
+      }
+      await page.waitForTimeout(500);
+    },
+    after: async (page) => {
+      const close = page.getByRole("button", { name: "Close", exact: true });
+      if (await close.count()) await close.last().click();
+    },
+  },
+  {
+    name: "pos-floor",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      const tab = page.getByRole("tab", { name: /Tables/ });
+      if (await tab.count()) await tab.click();
+      const busy = await page.locator(".table-tile.busy").count();
+      if (busy < 2) {
+        for (const [table, items, print] of [["Table 2", ["Latte", "Croissant"], true], ["Table 4", ["Americano", "Gelato Cone", "Espresso"], false]]) {
+          await page.locator(".table-tile", { hasText: table }).first().click();
+          for (const it of items) {
+            await tile(page, it).click();
+            await chooseOptions(page);
+          }
+          if (print) {
+            await page.getByRole("button", { name: /Print bill/ }).click();
+            await page.waitForTimeout(1500);
+          } else {
+            await page.getByRole("button", { name: /Save/ }).first().click();
+          }
+          await soft(page.getByText(new RegExp(`${table} — saved`)), 10000);
+          await page.waitForTimeout(800);
+          if (await tab.count()) await tab.click();
+        }
+      }
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    name: "pos-split",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      const tab = page.getByRole("tab", { name: /Tables/ });
+      if (await tab.count()) await tab.click();
+      await page.locator(".table-tile", { hasText: "Table 4" }).first().click();
+      await page.getByRole("button", { name: /Split bill/ }).click();
+      const line = page.locator(".split-line").first();
+      await line.getByRole("button", { name: "+" }).click().catch(() => {});
+      await page.waitForTimeout(400);
+    },
+    after: async (page) => page.keyboard.press("Escape"),
+  },
+  {
+    name: "pos-cancel-bill",
+    role: "manager",
+    path: "/pos",
+    then: async (page) => {
+      const tab = page.getByRole("tab", { name: /Tables/ });
+      if (await tab.count()) await tab.click();
+      await page.locator(".table-tile", { hasText: "Table 4" }).first().click();
+      await page.getByRole("button", { name: /Cancel bill/ }).click();
+      const reason = page.getByLabel("Reason");
+      if (await reason.count()) await reason.selectOption({ index: 1 });
+      await page.waitForTimeout(200);
+      const why = page.locator(".pos-modal textarea, .pos-modal input[type=text]").first();
+      if (await why.count()) await why.fill("The customers left before ordering").catch(() => {});
+      await page.waitForTimeout(400);
+    },
+    after: async (page) => page.keyboard.press("Escape"),
+  },
+  {
+    name: "pos-preorder-new",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await freshSale(page, "Takeaway");
+      const c = tile(page, "Croissant");
+      for (let i = 0; i < 12; i++) await c.click();
+      await page.getByTestId("preorders-button").click();
+      const form = page.getByTestId("preorder-form");
+      await soft(form);
+      await form.getByTestId("preorder-name").fill("Shilan Omar");
+      const phone = form.getByTestId("preorder-phone");
+      if (await phone.count()) await phone.fill("0750 777 1122");
+      await form.getByTestId("preorder-deposit").fill("10000");
+      await page.waitForTimeout(300);
+    },
+    after: async (page) => {
+      await page.keyboard.press("Escape");
+      await freshSale(page, null);
+    },
+  },
+  {
+    name: "pos-preorder-list",
+    role: "cashier",
+    path: "/pos",
+    get sql() {
+      if (one(`select count(*) from pre_order where customer_name = 'Rawa Karim'`) !== "0") return "select 1";
+      const v = one(`select v.id from product_variant v join product p on p.id = v.product_id where p.name = 'Croissant' limit 1`);
+      const w = one(`select v.id from product_variant v join product p on p.id = v.product_id where p.name = 'Gelato Cup' and v.name = 'Single / Vanilla'`);
+      sql(`select test.act_as('cashier@example.com');
+           select take_pre_order('Rawa Karim', now() + interval '3 hours', '[{"variant_id":"${v}","qty":20}]'::jsonb, '0751 333 4455',
+                                 'For the school party', 'takeaway', '{"type":"cash","amount":20000}'::jsonb);
+           select take_pre_order('Dilan Aziz', now() + interval '1 day', '[{"variant_id":"${w}","qty":6}]'::jsonb, '0750 111 2233');`);
+      sql(`set session_replication_role = replica;
+           update pre_order set pickup_at = now() - interval '25 minutes' where customer_name = 'Rawa Karim';`);
+      return "select 1";
+    },
+    then: async (page) => {
+      await freshSale(page, null);
+      await page.getByTestId("preorders-button").click();
+      await soft(page.getByTestId("preorders-dialog"));
+      await page.waitForTimeout(400);
+    },
+    after: async (page) => {
+      const close = page.getByTestId("preorders-close");
+      if (await close.count()) await close.click();
+    },
+  },
+  {
+    name: "pos-printing",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await page.getByRole("button", { name: /print/i }).filter({ has: page.locator("svg") }).first().click().catch(() => {});
+      await page.waitForTimeout(500);
+    },
+    after: async (page) => page.keyboard.press("Escape"),
+  },
+  {
+    name: "pos-offline",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      await freshSale(page, "Takeaway");
+      await page.context().setOffline(true);
+      await page.waitForTimeout(500);
+      for (const name of ["Espresso", "Bottled Water"]) {
+        await tile(page, name).click();
+        await page.getByRole("button", { name: /^Card$/ }).click();
+        await page.locator(".pay-confirm").click();
+        await soft(page.getByTestId("receipt-offline"), 10000);
+        await page.waitForTimeout(500);
+      }
+      await page.getByTestId("offline-strip").click().catch(() => {});
+      await page.waitForTimeout(500);
+    },
+    after: async (page) => {
+      await page.keyboard.press("Escape");
+      await page.context().setOffline(false);
+      await soft(page.getByTestId("offline-strip"), 1000);
+      await page.getByTestId("offline-strip").waitFor({ state: "detached", timeout: 40000 }).catch(() => {});
+    },
+  },
+  {
+    name: "pos-offline-window",
+    role: "manager",
+    path: "/pos",
+    then: async (page) => {
+      await freshSale(page, "Takeaway");
+      await page.context().setOffline(true);
+      await page.waitForTimeout(500);
+      await tile(page, "Bottled Water").click();
+      await page.getByRole("button", { name: /^Card$/ }).click();
+      await page.locator(".pay-confirm").click();
+      await soft(page.getByTestId("receipt-offline"), 10000);
+      // The water's price changes while the till is offline: the sale is refused when sent.
+      const v = one(`select v.id from product_variant v join product p on p.id = v.product_id where p.name = 'Bottled Water' limit 1`);
+      sql(`select test.act_as('owner@example.com');
+           select set_price('${v}', 'takeaway', 750, null, null, gen_random_uuid());`);
+      await page.context().setOffline(false);
+      await soft(page.getByTestId("offline-error"), 30000);
+      await page.waitForTimeout(3000);
+      const strip = page.getByTestId("offline-strip");
+      if (await strip.count()) await strip.click().catch(() => {});
+      await soft(page.getByTestId("offline-error"), 10000);
+      await page.waitForTimeout(400);
+    },
+    after: async (page) => {
+      const v = one(`select v.id from product_variant v join product p on p.id = v.product_id where p.name = 'Bottled Water' limit 1`);
+      sql(`select test.act_as('owner@example.com');
+           select set_price('${v}', 'takeaway', 500, null, null, gen_random_uuid());`);
+      await page.keyboard.press("Escape");
+    },
+  },
+
+  {
+    name: "pos-drawer-close",
+    role: "cashier",
+    path: "/pos",
+    then: async (page) => {
+      for (let i = 0; i < 5 && !(await soft(page.getByTestId("drawer-panel"), 1500)); i++) {
+        await page.getByTestId("drawer-button").click({ timeout: 8000 }).catch(() => {});
+      }
+
+      const drawer = page.getByTestId("drawer-panel");
+      await drawer.getByRole("button", { name: "Close the drawer" }).first().click({ timeout: 8000 });
+      await page.waitForTimeout(300);
+      const total = drawer.getByText("Type the total instead");
+      if (await total.count()) await total.click();
+      const counted = drawer.getByLabel("Cash counted", { exact: true });
+      const expected = Number(one(`select d.carry + d.moved from location l cross join lateral drawer_position(l.business_id, l.id) d
+                                    where l.business_id = '${B}' and l.name = 'Main Branch'`));
+      if (await counted.count()) await counted.fill(String(expected - 1000));
+      const usd = drawer.getByLabel(/Dollars counted/);
+      if (await usd.count()) await usd.first().fill("20");
+      const stays = drawer.getByLabel("Stays in the drawer");
+      if (await stays.count()) await stays.fill("50000");
+      await page.waitForTimeout(400);
+    },
+    after: async (page) => page.keyboard.press("Escape"),
+  },
+
+  // ───────────────────────── Selling: Orders, Sales, Platforms, Customers ──
+  {
+    name: "orders-refund",
+    role: "manager",
+    path: "/orders",
+    then: async (page) => {
+      const row = page.locator("tbody tr", { has: page.getByRole("button", { name: "Refund" }) })
+        .filter({ hasText: "8,000" }).first();
+      await row.getByRole("button", { name: "Refund" }).click();
+      const dialog = page.getByTestId("refund-dialog");
+      await soft(dialog);
+      for (const name of ["Iced Latte", "Croissant"]) {
+        const qty = dialog.getByLabel(new RegExp(`How many of ${name}`));
+        if (await qty.count()) await qty.fill("0");
+      }
+      await dialog.getByLabel("Why refund it?").selectOption({ index: 1 });
+      await page.waitForTimeout(400);
+    },
+    after: async (page) => {
+      const dialog = page.getByTestId("refund-dialog");
+      await dialog.getByRole("button", { name: "Confirm refund" }).click().catch(() => {});
+      await soft(dialog.getByTestId("refund-answer"), 10000);
+      await dialog.getByRole("button", { name: "Close", exact: true }).click().catch(() => {});
+    },
+  },
+  {
+    name: "orders-list",
+    role: "manager",
+    path: "/orders?at=list",
+    // The split payment and the refund, one under the other.
+    then: async (page) => toTop(page.locator("tbody tr").filter({ hasText: /Card [\d,]+ IQD \+ Cash/ }).first(), 120),
+  },
+  {
+    name: "orders-void",
+    role: "manager",
+    path: "/orders?at=void",
+    then: async (page) => {
+      const done = page.locator("tbody tr").filter({ hasText: /approved by/ }).filter({ hasText: /Voided/ });
+      if (!(await done.count())) {
+        const row = page.locator("tbody tr", { has: page.getByRole("button", { name: "Void" }) })
+          .filter({ hasText: /2026-10-22 01:0/ }).last();
+        await row.getByRole("button", { name: "Void" }).click();
+        const fix = page.getByTestId("order-correction");
+        await fix.getByLabel("Why void it?").selectOption({ index: 1 });
+        await fix.getByLabel("Approved by").selectOption({ index: 1 });
+        await fix.getByLabel("Their PIN").fill("24680");
+        await fix.getByRole("button", { name: "Confirm void" }).click();
+        await soft(page.getByText(/Voided \(journal/), 15000);
+        await page.reload();
+      }
+      await toTop(done, 200);
+    },
+  },
+  {
+    name: "sales-overview",
+    role: "owner",
+    path: "/sales",
+  },
+  {
+    name: "sales-move-cash",
+    role: "manager",
+    path: "/sales",
+    then: async (page) => {
+      const from = page.getByLabel("Cash from");
+      await from.selectOption({ label: "the safe" }).catch(() => from.selectOption({ index: 1 }));
+      await page.getByLabel("Cash to").selectOption({ label: "the bank" }).catch(() => {});
+      await page.getByLabel("Amount to move").fill("500000");
+      await page.getByLabel("What the cash is for").fill("Deposit at the bank");
+      await page.waitForTimeout(300);
+      await toTop(page.getByRole("heading", { name: "Move Cash" }), 110);
+    },
+  },
+  {
+    name: "sales-dollars",
+    role: "manager",
+    path: "/sales",
+    then: async (page) => toTop(page.getByTestId("dollars-panel"), 90),
+  },
+  {
+    name: "sales-card",
+    role: "kitchenboss",
+    path: "/sales",
+    then: async (page) => {
+      const panel = page.getByTestId("card-takings");
+      await panel.getByLabel("The terminal's total").first().fill("1,053,500").catch(() => {});
+      await panel.getByLabel("Reached the bank").first().fill("1045600").catch(() => {});
+      await page.waitForTimeout(400);
+      await toTop(panel, 90);
+    },
+  },
+  {
+    name: "sales-sessions",
+    role: "owner",
+    path: "/sales/sessions",
+  },
+  {
+    name: "sales-session",
+    role: "owner",
+    path: () => `/sales/sessions/${one(`select id from work_shift where kind = 'session' and closed_at is not null
+                                          and counted_cash is not null order by closed_at desc limit 1`)}`,
+  },
+  {
+    name: "platforms-owed",
+    role: "owner",
+    path: "/platforms",
+    then: async (page) => {
+      const ours = page.getByTestId("platform-owed").filter({ hasText: "TB-40871" });
+      if (await ours.count()) await toTop(ours, 520);
+      else await toTop(page.getByTestId("platform-owed").first(), 160);
+    },
+  },
+  {
+    name: "platforms-match",
+    role: "kitchenboss",
+    path: "/platforms",
+    then: async (page) => {
+      const m = page.getByTestId("statement-matcher");
+      await m.getByLabel("Platform").selectOption("talabat");
+      await m.getByLabel("The statement").fill(
+        ["Order ID,Net Payout,Commission", "TB-40871,3570,630", "TB-40827,2550,450"].join("\n"),
+      );
+      await m.getByRole("button", { name: "Match to the orders waiting" }).click();
+      await soft(m.getByTestId("match-result"), 10000);
+      await toTop(m, 90);
+    },
+  },
+  {
+    name: "customers-list",
+    role: "owner",
+    path: "/customers",
+    get sql() {
+      return accountSetup();
+    },
+  },
+  {
+    name: "customer-page",
+    role: "owner",
+    path: () => `/customers/${one(`select id from customer where full_name = 'Sara Ahmed'`)}`,
+    get sql() {
+      if (one(`select count(*) from customer_address`) !== "0") return "select 1";
+      return `select test.act_as('owner@example.com');
+              select save_customer_address((select id from customer where full_name = 'Sara Ahmed'), null, 'Home',
+                                           '100 Meter Street, Gulan Towers B, flat 12', 'Ring twice');`;
+    },
+  },
+  {
+    name: "customer-account",
+    role: "kitchenboss",
+    path: () => `/customers/${one(`select id from customer where full_name = 'Erbil Tech Office'`)}`,
+    then: async (page) => {
+      const acct = page.getByTestId("customer-account");
+      if (await acct.count()) await toTop(acct, 90);
+    },
+  },
+
+  // ───────────────────────── The day's end (after the selling above) ───────
+  {
+    name: "end-of-day-slip",
+    role: "owner",
+    path: "/end-of-day?at=slip",
+    locator: ".guide-slip",
+    // The slip as the printer gets it: kept when the till asks to print, shown as print shows it.
+    then: async (page) => {
+      await page.evaluate(() => {
+        window.print = () => {
+          const paper = document.querySelector(".print-slip");
+          if (!paper || document.querySelector(".guide-slip")) return;
+          const copy = paper.cloneNode(true);
+          copy.classList.add("guide-slip");
+          copy.removeAttribute("data-testid");
+          document.body.appendChild(copy);
+        };
+      });
+      await page.getByTestId("eod-slip").click();
+      await soft(page.locator(".guide-slip"), 8000);
+      await page.emulateMedia({ media: "print" });
+      await page.waitForTimeout(400);
+    },
+    after: async (page) => {
+      await page.emulateMedia({ media: "screen" });
+      await page.evaluate(() => document.querySelector(".guide-slip")?.remove());
+    },
+  },
+  {
+    name: "accounting-close-failing",
+    role: "owner",
+    path: "/accounting",
+    then: async (page) => {
+      const close = page.getByRole("heading", { name: /^Close 2026-10/ });
+      await toTop(close, 100);
+    },
+  },
+  {
+    name: "reports-payments",
+    role: "owner",
+    path: "/reports?at=payments#payments",
+    then: async (page) => toTop(page.locator("#payments"), 80),
+  },
+  {
+    name: "reports-rec-bad",
+    role: "owner",
+    path: "/reports?at=recbad#reconciliation",
+    get sql() {
+      // Today's 500 IQD water sale loses its journal for the picture, and gets it back after.
+      const j = one(`select e.id from journal_entry e join sales_order o on o.id = e.reference_id
+                      where e.reference_type = 'sales_order' and e.status = 'published' and e.reverses_entry is null
+                        and o.net_amount = 500 and o.status = 'completed'
+                        and o.placed_at >= (${TODAY})::timestamp at time zone 'Asia/Baghdad'
+                      order by o.placed_at limit 1`);
+      if (j) {
+        meanwhile(
+        "reports-rec-bad",
+          `set session_replication_role = replica; update journal_entry set status = 'draft' where id = '${j}';`,
+          `set session_replication_role = replica; update journal_entry set status = 'published' where id = '${j}';`,
+        );
+      }
+      return "select 1";
+    },
+    then: async (page) => {
+      await toTop(page.getByRole("heading", { name: "Records to look into" }), 420);
+    },
+    after: async () => undo(),
+  },
+  {
+    name: "end-of-day-steps",
+    role: "manager",
+    path: "/end-of-day?at=steps",
+    get sql() {
+      // The bills and the drawer left; the rest done for the picture, and put back after.
+      const losses = ids(`select id from stock_loss where status = 'pending'`);
+      const dara = ids(`select a.id from attendance a join employee e on e.id = a.employee_id
+                         where e.full_name = 'Dara' and a.clock_out is null`);
+      const alerts = ids(`select id from alert where business_id = '${B}' and resolved_at is null
+                            and acknowledged_at is null and (snoozed_until is null or snoozed_until < now())`);
+      meanwhile(
+        "end-of-day-steps",
+        `set session_replication_role = replica;
+         update stock_loss set status = 'approved' where id in (${losses});
+         update attendance set clock_out = clock_in + interval '7 hours 26 minutes' where id in (${dara});
+         update alert set acknowledged_at = now(), acknowledged_by = (select id from app_user where email = 'manager@example.com'),
+                          ack_note = 'Seen to' where id in (${alerts});`,
+        `set session_replication_role = replica;
+         update stock_loss set status = 'pending' where id in (${losses});
+         update attendance set clock_out = null where id in (${dara});
+         update alert set acknowledged_at = null, acknowledged_by = null, ack_note = null where id in (${alerts});`,
+      );
+      return "select 1";
+    },
+    then: async (page) => {
+      const drawer = page.getByTestId("eod-tills").getByTestId("drawer-panel");
+      await drawer.getByRole("button", { name: "Close it for them" }).click();
+      await drawer.getByLabel("Why it is closed").fill("Closing up for the night");
+      await page.waitForTimeout(300);
+      await toTop(page.getByTestId("eod-progress"), 80);
+    },
+    after: async () => undo(),
+  },
+  {
+    name: "dashboard-all-clear",
+    role: "owner",
+    path: "/dashboard?at=clear",
+    get sql() {
+      const alerts = ids(`select id from alert where business_id = '${B}' and resolved_at is null
+                            and acknowledged_at is null and (snoozed_until is null or snoozed_until < now())`);
+      meanwhile(
+        "dashboard-all-clear",
+        `set session_replication_role = replica;
+         update alert set acknowledged_at = now() - interval '20 minutes',
+                          acknowledged_by = (select id from app_user where email = 'owner@example.com'),
+                          ack_note = 'Seen to' where id in (${alerts});`,
+        `set session_replication_role = replica;
+         update alert set acknowledged_at = null, acknowledged_by = null, ack_note = null where id in (${alerts});`,
+      );
+      return "select 1";
+    },
+    after: async () => undo(),
+  },
+  {
+    name: "dashboard-setup",
+    role: "barista2",
+    path: "/dashboard?at=setup",
+    get sql() {
+      // Hana, for the picture, owns the second, empty café; back to this one after.
+      meanwhile(
+        "dashboard-setup",
+        `set session_replication_role = replica;
+         update app_user set business_id = '${B2}' where email = 'barista2@example.com';
+         delete from user_role where app_user_id = (select id from app_user where email = 'barista2@example.com');
+         insert into user_role (app_user_id, role, business_id)
+           select id, 'owner', '${B2}' from app_user where email = 'barista2@example.com';`,
+        `set session_replication_role = replica;
+         update app_user set business_id = '${B}' where email = 'barista2@example.com';
+         delete from user_role where app_user_id = (select id from app_user where email = 'barista2@example.com');
+         insert into user_role (app_user_id, role, business_id)
+           select id, 'purchasing', '${B}' from app_user where email = 'barista2@example.com';`,
+      );
+      return "select 1";
+    },
+    after: async () => undo(),
+  },
 ];
+
+/**
+ * The till's first sale of the day, from a clean order: the menu shown, no
+ * bill or quick sale left on screen, the way of selling chosen.
+ */
+async function freshSale(page, channel) {
+  await page.keyboard.press("Escape").catch(() => {});
+  const menuTab = page.getByRole("tab", { name: "Menu", exact: true });
+  if (await menuTab.count()) await menuTab.click();
+  const quick = page.locator(".strip-chip", { hasText: "Quick sale" });
+  if (await quick.isVisible().catch(() => false)) await quick.click();
+  const clear = page.getByRole("button", { name: "Clear", exact: true });
+  if ((await clear.count()) && (await clear.isEnabled().catch(() => false))) {
+    await clear.click();
+    const yes = page.getByRole("button", { name: /^(Yes|Clear it)/ });
+    if (await yes.count()) await yes.first().click();
+  }
+  if (channel) await page.getByRole("button", { name: channel, exact: true }).first().click();
+  await page.waitForTimeout(200);
+}
+
+/** The size and add-ons sheet, if it opened: the size named (or the first), the first of each group, then added. */
+async function chooseOptions(page, size) {
+  const sheet = page.getByTestId("options-sheet");
+  if (!(await soft(sheet, 1500))) return;
+  const sizes = sheet.locator(".variant-list button");
+  if (await sizes.count()) {
+    const pick = size ? sizes.filter({ hasText: size }).first() : sizes.first();
+    await pick.click();
+    await page.waitForTimeout(300);
+  }
+  if (!(await sheet.isVisible().catch(() => false))) return;
+  const groups = sheet.getByTestId("addon-group");
+  for (let i = 0; i < (await groups.count()); i++) {
+    const g = groups.nth(i);
+    if ((await g.evaluate((el) => el.tagName)) === "DETAILS") continue;
+    await g.locator("button").first().click().catch(() => {});
+  }
+  const add = sheet.getByRole("button", { name: /^Add/ }).last();
+  if (await add.count()) await add.click();
+  await page.waitForTimeout(250);
+}
+
+/**
+ * The office's account: on account, 30 days, and an invoice for last week's
+ * coffee that has gone past its day to be paid.
+ */
+function accountSetup() {
+  if (one(`select count(*) from customer_invoice`) !== "0") return "select 1";
+  const office = one(`select id from customer where full_name = 'Erbil Tech Office'`);
+  const v = one(`select v.id from product_variant v join product p on p.id = v.product_id where p.name = 'Americano' limit 1`);
+  sql(`select test.act_as('owner@example.com');
+       select set_customer_account('${office}', true, 500000, 0);
+       select invoice_customer('${office}', '[{"variant_id":"${v}","qty":24}]'::jsonb, gen_random_uuid(), 'Coffee for the meeting room');`);
+  sql(`set session_replication_role = replica;
+       update customer_invoice set due_on = due_on - 3, issued_on = issued_on - 3 where customer_id = '${office}';`);
+  sql(`select test.act_as('owner@example.com'); select set_customer_account('${office}', true, 500000, 30);`);
+  return "select 1";
+}
+
+/** The payment confirmed, and the sale recorded. */
+async function paid(page) {
+  await page.locator(".pay-confirm").click();
+  await page.locator(".pay-confirm").waitFor({ state: "detached", timeout: 15000 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+/** A drawer open at the till for the person, counted as it was left. */
+function openDrawer(who) {
+  const open = one(`select count(*) from work_shift w
+                     where w.kind = 'session' and w.closed_at is null and w.business_id = '${B}'`);
+  if (open !== "0") return "select 1";
+  const holds = one(`select d.carry + d.moved from location l cross join lateral drawer_position(l.business_id, l.id) d
+                      where l.business_id = '${B}' and l.name = 'Main Branch'`);
+  return `select test.act_as('${who}@example.com'); select open_cash_session(${holds});`;
+}
+
+/** Customers the till finds, and a dollar rate set by a manager this morning. */
+function sellingSetup() {
+  if (one(`select count(*) from customer`) === "0") {
+    sql(`select test.act_as('owner@example.com');
+         select save_customer(null, 'Sara Ahmed', '0750 412 3344', 'Likes her latte with oat milk');
+         select save_customer(null, 'Hemin Rashid', '0751 220 9087');
+         select save_customer(null, 'Erbil Tech Office', '0770 300 1200', 'Coffee for the office, monthly bill');`);
+  }
+  if (one(`select count(*) from fx_rate`) === "0")
+    sql(`select test.act_as('manager@example.com'); select set_fx_rate('USD', 1310, 'The exchange office this morning');`);
+  return "select 1";
+}
+
+/** The bank's balance on the books at the end of a day: what a statement to that day says. */
+const bankBalance = (day) =>
+  Number(
+    one(`select coalesce(sum(l.debit - l.credit), 0) from journal_line l join journal_entry e on e.id = l.journal_entry_id
+          join gl_account a on a.id = l.account_id
+         where a.code = '1020' and a.business_id = '${B}' and e.status = 'published'
+           and (e.occurred_at at time zone 'Asia/Baghdad')::date <= date '${day}'`),
+  );
+
+/** A bank statement to a day kept: every line ticked to it, and the balance it ends with. */
+async function keepStatement(page, day) {
+  await page.getByTestId("bank-date").fill(day);
+  await page.getByRole("button", { name: "Tick every line to this day" }).click();
+  await page.getByTestId("bank-closing").fill(String(bankBalance(day)));
+  await page.getByTestId("bank-keep").click();
+  await soft(page.getByText(/Statement \d+ is kept/), 10000);
+  await page.waitForTimeout(800);
+}
+
+/** A manual journal published (the generator's repair) and one saved as a draft. */
+function journalsSetup() {
+  if (one(`select count(*) from journal_entry where description = 'Being the generator repaired'`) !== "0") return "select 1";
+  sql(`select test.act_as('owner@example.com');
+       select save_journal(${TODAY}, 'Being the generator repaired',
+         '[{"code":"6900","debit":75000,"credit":0,"memo":"Generator repair"},{"code":"1020","debit":0,"credit":75000,"memo":"Paid by transfer"}]'::jsonb,
+         true, 'INV-311');
+       select save_journal(${TODAY}, 'Being the deposit on the new freezer',
+         '[{"code":"6900","debit":40000,"credit":0,"memo":"Freezer deposit"},{"code":"1020","debit":0,"credit":40000,"memo":"By transfer"}]'::jsonb,
+         false);`);
+  return "select 1";
+}
+
+/** A phone, as the pictures of one are taken. */
+const PHONE = { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true };
+
+/** A link for a person's phone, as a manager makes it on Staff. */
+const phoneLinkKey = (name) =>
+  one(`select test.act_as('manager@example.com');
+       select link_phone_start((select id from employee where full_name = '${name}')) ->> 'key'`);
+
+/** Every clock screen taken out of use: a till shows its own clock again. */
+function removeScreens() {
+  const ids = sql(`select id from clock_screen where removed_at is null`).split("\n").filter(Boolean);
+  for (const id of ids)
+    sql(`select test.act_as('owner@example.com'); select remove_clock_screen('${id}', 'Made for the guide');`);
+  return "select 1";
+}
+
+/** RFC 6238: the six digits of an authenticator app now (as tests/e2e/gateway.mjs checks them). */
+function totp(secret) {
+  const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = "";
+  for (const ch of secret.replace(/=+$/, "")) bits += A.indexOf(ch).toString(2).padStart(5, "0");
+  const key = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8) key.push(parseInt(bits.slice(i, i + 8), 2));
+  const msg = Buffer.alloc(8);
+  msg.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30000)));
+  const h = createHmac("sha1", Buffer.from(key)).update(msg).digest();
+  const o = h[h.length - 1] & 15;
+  return String((h.readUInt32BE(o) & 0x7fffffff) % 1000000).padStart(6, "0");
+}
+
+/** The device cookies of the till made the shop's clock screen. */
+let CLOCK_SCREEN_COOKIES = null;
+
+/**
+ * A picture taken in a context of its own (another device, signed in as
+ * someone, or signed out), shown on the picture's page as it was seen there:
+ * so a sign-out, a phone's link or a clock screen leaves the other pictures'
+ * sessions as they were.
+ */
+async function elsewhere(page, who, options, fn) {
+  const size = page.viewportSize();
+  const browser = page.context().browser();
+  const ctx = await browser.newContext({ viewport: size, deviceScaleFactor: 1, ...options });
+  try {
+    await ctx.clock.install({ time: new Date(`${CLOCK_AT.replace(" ", "T")}Z`) });
+    await ctx.addInitScript(() => {
+      const get = Storage.prototype.getItem;
+      Storage.prototype.getItem = function (k) {
+        return String(k).startsWith("sixties.tour.") ? "no" : get.call(this, k);
+      };
+    });
+    const p = await ctx.newPage();
+    if (who) {
+      await p.goto(`${BASE}/login`);
+      await p.fill('input[name="email"]', `${who}@example.com`);
+      await p.fill('input[name="password"]', "password123");
+      await Promise.all([p.waitForURL((u) => !u.pathname.startsWith("/login")), p.click('button[type="submit"]')]);
+    }
+    await fn(p);
+    await p.waitForTimeout(250);
+    const png = await p.screenshot({ type: "png" });
+    await page.goto("about:blank");
+    await page.setContent(
+      `<html><body style="margin:0;background:#fff"><img style="display:block" src="data:image/png;base64,${png.toString("base64")}"></body></html>`,
+    );
+  } finally {
+    await ctx.close();
+  }
+}
+
+/**
+ * The people's weeks: PINs (Lana has none yet), four weeks of shifts and of
+ * hours on the clock, and this week planned with only Dara on Friday evening.
+ * Yesterday Avin came 20 minutes late, Bana did not come, and Dara is still
+ * clocked in.
+ */
+function staffSetup() {
+  if (one(`select count(*) from shift_schedule`) !== "0") return "select 1";
+  const pins = { Avin: "5820", Bana: "6731", Dara: "7942", Karwan: "8153", Shno: "9264", "Demo Manager": "3175" };
+  sql(`select test.act_as('owner@example.com');
+       ${Object.entries(pins)
+         .map(([n, pin]) => `select set_clock_pin((select id from employee where full_name = '${n}'), '${pin}');`)
+         .join("\n")}`);
+  const owner = `(select id from app_user where email = 'owner@example.com')`;
+  sql(`insert into shift_schedule (business_id, employee_id, location_id, day, starts_at, ends_at, created_by)
+       select '${B}', e.id, e.location_id, d::date,
+              (d::date + s.st) at time zone 'Asia/Baghdad', (d::date + s.en) at time zone 'Asia/Baghdad', ${owner}
+         from generate_series(date '2026-09-24', date '2026-10-25', interval '1 day') d
+         join (values ('Avin', time '08:00', time '16:00', 0), ('Bana', time '08:00', time '16:00', 1),
+                      ('Dara', time '16:00', time '23:30', 2), ('Karwan', time '16:00', time '23:30', 3),
+                      ('Shno', time '07:00', time '15:00', 4)) s(name, st, en, off)
+           on extract(dow from d) <> s.off
+         join employee e on e.full_name = s.name
+        where not (d::date = date '2026-10-23' and s.name = 'Karwan');
+       insert into shift_schedule (business_id, employee_id, location_id, day, starts_at, ends_at, created_by)
+       select '${B}', e.id, e.location_id, d::date,
+              (d::date + time '12:00') at time zone 'Asia/Baghdad', (d::date + time '20:00') at time zone 'Asia/Baghdad', ${owner}
+         from generate_series(date '2026-09-24', date '2026-10-25', interval '1 day') d
+         join employee e on e.full_name = 'Lana'
+        where extract(dow from d) in (5, 6) and d::date <> date '2026-10-23';
+       insert into attendance (business_id, employee_id, location_id, clock_in, clock_out, work_day, source, recorded_by, out_recorded_by)
+       select s.business_id, s.employee_id, s.location_id,
+              s.starts_at + case when e.full_name = 'Avin' and s.day = date '2026-10-21' then interval '20 minutes'
+                                 else ((abs(hashtext(s.id::text)) % 9) - 4) * interval '1 minute' end,
+              case when e.full_name = 'Dara' and s.day = date '2026-10-21' then null
+                   else s.ends_at + ((abs(hashtext(s.id::text || 'out')) % 11) - 2) * interval '1 minute' end,
+              s.day, 'till', ${owner}, ${owner}
+         from shift_schedule s join employee e on e.id = s.employee_id
+        where s.day < date '2026-10-22' and not (e.full_name = 'Bana' and s.day = date '2026-10-21');`);
+  return "select 1";
+}
+
+/** Two advances given, and October's payroll drafted (it takes Avin's advance back). */
+function payrollSetup() {
+  if (one(`select count(*) from payroll_run where month = '2026-10-01'`) !== "0") return "select 1";
+  sql(`select test.act_as('owner@example.com');
+       select record_advance((select id from employee where full_name = 'Avin'), 100000, 'safe', 'Doctor''s bill');
+       select record_advance((select id from employee where full_name = 'Dara'), 50000, 'bank', 'Rent help');
+       select draft_payroll('2026-10-01');`);
+  return "select 1";
+}
 
 /** A vendor chosen on Vendors, on one of its tabs. */
 async function vendor(page, name, tab) {

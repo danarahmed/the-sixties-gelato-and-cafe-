@@ -33,7 +33,10 @@
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { background: var(--paper); color: var(--ink); font: 15px/1.6 var(--body); }
+body { background: var(--paper); color: var(--ink); font: 15px/1.6 var(--body); overflow-wrap: break-word; }
+.screen > *, .task > *, section > * { min-width: 0; }
+code, q, .ph { overflow-wrap: anywhere; }
+h3.when { font-size: 1.15rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--body); margin-top: 8px; }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
 a { color: var(--brand); text-underline-offset: 2px; }
 a:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
