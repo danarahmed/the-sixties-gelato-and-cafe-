@@ -35,6 +35,9 @@ const AUDITOR = HELPER("auditor", "Demo Auditor");
 const GM = HELPER("general_manager", "Demo General Manager");
 // Everyone made at the start, so they show in lists the same way in every picture.
 sql(BARISTA + ACCOUNTANT + PURCHASING);
+// The managers' approval PINs (24680), for the approvals the pictures show.
+sql(`update app_user set pin_hash = extensions.crypt('24680', extensions.gen_salt('bf', 8))
+      where email in ('manager@example.com', 'owner@example.com') and pin_hash is null`);
 
 /** Wait for some text to show, without failing the picture if it does not. */
 const soft = async (locator, timeout = 8000) => {
@@ -52,6 +55,12 @@ const toTop = async (locator, gap = 80) => {
     window.scrollTo(0, y);
   }, gap);
 };
+
+/** A rule set as the owner, unless it is set so already. */
+const rule = (key, scope, id, value, reason) => `select test.act_as('owner@example.com');
+  select set_business_rule('${key}', '${scope}', ${id}, '${value}'::jsonb, '${reason.replace(/'/g, "''")}')
+   where not exists (select 1 from business_rule where key = '${key}' and scope_type = '${scope}'
+                        and scope_id = coalesce(${id}, '') and value = '${value}'::jsonb);`;
 
 /** A product's tile on the till, by its exact name. */
 const tile = (page, name) =>
@@ -300,9 +309,8 @@ export const STATE_SHOTS = [
     name: "production-approval",
     role: "barista",
     path: "/production",
-    sql: `select test.act_as('owner@example.com');
-          select set_business_rule('negative_stock', 'item', (select id::text from item where name = 'Pistachio paste'),
-                                   '"approve"'::jsonb, 'Pistachio paste is dear: a manager says first');`,
+    sql: rule("negative_stock", "item", "(select id::text from item where name = 'Pistachio paste')", '"approve"',
+      "Pistachio paste is dear: a manager says first"),
     then: async (page) => {
       const form = page.locator(".pr-record");
       await form.getByLabel("What did you make").selectOption({ label: "Pistachio Gelato Batch" });
@@ -317,7 +325,8 @@ export const STATE_SHOTS = [
     role: "manager",
     path: "/production#lots",
     sql: `update item_lot set use_by = ((${TODAY} + time '22:00') at time zone 'Asia/Baghdad')
-           where lot_code = 'B1143' and item_id = (select id from item where name = 'Vanilla gelato')`,
+           where lot_code = 'B1143' and item_id = (select id from item where name = 'Vanilla gelato');
+          update production_batch set use_by = ((${TODAY} + time '22:00') at time zone 'Asia/Baghdad') where batch_no = 1143;`,
     then: async (page) => {
       const row = page.locator('[data-testid="lot-row"][data-lot="B1143"]');
       await row.getByTestId("change-use-by").click();
@@ -381,7 +390,302 @@ export const STATE_SHOTS = [
       await page.waitForTimeout(600);
     },
   },
+
+  // ───────────────────────── Kitchen and stock: Inventory ──────────────────
+  {
+    name: "inventory-board",
+    role: "owner",
+    path: "/inventory",
+    sql: `update item set min_level_base = 600 where name = 'Cone';
+          update item set min_level_base = 2000 where name = 'Gelato spoon';
+          update item set min_level_base = 20000 where name = 'Coffee beans';
+          ${rule("negative_stock", "item", "(select id::text from item where name = 'Croissant')", '"allow"',
+            "Croissants are sold before the batch is recorded")}
+          select test.act_as('owner@example.com');
+          select record_loss('waste', (select id from item where name = 'Croissant'), null, 3, 'each', 'Dropped before the batch was recorded')
+           where not exists (select 1 from stock_board where item_id = (select id from item where name = 'Croissant') and is_negative);`,
+    then: async (page) => {
+      await toTop(page.getByTestId("stock-board").or(page.locator(".card.stat")).first(), 90);
+    },
+  },
+  {
+    name: "inventory-barista",
+    role: "barista",
+    path: "/inventory",
+  },
+  {
+    name: "inventory-loss-form",
+    role: "barista",
+    path: "/inventory",
+    then: async (page) => {
+      const form = page.getByTestId("record-loss");
+      await form.getByLabel("What kind of loss").selectOption("expired");
+      await form.getByLabel("Item").selectOption({ label: "Chocolate gelato" });
+      const batch = form.getByLabel("From batch");
+      await batch.selectOption({ index: 1 });
+      await form.getByLabel("Quantity lost").fill("300");
+      await form.getByLabel("Why (required)").fill("Past its use-by, found at the back of the freezer");
+      await toTop(form, 90);
+    },
+  },
+  {
+    name: "inventory-loss-approval",
+    role: "barista",
+    path: "/inventory",
+    sql: rule("waste_approval_over", "role", "'barista'", "10000", "Baristas ask a manager for losses over 10,000"),
+    then: async (page) => {
+      const form = page.getByTestId("record-loss");
+      await form.getByLabel("What kind of loss").selectOption("spoilage");
+      await form.getByLabel("Item").selectOption({ label: "Milk" });
+      await form.getByLabel("Quantity lost").fill("12");
+      await form.getByLabel("Unit").selectOption("L");
+      await form.getByLabel("Why (required)").fill("The fridge was left open overnight");
+      await form.getByRole("button", { name: "Record the loss" }).click();
+      await soft(form.getByTestId("loss-approval"), 15000);
+      await toTop(form, 90);
+    },
+  },
+  {
+    name: "inventory-losses-waiting",
+    role: "manager",
+    path: "/inventory#losses-waiting",
+    sql: `select test.act_as('barista@example.com');
+          select record_loss('spoilage', (select id from item where name = 'Milk'), null, 12, 'L',
+                             'The fridge was left open overnight', p_wait => true)
+           where not exists (select 1 from stock_loss where status = 'pending');`,
+    then: async (page) => {
+      await soft(page.getByTestId("loss-waiting"));
+      await toTop(page.getByTestId("losses-waiting"), 90);
+    },
+  },
+  {
+    name: "inventory-correct-confirm",
+    role: "manager",
+    path: "/inventory",
+    then: async (page) => {
+      const form = await openForm(page, "correct", "correct-stock");
+      await form.getByLabel("Item").selectOption({ label: "Cone" });
+      await form.getByLabel("Change (− to reduce)").fill("-4000");
+      await form.getByLabel("Why (required)").fill("Counted the cones in the store room");
+      await form.getByRole("button").filter({ hasText: /^(Post|Correct|Save)/ }).first().click();
+      await soft(form.getByTestId("correct-confirm"));
+      await toTop(form, 90);
+    },
+  },
+  {
+    name: "inventory-paste",
+    role: "owner",
+    path: "/inventory#paste-items",
+    then: async (page) => {
+      const list = [
+        "Name\tUnit\tReorder at\tOn the shelf\tCost each",
+        "Mango puree\tkg\t2\t3\t9,500",
+        "Paper napkins\tbox\t5\t10",
+        "Vanila syrup\tml",
+      ].join("\n");
+      if (!(await page.getByTestId("paste-box").isVisible())) {
+        if ((await page.getByTestId("add-paste").count()) === 0) await page.getByTestId("inv-open-add").click();
+        await page.getByTestId("add-paste").click();
+      }
+      await page.getByTestId("paste-box").fill(list);
+      await page.waitForTimeout(600);
+      await toTop(page.getByTestId("paste-rows"), 260);
+    },
+  },
+  {
+    name: "inventory-add-one",
+    role: "barista2",
+    path: "/inventory",
+    sql: PURCHASING,
+    then: async (page) => {
+      const add = page.getByTestId("inv-open-add");
+      if ((await page.getByTestId("add-one").count()) === 0) await add.click();
+      await page.getByTestId("add-one").click();
+      const form = page.getByTestId("new-item-form");
+      await form.getByLabel("Name (English)").fill("Vanila syrup");
+      await page.waitForTimeout(800);
+      await toTop(form, 90);
+    },
+  },
+  {
+    name: "stock-card",
+    role: "owner",
+    path: (ids) => `/inventory/${ids.item()}?from=2026-09-01&to=2026-09-30`,
+    then: async (page) => {
+      await toTop(page.getByTestId("stock-card"), 80);
+    },
+  },
+  {
+    name: "stock-card-edit",
+    role: "barista2",
+    path: (ids) => `/inventory/${ids.item()}`,
+    sql: PURCHASING,
+    then: async (page) => {
+      await toTop(page.getByTestId("pack-units"), 80);
+    },
+  },
+  {
+    name: "transfers-send",
+    role: "manager",
+    path: "/inventory/transfers",
+    then: async (page) => {
+      const form = page.getByTestId("send-transfer");
+      const lines = form.getByTestId("transfer-line");
+      await lines.nth(0).getByLabel("Item").selectOption({ label: "Milk" });
+      await lines.nth(0).getByLabel("Quantity").fill("6");
+      await lines.nth(0).getByLabel("Unit").selectOption("L");
+      await form.getByRole("button", { name: "+ Add line" }).click();
+      await lines.nth(1).getByLabel("Item").selectOption({ label: "Sugar" });
+      await lines.nth(1).getByLabel("Quantity").fill("2000");
+      await form.getByTestId("transfer-note").fill("For tomorrow's gelato");
+      await page.waitForTimeout(500);
+      await toTop(form, 90);
+    },
+  },
+  {
+    name: "transfers-short",
+    role: "manager",
+    path: "/inventory/transfers",
+    then: async (page) => {
+      let card = page.locator('[data-testid="transfers-on-their-way"] [data-testid="transfer"]').first();
+      if ((await card.count()) === 0) {
+        const form = page.getByTestId("send-transfer");
+        const lines = form.getByTestId("transfer-line");
+        await lines.nth(0).getByLabel("Item").selectOption({ label: "Milk" });
+        await lines.nth(0).getByLabel("Quantity").fill("6");
+        await lines.nth(0).getByLabel("Unit").selectOption("L");
+        await form.getByRole("button", { name: "+ Add line" }).click();
+        await lines.nth(1).getByLabel("Item").selectOption({ label: "Sugar" });
+        await lines.nth(1).getByLabel("Quantity").fill("2000");
+        await form.getByTestId("transfer-note").fill("For tomorrow's gelato");
+        await form.getByTestId("transfer-send").click();
+        await soft(form.getByText(/is on its way to/), 15000);
+        await page.waitForTimeout(800);
+        card = page.locator('[data-testid="transfers-on-their-way"] [data-testid="transfer"]').first();
+      }
+      await card.getByTestId("transfer-receive-some").click();
+      await card.getByLabel("What arrived of Milk").fill("5");
+      await card.getByLabel("Note (optional)").fill("A bottle leaked on the way");
+      await toTop(card, 90);
+    },
+  },
+  {
+    name: "usage-table",
+    role: "owner",
+    path: "/inventory/usage",
+    get sql() {
+      return usageCounts();
+    },
+    then: async (page) => {
+      const row = page.getByTestId("usage-row").filter({ hasText: "Takeaway cup" }).first();
+      if (await row.count()) {
+        const more = row.locator("summary, button").filter({ hasText: /made of/ }).first();
+        if (await more.count()) await more.click();
+        await toTop(row, 160);
+      }
+    },
+  },
+  {
+    name: "count-sheet",
+    role: "counter",
+    path: "/count",
+    then: async (page) => {
+      if (await page.getByRole("button", { name: "Start count" }).count()) {
+        await page.getByRole("button", { name: "Start count" }).click();
+        await soft(page.getByText("Your count"), 15000);
+      }
+      const boxes = page.locator('input[aria-label^="Counted "]');
+      const n = Math.min(6, await boxes.count());
+      const values = ["80", "210", "16000", "7600", "33800", "480"];
+      for (let i = 0; i < n; i++) {
+        await boxes.nth(i).fill(values[i]);
+        await boxes.nth(i).blur();
+        await page.waitForTimeout(300);
+      }
+      await page.waitForTimeout(800);
+    },
+    after: async () => {
+      sql(`select test.act_as('counter@example.com');
+           select cancel_stock_count(id, 'Started for the guide') from stock_count where status = 'counting'`);
+    },
+  },
+  {
+    name: "count-review",
+    role: "manager",
+    path: "/count",
+    get sql() {
+      return submittedCount();
+    },
+    then: async (page) => {
+      const review = page.getByRole("button", { name: /Review/ }).first();
+      if (await review.count()) await review.click();
+      await page.waitForTimeout(800);
+    },
+  },
 ];
+
+/** Inventory's form, opened from its button unless it is open already. */
+async function openForm(page, key, testid) {
+  const form = page.getByTestId(testid);
+  if ((await form.count()) === 0) await page.getByTestId(`inv-open-${key}`).click();
+  await form.waitFor({ timeout: 10000 });
+  return form;
+}
+
+/** On hand of an item at the Main Branch at a moment (an SQL expression). */
+const onHandAt = (item, at = "now()") => `(select coalesce(sum(m.base_quantity_signed), 0) from inventory_movement m
+   where m.item_id = (select id from item where name = '${item}') and m.location_id = ${MAIN} and m.created_at <= ${at})`;
+
+/**
+ * Two counts of the takeaway cups, a week apart, with a week's sales between:
+ * the first counted as the ledger stood then, the second 40 cups short now.
+ */
+function usageCounts() {
+  const cup = one(`select id from item where name = 'Takeaway cup'`);
+  const done = Number(one(`select count(*) from stock_count c join stock_count_line l on l.stock_count_id = c.id
+                            where c.status = 'approved' and l.item_id = '${cup}'`));
+  if (done >= 2) return "select 1";
+  const week = `(now() - interval '7 days')`;
+  if (done === 0) {
+    const first = one(`select test.act_as('counter@example.com');
+      select start_stock_count(array['${cup}'::uuid])`);
+    sql(`select test.act_as('counter@example.com');
+         select record_count('${first}', '${cup}', ${one(`select ${onHandAt("Takeaway cup")}`)}, 'each');
+         select submit_stock_count('${first}');
+         select test.act_as('manager@example.com'); select approve_stock_count('${first}');`);
+  }
+  const then = one(`select ${onHandAt("Takeaway cup", week)}`);
+  sql(`set session_replication_role = replica;
+       update stock_count_line l set counted_at = ${week}, counted_base = ${then}, expected_at_count = ${then}
+         from stock_count c where c.id = l.stock_count_id and c.status = 'approved' and l.item_id = '${cup}';
+       update stock_count c set started_at = ${week}, submitted_at = ${week}, approved_at = ${week}
+        where c.status = 'approved' and exists (select 1 from stock_count_line l where l.stock_count_id = c.id and l.item_id = '${cup}');`);
+  const second = one(`select test.act_as('counter@example.com');
+    select start_stock_count(array['${cup}'::uuid])`);
+  const now = Number(one(`select ${onHandAt("Takeaway cup")}`));
+  return `select test.act_as('counter@example.com');
+    select record_count('${second}', '${cup}', ${now - 40}, 'each');
+    select submit_stock_count('${second}');
+    select test.act_as('manager@example.com'); select approve_stock_count('${second}');`;
+}
+
+/** A count of three things handed in by the counter, a little off, for a manager to review. */
+function submittedCount() {
+  if (Number(one(`select count(*) from stock_count where status = 'submitted'`)) > 0) return "select 1";
+  const names = ["Cone", "Napkin", "Straw"];
+  const ids = names.map((n) => one(`select id from item where name = '${n}'`));
+  const has = names.map((n) => Number(one(`select ${onHandAt(n)}`)));
+  let c = one(`select id from stock_count where status = 'counting' limit 1`);
+  if (!c)
+    c = one(`select test.act_as('counter@example.com');
+      select start_stock_count(array[${ids.map((i) => `'${i}'::uuid`).join(",")}])`);
+  return `select test.act_as('counter@example.com');
+    select record_count('${c}', '${ids[0]}', ${has[0] - 12}, 'each');
+    select record_count('${c}', '${ids[1]}', ${has[1] + 30}, 'each');
+    select record_count('${c}', '${ids[2]}', ${Math.max(0, has[2] - 55)}, 'each');
+    select submit_stock_count('${c}');`;
+}
+
 
 /** Fill one line of a recipe editor (as tests/e2e/production.e2e.mjs does). */
 async function line(page, n, item, qty, unit) {
