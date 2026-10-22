@@ -263,10 +263,10 @@ and printed by the test on Test your devices.
 | 4 ✓  | F1 meal deals, F2 prices by time of day                                      | `0089`    |
 | 5 ✓  | F3 tips and a service charge                                                 | `0090`    |
 | 6 ✓  | F4 the dashboard arranged for each role, F5 the café's own receipt           | `0091`    |
-| 7    | The simulated year on the copy, with the planted problems; the backtest tool | —         |
-| 8    | Part 3, smarter buying (parts 5 and 6 use its drafts and lead times)         | `0092`    |
-| 9    | Part 5, cash planning                                                        | `0093`    |
-| 10   | Part 2, the watch list                                                       | `0094`    |
+| 7 ✓  | The simulated year on the copy, with the planted problems; the backtest tool | —         |
+| 8 ✓  | Part 3, smarter buying (parts 5 and 6 use its drafts and lead times)         | `0092`    |
+| 9 ✓  | Part 5, cash planning                                                        | `0093`    |
+| 10 ✓ | Part 2, the watch list                                                       | `0094`    |
 | 11   | Part 6, the Monday brief (gathers 2, 3 and 5, and the new deals and tips)    | `0095`    |
 | 12   | The guide brought up to date with every new screen                           | —         |
 
@@ -332,6 +332,38 @@ is turned on inside it, with **Not set up yet** at the top listing what is
 off and what each gives; a link into Settings (`/settings#receipt`) opens its
 group. The Dashboard's setup list is folded to one line for anyone but the
 owner and a general manager.
+
+**The simulated year** (step 7) is lived on a copy whose clock is moved
+day by day (`scripts/sim/run.sh`, `docs/SIMULATION.md`): a café of the
+catalogue's size, its seasons, Ramadan and Eid, late deliveries, bills,
+salaries, the owner's drawings, a machine bought, tight months, and three
+planted problems beside honest look-alikes, with an answer key; the
+backtests (`scripts/sim/backtest.py`) ask each feature what it would have
+said, day by day, and score it against the year and against plain baselines.
+**Smarter buying** (step 8) learns each supplier's delivery time and how
+late it has come from its orders, and how often it delivers (or as set on
+Vendors); What to buy orders to last until the order comes, late as the
+supplier has been, with a margin for a busier day, and up to that and what
+is used until the delivery after it; suggested levels beside any set by
+hand, top-ups when the supplier is ordered from anyway, a cheaper supplier,
+the drafts in one press, approve and send in one tap; the price watch sets
+the price that keeps a margin in one tap. **Cash ahead** (step 9) is
+Reports → Cash ahead and the alert "Money short ahead": the next 7 to 92
+days of the bank and the safe from what they hold, each weekday's takings
+(cash to the safe at the close, cards to the bank on their weekdays, less
+the fee), the safe banked on its weekdays as it stood that morning, bills
+on the days and as late as the café pays them, deliveries and orders still
+to bill, customer invoices, and payments made again and again under the same
+words; a short spell says what to do (move from the safe, or ask a supplier
+to take a bill later). **The watch list** (step 10) is Reports → Watch list,
+for the owner (and the general manager when allowed): voids, discounts just
+under the cashier's limit (each reason apart) and drawers short, each
+person against the others at the same hours, raised only when luck would
+hardly give it (below one in 10,000; strong below one in a million); new
+staff not judged for three weeks; explained or looked into with a note; a
+nightly look-over; the Dashboard and the phone say only that something is
+worth a look. What the year showed against each mark is in
+`docs/SIMULATION.md` (_What the year showed_).
 
 Easier and more flexible first: every user feels them from the first day,
 and the smart parts then learn from deals, tips and time-of-day prices too.
