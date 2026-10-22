@@ -808,6 +808,7 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
     phone: vendor.phone ?? "",
     isActive: vendor.isActive,
     leadTimeDays: vendor.leadTimeDays === null ? "" : String(vendor.leadTimeDays),
+    deliversEveryDays: vendor.deliversEveryDays === null ? "" : String(vendor.deliversEveryDays),
   };
   const [f, setF] = useState(initial);
   const [reason, setReason] = useState("");
@@ -817,6 +818,7 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
     setMsg(null);
     start(async () => {
       const days = f.leadTimeDays.trim();
+      const every = f.deliversEveryDays.trim();
       const r = await updateSupplierAction({
         supplierId: vendor.id,
         name: f.name,
@@ -825,6 +827,10 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
         isActive: f.isActive,
         reason,
         leadTimeDays: days === "" ? null : Number(days),
+        // Only when changed, so a supplier saves before 0092 is applied too.
+        ...(f.deliversEveryDays === initial.deliversEveryDays
+          ? {}
+          : { deliversEveryDays: every === "" ? null : Number(every) }),
       });
       if (r.ok) {
         setMsg({ ok: true, text: t("Saved, and on the audit trail.") });
@@ -858,6 +864,18 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
             placeholder={t("Café default")}
             onChange={(e) =>
               setF({ ...f, leadTimeDays: e.target.value.replace(/[^0-9]/g, "").slice(0, 2) })
+            }
+          />
+        </label>
+        <label style={{ width: 150 }}>
+          <div className="sc">{t("Delivers every (days)")}</div>
+          <input
+            inputMode="numeric"
+            aria-label={t("Delivers every (days)")}
+            value={f.deliversEveryDays}
+            placeholder={t("Learnt")}
+            onChange={(e) =>
+              setF({ ...f, deliversEveryDays: e.target.value.replace(/[^0-9]/g, "").slice(0, 2) })
             }
           />
         </label>

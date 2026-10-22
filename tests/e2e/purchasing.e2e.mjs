@@ -105,7 +105,7 @@ let po = 0;
   check((await stageOf(page, po)) === "Draft", `order ${po} is a draft, waiting for approval`);
 
   const row = page.locator(`[data-testid="po-row"][data-po="${po}"]`);
-  await row.getByRole("button", { name: "Approve" }).click();
+  await row.getByRole("button", { name: "Approve", exact: true }).click();
   await row.getByText(`Order ${po} approved.`).waitFor({ timeout: 15000 });
   await page.waitForFunction(
     (no) =>
@@ -270,7 +270,7 @@ let big = 0;
   check(
     (await row.textContent()).includes(
       "Over your limit: the owner or the general manager approves it",
-    ) && (await row.getByRole("button", { name: "Approve" }).count()) === 0,
+    ) && (await row.getByRole("button", { name: "Approve", exact: true }).count()) === 0,
     "300,000 is over the manager's 250,000: no Approve, and it says who approves it",
   );
   await ctx.close();
@@ -278,7 +278,7 @@ let big = 0;
   const owner = await signIn(browser, "owner");
   await open(owner.page, "/purchasing");
   const theirs = owner.page.locator(`[data-testid="po-row"][data-po="${big}"]`);
-  await theirs.getByRole("button", { name: "Approve" }).click();
+  await theirs.getByRole("button", { name: "Approve", exact: true }).click();
   await theirs.getByText(`Order ${big} approved.`).waitFor({ timeout: 15000 });
   await theirs.getByRole("button", { name: "Cancel", exact: true }).click();
   await theirs

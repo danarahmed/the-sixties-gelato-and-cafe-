@@ -3,7 +3,8 @@ import { PrintButton } from "@/components/PrintButton";
 import { PrintHead } from "@/components/PrintHead";
 import { getDir, getLocale, getT } from "@/lib/i18n/server";
 import { arrows } from "@/lib/i18n/core";
-import { requirePermission } from "@/lib/auth/session";
+import { has, requirePermission } from "@/lib/auth/session";
+import { SetKeepPrice } from "@/components/reports/SetKeepPrice";
 import { getPriceRises } from "@/lib/db/prices";
 import { getChannelNames } from "@/lib/db/channels";
 import { addDays, businessToday, dateTimeIn } from "@/lib/dates";
@@ -35,6 +36,8 @@ export default async function PricesPage() {
   // From before to after, the way the reader reads.
   const { on: then } = arrows(dir);
   const today = businessToday(profile.timezone);
+  // The price that keeps a margin, set in one tap by whoever changes the menu (0092).
+  const canPrice = has(profile, "recipe.edit");
   const rises = await getPriceRises(today, { days: DAYS });
   const named = (i: { name: string; nameAr: string | null; nameCkb: string | null }) =>
     (locale === "ar" ? i.nameAr : locale === "ckb" ? i.nameCkb : null) || i.name;
@@ -185,6 +188,17 @@ export default async function PricesPage() {
                                 data-label={t("Keeps the margin")}
                               >
                                 {x.keep === null ? "—" : fmtIQD(x.keep)}
+                                {x.keep !== null && canPrice && (
+                                  <>
+                                    {" "}
+                                    <SetKeepPrice
+                                      variantId={x.variantId}
+                                      channel={x.channel}
+                                      price={x.keep}
+                                      from={today}
+                                    />
+                                  </>
+                                )}
                               </td>
                             </tr>
                           );

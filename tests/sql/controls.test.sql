@@ -150,7 +150,7 @@ select test.eq((
   'current_has_role,customer_account,customer_accounts,customer_at_till,customer_detail,customer_list,'
   'daily_brief,daily_sales_target,dashboard_summary,deals_list,depreciate_to,detach_document,'
   'discard_journal,dispose_fixed_asset,document_counts,document_may_attach,document_may_see,'
-  'document_permissions,document_record,documents_for,draft_payroll,drawer_methods,drawer_status,'
+  'document_permissions,document_record,documents_for,draft_payroll,draft_purchase_orders,drawer_methods,drawer_status,'
   'employee_advances,exchange_dollars,find_customer,fixed_assets,force_close_session,fx_status,'
   'give_away,hand_over_session,inventory_valuation,invite_member,invoice_customer,item_costs,'
   'item_price_history,labour_target,language_settings,legacy_unposted,link_phone_finish,'
@@ -188,7 +188,7 @@ select test.eq((
   'set_receipt_setup,set_section_hours,set_service_charge,set_time_price,set_tip_sharers,'
   'set_variant_barcode,set_variant_weighed,settle_problem,settle_tab,settle_tab_offline,snooze_alert,'
   'split_tab,staff_list,staff_phones,staff_schedule,start_stock_count,stock_card,stock_places,'
-  'stock_transfers,stop_markdown,stop_time_price,submit_stock_count,supplier_statement,take_pre_order,'
+  'stock_transfers,stop_markdown,stop_time_price,submit_stock_count,supplier_records,supplier_statement,take_pre_order,'
   'time_prices,tips_month,turn_off_phone_warnings,turn_on_phone_warnings,undo_bank_statement,'
   'unlink_phone,unlock_period,update_delivery_platform,update_item,update_supplier,update_variant,'
   'void_sale,waste_coach',

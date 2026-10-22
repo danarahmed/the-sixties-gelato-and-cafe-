@@ -17,6 +17,8 @@ import { DocumentsLink } from "@/components/documents/DocumentsLink";
 import { getDocumentCounts } from "@/lib/db/documents";
 import { PlaceSwitch } from "@/components/PlaceSwitch";
 import { placeChoice } from "@/lib/place";
+import { getSupplierRecords } from "@/lib/db/buying";
+import { DraftNow } from "@/components/purchasing/DraftNow";
 
 export const dynamic = "force-dynamic";
 
@@ -30,8 +32,8 @@ export default async function PurchasingPage() {
   const canReceive = has(profile, "purchase.receive");
   // A delivery with no order, a new order and a return not named against a
   // delivery are for this device's place (AB).
-  const { places, place } = await placeChoice();
-  const [items, suppliers, receipts, costs, outOfUse, { orders, approveUpTo }, returns] =
+  const { places, place, at } = await placeChoice();
+  const [items, suppliers, receipts, costs, outOfUse, { orders, approveUpTo }, returns, records] =
     await Promise.all([
       getItems(),
       getSuppliers(),
@@ -40,6 +42,7 @@ export default async function PurchasingPage() {
       canCorrect ? getItemsOutOfUse() : Promise.resolve([]),
       getPurchaseOrders(),
       getSupplierReturns(20),
+      getSupplierRecords(),
     ]);
   // The documents kept with each delivery and return (0053).
   const [receiptDocs, returnDocs] = await Promise.all([
@@ -123,6 +126,46 @@ export default async function PurchasingPage() {
         >
           {t("Open What to buy")}
         </Link>
+        {canCreate && (
+          <div style={{ flexBasis: "100%" }}>
+            <DraftNow locationId={at} />
+          </div>
+        )}
+        {records.length > 0 && (
+          <details style={{ flexBasis: "100%" }} data-testid="supplier-records">
+            <summary>{t("How each supplier delivers")}</summary>
+            <ul style={{ margin: "6px 0 0", paddingInlineStart: 18, fontSize: ".85rem" }}>
+              {records.map((r) => (
+                <li key={r.supplierId} data-testid="supplier-record" data-supplier={r.supplier}>
+                  <strong>{r.supplier}</strong>
+                  {": "}
+                  {r.leadFrom === "learned"
+                    ? r.late
+                      ? t("usually {n} day(s), later {late} time(s) in {orders} orders", {
+                          n: r.lead,
+                          late: r.late,
+                          orders: r.orders,
+                        })
+                      : t("usually {n} day(s), never later in {orders} orders", {
+                          n: r.lead,
+                          orders: r.orders,
+                        })
+                    : r.leadFrom === "supplier"
+                      ? t("{n} day(s), as set (too few orders sent yet to learn it)", { n: r.lead })
+                      : t("{n} day(s), the café's own (none set, too few orders to learn it)", {
+                          n: r.lead,
+                        })}
+                  {"; "}
+                  {r.everyFrom === "supplier"
+                    ? t("delivers every {n} day(s)", { n: r.every })
+                    : r.everyFrom === "learned"
+                      ? t("its deliveries come every {n} day(s) or so", { n: r.every })
+                      : t("how often it delivers is not set yet (a week is assumed)")}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </div>
 
       <PurchaseOrders

@@ -86,6 +86,7 @@ Plan a short window when the café is closed.
 | Meal deals and prices by the hour (`0089`) | ✅ Applied by the owner in the SQL editor on 21 October; Products & Recipes then showed Meal deals and Prices by the time of day, the till as before                                                                                                                                                                                                                                                                                             |
 | Tips and a service charge (`0090`)         | ✅ Applied by the owner in the SQL editor on 21 October; Settings then offered the service charge on the three ways of selling, Payroll the tips                                                                                                                                                                                                                                                                                                 |
 | The café's own receipt (`0091`)            | ✅ Applied by the owner in the SQL editor on 22 October; Settings then showed The receipt with its preview, a report opened was counted, the Dashboard arranged for the owner                                                                                                                                                                                                                                                                    |
+| Smarter buying (`0092`)                    | ⏳ To be applied by the owner in the SQL editor, after `0091`                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## 0. Before you start
 
@@ -4097,6 +4098,43 @@ Nothing recorded changes. Rehearsed with
 It is applied by the owner, in Supabase's SQL editor, after `0090`:
 
 1. Open the file `supabase/migrations/0091_receipt_and_reports.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0092`
+
+Migration `0092` brings smarter buying:
+
+- **Each supplier's real delivery time, learnt:** from each order sent to it
+  and the day its first delivery came, once there are three: the usual days,
+  how many came later, the most days late lately. Purchasing shows it under
+  **How each supplier delivers**; before three orders, the days set on the
+  supplier (Vendors) are used, else the café's.
+- **How often a supplier delivers**, set on Vendors (**Delivers every
+  (days)**), else read from the days its deliveries came, else a week.
+- **What to buy orders what would run out before the next delivery could
+  come:** enough to last until this order arrives, late as the supplier has
+  come lately, with some kept for busier days than usual; up to what lasts
+  until the delivery after it. The levels it suggests are shown beside any
+  set on the item, which still rule. An item with enough but low is topped up
+  when its supplier is ordered from anyway. Another supplier 3% or more
+  cheaper is pointed out, with a tap to order from it.
+- **The drafts in one press:** **Draft the orders now** on Purchasing makes
+  a draft for each supplier; **Approve and send** does both steps of a draft
+  in one tap.
+- **The price watch:** **Set it** beside the price that keeps a margin sets
+  that price from today.
+
+Nothing recorded changes; one new column, `supplier.delivers_every_days`.
+Rehearsed with `tests/sql/smarter_buying.test.sql` and every other test, and
+on the simulated year (`docs/SIMULATION.md`).
+
+It is applied by the owner, in Supabase's SQL editor, after `0091`:
+
+1. Open the file `supabase/migrations/0092_smarter_buying.sql` on GitHub, press **Raw**,
    select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run

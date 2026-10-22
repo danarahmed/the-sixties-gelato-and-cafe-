@@ -80,6 +80,46 @@ export async function draftOrdersFromListAction(
   };
 }
 
+const placeOnly = z.object({ locationId: z.string().uuid().nullable().default(null) });
+
+/**
+ * What to buy, drafted in one press (0092): a draft order for each supplier
+ * from what is to order and what it would top up, for a manager to approve
+ * and send. The items to order with no supplier or price come back apart.
+ * Keyed.
+ */
+export async function draftPurchaseOrdersAction(
+  input: z.input<typeof placeOnly>,
+  key: string,
+): Promise<ActionResult<{ orders: DraftedOrder[]; left: string[] }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(placeOnly, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("draft_purchase_orders", {
+    p_location: v.data.locationId,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh("/purchasing", "/purchasing/buying-list", "/purchasing/orders", "/approvals");
+  const orders = Array.isArray(r.data.orders) ? (r.data.orders as Record<string, unknown>[]) : [];
+  const left = Array.isArray(r.data.left) ? (r.data.left as Record<string, unknown>[]) : [];
+  return {
+    ok: true,
+    data: {
+      orders: orders.map((o) => ({
+        poId: String(o.po_id),
+        poNo: Number(o.po_no),
+        supplier: String(o.supplier ?? ""),
+        expectedOn: o.expected_on == null ? null : String(o.expected_on),
+        total: Number(o.total ?? 0),
+        lines: Number(o.lines ?? 0),
+      })),
+      left: left.map((l) => String(l.item ?? "")),
+    },
+  };
+}
+
 const supplierInput = z.object({
   itemId: id("an item"),
   supplierId: id("the supplier"),

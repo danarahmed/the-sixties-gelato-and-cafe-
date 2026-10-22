@@ -2054,6 +2054,35 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Smarter buying (`0092`)
+
+- **`supplier.delivers_every_days`** (1 to 60, or null): how often the
+  supplier delivers, set on Vendors (`update_supplier`'s
+  `p_delivers_every_days`, `purchase.create`; left out, it stays as it was).
+- `supplier_terms` (internal) reads a supplier's terms as its deliveries
+  have shown them: from each order sent in six months to the day its first
+  delivery came, once there are three, the usual days (the middle one), how
+  many came later and the most days late in three months; else the days set
+  on the supplier, else the café's. How often it delivers: its own, else the
+  middle gap between its delivery days over three months, else 7.
+  `supplier_records` (`cost.view`) gives each supplier's for Purchasing.
+- `buying_list` uses them: an item is to order when what it has and has
+  coming would not last until the order comes (the days to it and a day
+  more, each by its weekday), late as the supplier has come lately, with
+  1.65 times how far a day's use strays from its weekday's (over the days
+  judged) for the days to the delivery — enough 19 times in 20; it is
+  ordered up to what lasts until the delivery after it (`target_from`
+  `cover`). The suggested levels (`suggested_reorder`, `suggested_target`)
+  are given beside any set on the item (`own_reorder`), which still rules.
+  Also: `late_days`, `every_days`, `every_from`, `cycle_use`, `late_use`,
+  `spread`, `top_up` and `top_up_packs` (enough, but less than halfway to
+  its level), and `cheaper` (another supplier's price for the same quantity,
+  3% or more less, from the last six months).
+- `draft_purchase_orders` (`purchase.create`, keyed) drafts what is to order,
+  and what its supplier would top up, a draft order for each supplier, as
+  What to buy's own button does; what has no supplier or price comes back
+  apart. Drafted orders are expected when the supplier usually delivers.
+
 ### The café's own receipt, and each person's reports first (`0091`)
 
 - **`receipt_setup`** (one row per café): what the bill, the receipt and a

@@ -11,6 +11,7 @@ import {
 import {
   bySupplier,
   draftOf,
+  draftsOf,
   inPack,
   listStamp,
   reasonsOf,
@@ -31,8 +32,7 @@ import { OperationStatus, useOperation } from "@/components/useOperation";
 type Msg = { ok: boolean; text: string } | null;
 type Unit = { code: string; label: string; factor: number };
 
-const fresh = (list: BuyingList): Record<string, LineDraft> =>
-  Object.fromEntries(list.items.map((l) => [l.itemId, draftOf(l)]));
+const fresh = (list: BuyingList): Record<string, LineDraft> => draftsOf(list);
 
 /**
  * What to buy (0045): the items to order, grouped by the supplier each is
@@ -230,7 +230,9 @@ export function BuyingListForm({
                             <Link href={`/inventory/${l.itemId}`}>{l.item}</Link>
                             {l.status !== "order" && (
                               <div className="muted" style={{ fontSize: ".75rem" }}>
-                                {t("Added by hand")}
+                                {l.topUp && d.qty === String(l.topUpPacks)
+                                  ? t("Topped up with this order")
+                                  : t("Added by hand")}
                               </div>
                             )}
                           </td>
@@ -311,6 +313,22 @@ export function BuyingListForm({
                                 </option>
                               ))}
                             </select>
+                            {l.cheaper && d.supplierId !== l.cheaper.supplierId && canCreate && (
+                              <button
+                                type="button"
+                                className="linklike"
+                                data-testid="buying-cheaper"
+                                style={{ display: "block", fontSize: ".75rem" }}
+                                onClick={() =>
+                                  set(l.itemId, withSupplier(l, d, l.cheaper!.supplierId))
+                                }
+                              >
+                                {t("Order from {supplier}, {pct} cheaper", {
+                                  supplier: l.cheaper.supplier,
+                                  pct: `${fmtQty(Math.round(l.cheaper.saves * 1000) / 10)}%`,
+                                })}
+                              </button>
+                            )}
                             {d.supplierId !== "" &&
                               (choice?.usual ? (
                                 <div className="muted" style={{ fontSize: ".75rem" }}>

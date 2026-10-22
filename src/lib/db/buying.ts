@@ -54,3 +54,41 @@ export async function getItemSuppliers(itemId: string): Promise<ItemSupplier[]> 
     })
     .sort((a, b) => Number(b.usual) - Number(a.usual) || a.supplier.localeCompare(b.supplier));
 }
+
+/** A supplier's deliveries as its orders have shown them (0092). */
+export interface SupplierRecord {
+  supplierId: string;
+  supplier: string;
+  /** The days used for a delivery, and where they come from. */
+  lead: number;
+  leadFrom: "learned" | "supplier" | "cafe";
+  /** Orders sent in six months with a delivery against them; the usual days, how many came later, the most lately. */
+  orders: number;
+  usual: number | null;
+  late: number | null;
+  worst: number | null;
+  /** How often it delivers, and where that comes from. */
+  every: number;
+  everyFrom: "supplier" | "learned" | "default";
+}
+
+/** Each supplier in use, with its deliveries (0092); none before 0092 is applied. */
+export async function getSupplierRecords(): Promise<SupplierRecord[]> {
+  const c = await db();
+  const r = await c.rpc("supplier_records");
+  if (r.error || !Array.isArray(r.data)) return [];
+  return (r.data as Record<string, unknown>[]).map((x) => ({
+    supplierId: str(x.supplier_id),
+    supplier: str(x.supplier),
+    lead: Number(x.lead ?? 0),
+    leadFrom:
+      x.lead_from === "learned" ? "learned" : x.lead_from === "supplier" ? "supplier" : "cafe",
+    orders: Number(x.orders ?? 0),
+    usual: numOrNull(x.usual),
+    late: numOrNull(x.late),
+    worst: numOrNull(x.worst),
+    every: Number(x.every ?? 7),
+    everyFrom:
+      x.every_from === "supplier" ? "supplier" : x.every_from === "learned" ? "learned" : "default",
+  }));
+}
