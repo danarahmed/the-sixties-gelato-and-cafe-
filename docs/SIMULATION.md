@@ -62,7 +62,7 @@ it (`SIM_DRAFTS_PORT=5434` for the backtest then).
   in June, cups in July. Each delivery is billed, due in 30 days, paid on a
   Sunday (now and then a few days late).
 - **Money, kept tight on purpose:** the owner starts the year with only
-  6,000,000 IQD in the bank and takes 12,000,000 out on the 20th of every
+  6,000,000 IQD in the bank and takes 16,000,000 out on the 20th of every
   month; the rent is paid three months at a time (7,500,000 on 1 January,
   April, July and October); a second gelato machine is bought on 8 June
   (18,000,000). The safe is banked twice a week, the card machine's money

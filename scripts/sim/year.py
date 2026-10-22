@@ -244,7 +244,7 @@ class Year:
         if day.day == 1 and day.month in (1, 4, 7, 10):
             ev(10, 5, ("expense", "Rent, three months", 7500000, "6000"))
         if day.day == 20:
-            ev(12, 0, ("drawings", 12000000))
+            ev(12, 0, ("drawings", 16000000))
         if day == dt.date(2026, 6, 8):
             ev(12, 30, ("machine", 18000000))
         if day.day == 5:
