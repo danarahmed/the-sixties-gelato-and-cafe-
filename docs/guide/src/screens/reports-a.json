@@ -1,0 +1,831 @@
+[
+  {
+    "path": "/reports",
+    "title": "Reports",
+    "area": "Reports",
+    "summary": "The reports hub: one long page that reads the café's figures for the dates (and the place) you choose. This entry covers the top of the page: the dates and place, printing, the period at a glance, what the period says, where the money went, the jump links and the links to the other reports. The report sections below it have their own entries (Profit, Sales, Buying and stock, People, Checks).",
+    "who": [
+      {"role": "owner", "can": "See every part of the page, every report link (the Watch list too), and post the journals the old app never wrote (under Do the books tie?).", "cannot": ""},
+      {"role": "general_manager", "can": "See every part of the page and every report link; the Watch list link only when the owner allows it.", "cannot": "Post the journals the old app never wrote (the page says \"Only the owner can post them.\")."},
+      {"role": "branch_manager", "can": "See every part of the page, the profit, the exceptions, the staff hours and the customers. Someone who works at one place reads that place only.", "cannot": "See what staff cost (the Salaries (6100) table needs payroll.view); see the Watch list."},
+      {"role": "accountant", "can": "See every part of the page, the staff hours with what staff cost, the profit, the exceptions and the customers.", "cannot": "See the Watch list; post the old app's journals."},
+      {"role": "auditor", "can": "The same as the accountant: read every part.", "cannot": "Change anything; see the Watch list."},
+      {"role": "purchasing", "can": "Open the page and read sales, buying, stock, losses and the checks.", "cannot": "See the Profit part, the period's figures at a glance, where each 1,000 IQD went, Exceptions, Staff, Customers and loyalty, or the links to Cash ahead and Balance sheet and cash flow."},
+      {"role": "cashier", "can": "", "cannot": "Open Reports: they are sent to their own first screen (the till)."},
+      {"role": "barista", "can": "", "cannot": "Open Reports: they are sent to Production."},
+      {"role": "inventory_counter", "can": "", "cannot": "Open Reports: they are sent to the count."}
+    ],
+    "get_there": "Menu → Accountant → Reports (for some people it sits under More). It is the first screen for the accountant and the auditor. Also: the Dashboard's figures open it; Sales analysis and the week and month pages link back to it.",
+    "before": [
+      "Nothing has to be set up: every part reads what is already recorded. Parts with nothing in the dates say so.",
+      "The profit figures come from published journals only: a draft journal is not counted."
+    ],
+    "parts": [
+      {
+        "name": "Heading",
+        "shows": "\"Reports\", and \" · {place}\" when the page is read for one place. Beside it: the Print or save as PDF button, and the line \"{from} to {to} · from the ledger · every journal line (CSV)\".",
+        "controls": [
+          {"label": "Print or save as PDF", "kind": "button", "does": "Opens the browser's print window for the page as it stands. Choose a printer, or Save as PDF. The paper copy leaves out the menu, the forms, the jump links and the buttons, and starts with a heading: \"{business} · Reports · {from} to {to} · {place} · As of {date and time}\".", "rules": "Arabic and Kurdish print right to left. Open the parts you want (for example Do the books tie?) before printing: closed parts print closed.", "after": "Nothing changes."},
+          {"label": "every journal line (CSV)", "kind": "link", "does": "Downloads a spreadsheet file journal-lines_{from}_{to}.csv: every published journal line in the dates (journal no., when, day, account, account name, debit, credit, narration, memo, source, reference, posted by, reverses journal no.).", "rules": "Always the whole café, whatever place is chosen.", "after": "Nothing changes."}
+        ]
+      },
+      {
+        "name": "Dates and place",
+        "shows": "A small form with the dates and, for people who work everywhere when the café has more than one place, the place. Under it, when a place is read: \"Read for {place}. These stay the whole café's: Do the books tie?, Payable Ageing, Product Margin by Channel, and the customers with the points they hold.\"",
+        "controls": [
+          {"label": "From", "kind": "box", "does": "The first day of the dates.", "rules": "A date. Empty or not a date: the first day of this month (by the café's clock)."},
+          {"label": "To", "kind": "box", "does": "The last day of the dates.", "rules": "A date. Empty or not a date: today. From must be on or before To, or the page cannot be loaded (see States)."},
+          {"label": "Place", "kind": "list", "does": "Chooses the place the reports are read for: The whole café, or one of the café's places.", "rules": "Shown only to people who work everywhere, when the café has more than one place. Default: The whole café. Someone who works at one place always reads their own place and sees no list.", "who": "Only people not tied to one place."},
+          {"label": "Show", "kind": "button", "does": "Reloads the page for the dates and place chosen.", "after": "Nothing changes."},
+          {"label": "This month", "kind": "link", "does": "Shows the first of this month to today, keeping the place."},
+          {"label": "Last month", "kind": "link", "does": "Shows all of last month, keeping the place."},
+          {"label": "This year", "kind": "link", "does": "Shows 1 January to today, keeping the place."}
+        ]
+      },
+      {
+        "name": "The period at a glance",
+        "shows": "Four tiles, each set against the days just before, as many (for 1 to 30 September: 2 to 31 August). Only for people who see profit, and only when From is on or before To. Net revenue: the P&L's net revenue (4000 Sales less 4100 discounts and 4200 refunds); its line says \"{pct}% more than the {n} day(s) before\", \"{pct}% less than the {n} day(s) before\" or \"About as the {n} day(s) before\" (within 5% either way is \"about as\"). Gross profit after waste & fees: net revenue less everything in cost of sales (recipe cost of goods, price differences on deliveries, platform commission and fees, waste, count differences); with \"{pct}% of net revenue\" and the change in that share in points: \"{n} point(s) more than the {days} day(s) before\", \"{n} point(s) less than the {days} day(s) before\" (less than one point either way is \"About as\"). Net profit (or Net loss, in red): what is left after the operating expenses too; with its share of net revenue and its change in points. Losses: everything lost or given away in the dates that was not reversed (the Losses section's total), with its share of net revenue.",
+        "controls": [
+          {"label": "Net revenue", "kind": "tile", "does": "Jumps to the Profit & Loss."},
+          {"label": "Gross profit after waste & fees", "kind": "tile", "does": "Jumps to the Profit & Loss."},
+          {"label": "Net profit", "kind": "tile", "does": "Jumps to the Profit & Loss. Reads \"Net loss\" when the period lost money."},
+          {"label": "Losses", "kind": "tile", "does": "Jumps to the Losses section."}
+        ]
+      },
+      {
+        "name": "What the period says",
+        "shows": "The figures in sentences, each with a mark (✓ good, ▲ up, ▼ down, ● as before, ! look at this) and a link to where to act. Which sentences appear depends on the figures: see Messages. The first line is always the books check.",
+        "controls": [
+          {"label": "(each sentence)", "kind": "link", "does": "Opens where to act on it: Do the books tie?, the Profit & Loss, the sales analysis by date, the largest expense's journal lines, Delivery platforms (/platforms), Losses, Payable Ageing or Uncosted Sales."}
+        ]
+      },
+      {
+        "name": "Where each 1,000 IQD of net revenue went",
+        "shows": "One bar split into parts, for people who see profit, when there was net revenue. Each part says how many dinars of every 1,000 IQD of net revenue went to it, and \"{amount} in all\". What was sold cost: 5000 (the recipes' cost of goods). Delivery platforms: 5100 and 5200 (commission and fees). Waste and stock differences: the rest of cost of sales (waste, preparation loss, count differences, price differences on deliveries). Staff: 6100 Salaries and 6110 Staff meals. Rent and running costs: every other expense. Last: Kept as profit (or The period's loss). Under it: \"From the P&L: what was sold cost is the recipes' cost of goods; waste and stock differences are waste, preparation loss, count differences and price differences on deliveries; the staff are their pay and their meals.\"",
+        "controls": []
+      },
+      {
+        "name": "Parts of the reports (jump links)",
+        "shows": "Links to each section, in groups. Profit: Profit & Loss, Profit & Loss by place. Sales: Sales by Channel, Product Margin by Channel, Sizes and add-ons, Sales by payment method, Dollars, Customers and loyalty. Buying and stock: Purchasing, Payable Ageing, Production, Losses. People: Staff. Checks: Do the books tie?, Uncosted Sales, Exceptions. Groups and links you may not see are left out. Not printed.",
+        "controls": [
+          {"label": "(each section name)", "kind": "link", "does": "Scrolls the page to that section."}
+        ]
+      },
+      {
+        "name": "The other reports",
+        "shows": "A row of links to the reports on their own pages. Each person's most opened come first: every time you open one of them it is counted for you, and once a report has been opened 3 times or more it moves ahead of those opened less (most opened first; the rest keep their usual order). When the order has changed, the row starts with \"The ones you open most, first:\". Nobody arranges them by hand. Stock value on a day and Balance sheet and cash flow are not counted, so they never move up.",
+        "controls": [
+          {"label": "Sales analysis: by hour, day, product, person, payment… →", "kind": "link", "does": "Opens Sales analysis for the same dates (and place)."},
+          {"label": "The week at a glance →", "kind": "link", "does": "Opens the week ending on To (today at most), for the same place."},
+          {"label": "The month at a glance →", "kind": "link", "does": "Opens the month of To (this month at most), for the same place."},
+          {"label": "Price watch: what came in dearer →", "kind": "link", "does": "Opens Price watch (always the last 30 days, whole café)."},
+          {"label": "Menu matrix: what to keep, reprice, show more or drop →", "kind": "link", "does": "Opens Menu matrix for the same place."},
+          {"label": "Staffed when busy? Orders an hour against who was on the clock →", "kind": "link", "does": "Opens the staffing report for the same place.", "who": "Those who keep the staff, their hours or their pay (staff.manage, attendance.edit or payroll.view)."},
+          {"label": "Waste by recipe: made, sold and thrown away →", "kind": "link", "does": "Opens the waste report for the same place."},
+          {"label": "Stock value on a day →", "kind": "link", "does": "Opens the stock's value at the end of To, for the same place."},
+          {"label": "Cash ahead: the next 30 days of the bank and the safe →", "kind": "link", "does": "Opens Cash ahead.", "who": "People who see profit."},
+          {"label": "Balance sheet and cash flow →", "kind": "link", "does": "Opens the statements for the same dates.", "who": "People who see profit."},
+          {"label": "Watch list: patterns worth a look →", "kind": "link", "does": "Opens the Watch list.", "who": "The owner; the general manager only when the owner allows it."}
+        ]
+      },
+      {
+        "name": "Also (bottom of the page)",
+        "shows": "\"Also:\" and links to other screens with figures.",
+        "controls": [
+          {"label": "Trial balance", "kind": "link", "does": "Opens /accounting."},
+          {"label": "Journal register", "kind": "link", "does": "Opens /journals."},
+          {"label": "Daily sales & cash over/short", "kind": "link", "does": "Opens /sales."},
+          {"label": "Vendor statements", "kind": "link", "does": "Opens /vendors."},
+          {"label": "Stock valuation", "kind": "link", "does": "Opens /inventory."},
+          {"label": "Count variances", "kind": "link", "does": "Opens /count."}
+        ]
+      }
+    ],
+    "states": [
+      {"state": "First opened", "looks": "The first of this month to today, for the whole café (or your place, if you work at one)."},
+      {"state": "One place chosen", "looks": "The heading ends \" · {place}\", the note \"Read for {place}…\" shows, and the sections are that place's, except Do the books tie?, Payable Ageing, Product Margin by Channel and the customers' points, which stay the whole café's."},
+      {"state": "No profit permission (purchasing)", "looks": "No tiles, no \"Where each 1,000 IQD…\" bar, no Profit part; What the period says shows only the books check and the losses, supplier and uncosted lines."},
+      {"state": "No net revenue in the dates", "looks": "The tiles show 0; the bar of where the money went is not shown; the sentences about revenue and profit are not shown."},
+      {"state": "From after To", "looks": "The page cannot be loaded: \"This screen could not be loaded\" with a Try again button. Change the dates in the address, or open Reports again from the menu."},
+      {"state": "The ones you open most moved up", "looks": "The report links start with \"The ones you open most, first:\" and the reports you open most lead the row."},
+      {"state": "Printed", "looks": "The print heading at the top; no menu, form, jump links or buttons."}
+    ],
+    "messages": [
+      {"text": "{n} reconciliation difference(s): look into them before trusting these figures.", "kind": "warning", "when": "One or more checks under Do the books tie? do not tie.", "do": "Open it (the sentence links there) and look into each difference before you rely on the figures."},
+      {"text": "The books tie: every record agrees with its account.", "kind": "success", "when": "Every check under Do the books tie? ties.", "do": "Nothing."},
+      {"text": "Net revenue was {pct}% more than in the {n} day(s) before.", "kind": "success", "when": "Net revenue rose 5% or more against the same number of days before. Under it: \"{now} against {before}.\"", "do": "The link opens the sales analysis by date to see which days did it."},
+      {"text": "Net revenue was {pct}% less than in the {n} day(s) before.", "kind": "warning", "when": "Net revenue fell 5% or more. Under it: \"{now} against {before}.\"", "do": "Open the sales analysis by date to find the weak days, then look at the week and month pages."},
+      {"text": "Net revenue was about as in the {n} day(s) before.", "kind": "info", "when": "Within 5% either way.", "do": "Nothing."},
+      {"text": "Net revenue was {amount}; the {n} day(s) before had none to compare with.", "kind": "info", "when": "The days before had no net revenue.", "do": "Nothing."},
+      {"text": "You kept {pct}% of net revenue after the cost of sales.", "kind": "info", "when": "There was net revenue. Under it: \"{pct}% in the {n} day(s) before.\" Marked ▼ when the share fell a point or more, ▲ when it rose.", "do": "If it fell, look at Product Margin by Channel and Losses: costs, prices or waste moved."},
+      {"text": "After every expense, the period made {amount}: {pct}% of net revenue.", "kind": "success", "when": "Net profit is zero or more.", "do": "Nothing."},
+      {"text": "After every expense, the period lost {amount}.", "kind": "warning", "when": "Net loss.", "do": "Open the Profit & Loss and look at the largest expenses and the cost of sales."},
+      {"text": "{account} was the largest expense: {amount}, {pct}% of net revenue.", "kind": "info", "when": "There was at least one operating expense.", "do": "The link opens that account's journal lines for the dates."},
+      {"text": "The delivery platforms' commission and fees came to {amount}: {pct}% of net revenue.", "kind": "info", "when": "Platform commission and fees (5100, 5200) are 1% of net revenue or more.", "do": "The link opens Delivery platforms; check the platforms' prices cover their fees."},
+      {"text": "Losses came to {amount}, {pct}% of net sales.", "kind": "warning", "when": "Anything was lost or given away in the dates (not reversed) and there were net sales. Under it: \"The largest kind: {kind}, {amount}.\"", "do": "Open Losses to see what, where and who."},
+      {"text": "Losses came to {amount}.", "kind": "warning", "when": "As above, with no net sales.", "do": "Open Losses."},
+      {"text": "{amount} owed to suppliers is past due, {old} of it by more than 30 days.", "kind": "warning", "when": "Unpaid bills are past their due date, some by more than 30 days (today, whole café).", "do": "Open Payable Ageing and pay the oldest first on Vendors."},
+      {"text": "{amount} owed to suppliers is past due.", "kind": "warning", "when": "Unpaid bills are past due, none by more than 30 days.", "do": "Open Payable Ageing."},
+      {"text": "Sales of {amount} were costed at nothing: their profit is overstated until what they use has a cost.", "kind": "warning", "when": "Some sales in the dates went out with no cost, or part of it missing.", "do": "Open Uncosted Sales and give the products their recipes or the items their cost."},
+      {"text": "Read for {place}. These stay the whole café's: Do the books tie?, Payable Ageing, Product Margin by Channel, and the customers with the points they hold.", "kind": "info", "when": "The page is read for one place.", "do": "Nothing; choose The whole café to see everything together."},
+      {"text": "This screen could not be loaded", "kind": "error", "when": "A figure could not be read, for example when From is after To. It is followed by \"The information could not be read from the database, so nothing is shown rather than something incomplete. Nothing has been changed.\" and \"If it keeps happening, tell the owner, and quote reference {ref}.\" (or \"If it keeps happening, tell the owner.\").", "do": "Press Try again; if the dates are the wrong way round, open Reports from the menu and choose them again."},
+      {"text": "Sign in to continue", "kind": "error", "when": "A CSV link was opened after the sign-in ran out (shown as plain text in the browser).", "do": "Sign in again and press the link again."},
+      {"text": "You do not have permission to see this report", "kind": "error", "when": "A CSV the database will not give you (shown as plain text).", "do": "Ask the owner."}
+    ],
+    "skipped_messages": [
+      "note_report_visit: \"Sign in again\", \"That is not one of the reports\": counting a visit fails silently; nothing is shown.",
+      "report_losses, report_dollars and the other reports' \"Choose the dates, the first before the last\": the page shows \"This screen could not be loaded\" instead (the database's words appear only on a developer's machine).",
+      "report_place \"Choose one of the café's places\" / \"You work at {1}, not at {2}\": the hub only sends places from its own list, and a person at one place is always read for their place.",
+      "export \"Unknown report\": no link on this page sends an unknown report."
+    ],
+    "what_if": [
+      {"case": "The figures look wrong", "do": "Check the first sentence of What the period says: if the books do not tie, open Do the books tie? and fix the differences first."},
+      {"case": "You want last month's report on paper", "do": "Press Last month, open the parts you want, then Print or save as PDF."},
+      {"case": "You want one branch only", "do": "Choose it in Place and press Show. Remember the four parts named in the note stay the whole café's."},
+      {"case": "A report you use a lot is at the end of the row", "do": "Just keep using it: from its third opening it moves ahead of those you open less."}
+    ],
+    "tips": [
+      "Every tile, sentence and many numbers are links: tap a number to see what is behind it.",
+      "The days compared are always as many as you chose, just before them: choose a whole month to compare with the month before only when both have the same number of days.",
+      "The CSV files open in Excel or Google Sheets."
+    ],
+    "related": ["/reports/sales", "/reports/week", "/reports/month", "/reports/menu", "/reports/prices", "/journals", "/accounting", "/dashboard"],
+    "shots": [
+      {"name": "reports-top", "role": "owner", "state": "The top of the page with the four tiles, What the period says and the 1,000 IQD bar", "setup": "Open Reports with a month of trading."},
+      {"name": "reports-place", "role": "owner", "state": "One place chosen, with the place note", "setup": "Choose a branch in Place and press Show."},
+      {"name": "reports-learned", "role": "owner", "state": "The report links with \"The ones you open most, first:\"", "setup": "Open Menu matrix three times, then come back to Reports."}
+    ],
+    "open_questions": [
+      "A visit is counted when a report page loads; whether moving inside a report with its own links (for example the week before) counts again was not tested."
+    ]
+  },
+  {
+    "path": "/reports#g-profit",
+    "title": "Reports — Profit",
+    "area": "Reports",
+    "summary": "The profit and loss for the dates, from the published journals, and, when the whole café is read and it has more than one place, each place's profit and loss side by side.",
+    "who": [
+      {"role": "owner, general_manager, branch_manager, accountant, auditor", "can": "See both tables and download them.", "cannot": ""},
+      {"role": "purchasing", "can": "", "cannot": "See this part (it needs profit.view)."}
+    ],
+    "get_there": "Reports → the Profit links in the jump links, or the tiles at the top.",
+    "before": ["Only published journals count: drafts on the Journal register are left out until published."],
+    "parts": [
+      {
+        "name": "Profit & Loss",
+        "shows": "Heading \"Profit & Loss\" (or \"Profit & Loss at {place}\"), and \"Published journal lines, {from} to {to} · CSV\". Income: each revenue account with an amount (4000 Sales, 4100 discounts and 4200 refunds show negative, in red), then Net revenue. Cost of sales: each account in brackets (5000 cost of goods, purchase price differences, 5100/5200 platform commission and fees, 5300 waste, 5310 preparation loss, count differences), then Gross profit after waste & fees = net revenue less cost of sales. Operating expenses: each account in brackets (salaries, staff meals, rent, utilities, complimentary items, samples…). Last: Net profit (or Net loss, in red) = gross profit less operating expenses. Accounts with nothing in the dates are not listed. A year-end close is left out.",
+        "controls": [
+          {"label": "(each account line, e.g. \"4000 Sales\")", "kind": "link", "does": "Opens the Journal register filtered to that account and the dates: the journal lines that make the amount."},
+          {"label": "CSV", "kind": "link", "does": "Downloads profit-and-loss_{from}_{to}.csv (code, account, section, amount) for the same dates and place."}
+        ]
+      },
+      {
+        "name": "Profit & Loss by place",
+        "shows": "Only when the whole café is read, the café has more than one place, and you see profit. One column per place, a Shared column, and Café total. The same groups and totals as above; \"—\" where a place has nothing. The note explains: \"Each line is at the place of its record: a sale at the branch that sold it, a loss where the stock was, an expense where it was recorded. A platform's payout is shared out by the branch of each order, a payroll by where each person works. Shared: what belongs to no one place, such as the bank's card fees and journals by hand.\"",
+        "controls": [
+          {"label": "(each account line)", "kind": "link", "does": "Opens that account's journal lines for the dates (all places)."},
+          {"label": "CSV", "kind": "link", "does": "Downloads profit-and-loss-by-place_{from}_{to}.csv (code, account, section, place, amount; \"shared\" for no place)."}
+        ]
+      }
+    ],
+    "states": [
+      {"state": "Net loss", "looks": "The last line reads Net loss and the amount is red."},
+      {"state": "A place chosen", "looks": "The heading reads \"Profit & Loss at {place}\"; Profit & Loss by place is not shown."},
+      {"state": "Nothing posted in the dates", "looks": "Only the headings and totals of 0."}
+    ],
+    "messages": [],
+    "what_if": [
+      {"case": "Net revenue here and the till's sales differ", "do": "Net revenue is sales less discounts and refunds, with a refund on the day it was made. Check Do the books tie? (the Sales check) and the Sales by Channel note."},
+      {"case": "An expense is missing", "do": "It may be a draft journal or recorded with another date: look on the Journal register or Expenses."},
+      {"case": "Gross profit is much lower than the sales margin", "do": "Gross profit also takes off waste, count differences, price differences on deliveries and platform fees: look at Losses and the cost-of-sales lines."}
+    ],
+    "tips": ["Gross profit after waste & fees is not the same as the Sales margin in Sales by Channel: the margin is before waste, counts and fees."],
+    "related": ["/journals", "/expenses", "/platforms", "/reports/statements"],
+    "shots": [
+      {"name": "reports-pnl", "role": "owner", "state": "The Profit & Loss for a month", "setup": "Open Reports, This month, scroll to Profit & Loss."},
+      {"name": "reports-pnl-places", "role": "owner", "state": "Profit & Loss by place with two branches", "setup": "A café with two places, The whole café chosen."}
+    ]
+  },
+  {
+    "path": "/reports#g-sales",
+    "title": "Reports — Sales",
+    "area": "Reports",
+    "summary": "What was sold in the dates: by part of the menu, by channel, the margin of every product today, sizes and add-ons, the ways customers paid, dollars taken and exchanged, and customers with their points.",
+    "who": [
+      {"role": "owner, general_manager, branch_manager, accountant, auditor, purchasing", "can": "See every section here.", "cannot": ""},
+      {"role": "purchasing", "can": "", "cannot": "See Customers and loyalty (needs customer.view)."}
+    ],
+    "get_there": "Reports → Sales in the jump links.",
+    "before": [],
+    "parts": [
+      {
+        "name": "Café and bakery",
+        "shows": "Only when the menu is split into parts (Settings, menu sections) and the dates are a year or less. One row per part of the menu, and \"No section\" for categories in none. Sales: sales after discounts, less what refunds gave back. Share of sales: its share of all, with a bar. Cost: what those sales used. Profit: sales less cost. Margin: profit as a % of sales. Note: \"Sales after discounts, less what refunds gave back; the cost is what those sales used. Rent, wages and other costs the parts share are in the profit and loss.\" No sales: \"No sales in these dates.\"",
+        "controls": []
+      },
+      {
+        "name": "Sales by Channel",
+        "shows": "\"Sales {from} to {to}, voids excluded; refunds on the day they were made\". A bar chart \"Net sales by channel\", each bar with \"{share}% of net sales · margin {kept}%\". A table: Channel, Orders, Sales (before refunds), Refunds (in brackets), Net sales = sales less refunds, Sales margin = net sales less the recipe cost of what was sold (the cost of what went back on the shelf taken off). All channels row. Note: \"Net sales are what the P&L shows as net revenue for the same dates (4000 less 4100 and 4200). The sales margin is net sales less the recipe cost of what was sold; the P&L's gross profit also takes off waste, count differences, purchase price differences and platform fees.\"",
+        "controls": [
+          {"label": "(the Orders number of a channel)", "kind": "link", "does": "Opens Orders for the same dates and that channel."}
+        ]
+      },
+      {
+        "name": "Product Margin by Channel",
+        "shows": "\"Today's prices and today's costs, costed exactly as a sale posts them\". Every size of every product on every channel in use: Product (— size), Channel, Price, Cost (\"unknown\" when it has no cost), Margin = price less cost (red when negative), % = margin ÷ price. Not affected by the dates or the place chosen. Empty: \"Add products with recipes and prices to see their margins.\"",
+        "controls": []
+      },
+      {
+        "name": "Sizes and add-ons",
+        "shows": "\"Sold {from} to {to}, at the prices and costs of each sale; voids left out\". Sizes (only products sold in more than one size): Product, Size, Qty, Net sales, Cost, Margin, %. Add-ons: Group, Add-on, Qty, On lines, Of the lines offered it (on lines ÷ lines of products that offer it today), Net sales, Cost, Margin. Note: \"A size's figures leave out its add-ons, which are counted on their own, each with its share of the line's discount. Refunds are not taken off here: Sales by Channel has them. How often an add-on is taken is out of the lines of the products that offer it today.\" Empty: \"No product was sold in more than one size, and no add-on was taken, in these dates.\"",
+        "controls": []
+      },
+      {
+        "name": "Sales by payment method",
+        "shows": "A bar chart \"Net sales by payment method\" (\"{share}% of net sales\"). Table by Paid by (Cash, Card, Platform-paid, Other way to pay): Sales (how many; \"{n} paid two ways\" under it), Takings, Refunds, Net = takings less refunds, Change given; All payments row. Note: \"A sale paid part in cash and part by card counts under each, for the part it paid. Cash is what the sale kept: the change went back to the customer. The net matches the sales by channel.\" When the café has its own ways to pay, a second table by Way to pay (\" · out of use\" for one no longer used): Sales, Takings, Refunds, Net and, for the whole café only, Moved out, Fees and \"In its account on {day}\". Its note (whole café): \"The café's own ways to pay, each with its own account: what it took, what refunds gave back by it, what was moved out of its account in the dates and the fees the bank or the app kept, and what the account held at the end. Money is moved on Sales → Ways to Pay.\" (one place): \"The café's own ways to pay, at this place: what each took, and what refunds gave back by it. Their accounts are the café's: see them for all places.\" Empty: \"No sales in these dates.\"",
+        "controls": []
+      },
+      {
+        "name": "Dollars",
+        "shows": "\"Taken, counted and exchanged {from} to {to}; held now\". A sentence: \"{sales} sale(s) paid in dollars: {usd}, taken at {value}; they paid {paid}, and {change} went back as change in dinars.\" (or \"No sale was paid in dollars in these dates.\"). By rate: Dinars a dollar, Sales, Dollars, Taken at. Exchanges: When, From, Into (the till, the safe, the bank), Dollars, Taken at, Dinars received, Difference (red in brackets when less was received). Drawer counts: Session, Branch, Should have held, Counted (\"Not counted\"), Difference. Last line: \"Exchange differences {exchanges} (6950) · dollars counted over or short {counts} (6300) · held now: the safe {safe}\" and, for each till, \"{place}'s till: {usd} (taken at {amount})\".",
+        "controls": [
+          {"label": "(a session number)", "kind": "link", "does": "Opens that drawer session."}
+        ]
+      },
+      {
+        "name": "Customers and loyalty",
+        "shows": "For people who see customers. \"Points earned and spent {from} to {to}, and who bought the most\". \"Points earned: {n}\", \"Rewards taken: {n}, {amount} off\", \"Taken back on voids and refunds: {n}; given back: {m}\", \"By hand: {plus} given, {minus} taken\", \"Customers hold {n} points now, worth {amount} in rewards\" (always the whole café), \"{n} customers, {m} new in these dates\", \"Their sales: {n}, {amount}\". Note: \"A reward is a discount on 4100, like any other: the points are no liability in the books, only what customers hold here.\" Table of top customers: Customer, Orders, Bought, Points.",
+        "controls": [
+          {"label": "(a customer's name)", "kind": "link", "does": "Opens that customer."}
+        ]
+      }
+    ],
+    "states": [
+      {"state": "No sales in the dates", "looks": "\"No sales in these dates.\" in Sales by Channel, payment method and Café and bakery."},
+      {"state": "A place chosen", "looks": "Every section is that place's except Product Margin by Channel and the points customers hold now; the ways to pay show no account columns."}
+    ],
+    "messages": [],
+    "what_if": [
+      {"case": "A product's margin is red", "do": "Its cost is above its price on that channel: change the price or the recipe on Products & Recipes."},
+      {"case": "Cost shows \"unknown\"", "do": "The product has no recipe, or an ingredient has no cost yet: give it a recipe, or record a delivery or opening stock for the item."},
+      {"case": "A dollar exchange shows a red difference", "do": "Less was received than the dollars were taken at; it goes to 6950. Check the rate used at the till."}
+    ],
+    "tips": ["Sales by Channel's Net sales equals the P&L's Net revenue for the same dates; if not, look at Do the books tie?."],
+    "related": ["/orders", "/products", "/sales", "/customers", "/platforms"],
+    "shots": [
+      {"name": "reports-channel", "role": "owner", "state": "Sales by Channel with chart and table", "setup": "This month with sales on two channels."},
+      {"name": "reports-payments", "role": "owner", "state": "Sales by payment method with a split payment", "setup": "A sale paid part cash, part card."}
+    ]
+  },
+  {
+    "path": "/reports#g-buying",
+    "title": "Reports — Buying and stock",
+    "area": "Reports",
+    "summary": "What was ordered, delivered, returned and credited in the dates; what is owed to suppliers today and how late; the batches made and what became of them; and everything lost or given away.",
+    "who": [
+      {"role": "owner, general_manager, branch_manager, accountant, auditor, purchasing", "can": "See every section here.", "cannot": ""}
+    ],
+    "get_there": "Reports → Buying and stock in the jump links.",
+    "before": [],
+    "parts": [
+      {
+        "name": "Purchasing",
+        "shows": "\"Orders, prices, returns and credits, {from} to {to}\". Orders made in the dates: Order, Supplier, Stage (Draft, Approved, Sent, Partly received, Received, Closed, Cancelled), Ordered, Received; or \"No purchase order was made in these dates.\". \"{n} order(s) open, waiting for goods: {list}\". \"Prices that changed from the supplier's delivery before\": Delivery, Supplier, Item, Before, Now (\"{cost} a {unit}\"), Change (red when dearer). \"Returns to suppliers\": No., Supplier, Delivery, Why, Owed back, Stock value, How (\"Off the delivery's bill\", \"Credit {no} on the account\", \"On the account\"). \"Suppliers' credits\": No., Supplier, For (Goods returned, A lower price, Other), Their note (\"Awaiting their note\"), Amount, Left. Totals: \"Returned {returned} · credited {credited} · credits not yet set against a bill {left}\". Then \"What came in, by supplier\": Supplier, Deliveries, Received, Sent back, Credited for price, Net = received less sent back less price credits, Billed; All row. \"What came in, by item\": Item, Came in, Cost of one (received ÷ quantity), Received, Sent back, Net. Note: \"The deliveries received in the dates, as their corrections left them, their landed costs shared in; what went back to the suppliers in the dates, at what they owe back; the credits suppliers gave for price; and the bills dated in the dates.\"",
+        "controls": [
+          {"label": "(an order number)", "kind": "link", "does": "Opens that purchase order."},
+          {"label": "(a supplier's name)", "kind": "link", "does": "Opens the supplier's statement for the same dates."},
+          {"label": "(an item's name)", "kind": "link", "does": "Opens the item on Inventory."},
+          {"label": "CSV", "kind": "link", "does": "Downloads what came in, for the same dates and place."}
+        ]
+      },
+      {
+        "name": "Payable Ageing",
+        "shows": "\"Today · what to pay first\". Always today and the whole café, whatever dates are chosen. A chart \"What is owed, by how late it is\": Not yet due, 1 to 15 days late, 16 to 30 days late, More than 30 days late, each with \"{share}% of what is owed\". Table of unpaid bills: Vendor, Invoice, Due, Outstanding, Age (\"{n}d over\" or \"Current\"); Total payable. Empty: \"Nothing outstanding — every bill is settled.\"",
+        "controls": []
+      },
+      {
+        "name": "Production",
+        "shows": "\"Batches made {from} to {to}: what came out, and what became of it\". Batch, What (\"cancelled\" badge), Came out, Of the recipe (what came out ÷ what the recipe should make, %), Quantity sold, Lost, Still in stock, Cost (what the batch used). Empty: \"No batch was made in these dates.\"",
+        "controls": [
+          {"label": "(a batch number)", "kind": "link", "does": "Opens that batch."}
+        ]
+      },
+      {
+        "name": "Losses",
+        "shows": "\"What was lost or given away {from} to {to}, and where it was charged\". \"{n} loss(es), {value} in all.\" then \"{n} of them wait for a manager ({value}).\" and \"{n} reversed, as they did not happen ({value}): left out.\" Each loss is valued at the item's average cost. A chart \"Losses by kind\" (share and account). By kind: Kind, Account (5300 Waste & spoilage, 5310 Production and preparation loss, 6110 Staff meals, 6610 Complimentary items, 6620 Marketing samples), Losses, Value, Share. \"Given away at the till: {what}: {n}, {value} · …\" (Staff meal, On the house, Sample). The 10 items lost most: Item, Quantity lost, Value. By person: Recorded by, Losses, Value. The latest 50: When, Kind (badges \"at the till, number {n}\" / \"at the till\", \"waiting for a manager\", \"reversed\"), What, Value, Why, Recorded by (\" · approved by {name}\"). Empty: \"Nothing was lost in these dates.\"",
+        "controls": [
+          {"label": "(an item's name)", "kind": "link", "does": "Opens the item on Inventory."}
+        ]
+      }
+    ],
+    "states": [
+      {"state": "A place chosen", "looks": "Purchasing, Production and Losses are that place's; Payable Ageing stays the whole café's."},
+      {"state": "Bills overdue", "looks": "The Age column shows \"{n}d over\" in warning colour."}
+    ],
+    "messages": [],
+    "what_if": [
+      {"case": "A loss waits for a manager", "do": "Approve or reverse it on Approvals (or Inventory); until then it counts in the total."},
+      {"case": "A supplier's price went up", "do": "Open Price watch to see what it does to each product's margin and the price that keeps it."},
+      {"case": "Much is more than 30 days late", "do": "Pay those first on Vendors."}
+    ],
+    "tips": ["Reversed losses are listed (struck through) but left out of every total."],
+    "related": ["/purchasing", "/vendors", "/production", "/inventory", "/approvals", "/reports/prices"],
+    "shots": [
+      {"name": "reports-losses", "role": "owner", "state": "Losses with a pending and a reversed loss", "setup": "Record a large waste that waits, and reverse another."},
+      {"name": "reports-ageing", "role": "accountant", "state": "Payable Ageing with overdue bills", "setup": "Bills past their due date."}
+    ]
+  },
+  {
+    "path": "/reports#g-people",
+    "title": "Reports — People (Staff)",
+    "area": "Reports",
+    "summary": "The hours the staff worked in the dates, lateness, leaving early and absence, and, for those who see pay, what salaries cost against the sales.",
+    "who": [
+      {"role": "owner, general_manager, accountant, auditor", "can": "See the hours and the Salaries (6100) table.", "cannot": ""},
+      {"role": "branch_manager", "can": "See the hours.", "cannot": "See the Salaries (6100) table (needs payroll.view)."},
+      {"role": "purchasing", "can": "", "cannot": "See this part."}
+    ],
+    "get_there": "Reports → People → Staff in the jump links.",
+    "before": ["The staff's schedule and clock-ins are kept on Staff."],
+    "parts": [
+      {
+        "name": "Staff",
+        "shows": "\"The hours worked {from} to {to}, lateness, leaving early and absence\". Who (and title), Days on the schedule, Days worked, Hours (\"{h} h\" or \"{h} h {m} min\"), Overtime, Lateness and Left early (\"{n} times, {minutes} min\"), Absent (days). Then, with payroll.view: Month, Salaries (6100), Sales, Of sales (salaries ÷ sales, %), and the note \"What staff cost is what 6100 Salaries holds for the month: the payroll approved for it, and any salary recorded as an expense. The sales are the month's, less refunds.\"",
+        "controls": []
+      }
+    ],
+    "states": [
+      {"state": "More than a year chosen", "looks": "\"Choose up to a year to see the hours.\""},
+      {"state": "Nobody worked", "looks": "\"Nobody worked or was on the schedule in these dates.\""}
+    ],
+    "messages": [],
+    "what_if": [
+      {"case": "Someone shows absent but worked", "do": "Their clock-in is missing: correct their attendance on Staff."}
+    ],
+    "tips": ["Staffed when busy? (in the report links) sets orders an hour against who was on the clock."],
+    "related": ["/staff", "/payroll", "/reports/staffing"],
+    "shots": [
+      {"name": "reports-staff", "role": "owner", "state": "Staff hours with the salaries table", "setup": "A month with attendance and an approved payroll."}
+    ]
+  },
+  {
+    "path": "/reports#g-checks",
+    "title": "Reports — Checks",
+    "area": "Reports",
+    "summary": "Whether the books tie (every record against its account), the stock the old app never journaled, sales that went out with no cost, and the exceptions: voids, refunds, discounts, cancelled bills, items taken off bills and wrong PINs, by person.",
+    "who": [
+      {"role": "owner", "can": "See everything and post the old app's journals.", "cannot": ""},
+      {"role": "general_manager, branch_manager, accountant, auditor", "can": "See everything.", "cannot": "Post the old app's journals."},
+      {"role": "purchasing", "can": "See Do the books tie? and Uncosted Sales.", "cannot": "See Exceptions (needs audit.view); post anything."}
+    ],
+    "get_there": "Reports → Checks in the jump links, or the first sentence of What the period says.",
+    "before": [],
+    "parts": [
+      {
+        "name": "Do the books tie?",
+        "shows": "\"Each subledger against its control account, as at the end of {to} · CSV\". Always the whole café. Folded to one line when all tie: \"Ties\" mark and \"Every subledger agrees with its control account.\"; opened by itself when one does not: \"Does not tie\" mark and \"{n} of {total} checks do not tie\". The table: Check, Subledger (what the records add up to), Ledger (what the account holds), Difference = subledger less ledger (red when not 0). The checks: Stock ledger vs Inventory (1200); Unpaid bills vs Accounts payable (2000); Unbilled receipts vs Goods received not invoiced (2050); Sales recorded vs net revenue in the ledger (4000 less 4100 and 4200); Card takings not yet settled vs Card clearing (1010); Orders the platforms owe vs Receivable from platforms (1100); What the drawers should hold vs Cash in the till (1000); Cash moved in and out of the safe vs Safe (1005); Dollars held, at what they were taken at, vs Cash in dollars (1001 and 1006); Salaries owed vs Salaries payable (2100); Advances not yet taken back vs Employee advances (1300); Stock on its way between places vs Stock in transit (1210); Prepaid expenses still to come vs Prepaid expenses (1400); and Every record has its one journal, and every automatic journal its record (a count of records, not money: \"{n} record(s)\" or \"none\"). When records are wrong: \"Records to look into\": When, Record (Sale, Void, Refund, Delivery, Delivery correction, Bill, Payment, Expense, Stock, Stock count, Cash moved, Drawer session, Dollars, Return to a supplier, Supplier's credit, Card settlement, Platform statement, Transfer, Journal), What is wrong.",
+        "controls": [
+          {"label": "(the summary line)", "kind": "toggle", "does": "Opens or folds the table of checks."},
+          {"label": "(a Subledger amount)", "kind": "link", "does": "Opens the records behind it: Inventory, Vendors, Purchasing, Orders (this month to To), Sales (card or safe), Platforms, Drawer sessions or Transfers."},
+          {"label": "(a Ledger amount)", "kind": "link", "does": "Opens the account's journal lines from the first of To's month to To."},
+          {"label": "{n} record(s)", "kind": "link", "does": "Jumps to Records to look into."},
+          {"label": "(a record in Records to look into)", "kind": "link", "does": "Opens where that record is kept (Orders for that day, Purchasing, Vendors, Expenses, Inventory, Count, Sales, the drawer session, Platforms, Transfers or the Journal register for that day)."},
+          {"label": "CSV", "kind": "link", "does": "Downloads reconciliation_{to}.csv."}
+        ]
+      },
+      {
+        "name": "Stock the old app never journaled",
+        "shows": "Only when such records exist. \"These records moved stock before the upgrade but have no journal, so they show above as an Inventory difference. Each would post the entry the new app writes for the same record, dated when it happened. Post them only if the records are real.\" Table: When, Record (Opening stock, Goods received, Count variance, Waste, Stock correction, and its description), Journal it would post (e.g. \"1200 Dr 50,000 · 2050 Cr 50,000\"), Amount; \"{n} record(s)\" and the total.",
+        "controls": [
+          {"label": "Why they are being posted (for the audit trail)", "kind": "box", "does": "The reason kept on the audit trail.", "rules": "Required; at most 300 letters.", "who": "Owner only (accounting.period.unlock)."},
+          {"label": "Post these {n} journal(s)", "kind": "button", "does": "Posts one journal for each record, oldest first, each dated when its record happened, its narration ending \"(the old app never journaled it)\". Shows \"Posting…\" while it works.", "rules": "Disabled until a reason is typed. All or nothing: if one cannot be posted, none is.", "who": "Owner only. Others see \"Only the owner can post them.\"", "after": "The books: each journal debits/credits as shown (Inventory 1200 against GRNI 2050, waste, count variance or the opening balance), so the Inventory difference above shrinks. Stock itself does not move (it already did). The journals appear on the Journal register; the audit trail records who posted how many, the total and the reason."}
+        ]
+      },
+      {
+        "name": "Uncosted Sales",
+        "shows": "\"Sales {from} to {to} with no cost, or part of it missing\". A sale's cost is understated when a product has no recipe (and was not marked as using no stock), or an ingredient was used before it had any cost. Table: When, Products, Channel, Net sales, Cost recorded, Why. Under it the warning and how to fix it. None: \"All good\" and \"Every sale in these dates carries its cost.\"",
+        "controls": [
+          {"label": "Products", "kind": "link", "does": "Opens Products & Recipes to give the product its recipe."},
+          {"label": "Inventory", "kind": "link", "does": "Opens Inventory to give an item its opening stock or first delivery."}
+        ]
+      },
+      {
+        "name": "Exceptions",
+        "shows": "For people with audit.view. \"Voids, refunds, discounts, cancelled bills, items taken off bills and wrong PINs, {from} to {to} · CSV\". By person (\"No one signed in\" when nobody was): Void, Refund, Discount, Bill cancelled, Printed bill reduced, Items taken off a bill, Wrong PIN (how many of each), Money involved, For review (in warning colour). The people with most to review come first. Then every one: When, What (\"review\" badge), Who, Amount, Why, Approved by, About. A row is for review when it is a void or refund nobody else approved, a wrong PIN, or a discount over the cap given before discounts were checked; the mark stays, it tells you what to look at. None: \"All good\" and \"Nothing was voided, refunded, discounted, cancelled or taken off a bill in these dates.\"",
+        "controls": [
+          {"label": "CSV", "kind": "link", "does": "Downloads exceptions_{from}_{to}.csv (every row, with needs_review yes/no) for the same dates and place."}
+        ]
+      }
+    ],
+    "states": [
+      {"state": "Everything ties", "looks": "One line with a Ties mark; tap it to see the checks."},
+      {"state": "A check does not tie", "looks": "The table is open, the failing rows are marked Does not tie with a red difference, and a note explains (see Messages)."},
+      {"state": "Records to look into", "looks": "Under the table, each record with what is wrong and a link to it."},
+      {"state": "Old app's stock records waiting", "looks": "The Stock the old app never journaled table, with the reason box and button for the owner."}
+    ],
+    "messages": [
+      {"text": "{n} difference(s). A period cannot be locked while its checks fail. Differences that predate the controls are explained in docs/REMEDIATION.md and are corrected by new, dated entries — reversals, cancelled bills, the owner's corrections — never by editing history.", "kind": "warning", "when": "One or more checks do not tie.", "do": "Open the Subledger and Ledger links to find the record and its journal that disagree; fix it with a new dated entry (a reversal, a cancelled bill, an owner's correction). Ask the accountant if unsure."},
+      {"text": "{n} sale(s), {amount} of sales: their profit is overstated by what went into them uncosted. A sale keeps the cost it was recorded with. To cost the next ones, give the product its recipe on Products (or say why it uses no stock), and give an item with no cost its opening stock or its first delivery on Inventory.", "kind": "warning", "when": "Sales in the dates went out with no cost or part of it missing.", "do": "Do as it says; the past sales keep their cost."},
+      {"text": "{n} wait for your review: a void or refund nobody else approved, a wrong PIN, or a discount over the cap given before discounts were checked. Discounts over the cap need a manager's approval on the till; a void or refund may be approved there by a second person with their name and PIN.", "kind": "warning", "when": "Some exceptions in the dates are for review.", "do": "Read each one marked review and ask the person about it."},
+      {"text": "a void or refund nobody else approved, a wrong PIN, or a discount over the cap given before discounts were checked. Discounts over the cap need a manager's approval on the till; a void or refund may be approved there by a second person with their name and PIN.", "kind": "info", "when": "There are exceptions but none for review (shown as is, starting in small letters).", "do": "Nothing."},
+      {"text": "Only the owner can post them.", "kind": "info", "when": "Someone other than the owner sees the old app's records.", "do": "Ask the owner to review and post them."},
+      {"text": "{n} journal(s) posted, {amount} in all. They are in the Journal Register.", "kind": "success", "when": "The owner posted the old app's records.", "do": "Check Do the books tie? again: the Inventory difference should be gone or smaller."},
+      {"text": "Say why these records are being posted", "kind": "error", "when": "The reason was only spaces.", "do": "Type a reason."},
+      {"text": "A reason is too long", "kind": "error", "when": "The reason is longer than 300 letters.", "do": "Shorten it."},
+      {"text": "There is nothing left to post", "kind": "error", "when": "Someone else posted them already (the page was old).", "do": "Reload the page."},
+      {"text": "Accounting period {1} is locked; post into an open period or reverse in the current one", "kind": "error", "when": "A record is dated in a month already locked, so its journal cannot be posted there. Nothing is posted.", "do": "Unlock that period on Accounting if right to do so, post, and lock it again; or ask the accountant."},
+      {"text": "Account {1} is missing or inactive", "kind": "error", "when": "An account the journal needs was switched off.", "do": "Switch the account on again on Accounting, then post."},
+      {"text": "Your previous submission may already have been saved. Checking…", "kind": "info", "when": "Posting got no answer and is being sent again by itself.", "do": "Wait."},
+      {"text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.", "kind": "warning", "when": "No answer after the retries.", "do": "Press Post again: it will not post twice."},
+      {"text": "You do not have permission to do this (needs accounting.period.unlock)", "kind": "error", "when": "Someone's owner role was taken away while the page was open.", "do": "Ask the owner."}
+    ],
+    "skipped_messages": [
+      "\"A reason is required\": the button stays disabled until a reason is typed.",
+      "badKey / idem_begin retry-key messages: the screen always sends a key; they cannot be reached by a person here.",
+      "post_journal \"Entry … does not balance\" and \"Journal line amounts cannot be negative\": the records' entries are built balanced by the database."
+    ],
+    "what_if": [
+      {"case": "Inventory (1200) does not tie and the old app's records are listed", "do": "Owner: check the records are real, type why, press Post these journal(s). Then look at the check again."},
+      {"case": "The drawer check does not tie", "do": "Open its Subledger link (Drawer sessions): a session not yet counted or closed is the usual cause."},
+      {"case": "A cashier has many voids for review", "do": "Read each void's reason and time in the list; talk to them; from now on a second person can approve voids at the till."}
+    ],
+    "tips": ["Do the books tie? reads as at the end of To; Payable Ageing reads today."],
+    "related": ["/journals", "/accounting", "/products", "/inventory", "/orders", "/audit"],
+    "shots": [
+      {"name": "reports-rec-ok", "role": "owner", "state": "Everything ties, folded", "setup": "Clean data."},
+      {"name": "reports-rec-bad", "role": "owner", "state": "A check does not tie, with Records to look into", "setup": "A record without its journal."},
+      {"name": "reports-exceptions", "role": "owner", "state": "Exceptions by person with review marks", "setup": "A void with nobody approving, and a wrong PIN."}
+    ]
+  },
+  {
+    "path": "/reports/sales",
+    "title": "Sales analysis",
+    "area": "Reports",
+    "summary": "The sales of the dates seen one way and, if you like, a second (by hour, day, product, person, payment…), narrowed to a channel, branch, category or person, with what each made, cost and kept after refunds.",
+    "who": [
+      {"role": "owner, general_manager, branch_manager, accountant, auditor, purchasing", "can": "Use every choice. Someone who works at one place sees that place's sales only.", "cannot": ""},
+      {"role": "cashier, barista, inventory_counter", "can": "", "cannot": "Open it (sent to their own first screen)."}
+    ],
+    "get_there": "Reports → Sales analysis: by hour, day, product, person, payment… →. Also from the week and month pages, and from sentences on Reports.",
+    "before": [],
+    "parts": [
+      {
+        "name": "Heading",
+        "shows": "\"Sales analysis\", the Print or save as PDF button, and a link back to Reports. Under it: \"The sales of the dates, seen one way and, if you like, a second.\" with \"How this works\": \"Each sale counts as it was paid; what its refunds gave back since is taken off it, whenever they were made. Voided sales are left out.\"",
+        "controls": [
+          {"label": "Print or save as PDF", "kind": "button", "does": "Prints the page or saves it as PDF, headed \"{business} · Sales analysis · {from} to {to} · As of {when}\"."},
+          {"label": "← Reports", "kind": "link", "does": "Back to Reports for the same dates."},
+          {"label": "How this works", "kind": "toggle", "does": "Opens or folds the rest of the explanation."}
+        ]
+      },
+      {
+        "name": "Choices",
+        "shows": "The form that decides what is shown.",
+        "controls": [
+          {"label": "From", "kind": "box", "does": "First day.", "rules": "Default: the first of this month."},
+          {"label": "To", "kind": "box", "does": "Last day.", "rules": "Default: today. At most a year after From."},
+          {"label": "See the sales by", "kind": "list", "does": "The first way: Hour, Day of the week, Date, Product, Category, Size, Add-on, Who took the money, Payment, Channel, Branch.", "rules": "Default: Product."},
+          {"label": "Then by", "kind": "list", "does": "A second way under each row of the first: Nothing more, or any of the same list.", "rules": "The same as the first is ignored. Payment cannot go with Product, Category, Size or Add-on."},
+          {"label": "Channel", "kind": "list", "does": "Every channel, or one."},
+          {"label": "Branch", "kind": "list", "does": "Every branch, or one.", "rules": "Shown only when there is more than one branch to choose from."},
+          {"label": "Category", "kind": "list", "does": "Every category, or one.", "rules": "Not with Payment."},
+          {"label": "Who took the money", "kind": "list", "does": "Everyone, or one person."},
+          {"label": "Show", "kind": "button", "does": "Shows the sales for the choices."},
+          {"label": "Today", "kind": "link", "does": "Today only, other choices kept."},
+          {"label": "Last 7 days", "kind": "link", "does": "Today and the 6 days before."},
+          {"label": "This month", "kind": "link", "does": "First of this month to today."},
+          {"label": "Last month", "kind": "link", "does": "All of last month."}
+        ]
+      },
+      {
+        "name": "The analysis",
+        "shows": "Heading \"By {first}\" or \"By {first}, then by {second}\", and \"{from} to {to} · CSV\". For Hour, Day of the week or Date with no second way (and not Payment): a column chart \"Net sales\" — every hour from the first to the last sold in, every weekday Saturday to Friday, or every day of the dates (two months at most); each column with \"{n} order(s)\"; a line \"Average: {amount} an hour sold in\" or \"Average: {amount} a day sold in\" (the average of those with sales). The table, by lines sold (most ways): Orders, Items, Sold for (before the discount, add-ons in), Discount, Net = sold for less discount, Cost (what it used, at the cost it was sold at), Margin = net less cost, Given back (what refunds gave back since, whenever made), Kept = net less given back, Margin kept = kept less (cost less the cost refunds put back). By Add-on: Times taken, Items, Sold for, Discount, Net, Cost, Margin (refunds not taken off). By Payment: Sales, Paid, Given back, Kept. A thin bar beside Net (or Paid) shows its size against the largest. Hours, days and dates keep their order; the other ways put the largest first. Last row: All. An order is counted once per row, so rows' orders can add up to more than All's. Notes: \"Left out: {n} voided sale(s), {amount}; {m} bill(s) cancelled.\" and one of: lines — \"Each line as it was sold, its add-ons with it, so the products, the categories and the sizes add up to the sales. The margin is what they came to less the cost of what they used; kept, less what refunds gave back and the cost they put back.\"; add-ons — \"Each add-on as it was sold on its line, its share of the discount taken off. Refunds are not taken off here.\"; payments — \"What each way of paying took of the sales, and what their refunds gave back that way. A payment pays for a whole sale, so payments go with the hour, the day, the person, the channel and the branch.\"",
+        "controls": [
+          {"label": "CSV", "kind": "link", "does": "Downloads sales-analysis_{by}[-{then}]_{from}_{to}.csv with the same choices (English column names, keys and names)."},
+          {"label": "Show as a table", "kind": "toggle", "does": "Opens the chart's figures as a table."},
+          {"label": "(a chart column)", "kind": "tile", "does": "Hover, tap or focus it to see its amount and orders; arrow keys, Home and End move between columns."}
+        ]
+      },
+      {
+        "name": "Service charge and tips",
+        "shows": "Only when the till took any. \"Taken with the sales, on top of them: the service charge is the café's own, the tips the staff's.\" Service charge and Tips, each with \"{n} sale(s)\" and the amount.",
+        "controls": []
+      },
+      {
+        "name": "Meal deals sold",
+        "shows": "Only when deals were sold. \"Each deal's things at their own prices, what was paid for them, and what the deal gave away\": Deal, Sold, At their own prices, Paid, Given away = at their own prices less paid.",
+        "controls": []
+      }
+    ],
+    "states": [
+      {"state": "No sales", "looks": "\"No sales in these dates.\""},
+      {"state": "Too many rows", "looks": "The first 2,000 rows and \"The first {n} rows of {m}: narrow the dates or the choice to see the rest.\""},
+      {"state": "A choice that cannot be shown", "looks": "A red line with the problem (see Messages), no table."}
+    ],
+    "messages": [
+      {"text": "Choose the dates, the first on or before the last", "kind": "error", "when": "From is after To.", "do": "Fix the dates and press Show."},
+      {"text": "Choose at most a year of dates", "kind": "error", "when": "More than 366 days between From and To.", "do": "Shorten the dates."},
+      {"text": "A payment pays for a whole sale: see the payments by the hour, the day, the person, the channel or the branch", "kind": "error", "when": "Payment is chosen with Product, Category, Size, Add-on, or a category.", "do": "Change the other way, or choose Every category."},
+      {"text": "The first {n} rows of {m}: narrow the dates or the choice to see the rest.", "kind": "info", "when": "More than 2,000 rows.", "do": "Narrow the dates or choose a channel, branch, category or person."},
+      {"text": "This screen could not be loaded", "kind": "error", "when": "Someone who works at one place opened a link for another place, or the figures could not be read.", "do": "Open Sales analysis from Reports."}
+    ],
+    "skipped_messages": [
+      "\"Choose something else to see them by next\": the page drops a second way that equals the first, so it is never shown.",
+      "report_place \"You work at {1}, not at {2}\": shown only as \"This screen could not be loaded\"."
+    ],
+    "what_if": [
+      {"case": "Which hours are busiest?", "do": "See the sales by Hour; compare with the average line."},
+      {"case": "What does each cashier take by card and cash?", "do": "By Who took the money, then by Payment."},
+      {"case": "The total differs from Reports' Sales by Channel", "do": "Here a refund is taken off the sale it refunds; on Reports it is counted on the day it was made. Over long dates they agree."}
+    ],
+    "tips": ["The quick date links keep every other choice.", "Change the second way to see each product by day, or each day by product."],
+    "related": ["/reports", "/reports/week", "/reports/month", "/orders"],
+    "shots": [
+      {"name": "analysis-hour", "role": "owner", "state": "By Hour with the column chart and the average line", "setup": "See the sales by Hour, This month."},
+      {"name": "analysis-two", "role": "owner", "state": "By Who took the money, then by Payment", "setup": "Choose both and Show."}
+    ]
+  },
+  {
+    "path": "/reports/week",
+    "title": "The week at a glance",
+    "area": "Reports",
+    "summary": "The seven days to a day (today unless another is chosen) against the seven before them: net sales day by day, the margin, the orders, what was lost, what sold the most and what rose and fell, each with what changed in words.",
+    "who": [
+      {"role": "owner, general_manager, branch_manager, accountant, auditor, purchasing", "can": "Read it. Someone who works at one place sees their place.", "cannot": ""}
+    ],
+    "get_there": "Reports → The week at a glance →. Also the Week tab on the month page.",
+    "before": [],
+    "parts": [
+      {
+        "name": "Heading and moving about",
+        "shows": "\"The week at a glance\", Print or save as PDF, and \"{from} to {to}, against {beforeFrom} to {beforeTo}\".",
+        "controls": [
+          {"label": "Print or save as PDF", "kind": "button", "does": "Prints the page or saves it as PDF."},
+          {"label": "Week", "kind": "tab", "does": "This page (selected)."},
+          {"label": "Month", "kind": "tab", "does": "Opens the month of the week's last day."},
+          {"label": "The week before", "kind": "link", "does": "The seven days ending a week earlier."},
+          {"label": "The week after", "kind": "link", "does": "The seven days ending a week later.", "rules": "Not shown when that would go past today."},
+          {"label": "The last 7 days", "kind": "link", "does": "Back to the seven days to today.", "rules": "Not shown when already there or one step away."}
+        ]
+      },
+      {
+        "name": "Tiles",
+        "shows": "Net sales: sales as paid, less what refunds gave back since; note \"{amount} in the week before.\" and \"{pct}% more than the week before\" / \"{pct}% less than the week before\" / \"About the same as the week before\" (within 5%). Gross margin: (net sales less what they cost, less cost put back by refunds) ÷ net sales, to a tenth of a %, with the amount; change in points: \"{n} point(s) more than the week before\" / \"{n} point(s) less than the week before\". Orders: how many, \"{amount} an order on average\". Waste: everything lost or given away at its cost (the loss report), \"{pct}% of net sales\"; less is shown as the good way.",
+        "controls": []
+      },
+      {
+        "name": "What the week says",
+        "shows": "Sentences with marks: see Messages.",
+        "controls": [
+          {"label": "(a sentence with a link)", "kind": "link", "does": "Opens Products (margin fell), Reports' Losses for the week, or the sales analysis by product then date (what fell)."}
+        ]
+      },
+      {
+        "name": "Sales day by day",
+        "shows": "A column per day (\"Saturday 05\"…), the best day marked; each with \"{date} · {n} order(s)\". A line: The week before (the same weekday a week earlier).",
+        "controls": [
+          {"label": "Show as a table", "kind": "toggle", "does": "The figures as a table (Day, This week, The week before)."}
+        ]
+      },
+      {
+        "name": "What sold the most / What was lost",
+        "shows": "The 8 products that sold most (each with its change against the week before, or \"new this week\"); the 6 items lost most (\"{n} loss(es)\"). Footnote: \"Sales as paid, less what refunds gave back since, as the sales analysis has them; what was lost at what it cost.\"",
+        "controls": [
+          {"label": "The sales analysis of the week →", "kind": "link", "does": "Sales analysis by product for the week (same place)."},
+          {"label": "The losses of the week →", "kind": "link", "does": "Reports' Losses for the week (the whole café unless you work at one place)."}
+        ]
+      }
+    ],
+    "states": [
+      {"state": "No sales", "looks": "\"No sales this week.\" in the sentences and under What sold the most."},
+      {"state": "Nothing lost", "looks": "\"Nothing was lost this week.\""}
+    ],
+    "messages": [
+      {"text": "Net sales rose {pct}% against the week before: {amount} more.", "kind": "success", "when": "5% or more up. Under it: \"The best day: {day}, {amount}.\"", "do": "Nothing."},
+      {"text": "Net sales fell {pct}% against the week before: {amount} less.", "kind": "warning", "when": "5% or more down.", "do": "Look at the day-by-day chart for the weak days and at what fell the most."},
+      {"text": "Net sales held steady against the week before.", "kind": "info", "when": "Within 5%.", "do": "Nothing."},
+      {"text": "Net sales {amount}, and no sales in the week before to compare with.", "kind": "info", "when": "The week before had none.", "do": "Nothing."},
+      {"text": "No sales this week.", "kind": "info", "when": "No net sales.", "do": "Check the dates or the place."},
+      {"text": "The margin fell {n} point(s), to {pct}%.", "kind": "warning", "when": "Down 2 points or more. Possibly with \"What was sold cost {cost}% more, on {sales}% more sales: check the recipes' costs and the prices.\"", "do": "Check Price watch and the recipes on Products."},
+      {"text": "The margin rose {n} point(s), to {pct}%.", "kind": "success", "when": "Up 2 points or more.", "do": "Nothing."},
+      {"text": "The margin held at {pct}%.", "kind": "info", "when": "Less than 2 points either way.", "do": "Nothing."},
+      {"text": "Lost {amount} to waste, {pct}% of net sales.", "kind": "warning", "when": "Anything lost (a warning at 3% of net sales or more). Under it: \"Most of it {item}: {amount}.\" and \"{amount} in the week before.\"", "do": "Open the losses of the week."},
+      {"text": "Nothing was lost this week.", "kind": "success", "when": "No losses.", "do": "Nothing."},
+      {"text": "{name} sold the most: {amount}.", "kind": "info", "when": "Any sales; under it its change.", "do": "Nothing."},
+      {"text": "{name} rose the most: {amount} more than the week before.", "kind": "success", "when": "A product sold both weeks rose most (not the best seller).", "do": "Nothing."},
+      {"text": "{name} fell the most: {amount} less than the week before.", "kind": "warning", "when": "A product sold the week before fell most.", "do": "Open the link to see its days; check it was in stock and on the menu."},
+      {"text": "This screen could not be loaded", "kind": "error", "when": "Someone at one place opened another place's link, or the figures could not be read.", "do": "Open the week from Reports."}
+    ],
+    "what_if": [
+      {"case": "You want last Friday's week", "do": "Press The week before until the dates show it."}
+    ],
+    "tips": ["Net sales here take refunds off the sale they refund (as the sales analysis does), so they can differ a little from Reports' Sales by Channel for the same days."],
+    "related": ["/reports/month", "/reports/sales", "/reports"],
+    "shots": [
+      {"name": "week-glance", "role": "owner", "state": "A week with tiles, sentences and the chart", "setup": "Open the week with two weeks of trading."}
+    ]
+  },
+  {
+    "path": "/reports/month",
+    "title": "The month at a glance",
+    "area": "Reports",
+    "summary": "A month (this one unless another is chosen) to today while it runs, against the same days of the month before, and the whole month against the whole month before once it is over; with where a running month will close at its pace.",
+    "who": [
+      {"role": "owner, general_manager, branch_manager, accountant, auditor, purchasing", "can": "Read it. Someone who works at one place sees their place.", "cannot": ""}
+    ],
+    "get_there": "Reports → The month at a glance →. Also the Month tab on the week page.",
+    "before": ["For \"The month's target\", a daily sales target set in Settings (Rules)."],
+    "parts": [
+      {
+        "name": "Heading and moving about",
+        "shows": "\"The month at a glance\", Print or save as PDF, and \"{from} to {to}, against {beforeFrom} to {beforeTo}\". While the month runs it is set against the same days of the month before (the 30th of March against the 28th of February).",
+        "controls": [
+          {"label": "Print or save as PDF", "kind": "button", "does": "Prints or saves as PDF."},
+          {"label": "Week", "kind": "tab", "does": "Opens the week ending on the month's last day shown."},
+          {"label": "Month", "kind": "tab", "does": "This page (selected)."},
+          {"label": "The month before", "kind": "link", "does": "The month before."},
+          {"label": "The month after", "kind": "link", "does": "The month after.", "rules": "Not shown when it would be after this month."},
+          {"label": "This month", "kind": "link", "does": "Back to this month.", "rules": "Not shown when this month is already shown or is the next step."}
+        ]
+      },
+      {
+        "name": "Tiles",
+        "shows": "As on the week page, set against \"the same days of {month}\" (e.g. the same days of 2026-08) while the month runs, or against \"{month}\" when it is over: Net sales, Gross margin, Orders, Waste.",
+        "controls": []
+      },
+      {
+        "name": "What the month says",
+        "shows": "Sentences as on the week page (with \"this month\"), and two more: where the month closes at its pace, and which weekday sells most and least.",
+        "controls": [
+          {"label": "(a sentence with a link)", "kind": "link", "does": "Opens Products, Reports' Losses for the month, or the sales analysis by weekday / by product then date."}
+        ]
+      },
+      {
+        "name": "Sales day by day",
+        "shows": "A column per day of the month (to today), the best day marked; each with \"{weekday} {date} · {n} order(s)\". A line: \"Usual for the weekday in {month}\": what that weekday sold on an average day with sales in the month before.",
+        "controls": [
+          {"label": "Show as a table", "kind": "toggle", "does": "The figures as a table."}
+        ]
+      },
+      {
+        "name": "What sold the most / What was lost",
+        "shows": "As on the week page, for the month (\"new this month\").",
+        "controls": [
+          {"label": "The sales analysis of the month →", "kind": "link", "does": "Sales analysis by product for the month."},
+          {"label": "The losses of the month →", "kind": "link", "does": "Reports' Losses for the month."}
+        ]
+      }
+    ],
+    "states": [
+      {"state": "Month running, fewer than 7 full days", "looks": "No pace sentence yet."},
+      {"state": "Month over", "looks": "Whole month against the whole month before; no pace or target sentence."},
+      {"state": "No sales", "looks": "\"No sales this month.\"; \"Nothing was lost this month.\" when nothing was lost."}
+    ],
+    "messages": [
+      {"text": "At this pace, {month} closes near {amount}.", "kind": "info", "when": "The month runs and has 7 or more full days (today is not counted). The pace is what the full days sold on average × the days in the month. Under it: \"From {n} full day(s) so far; {month} closed at {amount}.\" and, with a target, \"The month's target: {amount}.\" (daily target × days in the month). ▲ when it reaches the target (or, with none, beats last month), ▼ when not.", "do": "Below target: look at the weak weekdays and what fell."},
+      {"text": "On average, {best} sold the most: {amount} a day; {worst} the least: {low}.", "kind": "info", "when": "Two weeks or more of the month shown.", "do": "Plan staff and offers by weekday; the link opens the sales analysis by weekday."},
+      {"text": "Net sales rose {pct}% against {then}: {amount} more.", "kind": "success", "when": "As on the week page; {then} is \"the same days of {month}\" or \"{month}\".", "do": "Nothing."},
+      {"text": "Net sales fell {pct}% against {then}: {amount} less.", "kind": "warning", "when": "As on the week page.", "do": "Look at the chart and what fell."},
+      {"text": "Net sales held steady against {then}.", "kind": "info", "when": "Within 5%.", "do": "Nothing."},
+      {"text": "Net sales {amount}, and no sales in {then} to compare with.", "kind": "info", "when": "Nothing the month before.", "do": "Nothing."},
+      {"text": "No sales this month.", "kind": "info", "when": "No net sales.", "do": "Check the month or place."},
+      {"text": "The margin fell {n} point(s), to {pct}%.", "kind": "warning", "when": "Down 2 points or more.", "do": "Check Price watch and recipes."},
+      {"text": "The margin rose {n} point(s), to {pct}%.", "kind": "success", "when": "Up 2 points or more.", "do": "Nothing."},
+      {"text": "The margin held at {pct}%.", "kind": "info", "when": "Less than 2 points either way.", "do": "Nothing."},
+      {"text": "Lost {amount} to waste, {pct}% of net sales.", "kind": "warning", "when": "Anything lost.", "do": "Open the losses of the month."},
+      {"text": "Nothing was lost this month.", "kind": "success", "when": "No losses.", "do": "Nothing."},
+      {"text": "{name} sold the most: {amount}.", "kind": "info", "when": "Any sales.", "do": "Nothing."},
+      {"text": "{name} rose the most: {amount} more than {then}.", "kind": "success", "when": "As on the week page.", "do": "Nothing."},
+      {"text": "{name} fell the most: {amount} less than {then}.", "kind": "warning", "when": "As on the week page.", "do": "Open the link."},
+      {"text": "This screen could not be loaded", "kind": "error", "when": "Someone at one place opened another place's link, or the figures could not be read.", "do": "Open the month from Reports."}
+    ],
+    "what_if": [
+      {"case": "You want September", "do": "Press The month before until it shows, or open /reports/month?month=2026-09."}
+    ],
+    "tips": ["A future month is shown as this month."],
+    "related": ["/reports/week", "/reports/sales", "/reports", "/settings"],
+    "shots": [
+      {"name": "month-glance", "role": "owner", "state": "A running month with the pace sentence", "setup": "A month with 10+ days of trading and a daily target."}
+    ]
+  },
+  {
+    "path": "/reports/menu",
+    "title": "Menu matrix",
+    "area": "Reports",
+    "summary": "Every product sold in the last 4 weeks (or 3 months), placed by how many sold against what each one earns after its cost, in four groups — Keep, Raise the price, Show it more, Change it or drop it — each with what to do.",
+    "who": [
+      {"role": "owner, general_manager, branch_manager, accountant, auditor, purchasing", "can": "Read it. Someone who works at one place sees their place.", "cannot": ""}
+    ],
+    "get_there": "Reports → Menu matrix: what to keep, reprice, show more or drop →.",
+    "before": ["Products need recipes with costs: a product sold with no cost is left out and named at the bottom.", "At least two products with a cost must have sold in the period."],
+    "parts": [
+      {
+        "name": "Heading and choices",
+        "shows": "\"Menu matrix\", Print or save as PDF, and \"What each product sells against what it earns on each one, {from} to {to}\".",
+        "controls": [
+          {"label": "Print or save as PDF", "kind": "button", "does": "Prints or saves as PDF."},
+          {"label": "The last 4 weeks", "kind": "tab", "does": "28 days to today (default)."},
+          {"label": "The last 3 months", "kind": "tab", "does": "91 days to today."},
+          {"label": "The whole menu", "kind": "tab", "does": "Every category together (default)."},
+          {"label": "(a category name)", "kind": "tab", "does": "Only that category, so like is compared with like (a coffee with coffees).", "rules": "Shown when categories had sales."}
+        ]
+      },
+      {
+        "name": "What it says",
+        "shows": "Sentences: see Messages.",
+        "controls": []
+      },
+      {
+        "name": "Sold against what each one earns (chart)",
+        "shows": "Each product a mark: across, \"Sold in the period\"; up, \"Earns on each one (IQD)\". A line at \"Sells a lot from {n} sold\" and one at \"The menu's average: {amount} on each one\" split it into the four groups. Under it: \"A product sells a lot when it sold at least {n} in the period: 70% of an even share of the {total} items sold. It earns well when it keeps at least {amount} on each one after its cost: the menu's average. Refunds are taken off.\" Earns on each = margin kept (after refunds and their cost back) ÷ items sold; the menu's average = all margin kept ÷ all items sold.",
+        "controls": [
+          {"label": "(a product's mark)", "kind": "tile", "does": "Hover or tap to see its name, group, \"{n} sold\" and \"earns {amount} on each\"; tap again to hide."}
+        ]
+      },
+      {
+        "name": "The four groups",
+        "shows": "In the chart's order: Show it more (\"Earns well on each one, but few buy it.\" — \"Show it more: first on the menu, a favourite on the till, or offered to customers.\"), Keep (\"Sells a lot and earns well on each one.\" — \"Keep it as it is, first on the menu and among the till's favourites.\"), Change it or drop it (\"Sells little and earns little on each one.\" — \"Change its recipe or price, or take it off the menu.\"), Raise the price (\"Sells a lot, but earns little on each one.\" — \"Raise its price a little, or make it cost less to make.\"). Each with how many, and a table: Product, Items sold (\"{n} · {share}%\"), Earns on each, and for Raise the price: Raise by about (what each would need to earn the menu's average, rounded up to 250 IQD). \"None in this period.\" when empty.",
+        "controls": []
+      }
+    ],
+    "states": [
+      {"state": "Not enough sold", "looks": "\"Not enough sold yet to compare.\" with \"The matrix compares at least two products sold in the period, each with a cost on its recipe.\""},
+      {"state": "Products with no cost", "looks": "At the bottom: \"Left out, sold with no cost to judge them by (add their recipe and its costs on Products & Recipes): {list}.\""}
+    ],
+    "messages": [
+      {"text": "Raise the price of {n} product(s): many are sold, but each earns little.", "kind": "warning", "when": "Products in Raise the price. Under it: \"At the raises shown, as many sold as in this period would bring about {amount} more.\"", "do": "Change their prices on Products & Recipes, or lower what they cost to make."},
+      {"text": "Show {n} product(s) more: each earns well, but few are sold.", "kind": "info", "when": "Products in Show it more.", "do": "Put them first on the menu and the till's favourites; offer them."},
+      {"text": "Change or drop {n} product(s): few are sold, and each earns little.", "kind": "warning", "when": "Products in Change it or drop it.", "do": "Change the recipe or price, or take them off the menu."},
+      {"text": "Keep {n} product(s) first: many are sold, and each earns well.", "kind": "success", "when": "Products in Keep.", "do": "Keep them as they are."},
+      {"text": "Left out, sold with no cost to judge them by (add their recipe and its costs on Products & Recipes): {list}.", "kind": "warning", "when": "Some products sold had no cost.", "do": "Give them a recipe with costs."},
+      {"text": "This screen could not be loaded", "kind": "error", "when": "The sales could not be read.", "do": "Try again."}
+    ],
+    "what_if": [
+      {"case": "A new product looks like \"Change it or drop it\"", "do": "It may just be new: look again over The last 3 months before dropping it."}
+    ],
+    "tips": ["Compare inside a category: a gelato scoop and a cake are judged against their own kind.", "Nothing here changes prices: change them on Products & Recipes."],
+    "related": ["/products", "/reports/prices", "/reports/sales"],
+    "shots": [
+      {"name": "menu-matrix", "role": "owner", "state": "The chart and four groups", "setup": "4 weeks of sales across several products with recipes."}
+    ]
+  },
+  {
+    "path": "/reports/prices",
+    "title": "Price watch",
+    "area": "Reports",
+    "summary": "What came in dearer in the last 30 days — each item's latest delivery against the one before, by 5% or more — and what it does to the margin of every size that uses it, with the price that keeps the margin, set in one tap.",
+    "who": [
+      {"role": "owner, general_manager", "can": "Read it and set the price that keeps the margin (Set it).", "cannot": ""},
+      {"role": "branch_manager, accountant, auditor, purchasing", "can": "Read it.", "cannot": "Set a price (needs recipe.edit)."}
+    ],
+    "get_there": "Reports → Price watch: what came in dearer →.",
+    "before": ["Deliveries recorded on Purchasing / Inventory, with their prices; products with recipes and prices."],
+    "parts": [
+      {
+        "name": "Heading",
+        "shows": "\"Price watch\", Print or save as PDF, and \"Deliveries of the last 30 day(s), each against the one before\". Always the whole café.",
+        "controls": [
+          {"label": "Print or save as PDF", "kind": "button", "does": "Prints or saves as PDF."}
+        ]
+      },
+      {
+        "name": "Tiles",
+        "shows": "Came in dearer: how many items (\"{n} item(s), by 5% or more\"). What it comes to a month: the extra all rises add over a month at the last 30 days' sales (\"At the last 30 days' sales\"). Sizes it touches: how many sizes use a dearer item (\"{n} price(s) would keep the margin\").",
+        "controls": []
+      },
+      {
+        "name": "Each item that came in dearer",
+        "shows": "Most costly first. The item's name and \"▲ {pct}%\". \"{was} → {now} a {unit}, delivered {when}\" and the supplier (per kg or L for items kept in g or ml; freight shared in). \"At the last 30 days' sales, it comes to about {amount} a month.\" Then every size it touches, on its recipe or through what is made from it (milk in a base, the base in a gelato), up to 15: What it touches (product · size), Channel, Price, \"Margin, before → after\" (the after in warning colour when it falls 2 points or more), Adds a serving (the extra cost of one serving), Sold in 30 days, Keeps the margin (the price that keeps the old margin %, rounded up to 250 IQD; \"—\" when less than half a step above today's price). \"And {n} more, each adding less.\" when more than 15. Or: \"No product uses it on its recipe, nor through what is made from it.\" Footnote: \"Each delivery against the one before it, a unit at a time, with freight shared out. A serving costs what a sale would post, with this item at its old price, then its new, once what was bought dearer is what is sold. The price that keeps the margin is rounded up to 250 IQD.\"",
+        "controls": [
+          {"label": "Set it", "kind": "button", "does": "Sets that size's price on that channel to the price shown, from today, for every branch. The cell then says \"Set from today\".", "rules": "Shown only beside a price that keeps the margin. Its spoken name: \"Set the price to {price}\".", "who": "Owner and general manager (recipe.edit).", "after": "The till sells at the new price from today (a branch with its own price keeps its own). Past sales keep their price. The audit trail records the price change (was and now). Menu screens refresh."},
+          {"label": "Its deliveries and prices →", "kind": "link", "does": "Opens the item on Inventory."}
+        ]
+      }
+    ],
+    "states": [
+      {"state": "Nothing dearer", "looks": "\"Nothing came in dearer in the last 30 day(s).\" with \"Each delivery is set against the one before it, item by item.\""},
+      {"state": "Price set", "looks": "\"Set from today\" in place of the Set it button."}
+    ],
+    "messages": [
+      {"text": "Set from today", "kind": "success", "when": "Set it worked.", "do": "Nothing; check the new price on Products & Recipes."},
+      {"text": "A price cannot start in the past: every sale keeps the price it was made at", "kind": "error", "when": "The page was opened yesterday and Set it pressed after midnight.", "do": "Reload the page and press Set it again."},
+      {"text": "Unknown product", "kind": "error", "when": "The size was removed meanwhile.", "do": "Reload the page."},
+      {"text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.", "kind": "warning", "when": "No answer from the server after the retries.", "do": "Press Set it again; it will not be set twice."},
+      {"text": "You do not have permission to do this (needs recipe.edit)", "kind": "error", "when": "The person's menu permission was removed while the page was open.", "do": "Ask the owner."},
+      {"text": "This screen could not be loaded", "kind": "error", "when": "The deliveries could not be read.", "do": "Try again."}
+    ],
+    "skipped_messages": [
+      "set_price \"Enter a price\", \"Choose one of the café's branches\", \"Price must be a number greater than zero\": the button always sends a price above zero and no branch.",
+      "Retry-key messages (badKey, idem_begin): the screen always sends a key."
+    ],
+    "what_if": [
+      {"case": "The rise was a one-off", "do": "Do not change the price; the next delivery will show whether it lasts."},
+      {"case": "You want a different price than the one shown", "do": "Set it on Products & Recipes instead."}
+    ],
+    "tips": ["The month figure uses the last 30 days' sales: a product sold a lot matters more than a big rise on something rarely sold."],
+    "related": ["/products", "/inventory", "/purchasing", "/reports/menu"],
+    "shots": [
+      {"name": "prices-rise", "role": "owner", "state": "An item 20% dearer with the sizes it touches and Set it", "setup": "Two deliveries of milk, the second dearer, and products using it."}
+    ]
+  }
+]

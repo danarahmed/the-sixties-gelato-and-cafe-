@@ -1,0 +1,4599 @@
+[
+  {
+    "path": "/staff",
+    "title": "Staff",
+    "area": "People",
+    "summary": "Who works here, their PINs, phones and pay. The screen has four tabs (People, The schedule, The hours, Shop's clock); this entry covers the top of the screen and the People tab.",
+    "who": [
+      {
+        "role": "owner",
+        "can": "everything on the screen: add people, their details, PINs, pay, phones, last days; the schedule; correct hours; make and remove clock screens",
+        "cannot": "—"
+      },
+      {
+        "role": "general_manager",
+        "can": "the same as the owner",
+        "cannot": "—"
+      },
+      {
+        "role": "branch_manager",
+        "can": "add people, change their details, set PINs, link phones, set last days, make the schedule, correct and add hours; see the clock screens",
+        "cannot": "see or set pay (no pay badges, no Pay tab, no labour cost in the schedule check); make or remove a clock screen"
+      },
+      {
+        "role": "accountant",
+        "can": "see everyone and their pay; set pay (Pay tab); see the schedule with its labour cost, and the hours",
+        "cannot": "add people, change details, PINs, phones or last days; change the schedule; correct hours; the Shop's clock tab is not shown"
+      },
+      {
+        "role": "auditor",
+        "can": "read everything on People, The schedule and The hours, pay included",
+        "cannot": "change anything; the Shop's clock tab is not shown"
+      },
+      {
+        "role": "cashier, barista, inventory_counter, purchasing",
+        "can": "nothing here: opening /staff sends them to their own start screen",
+        "cannot": "open the screen"
+      }
+    ],
+    "get_there": "Menu → Operations → Staff. Also: Payroll → “Staff, the schedule and the hours →”; links to /staff#people, /staff#schedule, /staff#attendance, /staff#shop-clock open that tab; /staff#add-person opens the Add people form (Getting set up uses it).",
+    "before": [
+      "At least one active place (branch or central kitchen) for “Where they work”. Warehouses are not offered.",
+      "To give someone a login, they must first be added as a member on Settings → People and roles; then their login can be chosen here."
+    ],
+    "parts": [
+      {
+        "name": "Heading and intro",
+        "shows": "“Staff” and the short text: “Who works here, the schedule, and the hours. Each person clocks in and out on their own phone, by scanning the shop's code, or at the till with their name and PIN. Lateness, leaving early, absence and overtime are shown here, and deducted from pay only when a manager says so on Payroll.”",
+        "controls": [
+          {
+            "label": "How this works",
+            "kind": "button",
+            "does": "Opens the longer explanation of the screen."
+          }
+        ]
+      },
+      {
+        "name": "In now",
+        "shows": "Everyone clocked in at this moment, each as a green badge “{name} · since {time}” (month-day and time on the café's clock). Empty: “Nobody is clocked in.” Shown above the tabs, on every tab.",
+        "controls": []
+      },
+      {
+        "name": "Tabs",
+        "shows": "People, The schedule, The hours, and Shop's clock (only for those who manage staff or settings). Only one shows at a time; what you typed in one tab is kept while you look at another.",
+        "controls": [
+          {
+            "label": "People / The schedule / The hours / Shop's clock",
+            "kind": "tab",
+            "does": "Shows that tab and puts its name in the address (#people, #schedule, #attendance, #shop-clock), so a reload or a shared link opens the same tab."
+          },
+          {
+            "label": "Left / Right arrow, Home, End",
+            "kind": "key",
+            "does": "With a tab focused: move to the next or previous tab (reversed in Arabic and Kurdish), the first or the last."
+          }
+        ]
+      },
+      {
+        "name": "People tab: tools",
+        "shows": "A search box (6 or more people), Download CSV, and Add people.",
+        "controls": [
+          {
+            "label": "Find someone…",
+            "kind": "box",
+            "does": "Filters the list as you type. Matches the name, what they do, the phone or the place.",
+            "rules": "Shown only when there are 6 or more people. Not case-sensitive."
+          },
+          {
+            "label": "Download CSV",
+            "kind": "link",
+            "does": "Downloads staff_YYYY-MM-DD.csv: a row a person with Name, What they do, Phone, Where they work, Started on, Their last day, Works here now (Yes/No), Login, PIN (Set / None yet), In now. Headings are in your language.",
+            "rules": "Shown when there is at least one person. Pay columns (How they are paid, Pay (IQD), A day's hours, Overtime %, Advances owed (IQD)) only for those who see payroll and only when someone's pay is visible. Phone linked (Yes/No) only for those who manage staff. Amounts are plain numbers.",
+            "after": "Nothing changes; it is a copy of the list."
+          },
+          {
+            "label": "Add people",
+            "kind": "button",
+            "does": "Opens the “People to add” form in place of the button.",
+            "who": "staff.manage (owner, general manager, branch manager)"
+          }
+        ]
+      },
+      {
+        "name": "People to add (the Add people form)",
+        "shows": "“A row for each person. A PIN can be set now, or later on their row: let each person type their own. Rows left empty are not added.” A table that starts with 3 empty rows. A row with a problem is marked and says why under the name, with a warning icon.",
+        "controls": [
+          {
+            "label": "Name",
+            "kind": "box",
+            "does": "Their name.",
+            "rules": "Required in a row you use. Up to 80 letters. Must not be the same as someone already on the staff."
+          },
+          {
+            "label": "What they do",
+            "kind": "box",
+            "does": "Their job, e.g. Barista.",
+            "rules": "Optional, up to 60 letters."
+          },
+          {
+            "label": "Phone",
+            "kind": "box",
+            "does": "Their phone number.",
+            "rules": "Optional, up to 40 characters."
+          },
+          {
+            "label": "Where they work",
+            "kind": "list",
+            "does": "The place they belong to: the café's active branches and central kitchens.",
+            "rules": "Default: the first place."
+          },
+          {
+            "label": "Started on",
+            "kind": "box",
+            "does": "Their first day (a date).",
+            "rules": "Default: today. At most a year ahead."
+          },
+          {
+            "label": "Their login, if they have one",
+            "kind": "list",
+            "does": "Links the person to a member's login (“No login” by default).",
+            "rules": "A login can belong to one person only; choosing the same login on two rows marks both rows."
+          },
+          {
+            "label": "PIN (optional)",
+            "kind": "box",
+            "does": "Their clock-in PIN, typed by them. Only digits are kept (Arabic digits become 0–9).",
+            "rules": "4 to 8 digits, not one digit repeated (1111) and not a run (1234, 9876)."
+          },
+          {
+            "label": "Remove this row",
+            "kind": "button",
+            "does": "The ✕ at the end of a row: removes it. Removing the last row leaves one empty row."
+          },
+          {
+            "label": "Another row",
+            "kind": "button",
+            "does": "Adds an empty row."
+          },
+          {
+            "label": "Cancel",
+            "kind": "button",
+            "does": "Closes the form; nothing is added."
+          },
+          {
+            "label": "Add to the staff / Add {n} to the staff",
+            "kind": "button",
+            "does": "Adds each ready row one after another (“Adding {done} of {of}…” while it works), then sets its PIN if one was typed. When all are added, the form closes and says “{n} added to the staff.” under the list. Rows that failed stay in the form with the reason; rows added leave it.",
+            "rules": "Disabled until at least one row is filled and every filled row is free of problems. A row with only its place and date (filled in for you) counts as empty and is skipped.",
+            "after": "Each person is added to the staff list, the till's clock list (if they work at that branch) and the schedule. The audit trail records it. A PIN that could not be set does not stop the person being added: set it later on their PIN tab."
+          }
+        ]
+      },
+      {
+        "name": "The list of people",
+        "shows": "One line a person: initials in a circle (green when clocked in), name, what they do · place, and badges: “In since {time}”, “Last day {day}” (yellow while still to come, grey once passed), “Starts later” (start date in the future), “PIN set” or “No PIN yet”, “Phone linked”, and for those who see payroll the pay (“{amount} a month” / “{amount} a day” / “{amount} an hour”) or “Pay not set”. People who no longer work here are shown greyed.",
+        "controls": [
+          {
+            "label": "{name}: open",
+            "kind": "button",
+            "does": "The whole line: opens that person's panel beside the list."
+          },
+          {
+            "label": "Payroll and advances →",
+            "kind": "link",
+            "does": "Opens Payroll.",
+            "who": "payroll.view (owner, general manager, accountant, auditor)"
+          }
+        ]
+      },
+      {
+        "name": "A person's panel",
+        "shows": "Their initials, name, what they do (or “No job written yet”) and “In since {time}”. Facts: Where, Started, Phone, Login, PIN (Set / None yet), Their phone (Phone linked / Not linked; for those who manage staff), Pay (with “{hours} hours a day” and “overtime at {percent}%”, or “Not set”) and Advances owed (for those who see payroll). Below, a tab for each thing to change.",
+        "controls": [
+          {
+            "label": "Close",
+            "kind": "button",
+            "does": "The ✕: closes the panel. Escape or a tap outside it also closes it; focus goes back to the person's line."
+          },
+          {
+            "label": "Details",
+            "kind": "tab",
+            "does": "The person's form: Name, What they do, Phone, Where they work, Started on, Their login, if they have one; “Save” and “Cancel”.",
+            "who": "staff.manage",
+            "rules": "Save is disabled without a name or a place. Started on cannot be after their last day, nor after hours already recorded for them.",
+            "after": "The list, the till's clock and the schedule show the new details. Recorded in the audit trail."
+          },
+          {
+            "label": "Set a PIN / New PIN",
+            "kind": "tab",
+            "does": "“Let {name} type it: 4 to 8 digits, not one digit over and over, nor a run like 1234. They clock in and out at the till with their name and this PIN.” Two boxes (PIN, The same PIN again) and “Save the PIN”.",
+            "who": "staff.manage",
+            "rules": "Save the PIN is disabled until the first box has 4 characters. The two must match.",
+            "after": "They clock in at the till with this PIN from now on. A new PIN also lifts the pause after too many wrong PINs that day. The panel closes after a moment."
+          },
+          {
+            "label": "Pay",
+            "kind": "tab",
+            "does": "How they are paid (By the month / By the day / By the hour), the rate (its label follows the choice: “Pay a month”, “Pay a day”, “Pay an hour”), A day's hours (default 8), Overtime at (% of an hour's pay; empty: the café's rule), Why it changes (optional); “Save the pay” and “Cancel”. Note: “Overtime is each hour worked beyond a day's hours. An hour's pay is an hourly rate; a day's pay over a day's hours; or a month's pay over 30 days and a day's hours.”",
+            "who": "payroll.run (owner, general manager, accountant)",
+            "rules": "Rate is required and above 0. A day's hours: more than 0 and at most 16. Overtime: 100% to 300%; empty uses the café's rule (150% unless changed).",
+            "after": "Used by the next payroll draft. A draft made before the change shows that it is out of date and must be drafted again. The schedule check's labour cost uses it at once. Recorded with its reason in the audit trail."
+          },
+          {
+            "label": "Their phone",
+            "kind": "tab",
+            "does": "Links the person's own phone so it clocks them in and out (see the steps under “Their phone” below).",
+            "who": "staff.manage, and only for someone who works here now"
+          },
+          {
+            "label": "Last day / Works here again",
+            "kind": "tab",
+            "does": "For someone working: “After their last day they no longer clock in, and their hours on the schedule after it are taken off. Their records and pay stay.” A date (default today), Why (e.g. moved to Erbil) and “Save their last day”. For someone who has left: Why (e.g. came back after the summer) and “They work here again”.",
+            "who": "staff.manage",
+            "rules": "Why is required (the button stays disabled without it). The last day cannot be before they started; they must be clocked out; no hours may be recorded after it.",
+            "after": "Their schedule after the last day is deleted. After it they cannot clock in, be put on the schedule or be given an advance. Their records, payrolls and advances stay. Recorded in the audit trail."
+          }
+        ]
+      },
+      {
+        "name": "Their phone (tab in the panel)",
+        "shows": "With no phone linked, a square to scan is shown at once: “{name}: scan this with your own phone's camera”, steps “Open the camera on your phone and point it at the square.” and “Open the link it shows, and press Link this phone.”, “The square works once, until {time}.” and “Waiting for the phone…”. With a phone linked: “Their phone is linked since {when}.” and “Last used {when}.”",
+        "controls": [
+          {
+            "label": "The link, to send to their phone",
+            "kind": "box",
+            "does": "The same link as the square, as text (selected when tapped), to send by message if the camera cannot scan."
+          },
+          {
+            "label": "Make a new one",
+            "kind": "button",
+            "does": "Shown when the square is too old (“This square is too old.”): makes a new square and link, good for 10 minutes."
+          },
+          {
+            "label": "Link a new phone",
+            "kind": "button",
+            "does": "With a phone linked: shows a new square, to link a different phone. When the new phone links, the old one stops."
+          },
+          {
+            "label": "Unlink…",
+            "kind": "button",
+            "does": "Shows a Why box (e.g. They lost it) with “Unlink the phone” and “Cancel”.",
+            "after": "The phone no longer clocks them in. With a clock screen in use, they then clock in on it with their PIN."
+          },
+          {
+            "label": "Close",
+            "kind": "button",
+            "does": "Closes the panel."
+          },
+          {
+            "label": "Done",
+            "kind": "button",
+            "does": "Shown after “Linked: {name}'s phone clocks them in and out now.”: closes the panel."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Nobody on the staff yet",
+        "looks": "“Nobody is on the staff list yet: add the people who work here, then set their PINs and pay.” Press Add people."
+      },
+      {
+        "state": "Nobody clocked in",
+        "looks": "In now says “Nobody is clocked in.”"
+      },
+      {
+        "state": "Search finds nobody",
+        "looks": "“Nobody by that name.” in the list."
+      },
+      {
+        "state": "Read-only viewer (accountant, auditor)",
+        "looks": "No Add people button; the panel shows the facts and, for the accountant, only the Pay tab."
+      },
+      {
+        "state": "Branch manager",
+        "looks": "No pay badges or pay facts, no Pay tab."
+      },
+      {
+        "state": "Someone has left",
+        "looks": "Their line is greyed with “Last day {day}”; their panel has “Works here again” and no phone tab."
+      },
+      {
+        "state": "Phone linked just now",
+        "looks": "The phone tab shows a tick and “Linked: {name}'s phone clocks them in and out now.” with Done."
+      }
+    ],
+    "messages": [
+      {
+        "text": "{n} added to the staff.",
+        "kind": "success",
+        "when": "Add people finished (all rows added), or some were added and others failed (then shown in red with the failed rows kept).",
+        "do": "Check any rows left in the form."
+      },
+      {
+        "text": "{name} is added, but the PIN was not set: {why}",
+        "kind": "warning",
+        "when": "The person was added but their PIN was refused (e.g. too easy to guess).",
+        "do": "Open their line → Set a PIN, and let them type a new one."
+      },
+      {
+        "text": "Give their name",
+        "kind": "error",
+        "when": "A row has something typed but no name.",
+        "do": "Type the name or remove the row."
+      },
+      {
+        "text": "This login is chosen for someone else too",
+        "kind": "error",
+        "when": "Two rows chose the same login.",
+        "do": "Choose a different login for one of them, or No login."
+      },
+      {
+        "text": "A PIN is 4 to 8 digits",
+        "kind": "error",
+        "when": "The PIN typed is shorter than 4 or longer than 8 digits.",
+        "do": "Type 4 to 8 digits, or leave it empty."
+      },
+      {
+        "text": "Choose a PIN that is harder to guess",
+        "kind": "error",
+        "when": "The PIN is one digit repeated or a run like 1234 or 9876.",
+        "do": "Let the person choose another PIN."
+      },
+      {
+        "text": "Type the person's name",
+        "kind": "error",
+        "when": "Saved without a name.",
+        "do": "Type the name."
+      },
+      {
+        "text": "Name is required",
+        "kind": "error",
+        "when": "The name is empty when saving details.",
+        "do": "Type the name."
+      },
+      {
+        "text": "A name is at most 80 letters",
+        "kind": "error",
+        "when": "The name is too long.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "Say when they started",
+        "kind": "error",
+        "when": "No start date.",
+        "do": "Choose the date they started."
+      },
+      {
+        "text": "Started on must be a date",
+        "kind": "error",
+        "when": "The start date box is empty or not a date.",
+        "do": "Choose a date."
+      },
+      {
+        "text": "They start within a year",
+        "kind": "error",
+        "when": "The start date is more than a year from today.",
+        "do": "Check the date."
+      },
+      {
+        "text": "Choose where they work",
+        "kind": "error",
+        "when": "No place chosen, or the place is not one of the café's.",
+        "do": "Choose a place."
+      },
+      {
+        "text": "Someone here is called {1} already: add a surname or a nickname",
+        "kind": "error",
+        "when": "Another person on the staff has exactly this name.",
+        "do": "Add a surname or nickname so the names differ."
+      },
+      {
+        "text": "Choose a login of this café",
+        "kind": "error",
+        "when": "The login chosen does not belong to this café.",
+        "do": "Choose another login or No login."
+      },
+      {
+        "text": "Choose a login",
+        "kind": "error",
+        "when": "The login chosen is not valid.",
+        "do": "Choose another login or No login."
+      },
+      {
+        "text": "{1} is the login of someone else already",
+        "kind": "error",
+        "when": "That login is already linked to another person on the staff.",
+        "do": "Choose another login, or remove it from the other person first."
+      },
+      {
+        "text": "There are hours recorded before {1}: correct them first",
+        "kind": "error",
+        "when": "Moving the start date later would leave recorded hours before it.",
+        "do": "Correct or cancel those hours on The hours tab first, or keep the earlier date."
+      },
+      {
+        "text": "They cannot start after their last day ({1})",
+        "kind": "error",
+        "when": "The start date is after their last day.",
+        "do": "Fix the start date or the last day."
+      },
+      {
+        "text": "Choose someone who works here",
+        "kind": "error",
+        "when": "The person no longer exists or is not this café's.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "The two PINs are not the same",
+        "kind": "error",
+        "when": "The two PIN boxes differ.",
+        "do": "Type the same PIN in both."
+      },
+      {
+        "text": "{name} clocks in with this PIN now.",
+        "kind": "success",
+        "when": "The PIN was saved.",
+        "do": "Nothing; the panel closes."
+      },
+      {
+        "text": "Sign in first",
+        "kind": "error",
+        "when": "Saving a PIN without being signed in.",
+        "do": "Sign in again."
+      },
+      {
+        "text": "Choose how they are paid: by the month, the day or the hour",
+        "kind": "error",
+        "when": "No pay basis.",
+        "do": "Choose one."
+      },
+      {
+        "text": "Their pay must be a number greater than zero",
+        "kind": "error",
+        "when": "The rate is empty, 0 or not a number.",
+        "do": "Type the amount in IQD."
+      },
+      {
+        "text": "Enter the pay",
+        "kind": "error",
+        "when": "The database got no rate.",
+        "do": "Type the amount."
+      },
+      {
+        "text": "A day's hours must be a number greater than zero",
+        "kind": "error",
+        "when": "A day's hours is empty, 0 or not a number.",
+        "do": "Type the hours, e.g. 8."
+      },
+      {
+        "text": "A day's hours are more than 0 and at most 16",
+        "kind": "error",
+        "when": "A day's hours above 16.",
+        "do": "Type 16 or less."
+      },
+      {
+        "text": "Overtime must be a number of zero or more",
+        "kind": "error",
+        "when": "The overtime box has something that is not a number.",
+        "do": "Type a number like 150, or leave it empty."
+      },
+      {
+        "text": "Overtime is paid at 100% to 300% of an hour's pay",
+        "kind": "error",
+        "when": "The overtime percent is below 100 or above 300.",
+        "do": "Type 100 to 300, or leave it empty for the café's rule."
+      },
+      {
+        "text": "Their last day must be a date",
+        "kind": "error",
+        "when": "The last day box is empty.",
+        "do": "Choose a date."
+      },
+      {
+        "text": "Say why they leave",
+        "kind": "error",
+        "when": "No reason given for the last day.",
+        "do": "Write why."
+      },
+      {
+        "text": "Say why they work here again",
+        "kind": "error",
+        "when": "No reason given for coming back.",
+        "do": "Write why."
+      },
+      {
+        "text": "They cannot leave before they started ({1})",
+        "kind": "error",
+        "when": "The last day is before their start date.",
+        "do": "Choose a later date."
+      },
+      {
+        "text": "{1} is clocked in: clock them out first",
+        "kind": "error",
+        "when": "They are clocked in now.",
+        "do": "Clock them out (at the till, the clock screen or their phone), or correct the hours, then save the last day."
+      },
+      {
+        "text": "There are hours recorded after {1}: correct them first",
+        "kind": "error",
+        "when": "Hours are recorded after the chosen last day.",
+        "do": "Choose a later last day, or correct those hours first."
+      },
+      {
+        "text": "{1} works here already",
+        "kind": "error",
+        "when": "“They work here again” pressed for someone who has no last day.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "{1} does not work here now",
+        "kind": "error",
+        "when": "A phone link was asked for someone who has left or not started yet.",
+        "do": "Check their start and last day."
+      },
+      {
+        "text": "This square is too old.",
+        "kind": "warning",
+        "when": "The 10 minutes of the square have passed.",
+        "do": "Press Make a new one."
+      },
+      {
+        "text": "Linked: {name}'s phone clocks them in and out now.",
+        "kind": "success",
+        "when": "The person pressed Link this phone on their phone.",
+        "do": "Press Done."
+      },
+      {
+        "text": "Say why the phone is no longer theirs",
+        "kind": "error",
+        "when": "Unlink pressed with an empty reason.",
+        "do": "Write why."
+      },
+      {
+        "text": "Why is required",
+        "kind": "error",
+        "when": "A reason box was empty when saved.",
+        "do": "Write why."
+      },
+      {
+        "text": "{1} has no phone linked",
+        "kind": "error",
+        "when": "The phone was already unlinked (perhaps on another screen).",
+        "do": "Reload the page."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "The connection dropped while saving, and the screen is sending the same save again (up to three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. It will not be recorded twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries got no answer from the database.",
+        "do": "Check the connection, then press the same button again. The database recognises the same save and does not record it twice."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A save was sent again with its first key but different values (for example, the form was changed while it was retrying).",
+        "do": "Reload the page, check whether the first save went through, then do it again if needed."
+      },
+      {
+        "text": "This was sent by someone else",
+        "kind": "error",
+        "when": "Rare: the same save key was already used by another person's login.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "Your roles do not hold the permission named (here usually staff.manage or payroll.run). The database checks every save again, even if a button was shown.",
+        "do": "Ask the owner to change your roles on Settings → People and roles, or ask someone who may do it."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "Two-step sign-in is on for you and this session has not taken the second step.",
+        "do": "Reload the page: you are taken to the code step. Type the six digits from your authenticator app."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired or was ended on this device.",
+        "do": "Sign in again; what you typed may need typing again."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "The connection to the database failed during a save that has no automatic retry.",
+        "do": "Reload the page and look whether the change is there before doing it again."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The café's database has not had the update that this part of the screen uses.",
+        "do": "Tell whoever looks after the system; nothing was saved."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "A new barista starts tomorrow",
+        "do": "Add people → fill a row with their name, job, place, tomorrow's date; let them type a PIN or set it later. They show “Starts later” until then."
+      },
+      {
+        "case": "Someone forgot their PIN",
+        "do": "Open their line → New PIN, and let them type a new one twice. It also lifts the pause after too many wrong PINs."
+      },
+      {
+        "case": "Someone lost their phone",
+        "do": "Open their line → Their phone → Unlink… with why. Then link the new phone with Link a new phone. Meanwhile they clock in with their PIN."
+      },
+      {
+        "case": "Someone leaves at the end of the month",
+        "do": "Open their line → Last day, choose the date, write why, Save their last day. Make sure they are clocked out. Their last payroll still includes them."
+      },
+      {
+        "case": "Someone who left comes back",
+        "do": "Open their line → Works here again, write why, They work here again. Then put them on the schedule again."
+      },
+      {
+        "case": "Two people have the same name",
+        "do": "Add a surname or a nickname; the screen refuses two identical names."
+      }
+    ],
+    "tips": [
+      "Let each person type their own PIN; do not choose it for them.",
+      "The CSV opens in Excel or Google Sheets; amounts are plain numbers you can add up.",
+      "Add several people at once with Another row; empty rows are skipped."
+    ],
+    "related": [
+      "/payroll",
+      "/clock",
+      "/clock/link",
+      "/pos",
+      "/settings#people",
+      "/reports"
+    ],
+    "shots": [
+      {
+        "name": "staff-people",
+        "role": "owner",
+        "state": "The People tab with five people, one clocked in, one with “No PIN yet”, pay badges shown",
+        "setup": "Add five people, set PINs and pay for four, clock one in at the till."
+      },
+      {
+        "name": "staff-add-people",
+        "role": "branch_manager",
+        "state": "The Add people form with two filled rows and one row marked “Give their name”",
+        "setup": "Press Add people, fill two rows, type only a job in the third."
+      },
+      {
+        "name": "staff-person-panel",
+        "role": "owner",
+        "state": "A person's panel open on the Pay tab",
+        "setup": "Tap a person, choose Pay."
+      },
+      {
+        "name": "staff-phone-link",
+        "role": "branch_manager",
+        "state": "Their phone tab showing the square and “Waiting for the phone…”",
+        "setup": "Tap a person with no phone linked, choose Their phone."
+      }
+    ],
+    "skipped_messages": [
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "why": "Only reached if the page's code is broken or very old; every button here sends a key."
+      },
+      {
+        "text": "That has already been recorded.",
+        "why": "A database duplicate guard that the screens prevent before saving; not normally reachable."
+      },
+      {
+        "text": "Could not start a database session.",
+        "why": "A server set-up fault, not something a person at the screen causes."
+      },
+      {
+        "text": "Add them",
+        "why": "The one-person add button is no longer reached: adding goes through the Add people form."
+      }
+    ]
+  },
+  {
+    "path": "/staff#schedule",
+    "title": "Staff → The schedule",
+    "area": "People",
+    "summary": "Who works when at a place, a week (Saturday to Friday) at a time, typed as 08:00-16:00; and a check of the week against how busy each part of the day usually is, with what the hours cost.",
+    "who": [
+      {
+        "role": "owner, general_manager",
+        "can": "type and save the week, copy last week, see the check with labour cost",
+        "cannot": "—"
+      },
+      {
+        "role": "branch_manager",
+        "can": "type and save the week, copy last week, see the check of people needed",
+        "cannot": "see the labour cost row and line (no payroll.view)"
+      },
+      {
+        "role": "accountant, auditor",
+        "can": "see the week (read-only) and the check with labour cost",
+        "cannot": "change the hours"
+      }
+    ],
+    "get_there": "Staff → The schedule tab (or /staff#schedule).",
+    "before": [
+      "People on the staff, with “Where they work” set.",
+      "For the check: four weeks of sales with people clocked in. For the labour cost: pay set on Staff; the target on Settings → Rules."
+    ],
+    "parts": [
+      {
+        "name": "Week and place",
+        "shows": "The week's first and last day (Saturday — Friday) between the arrows; the café's places as chips when there is more than one (the chosen one is green).",
+        "controls": [
+          {
+            "label": "The week before",
+            "kind": "link",
+            "does": "Shows the week before, at the same place."
+          },
+          {
+            "label": "The week after",
+            "kind": "link",
+            "does": "Shows the next week, at the same place. This is how you make next week's schedule."
+          },
+          {
+            "label": "(a place's name)",
+            "kind": "link",
+            "does": "Shows that place's week. It also makes that place this device's place on every screen."
+          }
+        ]
+      },
+      {
+        "name": "The week's grid",
+        "shows": "A row for each person of this place (or with hours here this week), with what they do; a column for each day (Saturday … Friday, with month-day). A cell shows: a box for the hours; “—” on a day they do not work here yet or any more; “{place}: 08:00-16:00” in grey when they work at another place that day; the hours as text when you cannot change them or the day's pay is approved.",
+        "controls": [
+          {
+            "label": "{name}'s hours on {day}",
+            "kind": "box",
+            "does": "Type the hours, e.g. 08:00-16:00. 8-16, 0800-1600 and Arabic digits work too. Empty: not working that day.",
+            "rules": "One stretch a person a day. Hours that end at or before they start end the next day (18:00-02:00). Start and end cannot be the same. A day whose month's pay is approved cannot change.",
+            "who": "staff.manage"
+          },
+          {
+            "label": "Save the week",
+            "kind": "button",
+            "does": "Saves all the hours of this place for the week shown, replacing what was saved before.",
+            "rules": "Disabled until something changed. Each cell must be hours or empty.",
+            "after": "The till's clock list shows each person's shift today; lateness, leaving early and absence on The hours, Payroll and Reports are measured against it. An Undo button shows for 10 seconds. Recorded in the audit trail.",
+            "who": "staff.manage"
+          },
+          {
+            "label": "The same hours as the week before",
+            "kind": "button",
+            "does": "Fills the boxes with last week's hours at this place, a week later. Does not save: check, change, then Save the week.",
+            "rules": "Shown only when last week had hours here. Skips days a person does not work and days whose pay is approved. Overwrites boxes already typed for those days.",
+            "who": "staff.manage"
+          },
+          {
+            "label": "Undo ({n})",
+            "kind": "button",
+            "does": "For 10 seconds after saving: puts back the week as it was before the save.",
+            "after": "“Undone: as it was before.”"
+          }
+        ]
+      },
+      {
+        "name": "Is the week staffed for how busy it usually is?",
+        "shows": "Changes as you type, before saving. “From the four weeks to yesterday: what each part of the day usually brings on its weekday, and the {n} orders a person usually serves in an hour. Each cell: the people scheduled at a time, and about how many its orders need.” Rows Morning (5:00–12:00), Afternoon (12:00–17:00), Evening (17:00 to 5:00 the next morning); a cell “{people} · needs {need}” with a mark: ▲ too few, ▽ more than needed, ● nobody when orders usually come, ✓ fine, — no hours and no orders. A Labour row (% of what that day usually sells), for those who see pay. Under it, sentences listing the parts too few, with nobody, or with more than needed; and the week's cost.",
+        "controls": []
+      }
+    ],
+    "states": [
+      {
+        "state": "No place open",
+        "looks": "“No branch is open yet.” Open a place on Settings first."
+      },
+      {
+        "state": "Nobody works at this place this week",
+        "looks": "“Nobody works here this week.”"
+      },
+      {
+        "state": "Not enough history for the check",
+        "looks": "“Once the café has four weeks of sales with people clocked in, the week is checked here against how busy each part of the day usually is.”"
+      },
+      {
+        "state": "Week fits",
+        "looks": "“✓ Every part of the week has about the people it usually needs.”"
+      },
+      {
+        "state": "Read-only viewer",
+        "looks": "Hours as text; no Save buttons."
+      },
+      {
+        "state": "Approved month",
+        "looks": "Days of a month whose payroll is approved show hours as text, not boxes."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Give {name}'s hours on {day} as 08:00-16:00",
+        "kind": "error",
+        "when": "A box has something that is not hours (e.g. “8 till 4”, or the same start and end).",
+        "do": "Fix that box, then Save the week."
+      },
+      {
+        "text": "The week's hours are saved.",
+        "kind": "success",
+        "when": "Saved. Shown with Undo ({n}) for 10 seconds.",
+        "do": "Nothing, or Undo if it was a mistake."
+      },
+      {
+        "text": "Undone: as it was before.",
+        "kind": "success",
+        "when": "Undo put the earlier week back.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Too few: {list}.",
+        "kind": "warning",
+        "when": "Parts of the day where each person would serve half as many orders again as usual, or more. Each part as “{part} ({people} scheduled, about {need} needed)”, e.g. “Friday evening (1 scheduled, about 2 needed)”.",
+        "do": "Add hours in those parts."
+      },
+      {
+        "text": "Nobody scheduled when orders usually come: {list}.",
+        "kind": "error",
+        "when": "Parts with nobody scheduled but where orders usually come.",
+        "do": "Put someone on those hours."
+      },
+      {
+        "text": "More than needed: {list}.",
+        "kind": "info",
+        "when": "Parts with two or more people where each would serve half the usual or less.",
+        "do": "Consider fewer hours there."
+      },
+      {
+        "text": "Every part of the week has about the people it usually needs.",
+        "kind": "success",
+        "when": "No part is short, quiet or empty.",
+        "do": "Nothing."
+      },
+      {
+        "text": "The week's hours cost {cost}: {pct} of what a usual week sells, against a target of {target}.",
+        "kind": "info",
+        "when": "Those who see pay; a labour target is set. Followed by “By part of the day: {list}.” (e.g. Morning 18% · Afternoon 22% · Evening 25%).",
+        "do": "Compare with the target; change hours if too high."
+      },
+      {
+        "text": "The week's hours cost {cost}: {pct} of what a usual week sells. No labour target is set (Settings → Rules).",
+        "kind": "info",
+        "when": "Those who see pay; no target set.",
+        "do": "Set a labour target on Settings → Rules if you want one."
+      },
+      {
+        "text": "{n} hour(s) of people whose pay is not set are not counted.",
+        "kind": "warning",
+        "when": "Some scheduled people have no pay set, so their hours are left out of the cost.",
+        "do": "Set their pay on Staff → their line → Pay."
+      },
+      {
+        "text": "Choose the dates, the first before the last",
+        "kind": "error",
+        "when": "The week's dates are wrong (should not happen from this screen).",
+        "do": "Reload the page."
+      },
+      {
+        "text": "Choose up to 31 days",
+        "kind": "error",
+        "when": "More than 31 days sent.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "Choose up to 62 days",
+        "kind": "error",
+        "when": "The week asked for is too long (from a typed address).",
+        "do": "Use the week arrows."
+      },
+      {
+        "text": "Give the hours as a list",
+        "kind": "error",
+        "when": "The hours were sent wrongly.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "Each day of the hours is within the dates chosen",
+        "kind": "error",
+        "when": "Hours for a day outside the week.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "{1} does not work here on {2}",
+        "kind": "error",
+        "when": "Hours were typed on a day before they started or after their last day.",
+        "do": "Clear that box."
+      },
+      {
+        "text": "Give the hours as 08:00 to 16:00",
+        "kind": "error",
+        "when": "A time was not valid.",
+        "do": "Type the hours as 08:00-16:00."
+      },
+      {
+        "text": "{1} has one stretch of hours on {2} at most",
+        "kind": "error",
+        "when": "Two stretches for one person on one day.",
+        "do": "Keep one stretch."
+      },
+      {
+        "text": "A note is at most 200 letters",
+        "kind": "error",
+        "when": "A note was too long.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "The pay for {1} is approved: its hours can no longer change",
+        "kind": "error",
+        "when": "Hours in a month whose payroll is approved.",
+        "do": "Reopen that payroll on Payroll first, if the hours must change."
+      },
+      {
+        "text": "{1} works at {2} on {3} already",
+        "kind": "error",
+        "when": "The person already has hours at another place that day.",
+        "do": "Change their hours there first, or choose another day."
+      },
+      {
+        "text": "{1}'s hours overlap on {2}",
+        "kind": "error",
+        "when": "Their hours run into hours on the day next to it (e.g. a night shift running past the next day's start).",
+        "do": "Shorten one of the stretches."
+      },
+      {
+        "text": "Unknown location",
+        "kind": "error",
+        "when": "The labour target was asked for a place that does not exist.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "The connection dropped while saving, and the screen is sending the same save again (up to three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. It will not be recorded twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries got no answer from the database.",
+        "do": "Check the connection, then press the same button again. The database recognises the same save and does not record it twice."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A save was sent again with its first key but different values (for example, the form was changed while it was retrying).",
+        "do": "Reload the page, check whether the first save went through, then do it again if needed."
+      },
+      {
+        "text": "This was sent by someone else",
+        "kind": "error",
+        "when": "Rare: the same save key was already used by another person's login.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "Your roles do not hold the permission named (here usually staff.manage). The database checks every save again, even if a button was shown.",
+        "do": "Ask the owner to change your roles on Settings → People and roles, or ask someone who may do it."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "Two-step sign-in is on for you and this session has not taken the second step.",
+        "do": "Reload the page: you are taken to the code step. Type the six digits from your authenticator app."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired or was ended on this device.",
+        "do": "Sign in again; what you typed may need typing again."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "The connection to the database failed during a save that has no automatic retry.",
+        "do": "Reload the page and look whether the change is there before doing it again."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The café's database has not had the update that this part of the screen uses.",
+        "do": "Tell whoever looks after the system; nothing was saved."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "Make next week's schedule",
+        "do": "Press The week after, then The same hours as the week before, change what differs, and Save the week. Check the staffing check before saving."
+      },
+      {
+        "case": "A shift goes past midnight",
+        "do": "Type it as 18:00-02:00; it ends the next morning and counts in the Evening."
+      },
+      {
+        "case": "Someone swaps a day",
+        "do": "Clear their box on that day, type the hours in the other person's box, Save the week."
+      },
+      {
+        "case": "Saved the wrong week",
+        "do": "Press Undo within 10 seconds; later, correct the boxes and save again."
+      }
+    ],
+    "tips": [
+      "Nothing is saved until Save the week; switching tabs keeps what you typed.",
+      "The check updates as you type, so try changes before saving.",
+      "Lateness only counts after the café's grace (5 minutes unless changed on Settings → Rules)."
+    ],
+    "related": [
+      "/staff#attendance",
+      "/reports",
+      "/settings",
+      "/pos"
+    ],
+    "shots": [
+      {
+        "name": "staff-schedule-week",
+        "role": "owner",
+        "state": "A week with hours for four people and the check below with a ▲ in Friday evening",
+        "setup": "Type hours for a week with only one person on Friday evening, at a café with four weeks of sales."
+      },
+      {
+        "name": "staff-schedule-undo",
+        "role": "branch_manager",
+        "state": "Just after Save the week, the Undo (10) bar",
+        "setup": "Change a box and press Save the week."
+      }
+    ],
+    "skipped_messages": [
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "why": "Only reached if the page's code is broken or very old; every button here sends a key."
+      },
+      {
+        "text": "That has already been recorded.",
+        "why": "A database duplicate guard that the screens prevent before saving; not normally reachable."
+      },
+      {
+        "text": "Could not start a database session.",
+        "why": "A server set-up fault, not something a person at the screen causes."
+      },
+      {
+        "text": "Save the schedule a week at a time",
+        "why": "Only above 500 shifts in one save; a week of the café cannot reach it."
+      }
+    ]
+  },
+  {
+    "path": "/staff#attendance",
+    "title": "Staff → The hours",
+    "area": "People",
+    "summary": "Each day's hours for the week shown: scheduled against clocked, late, left early, absent, overtime; and every record of hours, which a manager corrects, cancels or adds with a reason.",
+    "who": [
+      {
+        "role": "owner, general_manager, branch_manager",
+        "can": "see, correct, cancel and add hours",
+        "cannot": "change hours in a month whose payroll is approved"
+      },
+      {
+        "role": "accountant, auditor",
+        "can": "see the hours",
+        "cannot": "correct, cancel or add"
+      }
+    ],
+    "get_there": "Staff → The hours tab (or /staff#attendance). The week is the one chosen on The schedule (?week=).",
+    "before": [
+      "People on the staff. For late/early/absent, their hours on the schedule."
+    ],
+    "parts": [
+      {
+        "name": "The hours, {from} to {to}",
+        "shows": "A row per person per day they were scheduled or worked: Day, Who, Hours on the schedule, Clocked (first in – last out, “…” while still in), Worked (“8 h 10 min”), Notes. Badges: Absent (a shift ended with no record), Late by {time}, Left {time} early (beyond the grace), Overtime {time} (worked beyond their day's hours, scheduled or not), Still in.",
+        "controls": []
+      },
+      {
+        "name": "Each record of hours",
+        "shows": "Who, In, Out (“Still in” when open), Worked, How: Clocked at the till / Added by a manager / Clocked on their phone, with who recorded it; “Corrected by {name}: {why}”; “Cancelled by {name}: {why}” (the row greyed); “Its month's pay is approved”. A red “Clocked in a long time” when a record is still open after the café's alert hours (16 unless changed).",
+        "controls": [
+          {
+            "label": "Correct…",
+            "kind": "button",
+            "does": "Opens the correction under the row: In, Out (empty: still in), Why (e.g. forgot to clock out at closing), and “Save the correction”.",
+            "who": "attendance.edit (owner, general manager, branch manager)",
+            "rules": "Not on a cancelled record or in a month whose pay is approved. Why is required. In cannot be in the future; Out after In; a record is at most a day long; no overlap with their other hours.",
+            "after": "The record keeps who corrected it and why. Payroll drafts made before show as out of date. Recorded in the audit trail."
+          },
+          {
+            "label": "Cancel…",
+            "kind": "button",
+            "does": "Opens Why (e.g. clocked in the wrong person) and “Cancel this record”.",
+            "who": "attendance.edit",
+            "after": "The record stays, greyed, with who and why, and no longer counts in hours or pay."
+          }
+        ]
+      },
+      {
+        "name": "Hours nobody clocked",
+        "shows": "For hours worked but never clocked (e.g. the till was down).",
+        "controls": [
+          {
+            "label": "+ Add hours nobody clocked…",
+            "kind": "button",
+            "does": "Opens the form: Who (people working this week), In, Out (empty: still in), Why (e.g. the till was down), “Add the hours” and “Cancel”.",
+            "who": "attendance.edit",
+            "rules": "Add the hours is disabled without Who, In and Why. The same checks as a correction.",
+            "after": "A record “Added by a manager” with who and why; counts in hours, payroll and reports."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "No hours this week",
+        "looks": "“Nobody had hours on the schedule or clocked in these days.” and “No hours were recorded these days.”"
+      },
+      {
+        "state": "Someone still in",
+        "looks": "Clocked ends with “…”, Still in badges."
+      },
+      {
+        "state": "Month approved",
+        "looks": "No Correct…/Cancel… on its records; “Its month's pay is approved”."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Enter a date and a time",
+        "kind": "error",
+        "when": "In (or Out) is empty or not a full date and time.",
+        "do": "Fill both the date and the time."
+      },
+      {
+        "text": "Say why the hours are corrected",
+        "kind": "error",
+        "when": "No reason for a correction.",
+        "do": "Write why."
+      },
+      {
+        "text": "Say why the hours are added",
+        "kind": "error",
+        "when": "No reason for added hours.",
+        "do": "Write why."
+      },
+      {
+        "text": "Say why the record is cancelled",
+        "kind": "error",
+        "when": "No reason for cancelling.",
+        "do": "Write why."
+      },
+      {
+        "text": "Say when they clocked in",
+        "kind": "error",
+        "when": "No clock-in time.",
+        "do": "Fill In."
+      },
+      {
+        "text": "The hours cannot be in the future",
+        "kind": "error",
+        "when": "In or Out is later than now.",
+        "do": "Use a time already passed."
+      },
+      {
+        "text": "They clock out after they clock in",
+        "kind": "error",
+        "when": "Out is before or at In.",
+        "do": "Fix the times."
+      },
+      {
+        "text": "One record is a day of hours at most",
+        "kind": "error",
+        "when": "Out is more than 24 hours after In.",
+        "do": "Split into two records (add a second)."
+      },
+      {
+        "text": "{1} does not work here on {2}",
+        "kind": "error",
+        "when": "The day is before they started or after their last day.",
+        "do": "Check the date, or their start/last day."
+      },
+      {
+        "text": "The pay for {1} is approved: its hours can no longer change",
+        "kind": "error",
+        "when": "The month's payroll is approved.",
+        "do": "Reopen that payroll on Payroll first."
+      },
+      {
+        "text": "{1} has other hours recorded then, from {2}",
+        "kind": "error",
+        "when": "The hours overlap another record of theirs.",
+        "do": "Correct or cancel the other record first."
+      },
+      {
+        "text": "Record of hours not found",
+        "kind": "error",
+        "when": "The record no longer exists (or the page is old).",
+        "do": "Reload the page."
+      },
+      {
+        "text": "That record was cancelled",
+        "kind": "error",
+        "when": "Someone cancelled it meanwhile.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "Choose someone who works here",
+        "kind": "error",
+        "when": "The person chosen is not on the staff.",
+        "do": "Reload and choose again."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "The connection dropped while saving, and the screen is sending the same save again (up to three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. It will not be recorded twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries got no answer from the database.",
+        "do": "Check the connection, then press the same button again. The database recognises the same save and does not record it twice."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A save was sent again with its first key but different values (for example, the form was changed while it was retrying).",
+        "do": "Reload the page, check whether the first save went through, then do it again if needed."
+      },
+      {
+        "text": "This was sent by someone else",
+        "kind": "error",
+        "when": "Rare: the same save key was already used by another person's login.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "Your roles do not hold the permission named (here usually attendance.edit). The database checks every save again, even if a button was shown.",
+        "do": "Ask the owner to change your roles on Settings → People and roles, or ask someone who may do it."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "Two-step sign-in is on for you and this session has not taken the second step.",
+        "do": "Reload the page: you are taken to the code step. Type the six digits from your authenticator app."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired or was ended on this device.",
+        "do": "Sign in again; what you typed may need typing again."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "The connection to the database failed during a save that has no automatic retry.",
+        "do": "Reload the page and look whether the change is there before doing it again."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The café's database has not had the update that this part of the screen uses.",
+        "do": "Tell whoever looks after the system; nothing was saved."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "Someone forgot to clock out",
+        "do": "Find their open record (Still in, perhaps “Clocked in a long time”) → Correct… → type the real Out time and why → Save the correction."
+      },
+      {
+        "case": "The till was down and nobody could clock in",
+        "do": "+ Add hours nobody clocked… for each person, with In, Out and why."
+      },
+      {
+        "case": "Someone clocked in the wrong person",
+        "do": "Cancel… that record with why, then add the right person's hours."
+      },
+      {
+        "case": "Late or absent: do they lose pay?",
+        "do": "Not automatically. Deduct it on the payroll line (Adjust…) with a note if the café decides so."
+      }
+    ],
+    "tips": [
+      "Change the week with the arrows on The schedule tab; this tab follows it.",
+      "Every correction keeps who made it and why; nothing is deleted."
+    ],
+    "related": [
+      "/staff#schedule",
+      "/payroll",
+      "/reports"
+    ],
+    "shots": [
+      {
+        "name": "staff-hours",
+        "role": "branch_manager",
+        "state": "A week with a Late by badge, an Absent badge and an open record",
+        "setup": "Schedule three people, clock one in 20 minutes late, leave one unclocked, leave one clocked in."
+      },
+      {
+        "name": "staff-hours-correct",
+        "role": "branch_manager",
+        "state": "The correction form open under a record",
+        "setup": "Press Correct… on an open record."
+      }
+    ],
+    "skipped_messages": [
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "why": "Only reached if the page's code is broken or very old; every button here sends a key."
+      },
+      {
+        "text": "That has already been recorded.",
+        "why": "A database duplicate guard that the screens prevent before saving; not normally reachable."
+      },
+      {
+        "text": "Could not start a database session.",
+        "why": "A server set-up fault, not something a person at the screen causes."
+      },
+      {
+        "text": "Say when they clocked out",
+        "why": "The screen checks the date and time itself first (“Enter a date and a time”)."
+      },
+      {
+        "text": "A record of hours is cancelled, not deleted",
+        "why": "A database guard; the screen never deletes a record."
+      },
+      {
+        "text": "A record of hours stays with its person",
+        "why": "A database guard; the screen never moves a record to another person."
+      }
+    ]
+  },
+  {
+    "path": "/staff#shop-clock",
+    "title": "Staff → Shop's clock",
+    "area": "People",
+    "summary": "The shop's clock screens: devices at the shop (the till, or a tablet by the door) that show a code staff scan with their own phones to clock in and out. The owner makes a device a clock screen from that device.",
+    "who": [
+      {
+        "role": "owner, general_manager",
+        "can": "make this device a clock screen, take any clock screen out of use",
+        "cannot": "—"
+      },
+      {
+        "role": "branch_manager",
+        "can": "see the clock screens and open the code on this device if it is one",
+        "cannot": "make or remove a clock screen"
+      },
+      {
+        "role": "accountant, auditor",
+        "can": "nothing: the tab is not shown",
+        "cannot": "see the tab"
+      }
+    ],
+    "get_there": "Staff → Shop's clock tab (or /staff#shop-clock), on the device that should show the code.",
+    "before": [
+      "Open Staff on the device itself (the till or the tablet) — a device becomes a clock screen from itself."
+    ],
+    "parts": [
+      {
+        "name": "The clock screens",
+        "shows": "“Staff clock in and out on their own phone: they scan the code on the shop's clock screen, which changes every 30 seconds, so it works only at the shop. Those without a phone clock in on the clock screen with their PIN.” Then each screen: name · place, “This device” when it is this one, “Seen {when}” or “Not seen yet”.",
+        "controls": [
+          {
+            "label": "Take out of use…",
+            "kind": "button",
+            "does": "Shows Why it is taken out of use (e.g. The tablet broke), “Take it out of use” and “Cancel”.",
+            "who": "settings.manage (owner, general manager)",
+            "rules": "Why is required.",
+            "after": "That device stops showing a code; codes from it no longer work. If it was this device, this device forgets it. With no clock screen left, everyone clocks at the till with their PIN again."
+          },
+          {
+            "label": "Show the code on the whole screen",
+            "kind": "link",
+            "does": "Opens /clock/screen: the code in large, for a tablet by the door.",
+            "rules": "Shown only when this device is a clock screen."
+          }
+        ]
+      },
+      {
+        "name": "Make this device a clock screen",
+        "shows": "“Do this on the device at the shop that will show the code: the till, or a tablet by the door.”",
+        "controls": [
+          {
+            "label": "Make this device the shop's clock screen / Make this device a clock screen too",
+            "kind": "button",
+            "does": "Opens the form below.",
+            "who": "settings.manage",
+            "rules": "Shown only when this device is not already one."
+          },
+          {
+            "label": "The clock screen's name",
+            "kind": "box",
+            "does": "A name for it.",
+            "rules": "Default “The till”. Required, up to 60 letters."
+          },
+          {
+            "label": "Where it is",
+            "kind": "list",
+            "does": "Its place.",
+            "rules": "Shown only with more than one place. Clock-ins from its code are recorded at this place."
+          },
+          {
+            "label": "Make it the clock screen",
+            "kind": "button",
+            "does": "Makes this device a clock screen; it keeps a secret key in this browser.",
+            "after": "From now on the till's own PIN clocking works only on a clock screen, and people with a linked phone clock with their phone. On a till that is a clock screen, Clock in or out shows the code first."
+          },
+          {
+            "label": "Cancel",
+            "kind": "button",
+            "does": "Closes the form."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "No clock screen yet",
+        "looks": "“No clock screen yet: everyone clocks in at the till with their PIN, as before.” For non-owners also: “The owner or the general manager makes a device at the shop the clock screen.”"
+      },
+      {
+        "state": "This device is a clock screen",
+        "looks": "Its row has “This device”; the link Show the code on the whole screen and “On the till, the code is also in Clock in or out.”"
+      },
+      {
+        "state": "Database not updated",
+        "looks": "“The database is not ready for clock screens yet.”"
+      }
+    ],
+    "messages": [
+      {
+        "text": "This device is the clock screen “{name}” now.",
+        "kind": "success",
+        "when": "The device was made a clock screen.",
+        "do": "Open Show the code on the whole screen, or use Clock in or out on the till."
+      },
+      {
+        "text": "The clock screen is taken out of use.",
+        "kind": "success",
+        "when": "A screen was removed.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Name the clock screen, such as The till",
+        "kind": "error",
+        "when": "No name.",
+        "do": "Type a name."
+      },
+      {
+        "text": "The clock screen's name is required",
+        "kind": "error",
+        "when": "The name box is empty.",
+        "do": "Type a name."
+      },
+      {
+        "text": "The clock screen's name is too long",
+        "kind": "error",
+        "when": "More than 60 letters.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "A clock screen's name is at most 60 letters",
+        "kind": "error",
+        "when": "More than 60 letters.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "Choose where it is",
+        "kind": "error",
+        "when": "No place chosen.",
+        "do": "Choose the place."
+      },
+      {
+        "text": "Say why the clock screen is taken out of use",
+        "kind": "error",
+        "when": "No reason.",
+        "do": "Write why."
+      },
+      {
+        "text": "That clock screen is not in use",
+        "kind": "error",
+        "when": "It was already removed.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "The database refused the change.",
+        "kind": "error",
+        "when": "The database did not give the device its key.",
+        "do": "Try again; if it repeats, tell whoever looks after the system."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "Your roles do not hold the permission named (here usually settings.manage). The database checks every save again, even if a button was shown.",
+        "do": "Ask the owner to change your roles on Settings → People and roles, or ask someone who may do it."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "Two-step sign-in is on for you and this session has not taken the second step.",
+        "do": "Reload the page: you are taken to the code step. Type the six digits from your authenticator app."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired or was ended on this device.",
+        "do": "Sign in again; what you typed may need typing again."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "The connection to the database failed during a save that has no automatic retry.",
+        "do": "Reload the page and look whether the change is there before doing it again."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The café's database has not had the update that this part of the screen uses.",
+        "do": "Tell whoever looks after the system; nothing was saved."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "The tablet by the door broke",
+        "do": "Take out of use… its row with why. On the new tablet, sign in, open Staff → Shop's clock, Make this device a clock screen too."
+      },
+      {
+        "case": "A tablet anyone can touch is signed in as the owner",
+        "do": "Open Show the code on the whole screen and press Sign out, keep the code. The code keeps showing."
+      }
+    ],
+    "tips": [
+      "Making a clock screen must be done on that very device.",
+      "The code is new every 30 seconds, so a photo of it does not work from home."
+    ],
+    "related": [
+      "/clock/screen",
+      "/clock",
+      "/pos"
+    ],
+    "shots": [
+      {
+        "name": "staff-shop-clock",
+        "role": "owner",
+        "state": "One clock screen “The till”, This device",
+        "setup": "On the till, Make this device the shop's clock screen."
+      }
+    ],
+    "skipped_messages": [
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "why": "Only reached if the page's code is broken or very old; every button here sends a key."
+      },
+      {
+        "text": "That has already been recorded.",
+        "why": "A database duplicate guard that the screens prevent before saving; not normally reachable."
+      },
+      {
+        "text": "Could not start a database session.",
+        "why": "A server set-up fault, not something a person at the screen causes."
+      }
+    ]
+  },
+  {
+    "path": "/settings#people",
+    "title": "Settings → People and roles",
+    "area": "People",
+    "summary": "The logins of the people who use the app (members): add someone by email and roles, change their roles and where they work, deactivate or reactivate them. Different from Staff, which lists who works and clocks in.",
+    "who": [
+      {
+        "role": "owner",
+        "can": "everything, including giving or taking the owner and general manager roles",
+        "cannot": "deactivate themselves; leave the café without an active owner"
+      },
+      {
+        "role": "general_manager",
+        "can": "add people, change roles and places, deactivate",
+        "cannot": "give or take the owner or general manager roles, or change the access of an owner or general manager"
+      },
+      {
+        "role": "others",
+        "can": "nothing: Settings needs settings.manage",
+        "cannot": "open Settings"
+      }
+    ],
+    "get_there": "Menu → Settings → People and roles (or /settings#people).",
+    "before": [
+      "The person's email address."
+    ],
+    "parts": [
+      {
+        "name": "People",
+        "shows": "“Add a person with their email and role. They then open this app, choose “First time here?”, and create their login with that same email; once they confirm it, they are in — with exactly what their role allows. Deactivating someone takes effect on their very next click.” A table: Name (“(you)” on yours), Email, Roles, Works at (only with more than one place), Login (deactivated / signed in / invited). Deactivated people are greyed.",
+        "controls": [
+          {
+            "label": "Roles",
+            "kind": "button",
+            "does": "Turns the row's roles into tick boxes, with Save and Cancel.",
+            "rules": "At least one role. Owner and General manager are greyed for anyone but the owner (“Only the owner can give this role”).",
+            "after": "Takes effect on their next click: the menu and what the database lets them do follow the new roles."
+          },
+          {
+            "label": "Owner / General manager / Branch manager / Cashier / Barista / production / Inventory counter / Purchasing / Accountant / Read-only auditor",
+            "kind": "toggle",
+            "does": "Ticks a role."
+          },
+          {
+            "label": "Save",
+            "kind": "button",
+            "does": "Saves the roles."
+          },
+          {
+            "label": "Cancel",
+            "kind": "button",
+            "does": "Leaves the roles as they were."
+          },
+          {
+            "label": "Where {name} works",
+            "kind": "list",
+            "does": "Everywhere, or one place. Saved as soon as it is chosen.",
+            "rules": "Disabled for deactivated people and for owners and general managers (they work everywhere).",
+            "after": "The database refuses anything they record at another place."
+          },
+          {
+            "label": "Deactivate / Reactivate",
+            "kind": "button",
+            "does": "Stops or restores their sign-in. Not on your own row.",
+            "after": "Deactivated: on their very next click they can read and do nothing. Their past records stay."
+          }
+        ]
+      },
+      {
+        "name": "Add a person",
+        "shows": "",
+        "controls": [
+          {
+            "label": "Name",
+            "kind": "box",
+            "does": "Their name.",
+            "rules": "Required, up to 120 letters."
+          },
+          {
+            "label": "Email",
+            "kind": "box",
+            "does": "The email they will create their login with.",
+            "rules": "Required, a valid email; kept in small letters."
+          },
+          {
+            "label": "(role tick boxes)",
+            "kind": "toggle",
+            "does": "Their roles; Cashier is ticked by default.",
+            "rules": "At least one."
+          },
+          {
+            "label": "Works at",
+            "kind": "list",
+            "does": "Everywhere or one place (only with more than one place).",
+            "rules": "Disabled when Owner or General manager is ticked."
+          },
+          {
+            "label": "Add person",
+            "kind": "button",
+            "does": "Adds them as invited.",
+            "rules": "Disabled until Name, Email and a role are given.",
+            "after": "Their row shows “invited”. Once they create their login with that email and confirm it, it shows “signed in”. To clock in and appear on the schedule they must also be added on Staff (where their login can be chosen)."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "One place only",
+        "looks": "No Works at column or box."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Added. Ask them to create their login with {email}.",
+        "kind": "success",
+        "when": "Add person worked.",
+        "do": "Tell them to open the app and choose First time here?."
+      },
+      {
+        "text": "Roles changed for {name}.",
+        "kind": "success",
+        "when": "Roles saved.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{name} works at {place}.",
+        "kind": "success",
+        "when": "Place chosen.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{name} works everywhere.",
+        "kind": "success",
+        "when": "Everywhere chosen.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{name} can no longer sign in to the books.",
+        "kind": "success",
+        "when": "Deactivated.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{name} is active again.",
+        "kind": "success",
+        "when": "Reactivated.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Enter the person's email",
+        "kind": "error",
+        "when": "The email is not valid.",
+        "do": "Check the email."
+      },
+      {
+        "text": "Their name is required",
+        "kind": "error",
+        "when": "No name.",
+        "do": "Type the name."
+      },
+      {
+        "text": "Their name is too long",
+        "kind": "error",
+        "when": "More than 120 letters.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "Give the person at least one role",
+        "kind": "error",
+        "when": "No role ticked.",
+        "do": "Tick a role."
+      },
+      {
+        "text": "Give the person's name and email",
+        "kind": "error",
+        "when": "Name or email missing.",
+        "do": "Fill both."
+      },
+      {
+        "text": "Only the owner can appoint an owner or general manager",
+        "kind": "error",
+        "when": "A general manager tried to add an owner or general manager.",
+        "do": "Ask the owner."
+      },
+      {
+        "text": "Someone with that email is already a member",
+        "kind": "error",
+        "when": "The email is already in the table.",
+        "do": "Find their row and change their roles instead."
+      },
+      {
+        "text": "Choose one of the café's places",
+        "kind": "error",
+        "when": "The place is not one of the café's.",
+        "do": "Choose again."
+      },
+      {
+        "text": "The owner and the general manager work everywhere",
+        "kind": "error",
+        "when": "A place was chosen for an owner or general manager.",
+        "do": "Leave them on Everywhere."
+      },
+      {
+        "text": "A person works everywhere or at one place: all their roles are at that place",
+        "kind": "error",
+        "when": "Their roles would be at different places.",
+        "do": "Choose one place or Everywhere."
+      },
+      {
+        "text": "Only the owner can give or take the owner and general manager roles",
+        "kind": "error",
+        "when": "A general manager changed those roles.",
+        "do": "Ask the owner."
+      },
+      {
+        "text": "The business must keep at least one active owner",
+        "kind": "error",
+        "when": "Removing or deactivating the last owner.",
+        "do": "Make someone else owner first."
+      },
+      {
+        "text": "You cannot deactivate yourself",
+        "kind": "error",
+        "when": "Deactivating your own login.",
+        "do": "Ask another owner."
+      },
+      {
+        "text": "Only the owner can change the access of an owner or a general manager",
+        "kind": "error",
+        "when": "A general manager deactivated an owner or general manager.",
+        "do": "Ask the owner."
+      },
+      {
+        "text": "Member not found",
+        "kind": "error",
+        "when": "The row no longer exists.",
+        "do": "Reload."
+      },
+      {
+        "text": "Choose a person",
+        "kind": "error",
+        "when": "The row is not valid.",
+        "do": "Reload."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "The connection dropped while saving, and the screen is sending the same save again (up to three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. It will not be recorded twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries got no answer from the database.",
+        "do": "Check the connection, then press the same button again. The database recognises the same save and does not record it twice."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A save was sent again with its first key but different values (for example, the form was changed while it was retrying).",
+        "do": "Reload the page, check whether the first save went through, then do it again if needed."
+      },
+      {
+        "text": "This was sent by someone else",
+        "kind": "error",
+        "when": "Rare: the same save key was already used by another person's login.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "Your roles do not hold the permission named (here usually settings.manage). The database checks every save again, even if a button was shown.",
+        "do": "Ask the owner to change your roles on Settings → People and roles, or ask someone who may do it."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "Two-step sign-in is on for you and this session has not taken the second step.",
+        "do": "Reload the page: you are taken to the code step. Type the six digits from your authenticator app."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired or was ended on this device.",
+        "do": "Sign in again; what you typed may need typing again."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "The connection to the database failed during a save that has no automatic retry.",
+        "do": "Reload the page and look whether the change is there before doing it again."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The café's database has not had the update that this part of the screen uses.",
+        "do": "Tell whoever looks after the system; nothing was saved."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "A new cashier needs to sign in",
+        "do": "Add a person with their email and Cashier. Ask them to open the app → First time here? Create your login, with that email, and confirm the email. Then add them on Staff and choose their login."
+      },
+      {
+        "case": "Someone leaves",
+        "do": "Deactivate them here, and set their Last day on Staff."
+      },
+      {
+        "case": "A branch manager moves branch",
+        "do": "Change Where {name} works to the new place."
+      }
+    ],
+    "tips": [
+      "Members (who signs in) and Staff (who works and clocks in) are two lists; a person can be on both, linked by “Their login” on Staff."
+    ],
+    "related": [
+      "/staff",
+      "/login",
+      "/account"
+    ],
+    "shots": [
+      {
+        "name": "settings-people",
+        "role": "owner",
+        "state": "Three members: one signed in, one invited, one deactivated",
+        "setup": "Add two members, deactivate one."
+      }
+    ],
+    "skipped_messages": [
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "why": "Only reached if the page's code is broken or very old; every button here sends a key."
+      },
+      {
+        "text": "That has already been recorded.",
+        "why": "A database duplicate guard that the screens prevent before saving; not normally reachable."
+      },
+      {
+        "text": "Could not start a database session.",
+        "why": "A server set-up fault, not something a person at the screen causes."
+      }
+    ],
+    "open_questions": [
+      "Settings → People and roles may also be described by the Settings area's entry; it is included here because the brief lists inviting members, roles and places under people."
+    ]
+  },
+  {
+    "path": "/payroll",
+    "title": "Payroll",
+    "area": "People",
+    "summary": "Each month's pay, drafted from the pay set on Staff and the hours worked; who shares the tips; and advances on pay, which the next payroll takes back.",
+    "who": [
+      {
+        "role": "owner, general_manager, accountant",
+        "can": "draft, adjust, approve, pay, reopen, cancel payments; give and cancel advances; choose who shares the tips",
+        "cannot": "—"
+      },
+      {
+        "role": "auditor",
+        "can": "see every payroll, the tips and the advances",
+        "cannot": "change anything"
+      },
+      {
+        "role": "branch_manager, cashier, barista, inventory_counter, purchasing",
+        "can": "nothing: opening /payroll sends them to their own start screen",
+        "cannot": "open the screen"
+      }
+    ],
+    "get_there": "Menu → Spending → Payroll. Also: Staff → People → “Payroll and advances →”.",
+    "before": [
+      "People on Staff with their pay set (Staff → their line → Pay).",
+      "For the hours: clocked hours, corrected where needed."
+    ],
+    "parts": [
+      {
+        "name": "Heading and intro",
+        "shows": "“Payroll” and “Each month's pay comes from the pay set on Staff and the hours worked. A draft is checked, adjusted with what is added or deducted and why, and approved once the month is over: the salaries are then owed, and paid from the bank, the safe, the till or by the owner.”",
+        "controls": [
+          {
+            "label": "How this works",
+            "kind": "button",
+            "does": "Opens the longer explanation."
+          }
+        ]
+      },
+      {
+        "name": "Draft a payroll",
+        "shows": "“From the pay and the hours as they are now; drafting again keeps what was added or deducted.”",
+        "controls": [
+          {
+            "label": "The month",
+            "kind": "list",
+            "does": "This month, and last month when someone worked here then (shown as 2026-09).",
+            "who": "payroll.run"
+          },
+          {
+            "label": "Draft the payroll",
+            "kind": "button",
+            "does": "Makes the month's payroll from the pay and hours now (or makes it again if a draft exists), then opens it. “Drafting…” while it works.",
+            "who": "payroll.run",
+            "rules": "One payroll a month. A month whose payroll is approved cannot be drafted again until reopened.",
+            "after": "A draft is not in the books: nothing is posted until it is approved."
+          }
+        ]
+      },
+      {
+        "name": "The payrolls",
+        "shows": "Each month's payroll: No., Month, Status (Draft / Approved / Paid), People, Gross, To be paid, Paid, Approved (“{name}, {at}”).",
+        "controls": [
+          {
+            "label": "(the number or the month)",
+            "kind": "link",
+            "does": "Opens that payroll."
+          }
+        ]
+      },
+      {
+        "name": "Tips",
+        "shows": "“Each day's tips are shared at the end of that day, equally, between the people ticked here who clocked in that day (all of them, when nobody did). Each one's share is added to their pay for the month.” Then: Who shares the tips (a tick box per person working now); Tips this month; a warning if some had nobody to share it; Person / Their tips this month; and a fold “Each day's tips, and how they were shared” (Day · place · “so far today”, Tips, Shared as “{name} {amount}” or “nobody to share it”).",
+        "controls": [
+          {
+            "label": "(a person's name)",
+            "kind": "toggle",
+            "does": "Ticks or unticks the person as sharing tips.",
+            "who": "payroll.run (others see the boxes greyed)"
+          },
+          {
+            "label": "Save who shares the tips",
+            "kind": "button",
+            "does": "Saves the ticks. Shown only when they changed.",
+            "who": "payroll.run",
+            "after": "From today, each day's tips are shared between those ticked who clocked in that day. Days already shared stay as they were. Each person's share is added to their pay on the month's payroll (in Added, as “Tips +{amount}”)."
+          }
+        ]
+      },
+      {
+        "name": "Advances on pay",
+        "shows": "Badges “{name} owes {amount}” for everyone with advances not yet taken back. A table: Given, To, Amount, From (The bank / The safe / The till's drawer / The owner, from their own pocket), What it is for (with “Cancelled: {why}”), Journal.",
+        "controls": [
+          {
+            "label": "+ Give an advance…",
+            "kind": "button",
+            "does": "Opens “An advance on their pay”: To (people working now), Amount, Paid from (default The safe), What it is for; “Give the advance” and “Cancel”. Under Paid from, what the safe or the drawer holds. Note: “Dr 1300 Employee advances, Cr where the money came from. The next payroll takes it back from their salary.”",
+            "who": "payroll.run",
+            "rules": "Give the advance is disabled without a person, an amount and what it is for. Amount above 0. From the till, a drawer must be open at this device's place and hold enough; from the safe, the safe must hold enough.",
+            "after": "Journal: Dr 1300 Employee advances, Cr 1000 (till), 1005 (safe), 1020 (bank) or 3000 (owner). From the till, the drawer's expected cash goes down (a paid-out). The person's “Advances owed” goes up; the next approved payroll takes it back from their pay."
+          },
+          {
+            "label": "Cancel…",
+            "kind": "button",
+            "does": "On an advance: Why (e.g. given twice) and “Cancel the advance”.",
+            "who": "payroll.run",
+            "rules": "Only while none of it has been taken back by a payroll.",
+            "after": "Its journal is reversed; from the till, the cash is put back in the drawer's records. The row stays, greyed, with why."
+          }
+        ]
+      },
+      {
+        "name": "Footer",
+        "shows": "",
+        "controls": [
+          {
+            "label": "Staff, the schedule and the hours →",
+            "kind": "link",
+            "does": "Opens Staff."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "No payroll yet",
+        "looks": "“No payroll has been drafted yet.”"
+      },
+      {
+        "state": "No advances",
+        "looks": "“No advance has been given.”"
+      },
+      {
+        "state": "Nobody on Staff",
+        "looks": "In Tips: “Add the people who work here on Staff first.”"
+      },
+      {
+        "state": "Before the tips update",
+        "looks": "The Tips card is not shown."
+      },
+      {
+        "state": "Auditor",
+        "looks": "No Draft a payroll card, no buttons; tick boxes greyed."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Saved: from today, the tips are shared between them.",
+        "kind": "success",
+        "when": "Who shares the tips was saved.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{amount} had nobody ticked to share it",
+        "kind": "warning",
+        "when": "Some days' tips had nobody ticked.",
+        "do": "Tick who shares the tips."
+      },
+      {
+        "text": "That person is not on Staff",
+        "kind": "error",
+        "when": "A ticked person is not on the staff list.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "Someone who has left does not share the tips",
+        "kind": "error",
+        "when": "A ticked person has left.",
+        "do": "Untick them."
+      },
+      {
+        "text": "Choose the month",
+        "kind": "error",
+        "when": "No month chosen.",
+        "do": "Choose a month."
+      },
+      {
+        "text": "Choose a month that has begun",
+        "kind": "error",
+        "when": "A future month.",
+        "do": "Choose this month or last."
+      },
+      {
+        "text": "The pay for {1} is approved already",
+        "kind": "error",
+        "when": "Drafting a month whose payroll is approved.",
+        "do": "Open it from the list; reopen it first if it must change."
+      },
+      {
+        "text": "Amount must be a number greater than zero",
+        "kind": "error",
+        "when": "The advance amount is empty, 0 or not a number.",
+        "do": "Type the amount."
+      },
+      {
+        "text": "Enter an amount greater than zero",
+        "kind": "error",
+        "when": "The advance amount is 0.",
+        "do": "Type the amount."
+      },
+      {
+        "text": "What it is for is required",
+        "kind": "error",
+        "when": "No purpose for the advance.",
+        "do": "Write what it is for."
+      },
+      {
+        "text": "Say what the advance is for",
+        "kind": "error",
+        "when": "No purpose for the advance.",
+        "do": "Write what it is for."
+      },
+      {
+        "text": "{1} does not work here on {2}",
+        "kind": "error",
+        "when": "The person has left or not started.",
+        "do": "Choose someone working now."
+      },
+      {
+        "text": "No active location for this business",
+        "kind": "error",
+        "when": "No open place to record the advance at.",
+        "do": "Open a place on Settings."
+      },
+      {
+        "text": "Say why the advance is cancelled",
+        "kind": "error",
+        "when": "No reason for cancelling.",
+        "do": "Write why."
+      },
+      {
+        "text": "Advance not found",
+        "kind": "error",
+        "when": "The advance no longer exists.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "This advance was cancelled already",
+        "kind": "error",
+        "when": "Someone cancelled it meanwhile.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "Some of this advance was taken back from a salary already: it cannot be cancelled",
+        "kind": "error",
+        "when": "A payroll already took part of it back.",
+        "do": "Leave it; or reopen that payroll and set what it takes back to 0 first."
+      },
+      {
+        "text": "The safe holds {amount} in the books.",
+        "kind": "info",
+        "when": "“Paid from” is The safe: what the safe holds by the books.",
+        "do": "Nothing."
+      },
+      {
+        "text": "The safe holds {amount} in the books: not enough to pay this. Put the takings in the safe first (Move cash, on Sales), or pay it from elsewhere.",
+        "kind": "warning",
+        "when": "The amount is more than the safe holds; the database will refuse it.",
+        "do": "Move cash into the safe first, or choose another “Paid from”."
+      },
+      {
+        "text": "The drawer is not open: open it on the till first, or pay it from elsewhere.",
+        "kind": "warning",
+        "when": "“Paid from” is The till's drawer and no drawer is open.",
+        "do": "Open the drawer on the till, or choose another source."
+      },
+      {
+        "text": "The drawer should hold {amount}.",
+        "kind": "info",
+        "when": "“Paid from” is the till: what the open drawer should hold (only to those who may see it).",
+        "do": "Nothing."
+      },
+      {
+        "text": "The drawer should hold {amount}: not enough to pay this. Move cash into the till first, or pay it from elsewhere.",
+        "kind": "warning",
+        "when": "The amount is more than the drawer should hold.",
+        "do": "Move cash into the till, or choose another source."
+      },
+      {
+        "text": "Open the drawer first: on the till, count the cash in it",
+        "kind": "error",
+        "when": "Paid from the till with no drawer open.",
+        "do": "Open the drawer on the till, then try again."
+      },
+      {
+        "text": "The drawer should hold only {1} — not enough to pay {2}. Move cash into the till first, or pay from the safe, the bank or the owner",
+        "kind": "error",
+        "when": "The drawer does not hold enough.",
+        "do": "Move cash in, or pay from elsewhere."
+      },
+      {
+        "text": "The drawer does not hold enough to pay {1}. Move cash into the till first, or pay from the safe, the bank or the owner",
+        "kind": "error",
+        "when": "The drawer does not hold enough (said without the amount, to those who may not see it).",
+        "do": "Move cash in, or pay from elsewhere."
+      },
+      {
+        "text": "The safe holds only {1} in the books — not enough to pay {2}. Put the takings in the safe first (Move cash), or say where the money came from",
+        "kind": "error",
+        "when": "The safe does not hold enough.",
+        "do": "Move cash into the safe, or pay from elsewhere."
+      },
+      {
+        "text": "Say where the money came from: the till, the safe, the bank or the owner",
+        "kind": "error",
+        "when": "No valid “Paid from”.",
+        "do": "Choose one."
+      },
+      {
+        "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
+        "kind": "error",
+        "when": "The month the journal would land in is locked on the books.",
+        "do": "Ask the owner to reopen the period, or do it in an open month."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "The connection dropped while saving, and the screen is sending the same save again (up to three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. It will not be recorded twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries got no answer from the database.",
+        "do": "Check the connection, then press the same button again. The database recognises the same save and does not record it twice."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A save was sent again with its first key but different values (for example, the form was changed while it was retrying).",
+        "do": "Reload the page, check whether the first save went through, then do it again if needed."
+      },
+      {
+        "text": "This was sent by someone else",
+        "kind": "error",
+        "when": "Rare: the same save key was already used by another person's login.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "Your roles do not hold the permission named (here usually payroll.run). The database checks every save again, even if a button was shown.",
+        "do": "Ask the owner to change your roles on Settings → People and roles, or ask someone who may do it."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "Two-step sign-in is on for you and this session has not taken the second step.",
+        "do": "Reload the page: you are taken to the code step. Type the six digits from your authenticator app."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired or was ended on this device.",
+        "do": "Sign in again; what you typed may need typing again."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "The connection to the database failed during a save that has no automatic retry.",
+        "do": "Reload the page and look whether the change is there before doing it again."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The café's database has not had the update that this part of the screen uses.",
+        "do": "Tell whoever looks after the system; nothing was saved."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "Someone needs money before payday",
+        "do": "+ Give an advance… → choose them, the amount, where the money comes from and why → Give the advance. The next payroll takes it back."
+      },
+      {
+        "case": "An advance was entered twice",
+        "do": "Cancel… the extra one with why (only before a payroll took any of it back)."
+      },
+      {
+        "case": "The drawer does not hold enough",
+        "do": "Choose The safe or The bank, or move cash into the till first."
+      },
+      {
+        "case": "A new waiter should share tips",
+        "do": "Tick them in Who shares the tips and Save. It counts from today."
+      }
+    ],
+    "tips": [
+      "Draft last month early in the new month; drafting again after corrections keeps the additions and deductions."
+    ],
+    "related": [
+      "/payroll/[id]",
+      "/staff",
+      "/journals",
+      "/reports",
+      "/sales"
+    ],
+    "shots": [
+      {
+        "name": "payroll-home",
+        "role": "owner",
+        "state": "Two payrolls (one Paid, one Draft), tips card and two advances",
+        "setup": "Run last month's payroll to Paid, draft this month, give two advances."
+      },
+      {
+        "name": "payroll-advance-form",
+        "role": "accountant",
+        "state": "The advance form from The safe, with the safe's balance under it",
+        "setup": "Press + Give an advance…, choose The safe."
+      }
+    ],
+    "skipped_messages": [
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "why": "Only reached if the page's code is broken or very old; every button here sends a key."
+      },
+      {
+        "text": "That has already been recorded.",
+        "why": "A database duplicate guard that the screens prevent before saving; not normally reachable."
+      },
+      {
+        "text": "Could not start a database session.",
+        "why": "A server set-up fault, not something a person at the screen causes."
+      },
+      {
+        "text": "An advance is cancelled, not deleted / An advance is not changed: cancel it and give it again",
+        "why": "Database guards; the screen never edits or deletes an advance."
+      }
+    ]
+  },
+  {
+    "path": "/payroll/[id]",
+    "title": "Payroll {no}: {month}",
+    "area": "People",
+    "summary": "One month's payroll: each person's pay from their hours, what was added and deducted with why, advances taken back, what is to be paid and what has been. A draft is adjusted and approved once the month is over; an approved one is paid or reopened.",
+    "who": [
+      {
+        "role": "owner, general_manager, accountant",
+        "can": "draft, adjust, approve, pay, reopen, cancel payments; give and cancel advances; choose who shares the tips",
+        "cannot": "—"
+      },
+      {
+        "role": "auditor",
+        "can": "see every payroll, the tips and the advances",
+        "cannot": "change anything"
+      },
+      {
+        "role": "branch_manager, cashier, barista, inventory_counter, purchasing",
+        "can": "nothing: opening /payroll sends them to their own start screen",
+        "cannot": "open the screen"
+      }
+    ],
+    "get_there": "Payroll → the number or month of a payroll; also straight after Draft the payroll.",
+    "before": [
+      "A drafted payroll. To approve: the month is over, everyone is clocked out, everyone's pay is set, and the draft is up to date."
+    ],
+    "parts": [
+      {
+        "name": "Top",
+        "shows": "“← All payrolls”, “Print or save as PDF”, the heading “Payroll {no}: {month}” with its status (Draft, Approved, Paid), and “Drafted by {name}, {at}.” / “Approved by {name}, {at}: journal {no}.”",
+        "controls": [
+          {
+            "label": "← All payrolls",
+            "kind": "link",
+            "does": "Back to Payroll."
+          },
+          {
+            "label": "Print or save as PDF",
+            "kind": "button",
+            "does": "Opens the print dialog; the printout carries the café's name, “Payroll” and the month."
+          }
+        ]
+      },
+      {
+        "name": "The lines",
+        "shows": "A row a person: Who (and job); Pay (“{amount} a month” etc., or red “Pay not set”; “{days} of {all} days here” for a monthly person who joined or left in the month); Worked (“{days} days, {hours}”, with “Overtime {time}”, “Late {n} times”, “Absent {n} days”, red “Still clocked in”); Base; Overtime; Added (with its note and “Tips +{amount}”); Deducted (with note); Advance taken back (“of {owed} owed” when not all); To be paid; Paid. A Total row. Under it: “The pay (gross) is the base and the overtime, with what was added and less what was deducted: approved, it is Dr 6100 Salaries; what is to be paid is Cr 2100 Salaries payable, and the advances taken back Cr 1300.” and “Gross {gross}.”",
+        "controls": [
+          {
+            "label": "Adjust…",
+            "kind": "button",
+            "does": "On a draft's line: Added, What it is for (e.g. a bonus for Eid), Deducted, What it is for (e.g. absent on the 12th), Advance taken back (empty: all owed, as far as the pay goes); “Save” and “Cancel”.",
+            "who": "payroll.run",
+            "rules": "Amounts of zero or more. A note is needed for any addition or deduction. Deductions no more than earned. Take back no more than owed nor more than the pay.",
+            "after": "The line's To be paid changes. Nothing is in the books until approval. Drafting again keeps these."
+          },
+          {
+            "label": "Pay…",
+            "kind": "button",
+            "does": "On an approved line still owed: Amount (default all still owed), Paid from (default The bank), “Pay {name}”; what the safe or drawer holds shows under it.",
+            "who": "payroll.run",
+            "rules": "More than 0 and no more than owed. From the till, the first branch's drawer must be open and hold enough.",
+            "after": "Journal: Dr 2100 Salaries payable, Cr 1000 / 1005 / 1020 / 3000. From the till, the drawer's expected cash goes down. When everyone is paid in full the payroll becomes Paid."
+          }
+        ]
+      },
+      {
+        "name": "Actions",
+        "shows": "A box of buttons for those who run payroll.",
+        "controls": [
+          {
+            "label": "Approve the payroll",
+            "kind": "button",
+            "does": "Approves the draft.",
+            "who": "payroll.run",
+            "rules": "Disabled until the month is over and while the draft is out of date.",
+            "after": "Journal dated the month's last day at noon: Dr 6100 Salaries (gross less tips), Dr 2200 for the tips part, Cr 2100 Salaries payable (to be paid), Cr 1300 Employee advances (taken back). The month's hours and schedule can no longer change. Status Approved."
+          },
+          {
+            "label": "Draft it again",
+            "kind": "button",
+            "does": "Re-reads the pay and the hours now; keeps what was added or deducted.",
+            "who": "payroll.run",
+            "rules": "On a draft only."
+          },
+          {
+            "label": "Paid from",
+            "kind": "list",
+            "does": "The bank / The safe / The till's drawer / The owner, from their own pocket (default The bank).",
+            "who": "payroll.run"
+          },
+          {
+            "label": "Pay everyone still owed ({amount})",
+            "kind": "button",
+            "does": "Pays every line still owed, in one payment, from the source chosen.",
+            "who": "payroll.run",
+            "rules": "On an approved payroll with something owed.",
+            "after": "One journal Dr 2100, Cr the source, for the total; the payroll becomes Paid."
+          },
+          {
+            "label": "Reopen…",
+            "kind": "button",
+            "does": "Shows Why (e.g. Omar's start date was wrong) and “Reopen the payroll”.",
+            "who": "payroll.run",
+            "rules": "Only while no salary payment from it stands (cancel payments first). Not in a locked month.",
+            "after": "The approval's journal is reversed in its own month; the payroll is a draft again; its month's hours can change again. The old approval is listed under “Approved before, and reopened”."
+          }
+        ]
+      },
+      {
+        "name": "Salaries paid",
+        "shows": "Each payment: Paid on, To (names), From, Amount, Journal; “Cancelled: {why}” on a cancelled one.",
+        "controls": [
+          {
+            "label": "Cancel…",
+            "kind": "button",
+            "does": "Why (e.g. paid the wrong person) and “Cancel the payment”.",
+            "who": "payroll.run",
+            "after": "Its journal is reversed; from the till, the cash is put back in the drawer's records; a Paid payroll goes back to Approved."
+          }
+        ]
+      },
+      {
+        "name": "Approved before, and reopened",
+        "shows": "“Approved by {name}, {at} (journal {no}); reopened by {by}, {when}: {why}” for each earlier approval.",
+        "controls": []
+      }
+    ],
+    "states": [
+      {
+        "state": "Draft, month not over",
+        "looks": "Yellow: “The month is not over: this draft shows what is owed so far, and is approved once the month is over.” Approve is disabled."
+      },
+      {
+        "state": "Draft out of date",
+        "looks": "Red: “The hours or the pay changed since this draft: draft it again, check it, then approve it.” Approve is disabled; press Draft it again."
+      },
+      {
+        "state": "Approved",
+        "looks": "Pay… on each line still owed, Pay everyone still owed, Reopen… (if nothing is paid)."
+      },
+      {
+        "state": "Paid",
+        "looks": "No pay buttons; Salaries paid listed."
+      },
+      {
+        "state": "Not found",
+        "looks": "A wrong or deleted payroll address shows the not-found page."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Approved, and posted.",
+        "kind": "success",
+        "when": "Approve worked.",
+        "do": "Pay the salaries when due."
+      },
+      {
+        "text": "Drafted again.",
+        "kind": "success",
+        "when": "Draft it again worked.",
+        "do": "Check the lines, then approve."
+      },
+      {
+        "text": "Paid.",
+        "kind": "success",
+        "when": "Pay everyone still owed worked.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Reopened: its journal is reversed.",
+        "kind": "success",
+        "when": "Reopen worked.",
+        "do": "Fix what was wrong, Draft it again, approve."
+      },
+      {
+        "text": "Payroll line not found",
+        "kind": "error",
+        "when": "The line no longer exists (drafted again elsewhere).",
+        "do": "Reload the page."
+      },
+      {
+        "text": "Only a draft payroll changes: this one is approved",
+        "kind": "error",
+        "when": "Adjusting an approved payroll.",
+        "do": "Reopen it first."
+      },
+      {
+        "text": "Added must be a number of zero or more",
+        "kind": "error",
+        "when": "Added is not a number.",
+        "do": "Type a number or leave empty."
+      },
+      {
+        "text": "Deducted must be a number of zero or more",
+        "kind": "error",
+        "when": "Deducted is not a number.",
+        "do": "Type a number or leave empty."
+      },
+      {
+        "text": "Taken back of the advances must be a number of zero or more",
+        "kind": "error",
+        "when": "Advance taken back is not a number.",
+        "do": "Type a number or leave empty."
+      },
+      {
+        "text": "Enter amounts of zero or more",
+        "kind": "error",
+        "when": "A negative amount.",
+        "do": "Use 0 or more."
+      },
+      {
+        "text": "Say what the addition is for",
+        "kind": "error",
+        "when": "Added without a note.",
+        "do": "Write what it is for."
+      },
+      {
+        "text": "Say what the deduction is for",
+        "kind": "error",
+        "when": "Deducted without a note.",
+        "do": "Write what it is for."
+      },
+      {
+        "text": "The deductions are more than {1} earned ({2})",
+        "kind": "error",
+        "when": "Deducting more than the person earned.",
+        "do": "Deduct less."
+      },
+      {
+        "text": "{1} owes {2} of advances: take back no more than that",
+        "kind": "error",
+        "when": "Taking back more than owed.",
+        "do": "Lower the amount."
+      },
+      {
+        "text": "Take back no more of the advances than the pay ({1})",
+        "kind": "error",
+        "when": "Taking back more than the pay.",
+        "do": "Lower the amount."
+      },
+      {
+        "text": "Payroll not found",
+        "kind": "error",
+        "when": "The payroll no longer exists.",
+        "do": "Go back to Payroll."
+      },
+      {
+        "text": "This payroll is approved already",
+        "kind": "error",
+        "when": "Approved meanwhile (another device).",
+        "do": "Reload."
+      },
+      {
+        "text": "The pay for {1} is approved once the month is over",
+        "kind": "error",
+        "when": "Approving before the month ends.",
+        "do": "Wait until the month is over."
+      },
+      {
+        "text": "Nobody worked here in {1}: there is no pay to approve",
+        "kind": "error",
+        "when": "No lines.",
+        "do": "Nothing to approve."
+      },
+      {
+        "text": "{1} is still clocked in since {2}: clock them out or correct the hours first",
+        "kind": "error",
+        "when": "Someone has an open record in the month.",
+        "do": "Correct their hours on Staff → The hours, then Draft it again."
+      },
+      {
+        "text": "Set {1}'s pay on Staff, then draft the payroll again",
+        "kind": "error",
+        "when": "A line has no pay set.",
+        "do": "Set the pay on Staff, then Draft it again."
+      },
+      {
+        "text": "The hours or the pay changed since this draft: draft it again, check it, then approve it",
+        "kind": "error",
+        "when": "Hours or pay changed after drafting.",
+        "do": "Press Draft it again."
+      },
+      {
+        "text": "The pay for {1} is approved already",
+        "kind": "error",
+        "when": "Drafting again a month already approved.",
+        "do": "Reopen first."
+      },
+      {
+        "text": "Why is required",
+        "kind": "error",
+        "when": "A reason box was empty.",
+        "do": "Write why."
+      },
+      {
+        "text": "Say why the payroll is reopened",
+        "kind": "error",
+        "when": "No reason.",
+        "do": "Write why."
+      },
+      {
+        "text": "This payroll is a draft already",
+        "kind": "error",
+        "when": "Reopened meanwhile.",
+        "do": "Reload."
+      },
+      {
+        "text": "Salaries were paid from this payroll: cancel the payments first",
+        "kind": "error",
+        "when": "Reopening with payments standing.",
+        "do": "Cancel each payment under Salaries paid first."
+      },
+      {
+        "text": "Approve the payroll first",
+        "kind": "error",
+        "when": "Paying a draft.",
+        "do": "Approve it."
+      },
+      {
+        "text": "{1} is paid in full already",
+        "kind": "error",
+        "when": "Nothing owed to that person.",
+        "do": "Reload."
+      },
+      {
+        "text": "Enter an amount greater than zero",
+        "kind": "error",
+        "when": "Pay amount 0.",
+        "do": "Type the amount."
+      },
+      {
+        "text": "Amount must be a number of zero or more",
+        "kind": "error",
+        "when": "Pay amount is not a number.",
+        "do": "Type a number, or leave empty to pay all owed."
+      },
+      {
+        "text": "That is more than is owed to {1} ({2})",
+        "kind": "error",
+        "when": "Paying more than owed.",
+        "do": "Lower the amount."
+      },
+      {
+        "text": "Everyone is paid in full already",
+        "kind": "error",
+        "when": "Nothing left to pay.",
+        "do": "Reload."
+      },
+      {
+        "text": "Say why the payment is cancelled",
+        "kind": "error",
+        "when": "No reason.",
+        "do": "Write why."
+      },
+      {
+        "text": "Salary payment not found",
+        "kind": "error",
+        "when": "The payment no longer exists.",
+        "do": "Reload."
+      },
+      {
+        "text": "This payment was cancelled already",
+        "kind": "error",
+        "when": "Cancelled meanwhile.",
+        "do": "Reload."
+      },
+      {
+        "text": "The safe holds {amount} in the books.",
+        "kind": "info",
+        "when": "“Paid from” is The safe: what the safe holds by the books.",
+        "do": "Nothing."
+      },
+      {
+        "text": "The safe holds {amount} in the books: not enough to pay this. Put the takings in the safe first (Move cash, on Sales), or pay it from elsewhere.",
+        "kind": "warning",
+        "when": "The amount is more than the safe holds; the database will refuse it.",
+        "do": "Move cash into the safe first, or choose another “Paid from”."
+      },
+      {
+        "text": "The drawer is not open: open it on the till first, or pay it from elsewhere.",
+        "kind": "warning",
+        "when": "“Paid from” is The till's drawer and no drawer is open.",
+        "do": "Open the drawer on the till, or choose another source."
+      },
+      {
+        "text": "The drawer should hold {amount}.",
+        "kind": "info",
+        "when": "“Paid from” is the till: what the open drawer should hold (only to those who may see it).",
+        "do": "Nothing."
+      },
+      {
+        "text": "The drawer should hold {amount}: not enough to pay this. Move cash into the till first, or pay it from elsewhere.",
+        "kind": "warning",
+        "when": "The amount is more than the drawer should hold.",
+        "do": "Move cash into the till, or choose another source."
+      },
+      {
+        "text": "Open the drawer first: on the till, count the cash in it",
+        "kind": "error",
+        "when": "Paid from the till with no drawer open.",
+        "do": "Open the drawer on the till, then try again."
+      },
+      {
+        "text": "The drawer should hold only {1} — not enough to pay {2}. Move cash into the till first, or pay from the safe, the bank or the owner",
+        "kind": "error",
+        "when": "The drawer does not hold enough.",
+        "do": "Move cash in, or pay from elsewhere."
+      },
+      {
+        "text": "The drawer does not hold enough to pay {1}. Move cash into the till first, or pay from the safe, the bank or the owner",
+        "kind": "error",
+        "when": "The drawer does not hold enough (said without the amount, to those who may not see it).",
+        "do": "Move cash in, or pay from elsewhere."
+      },
+      {
+        "text": "The safe holds only {1} in the books — not enough to pay {2}. Put the takings in the safe first (Move cash), or say where the money came from",
+        "kind": "error",
+        "when": "The safe does not hold enough.",
+        "do": "Move cash into the safe, or pay from elsewhere."
+      },
+      {
+        "text": "Say where the money came from: the till, the safe, the bank or the owner",
+        "kind": "error",
+        "when": "No valid “Paid from”.",
+        "do": "Choose one."
+      },
+      {
+        "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
+        "kind": "error",
+        "when": "The month the journal would land in is locked on the books.",
+        "do": "Ask the owner to reopen the period, or do it in an open month."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "The connection dropped while saving, and the screen is sending the same save again (up to three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. It will not be recorded twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries got no answer from the database.",
+        "do": "Check the connection, then press the same button again. The database recognises the same save and does not record it twice."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A save was sent again with its first key but different values (for example, the form was changed while it was retrying).",
+        "do": "Reload the page, check whether the first save went through, then do it again if needed."
+      },
+      {
+        "text": "This was sent by someone else",
+        "kind": "error",
+        "when": "Rare: the same save key was already used by another person's login.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "Your roles do not hold the permission named (here usually payroll.run). The database checks every save again, even if a button was shown.",
+        "do": "Ask the owner to change your roles on Settings → People and roles, or ask someone who may do it."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "Two-step sign-in is on for you and this session has not taken the second step.",
+        "do": "Reload the page: you are taken to the code step. Type the six digits from your authenticator app."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired or was ended on this device.",
+        "do": "Sign in again; what you typed may need typing again."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "The connection to the database failed during a save that has no automatic retry.",
+        "do": "Reload the page and look whether the change is there before doing it again."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The café's database has not had the update that this part of the screen uses.",
+        "do": "Tell whoever looks after the system; nothing was saved."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "Someone was late a lot and the café deducts it",
+        "do": "Adjust… their line → Deducted with a note (e.g. late 6 times) → Save. Lateness is never deducted by itself."
+      },
+      {
+        "case": "An Eid bonus",
+        "do": "Adjust… → Added with “Eid bonus” → Save."
+      },
+      {
+        "case": "Approved with a mistake",
+        "do": "If nothing is paid: Reopen… with why, fix (pay on Staff, hours, or the line), Draft it again, Approve. If paid: cancel the payments first."
+      },
+      {
+        "case": "Paid the wrong person",
+        "do": "Salaries paid → Cancel… with why, then Pay… the right line."
+      },
+      {
+        "case": "Pay part now, the rest later",
+        "do": "Pay… on the line with a smaller Amount; the rest stays owed."
+      }
+    ],
+    "tips": [
+      "Leave “Advance taken back” empty to take back everything owed, as far as the pay goes.",
+      "Print or save as PDF gives a copy to keep or sign."
+    ],
+    "related": [
+      "/payroll",
+      "/staff",
+      "/journals",
+      "/reports"
+    ],
+    "shots": [
+      {
+        "name": "payroll-run-draft",
+        "role": "owner",
+        "state": "A draft with an addition, an advance taken back and Approve enabled",
+        "setup": "Draft last month, Adjust… one line with a bonus."
+      },
+      {
+        "name": "payroll-run-approved",
+        "role": "accountant",
+        "state": "An approved payroll with the Pay everyone still owed button and the bank chosen",
+        "setup": "Approve a draft."
+      }
+    ],
+    "skipped_messages": [
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "why": "Only reached if the page's code is broken or very old; every button here sends a key."
+      },
+      {
+        "text": "That has already been recorded.",
+        "why": "A database duplicate guard that the screens prevent before saving; not normally reachable."
+      },
+      {
+        "text": "Could not start a database session.",
+        "why": "A server set-up fault, not something a person at the screen causes."
+      },
+      {
+        "text": "A payroll's approval is reopened, not deleted / A payroll's approval is not changed: reopen the payroll",
+        "why": "Database guards; the screen never edits approvals."
+      },
+      {
+        "text": "A salary payment is cancelled, not deleted / A salary payment is not changed: cancel it and pay again",
+        "why": "Database guards; the screen never edits payments."
+      }
+    ]
+  },
+  {
+    "path": "/pos#clock",
+    "title": "Clock in or out (at the till)",
+    "area": "People",
+    "summary": "The till's clock: each person chooses their name and types their PIN. On a clock screen it shows the shop's code first, for those who clock on their phone.",
+    "who": [
+      {
+        "role": "cashier, barista, branch_manager, general_manager, owner",
+        "can": "open it on the till and clock anyone in or out with that person's PIN",
+        "cannot": "clock someone without their PIN"
+      }
+    ],
+    "get_there": "On the till (POS), the clock button in the top bar (“Clock in or out”). Once the café has a clock screen, the button shows only on a till that is a clock screen.",
+    "before": [
+      "The person is on Staff at this branch (or has hours here today), with a PIN."
+    ],
+    "parts": [
+      {
+        "name": "The dialog",
+        "shows": "On a clock screen: the shop's code and “No phone? Choose your name and type your PIN.” Then a button a person: those in first (green), each with “In since {time}”, “Shift {from}–{to}”, “Not on the schedule today”, “No PIN yet: a manager sets one on Staff”, “Clocks on their phone” or “In since {time}, on their phone”.",
+        "controls": [
+          {
+            "label": "(a person's name)",
+            "kind": "button",
+            "does": "Chooses them; the PIN box shows with “{name}: clock in” or “{name}: clock out, in since {time}”.",
+            "rules": "Disabled for people without a PIN, and for people with a linked phone when the café has a clock screen."
+          },
+          {
+            "label": "Your PIN",
+            "kind": "box",
+            "does": "Their PIN; digits only.",
+            "rules": "4 to 8 digits."
+          },
+          {
+            "label": "Enter",
+            "kind": "key",
+            "does": "Same as the Clock in / Clock out button."
+          },
+          {
+            "label": "Clock in / Clock out",
+            "kind": "button",
+            "does": "Clocks them in or out.",
+            "rules": "Disabled until 4 to 8 digits are typed.",
+            "after": "A record of hours “Clocked at the till” at this branch (or the clock screen's place); shows on Staff and counts in Payroll. Every wrong PIN is counted."
+          },
+          {
+            "label": "Someone else",
+            "kind": "button",
+            "does": "Back to the list of names."
+          },
+          {
+            "label": "Close",
+            "kind": "button",
+            "does": "Closes the dialog."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Nobody at this branch",
+        "looks": "“Nobody works at this branch yet: a manager adds the people on Staff.”"
+      }
+    ],
+    "messages": [
+      {
+        "text": "{name} is clocked in, at {time}.",
+        "kind": "success",
+        "when": "Clocked in. Followed by “{minutes} min late.” when later than the shift's start plus the grace (5 minutes unless changed).",
+        "do": "Nothing."
+      },
+      {
+        "text": "{name} is clocked out, at {time}: {hours} today.",
+        "kind": "success",
+        "when": "Clocked out. Followed by “{minutes} min before the shift ends.” when leaving earlier than the shift's end less the grace.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{minutes} min late.",
+        "kind": "info",
+        "when": "Part of the clocked-in message.",
+        "do": "Nothing; a manager decides on Payroll whether anything is deducted."
+      },
+      {
+        "text": "{minutes} min before the shift ends.",
+        "kind": "info",
+        "when": "Part of the clocked-out message.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{name} is clocked in already, since {when}",
+        "kind": "error",
+        "when": "Clocking in while already in (when as e.g. 03 Oct 08:02).",
+        "do": "Clock out instead, or ask a manager to correct the hours."
+      },
+      {
+        "text": "{name} has hours recorded until later today: a manager corrects them on Staff",
+        "kind": "error",
+        "when": "A manager added hours that reach past now.",
+        "do": "Ask a manager to correct them on Staff → The hours."
+      },
+      {
+        "text": "{name} is not clocked in",
+        "kind": "error",
+        "when": "Clocking out without being in.",
+        "do": "Clock in, or ask a manager to add the hours."
+      },
+      {
+        "text": "{name} has been clocked in for more than a day: a manager corrects the hours on Staff",
+        "kind": "error",
+        "when": "The open record is older than 24 hours (forgot to clock out).",
+        "do": "Ask a manager to correct it on Staff → The hours; then clock in again."
+      },
+      {
+        "text": "That PIN is not right",
+        "kind": "error",
+        "when": "Wrong PIN; the box empties.",
+        "do": "Type it again carefully."
+      },
+      {
+        "text": "{name} has no PIN yet: a manager sets one on Staff",
+        "kind": "error",
+        "when": "No PIN set.",
+        "do": "Ask a manager to open Staff → their line → Set a PIN."
+      },
+      {
+        "text": "Too many wrong PINs from this login: try again in 15 minutes",
+        "kind": "error",
+        "when": "Three wrong PINs from this till's login in 15 minutes.",
+        "do": "Wait 15 minutes."
+      },
+      {
+        "text": "Clocking by PIN is paused for {name} after too many wrong PINs today: a manager sets a new PIN on Staff",
+        "kind": "error",
+        "when": "Twenty wrong PINs for this person in a day.",
+        "do": "A manager sets a new PIN on Staff."
+      },
+      {
+        "text": "Clocking in and out is on the shop's clock screen",
+        "kind": "error",
+        "when": "The café has a clock screen and this till is not one.",
+        "do": "Clock in on the clock screen, or by phone."
+      },
+      {
+        "text": "{name} clocks in and out on their own phone, with the shop's code",
+        "kind": "error",
+        "when": "The person has a linked phone.",
+        "do": "Scan the shop's code with that phone."
+      },
+      {
+        "text": "{1} does not work here on {2}",
+        "kind": "error",
+        "when": "Before their first day or after their last.",
+        "do": "Ask a manager."
+      },
+      {
+        "text": "Choose someone who works here",
+        "kind": "error",
+        "when": "The person is no longer on the staff.",
+        "do": "Close and open the dialog again."
+      },
+      {
+        "text": "No active location for this business",
+        "kind": "error",
+        "when": "No open place for this till.",
+        "do": "Choose this device's place, or open a place on Settings."
+      },
+      {
+        "text": "A PIN is 4 to 8 digits",
+        "kind": "error",
+        "when": "Not reached normally: the button needs 4 to 8 digits.",
+        "do": "Type 4 to 8 digits."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "The connection dropped while saving, and the screen is sending the same save again (up to three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. It will not be recorded twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries got no answer from the database.",
+        "do": "Check the connection, then press the same button again. The database recognises the same save and does not record it twice."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A save was sent again with its first key but different values (for example, the form was changed while it was retrying).",
+        "do": "Reload the page, check whether the first save went through, then do it again if needed."
+      },
+      {
+        "text": "This was sent by someone else",
+        "kind": "error",
+        "when": "Rare: the same save key was already used by another person's login.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "Your roles do not hold the permission named (here usually sale.create). The database checks every save again, even if a button was shown.",
+        "do": "Ask the owner to change your roles on Settings → People and roles, or ask someone who may do it."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "Two-step sign-in is on for you and this session has not taken the second step.",
+        "do": "Reload the page: you are taken to the code step. Type the six digits from your authenticator app."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired or was ended on this device.",
+        "do": "Sign in again; what you typed may need typing again."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "The connection to the database failed during a save that has no automatic retry.",
+        "do": "Reload the page and look whether the change is there before doing it again."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The café's database has not had the update that this part of the screen uses.",
+        "do": "Tell whoever looks after the system; nothing was saved."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "A person's name is greyed",
+        "do": "They have no PIN (a manager sets one on Staff), or they clock with their phone."
+      }
+    ],
+    "tips": [
+      "Each person types their own PIN; the till's cashier does not need to know it."
+    ],
+    "related": [
+      "/pos",
+      "/staff",
+      "/clock"
+    ],
+    "shots": [
+      {
+        "name": "pos-clock",
+        "role": "cashier",
+        "state": "The list with one person in and one with a shift",
+        "setup": "Open Clock in or out on the till."
+      }
+    ],
+    "skipped_messages": [
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "why": "Only reached if the page's code is broken or very old; every button here sends a key."
+      },
+      {
+        "text": "That has already been recorded.",
+        "why": "A database duplicate guard that the screens prevent before saving; not normally reachable."
+      },
+      {
+        "text": "Could not start a database session.",
+        "why": "A server set-up fault, not something a person at the screen causes."
+      }
+    ],
+    "open_questions": [
+      "This dialog lives on the till (/pos); the Selling area may also describe it."
+    ]
+  },
+  {
+    "path": "/clock",
+    "title": "(the person's name) — the phone's clock",
+    "area": "People",
+    "summary": "Clocking in or out on your own phone. Scanning the shop's code opens this with the code in it: one press and it is done. The phone is known by a key it keeps since a manager linked it; nobody types a PIN.",
+    "who": [
+      {
+        "role": "anyone with a linked phone",
+        "can": "clock themselves in and out, signed in or not",
+        "cannot": "clock anyone else; clock from away from the shop (the code changes every 30 seconds)"
+      }
+    ],
+    "get_there": "Scan the code on the shop's clock screen with the phone's camera and open the link. Or open /clock and type the 6 digits.",
+    "before": [
+      "A manager has linked this phone (Staff → their line → Their phone).",
+      "The café has a clock screen showing the code."
+    ],
+    "parts": [
+      {
+        "name": "The card",
+        "shows": "The person's name, their job (or the café's name), and the state: “In since {time}, at {place}” (green) or “Not clocked in”.",
+        "controls": [
+          {
+            "label": "Or type the 6 digits it shows",
+            "kind": "box",
+            "does": "Shown when the phone came without a code, or the scanned code has changed. Digits only (Arabic digits become 0–9); a space is allowed.",
+            "rules": "6 digits."
+          },
+          {
+            "label": "Enter",
+            "kind": "key",
+            "does": "In the digits box: same as the button."
+          },
+          {
+            "label": "Clock in / Clock out",
+            "kind": "button",
+            "does": "Clocks in (when out) or out (when in) with the code. “…” while it works.",
+            "rules": "Disabled until there is a 6-digit code. The code must be the one the screen shows now or the half-minute before.",
+            "after": "A record of hours “Clocked on their phone” at the clock screen's place; Staff → In now and The hours show it; it counts in Payroll and Reports. The phone's last use is noted on Staff."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Phone not linked",
+        "looks": "“This phone is not linked yet” — “A manager links it on Staff: they show you a square, and you scan it with this phone's camera. Then this phone clocks you in and out.”"
+      },
+      {
+        "state": "Person no longer works here",
+        "looks": "Their name and, in red, “{name} does not work here now”."
+      },
+      {
+        "state": "Database not updated",
+        "looks": "“The clock is not ready yet” — “The café's database needs its update before phones can clock in.”"
+      },
+      {
+        "state": "Scanned, ready",
+        "looks": "Only the big Clock in / Clock out button."
+      },
+      {
+        "state": "Opened without a code",
+        "looks": "“Scan the code on the shop's clock screen with this phone's camera.” and the digits box."
+      },
+      {
+        "state": "Done",
+        "looks": "A tick with the message, then “When you leave, scan the shop's code again to clock out.” or “Next time, scan the shop's code to clock in.” The code is removed from the address."
+      }
+    ],
+    "messages": [
+      {
+        "text": "{name} is clocked in, at {time}.",
+        "kind": "success",
+        "when": "Clocked in. Followed by “{minutes} min late.” when later than the shift's start plus the grace (5 minutes unless changed).",
+        "do": "Nothing."
+      },
+      {
+        "text": "{name} is clocked out, at {time}: {hours} today.",
+        "kind": "success",
+        "when": "Clocked out. Followed by “{minutes} min before the shift ends.” when leaving earlier than the shift's end less the grace.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{minutes} min late.",
+        "kind": "info",
+        "when": "Part of the clocked-in message.",
+        "do": "Nothing; a manager decides on Payroll whether anything is deducted."
+      },
+      {
+        "text": "{minutes} min before the shift ends.",
+        "kind": "info",
+        "when": "Part of the clocked-out message.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{name} is clocked in already, since {when}",
+        "kind": "error",
+        "when": "Clocking in while already in (when as e.g. 03 Oct 08:02).",
+        "do": "Clock out instead, or ask a manager to correct the hours."
+      },
+      {
+        "text": "{name} has hours recorded until later today: a manager corrects them on Staff",
+        "kind": "error",
+        "when": "A manager added hours that reach past now.",
+        "do": "Ask a manager to correct them on Staff → The hours."
+      },
+      {
+        "text": "{name} is not clocked in",
+        "kind": "error",
+        "when": "Clocking out without being in.",
+        "do": "Clock in, or ask a manager to add the hours."
+      },
+      {
+        "text": "{name} has been clocked in for more than a day: a manager corrects the hours on Staff",
+        "kind": "error",
+        "when": "The open record is older than 24 hours (forgot to clock out).",
+        "do": "Ask a manager to correct it on Staff → The hours; then clock in again."
+      },
+      {
+        "text": "This phone is not linked to anyone: a manager links it on Staff",
+        "kind": "error",
+        "when": "The phone has no key, or it was unlinked.",
+        "do": "Ask a manager to link it on Staff."
+      },
+      {
+        "text": "Too many wrong codes from this phone: try again in 10 minutes",
+        "kind": "error",
+        "when": "Five wrong codes in ten minutes.",
+        "do": "Wait 10 minutes, then scan the code on the screen."
+      },
+      {
+        "text": "That code has changed: scan the shop's code again",
+        "kind": "error",
+        "when": "The code is older than a minute, or typed wrong. The digits box appears.",
+        "do": "Scan again, or type the 6 digits the screen shows now."
+      },
+      {
+        "text": "{name} does not work here now",
+        "kind": "error",
+        "when": "Their last day has passed, or they have not started.",
+        "do": "Ask a manager."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "The connection dropped while saving, and the screen is sending the same save again (up to three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. It will not be recorded twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries got no answer from the database.",
+        "do": "Check the connection, then press the same button again. The database recognises the same save and does not record it twice."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A save was sent again with its first key but different values (for example, the form was changed while it was retrying).",
+        "do": "Reload the page, check whether the first save went through, then do it again if needed."
+      },
+      {
+        "text": "This was sent by someone else",
+        "kind": "error",
+        "when": "Rare: the same save key was already used by another person's login.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "No answer after the automatic tries.",
+        "do": "Look at the state line after reloading."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "The scan opens but the code has changed",
+        "do": "Type the 6 digits the screen shows now, and press the button."
+      },
+      {
+        "case": "No phone, or the battery is dead",
+        "do": "Clock in at the clock screen (Clock in or out on the till) with your name and PIN — unless your phone is linked: then a manager adds the hours."
+      },
+      {
+        "case": "Forgot to clock out yesterday",
+        "do": "Ask a manager to correct the hours on Staff; then clock in."
+      }
+    ],
+    "tips": [
+      "Add the page to the phone's home screen to open it quickly.",
+      "The code works only at the shop: it changes every 30 seconds."
+    ],
+    "related": [
+      "/clock/link",
+      "/clock/screen",
+      "/staff#attendance"
+    ],
+    "shots": [
+      {
+        "name": "clock-phone-ready",
+        "role": "barista",
+        "state": "Scanned, Not clocked in, the big Clock in button",
+        "setup": "Link a phone, scan the code."
+      },
+      {
+        "name": "clock-phone-done",
+        "role": "barista",
+        "state": "Clocked in with “6 min late.”",
+        "setup": "Schedule 08:00, clock in at 08:11."
+      }
+    ],
+    "skipped_messages": [
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "why": "Only reached if the page's code is broken or very old; every button here sends a key."
+      },
+      {
+        "text": "That has already been recorded.",
+        "why": "A database duplicate guard that the screens prevent before saving; not normally reachable."
+      },
+      {
+        "text": "Could not start a database session.",
+        "why": "A server set-up fault, not something a person at the screen causes."
+      },
+      {
+        "text": "Type the 6 digits the shop's screen shows",
+        "why": "The button is disabled until 6 digits are there, so this check is not reached."
+      },
+      {
+        "text": "Clock in, or out",
+        "why": "The screen always sends in or out."
+      }
+    ]
+  },
+  {
+    "path": "/clock/link",
+    "title": "Link this phone",
+    "area": "People",
+    "summary": "Opened on a person's own phone from the square a manager shows on Staff. One press makes this phone theirs, to clock in and out without a PIN.",
+    "who": [
+      {
+        "role": "the person whose phone it is",
+        "can": "link their own phone, signed in or not",
+        "cannot": "—"
+      }
+    ],
+    "get_there": "Scan the square on Staff → their line → Their phone, or open the link sent to them. A link works once and for ten minutes.",
+    "before": [
+      "A manager opened Their phone for this person in the last ten minutes."
+    ],
+    "parts": [
+      {
+        "name": "The card",
+        "shows": "“This phone will clock you in and out at the shop, without a PIN. Press the button on your own phone only.” If the phone was already linked: “This phone clocks in {name} now: linking it makes it the new person's.”",
+        "controls": [
+          {
+            "label": "Link this phone",
+            "kind": "button",
+            "does": "Links the phone; it keeps a key of its own from now on. Nothing happens until it is pressed, so a chat app opening the link does not use it.",
+            "after": "The phone clocks this person in and out; a phone linked before for them stops working; the previous person (if this phone was someone else's) is no longer linked to it. Staff shows “Phone linked”. Recorded in the audit trail."
+          },
+          {
+            "label": "Open the clock",
+            "kind": "link",
+            "does": "After linking: opens /clock."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Linked",
+        "looks": "“This phone is linked” — “This phone clocks in {name} now.” and “Each time you come in or leave, scan the code on the shop's clock screen with this phone's camera, and press Clock in or Clock out.”"
+      },
+      {
+        "state": "Bad link",
+        "looks": "No button; the red error."
+      }
+    ],
+    "messages": [
+      {
+        "text": "This phone clocks in {name} now.",
+        "kind": "success",
+        "when": "Linked.",
+        "do": "Press Open the clock."
+      },
+      {
+        "text": "This link is not one of the café's: ask a manager for a new one",
+        "kind": "error",
+        "when": "The link is broken or not real.",
+        "do": "Ask a manager to show a new square."
+      },
+      {
+        "text": "This link was used already: ask a manager for a new one",
+        "kind": "error",
+        "when": "The link was used before.",
+        "do": "Ask for a new square."
+      },
+      {
+        "text": "This link is more than ten minutes old: ask a manager for a new one",
+        "kind": "error",
+        "when": "Too late.",
+        "do": "Ask for a new square (Make a new one)."
+      },
+      {
+        "text": "{name} does not work here now",
+        "kind": "error",
+        "when": "The person has left or not started.",
+        "do": "Ask a manager."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "Connection failure.",
+        "do": "Open /clock to see if the phone is linked."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "The link opened in a chat app's browser",
+        "do": "Open it in the phone's own browser (Chrome or Safari) and press Link this phone there: the key stays in that browser."
+      }
+    ],
+    "tips": [
+      "Clearing the browser's data unlinks the phone in practice: ask for a new link."
+    ],
+    "related": [
+      "/staff",
+      "/clock"
+    ],
+    "shots": [
+      {
+        "name": "clock-link",
+        "role": "barista",
+        "state": "Link this phone, before pressing",
+        "setup": "Open the link from the square on Staff."
+      }
+    ],
+    "skipped_messages": []
+  },
+  {
+    "path": "/clock/screen",
+    "title": "The shop's code (whole screen)",
+    "area": "People",
+    "summary": "The shop's code in large, for a tablet by the door: a square to scan and its 6 digits, new every 30 seconds.",
+    "who": [
+      {
+        "role": "any device made a clock screen",
+        "can": "show the code, signed in or not",
+        "cannot": "—"
+      }
+    ],
+    "get_there": "Staff → Shop's clock → Show the code on the whole screen (on the clock screen device).",
+    "before": [
+      "This device was made a clock screen on Staff → Shop's clock."
+    ],
+    "parts": [
+      {
+        "name": "The code",
+        "shows": "“Scan with your phone to clock in or out”, the square, the 6 digits (e.g. 123 456), a bar running down, and “A new code in {n} s · {screen name} · {place}”. No menu, nothing of whoever is signed in.",
+        "controls": [
+          {
+            "label": "Sign out, keep the code",
+            "kind": "button",
+            "does": "Shown when someone is signed in, with “Signed in as {name}. A screen by the door is safer signed out: the code stays.” Signs this device out only; the code keeps showing.",
+            "after": "The tablet is nobody's way into the books. The owner stays signed in on their own phone."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Loading",
+        "looks": "“…”."
+      },
+      {
+        "state": "Not a clock screen",
+        "looks": "Red “This device is not one of the shop's clock screens” and “The owner makes a device the clock screen on Staff, from that device.”"
+      },
+      {
+        "state": "Connection lost",
+        "looks": "The last code stays until it ends; the screen asks again every 4 seconds."
+      }
+    ],
+    "messages": [
+      {
+        "text": "This device is not one of the shop's clock screens",
+        "kind": "error",
+        "when": "The device has no clock screen key, or it was taken out of use.",
+        "do": "On this device, sign in as the owner and make it a clock screen on Staff → Shop's clock."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "The till's own clock is wrong",
+        "do": "Nothing: the code comes from the server's clock."
+      }
+    ],
+    "tips": [
+      "Leave the tablet on this page, plugged in, by the door."
+    ],
+    "related": [
+      "/staff#shop-clock",
+      "/clock"
+    ],
+    "shots": [
+      {
+        "name": "clock-screen",
+        "role": "owner",
+        "state": "The code on the whole screen, signed out",
+        "setup": "Make a tablet a clock screen, open the whole-screen code, Sign out, keep the code."
+      }
+    ],
+    "skipped_messages": [
+      {
+        "text": "No code",
+        "why": "Only when the database answers without an error text; not seen in practice."
+      }
+    ]
+  },
+  {
+    "path": "/account",
+    "title": "My account",
+    "area": "People",
+    "summary": "Everyone's own page: who they are and what they may do, where they start, two-step sign-in, their approval PIN, warnings on this phone, their password, and Sign out.",
+    "who": [
+      {
+        "role": "every signed-in person",
+        "can": "see their details, choose a first screen (if they have more than one screen), turn two-step sign-in on or off, change their password, sign out",
+        "cannot": "change their own roles"
+      },
+      {
+        "role": "owner, general_manager, branch_manager",
+        "can": "also set their approval PIN (they approve discounts, voids and refunds)",
+        "cannot": "—"
+      },
+      {
+        "role": "owner, general_manager, branch_manager, accountant, auditor",
+        "can": "also turn on warnings on this phone (when the owner has turned them on for the café)",
+        "cannot": "—"
+      }
+    ],
+    "get_there": "Your name at the top right, or Menu → You → My account. People with no screen of their own land here.",
+    "before": [],
+    "parts": [
+      {
+        "name": "Who you are",
+        "shows": "Name, Email, Business, Roles, and a fold “What you may do ({n})” listing your permissions.",
+        "controls": [
+          {
+            "label": "What you may do",
+            "kind": "button",
+            "does": "Opens the list of permissions."
+          }
+        ]
+      },
+      {
+        "name": "First screen",
+        "shows": "“Where you start after signing in, on any phone or till.” (Only for people with more than one screen.)",
+        "controls": [
+          {
+            "label": "First screen",
+            "kind": "list",
+            "does": "“My role's: {screen}” or any screen of your menu. Saved as soon as it is chosen.",
+            "after": "From your next sign-in (on any device) you start there. If you later lose that screen, you start at your role's."
+          }
+        ]
+      },
+      {
+        "name": "Two-step sign-in",
+        "shows": "Off: “Recommended for the owner: with it, someone who learns your password still cannot open the books without your phone.” (owner) or “With it, someone who learns your password still cannot sign in without your phone.” On: “On: signing in asks for the code from your authenticator app.”",
+        "controls": [
+          {
+            "label": "Turn on two-step sign-in",
+            "kind": "button",
+            "does": "Shows a code to scan: “Open an authenticator app on your phone and scan this code:”, “Or type this key into the app:” with the key.",
+            "rules": "Any authenticator app (Google Authenticator, Microsoft Authenticator…)."
+          },
+          {
+            "label": "Then type the six digits it shows",
+            "kind": "box",
+            "does": "The six digits from the app."
+          },
+          {
+            "label": "Turn it on",
+            "kind": "button",
+            "does": "Confirms with the six digits.",
+            "rules": "Disabled until 6 digits.",
+            "after": "From now on, after the password, signing in asks for the code (One more step). A password alone opens nothing."
+          },
+          {
+            "label": "Turn it off",
+            "kind": "button",
+            "does": "Removes the second step.",
+            "after": "Signing in needs only the password again."
+          }
+        ]
+      },
+      {
+        "name": "Your approval PIN",
+        "shows": "“On the till you approve discounts over the cap, voids and refunds with your name and this PIN. Four to eight digits: not one digit over and over, nor a run like 1234. Three wrong PINs in fifteen minutes stop the person typing them for fifteen minutes; twenty wrong PINs for you in a day pause your approvals by PIN until you set a new one here.” and “You have a PIN. Setting a new one replaces it.” or “You have not set a PIN yet.”",
+        "controls": [
+          {
+            "label": "New PIN",
+            "kind": "box",
+            "does": "Digits only, up to 8."
+          },
+          {
+            "label": "The same PIN again",
+            "kind": "box",
+            "does": "The same digits."
+          },
+          {
+            "label": "Save the PIN",
+            "kind": "button",
+            "does": "Saves it; only its hash is kept.",
+            "rules": "Disabled until both have 4 digits.",
+            "after": "The till accepts it at once for approvals. This is not the clock-in PIN (that is set on Staff)."
+          }
+        ]
+      },
+      {
+        "name": "Warnings on this phone",
+        "shows": "“The warnings the dashboard shows under Needs you, sent to this phone as they come, in your language: what is short, late, below zero or out of the ordinary. Each is sent once, within about five minutes.”",
+        "controls": [
+          {
+            "label": "Only the urgent (red) ones",
+            "kind": "toggle",
+            "does": "Off: every warning; on: only the red ones. When warnings are on, saved at once."
+          },
+          {
+            "label": "Turn on warnings on this phone",
+            "kind": "button",
+            "does": "Asks the browser for permission and registers this phone."
+          },
+          {
+            "label": "Send a test",
+            "kind": "button",
+            "does": "Sends a test warning to this phone."
+          },
+          {
+            "label": "Turn off on this phone",
+            "kind": "button",
+            "does": "Stops warnings to this phone."
+          }
+        ]
+      },
+      {
+        "name": "Change password",
+        "shows": "",
+        "controls": [
+          {
+            "label": "New password",
+            "kind": "box",
+            "does": "At least 8 characters."
+          },
+          {
+            "label": "Repeat the new password",
+            "kind": "box",
+            "does": "The same password."
+          },
+          {
+            "label": "Save password",
+            "kind": "button",
+            "does": "Changes your password."
+          }
+        ]
+      },
+      {
+        "name": "Language and theme (top bar)",
+        "shows": "On every screen, in the top bar: Online/Offline, a Language list and a Theme button.",
+        "controls": [
+          {
+            "label": "Language",
+            "kind": "list",
+            "does": "English, العربية, کوردی and any language the owner added. The page reloads in that language.",
+            "after": "Kept on this device (not on your login)."
+          },
+          {
+            "label": "Theme",
+            "kind": "button",
+            "does": "Switches light and dark; kept on this device."
+          }
+        ]
+      },
+      {
+        "name": "Sign out",
+        "shows": "",
+        "controls": [
+          {
+            "label": "Sign out",
+            "kind": "button",
+            "does": "Signs out and goes to the sign-in page."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Login not linked to the café",
+        "looks": "“Your login is not linked to the business yet” — “You are signed in as {email}” — “Ask the owner to add you under Settings → People with exactly this email. Once they have, sign out and sign in again.”"
+      },
+      {
+        "state": "Warnings off for the café",
+        "looks": "“The owner has not turned phone warnings on for the café yet (Settings → Phone warnings).”"
+      },
+      {
+        "state": "Browser cannot take warnings",
+        "looks": "“This browser cannot take warnings. On an iPhone, first add the app to the Home Screen (Share → Add to Home Screen), then open it from there and come back here.”"
+      },
+      {
+        "state": "Notifications blocked",
+        "looks": "“Notifications are blocked for this app on this phone. Allow them in the browser's or the phone's settings for this site, then come back here.”"
+      },
+      {
+        "state": "Warnings on",
+        "looks": "“On: every warning” or “On: the urgent ones only”."
+      },
+      {
+        "state": "Checking",
+        "looks": "“Checking this phone…”"
+      }
+    ],
+    "messages": [
+      {
+        "text": "Saved: you start there from now on.",
+        "kind": "success",
+        "when": "First screen chosen.",
+        "do": "Nothing."
+      },
+      {
+        "text": "That screen is not one of yours.",
+        "kind": "error",
+        "when": "The screen is not in your menu.",
+        "do": "Choose another."
+      },
+      {
+        "text": "Sign in first",
+        "kind": "error",
+        "when": "Not signed in.",
+        "do": "Sign in again."
+      },
+      {
+        "text": "The second step could not be started. Try again.",
+        "kind": "error",
+        "when": "Turning on failed.",
+        "do": "Try again."
+      },
+      {
+        "text": "Type the six digits the app shows",
+        "kind": "error",
+        "when": "The code is not 6 digits.",
+        "do": "Type the 6 digits."
+      },
+      {
+        "text": "That code is not right. Type the one the app shows now.",
+        "kind": "error",
+        "when": "Wrong or expired code.",
+        "do": "Type the current code (it changes every 30 seconds)."
+      },
+      {
+        "text": "The second step could not be turned off. Sign in again and try.",
+        "kind": "error",
+        "when": "Turning off failed (e.g. this session did not take the second step).",
+        "do": "Sign out, sign in with the code, then try again."
+      },
+      {
+        "text": "Your PIN is saved.",
+        "kind": "success",
+        "when": "PIN saved.",
+        "do": "Nothing."
+      },
+      {
+        "text": "The two PINs are not the same",
+        "kind": "error",
+        "when": "The two PIN boxes differ.",
+        "do": "Type the same PIN twice."
+      },
+      {
+        "text": "Only those who approve discounts, voids, refunds, losses or stock below zero have a PIN",
+        "kind": "error",
+        "when": "Your roles do not approve anything.",
+        "do": "Nothing to do."
+      },
+      {
+        "text": "A PIN is 4 to 8 digits",
+        "kind": "error",
+        "when": "PIN too short or long.",
+        "do": "Type 4 to 8 digits."
+      },
+      {
+        "text": "Choose a PIN that is harder to guess",
+        "kind": "error",
+        "when": "One digit repeated or a run.",
+        "do": "Choose another PIN."
+      },
+      {
+        "text": "Your password is changed.",
+        "kind": "success",
+        "when": "Password saved.",
+        "do": "Use it next time you sign in."
+      },
+      {
+        "text": "Use at least 8 characters",
+        "kind": "error",
+        "when": "Password shorter than 8.",
+        "do": "Type a longer one."
+      },
+      {
+        "text": "The two passwords differ",
+        "kind": "error",
+        "when": "The two boxes differ.",
+        "do": "Type the same password twice."
+      },
+      {
+        "text": "Warnings will come to this phone.",
+        "kind": "success",
+        "when": "Warnings turned on.",
+        "do": "Press Send a test."
+      },
+      {
+        "text": "Saved.",
+        "kind": "success",
+        "when": "Urgent-only changed.",
+        "do": "Nothing."
+      },
+      {
+        "text": "A test is on its way: it comes within a minute.",
+        "kind": "success",
+        "when": "Test sent.",
+        "do": "Wait for it."
+      },
+      {
+        "text": "The test waits: the database cannot send yet (see Settings).",
+        "kind": "warning",
+        "when": "The database cannot send warnings yet.",
+        "do": "Ask the owner to finish Settings → Phone warnings."
+      },
+      {
+        "text": "Warnings will no longer come to this phone.",
+        "kind": "success",
+        "when": "Turned off.",
+        "do": "Nothing."
+      },
+      {
+        "text": "This phone's browser would not take warnings. Try again, or another browser.",
+        "kind": "error",
+        "when": "The browser refused.",
+        "do": "Try again, or use Chrome or Safari."
+      },
+      {
+        "text": "The database cannot send yet: nothing will come until it can (see Settings).",
+        "kind": "warning",
+        "when": "The café's warnings are on, but sending is not set up.",
+        "do": "Tell the owner."
+      },
+      {
+        "text": "Phone warnings are not turned on for the café: the owner turns them on in Settings",
+        "kind": "error",
+        "when": "The café's warnings were turned off.",
+        "do": "Ask the owner."
+      },
+      {
+        "text": "This phone's browser gave no address to send to",
+        "kind": "error",
+        "when": "The browser gave nothing to send to.",
+        "do": "Try again or another browser."
+      },
+      {
+        "text": "Warnings are not turned on on this phone",
+        "kind": "error",
+        "when": "Send a test with warnings off here.",
+        "do": "Turn them on first."
+      },
+      {
+        "text": "A test was sent a moment ago: wait a minute",
+        "kind": "error",
+        "when": "Two tests within a minute.",
+        "do": "Wait a minute."
+      },
+      {
+        "text": "Sign in to continue",
+        "kind": "error",
+        "when": "The session ended.",
+        "do": "Sign in again."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "The connection dropped while saving, and the screen is sending the same save again (up to three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. It will not be recorded twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries got no answer from the database.",
+        "do": "Check the connection, then press the same button again. The database recognises the same save and does not record it twice."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A save was sent again with its first key but different values (for example, the form was changed while it was retrying).",
+        "do": "Reload the page, check whether the first save went through, then do it again if needed."
+      },
+      {
+        "text": "This was sent by someone else",
+        "kind": "error",
+        "when": "Rare: the same save key was already used by another person's login.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "Your roles do not hold the permission named (here usually discount.approve). The database checks every save again, even if a button was shown.",
+        "do": "Ask the owner to change your roles on Settings → People and roles, or ask someone who may do it."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "Two-step sign-in is on for you and this session has not taken the second step.",
+        "do": "Reload the page: you are taken to the code step. Type the six digits from your authenticator app."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired or was ended on this device.",
+        "do": "Sign in again; what you typed may need typing again."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "The connection to the database failed during a save that has no automatic retry.",
+        "do": "Reload the page and look whether the change is there before doing it again."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The café's database has not had the update that this part of the screen uses.",
+        "do": "Tell whoever looks after the system; nothing was saved."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "Someone may know my password",
+        "do": "Change password here, and turn on two-step sign-in."
+      },
+      {
+        "case": "I lost the phone with the authenticator app",
+        "do": "This screen cannot help without the code: ask whoever runs the system to remove the second step, then turn it on again with the new phone."
+      },
+      {
+        "case": "I want the app in Kurdish",
+        "do": "Choose کوردی in the Language list at the top."
+      }
+    ],
+    "tips": [
+      "The owner should turn on two-step sign-in.",
+      "The approval PIN is yours; the clock-in PIN is set on Staff."
+    ],
+    "related": [
+      "/login",
+      "/login/verify",
+      "/devices",
+      "/settings"
+    ],
+    "shots": [
+      {
+        "name": "account",
+        "role": "branch_manager",
+        "state": "Details, First screen, Two-step off, Your approval PIN",
+        "setup": "Sign in as a branch manager and open My account."
+      },
+      {
+        "name": "account-two-step",
+        "role": "owner",
+        "state": "The code to scan and the six-digit box",
+        "setup": "Press Turn on two-step sign-in."
+      }
+    ],
+    "open_questions": [
+      "Recovery when the authenticator phone is lost is not on any screen; the what_if assumes whoever runs the system removes the second step in Supabase Auth."
+    ],
+    "skipped_messages": [
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "why": "Only reached if the page's code is broken or very old; every button here sends a key."
+      },
+      {
+        "text": "That has already been recorded.",
+        "why": "A database duplicate guard that the screens prevent before saving; not normally reachable."
+      },
+      {
+        "text": "Could not start a database session.",
+        "why": "A server set-up fault, not something a person at the screen causes."
+      },
+      {
+        "text": "(Supabase's own error text on a password change or first-screen save)",
+        "why": "Passed through as the sign-in service writes it; not fixed text in the app."
+      }
+    ]
+  },
+  {
+    "path": "/devices",
+    "title": "Test your devices",
+    "area": "People",
+    "summary": "Before opening, try each of the till's devices in turn — the internet, the receipt printer and its drawer, the label printer, the scanner, the scale's labels, the phone warnings. Nothing here is a sale or goes in the books.",
+    "who": [
+      {
+        "role": "every signed-in member",
+        "can": "use every test",
+        "cannot": "—"
+      }
+    ],
+    "get_there": "Menu → You → Test your devices. Also Find anything: “Test your devices”.",
+    "before": [
+      "For the label test: a product with a barcode (otherwise a test label with a made-up barcode prints)."
+    ],
+    "parts": [
+      {
+        "name": "Summary",
+        "shows": "“{n} of 7 tried.” or “{n} device(s) need attention.” Each device is a card with its state: Not tried yet / Works / Needs attention / Not used here; a card that needs attention says what to do in red.",
+        "controls": []
+      },
+      {
+        "name": "The internet",
+        "shows": "",
+        "controls": [
+          {
+            "label": "Check the connection",
+            "kind": "button",
+            "does": "Times an answer from the database: “Good: the database answered in {ms} ms.”, “Slow: …” (over 1.5 s; over 3 s marks it Needs attention)."
+          }
+        ]
+      },
+      {
+        "name": "The receipt printer",
+        "shows": "",
+        "controls": [
+          {
+            "label": "Print a test receipt",
+            "kind": "button",
+            "does": "Prints a receipt “Test receipt” with two test lines, 2,000, marked “Not a sale”, laid out as the café's receipts."
+          },
+          {
+            "label": "Yes / No",
+            "kind": "button",
+            "does": "After printing: “Did it print, easy to read?”"
+          }
+        ]
+      },
+      {
+        "name": "The cash drawer",
+        "shows": "“A drawer plugged into the receipt printer opens when a receipt prints. Print the test receipt above, then say.”",
+        "controls": [
+          {
+            "label": "Yes / No / The drawer is not on the printer",
+            "kind": "button",
+            "does": "“Did the drawer open when the test receipt printed?”"
+          }
+        ]
+      },
+      {
+        "name": "The label printer",
+        "shows": "",
+        "controls": [
+          {
+            "label": "Print a test label",
+            "kind": "button",
+            "does": "Prints one label of a product with a barcode (or “Test label”)."
+          },
+          {
+            "label": "Yes / No / No label printer here",
+            "kind": "button",
+            "does": "“Did the label print, its bars sharp?”"
+          }
+        ]
+      },
+      {
+        "name": "The barcode scanner",
+        "shows": "",
+        "controls": [
+          {
+            "label": "Click here, then scan any barcode",
+            "kind": "box",
+            "does": "Scan into it; the scanner must press Enter after the code. Fast typing tells a scan from typing."
+          },
+          {
+            "label": "No scanner here",
+            "kind": "button",
+            "does": "Marks it Not used here."
+          }
+        ]
+      },
+      {
+        "name": "The scale's labels",
+        "shows": "“Weigh something sold by weight, print its label on the scale, and scan it into the box above.”",
+        "controls": [
+          {
+            "label": "Nothing is sold by weight here",
+            "kind": "button",
+            "does": "Marks it Not used here."
+          }
+        ]
+      },
+      {
+        "name": "Warnings on the phone",
+        "shows": "“On the phone that should get the café's warnings, open My account and press Send a test.”",
+        "controls": [
+          {
+            "label": "My account",
+            "kind": "link",
+            "does": "Opens My account."
+          },
+          {
+            "label": "Yes / No / Not used",
+            "kind": "button",
+            "does": "“Did the test warning reach the phone?”"
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Nothing tried",
+        "looks": "“0 of 7 tried.”, every card Not tried yet."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Checking…",
+        "kind": "info",
+        "when": "The connection test is running.",
+        "do": "Wait."
+      },
+      {
+        "text": "This device says it has no connection.",
+        "kind": "error",
+        "when": "The device is offline.",
+        "do": "Check the Wi-Fi or cable."
+      },
+      {
+        "text": "The app answered, but the database did not.",
+        "kind": "error",
+        "when": "The database is down or unreachable.",
+        "do": "Wait and try again; tell whoever looks after the system."
+      },
+      {
+        "text": "Good: the database answered in {ms} ms.",
+        "kind": "success",
+        "when": "Fast answer.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Slow: the database answered in {ms} ms. Sales still work; pages open slowly.",
+        "kind": "warning",
+        "when": "Over 1.5 seconds.",
+        "do": "Check the internet; restart the router."
+      },
+      {
+        "text": "No answer from the app.",
+        "kind": "error",
+        "when": "The request failed.",
+        "do": "Check the internet."
+      },
+      {
+        "text": "Scanned: {code}, which is {name}.",
+        "kind": "success",
+        "when": "The scanner read a product's barcode.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Scanned: {code}. No product has this barcode yet: add it on Products & Recipes.",
+        "kind": "info",
+        "when": "Scanner works; the code is unknown.",
+        "do": "Add the barcode to the product if it should sell."
+      },
+      {
+        "text": "That was typed, not scanned. Scan a code into the box.",
+        "kind": "warning",
+        "when": "The keys came too slowly for a scanner.",
+        "do": "Scan with the scanner."
+      },
+      {
+        "text": "Read the scale's label: {name}, {weight}.",
+        "kind": "success",
+        "when": "A scale label was read.",
+        "do": "Nothing."
+      },
+      {
+        "text": "A scale's label, but no weighed product has its product code.",
+        "kind": "error",
+        "when": "A 13-digit code starting with 2 that no weighed product has.",
+        "do": "Give the weighed product the scale's product code as its barcode."
+      },
+      {
+        "text": "Check the Wi-Fi or the cable, then restart the router. The till keeps selling quick sales and table bills meanwhile, and sends them when the internet is back.",
+        "kind": "error",
+        "when": "The internet needs attention.",
+        "do": "Do as it says."
+      },
+      {
+        "text": "Check the printer is on, has paper and is chosen in the print dialog. Set the paper to 80 mm and the margins to none, then try again.",
+        "kind": "error",
+        "when": "The receipt printer marked No.",
+        "do": "Do as it says."
+      },
+      {
+        "text": "In the receipt printer's settings on this computer, turn on opening the cash drawer when printing. Check the drawer's cable is in the printer's drawer socket.",
+        "kind": "error",
+        "when": "The drawer marked No.",
+        "do": "Do as it says."
+      },
+      {
+        "text": "Check the label printer is on, has labels and is chosen in the print dialog, with the label's size as its paper.",
+        "kind": "error",
+        "when": "The label printer marked No.",
+        "do": "Do as it says."
+      },
+      {
+        "text": "Click in the box first, then scan. Check the scanner is plugged in and set to press Enter after each code.",
+        "kind": "error",
+        "when": "The scanner needs attention.",
+        "do": "Do as it says."
+      },
+      {
+        "text": "Set the scale to print EAN-13 labels starting with 2, and give each weighed product the scale's product code as its barcode on Products & Recipes.",
+        "kind": "error",
+        "when": "The scale's labels need attention.",
+        "do": "Do as it says."
+      },
+      {
+        "text": "On the phone, open My account, turn on Phone warnings and press Send a test.",
+        "kind": "error",
+        "when": "The phone warnings marked No.",
+        "do": "Do as it says."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "The receipt prints too small or cut",
+        "do": "In the print dialog set the paper to 80 mm and margins to none, then print the test again."
+      }
+    ],
+    "tips": [
+      "The ticks are not kept: the screen starts fresh each time.",
+      "Nothing printed here is a sale or touches stock or money."
+    ],
+    "related": [
+      "/pos",
+      "/account",
+      "/products"
+    ],
+    "shots": [
+      {
+        "name": "devices",
+        "role": "cashier",
+        "state": "Internet Works, printer Needs attention with its fix",
+        "setup": "Check the connection, print a test receipt and press No."
+      }
+    ],
+    "skipped_messages": []
+  },
+  {
+    "path": "/login",
+    "title": "Welcome back",
+    "area": "People",
+    "summary": "The sign-in page: sign in with the email the café invited; or create your login the first time; or ask for a password reset link.",
+    "who": [
+      {
+        "role": "anyone",
+        "can": "sign in, create a login with an invited email, ask for a reset link",
+        "cannot": "get into the café without being invited (Settings → People and roles)"
+      }
+    ],
+    "get_there": "Any page while signed out; Sign out.",
+    "before": [
+      "For a new person: the owner or general manager added their email on Settings → People and roles."
+    ],
+    "parts": [
+      {
+        "name": "The café",
+        "shows": "The café's name, “The till, the kitchen and the books, in one place.”, and three lines: “Sell at the counter, at a table, or for delivery”, “Make, count and keep the stock right”, “See the day's figures, and what they mean”. The top bar has the Language list and Theme.",
+        "controls": []
+      },
+      {
+        "name": "The form",
+        "shows": "“Welcome back” and “Sign in with the email your manager invited.”",
+        "controls": [
+          {
+            "label": "Email",
+            "kind": "box",
+            "does": "Your email.",
+            "rules": "Required."
+          },
+          {
+            "label": "Password",
+            "kind": "box",
+            "does": "Your password (not in reset mode).",
+            "rules": "At least 8 characters."
+          },
+          {
+            "label": "Sign in",
+            "kind": "button",
+            "does": "Signs in and goes to the page you were going to, or your first screen.",
+            "after": "With two-step sign-in on, you go to One more step first."
+          },
+          {
+            "label": "First time here? Create your login",
+            "kind": "button",
+            "does": "Switches to creating a login: the button becomes “Create my login” with “Use the email the owner invited. You will get a confirmation email; after confirming, sign in.”"
+          },
+          {
+            "label": "Create my login",
+            "kind": "button",
+            "does": "Creates the login and sends a confirmation email.",
+            "after": "After the email is confirmed and the email was invited, you are in with your roles."
+          },
+          {
+            "label": "Forgot password?",
+            "kind": "button",
+            "does": "Switches to “Send me a reset link” (email only)."
+          },
+          {
+            "label": "Send me a reset link",
+            "kind": "button",
+            "does": "Sends a link to set a new password; it opens My account."
+          },
+          {
+            "label": "I have a login",
+            "kind": "button",
+            "does": "Back to signing in."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "A link failed",
+        "looks": "“That link has expired or was already used. Sign in, or ask for a new link.”"
+      }
+    ],
+    "messages": [
+      {
+        "text": "Enter your email address",
+        "kind": "error",
+        "when": "The email is not valid.",
+        "do": "Check it."
+      },
+      {
+        "text": "Passwords are at least 8 characters",
+        "kind": "error",
+        "when": "Password too short.",
+        "do": "Type the full password."
+      },
+      {
+        "text": "That email and password do not match.",
+        "kind": "error",
+        "when": "Wrong email or password.",
+        "do": "Try again, or Forgot password?."
+      },
+      {
+        "text": "Confirm your email first — the link is in the message we sent you.",
+        "kind": "error",
+        "when": "The email is not confirmed yet.",
+        "do": "Open the confirmation email."
+      },
+      {
+        "text": "Check your email and open the confirmation link. If the owner invited this address, you can then sign in.",
+        "kind": "success",
+        "when": "Login created.",
+        "do": "Open the email."
+      },
+      {
+        "text": "If that address has a login, a link to set a new password is on its way.",
+        "kind": "success",
+        "when": "Reset asked (same answer whether or not the address exists).",
+        "do": "Open the email."
+      },
+      {
+        "text": "That link has expired or was already used. Sign in, or ask for a new link.",
+        "kind": "error",
+        "when": "A confirmation or reset link failed.",
+        "do": "Sign in or ask for a new link."
+      },
+      {
+        "text": "Check the form",
+        "kind": "error",
+        "when": "Something in the form is not valid.",
+        "do": "Check both boxes."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "Signed in but sees “Your login is not linked to the business yet”",
+        "do": "The email used is not the invited one. Ask the owner to add it on Settings → People and roles, then sign out and in."
+      }
+    ],
+    "tips": [
+      "Use exactly the email the owner typed when inviting you."
+    ],
+    "related": [
+      "/login/verify",
+      "/account",
+      "/settings#people"
+    ],
+    "shots": [
+      {
+        "name": "login",
+        "role": "cashier",
+        "state": "The sign-in page on a phone",
+        "setup": "Sign out."
+      }
+    ],
+    "skipped_messages": [
+      {
+        "text": "(the sign-in service's own error on Create my login, e.g. for an email already registered)",
+        "why": "Shown as the service writes it; not fixed text in the app."
+      }
+    ]
+  },
+  {
+    "path": "/login/verify",
+    "title": "One more step",
+    "area": "People",
+    "summary": "The second step of signing in, for people who turned on two-step sign-in: the six digits from the authenticator app.",
+    "who": [
+      {
+        "role": "anyone with two-step sign-in on",
+        "can": "finish signing in",
+        "cannot": "open any page before this step"
+      }
+    ],
+    "get_there": "Automatically after the password, or when opening any page with only the password given.",
+    "before": [
+      "Two-step sign-in turned on on My account."
+    ],
+    "parts": [
+      {
+        "name": "The code",
+        "shows": "“Type the six digits your authenticator app shows for this café.”",
+        "controls": [
+          {
+            "label": "The six digits",
+            "kind": "box",
+            "does": "Digits only, 6.",
+            "rules": "Kept while it checks, so typing on is not lost."
+          },
+          {
+            "label": "Sign in",
+            "kind": "button",
+            "does": "Checks the code and goes on to where you were going."
+          },
+          {
+            "label": "Sign out",
+            "kind": "button",
+            "does": "Signs out instead."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Two-step off or already done",
+        "looks": "The page sends you straight on."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Type the six digits the app shows",
+        "kind": "error",
+        "when": "Not 6 digits.",
+        "do": "Type 6 digits."
+      },
+      {
+        "text": "That code is not right. Type the one the app shows now.",
+        "kind": "error",
+        "when": "Wrong or old code.",
+        "do": "Type the current one; check the phone's time is right."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "The phone with the app is lost",
+        "do": "See open questions: the screen offers no recovery."
+      }
+    ],
+    "tips": [
+      "The code changes every 30 seconds; type the one showing now."
+    ],
+    "related": [
+      "/login",
+      "/account"
+    ],
+    "shots": [
+      {
+        "name": "login-verify",
+        "role": "owner",
+        "state": "One more step with three digits typed",
+        "setup": "Turn on two-step, sign out, sign in."
+      }
+    ],
+    "skipped_messages": [],
+    "open_questions": [
+      "If the owner loses the phone with the authenticator app, the app has no screen to recover; presumably the second step is removed in Supabase Auth by whoever runs the system."
+    ]
+  }
+]

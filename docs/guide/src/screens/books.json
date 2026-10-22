@@ -1,0 +1,3542 @@
+[
+  {
+    "path": "/accounting",
+    "title": "Chart of Accounts",
+    "area": "The books",
+    "summary": "The trial balance of one month (each account's opening, debits, credits and closing), and closing that month: a checklist that must pass before the month is locked, and reopening a locked month. (The equipment, the owner's money and the list of accounts on the same page are in the next entry.)",
+    "who": [
+      {
+        "role": "owner",
+        "can": "see everything; lock a month; reopen (unlock) a locked month",
+        "cannot": "lock while a blocking check fails"
+      },
+      {
+        "role": "general_manager",
+        "can": "see the trial balance and the checklist; lock a month",
+        "cannot": "reopen a locked month"
+      },
+      {
+        "role": "accountant",
+        "can": "see the trial balance and the checklist; lock a month",
+        "cannot": "reopen a locked month"
+      },
+      {
+        "role": "branch_manager",
+        "can": "see the trial balance and the checklist (it has audit.view)",
+        "cannot": "lock or reopen a month"
+      },
+      {
+        "role": "auditor",
+        "can": "see the trial balance and the checklist",
+        "cannot": "lock or reopen a month"
+      },
+      {
+        "role": "purchasing",
+        "can": "see the trial balance only",
+        "cannot": "see the closing checklist, lock or reopen"
+      },
+      {
+        "role": "cashier, barista, inventory_counter",
+        "can": "nothing here",
+        "cannot": "open the screen: they are sent to their own first screen (the till, Production or Stock Count)"
+      }
+    ],
+    "get_there": "Menu → Accountant → Chart of Accounts (for the owner and a branch manager it is folded under More). Also: the year-end and period links on Reports; an alert 'Reconcile the bank…' leads to the bank page under it.",
+    "before": [
+      "Months (periods) are made by the database as entries are posted into them; a month with no posting yet has no period and no closing panel.",
+      "To lock a month: every trading day's cash counted (End of Day), no stock count waiting, no draft journals, every earlier month locked, and each subledger agreeing with its account."
+    ],
+    "parts": [
+      {
+        "name": "Heading",
+        "shows": "The title 'Chart of Accounts', the line 'Trial balance & closing the period', a badge 'Period debits equal credits' (green) or 'Period debits do not equal credits' (red) from the totals below, and the chosen month's name with its state, e.g. '2026-09 open' or '2026-08 locked' (red when locked).",
+        "controls": [
+          {
+            "label": "Print or save as PDF",
+            "kind": "button",
+            "does": "Opens the browser's print window; the printout carries the café's name, 'Trial balance' and the dates."
+          }
+        ]
+      },
+      {
+        "name": "Months",
+        "shows": "A row of up to 18 months, newest first. The chosen one is highlighted; a locked month shows a lock icon.",
+        "controls": [
+          {
+            "label": "{month} (e.g. 2026-09)",
+            "kind": "link",
+            "does": "Shows that month's trial balance and closing panel (address /accounting?period=…).",
+            "rules": "Without a choice, the month that holds today is shown; if there is none, the current calendar month's dates are used and no closing panel is shown."
+          }
+        ]
+      },
+      {
+        "name": "Trial Balance",
+        "shows": "Heading 'Trial Balance' with '{from} to {to} · published entries only · IQD'. One row per account that has an opening, a movement or a closing balance: A/C (code), Account (name in the reader's language), Class (Asset, Liability, Equity, Income, Expense), Opening, Debit, Credit, Closing. Opening and Closing are debit-positive; a credit balance shows in brackets, e.g. (250,000). Drafts are left out. The last row, 'Totals for the period', adds the Debit and Credit columns. A note under it explains that the database guarantees debits equal credits for every published entry, and that whether the books are right is shown by the reconciliation on Reports.",
+        "controls": [
+          {
+            "label": "Download CSV",
+            "kind": "link",
+            "does": "Downloads the trial balance for the shown dates as a CSV file (opens in Excel)."
+          },
+          {
+            "label": "{account name}",
+            "kind": "link",
+            "does": "Opens Journals with the lines of that account for the same dates (the 'lines behind the figure' view)."
+          },
+          {
+            "label": "Reports",
+            "kind": "link",
+            "does": "Opens Reports, where 'Do the books tie?' compares each subledger with its control account."
+          }
+        ]
+      },
+      {
+        "name": "Close {period}",
+        "shows": "Only for the owner, a general manager, the accountant, a branch manager and the auditor (those with accounting.period.lock, accounting.post or audit.view), and only when a month is chosen. While open: the note 'Every check must pass before the period can be locked' and a table of checks, each with a mark — 'All good' (green), 'Stops the close' (red) or 'Warning' (orange) — the check and, when it fails, why. The checks, in order: 'Earlier periods are locked' ({n} earlier period(s) still open); 'No draft journals' ({n} draft journal(s) must be published or discarded); 'Every trading day's cash is counted' (Not counted: {days}); 'No stock count awaiting approval' ({n} count(s) submitted and not yet approved or rejected); each subledger against its account at the month's last day — 'Stock ledger agrees with Inventory (1200)', 'Unpaid bills agree with Accounts payable (2000)', 'Unbilled receipts agree with GRNI (2050)', 'Sales agree with net revenue (4000 less 4100 and 4200)', 'Card takings not yet settled agree with Card clearing (1010)', 'Orders the platforms owe agree with their receivable (1100)', 'What the drawers should hold agrees with Cash in the till (1000)', 'Cash moved through the safe agrees with the Safe (1005)', 'Dollars held, at what they were taken at, vs Cash in dollars (1001 and 1006)', 'Salaries owed agree with Salaries payable (2100)', 'Advances not yet taken back agree with Employee advances (1300)', 'Stock on its way agrees with Stock in transit (1210)', 'Prepaid expenses still to come vs Prepaid expenses (1400)', 'Every record has its one journal' (each failing one says e.g. 'stock ledger {a}, account 1200 {b}, difference {c}', or '{n} record(s) to look into: see Reports, Do the books tie?'); 'The period's journals balance' (out by {n}); 'Each prepaid expense's share of the month is posted' ({n} share(s) of prepaid expenses to {date}, {amount} IQD in all, are not posted: release them on Expenses). Warnings that do not stop the lock: 'No sale costed at nothing' ({n} sale(s) costed at nothing or in part at nothing: see Reports, Uncosted sales. Their profit is overstated. The month can still be locked); 'The month's payroll is approved' (The payroll for {YYYY-MM} is not approved: after the lock it cannot be posted into this month); 'The bank is reconciled to the month's end' ({n} bank line(s) to {date}, the first from {date}, are on no bank statement). Once locked, the checks are hidden and the header says 'Locked {when} by {name}'.",
+        "controls": [
+          {
+            "label": "Note for the audit trail (optional)",
+            "kind": "box",
+            "does": "A note kept with the lock on the audit trail.",
+            "rules": "Up to 300 letters.",
+            "who": "Owner, general manager, accountant (accounting.period.lock); only while the month is open."
+          },
+          {
+            "label": "Lock {period}",
+            "kind": "button",
+            "does": "The database runs every check again; if any blocking check fails it refuses. If all pass, the month is locked. If the month ends on 31 December, the year-end close is posted first: every income and cost account of the year is closed into 3100 Retained earnings as one journal ('Year-end close {year}'). The button shows 'Locking…' while it works.",
+            "rules": "Disabled while any blocking check fails; then 'Resolve the {n} failing check(s) first.' is shown beside it.",
+            "who": "Owner, general manager, accountant.",
+            "after": "No journal can be posted, changed or discarded with a date in that month any more; corrections go into an open month by reversing entries. The lock (who, when, the note) is on the audit trail as 'Period locked'. A December lock adds the year-end journal to the books."
+          },
+          {
+            "label": "Why must it be reopened? (required)",
+            "kind": "box",
+            "does": "The reason for reopening, kept on the audit trail.",
+            "rules": "Required; up to 300 letters.",
+            "who": "Owner only (accounting.period.unlock); only when the month is locked."
+          },
+          {
+            "label": "Reopen {period}",
+            "kind": "button",
+            "does": "Opens the locked month again. Shows 'Reopening…' while it works.",
+            "rules": "Disabled until a reason is typed. Only the most recent locked month can be reopened.",
+            "who": "Owner only.",
+            "after": "Postings into that month are allowed again. 'Period reopened' with the reason goes on the audit trail. A year-end journal already posted stays; it is not undone."
+          }
+        ]
+      },
+      {
+        "name": "Links under the closing panel",
+        "shows": "A link to the bank page, and (for those who may see it) a line about the audit trail.",
+        "controls": [
+          {
+            "label": "The bank against its statement →",
+            "kind": "link",
+            "does": "Opens /accounting/bank."
+          },
+          {
+            "label": "audit trail",
+            "kind": "link",
+            "does": "Opens the Audit trail.",
+            "who": "Those with audit.view."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Nothing posted",
+        "looks": "The trial balance shows 'Nothing posted up to the end of this period.' and totals of 0."
+      },
+      {
+        "state": "No period for today yet",
+        "looks": "No month is highlighted; the trial balance covers the current calendar month; there is no closing panel and no month badge in the heading."
+      },
+      {
+        "state": "Open month, checks failing",
+        "looks": "Red marks with the reasons; 'Lock {period}' is disabled and 'Resolve the {n} failing check(s) first.' shows."
+      },
+      {
+        "state": "Open month, only warnings",
+        "looks": "Orange marks; the lock button works."
+      },
+      {
+        "state": "Locked month",
+        "looks": "The month's badge is red ('2026-08 locked'), its chip has a lock icon, the panel says 'Locked {when} by {name}'. The owner sees the reopen box; others see 'Only the owner can reopen a locked period.'"
+      },
+      {
+        "state": "Debits not equal",
+        "looks": "The heading badge is red: 'Period debits do not equal credits'. This should never happen for published entries; tell whoever looks after the system."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Resolve the {n} failing check(s) first.",
+        "kind": "warning",
+        "when": "One or more blocking checks fail.",
+        "do": "Fix each red check (count the days' cash, approve the counts, publish or discard drafts, lock earlier months, look into the differences on Reports), then reload."
+      },
+      {
+        "text": "{period} is locked. Corrections now go in by reversing entries in an open period.",
+        "kind": "success",
+        "when": "The month was locked.",
+        "do": "Nothing. Corrections from now on are reversals dated in an open month."
+      },
+      {
+        "text": "{period} is locked. Corrections now go in by reversing entries in an open period. The year-end close was posted as journal {no}.",
+        "kind": "success",
+        "when": "A December month was locked and the year's income and costs were closed into retained earnings.",
+        "do": "Nothing; the journal is in the register."
+      },
+      {
+        "text": "{period} is open again. The reason is on the audit trail.",
+        "kind": "success",
+        "when": "The owner reopened the month.",
+        "do": "Post what was needed, then lock it again."
+      },
+      {
+        "text": "Only the owner can reopen a locked period.",
+        "kind": "info",
+        "when": "A locked month seen by someone who is not the owner.",
+        "do": "Ask the owner if it must be reopened."
+      },
+      {
+        "text": "Period {1} cannot be locked yet: {2}",
+        "kind": "error",
+        "when": "The database ran the checks again as it locked and one failed ({2} lists each failing check and why, separated by ';'). For example something changed after the page was loaded.",
+        "do": "Reload the page, fix the failing checks, try again."
+      },
+      {
+        "text": "Period {1} is already locked",
+        "kind": "error",
+        "when": "Someone locked it a moment before.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "Period {1} is not locked",
+        "kind": "error",
+        "when": "Someone reopened it a moment before.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "Reopen the most recent locked period first",
+        "kind": "error",
+        "when": "A later month is locked too.",
+        "do": "Reopen the latest locked month first, then this one."
+      },
+      {
+        "text": "Say why the period is being reopened",
+        "kind": "error",
+        "when": "The reason was empty.",
+        "do": "Type why it must be reopened."
+      },
+      {
+        "text": "Period not found",
+        "kind": "error",
+        "when": "The month does not exist for this café (old link).",
+        "do": "Choose a month from the row of months."
+      },
+      {
+        "text": "A reason is required",
+        "kind": "error",
+        "when": "Reopen pressed with only spaces as the reason.",
+        "do": "Type the reason."
+      },
+      {
+        "text": "Too long",
+        "kind": "error",
+        "when": "The note is over 300 letters.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "Choose a period",
+        "kind": "error",
+        "when": "The page sent no month (broken page).",
+        "do": "Reload the page."
+      },
+      {
+        "text": "Accounting periods cannot be deleted",
+        "kind": "error",
+        "when": "Never from this screen; a month is never deleted.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "No answer came back from the database, so the screen sends the same submission again by itself (three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. The database knows the submission by its key and never records it twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries brought no answer (connection lost or the database was slow).",
+        "do": "Check the connection, then press the same button again. It is sent with the same key, so it is recorded once at most."
+      },
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "kind": "error",
+        "when": "The page was old or broken and sent no submission key.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A retry carried the key of an earlier submission but different values.",
+        "do": "Reload the page, check whether the first one was saved, then do it again if needed."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "The person's roles do not give the permission the database function needs ({1} names it).",
+        "do": "Ask the owner to change the person's roles on Settings, or ask someone who has it."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired.",
+        "do": "Sign in again and repeat the action."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "The account uses two-step sign-in and the code was not given yet.",
+        "do": "Type the code from the authenticator app."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The database has not had the update that this part of the screen needs.",
+        "do": "Tell the owner or whoever looks after the system to apply the latest database update."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "A check says 'Every trading day's cash is counted' fails with 'Not counted: 2026-09-14'",
+        "do": "Count that day's drawer on End of Day (or close the drawer on the till), then come back and reload."
+      },
+      {
+        "case": "A mistake is found in a locked month",
+        "do": "Do not reopen for small things: reverse or correct it in the current open month (Journals → Reverse, dated today). Only the owner reopens, with a reason, and only the latest locked month."
+      },
+      {
+        "case": "The payroll check warns",
+        "do": "Approve the month's payroll on Payroll before locking, or it can never be posted into that month."
+      },
+      {
+        "case": "The bank check warns",
+        "do": "Keep the bank's statement for that month on /accounting/bank first; the lock is still allowed."
+      }
+    ],
+    "tips": [
+      "Click any account name in the trial balance to see the journal lines behind it.",
+      "Lock months in order: the oldest open month first.",
+      "Locking 31 December posts the year-end close journal by itself; its number is shown in the message."
+    ],
+    "related": [
+      "/journals",
+      "/accounting/bank",
+      "/reports",
+      "/end-of-day",
+      "/count",
+      "/expenses",
+      "/payroll",
+      "/audit"
+    ],
+    "shots": [
+      {
+        "name": "accounting-trial-balance",
+        "role": "accountant",
+        "state": "A month with postings",
+        "setup": "Menu → Accountant → Chart of Accounts."
+      },
+      {
+        "name": "accounting-close-failing",
+        "role": "owner",
+        "state": "The closing checklist with a red 'Every trading day's cash is counted' row",
+        "setup": "Leave a day with sales uncounted, open the month."
+      },
+      {
+        "name": "accounting-close-locked",
+        "role": "owner",
+        "state": "A locked month with the reopen box",
+        "setup": "Lock a month whose checks pass."
+      }
+    ],
+    "skipped_messages": [
+      "idem_begin: \"This was sent by someone else\" — only when a submission key is reused by another person; the screens make a fresh key per person, so it cannot be reached by normal use.",
+      "trg_inherit_business_id messages ({1}.{2}: cannot determine the business …) — internal database consistency checks, not reachable from these screens.",
+      "\"That has already been recorded.\" (a unique-key clash) — the keyed writes answer a repeat with the first result instead; not expected here."
+    ]
+  },
+  {
+    "path": "/accounting",
+    "title": "Chart of Accounts — equipment, the owner's money and the accounts",
+    "area": "The books",
+    "summary": "The lower half of Chart of Accounts: the equipment (what it cost, its monthly depreciation, what it is worth), the owner's money put in and taken out, and the list of accounts, where the café adds, renames, retires and brings back its own accounts.",
+    "who": [
+      {
+        "role": "owner",
+        "can": "everything below, including taking money out for themselves",
+        "cannot": "change an account the system posts to"
+      },
+      {
+        "role": "general_manager",
+        "can": "add equipment, post depreciation, record equipment gone; put owner's money in; add and change accounts",
+        "cannot": "record the owner taking money out ('Only the owner takes money out for themselves')"
+      },
+      {
+        "role": "accountant",
+        "can": "same as the general manager",
+        "cannot": "record the owner taking money out"
+      },
+      {
+        "role": "branch_manager",
+        "can": "see the equipment and the account list; put the owner's money in",
+        "cannot": "add or change equipment or accounts; take owner's money out"
+      },
+      {
+        "role": "auditor",
+        "can": "see the equipment and the account list",
+        "cannot": "change anything; the owner's money card is not shown"
+      },
+      {
+        "role": "purchasing",
+        "can": "see the account list",
+        "cannot": "see the equipment or the owner's money; change anything"
+      }
+    ],
+    "get_there": "Menu → Accountant → Chart of Accounts, then scroll down below the closing panel.",
+    "before": [
+      "The equipment and owner's money cards need the database update 0081; before it they are not shown.",
+      "To pay equipment 'With the loan …', add the loan account first (Add an account → A loan)."
+    ],
+    "parts": [
+      {
+        "name": "Equipment",
+        "shows": "Shown to those who see profit (owner, general manager, branch manager, accountant, auditor). Heading 'Equipment' and 'Worth in the books: {amount}'. A table: Equipment (name, and 'Bought {date} · {months} months' or 'Gone on {date}'), Cost, A month (its monthly depreciation), Depreciated (so far), Worth now ('—' when gone). Gone pieces are greyed. When months have passed without depreciation: 'Depreciation waits for {n} months gone.' with a button.",
+        "controls": [
+          {
+            "label": "Post it",
+            "kind": "button",
+            "does": "Posts the depreciation for every month gone that is not posted yet (never the current month): one journal per month, dated its last day, 'Depreciation YYYY-MM'.",
+            "who": "Owner, general manager, accountant (accounting.post).",
+            "after": "Books: Dr 6400 Depreciation, Cr 1590 Accumulated depreciation, for each month. The P&L of each month carries its share; 'Worth now' drops. Audit trail: 'Depreciation posted'. A month is posted only once, whoever presses."
+          },
+          {
+            "label": "＋ Add equipment",
+            "kind": "button",
+            "does": "Opens the form to add a piece.",
+            "who": "Owner, general manager, accountant."
+          },
+          {
+            "label": "What is it?",
+            "kind": "box",
+            "does": "Its name (oven, gelato machine…).",
+            "rules": "Required, up to 80 letters."
+          },
+          {
+            "label": "What it cost",
+            "kind": "box",
+            "does": "The price paid.",
+            "rules": "Required, more than 0."
+          },
+          {
+            "label": "Months it will be used",
+            "kind": "box",
+            "does": "Its life in months.",
+            "rules": "1 to 600; default 60."
+          },
+          {
+            "label": "Worth at the end (0 if nothing)",
+            "kind": "box",
+            "does": "What it will still be worth at the end.",
+            "rules": "0 or more and less than the cost; default 0."
+          },
+          {
+            "label": "Bought on",
+            "kind": "box",
+            "does": "The day it was bought; depreciation starts that month.",
+            "rules": "Up to today; default today."
+          },
+          {
+            "label": "How was it paid?",
+            "kind": "list",
+            "does": "Where the money came from: 'From the bank', 'From the safe', 'With the owner's own money', 'On a supplier's bill', 'Bought before: in the books already', or 'With the loan {code name}' for each loan account (2400–2499).",
+            "rules": "Default 'From the bank'."
+          },
+          {
+            "label": "{amount} a month for {months} months",
+            "kind": "tile",
+            "does": "A preview of the monthly depreciation: (cost − worth at the end) ÷ months, rounded."
+          },
+          {
+            "label": "Add it",
+            "kind": "button",
+            "does": "Adds the piece.",
+            "rules": "Disabled until it has a name and a cost above 0.",
+            "after": "Books (unless 'Bought before'): Dr 1500 Equipment, Cr the account paid from — 1020 Bank, 1005 Safe, 3000 Owner equity, 2000 Accounts payable, or the loan — dated the day bought ('Equipment bought: {name}'). Paid from the safe lowers what the safe holds in the books. Audit trail: 'Equipment added'."
+          },
+          {
+            "label": "Cancel",
+            "kind": "button",
+            "does": "Closes the form without saving."
+          },
+          {
+            "label": "Sold or thrown out",
+            "kind": "link",
+            "does": "Opens the small form below the table for that piece.",
+            "who": "Owner, general manager, accountant; only for a piece not gone."
+          },
+          {
+            "label": "When",
+            "kind": "box",
+            "does": "The day it went.",
+            "rules": "From the day it was bought up to today; default today."
+          },
+          {
+            "label": "What it fetched (0 when thrown out)",
+            "kind": "box",
+            "does": "The money received for it.",
+            "rules": "0 or more."
+          },
+          {
+            "label": "The bank / The safe",
+            "kind": "toggle",
+            "does": "Where the money went; shown only when it fetched more than 0.",
+            "rules": "Default 'The bank'."
+          },
+          {
+            "label": "Save",
+            "kind": "button",
+            "does": "Records the piece as gone.",
+            "after": "Books ('Equipment gone: {name}'): Cr 1500 its cost, Dr 1590 the depreciation so far, Dr 1020 Bank or 1005 Safe what it fetched, and the rest Dr 6900 Other expenses (a loss) or Cr 6900 (a gain). It takes no more depreciation from that month. Audit trail: 'Equipment sold or thrown out'."
+          }
+        ]
+      },
+      {
+        "name": "The owner's money",
+        "shows": "Shown to the owner, a general manager, a branch manager and the accountant. 'Put in' (all credits to 3000 Owner equity) and 'Taken out' (all debits to 3000 and 3200 Owner drawings), all time.",
+        "controls": [
+          {
+            "label": "The owner puts money in / The owner takes money out",
+            "kind": "toggle",
+            "does": "Which way the money goes.",
+            "rules": "Default: puts money in."
+          },
+          {
+            "label": "The bank / The safe",
+            "kind": "toggle",
+            "does": "Where the money goes into or comes out of.",
+            "rules": "Default: the bank."
+          },
+          {
+            "label": "Amount",
+            "kind": "box",
+            "does": "How much.",
+            "rules": "More than 0; commas allowed."
+          },
+          {
+            "label": "What it is for (required)",
+            "kind": "box",
+            "does": "What the money is for; kept with the journal and the audit trail.",
+            "rules": "Required, up to 200 letters."
+          },
+          {
+            "label": "Record it",
+            "kind": "button",
+            "does": "Records the movement of cash.",
+            "rules": "Disabled until there is an amount and a note.",
+            "who": "Putting in: anyone shown the card. Taking out: the owner only.",
+            "after": "Put in: Dr 1020 Bank or 1005 Safe, Cr 3000 Owner equity. Taken out: Dr 3200 Owner drawings, Cr 1020 Bank or 1005 Safe ('Cash from the … to the …: {note}'). The bank or safe balance in the books changes; 'Put in'/'Taken out' update; the move is on Sales' cash moves and the audit trail as 'Cash moved'. Taking out of the safe is refused if the safe does not hold that much in the books."
+          }
+        ]
+      },
+      {
+        "name": "The accounts",
+        "shows": "Every account by kind (Asset, Liability, Equity, Income, Expense): Code, Account (in the reader's language; 'Out of use' badge when retired, greyed), Type ('The system posts to it' under the ones the app posts to itself). The note: 'An income or a cost the café adds is changed here; the accounts the system posts to stay as they are.'",
+        "controls": [
+          {
+            "label": "Rename…",
+            "kind": "button",
+            "does": "Opens 'Name (English)', 'الاسم (Arabic)', 'ناو (Kurdish)' under the account, with 'Its names in Arabic and Kurdish stay as they are, unless new ones are given.'",
+            "who": "Owner, general manager, accountant; only on accounts the café added."
+          },
+          {
+            "label": "Save the name",
+            "kind": "button",
+            "does": "Renames the account; Arabic and Kurdish names change only if typed.",
+            "rules": "Name required, up to 60 letters each. A name that is a word the screens use (e.g. 'Delivery') is refused.",
+            "after": "Every screen and report shows the new name. Audit trail: 'Account renamed'."
+          },
+          {
+            "label": "Take out of use… / Bring back…",
+            "kind": "button",
+            "does": "Opens a 'Why (required)' box with 'Out of use, it takes no new posting; what was posted to it stays in every report.' or 'Back in use, it can be chosen again.'",
+            "who": "Owner, general manager, accountant; café's own accounts only."
+          },
+          {
+            "label": "Take it out of use / Put it back in use",
+            "kind": "button",
+            "does": "Retires or restores the account.",
+            "rules": "A reason is required (up to 300 letters). Refused while a draft journal has a line on it, or a prepaid expense still takes monthly shares from it.",
+            "after": "Out of use: Expenses, journals and other screens no longer offer it; its past stays in every report. Audit trail: 'Account taken out of use or brought back'."
+          },
+          {
+            "label": "Cancel",
+            "kind": "button",
+            "does": "Closes the rename or retire box without saving."
+          },
+          {
+            "label": "Type (Add an account)",
+            "kind": "list",
+            "does": "What kind of account to add: 'A cost', 'An income', 'Another bank account', 'A loan', 'A kind of equipment'. The code box is filled with the next free code for that kind, and the rule under it changes.",
+            "rules": "A cost 5000–6999 (5… cost of what was sold, 6… running costs); an income 4000–4999; another bank 1021–1029 (counts as cash in the cash flow); a loan 2400–2499; a kind of equipment 1501–1589.",
+            "who": "Owner, general manager, accountant."
+          },
+          {
+            "label": "Code",
+            "kind": "box",
+            "does": "The four-digit code.",
+            "rules": "Four digits, inside the kind's range, not taken."
+          },
+          {
+            "label": "Name (English)",
+            "kind": "box",
+            "does": "The name, e.g. 'Repairs'.",
+            "rules": "Required, up to 60 letters."
+          },
+          {
+            "label": "الاسم (Arabic) / ناو (Kurdish)",
+            "kind": "box",
+            "does": "Its names in Arabic and Kurdish (optional).",
+            "rules": "Up to 60 letters each."
+          },
+          {
+            "label": "Add the account",
+            "kind": "button",
+            "does": "Adds the account.",
+            "rules": "Disabled until there is a name and a four-digit code.",
+            "after": "It can be chosen on Expenses (a cost), in journals, as a bank or a loan for equipment. Audit trail: 'Account added'."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "No equipment",
+        "looks": "'No equipment yet. Add the oven, the machines and the fridges: each month's share of what they cost is then a cost of that month.'"
+      },
+      {
+        "state": "Depreciation waiting",
+        "looks": "A card 'Depreciation waits for {n} months gone.' with 'Post it' (only for those who may post)."
+      },
+      {
+        "state": "Before the 0081 update",
+        "looks": "No Equipment and no owner's money card."
+      },
+      {
+        "state": "Read-only (branch manager, auditor, purchasing)",
+        "looks": "The account list has no buttons and no 'Add an account' card; equipment has no buttons."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Name the equipment",
+        "kind": "error",
+        "when": "No name.",
+        "do": "Type what it is."
+      },
+      {
+        "text": "A name is at most 80 letters",
+        "kind": "error",
+        "when": "Name too long.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "Enter what it cost",
+        "kind": "error",
+        "when": "Cost empty or 0.",
+        "do": "Type the cost."
+      },
+      {
+        "text": "What it is worth at the end is less than what it cost",
+        "kind": "error",
+        "when": "Worth at the end is negative or not less than the cost.",
+        "do": "Lower it."
+      },
+      {
+        "text": "It is used for 1 to 600 months",
+        "kind": "error",
+        "when": "Months outside 1–600 or not whole.",
+        "do": "Type 1 to 600."
+      },
+      {
+        "text": "It was bought on a day up to today",
+        "kind": "error",
+        "when": "Date missing or in the future.",
+        "do": "Choose today or earlier."
+      },
+      {
+        "text": "Choose a kind of equipment from the chart",
+        "kind": "error",
+        "when": "The kind of equipment account does not exist (not normally reachable: the form always uses 1500).",
+        "do": "Add the kind on the account list first."
+      },
+      {
+        "text": "Say how it was paid: the bank, the safe, the owner, a supplier's bill or a loan",
+        "kind": "error",
+        "when": "The 'paid' choice is not one allowed (e.g. a loan account that was removed).",
+        "do": "Choose another way in 'How was it paid?'."
+      },
+      {
+        "text": "Equipment not found",
+        "kind": "error",
+        "when": "The piece was removed or the page is old.",
+        "do": "Reload."
+      },
+      {
+        "text": "{1} is gone already",
+        "kind": "error",
+        "when": "Someone recorded it gone a moment before.",
+        "do": "Reload."
+      },
+      {
+        "text": "It went on a day from when it was bought up to today",
+        "kind": "error",
+        "when": "Date before purchase or in the future.",
+        "do": "Fix the date."
+      },
+      {
+        "text": "Enter what it fetched, 0 or more",
+        "kind": "error",
+        "when": "Not a number, or negative.",
+        "do": "Type 0 or the amount."
+      },
+      {
+        "text": "Say where the money went: the bank or the safe",
+        "kind": "error",
+        "when": "It fetched money but no place was chosen.",
+        "do": "Choose The bank or The safe."
+      },
+      {
+        "text": "Recorded.",
+        "kind": "success",
+        "when": "The owner's money was recorded.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Only the owner takes money out for themselves",
+        "kind": "error",
+        "when": "Someone other than the owner chose 'The owner takes money out'.",
+        "do": "Ask the owner to record it."
+      },
+      {
+        "text": "Enter an amount greater than zero",
+        "kind": "error",
+        "when": "Amount is 0.",
+        "do": "Type the amount."
+      },
+      {
+        "text": "Amount must be a number greater than zero",
+        "kind": "error",
+        "when": "Amount is not a number.",
+        "do": "Type digits only."
+      },
+      {
+        "text": "Say what the money is for",
+        "kind": "error",
+        "when": "The note is empty.",
+        "do": "Type what it is for."
+      },
+      {
+        "text": "Too long",
+        "kind": "error",
+        "when": "The note is over 200 letters.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "The safe holds only {1} in the books — not enough to pay {2}. Put the takings in the safe first (Move cash), or say where the money came from",
+        "kind": "error",
+        "when": "Taking out of the safe more than it holds in the books.",
+        "do": "Move the takings into the safe first (Sales → Move cash), or take it from the bank."
+      },
+      {
+        "text": "Move cash between two of: the till, the safe, the bank, the owner",
+        "kind": "error",
+        "when": "Broken request (not normally reachable).",
+        "do": "Reload."
+      },
+      {
+        "text": "No active location for this business",
+        "kind": "error",
+        "when": "The café has no active place to record the movement against.",
+        "do": "Ask the owner to check Settings → places."
+      },
+      {
+        "text": "Account {code} is renamed.",
+        "kind": "success",
+        "when": "Renamed.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Account {code} is out of use.",
+        "kind": "success",
+        "when": "Retired.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Account {code} is in use again.",
+        "kind": "success",
+        "when": "Brought back.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Account {code} {name} is added.",
+        "kind": "success",
+        "when": "Added.",
+        "do": "Nothing; it is now offered on Expenses and in journals."
+      },
+      {
+        "text": "An account's code is four digits",
+        "kind": "error",
+        "when": "The code is not four digits.",
+        "do": "Type four digits."
+      },
+      {
+        "text": "An income's code is from 4000 to 4999",
+        "kind": "error",
+        "when": "Income code outside its range.",
+        "do": "Use 4000–4999."
+      },
+      {
+        "text": "A cost's code is from 5000 to 6999: 5… for the cost of what was sold, 6… for the running costs",
+        "kind": "error",
+        "when": "Cost code outside its range.",
+        "do": "Use 5000–6999."
+      },
+      {
+        "text": "Another bank's code is from 1021 to 1029",
+        "kind": "error",
+        "when": "Bank code outside its range.",
+        "do": "Use 1021–1029."
+      },
+      {
+        "text": "A loan's code is from 2400 to 2499",
+        "kind": "error",
+        "when": "Loan code outside its range.",
+        "do": "Use 2400–2499."
+      },
+      {
+        "text": "A kind of equipment's code is from 1501 to 1589",
+        "kind": "error",
+        "when": "Equipment code outside its range.",
+        "do": "Use 1501–1589."
+      },
+      {
+        "text": "Account {1} is {2}",
+        "kind": "error",
+        "when": "The code is taken by another account ({2} is its name).",
+        "do": "Use the code proposed, or another free one."
+      },
+      {
+        "text": "{1} is account {2} already",
+        "kind": "error",
+        "when": "Another account has that name.",
+        "do": "Choose another name."
+      },
+      {
+        "text": "An account added here is an income, a cost, a bank, a loan or a kind of equipment",
+        "kind": "error",
+        "when": "Unknown kind (broken page).",
+        "do": "Reload."
+      },
+      {
+        "text": "Choose an income or a cost",
+        "kind": "error",
+        "when": "Unknown kind (broken page).",
+        "do": "Reload."
+      },
+      {
+        "text": "The account's name is required",
+        "kind": "error",
+        "when": "Name empty.",
+        "do": "Type a name."
+      },
+      {
+        "text": "The account's name is too long",
+        "kind": "error",
+        "when": "Name over 60 letters.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "Name the account",
+        "kind": "error",
+        "when": "Name empty (database check).",
+        "do": "Type a name."
+      },
+      {
+        "text": "An account's name is at most 60 letters",
+        "kind": "error",
+        "when": "Name or another-language name over 60 letters.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "A word the screens use has its Arabic and Kurdish already: add the account without other names, or give it a name of its own (“Delivery costs”, not “Delivery”)",
+        "kind": "error",
+        "when": "Adding an account named like a word the screens use, with Arabic or Kurdish names given.",
+        "do": "Leave the Arabic and Kurdish empty, or use a longer name."
+      },
+      {
+        "text": "An account is not renamed as a word the screens use: its Arabic and Kurdish would change that word on every screen (“Delivery costs”, not “Delivery”)",
+        "kind": "error",
+        "when": "Renaming to a word the screens use.",
+        "do": "Choose a name of its own."
+      },
+      {
+        "text": "There is no account {1}",
+        "kind": "error",
+        "when": "The account was not found (old page).",
+        "do": "Reload."
+      },
+      {
+        "text": "Account {1} {2} is one the system posts to: it is kept as it is",
+        "kind": "error",
+        "when": "Trying to change a system account (not reachable from the buttons).",
+        "do": "Nothing."
+      },
+      {
+        "text": "Why is required",
+        "kind": "error",
+        "when": "Retire or bring back pressed with only spaces.",
+        "do": "Type why."
+      },
+      {
+        "text": "Why is too long",
+        "kind": "error",
+        "when": "Reason over 300 letters.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "Say why",
+        "kind": "error",
+        "when": "Reason empty (database check).",
+        "do": "Type why."
+      },
+      {
+        "text": "A reason is at most 300 letters",
+        "kind": "error",
+        "when": "Reason too long.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "Account {1} {2} is in use already",
+        "kind": "error",
+        "when": "Someone brought it back a moment before.",
+        "do": "Reload."
+      },
+      {
+        "text": "Account {1} {2} is out of use already",
+        "kind": "error",
+        "when": "Someone retired it a moment before.",
+        "do": "Reload."
+      },
+      {
+        "text": "A draft journal ({1}) has a line on account {2} {3}: publish it or change the line first",
+        "kind": "error",
+        "when": "A draft journal still uses the account.",
+        "do": "Publish or discard that draft on Journals, then retire the account."
+      },
+      {
+        "text": "A prepaid expense ({1}) takes a share from account {2} {3} each month until {4}: take it out of use once the last share is posted, or cancel the prepaid expense first",
+        "kind": "error",
+        "when": "A prepaid expense still posts monthly shares to it.",
+        "do": "Wait until its last share, or cancel the prepaid expense on Expenses."
+      },
+      {
+        "text": "System account {1} cannot be deactivated",
+        "kind": "error",
+        "when": "Database guard (not reachable from the buttons).",
+        "do": "Nothing."
+      },
+      {
+        "text": "Account {1} is missing or inactive",
+        "kind": "error",
+        "when": "An equipment or cash journal named an account that is out of use (e.g. a loan account retired).",
+        "do": "Bring the account back, or choose another."
+      },
+      {
+        "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
+        "kind": "error",
+        "when": "Equipment 'Bought on' or 'When' gone falls in a locked month.",
+        "do": "Use a date in an open month, or ask the owner to reopen it."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "No answer came back from the database, so the screen sends the same submission again by itself (three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. The database knows the submission by its key and never records it twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries brought no answer (connection lost or the database was slow).",
+        "do": "Check the connection, then press the same button again. It is sent with the same key, so it is recorded once at most."
+      },
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "kind": "error",
+        "when": "The page was old or broken and sent no submission key.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A retry carried the key of an earlier submission but different values.",
+        "do": "Reload the page, check whether the first one was saved, then do it again if needed."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "The person's roles do not give the permission the database function needs ({1} names it).",
+        "do": "Ask the owner to change the person's roles on Settings, or ask someone who has it."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired.",
+        "do": "Sign in again and repeat the action."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "The account uses two-step sign-in and the code was not given yet.",
+        "do": "Type the code from the authenticator app."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The database has not had the update that this part of the screen needs.",
+        "do": "Tell the owner or whoever looks after the system to apply the latest database update."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "Equipment was bought years ago and is already in the opening balances",
+        "do": "Add it with 'Bought before: in the books already': no money moves, only its depreciation from now on."
+      },
+      {
+        "case": "The owner paid a bill from their pocket",
+        "do": "Record it as an expense paid from 'owner' on Expenses, not here. Use this card only for money moved between the owner and the bank or safe."
+      },
+      {
+        "case": "The café opens a second bank account",
+        "do": "Add an account → 'Another bank account' (1021–1029)."
+      },
+      {
+        "case": "An account is no longer used",
+        "do": "Take it out of use with a reason; its history stays in reports. Bring it back any time."
+      }
+    ],
+    "tips": [
+      "Press 'Post it' once a month after the month ends: depreciation for all months gone is posted in one press.",
+      "The code box proposes the next free code; keep it unless you have a plan for codes.",
+      "The small form 'Sold or thrown out' has no Cancel: reload the page to close it without saving."
+    ],
+    "related": [
+      "/journals",
+      "/expenses",
+      "/reports",
+      "/sales",
+      "/settings/languages",
+      "/audit"
+    ],
+    "open_questions": [
+      "Moving money between the till, safe and bank, card settlements, platform settlements and dollars/exchange are not on these screens: they live on Sales (Move cash, Card Takings, money moves), Delivery Platforms and End of Day. Only the owner's money card here uses Move cash. They should be covered with those areas."
+    ],
+    "shots": [
+      {
+        "name": "accounting-equipment",
+        "role": "owner",
+        "state": "Equipment table with 'Depreciation waits for 2 months gone.'",
+        "setup": "Add an oven bought two months ago from the bank."
+      },
+      {
+        "name": "accounting-owner-money",
+        "role": "owner",
+        "state": "The owner's money card",
+        "setup": "Scroll below Equipment."
+      },
+      {
+        "name": "accounting-chart-add",
+        "role": "accountant",
+        "state": "Add an account card with 'A cost' chosen",
+        "setup": "Scroll to The accounts."
+      }
+    ],
+    "skipped_messages": [
+      "idem_begin: \"This was sent by someone else\" — only when a submission key is reused by another person; the screens make a fresh key per person, so it cannot be reached by normal use.",
+      "trg_inherit_business_id messages ({1}.{2}: cannot determine the business …) — internal database consistency checks, not reachable from these screens.",
+      "\"That has already been recorded.\" (a unique-key clash) — the keyed writes answer a repeat with the first result instead; not expected here."
+    ]
+  },
+  {
+    "path": "/accounting/bank",
+    "title": "The bank against its statement",
+    "area": "The books",
+    "summary": "Compare 1020 Bank in the books with the bank's own statement: tick the books' bank lines the statement shows, check they take the bank from the last statement's balance to the statement's balance, and keep the statement. The statement can be read from its Excel/CSV file or pasted, and its lines are found and ticked by themselves.",
+    "who": [
+      {
+        "role": "owner, general_manager, accountant",
+        "can": "read the statement file, tick lines, keep a statement, undo the latest statement",
+        "cannot": "keep a statement that does not tie"
+      },
+      {
+        "role": "branch_manager, purchasing, auditor",
+        "can": "see what the books hold, the open lines and the statements kept",
+        "cannot": "read a file, tick, keep or undo"
+      },
+      {
+        "role": "cashier, barista, inventory_counter",
+        "can": "nothing here",
+        "cannot": "open the screen (sent to their own first screen)"
+      }
+    ],
+    "get_there": "Chart of Accounts → 'The bank against its statement →'. Also: the orange alert '{n} bank line(s), the oldest from {date}, are on no bank statement' (bank lines older than 35 days) links here; Expenses and Journals lead back here after 'Record it'.",
+    "before": [
+      "Only published lines of account 1020 Bank count. Other bank accounts (1021–1029) are not reconciled here."
+    ],
+    "parts": [
+      {
+        "name": "Two cards",
+        "shows": "'In the books, the bank holds' {amount} 'at the end of {date}' (today). 'The last statement kept': its balance and 'Statement {no}, to {date}', or 'None yet: the first starts from nothing.'",
+        "controls": [
+          {
+            "label": "Chart of Accounts",
+            "kind": "link",
+            "does": "Back to Chart of Accounts (above the heading)."
+          }
+        ]
+      },
+      {
+        "name": "The bank's lines on no statement yet — reading the statement",
+        "shows": "For those who may keep a statement: 'The bank's statement' with a file button, and after reading, a summary.",
+        "controls": [
+          {
+            "label": "Read it from its file…",
+            "kind": "button",
+            "does": "Choose the bank's statement file (.xlsx, .csv, .tsv, .txt, or an Excel XML/HTML export). It is read in the browser; nothing is sent. Its table is put in the box below and read.",
+            "rules": "Up to 10 MB. Not .xls (Excel 97–2003) and not PDF."
+          },
+          {
+            "label": "or paste it",
+            "kind": "link",
+            "does": "Opens a box to paste the statement's table (copied from Excel or the bank's site)."
+          },
+          {
+            "label": "The bank's statement",
+            "kind": "box",
+            "does": "The statement's text; read again at every change. The example placeholder shows the expected columns: Date, Description, Debit, Credit, Balance.",
+            "rules": "Columns are found by their names in English, Arabic or Kurdish (Date, Description/Details, Debit/Credit or Money in/Money out or Amount, Balance). Up to 2000 lines. Totals and balances brought forward are left out."
+          },
+          {
+            "label": "Clear the statement read",
+            "kind": "button",
+            "does": "Empties what was read and lets the file button start again."
+          }
+        ]
+      },
+      {
+        "name": "What the statement read comes to",
+        "shows": "'{n} line(s) read · {from} to {to} · columns: {columns} · {n} row(s) left out: titles, totals and balances brought forward'; any lines that could not be read (in red, up to 8, then '…and {n} more'); '{n} of its line(s), to {date}, are on the statements kept already, and are left out.'; or 'Every line on it is on or before {date}, on the statements kept already.'; '{found} of its {n} line(s) are in the books, and are ticked.' A warning when the statement's opening balance differs from the last statement kept. Then 'On the statement, not in the books': a table (Date, What, Money in, Money out) of lines with no match. Matching: same amount, the same day first, else the nearest day up to 31 days before or 7 days after; each books line used once. The statement's last day and balance (if it gives balances) are filled into the boxes below.",
+        "controls": [
+          {
+            "label": "Record it",
+            "kind": "link",
+            "does": "For money out (a bank charge): opens Expenses filled in with the bank's words, the amount, the day and 'paid from the bank'. For money in (interest): opens Journals with a new journal filled in (Dr 1020 Bank, its amount, day and words), the other account to choose. After saving, a link back brings you here; what was read is kept for this browser tab and read again, so the new line is found and ticked."
+          },
+          {
+            "label": "Card Takings",
+            "kind": "link",
+            "does": "Opens Sales at Card Takings: card money paid into the bank is recorded there, as a card settlement.",
+            "rules": "Shown when a line not in the books is money in."
+          },
+          {
+            "label": "Delivery Platforms",
+            "kind": "link",
+            "does": "Opens Delivery Platforms: a platform's payout is recorded there.",
+            "rules": "Shown when a line not in the books is money in."
+          }
+        ]
+      },
+      {
+        "name": "Ticking and keeping",
+        "shows": "The table of the books' bank lines up to the chosen day: tick box, Date, Journal, What, Money in, Money out. Under it a summary: 'The last statement: {amount}', 'Money in, ticked: {amount} · Money out, ticked: {amount}', 'The lines ticked take the bank to: {amount}', and when a balance is typed either 'It ties with the statement.' (green) or 'The statement says {closing}: {difference} apart.' (red).",
+        "controls": [
+          {
+            "label": "The statement's last day",
+            "kind": "box",
+            "does": "The last day the statement covers; only lines up to this day are listed.",
+            "rules": "After the last statement kept's day, up to today. Default today (or the statement's last line when read)."
+          },
+          {
+            "label": "The balance on the statement",
+            "kind": "box",
+            "does": "The closing balance the bank gives.",
+            "rules": "A number; may be negative (overdrawn)."
+          },
+          {
+            "label": "On the statement",
+            "kind": "toggle",
+            "does": "Tick a line the statement shows."
+          },
+          {
+            "label": "Tick every line to this day",
+            "kind": "button",
+            "does": "Ticks all listed lines."
+          },
+          {
+            "label": "Untick all",
+            "kind": "button",
+            "does": "Clears every tick."
+          },
+          {
+            "label": "Note (optional)",
+            "kind": "box",
+            "does": "A note kept with the statement.",
+            "rules": "Up to 500 letters."
+          },
+          {
+            "label": "Keep the statement",
+            "kind": "button",
+            "does": "Keeps the statement with the ticked lines. The database checks it all again.",
+            "rules": "Disabled until the day is valid and the ticked lines tie exactly to the balance.",
+            "after": "The ticked lines are on statement {no} and leave the open list; the next statement starts from this balance. No money and no journal changes. Audit trail: 'Bank statement kept'. The month's closing check 'The bank is reconciled to the month's end' and the old-lines alert clear for those lines."
+          },
+          {
+            "label": "nav.expenses (Expenses)",
+            "kind": "link",
+            "does": "Opens Expenses, to record a bank charge (paid from the bank) that is on the statement but not in the books."
+          }
+        ]
+      },
+      {
+        "name": "The statements kept",
+        "shows": "Up to 24 statements, latest first: No., To, The bank's balance, Money in, Money out, Lines ticked, Kept by (with the note; 'Undone' and why when undone, greyed).",
+        "controls": [
+          {
+            "label": "Undo…",
+            "kind": "button",
+            "does": "Opens a 'Why (required)' box.",
+            "rules": "Only on the latest statement kept.",
+            "who": "Owner, general manager, accountant."
+          },
+          {
+            "label": "Undo the statement",
+            "kind": "button",
+            "does": "Undoes it.",
+            "rules": "A reason is required (up to 300 letters).",
+            "after": "Its lines are open again, to be ticked on the next statement; the statement stays listed as 'Undone' with why. Nothing in the books changes. Audit trail: 'Bank statement undone' with the reason."
+          },
+          {
+            "label": "Cancel",
+            "kind": "button",
+            "does": "Closes the undo box."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "No statement yet",
+        "looks": "'None yet: the first starts from nothing.' and 'No statement yet.' The first statement starts from 0."
+      },
+      {
+        "state": "Every line on a statement",
+        "looks": "'Every bank line in the books is on a statement.'"
+      },
+      {
+        "state": "Open lines, but none to the chosen day",
+        "looks": "'No bank line to this day is waiting.'"
+      },
+      {
+        "state": "Read-only",
+        "looks": "The open lines with '{n} line(s)' in the header, no tick boxes, no file button, no keep or undo."
+      },
+      {
+        "state": "Does not tie",
+        "looks": "Red 'The statement says {closing}: {difference} apart.' and Keep is disabled."
+      },
+      {
+        "state": "Ties",
+        "looks": "Green 'It ties with the statement.' and Keep is enabled."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Statement {no} is kept: the bank ties to {date}.",
+        "kind": "success",
+        "when": "The statement was kept.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Statement {no} is undone: its lines are open again.",
+        "kind": "success",
+        "when": "The latest statement was undone.",
+        "do": "Tick the lines again on the corrected statement."
+      },
+      {
+        "text": "The next statement ends after {date}.",
+        "kind": "info",
+        "when": "The chosen last day is on or before the last statement kept.",
+        "do": "Choose a later day."
+      },
+      {
+        "text": "It ties with the statement.",
+        "kind": "success",
+        "when": "The ticked lines reach exactly the typed balance.",
+        "do": "Press Keep the statement."
+      },
+      {
+        "text": "The statement says {closing}: {difference} apart.",
+        "kind": "warning",
+        "when": "The ticked lines do not reach the balance.",
+        "do": "Tick or untick lines; record lines on the statement but not in the books (Record it); check the balance typed."
+      },
+      {
+        "text": "The statement starts from {opening}, and the last statement kept ends at {kept}: a line between them may be missing.",
+        "kind": "warning",
+        "when": "The statement's own opening balance differs from the last statement kept.",
+        "do": "Check that no bank statement period was skipped; read the missing one first."
+      },
+      {
+        "text": "The statement starts from {opening}, and the books start the bank from nothing: the bank's opening balance may not be in the books yet.",
+        "kind": "warning",
+        "when": "First statement, and the bank's opening is not 0.",
+        "do": "Post the bank's opening balance by a journal first (ask the accountant)."
+      },
+      {
+        "text": "Record it fills in what the bank shows: a charge on Expenses, paid from the bank; money in (interest) as a journal into the bank, the account it came from yours to choose. Back on this page, it is found and ticked.",
+        "kind": "info",
+        "when": "There are lines on the statement not in the books.",
+        "do": "Press Record it for each."
+      },
+      {
+        "text": "Card money and a platform's payout are recorded where they are settled:",
+        "kind": "info",
+        "when": "A line not in the books is money in.",
+        "do": "If it is card money or a platform payout, record it on Card Takings or Delivery Platforms instead."
+      },
+      {
+        "text": "On the statement but not in the books? A bank's charge is recorded on Expenses, paid from the bank; interest by a journal. Then tick it here.",
+        "kind": "info",
+        "when": "Always shown under the keep button.",
+        "do": "Follow it for lines the bank shows and the books do not."
+      },
+      {
+        "text": "The columns were not recognised. Name them Date, Money in and Money out (or Amount), and Balance if the statement gives it.",
+        "kind": "error",
+        "when": "The statement's column names were not found in its first 30 rows.",
+        "do": "Rename the columns in the file, or paste with a header row."
+      },
+      {
+        "text": "Line {n} has more cells than the statement has columns: an amount with commas, not in quotes?",
+        "kind": "error",
+        "when": "A CSV amount like 500,000 without quotes split into two cells.",
+        "do": "Save the file as .xlsx, or quote the amounts."
+      },
+      {
+        "text": "Line {n}: \"{cell}\" is not an amount.",
+        "kind": "error",
+        "when": "An amount cell could not be read.",
+        "do": "Fix that cell, or record that line by hand."
+      },
+      {
+        "text": "Line {n}: \"{cell}\" does not say whether the money went in or out.",
+        "kind": "error",
+        "when": "One amount column without sign, and a type column that says neither in nor out.",
+        "do": "Use a file with Debit/Credit columns or signed amounts."
+      },
+      {
+        "text": "Line {n} has an amount but no date.",
+        "kind": "error",
+        "when": "A line with money and no date.",
+        "do": "Fix the file."
+      },
+      {
+        "text": "Line {n}: \"{cell}\" is not a date.",
+        "kind": "error",
+        "when": "A date could not be read.",
+        "do": "Fix the date in the file."
+      },
+      {
+        "text": "A statement is read 2000 lines at a time.",
+        "kind": "error",
+        "when": "More than 2000 lines.",
+        "do": "Split the statement into shorter periods."
+      },
+      {
+        "text": "…and {n} more",
+        "kind": "info",
+        "when": "More than 8 lines could not be read.",
+        "do": "Fix the file."
+      },
+      {
+        "text": "Read from {file}",
+        "kind": "success",
+        "when": "The file was read.",
+        "do": "Check the summary below."
+      },
+      {
+        "text": "The file is over 10 MB: a statement's own file is smaller.",
+        "kind": "error",
+        "when": "File too big.",
+        "do": "Download a shorter statement."
+      },
+      {
+        "text": "There is nothing in the file to read.",
+        "kind": "error",
+        "when": "Empty file.",
+        "do": "Choose the right file."
+      },
+      {
+        "text": "An Excel 97–2003 file (.xls) is not read: open it in Excel, save it as .xlsx or CSV, and choose that.",
+        "kind": "error",
+        "when": "An old .xls file.",
+        "do": "Save it as .xlsx or CSV."
+      },
+      {
+        "text": "A PDF is not read: download the statement as Excel or CSV, and choose that.",
+        "kind": "error",
+        "when": "A PDF chosen.",
+        "do": "Download Excel or CSV from the bank."
+      },
+      {
+        "text": "The file is not a table: choose the statement's Excel or CSV file.",
+        "kind": "error",
+        "when": "Not a spreadsheet or text table.",
+        "do": "Choose the right file."
+      },
+      {
+        "text": "This browser cannot open Excel files: save the statement as CSV and choose that.",
+        "kind": "error",
+        "when": "Old browser without unzip support.",
+        "do": "Use CSV, or another browser."
+      },
+      {
+        "text": "The file could not be read: save it again as .xlsx or CSV, and choose that.",
+        "kind": "error",
+        "when": "Any other read failure.",
+        "do": "Save it again and retry."
+      },
+      {
+        "text": "Give the statement's last day",
+        "kind": "error",
+        "when": "No day.",
+        "do": "Choose the day."
+      },
+      {
+        "text": "The statement's last day must be a date",
+        "kind": "error",
+        "when": "Day not a date.",
+        "do": "Choose the day."
+      },
+      {
+        "text": "A statement cannot end after today",
+        "kind": "error",
+        "when": "Day in the future.",
+        "do": "Choose today or earlier."
+      },
+      {
+        "text": "Give the balance the bank's statement shows",
+        "kind": "error",
+        "when": "No balance.",
+        "do": "Type it."
+      },
+      {
+        "text": "The balance on the statement must be a number",
+        "kind": "error",
+        "when": "Balance not a number.",
+        "do": "Type digits (a minus for overdrawn)."
+      },
+      {
+        "text": "A note is at most 500 letters",
+        "kind": "error",
+        "when": "Note too long.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "Too long",
+        "kind": "error",
+        "when": "Note too long (form check).",
+        "do": "Shorten it."
+      },
+      {
+        "text": "Statement {1} ends on {2}: the next one ends after it",
+        "kind": "error",
+        "when": "Another statement was kept meanwhile up to a later day.",
+        "do": "Reload and choose a later day."
+      },
+      {
+        "text": "A line ticked is not one of the bank's lines to {1} still open",
+        "kind": "error",
+        "when": "A ticked line was taken by another statement, reversed or is after the day.",
+        "do": "Reload and tick again."
+      },
+      {
+        "text": "The lines ticked take the bank to {1}, and the statement says {2}: {3} apart",
+        "kind": "error",
+        "when": "The database's own check of the sum failed (e.g. lines changed).",
+        "do": "Reload and tick again."
+      },
+      {
+        "text": "Choose the lines on the statement",
+        "kind": "error",
+        "when": "Broken request.",
+        "do": "Reload."
+      },
+      {
+        "text": "Why is required",
+        "kind": "error",
+        "when": "Undo with only spaces.",
+        "do": "Type why."
+      },
+      {
+        "text": "Why is too long",
+        "kind": "error",
+        "when": "Reason over 300 letters.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "Say why",
+        "kind": "error",
+        "when": "Reason empty (database check).",
+        "do": "Type why."
+      },
+      {
+        "text": "A reason is at most 300 letters",
+        "kind": "error",
+        "when": "Reason too long.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "There is no such bank statement",
+        "kind": "error",
+        "when": "Old page.",
+        "do": "Reload."
+      },
+      {
+        "text": "Bank statement {1} was undone already",
+        "kind": "error",
+        "when": "Someone undid it a moment before.",
+        "do": "Reload."
+      },
+      {
+        "text": "Statement {1} comes after it: undo the latest first",
+        "kind": "error",
+        "when": "A later statement exists.",
+        "do": "Undo the latest first."
+      },
+      {
+        "text": "Choose the statement",
+        "kind": "error",
+        "when": "Broken request.",
+        "do": "Reload."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "No answer came back from the database, so the screen sends the same submission again by itself (three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. The database knows the submission by its key and never records it twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries brought no answer (connection lost or the database was slow).",
+        "do": "Check the connection, then press the same button again. It is sent with the same key, so it is recorded once at most."
+      },
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "kind": "error",
+        "when": "The page was old or broken and sent no submission key.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A retry carried the key of an earlier submission but different values.",
+        "do": "Reload the page, check whether the first one was saved, then do it again if needed."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "The person's roles do not give the permission the database function needs ({1} names it).",
+        "do": "Ask the owner to change the person's roles on Settings, or ask someone who has it."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired.",
+        "do": "Sign in again and repeat the action."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "The account uses two-step sign-in and the code was not given yet.",
+        "do": "Type the code from the authenticator app."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The database has not had the update that this part of the screen needs.",
+        "do": "Tell the owner or whoever looks after the system to apply the latest database update."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "The bank took a monthly fee",
+        "do": "Read the statement, press 'Record it' on the fee line, choose the bank-charges cost on Expenses and record it; come back: it is found and ticked."
+      },
+      {
+        "case": "A transfer is in the books but not yet on the statement",
+        "do": "Leave it unticked; it waits for the next statement."
+      },
+      {
+        "case": "Card money arrived in the bank",
+        "do": "Record the card settlement on Sales → Card Takings (it moves 1010 Card clearing into the bank), then read the statement again."
+      },
+      {
+        "case": "A statement was kept by mistake",
+        "do": "Undo it (latest only), with why; its lines open again."
+      }
+    ],
+    "tips": [
+      "Reading the file ticks the matching lines and fills the day and balance for you.",
+      "What was read stays for this browser tab, so you can go to Expenses and come back.",
+      "Keep statements month by month; the month's closing checklist warns about bank lines on no statement."
+    ],
+    "related": [
+      "/accounting",
+      "/expenses",
+      "/journals",
+      "/sales",
+      "/platforms",
+      "/audit"
+    ],
+    "shots": [
+      {
+        "name": "bank-read",
+        "role": "accountant",
+        "state": "A statement read with lines found and one 'On the statement, not in the books'",
+        "setup": "Read a CSV with a bank charge not recorded."
+      },
+      {
+        "name": "bank-ties",
+        "role": "owner",
+        "state": "Ticked lines with 'It ties with the statement.'",
+        "setup": "Tick the lines and type the right balance."
+      },
+      {
+        "name": "bank-statements",
+        "role": "owner",
+        "state": "Statements kept, the latest with Undo…",
+        "setup": "Keep two statements."
+      }
+    ],
+    "skipped_messages": [
+      "idem_begin: \"This was sent by someone else\" — only when a submission key is reused by another person; the screens make a fresh key per person, so it cannot be reached by normal use.",
+      "trg_inherit_business_id messages ({1}.{2}: cannot determine the business …) — internal database consistency checks, not reachable from these screens.",
+      "\"That has already been recorded.\" (a unique-key clash) — the keyed writes answer a repeat with the first result instead; not expected here.",
+      "trg_bank_statement_guard / trg_bank_statement_line_guard (\"A bank statement is never deleted: undo it instead\", \"A bank statement stays as it was kept\", \"A line on a bank statement is not changed: undo the statement instead\") — table guards; the screen never deletes or edits a statement."
+    ]
+  },
+  {
+    "path": "/journals",
+    "title": "Journals",
+    "area": "The books",
+    "summary": "Every entry in the books, by number, newest first (sales, bills, payments, counts, cash moved, expenses and journals posted by hand), with a form to post a journal by hand: save it as a draft, publish it, reverse a published one, or discard a draft.",
+    "who": [
+      {
+        "role": "owner",
+        "can": "post, publish, discard drafts, reverse; also post a correction to a control account",
+        "cannot": "edit or delete a published entry (nobody can)"
+      },
+      {
+        "role": "general_manager, accountant",
+        "can": "post, publish, discard drafts, reverse journals not written by a record",
+        "cannot": "post to accounts with a subledger; post a control-account correction"
+      },
+      {
+        "role": "branch_manager, purchasing, auditor",
+        "can": "read the register, search, open entries, see an account's lines",
+        "cannot": "post, publish, discard or reverse"
+      },
+      {
+        "role": "cashier, barista, inventory_counter",
+        "can": "nothing here",
+        "cannot": "open the screen"
+      }
+    ],
+    "get_there": "Menu → Accountant → Journals (under More for the owner and a branch manager). Also: an account name on Chart of Accounts or a figure on Reports opens its lines here; 'Record it' on the bank page opens a filled-in journal.",
+    "before": [
+      "The month of the journal's date must be open (not locked)."
+    ],
+    "parts": [
+      {
+        "name": "Heading",
+        "shows": "'Journals', 'Every entry in the book, by number, newest first', a badge '{n} draft' when drafts exist, and this month's name with its state ('2026-09 open').",
+        "controls": [
+          {
+            "label": "Print or save as PDF",
+            "kind": "button",
+            "does": "Prints the register."
+          }
+        ]
+      },
+      {
+        "name": "New Journal",
+        "shows": "For the owner, a general manager and the accountant. Closed at first: a 'New Journal' button and 'For anything that is not a sale, a receipt, a bill, a payment or an expense. Stock, payables, goods-received and retained earnings are kept by their own records and take no manual journal.' Header note: 'Debits must equal credits before it can be published'. Open: Date, Reverse on, Journal # ('{n} (given on publish)'), Reference #, Currency (IQD), Notes, the lines (Account, Description, Debits, Credits) and the voucher totals 'Total (IQD) {debits} / {credits}' and 'Difference' (green at 0, red otherwise).",
+        "controls": [
+          {
+            "label": "New Journal",
+            "kind": "button",
+            "does": "Opens the form with two empty lines (opened already when coming from the bank page, with Dr 1020 Bank filled in)."
+          },
+          {
+            "label": "Date *",
+            "kind": "box",
+            "does": "The journal's date (noon that day).",
+            "rules": "Default today. Must be in an open month."
+          },
+          {
+            "label": "Reverse on (optional)",
+            "kind": "box",
+            "does": "A day to reverse it automatically. Shows 'On publishing, a mirror entry dated {date} is posted too, reversing every line below.'",
+            "rules": "After the journal's date. Hidden for a correction."
+          },
+          {
+            "label": "Journal #",
+            "kind": "box",
+            "does": "Read-only: the number it will likely get; the real number is given only on publish."
+          },
+          {
+            "label": "Reference #",
+            "kind": "box",
+            "does": "Your own reference (an invoice number…); searchable.",
+            "rules": "Up to 60 letters."
+          },
+          {
+            "label": "Currency",
+            "kind": "box",
+            "does": "Read-only: the café's currency."
+          },
+          {
+            "label": "Correction to a control account (the till's cash, Inventory, payables, goods received, retained earnings) — owner only, with a reason on the audit trail. For repairing history recorded before the controls; see docs/REMEDIATION.md.",
+            "kind": "toggle",
+            "does": "Switches the form to a control-account correction: the account lists also offer the blocked accounts, 'Reverse on' is hidden, 'Save as draft' is disabled and 'Reason for the correction *' appears.",
+            "who": "Owner only (accounting.period.unlock)."
+          },
+          {
+            "label": "Reason for the correction *",
+            "kind": "box",
+            "does": "What was wrong and how this entry puts it right; goes on the audit trail.",
+            "rules": "Required for a correction, up to 500 letters."
+          },
+          {
+            "label": "Notes *",
+            "kind": "box",
+            "does": "What the journal is for ('Being …').",
+            "rules": "Required, up to 500 letters."
+          },
+          {
+            "label": "Account",
+            "kind": "list",
+            "does": "The account of the line ('Select an account').",
+            "rules": "Only accounts in use and without a subledger: not 1000, 1001, 1005, 1006 (till, safe, dollars), 1110, 1200, 1210, 1300, 1400, 2000, 2050, 2100, 2200, 2300, 3100, 4000, 4100, 4200, 4300, 4950, 5950."
+          },
+          {
+            "label": "Description",
+            "kind": "box",
+            "does": "A note on the line.",
+            "rules": "Up to 200 letters."
+          },
+          {
+            "label": "Debits / Credits",
+            "kind": "box",
+            "does": "The line's amount, on one side; typing in one clears the other.",
+            "rules": "0 or more; Arabic and Kurdish digits and commas accepted."
+          },
+          {
+            "label": "×",
+            "kind": "button",
+            "does": "Removes the line ('Remove line').",
+            "rules": "Disabled when only two lines are left."
+          },
+          {
+            "label": "+ Add line",
+            "kind": "button",
+            "does": "Adds an empty line."
+          },
+          {
+            "label": "Save and publish",
+            "kind": "button",
+            "does": "Saves and publishes at once ('Saving…' while it works); a correction is published this way.",
+            "rules": "Needs Notes, at least two lines with an account and an amount, debits equal to credits and above 0 (and a reason for a correction). Otherwise disabled; with a difference 'Debits and credits must agree before it can be published.' shows.",
+            "after": "The journal gets the next number and is in the books: trial balance, reports, P&L, balance sheet. With 'Reverse on', a mirror journal dated that day is posted too. A line on 1020 Bank appears among the bank's open lines. A correction goes on the audit trail as 'Owner's correction posted' with the reason."
+          },
+          {
+            "label": "Save as draft",
+            "kind": "button",
+            "does": "Saves without publishing.",
+            "rules": "Needs Notes and at least one line; may be unbalanced. Disabled for a correction.",
+            "after": "Not in the books; listed first in the register as 'draft'; it blocks the month's close until published or discarded."
+          },
+          {
+            "label": "Cancel",
+            "kind": "button",
+            "does": "Empties and closes the form."
+          },
+          {
+            "label": "Back to the bank's statement",
+            "kind": "link",
+            "does": "Shown after publishing a journal opened from the bank page; goes back there, where the line is found and ticked."
+          }
+        ]
+      },
+      {
+        "name": "Journal Register",
+        "shows": "Up to 200 entries, drafts first, then by number newest first: Date, Journal # (or 'draft'), Reference (where it came from — Sale, Refund, Reversal, Receipt, Bill, Payment, Expense, Stock, Loss, Count, Drawer count, Drawer opened, Cash moved, Manual, Correction, Card settlement, Platform settlement, Year end, Payroll, Advance, Salaries, Transfer sent, Transfer received, Transfer cancelled, Prepaid expense, Delivery correction, Return to a supplier, Supplier's credit, Void, Batch cancelled, Money moved, Dollars exchanged, Dollars counted — and its reference number), Status ('Draft' or 'Published', and 'before controls' for old entries), Notes (with '· reverses #{no}' or '· reversed by #{no}'), Amount (total debits), Posted by. A note under it: a published entry is never edited or deleted, a mistake is reversed, only a draft may be discarded, numbers have no gaps.",
+        "controls": [
+          {
+            "label": "All",
+            "kind": "link",
+            "does": "Shows every source."
+          },
+          {
+            "label": "Manual and reversals",
+            "kind": "link",
+            "does": "Shows only journals posted by hand and reversals."
+          },
+          {
+            "label": "Find a journal",
+            "kind": "box",
+            "does": "Search by number or by words in the description, the reference or a line's description ('Its number, or words in it').",
+            "rules": "Up to 60 letters; words need at least 2 letters."
+          },
+          {
+            "label": "Find",
+            "kind": "button",
+            "does": "Runs the search."
+          },
+          {
+            "label": "{journal number}",
+            "kind": "button",
+            "does": "Opens or closes the entry's voucher: each line as Dr or Cr with account and description, 'Being {notes}', and 'Balanced — {amount} both sides' or 'Out by {amount}'."
+          },
+          {
+            "label": "Publish",
+            "kind": "button",
+            "does": "Publishes a draft ('Publish to the books').",
+            "rules": "Disabled when the draft does not balance ('Does not balance').",
+            "who": "Owner, general manager, accountant.",
+            "after": "As 'Save and publish': it gets its number and is in the books."
+          },
+          {
+            "label": "Discard",
+            "kind": "button",
+            "does": "Deletes the draft at once (no question asked).",
+            "who": "Owner, general manager, accountant.",
+            "after": "The draft is gone; nothing in the books changes."
+          },
+          {
+            "label": "Reverse",
+            "kind": "button",
+            "does": "Opens 'Reverse journal {no} with a mirror entry dated' with a date and 'Why is it being reversed?'.",
+            "rules": "Only on published entries not reversed yet that no record stands behind: Manual, Correction, Expense (not a prepaid expense's monthly share), Year end, and old 'before controls' entries. Sales, bills, counts and the like are corrected on their own screens.",
+            "who": "Owner, general manager, accountant."
+          },
+          {
+            "label": "Date of the reversal",
+            "kind": "box",
+            "does": "The reversal's date.",
+            "rules": "From the entry's day up to today; default today. A journal that moved the till's or the safe's cash (1000, 1001, 1005, 1006) must be reversed today."
+          },
+          {
+            "label": "Why is it being reversed?",
+            "kind": "box",
+            "does": "The reason.",
+            "rules": "Required, up to 300 letters."
+          },
+          {
+            "label": "Post reversal",
+            "kind": "button",
+            "does": "Posts the mirror entry ('Reversal: {reason}').",
+            "after": "A new published journal with every line swapped; the original shows 'reversed by #{no}'. If it touched the till's cash, the drawer's expected cash changes by the same amount. An expense reversed comes off the P&L. Audit trail: 'Journal reversed' with the reason."
+          },
+          {
+            "label": "Cancel",
+            "kind": "button",
+            "does": "Closes the reverse box."
+          }
+        ]
+      },
+      {
+        "name": "Four tiles",
+        "shows": "'Shown' (how many listed; 'All sources', 'Manual and reversals' or 'Found for “{q}”'), 'Drafts' ('Not in the books; block the period close'), 'Published, shown' (total debits of the published ones shown), 'Next number' ('Given on publish').",
+        "controls": []
+      }
+    ],
+    "states": [
+      {
+        "state": "No journals",
+        "looks": "'No journal entries yet' — 'Sales, receipts, bills, payments, expenses, drawer counts and cash moved all write here, as do journals posted by hand.'"
+      },
+      {
+        "state": "Search found nothing",
+        "looks": "'No journal matches “{q}”' — 'Type its number, or words from its description, its reference or a line's note.'"
+      },
+      {
+        "state": "Drafts waiting",
+        "looks": "Drafts at the top with Publish and Discard; '{n} draft' badge; the Drafts tile in orange."
+      },
+      {
+        "state": "Old entries",
+        "looks": "'before controls' tag and, under the register, '{n} entry is marked “before controls”…' / '{n} entries are marked “before controls”: recorded before these rules existed, kept as they were, and reported for review (docs/REMEDIATION.md).'"
+      },
+      {
+        "state": "Read-only",
+        "looks": "No New Journal panel and no Publish, Discard or Reverse buttons."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Journal {no} published.",
+        "kind": "success",
+        "when": "Saved and published.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Journal {no} published; its reversal is journal {reversal}.",
+        "kind": "success",
+        "when": "Published with 'Reverse on'.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Saved as a draft. It is not in the books until it is published.",
+        "kind": "success",
+        "when": "Saved as a draft.",
+        "do": "Publish it from the register when ready."
+      },
+      {
+        "text": "Correction published as journal {no}; the reason is on the audit trail.",
+        "kind": "success",
+        "when": "The owner's correction posted.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Debits and credits must agree before it can be published.",
+        "kind": "warning",
+        "when": "The totals differ.",
+        "do": "Fix the amounts until Difference is 0."
+      },
+      {
+        "text": "Narrate the journal",
+        "kind": "error",
+        "when": "Notes empty.",
+        "do": "Type the notes."
+      },
+      {
+        "text": "Notes is required",
+        "kind": "error",
+        "when": "Notes empty (form check).",
+        "do": "Type the notes."
+      },
+      {
+        "text": "Notes is too long",
+        "kind": "error",
+        "when": "Over 500 letters.",
+        "do": "Shorten them."
+      },
+      {
+        "text": "Too long",
+        "kind": "error",
+        "when": "Reference over 60 or a line's description over 200 letters.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "The date must be a date",
+        "kind": "error",
+        "when": "Date empty or not a date.",
+        "do": "Choose a date."
+      },
+      {
+        "text": "The reversal date must be a date",
+        "kind": "error",
+        "when": "Reverse-on not a date.",
+        "do": "Choose a date or clear it."
+      },
+      {
+        "text": "The reversal date must be after the journal date",
+        "kind": "error",
+        "when": "Reverse-on on or before the date.",
+        "do": "Choose a later day."
+      },
+      {
+        "text": "Add at least one line",
+        "kind": "error",
+        "when": "No line with an amount.",
+        "do": "Add a line."
+      },
+      {
+        "text": "Choose an account on every line",
+        "kind": "error",
+        "when": "A line has no account.",
+        "do": "Choose one or remove the line."
+      },
+      {
+        "text": "Debit must be a number of zero or more",
+        "kind": "error",
+        "when": "Bad amount.",
+        "do": "Type digits."
+      },
+      {
+        "text": "Credit must be a number of zero or more",
+        "kind": "error",
+        "when": "Bad amount.",
+        "do": "Type digits."
+      },
+      {
+        "text": "A line is either a debit or a credit, not both",
+        "kind": "error",
+        "when": "A line has both.",
+        "do": "Keep one side."
+      },
+      {
+        "text": "Account {1} has a subledger and cannot take a manual journal; use a receipt, bill, count or payment",
+        "kind": "error",
+        "when": "A blocked account was used.",
+        "do": "Record it on its own screen (Purchasing, Vendors, Stock Count, Payroll, Sales…)."
+      },
+      {
+        "text": "Account {1} is missing or inactive",
+        "kind": "error",
+        "when": "The account is out of use or does not exist.",
+        "do": "Choose another account or bring it back on Chart of Accounts."
+      },
+      {
+        "text": "Cannot publish: debits {1} and credits {2} differ by {3}",
+        "kind": "error",
+        "when": "Not balanced (database check).",
+        "do": "Make the sides equal."
+      },
+      {
+        "text": "Journal entry {1} cannot be published with {2} line(s); it needs at least two",
+        "kind": "error",
+        "when": "Publishing a draft with one line.",
+        "do": "Discard it and post a full journal."
+      },
+      {
+        "text": "Journal entry {1} is unbalanced: debit {2} <> credit {3}",
+        "kind": "error",
+        "when": "Publishing an unbalanced draft.",
+        "do": "Discard it and post a balanced one."
+      },
+      {
+        "text": "Journal entry {1} moves no amount",
+        "kind": "error",
+        "when": "All amounts are 0.",
+        "do": "Enter amounts."
+      },
+      {
+        "text": "Journal line amounts cannot be negative (account {1})",
+        "kind": "error",
+        "when": "A negative amount in a correction.",
+        "do": "Use the other side instead."
+      },
+      {
+        "text": "Entry \"{1}\" does not balance: debits {2} <> credits {3}",
+        "kind": "error",
+        "when": "A correction does not balance.",
+        "do": "Make the sides equal."
+      },
+      {
+        "text": "The accounts of the transfer price between branches carry no journal",
+        "kind": "error",
+        "when": "4950 or 5950 used in a correction.",
+        "do": "Remove that line."
+      },
+      {
+        "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
+        "kind": "error",
+        "when": "The date (or the reversal date) is in a locked month.",
+        "do": "Date it in an open month."
+      },
+      {
+        "text": "Accounting period is locked; this draft cannot be discarded",
+        "kind": "error",
+        "when": "The draft's month was locked.",
+        "do": "Ask the owner to reopen the month."
+      },
+      {
+        "text": "Accounting period is locked; this draft cannot be changed",
+        "kind": "error",
+        "when": "Publishing a draft whose month was locked.",
+        "do": "Ask the owner to reopen, or discard and post in an open month."
+      },
+      {
+        "text": "No draft journal with that id",
+        "kind": "error",
+        "when": "It was published or discarded a moment before.",
+        "do": "Reload."
+      },
+      {
+        "text": "Only a draft can be discarded; a published journal is corrected by reversing it",
+        "kind": "error",
+        "when": "It was published meanwhile.",
+        "do": "Reverse it instead."
+      },
+      {
+        "text": "Journal {1} is published and cannot be deleted; post a reversing entry instead",
+        "kind": "error",
+        "when": "Database guard.",
+        "do": "Reverse it."
+      },
+      {
+        "text": "Say why the journal is being reversed",
+        "kind": "error",
+        "when": "No reason.",
+        "do": "Type why."
+      },
+      {
+        "text": "A reason is required",
+        "kind": "error",
+        "when": "No reason (form check).",
+        "do": "Type why."
+      },
+      {
+        "text": "A reason is too long",
+        "kind": "error",
+        "when": "Over 300 letters.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "Journal not found",
+        "kind": "error",
+        "when": "Old page.",
+        "do": "Reload."
+      },
+      {
+        "text": "Journal entry not found",
+        "kind": "error",
+        "when": "Old page.",
+        "do": "Reload."
+      },
+      {
+        "text": "Choose a date that has happened",
+        "kind": "error",
+        "when": "Reversal date in the future.",
+        "do": "Choose today or earlier."
+      },
+      {
+        "text": "A reversal cannot be dated before the entry it reverses ({1})",
+        "kind": "error",
+        "when": "Date before the entry.",
+        "do": "Choose that day or later."
+      },
+      {
+        "text": "A journal that moved the till's or the safe's cash is reversed today, when they count it",
+        "kind": "error",
+        "when": "Back-dating a reversal of a till/safe cash journal.",
+        "do": "Reverse it with today's date."
+      },
+      {
+        "text": "Journal {1} was written by {2}; correct it there, not by reversing the journal",
+        "kind": "error",
+        "when": "The entry came from a record (e.g. 'a bill (cancel it on Vendors)').",
+        "do": "Correct it on the screen named."
+      },
+      {
+        "text": "Only a published entry can be reversed",
+        "kind": "error",
+        "when": "A draft (database check).",
+        "do": "Discard it instead."
+      },
+      {
+        "text": "Journal {1} has already been reversed",
+        "kind": "error",
+        "when": "Reversed a moment before.",
+        "do": "Reload."
+      },
+      {
+        "text": "Say why a control account is being corrected",
+        "kind": "error",
+        "when": "Correction without reason.",
+        "do": "Type the reason."
+      },
+      {
+        "text": "The reason for correcting a control account is required",
+        "kind": "error",
+        "when": "Correction reason empty (form check).",
+        "do": "Type the reason."
+      },
+      {
+        "text": "Narrate the correction",
+        "kind": "error",
+        "when": "Correction notes empty.",
+        "do": "Type notes."
+      },
+      {
+        "text": "A correction needs at least two lines",
+        "kind": "error",
+        "when": "Fewer than two lines.",
+        "do": "Add lines."
+      },
+      {
+        "text": "Choose a journal",
+        "kind": "error",
+        "when": "Broken request.",
+        "do": "Reload."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "No answer came back from the database, so the screen sends the same submission again by itself (three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. The database knows the submission by its key and never records it twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries brought no answer (connection lost or the database was slow).",
+        "do": "Check the connection, then press the same button again. It is sent with the same key, so it is recorded once at most."
+      },
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "kind": "error",
+        "when": "The page was old or broken and sent no submission key.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A retry carried the key of an earlier submission but different values.",
+        "do": "Reload the page, check whether the first one was saved, then do it again if needed."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "The person's roles do not give the permission the database function needs ({1} names it).",
+        "do": "Ask the owner to change the person's roles on Settings, or ask someone who has it."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired.",
+        "do": "Sign in again and repeat the action."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "The account uses two-step sign-in and the code was not given yet.",
+        "do": "Type the code from the authenticator app."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The database has not had the update that this part of the screen needs.",
+        "do": "Tell the owner or whoever looks after the system to apply the latest database update."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "A manual journal was published with a wrong amount",
+        "do": "Reverse it (with why), then post the right one."
+      },
+      {
+        "case": "A sale or bill's journal is wrong",
+        "do": "There is no Reverse button for it: void/refund the sale on Orders, cancel the bill on Vendors, and so on."
+      },
+      {
+        "case": "An accrual must be undone next month",
+        "do": "Set 'Reverse on' to the first day of next month: the reversal is posted with it."
+      },
+      {
+        "case": "The month will not lock because of drafts",
+        "do": "Publish or discard each draft listed at the top of the register."
+      }
+    ],
+    "tips": [
+      "Search by the journal number to jump straight to it.",
+      "Open a number to see its lines as a voucher.",
+      "Money received in the bank that is not a sale goes to an income account the café adds (Chart of Accounts)."
+    ],
+    "related": [
+      "/accounting",
+      "/accounting/bank",
+      "/reports",
+      "/expenses",
+      "/vendors",
+      "/orders",
+      "/audit"
+    ],
+    "shots": [
+      {
+        "name": "journals-new",
+        "role": "accountant",
+        "state": "New Journal with two balanced lines",
+        "setup": "New Journal, Dr 6xxx, Cr 1020."
+      },
+      {
+        "name": "journals-register",
+        "role": "accountant",
+        "state": "Register with a draft and an open voucher",
+        "setup": "Save a draft, open a published journal's number."
+      },
+      {
+        "name": "journals-reverse",
+        "role": "owner",
+        "state": "The reverse box under a manual journal",
+        "setup": "Press Reverse."
+      }
+    ],
+    "skipped_messages": [
+      "idem_begin: \"This was sent by someone else\" — only when a submission key is reused by another person; the screens make a fresh key per person, so it cannot be reached by normal use.",
+      "trg_inherit_business_id messages ({1}.{2}: cannot determine the business …) — internal database consistency checks, not reachable from these screens.",
+      "\"That has already been recorded.\" (a unique-key clash) — the keyed writes answer a repeat with the first result instead; not expected here.",
+      "trg_journal_entry_guard / trg_journal_line_guard: \"A journal entry cannot change business or legacy status\", \"Journal entry {1} does not exist\", \"A journal line cannot be moved to another entry\", \"Lines of a published journal cannot be added, changed or removed…\", \"Journal {1} is published and cannot be changed…\" — guards against direct table edits the screen never makes."
+    ]
+  },
+  {
+    "path": "/journals?account={code}&from={day}&to={day}",
+    "title": "Journals — the lines behind the figure",
+    "area": "The books",
+    "summary": "The journal lines of one account (or a few added together) between two days, with the running balance: what makes up a figure on Chart of Accounts or Reports.",
+    "who": [
+      {
+        "role": "owner, general_manager, branch_manager, purchasing, accountant, auditor",
+        "can": "read it",
+        "cannot": "change anything here"
+      }
+    ],
+    "get_there": "Click an account name in the trial balance on Chart of Accounts, or a figure on Reports.",
+    "before": [],
+    "parts": [
+      {
+        "name": "The account's lines",
+        "shows": "Heading 'Journals' and 'The lines behind the figure'; the panel is titled '{code} {name}' (several joined with ' + '), with '{from} to {to} · published entries' (or, from a P&L figure, '… · the year-end close left out, as on the P&L'). Columns: When, Journal #, Account (when several), Narration (with '· reverses #{no}'), From (the source: Sale, Bill, Expense…, and its reference), Debit, Credit, Balance (not for a P&L figure). First row 'Opening balance'; last row 'Movement, and closing balance' (or 'Total: {amount}' for a P&L figure). Under it '{n} line(s).' or 'The first {n} lines are shown; the CSV has them all.' and 'Balances are debit-positive: a credit balance shows in brackets.'",
+        "controls": [
+          {
+            "label": "CSV",
+            "kind": "link",
+            "does": "Downloads all the lines as CSV."
+          },
+          {
+            "label": "Back to the journal register",
+            "kind": "link",
+            "does": "Opens the full register."
+          },
+          {
+            "label": "Print or save as PDF",
+            "kind": "button",
+            "does": "Prints the account's lines."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "No lines",
+        "looks": "'Nothing posted in these dates.'"
+      },
+      {
+        "state": "More than 1000 lines",
+        "looks": "The first 1000 shown and 'The first {n} lines are shown; the CSV has them all.'"
+      }
+    ],
+    "messages": [],
+    "what_if": [
+      {
+        "case": "A balance looks wrong",
+        "do": "Open the journal number on the register, or look at its source screen; reverse a manual one if it is a mistake."
+      }
+    ],
+    "tips": [
+      "Change the dates in the address (from=…&to=…) to look at another range."
+    ],
+    "related": [
+      "/accounting",
+      "/reports",
+      "/journals"
+    ],
+    "shots": [
+      {
+        "name": "journals-ledger",
+        "role": "accountant",
+        "state": "1020 Bank lines for a month",
+        "setup": "Chart of Accounts → click 'Bank'."
+      }
+    ]
+  },
+  {
+    "path": "/documents/[kind]/[record]",
+    "title": "Documents",
+    "area": "The books",
+    "summary": "The photos and PDFs kept with one record — a delivery (Delivery), a return to a supplier (Return), a supplier's bill (Bill), a supplier's credit note (Credit note), or an expense (Expense): open or download them, attach a new one from the camera or a file, or take one off with a reason.",
+    "who": [
+      {
+        "role": "owner, general_manager",
+        "can": "see and attach on every kind",
+        "cannot": "delete a document (it is only taken off, and kept)"
+      },
+      {
+        "role": "branch_manager",
+        "can": "see all; attach on deliveries, returns, bills, credit notes and expenses",
+        "cannot": ""
+      },
+      {
+        "role": "accountant",
+        "can": "see all; attach on bills, credit notes and expenses",
+        "cannot": "attach on deliveries or returns"
+      },
+      {
+        "role": "purchasing",
+        "can": "see all; attach on deliveries, returns, bills and credit notes",
+        "cannot": "attach on expenses"
+      },
+      {
+        "role": "auditor",
+        "can": "see and open documents",
+        "cannot": "attach or take off"
+      },
+      {
+        "role": "cashier, barista, inventory_counter",
+        "can": "nothing here",
+        "cannot": "open the page"
+      }
+    ],
+    "get_there": "The paperclip next to a record ('Documents kept with it: {n}' or 'No documents kept with it yet'): a delivery or return on Purchasing, a bill or credit note on Vendors (and a supplier's statement), an expense on Expenses.",
+    "before": [
+      "The record must exist; a wrong address shows 'Not found'."
+    ],
+    "parts": [
+      {
+        "name": "Heading",
+        "shows": "'Documents' and the record: '{Delivery|Return|Bill|Credit note|Expense} {no}'; under it the supplier, the date, the amount and the record's own words, joined by ' · '.",
+        "controls": [
+          {
+            "label": "Back",
+            "kind": "link",
+            "does": "Back to Purchasing (deliveries, returns), Vendors (bills, credit notes) or Expenses."
+          }
+        ]
+      },
+      {
+        "name": "Kept with it",
+        "shows": "'{n} of 20'. A table: Document (a PDF or picture icon and its name), Size ('{n} bytes', '{n} KB', '{n} MB'), Attached by (name · when), Note.",
+        "controls": [
+          {
+            "label": "{file name}",
+            "kind": "link",
+            "does": "Opens the document in a new tab, through a link that lasts one minute and is made only for someone who may see it."
+          },
+          {
+            "label": "Download",
+            "kind": "link",
+            "does": "Downloads the file."
+          },
+          {
+            "label": "Take off",
+            "kind": "link",
+            "does": "Opens 'Why is {name} taken off?'",
+            "who": "Those who may attach that kind."
+          },
+          {
+            "label": "Why is {name} taken off?",
+            "kind": "box",
+            "does": "The reason.",
+            "rules": "Required, up to 500 letters."
+          },
+          {
+            "label": "Take it off",
+            "kind": "button",
+            "does": "Takes the document off the record.",
+            "rules": "Disabled until a reason is typed.",
+            "after": "It moves to 'Taken off' (still openable), the count drops; nothing in stock, money or the books changes. Audit trail: 'Document taken off' with why."
+          },
+          {
+            "label": "Cancel",
+            "kind": "link",
+            "does": "Closes the box."
+          }
+        ]
+      },
+      {
+        "name": "Attach a document",
+        "shows": "For those who may attach, while fewer than 20 are kept: 'A photo or a PDF of the paper it came with: the delivery note, the supplier's bill or credit note, the return slip, or the receipt. A picture (JPEG, PNG or WebP) or a PDF, 10 MB at most; a large photo is made smaller before it is sent.'",
+        "controls": [
+          {
+            "label": "Take a photo",
+            "kind": "button",
+            "does": "On a phone opens the back camera; on a computer chooses a picture."
+          },
+          {
+            "label": "Choose a picture or a PDF",
+            "kind": "button",
+            "does": "Chooses a JPEG, PNG, WebP or PDF file. The chosen file's name and size are shown."
+          },
+          {
+            "label": "Name",
+            "kind": "box",
+            "does": "The name it is kept by; filled with the file's name.",
+            "rules": "Up to 200 letters."
+          },
+          {
+            "label": "Note (optional)",
+            "kind": "box",
+            "does": "A note kept with it.",
+            "rules": "Up to 500 letters."
+          },
+          {
+            "label": "Attach",
+            "kind": "button",
+            "does": "A picture over 1.5 MB is made smaller (longer side 2,000 pixels, JPEG); the file goes straight to storage, then is attached ('Sending…' while it works). If the answer is lost, pressing again does not send the file twice.",
+            "rules": "Disabled until a file is chosen.",
+            "after": "Listed under 'Kept with it'; the paperclip count on the record's list goes up. Nothing in stock, money or the books changes. Audit trail: 'Document attached'."
+          }
+        ]
+      },
+      {
+        "name": "Taken off",
+        "shows": "When any were taken off: 'Kept for the audit trail, with why' — Document (struck through, still openable), Attached by, Taken off by, Why.",
+        "controls": [
+          {
+            "label": "{file name}",
+            "kind": "link",
+            "does": "Opens the taken-off document."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "None yet",
+        "looks": "'No documents kept with it yet'."
+      },
+      {
+        "state": "Full (20)",
+        "looks": "No attach form; 'A record keeps at most 20 documents: take one off first'."
+      },
+      {
+        "state": "Read-only",
+        "looks": "No Take off and no attach form; 'Only those who may record it attach its documents.'"
+      }
+    ],
+    "messages": [
+      {
+        "text": "Attached: {name}",
+        "kind": "success",
+        "when": "The document was attached.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Take a photo or choose a file first",
+        "kind": "error",
+        "when": "Attach with no file.",
+        "do": "Choose a file."
+      },
+      {
+        "text": "That file is not a picture this browser can open.",
+        "kind": "error",
+        "when": "A big picture the browser could not shrink.",
+        "do": "Choose a JPEG or PNG, or a smaller file."
+      },
+      {
+        "text": "A document is a picture (JPEG, PNG or WebP) or a PDF",
+        "kind": "error",
+        "when": "Another type (e.g. HEIC, Word).",
+        "do": "Convert it, or take a photo instead."
+      },
+      {
+        "text": "That file is empty",
+        "kind": "error",
+        "when": "0 bytes.",
+        "do": "Choose the right file."
+      },
+      {
+        "text": "A document is at most 10 MB",
+        "kind": "error",
+        "when": "Too big.",
+        "do": "Use a smaller file or a photo."
+      },
+      {
+        "text": "The file could not be sent: try again",
+        "kind": "error",
+        "when": "Upload to storage failed.",
+        "do": "Check the connection and press Attach again."
+      },
+      {
+        "text": "You do not have permission to do that.",
+        "kind": "error",
+        "when": "Storage refused the upload for this person.",
+        "do": "Ask someone who records that kind."
+      },
+      {
+        "text": "Sign in first",
+        "kind": "error",
+        "when": "The session ended.",
+        "do": "Sign in again."
+      },
+      {
+        "text": "Choose what the document goes with",
+        "kind": "error",
+        "when": "Unknown kind (bad address).",
+        "do": "Open the page from the record's paperclip."
+      },
+      {
+        "text": "Choose the record",
+        "kind": "error",
+        "when": "Bad record id.",
+        "do": "Open the page from the record's paperclip."
+      },
+      {
+        "text": "The record was not found",
+        "kind": "error",
+        "when": "The record does not exist for this café.",
+        "do": "Go back and choose it again."
+      },
+      {
+        "text": "Give the document a name",
+        "kind": "error",
+        "when": "Name empty.",
+        "do": "Type a name."
+      },
+      {
+        "text": "A document's name is at most 200 letters",
+        "kind": "error",
+        "when": "Name too long.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "A note is at most 500 letters",
+        "kind": "error",
+        "when": "Note too long.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "Too long",
+        "kind": "error",
+        "when": "Note too long (form check).",
+        "do": "Shorten it."
+      },
+      {
+        "text": "The file is not kept with this record",
+        "kind": "error",
+        "when": "The uploaded file's place does not match the record (old page).",
+        "do": "Reload and attach again."
+      },
+      {
+        "text": "Upload the file first",
+        "kind": "error",
+        "when": "The file did not reach storage.",
+        "do": "Press Attach again."
+      },
+      {
+        "text": "That file is attached already",
+        "kind": "error",
+        "when": "The same upload attached twice.",
+        "do": "Nothing; it is attached."
+      },
+      {
+        "text": "A record keeps at most 20 documents: take one off first",
+        "kind": "error",
+        "when": "20 kept.",
+        "do": "Take one off first."
+      },
+      {
+        "text": "Document not found",
+        "kind": "error",
+        "when": "Old page.",
+        "do": "Reload."
+      },
+      {
+        "text": "Say why the document is taken off",
+        "kind": "error",
+        "when": "No reason.",
+        "do": "Type why."
+      },
+      {
+        "text": "Why is required",
+        "kind": "error",
+        "when": "No reason (form check).",
+        "do": "Type why."
+      },
+      {
+        "text": "Why is too long",
+        "kind": "error",
+        "when": "Over 500 letters.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "This document was taken off already",
+        "kind": "error",
+        "when": "Taken off a moment before.",
+        "do": "Reload."
+      },
+      {
+        "text": "Choose the document",
+        "kind": "error",
+        "when": "Broken request.",
+        "do": "Reload."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "No answer came back from the database, so the screen sends the same submission again by itself (three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. The database knows the submission by its key and never records it twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries brought no answer (connection lost or the database was slow).",
+        "do": "Check the connection, then press the same button again. It is sent with the same key, so it is recorded once at most."
+      },
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "kind": "error",
+        "when": "The page was old or broken and sent no submission key.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A retry carried the key of an earlier submission but different values.",
+        "do": "Reload the page, check whether the first one was saved, then do it again if needed."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "The person's roles do not give the permission the database function needs ({1} names it).",
+        "do": "Ask the owner to change the person's roles on Settings, or ask someone who has it."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired.",
+        "do": "Sign in again and repeat the action."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "The account uses two-step sign-in and the code was not given yet.",
+        "do": "Type the code from the authenticator app."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The database has not had the update that this part of the screen needs.",
+        "do": "Tell the owner or whoever looks after the system to apply the latest database update."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "The wrong photo was attached",
+        "do": "Take it off with why ('wrong photo') and attach the right one; the wrong one stays under 'Taken off'."
+      },
+      {
+        "case": "The photo is huge",
+        "do": "Just attach it: pictures over 1.5 MB are made smaller first."
+      }
+    ],
+    "tips": [
+      "On a phone, 'Take a photo' goes straight to the camera.",
+      "The paperclip on each list shows how many documents a record has."
+    ],
+    "related": [
+      "/purchasing",
+      "/vendors",
+      "/expenses",
+      "/audit"
+    ],
+    "shots": [
+      {
+        "name": "documents-list",
+        "role": "purchasing",
+        "state": "A delivery with two documents and the attach form",
+        "setup": "Purchasing → a delivery's paperclip."
+      },
+      {
+        "name": "documents-readonly",
+        "role": "auditor",
+        "state": "Read-only page",
+        "setup": "Open the same delivery as the auditor."
+      }
+    ],
+    "skipped_messages": [
+      "idem_begin: \"This was sent by someone else\" — only when a submission key is reused by another person; the screens make a fresh key per person, so it cannot be reached by normal use.",
+      "trg_inherit_business_id messages ({1}.{2}: cannot determine the business …) — internal database consistency checks, not reachable from these screens.",
+      "\"That has already been recorded.\" (a unique-key clash) — the keyed writes answer a repeat with the first result instead; not expected here.",
+      "trg_document_attachment_guard: \"A document is not deleted: take it off, saying why\", \"A document is not changed: take it off and attach it again\" — table guards; the screen never deletes or edits."
+    ]
+  },
+  {
+    "path": "/approvals",
+    "title": "Approvals",
+    "area": "The books",
+    "summary": "Everything waiting for a manager, oldest first: stock counts handed in, losses saved to wait, purchase orders drafted and left an hour, and the month's pay. Each is approved here, or sent back with why, by the same database step its own screen uses. Nobody approves what they asked for themselves.",
+    "who": [
+      {
+        "role": "owner, general_manager",
+        "can": "approve or send back counts, losses and orders (orders within their limit), approve the month's pay",
+        "cannot": "approve their own count or loss"
+      },
+      {
+        "role": "branch_manager",
+        "can": "approve or send back counts (of their own place, when they work at one), losses and orders (within their limit)",
+        "cannot": "approve payroll; approve their own count or loss"
+      },
+      {
+        "role": "accountant",
+        "can": "approve the month's pay",
+        "cannot": "see counts, losses or orders here"
+      },
+      {
+        "role": "cashier, barista, inventory_counter, purchasing, auditor",
+        "can": "nothing here",
+        "cannot": "open it: the menu does not offer it and the address sends them to their own first screen"
+      }
+    ],
+    "get_there": "Menu → Approvals (at the top; a number beside it counts what waits). Also: the alert '{n} waiting for a manager's approval: {n} count(s), {n} order(s)' and a phone warning when one arrives.",
+    "before": [
+      "A purchase order appears only once it has lines, a total above 0, and has been left for an hour as a draft."
+    ],
+    "parts": [
+      {
+        "name": "Intro",
+        "shows": "The page explanation, folded under 'How this works'.",
+        "controls": [
+          {
+            "label": "How this works",
+            "kind": "toggle",
+            "does": "Shows or hides the explanation."
+          }
+        ]
+      },
+      {
+        "name": "One card per thing waiting",
+        "shows": "A badge with the kind ('Stock count', 'Loss', 'Purchase order', 'The month's pay'), what it is (the place counted; the item lost; '#{po} · {supplier}'; the month 'YYYY-MM'), and the amount (a loss's value, an order's total for those who see costs, the month's net pay). Then: the detail ('{n} of {total} item(s) differ'; '{qty} {unit} · {kind of loss}'; '{n} line(s)' and '· Over your limit'; '{n} people') · who asked · when. The reason, if any.",
+        "controls": [
+          {
+            "label": "Approve",
+            "kind": "button",
+            "does": "Approves it at once (no question asked).",
+            "rules": "Not shown on what you asked for yourself (counts, losses), nor on an order over your limit.",
+            "after": "Count: the differences post to stock and the books (Dr/Cr 1200 Inventory against 5400 Inventory count variance), as of when the count was handed in. Loss: stays as recorded (its stock and journal were posted already). Order: becomes approved, ready to send to the supplier. Month's pay: Dr 6100 Salaries (and 2200 tips owed), Cr 2100 Salaries payable and 1300 advances taken back; it can then be paid on Payroll. Each goes on the audit trail. The card disappears and the menu count drops."
+          },
+          {
+            "label": "Send back for a recount… / Withdraw for a recount (your own count) / Reverse… (loss) / Cancel the order… (order)",
+            "kind": "button",
+            "does": "Opens a box asking why: 'Why is it sent back? (required)', 'Why is it reversed? (required)', or 'Why is it cancelled? (required)'.",
+            "rules": "None for the month's pay (reopen it on Payroll). Not on your own loss."
+          },
+          {
+            "label": "Confirm",
+            "kind": "button",
+            "does": "Sends it back with the reason.",
+            "rules": "A reason is required.",
+            "after": "Count: sent back, nothing posted; it can be counted again. Loss: reversed — the stock comes back and its journal is reversed. Order: cancelled (only while nothing has come against it). Audit trail records it with why."
+          },
+          {
+            "label": "Open its page",
+            "kind": "link",
+            "does": "Opens Stock Count, Inventory (losses waiting), Purchasing, or the month's payroll."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Nothing waiting",
+        "looks": "'Nothing waits for you.'"
+      },
+      {
+        "state": "Before the 0088 update",
+        "looks": "'The database needs an update for this screen' — 'Apply migration 0088 in the SQL editor.'"
+      },
+      {
+        "state": "Your own count",
+        "looks": "No Approve; the send-back button says 'Withdraw for a recount' and 'Someone else approves what you asked for' shows."
+      },
+      {
+        "state": "Order over your limit",
+        "looks": "'· Over your limit' in the detail, no Approve, and 'Over your limit: a manager with a higher one approves it'."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Why is it sent back? (required)",
+        "kind": "error",
+        "when": "Confirm pressed without a reason on a count.",
+        "do": "Type why."
+      },
+      {
+        "text": "Why is it reversed? (required)",
+        "kind": "error",
+        "when": "Confirm without a reason on a loss.",
+        "do": "Type why."
+      },
+      {
+        "text": "Why is it cancelled? (required)",
+        "kind": "error",
+        "when": "Confirm without a reason on an order.",
+        "do": "Type why."
+      },
+      {
+        "text": "Someone else approves what you asked for",
+        "kind": "info",
+        "when": "Your own count or loss.",
+        "do": "Ask another manager."
+      },
+      {
+        "text": "Over your limit: a manager with a higher one approves it",
+        "kind": "info",
+        "when": "An order above your approval limit.",
+        "do": "Ask a manager with a higher limit (set on Settings)."
+      },
+      {
+        "text": "Count not found",
+        "kind": "error",
+        "when": "Old page.",
+        "do": "Reload."
+      },
+      {
+        "text": "Only a submitted count can be approved; this one is {1}",
+        "kind": "error",
+        "when": "Decided a moment before.",
+        "do": "Reload."
+      },
+      {
+        "text": "A count must be approved by someone other than the person who counted it",
+        "kind": "error",
+        "when": "Your own count.",
+        "do": "Ask another manager."
+      },
+      {
+        "text": "Only a submitted count can be rejected",
+        "kind": "error",
+        "when": "Decided a moment before.",
+        "do": "Reload."
+      },
+      {
+        "text": "Say why the count is rejected",
+        "kind": "error",
+        "when": "No reason.",
+        "do": "Type why."
+      },
+      {
+        "text": "A reason is required",
+        "kind": "error",
+        "when": "No reason (form check).",
+        "do": "Type why."
+      },
+      {
+        "text": "Loss not found",
+        "kind": "error",
+        "when": "Old page.",
+        "do": "Reload."
+      },
+      {
+        "text": "This loss has been looked at already",
+        "kind": "error",
+        "when": "Decided a moment before.",
+        "do": "Reload."
+      },
+      {
+        "text": "This loss is not waiting for approval",
+        "kind": "error",
+        "when": "No longer waiting.",
+        "do": "Reload."
+      },
+      {
+        "text": "Someone else approves a loss you recorded",
+        "kind": "error",
+        "when": "Your own loss.",
+        "do": "Ask another manager."
+      },
+      {
+        "text": "Say why the loss is reversed",
+        "kind": "error",
+        "when": "No reason.",
+        "do": "Type why."
+      },
+      {
+        "text": "{1} was counted since the loss, and the count put its stock right: approve the loss instead",
+        "kind": "error",
+        "when": "A stock count after the loss already corrected the item.",
+        "do": "Approve the loss instead of reversing it."
+      },
+      {
+        "text": "Order not found",
+        "kind": "error",
+        "when": "Old page.",
+        "do": "Reload."
+      },
+      {
+        "text": "Order {1} is not a draft waiting to be approved",
+        "kind": "error",
+        "when": "Approved or cancelled meanwhile.",
+        "do": "Reload."
+      },
+      {
+        "text": "Order {1} comes to nothing: give its lines their prices",
+        "kind": "error",
+        "when": "Total is 0.",
+        "do": "Open its page and price the lines."
+      },
+      {
+        "text": "You approve orders up to {1}; order {2} comes to {3}: someone whose limit covers it approves it",
+        "kind": "error",
+        "when": "Over your limit.",
+        "do": "Ask a manager with a higher limit."
+      },
+      {
+        "text": "Say why the order is being cancelled",
+        "kind": "error",
+        "when": "No reason.",
+        "do": "Type why."
+      },
+      {
+        "text": "Why it is cancelled is required",
+        "kind": "error",
+        "when": "No reason (form check).",
+        "do": "Type why."
+      },
+      {
+        "text": "Order {1} is not open",
+        "kind": "error",
+        "when": "Already cancelled or closed.",
+        "do": "Reload."
+      },
+      {
+        "text": "Goods have come against order {1}: close it instead",
+        "kind": "error",
+        "when": "Something was received.",
+        "do": "Close the order on Purchasing."
+      },
+      {
+        "text": "Payroll not found",
+        "kind": "error",
+        "when": "Old page.",
+        "do": "Reload."
+      },
+      {
+        "text": "This payroll is approved already",
+        "kind": "error",
+        "when": "Approved meanwhile.",
+        "do": "Reload."
+      },
+      {
+        "text": "The pay for {1} is approved once the month is over",
+        "kind": "error",
+        "when": "The month is not over.",
+        "do": "Approve after the month ends."
+      },
+      {
+        "text": "Nobody worked here in {1}: there is no pay to approve",
+        "kind": "error",
+        "when": "No one in the payroll.",
+        "do": "Nothing to approve."
+      },
+      {
+        "text": "{1} is still clocked in since {2}: clock them out or correct the hours first",
+        "kind": "error",
+        "when": "Someone still clocked in.",
+        "do": "Correct the hours on Staff, then draft the payroll again."
+      },
+      {
+        "text": "Set {1}'s pay on Staff, then draft the payroll again",
+        "kind": "error",
+        "when": "Someone has no pay set.",
+        "do": "Set the pay on Staff and draft again on Payroll."
+      },
+      {
+        "text": "The hours or the pay changed since this draft: draft it again, check it, then approve it",
+        "kind": "error",
+        "when": "Hours or pay changed after drafting.",
+        "do": "Open its page, draft again, check, approve."
+      },
+      {
+        "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
+        "kind": "error",
+        "when": "The count, loss reversal or payroll would post into a locked month.",
+        "do": "Ask the owner to reopen it, or deal with it differently."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "info",
+        "when": "No answer came back from the database, so the screen sends the same submission again by itself (three more tries, 1, 2 and 4 seconds apart).",
+        "do": "Wait. The database knows the submission by its key and never records it twice."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three more tries brought no answer (connection lost or the database was slow).",
+        "do": "Check the connection, then press the same button again. It is sent with the same key, so it is recorded once at most."
+      },
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "kind": "error",
+        "when": "The page was old or broken and sent no submission key.",
+        "do": "Reload the page and do it again."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A retry carried the key of an earlier submission but different values.",
+        "do": "Reload the page, check whether the first one was saved, then do it again if needed."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "The person's roles do not give the permission the database function needs ({1} names it).",
+        "do": "Ask the owner to change the person's roles on Settings, or ask someone who has it."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired.",
+        "do": "Sign in again and repeat the action."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "The account uses two-step sign-in and the code was not given yet.",
+        "do": "Type the code from the authenticator app."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The database has not had the update that this part of the screen needs.",
+        "do": "Tell the owner or whoever looks after the system to apply the latest database update."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "You counted the stock yourself",
+        "do": "You cannot approve it; another manager does. You may withdraw it for a recount."
+      },
+      {
+        "case": "A loss was recorded by mistake",
+        "do": "Reverse… with why: the stock comes back and its journal is reversed."
+      },
+      {
+        "case": "The month's pay looks wrong",
+        "do": "Open its page; reopen or draft again there. There is no send-back for pay here."
+      }
+    ],
+    "tips": [
+      "The number beside Approvals in the menu is how many wait for you.",
+      "Approve and Confirm act at once: there is no undo here."
+    ],
+    "related": [
+      "/count",
+      "/inventory",
+      "/purchasing",
+      "/payroll",
+      "/audit"
+    ],
+    "open_questions": [
+      "The brief mentions 'undo' with Approvals: the code's Undo for a few seconds (E7) is on Products, the schedule and the tables editor, not on this screen; nothing approved here can be undone except by its own screen (reopen the payroll, recount, etc.).",
+      "The page's code comment says the month's pay is 'approved on its own page', yet each payroll card offers Approve here; documented as the code behaves."
+    ],
+    "shots": [
+      {
+        "name": "approvals-inbox",
+        "role": "owner",
+        "state": "A count, a loss and an order waiting",
+        "setup": "Hand in a count, save a loss to wait, leave a PO draft an hour."
+      },
+      {
+        "name": "approvals-send-back",
+        "role": "owner",
+        "state": "Loss card with the 'Why is it reversed?' box",
+        "setup": "Press Reverse… on the loss."
+      }
+    ],
+    "skipped_messages": [
+      "idem_begin: \"This was sent by someone else\" — only when a submission key is reused by another person; the screens make a fresh key per person, so it cannot be reached by normal use.",
+      "trg_inherit_business_id messages ({1}.{2}: cannot determine the business …) — internal database consistency checks, not reachable from these screens.",
+      "\"That has already been recorded.\" (a unique-key clash) — the keyed writes answer a repeat with the first result instead; not expected here.",
+      "trg_stock_count_guard / trg_payroll_approval_guard messages — table guards behind the same steps; the screen never edits these rows directly."
+    ]
+  },
+  {
+    "path": "/audit",
+    "title": "Audit trail",
+    "area": "The books",
+    "summary": "Who changed what, newest first: every change the database recorded, with the values before and after, the person and their reason. Filter by dates, kind of change and person; download it as CSV.",
+    "who": [
+      {
+        "role": "owner, general_manager, branch_manager, accountant, auditor",
+        "can": "read and download it",
+        "cannot": "change or delete anything (nobody can)"
+      },
+      {
+        "role": "cashier, barista, inventory_counter, purchasing",
+        "can": "nothing here",
+        "cannot": "open it"
+      }
+    ],
+    "get_there": "Menu → Accountant → Audit trail (under More for the owner and a branch manager). Also: the link at the bottom of Chart of Accounts.",
+    "before": [],
+    "parts": [
+      {
+        "name": "Filters",
+        "shows": "A bar of filters; the page reloads with them in the address.",
+        "controls": [
+          {
+            "label": "From",
+            "kind": "box",
+            "does": "First day.",
+            "rules": "Up to today; default 29 days before 'To'."
+          },
+          {
+            "label": "To",
+            "kind": "box",
+            "does": "Last day.",
+            "rules": "Up to today; default today."
+          },
+          {
+            "label": "What",
+            "kind": "list",
+            "does": "Kind of change: 'Every change', 'Prices', 'Products & recipes', 'Stock items & opening stock', 'Suppliers & deliveries', 'Counts, corrections, batches & transfers', 'Sales, bills, discounts & approvals', 'Cash & the drawer', 'Card & platform settlements', 'Books & periods' (journals, periods, old records, expenses, accounts, bank statements, prepaid), 'Alerts answered', 'Staff, hours & payroll', 'Customers and points', 'Documents kept with records', 'Settings, places, platforms & people'.",
+            "rules": "Equipment changes and reported problems are in no group: see them under 'Every change'."
+          },
+          {
+            "label": "Who",
+            "kind": "list",
+            "does": "'Anyone', each person by name, or 'No one signed in (changed in the database)'."
+          },
+          {
+            "label": "Show",
+            "kind": "button",
+            "does": "Applies the filters."
+          },
+          {
+            "label": "CSV",
+            "kind": "link",
+            "does": "Downloads the whole trail for the filters (not only the 500 shown)."
+          },
+          {
+            "label": "Print or save as PDF",
+            "kind": "button",
+            "does": "Prints the trail."
+          }
+        ]
+      },
+      {
+        "name": "The trail",
+        "shows": "Heading '{from} to {to}' and '{n} change(s)' or 'The latest {n} changes are shown; the CSV has them all' (more than 500). Columns: When, Who (or the orange badge 'No one signed in'), What happened (e.g. 'Journal reversed', 'Period locked', 'Bank statement kept', 'Account added', 'Document attached', 'Cash moved', 'Equipment added'), About (what it was about, by name), Before → after (each field: old → new; new only in bold when added; struck through when removed; JSON shown as code), Why (the reason given).",
+        "controls": [
+          {
+            "label": "journal register",
+            "kind": "link",
+            "does": "Opens Journals (in the note under the table)."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Nothing in the dates",
+        "looks": "'Nothing recorded in these dates.'"
+      },
+      {
+        "state": "Nothing for the filter",
+        "looks": "'Nothing recorded in these dates for this choice.'"
+      },
+      {
+        "state": "More than 500",
+        "looks": "'The latest 500 changes are shown; the CSV has them all'."
+      }
+    ],
+    "messages": [],
+    "what_if": [
+      {
+        "case": "Who changed a price?",
+        "do": "What → Prices, set the dates, Show."
+      },
+      {
+        "case": "A change shows 'No one signed in'",
+        "do": "It was made in the database directly, not on a screen: ask whoever looks after the system."
+      },
+      {
+        "case": "Why was a month reopened?",
+        "do": "What → Books & periods; the Why column has the owner's reason."
+      }
+    ],
+    "tips": [
+      "Written in the same step as the change and never edited: it is the trusted record.",
+      "Use the CSV for long periods."
+    ],
+    "related": [
+      "/journals",
+      "/accounting"
+    ],
+    "shots": [
+      {
+        "name": "audit-books",
+        "role": "auditor",
+        "state": "Books & periods filter with a period lock and a journal reversal",
+        "setup": "What → Books & periods → Show."
+      }
+    ]
+  },
+  {
+    "path": "/problems",
+    "title": "Reported problems",
+    "area": "The books",
+    "summary": "What staff said went wrong with 'Something's wrong?', with the screen they were on, who, when and where. Open ones first, then newest. Mark each dealt with (with a note), open it again, or copy it to send on.",
+    "who": [
+      {
+        "role": "owner, general_manager, branch_manager, accountant, auditor",
+        "can": "see the list, mark dealt with or open again, copy",
+        "cannot": ""
+      },
+      {
+        "role": "cashier, barista, inventory_counter, purchasing",
+        "can": "report a problem from the menu",
+        "cannot": "open this list"
+      }
+    ],
+    "get_there": "Menu → You → Reported problems. Also: the Dashboard card '{n} problem(s) reported by staff, not dealt with yet'.",
+    "before": [
+      "Needs the database update 0083."
+    ],
+    "parts": [
+      {
+        "name": "Intro",
+        "shows": "'Reported problems' and the explanation under 'How this works'.",
+        "controls": [
+          {
+            "label": "How this works",
+            "kind": "toggle",
+            "does": "Shows or hides the explanation."
+          }
+        ]
+      },
+      {
+        "name": "One card per report (up to 200)",
+        "shows": "What was said (bold) and a badge 'Open' (orange) or 'Dealt with' (green; the card is greyed); when · who · the place · the screen's address; 'Note: {note}' if any.",
+        "controls": [
+          {
+            "label": "What was done (optional)",
+            "kind": "box",
+            "does": "A note kept with the report.",
+            "rules": "Up to 300 letters. Only on open reports."
+          },
+          {
+            "label": "Dealt with",
+            "kind": "button",
+            "does": "Marks it dealt with (with the note, if typed).",
+            "after": "It goes down the list and greys; the Dashboard count drops. Audit trail: 'Problem dealt with'."
+          },
+          {
+            "label": "Open again",
+            "kind": "button",
+            "does": "Reopens a dealt-with report (the note stays).",
+            "after": "Back on top as open. Audit trail: 'Problem opened again'."
+          },
+          {
+            "label": "Copy to send on",
+            "kind": "button",
+            "does": "Copies a text of the report — when, who, where, the screen, what went wrong, what the app knew (online, screen size, language, browser, last error, time) and the note — to paste into a message. The button then says 'Copied'."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Nothing reported",
+        "looks": "'Nothing reported. Anyone can say something is wrong from the menu, on any screen.'"
+      },
+      {
+        "state": "Before the update",
+        "looks": "'Reported problems are kept once the owner applies the latest database update.'"
+      }
+    ],
+    "messages": [
+      {
+        "text": "That report is not here",
+        "kind": "error",
+        "when": "Old page.",
+        "do": "Reload."
+      },
+      {
+        "text": "A note is at most 300 letters",
+        "kind": "error",
+        "when": "Note too long.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "No answer came back.",
+        "do": "Reload and look at the report's badge before pressing again."
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "Roles changed meanwhile.",
+        "do": "Ask the owner."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "Sign-in expired.",
+        "do": "Sign in again."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "A problem needs the person who looks after the system",
+        "do": "Press 'Copy to send on' and paste it into a message to them."
+      }
+    ],
+    "tips": [
+      "The screen's address on each card tells you exactly where it happened."
+    ],
+    "related": [
+      "/dashboard",
+      "/audit"
+    ],
+    "shots": [
+      {
+        "name": "problems-list",
+        "role": "owner",
+        "state": "One open and one dealt-with report",
+        "setup": "Report one from the till as a cashier."
+      }
+    ],
+    "skipped_messages": [
+      "Uncertain-answer retries: this screen does not resend by itself; only the plain 'The database did not answer…' message can show."
+    ]
+  },
+  {
+    "path": "(menu, every screen) Something's wrong?",
+    "title": "Something's wrong?",
+    "area": "The books",
+    "summary": "From the menu on every screen, anyone signed in says in a word or two what went wrong. The screen and what the app knew go with it; the owner and managers see it on Reported problems.",
+    "who": [
+      {
+        "role": "everyone signed in",
+        "can": "send a report",
+        "cannot": "see the list unless they have audit.view or settings.manage"
+      }
+    ],
+    "get_there": "Menu → You → Something's wrong? (on a phone, open the menu first).",
+    "before": [],
+    "parts": [
+      {
+        "name": "The window",
+        "shows": "'Something's wrong?' and 'Say in a word or two what went wrong. The screen you are on goes with it, so nobody has to ask.' A box and 'On: {page}'.",
+        "controls": [
+          {
+            "label": "What went wrong?",
+            "kind": "box",
+            "does": "What happened (example: 'The receipt printed twice').",
+            "rules": "2 to 500 letters."
+          },
+          {
+            "label": "Send",
+            "kind": "button",
+            "does": "Sends the report with the screen's address, whether online, screen size, language, browser, the last error the page saw, and the time. If the answer is lost, sending again is recorded once.",
+            "rules": "Disabled until 2 letters are typed.",
+            "after": "A new open report on Reported problems; the Dashboard card counts it. Nothing in stock, money or the books changes."
+          },
+          {
+            "label": "Close",
+            "kind": "button",
+            "does": "Closes the window."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Sent",
+        "looks": "'Thank you. The owner will see it, with this screen.'"
+      }
+    ],
+    "messages": [
+      {
+        "text": "Thank you. The owner will see it, with this screen.",
+        "kind": "success",
+        "when": "Sent.",
+        "do": "Close the window."
+      },
+      {
+        "text": "Say in a word or two what went wrong",
+        "kind": "error",
+        "when": "Fewer than 2 letters.",
+        "do": "Type more."
+      },
+      {
+        "text": "At most 500 letters",
+        "kind": "error",
+        "when": "Over 500 letters.",
+        "do": "Shorten it."
+      },
+      {
+        "text": "No answer: try again in a moment.",
+        "kind": "error",
+        "when": "The request failed (no connection).",
+        "do": "Press Send again; it is recorded once."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "No answer from the database.",
+        "do": "Press Send again; the same key is used, so it is kept once."
+      },
+      {
+        "text": "Sign in to continue",
+        "kind": "error",
+        "when": "Not signed in any more.",
+        "do": "Sign in again."
+      },
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "kind": "error",
+        "when": "Broken page.",
+        "do": "Reload."
+      },
+      {
+        "text": "No active location for this business",
+        "kind": "error",
+        "when": "No active place to record it against.",
+        "do": "Tell the owner."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "The till froze or printed twice",
+        "do": "Open the menu, Something's wrong?, type what happened, Send."
+      }
+    ],
+    "tips": [
+      "You do not need to say which screen: it is sent with the report."
+    ],
+    "related": [
+      "/problems",
+      "/dashboard"
+    ],
+    "shots": [
+      {
+        "name": "problem-dialog",
+        "role": "cashier",
+        "state": "The window over the till with text typed",
+        "setup": "On the till, Menu → Something's wrong?"
+      }
+    ]
+  }
+]

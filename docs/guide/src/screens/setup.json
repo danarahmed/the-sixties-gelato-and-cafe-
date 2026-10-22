@@ -1,0 +1,2777 @@
+[
+  {
+    "path": "/",
+    "title": "(no screen of its own: the app's home address)",
+    "area": "Setup",
+    "summary": "Opening the app's plain address never shows a page: it sends each person straight to where their work starts, or to the first screen they chose on My account.",
+    "who": [
+      {
+        "role": "owner",
+        "can": "lands on Dashboard (or their chosen first screen)",
+        "cannot": ""
+      },
+      {
+        "role": "general_manager",
+        "can": "lands on Dashboard (or their chosen first screen)",
+        "cannot": ""
+      },
+      {
+        "role": "branch_manager",
+        "can": "lands on Dashboard (or their chosen first screen)",
+        "cannot": ""
+      },
+      {
+        "role": "cashier",
+        "can": "lands on POS (the till)",
+        "cannot": ""
+      },
+      {
+        "role": "barista",
+        "can": "lands on Production",
+        "cannot": ""
+      },
+      {
+        "role": "inventory_counter",
+        "can": "lands on Stock Count",
+        "cannot": ""
+      },
+      {
+        "role": "purchasing",
+        "can": "lands on Purchasing",
+        "cannot": ""
+      },
+      {
+        "role": "accountant",
+        "can": "lands on Reports",
+        "cannot": ""
+      },
+      {
+        "role": "auditor",
+        "can": "lands on Reports",
+        "cannot": ""
+      }
+    ],
+    "get_there": "Type the app's address, tap the app's icon on a phone or till, sign in, or tap the café's name… any way into the app with no page named. Signing in also ends here.",
+    "before": [
+      "The app must have its database set (otherwise it goes to “Not configured”, /setup)."
+    ],
+    "parts": [
+      {
+        "name": "Where you are sent",
+        "shows": "Nothing is shown. In order: no database set → /setup. Not signed in → the sign-in page. Signed in but the second step not done → the code page (/login/verify). Signed in but not linked to the café, or deactivated → My account, which says “Your login is not linked to the business yet”. Otherwise: the first screen you chose on My account, as long as your roles still open it; if not, your role's screen: Dashboard for those who see profit and also sell (owner, general manager, branch manager); Reports for those who see profit but do not sell (accountant, auditor); Production for the barista; POS for the cashier; Stock Count for the inventory counter; Purchasing for purchasing; otherwise Inventory, Reports or My account.",
+        "controls": []
+      }
+    ],
+    "states": [
+      {
+        "state": "Signed in and linked",
+        "looks": "You arrive at your start screen at once."
+      },
+      {
+        "state": "Not signed in",
+        "looks": "The sign-in page."
+      },
+      {
+        "state": "Login not linked, or deactivated",
+        "looks": "My account, with “Your login is not linked to the business yet” and your email; ask the owner to add you on Settings → People and roles with exactly that email."
+      },
+      {
+        "state": "No database set",
+        "looks": "The “Not configured” page."
+      }
+    ],
+    "messages": [],
+    "skipped_messages": [
+      "Messages that every screen can show (session ended, no permission, the database did not answer, retry key, missing database update) are listed once, under “(every screen)”."
+    ],
+    "what_if": [
+      {
+        "case": "I always land on a screen I do not want",
+        "do": "Open My account → First screen and choose the screen you want. It follows your sign-in to any phone or till."
+      },
+      {
+        "case": "My chosen first screen stopped opening",
+        "do": "Your roles changed and no longer open it, so you are sent to your role's screen. Choose another first screen on My account."
+      }
+    ],
+    "tips": [
+      "The address with a screen named (for example /end-of-day) goes straight there; after signing in you are taken back to the screen you asked for."
+    ],
+    "related": [
+      "/account",
+      "/login",
+      "/setup",
+      "/dashboard"
+    ],
+    "shots": []
+  },
+  {
+    "path": "/setup",
+    "title": "Not configured",
+    "area": "Setup",
+    "summary": "Shown instead of the whole app when this copy of the app has no database connection set. It shows nothing and records nothing.",
+    "who": [
+      {
+        "role": "anyone",
+        "can": "see this page without signing in",
+        "cannot": "do anything here; it has no buttons"
+      }
+    ],
+    "get_there": "You are sent here from any address when the database connection is not set. If the connection is set, opening /setup sends you to the home address instead.",
+    "before": [],
+    "parts": [
+      {
+        "name": "The card",
+        "shows": "Heading “Not configured”, then: “This deployment has no database connection, so it shows nothing and records nothing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY for the environment and deploy again.” and “There is intentionally no built-in default: a copy of the app must never write to another business's books by accident. See docs/guides/deployment.md.” The top bar shows only the app's name, the connection badge, the language list and the theme button: no menu.",
+        "controls": []
+      }
+    ],
+    "states": [
+      {
+        "state": "Database not set",
+        "looks": "The card above. Nothing else can be opened."
+      },
+      {
+        "state": "Database set",
+        "looks": "You never see this page: it sends you to the home address."
+      }
+    ],
+    "messages": [
+      {
+        "text": "This deployment has no database connection, so it shows nothing and records nothing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY for the environment and deploy again.",
+        "kind": "error",
+        "when": "The app was deployed without its two database settings.",
+        "do": "Tell whoever looks after the café's system. Staff cannot fix this from a screen."
+      },
+      {
+        "text": "There is intentionally no built-in default: a copy of the app must never write to another business's books by accident. See docs/guides/deployment.md.",
+        "kind": "info",
+        "when": "Always under the first message.",
+        "do": "Nothing."
+      }
+    ],
+    "what_if": [
+      {
+        "case": "Staff see “Not configured” on the till",
+        "do": "Do not take card or app payments through the app. Call whoever looks after the system; it needs the two settings and a new deployment."
+      }
+    ],
+    "tips": [
+      "The language list in the top bar still works, so the message can be read in Arabic or Kurdish."
+    ],
+    "related": [
+      "/"
+    ],
+    "shots": [
+      {
+        "name": "setup-not-configured",
+        "role": "anyone",
+        "state": "The Not configured card",
+        "setup": "Run the app without NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+      }
+    ]
+  },
+  {
+    "path": "/settings",
+    "title": "Settings",
+    "area": "Setup",
+    "summary": "How the café is set up, in six folded groups: Selling (ways to pay, service charge, the receipt), People and roles, Rules and warnings (rules, alert limits, phone warnings, who reads the watch list), Places, Languages, and The café's details. Each group's heading says what is turned on inside it.",
+    "who": [
+      {
+        "role": "owner",
+        "can": "everything on the page, including giving or taking the Owner and General manager roles, deactivating any person but themselves, and choosing whether the general manager reads the watch list",
+        "cannot": "deactivate themselves; change the café's details (name, currency, timezone, default language, bill numbers) — there is no screen for them"
+      },
+      {
+        "role": "general_manager",
+        "can": "everything else on the page",
+        "cannot": "tick the Owner or General manager role (the boxes are greyed: “Only the owner can give this role”), change the roles or access of an owner or general manager, or see the watch list box"
+      },
+      {
+        "role": "branch_manager, cashier, barista, inventory_counter, purchasing, accountant, auditor",
+        "can": "nothing here",
+        "cannot": "open Settings: the menu does not show it, and typing the address sends them to their own start screen"
+      }
+    ],
+    "get_there": "Menu → Accountant → Settings. Also: Find anything (Ctrl+K) → “Settings”; Sales → “Add them on Settings → Ways to pay.”; an address with a part named, for example /settings#receipt or /settings#phone-warnings, opens that group and scrolls to that part.",
+    "before": [],
+    "parts": [
+      {
+        "name": "Heading",
+        "shows": "“Settings”, and under it: “Each heading says what is turned on inside it. Open one to change it.”",
+        "controls": []
+      },
+      {
+        "name": "Not set up yet",
+        "shows": "A card shown only while something is not set up, in this order, each as a link and why it is worth doing: “Your own receipt — Your logo, your name and thanks in three languages, the Wi-Fi and a QR code on every receipt.” (nothing of the receipt given yet); “Ways to pay — The apps and banks you are paid through, each with its own account, so their money is counted apart.” (no way to pay besides cash and card); “Phone warnings — The Dashboard's warnings sent to your phone within minutes, wherever you are.” (phone warnings off for the café); “Service charge — A percentage added at the table or wherever you choose, kept apart from the sales.” (no service charge on any way of selling).",
+        "controls": [
+          {
+            "label": "Your own receipt / Ways to pay / Phone warnings / Service charge",
+            "kind": "link",
+            "does": "Opens the group that holds it and scrolls to that part."
+          }
+        ]
+      },
+      {
+        "name": "Selling (folded group)",
+        "shows": "Heading “Selling” with what is on: “No service charge” or “Service charge on {ways}” (each way with its percentage, e.g. “Dine-in 10%”); “Cash and card only” or “{n} way(s) to pay besides cash and card”; “Your own receipt” or “The app's own receipt”. Tap the heading to open or fold it.",
+        "controls": [
+          {
+            "label": "Selling",
+            "kind": "button",
+            "does": "Opens or folds the group."
+          }
+        ]
+      },
+      {
+        "name": "Selling → Ways to pay",
+        "shows": "“Cash and the card machine are always taken. Add the apps and banks the café is paid through: each gets an account of its own, where its money stays until it is moved, on Sales.” A table of the café's ways to pay: “Way to pay” (its name), “Its account” (its own account number in the books, 1030 onwards), “At the till” (“offered” or “out of use”). Before database update 0069 the part only says “This needs the database update 0069, which has not been applied yet.”",
+        "controls": [
+          {
+            "label": "+ FIB / + FastPay / + ZainCash / + Qi Card",
+            "kind": "button",
+            "does": "“Add with one press:” — adds that way to pay at once. Only those not added yet are shown.",
+            "after": "A new account for it is made in the books (1030 onwards). The till offers it from now on; Sales, End of Day and the reports show its money. On the audit trail."
+          },
+          {
+            "label": "Another, by its name",
+            "kind": "box",
+            "does": "Type the name of any other app or bank the café is paid through.",
+            "rules": "1 to 40 letters. The name must not be one the café already has (case and spaces ignored)."
+          },
+          {
+            "label": "Add",
+            "kind": "button",
+            "does": "Adds the way to pay typed in the box.",
+            "rules": "Off while the box is empty. At most 60 ways to pay in all.",
+            "after": "As for the one-press buttons: its own account, offered at the till."
+          },
+          {
+            "label": "Rename",
+            "kind": "button",
+            "does": "Turns the name into a box (“New name for {name}”), with “Save” and “Cancel”.",
+            "after": "Save renames it and its account in the books; the money in the account stays. On the audit trail."
+          },
+          {
+            "label": "Take out of use",
+            "kind": "button",
+            "does": "Stops offering it at the till.",
+            "after": "The till no longer offers it. Its account keeps what it holds; move that money on Sales. On the audit trail."
+          },
+          {
+            "label": "Bring back",
+            "kind": "button",
+            "does": "Shown instead of “Take out of use” for one out of use: offers it at the till again."
+          }
+        ]
+      },
+      {
+        "name": "Selling → Service charge",
+        "shows": "“A percentage added to what the products come to, on each way of selling you choose — or on none. The till adds it when a sale or a table's bill is paid, and the receipt shows it. It is the café's own money, kept apart from the sales.” One row per way of selling the café uses itself (Dine-in, Takeaway, Direct delivery — delivery platforms are not listed: a platform sets what its customers pay), with its percentage or “None”. Before update 0090: “This needs the database update 0090, which has not been applied yet.”",
+        "controls": [
+          {
+            "label": "Service charge on {way} (%)",
+            "kind": "box",
+            "does": "The percentage for that way of selling.",
+            "rules": "0 to 50; decimals allowed; empty or 0 means none."
+          },
+          {
+            "label": "Save",
+            "kind": "button",
+            "does": "Saves the percentage for that way of selling.",
+            "after": "The till adds it to every sale or table bill of that way of selling paid from now on; the bill and receipt show it. It goes to its own account in the books (4300 Service charge), not to sales. Bills already paid do not change. On the audit trail."
+          },
+          {
+            "label": "Turn off",
+            "kind": "link",
+            "does": "Shown only when it is on: empties the box and saves none.",
+            "after": "No service charge on that way of selling from now on."
+          }
+        ]
+      },
+      {
+        "name": "Selling → The receipt",
+        "shows": "“What the bill, the receipt and a refund's slip print besides the sale: your logo, your name and thanks in the three languages, your pages, the Wi-Fi, and a QR code to your menu or your reviews.” A form on one side and, on the other, “As it prints”: a made-up receipt (Test line, Another test line, 10,000) that changes as you type. Before update 0091: “This needs the database update 0091, which has not been applied yet.”",
+        "controls": [
+          {
+            "label": "Choose a logo",
+            "kind": "button",
+            "does": "Opens the picker for a picture. The picture is made small on the device (at most 320 px on its longer side) and saved at once. Shown as “Choose another logo” once there is one. Until a logo is given the café's emblem prints.",
+            "rules": "PNG, JPEG or WebP; smaller than 60 KB after it is made small. “It prints in black and white. A dark logo on a light background prints best.”",
+            "after": "Every bill, receipt and refund slip prints it from now on. On the audit trail."
+          },
+          {
+            "label": "Take the logo off",
+            "kind": "button",
+            "does": "Removes the logo at once; the emblem prints again.",
+            "after": "On the audit trail."
+          },
+          {
+            "label": "The café's name: In Arabic / In Kurdish",
+            "kind": "box",
+            "does": "The café's name in Arabic and in Kurdish, printed under its own name.",
+            "rules": "Up to 60 letters each; optional."
+          },
+          {
+            "label": "Thank-you line: In English / In Arabic / In Kurdish",
+            "kind": "box",
+            "does": "A thank-you line in each language. With none given, the app's own thanks prints.",
+            "rules": "Up to 120 letters each; optional."
+          },
+          {
+            "label": "Your pages: Instagram / Facebook / TikTok",
+            "kind": "box",
+            "does": "The café's pages, printed on the receipt.",
+            "rules": "Instagram and TikTok up to 60 letters, Facebook up to 80. A leading @ is dropped for Instagram and TikTok."
+          },
+          {
+            "label": "Wi-Fi: The Wi-Fi's name / Its password",
+            "kind": "box",
+            "does": "The Wi-Fi printed for customers.",
+            "rules": "Up to 60 letters each."
+          },
+          {
+            "label": "No QR code / Our menu / Tell us how we did",
+            "kind": "toggle",
+            "does": "Where the QR code on the receipt leads: nowhere, the menu, or the reviews. Choosing one shows its link box.",
+            "rules": "“A customer scans it with a phone's camera. The menu can be a page or a PDF you share; for reviews, the link Google Maps gives to write one.”"
+          },
+          {
+            "label": "The link to your menu / The link to your reviews page",
+            "kind": "box",
+            "does": "The address the QR code opens.",
+            "rules": "Required for the choice made; starts with https:// and has no spaces; up to 300 letters."
+          },
+          {
+            "label": "A line at the foot",
+            "kind": "box",
+            "does": "One line printed at the bottom, e.g. “An address, a phone number, opening hours…”.",
+            "rules": "Up to 200 letters."
+          },
+          {
+            "label": "Save the receipt",
+            "kind": "button",
+            "does": "Saves every box of the form at once (the logo is saved on its own when chosen).",
+            "after": "The till, Orders and Test your devices print it from now on. Receipts already printed do not change. On the audit trail (the receipt before and after)."
+          }
+        ]
+      },
+      {
+        "name": "People and roles (folded group)",
+        "shows": "Heading “People and roles” with “People: {n}” (active people).",
+        "controls": [
+          {
+            "label": "People and roles",
+            "kind": "button",
+            "does": "Opens or folds the group."
+          }
+        ]
+      },
+      {
+        "name": "People and roles → People",
+        "shows": "“Add a person with their email and role. They then open this app, choose “First time here?”, and create their login with that same email; once they confirm it, they are in — with exactly what their role allows. Deactivating someone takes effect on their very next click.” A table: “Name” (yours marked “(you)”), “Email”, “Roles”, “Works at” (only when the café has more than one place in use), “Login”: “invited” (not signed in yet), “signed in”, or “deactivated” (row greyed).",
+        "controls": [
+          {
+            "label": "Roles",
+            "kind": "button",
+            "does": "Turns the person's roles into tick boxes, with “Save” and “Cancel”.",
+            "rules": "At least one role (Save is off with none). Roles: Owner, General manager, Branch manager, Cashier, Barista / production, Inventory counter, Purchasing, Accountant, Read-only auditor.",
+            "who": "Only the owner can tick or untick Owner and General manager, or change the roles of an owner or general manager.",
+            "after": "What they can see and do changes on their next click, everywhere. Giving Owner or General manager makes them work everywhere. On the audit trail."
+          },
+          {
+            "label": "Deactivate",
+            "kind": "button",
+            "does": "Stops the person at once. Not shown on your own row.",
+            "who": "Only the owner can deactivate an owner or a general manager.",
+            "after": "From their very next click they can read and do nothing; their login sends them to My account (“not linked”). Their past work stays. On the audit trail."
+          },
+          {
+            "label": "Reactivate",
+            "kind": "button",
+            "does": "Shown for a deactivated person: lets them in again with the roles they had."
+          },
+          {
+            "label": "Where {name} works",
+            "kind": "list",
+            "does": "In the “Works at” column: “Everywhere”, or one of the café's places. Saved as soon as it is chosen.",
+            "rules": "Off for an owner or general manager (they work everywhere) and for a deactivated person.",
+            "after": "The database then refuses anything they record at another place; their Start and End of Day are that place's. On the audit trail."
+          }
+        ]
+      },
+      {
+        "name": "People and roles → Add a person",
+        "shows": "Under the table: “Add a person”.",
+        "controls": [
+          {
+            "label": "Name",
+            "kind": "box",
+            "does": "Their name.",
+            "rules": "Required; up to 120 letters."
+          },
+          {
+            "label": "Email",
+            "kind": "box",
+            "does": "The email they will create their login with.",
+            "rules": "Required; a real email address. Saved in small letters."
+          },
+          {
+            "label": "Role tick boxes",
+            "kind": "toggle",
+            "does": "Their roles; Cashier is ticked to start with.",
+            "rules": "At least one.",
+            "who": "Owner and General manager can be ticked only by the owner."
+          },
+          {
+            "label": "Works at",
+            "kind": "list",
+            "does": "Shown when the café has more than one place: “Everywhere” or one place.",
+            "rules": "Off (Everywhere) when Owner or General manager is ticked."
+          },
+          {
+            "label": "Add person",
+            "kind": "button",
+            "does": "Adds the person as “invited”.",
+            "rules": "Off until name, email and a role are given.",
+            "after": "Nothing in the books. They can now create their login with that email (“First time here?” on the sign-in page). On the audit trail."
+          }
+        ]
+      },
+      {
+        "name": "People and roles → Roles & what they may do",
+        "shows": "“Enforced by the database on every read and write — the screens only follow it. A cashier sells but never sees a cost; a counter never sees what the ledger expects; a count is approved by someone other than its counter; only the owner reopens a locked period.” A card per role listing its permission codes (for example sale.create, cost.view, settings.manage). Read only.",
+        "controls": []
+      },
+      {
+        "name": "Rules and warnings (folded group)",
+        "shows": "Heading “Rules and warnings” with “Phone warnings on” or “Phone warnings off” (nothing before update 0072).",
+        "controls": [
+          {
+            "label": "Rules and warnings",
+            "kind": "button",
+            "does": "Opens or folds the group."
+          }
+        ]
+      },
+      {
+        "name": "Rules and warnings → Rules",
+        "shows": "“The discount a cashier gives without a manager, the refunds and losses a second person approves, and what happens when more stock is used than the books hold. Each is changed on Rules, with a reason, and every change is kept.” A table of every rule's value for the whole café (e.g. “Refunds a second person approves — 25,000 IQD”), with “· {n} more for roles or items” when the rule is also set for roles, kinds of item, items or branches. Read only here.",
+        "controls": [
+          {
+            "label": "Open Rules →",
+            "kind": "link",
+            "does": "Opens Settings → Rules, where each rule is changed."
+          },
+          {
+            "label": "The general manager reads the watch list too",
+            "kind": "toggle",
+            "does": "Ticked: the general manager also sees Reports → watch list. Saved at once.",
+            "who": "Only the owner sees this box (and only after database update 0094).",
+            "after": "The general manager gains or loses the watch list. On the audit trail."
+          }
+        ]
+      },
+      {
+        "name": "Rules and warnings → Alerts",
+        "shows": "“The dashboard checks the books against these each time it opens, and says what needs someone: red now, orange soon. Leave a box empty to follow its default. How long a supplier takes to deliver is set on each vendor (Vendors → Edit); this is for the rest.” One box per limit, each with “Default {default} · {min} to {max}” and, when changed, “ · now {value}”. The limits (default; allowed): “Days a delivery takes (vendors without their own)” (1; 0 to 30, whole), “Margin target (%)” (70; 0 to 95), “Hours a stock count may stay open” (8; 1 to 72, whole), “Waste spike: times a usual week” (1.5; 1 to 10), “Waste spike: at least (IQD)” (20,000; 0 to 100,000,000, whole), “Exceptions by one person in 7 days” (10; 1 to 1,000, whole), “Exceptions as a share of their sales (%)” (3; 0.1 to 100), “Days card money takes to reach the bank” (3; 1 to 30, whole), “Days a delivery platform takes to pay” (7; 1 to 60, whole), “Days before a bill is due to warn” (3; 0 to 30, whole), “Price typo: times another channel's price” (3; 1.5 to 20), “Hours a cash session may stay open” (14; 1 to 72, whole), “A cash session short by at least (IQD)” (5,000; 0 to 100,000,000, whole), “Usage unlike the recipes by at least (%)” (10; 1 to 100), “Usage unlike the recipes by at least (IQD)” (5,000; 0 to 100,000,000, whole).",
+        "controls": [
+          {
+            "label": "(each limit)",
+            "kind": "box",
+            "does": "Type a new limit, or empty the box to follow the default again. The default shows faintly in an empty box.",
+            "rules": "Within the limit's range; “whole” ones take whole numbers only."
+          },
+          {
+            "label": "Save thresholds",
+            "kind": "button",
+            "does": "Saves every box that changed, together. Shows “Saving…” while it works.",
+            "after": "The Dashboard's alerts (and phone warnings) use the new limits from the next time they are checked. On the audit trail as a change to the business."
+          }
+        ]
+      },
+      {
+        "name": "Rules and warnings → Phone warnings",
+        "shows": "“The warnings of the dashboard, sent to the phones of those who see them, in each one's language, within about five minutes. Turned on here once for the café; then each person turns them on on a phone, on My account.” When on: a badge “On, for {n} phone(s)”. Before update 0072: “This needs the database update 0072, which has not been applied yet.”",
+        "controls": [
+          {
+            "label": "Turn phone warnings on for the café",
+            "kind": "button",
+            "does": "Turns them on, and the app makes the café's keys for sending.",
+            "after": "Each person who sees the Dashboard can now turn warnings on on their phone (My account → Warnings on this phone). Alerts already open are not sent; only new ones. On the audit trail."
+          },
+          {
+            "label": "Turn phone warnings off for the café",
+            "kind": "button",
+            "does": "Shown when on: turns them off.",
+            "after": "Nothing more is sent to any phone; warnings waiting to be sent are dropped. Phones stay registered for when it is turned on again. On the audit trail."
+          }
+        ]
+      },
+      {
+        "name": "Places (folded group)",
+        "shows": "Heading “Places” with “{n} branch(es)” and, if there are others, “{n} other place(s)”.",
+        "controls": [
+          {
+            "label": "Places",
+            "kind": "button",
+            "does": "Opens or folds the group."
+          }
+        ]
+      },
+      {
+        "name": "Places → Locations",
+        "shows": "Every place: its name, its kind (“Branch”, “Central kitchen” or “Warehouse”) and “active” or “inactive”. Places cannot be added or renamed here. When the menu has sections in use, each branch also shows what it sells: “Sells everything” (none chosen) or “Sells only:” and a button for each section.",
+        "controls": [
+          {
+            "label": "(a section's name)",
+            "kind": "toggle",
+            "does": "Tap to add or take away that section for that branch; saved at once. With none chosen the branch sells everything.",
+            "after": "The till at that branch shows only the products of the chosen sections. Nothing in the books changes. On the audit trail."
+          }
+        ]
+      },
+      {
+        "name": "Languages (folded group)",
+        "shows": "Heading “Languages” with “English, Arabic and Kurdish”. Inside: “Every screen is in English, Arabic and Kurdish. Add another language, or give any phrase the café's own words.”",
+        "controls": [
+          {
+            "label": "Open Languages →",
+            "kind": "link",
+            "does": "Opens Settings → Languages."
+          }
+        ]
+      },
+      {
+        "name": "The café's details (folded group)",
+        "shows": "Heading “The café's details” with the currency and timezone. Inside, “Business configuration”: “Business name”; “Currency” — “{code} — {n} decimal places”; “Timezone” — “{timezone} — every trading day and period runs midnight to midnight here”; “Default language”; “Bill numbers” — “{prefix}-{year}-0001, -0002 … for a bill entered without the supplier's number: never given twice, never typed in by hand”. Then: “These are changed in the database by the owner; there is no screen for them yet.” Read only.",
+        "controls": []
+      }
+    ],
+    "states": [
+      {
+        "state": "Opened plainly",
+        "looks": "Every group folded; only the headings, their status lines and (if anything is missing) “Not set up yet”."
+      },
+      {
+        "state": "Opened at a part (/settings#receipt, #ways-to-pay, #service-charge, #phone-warnings, #rules, #alerts…)",
+        "looks": "That group opens by itself and the page scrolls to the part."
+      },
+      {
+        "state": "Everything set up",
+        "looks": "No “Not set up yet” card."
+      },
+      {
+        "state": "A database update not applied",
+        "looks": "The part says “This needs the database update {0069, 0090, 0091 or 0072}, which has not been applied yet.” and its status is left off the heading."
+      },
+      {
+        "state": "One place only",
+        "looks": "No “Works at” column and no Works at list when adding a person."
+      },
+      {
+        "state": "No menu sections in use",
+        "looks": "Places shows no “Sells everything / Sells only:” buttons."
+      },
+      {
+        "state": "A save with no answer",
+        "looks": "A yellow line “⏳ Your previous submission may already have been saved. Checking…” while it is sent again (ways to pay, people being added, phone warnings, sections)."
+      },
+      {
+        "state": "General manager",
+        "looks": "Owner and General manager boxes greyed; no watch list box."
+      }
+    ],
+    "messages": [
+      {
+        "text": "{name} added: the till offers it now.",
+        "kind": "success",
+        "when": "A way to pay was added.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Renamed {name}: its account too.",
+        "kind": "success",
+        "when": "A way to pay was renamed.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{name} is offered at the till again.",
+        "kind": "success",
+        "when": "A way to pay was brought back.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{name} is out of use: no longer offered at the till. Its account keeps what it holds.",
+        "kind": "success",
+        "when": "A way to pay was taken out of use.",
+        "do": "Move what its account holds on Sales when it arrives."
+      },
+      {
+        "text": "The name is required",
+        "kind": "error",
+        "when": "Rename saved with an empty name.",
+        "do": "Type a name."
+      },
+      {
+        "text": "Name the way to pay, in 40 letters at most",
+        "kind": "error",
+        "when": "The name was empty or too long when it reached the database.",
+        "do": "Type a shorter name."
+      },
+      {
+        "text": "There is already a way to pay called {1}",
+        "kind": "error",
+        "when": "That name (ignoring case and spaces) is taken, maybe by one out of use.",
+        "do": "Bring the old one back instead, or choose another name."
+      },
+      {
+        "text": "The café has 60 ways to pay already: rename one out of use and bring it back",
+        "kind": "error",
+        "when": "The limit of 60 is reached.",
+        "do": "Rename one that is out of use and bring it back."
+      },
+      {
+        "text": "That way to pay is not one of the café's",
+        "kind": "error",
+        "when": "It was removed or changed on another device.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "A service charge is between 0 and 50%",
+        "kind": "error",
+        "when": "The percentage typed is below 0, above 50 or not a number.",
+        "do": "Type 0 to 50, or empty it for none."
+      },
+      {
+        "text": "Saved.",
+        "kind": "success",
+        "when": "A service charge was saved or turned off; also when a logo is chosen.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Saved: every receipt prints it from now on.",
+        "kind": "success",
+        "when": "Save the receipt worked.",
+        "do": "Print a test on Test your devices to see it on paper."
+      },
+      {
+        "text": "A link starts with https:// and has no spaces",
+        "kind": "error",
+        "when": "The menu or reviews link is not an https address.",
+        "do": "Paste the full link, starting https://."
+      },
+      {
+        "text": "Give the menu's link for the QR code to lead to",
+        "kind": "error",
+        "when": "“Our menu” is chosen but its link is empty.",
+        "do": "Paste the link, or choose “No QR code”."
+      },
+      {
+        "text": "Give the reviews' link for the QR code to lead to",
+        "kind": "error",
+        "when": "“Tell us how we did” is chosen but its link is empty.",
+        "do": "Paste the link, or choose “No QR code”."
+      },
+      {
+        "text": "That file is not a picture this browser can open.",
+        "kind": "error",
+        "when": "The chosen file is not a picture.",
+        "do": "Choose a PNG, JPEG or WebP picture."
+      },
+      {
+        "text": "This browser cannot prepare the picture.",
+        "kind": "error",
+        "when": "The browser could not shrink the picture.",
+        "do": "Try another browser or device."
+      },
+      {
+        "text": "The picture is still too large; try a smaller one.",
+        "kind": "error",
+        "when": "Even made small, the logo is over the limit.",
+        "do": "Use a simpler or smaller picture."
+      },
+      {
+        "text": "Use a PNG, JPEG or WebP picture",
+        "kind": "error",
+        "when": "The picture's type is not accepted.",
+        "do": "Save it as PNG, JPEG or WebP."
+      },
+      {
+        "text": "The picture could not be read",
+        "kind": "error",
+        "when": "The picture arrived damaged.",
+        "do": "Choose it again."
+      },
+      {
+        "text": "The logo must be smaller than 60 KB",
+        "kind": "error",
+        "when": "The logo is too big.",
+        "do": "Use a smaller picture."
+      },
+      {
+        "text": "That file is not a PNG, JPEG or WebP picture",
+        "kind": "error",
+        "when": "The file's contents are not the picture type it claims.",
+        "do": "Save it again as PNG, JPEG or WebP."
+      },
+      {
+        "text": "Added. Ask them to create their login with {email}.",
+        "kind": "success",
+        "when": "A person was added.",
+        "do": "Tell them to open the app, choose “First time here?” and use exactly that email."
+      },
+      {
+        "text": "Roles changed for {name}.",
+        "kind": "success",
+        "when": "Roles saved.",
+        "do": "Nothing; it applies on their next click."
+      },
+      {
+        "text": "{name} can no longer sign in to the books.",
+        "kind": "success",
+        "when": "A person was deactivated.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{name} is active again.",
+        "kind": "success",
+        "when": "A person was reactivated.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{name} works at {place}.",
+        "kind": "success",
+        "when": "Works at changed to a place.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{name} works everywhere.",
+        "kind": "success",
+        "when": "Works at changed to Everywhere.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Only the owner can give this role",
+        "kind": "info",
+        "when": "Hover text on the greyed Owner and General manager boxes, for a general manager.",
+        "do": "Ask the owner."
+      },
+      {
+        "text": "Enter the person's email",
+        "kind": "error",
+        "when": "The email is not a valid address.",
+        "do": "Check the email."
+      },
+      {
+        "text": "Their name is required",
+        "kind": "error",
+        "when": "Name left empty (spaces only).",
+        "do": "Type the name."
+      },
+      {
+        "text": "Give the person's name and email",
+        "kind": "error",
+        "when": "The database got no name or email.",
+        "do": "Fill both."
+      },
+      {
+        "text": "Give the person at least one role",
+        "kind": "error",
+        "when": "No role ticked.",
+        "do": "Tick a role."
+      },
+      {
+        "text": "Only the owner can appoint an owner or general manager",
+        "kind": "error",
+        "when": "A general manager tried to add an owner or general manager.",
+        "do": "Ask the owner."
+      },
+      {
+        "text": "Someone with that email is already a member",
+        "kind": "error",
+        "when": "That email is already on the list (maybe deactivated).",
+        "do": "Find them in the table; Reactivate or change their roles."
+      },
+      {
+        "text": "Choose one of the café's places",
+        "kind": "error",
+        "when": "The place chosen is not one of the café's (changed meanwhile).",
+        "do": "Reload and choose again."
+      },
+      {
+        "text": "Only the owner can give or take the owner and general manager roles",
+        "kind": "error",
+        "when": "A general manager tried to change an owner's or general manager's roles.",
+        "do": "Ask the owner."
+      },
+      {
+        "text": "Only the owner can change the access of an owner or a general manager",
+        "kind": "error",
+        "when": "A general manager pressed Deactivate on an owner or general manager.",
+        "do": "Ask the owner."
+      },
+      {
+        "text": "The business must keep at least one active owner",
+        "kind": "error",
+        "when": "Taking the Owner role from, or deactivating, the last active owner.",
+        "do": "Make someone else owner first."
+      },
+      {
+        "text": "Saved, and on the audit trail.",
+        "kind": "success",
+        "when": "The watch list box was changed (owner).",
+        "do": "Nothing."
+      },
+      {
+        "text": "Nothing changed.",
+        "kind": "info",
+        "when": "Save thresholds pressed with no box changed.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Saved, and on the audit trail. The dashboard uses them now.",
+        "kind": "success",
+        "when": "Limits saved.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{threshold}: enter a number",
+        "kind": "error",
+        "when": "A limit's box has something that is not a number.",
+        "do": "Type a number, or empty the box."
+      },
+      {
+        "text": "{threshold}: enter a whole number from {min} to {max}",
+        "kind": "error",
+        "when": "A whole-number limit is out of range or has decimals.",
+        "do": "Type a whole number in the range shown under the box."
+      },
+      {
+        "text": "{threshold}: enter a number from {min} to {max}",
+        "kind": "error",
+        "when": "A limit is out of its range.",
+        "do": "Type a number in the range shown under the box."
+      },
+      {
+        "text": "Phone warnings are on. Each person turns them on on a phone, on My account.",
+        "kind": "success",
+        "when": "Turned on for the café.",
+        "do": "Tell the managers to open My account on their phones and turn them on."
+      },
+      {
+        "text": "Phone warnings are off: nothing more is sent.",
+        "kind": "success",
+        "when": "Turned off for the café.",
+        "do": "Nothing."
+      },
+      {
+        "text": "The database cannot send yet: it needs its timer and its calls out (the pg_cron and pg_net extensions, under Database → Extensions in Supabase). Nothing is sent until then.",
+        "kind": "warning",
+        "when": "Phone warnings are on but the database cannot send.",
+        "do": "Whoever looks after the system turns on pg_cron and pg_net in Supabase."
+      },
+      {
+        "text": "The app's address must be its https address",
+        "kind": "error",
+        "when": "The app is not running at an https address (for example a test copy).",
+        "do": "Turn them on from the café's real address."
+      },
+      {
+        "text": "The keys for sending are not valid",
+        "kind": "error",
+        "when": "The keys the app made were refused.",
+        "do": "Try again; if it repeats, tell whoever looks after the system."
+      },
+      {
+        "text": "This needs the database update {n}, which has not been applied yet.",
+        "kind": "info",
+        "when": "Shown in a part whose database update (0069, 0090, 0091 or 0072) is missing.",
+        "do": "Whoever looks after the system applies the update."
+      }
+    ],
+    "skipped_messages": [
+      "Messages that every screen can show (session ended, no permission, the database did not answer, retry key, missing database update) are listed once, under “(every screen)”.",
+      "“The name is too long”, “Their name is too long”, “A line of the receipt is at most {max} letters”: the boxes stop typing at the limit.",
+      "“Choose the way of selling”, “Choose a channel”, “A delivery platform sets what its customers pay: no service charge is added to it”: the screen lists only the café's own ways of selling.",
+      "“The receipt's setup cannot be read”, “The QR code leads to the menu, to the reviews, or nowhere”, “Choose a picture”, “The ways to pay cannot be read”: the screen always sends them right.",
+      "“You cannot deactivate yourself”: there is no Deactivate button on your own row. “The owner and the general manager work everywhere”: the list is off for them. “Member not found”, “Place not found”, “Section not found”, “{1} does not sell: the till is at a branch”, “Unknown threshold: {1}”, “No thresholds given”: cannot come from this screen's controls. “Only the owner says who reads the watch list”: only the owner sees the box.",
+      "“A person works everywhere or at one place: all their roles are at that place”: the screen always sends one place for all roles."
+    ],
+    "what_if": [
+      {
+        "case": "A new cashier cannot sign in",
+        "do": "Check the Login column: “invited” means they have not created their login yet. They must choose “First time here?” and use exactly the email shown, then confirm it from their email."
+      },
+      {
+        "case": "Someone leaves the café",
+        "do": "Press Deactivate on their row. It works from their next click. Their past sales and records stay."
+      },
+      {
+        "case": "We stop taking ZainCash",
+        "do": "Press “Take out of use”. Move what its account still holds on Sales when the money arrives."
+      },
+      {
+        "case": "A way to pay was added with a wrong name",
+        "do": "Press Rename and Save: its account is renamed too."
+      },
+      {
+        "case": "The dashboard warns too often about short drawers",
+        "do": "Raise “A cash session short by at least (IQD)” under Alerts and Save thresholds."
+      },
+      {
+        "case": "Nobody receives phone warnings",
+        "do": "Check Rules and warnings → Phone warnings says “On, for {n} phone(s)”. If 0 phones, each manager must turn them on on My account. If the yellow line about pg_cron/pg_net shows, the system needs those turned on."
+      },
+      {
+        "case": "The bakery branch should show only bakery products",
+        "do": "Places → on that branch's row tap the bakery section, so it says “Sells only:”."
+      }
+    ],
+    "tips": [
+      "The headings tell you what is on without opening them.",
+      "Links into Settings from other screens open the right group by themselves.",
+      "A threshold box left empty follows its default; the default shows faintly inside it.",
+      "The receipt preview changes as you type, before you save."
+    ],
+    "related": [
+      "/settings/rules",
+      "/settings/languages",
+      "/sales",
+      "/account",
+      "/devices",
+      "/dashboard",
+      "/reports/watch",
+      "/audit"
+    ],
+    "shots": [
+      {
+        "name": "settings-overview",
+        "role": "owner",
+        "state": "All groups folded, with “Not set up yet” listing Your own receipt and Ways to pay",
+        "setup": "A fresh café: no receipt set, no ways to pay."
+      },
+      {
+        "name": "settings-ways-to-pay",
+        "role": "owner",
+        "state": "Selling open: FIB and FastPay in the table, + ZainCash and + Qi Card offered",
+        "setup": "Press + FIB and + FastPay."
+      },
+      {
+        "name": "settings-receipt",
+        "role": "owner",
+        "state": "The receipt form with a logo, thanks in three languages and the preview",
+        "setup": "Choose a logo and fill the thank-you lines."
+      },
+      {
+        "name": "settings-people",
+        "role": "general_manager",
+        "state": "People table with an invited cashier and the greyed Owner box",
+        "setup": "Add a cashier by email."
+      },
+      {
+        "name": "settings-alerts",
+        "role": "owner",
+        "state": "Alerts with one limit changed (“now …”)",
+        "setup": "Change Hours a cash session may stay open to 12 and save."
+      }
+    ]
+  },
+  {
+    "path": "/settings/rules",
+    "title": "Rules",
+    "area": "Setup",
+    "summary": "How the café works, rule by rule: the discount a cashier gives without a manager, refunds and losses a second person approves, using more stock than the books hold, dollars, purchase approvals, pay, lateness, loyalty and transfers. Each rule can have a value for the whole café and, for some, for a role, a kind of item or one item. Every change needs a reason and is kept.",
+    "who": [
+      {
+        "role": "owner",
+        "can": "change every rule, set it for a role, kind of item or item, and set it back to the default",
+        "cannot": ""
+      },
+      {
+        "role": "general_manager",
+        "can": "the same as the owner",
+        "cannot": ""
+      },
+      {
+        "role": "everyone else",
+        "can": "nothing here",
+        "cannot": "open the screen: they are sent to their own start screen"
+      }
+    ],
+    "get_there": "Settings → Rules and warnings → “Open Rules →”. Also: Dashboard → “Give the café a day's sales target, and today is measured against it.” (opens at that rule); an address like /settings/rules#rule-refund_approval_over opens at one rule.",
+    "before": [],
+    "parts": [
+      {
+        "name": "Heading",
+        "shows": "“Rules”, a link “Back to Settings”, and the intro: “How the café works: the discount a cashier gives without a manager, the refunds and losses a second person approves, and what happens when more stock is used than the books hold. A rule set for a role, a kind of item or one item is used before the whole café's. Every change takes a reason, and is kept below and on the audit trail.” (folded behind “How this works”).",
+        "controls": [
+          {
+            "label": "Back to Settings",
+            "kind": "link",
+            "does": "Back to Settings."
+          },
+          {
+            "label": "How this works",
+            "kind": "button",
+            "does": "Unfolds or folds the intro."
+          }
+        ]
+      },
+      {
+        "name": "One panel per rule",
+        "shows": "Each rule's name, what it does in a sentence, and a table: “Applies to” (“The whole café”, a role, a kind of item, one item, or a branch), “Rule” (its value: e.g. 10%, 25,000 IQD, “16 hours”, “5 minutes”, “Day 1 of the month”, “100 points”, a choice, “No target”, “At cost”), “Set” (“Default”, or “{who}, {when}” and the reason given). The rules, with kind, limits, default and what they can be set for: “A day's net sales target” — amount; 0 to 1,000,000,000 IQD, whole; 0 shows “No target”; default 0 (no target); for the whole café (a branch's row can exist but is not added here). “Labour cost the café aims for (% of net sales)” — percent; 0 to 100; 0 shows “No target”; default 0 (no target); for the whole café (branch rows not added here). “Discounts a manager approves” — percent; 0 to 100; default 10%; for the whole café, a role. “Discounts rounded to” — amount; 1 to 100,000 IQD, whole; default 500 IQD; for the whole café. “Refunds a second person approves” — amount; 0 to 100,000,000 IQD, whole; default 25,000 IQD; for the whole café, a role. “Losses a manager approves” — amount; 0 to 100,000,000 IQD, whole; default 50,000 IQD; for the whole café, a role. “One person's losses are added up over” — choice; “Each loss on its own”, “Their cash session, or their day”, “The day”; default Their cash session, or their day; for the whole café. “Using more stock than the books hold” — choice; “Refused”, “A manager approves it”, “Allowed, with a red alert”, and for one item only “Allowed, with no alert”; default Allowed, with a red alert (Refused for finished goods and sub-recipes); for the whole café, a kind of item, one item. “A dollar rate is used for” — hours; 1 to 168 hours, whole; default 36 hours; for the whole café. “Dollars are counted in dinars to the nearest” — amount; 1 to 100,000 IQD, whole; default 250 IQD; for the whole café. “Purchase orders a manager approves, up to” — amount; 0 to 1,000,000,000 IQD, whole; default 250,000 IQD (owner and general manager: 1,000,000,000); for the whole café, a role. “Stock sent to another branch is charged at cost plus (%)” — percent; 0 to 100; 0 shows “At cost”; default 0 (at cost); for the whole café (branch rows not added here). “Overtime is paid at (% of an hour's pay)” — percent; 100 to 300; default 150%; for the whole café. “Late, or leaving early, by more than” — minutes; 0 to 120, whole; default 5 minutes; for the whole café. “Someone still clocked in after” — hours; 4 to 24, whole; default 16 hours; for the whole café. “Salaries are paid on the day of the month” — day; 1 to 28, whole; default Day 1 of the month; for the whole café. “Customers earn points, and take rewards” — choice; “On”, “Off”; default On; for the whole café. “A customer earns a point for every” — amount; 1 to 1,000,000 IQD, whole; default 1,000 IQD; for the whole café. “A reward takes” — points; 1 to 100,000, whole; default 100 points; for the whole café. “A reward is worth” — amount; 1 to 10,000,000 IQD, whole; default 5,000 IQD; for the whole café.",
+        "controls": [
+          {
+            "label": "Change",
+            "kind": "link",
+            "does": "Opens a small form under the row: the value and “Why (required)”."
+          },
+          {
+            "label": "Rule",
+            "kind": "box",
+            "does": "The new value. Its placeholder says the unit: %, IQD, hours, minutes, day or points. For a choice rule it is a list of the choices.",
+            "rules": "Within the rule's limits; whole numbers where the rule says so. For “Using more stock than the books hold”, “Allowed, with no alert” is offered only for one item."
+          },
+          {
+            "label": "Why (required)",
+            "kind": "box",
+            "does": "Why the rule is changing. Kept with the rule, in “Every change” and on the audit trail.",
+            "rules": "Required; up to 300 letters. The Save button stays off until it is typed."
+          },
+          {
+            "label": "Save",
+            "kind": "button",
+            "does": "Saves the new value for that row.",
+            "after": "The database applies it at once everywhere: the till (discount PIN, dollars, loyalty), refunds, losses, batches and corrections (negative stock), purchase approvals, payroll and Staff (overtime, lateness, payday), the Dashboard (daily target, alerts) and transfers between branches. On the audit trail (rule.set) with the reason."
+          },
+          {
+            "label": "Back to default",
+            "kind": "link",
+            "does": "Shown only for a row someone set. Opens the form with only “Why (required)” and the button “Set it back to the default”.",
+            "after": "The row follows the café's default again. A role, kind of item or item row that goes back to default disappears, so the whole café's value applies. On the audit trail."
+          },
+          {
+            "label": "Cancel",
+            "kind": "link",
+            "does": "Closes the form without saving."
+          },
+          {
+            "label": "+ Set it for {what}",
+            "kind": "button",
+            "does": "Shown for rules that can be set for more than the whole café: “+ Set it for a role” (discounts, refunds, losses, purchase orders) or “+ Set it for a kind of item / one item” (using more stock than the books hold). Opens: “Applies to” (A kind of item / One item, when there are two), then a list “Choose…” of the roles, kinds of item (Ingredient, Packaging, Consumable, Finished good, Resale, Sub-recipe) or items. Choosing one opens the value and reason form.",
+            "rules": "Not offered for branches: a rule's branch rows cannot be added from this screen."
+          }
+        ]
+      },
+      {
+        "name": "Every change",
+        "shows": "Every change ever made, newest first: “When”, “Rule”, “Applies to”, “From”, “To” (“Default” when set back), “Why”, “Who”. With none: “No rule has been changed yet.”",
+        "controls": []
+      }
+    ],
+    "states": [
+      {
+        "state": "Nothing changed yet",
+        "looks": "Every row says “Default”; “Every change” says “No rule has been changed yet.”"
+      },
+      {
+        "state": "A rule with role or item rows",
+        "looks": "Extra rows under “The whole café”, each with its own Change and Back to default."
+      },
+      {
+        "state": "Form open",
+        "looks": "The value box (or list), the reason box, Save and Cancel under the row."
+      },
+      {
+        "state": "Saving with no answer",
+        "looks": "“⏳ Your previous submission may already have been saved. Checking…” under the form."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Enter a number",
+        "kind": "error",
+        "when": "The value box is empty or not a number.",
+        "do": "Type a number."
+      },
+      {
+        "text": "Enter a number within the rule's limits",
+        "kind": "error",
+        "when": "The number is outside the rule's limits (see the list above).",
+        "do": "Type a number inside the limits."
+      },
+      {
+        "text": "Enter a whole number",
+        "kind": "error",
+        "when": "The rule takes whole numbers only.",
+        "do": "Remove the decimals."
+      },
+      {
+        "text": "That is the rule already",
+        "kind": "error",
+        "when": "The new value is the same as now, or “Back to default” on a row already at its default.",
+        "do": "Nothing to do, or type a different value."
+      },
+      {
+        "text": "Enter a number from {1} to {2}",
+        "kind": "error",
+        "when": "The database's own check of the limits (rare: the screen checks first).",
+        "do": "Type a number inside the limits."
+      }
+    ],
+    "skipped_messages": [
+      "Messages that every screen can show (session ended, no permission, the database did not answer, retry key, missing database update) are listed once, under “(every screen)”.",
+      "“Say why the rule is changing”, “Keep the reason under 300 characters”: the button is off without a reason and the box stops at 300.",
+      "“That is not one of this rule's choices”, “Using stock the books do not hold, with no alert, is for chosen items only”, “Unknown rule”, “This rule is not set that way”, “Unknown role”, “Unknown kind of item”, “Unknown item”, “Unknown location”: the screen only offers allowed values."
+    ],
+    "what_if": [
+      {
+        "case": "Cashiers should give up to 15% without a manager",
+        "do": "Discounts a manager approves → “+ Set it for a role” → Cashier → 15 → reason → Save. The whole café's 10% stays for others."
+      },
+      {
+        "case": "A branch manager may approve purchase orders up to 500,000",
+        "do": "Purchase orders a manager approves, up to → “+ Set it for a role” → Branch manager → 500000 → reason → Save."
+      },
+      {
+        "case": "Milk must never go below zero in the books",
+        "do": "Using more stock than the books hold → “+ Set it for a kind of item / one item” → One item → Milk → “Refused” → reason → Save."
+      },
+      {
+        "case": "A change was a mistake",
+        "do": "Press “Back to default” (or Change back to the old value) with a reason. Both changes stay in “Every change”."
+      },
+      {
+        "case": "We want a sales target for one branch only",
+        "do": "This screen cannot add a branch row; set the whole café's target, or ask whoever looks after the system."
+      }
+    ],
+    "tips": [
+      "A role's, kind of item's or item's row wins over the whole café's.",
+      "0 for a target means no target; 0 for the transfer charge means at cost.",
+      "Write the reason for the next person: it is shown beside the value."
+    ],
+    "related": [
+      "/settings",
+      "/pos",
+      "/dashboard",
+      "/payroll",
+      "/staff",
+      "/inventory",
+      "/audit"
+    ],
+    "shots": [
+      {
+        "name": "rules-refunds",
+        "role": "owner",
+        "state": "Refunds a second person approves with the whole café's row changed to 20,000 IQD and its reason",
+        "setup": "Change it to 20000 with a reason."
+      },
+      {
+        "name": "rules-history",
+        "role": "owner",
+        "state": "Every change with two lines",
+        "setup": "Change a rule, then set it back to the default."
+      }
+    ]
+  },
+  {
+    "path": "/settings/languages",
+    "title": "Languages",
+    "area": "Setup",
+    "summary": "The café's languages and its own words. Every screen is in English, Arabic and Kurdish. Here you add another language and give any phrase the café's own words: a whole new language, or a better word for the Arabic or Kurdish.",
+    "who": [
+      {
+        "role": "owner",
+        "can": "add, rename, take out of use or bring back a language; give or clear words; download and upload CSV",
+        "cannot": "remove or rename English, Arabic or Kurdish"
+      },
+      {
+        "role": "general_manager",
+        "can": "the same as the owner",
+        "cannot": "the same"
+      },
+      {
+        "role": "everyone else",
+        "can": "nothing here",
+        "cannot": "open the screen: they are sent to their own start screen"
+      }
+    ],
+    "get_there": "Settings → Languages → “Open Languages →”. The link “Settings” above the heading goes back.",
+    "before": [],
+    "parts": [
+      {
+        "name": "Heading",
+        "shows": "“Settings” link, “Languages”, and the intro (folded behind “How this works”): “Every screen is in English, Arabic and Kurdish. Add another language here, and give any phrase the café's own words: a whole new language, or a better word for the Arabic or Kurdish. A phrase with no words in a language shows its English.”",
+        "controls": [
+          {
+            "label": "Settings",
+            "kind": "link",
+            "does": "Back to Settings."
+          },
+          {
+            "label": "How this works",
+            "kind": "button",
+            "does": "Unfolds the intro."
+          }
+        ]
+      },
+      {
+        "name": "The café's languages",
+        "shows": "A table: “Language” (its own name), “Code”, “Written” (“Left to right” or “Right to left”), “Status” (“Built in” for English, العربية and کوردی; “In use” or “Not in use” for added ones), “The café's own words” (how many phrases have the café's words in it; a link for languages in use, except the one shown below).",
+        "controls": [
+          {
+            "label": "Edit…",
+            "kind": "button",
+            "does": "For an added language in use: opens “Name, as its speakers write it” (up to 40 letters), “Written” (Left to right / Right to left), “Save”, “Cancel”.",
+            "after": "The language menu in the top bar shows the new name; every page is refreshed. On the audit trail."
+          },
+          {
+            "label": "Take out of use",
+            "kind": "button",
+            "does": "For an added language in use: takes it out of the language menu. Its words are kept.",
+            "after": "Nobody can choose it in the top bar any more. On the audit trail."
+          },
+          {
+            "label": "Bring back",
+            "kind": "button",
+            "does": "For a language not in use: puts it back in the language menu with its words."
+          },
+          {
+            "label": "(own words count)",
+            "kind": "link",
+            "does": "Opens that language's words below."
+          }
+        ]
+      },
+      {
+        "name": "Add a language",
+        "shows": "“The code is the language's short international name: tr for Turkish, fa for Persian, kmr for Kurmanji Kurdish.”",
+        "controls": [
+          {
+            "label": "Code",
+            "kind": "box",
+            "does": "The language's short code.",
+            "rules": "Two or three small Latin letters, with a region after a dash if needed (pt-br). Not en, ar or ckb."
+          },
+          {
+            "label": "Name, as its speakers write it",
+            "kind": "box",
+            "does": "Its own name, e.g. Türkçe.",
+            "rules": "Required; up to 40 letters."
+          },
+          {
+            "label": "Written",
+            "kind": "list",
+            "does": "Left to right, or Right to left.",
+            "rules": "Left to right to start with."
+          },
+          {
+            "label": "Add the language",
+            "kind": "button",
+            "does": "Adds it and opens its words below. Shows “Saving…” while it works.",
+            "rules": "Off until code and name are given.",
+            "after": "It is in everyone's language menu at once; until its phrases are given words, they show in English. On the audit trail."
+          }
+        ]
+      },
+      {
+        "name": "Words in {language}",
+        "shows": "A badge for each language in use (the one shown is highlighted; the others are links). A line: for English “The English is each phrase itself; words given here are shown instead of it, to every reader in English.”; for Arabic and Kurdish “{language} is built in: {own} phrase(s) have the café's own words instead of the built-in ones.”; for an added language “{done} of {total} phrases have words in {language}; the rest show in English.” A table, 40 phrases a page: “English” (with the phrase's key under it when the key is not the English), “Built in” (Arabic and Kurdish only), “The café's words” (a box for each). The language shown at first is the one asked for, else the first added language, else Arabic.",
+        "controls": [
+          {
+            "label": "(a language's badge)",
+            "kind": "link",
+            "does": "Shows that language's words."
+          },
+          {
+            "label": "Search",
+            "kind": "box",
+            "does": "Finds phrases by their English, key, built-in words or the café's words (placeholder “The English, or the words”)."
+          },
+          {
+            "label": "Show",
+            "kind": "list",
+            "does": "“Every phrase”, “Phrases with no words yet” (not for English), “The café's own words”."
+          },
+          {
+            "label": "Words for: {phrase}",
+            "kind": "box",
+            "does": "The café's words for that phrase. Empty it to go back to the built-in words (or the English). The placeholder shows the built-in words or the English.",
+            "rules": "Keep every {placeholder} and every <mark> of the English; counts written whole as the built-in Arabic does. Up to 4000 letters."
+          },
+          {
+            "label": "Download CSV",
+            "kind": "button",
+            "does": "Downloads words-{code}.csv with the columns key, english, built_in, words, for a translator."
+          },
+          {
+            "label": "Upload CSV",
+            "kind": "button",
+            "does": "Reads a CSV back (it needs the key and words columns). The new words fill the boxes but are not saved yet."
+          },
+          {
+            "label": "Save {n} change(s)",
+            "kind": "button",
+            "does": "Saves every changed box (in batches of 2000). Shows “Saving…”.",
+            "rules": "Off when nothing changed.",
+            "after": "Every reader in that language sees the café's words at once on every screen. On the audit trail."
+          },
+          {
+            "label": "Previous / Next",
+            "kind": "button",
+            "does": "Pages through the phrases: “Page {page} of {pages} · {n} phrase(s)”."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Only the built-in languages",
+        "looks": "Three rows, all “Built in”; words shown for Arabic."
+      },
+      {
+        "state": "An added language",
+        "looks": "Its row with Edit… and Take out of use; its words shown first, most of them empty."
+      },
+      {
+        "state": "Changes not saved",
+        "looks": "The Save button counts them: “Save {n} change(s)”. Leaving the page loses them."
+      },
+      {
+        "state": "A CSV read",
+        "looks": "The boxes hold the file's words; save to keep them."
+      }
+    ],
+    "messages": [
+      {
+        "text": "{language} is saved.",
+        "kind": "success",
+        "when": "An added language was edited or brought back.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{language} is out of use: it leaves the language menu, and its words are kept.",
+        "kind": "success",
+        "when": "Take out of use.",
+        "do": "Nothing."
+      },
+      {
+        "text": "{language} is added: it is in the language menu now. Give its words below; a phrase with none shows in English.",
+        "kind": "success",
+        "when": "A language was added.",
+        "do": "Give its words, or download the CSV for a translator."
+      },
+      {
+        "text": "Saved: {set} phrase(s) with new words, {cleared} back to the built-in words.",
+        "kind": "success",
+        "when": "Words saved.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Read {n} phrase(s) with new words from the file. Check them, then save.",
+        "kind": "info",
+        "when": "A CSV was read.",
+        "do": "Check the boxes, then press Save."
+      },
+      {
+        "text": "The file needs a key column and a words column, as the downloaded file has.",
+        "kind": "error",
+        "when": "The uploaded CSV has no key or words column.",
+        "do": "Use the file from Download CSV and keep its first line."
+      },
+      {
+        "text": "A language's code is two or three small Latin letters (tr, fa, kmr)",
+        "kind": "error",
+        "when": "The code typed is not valid.",
+        "do": "Type a code like tr, fa or kmr."
+      },
+      {
+        "text": "A language's code is two or three small Latin letters, as the world writes it (tr, fa, kmr), with a region after a dash if needed (pt-br)",
+        "kind": "error",
+        "when": "The database refused the code.",
+        "do": "Type a valid code."
+      },
+      {
+        "text": "English, Arabic and Kurdish are built in: correct their words instead of adding them",
+        "kind": "error",
+        "when": "The code typed was en, ar or ckb.",
+        "do": "Choose that language's badge and give its words instead."
+      },
+      {
+        "text": "The language's name is required",
+        "kind": "error",
+        "when": "The name was left empty.",
+        "do": "Type the language's own name."
+      },
+      {
+        "text": "Name the language as its speakers write it, in up to 40 letters (Türkçe, فارسی)",
+        "kind": "error",
+        "when": "The database refused the name.",
+        "do": "Type its own name, up to 40 letters."
+      },
+      {
+        "text": "Keep {placeholders} in the words for \"{phrase}\", as the English has them",
+        "kind": "error",
+        "when": "Words missing or adding a {…} the English has.",
+        "do": "Copy every {…} from the English into the words, unchanged."
+      },
+      {
+        "text": "The English of \"{phrase}\" has no {…}: leave them out of its words",
+        "kind": "error",
+        "when": "Words added a {…} the English does not have.",
+        "do": "Remove it."
+      },
+      {
+        "text": "Keep the marks <…> of the English in the words for \"{phrase}\"",
+        "kind": "error",
+        "when": "Words lost or added a <…> mark.",
+        "do": "Copy the marks from the English."
+      },
+      {
+        "text": "Write each count in the words for \"{phrase}\" whole: one form after another in { }, and an \"other\" form with # for the number",
+        "kind": "error",
+        "when": "A count's forms were written incompletely.",
+        "do": "Write them as the built-in Arabic does, with an “other” form."
+      },
+      {
+        "text": "The words for \"{phrase}\" are too long: 4000 letters at most",
+        "kind": "error",
+        "when": "Very long words.",
+        "do": "Shorten them."
+      }
+    ],
+    "skipped_messages": [
+      "Messages that every screen can show (session ended, no permission, the database did not answer, retry key, missing database update) are listed once, under “(every screen)”.",
+      "“Choose which way it is written”, “A language is written left to right (ltr) or right to left (rtl)”, “Choose the language”, “The language's name is too long”, “Give at most 5000 phrases at a time”, “A phrase is 1 to 2000 letters”, “Give the words as {\"phrase\": \"words\"}”, “Give the words for \"{1}\" as text”, “Add the language on Settings → Languages first”: the screen always sends these right."
+    ],
+    "what_if": [
+      {
+        "case": "A Kurdish word on the till is wrong",
+        "do": "Choose کوردی, search the English, type the better word in its box, Save."
+      },
+      {
+        "case": "We hired staff who read Turkish",
+        "do": "Add a language: code tr, name Türkçe, Left to right. Download CSV, have it translated, Upload CSV, check and Save."
+      },
+      {
+        "case": "A saved word broke a sentence",
+        "do": "Empty that box and Save: the built-in words (or English) come back."
+      }
+    ],
+    "tips": [
+      "Search the English exactly as the screen shows it.",
+      "Use “Phrases with no words yet” to finish a new language.",
+      "Saved words reach everyone at once; no one needs to reload."
+    ],
+    "related": [
+      "/settings"
+    ],
+    "shots": [
+      {
+        "name": "languages-words",
+        "role": "owner",
+        "state": "Words in کوردی with one own word typed and Save 1 change(s)",
+        "setup": "Choose Kurdish, search “Sales”, type a word."
+      }
+    ]
+  },
+  {
+    "path": "/start-of-day",
+    "title": "Start of Day",
+    "area": "Setup",
+    "summary": "The morning, step by step, before the doors open: the drawer opened and counted (done right here), everyone due in clocked in, what to make, deliveries due, nothing low without an order, and the red alerts answered. Then the day ahead. It records nothing by itself except opening the drawer.",
+    "who": [
+      {
+        "role": "owner",
+        "can": "every step, the day ahead, open the drawer with a float from the safe, and see what the drawer should hold",
+        "cannot": ""
+      },
+      {
+        "role": "general_manager",
+        "can": "the same as the owner",
+        "cannot": ""
+      },
+      {
+        "role": "branch_manager",
+        "can": "every step and open the drawer with a float from the safe",
+        "cannot": "see what an open drawer should hold (needs cash.view_expected)"
+      },
+      {
+        "role": "cashier, barista, inventory_counter, purchasing, accountant, auditor",
+        "can": "nothing here",
+        "cannot": "open the screen (needs day.close): they are sent to their own start screen"
+      }
+    ],
+    "get_there": "Menu → Operations → Start of Day (for the owner and general manager it is under More). Also: Dashboard, 4:00 to 11:59, “Opening up? The start of the day, step by step”; Find anything → “Start of Day”.",
+    "before": [
+      "Someone who works at one place sees that place: its name is shown in the heading."
+    ],
+    "parts": [
+      {
+        "name": "Heading",
+        "shows": "“Start of Day”, then the weekday, date, time and, for someone who works at one place, the place's name.",
+        "controls": []
+      },
+      {
+        "name": "Progress",
+        "shows": "A ring and “{done} of {total} done” with “Work down the list: each step opens where it is done, and is ticked here once it is.” When every step is done: “Everything is ready: open the doors.” and “The till is ready for the first customer.”",
+        "controls": []
+      },
+      {
+        "name": "Step: Drawer open and counted",
+        "shows": "Each step is a numbered card, ticked (✓) once nothing of it is left. Up to three items are listed, then “…and {n} more”. A step's button opens the screen where its work is done. Shown to those who run drawers, for this device's till. Done: “Session {no} is open: {cashier}, since {time}.” Not yet: “The drawer is not open yet: count what is in it and open it here.” and the drawer box: “The drawer is closed” / “Cash is taken only while it is open: open it by counting the cash in it.”",
+        "controls": [
+          {
+            "label": "Open the drawer",
+            "kind": "button",
+            "does": "Opens the count form: heading “Open the drawer” and “Count what is in the drawer now, before putting anything in. Its difference from what the last session left is shown once the count is in.”"
+          },
+          {
+            "label": "Cash counted (IQD)",
+            "kind": "box",
+            "does": "Type the total cash you counted in the drawer. Nothing about what it should hold is shown before the count is in (a blind count).",
+            "rules": "A number of 0 or more. Arabic and Kurdish digits are accepted. When a manager closes someone else's drawer the box is called “Cash counted (IQD), if counted” and may be left empty."
+          },
+          {
+            "label": "Count note by note",
+            "kind": "link",
+            "does": "Swaps the total box for one box per note: 50,000, 25,000, 10,000, 5,000, 1,000, 500 and 250 IQD (“Notes of {note}”). The line “Counted: …” adds them up for you. “Type the total instead” swaps back.",
+            "rules": "Whole notes only; otherwise “Count whole notes.” shows."
+          },
+          {
+            "label": "Cash put in from the safe now (optional)",
+            "kind": "box",
+            "does": "A float put in from the safe after the count.",
+            "rules": "0 or more; may be empty.",
+            "who": "Managers (owner, general manager, branch manager)."
+          },
+          {
+            "label": "Open the drawer (in the form)",
+            "kind": "button",
+            "does": "Opens the session. Shows “Saving…”; the answer stays on the page even after the step is ticked.",
+            "rules": "Off until a count is given.",
+            "after": "A cash session opens in this person's name at this till; cash can be taken. A difference from what the last session left is posted to the books (6300 Cash over / short). A float moves that cash from the safe (1005) to the drawer with its own journal; the safe must hold it in the books. On the audit trail."
+          },
+          {
+            "label": "Back",
+            "kind": "button",
+            "does": "Closes the form without opening."
+          }
+        ]
+      },
+      {
+        "name": "Step: Everyone due in is in",
+        "shows": "Each step is a numbered card, ticked (✓) once nothing of it is left. Up to three items are listed, then “…and {n} more”. A step's button opens the screen where its work is done. Shown when anyone is on today's clock boards. “{n} due in and not clocked in yet.” (those whose shift began, longest waited first, as “{name} · due {time}”), or “{n} clocked in.”, or “Nobody is due in yet.” Note: “Due later: {names}.”",
+        "controls": [
+          {
+            "label": "Clock in on the till",
+            "kind": "button",
+            "does": "Shown when someone is late: opens POS, where people clock in."
+          }
+        ]
+      },
+      {
+        "name": "Step: What to make today",
+        "shows": "Each step is a numbered card, ticked (✓) once nothing of it is left. Up to three items are listed, then “…and {n} more”. A step's button opens the screen where its work is done. From today's production plan at this place. “{n} recipe(s) to make, {batches} batch(es) in all.” with “{recipe} · {n} batch(es): {qty}”, or “Nothing needs making: the stock covers the day.”, or “Nothing is made in batches here.” Note: “Short for the plan: {items}.”",
+        "controls": [
+          {
+            "label": "Open the plan",
+            "kind": "button",
+            "does": "Opens Production at the plan."
+          }
+        ]
+      },
+      {
+        "name": "Step: Deliveries due",
+        "shows": "Each step is a numbered card, ticked (✓) once nothing of it is left. Up to three items are listed, then “…and {n} more”. A step's button opens the screen where its work is done. For those who see costs. Purchase orders approved or sent, due today or earlier, at this place: “{n} order(s) due today or late.” with “Order {no} · {supplier} · due {when}” (“Today” or the date), or “No delivery is due today.” Note: “Receive each against its order on Purchasing as it comes in.”",
+        "controls": [
+          {
+            "label": "Receive them",
+            "kind": "button",
+            "does": "Opens Purchasing."
+          }
+        ]
+      },
+      {
+        "name": "Step: Nothing low without an order",
+        "shows": "Each step is a numbered card, ticked (✓) once nothing of it is left. Up to three items are listed, then “…and {n} more”. A step's button opens the screen where its work is done. For those who see costs. “{n} item(s) low and not on any order yet.” with “{item} · {on hand} / {reorder level} {unit}”, or “{n} item(s) low, all on order.”, or “Everything is above its reorder level.”",
+        "controls": [
+          {
+            "label": "What to buy",
+            "kind": "button",
+            "does": "Opens Purchasing → What to buy."
+          }
+        ]
+      },
+      {
+        "name": "Step: Red alerts answered",
+        "shows": "Each step is a numbered card, ticked (✓) once nothing of it is left. Up to three items are listed, then “…and {n} more”. A step's button opens the screen where its work is done. For those who see profit. “{n} red alert(s) wait for an answer.” with each alert's title, or “No red alert waits.” Note: “{n} orange alert(s) can wait for a quiet moment.”",
+        "controls": [
+          {
+            "label": "Answer them",
+            "kind": "button",
+            "does": "Opens Dashboard → Needs you."
+          }
+        ]
+      },
+      {
+        "name": "Test your devices",
+        "shows": "“Test your devices: the printer, the drawer, the scanner and the internet, before the first customer.”",
+        "controls": [
+          {
+            "label": "Test your devices",
+            "kind": "link",
+            "does": "Opens the device test page."
+          }
+        ]
+      },
+      {
+        "name": "The day ahead",
+        "shows": "For those who see profit. “Today's target: {amount}.” (when a target is set), “Last {weekday}: {amount}.”, “A usual {weekday} (the four before): {amount}.”; with no history: “No sales yet to compare the day with.”",
+        "controls": [
+          {
+            "label": "Dashboard",
+            "kind": "link",
+            "does": "Opens the Dashboard."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Nothing done yet",
+        "looks": "“0 of {total} done”; each step numbered."
+      },
+      {
+        "state": "Some done",
+        "looks": "Done steps show a tick and green styling."
+      },
+      {
+        "state": "All done",
+        "looks": "“Everything is ready: open the doors.”"
+      },
+      {
+        "state": "A step cannot be read",
+        "looks": "That step is left out (the rest still show)."
+      },
+      {
+        "state": "Drawer already open",
+        "looks": "The drawer step is ticked and shows the session; no form."
+      },
+      {
+        "state": "No one on today's boards",
+        "looks": "The people step is not shown."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "warning",
+        "when": "Opening the drawer got no answer and is being sent again.",
+        "do": "Wait; it will not be recorded twice."
+      },
+      {
+        "text": "Session {no} is open. Counted {counted}; the last session left {expected}: {difference}.",
+        "kind": "success",
+        "when": "The drawer was opened. {difference} is “it agrees exactly”, “{amount} short” or “{amount} over”.",
+        "do": "Nothing, if it agrees. If short or over, the difference is already in the books (6300 Cash over / short): tell the manager."
+      },
+      {
+        "text": "Session {no} is open. The drawer counts before sessions end here: the books said the till held {expected}; counted {counted}: {difference}.",
+        "kind": "success",
+        "when": "The first session at this drawer, taking over from the drawer counts used before sessions.",
+        "do": "Nothing; check any difference with the manager."
+      },
+      {
+        "text": "{amount} put in from the safe.",
+        "kind": "info",
+        "when": "Added to the answer when a manager put cash in from the safe as the drawer opened.",
+        "do": "Nothing."
+      },
+      {
+        "text": "(6300 Cash over / short, journal {no})",
+        "kind": "info",
+        "when": "Added to the answer when the count did not agree: the difference was posted to the books in that journal.",
+        "do": "Open Journals and search the number if you need the details."
+      },
+      {
+        "text": "Count whole notes.",
+        "kind": "error",
+        "when": "A note box has something that is not a whole number.",
+        "do": "Type how many of each note, as a whole number."
+      },
+      {
+        "text": "Cash counted must be a number of zero or more",
+        "kind": "error",
+        "when": "The count box has letters or a minus sign.",
+        "do": "Type the amount again."
+      },
+      {
+        "text": "Cash from the safe must be a number of zero or more",
+        "kind": "error",
+        "when": "The float box has letters or a minus sign.",
+        "do": "Type the amount, or leave it empty."
+      },
+      {
+        "text": "Enter the cash put in from the safe, or leave it empty",
+        "kind": "error",
+        "when": "The database got a negative float.",
+        "do": "Type the amount, or leave it empty."
+      },
+      {
+        "text": "The safe holds only {1} in the books — not enough to pay {2}. Put the takings in the safe first (Move cash), or say where the money came from",
+        "kind": "error",
+        "when": "The float from the safe is more than the books say the safe holds.",
+        "do": "Put less in, or record the takings into the safe first on Sales → Move cash."
+      },
+      {
+        "text": "This branch has no drawer",
+        "kind": "error",
+        "when": "The device's till place has no drawer.",
+        "do": "Choose the right branch with “Till at” on the till, or ask the owner."
+      },
+      {
+        "text": "The drawer is already open: session {1} since {2}, with {3}",
+        "kind": "error",
+        "when": "Someone opened the drawer at the same time, on another device.",
+        "do": "Reload the page: the step is then ticked."
+      },
+      {
+        "text": "The notes counted come to {1}, not the {2} entered",
+        "kind": "error",
+        "when": "The note-by-note count and the total sent disagree (rare: the screen adds them up itself).",
+        "do": "Count again with “Count note by note”."
+      }
+    ],
+    "skipped_messages": [
+      "Messages that every screen can show (session ended, no permission, the database did not answer, retry key, missing database update) are listed once, under “(every screen)”.",
+      "“Only a manager puts cash in from the safe”: the float box is shown only to those allowed. “No active location for this business”, “The notes counted cannot be read”: cannot come from the screen."
+    ],
+    "what_if": [
+      {
+        "case": "The opening count differs from last night's close",
+        "do": "Count again. If it still differs, open anyway: the difference is recorded (6300 Cash over / short) and the manager sees it on Sales → sessions."
+      },
+      {
+        "case": "The drawer needs change",
+        "do": "A manager types the float in “Cash put in from the safe now (optional)” while opening."
+      },
+      {
+        "case": "A barista is late",
+        "do": "Their name shows under the people step; they clock in on the till when they arrive. A manager corrects hours on Staff."
+      },
+      {
+        "case": "A delivery is late",
+        "do": "It stays in Deliveries due with its date; call the supplier, receive it on Purchasing when it comes."
+      }
+    ],
+    "tips": [
+      "Work top to bottom; the page ticks each step by itself when you come back.",
+      "The drawer step is done right on this page.",
+      "Try the printer on Test your devices before the first customer."
+    ],
+    "related": [
+      "/pos",
+      "/production",
+      "/purchasing",
+      "/purchasing/buying-list",
+      "/dashboard",
+      "/devices",
+      "/end-of-day",
+      "/sales/sessions"
+    ],
+    "shots": [
+      {
+        "name": "start-of-day-steps",
+        "role": "branch_manager",
+        "state": "2 of 6 done, the drawer step with its open form",
+        "setup": "Morning, drawer closed, a purchase order due today."
+      },
+      {
+        "name": "start-of-day-ready",
+        "role": "owner",
+        "state": "Everything is ready: open the doors.",
+        "setup": "All steps done."
+      }
+    ]
+  },
+  {
+    "path": "/end-of-day",
+    "title": "End of Day",
+    "area": "Setup",
+    "summary": "The close, step by step: bills paid, everyone clocked out, drawers closed and counted (done right here), losses approved, card and platform money, and red alerts answered. Then the day in numbers, to print or keep as a PDF, and a slip for the receipt printer.",
+    "who": [
+      {
+        "role": "owner",
+        "can": "every step, the day in numbers, close or hand over the drawer, close someone else's drawer, see what it should hold, print",
+        "cannot": ""
+      },
+      {
+        "role": "general_manager",
+        "can": "the same as the owner",
+        "cannot": ""
+      },
+      {
+        "role": "branch_manager",
+        "can": "every step, the day in numbers, close or hand over, close someone else's drawer, print",
+        "cannot": "see what an open drawer should hold before counting"
+      },
+      {
+        "role": "cashier, barista, inventory_counter, purchasing, accountant, auditor",
+        "can": "nothing here",
+        "cannot": "open the screen (needs day.close): they are sent to their own start screen"
+      }
+    ],
+    "get_there": "Menu → Operations → End of Day (for the owner and general manager under More). Also: Dashboard, from 16:00 to 03:59, “Closing up? The end of the day, step by step”; Find anything → “End of Day”.",
+    "before": [
+      "Someone who works at one place closes that place's day (bills, drawers, takings); anyone else the whole café's."
+    ],
+    "parts": [
+      {
+        "name": "Heading",
+        "shows": "“End of Day”, the weekday, date, time and the place for someone who works at one place.",
+        "controls": [
+          {
+            "label": "Print or save as PDF",
+            "kind": "button",
+            "does": "Prints the page as it is (without the menu and buttons), or saves it as a PDF from the print dialog."
+          },
+          {
+            "label": "Print the slip for the till",
+            "kind": "button",
+            "does": "Prints a 72 mm slip on the receipt printer: “The day's close”, Day, Printed at, Place, Printed by, Net sales, then Sales (Orders, An order on average, Voids and refunds, Waste), How it was paid, Drawers (Counted today, Against what they should hold, Still open), Service charge and tips (Service charge; Tips, for the staff), What sold the most, “The close, step by step” (✓/✗ each step) and lines “Closed by”, “Checked by”. Parts are on it only for those the page shows them to."
+          }
+        ]
+      },
+      {
+        "name": "Progress",
+        "shows": "A ring and “{done} of {total} done”, or “Everything is done: the day can close.” with “Print the day below to keep it, or save it as a PDF.”",
+        "controls": []
+      },
+      {
+        "name": "Step: Bills paid",
+        "shows": "Each step is a numbered card, ticked (✓) once nothing of it is left. Up to three items are listed, then “…and {n} more”. A step's button opens the screen where its work is done. “{n} bill(s) still open, {amount} in all.” with “{table · name} · {amount} · since {time}” (or “Bill”), or “No bill is open.” Note: “A bill left open is paid in the next session; one that will not be paid is cancelled by a manager, with the reason.”",
+        "controls": [
+          {
+            "label": "Open the till",
+            "kind": "button",
+            "does": "Opens POS to take payment."
+          }
+        ]
+      },
+      {
+        "name": "Step: Everyone clocked out",
+        "shows": "Each step is a numbered card, ticked (✓) once nothing of it is left. Up to three items are listed, then “…and {n} more”. A step's button opens the screen where its work is done. Shown when anyone is on the clock boards. “{n} still clocked in.” with “{name} · since {time}”, or “Nobody is clocked in.” Note: “Each clocks out on the till as they leave; a manager corrects forgotten hours on Staff.”",
+        "controls": [
+          {
+            "label": "Open the hours",
+            "kind": "button",
+            "does": "Opens Staff → attendance."
+          }
+        ]
+      },
+      {
+        "name": "Step: Drawers closed and counted",
+        "shows": "Each step is a numbered card, ticked (✓) once nothing of it is left. Up to three items are listed, then “…and {n} more”. A step's button opens the screen where its work is done. Always shown. “{n} drawer(s) still open.” with “Session {no} · {cashier} · since {time}” (and the place when there are several), or “Every drawer is closed.” plus “Counted today: {n}, and they agreed.” / “Counted today: {n}, {amount} short in all.” / “Counted today: {n}, {amount} over in all.” Note: “{n} closed without a count: the next opening count finds what it held.” or “Count each drawer as it closes: what it should hold is shown once the count is in.” When this device's till has an open session that you may close, the drawer box is here: “The drawer is open: session {no}, {cashier}'s, since {when}” (and, for the owner and general manager, “It should hold {amount} · cash sales {sales}, card {card}, {orders} order(s)” and any dollars).",
+        "controls": [
+          {
+            "label": "All sessions",
+            "kind": "button",
+            "does": "Shown while drawers are open: opens Sales → sessions."
+          },
+          {
+            "label": "Close the drawer",
+            "kind": "button",
+            "does": "Opens “Close session {no}”: “Count the cash in the drawer. What it should hold is shown once the count is in.”",
+            "who": "The session's cashier or a manager."
+          },
+          {
+            "label": "Cash counted (IQD)",
+            "kind": "box",
+            "does": "Type the total cash you counted in the drawer. Nothing about what it should hold is shown before the count is in (a blind count).",
+            "rules": "A number of 0 or more. Arabic and Kurdish digits are accepted. When a manager closes someone else's drawer the box is called “Cash counted (IQD), if counted” and may be left empty."
+          },
+          {
+            "label": "Count note by note",
+            "kind": "link",
+            "does": "Swaps the total box for one box per note: 50,000, 25,000, 10,000, 5,000, 1,000, 500 and 250 IQD (“Notes of {note}”). The line “Counted: …” adds them up for you. “Type the total instead” swaps back.",
+            "rules": "Whole notes only; otherwise “Count whole notes.” shows."
+          },
+          {
+            "label": "Dollars counted ($)",
+            "kind": "box",
+            "does": "Shown under “Dollars in the till” only when the till took dollars since it was last counted. Count the dollars too, blind; all of them go to the safe. Has its own “Count note by note” (100, 50, 20, 10, 5, 1 dollars).",
+            "rules": "Whole dollars. Required at a normal close or hand over; may be left empty when a manager closes someone else's drawer."
+          },
+          {
+            "label": "Stays in the drawer",
+            "kind": "box",
+            "does": "What stays in the drawer for the next session (placeholder “all of it”).",
+            "rules": "0 up to the count; empty keeps all of it."
+          },
+          {
+            "label": "The other {amount} goes to",
+            "kind": "list",
+            "does": "Shown when some cash is taken out: “the safe (1005)” or “the bank (1020)”."
+          },
+          {
+            "label": "Close the drawer (in the form)",
+            "kind": "button",
+            "does": "Closes the session.",
+            "after": "The session closes. A difference from what it should hold is posted to 6300 Cash over / short. Cash taken out moves from the till to the safe or bank with its own journal. Dollars all go to the safe. The step and the slip show the count. On the audit trail."
+          },
+          {
+            "label": "Hand over",
+            "kind": "button",
+            "does": "Shown when someone may take the drawer: opens “Hand session {no} over” with the count, “Stays in the drawer for them” and “Hand the drawer to”.",
+            "after": "Closes this session as above and opens the next person's session on what stays, in one step."
+          },
+          {
+            "label": "Hand the drawer to",
+            "kind": "list",
+            "does": "The person who takes the drawer."
+          },
+          {
+            "label": "Close it for them",
+            "kind": "button",
+            "does": "For a manager, on someone else's session: opens “Close {cashier}'s session {no}” with “Why it is closed” (e.g. “The cashier went home without closing it”) and an optional count.",
+            "who": "Owner, general manager, branch manager.",
+            "after": "With a count, as a normal close. Left empty: “Close it without a count”: what it should hold stays in the drawer for the next opening count. On the audit trail with the reason."
+          },
+          {
+            "label": "Back",
+            "kind": "button",
+            "does": "Leaves the form without closing."
+          }
+        ]
+      },
+      {
+        "name": "Step: Losses approved",
+        "shows": "Each step is a numbered card, ticked (✓) once nothing of it is left. Up to three items are listed, then “…and {n} more”. A step's button opens the screen where its work is done. “{n} loss(es) wait for a manager, {amount} in all.” (or without the amount), with “{qty} {unit} {item} · {recorded by}”, or “No loss waits for approval.” Note: “A manager other than the one who recorded it approves each, or reverses it.”",
+        "controls": [
+          {
+            "label": "Approve them",
+            "kind": "button",
+            "does": "Opens Inventory at the losses waiting."
+          }
+        ]
+      },
+      {
+        "name": "Step: Card and platform money",
+        "shows": "Each step is a numbered card, ticked (✓) once nothing of it is left. Up to three items are listed, then “…and {n} more”. A step's button opens the screen where its work is done. For those who see costs. Sentences: “Card today: {amount}. Check it against the terminal's own total for the day.” or “No card payments today.”; “Card takings still to reach the bank: {amount} over {n} day(s).”; “Delivery platforms still owe {amount} for {n} order(s).”; for each way to pay that took money, “{name} today: {amount} from {n} sale(s). Check it against {name}'s own list.” Ticked unless an alert about card money not banked or a platform not paying is waiting (those alerts are listed). Note: “Late: settle it on Sales, or record what the platform paid on Delivery Platforms.” or “Nothing is late.”",
+        "controls": [
+          {
+            "label": "Card Takings",
+            "kind": "button",
+            "does": "Opens Sales at card takings."
+          },
+          {
+            "label": "Ways to Pay",
+            "kind": "button",
+            "does": "Shown when a way to pay took money today: opens Sales at ways to pay."
+          },
+          {
+            "label": "Delivery Platforms",
+            "kind": "button",
+            "does": "Shown when the café has platforms: opens Delivery Platforms."
+          }
+        ]
+      },
+      {
+        "name": "Step: Red alerts answered",
+        "shows": "Each step is a numbered card, ticked (✓) once nothing of it is left. Up to three items are listed, then “…and {n} more”. A step's button opens the screen where its work is done. As on Start of Day: “{n} red alert(s) wait for an answer.” or “No red alert waits.”, and the orange note.",
+        "controls": [
+          {
+            "label": "Answer them",
+            "kind": "button",
+            "does": "Opens Dashboard → Needs you."
+          }
+        ]
+      },
+      {
+        "name": "The day in numbers",
+        "shows": "For those who see profit. “Today so far, as the books have it.” Tiles: “Net sales” ({n} order(s)), “Gross profit after waste & fees” (“{pct}% of net sales”, or “after waste and every other cost of sales”), “Voids and refunds” (“{voids} void(s), {refunds} refund(s)”), “Waste” (“at what it cost”). Then “Last {weekday}: {amount} ({change} since).” and “A usual {weekday} (the four before): {amount}.”, and “How it was paid”: a bar of cash, card and each way to pay by name, each with “{share}% of net sales”.",
+        "controls": [
+          {
+            "label": "Today's reports",
+            "kind": "link",
+            "does": "Opens Reports for today."
+          },
+          {
+            "label": "Net sales / Voids and refunds",
+            "kind": "tile",
+            "does": "Opens Orders for today."
+          },
+          {
+            "label": "Gross profit after waste & fees",
+            "kind": "tile",
+            "does": "Opens Reports for today."
+          },
+          {
+            "label": "Waste",
+            "kind": "tile",
+            "does": "Opens Reports for today at losses."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "state": "Steps still open",
+        "looks": "“{done} of {total} done”."
+      },
+      {
+        "state": "All done",
+        "looks": "“Everything is done: the day can close.”"
+      },
+      {
+        "state": "This device's drawer already closed",
+        "looks": "No drawer box; the step lists other open drawers or says every drawer is closed."
+      },
+      {
+        "state": "Drawer just closed here",
+        "looks": "The answer stays on the page under the step, even though the step is now ticked."
+      },
+      {
+        "state": "No sales today",
+        "looks": "The day in numbers shows zeros; How it was paid is not shown."
+      },
+      {
+        "state": "Saving with no answer",
+        "looks": "“⏳ Your previous submission may already have been saved. Checking…”"
+      }
+    ],
+    "messages": [
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "warning",
+        "when": "A drawer close got no answer and is being sent again.",
+        "do": "Wait; it will not be recorded twice."
+      },
+      {
+        "text": "(6300 Cash over / short, journal {no})",
+        "kind": "info",
+        "when": "Added to the answer when the count did not agree: the difference was posted to the books in that journal.",
+        "do": "Open Journals and search the number if you need the details."
+      },
+      {
+        "text": "Session {no} is closed. It should have held {expected}; counted {counted}: {difference}.",
+        "kind": "success",
+        "when": "A drawer was closed (or handed over) with a count. Followed by “{taken} to the {place}; {left} stays in the drawer.” or “{left} stays in the drawer.”, and a line of the session's figures: “Cash sales {sales} · refunds {refunds} · voids {voids} · paid out {paidOut} · put in {cashIn} · taken out {cashOut} · card {card} · {orders} order(s)”.",
+        "do": "If short or over, tell the manager; the difference is already in the books."
+      },
+      {
+        "text": "Session {no} is closed without a count: the {expected} it should hold stays in the drawer for the next opening count.",
+        "kind": "info",
+        "when": "A manager closed someone else's drawer and left the count empty.",
+        "do": "The next person who opens the drawer counts it; any difference shows then."
+      },
+      {
+        "text": "Dollars: it should have held {expected}; counted {counted}: {difference}.",
+        "kind": "info",
+        "when": "Added when dollars were counted. {difference} is “it agrees exactly”, “{usd} short ({amount})” or “{usd} over ({amount})”. Then “{usd} to the safe, at {amount}.”",
+        "do": "Put the dollars in the safe."
+      },
+      {
+        "text": "The till's {usd} were not counted: they stay in it for the next count.",
+        "kind": "info",
+        "when": "A manager closed a drawer holding dollars without counting them.",
+        "do": "Count them at the next close."
+      },
+      {
+        "text": "Session {no} is open for {name}.",
+        "kind": "success",
+        "when": "Added after a hand over: the next person's session opened on what was left.",
+        "do": "The next person carries on selling."
+      },
+      {
+        "text": "Count whole notes.",
+        "kind": "error",
+        "when": "A note box has something that is not a whole number.",
+        "do": "Type how many of each note, as a whole number."
+      },
+      {
+        "text": "Enter the dollars you counted, in whole dollars",
+        "kind": "error",
+        "when": "The dollar total has cents or is not a number.",
+        "do": "Type whole dollars."
+      },
+      {
+        "text": "What stays in the drawer must be between 0 and the cash counted.",
+        "kind": "error",
+        "when": "“Stays in the drawer” is more than what was counted (shown under the boxes before you press).",
+        "do": "Lower it, or leave it empty to keep all of it in the drawer."
+      },
+      {
+        "text": "Cash counted must be a number of zero or more",
+        "kind": "error",
+        "when": "The count box has letters or a minus sign.",
+        "do": "Type the amount again."
+      },
+      {
+        "text": "What stays in the drawer must be a number of zero or more",
+        "kind": "error",
+        "when": "The “Stays in the drawer” box has letters or a minus sign.",
+        "do": "Type the amount, or leave it empty."
+      },
+      {
+        "text": "Why it is closed is required",
+        "kind": "error",
+        "when": "A manager closing someone else's drawer left the reason empty (the button stays off until it is typed).",
+        "do": "Say why."
+      },
+      {
+        "text": "Enter the cash you counted",
+        "kind": "error",
+        "when": "A close or hand over was sent with no count.",
+        "do": "Type the count."
+      },
+      {
+        "text": "The drawer is not open",
+        "kind": "error",
+        "when": "The session was closed on another device meanwhile.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "Only {1} or a manager closes this session",
+        "kind": "error",
+        "when": "Someone without the right to force a close tried to close another person's drawer.",
+        "do": "Ask that person, or a manager, to close it."
+      },
+      {
+        "text": "Session {1} is already closed",
+        "kind": "error",
+        "when": "It was closed on another device meanwhile.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "What stays in the drawer must be between 0 and the {1} counted",
+        "kind": "error",
+        "when": "The database checked what stays in the drawer against the count.",
+        "do": "Lower it."
+      },
+      {
+        "text": "Say where the rest of the cash goes: the safe or the bank",
+        "kind": "error",
+        "when": "Cash is taken out of the drawer but no place was chosen.",
+        "do": "Choose the safe or the bank."
+      },
+      {
+        "text": "Choose someone who may take the drawer",
+        "kind": "error",
+        "when": "Hand over to someone who may not run a drawer.",
+        "do": "Choose another person."
+      },
+      {
+        "text": "{1} works at {2}, not here: choose someone who works here",
+        "kind": "error",
+        "when": "Hand over to someone who works at another place.",
+        "do": "Choose someone who works here."
+      },
+      {
+        "text": "Hand the drawer to someone else",
+        "kind": "error",
+        "when": "Hand over to yourself.",
+        "do": "Choose another person."
+      },
+      {
+        "text": "Say why the session is being closed",
+        "kind": "error",
+        "when": "A manager's close with no reason.",
+        "do": "Type why."
+      },
+      {
+        "text": "The notes counted come to {1}, not the {2} entered",
+        "kind": "error",
+        "when": "The note-by-note count and the total sent disagree (rare: the screen adds them up itself).",
+        "do": "Count again with “Count note by note”."
+      },
+      {
+        "text": "{n} bill(s) are still open: they are no cash yet, and are paid in the next session.",
+        "kind": "info",
+        "when": "Shown in the close form while bills are open.",
+        "do": "Take payment on the till first, or leave them for the next session."
+      }
+    ],
+    "skipped_messages": [
+      "Messages that every screen can show (session ended, no permission, the database did not answer, retry key, missing database update) are listed once, under “(every screen)”.",
+      "“Session not found”, “The dollar notes counted cannot be read”, “The notes counted cannot be read”: cannot come from the screen."
+    ],
+    "what_if": [
+      {
+        "case": "A cashier went home with the drawer open",
+        "do": "In the drawer step press “Close it for them”, write why, count if you can (or leave it empty), and press the button."
+      },
+      {
+        "case": "The count is short",
+        "do": "Count again before closing. If still short, close: the difference is recorded (6300 Cash over / short) and shows on the slip and on Sales → sessions."
+      },
+      {
+        "case": "A table did not pay",
+        "do": "Leave the bill open: it is paid in the next session. If it will never be paid, a manager cancels it on the till with the reason."
+      },
+      {
+        "case": "Card total differs from the terminal",
+        "do": "Check the card sales on Orders for today, and settle on Sales → Card Takings when the bank pays."
+      }
+    ],
+    "tips": [
+      "Print the slip for the till and keep it with the cash, signed.",
+      "The page can be printed or saved as a PDF to keep.",
+      "Each step's button goes straight to where its work is done."
+    ],
+    "related": [
+      "/pos",
+      "/staff",
+      "/sales",
+      "/sales/sessions",
+      "/inventory",
+      "/platforms",
+      "/dashboard",
+      "/reports",
+      "/orders",
+      "/start-of-day"
+    ],
+    "shots": [
+      {
+        "name": "end-of-day-steps",
+        "role": "branch_manager",
+        "state": "4 of 6 done, the drawer step with the close form",
+        "setup": "Evening, an open bill and an open drawer."
+      },
+      {
+        "name": "end-of-day-slip",
+        "role": "owner",
+        "state": "The printed slip",
+        "setup": "Press Print the slip for the till."
+      }
+    ]
+  },
+  {
+    "path": "(every screen)",
+    "title": "The app frame (top bar, menu and what is on every screen)",
+    "area": "Setup",
+    "summary": "What is around every screen once you are signed in: the top bar (menu button, café name, Find anything, connection, language, theme, your name), the menu with More and You, the offline banner, the tour, “Something's wrong?”, and what happens when a screen fails or is not allowed. Also the parts that appear on many screens: the place switch, Undo, phone warnings and signing out.",
+    "who": [
+      {
+        "role": "everyone signed in",
+        "can": "use the top bar, Find anything, language, theme, My account, Test your devices, Something's wrong?",
+        "cannot": "see menu entries for screens their roles do not open"
+      },
+      {
+        "role": "owner, general_manager, branch_manager, accountant, auditor",
+        "can": "also “Reported problems” in the menu (audit.view or settings.manage)",
+        "cannot": ""
+      },
+      {
+        "role": "signed out",
+        "can": "the app name, connection badge, language list and theme button only",
+        "cannot": "see a menu"
+      }
+    ],
+    "get_there": "Always there. On POS and the clock the menu is hidden to give the whole screen; open it with ☰ (Menu).",
+    "before": [],
+    "parts": [
+      {
+        "name": "Top bar",
+        "shows": "From the start: the Menu button (☰), the café's mark and name, the search button, the connection badge (“Online” or “Offline”), the language list, the theme button and your name.",
+        "controls": [
+          {
+            "label": "Skip to the content",
+            "kind": "link",
+            "does": "The first thing the keyboard reaches: jumps past the menu to the page."
+          },
+          {
+            "label": "Menu (☰)",
+            "kind": "button",
+            "does": "Opens or closes the menu (on a phone, and on POS and the clock)."
+          },
+          {
+            "label": "Find anything",
+            "kind": "button",
+            "does": "The search button: opens Find anything. Same as Ctrl+K (⌘K on a Mac)."
+          },
+          {
+            "label": "Online / Offline",
+            "kind": "tile",
+            "does": "Shows whether this device has internet now."
+          },
+          {
+            "label": "Language",
+            "kind": "list",
+            "does": "English, العربية, کوردی and any language the café added. Choosing one reloads the page in it.",
+            "after": "Kept on this device for a year. Nothing in the books changes."
+          },
+          {
+            "label": "Theme",
+            "kind": "button",
+            "does": "Switches light and dark (sun or moon icon).",
+            "after": "Kept on this device for a year."
+          },
+          {
+            "label": "(your name)",
+            "kind": "link",
+            "does": "Opens My account."
+          }
+        ]
+      },
+      {
+        "name": "Menu",
+        "shows": "Only the screens your roles open, with an icon each: Dashboard and Approvals (with a count of what waits for you), then under headings Revenue (Sales, Delivery Platforms, Customers), Spending (Vendors, Expenses, Purchasing, Payroll), Operations (POS, Start of Day, End of Day, Orders, Products & Recipes, Inventory, Stock Count, Usage, Transfers, Production, Staff), Accountant (Journals, Chart of Accounts, Reports, Audit trail, Settings). Your daily screens come first; the rest fold under “More” with how many it holds (More is used only when it would hold two or more). The screen you are on is lit. Under “You”: My account, Show me around this screen (only on POS, Production and Dashboard), Test your devices, Something's wrong?, Reported problems (owner, general manager, branch manager, accountant, auditor).",
+        "controls": [
+          {
+            "label": "(a screen's name)",
+            "kind": "link",
+            "does": "Opens that screen; on a phone the menu closes."
+          },
+          {
+            "label": "More",
+            "kind": "button",
+            "does": "Opens or folds the less-used screens. It opens by itself when you are on one of them."
+          },
+          {
+            "label": "My account",
+            "kind": "link",
+            "does": "Your details, first screen, PIN, phone warnings, password and Sign out."
+          },
+          {
+            "label": "Show me around this screen",
+            "kind": "button",
+            "does": "Starts this screen's tour (see Tour)."
+          },
+          {
+            "label": "Test your devices",
+            "kind": "link",
+            "does": "Opens the device test page."
+          },
+          {
+            "label": "Something's wrong?",
+            "kind": "button",
+            "does": "Opens the problem report (see below)."
+          },
+          {
+            "label": "Reported problems",
+            "kind": "link",
+            "does": "Opens the list of reported problems.",
+            "who": "Those with audit.view or settings.manage."
+          }
+        ]
+      },
+      {
+        "name": "Find anything (Ctrl+K)",
+        "shows": "A box over the page: “A screen, a product, a customer, a sale's number…”. Empty, it lists up to 8 of your screens. Typing finds screens by name (in your language or English, including the reports' own pages and Test your devices) and, after 2 letters, records you may read: products, stock items (name or SKU), customers (name or phone), suppliers, staff, purchase orders and journals by number, and “Find the sale on Orders” for a receipt number, number or phone. Each row says its kind (“Screen”, “Product”, “Stock item”, “Customer”, “Supplier”, “Staff”, “Purchase order”, “Journal”). Up to 5 of each kind.",
+        "controls": [
+          {
+            "label": "Ctrl+K / ⌘K",
+            "kind": "key",
+            "does": "Opens or closes Find anything from any screen."
+          },
+          {
+            "label": "Arrow up / Arrow down",
+            "kind": "key",
+            "does": "Moves between the rows."
+          },
+          {
+            "label": "Enter",
+            "kind": "key",
+            "does": "Opens the chosen row."
+          },
+          {
+            "label": "Escape",
+            "kind": "key",
+            "does": "Closes the box (or tap outside it)."
+          }
+        ]
+      },
+      {
+        "name": "Offline",
+        "shows": "When the device loses internet: the badge says “Offline” and a red banner under the top bar says “Offline — the till keeps quick sales and table bills and sends them when the connection returns. Nothing else is saved until then.” On POS only, a chip beside the drawer says the queue's state: “No internet · selling offline”, “No internet · {n} sale(s) kept on this till”, “Sending {n} sale(s) made offline…”, “{n} sale(s) made offline waiting to send”, “{n} offline sale(s) need a manager”, and “· {n} bill(s) kept on this till” (details on the POS entry). A page opened with no connection at all shows “No connection” with “Sales cannot be recorded while the till is offline. Nothing is being saved. Take payment only once the connection is back, or write the sale down and ring it up when it returns.”",
+        "controls": []
+      },
+      {
+        "name": "Place switch (on stock screens and the till)",
+        "shows": "Not in the frame itself: on Inventory, Stock Count, Usage, Transfers, Production, Purchasing and What to buy a list “Stock at”, and on POS “Till at” (branches only), shown when there is more than one place. A till at a place that sells nothing offers “Sell at {place}” buttons.",
+        "controls": [
+          {
+            "label": "Stock at / Till at",
+            "kind": "list",
+            "does": "Chooses where this device works. Stock screens show and record at that place; the till sells at that branch.",
+            "after": "Kept on this device for a year. The stock screens refresh; the till reloads with that branch's menu, prices, bills and drawer."
+          }
+        ]
+      },
+      {
+        "name": "Undo (after some saves)",
+        "shows": "After saving a product's details, the week's schedule or the tables, a green bar shows what was saved with “Undo ({n})”, counting down 10 seconds. Sales, payments and anything in the books are never undone this way (they have void, refund or reverse).",
+        "controls": [
+          {
+            "label": "Undo ({n})",
+            "kind": "button",
+            "does": "Saves what was there before. Then “Undone: as it was before.”; if refused, the reason shows."
+          }
+        ]
+      },
+      {
+        "name": "Tour",
+        "shows": "On POS, Production and Dashboard, a one-time offer: “New here? Let us show you around this screen.” The tour lights one part at a time with a card: “Step {n} of {total}”, a title and a sentence.",
+        "controls": [
+          {
+            "label": "Show me around",
+            "kind": "button",
+            "does": "Starts the tour."
+          },
+          {
+            "label": "No thanks",
+            "kind": "button",
+            "does": "Hides the offer on this device for good (the menu item still starts it)."
+          },
+          {
+            "label": "Next / Finish",
+            "kind": "button",
+            "does": "Next step; on the last, ends it."
+          },
+          {
+            "label": "Back",
+            "kind": "button",
+            "does": "Previous step."
+          },
+          {
+            "label": "End the tour",
+            "kind": "button",
+            "does": "Ends it. Escape does too; the arrow keys go on and back."
+          }
+        ]
+      },
+      {
+        "name": "Something's wrong?",
+        "shows": "A box: “Say in a word or two what went wrong. The screen you are on goes with it, so nobody has to ask.”, a text box (example “The receipt printed twice”) and “On: {page}”. The device's connection, screen size, language, browser and the last error the page saw are sent with it.",
+        "controls": [
+          {
+            "label": "What went wrong?",
+            "kind": "box",
+            "does": "Your words.",
+            "rules": "2 to 500 letters."
+          },
+          {
+            "label": "Send",
+            "kind": "button",
+            "does": "Sends the report.",
+            "rules": "Off until 2 letters are typed.",
+            "after": "The owner and managers see it on Reported problems and the Dashboard. Sent once even if the connection drops."
+          },
+          {
+            "label": "Close",
+            "kind": "button",
+            "does": "Closes the box."
+          }
+        ]
+      },
+      {
+        "name": "Phone warnings (push alerts)",
+        "shows": "Once the owner turns them on in Settings, each person who sees the Dashboard can turn them on, on My account → “Warnings on this phone”: “Only the urgent (red) ones” box, “Turn on warnings on this phone”, then “On: every warning” or “On: the urgent ones only”, “Send a test”, “Turn off on this phone”. The Dashboard's warnings then arrive on the phone in the person's language within about five minutes; a red one stays on screen until tapped; tapping opens the page to act on it.",
+        "controls": [
+          {
+            "label": "Turn on warnings on this phone",
+            "kind": "button",
+            "does": "Asks the phone for permission and registers it.",
+            "who": "Those who see profit (owner, general manager, branch manager, accountant, auditor)."
+          },
+          {
+            "label": "Send a test",
+            "kind": "button",
+            "does": "Sends a test warning to this phone."
+          },
+          {
+            "label": "Turn off on this phone",
+            "kind": "button",
+            "does": "Stops warnings to this phone."
+          }
+        ]
+      },
+      {
+        "name": "Sign out",
+        "shows": "At the bottom of My account.",
+        "controls": [
+          {
+            "label": "Sign out",
+            "kind": "button",
+            "does": "Ends your sign-in on this device and opens the sign-in page."
+          }
+        ]
+      },
+      {
+        "name": "When a screen fails to load",
+        "shows": "Instead of the page: “This screen could not be loaded” and “The information could not be read from the database, so nothing is shown rather than something incomplete. Nothing has been changed.” then “If it keeps happening, tell the owner, and quote reference {ref}.” (or without a reference).",
+        "controls": [
+          {
+            "label": "Try again",
+            "kind": "button",
+            "does": "Loads the screen again."
+          }
+        ]
+      },
+      {
+        "name": "When a screen is not allowed",
+        "shows": "The menu shows only screens your roles open. Typing another screen's address sends you to your own start screen (Dashboard, Reports, Production, POS, Stock Count, Purchasing, Inventory or My account) with no message. Not signed in: the sign-in page, which brings you back to the screen afterwards. Second step not done: the code page. Login not linked or deactivated: My account says “Your login is not linked to the business yet”. If a button is pressed that your role may not use, the database refuses it and nothing is saved.",
+        "controls": []
+      }
+    ],
+    "states": [
+      {
+        "state": "Signed in, wide screen",
+        "looks": "Top bar and menu on the side."
+      },
+      {
+        "state": "Phone",
+        "looks": "Menu hidden; ☰ opens it over the page."
+      },
+      {
+        "state": "POS or the clock",
+        "looks": "Whole screen; ☰ opens the menu."
+      },
+      {
+        "state": "Signed out or the clock screen",
+        "looks": "No menu; only the name, connection badge, language and theme."
+      },
+      {
+        "state": "Offline",
+        "looks": "Red banner and “Offline” badge."
+      },
+      {
+        "state": "Approvals waiting",
+        "looks": "A number beside Approvals in the menu."
+      }
+    ],
+    "messages": [
+      {
+        "text": "Offline — the till keeps quick sales and table bills and sends them when the connection returns. Nothing else is saved until then.",
+        "kind": "warning",
+        "when": "The device lost internet.",
+        "do": "Sell quick sales and table bills only; wait for the connection for anything else."
+      },
+      {
+        "text": "No internet · selling offline",
+        "kind": "warning",
+        "when": "On POS, offline with nothing kept yet.",
+        "do": "Carry on selling quick sales."
+      },
+      {
+        "text": "No internet · {n} sale(s) kept on this till",
+        "kind": "warning",
+        "when": "On POS, offline with sales kept.",
+        "do": "Keep the device on; they are sent when the internet is back."
+      },
+      {
+        "text": "Sending {n} sale(s) made offline…",
+        "kind": "info",
+        "when": "On POS, the connection is back.",
+        "do": "Wait."
+      },
+      {
+        "text": "{n} sale(s) made offline waiting to send",
+        "kind": "info",
+        "when": "On POS, sales still to send.",
+        "do": "Wait, or open the chip to see them."
+      },
+      {
+        "text": "{n} offline sale(s) need a manager",
+        "kind": "error",
+        "when": "On POS, the database refused some kept sales.",
+        "do": "A manager opens the chip and sends again, records at today's price, or takes one off the till."
+      },
+      {
+        "text": "No connection",
+        "kind": "error",
+        "when": "A page was opened with no internet at all.",
+        "do": "Wait for the connection; write sales down and ring them up later."
+      },
+      {
+        "text": "Nothing found for “{q}”.",
+        "kind": "info",
+        "when": "Find anything found nothing.",
+        "do": "Try fewer letters, or another word."
+      },
+      {
+        "text": "Undone: as it was before.",
+        "kind": "success",
+        "when": "Undo worked.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Thank you. The owner will see it, with this screen.",
+        "kind": "success",
+        "when": "A problem was reported.",
+        "do": "Nothing."
+      },
+      {
+        "text": "Say in a word or two what went wrong",
+        "kind": "error",
+        "when": "The report is shorter than 2 letters.",
+        "do": "Type a little more."
+      },
+      {
+        "text": "No answer: try again in a moment.",
+        "kind": "error",
+        "when": "The report could not reach the app.",
+        "do": "Press Send again; it is sent once only."
+      },
+      {
+        "text": "This screen could not be loaded",
+        "kind": "error",
+        "when": "The screen's information could not be read.",
+        "do": "Press Try again. If it repeats, tell the owner with the reference."
+      },
+      {
+        "text": "If it keeps happening, tell the owner, and quote reference {ref}.",
+        "kind": "info",
+        "when": "Under a failed screen.",
+        "do": "Give the owner the reference."
+      },
+      {
+        "text": "Your login is not linked to the business yet",
+        "kind": "error",
+        "when": "Signed in with an email not on Settings → People, or deactivated.",
+        "do": "“Ask the owner to add you under Settings → People with exactly this email. Once they have, sign out and sign in again.”"
+      },
+      {
+        "text": "You do not have permission to do this (needs {1})",
+        "kind": "error",
+        "when": "A press your role may not make; {1} is the permission.",
+        "do": "Ask a manager who holds it."
+      },
+      {
+        "text": "You do not have permission to do that.",
+        "kind": "error",
+        "when": "The database refused a read or write for your role.",
+        "do": "Ask a manager."
+      },
+      {
+        "text": "Sign in to continue",
+        "kind": "error",
+        "when": "The sign-in ended.",
+        "do": "Sign in again."
+      },
+      {
+        "text": "Your session has ended. Sign in again.",
+        "kind": "error",
+        "when": "The sign-in expired.",
+        "do": "Sign in again; then do it once more."
+      },
+      {
+        "text": "Finish signing in: type the code from your authenticator app",
+        "kind": "error",
+        "when": "Two-step sign-in not finished.",
+        "do": "Type the code on the code page."
+      },
+      {
+        "text": "The database did not answer, so this may have been saved. Check before trying again.",
+        "kind": "warning",
+        "when": "No answer came back from the database.",
+        "do": "Check whether it was saved before doing it again."
+      },
+      {
+        "text": "Your previous submission may already have been saved. Checking…",
+        "kind": "warning",
+        "when": "A save with no answer is being sent again by itself (up to three times).",
+        "do": "Wait."
+      },
+      {
+        "text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.",
+        "kind": "warning",
+        "when": "Three tries got no answer.",
+        "do": "Press the same button again when the connection is back."
+      },
+      {
+        "text": "This screen sent no retry key: reload the page and try again.",
+        "kind": "error",
+        "when": "The page is old or broken.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "This retry does not match what was first sent: reload the page and check before doing it again",
+        "kind": "error",
+        "when": "A retry was sent with different details.",
+        "do": "Reload and check whether it was saved."
+      },
+      {
+        "text": "This was sent by someone else",
+        "kind": "error",
+        "when": "A retry key belongs to another person.",
+        "do": "Reload the page."
+      },
+      {
+        "text": "That has already been recorded.",
+        "kind": "error",
+        "when": "The same thing was saved twice.",
+        "do": "Check; nothing more to do."
+      },
+      {
+        "text": "The database is missing an update this screen needs (a migration has not been applied yet).",
+        "kind": "error",
+        "when": "The database is older than the app.",
+        "do": "Tell whoever looks after the system."
+      },
+      {
+        "text": "The database refused the change.",
+        "kind": "error",
+        "when": "A refusal with no reason given.",
+        "do": "Check the form, or report it with Something's wrong?."
+      }
+    ],
+    "skipped_messages": [
+      "The till's offline dialog (Sales made offline, Send again, Record at today's price, Take it off this till…) belongs to the POS entry."
+    ],
+    "what_if": [
+      {
+        "case": "I cannot find a screen in the menu",
+        "do": "Look under More. If it is not there either, your roles do not open it: ask the owner."
+      },
+      {
+        "case": "The internet drops during service",
+        "do": "Keep selling quick sales and table bills on the till; they are sent when it returns. Do not record expenses or stock until then."
+      },
+      {
+        "case": "A screen shows “This screen could not be loaded”",
+        "do": "Press Try again. If it repeats, press Something's wrong? and say what you were doing."
+      },
+      {
+        "case": "The app is in the wrong language on this device",
+        "do": "Choose the language in the top bar; it is kept on this device."
+      }
+    ],
+    "tips": [
+      "Ctrl+K finds any screen or record fast.",
+      "Type a sale's receipt number in Find anything to jump to it on Orders.",
+      "Something's wrong? sends the screen with your words, so nobody has to ask which screen."
+    ],
+    "related": [
+      "/account",
+      "/devices",
+      "/problems",
+      "/pos",
+      "/dashboard"
+    ],
+    "shots": [
+      {
+        "name": "frame-menu-more",
+        "role": "owner",
+        "state": "Menu with More open",
+        "setup": "Open a screen under More, such as Journals."
+      },
+      {
+        "name": "frame-find",
+        "role": "branch_manager",
+        "state": "Find anything with “milk” typed",
+        "setup": "Press Ctrl+K and type milk."
+      },
+      {
+        "name": "frame-offline",
+        "role": "cashier",
+        "state": "Offline banner and POS offline chip",
+        "setup": "Turn the device's network off on POS."
+      }
+    ]
+  }
+]
