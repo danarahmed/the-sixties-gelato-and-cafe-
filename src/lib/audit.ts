@@ -424,6 +424,7 @@ const FIELD_LABEL: Record<string, string> = {
   reason: "Reason",
   alert_settings: "Alert thresholds",
   lead_time_days: "Days a delivery takes",
+  delivers_every_days: "Delivers every (days)",
   rule: "Alert",
   title: "What it said", // i18n-ignore: a phrase, like every field's name here
   until: "Until",
