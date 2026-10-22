@@ -117,6 +117,62 @@ the year bought by habit.
 - **Monday brief (step 11):** every number agrees with the report it comes
   from; the owner reads a sample and finds it useful.
 
+## What the year showed
+
+Run on 22 October 2026. The year bought by habit was lived to 9 September
+(322 days; the run was stopped at the session's two-hour limit) and the year
+bought through the drafts to the end; each backtest uses the days its year
+lived. `python3 scripts/sim/backtest.py all` gives every line below.
+
+**Watch list (step 10) — passes.** Looked over every night, as it runs:
+
+| Planted problem                     | Began       | Found       | After   |
+| ----------------------------------- | ----------- | ----------- | ------- |
+| Dara's 9% discounts                 | 20 December | 27 December | 7 days  |
+| Karwan's voided cash sales          | 15 March    | 23 March    | 8 days  |
+| Bana's Thursday drawer, short       | 7 May       | 21 May      | 14 days |
+| Lana, new, learning (not a problem) | 1 August    | not raised  | —       |
+| The students' 8%, the busy evening  | —           | not raised  | —       |
+
+One false alarm in 9.6 months (Dara's voids in her first weeks, 8 against
+1.07 expected). The baseline (each cashier's rates over four weeks against
+everyone else's, checked on Sundays) found Bana's drawer only after 80 days. Bana's is found on her
+third short Thursday: two in a row are not yet beyond luck.
+
+**Smarter buying (step 8) — passes.** 27 November to 2 September:
+
+| Bought by            | Sales lost to a shortage | Stock held against needed |
+| -------------------- | ------------------------ | ------------------------- |
+| The café's habit     | 0                        | +35%                      |
+| What to buy's drafts | 0                        | **+17%** (mark: ≤ 25%)    |
+
+On the way there the year showed two things put right in `0092`: the busy-
+day margin was counted twice (at the reorder level and again on top), and
+the supplier's lateness and a busier day were added one on the other; they
+are now kept once, as the root of their squares (+26%, then +31% over the
+summer, before). Coffee beans are held at 1.09 million against 0.93 needed.
+
+**Cash ahead (step 9) — better than every baseline; not the strict mark.**
+
+| Measure (41 Sundays, 7 days ahead)                  | Nothing changes | The last 4 weeks' trend | Cash ahead   |
+| --------------------------------------------------- | --------------- | ----------------------- | ------------ |
+| Within 10% of what happened                         | 4 weeks         | 3 weeks                 | **24 weeks** |
+| Average miss                                        | 92%             | 100%                    | **33%**      |
+| Leaving out payments made for the first time        | 76%             | 83%                     | **10.7%**    |
+| Short spells of the bank warned of ≥ 3 days before  | 12 of 15        | —                       | **12 of 15** |
+| Days warned of when the bank in fact held something | 86 of 121       | —                       | **2 of 47**  |
+
+The weeks it misses are mostly payments the books had never seen twice (the
+first owner's drawings, the first and second quarterly rent, an 18,000,000
+gelato machine) and Eid after Ramadan (the takings judged by the quiet
+Ramadan weeks). The spells not warned of: the second quarterly rent, the
+machine, and a 450,000 dip three days after it. The year showed one fault,
+put right in `0093`: the safe was banked with the evening's takings in it,
+about a million too hopeful each banking day. "Within 10% every week" is
+measured on what the bank and safe hold, often near nothing in this year,
+where 10% is a few hundred thousand; no forecast from the books can meet
+it while one-off payments are unknown to them.
+
 ## Not in the year (yet)
 
 Delivery by the café's own driver (it needs a customer and an address for
