@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getWatchList } from "@/lib/db/watch";
+import { WatchVisibility } from "@/components/watch/WatchVisibility";
 import { getT } from "@/lib/i18n/server";
 import { BUILT_IN_LANGUAGES } from "@/lib/i18n/core";
 import { requirePermission } from "@/lib/auth/session";
@@ -47,6 +49,8 @@ const KIND_LABEL: Record<string, string> = {
 
 export default async function SettingsPage() {
   const profile = await requirePermission("settings.manage");
+  // Who reads the watch list (0094): the owner's own list, null for anyone else or before 0094.
+  const watch = profile.roles.includes("owner") ? await getWatchList() : null;
   const t = await getT();
   const today = businessToday(profile.timezone);
   const [
@@ -303,6 +307,8 @@ export default async function SettingsPage() {
             </tbody>
           </table>
           <Link href="/settings/rules">{t("Open Rules →")}</Link>
+          {/* Who reads the watch list (0094): the owner says. */}
+          {watch && profile.roles.includes("owner") && <WatchVisibility gmSees={watch.gmSees} />}
         </section>
         <section className="sg-part" id="alerts">
           <h3 style={{ marginTop: 0 }}>{t("Alerts")}</h3>

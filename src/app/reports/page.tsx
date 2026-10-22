@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { watchMaySee } from "@/lib/db/watch";
 import { getMyReportVisits } from "@/lib/db/receipt";
 import { mostOpenedFirst } from "@/lib/reportVisits";
 import { Fragment } from "react";
@@ -219,6 +220,12 @@ export default async function ReportsPage({
     ...(seesProfit
       ? [
           {
+            path: "/reports/cash-ahead",
+            testId: "to-cash-ahead",
+            href: "/reports/cash-ahead",
+            label: t("Cash ahead: the next 30 days of the bank and the safe →"),
+          },
+          {
             path: "/reports/statements",
             testId: "to-statements",
             href: `/reports/statements?from=${from}&to=${to}`,
@@ -227,6 +234,14 @@ export default async function ReportsPage({
         ]
       : []),
   ];
+  // The watch list (0094), for the owner (and the general manager if allowed).
+  if (await watchMaySee())
+    reportPages.push({
+      path: "/reports/watch",
+      testId: "to-watch",
+      href: "/reports/watch",
+      label: t("Watch list: patterns worth a look →"),
+    });
   const reportsLearned = mostOpenedFirst(reportPages, visits);
   // The café's and the bakery's takings and profit (0074), once the menu has
   // parts: the sales analysis by category, each counted in its part.

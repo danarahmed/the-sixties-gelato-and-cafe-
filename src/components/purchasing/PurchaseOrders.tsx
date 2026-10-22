@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  approveAndSendPurchaseOrderAction,
   approvePurchaseOrderAction,
   cancelPurchaseOrderAction,
   closePurchaseOrderAction,
@@ -269,6 +270,23 @@ function OrderActions({
             }
           >
             {t("Approve")}
+          </button>
+        )}
+        {canApprove && canCreate && order.status === "draft" && order.mayApprove && (
+          <button
+            type="button"
+            style={small}
+            disabled={busy}
+            data-testid="po-approve-send"
+            onClick={() =>
+              run(
+                "approveSendPo",
+                (key) => approveAndSendPurchaseOrderAction({ poId: order.id }, key),
+                t("Order {no} approved and marked as sent to the supplier.", { no: order.poNo }),
+              )
+            }
+          >
+            {t("Approve and send")}
           </button>
         )}
         {mayAct && order.status === "approved" && (

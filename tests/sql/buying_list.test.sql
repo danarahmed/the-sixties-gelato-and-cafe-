@@ -123,8 +123,8 @@ select receive_goods(pg_temp.dairy(), jsonb_build_array(pg_temp.line(pg_temp.mil
 select test.eq((buying_list() ->> 'location_id')::uuid, pg_temp.loc(), 'the buyer reads the list for the branch');
 select test.eq((select buying_list() ->> 'window_days'), '28', 'use is judged over 28 days');
 select test.eq(pg_temp.says(pg_temp.milk()),
-  'order have 2000+0+0 use 1000/25d lead 2 supplier reorder 3000 use up to 10000 week order 8 carton_1l from Sulaymaniyah Dairy Co. last_delivery at 1500 delivery',
-  'milk: 2,000 ml on hand, 1,000 a day for 25 days, the dairy two days away: at or under 3,000 (three days of use) it is ordered up to 10,000 (and a week), 8 cartons from the dairy at the last delivery''s price');
+  'order have 2000+0+0 use 1000/25d lead 2 supplier reorder 3000 use up to 10000 cover order 8 carton_1l from Sulaymaniyah Dairy Co. last_delivery at 1500 delivery',
+  'milk: 2,000 ml on hand, 1,000 a day for 25 days, the dairy two days away: at or under 3,000 (three days of use) it is ordered up to 10,000 (and a week: the dairy has no delivery days of its own, nor enough deliveries to learn them), 8 cartons from the dairy at the last delivery''s price');
 select test.eq((pg_temp.row(pg_temp.milk()) ->> 'history_days')::int, 25, 'its history is the 25 days since it was first there');
 select test.eq((pg_temp.row(pg_temp.sugar()) ->> 'status') || ' ' || (pg_temp.row(pg_temp.sugar()) ->> 'history_days')
                || ' ' || (pg_temp.row(pg_temp.sugar()) ->> 'packs'),
@@ -199,7 +199,7 @@ select test.act_as('buyer@example.com');
 insert into res select 'po1', save_po(null, pg_temp.dairy(), jsonb_build_array(pg_temp.line(pg_temp.milk(), 3, 'carton_1l', 1500)),
                                       p_idempotency_key => gen_random_uuid());
 select test.eq(pg_temp.says(pg_temp.milk()),
-  'enough have 2000+0+3000 use 1000/25d lead 2 supplier reorder 3000 use up to 10000 week order 0 carton_1l from Sulaymaniyah Dairy Co. last_delivery at 1500 delivery',
+  'enough have 2000+0+3000 use 1000/25d lead 2 supplier reorder 3000 use up to 10000 cover order 0 carton_1l from Sulaymaniyah Dairy Co. last_delivery at 1500 delivery',
   'a draft for 3 cartons: 5,000 with it, over the reorder level: enough');
 select test.eq(pg_temp.row(pg_temp.milk()) -> 'orders' -> 0 ->> 'status', 'draft', 'the draft is named on the line');
 select test.act_as('owner@example.com');
@@ -208,7 +208,7 @@ select test.act_as('buyer@example.com');
 select receive_goods(pg_temp.dairy(), jsonb_build_array(pg_temp.line(pg_temp.milk(), 0.5, 'carton_1l', 1500)),
                      p_purchase_order => pg_temp.po_id(1), p_idempotency_key => gen_random_uuid());
 select test.eq(pg_temp.says(pg_temp.milk()),
-  'enough have 2500+2500+0 use 1000/25d lead 2 supplier reorder 3000 use up to 10000 week order 0 carton_1l from Sulaymaniyah Dairy Co. last_delivery at 1500 delivery',
+  'enough have 2500+2500+0 use 1000/25d lead 2 supplier reorder 3000 use up to 10000 cover order 0 carton_1l from Sulaymaniyah Dairy Co. last_delivery at 1500 delivery',
   'approved, and half a carton of it come: 2,500 on hand and 2,500 still on order');
 select test.eq((select (o ->> 'status') || ' ' || (o ->> 'base_qty') from jsonb_array_elements(pg_temp.row(pg_temp.milk()) -> 'orders') o),
   'approved 2500', 'the order is named with what it still waits for');
@@ -216,7 +216,7 @@ select test.act_as('owner@example.com');
 select close_po(pg_temp.po_id(1), 'the rest is not coming', gen_random_uuid());
 select test.act_as('buyer@example.com');
 select test.eq(pg_temp.says(pg_temp.milk()),
-  'order have 2500+0+0 use 1000/25d lead 2 supplier reorder 3000 use up to 10000 week order 8 carton_1l from Sulaymaniyah Dairy Co. last_delivery at 1500 delivery',
+  'order have 2500+0+0 use 1000/25d lead 2 supplier reorder 3000 use up to 10000 cover order 8 carton_1l from Sulaymaniyah Dairy Co. last_delivery at 1500 delivery',
   'closed short, nothing more is coming: below the reorder level, 7,500 ml to order, 8 whole cartons');
 
 -- ------------------------------------------------------------ the usual supplier comes first

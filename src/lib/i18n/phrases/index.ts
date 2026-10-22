@@ -47,6 +47,9 @@ import approvals from "./approvals";
 import deals from "./deals";
 import tips from "./tips";
 import receipt from "./receipt";
+import smartBuying from "./smartBuying";
+import cashAhead from "./cashAhead";
+import watch from "./watch";
 import simplify from "./simplify";
 import devices from "./devices";
 import twoStep from "./twoStep";
@@ -100,6 +103,9 @@ export const BOOKS: Record<string, PhraseBook> = {
   deals,
   tips,
   receipt,
+  smartBuying,
+  cashAhead,
+  watch,
   simplify,
   devices,
   twoStep,

@@ -5,7 +5,7 @@
 // before and after, and the price that keeps it; the dashboard says the beans
 // came in dearer and leads there; the page speaks Arabic and Kurdish; and once
 // the delivery is corrected to its true price, the watch reads it so.
-import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
+import { BASE, TODAY, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 import { english } from "./english.mjs";
 
 const browser = await chromium.launch();
@@ -69,6 +69,23 @@ console.log("▸ the price watch: by how much, and what it does to the espresso"
     keep === "—" || Number(keep.replace(/\D/g, "")) > price,
     `with the price that keeps its margin: ${keep}`,
   );
+  // Set in one tap, from today (0092).
+  const kept = Number(keep.replace(/\D/g, ""));
+  if (keep !== "—") {
+    await row.getByTestId("price-keep-button").click();
+    await row.getByTestId("price-keep-set").waitFor({ timeout: 15000 });
+    check(
+      Number(
+        last(`select trim_scale(price) from channel_price
+               where product_variant_id = '${variant}' and channel = 'dine_in' and effective_from = ${TODAY}
+                 and location_id is null`),
+      ) === kept,
+      `set in one tap: a dine-in espresso is ${kept} IQD from today`,
+    );
+    // Put back as it was, for the suites after this one.
+    sql(`delete from channel_price where product_variant_id = '${variant}' and channel = 'dine_in'
+           and effective_from = ${TODAY} and location_id is null and price = ${kept}`);
+  }
   await ctx.close();
 }
 

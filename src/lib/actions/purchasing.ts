@@ -6,6 +6,7 @@
  * payment settles the payable from the till, the safe, the bank, a card or
  * the owner personally.
  */
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { db } from "@/lib/db/client";
@@ -71,6 +72,14 @@ const updateSupplierInput = supplierInput.extend({
     .max(30, "A delivery takes 0 to 30 days")
     .nullable()
     .optional(),
+  /** How often they deliver (0092); null: learnt from their deliveries. */
+  deliversEveryDays: z
+    .number()
+    .int("A supplier delivers every 1 to 60 days")
+    .min(1, "A supplier delivers every 1 to 60 days")
+    .max(60, "A supplier delivers every 1 to 60 days")
+    .nullable()
+    .optional(),
 });
 
 /**
@@ -92,6 +101,10 @@ export async function updateSupplierAction(
     p_is_active: v.data.isActive,
     p_reason: v.data.reason,
     p_lead_time_days: v.data.leadTimeDays ?? null,
+    // Sent only when given (0092): a supplier edited before 0092 is applied saves as before.
+    ...(v.data.deliversEveryDays === undefined
+      ? {}
+      : { p_delivers_every_days: v.data.deliversEveryDays }),
   });
   if (!r.ok) return r;
   refresh("/purchasing", "/vendors");
@@ -257,6 +270,41 @@ export async function approvePurchaseOrderAction(
   });
   if (!r.ok) return r;
   refresh("/purchasing", "/purchasing/orders", "/reports");
+  return { ok: true, data: { poNo: Number(r.data.po_no) } };
+}
+
+/**
+ * A second key for the second of two steps sent as one press (0092): the
+ * same press always gives the same one, so a retry does neither twice.
+ */
+function stepKey(key: string, step: string): string {
+  const h = createHash("sha1").update(`${key}:${step}`).digest("hex");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+
+/**
+ * A draft approved and sent to the supplier in one tap (0092), by someone
+ * who may do both. Keyed: each step with its own key from the one press.
+ */
+export async function approveAndSendPurchaseOrderAction(
+  input: z.input<typeof poOnly>,
+  key: string,
+): Promise<ActionResult<{ poNo: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(poOnly, input);
+  if (!v.ok) return v;
+  const a = await callRpc<Record<string, unknown>>("approve_po", {
+    p_po: v.data.poId,
+    p_idempotency_key: key,
+  });
+  if (!a.ok) return a;
+  const r = await callRpc<Record<string, unknown>>("send_po", {
+    p_po: v.data.poId,
+    p_idempotency_key: stepKey(key, "send"),
+  });
+  refresh("/purchasing", "/purchasing/orders", "/purchasing/buying-list", "/reports");
+  if (!r.ok) return r;
   return { ok: true, data: { poNo: Number(r.data.po_no) } };
 }
 

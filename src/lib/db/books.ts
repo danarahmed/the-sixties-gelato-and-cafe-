@@ -185,6 +185,8 @@ export interface VendorRow {
   isActive: boolean;
   /** Days a delivery takes, for "running out" (0029); null: the café's default. */
   leadTimeDays: number | null;
+  /** How often they deliver (0092); null: learnt from their deliveries. */
+  deliversEveryDays: number | null;
   billed: number;
   paid: number;
   /** What the supplier owes back (0044): their credits, set against bills or not. */
@@ -222,7 +224,8 @@ export async function getVendorBook(
 ): Promise<{ vendors: VendorRow[]; openBills: OpenBill[] }> {
   const c = await db();
   const [suppliers, bills, payments, credits, allocations] = await Promise.all([
-    c.from("supplier").select("id,name,contact,phone,is_active,lead_time_days").order("name"),
+    // Every column: how often a supplier delivers is there once 0092 is applied.
+    c.from("supplier").select("*").order("name"),
     c
       .from("purchase_invoice")
       .select(
@@ -342,6 +345,7 @@ export async function getVendorBook(
       phone: strOrNull(s.phone),
       isActive: s.is_active !== false,
       leadTimeDays: s.lead_time_days == null ? null : num(s.lead_time_days),
+      deliversEveryDays: s.delivers_every_days == null ? null : num(s.delivers_every_days),
       billed,
       paid,
       credited,

@@ -16,8 +16,29 @@ export type BuyStatus = "order" | "enough" | "no_history" | "not_used";
 export type ReorderFrom = "item" | "use" | "plan";
 /** How the days a delivery takes are judged (0070): each by its weekday, or a day on average. */
 export type Forecast = "weekday" | "average";
-/** What it is ordered up to: its par level, the most it holds, a week of use more, or the reorder level. */
-export type TargetFrom = "par" | "max" | "week" | "reorder";
+/**
+ * What it is ordered up to: its par level, the most it holds, a week of use
+ * more (before 0092), what lasts until the delivery after this one (0092), or
+ * the reorder level.
+ */
+export type TargetFrom = "par" | "max" | "week" | "cover" | "reorder";
+/** Where the days a delivery takes come from: learnt from its orders (0092), set on the supplier, the café's. */
+export type LeadFrom = "learned" | "supplier" | "cafe";
+/** How often the supplier delivers: set on it, learnt from its deliveries, or a week until then (0092). */
+export type EveryFrom = "supplier" | "learned" | "default";
+
+/** Another supplier's lower price for the same quantity (0092). */
+export interface Cheaper {
+  supplierId: string;
+  supplier: string;
+  packUnit: string;
+  price: number;
+  /** A base unit's price at it, and at the supplier suggested. */
+  perBase: number;
+  chosenPerBase: number;
+  /** As a fraction: 0.067 is 6.7% less. */
+  saves: number;
+}
 /** Why this supplier: the item's usual one, its last delivery's, or the one it was last set with. */
 export type SupplierFrom = "usual" | "last_delivery" | "set";
 /** Where a pack's price comes from: agreed last, the last delivery, what the item costs now. */
@@ -73,7 +94,27 @@ export interface BuyingLine {
   capped: boolean;
   capLevel: number | null;
   leadTime: number;
-  leadFrom: "supplier" | "cafe";
+  leadFrom: LeadFrom;
+  /**
+   * 0092: the days late allowed for (the most the supplier came late lately),
+   * how often it delivers and where that comes from; what the days after the
+   * delivery until the next could come use, what the late days use, and how
+   * far a day's use strays from its weekday's. Null before 0092.
+   */
+  lateDays: number | null;
+  everyDays: number | null;
+  everyFrom: EveryFrom | null;
+  cycleUse: number | null;
+  lateUse: number | null;
+  spread: number | null;
+  /** The levels its use and supplier suggest, beside any set by hand; the one set on the item. */
+  suggestedReorder: number | null;
+  suggestedTarget: number | null;
+  ownReorder: number | null;
+  /** Enough, but less than halfway to its level: topped up when its supplier is ordered from anyway. */
+  topUp: boolean;
+  topUpPacks: number;
+  cheaper: Cheaper | null;
   reorderLevel: number | null;
   reorderFrom: ReorderFrom | null;
   safetyStock: number | null;
@@ -147,6 +188,20 @@ function choiceFrom(c: Record<string, unknown>): SupplierChoice {
   };
 }
 
+function cheaperFrom(v: unknown): Cheaper | null {
+  if (!v || typeof v !== "object") return null;
+  const c = v as Record<string, unknown>;
+  return {
+    supplierId: str(c.supplier_id),
+    supplier: str(c.supplier),
+    packUnit: str(c.pack_unit),
+    price: num(c.price),
+    perBase: num(c.per_base),
+    chosenPerBase: num(c.chosen_per_base),
+    saves: num(c.saves),
+  };
+}
+
 export function buyingLineFrom(r: Record<string, unknown>): BuyingLine {
   return {
     itemId: str(r.item_id),
@@ -178,12 +233,24 @@ export function buyingLineFrom(r: Record<string, unknown>): BuyingLine {
     capped: r.capped === true,
     capLevel: numOrNull(r.cap_level),
     leadTime: num(r.lead_time),
-    leadFrom: r.lead_from === "supplier" ? "supplier" : "cafe",
+    leadFrom: oneOf(r.lead_from, ["learned", "supplier", "cafe"] as const) ?? "cafe",
+    lateDays: numOrNull(r.late_days),
+    everyDays: numOrNull(r.every_days),
+    everyFrom: oneOf(r.every_from, ["supplier", "learned", "default"] as const),
+    cycleUse: numOrNull(r.cycle_use),
+    lateUse: numOrNull(r.late_use),
+    spread: numOrNull(r.spread),
+    suggestedReorder: numOrNull(r.suggested_reorder),
+    suggestedTarget: numOrNull(r.suggested_target),
+    ownReorder: numOrNull(r.own_reorder),
+    topUp: r.top_up === true,
+    topUpPacks: num(r.top_up_packs),
+    cheaper: cheaperFrom(r.cheaper),
     reorderLevel: numOrNull(r.reorder_level),
     reorderFrom: oneOf(r.reorder_from, ["item", "use", "plan"] as const),
     safetyStock: numOrNull(r.safety_stock),
     targetLevel: numOrNull(r.target_level),
-    targetFrom: oneOf(r.target_from, ["par", "max", "week", "reorder"] as const),
+    targetFrom: oneOf(r.target_from, ["par", "max", "week", "cover", "reorder"] as const),
     supplierId: strOrNull(r.supplier_id),
     supplier: strOrNull(r.supplier),
     supplierFrom: oneOf(r.supplier_from, ["usual", "last_delivery", "set"] as const),
@@ -257,6 +324,30 @@ export function draftOf(line: BuyingLine): LineDraft {
     supplierId: line.supplierId ?? "",
     usual: false,
   };
+}
+
+/**
+ * The list's suggestions for every line (0092): what is to order, and with
+ * it what its supplier would top up — an item with enough but less than
+ * halfway to its level — when that supplier is ordered from anyway.
+ */
+export function draftsOf(list: BuyingList): Record<string, LineDraft> {
+  const ordering = new Set(
+    list.items
+      .filter((l) => l.status === "order" && l.supplierId && l.price !== null)
+      .map((l) => l.supplierId),
+  );
+  return Object.fromEntries(
+    list.items.map((l) => {
+      const d = draftOf(l);
+      return [
+        l.itemId,
+        l.topUp && l.topUpPacks > 0 && ordering.has(l.supplierId)
+          ? { ...d, include: true, qty: String(l.topUpPacks) }
+          : d,
+      ];
+    }),
+  );
 }
 
 /**
@@ -382,6 +473,12 @@ export function reasonsOf(
         : t("At or above its reorder level, set on the item: {level}.", { level }),
     );
     extra();
+    if (line.suggestedReorder !== null)
+      out.push(
+        t("From its use and its supplier's deliveries, {level} would be suggested.", {
+          level: about(line.suggestedReorder),
+        }),
+      );
   } else if (line.reorderFrom === "plan") {
     out.push(
       t("Not used here yet, but today's plan needs {qty}: {level} is its reorder level.", {
@@ -391,6 +488,53 @@ export function reasonsOf(
     );
     if (line.safetyStock)
       out.push(t("With a safety stock of {qty}.", { qty: about(line.safetyStock) }));
+    below();
+  } else if (line.everyDays !== null && line.leadUse !== null) {
+    // 0092: the delivery's days as learnt or set, the days it may come late,
+    // and what is kept for days busier than usual.
+    out.push(
+      line.leadFrom === "learned"
+        ? t("Its supplier usually delivers in {n} day(s), as its orders have shown.", {
+            n: line.leadTime,
+          })
+        : line.leadFrom === "supplier"
+          ? t("A delivery takes {n} day(s), as set on the supplier.", { n: line.leadTime })
+          : t("A delivery takes {n} day(s), the café's own: the supplier has none set.", {
+              n: line.leadTime,
+            }),
+      line.forecast === "weekday"
+        ? t(
+            "Each day judged by its weekday over the last 4 weeks: until it comes, and a day more, it uses about {use}.",
+            { use: about(line.leadUse) },
+          )
+        : t(
+            "About {daily} a day over the last {days} days: until it comes, and a day more, about {use}.",
+            {
+              daily: about(line.dailyUse ?? 0),
+              days: line.days ?? 0,
+              use: about(line.leadUse),
+            },
+          ),
+    );
+    if ((line.lateDays ?? 0) > 0 && (line.lateUse ?? 0) > 0)
+      out.push(
+        t("It has come up to {n} day(s) late lately: {qty} more.", {
+          n: line.lateDays ?? 0,
+          qty: about(line.lateUse ?? 0),
+        }),
+      );
+    const busy =
+      (line.reorderLevel ?? 0) -
+      line.leadUse -
+      (line.lateUse ?? 0) -
+      line.planExtra -
+      (line.safetyStock ?? 0);
+    if ((line.spread ?? 0) > 0 && busy > 0)
+      out.push(t("For days busier than usual: {qty} more.", { qty: about(busy) }));
+    extra();
+    if (line.safetyStock)
+      out.push(t("With a safety stock of {qty}.", { qty: about(line.safetyStock) }));
+    out.push(t("{level} is its reorder level.", { level }));
     below();
   } else {
     out.push(
@@ -416,7 +560,19 @@ export function reasonsOf(
         days: line.days ?? 0,
       }),
     );
-  if (line.status !== "order") return out;
+  if (line.status !== "order") {
+    if (line.topUp)
+      out.push(
+        t("Less than halfway to {target}: {packs} more when its supplier is ordered from anyway.", {
+          target: about(line.targetLevel ?? 0),
+          packs:
+            line.packFactor === 1
+              ? q(line.topUpPacks)
+              : `${line.topUpPacks} × ${packName(line.packUnit)}`,
+        }),
+      );
+    return out;
+  }
   const target = about(line.targetLevel ?? 0);
   if (line.capped && line.keepsDays !== null) {
     out.push(
@@ -448,12 +604,27 @@ export function reasonsOf(
         ? t("Ordered up to the most it holds, {target}.", { target })
         : line.targetFrom === "week"
           ? t("Ordered up to the reorder level and a week of use: {target}.", { target })
-          : t(
-              "Ordered up to its reorder level, {target}: a par level on the item orders more at once.",
-              {
-                target,
-              },
-            ),
+          : line.targetFrom === "cover"
+            ? line.everyFrom === "supplier"
+              ? t(
+                  "It delivers every {n} day(s): ordered up to what lasts until the delivery after this one, {target}.",
+                  { n: line.everyDays ?? 0, target },
+                )
+              : line.everyFrom === "learned"
+                ? t(
+                    "Its deliveries have come every {n} day(s) or so: ordered up to what lasts until the delivery after this one, {target}.",
+                    { n: line.everyDays ?? 0, target },
+                  )
+                : t(
+                    "Ordered up to a week more of use, until how often the supplier delivers is set or learnt: {target}.",
+                    { target },
+                  )
+            : t(
+                "Ordered up to its reorder level, {target}: a par level on the item orders more at once.",
+                {
+                  target,
+                },
+              ),
   );
   out.push(
     line.packFactor === 1
@@ -496,6 +667,14 @@ export function sourceOf(line: BuyingLine, t: T = english): string[] {
             }),
     );
   else out.push(t("No price yet: enter one."));
+  if (line.cheaper)
+    out.push(
+      t("{supplier} sells it {pct} cheaper: {price} a pack.", {
+        supplier: line.cheaper.supplier,
+        pct: `${fmtQty(Math.round(line.cheaper.saves * 1000) / 10)}%`,
+        price: fmtPrice(line.cheaper.price),
+      }),
+    );
   return out;
 }
 
