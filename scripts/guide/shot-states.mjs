@@ -50,6 +50,7 @@ const soft = async (locator, timeout = 8000) => {
 };
 /** Scroll an element to the top of the window, under the menu bar. */
 const toTop = async (locator, gap = 80) => {
+  if (!(await soft(locator, 3000))) return;
   await locator.first().evaluate((el, g) => {
     const y = el.getBoundingClientRect().top + window.scrollY - g;
     window.scrollTo(0, y);
@@ -61,6 +62,18 @@ const rule = (key, scope, id, value, reason) => `select test.act_as('owner@examp
   select set_business_rule('${key}', '${scope}', ${id}, '${value}'::jsonb, '${reason.replace(/'/g, "''")}')
    where not exists (select 1 from business_rule where key = '${key}' and scope_type = '${scope}'
                         and scope_id = coalesce(${id}, '') and value = '${value}'::jsonb);`;
+
+/** A day from today, as a date box wants it. */
+const daysFromNow = (n) => one(`select (${TODAY} + ${n})::text`);
+
+/** A product's panel on Products & Recipes, on a tab if one is named. */
+async function openProduct(page, name, tab) {
+  await page.locator(`[data-testid="product-card"][data-name="${name}"] > button`).click();
+  const panel = page.getByTestId("product-panel");
+  await panel.waitFor({ timeout: 10000 });
+  if (tab) await panel.getByRole("tab", { name: tab, exact: true }).click();
+  return panel;
+}
 
 /** A product's tile on the till, by its exact name. */
 const tile = (page, name) =>
@@ -510,7 +523,7 @@ export const STATE_SHOTS = [
   {
     name: "stock-card",
     role: "owner",
-    path: (ids) => `/inventory/${ids.item()}?from=2026-09-01&to=2026-09-30`,
+    path: (ids) => `/inventory/${ids.item()}`,
     then: async (page) => {
       await toTop(page.getByTestId("stock-card"), 80);
     },
@@ -577,7 +590,7 @@ export const STATE_SHOTS = [
       return usageCounts();
     },
     then: async (page) => {
-      const row = page.getByTestId("usage-row").filter({ hasText: "Takeaway cup" }).first();
+      const row = page.getByTestId("usage-row").filter({ hasText: "Coffee beans" }).first();
       if (await row.count()) {
         const more = row.locator("summary, button").filter({ hasText: /made of/ }).first();
         if (await more.count()) await more.click();
@@ -606,23 +619,489 @@ export const STATE_SHOTS = [
     },
     after: async () => {
       sql(`select test.act_as('counter@example.com');
-           select cancel_stock_count(id, 'Started for the guide') from stock_count where status = 'counting'`);
+           select cancel_stock_count(id, 'Started for the guide') from stock_count where status = 'counting';
+           reset role; set session_replication_role = replica;
+           delete from stock_count where status = 'rejected';`);
     },
   },
   {
     name: "count-review",
     role: "manager",
-    path: "/count",
+    path: () => `/count?review=${one(`select id from stock_count where status = 'submitted' limit 1`)}`,
     get sql() {
       return submittedCount();
     },
     then: async (page) => {
-      const review = page.getByRole("button", { name: /Review/ }).first();
-      if (await review.count()) await review.click();
-      await page.waitForTimeout(800);
+      await page.waitForTimeout(500);
     },
   },
+
+  // ───────────────────────── A batch's own page ────────────────────────────
+  {
+    name: "batch-story",
+    role: "owner",
+    path: () => `/production/batches/${one(`select id from production_batch where batch_no = 1143`)}`,
+    sql: `select test.act_as('owner@example.com');
+          select record_loss('expired', (select id from item where name = 'Vanilla gelato'), null, 400, 'g',
+                             'Set too soft in the display', p_lot => (select output_lot_id from production_batch where batch_no = 1143))
+           where not exists (select 1 from stock_loss where reason = 'Set too soft in the display');`,
+  },
+  {
+    name: "batch-late",
+    role: "manager",
+    path: "/production",
+    then: async (page) => {
+      const form = page.locator(".pr-record");
+      await form.getByLabel("What did you make").selectOption({ label: "Chocolate Gelato Batch" });
+      await form.getByLabel("Made earlier: yesterday or today, recorded now").check();
+      await form.getByLabel("When it was made").fill("2026-10-21T21:30");
+      await form.getByLabel("Why it is recorded late").fill("Made before closing; the tablet was flat");
+      await form.getByRole("button", { name: "Record batch" }).click();
+      await soft(page.getByText(/Recorded as batch \d+/), 15000);
+      const no = one(`select batch_no from production_batch where late_reason is not null order by created_at desc limit 1`);
+      const id = one(`select id from production_batch where batch_no = ${no}`);
+      await page.goto(page.url().replace(/\/production.*$/, `/production/batches/${id}`));
+      await page.waitForLoadState("networkidle");
+      const change = page.getByTestId("change-use-by").first();
+      if (await change.count()) await change.click();
+      await page.waitForTimeout(400);
+    },
+  },
+
+  // ───────────────────────── Products & Recipes ────────────────────────────
+  {
+    name: "products-grid",
+    role: "owner",
+    path: "/products",
+  },
+  {
+    name: "products-panel-basics",
+    role: "owner",
+    path: "/products",
+    then: async (page) => {
+      await openProduct(page, "Latte");
+      await page.waitForTimeout(400);
+    },
+  },
+  {
+    name: "products-recipe-change",
+    role: "owner",
+    path: "/products",
+    then: async (page) => {
+      const card = await openProduct(page, "Latte", "Recipe");
+      await card.getByRole("button", { name: "Change the recipe…" }).click();
+      await card.getByLabel("Quantity 1").fill("20");
+      await card.locator('input[type="date"]').fill(daysFromNow(7));
+      await page.waitForTimeout(400);
+    },
+  },
+  {
+    name: "products-sizes",
+    role: "owner",
+    path: "/products",
+    then: async (page) => {
+      const card = await openProduct(page, "Latte", "Sizes & prices");
+      if ((await card.locator('[data-testid="size-row"][data-size="Large"]').count()) === 0) {
+        await card.getByTestId("size-add").click();
+        const form = card.getByTestId("size-form");
+        await form.getByLabel("New size (English)").fill("Large");
+        await form.getByLabel("Price · Dine-in").fill("4500");
+        await form.getByLabel("Price · Takeaway").fill("4500");
+      }
+      await page.waitForTimeout(400);
+    },
+    after: async (page) => {
+      const save = page.getByTestId("size-save");
+      if (await save.count()) {
+        await save.click();
+        await soft(page.locator('[data-testid="size-row"][data-size="Large"]'), 15000);
+      }
+    },
+  },
+  {
+    name: "products-prices",
+    role: "owner",
+    path: "/products",
+    then: async (page) => {
+      const card = await openProduct(page, "Americano", "Sizes & prices");
+      if ((await card.getByTestId("scheduled-changes").count()) === 0) {
+        await card.getByRole("button", { name: "Change a price…" }).first().click();
+        await card.locator("label", { hasText: "New price" }).locator("input").fill("3000");
+        await card.locator("label", { hasText: /^From/ }).locator("input").fill(daysFromNow(7));
+        await card.getByRole("button", { name: "Set price" }).click();
+        await soft(card.getByTestId("scheduled-changes"), 15000);
+      }
+      await card.getByTestId("scheduled-changes").scrollIntoViewIfNeeded().catch(() => {});
+      await page.waitForTimeout(400);
+    },
+  },
+  {
+    name: "products-addons",
+    role: "owner",
+    path: "/products",
+    then: async (page) => {
+      const card = await openProduct(page, "Latte", "Add-ons");
+      if ((await card.locator('[data-testid="addon-group-card"][data-group="Milk"]').count()) === 0) {
+        await card.getByTestId("ready-milk").click();
+        const group = card.getByTestId("group-form");
+        const must = group.getByLabel("Must pick one");
+        if (await must.count()) await must.check();
+        const prices = group.locator('input[placeholder="+ IQD"]');
+        for (let i = 0; i < (await prices.count()); i++)
+          if (!(await prices.nth(i).inputValue())) await prices.nth(i).fill("750");
+        await group.getByTestId("group-save").click();
+        await soft(card.locator('[data-testid="addon-group-card"][data-group="Milk"]'), 15000);
+      }
+      await page.waitForTimeout(600);
+    },
+  },
+  {
+    name: "products-new",
+    role: "owner",
+    path: "/products",
+    then: async (page) => {
+      await page.getByRole("button", { name: "Add menu product", exact: true }).click();
+      await page.getByLabel("Product name (English)").fill("Pistachio latte");
+      await line(page, 1, "Coffee beans", "18", "g");
+      await line(page, 2, "Milk", "200", "ml");
+      await line(page, 3, "Pistachio paste", "15", "g");
+      await page.getByLabel("Dine-in price").fill("5000");
+      await page.getByLabel("Takeaway price").fill("5000");
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    name: "products-deal",
+    role: "owner",
+    path: "/products",
+    then: async (page) => {
+      const deals = page.getByTestId("deals-card");
+      await deals.locator("summary").click();
+      await deals.getByTestId("deal-new").click();
+      const form = deals.getByTestId("deal-form");
+      await form.getByTestId("deal-name").fill("Morning coffee and croissant");
+      const places = form.getByTestId("deal-place");
+      const coffee = await places.nth(0).locator("option", { hasText: "Any Coffee" }).getAttribute("value");
+      await places.nth(0).selectOption(coffee);
+      const croissant = await places.nth(1).locator("option", { hasText: "Croissant" }).first().getAttribute("value");
+      await places.nth(1).selectOption(croissant);
+      for (const c of ["dine_in", "takeaway"]) {
+        const box = form.getByTestId(`deal-price-${c}`);
+        if (await box.count()) await box.fill("5000");
+      }
+      const from = form.getByTestId("hours-from");
+      if (await from.count()) {
+        await from.fill("07:00");
+        await form.getByTestId("hours-until").fill("11:00");
+      }
+      await toTop(form, 90);
+    },
+  },
+  {
+    name: "products-time-price",
+    role: "owner",
+    path: "/products",
+    then: async (page) => {
+      const hours = page.getByTestId("time-prices-card");
+      await hours.locator("summary").click();
+      if ((await hours.getByTestId("time-price-row").count()) === 0) {
+        await hours.getByTestId("time-price-new").click();
+        const f = hours.getByTestId("time-price-form");
+        const size = f.getByTestId("time-price-size");
+        const espresso = await size.locator("option", { hasText: /^Espresso/ }).first().getAttribute("value");
+        await size.selectOption(espresso);
+        await f.getByTestId("time-price-price").fill("1500");
+        await f.getByTestId("hours-from").fill("00:00");
+        await f.getByTestId("hours-until").fill("23:59");
+        await f.getByTestId("time-price-save").click();
+        await soft(hours.getByTestId("time-price-row"), 15000);
+      }
+      await toTop(hours, 90);
+    },
+    after: async () => {
+      // A price by the hour all day would change every later sale's espresso: ended at once.
+      sql(`update time_price set stopped_at = now() where stopped_at is null`);
+    },
+  },
+  {
+    name: "labels-sheet",
+    role: "owner",
+    path: "/products/labels",
+    sql: `update product_variant set barcode = '6260000000017' where name = '500 ml' and barcode is null;
+          update product_variant set barcode = '6260000000024' where name = 'Plain' and barcode is null;`,
+    then: async (page) => {
+      const counts = page.getByTestId("label-count");
+      if (await counts.count()) await counts.first().fill("3");
+      await page.waitForTimeout(500);
+    },
+  },
+
+  // ───────────────────────── Buying: Purchasing ────────────────────────────
+  {
+    name: "purchasing-orders",
+    role: "manager",
+    path: "/purchasing",
+    get sql() {
+      return buyingSetup();
+    },
+    then: async (page) => {
+      await toTop(page.getByTestId("po-panel"), 80);
+    },
+  },
+  {
+    name: "purchasing-order-form",
+    role: "barista2",
+    path: "/purchasing",
+    sql: PURCHASING,
+    then: async (page) => {
+      const panel = page.getByTestId("po-panel");
+      await panel.getByRole("button", { name: "New order" }).click();
+      const form = page.getByTestId("po-form");
+      await form.getByLabel("Supplier", { exact: true }).selectOption({ label: "Kurdistan Coffee Imports" });
+      await form.getByLabel("Expected", { exact: true }).fill(daysFromNow(3));
+      await form.getByLabel("Note for the supplier", { exact: true }).fill("Please deliver before 9 in the morning");
+      let line = form.getByTestId("po-line").nth(0);
+      await line.getByLabel("Item", { exact: true }).selectOption({ label: "Coffee beans" });
+      await line.getByLabel("Quantity", { exact: true }).fill("5");
+      await line.getByLabel("Unit", { exact: true }).selectOption("kg");
+      await line.getByLabel("Price per unit", { exact: true }).fill("37000");
+      await form.getByRole("button", { name: "Add a line" }).click();
+      line = form.getByTestId("po-line").nth(1);
+      await line.getByLabel("Item", { exact: true }).selectOption({ label: "Sugar" });
+      await line.getByLabel("Quantity", { exact: true }).fill("10000");
+      await line.getByLabel("Price per unit", { exact: true }).fill("1.6");
+      await page.waitForTimeout(400);
+      await toTop(form, 90);
+    },
+  },
+  {
+    name: "purchasing-supplier-records",
+    role: "owner",
+    path: "/purchasing",
+    then: async (page) => {
+      const records = page.getByTestId("supplier-records");
+      await records.locator("summary").first().click();
+      await toTop(records, 90);
+    },
+  },
+  {
+    name: "purchasing-receive-order",
+    role: "barista2",
+    path: "/purchasing",
+    sql: PURCHASING,
+    then: async (page) => {
+      const form = page.getByTestId("receive");
+      const po = one(`select id from purchase_order where note = 'Guide: milk and cream' limit 1`);
+      await form.locator("label", { hasText: /^Supplier/ }).locator("select").first()
+        .selectOption({ label: "Sulaymaniyah Dairy Co." });
+      await form.getByTestId("receive-order").selectOption(po);
+      await page.waitForTimeout(600);
+      const lines = form.getByTestId("receive-line");
+      await lines.nth(0).locator("label", { hasText: /^Quantity/ }).locator("input").fill("10");
+      if ((await lines.count()) > 1)
+        await lines.nth(1).locator("label", { hasText: /^Price per/ }).locator("input").fill("7500");
+      await page.waitForTimeout(500);
+      await toTop(form, 90);
+    },
+  },
+  {
+    name: "purchasing-price-check",
+    role: "manager",
+    path: "/purchasing",
+    then: async (page) => {
+      const form = page.getByTestId("receive");
+      await form.locator("label", { hasText: /^Supplier/ }).locator("select").first()
+        .selectOption({ label: "Kurdistan Coffee Imports" });
+      const line = form.getByTestId("receive-line").first();
+      await line.locator("label", { hasText: /^Item/ }).locator("select").selectOption({ label: "Coffee beans" });
+      await line.locator("label", { hasText: /^Quantity/ }).locator("input").fill("2");
+      await line.locator("label", { hasText: /^Unit/ }).locator("select").selectOption("kg");
+      await line.locator("label", { hasText: /^Price per/ }).locator("input").fill("76000");
+      await form.getByRole("button", { name: "Receive goods" }).click();
+      await soft(page.getByTestId("price-check"), 15000);
+      await toTop(page.getByTestId("price-check"), 300);
+    },
+  },
+  {
+    name: "purchasing-new-item",
+    role: "barista2",
+    path: "/purchasing",
+    sql: PURCHASING,
+    then: async (page) => {
+      const form = page.getByTestId("receive");
+      await form.locator("label", { hasText: /^Supplier/ }).locator("select").first()
+        .selectOption({ label: "Kurdistan Coffee Imports" });
+      const line = form.getByTestId("receive-line").first();
+      await line.locator("label", { hasText: /^Item/ }).locator("select").selectOption({ label: "+ New item (not in Inventory yet)…" });
+      const ni = form.getByTestId("new-item");
+      await soft(ni);
+      const name = ni.getByLabel("Name (English)");
+      if (await name.count()) await name.fill("Cardamom");
+      await page.waitForTimeout(400);
+      await toTop(form, 90);
+    },
+  },
+  {
+    name: "purchasing-return",
+    role: "barista2",
+    path: "/purchasing",
+    sql: PURCHASING,
+    then: async (page) => {
+      const box = page.getByTestId("return-goods");
+      const opener = box.locator("summary").first();
+      if (await opener.count()) await opener.click().catch(() => {});
+      await box.getByLabel("Supplier", { exact: true }).selectOption({ label: "Sulaymaniyah Dairy Co." });
+      const delivery = box.getByLabel("The delivery they came in", { exact: true });
+      await delivery.selectOption({ index: 1 });
+      const line = box.getByTestId("return-line").first();
+      await line.getByLabel("Item", { exact: true }).selectOption({ label: "Cream" });
+      await line.getByLabel("Quantity", { exact: true }).fill("2");
+      await line.getByLabel("Unit", { exact: true }).selectOption("L");
+      await box.getByLabel("Why they are going back", { exact: true }).fill("Two bottles came past their date");
+      await page.waitForTimeout(400);
+      await toTop(box, 90);
+    },
+  },
+  {
+    name: "purchasing-correction",
+    role: "manager",
+    path: "/purchasing",
+    then: async (page) => {
+      const no = one(`select receipt_no from goods_receipt where note = 'Guide: milk and cream' order by received_at desc limit 1`);
+      const row = page.locator(`[data-testid="receipt-row"][data-receipt="${no}"]`);
+      await row.getByRole("button", { name: "Correct", exact: true }).click();
+      const dialog = page.getByTestId("receipt-correction");
+      const price = dialog.getByLabel(/^Price of Cream|^Unit price of Cream|^Cost of Cream/).first();
+      if (await price.count()) await price.fill("6500");
+      else await dialog.getByLabel("Quantity of Milk").fill("11");
+      await dialog.getByRole("button", { name: "Show what it would do" }).click();
+      await soft(dialog.getByTestId("correction-plan"), 10000);
+      await page.waitForTimeout(400);
+    },
+  },
+  {
+    name: "purchasing-receipts",
+    role: "owner",
+    path: "/purchasing",
+    then: async (page) => {
+      await toTop(page.getByTestId("receipt-row").first(), 220);
+    },
+  },
+  {
+    name: "buying-list",
+    role: "manager",
+    path: "/purchasing/buying-list",
+  },
+  {
+    name: "buying-why",
+    role: "barista2",
+    path: "/purchasing/buying-list",
+    sql: PURCHASING,
+    then: async (page) => {
+      const line = page.getByTestId("buying-line").first();
+      const why = line.getByTestId("buying-why");
+      const sum = why.locator("summary");
+      if (await sum.count()) await sum.click();
+      else await why.click();
+      await toTop(line, 160);
+    },
+  },
+  {
+    name: "buying-made",
+    role: "barista2",
+    path: "/purchasing/buying-list",
+    sql: PURCHASING,
+    then: async (page) => {
+      await page.getByTestId("buying-create").first().click();
+      await soft(page.getByTestId("buying-made"), 15000);
+      await toTop(page.getByTestId("buying-made"), 90);
+    },
+    after: async () => {
+      // The orders it drafted, cancelled, so the next pictures find the same list.
+      sql(`select test.act_as('owner@example.com');
+           select cancel_po(id, 'Drafted for the guide') from purchase_order
+            where status = 'draft' and note is distinct from 'Guide: beans' and note is distinct from 'Guide: cups and lids';
+           reset role; set session_replication_role = replica;
+           delete from purchase_order_line where purchase_order_id in
+             (select id from purchase_order where status = 'cancelled' and cancel_reason = 'Drafted for the guide');
+           delete from purchase_order where status = 'cancelled' and cancel_reason = 'Drafted for the guide';`);
+    },
+  },
+  {
+    name: "purchasing-draft-now",
+    role: "owner",
+    path: "/purchasing",
+    then: async (page) => {
+      await page.getByRole("button", { name: "Draft the orders now" }).click();
+      await soft(page.getByTestId("draft-now-made").or(page.getByTestId("draft-now-none")), 15000);
+      await toTop(page.getByTestId("draft-now"), 90);
+    },
+    after: async () => {
+      sql(`select test.act_as('owner@example.com');
+           select cancel_po(id, 'Drafted for the guide') from purchase_order
+            where status = 'draft' and note is distinct from 'Guide: beans' and note is distinct from 'Guide: cups and lids';
+           reset role; set session_replication_role = replica;
+           delete from purchase_order_line where purchase_order_id in
+             (select id from purchase_order where status = 'cancelled' and cancel_reason = 'Drafted for the guide');
+           delete from purchase_order where status = 'cancelled' and cancel_reason = 'Drafted for the guide';`);
+    },
+  },
+  {
+    name: "po-page",
+    role: "manager",
+    path: () => `/purchasing/orders/${one(`select id from purchase_order where note = 'Guide: milk and cream' limit 1`)}`,
+  },
 ];
+
+/**
+ * The buying the pictures show, made once: two draft orders (the beans left
+ * two hours), and an order of milk and cream approved, sent and half received;
+ * the cones offered cheaper by a second supplier; milk, cones and spoons under
+ * their levels; a delivery corrected and one reversed.
+ */
+function buyingSetup() {
+  if (one(`select count(*) from purchase_order where note = 'Guide: milk and cream'`) !== "0") return "select 1";
+  const sup = (n) => `(select id from supplier where name = '${n}')`;
+  const item = (n) => one(`select id from item where name = '${n}'`);
+  const [beans, cup, lid, milk, cream, cone] = ["Coffee beans", "Takeaway cup", "Cup lid", "Milk", "Cream", "Cone"].map(item);
+  const as = (who) => `select test.act_as('${who}@example.com');`;
+  sql(`${as("manager")}
+    select save_po(null, ${sup("Kurdistan Coffee Imports")},
+      '[{"item_id":"${beans}","qty":5,"unit_code":"kg","unit_price":37000}]'::jsonb,
+      ${TODAY} + 3, 'Guide: beans', ${MAIN});
+    select save_po(null, ${sup("City Packaging Supplies")},
+      '[{"item_id":"${cup}","qty":500,"unit_code":"each","unit_price":132},{"item_id":"${lid}","qty":500,"unit_code":"each","unit_price":50}]'::jsonb,
+      ${TODAY} + 2, 'Guide: cups and lids', ${MAIN});
+    select save_po(null, ${sup("Sulaymaniyah Dairy Co.")},
+      '[{"item_id":"${milk}","qty":24,"unit_code":"L","unit_price":1400},{"item_id":"${cream}","qty":10,"unit_code":"L","unit_price":7000}]'::jsonb,
+      ${TODAY}, 'Guide: milk and cream', ${MAIN});`);
+  sql(`update purchase_order set updated_at = now() - interval '2 hours' where note = 'Guide: beans';`);
+  const po = one(`select id from purchase_order where note = 'Guide: milk and cream'`);
+  const line = (i) => one(`select id from purchase_order_line where purchase_order_id = '${po}' and item_id = '${i}'`);
+  sql(`${as("manager")} select approve_po('${po}'); select send_po('${po}');`);
+  sql(`${as("manager")}
+    select receive_goods(${sup("Sulaymaniyah Dairy Co.")},
+      '[{"item_id":"${milk}","qty":12,"unit_code":"L","unit_price":1400,"po_line_id":"${line(milk)}"},
+        {"item_id":"${cream}","qty":10,"unit_code":"L","unit_price":7000,"po_line_id":"${line(cream)}"}]'::jsonb,
+      p_note => 'Guide: milk and cream', p_purchase_order => '${po}');`);
+  // Two small deliveries of cones: one corrected, one entered twice and reversed.
+  for (const note of ["Guide: cones", "Guide: cones again"])
+    sql(`${as("manager")}
+      select receive_goods(${sup("City Packaging Supplies")},
+        '[{"item_id":"${cone}","qty":100,"unit_code":"each","unit_price":150}]'::jsonb, p_note => '${note}', p_location => ${MAIN});`);
+  const r1 = one(`select id from goods_receipt where note = 'Guide: cones'`);
+  const r2 = one(`select id from goods_receipt where note = 'Guide: cones again'`);
+  sql(`${as("manager")}
+    select correct_receipt('${r1}', '[{"item_id":"${cone}","qty":96,"unit_code":"each","unit_price":150}]'::jsonb,
+                           p_reason => 'Four cones short on the invoice', p_confirm => true);
+    select reverse_receipt('${r2}', 'Entered twice', true);`);
+  // A cheaper second supplier for the cones, and levels to buy to.
+  return `${as("owner")}
+    select set_item_supplier('${cone}', ${sup("Kurdistan Coffee Imports")}, 'each', 120, false);
+    reset role;
+    update item set min_level_base = 150000 where name = 'Milk';
+    update item set min_level_base = 1500 where name = 'Takeaway cup';`;
+}
 
 /** Inventory's form, opened from its button unless it is open already. */
 async function openForm(page, key, testid) {
@@ -637,11 +1116,16 @@ const onHandAt = (item, at = "now()") => `(select coalesce(sum(m.base_quantity_s
    where m.item_id = (select id from item where name = '${item}') and m.location_id = ${MAIN} and m.created_at <= ${at})`;
 
 /**
- * Two counts of the takeaway cups, a week apart, with a week's sales between:
- * the first counted as the ledger stood then, the second 40 cups short now.
+ * Two counts of the coffee beans, a week apart, with a week's sales between:
+ * the first counted as the ledger stood then, the second 600 g short now.
  */
 function usageCounts() {
-  const cup = one(`select id from item where name = 'Takeaway cup'`);
+  const ITEM = "Coffee beans";
+  sql(`select test.act_as('counter@example.com');
+       select cancel_stock_count(id, 'Started by mistake') from stock_count where status = 'counting';
+       select test.act_as('manager@example.com');
+       select reject_stock_count(id, 'Count it again') from stock_count where status = 'submitted'`);
+  const cup = one(`select id from item where name = '${ITEM}'`);
   const done = Number(one(`select count(*) from stock_count c join stock_count_line l on l.stock_count_id = c.id
                             where c.status = 'approved' and l.item_id = '${cup}'`));
   if (done >= 2) return "select 1";
@@ -650,11 +1134,11 @@ function usageCounts() {
     const first = one(`select test.act_as('counter@example.com');
       select start_stock_count(array['${cup}'::uuid])`);
     sql(`select test.act_as('counter@example.com');
-         select record_count('${first}', '${cup}', ${one(`select ${onHandAt("Takeaway cup")}`)}, 'each');
+         select record_count('${first}', '${cup}', ${one(`select ${onHandAt(ITEM)}`)}, 'g');
          select submit_stock_count('${first}');
          select test.act_as('manager@example.com'); select approve_stock_count('${first}');`);
   }
-  const then = one(`select ${onHandAt("Takeaway cup", week)}`);
+  const then = one(`select ${onHandAt(ITEM, week)}`);
   sql(`set session_replication_role = replica;
        update stock_count_line l set counted_at = ${week}, counted_base = ${then}, expected_at_count = ${then}
          from stock_count c where c.id = l.stock_count_id and c.status = 'approved' and l.item_id = '${cup}';
@@ -662,9 +1146,9 @@ function usageCounts() {
         where c.status = 'approved' and exists (select 1 from stock_count_line l where l.stock_count_id = c.id and l.item_id = '${cup}');`);
   const second = one(`select test.act_as('counter@example.com');
     select start_stock_count(array['${cup}'::uuid])`);
-  const now = Number(one(`select ${onHandAt("Takeaway cup")}`));
+  const now = Number(one(`select ${onHandAt(ITEM)}`));
   return `select test.act_as('counter@example.com');
-    select record_count('${second}', '${cup}', ${now - 40}, 'each');
+    select record_count('${second}', '${cup}', ${now - 600}, 'g');
     select submit_stock_count('${second}');
     select test.act_as('manager@example.com'); select approve_stock_count('${second}');`;
 }

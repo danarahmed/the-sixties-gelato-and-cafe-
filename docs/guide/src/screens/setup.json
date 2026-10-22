@@ -1463,7 +1463,7 @@
     "tips": [
       "Search the English exactly as the screen shows it.",
       "Use “Phrases with no words yet” to finish a new language.",
-      "Saved words reach everyone at once; no one needs to reload."
+      "Saved words are used on every screen at once; someone with a screen already open sees them when it is loaded again."
     ],
     "related": [
       "/settings"
@@ -1902,7 +1902,7 @@
           {
             "label": "Dollars counted ($)",
             "kind": "box",
-            "does": "Shown under “Dollars in the till” only when the till took dollars since it was last counted. Count the dollars too, blind; all of them go to the safe. Has its own “Count note by note” (100, 50, 20, 10, 5, 1 dollars).",
+            "does": "Shown under “Dollars in the till” at every close while the till holds dollars. Count the dollars too, blind; all of them go to the safe. Has its own “Count note by note” (100, 50, 20, 10, 5, 1 dollars).",
             "rules": "Whole dollars. Required at a normal close or hand over; may be left empty when a manager closes someone else's drawer."
           },
           {
@@ -2361,7 +2361,7 @@
       },
       {
         "name": "Find anything (Ctrl+K)",
-        "shows": "A box over the page: “A screen, a product, a customer, a sale's number…”. Empty, it lists up to 8 of your screens. Typing finds screens by name (in your language or English, including the reports' own pages and Test your devices) and, after 2 letters, records you may read: products, stock items (name or SKU), customers (name or phone), suppliers, staff, purchase orders and journals by number, and “Find the sale on Orders” for a receipt number, number or phone. Each row says its kind (“Screen”, “Product”, “Stock item”, “Customer”, “Supplier”, “Staff”, “Purchase order”, “Journal”). Up to 5 of each kind.",
+        "shows": "A box over the page: “A screen, a product, a customer, a sale's number…”. Empty, it lists up to 8 of your screens. Typing finds screens by name (in your language or English, including the reports' own pages and Test your devices) and, after 2 letters, records you may read: products, stock items (name or SKU), customers (name or phone), suppliers, staff, purchase orders and journals by number, and “Find the sale on Orders” for a receipt number, number or phone. Each row says its kind (“Screen”, “Product”, “Stock item”, “Customer”, “Supplier”, “Staff”, “Purchase order”, “Journal”). Up to 6 screens, and up to 5 of each kind of record.",
         "controls": [
           {
             "label": "Ctrl+K / ⌘K",

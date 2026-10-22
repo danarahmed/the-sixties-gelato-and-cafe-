@@ -5762,7 +5762,7 @@
     "states": [
       {
         "state": "Open session",
-        "looks": "Should hold is shown only to those who may see it; others see —."
+        "looks": "Only those who may see what a drawer should hold (owner, general manager, accountant, auditor) can open a session that is still open. A branch manager gets \"What an open drawer should hold is shown once it is counted\" instead, until the session is closed."
       }
     ],
     "messages": [
@@ -6197,7 +6197,7 @@
         "do": "Fix it."
       },
       {
-        "text": "A statement is matched 2000 lines at a time.",
+        "text": "A statement is matched 2,000 lines at a time",
         "kind": "error",
         "when": "Too many lines.",
         "do": "Split the statement."

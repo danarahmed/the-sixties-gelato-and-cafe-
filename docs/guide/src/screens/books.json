@@ -41,7 +41,7 @@
         "cannot": "open the screen: they are sent to their own first screen (the till, Production or Stock Count)"
       }
     ],
-    "get_there": "Menu → Accountant → Chart of Accounts (for the owner and a branch manager it is folded under More). Also: the year-end and period links on Reports; an alert 'Reconcile the bank…' leads to the bank page under it.",
+    "get_there": "Menu → Accountant → Chart of Accounts (for the owner, a general manager, a branch manager and purchasing it is folded under More). Also: the year-end and period links on Reports; an alert 'Reconcile the bank…' leads to the bank page under it.",
     "before": [
       "Months (periods) are made by the database as entries are posted into them; a month with no posting yet has no period and no closing panel.",
       "To lock a month: every trading day's cash counted (End of Day), no stock count waiting, no draft journals, every earlier month locked, and each subledger agreeing with its account."
@@ -1678,7 +1678,7 @@
         "cannot": "open the screen"
       }
     ],
-    "get_there": "Menu → Accountant → Journals (under More for the owner and a branch manager). Also: an account name on Chart of Accounts or a figure on Reports opens its lines here; 'Record it' on the bank page opens a filled-in journal.",
+    "get_there": "Menu → Accountant → Journals (under More for the owner, a general manager, a branch manager and purchasing). Also: an account name on Chart of Accounts or a figure on Reports opens its lines here; 'Record it' on the bank page opens a filled-in journal.",
     "before": [
       "The month of the journal's date must be open (not locked)."
     ],
@@ -3186,7 +3186,7 @@
         "cannot": "open it"
       }
     ],
-    "get_there": "Menu → Accountant → Audit trail (under More for the owner and a branch manager). Also: the link at the bottom of Chart of Accounts.",
+    "get_there": "Menu → Accountant → Audit trail (under More for the owner, a general manager and a branch manager). Also: the link at the bottom of Chart of Accounts.",
     "before": [],
     "parts": [
       {
@@ -3509,12 +3509,6 @@
         "kind": "error",
         "when": "Broken page.",
         "do": "Reload."
-      },
-      {
-        "text": "No active location for this business",
-        "kind": "error",
-        "when": "No active place to record it against.",
-        "do": "Tell the owner."
       }
     ],
     "what_if": [

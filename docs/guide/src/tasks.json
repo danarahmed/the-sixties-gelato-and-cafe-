@@ -317,7 +317,7 @@
     "if": [
       {
         "case": "A branch manager cannot see the Pay tab",
-        "do": "Only the owner, general manager and accountant see and set pay."
+        "do": "Only the owner, general manager and accountant set pay (the Pay tab). The auditor can read a person's pay but not change it."
       }
     ],
     "screens": [
@@ -1279,7 +1279,7 @@
       "owner"
     ],
     "when": "when needed",
-    "why": "A customer can pay part by card, part in cash, or several ways (up to 10). Each part is recorded the way it was paid.",
+    "why": "A customer can pay part by card, part in cash, or several ways (up to 4 on the till). Each part is recorded the way it was paid.",
     "before": [
       "For the cash part, the drawer is open."
     ],
@@ -1535,7 +1535,7 @@
     "when": "when needed",
     "why": "A cake for Friday, paid half now: the deposit is kept apart until the customer collects.",
     "before": [
-      "Pre-orders are switched on (the till shows “Pre-orders”).",
+      "The till shows “Pre-orders” (it does once the pre-orders update is installed on the database; nothing else turns it on).",
       "The drawer is open for a cash deposit."
     ],
     "steps": [
@@ -1719,7 +1719,7 @@
         "shot": "pos-offline-window"
       },
       {
-        "do": "Manager: press “Send again”, or “Record at today's price” when a price changed. Only as a last choice press “Take it off this till”."
+        "do": "Press “Send again”, or “Record at today's price” when a price changed (anyone at the till can). Only as a last choice a manager presses “Take it off this till”."
       }
     ],
     "if": [
@@ -3764,6 +3764,7 @@
     "roles": [
       "owner",
       "general_manager",
+      "branch_manager",
       "accountant"
     ],
     "when": "when needed",
