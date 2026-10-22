@@ -66,6 +66,7 @@ echo "▸ PostgREST and the auth stand-in"
 JWT_SECRET="local-guide-only-$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')"
 export JWT_SECRET
 echo "$AT_UTC" > "$RUN/clock"
+date +%s > "$RUN/clock-since"   # the year's clock runs on from here, as the servers' do
 cat > "$RUN/postgrest.conf" <<EOF
 db-uri = "postgres://authenticator@$PGHOST:$PGPORT/$E2E_DB"
 db-schemas = "public"

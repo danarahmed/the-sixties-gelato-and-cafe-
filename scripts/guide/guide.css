@@ -32,6 +32,7 @@
   --warn: #e8b26a; --err: #f08c84; --code: #33251f; color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { background: var(--paper); color: var(--ink); font: 15px/1.6 var(--body); }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
 a { color: var(--brand); text-underline-offset: 2px; }
@@ -130,6 +131,10 @@ mark { background: color-mix(in srgb, var(--brand) 22%, transparent); color: inh
   .screen, .task { padding: 16px; }
 }
 @media print {
+  .printing #messages, .printing .toc { display: none !important; }
+  .stats div { padding: 4px 10px; }
+  table { font-size: 8.5pt; }
+  td { padding: 4px 6px; }
   .top, .toc { display: none !important; }
   .wrap { display: block; padding: 0; }
   body { background: #fff; font-size: 10.5pt; }

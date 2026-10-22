@@ -9,12 +9,11 @@ const P = (path, role, extra = {}) => ({ name: pageName(path), path: extra.at ||
 
 export const SHOTS = [
   // Getting around and setting up
-  P("/login", "owner", { then: async (page) => { await page.context().clearCookies(); await page.goto(page.url().replace(/\/[^/]*$/, "/login")); } }),
+  P("/login", "anon"),
   P("/dashboard", "owner"),
   P("/settings", "owner"),
   P("/settings/rules", "owner"),
   P("/settings/languages", "owner"),
-  P("/setup", "owner"),
   P("/start-of-day", "manager"),
   P("/end-of-day", "manager"),
   // Selling

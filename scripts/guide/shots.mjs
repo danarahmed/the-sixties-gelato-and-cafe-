@@ -19,6 +19,10 @@ const OUT = join(process.env.GUIDE_OUT || "/tmp/sixties-guide/out", "shots");
 mkdirSync(OUT, { recursive: true });
 const CLOCK = readFileSync(process.env.GUIDE_CLOCK_FILE || "/tmp/sixties-guide/clock", "utf8").trim();
 const only = new Set(process.argv.slice(2));
+const SINCE = Number(
+  (() => { try { return readFileSync(process.env.GUIDE_CLOCK_SINCE || "/tmp/sixties-guide/clock-since", "utf8"); } catch { return ""; } })() ||
+    Date.now() / 1000,
+);
 
 // Ids the screens with an id in their address need: read once.
 const id = (q) => sql(q).split("\n")[0]?.trim();
@@ -38,8 +42,13 @@ const sessions = new Map();
 async function as(role, viewport) {
   const key = `${role}:${viewport.width}`;
   if (!sessions.has(key)) {
-    const { ctx, page } = await signIn(browser, role, { viewport, deviceScaleFactor: 1 });
-    await ctx.clock.install({ time: new Date(`${CLOCK.replace(" ", "T")}Z`) });
+    const { ctx, page } =
+      role === "anon"
+        ? await (async () => { const ctx = await browser.newContext({ viewport }); return { ctx, page: await ctx.newPage() }; })()
+        : await signIn(browser, role, { viewport, deviceScaleFactor: 1 });
+    // The servers' clock started at CLOCK and has run on since: the browser's the same.
+    const ran = Date.now() - SINCE * 1000;
+    await ctx.clock.install({ time: new Date(new Date(`${CLOCK.replace(" ", "T")}Z`).getTime() + ran) });
     // No "Show me around" offers in the pictures.
     await ctx.addInitScript(() => {
       const get = Storage.prototype.getItem;

@@ -23,3 +23,9 @@ yet: they wait for the owner's word.
   target, labour target, transfer charge), but the screen offers no branch row.
 - Two-step sign-in: if the owner loses the phone with the authenticator app,
   no screen offers a way back in (it is removed in Supabase Auth).
+- Till: collecting a pre-order (or making a customer invoice) can be refused
+  when the books hold less stock than needed and the rule asks for a manager,
+  but neither window offers a manager's approval: staff are stuck.
+- Till: "Discard" tells a cashier a manager will check Orders, a screen the
+  cashier cannot open (fine as information, but worth wording).
+- Till: the main screen has no heading ("Point of Sale" shows only when empty).

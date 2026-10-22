@@ -12,23 +12,14 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pageName } from "./shot-list.mjs";
+import { ROLES } from "./roles.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const SRC = join(ROOT, "docs", "guide", "src");
 const OUT = process.env.GUIDE_OUT || "/tmp/sixties-guide/out";
 mkdirSync(join(OUT, "shots"), { recursive: true });
 
-export const ROLES = [
-  ["owner", "Owner", "Everything, and the only one who changes who works here, the rules and the books' locks."],
-  ["general_manager", "General manager", "Runs the café day to day across every place: almost everything the owner does."],
-  ["branch_manager", "Branch manager", "Runs one place: the till, stock, staff hours, buying and that place's reports."],
-  ["cashier", "Cashier", "Sells at the till, takes payment and counts the drawer."],
-  ["barista", "Barista", "Sells at the till, records batches made and what is thrown away."],
-  ["inventory_counter", "Counter", "Counts the stock on the shelves."],
-  ["purchasing", "Purchasing", "Orders from suppliers, receives deliveries and moves stock between places."],
-  ["accountant", "Accountant", "Keeps the books: bills, expenses, the bank, payroll and the statements."],
-  ["auditor", "Auditor", "Reads the books, the reports and the audit trail; changes nothing."],
-];
+
 const ROLE_KEYS = ROLES.map((r) => r[0]);
 const ALIAS = {
   gm: "general_manager", "general manager": "general_manager", generalmanager: "general_manager",
