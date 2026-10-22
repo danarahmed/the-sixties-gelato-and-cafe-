@@ -51,6 +51,23 @@ language sql stable as $$
     from unnest(array['1000', '1005', '1010', '1020']) code
 $$;
 
+-- What the café paid out between two days (after the first, to the end of the
+-- second) under words its books had not seen twice before the first: what no
+-- forecast from its own records could foresee (a machine; the second of a
+-- quarterly rent, whose rhythm one payment does not tell).
+create or replace function sim.first_payments(p_from date, p_to date) returns numeric
+language sql stable as $$
+  select coalesce(sum(l.debit - l.credit), 0)
+    from journal_entry e join journal_line l on l.journal_entry_id = e.id join gl_account a on a.id = l.account_id
+   where e.business_id = sim.business() and e.status = 'published' and a.code in ('1000', '1005', '1010', '1020')
+     and e.reference_type in ('manual', 'expense')
+     and e.occurred_at >= ((p_from + 1)::timestamp at time zone 'Asia/Baghdad')
+     and e.occurred_at < ((p_to + 1)::timestamp at time zone 'Asia/Baghdad')
+     and (select count(*) from journal_entry o
+           where o.business_id = e.business_id and o.status = 'published' and o.description = e.description
+             and o.occurred_at < ((p_from + 1)::timestamp at time zone 'Asia/Baghdad')) < 2
+$$;
+
 -- The cash forecast's two baselines, p_days ahead of p_as_of: nothing
 -- changes; or the last four weeks' average day goes on.
 create or replace function sim.naive_cash(p_as_of date, p_days int)

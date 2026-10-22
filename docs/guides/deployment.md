@@ -4119,8 +4119,8 @@ Migration `0092` brings smarter buying:
   (days)**), else read from the days its deliveries came, else a week.
 - **What to buy orders what would run out before the next delivery could
   come:** enough to last until this order arrives, late as the supplier has
-  come lately, with some kept for busier days than usual; up to what lasts
-  until the delivery after it. The levels it suggests are shown beside any
+  come lately, with some kept for busier days than usual; and up to that
+  and what is used until the delivery after it. The levels it suggests are shown beside any
   set on the item, which still rule. An item with enough but low is topped up
   when its supplier is ordered from anyway. Another supplier 3% or more
   cheaper is pointed out, with a tap to order from it.

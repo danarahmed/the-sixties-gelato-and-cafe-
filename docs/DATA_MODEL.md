@@ -2095,7 +2095,8 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   debits of 1005 from 1000 — and the card money into 1010); the card money
   reaching the bank on the weekdays `card_settlement` has come (half the
   weeks of eight or more), less the share the bank kept; the safe banked on
-  the weekdays it has been, as much of it as before; each bill still owed
+  the weekdays it has been, as much of it as before, as it stood that
+  morning (the day's own takings reach it at the close); each bill still owed
   (`purchase_invoice`, less what was paid of it since) on its due date,
   moved to the weekdays the café pays bills (a quarter of its
   `supplier_payment`s or more over three months) and as late as it has paid
@@ -2132,8 +2133,9 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   more, each by its weekday), late as the supplier has come lately, with
   1.65 times how far a day's use strays from its weekday's (over the days
   judged) for the days to the delivery — enough 19 times in 20; it is
-  ordered up to what lasts until the delivery after it (`target_from`
-  `cover`). The suggested levels (`suggested_reorder`, `suggested_target`)
+  ordered up to that and what is used until the delivery after it
+  (`target_from` `cover`; the margin kept once). Use is judged from the
+  start of the day four weeks ago, the same at any hour. The suggested levels (`suggested_reorder`, `suggested_target`)
   are given beside any set on the item (`own_reorder`), which still rules.
   Also: `late_days`, `every_days`, `every_from`, `cycle_use`, `late_use`,
   `spread`, `top_up` and `top_up_packs` (enough, but less than halfway to

@@ -177,15 +177,24 @@ def cash(fn, days=7):
         target = as_of + dt.timedelta(days=days)
         if target > end:
             break
-        (said, actual), = q(f"select {fn}('{as_of}', {days}), sim.cash_on('{target}')")
-        errors.append((as_of, float(said), float(actual)))
+        (said, actual, new), = q(f"select {fn}('{as_of}', {days}), sim.cash_on('{target}'), "
+                                 f"sim.first_payments('{as_of}', '{target}')")
+        errors.append((as_of, float(said), float(actual), float(new)))
     print(f"Cash ahead backtest: {fn}, {days} days ahead, {len(errors)} Sundays\n")
-    within = sum(1 for _, s, a in errors if a and abs(s - a) / abs(a) <= 0.10)
-    mape = sum(abs(s - a) / abs(a) for _, s, a in errors if a) / len(errors)
+    within = sum(1 for _, s, a, _ in errors if a and abs(s - a) / abs(a) <= 0.10)
+    mape = sum(abs(s - a) / abs(a) for _, s, a, _ in errors if a) / len(errors)
     print(f"  Within 10%: {within} of {len(errors)} weeks; average miss {mape * 100:.1f}%")
     worst = sorted(errors, key=lambda e: -abs(e[1] - e[2]) / max(1, abs(e[2])))[:5]
-    for as_of, s, a in worst:
-        print(f"    {as_of}: said {money(s)}, was {money(a)}")
+    for as_of, s, a, n in worst:
+        print(f"    {as_of}: said {money(s)}, was {money(a)}"
+              + (f" ({money(-n)} of it paid out for the first time)" if n else ""))
+    # What could be known: a payment the books had not seen twice before (a
+    # machine, the first of a quarterly rent) no forecast from them can foresee.
+    known = [(as_of, s, a - n) for as_of, s, a, n in errors]
+    k_within = sum(1 for _, s, a in known if a and abs(s - a) / abs(a) <= 0.10)
+    k_mape = sum(abs(s - a) / abs(a) for _, s, a in known if a) / len(known)
+    print(f"  Leaving out what was paid for the first time: within 10% {k_within} of {len(known)} weeks; "
+          f"average miss {k_mape * 100:.1f}%")
     passed = within == len(errors)
     print(f"\n  {'PASSES' if passed else 'DOES NOT PASS'} SMART_PLAN's mark for part 5 (within 10% every week)")
     return passed
@@ -219,6 +228,21 @@ def shortfalls(fn):
         warned_all = warned_all and warned is not None
         print(f"  {'✓' if warned else '✗'} from {first}, {len(spell)} day(s): "
               + (f"warned {warned} days before" if warned else "not warned 3 days or more before"))
+    # And how often it cried wolf: each Sunday, the days 3 to 14 ahead it
+    # warned of on which the bank in fact held something.
+    warned_days = false_days = near = 0
+    for as_of in sundays(start, end, after_days=0):
+        for x, in q(f"select * from {fn}('{as_of}')"):
+            d = dt.date.fromisoformat(x)
+            if d > end or (d - as_of).days < 3:
+                continue
+            warned_days += 1
+            if d not in below:
+                false_days += 1
+                (bank,), = q(f"select sim.bank_on('{d}')")
+                near += float(bank) < 2_000_000
+    print(f"\n  Days warned of (3 to 14 days ahead, each Sunday): {warned_days}; the bank in fact held "
+          f"something on {false_days} of them ({near} of those under 2,000,000 IQD)")
     passed = warned_all
     print(f"\n  {'PASSES' if passed else 'DOES NOT PASS'} SMART_PLAN's mark for part 5 "
           f"(every real shortfall warned of at least 3 days before)")

@@ -180,8 +180,8 @@ select pg_temp.mv('c0000000-0000-0000-0000-0000000000c1', 'sale_consumption', -7
 select pg_temp.mv('c0000000-0000-0000-0000-0000000000c1', 'waste', -1400, 14, '20:00');
 select test.act_as('manager@example.com');
 select test.eq(pg_temp.buys('Learn cones'),
-  'order used 9100 wasted 1400 daily 325 weekday 2100 plan 0/0 reorder 3222.458 use up to 6756.093 cover order 5257 each',
-  'cones: use without what was thrown away (shown apart), and today and tomorrow judged each by its weekday — 2,100 for today, none tomorrow — where 325 a day would have said 650; with enough over for a day''s use straying as far from its weekday''s as it has (0092), and up to a week more');
+  'order used 9100 wasted 1400 daily 325 weekday 2100 plan 0/0 reorder 3222.458 use up to 5497.458 cover order 3998 each',
+  'cones: use without what was thrown away (shown apart), and today and tomorrow judged each by its weekday — 2,100 for today, none tomorrow — where 325 a day would have said 650; with enough over for a day''s use straying as far from its weekday''s as it has (0092), and up to a week''s use more');
 
 -- Cocoa again, with four weeks of batches behind it on this weekday: what
 -- today's plan needs beyond what those batches use is added.
@@ -190,7 +190,7 @@ select pg_temp.mv((select cocoa from ids), 'opening_balance', 1500, 30, '08:00')
 select pg_temp.mv((select cocoa from ids), 'production_consumption', -500, d, '09:00') from unnest(array[7, 14, 21]) d;
 select test.act_as('manager@example.com');
 select test.eq(pg_temp.buys('Learn cocoa'),
-  'order used 1500 wasted 0 daily 53.571 weekday 375 plan 1000/625 reorder 1194.454 use up to 1787.5 cover order 1488 g',
+  'order used 1500 wasted 0 daily 53.571 weekday 375 plan 1000/625 reorder 1194.454 use up to 1569.454 cover order 1270 g',
   'its weekday''s batches use 375 g; today''s plan needs 1,000: the 625 beyond is added to what the days ahead use (and enough over for its use straying from its weekday''s, 0092)');
 
 -- Cream, 20 days of a litre a day, from the dairy by the carton, a par level of 10 L.

@@ -184,6 +184,9 @@ declare
   v_target numeric; v_target_from text; v_position numeric; v_status text; v_factor numeric; v_pack text;
   v_packs numeric; v_price numeric; v_price_from text; v_price_on date;
   v_tz text := (select timezone from business where id = v_business);
+  -- The use judged: from the start of the day four weeks ago (0092), so the
+  -- same at any hour of today.
+  v_use_from timestamptz := (v_today - 28)::timestamp at time zone v_tz;
   v_plan jsonb; v_wd numeric[]; v_forecast text; v_lead_use numeric; v_plan_need numeric; v_plan_extra numeric;
   v_wd_batches numeric; v_cap numeric; v_capped boolean; v_back uuid[];
   -- 0092: each supplier's terms as its deliveries have shown them, read once.
@@ -202,7 +205,7 @@ begin
     with moves as (
       select m.item_id, sum(m.base_quantity_signed) as on_hand, min(m.occurred_at) as first_at,
              -sum(m.base_quantity_signed) filter (
-                where m.occurred_at >= v_now - interval '28 days'
+                where m.occurred_at >= v_use_from
                   and ((stock_card_kind(m.type, m.reference_type, m.base_quantity_signed) in ('sold', 'batches', 'wasted')
                         or sent_away(m))
                        and not (m.type in ('waste', 'spoilage', 'expired')
@@ -210,7 +213,7 @@ begin
                            and m.reference_id = any(v_back)))))
                as used,
              -sum(m.base_quantity_signed) filter (
-                where m.occurred_at >= v_now - interval '28 days'
+                where m.occurred_at >= v_use_from
                   and (m.type in ('waste', 'spoilage', 'expired')
                        or (m.type = 'reversal' and m.reference_type = 'loss_review'
                            and m.reference_id = any(v_back))))
@@ -354,7 +357,7 @@ begin
                             -sum(m.base_quantity_signed) as qty
                        from inventory_movement m
                       where m.business_id = v_business and m.location_id = v_loc and m.item_id = x.id
-                        and m.occurred_at >= v_now - interval '28 days'
+                        and m.occurred_at >= v_use_from
                         and ((stock_card_kind(m.type, m.reference_type, m.base_quantity_signed) in ('sold', 'batches', 'wasted')
                         or sent_away(m))
                        and not (m.type in ('waste', 'spoilage', 'expired')
@@ -413,13 +416,13 @@ begin
     v_reorder := null; v_reorder_from := null; v_target := null; v_target_from := null;
     -- The levels its use and its supplier suggest (0092), beside any set by
     -- hand: to last until this order comes, late as it has come lately; and up
-    -- to what lasts until the one after it could come.
+    -- to that and what is used until the one after it could come (the margin
+    -- for a busier day kept once, at the reorder level).
     v_suggest_reorder := null; v_suggest_target := null;
     if v_daily > 0 then
       v_suggest_reorder := v_lead_use + v_late_use + 1.65 * v_sd * sqrt(v_lead + 1) + v_plan_extra
                            + coalesce(greatest(x.safety_stock_base, 0), 0);
-      v_suggest_target := v_lead_use + v_cycle_use + v_late_use + 1.65 * v_sd * sqrt(v_lead + v_every + 1)
-                          + v_plan_extra + coalesce(greatest(x.safety_stock_base, 0), 0);
+      v_suggest_target := v_suggest_reorder + v_cycle_use;
     end if;
     if x.min_level_base > 0 then
       v_reorder := x.min_level_base + v_plan_extra; v_reorder_from := 'item';

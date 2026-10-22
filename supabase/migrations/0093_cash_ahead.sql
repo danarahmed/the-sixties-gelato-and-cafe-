@@ -297,6 +297,14 @@ begin
       v_card := 0;
     end if;
     v_card := v_card + coalesce(v_card_in[v_wd], 0);
+    -- The safe banked on its weekdays, as it stood that morning: the day's
+    -- own takings reach it at the close, after the bank's hours.
+    v_move := 0;
+    if v_wd = any(v_bank_days) and v_safe > 0 then
+      v_move := floor(v_safe * v_bank_share / 1000) * 1000;
+      v_safe := v_safe - v_move;
+      v_bank := v_bank + v_move;
+    end if;
     -- The events of the day.
     select coalesce(sum((x ->> 'amount')::numeric) filter (where x ->> 'from' = 'safe'), 0),
            coalesce(sum((x ->> 'amount')::numeric) filter (where x ->> 'from' <> 'safe'), 0)
@@ -304,13 +312,6 @@ begin
       from jsonb_array_elements(v_events) x where (x ->> 'day')::date = d;
     v_safe := v_safe + v_in_safe + v_out_safe;
     v_bank := v_bank + v_in_bank + v_out_bank;
-    -- The safe banked on its weekdays.
-    v_move := 0;
-    if v_wd = any(v_bank_days) and v_safe > 0 then
-      v_move := floor(v_safe * v_bank_share / 1000) * 1000;
-      v_safe := v_safe - v_move;
-      v_bank := v_bank + v_move;
-    end if;
     v_days := v_days || jsonb_build_object(
       'day', d, 'safe', round(v_safe), 'bank', round(v_bank), 'card', round(v_card),
       'total', round(v_till + v_safe + v_card + v_bank + v_other),
