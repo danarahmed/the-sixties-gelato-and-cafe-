@@ -59,6 +59,14 @@ on conflict (supplier) do update set every_days = excluded.every_days, cover_day
 update supplier set lead_time_days = case name when 'Sulaymaniyah Dairy Co.' then 1
                                                 when 'Kurdistan Coffee Imports' then 3 else 2 end
  where business_id = sim.business();
+-- How often each delivers (once 0092 is applied: What to buy's drafts read it).
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_name = 'supplier' and column_name = 'delivers_every_days') then
+    execute $q$update supplier set delivers_every_days = case name when 'Sulaymaniyah Dairy Co.' then 2
+                                                              when 'Kurdistan Coffee Imports' then 7 else 14 end
+                where business_id = sim.business()$q$;
+  end if;
+end $$;
 
 -- Prices per gram, millilitre or piece, in IQD, as an Erbil café pays in 2025.
 insert into sim.supply (item, supplier, price, daily) values

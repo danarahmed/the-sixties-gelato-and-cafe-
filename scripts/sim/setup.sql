@@ -155,8 +155,15 @@ begin
     v_have := coalesce((select qty from stock_balance where item_id = r.item and location_id = sim.main()), 0);
     v_batches := ceil((v_sold * p_share - v_have) / r.yield);
     if v_batches > 0 then
-      perform record_production(r.recipe, v_batches, p_location => sim.main(), p_stock_approval => null);
-      n := n + v_batches::int;
+      -- A batch the café's rules refuse (an ingredient run out) is kept with
+      -- the refused sales, for the buying backtest.
+      begin
+        perform record_production(r.recipe, v_batches, p_location => sim.main(), p_stock_approval => null);
+        n := n + v_batches::int;
+      exception when others then
+        insert into sim.refused (cashier, items, reason)
+        values ('kitchen', (select name from recipe where id = r.recipe), sqlerrm);
+      end;
     end if;
   end loop;
   return n;
@@ -291,3 +298,60 @@ exception when others then
   return null;
 end $$;
 grant execute on function sim.void_last(text, text) to authenticated;
+
+-- ---------------------------------------------------------------- buying by drafts
+-- With year.py --buying drafts (step 8's backtest): each morning What to buy's
+-- drafts are approved and sent (by the owner), and each order comes when its
+-- supplier delivers: the dairy in a day, the coffee importer in three, the
+-- packaging in two, now and then late (as often and as late as in the habit;
+-- drawn from the order's number, so the same year is the same). What came is
+-- the order's lines, at the day's price, billed as a delivery is.
+create table if not exists sim.arrival (
+  po_id uuid primary key, supplier text not null, due date not null, received boolean not null default false
+);
+
+create or replace function sim.order_drafts() returns int
+language plpgsql security definer set search_path = public, sim as $$
+declare v jsonb; o jsonb; n int := 0; v_day date := business_local_date(sim.business(), now());
+        v_name text; v_lead int; v_h int; v_late int;
+begin
+  v := draft_purchase_orders(sim.main(), gen_random_uuid());
+  for o in select * from jsonb_array_elements(v -> 'orders') loop
+    perform approve_po((o ->> 'po_id')::uuid, gen_random_uuid());
+    perform send_po((o ->> 'po_id')::uuid, gen_random_uuid());
+    v_name := o ->> 'supplier';
+    v_lead := case v_name when 'Sulaymaniyah Dairy Co.' then 1 when 'Kurdistan Coffee Imports' then 3 else 2 end;
+    v_h := abs(hashtext('late:' || (o ->> 'po_no'))) % 100;
+    v_late := case v_name
+      when 'Sulaymaniyah Dairy Co.' then case when v_h < 15 then 1 else 0 end
+      when 'Kurdistan Coffee Imports' then case when v_h < 20 then 1 + v_h % 3 else 0 end
+      else case when v_h < 15 then 1 + v_h % 2 else 0 end end;
+    insert into sim.arrival values ((o ->> 'po_id')::uuid, v_name, v_day + v_lead + v_late);
+    n := n + 1;
+  end loop;
+  return n;
+end $$;
+grant execute on function sim.order_drafts() to authenticated;
+
+create or replace function sim.receive_due() returns int
+language plpgsql security definer set search_path = public, sim as $$
+declare a record; v_lines jsonb; v_res jsonb; v_sup uuid; n int := 0;
+        v_day date := business_local_date(sim.business(), now());
+begin
+  for a in select * from sim.arrival where not received and due <= v_day order by due, supplier loop
+    select jsonb_agg(jsonb_build_object(
+             'item_id', l.item_id, 'qty', l.order_qty, 'unit_code', l.order_unit_code,
+             'unit_price', round(sim.price(i.name, v_day) * unit_factor(l.item_id, l.order_unit_code), 4))
+             order by l.line_no)
+      into v_lines
+      from purchase_order_line l join item i on i.id = l.item_id where l.purchase_order_id = a.po_id;
+    v_sup := (select supplier_id from purchase_order where id = a.po_id);
+    v_res := receive_goods(v_sup, v_lines, p_location => sim.main(), p_confirm => true, p_purchase_order => a.po_id);
+    perform record_bill(v_sup, 'SIM-' || (v_res ->> 'receipt_no'), v_day, (v_res ->> 'value')::numeric, 30,
+                        (v_res ->> 'receipt_id')::uuid, null);
+    update sim.arrival set received = true where po_id = a.po_id;
+    n := n + 1;
+  end loop;
+  return n;
+end $$;
+grant execute on function sim.receive_due() to authenticated;

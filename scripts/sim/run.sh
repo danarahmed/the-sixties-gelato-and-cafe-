@@ -13,7 +13,11 @@
 #   scripts/test-sql.sh tests/sql/smoke.test.sql   # (re)builds the template
 #   scripts/sim/run.sh                       # about 40 minutes
 #   scripts/sim/run.sh --days 30             # a first month only, to try it
+#   SIM_DB=sixties_sim_drafts scripts/sim/run.sh --buying drafts
+#                                            # the same year, bought through
+#                                            # What to buy's drafts (step 8)
 #
+# One year at a time: the server has one clock.
 # Then: psql -h 127.0.0.1 -p 5433 -U postgres sixties_sim, and
 # python3 scripts/sim/backtest.py for the backtests.
 set -euo pipefail
@@ -24,6 +28,7 @@ PGUSER=${PGUSER:-postgres}
 SRC_PORT=${PGPORT:-5432}
 SIM_PORT=${SIM_PORT:-5433}
 SIM_DIR=${SIM_DIR:-/var/lib/postgresql/sim}
+SIM_DB=${SIM_DB:-sixties_sim}
 FAKETIME_LIB=${FAKETIME_LIB:-/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1}
 WORK=$(mktemp -d)
 PSQL=(psql -h "$PGHOST" -p "$SIM_PORT" -U "$PGUSER" -X -q -v ON_ERROR_STOP=1)
@@ -51,23 +56,23 @@ pg_dumpall -h "$PGHOST" -p "$SRC_PORT" -U "$PGUSER" --roles-only 2>/dev/null \
   | grep -v '^CREATE ROLE postgres;' > "$WORK/roles.sql"
 pg_dump -h "$PGHOST" -p "$SRC_PORT" -U "$PGUSER" -Fc sixties_tpl > "$WORK/tpl.dump"
 psql -h "$PGHOST" -p "$SIM_PORT" -U "$PGUSER" -X -q -f "$WORK/roles.sql" > /dev/null 2>&1 || true
-"${PSQL[@]}" -d postgres -c "drop database if exists sixties_sim with (force)" -c "create database sixties_sim"
-pg_restore -h "$PGHOST" -p "$SIM_PORT" -U "$PGUSER" -d sixties_sim --no-owner --role="$PGUSER" "$WORK/tpl.dump"
-"${PSQL[@]}" -d sixties_sim -c "select test.golden_catalogue()" > /dev/null
-"${PSQL[@]}" -d sixties_sim -f scripts/sim/age.sql > /dev/null
+"${PSQL[@]}" -d postgres -c "drop database if exists $SIM_DB with (force)" -c "create database $SIM_DB"
+pg_restore -h "$PGHOST" -p "$SIM_PORT" -U "$PGUSER" -d "$SIM_DB" --no-owner --role="$PGUSER" "$WORK/tpl.dump"
+"${PSQL[@]}" -d "$SIM_DB" -c "select test.golden_catalogue()" > /dev/null
+"${PSQL[@]}" -d "$SIM_DB" -f scripts/sim/age.sql > /dev/null
 
 echo "▸ the café on the eve of its year"
-"${PSQL[@]}" -d sixties_sim -f scripts/sim/setup.sql > /dev/null
-"${PSQL[@]}" -d sixties_sim -c "insert into sim.config values ('clock_file', '$SIM_DIR/clock')
+"${PSQL[@]}" -d "$SIM_DB" -f scripts/sim/setup.sql > /dev/null
+"${PSQL[@]}" -d "$SIM_DB" -c "insert into sim.config values ('clock_file', '$SIM_DIR/clock')
   on conflict (key) do update set value = excluded.value" > /dev/null
-"${PSQL[@]}" -d sixties_sim -f scripts/sim/cafe.sql > /dev/null
+"${PSQL[@]}" -d "$SIM_DB" -f scripts/sim/cafe.sql > /dev/null
 
 echo "▸ the year, day by day (log: $WORK/year.log)"
 python3 scripts/sim/year.py "$@" \
-  | psql -h "$PGHOST" -p "$SIM_PORT" -U "$PGUSER" -X -q -d sixties_sim > "$WORK/year.out" 2> "$WORK/year.log" || true
+  | psql -h "$PGHOST" -p "$SIM_PORT" -U "$PGUSER" -X -q -d "$SIM_DB" > "$WORK/year.out" 2> "$WORK/year.log" || true
 
 echo "▸ done"
-"${PSQL[@]}" -d sixties_sim -At -F' | ' -c "
+"${PSQL[@]}" -d "$SIM_DB" -At -F' | ' -c "
   select 'sales ' || count(*) || ', voided ' || count(*) filter (where status = 'voided')
          || ', from ' || min(placed_at)::date || ' to ' || max(placed_at)::date from sales_order"
 echo "  refused by the café's own rules: $(grep -c '^ERROR' "$WORK/year.log" || true) (see $WORK/year.log)"

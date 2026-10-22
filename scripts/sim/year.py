@@ -36,6 +36,10 @@ MORNING = ["Avin", "Dara", "Avin", "Dara", "Avin", "Dara", "Avin"]
 EVENING = ["Karwan", "Bana", "Karwan", "Bana", "Karwan", "Bana", "Karwan"]
 LANA_FROM = dt.date(2026, 8, 1)
 
+# With --buying drafts: the habit for the first four weeks (What to buy judges
+# use over four weeks), What to buy's drafts from then.
+DRAFTS_FROM_DAY = 28
+
 # The planted problems (the answer key is sim.planted, written by cafe.sql).
 DARA_DISCOUNTS_FROM = dt.date(2025, 12, 20)
 KARWAN_VOIDS_FROM = dt.date(2026, 3, 15)
@@ -81,9 +85,14 @@ def in_ramadan(day):
 
 
 class Year:
-    def __init__(self, seed, days):
+    def __init__(self, seed, days, buying="habit"):
         self.r = random.Random(seed)
         self.days = days
+        # How the café buys: its own simple habit (each supplier's delivery
+        # on its days, ordered as it comes), or, from the fifth week, through
+        # What to buy's drafts (step 8), approved and sent each morning and
+        # delivered as each supplier takes.
+        self.buying = buying
         self.who = None  # who the session is acting as
         self.order_no = 50000
         self.out = sys.stdout
@@ -190,16 +199,27 @@ class Year:
 
         # Deliveries: the dairy every other day, the coffee importer on
         # Sundays, the packaging every other Saturday; now and then late.
+        # The draws are made the same way whichever way the café buys, so the
+        # customers are the same.
         k = (day - START).days
+        drafts = self.buying == "drafts" and k >= DRAFTS_FROM_DAY
         if k % 2 == 0:
             late = 1 if r.random() < 0.15 else 0
-            self.later(day, late, 9, 0, ("deliver", "Sulaymaniyah Dairy Co."))
+            if not drafts:
+                self.later(day, late, 9, 0, ("deliver", "Sulaymaniyah Dairy Co."))
         if day.weekday() == 6:
             late = r.choice([1, 2, 3]) if r.random() < 0.2 else 0
-            self.later(day, late, 11, 0, ("deliver", "Kurdistan Coffee Imports"))
+            if not drafts:
+                self.later(day, late, 11, 0, ("deliver", "Kurdistan Coffee Imports"))
         if day.weekday() == 5 and (k // 7) % 2 == 0:
             late = r.choice([1, 2]) if r.random() < 0.15 else 0
-            self.later(day, late, 12, 0, ("deliver", "City Packaging Supplies"))
+            if not drafts:
+                self.later(day, late, 12, 0, ("deliver", "City Packaging Supplies"))
+        if self.buying == "drafts":
+            # What was ordered and is due comes in; then the morning's drafts.
+            ev(9, 0, ("arrivals",))
+            if drafts:
+                ev(9, 30, ("drafts",))
         for hour, minute, action in self.pending.pop(day, []):
             ev(hour, minute, action)
 
@@ -300,6 +320,12 @@ class Year:
             _, what, amount, code = action
             self.act(OWNER)
             self.sql(f"select record_expense('{what}', {amount}, '{code}', 'bank', current_date, sim.main(), false, gen_random_uuid());")
+        elif kind == "arrivals":
+            self.act(OWNER)
+            self.sql("select sim.receive_due();")
+        elif kind == "drafts":
+            self.act(OWNER)
+            self.sql("select sim.order_drafts();")
         elif kind == "payroll":
             self.act(OWNER)
             self.sql(
@@ -354,8 +380,10 @@ def main():
     a = argparse.ArgumentParser()
     a.add_argument("--days", type=int, default=None, help="only the first N days")
     a.add_argument("--seed", type=int, default=2026)
+    a.add_argument("--buying", choices=["habit", "drafts"], default="habit",
+                   help="the café's own ordering habit, or What to buy's drafts (step 8)")
     args = a.parse_args()
-    Year(args.seed, args.days).run()
+    Year(args.seed, args.days, args.buying).run()
 
 
 if __name__ == "__main__":

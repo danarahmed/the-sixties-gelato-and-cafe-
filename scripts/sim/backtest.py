@@ -10,7 +10,7 @@ stands in: the simplest rule it must beat.
     python3 scripts/sim/backtest.py summary            # is the year believable?
     python3 scripts/sim/backtest.py watch [--fn F]     # part 2: problems people hide
     python3 scripts/sim/backtest.py cash [--fn F]      # part 5: cash ahead
-    python3 scripts/sim/backtest.py buying             # part 3: stock-outs and stock held
+    python3 scripts/sim/backtest.py buying             # part 3: the habit against the drafts year
     python3 scripts/sim/backtest.py all
 
 F is a SQL function on the copy: for watch, F(as_of date) returning
@@ -25,11 +25,16 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DB = ["psql", "-h", os.environ.get("PGHOST", "127.0.0.1"), "-p", os.environ.get("SIM_PORT", "5433"),
-      "-U", os.environ.get("PGUSER", "postgres"), "-X", "-q", "-At", "-F", "\t", "-d", "sixties_sim"]
+      "-U", os.environ.get("PGUSER", "postgres"), "-X", "-q", "-At", "-F", "\t", "-d",
+      os.environ.get("SIM_DB", "sixties_sim")]
 
 
-def q(sql):
-    out = subprocess.run(DB + ["-c", sql], capture_output=True, text=True)
+def q(sql, db=None, port=None):
+    """Rows of a query on the year's copy (or another database, on another port)."""
+    cmd = DB[:-1] + [db or DB[-1], "-c", sql]
+    if port:
+        cmd[cmd.index("-p") + 1] = port
+    out = subprocess.run(cmd, capture_output=True, text=True)
     if out.returncode != 0:
         sys.exit(f"✗ {out.stderr.strip()}")
     return [line.split("\t") for line in out.stdout.splitlines() if line]
@@ -170,31 +175,95 @@ def cash(fn, days=7):
 
 
 # ---------------------------------------------------------------------- buying
-def buying():
-    """Part 3's pass mark: nothing out of stock, at most 25% extra stock on average.
-    Until smart buying exists, this scores the simulated café's own simple habit
-    (order up to so many days of the last fortnight's use)."""
+def stock_story(db, port, first, last):
+    """For each item the café buys: its stock at each day's end, what it used
+    each day and the days its deliveries came, from the year's movements."""
+    items = {name: float(price) for name, price in q("select item, price from sim.supply", db, port)}
+    used, came, opening = {}, {}, {}
+    for name, day, u, c in q(f"""
+        select i.name, (m.occurred_at at time zone 'Asia/Baghdad')::date,
+               -coalesce(sum(m.base_quantity_signed) filter (where m.type <> 'purchase_receipt'), 0),
+               coalesce(sum(m.base_quantity_signed) filter (where m.type = 'purchase_receipt'), 0)
+          from inventory_movement m join item i on i.id = m.item_id
+         where i.name in (select item from sim.supply) and m.location_id = sim.main()
+         group by 1, 2""", db, port):
+        d = dt.date.fromisoformat(day)
+        if d < first:
+            opening[name] = opening.get(name, 0) - float(u) + float(c)
+        else:
+            used[(name, d)] = float(u)
+            came[(name, d)] = float(c)
+    return items, used, came, opening
+
+
+def buying_score(db, port, first, last):
+    """Sales lost to a shortage of something bought, and the stock held against
+    what was needed: a café that knew what each day would use, with the same
+    deliveries, would end each day holding just what lasts until the next one."""
+    lost = q(f"""select count(*) filter (where cashier <> 'kitchen'
+                                         and substring(reason from 'of (.+) is in stock') in (select item from sim.supply)),
+                        count(*) filter (where cashier <> 'kitchen' and reason like '%is in stock%'),
+                        count(*) filter (where cashier = 'kitchen')
+                   from sim.refused
+                  where (at at time zone 'Asia/Baghdad')::date between '{first}' and '{last}'""", db, port)[0]
+    items, used, came, opening = stock_story(db, port, first - dt.timedelta(days=1), last + dt.timedelta(days=60))
+    held_v = need_v = 0.0
+    per = []
+    for name, price in items.items():
+        days = [first + dt.timedelta(days=k) for k in range((last - first).days + 1)]
+        horizon = [first + dt.timedelta(days=k) for k in range((last - first).days + 60)]
+        arrivals = [d for d in horizon if came.get((name, d), 0) > 0]
+        held, h, nv, hv = opening.get(name, 0.0), [], 0.0, 0.0
+        for d in horizon:
+            held += came.get((name, d), 0) - used.get((name, d), 0)
+            h.append((d, held))
+        for d, held in h:
+            if d > last:
+                break
+            nxt = next((a for a in arrivals if a > d), None)
+            if nxt is None:
+                continue
+            need = sum(used.get((name, d + dt.timedelta(days=k)), 0) for k in range(1, (nxt - d).days))
+            hv += max(held, 0) * price
+            nv += need * price
+        held_v += hv
+        need_v += nv
+        per.append((name, hv / max(len(days), 1), nv / max(len(days), 1)))
+    return dict(lost_bought=int(lost[0]), lost_any=int(lost[1]), kitchen=int(lost[2]),
+                held=held_v / max((last - first).days + 1, 1), need=need_v / max((last - first).days + 1, 1),
+                per=sorted(per, key=lambda r: -r[1]))
+
+
+def buying(dbs):
+    """Part 3's pass mark: nothing out of stock, at most 25% more stock held than needed."""
     start, end = year()
-    print("Buying backtest: the simulated café's own ordering habit (the baseline)\n")
-    rows = q("""select to_char(at at time zone 'Asia/Baghdad', 'YYYY-MM'), count(*),
-                       string_agg(distinct substring(reason from 'of ([A-Za-z ]+) is in stock'), ', ')
-                  from sim.refused where reason like '%is in stock%' group by 1 order by 1""")
-    total = sum(int(r[1]) for r in rows)
-    print(f"  Sales lost to something out of stock: {total}")
-    for m, n, what in rows:
-        print(f"    {m}  {n:>4}  {what}")
-    held = q("""
-      with u as (select item_id, -sum(base_quantity_signed) / 365.0 as daily
-                   from inventory_movement where type in ('sale_consumption', 'production_consumption')
-                    and location_id = sim.main() group by item_id),
-           v as (select i.name, b.qty, u.daily from stock_balance b join u using (item_id)
-                   join item i on i.id = b.item_id where b.location_id = sim.main() and u.daily > 0)
-      select name, round(qty / daily, 1) from v order by 2 desc""")
-    print("\n  Days of use held at the year's end, by item (the needs differ by supplier):")
-    for name, d in held[:10]:
-        print(f"    {name:<32} {d:>6} days")
-    print("\n  The real feature (step 8) must lose no sale to a shortage and hold at most 25% more than it needs.")
-    return total == 0
+    first, last = start + dt.timedelta(days=35), end - dt.timedelta(days=7)
+    print(f"Buying backtest: {first} to {last} (from the sixth week, when What to buy has four weeks behind it)\n")
+    result = None
+    for label, db, port in dbs:
+        if not q("select 1 from pg_database where datname = '" + db + "'", "postgres", port):
+            print(f"  {label}: no year in {db} (SIM_DB={db} scripts/sim/run.sh{' --buying drafts' if 'drafts' in db else ''})\n")
+            continue
+        r = buying_score(db, port, first, last)
+        if not r["need"]:
+            print(f"  {label} ({db}): its year has not reached {last} yet\n")
+            continue
+        extra = r["held"] / r["need"] - 1 if r["need"] else 0
+        print(f"  {label} ({db}):")
+        print(f"    sales lost to something bought running out: {r['lost_bought']}"
+              f"  (to anything: {r['lost_any']}; batches the kitchen could not make: {r['kitchen']})")
+        print(f"    stock held on average {money(r['held'])}, needed {money(r['need'])}: {extra * 100:+.0f}%")
+        for name, hv, nv in r["per"][:6]:
+            print(f"      {name:<32} held {money(hv):>14}  needed {money(nv):>14}")
+        print()
+        result = (r, extra)
+    if result is None:
+        return False
+    r, extra = result
+    passed = r["lost_bought"] == 0 and r["kitchen"] == 0 and extra <= 0.25
+    print(f"  {'PASSES' if passed else 'DOES NOT PASS'} SMART_PLAN's mark for part 3 "
+          f"(no sale lost to a shortage; at most 25% more stock than needed)")
+    return passed
 
 
 def main():
@@ -217,7 +286,9 @@ def main():
             cash("sim.naive_cash_trend", args.days)
         print()
     if args.what in ("buying", "all"):
-        buying()
+        buying([("The café's own habit", os.environ.get("SIM_DB", "sixties_sim"), None),
+                ("What to buy's drafts (step 8)", os.environ.get("SIM_DRAFTS_DB", "sixties_sim_drafts"),
+                 os.environ.get("SIM_DRAFTS_PORT"))])
 
 
 if __name__ == "__main__":
