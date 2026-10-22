@@ -7827,3 +7827,23 @@ details.page-intro > p {
   width: 8ch;
   padding: 6px 8px;
 }
+
+/* ---------------------------------------------------------------- cash ahead (0093) */
+.cash-warning {
+  display: grid;
+  gap: 4px;
+  border-inline-start: 4px solid var(--err);
+}
+.cash-in {
+  color: var(--ok, inherit);
+}
+
+/* ---------------------------------------------------------------- watch list (0094) */
+.watch-finding {
+  display: grid;
+  gap: 6px;
+  border-inline-start: 4px solid var(--warn);
+}
+.watch-finding.strong {
+  border-inline-start-color: var(--err);
+}

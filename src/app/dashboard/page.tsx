@@ -52,6 +52,7 @@ import { GettingSetUp } from "@/components/dashboard/GettingSetUp";
 import { PageIntro } from "@/components/PageIntro";
 import { sortAlerts } from "@/lib/alerts";
 import { dashLayout, inOrder } from "@/lib/dashboardLayout";
+import { getWatchList, watchMaySee } from "@/lib/db/watch";
 
 export const dynamic = "force-dynamic";
 
@@ -72,6 +73,10 @@ function hoursOf(a: SalesAnalysis | null): HourSales[] {
 export default async function DashboardPage() {
   const profile = await requirePermission("profit.view");
   const [t, msg, locale] = await Promise.all([getT(), getMsg(), getLocale()]);
+  // The watch list's open findings (0094), for those who may read it; none before 0094.
+  const watchOpen = (await watchMaySee())
+    ? ((await getWatchList())?.findings ?? []).filter((f) => f.status === "open")
+    : [];
   const today = businessToday(profile.timezone);
   const now = dateTimeIn(profile.timezone, new Date().toISOString());
   const hour = Number(now.slice(11, 13));
@@ -736,6 +741,16 @@ export default async function DashboardPage() {
               </div>
 
               <div className="dash-side">
+                {/* The watch list (0094): private, for the owner (and the general manager if allowed). */}
+                {watchOpen.length > 0 && (
+                  <section className="card watch-finding" data-testid="dash-watch">
+                    <h3 className="viz-title">{t("Watch list")}</h3>
+                    <p style={{ margin: 0 }}>
+                      {t("{n} thing(s) worth a look", { n: watchOpen.length })}
+                    </p>
+                    <Link href="/reports/watch">{t("Open the watch list")}</Link>
+                  </section>
+                )}
                 {inOrder(layout.side, {
                   sells: (
                     <Fragment key="sells">

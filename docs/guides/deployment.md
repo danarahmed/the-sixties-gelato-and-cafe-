@@ -87,6 +87,8 @@ Plan a short window when the café is closed.
 | Tips and a service charge (`0090`)         | ✅ Applied by the owner in the SQL editor on 21 October; Settings then offered the service charge on the three ways of selling, Payroll the tips                                                                                                                                                                                                                                                                                                 |
 | The café's own receipt (`0091`)            | ✅ Applied by the owner in the SQL editor on 22 October; Settings then showed The receipt with its preview, a report opened was counted, the Dashboard arranged for the owner                                                                                                                                                                                                                                                                    |
 | Smarter buying (`0092`)                    | ⏳ To be applied by the owner in the SQL editor, after `0091`                                                                                                                                                                                                                                                                                                                                                                                    |
+| Cash ahead (`0093`)                        | ⏳ To be applied by the owner in the SQL editor, after `0092`                                                                                                                                                                                                                                                                                                                                                                                    |
+| The watch list (`0094`)                    | ⏳ To be applied by the owner in the SQL editor, after `0093`                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## 0. Before you start
 
@@ -4135,6 +4137,57 @@ on the simulated year (`docs/SIMULATION.md`).
 It is applied by the owner, in Supabase's SQL editor, after `0091`:
 
 1. Open the file `supabase/migrations/0092_smarter_buying.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0093`
+
+Migration `0093` brings **Reports → Cash ahead**: the next 30 days of the
+café's money, the bank day by day as a chart, the safe and the café as a
+whole in a table, from what it holds now, each weekday's usual takings and
+what is due — bills on the days the café pays them, deliveries and orders
+still to be billed, customers' invoices, and every regular payment (the
+rent, the electricity, the salaries, the owner's drawings) when it comes
+again. Each spell the bank or the safe would be short is warned of, with
+what to do: move takings from the safe to the bank, ask a supplier to take a
+bill later, or put money in. The Dashboard and the phone say so, the
+fortnight ahead, once the café's books go back four weeks.
+
+Nothing recorded changes. Rehearsed with `tests/sql/cash_ahead.test.sql` and
+every other test, and on the simulated year (`docs/SIMULATION.md`).
+
+It is applied by the owner, in Supabase's SQL editor, after `0092`:
+
+1. Open the file `supabase/migrations/0093_cash_ahead.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0094`
+
+Migration `0094` brings **Reports → Watch list**, for the owner (and the
+general manager if the owner allows it on Settings → Rules and warnings):
+patterns a person may be hiding, each set against what the others do at the
+same hours — sales voided far more often, discounts just under the limit a
+cashier may give alone again and again (each reason apart, so a promotion
+everyone gives is nobody's), the drawer short again and again or on the same
+weekday — each with its evidence and how unlikely it is by luck. It says
+"worth a look", never more; the owner marks each explained or looked into,
+with a note. Someone new is not judged in their first three weeks. It is
+worked out once a day; the Dashboard (for the owner) and the phone say only
+that something is worth a look, with no name.
+
+Nothing recorded changes. Rehearsed with `tests/sql/watch_list.test.sql` and
+every other test, and on the simulated year (`docs/SIMULATION.md`).
+
+It is applied by the owner, in Supabase's SQL editor, after `0093`:
+
+1. Open the file `supabase/migrations/0094_watch_list.sql` on GitHub, press **Raw**,
    select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run

@@ -141,7 +141,7 @@ select test.eq((
   'cancel_advance,cancel_attendance,cancel_bill,cancel_card_settlement,cancel_money_move,'
   'cancel_platform_settlement,cancel_po,cancel_pre_order,cancel_prepaid_expense,cancel_production,'
   'cancel_salary_payment,cancel_scheduled_price,cancel_scheduled_recipe,cancel_stock_count,'
-  'cancel_stock_transfer,cancel_tab,card_takings,cash_session_statement,cash_session_status,'
+  'cancel_stock_transfer,cancel_tab,card_takings,cash_ahead,cash_session_statement,cash_session_status,'
   'cash_sessions,change_product_recipe,clear_product_image,clear_receipt_logo,clock_board,'
   'clock_by_phone,clock_in,clock_out,clock_screen_check,clock_screen_code,clock_screens,'
   'close_cash_session,close_po,collect_pre_order,copy_platform_setup,correct_attendance,'
@@ -186,12 +186,12 @@ select test.eq((
   'set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_place_sections,'
   'set_price,set_product_details,set_product_image,set_product_modifiers,set_receipt_logo,'
   'set_receipt_setup,set_section_hours,set_service_charge,set_time_price,set_tip_sharers,'
-  'set_variant_barcode,set_variant_weighed,settle_problem,settle_tab,settle_tab_offline,snooze_alert,'
+  'set_variant_barcode,set_variant_weighed,set_watch_visibility,settle_problem,settle_tab,settle_tab_offline,settle_watch_finding,snooze_alert,'
   'split_tab,staff_list,staff_phones,staff_schedule,start_stock_count,stock_card,stock_places,'
   'stock_transfers,stop_markdown,stop_time_price,submit_stock_count,supplier_records,supplier_statement,take_pre_order,'
   'time_prices,tips_month,turn_off_phone_warnings,turn_on_phone_warnings,undo_bank_statement,'
   'unlink_phone,unlock_period,update_delivery_platform,update_item,update_supplier,update_variant,'
-  'void_sale,waste_coach',
+  'void_sale,waste_coach,watch_list,watch_may_see',
   'signed-in users can call exactly the intended API');
 -- The public (the anon key is in every page) may call only the clock's four,
 -- each answering only to a key it gave out: a clock screen asking its code, a

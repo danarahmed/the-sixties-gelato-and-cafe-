@@ -329,6 +329,10 @@ def main():
     if args.what in ("watch", "all"):
         watch(args.fn or "sim.naive_watch")
         print()
+        # The watch list itself (step 10), once 0094 is on the copy.
+        if not args.fn and q("select to_regprocedure('public.watch_scan(uuid, timestamptz)') is not null")[0][0] == "t":
+            watch("sim.watch_feature")
+            print()
     if args.what in ("cash", "all"):
         cash(args.fn or "sim.naive_cash", args.days)
         if not args.fn:
@@ -337,6 +341,12 @@ def main():
         print()
         shortfalls(args.short_fn or "sim.naive_short")
         print()
+        # Cash ahead itself (step 9), once 0093 is on the copy.
+        if not args.fn and q("select to_regprocedure('public.cash_ahead_for(uuid, timestamptz, integer)') is not null")[0][0] == "t":
+            cash("sim.ahead_cash", args.days)
+            print()
+            shortfalls("sim.ahead_short")
+            print()
     if args.what in ("buying", "all"):
         buying([("The café's own habit", os.environ.get("SIM_DB", "sixties_sim"), None),
                 ("What to buy's drafts (step 8)", os.environ.get("SIM_DRAFTS_DB", "sixties_sim_drafts"),

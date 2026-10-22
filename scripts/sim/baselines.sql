@@ -74,3 +74,35 @@ returns table (day date) language sql stable as $$
   with t as (select sim.bank_on(p_as_of) as now, (sim.bank_on(p_as_of) - sim.bank_on(p_as_of - 28)) / 28 as per_day)
   select p_as_of + k from t, generate_series(1, 14) k where t.now + t.per_day * k < 0
 $$;
+
+-- ---------------------------------------------------------------- the features
+-- Cash ahead (step 9, 0093), asked as at the end of p_as_of, scored as the
+-- baselines are: the café's money p_days later; the days of the next fortnight
+-- the bank or the safe would be below nothing. (plpgsql: loaded before 0093
+-- is applied, they wait until called.)
+create or replace function sim.ahead_cash(p_as_of date, p_days int) returns numeric
+language plpgsql stable as $$
+begin
+  return (cash_ahead_for(sim.business(), ((p_as_of + 1)::timestamp at time zone 'Asia/Baghdad') - interval '1 microsecond',
+                         p_days) -> 'days' -> (p_days - 1) ->> 'total')::numeric;
+end $$;
+create or replace function sim.ahead_short(p_as_of date) returns table (day date)
+language plpgsql stable as $$
+begin
+  return query
+    select (x ->> 'day')::date
+      from jsonb_array_elements(cash_ahead_for(sim.business(),
+             ((p_as_of + 1)::timestamp at time zone 'Asia/Baghdad') - interval '1 microsecond', 14) -> 'days') x
+     where (x ->> 'bank')::numeric < 0 or (x ->> 'safe')::numeric < 0;
+end $$;
+
+-- The watch list (step 10, 0094), asked on the morning after p_as_of (its
+-- four weeks to the end of p_as_of), scored as the baseline is.
+create or replace function sim.watch_feature(p_as_of date) returns table (who text, kind text, detail text)
+language plpgsql stable as $$
+begin
+  return query
+    select s.who, s.kind, s.observed || ' against ' || s.expected
+                          || case when s.detail_key <> '' then ' (' || s.detail_key || ')' else '' end
+      from watch_scan(sim.business(), ((p_as_of + 1)::timestamp + time '06:00') at time zone 'Asia/Baghdad') s;
+end $$;

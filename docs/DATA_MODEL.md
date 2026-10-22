@@ -2054,6 +2054,67 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### The watch list (`0094`)
+
+- **`watch_finding`**: a pattern that stands out for a person
+  (`app_user_id`): `kind` `voids`, `discounts` (with the reason as
+  `detail_key`) or `drawer_short`; the days judged (`window_from`,
+  `window_to`), what was seen (`observed`, `cases`) against what the others'
+  rates would give (`expected`), the chance of it by luck (`chance`,
+  Poisson), `strength` (`strong` below one in a million, else
+  `worth_a_look`), the `evidence`; `status` `open`, `explained` or
+  `looked_into`, with who settled it, when and the `note`. One open per
+  person, kind and reason. Read only through the functions below.
+- **`watch_state`**: per café, when it was last looked over (`scanned_at`)
+  and whether the general manager reads the list (`gm_sees`, set by the
+  owner with `set_watch_visibility`).
+- `watch_scan` (internal, as at a moment) works out, over the four weeks to
+  the day before, each person's voided sales against the others' at the same
+  hours of the day (four-hour bands), their discounts within two points of
+  the cashier's limit for each reason against the others' for that reason at
+  those hours, and their drawers short by 5,000 IQD or more (twice on the
+  same weekday and shift, or three times) against the others'; shown with
+  enough cases (eight, or the drawers' rule) and a chance below one in
+  10,000. Someone is judged from their fourth week here.
+- `watch_refresh` keeps the findings (one still standing is updated; a new
+  one is raised unless the same was settled in the last two weeks);
+  `watch_tick` does it for every café, daily at 03:30 Erbil time by pg_cron
+  where there is one, else when the list is opened and the last look is over
+  20 hours old. `watch_list`, `settle_watch_finding` (keyed) and
+  `watch_may_see`: the owner, and the general manager when allowed.
+- Alert rule **`watch_strong`**: how many strong findings are open, with no
+  name, leading to Reports → Watch list.
+
+### Cash ahead (`0093`)
+
+- `cash_ahead_for` (internal) forecasts the days after a moment from the
+  café's own records, every read as at that moment (so it can be checked on
+  a past day): what the till, the safe, the card account and the bank hold at
+  the day's end; each weekday's takings as the last four weeks' same weekdays
+  brought them (the cash into the safe at each close — `cash_transfer`
+  debits of 1005 from 1000 — and the card money into 1010); the card money
+  reaching the bank on the weekdays `card_settlement` has come (half the
+  weeks of eight or more), less the share the bank kept; the safe banked on
+  the weekdays it has been, as much of it as before; each bill still owed
+  (`purchase_invoice`, less what was paid of it since) on its due date,
+  moved to the weekdays the café pays bills (a quarter of its
+  `supplier_payment`s or more over three months) and as late as it has paid
+  them (the middle delay), from the bank or the safe as it has; what
+  deliveries not billed and orders still to come will be billed for, due as
+  the supplier's bills have been (else 30 days); customers' open invoices on
+  their due dates, oldest paid first (overdue ones listed, not counted); and
+  every regular payment — journals crediting 1005 or 1020 under the same
+  words (numbers left out), but bills, takings, card money, the café's own
+  moves and the like — weekly, fortnightly, monthly or every three months
+  as the gaps have been, on its next day at its last amount. Each day's
+  safe, bank, card money and total; the events; and a warning for each
+  spell the bank or the safe would be below nothing (from, until, how low,
+  what is due, and the action: `move` from the safe, ask for a bill `later`,
+  or `money_in`).
+- `cash_ahead(p_days)` (`profit.view`) gives it for Reports → Cash ahead.
+- Alert rule **`cash_short_ahead`**: the first spell within 14 days, red
+  within three; once the café's books go back four weeks.
+
 ### Smarter buying (`0092`)
 
 - **`supplier.delivers_every_days`** (1 to 60, or null): how often the
