@@ -2130,9 +2130,11 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   `supplier_records` (`cost.view`) gives each supplier's for Purchasing.
 - `buying_list` uses them: an item is to order when what it has and has
   coming would not last until the order comes (the days to it and a day
-  more, each by its weekday), late as the supplier has come lately, with
-  1.65 times how far a day's use strays from its weekday's (over the days
-  judged) for the days to the delivery — enough 19 times in 20; it is
+  more, each by its weekday), with a margin for the supplier coming late as
+  it has lately and for 1.65 times how far a day's use strays from its
+  weekday's (over the days judged) for the days to the delivery — enough 19
+  times in 20 — the two kept together as the root of their squares (they
+  seldom come at once; never less than either); it is
   ordered up to that and what is used until the delivery after it
   (`target_from` `cover`; the margin kept once). Use is judged from the
   start of the day four weeks ago, the same at any hour. The suggested levels (`suggested_reorder`, `suggested_target`)

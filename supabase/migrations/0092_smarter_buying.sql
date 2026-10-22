@@ -420,7 +420,9 @@ begin
     -- for a busier day kept once, at the reorder level).
     v_suggest_reorder := null; v_suggest_target := null;
     if v_daily > 0 then
-      v_suggest_reorder := v_lead_use + v_late_use + 1.65 * v_sd * sqrt(v_lead + 1) + v_plan_extra
+      -- The supplier's lateness and a busier day are apart, and seldom both:
+      -- kept together as the root of their squares (never less than either).
+      v_suggest_reorder := v_lead_use + sqrt(v_late_use ^ 2 + (1.65 * v_sd) ^ 2 * (v_lead + 1)) + v_plan_extra
                            + coalesce(greatest(x.safety_stock_base, 0), 0);
       v_suggest_target := v_suggest_reorder + v_cycle_use;
     end if;
