@@ -2164,14 +2164,14 @@
       {
         "text": "Only {qty} {unit} of {item} is in stock: record the delivery or the batch first, or count it",
         "kind": "error",
-        "when": "An ingredient's rule refuses using more than the books hold here, and the batch needs more than that.",
-        "do": "Record the missing delivery (Purchasing) or the batch that makes the ingredient first, or count it on Stock Count; then record the batch."
+        "when": "The item's rule refuses taking more than the books hold here, and the loss takes more than that.",
+        "do": "Record the missing delivery (Purchasing) or the batch that makes the item first, or count it on Stock Count; then record the loss."
       },
       {
         "text": "Only {qty} {unit} of {item} is in stock: a manager approves using more than that",
         "kind": "warning",
-        "when": "An ingredient's rule asks a manager to approve using more than the books hold. The form then shows the manager's name list and PIN box.",
-        "do": "A manager chooses their name, types their PIN and presses Approve; the batch is then recorded with that approval."
+        "when": "The item's rule asks a manager to approve taking more than the books hold. The form then shows the manager's name list and PIN box.",
+        "do": "A manager chooses their name, types their PIN and presses Approve; the loss is then recorded with that approval."
       },
       {
         "text": "Only {qty} {unit} of batch {batch} is left",
@@ -2639,8 +2639,8 @@
       {
         "text": "Only {qty} {unit} of {item} is in stock: record the delivery or the batch first, or count it",
         "kind": "error",
-        "when": "An ingredient's rule refuses using more than the books hold here, and the batch needs more than that.",
-        "do": "Record the missing delivery (Purchasing) or the batch that makes the ingredient first, or count it on Stock Count; then record the batch."
+        "when": "The item's rule refuses going below what the books hold here, and the correction takes off more than that.",
+        "do": "Record the missing delivery (Purchasing) or the batch that makes the item first, or count it on Stock Count; then correct it."
       },
       {
         "text": "Opening stock of {name}: {qty} {unit}, worth {value} (journal {journal}).",

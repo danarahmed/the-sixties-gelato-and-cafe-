@@ -31,7 +31,7 @@
     "get_there": "Menu → Operations → POS. A cashier lands here after signing in. Also: Sales → Open POS.",
     "before": [
       "At least one product with a price on a way of selling (Products & Recipes). Otherwise the till shows \"No products to sell yet\".",
-      "The device must be at a branch. At the central kitchen the till asks which branch to sell at.",
+      "The till sells at a branch. A device set to the central kitchen sells at the café's only branch if there is one; with two or more branches it asks which branch to sell at.",
       "To take cash the drawer must be open (see \"Point of Sale — the drawer, clocking and printing\"). A card sale needs no drawer."
     ],
     "parts": [
@@ -4570,7 +4570,7 @@
         "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
         "kind": "error",
         "when": "The month this would be written in is locked in the books.",
-        "do": "Only the owner can open a locked month again (Accounting): ask them, or do it in the current month."
+        "do": "Only the owner can open a locked month again (Chart of Accounts): ask them, or do it in the current month."
       },
       {
         "text": "Your previous submission may already have been saved. Checking…",
@@ -5406,7 +5406,7 @@
         "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
         "kind": "error",
         "when": "The month this would be written in is locked in the books.",
-        "do": "Only the owner can open a locked month again (Accounting): ask them, or do it in the current month."
+        "do": "Only the owner can open a locked month again (Chart of Accounts): ask them, or do it in the current month."
       },
       {
         "text": "Your previous submission may already have been saved. Checking…",
@@ -6326,7 +6326,7 @@
         "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
         "kind": "error",
         "when": "The month this would be written in is locked in the books.",
-        "do": "Only the owner can open a locked month again (Accounting): ask them, or do it in the current month."
+        "do": "Only the owner can open a locked month again (Chart of Accounts): ask them, or do it in the current month."
       },
       {
         "text": "Your previous submission may already have been saved. Checking…",
@@ -7131,7 +7131,7 @@
         "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
         "kind": "error",
         "when": "The month this would be written in is locked in the books.",
-        "do": "Only the owner can open a locked month again (Accounting): ask them, or do it in the current month."
+        "do": "Only the owner can open a locked month again (Chart of Accounts): ask them, or do it in the current month."
       },
       {
         "text": "Your previous submission may already have been saved. Checking…",

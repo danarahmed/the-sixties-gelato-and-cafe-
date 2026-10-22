@@ -891,7 +891,7 @@ export const STATE_SHOTS = [
     sql: PURCHASING,
     then: async (page) => {
       const form = page.getByTestId("receive");
-      const po = one(`select id from purchase_order where note = 'Guide: milk and cream' limit 1`);
+      const po = one(`select id from purchase_order where note = 'Milk and cream for the gelato' limit 1`);
       await form.locator("label", { hasText: /^Supplier/ }).locator("select").first()
         .selectOption({ label: "Sulaymaniyah Dairy Co." });
       await form.getByTestId("receive-order").selectOption(po);
@@ -967,7 +967,7 @@ export const STATE_SHOTS = [
     role: "manager",
     path: "/purchasing",
     then: async (page) => {
-      const no = one(`select receipt_no from goods_receipt where note = 'Guide: milk and cream' order by received_at desc limit 1`);
+      const no = one(`select receipt_no from goods_receipt where note = 'Milk and cream for the gelato' order by received_at desc limit 1`);
       const row = page.locator(`[data-testid="receipt-row"][data-receipt="${no}"]`);
       await row.getByRole("button", { name: "Correct", exact: true }).click();
       const dialog = page.getByTestId("receipt-correction");
@@ -1020,7 +1020,7 @@ export const STATE_SHOTS = [
       // The orders it drafted, cancelled, so the next pictures find the same list.
       sql(`select test.act_as('owner@example.com');
            select cancel_po(id, 'Drafted for the guide') from purchase_order
-            where status = 'draft' and note is distinct from 'Guide: beans' and note is distinct from 'Guide: cups and lids';
+            where status = 'draft' and note is distinct from 'Beans for the weekend' and note is distinct from 'Cups and lids for takeaway';
            reset role; set session_replication_role = replica;
            delete from purchase_order_line where purchase_order_id in
              (select id from purchase_order where status = 'cancelled' and cancel_reason = 'Drafted for the guide');
@@ -1039,7 +1039,7 @@ export const STATE_SHOTS = [
     after: async () => {
       sql(`select test.act_as('owner@example.com');
            select cancel_po(id, 'Drafted for the guide') from purchase_order
-            where status = 'draft' and note is distinct from 'Guide: beans' and note is distinct from 'Guide: cups and lids';
+            where status = 'draft' and note is distinct from 'Beans for the weekend' and note is distinct from 'Cups and lids for takeaway';
            reset role; set session_replication_role = replica;
            delete from purchase_order_line where purchase_order_id in
              (select id from purchase_order where status = 'cancelled' and cancel_reason = 'Drafted for the guide');
@@ -1049,9 +1049,212 @@ export const STATE_SHOTS = [
   {
     name: "po-page",
     role: "manager",
-    path: () => `/purchasing/orders/${one(`select id from purchase_order where note = 'Guide: milk and cream' limit 1`)}`,
+    path: () => `/purchasing/orders/${one(`select id from purchase_order where note = 'Milk and cream for the gelato' limit 1`)}`,
+  },
+
+  // ───────────────────────── Buying: Vendors ───────────────────────────────
+  {
+    name: "vendors-statement",
+    role: "kitchenboss",
+    path: "/vendors",
+    get sql() {
+      return creditsSetup();
+    },
+    then: async (page) => {
+      await vendor(page, "Sulaymaniyah Dairy Co.", "Statement");
+      const rows = page.locator(".stmt tbody tr, table tbody tr");
+      await rows.last().scrollIntoViewIfNeeded().catch(() => {});
+      await page.evaluate(() => window.scrollBy(0, 200));
+    },
+  },
+  {
+    name: "vendors-edit",
+    role: "manager",
+    path: "/vendors",
+    then: async (page) => {
+      await vendor(page, "Sulaymaniyah Dairy Co.", "Edit vendor");
+      const ev = page.getByTestId("edit-vendor");
+      await ev.getByLabel("Days a delivery takes").fill("1");
+      await ev.getByLabel("Delivers every (days)").fill("2");
+      await ev.locator("label", { hasText: /^Why/ }).locator("input").fill("They come every other morning now");
+      await toTop(ev, 200);
+    },
+  },
+  {
+    name: "vendors-record-bill",
+    role: "kitchenboss",
+    path: "/vendors",
+    then: async (page) => {
+      await vendor(page, "Sulaymaniyah Dairy Co.", "Bills & payments");
+      const panel = page.locator(".panel", { has: page.getByRole("heading", { name: "Record a bill" }) });
+      const no = one(`select receipt_no from goods_receipt where note = 'Milk and cream for the gelato' limit 1`);
+      const sel = panel.locator("label", { hasText: "Goods receipt" }).locator("select");
+      const opt = await sel.locator("option", { hasText: `Receipt ${no}` }).first().getAttribute("value");
+      if (opt) await sel.selectOption(opt);
+      await panel.getByLabel("Invoice no.").fill("SD-4471");
+      await panel.locator("label", { hasText: "Amount (IQD)" }).locator("input").fill("91800");
+      await page.waitForTimeout(400);
+      await toTop(panel, 90);
+    },
+  },
+  {
+    name: "vendors-pay-bill",
+    role: "kitchenboss",
+    path: "/vendors",
+    then: async (page) => {
+      await vendor(page, "Sulaymaniyah Dairy Co.", "Bills & payments");
+      const pay = page.locator("label", { hasText: "Pay bill" }).locator("select");
+      await pay.selectOption({ index: 1 });
+      await page.getByLabel("Paid from").selectOption("safe");
+      await page.waitForTimeout(500);
+      await toTop(pay, 160);
+    },
+  },
+  {
+    name: "vendors-cancel-bill",
+    role: "owner",
+    path: "/vendors",
+    then: async (page) => {
+      await vendor(page, "City Packaging Supplies", "Bills & payments");
+      const row = page.locator('[data-testid="bill-row"][data-bill="SIM-272"]');
+      await row.getByRole("button", { name: /^Cancel/ }).first().click();
+      await page.waitForTimeout(400);
+      await toTop(row, 200);
+    },
+  },
+  {
+    name: "vendors-credits",
+    role: "kitchenboss",
+    path: "/vendors",
+    then: async (page) => {
+      await vendor(page, "Sulaymaniyah Dairy Co.", "Credit notes");
+      await soft(page.getByTestId("supplier-credits"));
+      await toTop(page.getByTestId("supplier-credits"), 90);
+    },
+  },
+  {
+    name: "supplier-statement",
+    role: "kitchenboss",
+    path: (ids) => `/vendors/${one(`select id from supplier where name = 'Sulaymaniyah Dairy Co.'`)}/statement`,
+  },
+
+  // ───────────────────────── Buying: Expenses ──────────────────────────────
+  {
+    name: "expense-entry",
+    role: "manager",
+    path: "/expenses",
+    then: async (page) => {
+      await page.getByPlaceholder("September shop rent").fill("October shop rent");
+      await page.locator("input.amt").first().fill("500000");
+      await page.getByLabel("Paid from", { exact: true }).selectOption("bank");
+      await page.waitForTimeout(600);
+      const acct = page.getByLabel("Account", { exact: true });
+      if (!(await acct.inputValue())) await acct.selectOption("6000");
+      await page.waitForTimeout(400);
+    },
+  },
+  {
+    name: "expense-prepaid",
+    role: "kitchenboss",
+    path: "/expenses",
+    then: async (page) => {
+      await page.getByPlaceholder("September shop rent").fill("Shop rent, a quarter");
+      await page.locator("input.amt").first().fill("1500000");
+      await page.getByLabel("Paid from", { exact: true }).selectOption("bank");
+      await page.getByLabel("Account", { exact: true }).selectOption("6000");
+      await page.getByTestId("expense-ahead").check();
+      const first = page.getByLabel("First month", { exact: true });
+      await first.selectOption({ index: 0 });
+      await page.getByLabel("How many months", { exact: true }).fill("3");
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    name: "expense-duplicate",
+    role: "owner",
+    path: "/expenses",
+    sql: `select test.act_as('owner@example.com');
+          select record_expense('Generator diesel', 85000, '6200', 'safe')
+           where not exists (select 1 from expense where description = 'Generator diesel');`,
+    then: async (page) => {
+      await page.getByPlaceholder("September shop rent").fill("Diesel for the generator");
+      await page.locator("input.amt").first().fill("85000");
+      await page.getByLabel("Paid from", { exact: true }).selectOption("safe");
+      await page.getByLabel("Account", { exact: true }).selectOption("6200");
+      await page.getByRole("button", { name: "Post expense" }).click();
+      await soft(page.getByTestId("same-payment"), 15000);
+    },
+  },
+  {
+    name: "expense-prepaid-list",
+    role: "kitchenboss",
+    path: "/expenses#prepaid",
+    get sql() {
+      return prepaidSetup();
+    },
+    then: async (page) => {
+      await soft(page.getByTestId("prepaid"));
+      await toTop(page.getByTestId("prepaid"), 90);
+    },
+  },
+  {
+    name: "expense-register",
+    role: "owner",
+    path: "/expenses",
+    sql: `select test.act_as('owner@example.com');
+          select reverse_journal(e.journal_entry_id, 'Posted to the wrong month')
+            from expense e
+           where e.description = 'Electricity and generator' and e.journal_entry_id is not null
+             and not exists (select 1 from journal_entry r where r.reverses_entry = e.journal_entry_id)
+           order by e.created_at desc limit 1;`,
+    then: async (page) => {
+      await toTop(page.getByTestId("expense-register"), 90);
+    },
   },
 ];
+
+/** A vendor chosen on Vendors, on one of its tabs. */
+async function vendor(page, name, tab) {
+  await page.locator("button.vrow", { hasText: name }).click();
+  await page.locator(".dtab", { hasText: tab }).first().click();
+  await page.waitForTimeout(500);
+}
+
+/**
+ * The dairy's credit notes: a return of cream after its bill (a credit that
+ * waits for their note) and a crate deposit refunded (a credit with something
+ * left to set against a bill).
+ */
+function creditsSetup() {
+  if (one(`select count(*) from supplier_credit where reason = 'Crate deposit refunded'`) !== "0") return "select 1";
+  const dairy = `(select id from supplier where name = 'Sulaymaniyah Dairy Co.')`;
+  const cream = one(`select id from item where name = 'Cream'`);
+  const billed = one(`select r.id from goods_receipt r join purchase_invoice b on b.goods_receipt_id = r.id
+                       where r.supplier_id = ${dairy} order by r.received_at desc limit 1`);
+  sql(`select test.act_as('manager@example.com');
+       select return_to_supplier(${dairy}, '[{"item_id":"${cream}","qty":1,"unit_code":"L"}]'::jsonb,
+                                 'A bottle was leaking', '${billed}', ${MAIN}, true);
+       select test.act_as('owner@example.com');
+       select record_supplier_credit(${dairy}, 'other', 1500, 'SD-CN-77', 'Crate deposit refunded',
+                                     p_account_code => '6900');`);
+  return "select 1";
+}
+
+/** Two prepaid expenses: the insurance with a month due now, and a sign paid ahead and cancelled. */
+function prepaidSetup() {
+  if (one(`select count(*) from prepaid_expense where description = 'Insurance, a year'`) !== "0") return "select 1";
+  const next = one(`select (date_trunc('month', ${TODAY}) + interval '1 month')::date`);
+  const ins = one(`select test.act_as('owner@example.com');
+    select record_prepaid_expense('Insurance, a year', 1200000, '6900', 'bank', '${next}', 12) ->> 'prepaid_id'`);
+  sql(`alter table prepaid_expense disable trigger prepaid_expense_guard;
+       update prepaid_expense set first_month = date_trunc('month', ${TODAY})::date where description = 'Insurance, a year';
+       alter table prepaid_expense enable trigger prepaid_expense_guard;`);
+  const sign = one(`select test.act_as('owner@example.com');
+    select record_prepaid_expense('Shop sign, six months', 300000, '6900', 'bank', '${next}', 6) ->> 'prepaid_id'`);
+  sql(`select test.act_as('owner@example.com');
+       select cancel_prepaid_expense(id, 'Paid twice by mistake') from prepaid_expense where description = 'Shop sign, six months';`);
+  return "select 1";
+}
 
 /**
  * The buying the pictures show, made once: two draft orders (the beans left
@@ -1060,7 +1263,7 @@ export const STATE_SHOTS = [
  * their levels; a delivery corrected and one reversed.
  */
 function buyingSetup() {
-  if (one(`select count(*) from purchase_order where note = 'Guide: milk and cream'`) !== "0") return "select 1";
+  if (one(`select count(*) from purchase_order where note = 'Milk and cream for the gelato'`) !== "0") return "select 1";
   const sup = (n) => `(select id from supplier where name = '${n}')`;
   const item = (n) => one(`select id from item where name = '${n}'`);
   const [beans, cup, lid, milk, cream, cone] = ["Coffee beans", "Takeaway cup", "Cup lid", "Milk", "Cream", "Cone"].map(item);
@@ -1068,39 +1271,40 @@ function buyingSetup() {
   sql(`${as("manager")}
     select save_po(null, ${sup("Kurdistan Coffee Imports")},
       '[{"item_id":"${beans}","qty":5,"unit_code":"kg","unit_price":37000}]'::jsonb,
-      ${TODAY} + 3, 'Guide: beans', ${MAIN});
+      ${TODAY} + 3, 'Beans for the weekend', ${MAIN});
     select save_po(null, ${sup("City Packaging Supplies")},
       '[{"item_id":"${cup}","qty":500,"unit_code":"each","unit_price":132},{"item_id":"${lid}","qty":500,"unit_code":"each","unit_price":50}]'::jsonb,
-      ${TODAY} + 2, 'Guide: cups and lids', ${MAIN});
+      ${TODAY} + 2, 'Cups and lids for takeaway', ${MAIN});
     select save_po(null, ${sup("Sulaymaniyah Dairy Co.")},
       '[{"item_id":"${milk}","qty":24,"unit_code":"L","unit_price":1400},{"item_id":"${cream}","qty":10,"unit_code":"L","unit_price":7000}]'::jsonb,
-      ${TODAY}, 'Guide: milk and cream', ${MAIN});`);
-  sql(`update purchase_order set updated_at = now() - interval '2 hours' where note = 'Guide: beans';`);
-  const po = one(`select id from purchase_order where note = 'Guide: milk and cream'`);
+      ${TODAY}, 'Milk and cream for the gelato', ${MAIN});`);
+  sql(`update purchase_order set updated_at = now() - interval '2 hours' where note = 'Beans for the weekend';`);
+  const po = one(`select id from purchase_order where note = 'Milk and cream for the gelato'`);
   const line = (i) => one(`select id from purchase_order_line where purchase_order_id = '${po}' and item_id = '${i}'`);
   sql(`${as("manager")} select approve_po('${po}'); select send_po('${po}');`);
   sql(`${as("manager")}
     select receive_goods(${sup("Sulaymaniyah Dairy Co.")},
       '[{"item_id":"${milk}","qty":12,"unit_code":"L","unit_price":1400,"po_line_id":"${line(milk)}"},
         {"item_id":"${cream}","qty":10,"unit_code":"L","unit_price":7000,"po_line_id":"${line(cream)}"}]'::jsonb,
-      p_note => 'Guide: milk and cream', p_purchase_order => '${po}');`);
+      p_note => 'Milk and cream for the gelato', p_purchase_order => '${po}');`);
   // Two small deliveries of cones: one corrected, one entered twice and reversed.
-  for (const note of ["Guide: cones", "Guide: cones again"])
+  for (const note of ["Delivery note 4471", "Delivery note 4471, again"])
     sql(`${as("manager")}
       select receive_goods(${sup("City Packaging Supplies")},
         '[{"item_id":"${cone}","qty":100,"unit_code":"each","unit_price":150}]'::jsonb, p_note => '${note}', p_location => ${MAIN});`);
-  const r1 = one(`select id from goods_receipt where note = 'Guide: cones'`);
-  const r2 = one(`select id from goods_receipt where note = 'Guide: cones again'`);
+  const r1 = one(`select id from goods_receipt where note = 'Delivery note 4471'`);
+  const r2 = one(`select id from goods_receipt where note = 'Delivery note 4471, again'`);
   sql(`${as("manager")}
     select correct_receipt('${r1}', '[{"item_id":"${cone}","qty":96,"unit_code":"each","unit_price":150}]'::jsonb,
                            p_reason => 'Four cones short on the invoice', p_confirm => true);
     select reverse_receipt('${r2}', 'Entered twice', true);`);
   // A cheaper second supplier for the cones, and levels to buy to.
-  return `${as("owner")}
+  sql(`${as("owner")}
     select set_item_supplier('${cone}', ${sup("Kurdistan Coffee Imports")}, 'each', 120, false);
     reset role;
     update item set min_level_base = 150000 where name = 'Milk';
-    update item set min_level_base = 1500 where name = 'Takeaway cup';`;
+    update item set min_level_base = 1500 where name = 'Takeaway cup';`);
+  return "select 1";
 }
 
 /** Inventory's form, opened from its button unless it is open already. */
@@ -1147,10 +1351,11 @@ function usageCounts() {
   const second = one(`select test.act_as('counter@example.com');
     select start_stock_count(array['${cup}'::uuid])`);
   const now = Number(one(`select ${onHandAt(ITEM)}`));
-  return `select test.act_as('counter@example.com');
+  sql(`select test.act_as('counter@example.com');
     select record_count('${second}', '${cup}', ${now - 600}, 'g');
     select submit_stock_count('${second}');
-    select test.act_as('manager@example.com'); select approve_stock_count('${second}');`;
+    select test.act_as('manager@example.com'); select approve_stock_count('${second}');`);
+  return "select 1";
 }
 
 /** A count of three things handed in by the counter, a little off, for a manager to review. */
@@ -1163,11 +1368,12 @@ function submittedCount() {
   if (!c)
     c = one(`select test.act_as('counter@example.com');
       select start_stock_count(array[${ids.map((i) => `'${i}'::uuid`).join(",")}])`);
-  return `select test.act_as('counter@example.com');
+  sql(`select test.act_as('counter@example.com');
     select record_count('${c}', '${ids[0]}', ${has[0] - 12}, 'each');
     select record_count('${c}', '${ids[1]}', ${has[1] + 30}, 'each');
     select record_count('${c}', '${ids[2]}', ${Math.max(0, has[2] - 55)}, 'each');
-    select submit_stock_count('${c}');`;
+    select submit_stock_count('${c}');`);
+  return "select 1";
 }
 
 
