@@ -91,7 +91,7 @@ def summary():
         print(f"    {int(h):02d}:00  {normal:>5}%  {ramadan:>5}%")
     print("\n  What sells, January against July (share of items sold):")
     for name, jan, jul in q("""
-      with l as (select p.name, to_char(o.placed_at at time zone 'Asia/Baghdad', 'MM') as m, sum(sl.qty) as qty
+      with l as (select p.name, to_char(o.placed_at at time zone 'Asia/Baghdad', 'MM') as m, sum(sl.quantity) as qty
                    from sales_order o join sales_order_line sl on sl.sales_order_id = o.id
                    join product_variant v on v.id = sl.product_variant_id join product p on p.id = v.product_id
                   where o.status <> 'voided' group by 1, 2)
