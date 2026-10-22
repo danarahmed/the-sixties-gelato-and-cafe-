@@ -4570,7 +4570,7 @@
         "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
         "kind": "error",
         "when": "The month this would be written in is locked in the books.",
-        "do": "Ask the accountant or the owner to open the period, or do it in the current month."
+        "do": "Only the owner can open a locked month again (Accounting): ask them, or do it in the current month."
       },
       {
         "text": "Your previous submission may already have been saved. Checking…",
@@ -5406,7 +5406,7 @@
         "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
         "kind": "error",
         "when": "The month this would be written in is locked in the books.",
-        "do": "Ask the accountant or the owner to open the period, or do it in the current month."
+        "do": "Only the owner can open a locked month again (Accounting): ask them, or do it in the current month."
       },
       {
         "text": "Your previous submission may already have been saved. Checking…",
@@ -6326,7 +6326,7 @@
         "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
         "kind": "error",
         "when": "The month this would be written in is locked in the books.",
-        "do": "Ask the accountant or the owner to open the period, or do it in the current month."
+        "do": "Only the owner can open a locked month again (Accounting): ask them, or do it in the current month."
       },
       {
         "text": "Your previous submission may already have been saved. Checking…",
@@ -7131,7 +7131,7 @@
         "text": "Accounting period {1} is locked; post into an open period or reverse in the current one",
         "kind": "error",
         "when": "The month this would be written in is locked in the books.",
-        "do": "Ask the accountant or the owner to open the period, or do it in the current month."
+        "do": "Only the owner can open a locked month again (Accounting): ask them, or do it in the current month."
       },
       {
         "text": "Your previous submission may already have been saved. Checking…",

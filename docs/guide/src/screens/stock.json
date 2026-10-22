@@ -443,7 +443,7 @@
         "text": "That day is in a locked month: nothing is recorded in it",
         "kind": "error",
         "when": "The day it was made is in a month the accountant locked.",
-        "do": "Ask the accountant; or record it with today's time."
+        "do": "Only the owner can open a locked month again: ask them, or record it with today's time."
       },
       {
         "text": "{recipe} has no ingredients in force that day",
