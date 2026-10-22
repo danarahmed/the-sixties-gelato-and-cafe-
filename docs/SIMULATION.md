@@ -106,7 +106,11 @@ the year bought by habit.
 - **Smarter buying (step 8):** no sale lost to something bought running out;
   at most 25% more stock held than needed, on average. _Needed_ is what a café
   that knew each day's use would hold with the same deliveries: at each day's
-  end, just what lasts until the next delivery comes.
+  end, what lasts until the next delivery comes, and — as nobody knows which
+  delivery will be late — enough for its supplier's worst lateness on top
+  (a day for the dairy, three for the coffee importer, two for the
+  packaging). The backtest also shows the stock against a café that knew
+  which deliveries would be late too; no café can come near that one.
 - **Cash ahead (step 9):** 7 days ahead, within 10% of what happened, every
   week; every real shortfall (a day the bank ends below nothing) warned of at
   least 3 days before.

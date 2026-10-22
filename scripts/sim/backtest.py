@@ -230,10 +230,18 @@ def stock_story(db, port, first, last):
     return items, used, came, opening
 
 
+# The most days late each supplier delivers (as the year is written: year.py,
+# setup.sql's sim.order_drafts), which a careful café learns and must allow for.
+LATE = {"Sulaymaniyah Dairy Co.": 1, "Kurdistan Coffee Imports": 3, "City Packaging Supplies": 2}
+
+
 def buying_score(db, port, first, last):
     """Sales lost to a shortage of something bought, and the stock held against
-    what was needed: a café that knew what each day would use, with the same
-    deliveries, would end each day holding just what lasts until the next one."""
+    what was needed. Needed: a café that knew what each day would use, with the
+    same deliveries, ends each day holding what lasts until the next delivery
+    comes, and — not knowing which delivery will be late — enough for its
+    supplier's worst lateness on top (the fair mark). Also shown against one
+    that knew when each delivery would come too (no lateness to allow for)."""
     lost = q(f"""select count(*) filter (where cashier <> 'kitchen'
                                          and substring(reason from 'of (.+) is in stock') in (select item from sim.supply)),
                         count(*) filter (where cashier <> 'kitchen' and reason like '%is in stock%'),
@@ -241,13 +249,14 @@ def buying_score(db, port, first, last):
                    from sim.refused
                   where (at at time zone 'Asia/Baghdad')::date between '{first}' and '{last}'""", db, port)[0]
     items, used, came, opening = stock_story(db, port, first - dt.timedelta(days=1), last + dt.timedelta(days=60))
-    held_v = need_v = 0.0
+    late = {item: LATE.get(sup, 0) for item, sup in q("select item, supplier from sim.supply", db, port)}
+    held_v = need_v = bare_v = 0.0
     per = []
     for name, price in items.items():
         days = [first + dt.timedelta(days=k) for k in range((last - first).days + 1)]
         horizon = [first + dt.timedelta(days=k) for k in range((last - first).days + 60)]
         arrivals = [d for d in horizon if came.get((name, d), 0) > 0]
-        held, h, nv, hv = opening.get(name, 0.0), [], 0.0, 0.0
+        held, h, nv, hv, bv = opening.get(name, 0.0), [], 0.0, 0.0, 0.0
         for d in horizon:
             held += came.get((name, d), 0) - used.get((name, d), 0)
             h.append((d, held))
@@ -257,15 +266,19 @@ def buying_score(db, port, first, last):
             nxt = next((a for a in arrivals if a > d), None)
             if nxt is None:
                 continue
-            need = sum(used.get((name, d + dt.timedelta(days=k)), 0) for k in range(1, (nxt - d).days))
+            bare = sum(used.get((name, d + dt.timedelta(days=k)), 0) for k in range(1, (nxt - d).days))
+            need = sum(used.get((name, d + dt.timedelta(days=k)), 0)
+                       for k in range(1, (nxt - d).days + late.get(name, 0)))
             hv += max(held, 0) * price
             nv += need * price
+            bv += bare * price
         held_v += hv
         need_v += nv
+        bare_v += bv
         per.append((name, hv / max(len(days), 1), nv / max(len(days), 1)))
+    n = max((last - first).days + 1, 1)
     return dict(lost_bought=int(lost[0]), lost_any=int(lost[1]), kitchen=int(lost[2]),
-                held=held_v / max((last - first).days + 1, 1), need=need_v / max((last - first).days + 1, 1),
-                per=sorted(per, key=lambda r: -r[1]))
+                held=held_v / n, need=need_v / n, bare=bare_v / n, per=sorted(per, key=lambda r: -r[1]))
 
 
 def buying(dbs):
@@ -286,7 +299,9 @@ def buying(dbs):
         print(f"  {label} ({db}):")
         print(f"    sales lost to something bought running out: {r['lost_bought']}"
               f"  (to anything: {r['lost_any']}; batches the kitchen could not make: {r['kitchen']})")
-        print(f"    stock held on average {money(r['held'])}, needed {money(r['need'])}: {extra * 100:+.0f}%")
+        print(f"    stock held on average {money(r['held'])}, needed {money(r['need'])}: {extra * 100:+.0f}%"
+              f"  (against a café that also knew which deliveries would be late: "
+              f"{(r['held'] / r['bare'] - 1) * 100 if r['bare'] else 0:+.0f}%)")
         for name, hv, nv in r["per"][:6]:
             print(f"      {name:<32} held {money(hv):>14}  needed {money(nv):>14}")
         print()
