@@ -112,13 +112,24 @@ def summary():
 
 
 # ---------------------------------------------------------------------- watch
-def watch(fn):
-    """Part 2's pass mark: every planted problem found within two weeks, at most one false alarm a month."""
+def days(start, end, after_days=28):
+    d = start + dt.timedelta(days=after_days)
+    while d <= end:
+        yield d
+        d += dt.timedelta(days=1)
+
+
+def watch(fn, daily=False):
+    """Part 2's pass mark: every planted problem found within two weeks, at most one false alarm a month.
+
+    A false alarm is counted once for the same person and pattern within four
+    weeks, as the watch list keeps one finding open (looking daily or weekly
+    then counts alike)."""
     start, end = year()
     planted = [dict(kind=k, who=w, starts=dt.date.fromisoformat(s), ends=dt.date.fromisoformat(e), problem=p == "t")
                for k, w, s, e, p in q("select kind, who, starts, ends, problem from sim.planted")]
-    found, false = {}, []
-    weeks = list(sundays(start, end))
+    found, false, last_false = {}, [], {}
+    weeks = list(days(start, end) if daily else sundays(start, end))
     for as_of in weeks:
         for who, kind, detail in q(f"select * from {fn}('{as_of}')"):
             match = next((p for p in planted if p["who"] == who and p["kind"] == kind and p["problem"]
@@ -126,8 +137,11 @@ def watch(fn):
             if match:
                 found.setdefault((who, kind), as_of)
             else:
-                false.append((as_of, who, kind, detail))
-    print(f"Watch list backtest: {fn}, {len(weeks)} Sundays from {weeks[0]} to {weeks[-1]}\n")
+                seen = last_false.get((who, kind))
+                if seen is None or (as_of - seen).days > 28:
+                    false.append((as_of, who, kind, detail))
+                last_false[(who, kind)] = as_of
+    print(f"Watch list backtest: {fn}, {len(weeks)} {'days' if daily else 'Sundays'} from {weeks[0]} to {weeks[-1]}\n")
     ok = True
     for p in [p for p in planted if p["problem"]]:
         when = found.get((p["who"], p["kind"]))
@@ -284,6 +298,12 @@ def buying_score(db, port, first, last):
 def buying(dbs):
     """Part 3's pass mark: nothing out of stock, at most 25% more stock held than needed."""
     start, end = year()
+    # Over the days every year has lived (a year stopped early is compared on its months).
+    for _, db, port in dbs:
+        if q("select 1 from pg_database where datname = '" + db + "'", "postgres", port):
+            (other,), = q("select max(day)::text from sim.day_log", db, port)
+            if other:
+                end = min(end, dt.date.fromisoformat(other))
     first, last = start + dt.timedelta(days=35), end - dt.timedelta(days=7)
     print(f"Buying backtest: {first} to {last} (from the sixth week, when What to buy has four weeks behind it)\n")
     result = None
@@ -331,7 +351,7 @@ def main():
         print()
         # The watch list itself (step 10), once 0094 is on the copy.
         if not args.fn and q("select to_regprocedure('public.watch_scan(uuid, timestamptz)') is not null")[0][0] == "t":
-            watch("sim.watch_feature")
+            watch("sim.watch_feature", daily=True)  # it looks over the café every night
             print()
     if args.what in ("cash", "all"):
         cash(args.fn or "sim.naive_cash", args.days)
