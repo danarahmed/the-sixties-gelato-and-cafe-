@@ -15,6 +15,8 @@ import { Icon } from "@/components/Icon";
 export function LinkPhone({ linkKey, already }: { linkKey: string; already: string | null }) {
   const { t, msg: say } = useT();
   const [done, setDone] = useState<string | null>(null);
+  // Whose link on this phone ended (0095): one phone, one person.
+  const [replaced, setReplaced] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(
     isKey(linkKey) ? null : "This link is not one of the café's: ask a manager for a new one",
   );
@@ -33,6 +35,7 @@ export function LinkPhone({ linkKey, already }: { linkKey: string; already: stri
         return;
       }
       setDone(r.data.name ?? "");
+      setReplaced(r.data.replaced ?? null);
     });
   }
 
@@ -52,6 +55,13 @@ export function LinkPhone({ linkKey, already }: { linkKey: string; already: stri
             <Icon name="check" size={28} />
             <span>{t("This phone clocks in {name} now.", { name: done })}</span>
           </p>
+          {replaced && (
+            <p className="muted" style={{ margin: 0 }} data-testid="link-phone-replaced">
+              {t("{name} no longer clocks in on this phone: one phone, one person.", {
+                name: replaced,
+              })}
+            </p>
+          )}
           <p className="muted" style={{ margin: 0 }}>
             {t(
               "Each time you come in or leave, scan the code on the shop's clock screen with this phone's camera, and press Clock in or Clock out.",

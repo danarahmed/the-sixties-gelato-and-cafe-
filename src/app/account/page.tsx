@@ -7,7 +7,7 @@ import { PasswordForm } from "./PasswordForm";
 import { PinForm } from "./PinForm";
 import { getPhoneWarnings } from "@/lib/db/push";
 import { PhoneWarnings } from "@/components/push/PhoneWarnings";
-import { twoStepState } from "@/lib/auth/twoStep";
+import { backupCodesLeft, twoStepState } from "@/lib/auth/twoStep";
 import { TwoStepCard } from "./TwoStepCard";
 import { FirstScreenForm } from "./FirstScreenForm";
 import { NAV, holdsAny, roleHome } from "@/lib/auth/routes";
@@ -15,8 +15,14 @@ import { NAV, holdsAny, roleHome } from "@/lib/auth/routes";
 export const dynamic = "force-dynamic";
 
 /** Everyone's own page: who they are, what they may do, their password. */
-export default async function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const t = await getT();
+  // Signed in with a backup code (0095): the second step is off, for a new phone.
+  const reset = (await searchParams)["two-step"] === "reset";
   const s = await getSession();
   if (!s.configured) redirect("/setup");
   if (!s.signedIn) redirect("/login");
@@ -24,6 +30,8 @@ export default async function AccountPage() {
   const warnings = s.profile ? await getPhoneWarnings() : null;
   // Two-step sign-in (0080): whether it is on for them.
   const twoStep = s.profile ? await twoStepState().catch(() => null) : null;
+  // Its backup codes (0095): how many are left; null before 0095.
+  const codesLeft = twoStep?.on ? await backupCodesLeft().catch(() => null) : null;
 
   // The screens they may start on (E6): those the menu offers them.
   const mine = s.profile ? NAV.filter((n) => holdsAny(s.profile!.permissions, n.anyOf)) : [];
@@ -100,6 +108,8 @@ export default async function AccountPage() {
           on={twoStep.on}
           factorId={twoStep.factorId}
           owner={s.profile.roles.includes("owner")}
+          codesLeft={codesLeft}
+          reset={reset && !twoStep.on}
         />
       )}
 

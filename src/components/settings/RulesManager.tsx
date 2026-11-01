@@ -82,10 +82,13 @@ function choicesFor(def: RuleDefinition, scopeType: ScopeType): string[] {
 export function RulesManager({
   rules,
   items,
+  places = [],
   timezone,
 }: {
   rules: BusinessRules;
   items: { id: string; name: string }[];
+  /** The café's open places, for a rule set for one of them (0095). */
+  places?: { id: string; name: string; kind: string }[];
   timezone: string;
 }) {
   const { t, msg: say } = useT();
@@ -131,7 +134,9 @@ export function RulesManager({
                 </tbody>
               </table>
             </div>
-            {def.scopes.some((s) => s !== "business") && <AddRule def={def} items={items} />}
+            {def.scopes.some((s) => s !== "business") && (
+              <AddRule def={def} items={items} places={places} />
+            )}
           </div>
         </section>
       ))}
@@ -251,16 +256,31 @@ function RuleRowView({
   );
 }
 
-/** A new row for a rule: for a role, a kind of item, or one item. */
-function AddRule({ def, items }: { def: RuleDefinition; items: { id: string; name: string }[] }) {
+/** A new row for a rule: for a role, a branch, a kind of item, or one item. */
+function AddRule({
+  def,
+  items,
+  places,
+}: {
+  def: RuleDefinition;
+  items: { id: string; name: string }[];
+  places: { id: string; name: string; kind: string }[];
+}) {
   const { t } = useT();
-  const scopes = def.scopes.filter((s) => s !== "business" && s !== "location");
+  // A target is a branch's; the transfer charge is the sending place's, a kitchen or store too.
+  const forPlace =
+    def.key === "transfer_markup_percent" ? places : places.filter((p) => p.kind === "branch");
+  const scopes = def.scopes.filter(
+    (s) => s !== "business" && (s !== "location" || forPlace.length > 0),
+  );
   const [open, setOpen] = useState(false);
   const [scopeType, setScopeType] = useState<ScopeType>(scopes[0] ?? "role");
   const targets: [string, string][] =
     scopeType === "role"
       ? ROLES.map((r) => [r, t(roleLabel(r))])
-      : scopeType === "item_type"
+      : scopeType === "location"
+        ? forPlace.map((p) => [p.id, p.name])
+        : scopeType === "item_type"
         ? ITEM_TYPES.map((k) => [k, t(itemTypeLabel(k))])
         : items.map((i) => [i.id, i.name]);
   const [scopeId, setScopeId] = useState("");

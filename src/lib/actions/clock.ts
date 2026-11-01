@@ -7,7 +7,7 @@
  */
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
+import { MISSING_UPDATE, badKey, callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import {
   phoneClockAnswerFrom,
   phoneLinkFrom,
@@ -146,7 +146,9 @@ export async function unlinkPhoneAction(
 /** The link opened on the phone: this phone is now the person's, and keeps its key. */
 export async function linkPhoneFinishAction(
   link: string,
-): Promise<ActionResult<{ ok: boolean; error: string | null; name: string | null }>> {
+): Promise<
+  ActionResult<{ ok: boolean; error: string | null; name: string | null; replaced?: string | null }>
+> {
   if (!isKey(link)) {
     return {
       ok: true,
@@ -157,7 +159,15 @@ export async function linkPhoneFinishAction(
       },
     };
   }
-  const r = await callRpc<Record<string, unknown>>("link_phone_finish", { p_link: link });
+  // One phone, one person (0095): the key this phone held before is sent too,
+  // and that link ends. Before 0095 the function takes the link alone.
+  const previous = await phoneKey();
+  let r = await callRpc<Record<string, unknown>>("link_phone_finish", {
+    p_link: link,
+    p_previous: previous ?? null,
+  });
+  if (!r.ok && r.error === MISSING_UPDATE)
+    r = await callRpc<Record<string, unknown>>("link_phone_finish", { p_link: link });
   if (!r.ok) return r;
   if (r.data.ok !== true || !isKey(r.data.key)) {
     return {
@@ -167,7 +177,15 @@ export async function linkPhoneFinishAction(
   }
   await keepPhoneKey(r.data.key);
   refresh("/clock", "/staff");
-  return { ok: true, data: { ok: true, error: null, name: String(r.data.name ?? "") } };
+  return {
+    ok: true,
+    data: {
+      ok: true,
+      error: null,
+      name: String(r.data.name ?? ""),
+      replaced: typeof r.data.replaced === "string" ? r.data.replaced : null,
+    },
+  };
 }
 
 const phoneClockInput = z.object({

@@ -28,6 +28,10 @@ import { getLocale } from "@/lib/i18n/server";
 import { getReceiptSetup } from "@/lib/db/receipt";
 import { ReceiptManager } from "@/components/settings/ReceiptManager";
 import { SettingsGroup } from "@/components/settings/SettingsGroup";
+import { getBusinessDetails, getPlaces } from "@/lib/db/details";
+import { getLanguageSettings } from "@/lib/db/languages";
+import { DetailsManager } from "@/components/settings/DetailsManager";
+import { PlacesManager } from "@/components/settings/PlacesManager";
 import {
   notSetUp,
   peopleStatus,
@@ -66,6 +70,9 @@ export default async function SettingsPage() {
     channels,
     locale,
     receipt,
+    details,
+    places,
+    languageSettings,
   ] = await Promise.all([
     getBusinessConfig(),
     getLocations(),
@@ -84,6 +91,10 @@ export default async function SettingsPage() {
     getLocale(),
     // The café's own receipt (0091); null before it is applied.
     getReceiptSetup(),
+    // The café's details and its places on a screen (0095); null before it is applied.
+    getBusinessDetails(),
+    getPlaces(),
+    getLanguageSettings().catch(() => ({ languages: [], ownWords: {} })),
   ]);
   // The café's own ways of selling, in use: a delivery platform sets what its customers pay.
   const shopChannels = channels
@@ -347,32 +358,64 @@ export default async function SettingsPage() {
       <SettingsGroup id="places" title={t("Places")} status={say(placesStatus(facts))}>
         <section className="sg-part" id="locations">
           <h3 style={{ marginTop: 0 }}>{t("Locations")}</h3>
-          <table>
-            <tbody>
-              {locations.map((l) => (
-                <tr key={l.id}>
-                  <td>{l.name}</td>
-                  <td className="muted">{t(KIND_LABEL[l.kind] ?? l.kind)}</td>
-                  <td className="muted">{l.isActive ? t("active") : t("inactive")}</td>
-                  {sectionsInUse.length > 0 && (
-                    <td>
-                      {l.kind === "branch" && (
-                        <PlaceSections
-                          placeId={l.id}
-                          placeName={l.name}
-                          sections={sectionsInUse}
-                          selling={(sectionSetup?.placeSections[l.id] ?? []).filter((id) =>
-                            sectionsInUse.some((s) => s.id === id),
+          {details === null ? (
+            <>
+              <table>
+                <tbody>
+                  {locations.map((l) => (
+                    <tr key={l.id}>
+                      <td>{l.name}</td>
+                      <td className="muted">{t(KIND_LABEL[l.kind] ?? l.kind)}</td>
+                      <td className="muted">{l.isActive ? t("active") : t("inactive")}</td>
+                      {sectionsInUse.length > 0 && (
+                        <td>
+                          {l.kind === "branch" && (
+                            <PlaceSections
+                              placeId={l.id}
+                              placeName={l.name}
+                              sections={sectionsInUse}
+                              selling={(sectionSetup?.placeSections[l.id] ?? []).filter((id) =>
+                                sectionsInUse.some((s) => s.id === id),
+                              )}
+                              canEdit
+                            />
                           )}
-                          canEdit
-                        />
+                        </td>
                       )}
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="muted" style={{ fontSize: ".85rem" }}>
+                {t("This needs the database update 0095, which has not been applied yet.")}
+              </p>
+            </>
+          ) : (
+            <PlacesManager
+              places={places}
+              extra={
+                sectionsInUse.length > 0
+                  ? Object.fromEntries(
+                      places
+                        .filter((l) => l.kind === "branch")
+                        .map((l) => [
+                          l.id,
+                          <PlaceSections
+                            key={l.id}
+                            placeId={l.id}
+                            placeName={l.name}
+                            sections={sectionsInUse}
+                            selling={(sectionSetup?.placeSections[l.id] ?? []).filter((id) =>
+                              sectionsInUse.some((s) => s.id === id),
+                            )}
+                            canEdit
+                          />,
+                        ]),
+                    )
+                  : undefined
+              }
+            />
+          )}
         </section>
       </SettingsGroup>
 
@@ -397,21 +440,35 @@ export default async function SettingsPage() {
         title={t("The café's details")}
         status={cfg ? [`${cfg.currencyCode} · ${t(cfg.timezone)}`] : []}
       >
-        <section className="sg-part">
+        <section className="sg-part" data-testid="settings-details">
           <h3 style={{ marginTop: 0 }}>{t("Business configuration")}</h3>
-          <table>
-            <tbody>
-              {config.map(([k, v]) => (
-                <tr key={k}>
-                  <td className="muted">{t(k)}</td>
-                  <td>{v}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="muted" style={{ fontSize: ".8rem" }}>
-            {t("These are changed in the database by the owner; there is no screen for them yet.")}
-          </p>
+          {details === null ? (
+            <>
+              <table>
+                <tbody>
+                  {config.map(([k, v]) => (
+                    <tr key={k}>
+                      <td className="muted">{t(k)}</td>
+                      <td>{v}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="muted" style={{ fontSize: ".8rem" }}>
+                {t("This needs the database update 0095, which has not been applied yet.")}
+              </p>
+            </>
+          ) : (
+            <DetailsManager
+              details={details}
+              languages={[
+                ...BUILT_IN_LANGUAGES.map((l) => ({ code: l.code, label: l.label })),
+                ...languageSettings.languages
+                  .filter((l) => l.isActive)
+                  .map((l) => ({ code: l.code, label: l.name })),
+              ]}
+            />
+          )}
         </section>
       </SettingsGroup>
     </div>

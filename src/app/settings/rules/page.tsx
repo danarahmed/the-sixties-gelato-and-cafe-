@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requirePermission } from "@/lib/auth/session";
 import { getT } from "@/lib/i18n/server";
 import { getBusinessRules } from "@/lib/db/rules";
-import { getItems } from "@/lib/db/read";
+import { getItems, getLocations } from "@/lib/db/read";
 import { RulesManager } from "@/components/settings/RulesManager";
 import { PageIntro } from "@/components/PageIntro";
 
@@ -16,7 +16,11 @@ export const dynamic = "force-dynamic";
 export default async function RulesPage() {
   const profile = await requirePermission("settings.manage");
   const t = await getT();
-  const [rules, items] = await Promise.all([getBusinessRules(), getItems()]);
+  const [rules, items, locations] = await Promise.all([
+    getBusinessRules(),
+    getItems(),
+    getLocations(),
+  ]);
   return (
     <div className="grid" style={{ gap: 16 }}>
       <div className="phead">
@@ -34,6 +38,9 @@ export default async function RulesPage() {
       <RulesManager
         rules={rules}
         items={items.map((i) => ({ id: i.id, name: i.name }))}
+        places={locations
+          .filter((l) => l.isActive)
+          .map((l) => ({ id: l.id, name: l.name, kind: l.kind }))}
         timezone={profile.timezone}
       />
     </div>
