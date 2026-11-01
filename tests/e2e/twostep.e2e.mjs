@@ -1,7 +1,9 @@
 // Two-step sign-in (round twenty-three, 0080), through the real screens: the
-// owner turns it on from the Account page with an authenticator app's code;
-// signing in again asks for the code before any page, a wrong one is
-// refused, the right one lets them in; and it is turned off again.
+// owner turns it on from the Account page with an authenticator app's code
+// and is shown eight backup codes (0095); signing in again asks for the code
+// before any page, a wrong one is refused, the right one lets them in; new
+// backup codes end the old; with the phone lost, a backup code lets them in
+// with the second step off; and, on again, it is turned off.
 import crypto from "node:crypto";
 import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
 
@@ -24,6 +26,8 @@ function totp(secret) {
 
 const browser = await chromium.launch();
 let secret = "";
+let oldCodes = [];
+let newCodes = [];
 
 console.log("▸ the owner turns it on");
 {
@@ -38,11 +42,23 @@ console.log("▸ the owner turns it on");
   );
   await card.getByTestId("two-step-code").fill(totp(secret));
   await card.getByTestId("two-step-confirm").click();
+  await card.getByTestId("backup-codes").waitFor({ timeout: 10000 });
+  const codes = await card.getByTestId("backup-code").allTextContents();
+  check(
+    codes.length === 8 && codes.every((c) => /^[A-Z2-9]{5}-[A-Z2-9]{5}$/.test(c.trim())),
+    "eight backup codes, shown once",
+  );
+  await card.getByTestId("backup-codes-kept").click();
   await card.getByTestId("two-step-on").waitFor({ timeout: 10000 });
   check(
     sql(`select count(*) from auth.mfa_factors where status = 'verified'`) === "1",
     "on: the second step is kept, confirmed",
   );
+  check(
+    /8/.test((await card.getByTestId("backup-codes-left").textContent()) ?? ""),
+    "eight backup codes left",
+  );
+  oldCodes = codes.map((c) => c.trim());
   await ctx.close();
 }
 
@@ -68,9 +84,64 @@ console.log("▸ signing in asks for the code");
   await p.waitForURL((u) => u.pathname !== "/login/verify", { timeout: 10000 });
   check(true, "the right code lets them in");
   await open(p, "/account");
-  await p.getByTestId("two-step").getByTestId("two-step-off").click();
-  await p.getByTestId("two-step").getByTestId("two-step-start").waitFor({ timeout: 10000 });
+  const card = p.getByTestId("two-step");
+  await card.getByTestId("backup-codes-new").click();
+  await card.getByTestId("backup-codes").waitFor({ timeout: 10000 });
+  newCodes = (await card.getByTestId("backup-code").allTextContents()).map((c) => c.trim());
+  check(
+    newCodes.length === 8 && !newCodes.some((c) => oldCodes.includes(c)),
+    "new backup codes, none of the old",
+  );
+  await card.getByTestId("backup-codes-kept").click();
+  await ctx.close();
+}
+
+console.log("▸ the phone lost: a backup code");
+{
+  const ctx = await browser.newContext();
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/login`);
+  await p.fill('input[name="email"]', "owner@example.com");
+  await p.fill('input[name="password"]', "password123");
+  await p.locator('button[type="submit"]').first().click();
+  await p.waitForURL((u) => u.pathname === "/login/verify", { timeout: 15000 });
+  await p.getByTestId("verify-lost-phone").click();
+  await p.getByTestId("backup-code-input").fill(oldCodes[0]);
+  await p.getByTestId("backup-submit").click();
+  await p.getByRole("alert").waitFor({ timeout: 10000 });
+  check(
+    new URL(p.url()).pathname === "/login/verify",
+    "an old code, ended by the new ones, is refused",
+  );
+  await p.getByTestId("backup-code-input").fill(newCodes[2].toLowerCase());
+  await p.getByTestId("backup-submit").click();
+  await p.waitForURL((u) => u.pathname === "/account", { timeout: 15000 });
+  await p.getByTestId("two-step-reset").waitFor({ timeout: 10000 });
+  check(true, "a new one lets them in, and says the second step is off");
+  check(sql(`select count(*) from auth.mfa_factors`) === "0", "the second step is off");
+  check(
+    sql(`select count(*) from two_step_backup_code where used_at is null`) === "0",
+    "and the other codes are used up",
+  );
+  await open(p, "/reports");
+  check(new URL(p.url()).pathname === "/reports", "every page opens again");
+
+  console.log("▸ on again with a new phone, then off");
+  const card = p.getByTestId("two-step");
+  await open(p, "/account");
+  await card.getByTestId("two-step-start").click();
+  const again = (await card.getByTestId("two-step-secret").textContent()) ?? "";
+  await card.getByTestId("two-step-code").fill(totp(again));
+  await card.getByTestId("two-step-confirm").click();
+  await card.getByTestId("backup-codes").waitFor({ timeout: 10000 });
+  await card.getByTestId("backup-codes-kept").click();
+  await card.getByTestId("two-step-off").click();
+  await card.getByTestId("two-step-start").waitFor({ timeout: 10000 });
   check(sql(`select count(*) from auth.mfa_factors`) === "0", "turned off again");
+  check(
+    sql(`select count(*) from two_step_backup_code where used_at is null`) === "0",
+    "and its backup codes with it",
+  );
   await ctx.close();
 }
 

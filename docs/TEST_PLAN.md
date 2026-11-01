@@ -736,7 +736,11 @@ database, behind a small local stand-in for Supabase's auth service.
 - `twostep` (round twenty-three, `0080`): the owner turns on the second
   step from Account with a code from the app, signs out, signs in with the
   password, is asked for the code before any page, a wrong code is refused,
-  the right one lets them in, and they turn it off.
+  the right one lets them in, and they turn it off. Since `0095`: turned on,
+  it shows eight backup codes once; new ones end the old; with the phone
+  lost, an old code is refused and a new one (in small letters) lets them in
+  with the second step off and the others used up; on again with a new
+  phone, then off, its codes go with it.
 - `markdowns` (round twenty-one, `0079`): Production suggests half off the
   water due within the hour; a tap marks it down, the till shows −50%, and a
   tap stops it.
@@ -1342,6 +1346,11 @@ database, behind a small local stand-in for Supabase's auth service.
   unlikely it is by luck; marked explained with a note, it is kept under
   what was settled. A manager is sent back to Reports; Settings offers the
   owner the general manager's access; Arabic and Kurdish.
+- `findings` (`0095`): the owner renames the café on Settings, the currency
+  shut once it has sold; a manager changes nothing; a branch is added (with
+  its drawer), renamed, not closed without a reason, closed with one (its
+  drawer with it) and opened again, and Rules offers it for a daily target;
+  a sale's receipt printed again from Orders says COPY, with its number.
 - `setup` (round seven, run last: it clears the café): the test café is
   cleared with `supabase/remediation/start-fresh.sql`, every record and the
   setup lists gone, the logins and the chart of accounts kept, the audit
