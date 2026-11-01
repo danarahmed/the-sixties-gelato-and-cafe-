@@ -14,9 +14,9 @@ const phrases: PhraseBook = {
   "Stock value (ledger)": { ar: "قيمة المخزون (حسب السجل)", ckb: "بەهای کۆگا (بەپێی تۆمار)" },
   "Below reorder level": { ar: "دون حدّ إعادة الطلب", ckb: "لە خوار ئاستی داواکردنەوە" },
   "Negative stock": { ar: "المخزون السالب", ckb: "کۆگای ژێر سفر" },
-  "Only the {n} item(s) at or below their reorder level.": {
-    ar: "فقط المواد الـ{n} التي عند حدّ إعادة الطلب أو دونه.",
-    ckb: "تەنها ئەو {n} کاڵایەی لە ئاستی داواکردنەوە یان لە خوارییەوەن.",
+  "Only the {n} item(s) below their reorder level.": {
+    ar: "فقط المواد الـ{n} التي دون حدّ إعادة الطلب.",
+    ckb: "تەنها ئەو {n} کاڵایەی لە خوار ئاستی داواکردنەوەن.",
   },
   "Only the {n} item(s) with negative stock.": {
     ar: "فقط المواد الـ{n} ذات المخزون السالب.",

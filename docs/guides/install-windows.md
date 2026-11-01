@@ -15,9 +15,11 @@ automatically. It needs a connection to sell and to show the books.
 ## Notes
 
 - The app opens in its own window, full-screen capable, keyboard-friendly.
-- If the internet drops, a red **Offline** banner appears and the till stops
-  taking sales until it is back. Nothing is saved while offline, so nothing is
-  recorded twice.
+- If the internet drops, a red **Offline** banner appears. Quick sales still
+  work: the till keeps each one, prints its receipt as **Offline 1**,
+  **Offline 2**…, and sends them by itself when the internet is back, each
+  once. A table's bill, a discount, a customer, dollars and the café's own
+  delivery wait for the internet (the cashier guide has the rest).
 - To update: just reopen it — updates apply automatically.
 - To uninstall: open the app → menu (…) → **Uninstall**, or remove it from
   Windows _Installed apps_.

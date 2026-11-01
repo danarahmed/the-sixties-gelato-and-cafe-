@@ -1400,7 +1400,7 @@
             "does": "Sends the same payment again with the same key: recorded once at most."
           },
           {
-            "label": "Discard — a manager will check Orders",
+            "label": "Discard — a manager can see it on Orders",
             "kind": "button",
             "does": "Gives up on this till. Quick sale: \"Discarded on this till. If the sale did reach the books, a manager can void it on the Orders screen.\" Bill: \"Set aside. If the payment went through, the bill has left the open bills; if not, it is still there waiting to be paid.\"",
             "after": "Nothing is undone in the books: if it was recorded, it stays until voided on Orders."

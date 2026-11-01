@@ -116,6 +116,7 @@ export async function backupCodeSignInAction(
     return { error: "A backup code is ten letters and digits, like ABCDE-FGH23" };
   const r = await callRpc<{ ok?: boolean; error?: string }>("use_two_step_code", { p_code: code });
   if (!r.ok) return { error: r.error };
-  if (!r.data?.ok) return { error: r.data?.error ?? "That backup code is not right, or was used already" };
+  if (!r.data?.ok)
+    return { error: r.data?.error ?? "That backup code is not right, or was used already" };
   redirect("/account?two-step=reset");
 }

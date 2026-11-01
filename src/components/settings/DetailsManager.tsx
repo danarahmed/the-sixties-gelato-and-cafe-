@@ -12,9 +12,9 @@ const NEAR_ZONES = ["Asia/Baghdad", "Asia/Dubai", "Asia/Riyadh", "Asia/Tehran", 
 
 function allZones(): string[] {
   try {
-    const more = (Intl as unknown as { supportedValuesOf?: (k: string) => string[] }).supportedValuesOf?.(
-      "timeZone",
-    );
+    const more = (
+      Intl as unknown as { supportedValuesOf?: (k: string) => string[] }
+    ).supportedValuesOf?.("timeZone");
     return [...new Set([...NEAR_ZONES, ...(more ?? [])])];
   } catch {
     return NEAR_ZONES;
@@ -125,6 +125,7 @@ export function DetailsManager({
           onChange={set("name")}
           disabled={!can || busy}
           maxLength={80}
+          aria-label={t("Business name")}
           data-testid="details-name"
         />,
       )}
@@ -135,6 +136,7 @@ export function DetailsManager({
           value={f.defaultLocale}
           onChange={set("defaultLocale")}
           disabled={!can || busy}
+          aria-label={t("Default language")}
           data-testid="details-language"
         >
           {languages.map((l) => (
@@ -154,6 +156,7 @@ export function DetailsManager({
             onChange={set("currencyCode")}
             disabled={!open || busy}
             maxLength={3}
+            aria-label={t("Currency")}
             data-testid="details-currency"
           />,
         )}
@@ -165,6 +168,7 @@ export function DetailsManager({
             onChange={set("currencySymbol")}
             disabled={!open || busy}
             maxLength={6}
+            aria-label={t("Its sign")}
             data-testid="details-symbol"
           />,
         )}
@@ -176,6 +180,7 @@ export function DetailsManager({
             value={f.currencyDecimals}
             onChange={set("currencyDecimals")}
             disabled={!open || busy}
+            aria-label={t("Decimal places")}
             data-testid="details-decimals"
           />,
         )}
@@ -189,6 +194,7 @@ export function DetailsManager({
             value={f.timezone}
             onChange={set("timezone")}
             disabled={!open || busy}
+            aria-label={t("Timezone")}
             data-testid="details-timezone"
           />
           <datalist id="details-zones">
@@ -207,14 +213,21 @@ export function DetailsManager({
           onChange={set("billPrefix")}
           disabled={!open || busy}
           maxLength={8}
+          aria-label={t("Bill numbers start with")}
           data-testid="details-prefix"
         />,
-        fixedNote ?? t("2 to 8 capital letters or digits, a letter first: {prefix}-2026-0001.", {
-          prefix: (f.billPrefix || "BILL").toUpperCase(),
-        }),
+        fixedNote ??
+          t("2 to 8 capital letters or digits, a letter first: {prefix}-2026-0001.", {
+            prefix: (f.billPrefix || "BILL").toUpperCase(),
+          }),
       )}
       {can && (
-        <button type="submit" disabled={busy} style={{ justifySelf: "start" }} data-testid="details-save">
+        <button
+          type="submit"
+          disabled={busy}
+          style={{ justifySelf: "start" }}
+          data-testid="details-save"
+        >
           {t("Save")}
         </button>
       )}

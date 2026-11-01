@@ -127,7 +127,11 @@ export function PlacesManager({
     start(async () => {
       const r = await setPlaceActiveAction({ place: p.id, active, reason: reason ?? null });
       if (!r.ok) return setMsg({ ok: false, text: r.error });
-      done(active ? t("{name} is open again.", { name: p.name }) : t("{name} is closed.", { name: p.name }));
+      done(
+        active
+          ? t("{name} is open again.", { name: p.name })
+          : t("{name} is closed.", { name: p.name }),
+      );
     });
   }
 
@@ -139,7 +143,12 @@ export function PlacesManager({
         <table className="stack-table">
           <tbody>
             {places.map((p) => (
-              <tr key={p.id} data-testid="place-row" data-place={p.name} className={p.isActive ? "" : "muted"}>
+              <tr
+                key={p.id}
+                data-testid="place-row"
+                data-place={p.name}
+                className={p.isActive ? "" : "muted"}
+              >
                 <td>
                   {renaming?.id === p.id ? (
                     <NameFields
@@ -169,10 +178,19 @@ export function PlacesManager({
                   <div className="row" style={{ gap: 6, flexWrap: "wrap", alignItems: "center" }}>
                     {renaming?.id === p.id ? (
                       <>
-                        <button type="button" onClick={rename} disabled={busy} data-testid="place-rename-save">
+                        <button
+                          type="button"
+                          onClick={rename}
+                          disabled={busy}
+                          data-testid="place-rename-save"
+                        >
                           {t("Save")}
                         </button>
-                        <button type="button" className="linklike" onClick={() => setRenaming(null)}>
+                        <button
+                          type="button"
+                          className="linklike"
+                          onClick={() => setRenaming(null)}
+                        >
                           {t("Cancel")}
                         </button>
                       </>
@@ -208,7 +226,11 @@ export function PlacesManager({
                           onClick={() =>
                             setRenaming({
                               id: p.id,
-                              names: { name: p.name, nameAr: p.nameAr ?? "", nameCkb: p.nameCkb ?? "" },
+                              names: {
+                                name: p.name,
+                                nameAr: p.nameAr ?? "",
+                                nameCkb: p.nameCkb ?? "",
+                              },
                             })
                           }
                           disabled={busy}
@@ -272,7 +294,11 @@ export function PlacesManager({
             ))}
           </select>
           <NameFields names={names} onChange={setNames} disabled={busy} />
-          <button type="submit" disabled={busy || names.name.trim().length < 2} data-testid="place-add-save">
+          <button
+            type="submit"
+            disabled={busy || names.name.trim().length < 2}
+            data-testid="place-add-save"
+          >
             {t("Add")}
           </button>
         </div>

@@ -877,7 +877,9 @@ daily use`; it fires when that is under `lead + 1` days, the lead being the
   item's last supplier's delivery time or the café's _1 day_. 🔴 under a day,
   🟠 otherwise. Quiet with under 7 days of history, and on a day the item is
   received. Sure with 28 days of history or more, fairly sure with 14–27, an
-  early sign with 7–13. It suggests ordering `ceil(daily use × 7)`, a week's
+  early sign with 7–13. Its title says the daily use with the item's unit,
+  rounded as people do (`0095`: whole from 10, one place from 1, else two —
+  "using about 88 each a day"). It suggests ordering `ceil(daily use × 7)`, a week's
   worth (or a batch, for an item made on Production).
 - **Below the reorder level** (🟠): on hand under the item's reorder level,
   items never stocked included; not said again for an item running out.
@@ -894,7 +896,8 @@ daily use`; it fires when that is under `lead + 1` days, the lead being the
   ingredient is named once instead, with the products that use it (🟠 no
   cost); a product sold with no recipe, and no reason for using no stock, is
   🟠 once, whatever its channels.
-- **Waste above its usual** (🟠): waste (5300) in the last 7 days against the
+- **Waste above its usual** (🟠): waste (5300 Waste & spoilage and, since
+  `0048`, 5310 Production and preparation loss) in the last 7 days against the
   usual week, `prior waste ÷ prior days × 7`, the prior days being days 8–35
   back, at most 28 and at least 7 (so the books need 14 days of history). It
   fires above _1.5_ times the usual week and above _20,000 IQD_. Fairly sure

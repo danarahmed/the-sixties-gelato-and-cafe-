@@ -281,8 +281,8 @@ function AddRule({
       : scopeType === "location"
         ? forPlace.map((p) => [p.id, p.name])
         : scopeType === "item_type"
-        ? ITEM_TYPES.map((k) => [k, t(itemTypeLabel(k))])
-        : items.map((i) => [i.id, i.name]);
+          ? ITEM_TYPES.map((k) => [k, t(itemTypeLabel(k))])
+          : items.map((i) => [i.id, i.name]);
   const [scopeId, setScopeId] = useState("");
   if (scopes.length === 0) return null;
   if (!open)

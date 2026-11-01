@@ -44,7 +44,9 @@ export async function updateBusinessDetailsAction(
 const KINDS = ["branch", "central_kitchen", "warehouse"] as const;
 
 const placeInput = z.object({
-  kind: z.string().refine((k) => (KINDS as readonly string[]).includes(k), "Choose what kind of place it is"),
+  kind: z
+    .string()
+    .refine((k) => (KINDS as readonly string[]).includes(k), "Choose what kind of place it is"),
   name: text("The place's name", 60),
   nameAr: optionalText(60),
   nameCkb: optionalText(60),

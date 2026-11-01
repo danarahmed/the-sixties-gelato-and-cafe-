@@ -312,7 +312,7 @@ own:
   turns the chip red: **1 offline sale needs a manager**. A manager opens it and
   sends it again, records it at today's price, or, last of all, takes it off the
   till.
-- **Discard — a manager will check Orders** clears a frozen order from your
+- **Discard — a manager can see it on Orders** clears a frozen order from your
   till. Use it only if the customer left without paying, and tell a manager.
 - Everything else you save (a table's bill, a bill kept for later, a split, a
   cancellation) works the same way: if no answer comes back, the till says

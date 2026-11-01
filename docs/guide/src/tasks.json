@@ -1104,7 +1104,7 @@
       },
       {
         "case": "The screen says the connection dropped after Confirm",
-        "do": "Press “Retry” when the internet is back. It is never recorded twice. Only if you must, press “Discard — a manager will check Orders” and tell a manager."
+        "do": "Press “Retry” when the internet is back. It is never recorded twice. Only if you must, press “Discard — a manager can see it on Orders” and tell a manager."
       }
     ],
     "screens": [

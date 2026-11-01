@@ -34,7 +34,7 @@ export function VerifyForm({ next }: { next: string }) {
           spellCheck={false}
           autoFocus
           dir="ltr"
-          placeholder="ABCDE-FGH23"
+          placeholder="ABCDE-FGH23" // i18n-ignore: a backup code's shape, the same in every language
           aria-label={t("Backup code")}
           data-testid="backup-code-input"
           style={{ minHeight: 52, fontSize: "1.3rem", letterSpacing: ".15em", textAlign: "center" }}

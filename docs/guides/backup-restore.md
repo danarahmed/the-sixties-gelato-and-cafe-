@@ -1,13 +1,21 @@
 # Backup & Restore Guide
 
-Your data is yours. This describes automated backups, a **tested** restore
+Your data is yours. This describes backups, a **tested** restore
 procedure, and export for an external accountant.
 
-## Automated backups
+## Backups
 
-- Supabase provides automated daily backups (and point-in-time recovery on paid
-  plans). Verify the schedule in your project's **Database → Backups**.
-- Additionally, take your own logical backup on a schedule you control:
+- **What the café's plan gives.** The café's Supabase project is on the
+  **Free plan**, and the Free plan takes **no backups** a project can be
+  restored from. If the database were lost or wrongly changed, Supabase would
+  have nothing to put back.
+- **Recommended: the Pro plan** (about $25 a month). It takes a backup of the
+  whole project every day and keeps the last seven, restored from the
+  dashboard; point-in-time recovery (back to any minute) can be added to it.
+  Change it in Supabase: the organisation → **Billing**. Then check
+  **Database → Backups** in the project shows a backup each day.
+- Whatever the plan, also take your own copy on a schedule you control, and
+  keep it off Supabase:
   ```bash
   pg_dump "$DATABASE_URL" --no-owner --format=custom -f backup-$(date +%F).dump
   ```
@@ -29,7 +37,8 @@ procedure, and export for an external accountant.
 
    A dump of the database carries the books and the people, but not their
    logins: those live in Supabase Auth. For a full project restore, use
-   Supabase's own backups; people can also simply create their logins again.
+   Supabase's own backups (the Pro plan's); people can also simply create
+   their logins again.
 
 4. Record the drill date and result. A backup you have never restored is not a
    backup.

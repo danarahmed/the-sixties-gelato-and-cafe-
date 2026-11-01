@@ -83,6 +83,35 @@ export default async function ReportsPage({
   const today = businessToday(profile.timezone);
   const from = parseDay(sp.from, monthStart(today));
   const to = parseDay(sp.to, today);
+  // From after To (D3): said plainly, with the dates to put right, before
+  // anything is read for days that do not exist.
+  if (from > to)
+    return (
+      <div className="grid" style={{ gap: 18 }}>
+        <div className="phead">
+          <h1>{t("nav.reports")}</h1>
+        </div>
+        <form
+          className="card"
+          style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}
+          data-testid="reports-bad-dates"
+        >
+          <p className="red" role="alert" style={{ flexBasis: "100%", margin: 0 }}>
+            {t("Choose the dates, the first on or before the last")}
+          </p>
+          <label>
+            <div className="sc">{t("From")}</div>
+            <input type="date" name="from" defaultValue={to} />
+          </label>
+          <label>
+            <div className="sc">{t("To")}</div>
+            <input type="date" name="to" defaultValue={from} />
+          </label>
+          {typeof sp.place === "string" && <input type="hidden" name="place" value={sp.place} />}
+          <button type="submit">{t("Show")}</button>
+        </form>
+      </div>
+    );
   const seesProfit = has(profile, "profit.view");
   const seesExceptions = has(profile, "audit.view");
   // The hours (0049): for those who keep the staff, their hours or their pay, a year at most.

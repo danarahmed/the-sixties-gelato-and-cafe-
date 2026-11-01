@@ -1,45 +1,63 @@
 # What writing the guide found
 
-Things noticed in the code while each screen was described. None is changed
-yet: they wait for the owner's word.
+Things noticed in the code while each screen was described, and what the
+owner decided on 1 November 2026. Put right in migration `0095` and the
+screens with it, unless said otherwise.
 
-- Reports: a From date after the To date shows the general "This screen could
-  not be loaded" page instead of a plain message (Sales analysis says it plainly).
-- Reports: "Stock value on a day" and "Balance sheet and cash flow" never count
-  as opened, so they never move up in the most-opened order.
-- Dashboard: "runs out … using about 88.07 a day" shows a daily use with two
-  decimals and no unit (each, g, ml).
-- Dashboard: the low-stock line says "at or below their reorder level"; it
-  counts items strictly below.
-- docs/CALCULATIONS.md: the waste alert reads 5300 and 5310 since 0048, not 5300 alone.
-- Purchase order page: the Unit column shows raw codes (e.g. case_24).
-- Vendors: "Edit vendor" saves without a retry key (a lost answer is not retried).
-- Meal deals and prices by the hour: a price that is not a number may show
-  "Expected number, received nan"; each press makes a new retry key, so a
-  dropped answer pressed again could add a second price by the hour.
-- Stock counts: the status words (counting, submitted, approved…) have no
-  translation and show in lower case.
-- Rules: three rules may be set per branch in the database (daily sales
-  target, labour target, transfer charge), but the screen offers no branch row.
-- Two-step sign-in: if the owner loses the phone with the authenticator app,
-  no screen offers a way back in (it is removed in Supabase Auth).
-- Till: collecting a pre-order (or making a customer invoice) can be refused
-  when the books hold less stock than needed and the rule asks for a manager,
-  but neither window offers a manager's approval: staff are stuck.
-- Till: "Discard" tells a cashier a manager will check Orders, a screen the
-  cashier cannot open (fine as information, but worth wording).
-- Till: the main screen has no heading ("Point of Sale" shows only when empty).
+## Things that stopped work
 
-Missing features the task guides ran into (described as they are):
+- **Fixed (A1).** Till: collecting a pre-order or making a customer invoice
+  could be refused when the books held less stock than needed and the rule
+  asked for a manager, with no way to get one. Now such a sale, already
+  agreed with the customer, goes ahead without a manager and is noted on the
+  audit trail with why. A rule that refuses still refuses.
+- **Fixed (A2).** Clock: linking a phone to a second person left the first
+  person's phone counted as linked. Now one phone is one person: the old link
+  ends, and the phone says whose it was.
+- **Fixed (A3).** Purchasing: a delivery priced entirely at 0 could not be
+  received. Now it is received at no cost and moves nothing in the books;
+  freight on it is refused, as there is nothing to share it by.
 
-- No screen changes the café's details (name, currency, time zone, default
-  language, bill numbers); Settings only shows them.
-- Places (branches, the kitchen, the warehouse) cannot be added or renamed on
-  a screen.
-- An earlier sale's receipt cannot be printed again (Orders prints refund slips only).
-- Clock: linking a phone to a second person makes the phone forget the first
-  person's key, but the database still counts the first person's phone as
-  linked: Staff shows "Phone linked" and the till refuses their PIN while a
-  clock screen is in use, until a manager presses Unlink.
-- Purchasing: a delivery priced entirely at 0 cannot be received ("Goods value
-  must be greater than zero…"), even with no freight.
+## Features that were missing
+
+- **Fixed (B1).** Settings → The café's details: the owner changes the name
+  and default language; the currency, the time zone and the bill numbers
+  until anything is sold or posted.
+- **Fixed (B2).** Settings → Places: add, rename (three languages), close
+  (with a reason, once nothing is open or left there) and open again. A new
+  place has its till drawer at once and every screen and report counts it.
+- **Fixed (B3).** Orders: **Print receipt again**, marked COPY.
+- **Fixed (B4).** Settings → Rules: the daily sales target, the labour target
+  and the transfer charge take a row per branch.
+- **Fixed (B5).** Two-step sign-in: eight backup codes, shown once; one of
+  them at sign-in takes the second step off when the phone is lost.
+
+## Protection against duplicates and confusing errors
+
+- **Fixed (C1).** Meal deals and prices by the hour keep one retry key per
+  press, so an unanswered press sent again is never recorded twice.
+- **Fixed (C2).** Vendors → Edit vendor is sent again by itself when no
+  answer comes (an edit sets the same values twice, so no key is needed).
+- **Fixed (C3).** A price that is not a number says "Type the price as a
+  number, e.g. 3500".
+
+## Wording and display
+
+- **Fixed (D1).** "Runs out … using about 88 each a day": with its unit, and
+  rounded as people round.
+- **Fixed (D2).** The purchase order page names a pack ("Case of 24"), not
+  its code.
+- **Fixed (D3).** Reports: a From date after the To date says so plainly,
+  with the two dates offered the right way round.
+- **Fixed (D4).** Dashboard and Stock: "below their reorder level", as they
+  count; "No item is below its reorder level" when none is.
+- **Fixed (D5).** Stock counts: the status in words (Counting, Waiting for
+  review, Approved, Rejected), in the three languages.
+- **Left as it is (D6).** The till's main screen has no heading.
+- **Fixed (D7).** Till: "Discard — a manager can see it on Orders".
+- **Not a fault (D8).** "Stock value on a day" and "Balance sheet and cash
+  flow" have counted as opened since step 6 (21 October); the finding was
+  wrong.
+- **Fixed (D9).** docs/CALCULATIONS.md: the waste alert reads 5300 and 5310.
+- **Fixed (D10).** The install guides said nothing is saved offline; quick
+  sales are kept and sent when the internet is back.

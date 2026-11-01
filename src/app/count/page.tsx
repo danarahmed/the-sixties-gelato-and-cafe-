@@ -14,6 +14,15 @@ import { PageIntro } from "@/components/PageIntro";
 
 export const dynamic = "force-dynamic";
 
+/** A count's state in words (D5): the database's codes are not shown. */
+const STATUS_LABEL: Record<string, string> = {
+  draft: "Draft",
+  counting: "Counting",
+  submitted: "Waiting for review",
+  approved: "Approved",
+  rejected: "Rejected",
+};
+
 const STATUS_BADGE: Record<string, string> = {
   counting: "warn",
   submitted: "warn",
@@ -225,7 +234,9 @@ export default async function CountPage({
                     {c.counted}/{c.lines}
                   </td>
                   <td data-label={t("Status")}>
-                    <span className={`badge ${STATUS_BADGE[c.status] ?? ""}`}>{t(c.status)}</span>
+                    <span className={`badge ${STATUS_BADGE[c.status] ?? ""}`}>
+                      {t(STATUS_LABEL[c.status] ?? c.status)}
+                    </span>
                     {c.rejectedReason && (
                       <div className="muted" style={{ fontSize: ".75rem" }}>
                         {msg(c.rejectedReason)}

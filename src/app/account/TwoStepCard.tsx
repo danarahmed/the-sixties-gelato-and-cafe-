@@ -92,7 +92,12 @@ export function TwoStepCard({
         <Icon name="shield" /> {t("Two-step sign-in")}
       </h3>
       {reset && (
-        <p className="badge warn" role="status" style={{ whiteSpace: "normal", margin: 0 }} data-testid="two-step-reset">
+        <p
+          className="badge warn"
+          role="status"
+          style={{ whiteSpace: "normal", margin: 0 }}
+          data-testid="two-step-reset"
+        >
           {t(
             "You signed in with a backup code: the second step is off, and your other codes are used up. Turn it on again with your new phone.",
           )}
@@ -106,7 +111,16 @@ export function TwoStepCard({
               "Write them down or print them, and keep them away from your phone. If the phone is lost, one of them, typed instead of the six digits, lets you in. Each works once. They are not shown again.",
             )}
           </p>
-          <ol className="backup-codes" dir="ltr" style={{ margin: 0, columns: 2, fontFamily: "var(--mono, monospace)", fontSize: "1.05rem" }}>
+          <ol
+            className="backup-codes"
+            dir="ltr"
+            style={{
+              margin: 0,
+              columns: 2,
+              fontFamily: "var(--mono, monospace)",
+              fontSize: "1.05rem",
+            }}
+          >
             {codes.map((c) => (
               <li key={c} data-testid="backup-code">
                 {c}
@@ -134,7 +148,11 @@ export function TwoStepCard({
             {t("On: signing in asks for the code from your authenticator app.")}
           </p>
           {codesLeft !== null && (
-            <p className="muted" style={{ margin: 0, fontSize: ".85rem" }} data-testid="backup-codes-left">
+            <p
+              className="muted"
+              style={{ margin: 0, fontSize: ".85rem" }}
+              data-testid="backup-codes-left"
+            >
               {codesLeft === 0
                 ? t("No backup codes left: make new ones, in case the phone is lost.")
                 : t("{n} backup codes left, for when the phone is lost.", { n: codesLeft })}
@@ -142,7 +160,12 @@ export function TwoStepCard({
           )}
           <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
             {codesLeft !== null && (
-              <button type="button" disabled={busy} onClick={makeCodes} data-testid="backup-codes-new">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={makeCodes}
+                data-testid="backup-codes-new"
+              >
                 {t("Make new backup codes")}
               </button>
             )}

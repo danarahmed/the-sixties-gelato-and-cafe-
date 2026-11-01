@@ -90,7 +90,8 @@ export async function saleReceiptAction(id: string): Promise<ActionResult<PrintJ
     change: change > 0 ? change : null,
     reference: o.id.slice(0, 8),
     platformOrderNo:
-      (platform?.data as { external_order_id?: string } | null | undefined)?.external_order_id ?? null,
+      (platform?.data as { external_order_id?: string } | null | undefined)?.external_order_id ??
+      null,
     journalNo: (journal.data as { journal_no?: number } | null)?.journal_no ?? null,
     turnNo: h.turn_no === null || h.turn_no === undefined ? null : Number(h.turn_no),
     customer: cust?.full_name
