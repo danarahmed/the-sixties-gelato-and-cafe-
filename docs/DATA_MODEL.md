@@ -2054,6 +2054,46 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### What the guide found (`0095`)
+
+- **`two_step_backup_code`**: a person's backup codes for the second step
+  (`user_id`), each kept only as a hash (`code_hash`: SHA-256 of the code in
+  capitals with anything but letters and digits taken out), `created_at`,
+  and `used_at` once used. Eight are made by `make_two_step_codes` (only from
+  a session that has taken the second step), which ends any before;
+  `two_step_codes_left` counts them; `use_two_step_code` (from a session that
+  has given the password only) checks one: a right one is marked used, the
+  others end, and the person's second steps (`auth.mfa_factors`) are taken
+  off, on the audit trail (`account.two_step_off`). `forget_two_step_codes`
+  ends them when the second step is turned off. Read by no one.
+- **`two_step_backup_try`**: each try of a backup code (`user_id`, `at`):
+  five in an hour, then none for the hour. Read by no one.
+- `business_details` and `update_business_details` (the owner): the café's
+  name and default language at any time; the currency, its sign and decimal
+  places, the time zone and the bill-number prefix only while
+  `business_has_records` is false (no sale and no journal). On the audit
+  trail (`settings.business_details`).
+- `add_place` (keyed), `rename_place` and `set_place_active` (settings.manage):
+  a `location` added with its names in the three languages (its
+  `cash_drawer` comes with it, 0036), renamed, or closed with a reason, only
+  once another branch stays open and it has no drawer open, no stock, no
+  table's bill open and no pre-order waiting; opened again. Its drawer closes
+  and opens with it. On the audit trail (`place.add`, `place.rename`,
+  `place.close`, `place.open`).
+- `link_phone_finish(link, previous)`: the key the phone held before ends
+  that link too (`staff_phone.ended_at`, audit `staff.phone_unlinked`), and
+  the answer names whose it was (`replaced`).
+- `stock_rules`: a sale already agreed — a pre-order collected
+  (`sixties.pre_order`) or a customer invoiced (`sixties.on_account`) — that
+  the rule would hold for a manager goes ahead, noted (`stock.below_zero`
+  with `agreed`).
+- `receive_goods__run`: a delivery worth nothing posts no journal;
+  `receipt_is_free` tells such a delivery, and `document_problems`, the
+  correction preview, `correct_receipt` and `return_to_supplier` read it so.
+  `allocate_landed` gives lines worth nothing in all nothing each.
+- `alert_qty` rounds as people do (whole from 10, one place from 1, else
+  two); the running-out alert's title says the unit of a day's use.
+
 ### The watch list (`0094`)
 
 - **`watch_finding`**: a pattern that stands out for a person

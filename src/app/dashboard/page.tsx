@@ -432,12 +432,12 @@ export default async function DashboardPage() {
       ? {
           tone: "warn",
           icon: "!",
-          text: t("{n} item(s) at or below their reorder level: see what to buy.", {
+          text: t("{n} item(s) below their reorder level: see what to buy.", {
             n: d.lowStock,
           }),
           href: "/inventory",
         }
-      : { tone: "ok", icon: "✓", text: t("Every item is above its reorder level.") },
+      : { tone: "ok", icon: "✓", text: t("No item is below its reorder level.") },
   );
 
   // ------------------------------------------------------------- the charts

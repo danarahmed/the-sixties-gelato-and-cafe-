@@ -26,7 +26,7 @@ export default async function InventoryPage({
   const profile = await requirePermission("cost.view", "waste.record");
   const t = await getT();
   const { on } = arrows(await getDir());
-  // A tile's items alone: those at or below their reorder level, or below nothing.
+  // A tile's items alone: those below their reorder level, or below nothing.
   const sp = await searchParams;
   const only = sp.show === "low" || sp.show === "negative" ? sp.show : null;
   const msg = await getMsg();
@@ -216,7 +216,7 @@ export default async function InventoryPage({
               <p className="stock-only" data-testid="stock-only">
                 <strong>
                   {only === "low"
-                    ? t("Only the {n} item(s) at or below their reorder level.", {
+                    ? t("Only the {n} item(s) below their reorder level.", {
                         n: shown.length,
                       })
                     : t("Only the {n} item(s) with negative stock.", { n: shown.length })}

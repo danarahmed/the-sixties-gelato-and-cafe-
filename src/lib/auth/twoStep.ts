@@ -7,7 +7,7 @@
  */
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
-import type { ActionResult } from "@/lib/db/rpc";
+import { callRpc, type ActionResult } from "@/lib/db/rpc";
 
 const CODE = /^\d{6}$/;
 
@@ -80,5 +80,43 @@ export async function stopTwoStepAction(factorId: string): Promise<ActionResult<
   const { error } = await supabase.auth.mfa.unenroll({ factorId });
   if (error)
     return { ok: false, error: "The second step could not be turned off. Sign in again and try." };
+  // Its backup codes go with it (0095); before 0095 there are none.
+  await callRpc("forget_two_step_codes");
   return { ok: true, data: null };
+}
+
+/**
+ * Eight backup codes (0095), shown once: each, typed instead of the six
+ * digits, takes the second step off when the phone is lost. Making new ones
+ * ends the old. Only a session that has taken the second step makes them.
+ */
+export async function makeBackupCodesAction(): Promise<ActionResult<string[]>> {
+  const r = await callRpc<unknown>("make_two_step_codes");
+  if (!r.ok) return r;
+  return { ok: true, data: Array.isArray(r.data) ? r.data.map(String) : [] };
+}
+
+/** How many backup codes are left; null before 0095. */
+export async function backupCodesLeft(): Promise<number | null> {
+  const r = await callRpc<number>("two_step_codes_left");
+  return r.ok ? Number(r.data) || 0 : null;
+}
+
+/**
+ * Signing in with a backup code instead of the six digits: the second step
+ * comes off (the phone is lost), and the person is let in to turn it on again
+ * with their new phone.
+ */
+export async function backupCodeSignInAction(
+  _prev: { error: string | null },
+  form: FormData,
+): Promise<{ error: string | null }> {
+  const code = String(form.get("backup") ?? "").trim();
+  if (code.replace(/[^0-9a-z]/gi, "").length !== 10)
+    return { error: "A backup code is ten letters and digits, like ABCDE-FGH23" };
+  const r = await callRpc<{ ok?: boolean; error?: string }>("use_two_step_code", { p_code: code });
+  if (!r.ok) return { error: r.error };
+  if (!r.data?.ok)
+    return { error: r.data?.error ?? "That backup code is not right, or was used already" };
+  redirect("/account?two-step=reset");
 }

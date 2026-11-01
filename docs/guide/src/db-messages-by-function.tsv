@@ -1,0 +1,1253 @@
+forbid_mutation	Table {1} is append-only; {2} is not permitted
+forbid_financial_edit	sales_order is append-only; use a void or refund, not DELETE
+forbid_financial_edit	A finalized sale is immutable; only its status may move to voided or refunded
+forbid_financial_edit	A sale cannot move from {1} to {2}
+trg_gl_account_guard	Account {1} is in use and cannot be deleted; deactivate it instead
+trg_gl_account_guard	System account {1} may be renamed but not re-coded or re-typed
+trg_gl_account_guard	System account {1} cannot be deactivated
+trg_inherit_business_id	{1}.{2}: cannot determine the business (no {3})
+trg_inherit_business_id	{1}: business_id does not match its parent {2}
+trg_journal_entry_guard	Journal {1} is published and cannot be deleted; post a reversing entry instead
+trg_journal_entry_guard	Accounting period is locked; this draft cannot be discarded
+trg_journal_entry_guard	Journal {1} is published and cannot be changed; post a reversing entry instead
+trg_journal_entry_guard	A journal entry cannot change business or legacy status
+trg_journal_entry_guard	Accounting period is locked; this draft cannot be changed
+trg_journal_entry_guard	Accounting period {1} is locked; post into an open period or reverse in the current one
+trg_journal_line_guard	Journal entry {1} does not exist
+trg_journal_line_guard	Lines of a published journal cannot be added, changed or removed; post a reversing entry instead
+trg_journal_line_guard	Accounting period is locked; journal lines cannot change
+trg_journal_line_guard	A journal line cannot be moved to another entry
+validate_journal_entry	Journal entry {1} cannot be published with {2} line(s); it needs at least two
+validate_journal_entry	Journal entry {1} is unbalanced: debit {2} <> credit {3}
+validate_journal_entry	Journal entry {1} moves no amount
+trg_period_guard	Accounting periods cannot be deleted
+trg_period_guard	An accounting period's dates and name cannot change
+trg_purchase_invoice_guard	Bills are append-only; record a credit note instead
+trg_purchase_invoice_guard	A bill's supplier, number, date and amount cannot change
+trg_purchase_invoice_guard	This bill is already cancelled
+trg_purchase_invoice_guard	Cancelling a bill needs a date and a reason
+trg_purchase_invoice_guard	A bill with payments against it cannot be cancelled
+trg_purchase_invoice_guard	A bill with credits set against it cannot be cancelled
+trg_purchase_invoice_guard	Payments of {1} would exceed the bill total of {2}
+trg_stock_count_guard	A submitted stock count cannot be deleted
+trg_stock_count_guard	A stock count starts open; it is submitted and approved separately
+trg_stock_count_guard	Stock count is {1} and cannot change
+trg_stock_count_guard	A submitted count may only be approved or rejected
+trg_stock_count_guard	A stock count must be approved by someone other than the person who counted it
+trg_stock_count_line_guard	The expected quantity is recorded by the system and cannot be edited
+trg_stock_count_line_guard	Lines of a {1} stock count cannot change
+trg_work_shift_guard	A closed trading day cannot be deleted
+trg_work_shift_guard	This trading day is already closed and cannot change
+require_permission	Sign in to continue
+require_permission	Finish signing in: type the code from your authenticator app
+require_permission	You do not have permission to do this (needs {1})
+to_base_qty	Unknown item {1}
+to_base_qty	Unit "{1}" is not defined for this item (base unit is {2})
+resolve_location	No active location for this business
+post_journal	Journal line amounts cannot be negative (account {1})
+post_journal	Account {1} is missing or inactive
+post_journal	Entry "{1}" does not balance: debits {2} <> credits {3}
+expand_recipe	Recipe nesting is too deep or cyclic (recipe {1})
+expand_recipe	Recipe {1} has no version in force on {2}
+reverse_entry_internal	Journal entry not found
+reverse_entry_internal	Only a published entry can be reversed
+reverse_entry_internal	Journal {1} has already been reversed
+allocate_landed	Goods value must be greater than zero to allocate landed costs
+allocate_landed	The rebate exceeds the value of a received line
+record_bill	Choose a supplier
+record_bill	Enter an amount greater than zero
+record_bill	A bill is either for a goods receipt or for an expense account — choose one
+record_bill	Numbers like {1} are the café's own and are given automatically: leave the box as it is, or type the supplier's invoice number
+record_bill	Invoice {1} from this supplier is already recorded
+record_bill	Receipt not found
+record_bill	That receipt is from a different supplier
+record_bill	That receipt has already been billed
+record_bill	That receipt has no payable to bill against: its journal was reversed or never written (see docs/REMEDIATION.md)
+record_bill	Account {1} cannot take a bill; stock is billed against its goods receipt
+pay_bill	Bill not found
+pay_bill	That bill was cancelled; it is not owed
+pay_bill	Say where the money came from: the till, the safe, the bank, a card or the owner
+pay_bill	Enter an amount greater than zero
+pay_bill	That is more than the {1} outstanding on this bill
+cancel_bill	Say why the bill is being cancelled
+cancel_bill	Bill not found
+cancel_bill	This bill is already cancelled
+cancel_bill	This bill has payments against it, so it cannot be cancelled
+cancel_bill	Choose a date that has happened
+cancel_bill	A bill cannot be cancelled before its own date
+record_expense	Enter an amount greater than zero
+record_expense	Describe the expense
+record_expense	Account {1} cannot take an expense (stock costs come from their own records)
+record_expense	Say where the money came from: the till, the safe, the bank, a card or the owner
+record_waste	Not a waste type: {1}
+record_waste	Say why the stock was lost
+record_waste	Unknown item
+record_waste	Enter a quantity greater than zero
+record_waste	This much waste needs a manager to record it
+adjust_stock	Say why the stock is being corrected
+adjust_stock	Unknown item
+adjust_stock	The correction cannot be zero
+adjust_stock	Unit cost cannot be negative
+create_supplier	Name the supplier
+set_price	Unknown product
+set_price	Enter a price
+set_price	A price cannot start in the past: every sale keeps the price it was made at
+new_recipe_version	Unknown recipe
+new_recipe_version	A new recipe version cannot start in the past
+start_stock_count	A count is already {1} here (started {2} by {3}). Finish or cancel it first
+record_count	Count not found
+record_count	Only the person counting can enter counts
+record_count	This count is already {1}
+record_count	Enter what you counted
+record_count	That item is not in this count
+submit_stock_count	Count not found
+submit_stock_count	Only the person counting can submit
+submit_stock_count	This count is already {1}
+submit_stock_count	Some items have not been counted yet
+review_stock_count	Count not found
+approve_stock_count	Count not found
+approve_stock_count	Only a submitted count can be approved; this one is {1}
+approve_stock_count	A count must be approved by someone other than the person who counted it
+reject_stock_count	Count not found
+reject_stock_count	Only a submitted count can be rejected
+reject_stock_count	Say why the count is rejected
+close_day	The day close is now a drawer count. Refresh the page and count the drawer
+save_journal	Narrate the journal
+save_journal	Add at least one line
+save_journal	Account {1} has a subledger and cannot take a manual journal; use a receipt, bill, count or payment
+save_journal	Account {1} is missing or inactive
+save_journal	Cannot publish: debits {1} and credits {2} differ by {3}
+save_journal	The reversal date must be after the journal date
+publish_journal	No draft journal with that id
+discard_journal	Only a draft can be discarded; a published journal is corrected by reversing it
+reverse_journal	Say why the journal is being reversed
+reverse_journal	Journal not found
+reverse_journal	Choose a date that has happened
+reverse_journal	A reversal cannot be dated before the entry it reverses ({1})
+reverse_journal	Journal {1} was written by {2}; correct it there, not by reversing the journal
+post_control_correction	Say why a control account is being corrected
+post_control_correction	Narrate the correction
+post_control_correction	A correction needs at least two lines
+post_legacy_unposted	Say why these records are being posted
+post_legacy_unposted	There is nothing left to post
+lock_period	Period not found
+lock_period	Period {1} is already locked
+lock_period	Period {1} cannot be locked yet: {2}
+unlock_period	Say why the period is being reopened
+unlock_period	Period not found
+unlock_period	Period {1} is not locked
+unlock_period	Reopen the most recent locked period first
+invite_member	Give the person's name and email
+invite_member	Give the person at least one role
+invite_member	Only the owner can appoint an owner or general manager
+invite_member	Someone with that email is already a member
+set_member_active	You cannot deactivate yourself
+set_member_active	Only the owner can change the access of an owner or a general manager
+set_member_active	The business must keep at least one active owner
+set_member_active	Member not found
+set_member_roles	Give the person at least one role
+set_member_roles	Member not found
+set_member_roles	Only the owner can give or take the owner and general manager roles
+set_member_roles	The business must keep at least one active owner
+trg_pos_tab_guard	A bill is never deleted; cancel it instead
+trg_pos_tab_guard	This bill is {1} and cannot change
+trg_pos_tab_line_guard	The lines of a {1} bill cannot change
+save_table	Name the table
+save_table	Table not found
+save_table	This table has an open bill; take payment or cancel it first
+save_table	There is already a table called {1}
+save_category	Name the category
+save_category	Category not found
+save_category	There is already a category called {1}
+set_product_details	Name the product
+set_product_details	Product not found
+set_product_details	Unknown category
+set_product_image	Product not found
+set_product_image	Use a PNG, JPEG or WebP picture
+set_product_image	The picture could not be read
+set_product_image	The picture must be smaller than 300 KB
+set_product_image	That file is not a PNG, JPEG or WebP picture
+clear_product_image	Product not found
+lock_open_tab	Bill not found
+lock_open_tab	This bill is already {1}
+lock_open_tab	This bill was changed on another till. Open it again to see the latest.
+mark_bill_printed	The bill is empty
+split_tab	Choose what to move to the new bill
+split_tab	Each line can be moved once
+split_tab	That line is not on this bill
+split_tab	Move between 1 and {1} of {2}
+sale_discount	Give the discount as a percentage or as an amount, not both
+sale_discount	A discount is more than 0% and no more than 100%
+sale_discount	Business not found
+sale_discount	A discount must be more than zero
+write_recipe_lines	List what goes into it
+write_recipe_lines	Unknown item in the recipe
+write_recipe_lines	A batch cannot use what it makes
+write_recipe_lines	Every recipe line needs a quantity
+change_product_recipe	Unknown product
+change_product_recipe	This product is sold as bought: it has no recipe to change
+change_product_recipe	A recipe change cannot start in the past
+save_batch_recipe	Name what the batch makes
+save_batch_recipe	Batch recipe not found
+save_batch_recipe	Unknown item
+save_batch_recipe	Say whether it is weighed, measured or counted in pieces
+save_batch_recipe	You already keep an item called {1}: choose it as what the batch makes
+save_batch_recipe	"{1}" is already a unit: name the container, such as pan or tray
+save_batch_recipe	Say how much one {1} holds
+save_batch_recipe	Say how much one batch makes
+record_production	Choose what was made
+record_production	{1} is not made any more: show it again to record a batch
+record_production	Enter how many batches were made
+record_production	{1} has no ingredients in force today
+record_production	Enter what came out, or leave it empty if it came out as the recipe says
+record_production	{1} has no ingredients
+record_production	A batch cannot use what it makes
+cancel_production	Say why the batch is cancelled
+cancel_production	Batch not found
+cancel_production	This batch is already cancelled
+cancel_production	Only a recorded batch can be cancelled
+cancel_production	Some of what this batch made has already been used or sold: record a loss or a correction instead
+cancel_stock_count	Say why the count is cancelled
+cancel_stock_count	Count not found
+cancel_stock_count	Only a count still being counted can be cancelled; a submitted count is approved or rejected by its reviewer
+cancel_stock_count	Only the person counting or a manager can cancel this count
+trg_cash_event_guard	Cash in and out of the drawer is never deleted
+trg_cash_event_guard	Cash in and out of the drawer cannot change once recorded
+trg_cash_transfer_guard	A movement of cash cannot change or be deleted; record the opposite movement
+assert_drawer_can_pay	Open the drawer first: on the till, count the cash in it
+assert_drawer_can_pay	The drawer should hold only {1} — not enough to pay {2}. Move cash into the till first, or pay from the safe, the bank or the owner
+assert_drawer_can_pay	The drawer does not hold enough to pay {1}. Move cash into the till first, or pay from the safe, the bank or the owner
+assert_safe_can_pay	The safe holds only {1} in the books — not enough to pay {2}. Put the takings in the safe first (Move cash), or say where the money came from
+trg_cash_from_tender	The drawer does not hold the {1} change in dinars: take the payment in dinars, or put cash in the till first
+trg_cash_from_adjustment	The till no longer holds the ${1} this sale was paid with: refund it instead
+count_drawer	{1} bill(s) are still open. Take payment for them or cancel them before counting the drawer
+count_drawer	Enter the cash you counted
+count_drawer	What stays in the drawer must be between 0 and the {1} counted
+count_drawer	Say where the rest of the cash goes: the safe or the bank
+count_drawer	Enter the cash that was in the drawer when trading began after the last close
+move_cash	Move cash between two of: the till, the safe, the bank, the owner
+move_cash	Only the owner takes money out for themselves
+move_cash	Enter an amount greater than zero
+move_cash	Say what the money is for
+cancel_scheduled_price	Say why the change is cancelled
+cancel_scheduled_price	Price not found
+cancel_scheduled_price	That price is already in force: set a new price instead
+cancel_scheduled_recipe	Say why the change is cancelled
+cancel_scheduled_recipe	Recipe not found
+cancel_scheduled_recipe	That recipe is already in force: change the recipe again instead
+assert_sale_total	The total is {1} now, not the {2} shown: a price has changed. The till has the new prices; tell the customer, then take payment again
+set_no_stock	Unknown product
+set_no_stock	This product is sold as bought: it takes its item from stock
+set_no_stock	It has a recipe in force: it takes its stock through it
+stock_card	Item not found
+assert_name_free	There is already an item called {1}
+assert_name_free	There is already a supplier called {1}
+assert_name_free	There is already a product called {1}
+assert_owner_opening	Only the owner records opening stock: it is capital the owner puts in
+assert_owner_opening	Say where this stock came from (the opening count, say)
+record_opening_stock	Unknown item
+record_opening_stock	Enter the quantity on the shelf
+record_opening_stock	Enter what one {1} of {2} cost
+record_opening_stock	{1} already has stock recorded here. Correct it with a count or a stock correction
+record_opening_stock	That stock is worth nothing at this cost: check the quantity and the cost
+create_item	Name the item
+create_item	Give the item a base unit
+create_item	Levels cannot be negative
+create_item	{1} already has a unit called {2}: a unit in use keeps its size, so give a new size its own name
+create_item	Opening stock needs a unit cost
+update_item	Unknown item
+update_item	Name the item
+update_item	Levels cannot be negative
+update_item	{1} still has {2} {3} in stock: count it to nothing or write it off before taking it out of use
+update_item	{1} is in a recipe in force or to come: change the recipe first
+update_item	{1} is what a batch recipe makes: stop using that batch recipe first
+update_item	{1} is sold as bought on the till: hide that product first
+add_item_unit	Unknown item
+add_item_unit	{1} already has a unit called {2}: a unit in use keeps its size, so give a new size its own name
+create_product	Name the product
+create_product	Unknown item in the recipe
+create_product	Every recipe line needs a quantity
+create_product	List what one serving uses, or say why it uses no stock
+receive_goods	Choose an active supplier
+receive_goods	Add at least one line
+receive_goods	Freight, other costs and rebates cannot be negative
+receive_goods	Unknown item on the receipt
+receive_goods	{1} is out of use: bring it back into use first
+receive_goods	Every received line needs a quantity
+receive_goods	Every received line needs a price
+receive_goods	Check the price: {1}. If it is right, confirm it and receive again
+item_price_history	Item not found
+reason_text	Choose a reason from the list
+reason_text	Choose a reason from the list
+reason_text	Say what happened, in a few words
+set_my_pin	Sign in first
+set_my_pin	Only those who approve discounts, voids, refunds, losses or stock below zero have a PIN
+set_my_pin	A PIN is 4 to 8 digits
+set_my_pin	Choose a PIN that is harder to guess
+list_approvers	Unknown approval
+request_approval	Unknown approval
+request_approval	Choose someone who may approve this
+request_approval	Someone else approves it: that is the point of asking
+use_approval	That approval is not for this
+use_approval	That approval has been used: ask again
+use_approval	That approval has run out: ask again
+use_approval	That approval was given to someone else
+discount_approver	A discount over {1}% needs a manager's approval
+discount_approver	The manager approved up to {1}%: ask again for this one
+save_tab	The bill has no lines
+save_tab	Each line needs a positive quantity
+save_tab	A product on the bill is not on sale
+save_tab	No {1} price is set for {2}
+save_tab	That table is not in use
+save_tab	You do not have permission to give discounts
+save_tab	Only a manager can change the discount on a bill that has been printed
+save_tab	The {1} off would be {2}% of the bill, over the {3}% allowed: take the discount off first, or ask a manager
+save_tab	Only a manager can take items off a bill that has been printed
+open_tab	Delivery-platform orders are paid through the platform: ring them up as a sale, not a bill
+open_tab	That table is not in use
+open_tab	Give the bill a table or a name
+open_tab	Add something to the bill before giving a discount
+cancel_tab	Only a manager can cancel a bill with items on it
+void_sale	Sale not found
+void_sale	Only a completed sale can be voided; this one is {1}
+void_sale	The drawer has been counted since this sale; refund it instead of voiding it
+void_sale	This sale has no journal to reverse (it predates the controls); refund it instead
+void_sale	That approval is for another sale
+refund_sale	Sale not found
+refund_sale	Only a completed sale can be refunded; this one is {1}
+refund_sale	This sale's tender cannot be refunded here
+refund_sale	That approval is for another sale
+alert_to_act_on	That alert has cleared already
+alert_to_act_on	An alert about your own exceptions is for someone else to review
+acknowledge_alert	Say what was done about it, or why it is fine
+snooze_alert	Say why it can wait
+snooze_alert	Snooze it until a day in the next 30
+set_alert_thresholds	No thresholds given
+set_alert_thresholds	Unknown threshold: {1}
+set_alert_thresholds	{1}: enter a number
+set_alert_thresholds	{1}: enter a {2} from {3} to {4}
+record_card_settlement	Nothing has been taken by card yet
+record_card_settlement	Card takings are settled once the day is over: today's wait until tomorrow
+record_card_settlement	Settle the card takings of days that are over: from {1} to {2}
+record_card_settlement	Enter the terminal's total for those days
+record_card_settlement	Enter what reached the bank
+record_card_settlement	The bank cannot receive more than the terminal took: the difference is its fee
+record_card_settlement	Nothing was taken by card on those days
+record_card_settlement	The till took {1} by card and the terminal {2}: say why they differ
+record_card_settlement	The money arrived on a day from {1} to today
+cancel_card_settlement	That settlement is not in force
+cancel_card_settlement	Cancel the latest settlement first: card takings are settled in order
+cancel_card_settlement	Say why it is cancelled
+platform_statement_match	Choose the platform the statement is from
+platform_statement_match	The statement has no lines
+platform_statement_match	Line {1} has no order number
+platform_statement_match	Line {1} (order {2}): the amounts must be numbers
+platform_statement_match	Line {1} (order {2}) has no payout
+platform_statement_match	Line {1} (order {2}): commission and fees are what the platform kept, never less than zero
+post_platform_settlement	Nothing on the statement matches a {1} order waiting to be paid out
+post_platform_settlement	Enter the statement's number or date, as the platform gives it
+post_platform_settlement	{1} statement {2} is already recorded
+post_platform_settlement	{1} line(s) of the statement do not match: say what they are
+post_platform_settlement	The payout arrived on a day from {1} to today
+cancel_platform_settlement	That settlement is not in force
+cancel_platform_settlement	Say why it is cancelled
+platform_names	Give the platform's names by language
+platform_names	Give each of the platform's names under its language's code (ar, ckb), in up to 60 letters
+add_delivery_platform	Name the platform as its customers know it, in up to 60 letters
+add_delivery_platform	{1} is already a delivery platform here: bring it back into use instead of adding it again
+add_delivery_platform	A platform's short name is small Latin letters, digits and _, starting with a letter (lezzoo)
+add_delivery_platform	{1} is one of the shop's own ways of selling, not a platform
+add_delivery_platform	A platform here already has the short name {1}: bring it back into use, or choose another
+copy_platform_setup	Choose one of the café's delivery platforms
+copy_platform_setup	{1} is not in use: bring it back first
+copy_platform_setup	Choose a channel {1} works like
+copy_platform_setup	Choose a channel {1} works like
+update_delivery_platform	Choose one of the café's delivery platforms
+update_delivery_platform	Name the platform as its customers know it, in up to 60 letters
+update_delivery_platform	{1} is already a delivery platform here
+save_language	A language's code is two or three small Latin letters, as the world writes it (tr, fa, kmr), with a region after a dash if needed (pt-br)
+save_language	English, Arabic and Kurdish are built in: correct their words instead of adding them
+save_language	Name the language as its speakers write it, in up to 40 letters (Türkçe, فارسی)
+save_language	A language is written left to right (ltr) or right to left (rtl)
+save_phrases	Add the language on Settings → Languages first
+save_phrases	Give the words as {"phrase": "words"}
+save_phrases	Give at most 5000 phrases at a time
+save_phrases	A phrase is 1 to 2000 letters
+save_phrases	Give the words for "{1}" as text
+save_phrases	The words for "{1}" are too long: 4000 letters at most
+save_phrases	Keep {1} in the words for "{2}", as the English has them
+assert_unit_ok	Name the unit, such as case_24
+assert_unit_ok	Say how many {1} one {2} holds
+assert_unit_ok	{1} already has a unit called {2}: a unit in use keeps its size, so give a new size its own name
+assert_unit_ok	One {1} is 1000 {2}
+idem_begin	This screen sent no retry key: reload the page and try again
+idem_begin	This retry does not match what was first sent: reload the page and check before doing it again
+idem_begin	This was sent by someone else
+trg_cash_event_session	Open the drawer first: on the till, count the cash in it
+counted_cash	Enter the cash you counted
+counted_cash	The notes counted cannot be read
+counted_cash	The notes counted cannot be read
+counted_cash	The notes counted cannot be read
+counted_cash	The notes counted come to {1}, not the {2} entered
+open_session_internal	This branch has no drawer
+open_session_internal	The drawer is already open: session {1} since {2}, with {3}
+close_session_internal	Session not found
+close_session_internal	Session {1} is already closed
+close_session_internal	What stays in the drawer must be between 0 and the {1} counted
+close_session_internal	Say where the rest of the cash goes: the safe or the bank
+open_cash_session	Enter the cash put in from the safe, or leave it empty
+open_cash_session	Only a manager puts cash in from the safe
+cash_session_statement	Session not found
+cash_session_statement	What an open drawer should hold is shown once it is counted
+count_drawer__run	Open the drawer on the till first: counting it now closes its session
+void_sale__run	Sale not found
+void_sale__run	Only a completed sale can be voided; this one is {1}
+void_sale__run	The drawer has been counted since this sale; refund it instead of voiding it
+void_sale__run	This sale has no journal to reverse (it predates the controls); refund it instead
+void_sale__run	That approval is for another sale
+receipt_after_state	A delivery keeps at least one line: to undo all of it, reverse it
+receipt_after_state	Choose an active supplier
+receipt_after_state	A delivery cannot have arrived after today
+receipt_after_state	A delivery's date is corrected within the month it was entered ({1}): one from another month is reversed and received again
+receipt_after_state	The lines cannot be read
+receipt_after_state	Unknown item on the delivery
+receipt_after_state	That line is not on this delivery
+receipt_after_state	A line is named twice
+receipt_after_state	{1} is out of use: bring it back into use first
+receipt_after_state	Every line needs a quantity: to take a line off, leave it out
+receipt_after_state	Every line needs a price
+preview_receipt_correction	Delivery not found
+record_bill__run	Choose a supplier
+record_bill__run	Enter an amount greater than zero
+record_bill__run	A bill is either for a goods receipt or for an expense account — choose one
+record_bill__run	Numbers like {1} are the café's own and are given automatically: leave the box as it is, or type the supplier's invoice number
+record_bill__run	Invoice {1} from this supplier is already recorded
+record_bill__run	Receipt not found
+record_bill__run	That delivery was reversed: there is nothing to bill
+record_bill__run	That receipt is from a different supplier
+record_bill__run	That receipt has already been billed
+record_bill__run	Delivery {1} came on {2}: date its bill that day or later
+record_bill__run	Everything delivery {1} brought went back to the supplier: there is nothing to bill
+record_bill__run	That receipt has no payable to bill against: its journal was reversed or never written (see docs/REMEDIATION.md)
+record_bill__run	Account {1} cannot take a bill; stock is billed against its goods receipt
+business_rule_write	A rule is never deleted: set it back to its default
+business_rule_write	A rule keeps what it is for: set another one instead
+set_business_rule__run	Unknown rule
+set_business_rule__run	Say why the rule is changing
+set_business_rule__run	This rule is not set that way
+set_business_rule__run	Unknown role
+set_business_rule__run	Unknown kind of item
+set_business_rule__run	Unknown item
+set_business_rule__run	Unknown location
+set_business_rule__run	That is not one of this rule's choices
+set_business_rule__run	Using stock the books do not hold, with no alert, is for chosen items only
+set_business_rule__run	Enter a number
+set_business_rule__run	Enter a number from {1} to {2}
+set_business_rule__run	Enter a whole number
+set_business_rule__run	That is the rule already
+set_business_rule__run	That is the rule already
+stock_rules	Only {1} {2} of {3} is in stock: record the delivery or the batch first, or count it
+stock_rules	Only {1} {2} of {3} is in stock: a manager approves using more than that
+record_waste__run	Not a waste type: {1}
+review_loss__run	{1} was counted since the loss, and the count put its stock right: approve the loss instead
+adjust_stock__run	Say why the stock is being corrected
+adjust_stock__run	Unknown item
+adjust_stock__run	The correction cannot be zero
+adjust_stock__run	Unit cost cannot be negative
+save_tab__run	The bill has no lines
+save_tab__run	Each line needs a positive quantity
+save_tab__run	A product on the bill is not on sale
+save_tab__run	No {1} price is set for {2}
+save_tab__run	The add-ons cannot be read
+save_tab__run	That table is not in use
+save_tab__run	You do not have permission to give discounts
+save_tab__run	Only a manager can change the discount on a bill that has been printed
+save_tab__run	The {1} off would be {2}% of the bill, over the {3}% allowed: take the discount off first, or ask a manager
+save_tab__run	Only a manager can take items off a bill that has been printed
+assert_size_name_free	Name the size
+assert_size_name_free	This product already has a size called {1}
+assert_size_name_free	This product has a retired size called {1}: bring it back instead
+add_variant__run	Product not found
+add_variant__run	{1} is sold as bought: add the other size as a product of its own
+add_variant__run	This product already has several sizes: rename each on its own
+add_variant__run	List what one serving of the size uses, copy another size's recipe, or say why it uses no stock
+add_variant__run	Copy the recipe of one of this product's sizes
+add_variant__run	{1} has no recipe in force to copy
+update_variant__run	Size not found
+retire_variant__run	Size not found
+retire_variant__run	{1} is retired already
+retire_variant__run	Say why the size is retired
+retire_variant__run	{1} is the product's only size on sale: hide the product instead
+retire_variant__run	{1} is on the open bill {2}: take it off, or settle the bill, first
+retire_variant__run	{1} is on sale already
+line_modifiers	The add-ons cannot be read
+line_modifiers	The add-ons cannot be read
+line_modifiers	Unknown add-on
+line_modifiers	{1} is no longer offered
+line_modifiers	{1} is not offered with {2}
+line_modifiers	{1} is added twice: give it a quantity instead
+line_modifiers	Add {1} 1 to 20 times
+line_modifiers	Add {1} 1 to 20 times
+line_modifiers	No {1} price is set for {2}
+line_modifiers	Choose {1} for {2}
+line_modifiers	Choose at least {1} from {2} for {3}
+line_modifiers	Choose at most {1} from {2} for {3}
+save_modifier_group__run	Name the group of add-ons
+save_modifier_group__run	The fewest to choose is a number from 0 to 20
+save_modifier_group__run	The most to choose is a number from 1 to 20, and no fewer than the fewest
+save_modifier_group__run	Group of add-ons not found
+save_modifier_group__run	There is already a group of add-ons called {1}
+save_modifier_group__run	{1} is on the open bill {2}: take it off, or settle the bill, first
+put_modifier_recipe	The recipe cannot be read
+put_modifier_recipe	Unknown item in the recipe
+put_modifier_recipe	Every recipe line needs a quantity
+save_modifier__run	Name the add-on
+save_modifier__run	Add-on not found
+save_modifier__run	An add-on stays in its group: add it to the other group instead
+save_modifier__run	Choose a group of add-ons in use
+save_modifier__run	The group already has an add-on called {1}
+save_modifier__run	The prices cannot be read
+save_modifier__run	Enter a price
+save_modifier__run	{1} is on the open bill {2}: take it off, or settle the bill, first
+set_modifier_price__run	Add-on not found
+set_modifier_price__run	Choose the channel
+set_modifier_price__run	Enter a price
+set_modifier_price__run	A price cannot start in the past: every sale keeps the price it was made at
+set_modifier_recipe__run	Add-on not found
+set_modifier_recipe__run	Size not found
+set_modifier_recipe__run	Nothing was changed
+set_product_modifiers__run	Product not found
+set_product_modifiers__run	The groups cannot be read
+set_product_modifiers__run	Choose a group of add-ons in use
+set_product_modifiers__run	Choose one of {1}'s sizes
+set_product_modifiers__run	{1} offers each group once: for all its sizes, or for some
+set_product_modifiers__run	{1}'s add-ons are on the open bill {2}: take them off, or settle the bill, first
+set_product_modifiers__run	Nothing was changed
+split_tab__run	Choose what to move to the new bill
+split_tab__run	Each line can be moved once
+split_tab__run	That line is not on this bill
+split_tab__run	Move between 1 and {1} of {2}
+mark_bill_printed__run	The bill is empty
+sale_payments	Choose how it was paid
+sale_payments	Choose which way to pay it was
+sale_payments	Send the payments once: one tender, or the list of payments
+sale_payments	Choose how it was paid
+sale_payments	A sale is paid in at most 10 payments
+sale_payments	The payments cannot be read
+sale_payments	Tender {1} is not supported
+sale_payments	Each payment needs an amount more than 0
+sale_payments	The payments cannot be read
+sale_payments	The payments cannot be read
+sale_payments	The cash handed over ({1}) is less than the {2} it pays
+sale_payments	The payments cannot be read
+sale_payments	The payments cannot be read
+sale_payments	Choose which way to pay it was
+sale_payments	That way to pay is not one of the café's
+sale_payments	The payments cannot be read
+sale_payments	The payments cannot be read
+sale_payments	A payment's reference is at most 60 letters
+sale_payments	Dollars are taken in cash only
+sale_payments	The payments cannot be read
+sale_payments	Dollars are taken in whole dollars
+sale_payments	Each payment needs an amount more than 0
+sale_payments	The payments cannot be read
+sale_payments	Payments are taken in dinars or dollars
+sale_payments	Tender {1} is not supported
+sale_payments	Delivery-platform orders are platform-paid, and only they are
+sale_payments	A delivery platform's order is paid once, by the platform
+refund_lines_internal	Sale not found
+refund_lines_internal	This sale has been refunded in full already
+refund_lines_internal	This sale was voided: there is nothing to refund
+refund_lines_internal	Only a completed sale can be refunded; this one is {1}
+refund_lines_internal	This sale's tender cannot be refunded here
+refund_lines_internal	That approval is for another sale
+refund_lines_internal	Choose what to refund
+refund_lines_internal	The items to refund cannot be read
+refund_lines_internal	That item is not on this sale
+refund_lines_internal	An item is named twice
+refund_lines_internal	The payments to give back cannot be read
+refund_lines_internal	A payment is named twice
+refund_lines_internal	Only {1} of {2} is left to refund
+refund_lines_internal	This sale was recorded before refunds by item: refund all of it
+refund_lines_internal	Choose what to refund
+refund_lines_internal	The items chosen were sold for nothing: there is no money to give back
+refund_lines_internal	This refund is more than is left of what was paid ({1})
+refund_lines_internal	A refund over {1} needs a second person to approve it
+refund_lines_internal	Only {1} of the cash paid is left to give back
+refund_lines_internal	Only {1} of the card payment is left to give back
+refund_lines_internal	This sale was not paid that way
+refund_lines_internal	Only {1} of what {2} took is left to give back
+refund_lines_internal	Only {1} of the platform's payment is left to give back
+refund_lines_internal	The refund is {1}, but the payments given back come to {2}
+usd_rate_now	No dollar rate is set: a manager sets today's on Sales → Dollars
+usd_rate_now	The dollar rate was set {1} hours ago: a manager sets today's before dollars are taken
+set_fx_rate__run	Only the dollar's rate is kept
+set_fx_rate__run	A dollar is a whole number of dinars, from 100 to 100,000
+set_fx_rate__run	Say where the rate comes from
+trg_fx_cash_event_session	Open the drawer first: on the till, count the cash in it
+sale_dollars	The dollar rate is now {1}, not the {2} shown: take the payment again
+sale_dollars	${1} come to {2}, less than the {3} they pay
+counted_dollars	Enter the dollars you counted, in whole dollars
+counted_dollars	The dollar notes counted cannot be read
+counted_dollars	The dollar notes counted cannot be read
+counted_dollars	The dollar notes counted cannot be read
+counted_dollars	The dollar notes counted come to ${1}, not the ${2} entered
+close_session_dollars	Session not found
+close_cash_session	Enter the cash you counted
+close_cash_session	The drawer is not open
+close_cash_session	Only {1} or a manager closes this session
+hand_over_session	Enter the cash you counted
+hand_over_session	The drawer is not open
+hand_over_session	Only {1} or a manager closes this session
+hand_over_session	Choose someone who may take the drawer
+hand_over_session	{1} works at {2}, not here: choose someone who works here
+hand_over_session	Hand the drawer to someone else
+force_close_session	Say why the session is being closed
+exchange_dollars__run	Say where the dollars come from: the till or the safe
+exchange_dollars__run	Say where the dinars go: the till, the safe or the bank
+exchange_dollars__run	Enter the dollars exchanged, in whole dollars
+exchange_dollars__run	Enter the dinars received for them
+exchange_dollars__run	That is {1} dinars a dollar: check the dinars received
+exchange_dollars__run	The safe holds only ${1} in the books
+exchange_dollars__run	The till holds only ${1} in the books
+trg_po_line_draft	An order's lines change only while it is a draft
+purchase_order	Order not found
+po_lines_checked	Add at least one line
+po_lines_checked	An order has at most 100 lines
+po_lines_checked	Unknown item on the order
+po_lines_checked	{1} is out of use: bring it back into use first
+po_lines_checked	{1} is on the order twice: one line for it
+po_lines_checked	Every line needs a quantity
+po_lines_checked	Every line needs a price
+po_lines_checked	{1} is not bought in {2}
+save_po__run	Choose an active supplier
+save_po__run	Order not found
+save_po__run	Order {1} has been sent: cancel it and make a new one, or close it
+approve_po__run	Order not found
+approve_po__run	Order {1} is not a draft waiting to be approved
+approve_po__run	Order {1} comes to nothing: give its lines their prices
+approve_po__run	You approve orders up to {1}; order {2} comes to {3}: someone whose limit covers it approves it
+send_po__run	Order not found
+send_po__run	Order {1} is not approved yet
+send_po__run	Order {1} is not waiting to be sent
+close_po__run	Order not found
+close_po__run	Order {1} is not open
+close_po__run	Nothing has come against order {1}: cancel it instead
+close_po__run	Order {1} has not all come: say why the rest is not coming
+cancel_po__run	Say why the order is being cancelled
+cancel_po__run	Order not found
+cancel_po__run	Order {1} is not open
+cancel_po__run	Goods have come against order {1}: close it instead
+receive_goods__run	Choose an active supplier
+receive_goods__run	Add at least one line
+receive_goods__run	Freight, other costs and rebates cannot be negative
+receive_goods__run	Order not found
+receive_goods__run	Order {1} is not approved yet: approve it, or receive without it
+receive_goods__run	Order {1} is closed: receive without it
+receive_goods__run	Order {1} was cancelled: receive without it
+receive_goods__run	Order {1} is from {2}: receive it from them
+receive_goods__run	Order {1} is for {2}: receive it there
+receive_goods__run	Unknown item on the receipt
+receive_goods__run	{1} is out of use: bring it back into use first
+receive_goods__run	Every received line needs a quantity
+receive_goods__run	Every received line needs a price
+receive_goods__run	That line is not on order {1}
+receive_goods__run	Check the price and the quantity: {1}. If it is right, confirm it and receive again
+receive_goods__run	Check the price: {1}. If it is right, confirm it and receive again
+receive_goods__run	Check the quantity: {1}. If it is right, confirm it and receive again
+trg_supplier_credit_guard	A supplier's credit is never deleted
+trg_supplier_credit_guard	A supplier's credit does not change
+trg_supplier_credit_allocation	More would be set against credit {1} than it is for
+cancel_bill__run	Say why the bill is being cancelled
+cancel_bill__run	Bill not found
+cancel_bill__run	This bill is already cancelled
+cancel_bill__run	This bill has payments against it, so it cannot be cancelled
+cancel_bill__run	This bill has credits set against it, so it cannot be cancelled
+cancel_bill__run	Choose a date that has happened
+cancel_bill__run	A bill cannot be cancelled before its own date
+return_to_supplier__run	This leaves {1} below zero, which a manager approves: ask one to return it
+set_credit_against	Credit not found
+set_credit_against	Bill not found
+set_credit_against	That bill is from another supplier
+set_credit_against	That bill was cancelled; it is not owed
+set_credit_against	Enter an amount greater than zero
+set_credit_against	That is more than the {1} left of credit {2}
+set_credit_against	That is more than the {1} outstanding on bill {2}
+record_supplier_credit__run	Say what the credit is for: a price, or other
+record_supplier_credit__run	A return makes its own credit: record the supplier's note on it instead
+record_supplier_credit__run	Choose a supplier
+record_supplier_credit__run	Type the number on the supplier's credit note
+record_supplier_credit__run	Credit note {1} from this supplier is already recorded
+record_supplier_credit__run	Say what the credit is for
+record_supplier_credit__run	Enter an amount greater than zero
+record_supplier_credit__run	Bill not found
+record_supplier_credit__run	That bill is from another supplier
+record_supplier_credit__run	That bill was cancelled; it is not owed
+record_supplier_credit__run	Choose the delivery the price was for
+record_supplier_credit__run	Delivery not found
+record_supplier_credit__run	Delivery {1} came from another supplier
+record_supplier_credit__run	Delivery {1} was reversed: there is no price to reduce
+record_supplier_credit__run	Bill {1} is not for delivery {2}
+record_supplier_credit__run	Delivery {1} is not billed yet: correct its price on Purchasing instead
+record_supplier_credit__run	That is more than delivery {1} is still worth ({2})
+record_supplier_credit__run	Choose the account the credit is taken off
+record_supplier_credit__run	Account {1} cannot take a supplier's credit
+note_supplier_credit__run	Type the number on the supplier's credit note
+note_supplier_credit__run	Credit not found
+note_supplier_credit__run	Credit {1} already has the supplier's note {2}
+note_supplier_credit__run	Credit note {1} from this supplier is already recorded
+supplier_statement	Supplier not found
+supplier_statement	Choose the dates, the first before the last
+set_item_supplier__run	Item not found
+set_item_supplier__run	{1} is out of use: bring it back into use first
+set_item_supplier__run	Choose an active supplier
+set_item_supplier__run	{1} is not bought in {2}
+set_item_supplier__run	A price is zero or more
+remove_item_supplier__run	Item not found
+remove_item_supplier__run	That supplier is not one the item is bought from
+purchase_orders_from_list__run	Choose at least one item to order
+purchase_orders_from_list__run	At most 300 lines at once
+purchase_orders_from_list__run	Choose a supplier for {1}
+record_production__run	{1} was counted after that time: a batch made before the count is in it already, and is not recorded now
+cancel_production__run	Say why the batch is cancelled
+cancel_production__run	Batch not found
+cancel_production__run	This batch is already cancelled
+cancel_production__run	Only a recorded batch can be cancelled
+cancel_production__run	Some of what this batch made has already been used or sold: record a loss or a correction instead
+set_batch_use_by__run	Say why the use-by changes
+set_batch_use_by__run	Batch not found
+set_batch_use_by__run	This batch is cancelled
+set_batch_use_by__run	The use-by is after the batch was made
+save_batch_recipe__run	Name what the batch makes
+save_batch_recipe__run	What it makes keeps for an hour to a year
+save_batch_recipe__run	Batch recipe not found
+save_batch_recipe__run	Unknown item
+save_batch_recipe__run	Say whether it is weighed, measured or counted in pieces
+save_batch_recipe__run	You already keep an item called {1}: choose it as what the batch makes
+save_batch_recipe__run	"{1}" is already a unit: name the container, such as pan or tray
+save_batch_recipe__run	Say how much one {1} holds
+save_batch_recipe__run	Say how much one batch makes
+batch_reconciliation	Batch not found
+loss_approval	This loss needs a manager's approval: ask one to approve it now, or save it to wait for their approval
+write_loss	Choose what kind of loss it is
+write_loss	At the till, a staff meal, on the house or a sample is given away
+write_loss	Say why it is given away
+write_loss	Say why the stock was lost
+write_loss	The cart is empty
+write_loss	Choose what was lost
+write_loss	At most 50 lines at once
+write_loss	Choose an item or a product that was lost
+write_loss	At the till, products are given away
+write_loss	Unknown item
+write_loss	Enter a quantity greater than zero
+write_loss	Enter a quantity greater than zero
+write_loss	That batch is not of this item, here
+write_loss	A batch is named for an item, not a product
+write_loss	Enter a quantity greater than zero
+write_loss	That product is not on sale
+write_loss	{1} uses no stock: nothing is lost with it
+write_loss	Nothing given uses any stock: there is nothing to record
+write_loss	Only {1} {2} of batch {3} is left
+give_away__run	Give it away as a staff meal, on the house or a sample
+give_away__run	What is given away is eaten in or taken away
+staff_member	Choose someone who works here
+save_employee__run	Type the person's name
+save_employee__run	A name is at most 80 letters
+save_employee__run	Say when they started
+save_employee__run	They start within a year
+save_employee__run	Choose where they work
+save_employee__run	Someone here is called {1} already: add a surname or a nickname
+save_employee__run	Choose a login of this café
+save_employee__run	{1} is the login of someone else already
+save_employee__run	There are hours recorded before {1}: correct them first
+save_employee__run	They cannot start after their last day ({1})
+set_employee_pay__run	Choose how they are paid: by the month, the day or the hour
+set_employee_pay__run	Enter the pay
+set_employee_pay__run	A day's hours are more than 0 and at most 16
+set_employee_pay__run	Overtime is paid at 100% to 300% of an hour's pay
+set_employee_left__run	Say why they work here again
+set_employee_left__run	Say why they leave
+set_employee_left__run	They cannot leave before they started ({1})
+set_employee_left__run	{1} is clocked in: clock them out first
+set_employee_left__run	There are hours recorded after {1}: correct them first
+set_employee_left__run	{1} works here already
+set_clock_pin	Sign in first
+set_clock_pin	You do not have permission to do this (needs {1})
+set_clock_pin	A PIN is 4 to 8 digits
+set_clock_pin	Choose a PIN that is harder to guess
+save_schedule__run	Choose the dates, the first before the last
+save_schedule__run	Choose up to 31 days
+save_schedule__run	Give the hours as a list
+save_schedule__run	Each day of the hours is within the dates chosen
+save_schedule__run	{1} does not work here on {2}
+save_schedule__run	Give the hours as 08:00 to 16:00
+save_schedule__run	Give the hours as 08:00 to 16:00
+save_schedule__run	{1} has one stretch of hours on {2} at most
+save_schedule__run	A note is at most 200 letters
+save_schedule__run	The pay for {1} is approved: its hours can no longer change
+save_schedule__run	{1} works at {2} on {3} already
+save_schedule__run	{1}'s hours overlap on {2}
+staff_schedule	Choose the dates, the first before the last
+staff_schedule	Choose up to 62 days
+trg_attendance_guard	A record of hours is cancelled, not deleted
+trg_attendance_guard	That record was cancelled
+trg_attendance_guard	A record of hours stays with its person
+attendance_checked	Say when they clocked in
+attendance_checked	The hours cannot be in the future
+attendance_checked	They clock out after they clock in
+attendance_checked	One record is a day of hours at most
+attendance_checked	{1} does not work here on {2}
+attendance_checked	The pay for {1} is approved: its hours can no longer change
+attendance_checked	{1} has other hours recorded then, from {2}
+correct_attendance__run	Say why the hours are corrected
+correct_attendance__run	Record of hours not found
+correct_attendance__run	That record was cancelled
+correct_attendance__run	The pay for {1} is approved: its hours can no longer change
+add_attendance__run	Say why the hours are added
+cancel_attendance__run	Say why the record is cancelled
+cancel_attendance__run	Record of hours not found
+cancel_attendance__run	That record was cancelled
+cancel_attendance__run	The pay for {1} is approved: its hours can no longer change
+attendance_list	Choose the dates, the first before the last
+attendance_list	Choose up to 62 days
+trg_employee_advance_guard	An advance is cancelled, not deleted
+trg_employee_advance_guard	An advance is not changed: cancel it and give it again
+staff_paid_from	Say where the money came from: the till, the safe, the bank or the owner
+cancel_advance__run	Say why the advance is cancelled
+cancel_advance__run	Advance not found
+cancel_advance__run	This advance was cancelled already
+cancel_advance__run	Some of this advance was taken back from a salary already: it cannot be cancelled
+trg_payroll_approval_guard	A payroll's approval is reopened, not deleted
+trg_payroll_approval_guard	A payroll's approval is not changed: reopen the payroll
+trg_payroll_line_guard	Only a draft payroll changes: this one is approved
+draft_payroll__run	Choose the month
+draft_payroll__run	Choose a month that has begun
+draft_payroll__run	The pay for {1} is approved already
+adjust_payroll_line__run	Payroll line not found
+adjust_payroll_line__run	Only a draft payroll changes: this one is approved
+adjust_payroll_line__run	Enter amounts of zero or more
+adjust_payroll_line__run	Say what the addition is for
+adjust_payroll_line__run	Say what the deduction is for
+adjust_payroll_line__run	The deductions are more than {1} earned ({2})
+adjust_payroll_line__run	{1} owes {2} of advances: take back no more than that
+adjust_payroll_line__run	Take back no more of the advances than the pay ({1})
+approve_payroll__run	Payroll not found
+approve_payroll__run	This payroll is approved already
+approve_payroll__run	The pay for {1} is approved once the month is over
+approve_payroll__run	Nobody worked here in {1}: there is no pay to approve
+approve_payroll__run	{1} is still clocked in since {2}: clock them out or correct the hours first
+approve_payroll__run	Set {1}'s pay on Staff, then draft the payroll again
+approve_payroll__run	The hours or the pay changed since this draft: draft it again, check it, then approve it
+reopen_payroll__run	Say why the payroll is reopened
+reopen_payroll__run	Payroll not found
+reopen_payroll__run	This payroll is a draft already
+reopen_payroll__run	Salaries were paid from this payroll: cancel the payments first
+trg_salary_payment_guard	A salary payment is cancelled, not deleted
+trg_salary_payment_guard	A salary payment is not changed: cancel it and pay again
+pay_salary__run	Payroll line not found
+pay_salary__run	Approve the payroll first
+pay_salary__run	{1} is paid in full already
+pay_salary__run	Enter an amount greater than zero
+pay_salary__run	That is more than is owed to {1} ({2})
+pay_payroll__run	Payroll not found
+pay_payroll__run	Approve the payroll first
+pay_payroll__run	Everyone is paid in full already
+cancel_salary_payment__run	Say why the payment is cancelled
+cancel_salary_payment__run	Salary payment not found
+cancel_salary_payment__run	This payment was cancelled already
+payroll_detail	Payroll not found
+customer_of	Customer not found
+save_customer__run	Type the customer's name
+save_customer__run	A name is at most 80 letters
+save_customer__run	Type the customer's phone number
+save_customer__run	That is not a phone number: type it as 0770 123 4567
+save_customer__run	Notes are at most 500 letters
+save_customer__run	That number is {1}'s already
+save_customer_address__run	Type the address
+save_customer_address__run	An address is at most 300 letters
+save_customer_address__run	A name for the address is at most 40 letters
+save_customer_address__run	Directions are at most 300 letters
+save_customer_address__run	Address not found
+save_customer_address__run	A customer keeps at most 10 addresses: put one away first
+save_customer_address__run	Address not found
+find_customer	That is not a phone number: type it as 0770 123 4567
+sale_customer_check	Choose the customer to take their reward
+sale_customer_check	A delivery platform's customers are its own: none is added at the till
+sale_customer_check	A sale takes from 1 to 20 rewards
+sale_customer_check	{1} is no longer a customer here: bring them back on Customers first
+sale_customer_check	Choose one of the customer's addresses
+sale_customer_check	Customers earn no points now: loyalty is off on Settings
+sale_customer_check	A reward is the bill's discount: take the other discount off first
+sale_customer_check	Not enough points: {1} has {2}, and this takes {3}
+sale_delivery_check	A delivery by the café's own driver needs the customer and their address
+sale_customer_record	The bill comes to less than the reward ({1}): add to it, or keep the points for later
+post_sale	A sale needs its idempotency key
+post_sale	The cart is empty
+post_sale	A tip is a whole amount of 0 or more
+post_sale	A delivery platform's order takes no tip at the till
+post_sale	A delivery platform sets its own discounts; none is given at the till
+post_sale	Each line needs a positive quantity
+post_sale	That product is not on sale
+post_sale	No {1} price is set for this product
+post_sale	A deal on the bill has no key
+post_sale	A deal on the bill is mixed with another
+post_sale	That deal is not on now
+post_sale	That deal is not sold on this channel
+post_sale	A deal is one of each of the things in it
+post_sale	You do not have permission to take the service charge off
+post_sale	The payments come to {1}, not the {2} to pay
+record_sale	You do not have permission to give discounts
+record_sale	{1} is not one of the café's delivery platforms: add it on Delivery Platforms
+record_sale	{1} is no longer in use: bring it back on Delivery Platforms to sell through it
+record_sale	Enter the {1} order number
+record_sale	An order number is letters and digits, as the {1} tablet shows it
+record_sale	{1} order {2} is already recorded, on the sale of {3}
+settle_tab	Bill not found
+settle_tab	The bill is empty
+settle_tab	That payment was already used for another sale. Try again.
+tab_customer_set	Choose the customer again
+tab_customer_set	A delivery platform's customers are its own: none is added at the till
+tab_customer_set	{1} is no longer a customer here: bring them back on Customers first
+tab_customer_set	Choose one of the customer's addresses
+adjust_points__run	Enter the points to give, or with a minus to take
+adjust_points__run	Points are given or taken 10,000 at most at a time
+adjust_points__run	Say why the points change
+adjust_points__run	{1} has {2} points: no more can be taken
+report_balance_sheet	Choose the day
+report_balance_sheet	Choose today or a day before it
+report_cash_flow	Choose the dates, the first on or before the last
+report_cash_flow	Choose at most a year of dates
+report_cash_flow	Choose today or a day before it
+trg_document_attachment_guard	A document is not deleted: take it off, saying why
+trg_document_attachment_guard	This document was taken off already
+trg_document_attachment_guard	A document is not changed: take it off and attach it again
+attach_document__run	Choose what the document goes with
+attach_document__run	The record was not found
+attach_document__run	Give the document a name
+attach_document__run	A document's name is at most 200 letters
+attach_document__run	A note is at most 500 letters
+attach_document__run	The file is not kept with this record
+attach_document__run	Upload the file first
+attach_document__run	A document is a picture (JPEG, PNG or WebP) or a PDF
+attach_document__run	A document is at most 10 MB
+attach_document__run	That file is attached already
+attach_document__run	A record keeps at most 20 documents: take one off first
+detach_document__run	Document not found
+detach_document__run	Say why the document is taken off
+detach_document__run	This document was taken off already
+documents_for	Choose what the document goes with
+document_counts	Choose what the document goes with
+document_record	Choose what the document goes with
+document_record	The record was not found
+trg_transit_by_transfers	Stock in transit (1210) moves only with a transfer between places
+trg_stock_transfer_guard	A transfer is not deleted: cancel it while it is on its way
+trg_stock_transfer_guard	Transfer {1} is settled: it does not change
+trg_stock_transfer_guard	What was sent does not change: cancel the transfer and send it again
+trg_stock_transfer_line_guard	A transfer is not deleted: cancel it while it is on its way
+trg_stock_transfer_line_guard	What arrived does not change
+trg_stock_transfer_line_guard	What was sent does not change: cancel the transfer and send it again
+send_stock_transfer__run	This leaves {1} below zero, which a manager approves: ask one to send it
+cancel_stock_transfer__run	Transfer not found
+cancel_stock_transfer__run	Say why the transfer is cancelled
+cancel_stock_transfer__run	Transfer {1} was received: it is not cancelled
+cancel_stock_transfer__run	Transfer {1} was cancelled already
+create_item__run	Name the item
+create_item__run	Give the item a base unit
+create_item__run	Levels cannot be negative
+create_item__run	{1} already has a unit called {2}: a unit in use keeps its size, so give a new size its own name
+create_item__run	Opening stock needs a unit cost
+trg_user_role_place	The owner and the general manager work everywhere
+trg_user_role_place	Choose one of the café's places
+trg_user_role_one_place	A person works everywhere or at one place: all their roles are at that place
+assert_works_at	You work at {1}, not at {2}
+invite_member__run	Give the person's name and email
+invite_member__run	Give the person at least one role
+invite_member__run	Only the owner can appoint an owner or general manager
+invite_member__run	Choose one of the café's places
+invite_member__run	Someone with that email is already a member
+set_member_place	Member not found
+set_member_place	Choose one of the café's places
+set_member_place	The owner and the general manager work everywhere
+trg_sold_at_a_branch	{1} does not sell: the till is at a branch
+set_price__run	Unknown product
+set_price__run	Enter a price
+set_price__run	Choose one of the café's branches
+set_price__run	A price cannot start in the past: every sale keeps the price it was made at
+record_expense__run	Money from the till or the safe is recorded the day it is taken out: today
+pay_bill__run	Bill not found
+pay_bill__run	That bill was cancelled; it is not owed
+pay_bill__run	Say where the money came from: the till, the safe, the bank, a card or the owner
+pay_bill__run	Enter an amount greater than zero
+pay_bill__run	That is more than the {1} outstanding on this bill
+record_advance__run	Enter an amount greater than zero
+record_advance__run	Say what the advance is for
+record_advance__run	{1} does not work here on {2}
+report_place	Choose one of the café's places
+report_place	You work at {1}, not at {2}
+daily_brief_0029	Choose a day that has happened
+report_losses	Choose the dates, the first before the last
+report_sizes_and_addons	Choose the dates, the first before the last
+report_purchases	Choose the dates, the first on or before the last
+report_dollars	Choose the dates, the first before the last
+report_purchasing	Choose the dates, the first before the last
+report_production	Choose the dates, the first before the last
+report_staff	Choose the dates, the first before the last
+report_staff	Choose up to a year
+report_customers	Choose the dates, the first on or before the last
+account_name_ok	Name the account
+account_name_ok	An account's name is at most 60 letters
+account_names_save	Give the account's other names as {"ar": "…", "ckb": "…"}
+account_names_save	An account's other names are its Arabic (ar) and Kurdish (ckb)
+account_names_save	Give the account's name in {1} as text
+account_names_save	An account's name is at most 60 letters
+account_to_change	There is no account {1}
+account_to_change	Account {1} {2} is one the system posts to: it is kept as it is
+create_account__run	An account added here is an income, a cost, a bank, a loan or a kind of equipment
+create_account__run	An account's code is four digits
+create_account__run	An income's code is from 4000 to 4999
+create_account__run	A cost's code is from 5000 to 6999: 5… for the cost of what was sold, 6… for the running costs
+create_account__run	Another bank's code is from 1021 to 1029
+create_account__run	A loan's code is from 2400 to 2499
+create_account__run	A kind of equipment's code is from 1501 to 1589
+create_account__run	Account {1} is {2}
+create_account__run	{1} is account {2} already
+rename_account__run	{1} is account {2} already
+set_account_in_use__run	Say whether the account is in use
+set_account_in_use__run	Say why
+set_account_in_use__run	A reason is at most 300 letters
+set_account_in_use__run	Account {1} {2} is in use already
+set_account_in_use__run	Account {1} {2} is out of use already
+set_account_in_use__run	A draft journal ({1}) has a line on account {2} {3}: publish it or change the line first
+set_account_in_use__run	A prepaid expense ({1}) takes a share from account {2} {3} each month until {4}: take it out of use once the last share is posted, or cancel the prepaid expense first
+trg_bank_statement_guard	A bank statement is never deleted: undo it instead
+trg_bank_statement_guard	Bank statement {1} was undone already
+trg_bank_statement_guard	A bank statement stays as it was kept
+trg_bank_statement_line_guard	A line on a bank statement is not changed: undo the statement instead
+save_bank_statement__run	Give the statement's last day
+save_bank_statement__run	A statement cannot end after today
+save_bank_statement__run	Give the balance the bank's statement shows
+save_bank_statement__run	A note is at most 500 letters
+save_bank_statement__run	Statement {1} ends on {2}: the next one ends after it
+save_bank_statement__run	A line ticked is not one of the bank's lines to {1} still open
+save_bank_statement__run	The lines ticked take the bank to {1}, and the statement says {2}: {3} apart
+undo_bank_statement__run	Say why
+undo_bank_statement__run	A reason is at most 300 letters
+undo_bank_statement__run	There is no such bank statement
+undo_bank_statement__run	Bank statement {1} was undone already
+undo_bank_statement__run	Statement {1} comes after it: undo the latest first
+trg_prepaid_expense_guard	A prepaid expense is never deleted: cancel it instead
+trg_prepaid_expense_guard	That prepaid expense was cancelled already
+trg_prepaid_expense_guard	A prepaid expense stays as it was recorded: cancel it and record it again
+trg_prepaid_release_guard	A month's share of a prepaid expense is not changed: cancel the prepaid expense instead
+trg_prepaid_by_its_records	A month's share of a prepaid expense is undone by cancelling the prepaid expense on Expenses
+trg_prepaid_by_its_records	Prepaid expenses (1400) move only with a prepaid expense: record one on Expenses
+record_prepaid_expense__run	Enter an amount greater than zero
+record_prepaid_expense__run	Describe the expense
+record_prepaid_expense__run	Account {1} cannot take an expense (stock costs come from their own records)
+record_prepaid_expense__run	Say where the money came from: the till, the safe, the bank, a card or the owner
+record_prepaid_expense__run	A prepaid expense covers 1 to 36 months
+record_prepaid_expense__run	A prepaid expense starts this month or later: what it paid for before is an expense of those months
+record_prepaid_expense__run	For this month alone, record an expense
+record_prepaid_expense__run	A prepaid expense starts within a year
+record_prepaid_expense__run	Each month takes at least 1 of it: pay at least {1}, or cover fewer months
+cancel_prepaid_expense__run	Say why the prepaid expense is cancelled
+cancel_prepaid_expense__run	Prepaid expense not found
+cancel_prepaid_expense__run	That prepaid expense was cancelled already
+reverse_journal__run	A journal that moved the till's or the safe's cash is reversed today, when they count it
+daily_sales_target	Unknown location
+register_clock_screen	Name the clock screen, such as The till
+register_clock_screen	A clock screen's name is at most 60 letters
+remove_clock_screen	Say why the clock screen is taken out of use
+remove_clock_screen	That clock screen is not in use
+link_phone_start	{1} does not work here now
+unlink_phone	Say why the phone is no longer theirs
+unlink_phone	{1} has no phone linked
+clock_in__run	{1} does not work here on {2}
+clock_by_phone__run	Clock in, or out
+save_payment_method__run	Name the way to pay, in 40 letters at most
+save_payment_method__run	The ways to pay cannot be read
+save_payment_method__run	There is already a way to pay called {1}
+save_payment_method__run	The café has 60 ways to pay already: rename one out of use and bring it back
+save_payment_method__run	That way to pay is not one of the café's
+sale_methods_in_use	{1} is no longer taken: choose another way to pay
+move_money__run	Choose where the money is moved from
+move_money__run	Choose where the money goes: the bank, the safe or another way to pay
+move_money__run	Money is moved out of a way to pay's account, or into one
+move_money__run	Enter amounts of 0 or more
+move_money__run	A charge alone is what the bank or the app took: enter it as the fee
+move_money__run	Enter how much arrived
+move_money__run	Money is moved on a day up to today
+move_money__run	A reference is at most 60 letters
+move_money__run	A note is at most 300 letters
+move_money__run	The safe holds {1}: no more can be moved out of it
+move_money__run	{1} holds {2}: no more can be moved out of it
+cancel_money_move__run	That move of money is not in force
+cancel_money_move__run	Say why it is cancelled
+cancel_money_move__run	A reason is at most 300 letters
+set_item_keeps__run	Unknown item
+set_item_keeps__run	An item keeps 1 to 365 days, or say nothing
+labour_target	Unknown location
+phone_warnings	Sign in to continue
+turn_on_phone_warnings__run	The app's address must be its https address
+turn_on_phone_warnings__run	The keys for sending are not valid
+save_push_device__run	Phone warnings are not turned on for the café: the owner turns them on in Settings
+save_push_device__run	This phone's browser gave no address to send to
+remove_push_device	Sign in to continue
+send_test_warning	Warnings are not turned on on this phone
+send_test_warning	A test was sent a moment ago: wait a minute
+push_take	Not allowed
+push_done	Not allowed
+record_offline_sale	A sale needs its idempotency key
+record_offline_sale	Say when the sale was made
+record_offline_sale	This sale is dated later than now: check the till's clock
+record_offline_sale	This sale was made more than a week ago: a manager records it by hand
+record_offline_sale	A delivery by the café's own driver needs the customer and their address
+record_offline_sale	A sale paid in dollars is not taken offline
+record_offline_sale	{1} is not one of the café's delivery platforms: add it on Delivery Platforms
+record_offline_sale	Enter the {1} order number
+record_offline_sale	An order number is letters and digits, as the {1} tablet shows it
+record_offline_sale	{1} order {2} is already recorded
+save_section	Name the section
+save_section	A section's name is at most 40 letters
+save_section	There is already a section called {1}
+save_section	Section not found
+set_category_section	Category not found
+set_category_section	Section not found
+set_place_sections	Place not found
+set_place_sections	{1} does not sell: the till is at a branch
+set_place_sections	Section not found
+set_variant_weighed	Size not found
+trg_line_quantity	A weight is from 1 g to 1,000 kg, to the gram
+take_pre_order	Say who the order is for
+take_pre_order	A name is at most 80 letters
+take_pre_order	Say when it is collected
+take_pre_order	It is collected later than now
+take_pre_order	It is collected within six months
+take_pre_order	A pre-order is collected at the café: take it away or eat in
+take_pre_order	The cart is empty
+take_pre_order	Each line needs a positive quantity
+take_pre_order	That product is not on sale
+take_pre_order	No {1} price is set for this product
+take_pre_order	A deposit is at most the order's total
+take_pre_order	Choose which way to pay it was
+take_pre_order	A deposit is paid in cash, by card or one of the café's ways to pay
+collect_pre_order	A sale needs its idempotency key
+collect_pre_order	Pre-order not found
+collect_pre_order	Pre-order {1} is collected already
+collect_pre_order	Pre-order {1} was cancelled
+collect_pre_order	Choose how it was paid
+cancel_pre_order	Say why it is cancelled
+cancel_pre_order	Pre-order not found
+cancel_pre_order	Pre-order {1} is collected already
+cancel_pre_order	Pre-order {1} was cancelled
+set_customer_account	Customer not found
+set_customer_account	A credit limit is an amount of 0 or more
+set_customer_account	Terms are from 0 to 365 days
+set_customer_account	A wholesale price is from 0% to 90% off
+invoice_customer	A sale needs its idempotency key
+invoice_customer	Customer not found
+invoice_customer	{1} is no longer a customer
+invoice_customer	{1} does not buy on account
+invoice_customer	An invoice is for take-away or eat-in prices
+invoice_customer	The cart is empty
+invoice_customer	A note is at most 300 letters
+invoice_customer	Each line needs a positive quantity
+invoice_customer	That product is not on sale
+invoice_customer	No {1} price is set for this product
+invoice_customer	{1} may owe at most {2}: they owe {3} already, and this is {4}
+receive_customer_payment	Customer not found
+receive_customer_payment	Each payment needs an amount more than 0
+receive_customer_payment	{1} owes {2}: a payment is at most that
+receive_customer_payment	A payment's reference is at most 60 letters
+receive_customer_payment	That way to pay is not one of the café's
+receive_customer_payment	Say where the money went: the till, the bank or a way to pay
+customer_account	Customer not found
+set_variant_barcode	Size not found
+set_variant_barcode	A barcode is 4 to 32 letters and digits
+set_variant_barcode	That barcode is on {1} already
+mark_down	A markdown is from 5% to 90% off, in whole percent
+mark_down	Choose what to mark down
+mark_down	A markdown ends later than now
+mark_down	That product is not on sale
+stop_markdown	Markdown not found
+add_fixed_asset	Name the equipment
+add_fixed_asset	A name is at most 80 letters
+add_fixed_asset	Enter what it cost
+add_fixed_asset	What it is worth at the end is less than what it cost
+add_fixed_asset	It is used for 1 to 600 months
+add_fixed_asset	It was bought on a day up to today
+add_fixed_asset	Choose a kind of equipment from the chart
+add_fixed_asset	Say how it was paid: the bank, the safe, the owner, a supplier's bill or a loan
+dispose_fixed_asset	Equipment not found
+dispose_fixed_asset	{1} is gone already
+dispose_fixed_asset	It went on a day from when it was bought up to today
+dispose_fixed_asset	Enter what it fetched, 0 or more
+dispose_fixed_asset	Say where the money went: the bank or the safe
+settle_tab_offline	A sale needs its idempotency key
+settle_tab_offline	Bill not found
+settle_tab_offline	This bill was paid on another till while this one was offline: give back what was taken twice
+settle_tab_offline	Say when the sale was made
+settle_tab_offline	This sale is dated later than now: check the till's clock
+settle_tab_offline	This sale was made more than a week ago: a manager records it by hand
+settle_tab_offline	Choose how it was paid
+settle_tab_offline	A sale paid in dollars is not taken offline
+report_problem	Sign in to continue
+report_problem	Say in a word or two what went wrong
+report_problem	At most 500 letters
+settle_problem	That report is not here
+settle_problem	A note is at most 300 letters
+trg_journal_line_not_transfer_price	The accounts of the transfer price between branches carry no journal
+set_time_price	Unknown product
+set_time_price	Enter a price
+set_time_price	Give the hours it runs, from and until
+set_time_price	Choose the days it runs
+set_time_price	A delivery platform sets its own prices
+set_time_price	Choose one of the café's branches
+stop_time_price	That price is not running
+set_section_hours	Give the hours it is shown, from and until, or neither
+set_section_hours	Choose the days it is shown
+set_section_hours	Section not found
+trg_sale_deal_frozen	A deal sold is kept as it was sold
+save_deal	Name the deal
+save_deal	A deal's name is at most 60 letters
+save_deal	There is already a deal called {1}
+save_deal	Give the deal a price
+save_deal	A deal has at least two things in it
+save_deal	A deal has at most eight things in it
+save_deal	Give the hours it is on, from and until, or neither
+save_deal	Choose the days it is on
+save_deal	Deal not found
+save_deal	Unknown channel {1}
+save_deal	A delivery platform sets its own offers
+save_deal	Enter a price
+save_deal	Unknown category
+save_deal	Each thing in a deal is a product or a category with products on sale
+set_service_charge	Choose the way of selling
+set_service_charge	A delivery platform sets what its customers pay: no service charge is added to it
+set_service_charge	A service charge is between 0 and 50%
+set_tip_sharers	That person is not on Staff
+set_tip_sharers	Someone who has left does not share the tips
+receipt_text	A line of the receipt is at most {1} letters
+receipt_link	A link starts with https:// and has no spaces
+set_receipt_setup	The receipt's setup cannot be read
+set_receipt_setup	The QR code leads to the menu, to the reviews, or nowhere
+set_receipt_setup	Give the menu's link for the QR code to lead to
+set_receipt_setup	Give the reviews' link for the QR code to lead to
+set_receipt_logo	Use a PNG, JPEG or WebP picture
+set_receipt_logo	The picture could not be read
+set_receipt_logo	The logo must be smaller than 60 KB
+set_receipt_logo	That file is not a PNG, JPEG or WebP picture
+note_report_visit	Sign in again
+note_report_visit	That is not one of the reports
+update_supplier	Unknown supplier
+update_supplier	Name the supplier
+update_supplier	A delivery takes 0 to 30 days
+update_supplier	A supplier delivers every 1 to 60 days
+update_supplier	{1} is still owed {2}: pay or cancel their bills before taking them out of use
+cash_ahead_for	Look 1 to 92 days ahead
+set_watch_visibility	Only the owner says who reads the watch list
+watch_list	The watch list is for the owner
+settle_watch_finding__run	The watch list is for the owner
+settle_watch_finding__run	Mark it explained or looked into
+settle_watch_finding__run	That finding is not on the watch list
+settle_watch_finding__run	That finding is settled already

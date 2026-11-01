@@ -53,6 +53,7 @@ import watch from "./watch";
 import simplify from "./simplify";
 import devices from "./devices";
 import twoStep from "./twoStep";
+import findings from "./findings";
 
 /**
  * The areas' phrase books; "db" holds what the database refuses with, "alerts"
@@ -109,6 +110,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   simplify,
   devices,
   twoStep,
+  findings,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

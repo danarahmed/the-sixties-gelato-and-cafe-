@@ -86,9 +86,10 @@ Plan a short window when the café is closed.
 | Meal deals and prices by the hour (`0089`) | ✅ Applied by the owner in the SQL editor on 21 October; Products & Recipes then showed Meal deals and Prices by the time of day, the till as before                                                                                                                                                                                                                                                                                             |
 | Tips and a service charge (`0090`)         | ✅ Applied by the owner in the SQL editor on 21 October; Settings then offered the service charge on the three ways of selling, Payroll the tips                                                                                                                                                                                                                                                                                                 |
 | The café's own receipt (`0091`)            | ✅ Applied by the owner in the SQL editor on 22 October; Settings then showed The receipt with its preview, a report opened was counted, the Dashboard arranged for the owner                                                                                                                                                                                                                                                                    |
-| Smarter buying (`0092`)                    | ⏳ To be applied by the owner in the SQL editor, after `0091`                                                                                                                                                                                                                                                                                                                                                                                    |
-| Cash ahead (`0093`)                        | ⏳ To be applied by the owner in the SQL editor, after `0092`                                                                                                                                                                                                                                                                                                                                                                                    |
-| The watch list (`0094`)                    | ⏳ To be applied by the owner in the SQL editor, after `0093`                                                                                                                                                                                                                                                                                                                                                                                    |
+| Smarter buying (`0092`)                    | ✅ Applied by the owner in the SQL editor on 22 October; Purchasing then showed how each supplier delivers and Draft the orders now                                                                                                                                                                                                                                                                                                              |
+| Cash ahead (`0093`)                        | ✅ Applied by the owner in the SQL editor on 22 October; Reports → Cash ahead then showed the bank and the safe for the next 30 days                                                                                                                                                                                                                                                                                                             |
+| The watch list (`0094`)                    | ✅ Applied by the owner in the SQL editor on 22 October; Reports → Watch list then opened, with nothing standing out                                                                                                                                                                                                                                                                                                                             |
+| What the guide found (`0095`)              | ⏳ To be applied by the owner in the SQL editor (see After `0095` below)                                                                                                                                                                                                                                                                                                                                                                         |
 
 ## 0. Before you start
 
@@ -4188,6 +4189,44 @@ every other test, and on the simulated year (`docs/SIMULATION.md`).
 It is applied by the owner, in Supabase's SQL editor, after `0093`:
 
 1. Open the file `supabase/migrations/0094_watch_list.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0095`
+
+Migration `0095` puts right what writing the guide found (docs/guide/src/FINDINGS.md):
+
+- **A pre-order collected, or a customer invoiced**, goes ahead without a
+  manager when the books hold less stock than it takes and the rule says a
+  manager approves; it is noted on the audit trail with why. A rule that
+  refuses still refuses.
+- **One phone, one person**: a phone linked to someone new ends the link it
+  held before, and the phone says whose it was.
+- **A delivery worth nothing** (samples, a free replacement) is received at
+  no cost and moves nothing in the books; freight on it is refused, having
+  nothing to be shared by.
+- **Settings → The café's details**: the owner changes the café's name and
+  default language at any time, and the currency, the time zone and how bill
+  numbers start only while nothing has been sold or posted.
+- **Settings → Places**: a branch, a central kitchen or a store added,
+  renamed in the three languages, closed (with a reason, once nothing is open
+  or left in it) and opened again. A new place has its till drawer at once.
+- **Backup codes for two-step sign-in**: eight, shown once when it is turned
+  on (and again on My account with "Make new backup codes"). One of them,
+  typed at sign-in instead of the six digits, takes the second step off, so
+  a person who lost the phone can sign in and turn it on with a new one.
+- **Running out** alerts say how much a day with the unit, rounded as people
+  round (88 each, not 88.07).
+
+Nothing recorded changes. Rehearsed with `tests/sql/findings.test.sql` and
+every other test.
+
+It is applied by the owner, in Supabase's SQL editor, after `0094`:
+
+1. Open the file `supabase/migrations/0095_findings.sql` on GitHub, press **Raw**,
    select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run

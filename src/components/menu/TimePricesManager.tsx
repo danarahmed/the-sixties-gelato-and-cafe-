@@ -10,6 +10,7 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import { useChannels } from "@/components/ChannelsProvider";
 import { Icon } from "@/components/Icon";
 import { Notice, inputStyle } from "@/components/ui";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 import { DaysAndHours, type DealSize } from "./DealsManager";
 
 /**
@@ -32,6 +33,7 @@ export function TimePricesManager({
   const router = useRouter();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, start] = useTransition();
+  const op = useOperation();
   const [adding, setAdding] = useState(false);
   const [f, setF] = useState({
     variantId: "",
@@ -51,17 +53,19 @@ export function TimePricesManager({
   function add() {
     setMsg(null);
     start(async () => {
-      const r = await setTimePriceAction(
-        {
-          variantId: f.variantId,
-          price: Number(f.price),
-          starts: f.starts,
-          ends: f.ends,
-          days: f.days.length === 7 ? null : f.days,
-          channel: f.channel || null,
-          locationId: f.locationId || null,
-        },
-        crypto.randomUUID(),
+      const r = await op.run("timePrice", (key) =>
+        setTimePriceAction(
+          {
+            variantId: f.variantId,
+            price: Number(f.price),
+            starts: f.starts,
+            ends: f.ends,
+            days: f.days.length === 7 ? null : f.days,
+            channel: f.channel || null,
+            locationId: f.locationId || null,
+          },
+          key,
+        ),
       );
       if (!r.ok) {
         setMsg({ ok: false, text: r.error });
@@ -95,6 +99,7 @@ export function TimePricesManager({
         )}
       </p>
       <Notice msg={msg} />
+      <OperationStatus op={op} />
       {prices.length > 0 && (
         <ul className="deal-list">
           {prices.map((p) => (

@@ -1,0 +1,796 @@
+[
+  {
+    "path": "/dashboard",
+    "title": "Good morning, {name} (or Good afternoon / Good evening; Dashboard when the person has no name)",
+    "area": "Reports",
+    "summary": "The home screen for whoever runs the café or checks its books: today's figures from the books against a usual day and the day's sales target, what needs someone (the alerts), what the figures say in words, the last 14 days, today hour by hour, what sells, the stock, the latest sales and yesterday's brief. Every figure opens what is behind it. Nothing on it changes stock, money or the books; only answering or snoozing an alert writes anything (to the alert and the audit trail).",
+    "who": [
+      {"role": "owner", "can": "see everything; answer and snooze alerts; see the full Getting set up list and the link to set a sales target; see the watch list card when something is open", "cannot": "answer or snooze an alert about their own exceptions"},
+      {"role": "general_manager", "can": "the same as the owner, arranged the same way; the watch list card only if the owner allowed the general manager to read the watch list", "cannot": "answer or snooze an alert about their own exceptions"},
+      {"role": "branch_manager", "can": "see the dashboard arranged for the floor (Needs you first); answer and snooze alerts; see the Getting set up list folded to one line; open the start and end of the day from the buttons at the top. Someone who works at one place sees that place's sales, orders and stock", "cannot": "see the watch list card; set a sales target"},
+      {"role": "accountant", "can": "see the dashboard arranged for the books (gross profit first, yesterday's brief first); answer and snooze alerts (they hold accounting.post)", "cannot": "see the start/end of day buttons; see the watch list"},
+      {"role": "auditor", "can": "see everything the accountant sees, arranged the same way", "cannot": "answer or snooze alerts: the Answer and Snooze buttons are not shown"},
+      {"role": "cashier, barista, inventory_counter, purchasing", "can": "nothing here", "cannot": "open it: the dashboard needs profit.view; they are sent to their own starting screen"}
+    ],
+    "get_there": "Menu → Dashboard (first in the menu). The owner, general manager and branch manager land here after signing in (unless they chose another first screen on My account). Accountants and auditors land on Reports and open the Dashboard from the menu.",
+    "before": [
+      "The person needs a role that sees profits (owner, general manager, branch manager, accountant, auditor).",
+      "Figures need sales; the comparisons with a usual day need at least one of the four same weekdays before today with sales.",
+      "The sales target card shows only once a day's sales target is set on Settings → Rules."
+    ],
+    "parts": [
+      {
+        "name": "How the screen is arranged (by role)",
+        "shows": "Nobody arranges their own dashboard; the app arranges it for the person's most senior role. Owner and general manager: Today, then Needs you, then the rest; the charts in the order the last 14 days, today hour by hour, yesterday's brief; the side column What sells, Stock, Recent sales; the four figures Net sales today, Orders, Average order value, Gross profit. Branch manager: Needs you first, then Today; today hour by hour before the 14 days; Stock, Recent sales, then What sells. Accountant and auditor: Today first; Gross profit leads the figures (then net sales, average order, orders); yesterday's brief leads the charts; Recent sales leads the side. Whoever it is, when any red alert waits, Needs you moves to the very top.",
+        "controls": []
+      },
+      {
+        "name": "The heading",
+        "shows": "A greeting by the time of day in the café's time zone (morning before 12:00, afternoon before 17:00, evening after), the weekday, date and time, and the place for someone who works at one place.",
+        "controls": [
+          {"label": "Opening up? The start of the day, step by step", "kind": "link", "does": "Opens Start of Day.", "rules": "Shown from 04:00 to 11:59.", "who": "Only those who open and close the day (day.close: owner, general manager, branch manager)."},
+          {"label": "Closing up? The end of the day, step by step", "kind": "link", "does": "Opens End of Day.", "rules": "Shown from 16:00 until 03:59.", "who": "Only day.close holders."},
+          {"label": "Books reconcile / {n} reconciliation difference(s)", "kind": "link", "does": "Opens Reports at the reconciliation section. Green when every check of the records against the books agrees today; red with how many checks differ.", "rules": "Counts the reconciliation checks as at today whose difference is not zero."}
+        ]
+      },
+      {
+        "name": "Getting set up",
+        "shows": "Only while the café is new (no sale yet, or its first sale within the last 30 days), until every step is done or put aside, and only to someone who may do at least one step left. Steps in order: Stock items, Suppliers, Recipes, Menu and prices, Tables, Staff and their PINs, The first sale. Each is ticked once the café has one (with '{n} added', or 'Done' for the first sale); the next step is marked 'Next'. A progress line says '{done} of {total} done'. The owner and the general manager see the full list; anyone else sees it folded to one line: 'Getting set up: {done} of {n} done'.",
+        "controls": [
+          {"label": "Add stock items / Add suppliers / Add recipes / Add products / Add tables / Add staff / Open the till", "kind": "button", "does": "Opens the form for that step: Inventory (paste items), Vendors, Production (new recipe), Products (add product), the till's tables, Staff (add person), the till.", "rules": "Shown only if the person may add that kind of thing; otherwise the step says 'The owner or the general manager adds these.'"},
+          {"label": "Not needed", "kind": "button", "does": "Puts an optional step aside (Suppliers, Recipes, Tables, Staff) on this device; it shows 'Not needed here' and no longer counts.", "rules": "Remembered on this device for a year (a cookie), not for the café."},
+          {"label": "Put back", "kind": "button", "does": "Brings back a step put aside on this device."},
+          {"label": "{n} without a PIN yet", "kind": "link", "does": "Opens Staff → people, to give PINs.", "rules": "Shown on the done staff step when some staff have no PIN."},
+          {"label": "Hide this list", "kind": "button", "does": "Hides the list on this device for good (a year-long cookie).", "after": "Nothing in the café changes; other devices still show it."},
+          {"label": "Getting set up: {done} of {n} done", "kind": "toggle", "does": "Opens or folds the list (for those who are not owner or general manager)."}
+        ]
+      },
+      {
+        "name": "Problems reported by staff",
+        "shows": "A line when staff have reported problems not yet dealt with.",
+        "controls": [
+          {"label": "{n} problem(s) reported by staff, not dealt with yet", "kind": "link", "does": "Opens the problems list.", "who": "Only those with audit.view or settings.manage (owner, general manager, branch manager, accountant, auditor)."}
+        ]
+      },
+      {
+        "name": "Tour offer",
+        "shows": "'New here? Let us show you around this screen.' once per device until taken or declined. The tour points at: Today at a glance, What needs you, What the figures say, The days behind it, Everything else (the menu).",
+        "controls": [
+          {"label": "Show me around", "kind": "button", "does": "Starts the five-step tour ('Step {n} of {total}')."},
+          {"label": "No thanks", "kind": "button", "does": "Hides the offer on this device. The menu's 'Show me around this screen' takes the tour again whenever."},
+          {"label": "Back / Next / Finish", "kind": "button", "does": "Moves through the tour; Finish on the last step ends it."},
+          {"label": "End the tour", "kind": "button", "does": "Stops the tour."}
+        ]
+      },
+      {
+        "name": "Today: Today's target",
+        "shows": "Only when a day's net sales target is set (Settings → Rules; for someone who works at one place, the place's own target). It shows today's net sales as the books have them 'of {target}', the share in whole percent rounded down (100% means reached), a bar, and a mark on the bar where a usual day of this weekday would be by now. Worked out: share = today's net sales ÷ target. A usual day = the 4 same weekdays before today, leaving out any with no sales. Usual share by now = what a usual day had sold by this minute ÷ its whole day. Expected by now = target × usual share by now: at or over it, the card says 'Ahead of the pace'; under it, 'Behind the pace' (card marked behind). The day's end if the rest goes as usual = today so far + (usual whole day − usual so far), said to the nearest 1,000. A day with more refunds than sales draws an empty bar.",
+        "controls": []
+      },
+      {
+        "name": "Today: the four figures",
+        "shows": "Net sales today: revenue in the books today (sales less discounts and refunds; a refund counts on the day it is made). Orders: today's sales not voided and not open. Average order value: net sales ÷ orders, rounded. Gross profit after waste & fees: net sales less everything in cost of sales (cost of goods, price differences on deliveries, platform fees and commission, waste, count differences); shown red below zero, with '{pct}% of net sales'. Under net sales, orders and the average: how today compares with a usual day of this weekday by this time ('{pct}% above usual by {time}', '{pct}% below usual by {time}', or 'As usual by {time}' within 5% either way), and a small line of the 14 days before today. For someone who works at one place, all are that place's.",
+        "controls": [
+          {"label": "Net sales today", "kind": "tile", "does": "Opens Reports for today at sales by channel."},
+          {"label": "Orders", "kind": "tile", "does": "Opens Orders for today."},
+          {"label": "Average order value", "kind": "tile", "does": "Opens Orders for today."},
+          {"label": "Gross profit after waste & fees", "kind": "tile", "does": "Opens Reports for today at the Profit & Loss."},
+          {"label": "How this works", "kind": "toggle", "does": "Opens the rest of the note: gross profit is after waste, count differences, price differences on deliveries and platform fees; open a figure to see what is behind it."},
+          {"label": "Give the café a day's sales target, and today is measured against it.", "kind": "link", "does": "Opens Settings → Rules at the daily sales target.", "who": "Only those who manage settings (owner, general manager), and only while no target is set."}
+        ]
+      },
+      {
+        "name": "Needs you (the alerts)",
+        "shows": "Every alert rule is checked against the books each time the dashboard opens: new conditions open an alert, cleared ones disappear by themselves. 🔴 red cannot wait; 🟠 orange can wait. Red alerts are always shown: the first two of each rule on the page, the rest under one red row '{rule}: {n} more'. Orange alerts fold into one row '{n} orange alert(s) can wait for a quiet moment.' with up to four kinds and how many of each; inside, two or more of one rule fold again into a row '{rule}: {n}' with the first one's reason. Each alert shows its title, why it matters, what to do (a link to where to do it, with an arrow), its rule's name, how sure it is (Sure, Fairly sure, Early sign) and 'since {when}' (when first seen). 🔵 'Answered or snoozed ({n})' lists those answered with a note or snoozed: they stay until the condition clears. When nothing waits: '🟢 Nothing needs you'. Every rule is listed under messages below.",
+        "controls": [
+          {"label": "{action} →", "kind": "link", "does": "Opens the screen where the alert is dealt with (e.g. Journals for the account, Cash sessions, What to buy, Products, Vendors, Approvals, Cash ahead, the watch list)."},
+          {"label": "{rule}: {n} more", "kind": "toggle", "does": "Opens the rest of the red alerts of one rule."},
+          {"label": "{n} orange alert(s) can wait for a quiet moment.", "kind": "toggle", "does": "Opens the orange alerts."},
+          {"label": "{rule}: {n}", "kind": "toggle", "does": "Opens the orange alerts of one rule."},
+          {"label": "Answered or snoozed ({n})", "kind": "toggle", "does": "Opens the alerts already answered or snoozed."},
+          {"label": "Answer", "kind": "button", "does": "Opens a box 'What was done, or why it is fine' with Save the answer and Cancel. On an answered alert the button reads 'Answer again'.", "who": "Owner, general manager, branch manager, accountant (sale.void or accounting.post). Not shown on an alert about your own exceptions.", "rules": "The note needs at least 3 characters (the button stays grey until then); at most 300."},
+          {"label": "Save the answer", "kind": "button", "does": "Marks the alert answered with who, when and the note ('Answered by {name} ({when}): “{note}”'); it moves to Answered or snoozed. Shows 'Saving…' while sending.", "after": "Nothing in stock, money or the books changes. The answer is on the audit trail (alert.acknowledge). The alert stays until its condition clears; if an orange alert turns red, the answer is cleared and it asks again. Yesterday's brief no longer lists an answered red alert under To do."},
+          {"label": "Snooze", "kind": "button", "does": "Opens 'until' with a date (Snooze until) and a box 'Why it can wait', with Snooze it and Cancel.", "who": "As Answer. Not shown while the alert is snoozed.", "rules": "The date is from tomorrow to 30 days ahead; a week ahead is offered. The reason needs 3 to 300 characters."},
+          {"label": "Snooze until", "kind": "box", "does": "The day the alert comes back if it is still true.", "rules": "Tomorrow to 30 days from today; required."},
+          {"label": "Snooze it", "kind": "button", "does": "Puts the alert under Answered or snoozed with 'Snoozed until {day} by {name}: “{reason}”'.", "after": "Nothing in the books changes. On the audit trail (alert.snooze). It comes back on that day if the condition is still there, at once if an orange alert turns red, and it leaves the brief while snoozed."},
+          {"label": "Cancel", "kind": "button", "does": "Closes the answer or snooze box without saving."}
+        ]
+      },
+      {
+        "name": "Show the rest (phone only)",
+        "shows": "On a phone the charts and lists below are behind one button; a wider screen shows everything.",
+        "controls": [
+          {"label": "Show the rest: charts, stock, recent sales", "kind": "button", "does": "Shows the charts and lists; the button then reads 'Show less' and folds them again."}
+        ]
+      },
+      {
+        "name": "What the figures say",
+        "shows": "The day in words, each with a mark and, where there is one, a link to act on it: how today compares with a usual day of this weekday by now (with '{today} so far; {usual} by then on average, over the {n} before.'), the busiest hour of a usual day, the product that brought in the most over the last 7 days, the product that keeps the least of its price (under 30%, sold at least 3 times, costed), the item that came in dearest over the last 14 days, and the stock below reorder level. Every sentence is listed under messages.",
+        "controls": [
+          {"label": "(each sentence)", "kind": "link", "does": "Opens where to act: the sales analysis by hour (today), Staff (the busiest hour), the sales analysis by product (7 days), Products (thin margin), the Price watch (dearer deliveries), Inventory (low stock)."}
+        ]
+      },
+      {
+        "name": "Sales, the last 14 days",
+        "shows": "A column for each of the last 14 days' net sales (today marked 'Today'; days below zero drawn empty), each with its weekday, date and '{n} order(s)'. A dashed line 'Average: {amount} a day' is the average of the 13 days before today that had sales.",
+        "controls": [
+          {"label": "Show as a table", "kind": "toggle", "does": "Shows the same figures as a table (Day, Net sales)."}
+        ]
+      },
+      {
+        "name": "Today, hour by hour",
+        "shows": "Today's net sales in each hour (hh:00–hh:00 · {n} order(s)), from the first to the last hour any day sold in, with a line 'A usual {weekday}': the average of the same 4 weekdays before, hour by hour. 'No sales yet today.' when there are none.",
+        "controls": [
+          {"label": "Show as a table", "kind": "toggle", "does": "Shows the hours as a table (Hour, Today)."}
+        ]
+      },
+      {
+        "name": "Yesterday, {weekday} {date} (the daily brief)",
+        "shows": "Three columns kept apart. Facts: net sales over how many sales, voids, refunds and discounts with their amounts, waste (account 5300), how the drawer was counted (right, short, over, or not counted), and sales with something costed at nothing. Calculations: cost of goods (5000) and its share of net sales; gross profit after waste and every other cost of sales, and its share; last week's same weekday and the change; a usual weekday (average of the four before that had sales). To do: the action of every red alert nobody has answered (at most 5 shown, then '…and {n} more' to Needs you); if none, how many orange alerts wait; else 'Nothing to do.' Under it: 'Open now: 🔴 {red} · 🟠 {orange} — each above, with what to do.'",
+        "controls": [
+          {"label": "…and {n} more", "kind": "link", "does": "Jumps to Needs you."}
+        ]
+      },
+      {
+        "name": "Watch list card",
+        "shows": "'Watch list' and '{n} thing(s) worth a look' when the watch list has open findings. Names are not shown here.",
+        "controls": [
+          {"label": "Open the watch list", "kind": "link", "does": "Opens Reports → Watch list.", "who": "Only the owner, and the general manager if the owner allows it."}
+        ]
+      },
+      {
+        "name": "What sells, the last 7 days",
+        "shows": "The five products that brought in the most net sales from 6 days ago to today, each with '{n} sold · {kept}% kept' (kept = (net − recipe cost) ÷ net) or '{n} sold · not costed yet' when the cost is nothing.",
+        "controls": []
+      },
+      {
+        "name": "Stock value / Stock at {place}",
+        "shows": "What the stock is worth now (the kept stock balance; for someone at one place, that place's). Below it, items below zero first (red), then those furthest under their reorder level (amber), as 'on hand / reorder level unit', at most 6. 'All above reorder level' when none; 'No items yet.' with no items.",
+        "controls": [
+          {"label": "Stock value / Stock at {place}", "kind": "link", "does": "Opens Inventory."},
+          {"label": "…and {n} more", "kind": "link", "does": "Opens Inventory for the rest of the low items."}
+        ]
+      },
+      {
+        "name": "Recent sales",
+        "shows": "The last 6 sales (any day): time, channel, lines as 'name ×qty', a status badge if not completed (e.g. voided, refunded), and the net amount. 'No sales yet.' when there are none.",
+        "controls": []
+      }
+    ],
+    "states": [
+      {"state": "Arranged for the owner or general manager", "looks": "Today first, then Needs you, then the rest."},
+      {"state": "Arranged for a branch manager", "looks": "Needs you first, then Today; Stock before What sells."},
+      {"state": "Arranged for an accountant or auditor", "looks": "Gross profit is the first figure; yesterday's brief leads the charts; Recent sales leads the side."},
+      {"state": "A red alert waits", "looks": "Needs you moves to the top for everyone."},
+      {"state": "Nothing needs you", "looks": "A green row: 'Nothing needs you' with 'Every rule has been checked against the books just now.' or, if some are answered or snoozed, '{n} answered or snoozed, below: each stays until it clears.'"},
+      {"state": "A new café", "looks": "Getting set up at the top (full for owner/GM, one folded line for others)."},
+      {"state": "No sales target set", "looks": "No target card; the owner/GM sees the link to set one."},
+      {"state": "Target reached", "looks": "'Reached: {over} over the target.' or 'Reached, exactly.'; the card is marked reached and the 'now' mark is gone."},
+      {"state": "Behind the pace", "looks": "The card is marked behind; it says how far a usual day is by now and where the day would end."},
+      {"state": "No sales yet today", "looks": "'No sales yet today.' in the sayings and in the hour chart; the figures show 0."},
+      {"state": "No same weekday before to compare with", "looks": "No arrows under the figures; 'No {weekday} before today to compare with yet.'; the target says only what is still to make."},
+      {"state": "Morning / evening for a day closer", "looks": "The start of the day button shows 04:00–11:59, the end of the day button from 16:00."},
+      {"state": "On a phone", "looks": "Today and Needs you, then a button 'Show the rest: charts, stock, recent sales'."},
+      {"state": "Cannot be read", "looks": "'This screen could not be loaded' with 'The information could not be read from the database, so nothing is shown rather than something incomplete. Nothing has been changed.' and 'Try again'."}
+    ],
+    "messages": [
+      {"text": "Say what was done about it, or why it is fine", "kind": "error", "when": "An answer of fewer than 3 characters reached the app or the database.", "do": "Write what was done, or why it is fine."},
+      {"text": "Keep the note under 300 characters", "kind": "error", "when": "The answer is longer than 300 characters (the box stops at 300).", "do": "Shorten it."},
+      {"text": "Say why it can wait", "kind": "error", "when": "A snooze reason of fewer than 3 characters.", "do": "Write why it can wait."},
+      {"text": "Keep the reason under 300 characters", "kind": "error", "when": "A snooze reason over 300 characters.", "do": "Shorten it."},
+      {"text": "Snooze it until a day in the next 30", "kind": "error", "when": "The date is today, in the past, or more than 30 days ahead.", "do": "Choose a day from tomorrow to 30 days ahead."},
+      {"text": "Until must be a date", "kind": "error", "when": "The snooze date is empty or not a date.", "do": "Choose the date."},
+      {"text": "Choose the alert", "kind": "error", "when": "The alert sent is not a valid one (a broken page).", "do": "Reload the page."},
+      {"text": "That alert has cleared already", "kind": "error", "when": "The condition cleared (or someone else's action resolved it) between opening the page and saving.", "do": "Nothing: reload; it is gone because it is no longer true."},
+      {"text": "An alert about your own exceptions is for someone else to review", "kind": "error", "when": "Someone tries to answer or snooze the 'Exceptions by one person' alert about themselves (the buttons are hidden for it).", "do": "Ask another manager or the owner to review it."},
+      {"text": "You do not have permission to do this (needs {1})", "kind": "error", "when": "An auditor (or a changed role) tries to answer or snooze.", "do": "Ask a manager, the accountant or the owner."},
+      {"text": "The database did not answer, so this may have been saved. Check before trying again.", "kind": "warning", "when": "The connection dropped while saving an answer or snooze.", "do": "Reload and see whether the alert moved to Answered or snoozed before trying again."},
+      {"text": "Your session has ended. Sign in again.", "kind": "error", "when": "The sign-in expired.", "do": "Sign in again."},
+      {"text": "No sales yet today.", "kind": "info", "when": "Nothing sold today and a usual day had sold almost nothing by now either.", "do": "Nothing."},
+      {"text": "No {weekday} before today to compare with yet.", "kind": "info", "when": "None of the 4 same weekdays before had sales.", "do": "Nothing: comparisons start once there is one."},
+      {"text": "Sales are {pct}% above a usual {weekday} by {time}.", "kind": "success", "when": "Today so far is 5% or more above the usual by this minute.", "do": "Nothing; check staffing if it keeps up."},
+      {"text": "Sales are {pct}% below a usual {weekday} by {time}.", "kind": "warning", "when": "Today so far is 5% or more below the usual.", "do": "Open the hour by hour to see when it fell behind; check the menu, staffing or the weather."},
+      {"text": "Sales are about as on a usual {weekday} by {time}.", "kind": "info", "when": "Within 5% either way.", "do": "Nothing."},
+      {"text": "{today} so far; {usual} by then on average, over the {n} before.", "kind": "info", "when": "Under the comparison sentence: the figures behind it.", "do": "Nothing."},
+      {"text": "A usual {weekday} is busiest from {from} to {to}: have the most hands on then.", "kind": "info", "when": "A usual day of this weekday has an hour with the most net sales.", "do": "Make sure the most staff are on the clock then (Staff)."},
+      {"text": "{product} brought in the most over the last 7 days: {net}.", "kind": "success", "when": "The top seller of the last 7 days, not costed.", "do": "Give it its recipe cost so its margin can be judged."},
+      {"text": "{product} brought in the most over the last 7 days: {net}, keeping {kept}% after what it uses.", "kind": "success", "when": "The top seller, costed.", "do": "Keep it in stock and in view."},
+      {"text": "{product} keeps only {kept}% of what it sells for: look at its recipe's cost, or its price.", "kind": "warning", "when": "A costed product sold 3+ times in 7 days keeps under 30% after its recipe cost (the thinnest is named).", "do": "Open Products: check the recipe's quantities and costs, or raise the price."},
+      {"text": "{item} came in {pct}% dearer on {day}: see what it does to the margins.", "kind": "warning", "when": "One delivery in the last 14 days cost more than the one before.", "do": "Open the Price watch to see which products it hits."},
+      {"text": "{n} items came in dearer over the last 14 days, {item} the most, by {pct}%: see what it does to the margins.", "kind": "warning", "when": "Several deliveries came in dearer.", "do": "Open the Price watch."},
+      {"text": "{n} item(s) at or below their reorder level: see what to buy.", "kind": "warning", "when": "Items hold less than their reorder level (at the person's place, or the café).", "do": "Open Inventory or What to buy, and order."},
+      {"text": "Every item is above its reorder level.", "kind": "success", "when": "No item is under its reorder level.", "do": "Nothing."},
+      {"text": "{pct}% above usual by {time}", "kind": "info", "when": "Under a figure: 5% or more above a usual day by now.", "do": "Nothing."},
+      {"text": "{pct}% below usual by {time}", "kind": "info", "when": "Under a figure: 5% or more below.", "do": "Open the figure to see why."},
+      {"text": "As usual by {time}", "kind": "info", "when": "Under a figure: within 5%.", "do": "Nothing."},
+      {"text": "{pct}% of net sales", "kind": "info", "when": "Under gross profit, when there are net sales.", "do": "A low share means high cost, waste or fees: open the Profit & Loss."},
+      {"text": "Reached: {over} over the target.", "kind": "success", "when": "Today's net sales passed the target.", "do": "Nothing."},
+      {"text": "Reached, exactly.", "kind": "success", "when": "Net sales equal the target.", "do": "Nothing."},
+      {"text": "{left} still to make; no {weekday} before today to know the pace by.", "kind": "info", "when": "Target not reached and no usual day to compare with.", "do": "Nothing."},
+      {"text": "{left} still to make; a usual {weekday} has sold almost nothing by {time}.", "kind": "info", "when": "Early in the day, before a usual day sells.", "do": "Nothing."},
+      {"text": "Ahead of the pace: by {time} a usual {weekday} has made {pct}% of its day, and today has {share}% of the target.", "kind": "success", "when": "Today is at or over where the target expects it by now.", "do": "Nothing."},
+      {"text": "Behind the pace: by {time} a usual {weekday} has made {pct}% of its day, and today has {share}% of the target.", "kind": "warning", "when": "Today is under where the target expects it by now.", "do": "Push the day's offers, check the floor and staffing."},
+      {"text": "Selling as a usual {weekday} from here, the day ends at about {amount}: over it.", "kind": "info", "when": "The projected end of day reaches the target.", "do": "Nothing."},
+      {"text": "Selling as a usual {weekday} from here, the day ends at about {amount}: {short} short of it.", "kind": "warning", "when": "The projected end of day falls short.", "do": "Decide whether to act now; it is a projection, not a fact."},
+      {"text": "Net sales {amount} over {n} sales.", "kind": "info", "when": "Brief, facts (1 sale: 'Net sales {amount} over 1 sale.').", "do": "Nothing."},
+      {"text": "No sales.", "kind": "info", "when": "Brief: nothing was sold yesterday.", "do": "Check that the café was closed, not that sales went unrecorded."},
+      {"text": "{n} voids ({amount}).", "kind": "info", "when": "Brief, facts (1 void: '1 void ({amount}).').", "do": "Look at Reports → Exceptions if many."},
+      {"text": "{n} refunds ({amount}).", "kind": "info", "when": "Brief, facts (or '1 refund ({amount}).').", "do": "Look at Reports → Exceptions if many."},
+      {"text": "{n} discounts ({amount}).", "kind": "info", "when": "Brief, facts (or '1 discount ({amount}).').", "do": "Nothing unless unusual."},
+      {"text": "Waste {amount}.", "kind": "info", "when": "Brief: waste posted yesterday (account 5300).", "do": "If high, see Waste by recipe and Inventory."},
+      {"text": "The drawer was counted, and was right.", "kind": "info", "when": "Brief: the drawer closes' differences add to nothing.", "do": "Nothing."},
+      {"text": "The drawer was counted {amount} short.", "kind": "warning", "when": "Brief: the drawer closes came out short.", "do": "Open Cash sessions and ask who had the drawer."},
+      {"text": "The drawer was counted {amount} over.", "kind": "warning", "when": "Brief: the drawer came out over.", "do": "Check for a sale not rung up or wrong change."},
+      {"text": "The drawer was not counted.", "kind": "warning", "when": "Brief: no drawer close yesterday although there were sales.", "do": "Close the session counting the cash."},
+      {"text": "{n} sales with something costed at nothing (Reports → Uncosted sales).", "kind": "warning", "when": "Brief: sales whose recipe or ingredient had no cost (or '1 sale with something costed at nothing (Reports → Uncosted sales).').", "do": "Give the items their cost; open Reports → Uncosted sales."},
+      {"text": "Cost of goods {amount}, {pct} of sales.", "kind": "info", "when": "Brief, calculations, when there were net sales ('Cost of goods {amount}.' when no share).", "do": "Nothing."},
+      {"text": "Gross profit {amount} ({pct}), after waste and every other cost of sales.", "kind": "info", "when": "Brief, calculations (without the share when none).", "do": "Nothing."},
+      {"text": "Last {weekday}: {amount} ({change} since).", "kind": "info", "when": "Brief: the same weekday a week before had sales ('Last {weekday}: {amount}.' without a change).", "do": "Nothing."},
+      {"text": "A usual {weekday} (the four before): {amount}.", "kind": "info", "when": "Brief: the average of the four same weekdays before that had sales.", "do": "Nothing."},
+      {"text": "Nothing to calculate: there were no sales.", "kind": "info", "when": "Brief: no sales and no comparisons.", "do": "Nothing."},
+      {"text": "Nothing urgent. {n} orange alerts wait for a quiet moment.", "kind": "info", "when": "Brief to-do: no unanswered red alert, some orange ones ('Nothing urgent. 1 orange alert waits for a quiet moment.' for one).", "do": "Deal with them when quiet."},
+      {"text": "Nothing to do.", "kind": "success", "when": "Brief to-do: no open alert.", "do": "Nothing."},
+      {"text": "Open now: 🔴 {red} · 🟠 {orange} — each above, with what to do.", "kind": "info", "when": "Under the brief's To do when alerts are open (snoozed ones left out).", "do": "Work through Needs you."},
+      {"text": "{bank or safe or till account} is {amount} IQD: below zero", "kind": "error", "when": "Alert 'Cash below zero' (red, Sure): the till (1000), safe (1005) or bank (1020) balance in the books is under nothing. Why: Money cannot leave a place before it is there: a payment was recorded from the wrong place, or takings are missing.", "do": "Open the account's journal lines and record where the money really came from. (Link: Journals for that account.)"},
+      {"text": "The drawer at {place} has not been counted for {day}", "kind": "warning", "when": "Alert 'Drawer not counted' (orange, Sure): one day before today whose cash no closed session or count took in. With two or more days it is red: 'The drawer at {place} has not been counted for {n} days, since {day}'. Why: Until the drawer is counted, nobody knows whether the cash is all there.", "do": "Close its session on the till, counting the cash; a manager can close one left open on Cash sessions."},
+      {"text": "Session {no} at {place} has been open since {when}", "kind": "warning", "when": "Alert 'Cash session left open': a session open longer than 14 hours (setting); red at twice that. Why: The cash in an open session has not been counted: the longer it stays open, the more passes through it unchecked.", "do": "Close it on the till, counting the cash; a manager can close it on Cash sessions."},
+      {"text": "Session {no} at {place} closed {amount} IQD short", "kind": "warning", "when": "Alert 'Cash session short' (Sure), last 7 days: a session closed short by 5,000 IQD or more (setting); red at five times that. Also 'Session {no} at {place} opened {amount} IQD short of what the last session left'. Why: Cash that should be in the drawer is not: change miscounted, a sale not rung up, or money taken.", "do": "Look at the session's statement on Cash sessions, and ask whoever had the drawer."},
+      {"text": "Session {no} at {place} was closed by {name}: {reason}", "kind": "warning", "when": "Alert 'Cash session closed by a manager' (orange), last 7 days. Why: 'It was closed without a count: what it held is counted when the drawer next opens.' or 'Its cashier did not close it: the count was not theirs.'", "do": "Check it with the cashier on Cash sessions."},
+      {"text": "A stock count has been open since {when}", "kind": "warning", "when": "Alert 'Stock count left open' (orange): a count in draft, counting or submitted for more than 8 hours (setting). Why: An open count is not in the books yet, and the longer it stays open the harder it is to finish honestly.", "do": "Finish it, or cancel it, on Stock Count."},
+      {"text": "{item} runs out in {no time / under a day / n days}: {qty} {unit} left, using about {daily} a day", "kind": "warning", "when": "Alert 'Running out': days of cover (on hand ÷ average daily use over the last 14 days) is under the delivery time + 1 day (the last supplier's own, else 1 day). Red under a day. Quiet with under 7 days of history and on a day the item was received. Sure with 28+ days of history, Fairly sure 14–27, Early sign 7–13. Why: What is sold without stock is costed wrongly, and customers are turned away.", "do": "'Order about {qty} {unit} (a week of use).' (opens What to buy) or, for an item made here, 'Make a batch on Production.' (opens its stock card)."},
+      {"text": "{item}: {qty} {unit} on hand, below its reorder level of {level}", "kind": "warning", "when": "Alert 'Below its reorder level' (orange, Sure), unless Running out already names it. Why: Below the reorder level there may not be enough until the next delivery.", "do": "'Order it.' (What to buy) or 'Make a batch on Production.'"},
+      {"text": "{reason} — confirmed by {name}", "kind": "warning", "when": "Alert 'Delivery price confirmed' (orange): in the last 7 days someone confirmed a delivery price far (over 25%) from the item's cost. Shows 'A delivery price was confirmed' when no reason was kept. Why: A price typed wrongly changes the cost of everything made from the item until it is corrected.", "do": "Check it against the supplier's invoice. (Purchasing)"},
+      {"text": "{product} is sold with no recipe: its sales are costed at nothing", "kind": "warning", "when": "Alert 'Sold with no recipe' (orange): an active product with no recipe and no reason for using no stock; or '{product} cannot be sold: its recipe has no version in force today'. Why: A sale costed at nothing overstates the profit, and its stock is never taken off the shelf.", "do": "Give it its recipe on Products, or say why it uses no stock."},
+      {"text": "{product} ({channel}): sold below cost at {price} IQD, costing {cost}", "kind": "error", "when": "Alert 'Margin' (red): the channel price is under today's recipe cost. Why: Every one sold loses money. Fairly sure when an ingredient has none on hand (its cost is the last delivery's).", "do": "Review the price, or the recipe, on Products."},
+      {"text": "{product} ({channel}): {pct}% margin at {price} IQD, costing {cost}", "kind": "warning", "when": "Alert 'Margin' (orange): (price − cost) ÷ price is under the margin target (70%, setting); the % is cut, not rounded. Why: Under the {target}% target, the price no longer covers what the recipe costs now.", "do": "Review the price, or the recipe, on Products."},
+      {"text": "{item} has no cost yet, and {n} product(s) use(s) it: {names}", "kind": "warning", "when": "Alert 'No cost yet' (orange, Sure): an ingredient costed at nothing, named once with up to 4 products (then 'and {n} more'). Why: Every sale that uses it is costed at nothing for it, so its profit is overstated.", "do": "'Receive it with its cost, or give it its opening stock, on Inventory.' or, for an item made here, 'Make a batch on Production: its cost comes from its ingredients.'"},
+      {"text": "Waste of {amount} IQD in the last 7 days, against about {usual} in a usual week", "kind": "warning", "when": "Alert 'Waste above its usual' (orange): waste and losses (5300, 5310) in the last 7 days above 1.5 times a usual week (days 8–35 back) and above 20,000 IQD (settings); needs 14 days of books. Fairly sure with 4 weeks to compare, else Early sign. Why: Waste well above its usual is money leaving through the bin: a delivery gone off, a recipe, or a habit.", "do": "Look at the waste on Inventory: which items, and who recorded them."},
+      {"text": "{name}: {n} void(s), refund(s), discount(s) or cancelled bill(s) in 7 days, {amount} IQD ({pct}% of their sales)", "kind": "warning", "when": "Alert 'Exceptions by one person' (orange, Fairly sure): in 7 days at least 10 (setting), or their amount over 3% of the person's own sales (setting). Why: Most exceptions have good reasons; a pattern is worth a look. This is evidence, not an accusation.", "do": "Review them on Reports → Exceptions. The person themselves cannot answer it."},
+      {"text": "{amount} IQD of card money is more than {n} days old and not yet recorded as settled", "kind": "warning", "when": "Alert 'Card money not banked' (orange, Sure): card takings (1010) older than 3 days (setting) not settled. Why: Card takings should reach the bank within a few days; money that does not may never have been taken.", "do": "Record the card settlement on Sales, from the terminal's report and the bank statement."},
+      {"text": "{n} {platform} order(s), {amount} IQD, is/are more than {days} days old and not yet paid out; the oldest from {day}", "kind": "warning", "when": "Alert 'Platform money not received' (orange, Sure): platform orders not paid out after 7 days (setting). Why: Platform payouts come on a cycle; an order past it may be missing from a statement.", "do": "Match the platform's statement on Delivery Platforms, and raise any order it left out."},
+      {"text": "{amount} IQD in platform receivable is matched to no order", "kind": "warning", "when": "Alert 'Platform money not received' (orange, Fairly sure): 1100 holds more than the orders waiting explain; or 'Platform receivable is {amount} IQD short of the orders waiting to be paid out'. Why: Sales from before order numbers, or a payout recorded by hand, leave platform receivable unexplained by any order.", "do": "Find the statement it belongs to; correct it with a journal on Journals if it was recorded by hand."},
+      {"text": "{supplier}: {amount} IQD overdue by {n} day(s)", "kind": "warning", "when": "Alert 'Supplier bill due' (orange, Sure): a bill not paid in full, due within 3 days (setting) or overdue; also '… due today' and '… due on {day}'. Why: Bills paid late cost goodwill, and sometimes a late fee.", "do": "Pay it, or agree a date with the supplier, on Vendors."},
+      {"text": "{product} is {high} IQD on {channel} but {low} on {channel}", "kind": "warning", "when": "Alert 'Possible price typo' (orange, Fairly sure): one channel's price more than 3 times another's (setting). Why: A price more than three times another channel's is usually a missing or extra zero.", "do": "Confirm it on Products."},
+      {"text": "Possible duplicate: {account} {amount} IQD in journal {no} ({day}) and journal {no} ({day})", "kind": "warning", "when": "Alert 'Possible duplicate payment' (orange, Fairly sure): two expenses, bills or journals to the same running-cost account, same amount, within 3 days, in the last 30, neither reversed (prepaid shares are left out). Why: The same amount to the same account twice in a few days is sometimes paid twice.", "do": "Confirm both are right, or reverse one on Journals."},
+      {"text": "{item}: {qty} {unit} more used than the recipes say between the counts of {day} and {day} ({pct}%, {amount} IQD)", "kind": "warning", "when": "Alert 'Usage unlike the recipes' (Fairly sure): the last two approved counts of an item at a place, the later in the last 14 days, differ from the recipes by at least 10% and 5,000 IQD (settings); red at five times the amount. Also '… less used …'. Why: What the counts say went, less the losses recorded, is more (or less) than the recipes of what was sold and made.", "do": "Open Usage on Inventory: it shows what came in, what was sold, made and lost between the counts, and what may explain it."},
+      {"text": "{item} is below zero in the books: {qty} {unit}", "kind": "error", "when": "Alert 'Stock below zero' (red, Sure), unless the item's rule allows it. Why: Stock cannot be less than nothing: a delivery or a batch was not entered, or more was used than was recorded.", "do": "Enter the delivery or the batch that is missing, or count the item on Stock Count."},
+      {"text": "{n} loss(es) waiting for a manager's approval ({amount} IQD)", "kind": "warning", "when": "Alert 'Losses waiting for approval' (Sure): losses over the limit saved to wait; red once one has waited 2 days. Why: A loss over the limit was saved to wait for a manager: until one approves it, or reverses it, nobody has looked at it.", "do": "Open Inventory: approve each loss, or reverse one that did not happen."},
+      {"text": "{item}, batch {no}, is past its use-by: {qty} {unit} left", "kind": "error", "when": "Alert 'Use-by date' (red, Sure). Why: Past its use-by it is not to be sold: what is left is a loss.", "do": "Record what is left as expired on Inventory, or change its use-by if it was set wrong."},
+      {"text": "{item}, batch {no}, is to be used by {when}: {qty} {unit} left", "kind": "warning", "when": "Alert 'Use-by date' (orange): due within 24 hours. Why: What is not used by then is lost.", "do": "Put it out before newer batches: sales take it first."},
+      {"text": "{name} has been clocked in for {n} hours, since {when}", "kind": "warning", "when": "Alert 'Clocked in a long time' (Sure): clocked in longer than the staff rule's hours (16); red after 24 hours. Why: Hours left open are paid as worked: a clock-out forgotten becomes overtime.", "do": "Clock them out on the till, or correct the hours on Staff."},
+      {"text": "The payroll for {month} is not approved: salaries were due on {day}", "kind": "warning", "when": "Alert 'Salaries due' (Sure): from payday (the 1st by default), last month's payroll not drafted or approved; red a week after payday. Why: Until the payroll is approved, the month's salaries are not in the books and nobody can be paid.", "do": "Draft it on Payroll, check it, and approve it."},
+      {"text": "Salaries for {month}: {amount} IQD not paid yet", "kind": "warning", "when": "Alert 'Salaries due': approved but not all paid. Why: Salaries owed and not paid are owed to people who have done the work.", "do": "Pay them on Payroll."},
+      {"text": "{n} bank line(s), the oldest from {day}, are on no bank statement", "kind": "warning", "when": "Alert 'Bank not reconciled' (orange, Sure): bank lines more than 35 days old not on any statement. Why: The bank's own statement shows whether the books have every payment in and out of the bank.", "do": "Reconcile the bank with its statement on Chart of Accounts."},
+      {"text": "{n} month(s) of prepaid expenses are due to be released, {amount} IQD in all", "kind": "warning", "when": "Alert 'Prepaid expenses due' (orange, Sure). Why: Each month a prepaid expense covers takes its share of it: until it is released, that month's profit is too high.", "do": "Release what is due on Expenses."},
+      {"text": "{n} waiting for a manager's approval: {counts} count(s), {orders} order(s)", "kind": "warning", "when": "Alert 'Waiting for approval' (Sure): stock counts submitted or purchase orders waiting; red after a day. Why: A stock count posts nothing, and an order goes to no supplier, until a manager approves it.", "do": "Open Approvals: approve each one, or send it back with why."},
+      {"text": "The bank would be {amount} short on {day}", "kind": "warning", "when": "Alert 'Money short ahead' (Fairly sure): the cash forecast for the next 14 days puts the bank (or 'The safe would be {amount} short on {day}') below nothing; red when it starts within 3 days; only once the books go back 4 weeks. Why: From what it holds now, the usual takings and what is due, as the café's own records have them.", "do": "As it says: 'Move {amount} from the safe to the bank by {day}.', 'Ask {supplier} to take {amount} later.' or 'Put money in, or pay something due later.' Open Cash ahead."},
+      {"text": "{n} thing(s) on the watch list worth a look", "kind": "warning", "when": "Alert 'Worth a look' (orange, Fairly sure): strong findings open on the watch list; no names here. Why: A pattern far from what the others do at the same hours, by more than luck would give.", "do": "Open the watch list (the owner)."},
+      {"text": "This screen could not be loaded", "kind": "error", "when": "A figure could not be read from the database.", "do": "Press Try again; if it keeps happening, tell the owner and quote the reference shown."}
+    ],
+    "skipped_messages": [
+      {"text": "Choose a day that has happened", "reason": "daily_brief is always asked for yesterday, so it cannot be raised here."},
+      {"text": "Unknown location", "reason": "daily_sales_target errors are swallowed: the dashboard just shows no target."},
+      {"text": "Choose one of the café's places / You work at {1}, not at {2}", "reason": "report_place: the dashboard never sends a place; a person at one place is given theirs."}
+    ],
+    "what_if": [
+      {"case": "A red alert is a known, harmless thing", "do": "Press Answer, write why it is fine, Save the answer. It moves to Answered or snoozed and stays there until the condition clears."},
+      {"case": "An alert will be dealt with next week", "do": "Press Snooze, pick the day, write why it can wait, Snooze it. If it is still true that day it comes back; if it turns from orange to red sooner, it comes back at once."},
+      {"case": "The exceptions alert names me", "do": "You cannot answer it: another manager or the owner reviews it on Reports → Exceptions."},
+      {"case": "An alert disappeared by itself", "do": "Its condition cleared (e.g. the drawer was counted, the bill paid). Nothing else to do."},
+      {"case": "Thresholds feel too strict or too loose", "do": "The owner or general manager changes them on Settings → Alerts (e.g. margin target, hours a session may stay open). An empty box goes back to the default."},
+      {"case": "No target card", "do": "Set the daily sales target on Settings → Rules (the link appears for the owner/GM)."},
+      {"case": "The badge says reconciliation differences", "do": "Open it: Reports shows which record and which ledger account disagree."}
+    ],
+    "tips": [
+      "Every figure is a link: open it to see what is behind it.",
+      "Red brings Needs you to the top: if the page starts with alerts, something cannot wait.",
+      "Yesterday's brief keeps facts, calculations and what to do apart: a figure is never a judgement.",
+      "Steps put aside and a hidden Getting set up list are remembered per device only.",
+      "The dashboard's net sales and gross profit are the books' own, the same as the Profit & Loss for today."
+    ],
+    "related": ["/reports", "/orders", "/inventory", "/sales/sessions", "/settings/rules", "/settings", "/reports/watch", "/reports/cash-ahead", "/start-of-day", "/end-of-day", "/problems"],
+    "shots": [
+      {"name": "dashboard-owner", "role": "owner", "state": "Target card behind the pace, four figures with arrows, Needs you with one red and folded orange alerts", "setup": "Set a daily target on Settings → Rules; have sales on the same weekday in past weeks; leave a bank balance below zero."},
+      {"name": "dashboard-answer", "role": "branch_manager", "state": "An alert with the Answer box open", "setup": "Press Answer on a red alert."},
+      {"name": "dashboard-all-clear", "role": "owner", "state": "Nothing needs you, with answered alerts below", "setup": "Answer every open alert."},
+      {"name": "dashboard-books", "role": "accountant", "state": "Arranged for the books: gross profit first, yesterday's brief first", "setup": "Sign in as the accountant."},
+      {"name": "dashboard-setup", "role": "owner", "state": "Getting set up on a new café", "setup": "A fresh café with no products."},
+      {"name": "dashboard-phone", "role": "owner", "state": "Phone width with the Show the rest button", "setup": "Narrow the window to phone width."}
+    ]
+  },
+  {
+    "path": "/reports/stock",
+    "title": "Stock value on a day",
+    "area": "Reports",
+    "summary": "What every item in stock was worth at the end of a chosen day, from the stock ledger, set beside what the books' 1200 Inventory account held then. The two should agree; a difference means the stock records and the books have drifted.",
+    "who": [
+      {"role": "owner, general_manager, accountant, auditor, purchasing", "can": "read it for the whole café or (with more than one place) for one place", "cannot": "change anything: it only reads"},
+      {"role": "branch_manager", "can": "read it; someone who works at one place sees only that place, with no place list", "cannot": "see the 1200 Inventory comparison for their place (it is the café's)"},
+      {"role": "cashier, barista, inventory_counter", "can": "nothing", "cannot": "open it (needs cost.view)"}
+    ],
+    "get_there": "Menu → Accountant → Reports → 'Stock value on a day →' (it opens on the Reports end date, with the place chosen there). Also: Find anything → Stock value on a day.",
+    "before": ["Items with stock movements (deliveries, opening stock, sales)."],
+    "parts": [
+      {
+        "name": "Heading and choices",
+        "shows": "'Stock value on a day', with '· {place}' when a place is shown. A line explains what is shown: for the café, 'What every item in stock was worth when the day ended, from the stock ledger, beside what 1200 Inventory held then. The two agree when the books tie.'; for a place, that 1200 Inventory is the café's and is not set beside a place's stock.",
+        "controls": [
+          {"label": "Print or save as PDF", "kind": "button", "does": "Prints the report with its heading (business, title, 'End of {day}' and the place), without the menu and buttons."},
+          {"label": "← Reports", "kind": "link", "does": "Back to Reports."},
+          {"label": "On", "kind": "box", "does": "The day whose end is read.", "rules": "A date; today or before (the box stops at today). Default today."},
+          {"label": "Place", "kind": "list", "does": "'The whole café' or one place.", "rules": "Shown only to someone not tied to one place, when the café has more than one place."},
+          {"label": "Show", "kind": "button", "does": "Reads the stock as it stood when that day ended."}
+        ]
+      },
+      {
+        "name": "Summary",
+        "shows": "The stock ledger: the sum of every item's value (quantity × its cost, from every stock movement before the day ended). 1200 Inventory: the books' stock account at that moment (only for the whole café). 'They agree' (green) or 'Difference: {amount}' (red) = stock ledger − 1200. Below: the value by kind of item (e.g. ingredients, packaging, made items).",
+        "controls": []
+      },
+      {
+        "name": "Item by item",
+        "shows": "Each item with stock or value then, the most valuable first: Item, Kind, In stock (quantity and unit), Cost of one (value ÷ quantity, '—' when none on hand), Value; the last row 'All' is the stock ledger total.",
+        "controls": [
+          {"label": "CSV", "kind": "link", "does": "Downloads the same list as a spreadsheet file."},
+          {"label": "(item name)", "kind": "link", "does": "Opens the item's stock card."}
+        ]
+      }
+    ],
+    "states": [
+      {"state": "The books tie", "looks": "Green 'They agree'."},
+      {"state": "The books do not tie", "looks": "Red 'Difference: {amount}'. Look at the reconciliation on Reports and the item cards."},
+      {"state": "A place chosen", "looks": "No 1200 figure and no difference: only the place's stock."},
+      {"state": "Nothing in stock", "looks": "'Nothing was in stock then.'"},
+      {"state": "A day after today asked (by link)", "looks": "Red 'Choose today or a day before it' and no figures."},
+      {"state": "Cannot be read", "looks": "'This screen could not be loaded' with Try again."}
+    ],
+    "messages": [
+      {"text": "Choose today or a day before it", "kind": "error", "when": "The day in the link is after today.", "do": "Choose today or an earlier day."},
+      {"text": "They agree", "kind": "success", "when": "Stock ledger value equals 1200 Inventory.", "do": "Nothing."},
+      {"text": "Difference: {amount}", "kind": "warning", "when": "The stock ledger and 1200 Inventory differ at the end of the day.", "do": "Open Reports → reconciliation; look for a stock movement with no journal, or a journal posted to 1200 by hand; ask the accountant."},
+      {"text": "Nothing was in stock then.", "kind": "info", "when": "No item had stock or value at the end of that day.", "do": "Choose a later day, or record opening stock."},
+      {"text": "This screen could not be loaded", "kind": "error", "when": "The stock could not be read.", "do": "Press Try again."}
+    ],
+    "skipped_messages": [
+      {"text": "Choose the day", "reason": "The page always sends a day."},
+      {"text": "Location not found / Choose one of the café's places / You work at {1}, not at {2}", "reason": "The page only sends one of the café's places, or the person's own."}
+    ],
+    "what_if": [
+      {"case": "The value differs from 1200 Inventory", "do": "Check the reconciliation on Reports; a manual journal to 1200 or a movement without its journal is the usual cause. The accountant corrects it on Journals."},
+      {"case": "Want the stock at the end of last month", "do": "Choose the month's last day in On, press Show, then CSV or Print."}
+    ],
+    "tips": ["Print it at each month's end for the accountant.", "Cost of one is the average cost then, not today's price."],
+    "related": ["/reports", "/inventory", "/accounting", "/journals"],
+    "shots": [
+      {"name": "stock-value", "role": "owner", "state": "End of a month, 'They agree', item list", "setup": "Choose the last day of last month and press Show."}
+    ]
+  },
+  {
+    "path": "/reports/waste",
+    "title": "Waste by recipe",
+    "area": "Reports",
+    "summary": "Four weeks of batches made on Production, recipe by recipe, each followed to now: what was sold or used, thrown away, eaten or given away, and still in stock; what was thrown away cost; and, where it was mostly left unsold, a batch size that would have covered what went. Above it, what was thrown away unsold in the last seven days, item by item, with what to try.",
+    "who": [
+      {"role": "owner, general_manager, branch_manager, accountant, auditor, purchasing", "can": "read it; someone at one place sees that place", "cannot": "change anything here"},
+      {"role": "cashier, barista, inventory_counter", "can": "nothing", "cannot": "open it (needs cost.view)"}
+    ],
+    "get_there": "Menu → Accountant → Reports → 'Waste by recipe: made, sold and thrown away →'. Also from Production, and Find anything → Waste by recipe.",
+    "before": ["Batches recorded on Production (with their lots); losses recorded on Inventory."],
+    "parts": [
+      {
+        "name": "Heading and weeks",
+        "shows": "'Batches made {from} to {to}, each as it stands now'. The four weeks end yesterday unless a later page was asked.",
+        "controls": [
+          {"label": "Print or save as PDF", "kind": "button", "does": "Prints the page."},
+          {"label": "The four weeks before", "kind": "link", "does": "Moves back 28 days."},
+          {"label": "The four weeks after", "kind": "link", "does": "Moves forward 28 days.", "rules": "Only when they end by yesterday."},
+          {"label": "The last four weeks", "kind": "link", "does": "Back to the four weeks to yesterday.", "rules": "Only when not already there."}
+        ]
+      },
+      {
+        "name": "The seven days to {day}",
+        "shows": "What was thrown away unsold (waste, spoilage, expired; losses reversed on review left out) in the 7 days to the last day, against the 7 before; then up to 5 items thrown away, the costliest first, each with quantity, cost, how many times and on which weekdays, and what to try: made here, look at the batch made on those days; bought with no keeping time, say how many days it keeps on What to buy; bought with one, order less at a time.",
+        "controls": [
+          {"label": "(item line)", "kind": "link", "does": "Opens Production's plan (made here) or What to buy (bought)."}
+        ]
+      },
+      {
+        "name": "Tiles",
+        "shows": "Thrown away: cost of what the four weeks' batches threw away, with '{pct} of what was made and has gone' (cost thrown ÷ cost of what has left the shelf). Batches made, with '{n} recipe(s)'. Eaten or given away: staff meals, gifts and tastings at the batches' cost. The most thrown away: the recipe with the costliest waste, with '{pct} of what it made and has gone'.",
+        "controls": []
+      },
+      {
+        "name": "What the batches say",
+        "shows": "For up to 3 recipes that threw away 10% or more of what went: the share and cost, and why (smaller batches would help / it went past its use-by unsold / spilt, melted or spoilt in the making). Then whether nothing or no recipe wasted a tenth, how much was eaten or given, and how many batches are still in stock.",
+        "controls": [
+          {"label": "(recipe line)", "kind": "link", "does": "Opens Reports for the same dates at the production report."}
+        ]
+      },
+      {
+        "name": "What was thrown away, by recipe",
+        "shows": "Bars of the cost thrown away, the 10 costliest recipes, each with '{pct} of what went, {qty}'. Only when something was thrown away.",
+        "controls": []
+      },
+      {
+        "name": "Recipe by recipe",
+        "shows": "Recipe (and its item), Batches, Made, Sold or used (sold, or went into other batches), Thrown away (amber at 10% or more) with '{pct} of what went', Eaten or given away, Still in stock, What it cost (thrown away, at each batch's own cost), A better batch (or '—'). Worked out: thrown away = what the batch's lot lost, less what was eaten or given; share = thrown ÷ (made − still in stock). A better batch is shown only when the share is 10% or more, most of the waste went unsold (past use-by, spoilt), at least 2 batches are all gone, and those batches on average sold, used or gave less than they made: the better batch is that average, rounded down.",
+        "controls": []
+      }
+    ],
+    "states": [
+      {"state": "No batches in the four weeks", "looks": "'No batches were made in these four weeks.' with 'Each batch recorded on Production is followed here, to the last of it.' The seven days part still shows."},
+      {"state": "Batches still in stock", "looks": "'{n} batch(es) are still in stock: what becomes of them is not counted yet.'"},
+      {"state": "Cannot be read", "looks": "'This screen could not be loaded' with Try again."}
+    ],
+    "messages": [
+      {"text": "{recipe}: {pct} of what went was thrown away, {amount}.", "kind": "warning", "when": "A recipe threw away 10% or more of what has gone.", "do": "Read the line under it."},
+      {"text": "Batches of about {made}, of which about {taken} was sold, used or eaten; most of the rest went past its use-by. Batches of about {better} would have covered what went.", "kind": "warning", "when": "Mostly unsold waste with a better batch size.", "do": "Make smaller batches of that recipe."},
+      {"text": "Most of it went past its use-by, unsold.", "kind": "warning", "when": "Mostly unsold waste, no batch size to suggest.", "do": "Make less, or sell it sooner."},
+      {"text": "Most of it was spilt, melted or spoilt in the making: a smaller batch would not help. Look at how it is made and kept.", "kind": "warning", "when": "Mostly handling losses.", "do": "Check the method, the freezer and the staff's handling."},
+      {"text": "Nothing made in these four weeks was thrown away.", "kind": "success", "when": "No waste from the batches.", "do": "Nothing."},
+      {"text": "No recipe threw away a tenth of what went.", "kind": "success", "when": "Some waste, none at 10%.", "do": "Nothing."},
+      {"text": "{amount} of it was eaten by the staff, given away or tasted.", "kind": "info", "when": "Staff meals, gifts or tastings from the batches.", "do": "Check it matches what was allowed."},
+      {"text": "{n} batch(es) are still in stock: what becomes of them is not counted yet.", "kind": "info", "when": "Some batches still have stock.", "do": "Nothing; look again later."},
+      {"text": "Nothing was thrown away unsold in these seven days.", "kind": "success", "when": "No unsold waste in the last 7 days (with '{amount} the seven days before.' if there was some then).", "do": "Nothing."},
+      {"text": "Thrown away unsold in these seven days: {amount}; nothing the seven days before.", "kind": "warning", "when": "Waste this week, none the week before.", "do": "Read the items below."},
+      {"text": "Thrown away unsold in these seven days: {amount}, up from {before} the seven days before.", "kind": "warning", "when": "More than the week before.", "do": "Read the items below."},
+      {"text": "Thrown away unsold in these seven days: {amount}, against {before} the seven days before.", "kind": "success", "when": "Less or the same as the week before.", "do": "Keep it up."},
+      {"text": "{item}: {qty} thrown away, {amount}, {n} time(s), on {days}.", "kind": "warning", "when": "One of the 5 costliest items thrown away this week.", "do": "Follow the line under it."},
+      {"text": "Made here: the day's plan already makes less of what is thrown away on half the days or more. Look at the batch made on these days.", "kind": "info", "when": "The item is a batch recipe's output.", "do": "Open Production's plan."},
+      {"text": "Bought: say how many days it keeps on What to buy, and it is ordered for no more than that.", "kind": "info", "when": "Bought, keeping time not set.", "do": "Set its keeping days on What to buy."},
+      {"text": "Bought, and it keeps {n} day(s): order less of it at a time, and more often.", "kind": "info", "when": "Bought, keeping time set.", "do": "Order smaller amounts more often."},
+      {"text": "No batches were made in these four weeks.", "kind": "info", "when": "No batch made in the window.", "do": "Choose other weeks, or record batches on Production."},
+      {"text": "This screen could not be loaded", "kind": "error", "when": "The production report could not be read.", "do": "Press Try again."}
+    ],
+    "skipped_messages": [
+      {"text": "Choose the dates, the first before the last", "reason": "The page always sends 28 days in order."},
+      {"text": "Choose one of the café's places / You work at {1}, not at {2}", "reason": "Only reachable with a hand-edited location in the link; the page then fails to load."}
+    ],
+    "what_if": [
+      {"case": "A recipe's share is high and a better batch is shown", "do": "Make batches of about that size on Production; check the share again in four weeks."},
+      {"case": "A loss was recorded by mistake", "do": "Reverse it on review (Inventory); it then leaves this page."}
+    ],
+    "tips": ["The cost is each batch's own cost, not today's.", "A batch still in stock is not judged yet."],
+    "related": ["/production", "/inventory", "/purchasing/buying-list", "/reports"],
+    "shots": [
+      {"name": "waste-by-recipe", "role": "owner", "state": "Tiles, sayings and the recipe table with a better batch", "setup": "Record several batches of one recipe and expire part of each."}
+    ]
+  },
+  {
+    "path": "/reports/staffing",
+    "title": "Staffed when busy?",
+    "area": "Reports",
+    "summary": "Four weeks of orders, each hour of the café's week on average, set against the people on the clock then: where hands were short, where several stood idle, and where orders came with nobody clocked in. For those who see pay, what the hours cost against sales, week by week and by part of the day.",
+    "who": [
+      {"role": "owner, general_manager", "can": "everything, including what the hours cost", "cannot": "change anything here"},
+      {"role": "branch_manager", "can": "the orders against the hours (they keep staff and hours); someone at one place sees that place", "cannot": "see what the hours cost (no payroll.view)"},
+      {"role": "accountant, auditor", "can": "everything, including what the hours cost (payroll.view)", "cannot": "change anything"},
+      {"role": "purchasing", "can": "open it", "cannot": "see the figures: the page says it needs the hours on the clock"},
+      {"role": "cashier, barista, inventory_counter", "can": "nothing", "cannot": "open it (needs cost.view)"}
+    ],
+    "get_there": "Menu → Accountant → Reports → 'Staffed when busy? Orders an hour against who was on the clock →' (shown only to those who see the hours). Also Find anything → Staffed when busy?",
+    "before": ["Staff clock in and out at the till (or hours added on Staff).", "Sales in the four weeks.", "For the cost part: each person's pay set on Staff; a labour target on Settings → Rules (optional)."],
+    "parts": [
+      {
+        "name": "Heading and weeks",
+        "shows": "'{from} to {to}: four weeks, each hour of the week on average'. Ends yesterday unless another end is in the link.",
+        "controls": [
+          {"label": "Print or save as PDF", "kind": "button", "does": "Prints the page."},
+          {"label": "The four weeks before", "kind": "link", "does": "Moves back 28 days."},
+          {"label": "The four weeks after", "kind": "link", "does": "Moves forward 28 days.", "rules": "Only if they end by yesterday."},
+          {"label": "The last four weeks", "kind": "link", "does": "Back to the latest four weeks."}
+        ]
+      },
+      {
+        "name": "Tiles",
+        "shows": "Orders an hour, each on the clock: the usual = every order rung up while someone was on the clock ÷ every person-hour on the clock (with 'Over {n} hour(s) on the clock'). The busiest hour: the weekday and hour with the most orders a day on average ('About {orders} orders, {people} on the clock'). Hours short of hands: hours of the week where each person served 1.5 times the usual or more (in the busier half of hours). Hours quiet with two or more: hours with 2+ on the clock where each served half the usual or less.",
+        "controls": []
+      },
+      {
+        "name": "What the hours say",
+        "shows": "The busiest hour; up to 2 runs of short hours, 2 of quiet hours and 2 of hours with nobody on the clock, each with figures; a line if none was short or quiet; and a warning when 5% or more of orders were rung up with nobody on the clock.",
+        "controls": [
+          {"label": "(each line)", "kind": "link", "does": "Opens that weekday's hour by hour chart below (or Staff for the clock-in warning)."}
+        ]
+      },
+      {
+        "name": "Orders hour by hour",
+        "shows": "Columns: orders an hour on a day on average, or on one weekday; a line 'What those on the clock usually serve' = people on the clock × the usual. Each column says the hour, '{people} on the clock', net sales and its mark. Above the line, each person served more than usual; well below with 2+ on the clock, quiet.",
+        "controls": [
+          {"label": "Every day", "kind": "tab", "does": "Shows a day on average."},
+          {"label": "Saturday … Friday", "kind": "tab", "does": "Shows that weekday."},
+          {"label": "Show as a table", "kind": "toggle", "does": "Shows the hours as a table."}
+        ]
+      },
+      {
+        "name": "The week, hour by hour",
+        "shows": "A grid of weekdays (Saturday first) by hour, shaded from 'Fewer orders' to 'More orders', marked ▲ Short of hands, ▽ Quiet, ● Nobody on the clock.",
+        "controls": [
+          {"label": "(weekday name)", "kind": "link", "does": "Opens that weekday's chart."}
+        ]
+      },
+      {
+        "name": "What the hours cost against sales",
+        "shows": "Only for those who see pay. 'The labour target: {pct} of net sales.' or 'No labour target is set: set one on Settings → Rules.' A table by week and a table by part of the day (Morning 05:00–12:00, Afternoon 12:00–17:00, Evening 17:00–05:00): Net sales, Hours on the clock, What they cost, Share of sales (amber over the target). Cost of an hour: an hourly rate as it is; a day's pay ÷ its standard hours; a month's pay ÷ 30 ÷ its standard hours (8 if not set); overtime not added. People with no pay set are left out ('{n} hour(s) of people whose pay is not set are not counted.').",
+        "controls": []
+      }
+    ],
+    "states": [
+      {"state": "Cannot see the hours", "looks": "'This page needs the hours on the clock.' with 'Those who keep the staff, their hours or their pay can see it.'"},
+      {"state": "No orders", "looks": "'No orders in these four weeks.' with how to clock in."},
+      {"state": "Nobody clocked in", "looks": "'Nobody was on the clock in these four weeks.' with 'This page sets the orders of each hour against the hours on the clock: clock in and out at the till, or add the hours on Staff.'"},
+      {"state": "Some still clocked in", "looks": "Footnote '{n} time(s) clocked in and not out are left out.'"},
+      {"state": "Cannot be read", "looks": "'This screen could not be loaded' with Try again."}
+    ],
+    "messages": [
+      {"text": "The busiest hour: {when}, about {orders} orders and {amount}.", "kind": "info", "when": "Always, when there is an hour with orders (with '{people} on the clock, on average.').", "do": "Have the most hands on then."},
+      {"text": "Short of hands: {day}, {from}–{to}.", "kind": "warning", "when": "A run of short hours.", "do": "Read: 'About {orders} orders an hour with {people} on the clock: {each} each, against {usual} usually. One more would bring it to {after} each.' Add a person to that shift on Staff."},
+      {"text": "Quiet with {people} on the clock: {day}, {from}–{to}.", "kind": "info", "when": "A run of quiet hours.", "do": "Read: 'About {orders} orders an hour: {each} each, against {usual} usually. Unless they were preparing, one fewer would still leave {left}.' Consider one fewer."},
+      {"text": "Orders with nobody on the clock: {day}, {from}–{to}.", "kind": "warning", "when": "Orders (half an order a day on average or more) with nobody clocked in.", "do": "'About {orders} an hour. Clock in at the till, so this page reads true.'"},
+      {"text": "No hour was short of hands, nor quiet with two or more on the clock.", "kind": "success", "when": "No short or quiet hours.", "do": "Nothing."},
+      {"text": "{pct}% of the orders were rung up with nobody on the clock.", "kind": "warning", "when": "5% or more of orders.", "do": "'This page counts only the hours on the clock: clock in and out at the till.'"},
+      {"text": "No labour target is set: set one on Settings → Rules.", "kind": "info", "when": "Cost part, no target.", "do": "Set a labour target on Settings → Rules."},
+      {"text": "{n} hour(s) of people whose pay is not set are not counted.", "kind": "warning", "when": "Some people on the clock have no pay.", "do": "Set their pay on Staff."},
+      {"text": "This page needs the hours on the clock.", "kind": "info", "when": "The person may not see staff hours.", "do": "Ask a manager or the owner."},
+      {"text": "No orders in these four weeks.", "kind": "info", "when": "No orders.", "do": "Choose other weeks."},
+      {"text": "Nobody was on the clock in these four weeks.", "kind": "info", "when": "No closed clock-ins.", "do": "Clock in and out at the till, or add hours on Staff."},
+      {"text": "This screen could not be loaded", "kind": "error", "when": "Sales or hours could not be read.", "do": "Press Try again."}
+    ],
+    "skipped_messages": [
+      {"text": "Choose one of the café's places / You work at {1}, not at {2}", "reason": "Only with a hand-edited location in the link."}
+    ],
+    "what_if": [
+      {"case": "Staff forget to clock in", "do": "Hours then read short and orders show 'nobody on the clock'. Clock in at the till, or add the hours on Staff."},
+      {"case": "Someone forgot to clock out", "do": "That stretch is left out until closed; correct it on Staff."}
+    ],
+    "tips": ["The café's week starts on Saturday here.", "The evening runs until 05:00: night hours count to the evening before."],
+    "related": ["/staff", "/payroll", "/settings/rules", "/reports"],
+    "shots": [
+      {"name": "staffing-week", "role": "owner", "state": "Tiles, sayings, the chart and the week grid with marks", "setup": "Four weeks of sales and clock-ins."},
+      {"name": "staffing-cost", "role": "owner", "state": "What the hours cost against sales with a target", "setup": "Set pay for staff and a labour target."}
+    ]
+  },
+  {
+    "path": "/reports/statements",
+    "title": "Balance sheet and cash flow",
+    "area": "Reports",
+    "summary": "What the café owned and owed at the end of the day before the chosen dates and at the end of the last date, side by side (the balance sheet), each branch's position now, and where the cash in the till, the safe and the bank came from and went in between (the cash flow). As found in the app: the profit and loss is on Reports (Profit & Loss section) and the trial balance on Chart of Accounts; this page holds the balance sheet, each branch, and the cash flow.",
+    "who": [
+      {"role": "owner, general_manager, accountant, auditor", "can": "read all of it", "cannot": "change anything here"},
+      {"role": "branch_manager", "can": "read the balance sheet and cash flow (the café's); each branch's table is not shown to someone at one place", "cannot": "change anything"},
+      {"role": "cashier, barista, inventory_counter, purchasing", "can": "nothing", "cannot": "open it (needs profit.view)"}
+    ],
+    "get_there": "Menu → Accountant → Reports → 'Balance sheet and cash flow →' (opens with the Reports dates). Also Find anything → Balance sheet and cash flow.",
+    "before": ["Published journals (every sale, delivery, expense and payment posts one)."],
+    "parts": [
+      {
+        "name": "Heading and dates",
+        "shows": "A one-line explanation with 'How this works'.",
+        "controls": [
+          {"label": "Print or save as PDF", "kind": "button", "does": "Prints the statements."},
+          {"label": "← Reports", "kind": "link", "does": "Back to Reports with the same dates."},
+          {"label": "How this works", "kind": "toggle", "does": "Opens the explanation."},
+          {"label": "From", "kind": "box", "does": "The first day.", "rules": "Default the first of this month; on or before To; at most a year before To."},
+          {"label": "To", "kind": "box", "does": "The last day.", "rules": "Default today; not after today."},
+          {"label": "Show", "kind": "button", "does": "Reads both balance sheets and the cash flow."},
+          {"label": "This month / Last month / This year", "kind": "link", "does": "Sets the dates."}
+        ]
+      },
+      {
+        "name": "Balance sheet",
+        "shows": "Columns 'End of {day before From}' and 'End of {To}'. What the café owns: cash accounts (1000 till, 1001, 1005 safe, 1006, 1020 bank) then 'Cash in hand and at the bank'; other current assets then 'Current assets'; 15xx then 'Fixed assets'; 'Total assets'. What the café owes: each liability, 'Total owed'. The owner's: each equity account, 'Profit of earlier years, not yet closed' (only when not nothing), 'Profit this year, not yet closed', 'Total equity', 'Owed and the owner's'. Worked out from every published journal before the day ended: an asset = debits − credits; a liability or equity = credits − debits; profit this year = revenue − expenses from 1 January, not yet closed into Retained earnings (on locking December). Negative amounts show red. Then 'It balances' or 'Out by {amount}' (assets − owed − equity).",
+        "controls": [
+          {"label": "CSV", "kind": "link", "does": "Downloads the balance sheet at the To date."},
+          {"label": "(account code and name)", "kind": "link", "does": "Opens Journals for that account and these dates."}
+        ]
+      },
+      {
+        "name": "Each branch, now",
+        "shows": "Only for a café of more than one place, for someone who reads the whole café. For each branch, as of now: Cash in its till; Stock, at cost; Stock it sent, not yet received; Equipment, at book value; Customers owe, on its invoices; What it holds; Less deposits it holds for pre-orders; Its own; Profit this year; Sold to other branches this year; Bought from other branches this year; Charges other branches ('Cost plus {pct}%' or 'At cost'). Below, the café's own: the safe, the bank, card and platform money to come in, owed to suppliers and to staff (and equipment or invoices of no branch).",
+        "controls": []
+      },
+      {
+        "name": "Cash flow",
+        "shows": "'Cash at the start' (cash accounts at the end of the day before From). Lines by section, each with Came in, Went out and Net, and under each the accounts: From running the café (Received from sales; Paid for stock and to suppliers; Paid to staff, and advances; Running costs; The drawer counted over or short), Invested in equipment (Equipment bought or sold), From and to the owner (The owner's money in and out), From changing dollars (Dollars changed at another rate than they were kept at). 'Net change in cash', 'Cash at the end', and each cash account from start to end. Worked out: every journal of the dates that touched a cash account is read by its other lines; money moved between till, safe and bank is no flow; a bill paid counts as what it was for. Then 'It adds up…' or 'Out by {amount}'.",
+        "controls": [
+          {"label": "CSV", "kind": "link", "does": "Downloads the cash flow for the dates."},
+          {"label": "(account code and name)", "kind": "link", "does": "Opens Journals for that account and the dates."}
+        ]
+      }
+    ],
+    "states": [
+      {"state": "Dates wrong", "looks": "A red line with the problem and no statements; each branch's table may still show."},
+      {"state": "Nothing moved the cash", "looks": "'Nothing moved the cash in these dates.' in the cash flow."},
+      {"state": "One place only", "looks": "No 'Each branch, now' table."},
+      {"state": "Cannot be read", "looks": "'This screen could not be loaded' with Try again."}
+    ],
+    "messages": [
+      {"text": "Choose the dates, the first on or before the last", "kind": "error", "when": "From is after To.", "do": "Fix the dates."},
+      {"text": "Choose at most a year of dates", "kind": "error", "when": "More than 366 days.", "do": "Shorten the dates."},
+      {"text": "Choose today or a day before it", "kind": "error", "when": "To is after today.", "do": "Choose today or earlier."},
+      {"text": "It balances", "kind": "success", "when": "Both balance sheets balance.", "do": "Nothing."},
+      {"text": "Out by {amount}", "kind": "error", "when": "Assets do not equal owed plus equity, or the cash flow does not add up to the balance sheet's cash.", "do": "Tell the accountant: a journal is out of balance or a cash line is unread; check Chart of Accounts → Trial balance."},
+      {"text": "It adds up: the cash at the start and at the end are the balance sheet's.", "kind": "success", "when": "The cash flow ties.", "do": "Nothing."},
+      {"text": "Nothing moved the cash in these dates.", "kind": "info", "when": "No journal touched a cash account.", "do": "Nothing."},
+      {"text": "This screen could not be loaded", "kind": "error", "when": "A statement could not be read.", "do": "Press Try again."}
+    ],
+    "skipped_messages": [
+      {"text": "Choose the day", "reason": "report_balance_sheet always receives a day from the page."}
+    ],
+    "what_if": [
+      {"case": "Profit this year looks wrong", "do": "Open Reports → Profit & Loss for the year; open any account to see its journal lines."},
+      {"case": "Want the month-end position", "do": "Press Last month: the right column is the month's last day."}
+    ],
+    "tips": ["The left column is the end of the day before From, so a month's page compares the month's start and end.", "Every account is a link to its journal lines."],
+    "related": ["/reports", "/accounting", "/journals", "/reports/cash-ahead"],
+    "shots": [
+      {"name": "statements", "role": "accountant", "state": "Balance sheet balancing and cash flow adding up for last month", "setup": "Press Last month."}
+    ]
+  },
+  {
+    "path": "/reports/cash-ahead",
+    "title": "Cash ahead",
+    "area": "Reports",
+    "summary": "The café's money over the next 30 days, day by day: the bank and the safe from what they hold now, each weekday's usual takings and what is due, with a warning, days ahead, for each spell the bank or the safe would go below nothing, and what to do. It only forecasts: nothing is moved or paid.",
+    "who": [
+      {"role": "owner, general_manager, branch_manager, accountant, auditor", "can": "read it", "cannot": "change anything here"},
+      {"role": "cashier, barista, inventory_counter, purchasing", "can": "nothing", "cannot": "open it (needs profit.view)"}
+    ],
+    "get_there": "Menu → Accountant → Reports → 'Cash ahead: the next 30 days of the bank and the safe →'. Also from the dashboard alert 'Money short ahead', and Find anything → Cash ahead.",
+    "before": ["Four weeks of takings recorded (sessions closed into the safe, card takings).", "Supplier bills with due dates; regular payments recorded in the same words."],
+    "parts": [
+      {
+        "name": "Heading",
+        "shows": "'The next {n} day(s) from {day}' and a note with 'How this works': each weekday's takings are the last four weeks' same weekdays; cash goes to the safe at each close; card money reaches the bank on the weekdays it has before, less what the bank keeps; the safe is banked on the weekdays it has been; bills are paid on their due dates moved as late as the café has paid lately; a payment repeated under the same words (rent, electricity, salaries, the owner's drawings) comes again at its last amount; overdue customer invoices are not counted.",
+        "controls": [
+          {"label": "Print or save as PDF", "kind": "button", "does": "Prints the forecast."},
+          {"label": "How this works", "kind": "toggle", "does": "Opens the explanation."}
+        ]
+      },
+      {
+        "name": "Warnings",
+        "shows": "For each spell the bank or safe would be below nothing: how short and on which day, from when ('in {n} day(s)') until when (or still at the end), up to 3 payments due then, and one action: move takings from the safe to the bank (when the safe the day before covers the shortfall: the amount rounded up to 100,000, at most what the safe holds, by the day before); ask the supplier of the biggest bill due then to take it later; or put money in. When there is none: 'The bank and the safe cover what is due in the next {n} day(s).'",
+        "controls": []
+      },
+      {
+        "name": "Tiles",
+        "shows": "The bank now (1020 at the end of today), with the safe and card money on its way. Lowest the bank comes to, and the day (amber below nothing). Due in the next {n} day(s): everything going out (bills, deliveries and orders still to be billed, regular payments), with what customers will pay on their invoices. The café in {n} day(s): till + safe + card money + bank (+ other ways to pay) at the last day.",
+        "controls": []
+      },
+      {
+        "name": "The bank at each day's end (million IQD)",
+        "shows": "A chart of the bank each day; below nothing is marked 'short'. Each day's tip lists what is due.",
+        "controls": [
+          {"label": "The days as a table", "kind": "toggle", "does": "Shows Day and The bank as a table."}
+        ]
+      },
+      {
+        "name": "Day by day",
+        "shows": "Day, Takings (the usual for that weekday), Paid out, The safe, The bank (amber below nothing), The café.",
+        "controls": []
+      },
+      {
+        "name": "What is due and expected",
+        "shows": "Day, What (and from the bank or the safe), Why it is expected (Bill {ref}, A delivery still to be billed, An order still to be billed, Invoice {ref}, Every week, Every two weeks, Every month, Every three months), Amount (− out, + in). Overdue customer invoices are listed after it, not counted.",
+        "controls": [
+          {"label": "Customers", "kind": "link", "does": "Opens Customers, to chase what is overdue."}
+        ]
+      }
+    ],
+    "states": [
+      {"state": "All covered", "looks": "'The bank and the safe cover what is due in the next {n} day(s).'"},
+      {"state": "A shortfall ahead", "looks": "One red warning card per spell, with what to do."},
+      {"state": "Nothing due", "looks": "'Nothing due in the days ahead but the usual takings.'"},
+      {"state": "Not available", "looks": "'Cash ahead is not ready yet.' with 'It comes with migration 0093.' (also shown if the forecast cannot be read)."}
+    ],
+    "messages": [
+      {"text": "The bank would be {amount} short on {day}.", "kind": "warning", "when": "The bank goes below nothing in the 30 days.", "do": "Do the action under it."},
+      {"text": "The safe would be {amount} short on {day}.", "kind": "warning", "when": "The safe goes below nothing.", "do": "Do the action under it."},
+      {"text": "From {from}, in {n} day(s), until {until}.", "kind": "info", "when": "The spell ends within the 30 days.", "do": "Nothing."},
+      {"text": "From {from}, in {n} day(s), and still at the end of the days ahead.", "kind": "warning", "when": "The spell lasts past the 30 days.", "do": "Act soon: it does not recover by itself."},
+      {"text": "Due then: {what}.", "kind": "info", "when": "Payments due in the spell.", "do": "Nothing."},
+      {"text": "Move {amount} from the safe to the bank by {day}.", "kind": "info", "when": "The safe can cover the bank's shortfall.", "do": "Take that much from the safe to the bank by that day, and record the move in the app so the books follow."},
+      {"text": "Ask {supplier} to take {amount} later.", "kind": "info", "when": "A supplier bill is due in the spell.", "do": "Agree a later date with the supplier."},
+      {"text": "Put money in, or pay something due later.", "kind": "info", "when": "Neither of the above helps.", "do": "The owner puts money in, or a payment is moved."},
+      {"text": "The bank and the safe cover what is due in the next {n} day(s).", "kind": "success", "when": "No shortfall.", "do": "Nothing."},
+      {"text": "Nothing due in the days ahead but the usual takings.", "kind": "info", "when": "No events.", "do": "Nothing."},
+      {"text": "Overdue, not counted: {what}.", "kind": "warning", "when": "Customer invoices past due.", "do": "Chase them on Customers."},
+      {"text": "Cash ahead is not ready yet.", "kind": "info", "when": "The forecast could not be read (database not updated, or no permission).", "do": "Tell whoever runs the system."}
+    ],
+    "skipped_messages": [
+      {"text": "Look 1 to 92 days ahead", "reason": "The page always asks for 30 days."}
+    ],
+    "what_if": [
+      {"case": "The dashboard says money is short ahead", "do": "Open Cash ahead, read the warning, do its action, then look again."},
+      {"case": "A regular payment is missing", "do": "It is learnt from payments recorded again and again under the same words; record them the same way each time."}
+    ],
+    "tips": ["The dashboard alert looks only 14 days ahead, and only once the books go back four weeks."],
+    "related": ["/dashboard", "/sales", "/vendors", "/expenses", "/customers", "/reports/statements"],
+    "shots": [
+      {"name": "cash-ahead-warning", "role": "owner", "state": "A bank shortfall warning with 'Move … from the safe to the bank'", "setup": "A large bill due soon, cash in the safe, little in the bank."}
+    ]
+  },
+  {
+    "path": "/reports/watch",
+    "title": "Watch list",
+    "area": "Reports",
+    "summary": "Patterns that stand out from what the others do at the same hours, by more than luck would give: sales voided far more often, discounts just under the limit again and again, and the drawer short again and again. Each names the person and the evidence; it is 'worth a look', not proof. The owner marks each explained or looked into.",
+    "who": [
+      {"role": "owner", "can": "read the list, settle findings, and decide on Settings whether the general manager reads it too", "cannot": ""},
+      {"role": "general_manager", "can": "read and settle findings, only when the owner has ticked 'The general manager reads the watch list too' on Settings", "cannot": "change who may read it"},
+      {"role": "everyone else", "can": "nothing", "cannot": "open it: they are sent to Reports (or their own start screen)"}
+    ],
+    "get_there": "Menu → Accountant → Reports → 'Watch list: patterns worth a look →' (shown only to those who may read it). Also the dashboard's Watch list card → 'Open the watch list', and the dashboard alert 'Worth a look'.",
+    "before": ["Four weeks of sales and closed cash sessions.", "A person is judged only from their fourth week (21 days after their first sale or hire), and needs at least 50 sales (voids, discounts) or repeated short drawers."],
+    "parts": [
+      {
+        "name": "Heading",
+        "shows": "'Last looked {day}' or 'Not looked yet', and the explanation with 'How this works': once a day (03:30 Erbil time, or when the list is opened and the last look is over 20 hours old), over the four weeks to yesterday: sales voided; discounts within two points of the limit a cashier may give alone, each reason apart; drawers short by 5,000 IQD or more. Each person is set against the others who sold at the same hours (four-hour bands, by place). Someone new is not judged in their first three weeks. A finding settled is not raised again for two weeks.",
+        "controls": [
+          {"label": "How this works", "kind": "toggle", "does": "Opens the explanation."}
+        ]
+      },
+      {
+        "name": "Open findings",
+        "shows": "Strong ones first. Each: a title ('{person}: sales voided far more often than the others' at the same hours', '{person}: discounts just under the limit, again and again', '{person}: the drawer short again and again'), the evidence lines, how unusual ('Strong: less than 1 in a million by luck', 'Worth a look: less than 1 in 100,000 by luck', 'Worth a look: less than 1 in 10,000 by luck') and 'first seen {first}, last {last}'. How it is found: what the others' rate at the same hours would give the person is the expected number; a finding needs at least 8 voids (2.5 times expected) or 8 near-limit discounts with one reason (3 times expected), or 3 short drawers (or 2 on the same weekday and shift), and a chance by luck under 1 in 10,000; strong under 1 in a million.",
+        "controls": [
+          {"label": "The sales of those days", "kind": "link", "does": "Opens Orders for the finding's four weeks.", "rules": "Not on drawer findings."},
+          {"label": "A note (on the audit trail)", "kind": "box", "does": "What was found or why it is fine.", "rules": "Optional; up to 300 characters. Example shown: e.g. the regulars' discount, agreed."},
+          {"label": "Explained", "kind": "button", "does": "Settles the finding as explained, with the note.", "after": "The finding leaves the open list and appears under Settled for 30 days; the same person and pattern is not raised again for 14 days. On the audit trail (watch.settle) with the note. The dashboard card and the 'Worth a look' alert count it no longer. Nothing in stock, money or the books changes."},
+          {"label": "Looked into", "kind": "button", "does": "Settles it as looked into, with the note.", "after": "As Explained."}
+        ]
+      },
+      {
+        "name": "Settled in the last 30 days ({n})",
+        "shows": "Each settled finding's title, 'explained' or 'looked into', who settled it and the note.",
+        "controls": [
+          {"label": "Settled in the last 30 days ({n})", "kind": "toggle", "does": "Opens the list."}
+        ]
+      },
+      {
+        "name": "Who may see it (on Settings)",
+        "shows": "On Settings, Rules section, the owner sees a tick box.",
+        "controls": [
+          {"label": "The general manager reads the watch list too", "kind": "toggle", "does": "Lets the general manager read and settle the list, or stops it. Saves at once: 'Saved, and on the audit trail.'", "who": "Owner only.", "after": "On the audit trail (settings.watch_visibility). The general manager's Reports link and dashboard card appear or go."}
+        ]
+      }
+    ],
+    "states": [
+      {"state": "Nothing stands out", "looks": "'Nothing stands out.' with 'Nobody's voids, discounts or drawers are far from the others' at the same hours.'"},
+      {"state": "Open findings", "looks": "A card per finding; strong ones marked."},
+      {"state": "Not allowed", "looks": "The person is sent to Reports."},
+      {"state": "Saving with no answer", "looks": "'Your previous submission may already have been saved. Checking…' while it tries again."}
+    ],
+    "messages": [
+      {"text": "{voids} of {sales} sales voided, {from} to {to}.", "kind": "info", "when": "Evidence of a voids finding.", "do": "Open the sales of those days; ask the person."},
+      {"text": "The others' rate at the same hours would give {expected}: {times} times as often.", "kind": "info", "when": "Evidence, when the others had some.", "do": "Nothing."},
+      {"text": "The others voided none at the same hours.", "kind": "info", "when": "Voids evidence, the others had none.", "do": "Nothing."},
+      {"text": "{n} discounts of {low}–{high}% ({reason}) in {sales} sales, {from} to {to}.", "kind": "info", "when": "Evidence of a discounts finding.", "do": "Check the reason with the person."},
+      {"text": "The others gave none like it at the same hours.", "kind": "info", "when": "Discount evidence, the others gave none.", "do": "Nothing."},
+      {"text": "{short} of {shifts} drawers short by 5,000 IQD or more, {amount} in all, {from} to {to}.", "kind": "info", "when": "Evidence of a drawer finding.", "do": "Open Cash sessions for those shifts."},
+      {"text": "{n} of them on a {weekday}, on the same shift.", "kind": "info", "when": "Two or more short on the same weekday and shift.", "do": "Look at who else works that shift."},
+      {"text": "The watch list is for the owner", "kind": "error", "when": "Someone not allowed (or the GM after the owner took it back) tries to read or settle.", "do": "Ask the owner."},
+      {"text": "Mark it explained or looked into", "kind": "error", "when": "Neither status was sent.", "do": "Press Explained or Looked into."},
+      {"text": "That finding is not on the watch list", "kind": "error", "when": "The finding no longer exists for this café.", "do": "Reload the page."},
+      {"text": "That finding is settled already", "kind": "error", "when": "Someone settled it first.", "do": "Reload the page."},
+      {"text": "Choose a finding", "kind": "error", "when": "The page sent no valid finding.", "do": "Reload the page."},
+      {"text": "Too long", "kind": "error", "when": "The note is over 300 characters (the box stops at 300).", "do": "Shorten it."},
+      {"text": "This screen sent no retry key: reload the page and try again.", "kind": "error", "when": "The page was old or broken.", "do": "Reload and try again."},
+      {"text": "This retry does not match what was first sent: reload the page and check before doing it again", "kind": "error", "when": "A retry differs from the first try.", "do": "Reload and check."},
+      {"text": "This was sent by someone else", "kind": "error", "when": "The retry key belongs to another person.", "do": "Reload and try again."},
+      {"text": "Your previous submission may already have been saved. Checking…", "kind": "info", "when": "No answer came; it is sent again with the same key.", "do": "Wait."},
+      {"text": "Still no answer. It may have been saved: press the same button again to check. It will not be recorded twice.", "kind": "warning", "when": "Still no answer after retries.", "do": "Press the same button again."},
+      {"text": "Nothing stands out.", "kind": "success", "when": "No open finding.", "do": "Nothing."}
+    ],
+    "what_if": [
+      {"case": "A finding has a good reason (an agreed discount, a busy shift)", "do": "Write the reason in the note and press Explained."},
+      {"case": "You talked to the person and dealt with it", "do": "Write what was done and press Looked into."},
+      {"case": "The general manager should help", "do": "On Settings, tick 'The general manager reads the watch list too'."}
+    ],
+    "tips": ["The dashboard and the phone only say that something strong is worth a look, never a name.", "A finding is evidence, not an accusation: talk before acting."],
+    "related": ["/dashboard", "/orders", "/sales/sessions", "/settings", "/reports"],
+    "shots": [
+      {"name": "watch-finding", "role": "owner", "state": "An open voids finding with its evidence and the settle buttons", "setup": "One cashier with many voids over four weeks among others with few."}
+    ]
+  }
+]

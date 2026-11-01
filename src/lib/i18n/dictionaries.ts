@@ -129,7 +129,7 @@ const en: Dict = {
   "pos.uncertain":
     "The connection dropped before the till heard back. Press Retry: if the sale went through, it will not be recorded twice.",
   "pos.retry": "Retry",
-  "pos.discardPending": "Discard — a manager will check Orders",
+  "pos.discardPending": "Discard — a manager can see it on Orders",
   "pos.discardWarning":
     "Discarded on this till. If the sale did reach the books, a manager can void it on the Orders screen.",
   "pos.offlineBlocked": "Offline: the sale cannot be recorded until the connection returns.",
@@ -491,7 +491,7 @@ const ar: Dict = {
   "pos.uncertain":
     "انقطع الاتصال قبل وصول الرد. اضغط «إعادة المحاولة»: إذا كان البيع قد سُجّل فلن يُسجَّل مرتين.",
   "pos.retry": "إعادة المحاولة",
-  "pos.discardPending": "تجاهل — سيتحقق المدير من الطلبات",
+  "pos.discardPending": "تجاهل — يمكن للمدير رؤيته في شاشة الطلبات",
   "pos.discardWarning":
     "تم التجاهل على هذه الشاشة. إذا كان البيع قد وصل إلى الدفاتر، يمكن للمدير إلغاؤه من شاشة الطلبات.",
   "pos.offlineBlocked": "غير متصل: لا يمكن تسجيل البيع حتى يعود الاتصال.",
@@ -852,7 +852,7 @@ const ckb: Dict = {
   "pos.uncertain":
     "پەیوەندی پچڕا پێش ئەوەی وەڵام بگات. «دووبارە هەوڵدانەوە» دابگرە: ئەگەر فرۆشتنەکە تۆمارکرابێت، دوو جار تۆمار ناکرێت.",
   "pos.retry": "دووبارە هەوڵدانەوە",
-  "pos.discardPending": "پشتگوێخستن — بەڕێوەبەر داواکارییەکان دەپشکنێت",
+  "pos.discardPending": "پشتگوێخستن — بەڕێوەبەر دەتوانێت لە شاشەی داواکارییەکان بیبینێت",
   "pos.discardWarning":
     "لەسەر ئەم شاشەیە پشتگوێخرا. ئەگەر فرۆشتنەکە گەیشتبێتە دەفتەرەکان، بەڕێوەبەر دەتوانێت لە شاشەی داواکارییەکان هەڵیبوەشێنێتەوە.",
   "pos.offlineBlocked": "دەرهێڵ: تا پەیوەندی نەگەڕێتەوە فرۆشتنەکە تۆمار ناکرێت.",

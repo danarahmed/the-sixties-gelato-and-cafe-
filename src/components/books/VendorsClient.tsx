@@ -801,6 +801,8 @@ function AddVendor({ onDone, standalone }: { onDone: () => void; standalone?: bo
 function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void }) {
   const { t } = useT();
   const [busy, start] = useTransition();
+  // Sent again by itself when no answer comes (C2): an edit sets the same values twice.
+  const op = useOperation();
   const [msg, setMsg] = useState<Msg>(null);
   const initial = {
     name: vendor.name,
@@ -819,19 +821,21 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
     start(async () => {
       const days = f.leadTimeDays.trim();
       const every = f.deliversEveryDays.trim();
-      const r = await updateSupplierAction({
-        supplierId: vendor.id,
-        name: f.name,
-        contact: f.contact,
-        phone: f.phone,
-        isActive: f.isActive,
-        reason,
-        leadTimeDays: days === "" ? null : Number(days),
-        // Only when changed, so a supplier saves before 0092 is applied too.
-        ...(f.deliversEveryDays === initial.deliversEveryDays
-          ? {}
-          : { deliversEveryDays: every === "" ? null : Number(every) }),
-      });
+      const r = await op.run("editVendor", () =>
+        updateSupplierAction({
+          supplierId: vendor.id,
+          name: f.name,
+          contact: f.contact,
+          phone: f.phone,
+          isActive: f.isActive,
+          reason,
+          leadTimeDays: days === "" ? null : Number(days),
+          // Only when changed, so a supplier saves before 0092 is applied too.
+          ...(f.deliversEveryDays === initial.deliversEveryDays
+            ? {}
+            : { deliversEveryDays: every === "" ? null : Number(every) }),
+        }),
+      );
       if (r.ok) {
         setMsg({ ok: true, text: t("Saved, and on the audit trail.") });
         setReason("");
@@ -842,6 +846,7 @@ function EditVendor({ vendor, onDone }: { vendor: VendorRow; onDone: () => void 
 
   return (
     <div className="grid" style={{ gap: 12, maxWidth: 720 }} data-testid="edit-vendor">
+      <OperationStatus op={op} />
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
         <label style={{ flex: 1, minWidth: 160 }}>
           <div className="sc">{t("Vendor name")}</div>

@@ -10,6 +10,7 @@ import { getChannelNames } from "@/lib/db/channels";
 import { addDays, businessToday, dateTimeIn, dayStart, parseDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui";
 import { OrderActions } from "@/components/OrderActions";
+import { ReprintReceipt } from "@/components/ReprintReceipt";
 import { ReceiptProvider } from "@/components/ReceiptProvider";
 import { getReceiptSetup } from "@/lib/db/receipt";
 import { PageIntro } from "@/components/PageIntro";
@@ -77,8 +78,8 @@ export default async function OrdersPage({
   );
   const canVoid = has(profile, "sale.void");
   const canRefund = has(profile, "sale.refund");
-  // The café's own receipt (0091), for a refund's slip; null before it.
-  const receipt = canRefund ? await getReceiptSetup().catch(() => null) : null;
+  // The café's own receipt (0091), for a refund's slip and a receipt printed again; null before it.
+  const receipt = await getReceiptSetup().catch(() => null);
 
   return (
     <div className="grid" style={{ gap: 16 }}>
@@ -335,6 +336,13 @@ export default async function OrdersPage({
                         {fmtIQD(margin)} ({pct}%)
                       </td>
                       <td className="right">
+                        {o.status !== "voided" && (
+                          <ReprintReceipt
+                            orderId={o.id}
+                            businessName={profile.businessName}
+                            timezone={profile.timezone}
+                          />
+                        )}
                         {/* Kept for a sale refunded whole, with nothing to offer, so the
                           refund's answer stays until it is closed. */}
                         {o.status !== "voided" && (canVoid || canRefund) && (

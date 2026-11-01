@@ -10,6 +10,7 @@ import { useT } from "@/lib/i18n/I18nProvider";
 import { useChannels } from "@/components/ChannelsProvider";
 import { Icon } from "@/components/Icon";
 import { Notice, inputStyle } from "@/components/ui";
+import { OperationStatus, useOperation } from "@/components/useOperation";
 
 /** A size the menu sells, as a deal's place can name it. */
 export interface DealSize {
@@ -86,6 +87,7 @@ export function DealsManager({
   const [draft, setDraft] = useState<Draft | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, start] = useTransition();
+  const op = useOperation();
   const channels = set.inUse.filter((c) => !isPlatformChannel(c));
   const sizeName = new Map(sizes.map((s) => [s.id, s.label]));
   const catName = new Map(categories.map((c) => [c.id, c.name]));
@@ -95,24 +97,26 @@ export function DealsManager({
     const prices: Record<string, number> = {};
     for (const [k, v] of Object.entries(d.prices)) if (v.trim() !== "") prices[k] = Number(v);
     start(async () => {
-      const r = await saveDealAction(
-        {
-          id: d.id,
-          name: d.name,
-          nameAr: d.nameAr || null,
-          nameCkb: d.nameCkb || null,
-          prices,
-          slots: d.places.map((p) => ({
-            label: p.label || null,
-            categoryId: p.pick.startsWith("c:") ? p.pick.slice(2) : null,
-            variants: p.pick.startsWith("v:") ? [p.pick.slice(2)] : [],
-          })),
-          days: d.days.length === 7 ? null : d.days,
-          starts: d.starts || null,
-          ends: d.ends || null,
-          active: d.active,
-        },
-        crypto.randomUUID(),
+      const r = await op.run("deal", (key) =>
+        saveDealAction(
+          {
+            id: d.id,
+            name: d.name,
+            nameAr: d.nameAr || null,
+            nameCkb: d.nameCkb || null,
+            prices,
+            slots: d.places.map((p) => ({
+              label: p.label || null,
+              categoryId: p.pick.startsWith("c:") ? p.pick.slice(2) : null,
+              variants: p.pick.startsWith("v:") ? [p.pick.slice(2)] : [],
+            })),
+            days: d.days.length === 7 ? null : d.days,
+            starts: d.starts || null,
+            ends: d.ends || null,
+            active: d.active,
+          },
+          key,
+        ),
       );
       if (!r.ok) {
         setMsg({ ok: false, text: r.error });
@@ -142,6 +146,7 @@ export function DealsManager({
         )}
       </p>
       <Notice msg={msg} />
+      <OperationStatus op={op} />
       {deals.length > 0 && (
         <ul className="deal-list">
           {deals.map((d) => (

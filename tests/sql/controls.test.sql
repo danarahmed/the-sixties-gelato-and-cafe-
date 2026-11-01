@@ -134,10 +134,10 @@ select test.eq((
   select string_agg(p.proname, ',' order by p.proname)
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'execute')),
-  'acknowledge_alert,add_attendance,add_delivery_platform,add_fixed_asset,add_item_unit,add_variant,'
+  'acknowledge_alert,add_attendance,add_delivery_platform,add_fixed_asset,add_item_unit,add_place,add_variant,'
   'adjust_payroll_line,adjust_points,adjust_stock,alert_thresholds,allocate_credit,app_words,'
   'approvals_waiting,approvals_waiting_count,approve_payroll,approve_po,approve_stock_count,'
-  'attach_document,attendance_list,bank_book,batch_reconciliation,branch_position,buying_list,'
+  'attach_document,attendance_list,bank_book,batch_reconciliation,branch_position,business_details,buying_list,'
   'cancel_advance,cancel_attendance,cancel_bill,cancel_card_settlement,cancel_money_move,'
   'cancel_platform_settlement,cancel_po,cancel_pre_order,cancel_prepaid_expense,cancel_production,'
   'cancel_salary_payment,cancel_scheduled_price,cancel_scheduled_recipe,cancel_stock_count,'
@@ -151,10 +151,10 @@ select test.eq((
   'daily_brief,daily_sales_target,dashboard_summary,deals_list,depreciate_to,detach_document,'
   'discard_journal,dispose_fixed_asset,document_counts,document_may_attach,document_may_see,'
   'document_permissions,document_record,documents_for,draft_payroll,draft_purchase_orders,drawer_methods,drawer_status,'
-  'employee_advances,exchange_dollars,find_customer,fixed_assets,force_close_session,fx_status,'
+  'employee_advances,exchange_dollars,find_customer,fixed_assets,force_close_session,forget_two_step_codes,fx_status,'
   'give_away,hand_over_session,inventory_valuation,invite_member,invoice_customer,item_costs,'
   'item_price_history,labour_target,language_settings,legacy_unposted,link_phone_finish,'
-  'link_phone_start,list_approvers,list_business_rules,list_members,lock_period,losses_waiting,'
+  'link_phone_start,list_approvers,list_business_rules,list_members,lock_period,losses_waiting,make_two_step_codes,'
   'mark_bill_printed,mark_down,markdown_suggestions,match_platform_statement,menu_branch_prices,'
   'menu_costing,menu_recipe_lines,menu_scheduled,money_accounts,move_cash,move_money,my_profile,'
   'my_report_visits,next_bill_number,note_report_visit,note_supplier_credit,open_cash_session,open_tab,'
@@ -168,7 +168,7 @@ select test.eq((
   'record_card_settlement,record_count,record_expense,record_loss,record_offline_sale,'
   'record_opening_stock,record_prepaid_expense,record_production,record_sale,record_supplier_credit,'
   'record_waste,refund_sale,refund_sale_lines,register_clock_screen,reject_stock_count,release_prepaid,'
-  'remove_clock_screen,remove_item_supplier,remove_push_device,rename_account,reopen_payroll,'
+  'remove_clock_screen,remove_item_supplier,remove_push_device,rename_account,rename_place,reopen_payroll,'
   'report_balance_sheet,report_cash_flow,report_customers,report_daily_sales,report_day_totals,'
   'report_deals,report_document_problems,report_dollars,report_exceptions,report_journal_lines,'
   'report_losses,report_payment_methods,report_payments,report_problem,report_production,'
@@ -183,14 +183,14 @@ select test.eq((
   'send_test_warning,service_charges,set_account_in_use,set_alert_thresholds,set_batch_use_by,'
   'set_business_rule,set_category_section,set_clock_pin,set_customer_account,set_employee_left,'
   'set_employee_pay,set_fx_rate,set_item_keeps,set_item_supplier,set_member_active,set_member_place,'
-  'set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_place_sections,'
+  'set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_place_active,set_place_sections,'
   'set_price,set_product_details,set_product_image,set_product_modifiers,set_receipt_logo,'
   'set_receipt_setup,set_section_hours,set_service_charge,set_time_price,set_tip_sharers,'
   'set_variant_barcode,set_variant_weighed,set_watch_visibility,settle_problem,settle_tab,settle_tab_offline,settle_watch_finding,snooze_alert,'
   'split_tab,staff_list,staff_phones,staff_schedule,start_stock_count,stock_card,stock_places,'
   'stock_transfers,stop_markdown,stop_time_price,submit_stock_count,supplier_records,supplier_statement,take_pre_order,'
-  'time_prices,tips_month,turn_off_phone_warnings,turn_on_phone_warnings,undo_bank_statement,'
-  'unlink_phone,unlock_period,update_delivery_platform,update_item,update_supplier,update_variant,'
+  'time_prices,tips_month,turn_off_phone_warnings,turn_on_phone_warnings,two_step_codes_left,undo_bank_statement,'
+  'unlink_phone,unlock_period,update_business_details,update_delivery_platform,update_item,update_supplier,update_variant,use_two_step_code,'
   'void_sale,waste_coach,watch_list,watch_may_see',
   'signed-in users can call exactly the intended API');
 -- The public (the anon key is in every page) may call only the clock's four,

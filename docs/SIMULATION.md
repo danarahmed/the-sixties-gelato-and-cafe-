@@ -114,8 +114,6 @@ the year bought by habit.
 - **Cash ahead (step 9):** 7 days ahead, within 10% of what happened, every
   week; every real shortfall (a day the bank ends below nothing) warned of at
   least 3 days before.
-- **Monday brief (step 11):** every number agrees with the report it comes
-  from; the owner reads a sample and finds it useful.
 
 ## What the year showed
 

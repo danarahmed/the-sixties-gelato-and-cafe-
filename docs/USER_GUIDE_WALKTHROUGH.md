@@ -336,7 +336,7 @@ not hear back:
 
 - **Retry** sends it again with the same key. If the sale already went through,
   it is shown, not recorded twice.
-- **Discard — a manager will check Orders** clears it from the till.
+- **Discard — a manager can see it on Orders** clears it from the till.
 
 A cart left frozen when the page reloads is brought back for its retry.
 

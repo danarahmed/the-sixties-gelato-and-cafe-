@@ -2,9 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getT } from "@/lib/i18n/server";
 import { requirePermission } from "@/lib/auth/session";
-import { getBusinessConfig, getSuppliers } from "@/lib/db/read";
+import { getBusinessConfig, getItems, getSuppliers } from "@/lib/db/read";
 import { getPurchaseOrder } from "@/lib/db/purchasing";
-import { fmtIQD, fmtQty, unitName } from "@/lib/format";
+import { fmtIQD, fmtQty, packName, unitName } from "@/lib/format";
 import { inOrderUnit, orderStage, STAGE_LABEL } from "@/lib/purchasing";
 import { dateIn, dateTimeIn } from "@/lib/dates";
 import { PrintDocument } from "@/components/PrintDocument";
@@ -21,14 +21,19 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
   const t = await getT();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [order, business, suppliers] = await Promise.all([
+  const [order, business, suppliers, items] = await Promise.all([
     getPurchaseOrder(id),
     getBusinessConfig(),
     getSuppliers(),
+    getItems(),
   ]);
   if (!order) notFound();
   const supplier = suppliers.find((s) => s.id === order.supplierId);
   const stage = orderStage(order);
+  // A pack by the name the café gave it ("Case of 24"), never its code ("case_24").
+  const unitsOf = new Map(items.map((i) => [i.id, i.units]));
+  const pack = (l: { itemId: string; unitCode: string }) =>
+    packName(l.unitCode, unitsOf.get(l.itemId), t);
   const day = (ts: string) => dateIn(profile.timezone, new Date(ts));
 
   // What the supplier is sent: the order as approved, nothing of what came since.
@@ -63,7 +68,7 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
             <tr key={l.lineId}>
               <td>{l.item}</td>
               <td className="right">{fmtQty(l.qty)}</td>
-              <td>{l.unitCode}</td>
+              <td>{pack(l)}</td>
               <td className="right">{fmtIQD(l.unitPrice)}</td>
               <td className="right">{fmtIQD(l.amount)}</td>
             </tr>
@@ -148,13 +153,13 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
               <tr key={l.lineId}>
                 <td>{l.item}</td>
                 <td className="right mono">
-                  {fmtQty(l.qty)} {l.unitCode}
+                  {fmtQty(l.qty)} {pack(l)}
                 </td>
                 <td className="right mono">
-                  {fmtQty(inOrderUnit(l, l.receivedBase))} {l.unitCode}
+                  {fmtQty(inOrderUnit(l, l.receivedBase))} {pack(l)}
                 </td>
                 <td className="right mono">
-                  {fmtQty(inOrderUnit(l, l.outstandingBase))} {l.unitCode}
+                  {fmtQty(inOrderUnit(l, l.outstandingBase))} {pack(l)}
                 </td>
               </tr>
             ))}

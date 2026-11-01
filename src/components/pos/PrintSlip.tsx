@@ -69,6 +69,8 @@ export interface PrintJob {
   note?: string | null;
   /** The second and later prints of a bill say so. */
   printCount?: number;
+  /** A receipt printed again from Orders: marked COPY, so it is not taken for a second sale. */
+  copy?: boolean;
   /** The order's turn number (0034): the customer is called by it. */
   turnNo?: number | null;
   /**
@@ -344,6 +346,11 @@ function CheckSlip({
         {job.kind === "bill" && (job.printCount ?? 1) > 1 && (
           <div className="sl-copy">
             {t("print.copy")} {job.printCount}
+          </div>
+        )}
+        {job.kind !== "bill" && job.copy && (
+          <div className="sl-copy" data-testid="slip-copy">
+            {t("print.copy").toUpperCase()}
           </div>
         )}
       </header>

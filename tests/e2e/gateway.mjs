@@ -77,6 +77,19 @@ const factors = new Map(); // factor id -> { email, secret, status }
 const challenges = new Map(); // challenge id -> factor id
 const levels = new Map(); // refresh token -> "aal1" | "aal2"
 function factorsOf(email) {
+  // A factor the database no longer has is gone, as Supabase Auth reads its
+  // own table: a backup code (0095) takes the second step off there.
+  const mine = [...factors.keys()].filter((id) => factors.get(id).email === email);
+  if (mine.length > 0) {
+    const kept = new Set(
+      factorSql(
+        `select id from auth.mfa_factors where id in (${mine.map((id) => `'${id}'`).join(",")})`,
+      )
+        .split("\n")
+        .filter(Boolean),
+    );
+    for (const id of mine) if (!kept.has(id)) factors.delete(id);
+  }
   return [...factors.entries()]
     .filter(([, f]) => f.email === email)
     .map(([id, f]) => ({
