@@ -99,7 +99,12 @@ const phrases: PhraseBook = {
     ckb: "لە ژماردنی کۆگا تەواوی بکە یان هەڵیبوەشێنەوە.",
   },
 
-  // Running out, and below the reorder level.
+  // Running out, and below the reorder level. How much a day carries its unit
+  // (0095); alerts raised before it say it without.
+  "{1} runs out in {2}: {3} {4} left, using about {5} {4} a day": {
+    ar: "{1} ينفد خلال {2}: بقي {3} {4}، والاستهلاك نحو {5} {4} يوميًا",
+    ckb: "{1} لە ماوەی {2}دا تەواو دەبێت: {3} {4} ماوە، ڕۆژانە نزیکەی {5} {4} بەکاردێت",
+  },
   "{1} runs out in {2}: {3} {4} left, using about {5} a day": {
     ar: "{1} ينفد خلال {2}: بقي {3} {4}، والاستهلاك نحو {5} يوميًا",
     ckb: "{1} لە ماوەی {2}دا تەواو دەبێت: {3} {4} ماوە، ڕۆژانە نزیکەی {5} بەکاردێت",

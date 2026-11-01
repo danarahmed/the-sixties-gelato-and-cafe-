@@ -277,7 +277,7 @@ insert into item (id, business_id, sku, name, item_type, base_unit_code, dimensi
 select pg_temp.moves('c0000000-0000-0000-0000-0000000000a1', 'opening_balance', 11500, 2, '{10}');
 select pg_temp.moves('c0000000-0000-0000-0000-0000000000a1', 'sale_consumption', -1000, 2, '{1,2,3,4,5,6,7,8,9,10}');
 select test.eq(pg_temp.found('running_out', 'c0000000-0000-0000-0000-0000000000a1'),
-  'orange low: Alert milk runs out in 1.5 days: 1500 ml left, using about 1000 a day',
+  'orange low: Alert milk runs out in 1.5 days: 1500 ml left, using about 1000 ml a day',
   'a day and a half left, under the day a delivery takes plus one: orange, and only ten days to judge by');
 select test.eq((select action || ' ' || (facts ->> 'lead_time_days') from alert_conditions('00000000-0000-0000-0000-0000000000b1', now())
                  where rule = 'running_out' and subject = 'c0000000-0000-0000-0000-0000000000a1'),
@@ -295,7 +295,7 @@ insert into item (id, business_id, sku, name, item_type, base_unit_code, dimensi
 select pg_temp.moves('c0000000-0000-0000-0000-0000000000e5', 'opening_balance', 3000, 1, '{10}');
 select pg_temp.moves('c0000000-0000-0000-0000-0000000000e5', 'preparation_waste', -260, 1, '{1,2,3,4,5,6,7,8,9,10}');
 select test.eq(pg_temp.found('running_out', 'c0000000-0000-0000-0000-0000000000e5'),
-  'orange low: Alert fruit runs out in 1.5 days: 400 g left, using about 260 a day',
+  'orange low: Alert fruit runs out in 1.5 days: 400 g left, using about 260 g a day',
   'what is lost in preparation is counted as use');
 
 -- Answered while orange, it asks again once it turns red.
@@ -307,7 +307,7 @@ insert into inventory_movement (business_id, item_id, location_id, type, base_qu
 values ('00000000-0000-0000-0000-0000000000b1', 'c0000000-0000-0000-0000-0000000000a1', pg_temp.id('loc'), 'waste', -1000, 2, 2000,
         'fixture', now() - interval '1 minute');
 select test.eq(pg_temp.found('running_out', 'c0000000-0000-0000-0000-0000000000a1'),
-  'red low: Alert milk runs out in under a day: 500 ml left, using about 1100 a day',
+  'red low: Alert milk runs out in under a day: 500 ml left, using about 1100 ml a day',
   'a litre spilt: under a day left, red');
 select test.act_as('manager@example.com');
 select test.eq((select row(id = pg_temp.id('milk'), urgency, acknowledged_at is null, ack_note is null)::text
@@ -352,7 +352,7 @@ select update_supplier(pg_temp.id('dairy'), name, contact, phone, true, 'they de
   from supplier where id = pg_temp.id('dairy');
 select test.as_admin();
 select test.eq(pg_temp.found('running_out', 'c0000000-0000-0000-0000-0000000000a3'),
-  'orange low: Alert cream runs out in 2 days: 1000 ml left, using about 500 a day',
+  'orange low: Alert cream runs out in 2 days: 1000 ml left, using about 500 ml a day',
   'the dairy takes five days: two days of cream is not enough');
 select test.eq((select pg_temp.said(a) from audit_log a where action = 'supplier.update' order by id desc limit 1),
   '{"lead_time_days": null} → {"lead_time_days": 5} by manager@example.com (they deliver weekly now)',

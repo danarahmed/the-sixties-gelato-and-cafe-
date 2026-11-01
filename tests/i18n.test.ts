@@ -268,6 +268,8 @@ describe("what the café is told without asking", () => {
     ["Alert milk runs out in under a day: 500 ml left, using about 1100 a day", ["Alert milk"]],
     ["Alert milk runs out in 1.5 days: 1500 ml left, using about 1000 a day", ["Alert milk"]],
     ["Milk runs out in no time: 0 ml left, using about 50 a day", ["Milk"]],
+    ["Alert milk runs out in 1.5 days: 1500 ml left, using about 1000 ml a day", ["Alert milk"]],
+    ["Croissant runs out in no time: 0 each left, using about 88 each a day", ["Croissant"]],
     ["Order about 3500 ml (a week of use).", []],
     ["Alert straws: 0 each on hand, below its reorder level of 50", ["Alert straws"]],
     [

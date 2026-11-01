@@ -92,7 +92,8 @@ create table if not exists auth.mfa_factors (
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
-grant select, references on auth.mfa_factors to sb_admin;
+-- Supabase's postgres role may also remove a factor (0095: a backup code used).
+grant select, references, delete on auth.mfa_factors to sb_admin;
 
 -- Supabase Storage, as far as the migrations use it (0053): the buckets and
 -- the objects in them, owned by the storage service's own role with row-level
