@@ -31,10 +31,12 @@ describe("the menu cut for each person's daily work", () => {
     }
   });
 
-  it("shows few screens at first: at most 16 for the owner, 12 for a branch manager", () => {
-    expect(menuOf("owner").daily.length).toBeLessThanOrEqual(16);
-    expect(menuOf("branch_manager").daily.length).toBeLessThanOrEqual(12);
+  it("shows few screens at first: Today, then at most 16 for the owner, 12 for a branch manager", () => {
+    const besidesToday = (role: Role) => menuOf(role).daily.filter((n) => n.href !== "/today");
+    expect(besidesToday("owner").length).toBeLessThanOrEqual(16);
+    expect(besidesToday("branch_manager").length).toBeLessThanOrEqual(12);
     expect(menuOf("purchasing").daily.map((n) => n.href)).toEqual([
+      "/today",
       "/vendors",
       "/purchasing",
       "/inventory",
@@ -53,6 +55,14 @@ describe("the menu cut for each person's daily work", () => {
   it("has no More for a short menu: the cashier, the barista, the counter", () => {
     for (const role of ["cashier", "barista", "inventory_counter"] as Role[])
       expect(menuOf(role).more).toEqual([]);
+  });
+
+  it("puts Today first for everyone, and never under More", () => {
+    for (const role of Object.keys(ROLE_PERMISSIONS) as Role[]) {
+      const { daily, more } = menuOf(role);
+      expect(daily[0]?.href, role).toBe("/today");
+      expect(more.map((n) => n.href)).not.toContain("/today");
+    }
   });
 
   it("keeps one screen alone out of More", () => {

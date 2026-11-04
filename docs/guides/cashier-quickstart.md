@@ -9,7 +9,12 @@
   sign in.
 - **Forgot your password?** Choose **Forgot password?**; the email you receive
   takes you to **My account**, where you set a new one.
-- As a cashier you see the **POS** and **My account**. That is by design.
+- You start on **Today**: your jobs for the day, in order, each with one
+  button that goes straight to where it is done, and a tick once it is. For a
+  cashier that is the drawer: **Open the drawer** while it is closed, then
+  **Sell** to go to the till.
+- As a cashier you see **Today**, the **POS** and **My account**. That is by
+  design.
 
 ## The till
 

@@ -2811,7 +2811,9 @@ a.card.stat:focus-visible {
   border-radius: 4px;
   background: #fff;
   color: #000;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), 0 8px 24px -12px rgba(60, 30, 10, 0.35);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.08),
+    0 8px 24px -12px rgba(60, 30, 10, 0.35);
   font:
     12px/1.35 "Plus Jakarta Sans",
     Arial,
@@ -3082,7 +3084,8 @@ a.card.stat:focus-visible {
   top: 76px;
   padding: 14px;
   border-radius: 14px;
-  background: repeating-linear-gradient(
+  background:
+    repeating-linear-gradient(
       135deg,
       transparent 0 10px,
       color-mix(in srgb, var(--brand) 5%, transparent) 10px 20px
@@ -5339,6 +5342,39 @@ a.card.stat:focus-visible {
     width: 52px;
     height: 52px;
   }
+}
+
+/* --------------------------------------------------------------- today */
+/* Each person's jobs for the day: what is to do marked and its button bold;
+   what waits, or is for later, quieter; what is done ticked. */
+.today-job.todo {
+  border-inline-start: 4px solid var(--warn);
+}
+.today-job.waiting {
+  border-inline-start: 4px solid var(--border);
+}
+.today-job.later .eod-say,
+.today-job.done .eod-say {
+  color: var(--text-muted);
+}
+.today-job .badge {
+  margin-inline-start: 6px;
+  vertical-align: middle;
+}
+.today-job .eod-go .btn-soft {
+  min-height: 40px;
+}
+.today-job .eod-go .today-now {
+  min-height: 44px;
+  padding: 0 18px;
+  font-size: 0.92rem;
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+.today-job .eod-go .today-now:hover,
+.today-job .eod-go .today-now:focus-visible {
+  background: var(--brand-2);
+  color: var(--brand-ink);
 }
 
 /* The dashboard's recent sales: the time first, never broken over two lines. */

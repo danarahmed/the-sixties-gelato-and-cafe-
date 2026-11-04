@@ -28,7 +28,7 @@ export const PRACTICE_TASKS: Record<string, PracticeTaskInfo> = {
   },
   sell_card: {
     title: "Sell 2 small lattes, paid by card",
-    how: "Tap Latte, choose Small, tap it again, then Pay and Card.",
+    how: "On the till, press Menu, tap Latte and choose Small, twice, then Card.",
     href: "/pos",
   },
   sell_cash: {

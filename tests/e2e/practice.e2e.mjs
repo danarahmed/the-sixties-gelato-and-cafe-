@@ -26,6 +26,8 @@ console.log("▸ a cashier practises");
   await page.getByTestId("practice-banner").waitFor({ timeout: 10000 });
   check(true, "practice begun: straight to the till, under the PRACTICE banner");
 
+  // The practice café has tables: the till opens on them; the menu is a tab away.
+  await page.getByRole("tab", { name: /Menu/ }).click();
   for (let i = 0; i < 2; i++) {
     await page.locator(".product-tile", { hasText: "Latte" }).click();
     await page

@@ -4,6 +4,13 @@ The system is your set of books. Every sale, delivery, bill, payment and count
 writes its own entry, and the books check themselves. Your job is to keep people
 and records honest, and to close each month.
 
+Everyone, you included, starts on **Today** after signing in: only the jobs
+their permissions let them do, in the order of the day (open up, the
+approvals, the deliveries, the bills, the close…), each with one button
+straight to where it is done and ticked once it is. Nobody needs to learn the
+menu first. Someone who would rather start elsewhere picks a first screen on
+**My account**.
+
 ## The ideas behind it
 
 - **Stock counts itself.** Nobody types a stock level. Stock is the sum of

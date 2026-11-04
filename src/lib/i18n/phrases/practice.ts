@@ -73,6 +73,19 @@ const phrases: PhraseBook = {
     ckb: "ڕاهێنان بۆ خەڵکی خودی کافێیە",
   },
 
+  "New here? Practise first": {
+    ar: "جديد هنا؟ تدرّب أولًا",
+    ckb: "نوێیت لێرە؟ سەرەتا ڕاهێنان بکە",
+  },
+  "{n} practice tasks left for your role. Nothing you do in practice is real.": {
+    ar: "بقيت {n} من مهام التدريب لدورك. لا شيء تفعله في التدريب حقيقي.",
+    ckb: "{n} ئەرکی ڕاهێنان بۆ ڕۆڵەکەت ماوە. هیچ شتێک لە ڕاهێناندا ڕاستەقینە نییە.",
+  },
+  "Try your work in a practice café of your own: nothing you do there is real.": {
+    ar: "جرّب عملك في مقهى تدريب خاص بك: لا شيء تفعله هناك حقيقي.",
+    ckb: "کارەکەت لە کافێیەکی ڕاهێنانی تایبەت بە خۆت تاقی بکەرەوە: هیچ شتێک لەوێ ڕاستەقینە نییە.",
+  },
+
   // The tasks.
   "Open the drawer and count it": { ar: "افتح الدرج وعدّه", ckb: "دەخیلەکە بکەرەوە و بیژمێرە" },
   "On the till, press the drawer button, count the cash in it and open it.": {
@@ -83,9 +96,9 @@ const phrases: PhraseBook = {
     ar: "بِع كوبين صغيرين من اللاتيه، الدفع بالبطاقة",
     ckb: "2 لاتێی بچووک بفرۆشە، بە کارت",
   },
-  "Tap Latte, choose Small, tap it again, then Pay and Card.": {
-    ar: "اضغط لاتيه، واختر صغير، واضغطه مرة أخرى، ثم ادفع ثم بطاقة.",
-    ckb: "لاتێ دابگرە، بچووک هەڵبژێرە، دووبارە دایبگرەوە، پاشان پارەدان و کارت.",
+  "On the till, press Menu, tap Latte and choose Small, twice, then Card.": {
+    ar: "على شاشة البيع، اضغط القائمة، ثم لاتيه واختر صغير، مرتين، ثم بطاقة.",
+    ckb: "لەسەر شاشەی فرۆشتن، مینیو دابگرە، لاتێ دابگرە و بچووک هەڵبژێرە، دوو جار، پاشان کارت.",
   },
   "Sell for cash and give change": {
     ar: "بِع نقدًا وأعطِ الباقي",

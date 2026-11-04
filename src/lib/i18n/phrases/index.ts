@@ -56,6 +56,7 @@ import twoStep from "./twoStep";
 import findings from "./findings";
 import practice from "./practice";
 import stuck from "./stuck";
+import today from "./today";
 
 /**
  * The areas' phrase books; "db" holds what the database refuses with, "alerts"
@@ -115,6 +116,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   findings,
   practice,
   stuck,
+  today,
 };
 
 const byLocale = new Map<string, Record<string, string>>();
