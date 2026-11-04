@@ -23,7 +23,9 @@ for (const lang of process.argv.slice(2)) {
     for (const k of Object.keys(part)) out[k].push(...part[k]);
   }
   // Read right to left: "Menu → Reports" points the way the eye goes, as the app's own labels do.
-  const text = JSON.stringify(out, null, 1).replace(/→/g, "←");
+  let text = JSON.stringify(out, null, 1).replace(/→/g, "←");
+  // The cashier is کاشێر on every screen (common.ts): the help says the same.
+  if (lang === "ckb") text = text.replace(/فرۆشیار/g, "کاشێر");
   writeFileSync(`src/lib/help/${lang}.json`, text + "\n");
   console.log(`${lang}: ${out.screens.length} screens, ${out.tasks.length} tasks`);
 }
