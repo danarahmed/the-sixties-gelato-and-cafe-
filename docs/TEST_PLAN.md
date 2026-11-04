@@ -242,6 +242,11 @@ layers before every release.
 - `tests/tours.test.ts`: show me around (round six) — a tour for the till,
   Production and the dashboard and none elsewhere; each step points somewhere
   and says what it is for; every word in Arabic and in Kurdish.
+- `tests/videos.test.ts`: the practice tasks' videos (G5) — each one listed
+  is a practice task's, its file is in `public/help/videos/` and under a
+  megabyte; its captions are the task's title for four seconds, then how it
+  is done, in English as the Practice page says it and in Kurdish in its own
+  letters (no ك ي ة ى); a task with no video has no captions.
 - `tests/itemPaste.test.ts`: paste stock items in (round seven) — g, kg, ml,
   L and each however they are written, in English, Arabic or Kurdish; a line
   split at its tabs, semicolons or bars, or a typed one read from its end; the
@@ -1377,6 +1382,19 @@ database, behind a small local stand-in for Supabase's auth service.
   small lattes by card tick the task; none of it is in the café's sales;
   Stop practising goes back to the café, and the owner sees the cashier's
   progress on the Practice page.
+- `videos` (G5; run by hand to re-record the practice tasks' videos, not in
+  the default list: `scripts/test-e2e.sh videos`, or
+  `VIDEOS_ONLY=sell_card,refund scripts/test-e2e.sh videos` for some): for
+  each practice task, someone whose role has it (the cashier, a barista, the
+  counter, the manager, the owner) practises, and the browser records them
+  doing just that task in their practice café at a pace a newcomer can
+  follow, a drawn pointer showing where they press, from the screen it begins
+  on to the screen saying it is done; each video is cut to begin there,
+  shrunk with ffmpeg (VP9, 24 fps, no sound) into
+  `public/help/videos/<task>.webm`, and the task is ticked in the database.
+  The seconds it prints go into `src/lib/help/videos.ts`. The batch has none:
+  the practice café has nothing made in batches. The counter counts the
+  practice kitchen, Omar's count waiting for review at the branch.
 - `help` (G3): a cashier presses ? on the till and reads its help part by
   part, what a cashier may do there and their tasks on it; Escape closes it;
   the help opened is noted for the owner; in Kurdish, the panel is in
