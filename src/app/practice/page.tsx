@@ -9,6 +9,8 @@ import { dateTimeIn } from "@/lib/dates";
 import { roleLabel } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { PracticeControls } from "./PracticeControls";
+import { VIDEOS, captionsSrc, videoSrc } from "@/lib/help/videos";
+import { getLocale } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +20,7 @@ export const dynamic = "force-dynamic";
  * the next one first. For whoever keeps the staff, who is ready.
  */
 export default async function PracticePage() {
-  const t = await getT();
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
   const s = await getSession();
   if (!s.signedIn) redirect("/login");
   if (s.practiceEnded)
@@ -117,6 +119,19 @@ export default async function PracticePage() {
                       ? t("Done {when}", { when: dateTimeIn(profile.timezone, x.doneAt) })
                       : t(info.how)}
                   </div>
+                  {VIDEOS[x.task] && (
+                    <details className="practice-video" data-testid="practice-video">
+                      <summary>{t("Watch how")}</summary>
+                      <video controls preload="none" src={videoSrc(x.task)} width={480}>
+                        <track
+                          kind="captions"
+                          srcLang={locale}
+                          src={captionsSrc(x.task, locale)}
+                          default
+                        />
+                      </video>
+                    </details>
+                  )}
                 </div>
                 {practising && !x.doneAt && (
                   <Link

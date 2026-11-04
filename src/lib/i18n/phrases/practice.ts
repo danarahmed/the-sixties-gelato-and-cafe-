@@ -53,6 +53,7 @@ const phrases: PhraseBook = {
   },
   "Done {when}": { ar: "أُنجزت {when}", ckb: "تەواو کرا {when}" },
   Go: { ar: "اذهب", ckb: "بڕۆ" },
+  "Watch how": { ar: "شاهد كيف", ckb: "سەیر بکە چۆن" },
   "Your team's practice": { ar: "تدريب فريقك", ckb: "ڕاهێنانی تیمەکەت" },
   "Each person's tasks done in practice. Ready: every task of their role done.": {
     ar: "مهام كل شخص المنجزة في التدريب. جاهز: كل مهام دوره منجزة.",
