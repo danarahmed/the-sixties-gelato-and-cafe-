@@ -63,7 +63,7 @@ export const PRACTICE_TASKS: Record<string, PracticeTaskInfo> = {
   },
   batch: {
     title: "Record a batch you made",
-    how: "On Production, choose what you made and how much, and record it.",
+    how: "On Production, record a batch of the vanilla base: 5 L from milk and sugar.",
     href: "/production",
   },
   waste: {
@@ -78,7 +78,7 @@ export const PRACTICE_TASKS: Record<string, PracticeTaskInfo> = {
   },
   approve_count: {
     title: "Review Omar's count and approve it",
-    how: "On Stock Count, open the count Omar sent, look at what is short, and approve it.",
+    how: "On Stock Count, at the practice kitchen, open the count Omar sent, look at what is short, and approve it.",
     href: "/count",
   },
   order: {

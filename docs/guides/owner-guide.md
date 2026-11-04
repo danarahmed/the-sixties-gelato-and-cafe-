@@ -19,7 +19,7 @@ menu first. Someone who would rather start elsewhere picks a first screen on
   while it is on; nothing reaches the café's books. Their role's tasks are
   ticked as they do them; on **Practice** you see who is ready.
 - **Watch how**: each practice task has a short video beside it on
-  **Practice** (all but recording a batch, for now), recorded in a practice
+  **Practice**, recorded in a practice
   café on the real screens, with captions in the person's language.
 - **?** in the top bar of every screen: that screen's help for the person's
   role, in their language, with their tasks on it step by step.

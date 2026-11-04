@@ -310,12 +310,21 @@ await record("waste", "barista", "/inventory", async (page) => {
   await form.getByText(/^Recorded/).waitFor({ timeout: 15000 });
 });
 
-// Omar's count waits for review at the branch, and one count at a time is
-// taken at a place: the counter counts the kitchen.
+await record("batch", "barista", "/production", async (page) => {
+  const form = page.locator(".pr-record");
+  await form.waitFor({ timeout: 10000 });
+  await choose(page, form.getByLabel("What did you make"), { label: "Vanilla base" });
+  await type(page, form.getByLabel("Batches"), "1");
+  await wait(page, 1200);
+  await tap(page, form.getByRole("button", { name: "Record batch" }));
+  await page
+    .getByText(/Recorded as batch \d+: 5 Litres of Vanilla base into stock\./)
+    .waitFor({ timeout: 15000 });
+});
+
+// Omar's count waits for review in the kitchen: the counter counts the branch.
 await record("count", "counter", "/count", async (page) => {
-  const { biz, kitchen } = cafe("counter");
-  await choose(page, page.getByTestId("place-choice"), kitchen);
-  await page.waitForLoadState("networkidle");
+  const { biz, branch: kitchen } = cafe("counter");
   await wait(page, 800);
   await tap(page, page.getByRole("button", { name: "Start count" }));
   await page.getByText("Your count").waitFor({ timeout: 15000 });
@@ -340,7 +349,7 @@ await record("count", "counter", "/count", async (page) => {
   await tap(page, page.getByRole("button", { name: "Submit count" }));
   // The sheet says so, then gives way to the list, where the count waits for its review.
   await page
-    .locator("tbody tr", { hasText: "Practice kitchen" })
+    .locator("tbody tr", { hasText: "Practice branch" })
     .filter({ hasText: "Waiting for review" })
     .waitFor({ timeout: 15000 });
 });
@@ -386,11 +395,16 @@ await record("void", "manager", "/orders", async (page) => {
 });
 
 await record("approve_count", "manager", "/count", async (page) => {
+  // Omar's count is the kitchen's.
+  const { kitchen } = cafe("manager");
+  await choose(page, page.getByTestId("place-choice"), kitchen);
+  await page.waitForLoadState("networkidle");
+  await wait(page, 600);
   await tap(page, page.getByRole("link", { name: "Review" }).first());
   await page.getByText("Review — count").waitFor({ timeout: 15000 });
   await wait(page, 800);
-  // What is short: two paper cups.
-  const short = page.locator("tr", { hasText: "Paper cup" }).first();
+  // What is short: 50 g of coffee beans.
+  const short = page.locator("tr", { hasText: "Coffee beans" }).first();
   await short.scrollIntoViewIfNeeded();
   await short.hover();
   await wait(page, 1800);

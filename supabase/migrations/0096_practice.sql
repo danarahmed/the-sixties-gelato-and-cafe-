@@ -136,7 +136,7 @@ language plpgsql security definer set search_path = public as $$
 declare
   m app_user; r business; b uuid; v_branch uuid; v_kitchen uuid; v_twin uuid; v_sara uuid; v_omar uuid;
   c_coffee uuid; c_bakery uuid; c_drinks uuid;
-  i_beans uuid; i_milk uuid; i_cups uuid; i_croissant uuid; i_water uuid;
+  i_beans uuid; i_milk uuid; i_cups uuid; i_croissant uuid; i_water uuid; i_sugar uuid; i_base uuid;
   p uuid; v uuid; rc uuid; rv uuid; mv record; v_count uuid;
 begin
   select * into m from app_user where id = p_member;
@@ -172,7 +172,15 @@ begin
   values (b, 'P-CROISSANT', 'Croissant', 'كرواسون', 'کرواسۆن', 'resale', 'each', 'count', false) returning id into i_croissant;
   insert into item (business_id, sku, name, name_ar, name_ckb, item_type, base_unit_code, dimension, returnable_to_stock)
   values (b, 'P-WATER', 'Water bottle', 'قنينة ماء', 'بوتڵی ئاو', 'resale', 'each', 'count', true) returning id into i_water;
+  insert into item (business_id, sku, name, name_ar, name_ckb, item_type, base_unit_code, dimension, returnable_to_stock)
+  values (b, 'P-SUGAR', 'Sugar', 'سكر', 'شەکر', 'ingredient', 'g', 'mass', false) returning id into i_sugar;
+  -- Made here, in batches: what a barista records on Production.
+  insert into item (business_id, sku, name, name_ar, name_ckb, item_type, base_unit_code, dimension, returnable_to_stock)
+  values (b, 'P-BASE', 'Vanilla base', 'قاعدة الفانيلا', 'بنکەی ڤانیلا', 'finished_good', 'ml', 'volume', false)
+  returning id into i_base;
   insert into item_unit (item_id, code, label, dimension, factor_to_base) values
+    (i_sugar, 'kg', 'Kilogram', 'mass', 1000),
+    (i_base, 'L', 'Litre', 'volume', 1000),
     (i_beans, 'kg', 'Kilogram', 'mass', 1000),
     (i_milk, 'carton_1l', 'Carton of 1 L', 'volume', 1000),
     (i_cups, 'sleeve_50', 'Sleeve of 50', 'count', 50),
@@ -183,6 +191,7 @@ begin
          (b, i_cups, v_branch, 'opening_balance', 200, 100, 20000, 'Practice stock', now() - interval '1 day'),
          (b, i_croissant, v_branch, 'opening_balance', 30, 750, 22500, 'Practice stock', now() - interval '1 day'),
          (b, i_water, v_branch, 'opening_balance', 48, 250, 12000, 'Practice stock', now() - interval '1 day'),
+         (b, i_sugar, v_branch, 'opening_balance', 5000, 1.5, 7500, 'Practice stock', now() - interval '1 day'),
          (b, i_beans, v_kitchen, 'opening_balance', 3000, 20, 60000, 'Practice stock', now() - interval '1 day');
   for mv in select id, value from inventory_movement where business_id = b and type = 'opening_balance' loop
     perform post_journal(b, now() - interval '1 day', 'Opening stock (practice)', 'inventory_movement', mv.id,
@@ -249,18 +258,27 @@ begin
   insert into channel_price (business_id, product_variant_id, channel, price, effective_from)
   values (b, v, 'dine_in', 1000, '2020-01-01'), (b, v, 'takeaway', 1000, '2020-01-01');
 
+  -- The vanilla base: 5 L a batch, from 4 L of milk and 800 g of sugar; keeps three days.
+  insert into recipe (business_id, name, output_item_id, batch_yield_base, batch_yield_unit, shelf_life_hours,
+                      prep_instructions)
+  values (b, 'Vanilla base', i_base, 5000, 'L', 72, 'Heat the milk and sugar to 85°C, then cool.')
+  returning id into rc;
+  insert into recipe_version (recipe_id, version_no, effective_from) values (rc, 1, '2020-01-01') returning id into rv;
+  insert into recipe_line (recipe_version_id, component_type, item_id, quantity, unit_code, applies_to_channels)
+  values (rv, 'item', i_milk, 4000, 'ml', null), (rv, 'item', i_sugar, 800, 'g', null);
+
   insert into supplier (business_id, name, contact, lead_time_days)
   values (b, 'Practice supplier', 'Coffee, milk and cups', 1);
   insert into dining_table (business_id, location_id, name, seats, sort_order)
   values (b, v_branch, 'Table 1', 4, 1), (b, v_branch, 'Table 2', 2, 2);
 
-  -- Omar's count of the cups and the milk, sent for a manager: two cups short.
+  -- Omar's count of the kitchen's coffee beans, sent for a manager: 50 g short.
+  -- In the kitchen, so the branch is free for a counter's own count.
   insert into stock_count (business_id, location_id, count_type, status, is_blind, started_at, counted_by)
-  values (b, v_branch, 'cycle', 'counting', true, now() - interval '2 hours', v_omar)
+  values (b, v_kitchen, 'cycle', 'counting', true, now() - interval '2 hours', v_omar)
   returning id into v_count;
   insert into stock_count_line (business_id, stock_count_id, item_id, expected_base, counted_base, expected_at_count, counted_at)
-  values (b, v_count, i_cups, 200, 198, 200, now() - interval '1 hour'),
-         (b, v_count, i_milk, 10000, 10000, 10000, now() - interval '1 hour');
+  values (b, v_count, i_beans, 3000, 2950, 3000, now() - interval '1 hour');
   update stock_count set status = 'submitted', submitted_at = now() - interval '1 hour' where id = v_count;
   return v_twin;
 end $$;

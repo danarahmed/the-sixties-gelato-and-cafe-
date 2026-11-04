@@ -2089,9 +2089,10 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   second step and its backup codes stay the person's own.
 - `practice_seed` (internal) makes a practice café: two places (a branch and a
   kitchen) with their drawers, the twin, two colleagues (Sara, a cashier;
-  Omar, a counter, whose count of the cups waits for a manager), five items
-  with their stock in the books, a menu of four products with recipes and
-  prices, a supplier and two tables.
+  Omar, a counter, whose count of the kitchen's coffee beans waits for a
+  manager), seven items with their stock in the books, a vanilla base made
+  in batches (5 L from milk and sugar), a menu of four products with recipes
+  and prices, a supplier and two tables.
 - `practice_task_list` (internal): the tasks and the permission each needs;
   `practice_task_met` (internal) reads from the practice café's records and
   audit trail whether the twin did one. `practice_tasks` (anyone: their

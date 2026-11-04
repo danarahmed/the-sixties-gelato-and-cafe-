@@ -2,8 +2,7 @@
  * The short videos of the practice tasks (G5), recorded by the browser in a
  * practice café (tests/e2e/videos.e2e.mjs) into public/help/videos/<task>.webm.
  * Each task here has one; its captions are made from the task's own words in
- * each language (src/app/api/captions/[task]/[locale]). Recording a batch has
- * none yet: the practice café has nothing made in batches.
+ * each language (src/app/api/captions/[task]/[locale]).
  */
 export const VIDEOS: Record<string, { seconds: number }> = {
   open_drawer: { seconds: 9 },
@@ -15,8 +14,9 @@ export const VIDEOS: Record<string, { seconds: number }> = {
   void: { seconds: 8 },
   close_drawer: { seconds: 10 },
   waste: { seconds: 13 },
-  count: { seconds: 18 },
-  approve_count: { seconds: 10 },
+  batch: { seconds: 9 },
+  count: { seconds: 21 },
+  approve_count: { seconds: 12 },
   order: { seconds: 17 },
   receive: { seconds: 9 },
   transfer: { seconds: 12 },

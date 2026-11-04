@@ -145,9 +145,9 @@ const phrases: PhraseBook = {
     ckb: "لە کۆتایی شەفتدا، دوگمەی دەخیلە دابگرە، پارەکە بژمێرە و دایبخە.",
   },
   "Record a batch you made": { ar: "سجّل دفعة صنعتها", ckb: "بەرهەمێک تۆمار بکە کە دروستت کرد" },
-  "On Production, choose what you made and how much, and record it.": {
-    ar: "في الإنتاج، اختر ما صنعته وكميته، وسجّله.",
-    ckb: "لە بەرهەمهێنان، ئەوەی دروستت کرد و بڕەکەی هەڵبژێرە، و تۆماری بکە.",
+  "On Production, record a batch of the vanilla base: 5 L from milk and sugar.": {
+    ar: "في الإنتاج، سجّل دفعة من قاعدة الفانيلا: 5 لترات من الحليب والسكر.",
+    ckb: "لە بەرهەمهێنان، بەرهەمێکی بنکەی ڤانیلا تۆمار بکە: 5 لیتر لە شیر و شەکر.",
   },
   "Record something thrown away": { ar: "سجّل شيئًا رُمي", ckb: "شتێک تۆمار بکە کە فڕێدرا" },
   "On Stock, press Record a loss, choose the item, how much and why.": {
@@ -166,9 +166,9 @@ const phrases: PhraseBook = {
     ar: "راجع جرد عمر ووافق عليه",
     ckb: "ژماردنەکەی عومەر بپشکنە و پەسەندی بکە",
   },
-  "On Stock Count, open the count Omar sent, look at what is short, and approve it.": {
-    ar: "في جرد المخزون، افتح الجرد الذي أرسله عمر، وانظر إلى الناقص، ووافق عليه.",
-    ckb: "لە ژماردنی کۆگا، ئەو ژماردنە بکەرەوە کە عومەر ناردی، سەیری کەمییەکان بکە، و پەسەندی بکە.",
+  "On Stock Count, at the practice kitchen, open the count Omar sent, look at what is short, and approve it.": {
+    ar: "في جرد المخزون، في مطبخ التدريب، افتح الجرد الذي أرسله عمر، وانظر إلى الناقص، ووافق عليه.",
+    ckb: "لە ژماردنی کۆگا، لە چێشتخانەی ڕاهێنان، ئەو ژماردنە بکەرەوە کە عومەر ناردی، سەیری کەمییەکان بکە، و پەسەندی بکە.",
   },
   "Order from the supplier": { ar: "اطلب من المورّد", ckb: "لە دابینکەر داوا بکە" },
   "On Purchasing, make an order to the practice supplier, approve it and send it.": {

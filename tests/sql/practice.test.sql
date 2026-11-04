@@ -87,6 +87,9 @@ insert into res select 'count', to_jsonb((select id from stock_count where statu
 select test.ok(pg_temp.r('count') is not null, 'a count from Omar waits for a manager');
 select approve_stock_count((pg_temp.r('count') #>> '{}')::uuid, gen_random_uuid());
 select test.ok(pg_temp.done('approve_count'), 'approved: ticked');
+select record_production((select id from recipe where name = 'Vanilla base'), 1, null, null, null, null, null, null,
+  null, null, gen_random_uuid());
+select test.ok(pg_temp.done('batch'), 'a batch of the vanilla base: ticked');
 select pg_temp.practise(false);
 select test.act_as('cashier@example.com');
 select test.throws($$select practice_team()$$, '%staff.manage%', 'a cashier does not see the team''s practice');
