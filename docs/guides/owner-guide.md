@@ -11,6 +11,22 @@ straight to where it is done and ticked once it is. Nobody needs to learn the
 menu first. Someone who would rather start elsewhere picks a first screen on
 **My account**.
 
+## Learning the app without a trainer
+
+- **Practice** (My account → Practise first, or the card on Today): each
+  person practises their own role in a practice café of their own, with
+  pretend money and stock. A striped **PRACTICE** banner is on every screen
+  while it is on; nothing reaches the café's books. Their role's tasks are
+  ticked as they do them; on **Practice** you see who is ready.
+- **?** in the top bar of every screen: that screen's help for the person's
+  role, in their language, with their tasks on it step by step.
+- **Show me around** (in the menu, under You): a short tour of the screen,
+  on Today, the till, Production, the Dashboard, the count, Purchasing,
+  Reports and Practice.
+- **Reports → Where people get stuck**: the screens that stop people most.
+  Before the app goes to a new café, test it with two or three people who
+  have never seen it (docs/guides/testing-with-new-people.md).
+
 ## The ideas behind it
 
 - **Stock counts itself.** Nobody types a stock level. Stock is the sum of
