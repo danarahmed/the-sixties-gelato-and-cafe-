@@ -135,7 +135,7 @@ export function HelpButton() {
                           {task.steps.map((s, j) => (
                             <li key={j}>
                               {s.do}
-                              {s.see && <div className="muted">→ {s.see}</div>}
+                              {s.see && <div className="muted">— {s.see}</div>}
                             </li>
                           ))}
                         </ol>

@@ -22,6 +22,8 @@ for (const lang of process.argv.slice(2)) {
     const part = JSON.parse(readFileSync(f, "utf8"));
     for (const k of Object.keys(part)) out[k].push(...part[k]);
   }
-  writeFileSync(`src/lib/help/${lang}.json`, JSON.stringify(out, null, 1) + "\n");
+  // Read right to left: "Menu → Reports" points the way the eye goes, as the app's own labels do.
+  const text = JSON.stringify(out, null, 1).replace(/→/g, "←");
+  writeFileSync(`src/lib/help/${lang}.json`, text + "\n");
   console.log(`${lang}: ${out.screens.length} screens, ${out.tasks.length} tasks`);
 }
