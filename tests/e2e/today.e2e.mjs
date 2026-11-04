@@ -106,9 +106,12 @@ const countId = last(`select test.act_as('counter@example.com');
   check(at === "/count", "and its button opens Stock Count");
 
   // Counted at what is there, and sent: it waits on someone else.
+  // What is there, read as the database's own (a counter may not ask it).
+  const onShelf = last(
+    `select trim_scale((item_position('${B}', '${CUP}', default_location('${B}'))).qty)`,
+  );
   sql(`select test.act_as('counter@example.com');
-       select record_count('${countId}', '${CUP}',
-         (select trim_scale((item_position('${B}', '${CUP}', default_location('${B}'))).qty)));
+       select record_count('${countId}', '${CUP}', ${onShelf});
        select submit_stock_count('${countId}')`);
   await open(page, "/today");
   const sent = await jobs(page);

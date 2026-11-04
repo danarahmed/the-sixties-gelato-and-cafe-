@@ -21,7 +21,9 @@
 --            menu (products, sizes, categories, photos, prices, add-ons,
 --            promotions), recipes, stock items and their units, suppliers,
 --            staff (their phones too), the shop's clock screens, customers and
---            their addresses, dining tables; and the
+--            their addresses, dining tables; the watch list's findings,
+--            each person's practice (begun again in a new practice café) and
+--            where people got stuck; and the
 --            audit trail, which starts again with one line saying so.
 --            Numbers start again: journals at 1001, the rest at 1.
 --
@@ -66,6 +68,11 @@ select t from (values ('service_charge')) v(t) where to_regclass('public.' || t)
 -- The café's own receipt and the reports each person opens most (0091): kept.
 insert into fresh_keep
 select t from (values ('receipt_setup'), ('receipt_logo'), ('report_visit')) v(t)
+ where to_regclass('public.' || t) is not null;
+-- Who reads the watch list (0094) is a setting, and each login's backup codes
+-- for the second step (0095) are theirs: kept.
+insert into fresh_keep
+select t from (values ('watch_state'), ('two_step_backup_code'), ('two_step_backup_try')) v(t)
  where to_regclass('public.' || t) is not null;
 
 do $$
@@ -129,6 +136,13 @@ begin
        || case when to_regclass('public.sale_deal') is not null
                then ', sale_deal, deal_slot_variant, deal_slot, deal_price, deal, time_price' else '' end
        || case when to_regclass('public.tip_sharer') is not null then ', tip_sharer' else '' end
+       -- The watch list's findings (0094), each person's practice and its ticks
+       -- (0096: they start practice again, in a new practice café), and where
+       -- people got stuck (0097).
+       || case when to_regclass('public.watch_finding') is not null then ', watch_finding' else '' end
+       || case when to_regclass('public.practice_twin') is not null
+               then ', practice_task_done, practice_twin' else '' end
+       || case when to_regclass('public.stuck_event') is not null then ', stuck_event' else '' end
        || ' restart identity';
 end $$;
 
