@@ -2054,6 +2054,21 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Where people get stuck (`0097`)
+
+- **`stuck_event`**: a refusal or a help opened (`kind` `refused` or `help`)
+  on a screen (`path`, ids in it made `x` by `stuck_path`, so an item's page
+  is one screen), with what was said (`message`, a refusal's words), who
+  (`app_user_id`, the person, never their practice twin), under their own
+  café, `practice` when it was in practice, and `at`. The same note from the
+  same person within a minute is one; notes older than 180 days go. Read by
+  no one but through the report.
+- `note_stuck(path, kind, message)` (anyone): the app notes each refusal of a
+  database function with the screen it came from, and each help opened.
+  `stuck_report(days)` (the owner): each screen's refusals and help opened
+  (practice apart), how many people and their roles, and the five things
+  said most.
+
 ### Practice (`0096`)
 
 - **`business.practice_of`**: set on a practice café, naming the café whose

@@ -229,6 +229,7 @@ const REPORT_PAGES: [string, string][] = [
   ["/reports/sales", "Sales analysis"],
   ["/reports/statements", "Balance sheet and cash flow"],
   ["/reports/cash-ahead", "Cash ahead"],
+  ["/reports/stuck", "Where people get stuck"],
   ["/reports/week", "The week at a glance"],
   ["/reports/month", "The month at a glance"],
   ["/reports/menu", "Menu matrix"],
