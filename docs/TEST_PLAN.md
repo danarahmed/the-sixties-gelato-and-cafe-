@@ -1377,6 +1377,10 @@ database, behind a small local stand-in for Supabase's auth service.
   small lattes by card tick the task; none of it is in the café's sales;
   Stop practising goes back to the café, and the owner sees the cashier's
   progress on the Practice page.
+- `help` (G3): a cashier presses ? on the till and reads its help part by
+  part, what a cashier may do there and their tasks on it; Escape closes it;
+  the help opened is noted for the owner; in Kurdish, the panel is in
+  Kurdish.
 - `findings` (`0095`): the owner renames the café on Settings, the currency
   shut once it has sold; a manager changes nothing; a branch is added (with
   its drawer), renamed, not closed without a reason, closed with one (its

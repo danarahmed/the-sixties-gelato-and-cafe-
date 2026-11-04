@@ -1,0 +1,722 @@
+{
+ "screens": [
+  {
+   "path": "/accounting",
+   "title": "Chart of Accounts",
+   "summary": "The trial balance of one month (each account's opening, debits, credits and closing), and closing that month: a checklist that must pass before the month is locked, and reopening a locked month. (The equipment, the owner's money and the list of accounts on the same page are in the next entry.)",
+   "get_there": "Menu → Accountant → Chart of Accounts (for the owner, a general manager, a branch manager and purchasing it is folded under More). Also: the year-end and period links on Reports; an alert 'Reconcile the bank…' leads to the bank page under it.",
+   "who": {
+    "owner": "see everything; lock a month; reopen (unlock) a locked month Not: lock while a blocking check fails",
+    "general_manager": "see the trial balance and the checklist; lock a month Not: reopen a locked month",
+    "accountant": "see the trial balance and the checklist; lock a month Not: reopen a locked month",
+    "branch_manager": "see the trial balance and the checklist (it has audit.view) Not: lock or reopen a month",
+    "auditor": "see the trial balance and the checklist Not: lock or reopen a month",
+    "purchasing": "see the trial balance only Not: see the closing checklist, lock or reopen",
+    "cashier": "nothing here Not: open the screen: they are sent to their own first screen (the till, Production or Stock Count)",
+    "barista": "nothing here Not: open the screen: they are sent to their own first screen (the till, Production or Stock Count)",
+    "inventory_counter": "nothing here Not: open the screen: they are sent to their own first screen (the till, Production or Stock Count)"
+   },
+   "what_if": [
+    {
+     "case": "A check says 'Every trading day's cash is counted' fails with 'Not counted: 2026-09-14'",
+     "do": "Count that day's drawer on End of Day (or close the drawer on the till), then come back and reload."
+    },
+    {
+     "case": "A mistake is found in a locked month",
+     "do": "Do not reopen for small things: reverse or correct it in the current open month (Journals → Reverse, dated today). Only the owner reopens, with a reason, and only the latest locked month."
+    },
+    {
+     "case": "The payroll check warns",
+     "do": "Approve the month's payroll on Payroll before locking, or it can never be posted into that month."
+    },
+    {
+     "case": "The bank check warns",
+     "do": "Keep the bank's statement for that month on /accounting/bank first; the lock is still allowed."
+    }
+   ],
+   "tips": [
+    "Click any account name in the trial balance to see the journal lines behind it.",
+    "Lock months in order: the oldest open month first.",
+    "Locking 31 December posts the year-end close journal by itself; its number is shown in the message."
+   ]
+  },
+  {
+   "path": "/accounting",
+   "title": "Chart of Accounts — equipment, the owner's money and the accounts",
+   "summary": "The lower half of Chart of Accounts: the equipment (what it cost, its monthly depreciation, what it is worth), the owner's money put in and taken out, and the list of accounts, where the café adds, renames, retires and brings back its own accounts.",
+   "get_there": "Menu → Accountant → Chart of Accounts, then scroll down below the closing panel.",
+   "who": {
+    "owner": "everything below, including taking money out for themselves Not: change an account the system posts to",
+    "general_manager": "add equipment, post depreciation, record equipment gone; put owner's money in; add and change accounts Not: record the owner taking money out ('Only the owner takes money out for themselves')",
+    "accountant": "same as the general manager Not: record the owner taking money out",
+    "branch_manager": "see the equipment and the account list; put the owner's money in Not: add or change equipment or accounts; take owner's money out",
+    "auditor": "see the equipment and the account list Not: change anything; the owner's money card is not shown",
+    "purchasing": "see the account list Not: see the equipment or the owner's money; change anything"
+   },
+   "what_if": [
+    {
+     "case": "Equipment was bought years ago and is already in the opening balances",
+     "do": "Add it with 'Bought before: in the books already': no money moves, only its depreciation from now on."
+    },
+    {
+     "case": "The owner paid a bill from their pocket",
+     "do": "Record it as an expense paid from 'owner' on Expenses, not here. Use this card only for money moved between the owner and the bank or safe."
+    },
+    {
+     "case": "The café opens a second bank account",
+     "do": "Add an account → 'Another bank account' (1021–1029)."
+    },
+    {
+     "case": "An account is no longer used",
+     "do": "Take it out of use with a reason; its history stays in reports. Bring it back any time."
+    }
+   ],
+   "tips": [
+    "Press 'Post it' once a month after the month ends: depreciation for all months gone is posted in one press.",
+    "The code box proposes the next free code; keep it unless you have a plan for codes.",
+    "The small form 'Sold or thrown out' has no Cancel: reload the page to close it without saving."
+   ]
+  },
+  {
+   "path": "/accounting/bank",
+   "title": "The bank against its statement",
+   "summary": "Compare 1020 Bank in the books with the bank's own statement: tick the books' bank lines the statement shows, check they take the bank from the last statement's balance to the statement's balance, and keep the statement. The statement can be read from its Excel/CSV file or pasted, and its lines are found and ticked by themselves.",
+   "get_there": "Chart of Accounts → 'The bank against its statement →'. Also: the orange alert '{n} bank line(s), the oldest from {date}, are on no bank statement' (bank lines older than 35 days) links here; Expenses and Journals lead back here after 'Record it'.",
+   "who": {
+    "owner": "read the statement file, tick lines, keep a statement, undo the latest statement Not: keep a statement that does not tie",
+    "general_manager": "read the statement file, tick lines, keep a statement, undo the latest statement Not: keep a statement that does not tie",
+    "accountant": "read the statement file, tick lines, keep a statement, undo the latest statement Not: keep a statement that does not tie",
+    "branch_manager": "see what the books hold, the open lines and the statements kept Not: read a file, tick, keep or undo",
+    "purchasing": "see what the books hold, the open lines and the statements kept Not: read a file, tick, keep or undo",
+    "auditor": "see what the books hold, the open lines and the statements kept Not: read a file, tick, keep or undo",
+    "cashier": "nothing here Not: open the screen (sent to their own first screen)",
+    "barista": "nothing here Not: open the screen (sent to their own first screen)",
+    "inventory_counter": "nothing here Not: open the screen (sent to their own first screen)"
+   },
+   "what_if": [
+    {
+     "case": "The bank took a monthly fee",
+     "do": "Read the statement, press 'Record it' on the fee line, choose the bank-charges cost on Expenses and record it; come back: it is found and ticked."
+    },
+    {
+     "case": "A transfer is in the books but not yet on the statement",
+     "do": "Leave it unticked; it waits for the next statement."
+    },
+    {
+     "case": "Card money arrived in the bank",
+     "do": "Record the card settlement on Sales → Card Takings (it moves 1010 Card clearing into the bank), then read the statement again."
+    },
+    {
+     "case": "A statement was kept by mistake",
+     "do": "Undo it (latest only), with why; its lines open again."
+    }
+   ],
+   "tips": [
+    "Reading the file ticks the matching lines and fills the day and balance for you.",
+    "What was read stays for this browser tab, so you can go to Expenses and come back.",
+    "Keep statements month by month; the month's closing checklist warns about bank lines on no statement."
+   ]
+  },
+  {
+   "path": "/journals",
+   "title": "Journals",
+   "summary": "Every entry in the books, by number, newest first (sales, bills, payments, counts, cash moved, expenses and journals posted by hand), with a form to post a journal by hand: save it as a draft, publish it, reverse a published one, or discard a draft.",
+   "get_there": "Menu → Accountant → Journals (under More for the owner, a general manager, a branch manager and purchasing). Also: an account name on Chart of Accounts or a figure on Reports opens its lines here; 'Record it' on the bank page opens a filled-in journal.",
+   "who": {
+    "owner": "post, publish, discard drafts, reverse; also post a correction to a control account Not: edit or delete a published entry (nobody can)",
+    "general_manager": "post, publish, discard drafts, reverse journals not written by a record Not: post to accounts with a subledger; post a control-account correction",
+    "accountant": "post, publish, discard drafts, reverse journals not written by a record Not: post to accounts with a subledger; post a control-account correction",
+    "branch_manager": "read the register, search, open entries, see an account's lines Not: post, publish, discard or reverse",
+    "purchasing": "read the register, search, open entries, see an account's lines Not: post, publish, discard or reverse",
+    "auditor": "read the register, search, open entries, see an account's lines Not: post, publish, discard or reverse",
+    "cashier": "nothing here Not: open the screen",
+    "barista": "nothing here Not: open the screen",
+    "inventory_counter": "nothing here Not: open the screen"
+   },
+   "what_if": [
+    {
+     "case": "A manual journal was published with a wrong amount",
+     "do": "Reverse it (with why), then post the right one."
+    },
+    {
+     "case": "A sale or bill's journal is wrong",
+     "do": "There is no Reverse button for it: void/refund the sale on Orders, cancel the bill on Vendors, and so on."
+    },
+    {
+     "case": "An accrual must be undone next month",
+     "do": "Set 'Reverse on' to the first day of next month: the reversal is posted with it."
+    },
+    {
+     "case": "The month will not lock because of drafts",
+     "do": "Publish or discard each draft listed at the top of the register."
+    }
+   ],
+   "tips": [
+    "Search by the journal number to jump straight to it.",
+    "Open a number to see its lines as a voucher.",
+    "Money received in the bank that is not a sale goes to an income account the café adds (Chart of Accounts)."
+   ]
+  },
+  {
+   "path": "/journals?account={code}&from={day}&to={day}",
+   "title": "Journals — the lines behind the figure",
+   "summary": "The journal lines of one account (or a few added together) between two days, with the running balance: what makes up a figure on Chart of Accounts or Reports.",
+   "get_there": "Click an account name in the trial balance on Chart of Accounts, or a figure on Reports.",
+   "who": {
+    "owner": "read it Not: change anything here",
+    "general_manager": "read it Not: change anything here",
+    "branch_manager": "read it Not: change anything here",
+    "purchasing": "read it Not: change anything here",
+    "accountant": "read it Not: change anything here",
+    "auditor": "read it Not: change anything here"
+   },
+   "what_if": [
+    {
+     "case": "A balance looks wrong",
+     "do": "Open the journal number on the register, or look at its source screen; reverse a manual one if it is a mistake."
+    }
+   ],
+   "tips": [
+    "Change the dates in the address (from=…&to=…) to look at another range."
+   ]
+  },
+  {
+   "path": "/documents/[kind]/[record]",
+   "title": "Documents",
+   "summary": "The photos and PDFs kept with one record — a delivery (Delivery), a return to a supplier (Return), a supplier's bill (Bill), a supplier's credit note (Credit note), or an expense (Expense): open or download them, attach a new one from the camera or a file, or take one off with a reason.",
+   "get_there": "The paperclip next to a record ('Documents kept with it: {n}' or 'No documents kept with it yet'): a delivery or return on Purchasing, a bill or credit note on Vendors (and a supplier's statement), an expense on Expenses.",
+   "who": {
+    "owner": "see and attach on every kind Not: delete a document (it is only taken off, and kept)",
+    "general_manager": "see and attach on every kind Not: delete a document (it is only taken off, and kept)",
+    "branch_manager": "see all; attach on deliveries, returns, bills, credit notes and expenses",
+    "accountant": "see all; attach on bills, credit notes and expenses Not: attach on deliveries or returns",
+    "purchasing": "see all; attach on deliveries, returns, bills and credit notes Not: attach on expenses",
+    "auditor": "see and open documents Not: attach or take off",
+    "cashier": "nothing here Not: open the page",
+    "barista": "nothing here Not: open the page",
+    "inventory_counter": "nothing here Not: open the page"
+   },
+   "what_if": [
+    {
+     "case": "The wrong photo was attached",
+     "do": "Take it off with why ('wrong photo') and attach the right one; the wrong one stays under 'Taken off'."
+    },
+    {
+     "case": "The photo is huge",
+     "do": "Just attach it: pictures over 1.5 MB are made smaller first."
+    }
+   ],
+   "tips": [
+    "On a phone, 'Take a photo' goes straight to the camera.",
+    "The paperclip on each list shows how many documents a record has."
+   ]
+  },
+  {
+   "path": "/approvals",
+   "title": "Approvals",
+   "summary": "Everything waiting for a manager, oldest first: stock counts handed in, losses saved to wait, purchase orders drafted and left an hour, and the month's pay. Each is approved here, or sent back with why, by the same database step its own screen uses. Nobody approves what they asked for themselves.",
+   "get_there": "Menu → Approvals (at the top; a number beside it counts what waits). Also: the alert '{n} waiting for a manager's approval: {n} count(s), {n} order(s)' and a phone warning when one arrives.",
+   "who": {
+    "owner": "approve or send back counts, losses and orders (orders within their limit), approve the month's pay Not: approve their own count or loss",
+    "general_manager": "approve or send back counts, losses and orders (orders within their limit), approve the month's pay Not: approve their own count or loss",
+    "branch_manager": "approve or send back counts (of their own place, when they work at one), losses and orders (within their limit) Not: approve payroll; approve their own count or loss",
+    "accountant": "approve the month's pay Not: see counts, losses or orders here",
+    "cashier": "nothing here Not: open it: the menu does not offer it and the address sends them to their own first screen",
+    "barista": "nothing here Not: open it: the menu does not offer it and the address sends them to their own first screen",
+    "inventory_counter": "nothing here Not: open it: the menu does not offer it and the address sends them to their own first screen",
+    "purchasing": "nothing here Not: open it: the menu does not offer it and the address sends them to their own first screen",
+    "auditor": "nothing here Not: open it: the menu does not offer it and the address sends them to their own first screen"
+   },
+   "what_if": [
+    {
+     "case": "You counted the stock yourself",
+     "do": "You cannot approve it; another manager does. You may withdraw it for a recount."
+    },
+    {
+     "case": "A loss was recorded by mistake",
+     "do": "Reverse… with why: the stock comes back and its journal is reversed."
+    },
+    {
+     "case": "The month's pay looks wrong",
+     "do": "Open its page; reopen or draft again there. There is no send-back for pay here."
+    }
+   ],
+   "tips": [
+    "The number beside Approvals in the menu is how many wait for you.",
+    "Approve and Confirm act at once: there is no undo here."
+   ]
+  },
+  {
+   "path": "/audit",
+   "title": "Audit trail",
+   "summary": "Who changed what, newest first: every change the database recorded, with the values before and after, the person and their reason. Filter by dates, kind of change and person; download it as CSV.",
+   "get_there": "Menu → Accountant → Audit trail (under More for the owner, a general manager and a branch manager). Also: the link at the bottom of Chart of Accounts.",
+   "who": {
+    "owner": "read and download it Not: change or delete anything (nobody can)",
+    "general_manager": "read and download it Not: change or delete anything (nobody can)",
+    "branch_manager": "read and download it Not: change or delete anything (nobody can)",
+    "accountant": "read and download it Not: change or delete anything (nobody can)",
+    "auditor": "read and download it Not: change or delete anything (nobody can)",
+    "cashier": "nothing here Not: open it",
+    "barista": "nothing here Not: open it",
+    "inventory_counter": "nothing here Not: open it",
+    "purchasing": "nothing here Not: open it"
+   },
+   "what_if": [
+    {
+     "case": "Who changed a price?",
+     "do": "What → Prices, set the dates, Show."
+    },
+    {
+     "case": "A change shows 'No one signed in'",
+     "do": "It was made in the database directly, not on a screen: ask whoever looks after the system."
+    },
+    {
+     "case": "Why was a month reopened?",
+     "do": "What → Books & periods; the Why column has the owner's reason."
+    }
+   ],
+   "tips": [
+    "Written in the same step as the change and never edited: it is the trusted record.",
+    "Use the CSV for long periods."
+   ]
+  },
+  {
+   "path": "/problems",
+   "title": "Reported problems",
+   "summary": "What staff said went wrong with 'Something's wrong?', with the screen they were on, who, when and where. Open ones first, then newest. Mark each dealt with (with a note), open it again, or copy it to send on.",
+   "get_there": "Menu → You → Reported problems. Also: the Dashboard card '{n} problem(s) reported by staff, not dealt with yet'.",
+   "who": {
+    "owner": "see the list, mark dealt with or open again, copy",
+    "general_manager": "see the list, mark dealt with or open again, copy",
+    "branch_manager": "see the list, mark dealt with or open again, copy",
+    "accountant": "see the list, mark dealt with or open again, copy",
+    "auditor": "see the list, mark dealt with or open again, copy",
+    "cashier": "report a problem from the menu Not: open this list",
+    "barista": "report a problem from the menu Not: open this list",
+    "inventory_counter": "report a problem from the menu Not: open this list",
+    "purchasing": "report a problem from the menu Not: open this list"
+   },
+   "what_if": [
+    {
+     "case": "A problem needs the person who looks after the system",
+     "do": "Press 'Copy to send on' and paste it into a message to them."
+    }
+   ],
+   "tips": [
+    "The screen's address on each card tells you exactly where it happened."
+   ]
+  },
+  {
+   "path": "/purchasing",
+   "title": "Purchasing",
+   "summary": "The top of Purchasing: the way into What to buy, drafting all orders in one press, how each supplier delivers, and the list of purchase orders with their buttons (draft, approve, send, close, cancel).",
+   "get_there": "Menu → Spending → Purchasing (owner, general manager, branch manager and the purchasing role have it in the main menu; the accountant and the auditor find it under More). The purchasing role starts on this screen when signing in.",
+   "who": {
+    "owner": "everything on the screen: draft, change, approve (up to 1,000,000,000 IQD by default), send, close and cancel orders; receive; return; correct and reverse deliveries; add suppliers and items",
+    "general_manager": "the same as the owner",
+    "branch_manager": "draft, change, send, close and cancel orders; approve orders up to their own limit (250,000 IQD by default); receive; return; correct and reverse deliveries; add suppliers and items Not: approve an order over their limit",
+    "purchasing": "draft and change orders, mark them sent, close and cancel them; receive; return goods; add suppliers and items Not: approve orders; correct or reverse a delivery",
+    "accountant": "see everything (orders, deliveries, returns, costs) Not: change anything here",
+    "auditor": "see everything Not: change anything here",
+    "cashier": "nothing Not: open the screen: they are sent to their own start screen",
+    "barista": "nothing Not: open the screen: they are sent to their own start screen",
+    "inventory_counter": "nothing Not: open the screen: they are sent to their own start screen"
+   },
+   "what_if": [
+    {
+     "case": "The supplier says part of the order will never come",
+     "do": "Receive what came, then press Close on the order and type why the rest is not coming."
+    },
+    {
+     "case": "An order was approved with a wrong price",
+     "do": "If it has not been sent: press Change, fix the price and save (it becomes a draft), then approve again. If it was sent: cancel it (if nothing came) and draft a new one, or receive at the real price and close it."
+    },
+    {
+     "case": "The order was made for the wrong supplier and nothing has come",
+     "do": "Press Cancel, type why, and draft a new order."
+    },
+    {
+     "case": "A branch manager's order is over their limit",
+     "do": "It waits for the owner or general manager, here at once, and on Approvals once the draft has been left an hour."
+    }
+   ],
+   "tips": [
+    "Draft the orders now is the fastest way: one press makes every supplier's draft; then Approve and send each.",
+    "An approved order is printed from its own page (press its number), then Print the order.",
+    "Draft orders also appear on Approvals once they have been left an hour, where managers approve or cancel them."
+   ]
+  },
+  {
+   "path": "/purchasing",
+   "title": "Purchasing",
+   "summary": "Receiving a delivery (a goods receipt): each line as the supplier's invoice gives it, with freight and other costs shared over the lines, against a purchase order or without one. Also the quick Add supplier card.",
+   "get_there": "Menu → Spending → Purchasing (owner, general manager, branch manager and the purchasing role have it in the main menu; the accountant and the auditor find it under More). The purchasing role starts on this screen when signing in. The cards are below Purchase orders.",
+   "who": {
+    "owner": "add suppliers, receive, add a new item from the receipt line",
+    "general_manager": "add suppliers, receive, add a new item from the receipt line",
+    "branch_manager": "add suppliers, receive, add a new item from the receipt line",
+    "purchasing": "add suppliers, receive, add a new item from the receipt line",
+    "accountant": "nothing here (the cards are not shown) Not: receive or add suppliers",
+    "auditor": "nothing here (the cards are not shown) Not: receive or add suppliers"
+   },
+   "what_if": [
+    {
+     "case": "The invoice price is in kilograms but the item is kept in grams",
+     "do": "Choose the pack/unit the invoice uses (for example kg) and type the price per that unit. The warning card catches a price typed for the wrong unit."
+    },
+    {
+     "case": "The delivery is only part of the order",
+     "do": "Choose the order, change the quantities to what came (or empty lines that did not come), and receive. The order shows Partly received; receive the rest later or close it."
+    },
+    {
+     "case": "A delivery was entered wrong",
+     "do": "Before it is billed, a manager uses Correct or Reverse on it under Recent goods receipts."
+    },
+    {
+     "case": "The item is not in Inventory yet",
+     "do": "On the line choose \"+ New item (not in Inventory yet)…\", fill it in and press Add the item."
+    }
+   ],
+   "tips": [
+    "Type each price exactly as the invoice gives it, per the unit on the invoice; the app works out the cost per gram or millilitre.",
+    "Choosing the order fills the lines for you, at the order's prices.",
+    "The bill comes later, on Vendors: type the bill's amount from the supplier's invoice there."
+   ]
+  },
+  {
+   "path": "/purchasing",
+   "title": "Purchasing",
+   "summary": "Sending goods back to a supplier, named against the delivery they came in or not, and the list of recent returns with what the supplier owes back.",
+   "get_there": "Menu → Spending → Purchasing (owner, general manager, branch manager and the purchasing role have it in the main menu; the accountant and the auditor find it under More). The purchasing role starts on this screen when signing in. The card \"Return goods to a supplier\" is below Receive stock.",
+   "who": {
+    "owner": "return goods",
+    "general_manager": "return goods",
+    "branch_manager": "return goods",
+    "purchasing": "return goods",
+    "accountant": "see Recent returns to suppliers Not: return goods (the form is not shown)",
+    "auditor": "see Recent returns to suppliers Not: return goods (the form is not shown)"
+   },
+   "what_if": [
+    {
+     "case": "Milk came damaged and the bill has not come yet",
+     "do": "Name the delivery, return the damaged quantity; the bill on Vendors is then for what was kept."
+    },
+    {
+     "case": "The bill was already paid when the goods went back",
+     "do": "Name the delivery; the return becomes a credit on the supplier's account. Set it against their next bill on Vendors → Credit notes."
+    }
+   ],
+   "tips": [
+    "Name the delivery whenever you can: the supplier then owes back exactly what that delivery charged."
+   ]
+  },
+  {
+   "path": "/purchasing",
+   "title": "Purchasing",
+   "summary": "The last 40 deliveries with their value and bill status, and, for managers, correcting a delivery entered wrong (quantities, prices, items, supplier, date) or reversing it, before it is billed.",
+   "get_there": "Menu → Spending → Purchasing (owner, general manager, branch manager and the purchasing role have it in the main menu; the accountant and the auditor find it under More). The purchasing role starts on this screen when signing in. The table is at the bottom.",
+   "who": {
+    "owner": "see the deliveries and use Correct and Reverse Not: correct a billed, reversed or old (before the controls) delivery",
+    "general_manager": "see the deliveries and use Correct and Reverse Not: correct a billed, reversed or old (before the controls) delivery",
+    "branch_manager": "see the deliveries and use Correct and Reverse Not: correct a billed, reversed or old (before the controls) delivery",
+    "purchasing": "see the deliveries Not: correct or reverse them",
+    "accountant": "see the deliveries Not: correct or reverse them",
+    "auditor": "see the deliveries Not: correct or reverse them"
+   },
+   "what_if": [
+    {
+     "case": "A price was typed per gram instead of per kilogram and the bill has not come",
+     "do": "Correct → change the price → Show what it would do → type why → Confirm the correction."
+    },
+    {
+     "case": "The same delivery was entered twice",
+     "do": "Reverse one of them, with the reason \"entered twice\"."
+    },
+    {
+     "case": "The delivery is already billed",
+     "do": "On Vendors, cancel the bill (only if nothing is paid or credited on it), correct the delivery here, then record the bill again."
+    }
+   ],
+   "tips": [
+    "Nothing is changed until you press Confirm: Show what it would do is safe to try.",
+    "Every correction keeps what was first entered, so the audit trail always shows both."
+   ]
+  },
+  {
+   "path": "/purchasing/buying-list",
+   "title": "What to buy",
+   "summary": "For each item the café buys, at this place: what it has and has coming, its use, its reorder level and how much to order, from whom and at what price, with why. The lines ticked become a draft purchase order for each supplier, for a manager to approve.",
+   "get_there": "Purchasing → Open What to buy. The menu keeps Purchasing lit while it is open.",
+   "who": {
+    "owner": "tick and change lines, choose suppliers and packs, create the orders, say how many days an item keeps",
+    "general_manager": "tick and change lines, choose suppliers and packs, create the orders, say how many days an item keeps",
+    "branch_manager": "tick and change lines, choose suppliers and packs, create the orders, say how many days an item keeps",
+    "purchasing": "the same: create the draft orders and say how many days an item keeps Not: approve the orders (a manager does, on Purchasing or Approvals)",
+    "accountant": "read the list and the reasons Not: tick, change or create orders (the boxes are greyed and there is no Create the orders card)",
+    "auditor": "read the list and the reasons Not: tick, change or create orders (the boxes are greyed and there is no Create the orders card)",
+    "cashier": "nothing Not: open the screen: they are sent to their own start screen",
+    "barista": "nothing Not: open the screen: they are sent to their own start screen",
+    "inventory_counter": "nothing Not: open the screen: they are sent to their own start screen"
+   },
+   "what_if": [
+    {
+     "case": "The suggested quantity is too much for the shelf",
+     "do": "Lower the Quantity, or set a par level on the item (Inventory) so the list orders up to it, or say how many days it keeps."
+    },
+    {
+     "case": "Another supplier is cheaper",
+     "do": "Press \"Order from {supplier}, {pct} cheaper\" on the line; tick Make it the usual one to keep using them."
+    },
+    {
+     "case": "An item needed for an event is not on the list",
+     "do": "Open Not to order now and press Add to an order beside it, then set the quantity."
+    },
+    {
+     "case": "No price is known",
+     "do": "Type the price of a pack; it is remembered as the agreed price for next time."
+    }
+   ],
+   "tips": [
+    "Draft the orders now on Purchasing does all of this in one press when every item has a supplier and a price.",
+    "Prices typed here become the \"agreed\" price next time.",
+    "Orders already drafted count as coming: the list never suggests the same thing twice."
+   ]
+  },
+  {
+   "path": "/purchasing/orders/[id]",
+   "title": "Purchase order {no}",
+   "summary": "One purchase order: what was ordered, from whom, for when and where, who approved it, and what has come of each line. Printed, it is the order the supplier is sent.",
+   "get_there": "Purchasing → the order's number in Purchase orders. Also from What to buy (\"Order {no}\" links) and from Draft the orders now.",
+   "who": {
+    "owner": "read and print it Not: change it here (its buttons are on Purchasing)",
+    "general_manager": "read and print it Not: change it here (its buttons are on Purchasing)",
+    "branch_manager": "read and print it Not: change it here (its buttons are on Purchasing)",
+    "purchasing": "read and print it Not: change it here (its buttons are on Purchasing)",
+    "accountant": "read and print it Not: change it here (its buttons are on Purchasing)",
+    "auditor": "read and print it Not: change it here (its buttons are on Purchasing)",
+    "cashier": "nothing Not: open the screen: they are sent to their own start screen",
+    "barista": "nothing Not: open the screen: they are sent to their own start screen",
+    "inventory_counter": "nothing Not: open the screen: they are sent to their own start screen"
+   },
+   "what_if": [
+    {
+     "case": "The supplier wants the order on paper",
+     "do": "Press Print the order, then on Purchasing press Mark as sent."
+    },
+    {
+     "case": "The supplier wants it on the phone",
+     "do": "Read it from this page, or send a photo of the printed order."
+    }
+   ],
+   "tips": [
+    "The Unit column shows the unit's short code as stored (for example case_24)."
+   ]
+  },
+  {
+   "path": "/vendors",
+   "title": "Vendors",
+   "summary": "The suppliers the shop buys from: what is owed to them in total and how late, each supplier's running statement, and adding or correcting a supplier (name, phone, in use, days a delivery takes, how often they deliver).",
+   "get_there": "Menu → Spending → Vendors (in the main menu for the owner, general manager, accountant and purchasing; under More for the branch manager and the auditor). Also from Find anything (a supplier's name opens Vendors on that supplier), and from links on Purchasing.",
+   "who": {
+    "owner": "everything: add and edit vendors, record bills, pay bills, cancel bills, record and set credits",
+    "general_manager": "everything: add and edit vendors, record bills, pay bills, cancel bills, record and set credits",
+    "branch_manager": "add and edit vendors, record bills, record credit notes Not: pay or cancel bills, set a credit against a bill",
+    "purchasing": "add and edit vendors, record bills, record credit notes Not: pay or cancel bills, set a credit against a bill",
+    "accountant": "record, pay and cancel bills, record credit notes and set them against bills Not: add or edit vendors (no Edit vendor / New vendor tabs)",
+    "auditor": "read statements, bills and credits Not: change anything",
+    "cashier": "nothing Not: open the screen: they are sent to their own start screen",
+    "barista": "nothing Not: open the screen: they are sent to their own start screen",
+    "inventory_counter": "nothing Not: open the screen: they are sent to their own start screen"
+   },
+   "what_if": [
+    {
+     "case": "A supplier changed its name",
+     "do": "Edit vendor → change the name → type why → Save changes. Bills keep their history."
+    },
+    {
+     "case": "A supplier no longer delivers",
+     "do": "Pay or cancel their bills, then untick In use and save."
+    },
+    {
+     "case": "The same supplier was added twice under two spellings",
+     "do": "The app refuses the same name; if two spellings got in, take the unused one out of use."
+    }
+   ],
+   "tips": [
+    "A supplier's balance is bills less payments and credits; the list shows it at a glance.",
+    "Days a delivery takes is learnt by itself after three orders; set it only for a new supplier."
+   ]
+  },
+  {
+   "path": "/vendors",
+   "title": "Vendors",
+   "summary": "Recording a supplier's bill (for goods received, or for a service or asset), paying it from the till, the safe, the bank, a card or the owner, and cancelling a bill entered in error.",
+   "get_there": "Menu → Spending → Vendors (in the main menu for the owner, general manager, accountant and purchasing; under More for the branch manager and the auditor). Also from Find anything (a supplier's name opens Vendors on that supplier), and from links on Purchasing. Choose the supplier, then the tab Bills & payments.",
+   "who": {
+    "owner": "everything: add and edit vendors, record bills, pay bills, cancel bills, record and set credits",
+    "general_manager": "everything: add and edit vendors, record bills, pay bills, cancel bills, record and set credits",
+    "branch_manager": "add and edit vendors, record bills, record credit notes Not: pay or cancel bills, set a credit against a bill",
+    "purchasing": "add and edit vendors, record bills, record credit notes Not: pay or cancel bills, set a credit against a bill",
+    "accountant": "record, pay and cancel bills, record credit notes and set them against bills Not: add or edit vendors (no Edit vendor / New vendor tabs)",
+    "auditor": "read statements, bills and credits Not: change anything",
+    "cashier": "nothing Not: open the screen: they are sent to their own start screen",
+    "barista": "nothing Not: open the screen: they are sent to their own start screen",
+    "inventory_counter": "nothing Not: open the screen: they are sent to their own start screen"
+   },
+   "what_if": [
+    {
+     "case": "The invoice says more than the delivery recorded",
+     "do": "If the delivery was entered wrong: cancel nothing yet — correct the delivery on Purchasing first (before billing), then record the bill. If the supplier really charged more, record the bill as invoiced: the difference goes to 5050."
+    },
+    {
+     "case": "A bill was entered twice",
+     "do": "Press Cancel on the second one (only possible while nothing is paid on it), type \"entered twice\", Confirm."
+    },
+    {
+     "case": "Paying half now and half later",
+     "do": "Record payment with the half; the rest stays outstanding."
+    },
+    {
+     "case": "The owner paid the supplier from his own pocket",
+     "do": "Paid from: The owner, personally. It is booked as money the owner put in."
+    }
+   ],
+   "tips": [
+    "Leave the café's own number in the Invoice no. box when the supplier's paper has no number.",
+    "The ageing cards at the top tell you who to pay first.",
+    "Keep a photo of each invoice with the paperclip on its row."
+   ]
+  },
+  {
+   "path": "/vendors",
+   "title": "Vendors",
+   "summary": "What a supplier owes back: credits from goods returned after their bill, a lower price agreed on a billed delivery, or other (a service, an overcharge). Recording the supplier's credit note, its number, and setting what is left against a bill.",
+   "get_there": "Menu → Spending → Vendors (in the main menu for the owner, general manager, accountant and purchasing; under More for the branch manager and the auditor). Also from Find anything (a supplier's name opens Vendors on that supplier), and from links on Purchasing. Choose the supplier, then the tab Credit notes.",
+   "who": {
+    "owner": "everything: add and edit vendors, record bills, pay bills, cancel bills, record and set credits",
+    "general_manager": "everything: add and edit vendors, record bills, pay bills, cancel bills, record and set credits",
+    "branch_manager": "add and edit vendors, record bills, record credit notes Not: pay or cancel bills, set a credit against a bill",
+    "purchasing": "add and edit vendors, record bills, record credit notes Not: pay or cancel bills, set a credit against a bill",
+    "accountant": "record, pay and cancel bills, record credit notes and set them against bills Not: add or edit vendors (no Edit vendor / New vendor tabs)",
+    "auditor": "read statements, bills and credits Not: change anything",
+    "cashier": "nothing Not: open the screen: they are sent to their own start screen",
+    "barista": "nothing Not: open the screen: they are sent to their own start screen",
+    "inventory_counter": "nothing Not: open the screen: they are sent to their own start screen"
+   },
+   "what_if": [
+    {
+     "case": "The supplier agreed a lower price after the bill was recorded",
+     "do": "Record their credit note → A lower price on a delivery that was billed → choose the delivery → their number, amount, reason → Record the credit."
+    },
+    {
+     "case": "Goods went back after the bill and the supplier sent their credit note",
+     "do": "Find the return's credit (For: Goods returned) and type the note's number in Their note → Record it."
+    },
+    {
+     "case": "A credit is left over and a new bill comes",
+     "do": "On the credit row choose the new bill in Set it against and press Set against it (owner, general manager or accountant)."
+    }
+   ],
+   "tips": [
+    "A credit set against a bill lowers what is owed without any cash moving."
+   ]
+  },
+  {
+   "path": "/vendors/[id]/statement",
+   "title": "{supplier name}",
+   "summary": "A supplier's statement between two dates: what was owed before, each bill, cancelled bill, payment and credit with the balance after it, and what was owed at the end; then the bills still owed and the credits not yet used. Printed, it is what the café sends the supplier to agree the account.",
+   "get_there": "Vendors → choose the supplier → Statement tab → \"A statement between two dates, to print\".",
+   "who": {
+    "owner": "read and print it",
+    "general_manager": "read and print it",
+    "branch_manager": "read and print it",
+    "purchasing": "read and print it",
+    "accountant": "read and print it",
+    "auditor": "read and print it",
+    "cashier": "nothing Not: open the screen: they are sent to their own start screen",
+    "barista": "nothing Not: open the screen: they are sent to their own start screen",
+    "inventory_counter": "nothing Not: open the screen: they are sent to their own start screen"
+   },
+   "what_if": [
+    {
+     "case": "The supplier says the café owes a different amount",
+     "do": "Print the statement for the period they name and go through it with them line by line; record any missing bill or credit note on Vendors."
+    }
+   ],
+   "tips": [
+    "Use the first and last day of a month to match the supplier's monthly statement."
+   ]
+  },
+  {
+   "path": "/expenses",
+   "title": "Expenses",
+   "summary": "Recording money spent on rent, salaries, utilities and sundries: what it was for, how much, from where, and to which account, seen exactly as it will be written before posting. Also paying ahead for months to come, and the warning when a payment like it was posted already.",
+   "get_there": "Menu → Spending → Expenses (in the main menu for the owner, general manager and accountant; under More for the branch manager, purchasing and the auditor). Also from the bank's statement on Accounting: a bank charge the books do not have opens Expenses with it filled in.",
+   "who": {
+    "owner": "record expenses and prepaid expenses, release what is due, cancel a prepaid expense",
+    "general_manager": "record expenses and prepaid expenses, release what is due, cancel a prepaid expense",
+    "branch_manager": "record expenses and prepaid expenses, release what is due Not: cancel a prepaid expense",
+    "accountant": "record expenses and prepaid expenses, release what is due, cancel a prepaid expense",
+    "purchasing": "read the register and the prepaid expenses Not: record anything (the form is not shown)",
+    "auditor": "read the register and the prepaid expenses Not: record anything (the form is not shown)",
+    "cashier": "nothing Not: open the screen: they are sent to their own start screen",
+    "barista": "nothing Not: open the screen: they are sent to their own start screen",
+    "inventory_counter": "nothing Not: open the screen: they are sent to their own start screen"
+   },
+   "what_if": [
+    {
+     "case": "Rent for the next three months was paid today",
+     "do": "Tick Paid ahead…, First month = next month (or this month), How many months = 3, then Post prepaid expense."
+    },
+    {
+     "case": "The warning says a payment like this was posted already",
+     "do": "Look at the one listed. If it is the same payment, do not post. If it is a second, different payment (two shops' rent, say), tick the box and post."
+    },
+    {
+     "case": "An expense was posted with the wrong account or amount",
+     "do": "It cannot be edited: the accountant reverses its journal on Journals, then post it again correctly. It stays listed, marked \"reversed by #{no}\"."
+    },
+    {
+     "case": "Spoiled milk was thrown away",
+     "do": "Do not post it here; record it on Inventory → Record a loss."
+    }
+   ],
+   "tips": [
+    "Write the narration in plain words: the account is proposed from it.",
+    "Keep the paper receipt with the paperclip on its row in the register.",
+    "Paid from the till takes cash out of today's drawer, so the drawer count at the end of the day still matches."
+   ]
+  },
+  {
+   "path": "/expenses",
+   "title": "Expenses",
+   "summary": "What was paid ahead and how much of it each month has taken, posting the shares that are due, cancelling one entered in error; the last 100 expenses with their journals; and the expenses added up by account.",
+   "get_there": "Menu → Spending → Expenses (in the main menu for the owner, general manager and accountant; under More for the branch manager, purchasing and the auditor). Also from the bank's statement on Accounting: a bank charge the books do not have opens Expenses with it filled in. The lists are below the form.",
+   "who": {
+    "owner": "record expenses and prepaid expenses, release what is due, cancel a prepaid expense",
+    "general_manager": "record expenses and prepaid expenses, release what is due, cancel a prepaid expense",
+    "branch_manager": "record expenses and prepaid expenses, release what is due Not: cancel a prepaid expense",
+    "accountant": "record expenses and prepaid expenses, release what is due, cancel a prepaid expense",
+    "purchasing": "read the register and the prepaid expenses Not: record anything (the form is not shown)",
+    "auditor": "read the register and the prepaid expenses Not: record anything (the form is not shown)",
+    "cashier": "nothing Not: open the screen: they are sent to their own start screen",
+    "barista": "nothing Not: open the screen: they are sent to their own start screen",
+    "inventory_counter": "nothing Not: open the screen: they are sent to their own start screen"
+   },
+   "what_if": [
+    {
+     "case": "The dashboard says a prepaid share is due",
+     "do": "Open Expenses and press Release what is due."
+    },
+    {
+     "case": "A prepaid expense was entered with the wrong months",
+     "do": "Ask the owner, general manager or accountant to Cancel it with the reason, then record it again."
+    }
+   ],
+   "tips": [
+    "Still ahead always equals what 1400 Prepaid expenses holds in the books."
+   ]
+  }
+ ]
+}

@@ -7944,3 +7944,66 @@ details.page-intro > p {
   border-color: var(--warn);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--warn) 30%, transparent);
 }
+
+/* The ? help on every screen (G3). */
+.help-button {
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 0 10px;
+}
+.help-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(30, 18, 8, 0.35);
+  display: flex;
+  justify-content: flex-end;
+}
+.help-panel {
+  width: min(480px, 100vw);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--surface, #fff);
+  color: var(--text, inherit);
+  padding: 16px;
+  box-shadow: -8px 0 24px -12px rgba(60, 30, 10, 0.45);
+}
+.help-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.help-body section + section {
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+  padding-top: 8px;
+}
+.help-body h3 {
+  margin: 8px 0 4px;
+  font-size: 1.05rem;
+}
+.help-body h4 {
+  margin: 10px 0 2px;
+  font-size: 0.9rem;
+}
+.help-body dt {
+  font-weight: 600;
+  margin-top: 6px;
+}
+.help-body dd {
+  margin: 0 0 4px;
+}
+.help-body details {
+  margin: 6px 0;
+}
+@media print {
+  .help-button,
+  .help-scrim {
+    display: none;
+  }
+}

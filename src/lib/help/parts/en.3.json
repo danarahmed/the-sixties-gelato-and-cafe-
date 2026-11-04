@@ -1,0 +1,783 @@
+{
+ "screens": [
+  {
+   "path": "/settings/languages",
+   "title": "Languages",
+   "summary": "The café's languages and its own words. Every screen is in English, Arabic and Kurdish. Here you add another language and give any phrase the café's own words: a whole new language, or a better word for the Arabic or Kurdish.",
+   "get_there": "Settings → Languages → “Open Languages →”. The link “Settings” above the heading goes back.",
+   "who": {
+    "owner": "add, rename, take out of use or bring back a language; give or clear words; download and upload CSV Not: remove or rename English, Arabic or Kurdish",
+    "general_manager": "the same as the owner Not: the same",
+    "everyone else": "nothing here Not: open the screen: they are sent to their own start screen"
+   },
+   "what_if": [
+    {
+     "case": "A Kurdish word on the till is wrong",
+     "do": "Choose کوردی, search the English, type the better word in its box, Save."
+    },
+    {
+     "case": "We hired staff who read Turkish",
+     "do": "Add a language: code tr, name Türkçe, Left to right. Download CSV, have it translated, Upload CSV, check and Save."
+    },
+    {
+     "case": "A saved word broke a sentence",
+     "do": "Empty that box and Save: the built-in words (or English) come back."
+    }
+   ],
+   "tips": [
+    "Search the English exactly as the screen shows it.",
+    "Use “Phrases with no words yet” to finish a new language.",
+    "Saved words are used on every screen at once; someone with a screen already open sees them when it is loaded again."
+   ]
+  },
+  {
+   "path": "/start-of-day",
+   "title": "Start of Day",
+   "summary": "The morning, step by step, before the doors open: the drawer opened and counted (done right here), everyone due in clocked in, what to make, deliveries due, nothing low without an order, and the red alerts answered. Then the day ahead. It records nothing by itself except opening the drawer.",
+   "get_there": "Menu → Operations → Start of Day (for the owner and general manager it is under More). Also: Dashboard, 4:00 to 11:59, “Opening up? The start of the day, step by step”; Find anything → “Start of Day”.",
+   "who": {
+    "owner": "every step, the day ahead, open the drawer with a float from the safe, and see what the drawer should hold",
+    "general_manager": "the same as the owner",
+    "branch_manager": "every step and open the drawer with a float from the safe Not: see what an open drawer should hold (needs cash.view_expected)",
+    "cashier": "nothing here Not: open the screen (needs day.close): they are sent to their own start screen",
+    "barista": "nothing here Not: open the screen (needs day.close): they are sent to their own start screen",
+    "inventory_counter": "nothing here Not: open the screen (needs day.close): they are sent to their own start screen",
+    "purchasing": "nothing here Not: open the screen (needs day.close): they are sent to their own start screen",
+    "accountant": "nothing here Not: open the screen (needs day.close): they are sent to their own start screen",
+    "auditor": "nothing here Not: open the screen (needs day.close): they are sent to their own start screen"
+   },
+   "what_if": [
+    {
+     "case": "The opening count differs from last night's close",
+     "do": "Count again. If it still differs, open anyway: the difference is recorded (6300 Cash over / short) and the manager sees it on Sales → sessions."
+    },
+    {
+     "case": "The drawer needs change",
+     "do": "A manager types the float in “Cash put in from the safe now (optional)” while opening."
+    },
+    {
+     "case": "A barista is late",
+     "do": "Their name shows under the people step; they clock in on the till when they arrive. A manager corrects hours on Staff."
+    },
+    {
+     "case": "A delivery is late",
+     "do": "It stays in Deliveries due with its date; call the supplier, receive it on Purchasing when it comes."
+    }
+   ],
+   "tips": [
+    "Work top to bottom; the page ticks each step by itself when you come back.",
+    "The drawer step is done right on this page.",
+    "Try the printer on Test your devices before the first customer."
+   ]
+  },
+  {
+   "path": "/end-of-day",
+   "title": "End of Day",
+   "summary": "The close, step by step: bills paid, everyone clocked out, drawers closed and counted (done right here), losses approved, card and platform money, and red alerts answered. Then the day in numbers, to print or keep as a PDF, and a slip for the receipt printer.",
+   "get_there": "Menu → Operations → End of Day (for the owner and general manager under More). Also: Dashboard, from 16:00 to 03:59, “Closing up? The end of the day, step by step”; Find anything → “End of Day”.",
+   "who": {
+    "owner": "every step, the day in numbers, close or hand over the drawer, close someone else's drawer, see what it should hold, print",
+    "general_manager": "the same as the owner",
+    "branch_manager": "every step, the day in numbers, close or hand over, close someone else's drawer, print Not: see what an open drawer should hold before counting",
+    "cashier": "nothing here Not: open the screen (needs day.close): they are sent to their own start screen",
+    "barista": "nothing here Not: open the screen (needs day.close): they are sent to their own start screen",
+    "inventory_counter": "nothing here Not: open the screen (needs day.close): they are sent to their own start screen",
+    "purchasing": "nothing here Not: open the screen (needs day.close): they are sent to their own start screen",
+    "accountant": "nothing here Not: open the screen (needs day.close): they are sent to their own start screen",
+    "auditor": "nothing here Not: open the screen (needs day.close): they are sent to their own start screen"
+   },
+   "what_if": [
+    {
+     "case": "A cashier went home with the drawer open",
+     "do": "In the drawer step press “Close it for them”, write why, count if you can (or leave it empty), and press the button."
+    },
+    {
+     "case": "The count is short",
+     "do": "Count again before closing. If still short, close: the difference is recorded (6300 Cash over / short) and shows on the slip and on Sales → sessions."
+    },
+    {
+     "case": "A table did not pay",
+     "do": "Leave the bill open: it is paid in the next session. If it will never be paid, a manager cancels it on the till with the reason."
+    },
+    {
+     "case": "Card total differs from the terminal",
+     "do": "Check the card sales on Orders for today, and settle on Sales → Card Takings when the bank pays."
+    }
+   ],
+   "tips": [
+    "Print the slip for the till and keep it with the cash, signed.",
+    "The page can be printed or saved as a PDF to keep.",
+    "Each step's button goes straight to where its work is done."
+   ]
+  },
+  {
+   "path": "/today",
+   "title": "Today — your jobs for the day",
+   "summary": "Where everyone starts after signing in: only today's jobs for your role, in the order of the day, each with one button to where it is done, and ticked once done. A cashier sees the drawer; a counter, the count waiting; a manager, the start of the day, approvals, deliveries and red alerts; the accountant, bills due, the bank and the books.",
+   "get_there": "Sign in: you land here (unless you chose another first screen on My account). Also: Menu → Today, the first entry.",
+   "who": {
+    "owner": "See and do today's jobs of their role.",
+    "general_manager": "See and do today's jobs of their role.",
+    "branch_manager": "See and do today's jobs of their role.",
+    "cashier": "See and do today's jobs of their role.",
+    "barista": "See and do today's jobs of their role.",
+    "inventory_counter": "See and do today's jobs of their role.",
+    "purchasing": "See and do today's jobs of their role.",
+    "accountant": "See and do today's jobs of their role.",
+    "auditor": "See and do today's jobs of their role."
+   },
+   "what_if": [
+    {
+     "case": "A job you expected is not there",
+     "do": "Today shows only what your role does. If it should be yours, ask the owner to check your role on Settings → People and roles."
+    },
+    {
+     "case": "It says “All done for now”",
+     "do": "Nothing is waiting for you: carry on with your work, or check back later."
+    },
+    {
+     "case": "You are new",
+     "do": "Press “Start practising” on the card at the top: you practise in a café of your own first, and nothing there is real."
+    }
+   ],
+   "tips": [
+    "Each job's one button goes straight to where it is done.",
+    "To do comes first, then what waits on someone else, then later, then done."
+   ]
+  },
+  {
+   "path": "/practice",
+   "title": "Practice — your work, with pretend money and stock",
+   "summary": "Practise your work in a practice café of your own: the same screens, a small menu (espresso, latte, croissant, water), stock, a supplier, two tables and two practice colleagues. Nothing done there reaches the café's books. Your role's tasks are listed in order, each ticked once you have done it in practice; when all are ticked you are ready. For whoever keeps the staff, the team's practice: each person's tasks done, and who is ready.",
+   "get_there": "My account → Practise first; the card at the top of Today; or the PRACTICE banner's “Your practice tasks” while practising.",
+   "who": {
+    "owner": "Practise their own role's tasks. See the team's practice.",
+    "general_manager": "Practise their own role's tasks. See the team's practice.",
+    "branch_manager": "Practise their own role's tasks. See the team's practice.",
+    "cashier": "Practise their own role's tasks.",
+    "barista": "Practise their own role's tasks.",
+    "inventory_counter": "Practise their own role's tasks.",
+    "purchasing": "Practise their own role's tasks.",
+    "accountant": "Practise their own role's tasks.",
+    "auditor": "Practise their own role's tasks."
+   },
+   "what_if": [
+    {
+     "case": "You are not sure whether you are practising",
+     "do": "Look at the top: while practising, a striped PRACTICE banner is on every screen. With no banner, everything is real."
+    },
+    {
+     "case": "You want to start over",
+     "do": "Press “Start again from the first day”: a fresh practice café; what you ticked stays ticked."
+    },
+    {
+     "case": "It says “Practice has ended”",
+     "do": "Press “Back to the café”, then start practising again when you want."
+    },
+    {
+     "case": "A task is not ticked after you did it",
+     "do": "Open Practice again: ticks are read from what you did. Check it matches the task (for example two small lattes, by card)."
+    }
+   ],
+   "tips": [
+    "Press “Stop practising” on the banner to go back to the real café.",
+    "Try everything in practice, including mistakes: nothing there is real."
+   ]
+  },
+  {
+   "path": "/production",
+   "title": "Production",
+   "summary": "Where the kitchen records what it makes in batches (gelato, a base, syrup, dough): the day's plan of what to make, recording a batch, the batches in stock with their use-by, labels for the pans, and marking down what must be sold today.",
+   "get_there": "Menu → Operations → Production. A barista starts here after signing in. Also: Getting set up's link (/production#new-recipe) opens the add-recipe panel; a 'Record these' link in the plan opens the form filled in.",
+   "who": {
+    "owner": "everything here: see costs and stock, record batches (also made earlier), cancel a batch, change a use-by, add and change recipes, mark down",
+    "general_manager": "the same as the owner",
+    "branch_manager": "see costs, record batches (also made earlier), cancel a batch, change a use-by, mark down Not: add or change recipes (needs recipe.edit)",
+    "barista": "record batches, use the plan, print labels, mark down Not: see any cost or stock on hand, record a batch made earlier, cancel a batch, change a use-by, change recipes",
+    "purchasing": "look: the plan, costs, batches, lots Not: record a batch, mark down, change anything",
+    "accountant": "look: the plan, costs, batches, lots Not: record or change anything; the 'Sell it before it goes' card is not shown",
+    "auditor": "look: the plan, costs, batches, lots Not: record or change anything; the 'Sell it before it goes' card is not shown",
+    "cashier": "nothing Not: open the screen: they are sent to their own start screen",
+    "inventory_counter": "nothing Not: open the screen: they are sent to their own start screen"
+   },
+   "what_if": [
+    {
+     "case": "The batch came out lighter than the recipe says",
+     "do": "Type what you weighed in 'What came out (optional)' with its unit. The preview shows '— {diff} less than the recipe's {planned}'. Record it: stock gets what really came out, at the full cost of the ingredients."
+    },
+    {
+     "case": "I made it this morning before opening and forgot to record it",
+     "do": "A manager ticks 'Made earlier: yesterday or today, recorded now', gives the time and why, and records it. Not possible if a count of its items was approved after that time, or before yesterday."
+    },
+    {
+     "case": "An ingredient shows 'only … in stock'",
+     "do": "Usually a delivery is not entered. Enter it on Purchasing first. If the item's rule allows it, a manager can approve using more with their PIN; if it refuses, record the delivery or count it first."
+    },
+    {
+     "case": "A batch was recorded twice by mistake",
+     "do": "A manager presses 'Cancel…' on the second one in Batches, types 'recorded twice', and 'Cancel the batch'. If some of it was already sold or used, record the rest as a loss on Inventory instead."
+    },
+    {
+     "case": "A batch went soft and must be sold today",
+     "do": "A manager uses 'Change the use-by…' in In stock by batch, gives today's time and the reason. It then appears under 'Sell it before it goes', where it can be marked down."
+    },
+    {
+     "case": "Ice cream from today's batch will not sell before closing",
+     "do": "In 'Sell it before it goes', press the suggested '{percent}% off' button. The till sells it cheaper until the day ends. Press Stop to end it early."
+    },
+    {
+     "case": "The plan says 'Not enough history'",
+     "do": "It needs 28 days of sales and use. Until then, decide yourself how many to make."
+    },
+    {
+     "case": "We made the whole plan this morning",
+     "do": "Open 'Record the plan in one go', untick what was not made, change what came out where it differs, press 'Record {n} batch(es)', then 'Print {n} label(s)'."
+    }
+   ],
+   "tips": [
+    "The plan's 'Record these' fills in the form for you; you still check and press Record batch.",
+    "Leave 'What came out' empty when it came out as the recipe says.",
+    "Labels start at one per pan when the batch is entered in pans; you can change the number before printing.",
+    "A base recorded first is available at once for the flavours made from it; the plan in one go records bases first.",
+    "Sales use the batch with the earliest use-by first, and a batch past its use-by last.",
+    "Open a batch number to see what became of it."
+   ]
+  },
+  {
+   "path": "/production",
+   "title": "Production — What you make (batch recipes)",
+   "summary": "The lower part of Production: each thing the café makes in batches as a tile, opened beside the list to see its ingredients and to change it; and the form to add something new to make.",
+   "get_there": "Menu → Operations → Production, scroll to 'What you make'. Getting set up links straight to the add form (/production#new-recipe).",
+   "who": {
+    "owner": "see, add, change, stop and restart recipes",
+    "general_manager": "the same as the owner",
+    "branch_manager": "see the recipes and their costs Not: add or change recipes (needs recipe.edit)",
+    "barista": "see the recipes, without costs Not: add or change recipes",
+    "purchasing": "see the recipes and their costs Not: add or change recipes",
+    "accountant": "see the recipes and their costs Not: add or change recipes",
+    "auditor": "see the recipes and their costs Not: add or change recipes"
+   },
+   "what_if": [
+    {
+     "case": "We make a white base, then flavour it",
+     "do": "Add the base first ('Something new to keep in stock'). Then add each flavour and choose the base as an ingredient, like milk or sugar."
+    },
+    {
+     "case": "The recipe changed (less sugar)",
+     "do": "Open the tile, press Change…, change the line, Save changes. Batches already recorded keep what they used."
+    },
+    {
+     "case": "We stopped making a flavour",
+     "do": "Open it and press 'Stop making it'. It can be brought back with 'Make it again'."
+    },
+    {
+     "case": "Gelato is kept in pans of 5 kg",
+     "do": "When adding it, type 'pan' in 'Kept in a container?', holds 5 kg. Then batches can be entered in pans and labels print one per pan."
+    }
+   ],
+   "tips": [
+    "About right is fine for 'One batch makes': each batch records what really came out.",
+    "Give a shelf life so every batch gets a use-by by itself."
+   ]
+  },
+  {
+   "path": "/production/batches/[id]",
+   "title": "Batch {no}: {recipe}",
+   "summary": "One batch: when and by whom it was made, what came out against the recipe, its use-by, its pan labels, and what became of every bit of it, with each movement of its lot.",
+   "get_there": "Production → a batch number in 'Batches' or in 'In stock by batch'. Also from a batch's link elsewhere (reports).",
+   "who": {
+    "owner": "see the batch, print labels, change its use-by",
+    "general_manager": "see the batch, print labels, change its use-by",
+    "branch_manager": "see the batch, print labels, change its use-by",
+    "barista": "see the batch and print labels Not: change the use-by",
+    "purchasing": "see the batch and print labels Not: change the use-by",
+    "accountant": "see the batch and print labels Not: change the use-by",
+    "auditor": "see the batch and print labels Not: change the use-by",
+    "cashier": "nothing Not: open it (sent to their start screen)",
+    "inventory_counter": "nothing Not: open it (sent to their start screen)"
+   },
+   "what_if": [
+    {
+     "case": "A customer asks how old the gelato is",
+     "do": "Open its batch: 'Made {when}' and 'To be used by {when}'."
+    },
+    {
+     "case": "The labels fell off the pans",
+     "do": "Open the batch and press 'Print {n} label(s)'."
+    },
+    {
+     "case": "Some of the batch is missing",
+     "do": "Look at 'Each movement of the batch'. If it was thrown away and not recorded, record a loss on Inventory, choosing this batch in 'From batch'."
+    }
+   ],
+   "tips": [
+    "The lot code (B and the batch number) is printed on labels printed from this page."
+   ]
+  },
+  {
+   "path": "/inventory",
+   "title": "Inventory",
+   "summary": "What is in stock at this place, item by item, worked out from everything recorded (deliveries, sales, batches, counts, losses, transfers); the forms to change stock; and the losses waiting for a manager.",
+   "get_there": "Menu → Operations → Inventory. A dashboard tile for low stock also leads here.",
+   "who": {
+    "owner": "see the stock board and ledger, record a loss, correct stock, add items (one or a pasted list), record opening stock, approve or reverse losses waiting Not: approve a loss they recorded themselves",
+    "general_manager": "everything the owner can except opening stock Not: record opening stock (the owner's capital); approve a loss they recorded",
+    "branch_manager": "the same as the general manager Not: record opening stock; approve a loss they recorded",
+    "barista": "record a loss (an item, from a batch, or a product as made); the form is open at once Not: see the stock board, costs, the ledger; correct stock; add items",
+    "purchasing": "see the stock board and ledger, add stock items Not: record a loss, correct stock, approve losses, record opening stock",
+    "accountant": "look at the stock board and ledger Not: change anything (no buttons are shown)",
+    "auditor": "look at the stock board and ledger Not: change anything (no buttons are shown)",
+    "cashier": "nothing Not: open the screen (sent to their start screen)",
+    "inventory_counter": "nothing Not: open the screen (sent to their start screen)"
+   },
+   "what_if": [
+    {
+     "case": "An item shows negative stock",
+     "do": "Usually a delivery was not entered: enter it on Purchasing. If the count is wrong, count it on Stock Count."
+    },
+    {
+     "case": "A loss is waiting and the barista says it did not happen",
+     "do": "A manager presses Reverse…, types why, and 'Reverse the loss: the stock goes back'."
+    },
+    {
+     "case": "I recorded a loss and it waits for approval",
+     "do": "Another manager approves it here or on Approvals; you cannot approve your own."
+    },
+    {
+     "case": "Which items should I order?",
+     "do": "Tap 'Below reorder level', then 'What to buy →'."
+    }
+   ],
+   "tips": [
+    "The tiles are filters: tap one to see only those items.",
+    "Stock is never typed in: it changes only through deliveries, sales, batches, counts, losses, corrections and transfers."
+   ]
+  },
+  {
+   "path": "/inventory",
+   "title": "Inventory — Record a loss",
+   "summary": "Recording stock that was thrown away, went off, expired, broke, melted, was lost making or preparing, or was given away (staff meal, on the house, a sample): an item (from a chosen batch) or a product as made. Over the café's limit a manager approves it with their PIN, or it waits for one.",
+   "get_there": "Inventory → Record a loss (open at once for a barista). Link: /inventory#record-loss.",
+   "who": {
+    "owner": "record a loss Not: approve their own loss later",
+    "general_manager": "record a loss Not: approve their own loss later",
+    "branch_manager": "record a loss Not: approve their own loss later",
+    "barista": "record a loss Not: approve their own loss later",
+    "others": "nothing here Not: the button is not shown"
+   },
+   "what_if": [
+    {
+     "case": "A latte was dropped",
+     "do": "Choose Damaged (or Waste), 'A product, as made', the latte, How many 1, why. Its recipe's ingredients come out."
+    },
+    {
+     "case": "A pan of gelato expired",
+     "do": "Choose Expired, the item, 'From batch' the batch, the quantity, why."
+    },
+    {
+     "case": "The staff had coffees",
+     "do": "Choose Staff consumption: charged to 6110 Staff meals."
+    },
+    {
+     "case": "The loss is over the limit and no manager is here",
+     "do": "Press 'Save it to wait for a manager's approval'. A manager approves it later on Inventory or Approvals."
+    },
+    {
+     "case": "I recorded the wrong quantity",
+     "do": "If it is waiting, a manager reverses it and you record it again. If it was approved, a manager corrects the stock."
+    }
+   ],
+   "tips": [
+    "The explanation under the kind says which account it is charged to.",
+    "Naming the batch keeps each batch's story right on its page."
+   ]
+  },
+  {
+   "path": "/inventory",
+   "title": "Inventory — Correct stock and Opening stock",
+   "summary": "A manager's correction of an item's stock outside a count, and the owner's opening stock for an item that has none yet.",
+   "get_there": "Inventory → 'Correct stock (manager)' or 'Opening stock'. Links: /inventory#correct-stock, /inventory#opening-stock.",
+   "who": {
+    "owner": "correct stock; record opening stock",
+    "general_manager": "correct stock Not: record opening stock (owner only)",
+    "branch_manager": "correct stock Not: record opening stock (owner only)",
+    "others": "nothing here Not: the buttons are not shown"
+   },
+   "what_if": [
+    {
+     "case": "We found a box of cups not in the books",
+     "do": "A manager uses Correct stock with a positive change and, if known, its cost. If a count is due, count instead."
+    },
+    {
+     "case": "Opening day: the shelves are full",
+     "do": "The owner records each item's opening stock here, or pastes a list with the shelf quantities and costs (Add stock item → Paste a list)."
+    }
+   ],
+   "tips": [
+    "Counted stock is corrected by approving a count, not here.",
+    "The effect line shows the stock before and after before you post."
+   ]
+  },
+  {
+   "path": "/inventory",
+   "title": "Inventory — Add stock item (one, or paste a list)",
+   "summary": "Adding stock items: one at a time with its names, type, unit, pack and reorder level, or many at once pasted from Excel or Google Sheets, each row checked first.",
+   "get_there": "Inventory → Add stock item. Links: /inventory#add-item (one), /inventory#paste-items (paste). Products & Recipes sends here ('Add stock items') when there are no items. The same one-item form is on a delivery's line (Purchasing).",
+   "who": {
+    "owner": "add items, with opening stock (on the shelf, at a cost)",
+    "general_manager": "add items Not: give opening stock (the owner's)",
+    "branch_manager": "add items Not: give opening stock (the owner's)",
+    "purchasing": "add items Not: give opening stock (the owner's)",
+    "others": "nothing here Not: the button is not shown"
+   },
+   "what_if": [
+    {
+     "case": "Setting up the café's stock from a spreadsheet",
+     "do": "Copy the rows (name, unit, reorder, shelf, cost) and paste them; fix the rows marked red; press 'Add {n} item(s)'."
+    },
+    {
+     "case": "The name looks like an existing item",
+     "do": "If it is the same thing, open the existing one instead. If different, add it all the same."
+    }
+   ],
+   "tips": [
+    "Pressing Add again after a dropped connection never adds an item twice.",
+    "A pack (carton of 24) lets deliveries and counts be entered in cartons."
+   ]
+  },
+  {
+   "path": "/inventory/[itemId]",
+   "title": "Stock card: {name}",
+   "summary": "One item's stock card: what it opened with in the dates, each kind of movement, what it closed with, every movement with the balance after it; what each delivery cost; its units; who it is bought from; and correcting the item itself (names, type, reorder and par levels, in use).",
+   "get_there": "Inventory → an item's name. Also from Usage (an item), a batch's page, look-alike 'Open it' links.",
+   "who": {
+    "owner": "read the card, add a unit, correct the item, set suppliers",
+    "general_manager": "read the card, add a unit, correct the item, set suppliers",
+    "branch_manager": "read the card, add a unit, correct the item, set suppliers",
+    "purchasing": "read the card, add a unit, correct the item, set suppliers",
+    "accountant": "read the card Not: change anything",
+    "auditor": "read the card Not: change anything",
+    "barista": "nothing Not: open it (sent to their start screen)",
+    "cashier": "nothing Not: open it (sent to their start screen)",
+    "inventory_counter": "nothing Not: open it (sent to their start screen)"
+   },
+   "what_if": [
+    {
+     "case": "Where did the milk go last week?",
+     "do": "Set From and To to that week and Show: each kind of movement and every movement with who did it."
+    },
+    {
+     "case": "Milk now comes in crates of 12",
+     "do": "Add a unit crate_12, Label 'Crate of 12', Holds 12 (in its base unit). Keep the old unit: past deliveries were in it."
+    },
+    {
+     "case": "We no longer use an item",
+     "do": "Count it to 0 or record a loss, change recipes that use it, then untick 'In use' with why."
+    }
+   ],
+   "tips": [
+    "The closing line is what Inventory shows at the end of the last day.",
+    "Usage links here with its own dates."
+   ]
+  },
+  {
+   "path": "/inventory/transfers",
+   "title": "Transfers",
+   "summary": "Stock sent from one of the café's places to another (the kitchen to a branch, a branch to the kitchen): sent at its cost, on its way until the other place receives it (what did not arrive is lost), or cancelled on its way.",
+   "get_there": "Menu → Operations → Transfers (for some roles under More). Also: Inventory → How this works → Transfers.",
+   "who": {
+    "owner": "send, receive and cancel transfers Not: someone set to work at one place sends from it, receives only what comes to it, and cancels only what it sent",
+    "general_manager": "send, receive and cancel transfers Not: someone set to work at one place sends from it, receives only what comes to it, and cancels only what it sent",
+    "branch_manager": "send, receive and cancel transfers Not: someone set to work at one place sends from it, receives only what comes to it, and cancels only what it sent",
+    "purchasing": "send, receive and cancel transfers Not: someone set to work at one place sends from it, receives only what comes to it, and cancels only what it sent",
+    "accountant": "see the transfers and the value on its way Not: send, receive or cancel",
+    "auditor": "see the transfers and the value on its way Not: send, receive or cancel",
+    "barista": "nothing Not: open it (sent to their start screen)",
+    "cashier": "nothing Not: open it (sent to their start screen)",
+    "inventory_counter": "nothing Not: open it (sent to their start screen)"
+   },
+   "what_if": [
+    {
+     "case": "The kitchen sent 10 tubs, 9 arrived",
+     "do": "At the branch: 'Not all of it arrived…', type 9, a note, 'Receive what arrived'. The missing tub is written off as waste."
+    },
+    {
+     "case": "We sent it to the wrong branch",
+     "do": "At the sending place, while it is on its way: 'Cancel it…', the reason, 'Cancel the transfer'. Then send it again."
+    },
+    {
+     "case": "The screen warns stock goes below zero",
+     "do": "Usually a batch or a delivery was not recorded. Correct that, or 'Send it all the same' if you are sure."
+    }
+   ],
+   "tips": [
+    "A batch keeps its use-by at the place it goes to.",
+    "'On its way' at the top is the value held in transit."
+   ]
+  },
+  {
+   "path": "/inventory/usage",
+   "title": "Usage",
+   "summary": "For each item counted twice in the dates: what the counts say was used, less recorded losses, against what the recipes of what was sold and made say it should have used, and what may explain the difference.",
+   "get_there": "Menu → Operations → Usage (for some roles under More). Also Inventory → How this works → Usage; a Dashboard warning about usage.",
+   "who": {
+    "owner": "read and print it Not: change anything (it only reads)",
+    "general_manager": "read and print it Not: change anything (it only reads)",
+    "branch_manager": "read and print it Not: change anything (it only reads)",
+    "purchasing": "read and print it Not: change anything (it only reads)",
+    "accountant": "read and print it Not: change anything (it only reads)",
+    "auditor": "read and print it Not: change anything (it only reads)",
+    "barista": "nothing Not: open it",
+    "cashier": "nothing Not: open it",
+    "inventory_counter": "nothing Not: open it"
+   },
+   "what_if": [
+    {
+     "case": "Milk shows +3 L difference worth 4,500 IQD",
+     "do": "Open 'What it is made of'. If losses were not recorded, record them; if portions are big, train staff; count again to see the next stretch."
+    }
+   ],
+   "tips": [
+    "Count the expensive items often: usage only works between two counts."
+   ]
+  },
+  {
+   "path": "/count",
+   "title": "Stock Count",
+   "summary": "Blind, two-person stock counts: one person counts what is on the shelf without seeing what the books expect; someone else reviews expected against counted and approves, and only then are the differences posted.",
+   "get_there": "Menu → Operations → Stock Count (a stock counter starts here). Also from Usage.",
+   "who": {
+    "inventory_counter": "start a count, enter counts, submit, cancel their own open count Not: see what is expected, review or approve",
+    "owner": "count, review (see expected), approve or reject, cancel any open count Not: approve a count they counted (they can withdraw it for a recount)",
+    "general_manager": "count, review (see expected), approve or reject, cancel any open count Not: approve a count they counted (they can withdraw it for a recount)",
+    "branch_manager": "count, review (see expected), approve or reject, cancel any open count Not: approve a count they counted (they can withdraw it for a recount)",
+    "others": "nothing Not: open it"
+   },
+   "what_if": [
+    {
+     "case": "I forgot one item and pressed nothing yet",
+     "do": "Enter its number; Submit unlocks when every item has one."
+    },
+    {
+     "case": "The count shows a big loss",
+     "do": "The manager reviews; if a delivery was not entered, reject it ('recount'), enter the delivery, count again."
+    },
+    {
+     "case": "A count was started by mistake",
+     "do": "Cancel this count…, reason, Cancel the count."
+    }
+   ],
+   "tips": [
+    "The café can keep selling during a count: each item is compared with the stock at the moment it was counted.",
+    "Enter 0 for anything not on the shelf."
+   ]
+  },
+  {
+   "path": "/products",
+   "title": "Products & Recipes",
+   "summary": "The menu as tiles by the till's categories: each product's photo, price and what it costs as a share of the price. A tap opens the product beside the list, with tabs for its basics, recipe, sizes & prices and add-ons. Below: photos for the till, meal deals, prices by the time of day, the menu's parts and the categories.",
+   "get_there": "Menu → Operations → Products & Recipes. Getting set up links to /products#add-product.",
+   "who": {
+    "owner": "see everything and change the menu: products, recipes, prices, sizes, add-ons, photos, barcodes, deals, prices by the hour, sections, categories",
+    "general_manager": "see everything and change the menu: products, recipes, prices, sizes, add-ons, photos, barcodes, deals, prices by the hour, sections, categories",
+    "branch_manager": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "purchasing": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "accountant": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "auditor": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "barista": "nothing Not: open it (sent to their start screen)",
+    "cashier": "nothing Not: open it (sent to their start screen)",
+    "inventory_counter": "nothing Not: open it (sent to their start screen)"
+   },
+   "what_if": [
+    {
+     "case": "A product should not be sold for a while",
+     "do": "Open it, untick 'On the till', Save. Tick it again to sell it."
+    },
+    {
+     "case": "Many photos to add",
+     "do": "Name each file as its product (latte.jpg) and use 'Add many at once'."
+    },
+    {
+     "case": "A tile says 'cost 120%'",
+     "do": "It sells at a loss: open Sizes & prices to raise the price, or Recipe to check it."
+    }
+   ],
+   "tips": [
+    "The cost share uses the cheapest size on the first channel that sells it.",
+    "Search works in English, Arabic and Kurdish."
+   ]
+  },
+  {
+   "path": "/products",
+   "title": "Products & Recipes — Recipe tab",
+   "summary": "A product's recipe in force for each size (what one serving takes from stock), warnings when it is costed at nothing, changing the recipe from a date, and withdrawing a recipe set for later.",
+   "get_there": "Products & Recipes → a product → Recipe (only for a product on the till).",
+   "who": {
+    "owner": "see everything and change the menu: products, recipes, prices, sizes, add-ons, photos, barcodes, deals, prices by the hour, sections, categories",
+    "general_manager": "see everything and change the menu: products, recipes, prices, sizes, add-ons, photos, barcodes, deals, prices by the hour, sections, categories",
+    "branch_manager": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "purchasing": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "accountant": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "auditor": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "barista": "nothing Not: open it (sent to their start screen)",
+    "cashier": "nothing Not: open it (sent to their start screen)",
+    "inventory_counter": "nothing Not: open it (sent to their start screen)"
+   },
+   "what_if": [
+    {
+     "case": "From next Monday the latte uses 20 ml more milk",
+     "do": "Change the recipe…, change the milk line, In force from next Monday, Save the new recipe. It shows under Scheduled until then."
+    },
+    {
+     "case": "A service charge has no ingredients",
+     "do": "Type the reason in 'Why it uses no stock' and press 'Uses no stock'."
+    }
+   ],
+   "tips": [
+    "Cups, lids and bags: set 'Takeaway & delivery' so dine-in is not charged for them."
+   ]
+  },
+  {
+   "path": "/products",
+   "title": "Products & Recipes — Sizes & prices tab",
+   "summary": "A product's sizes (rename, retire, bring back, add one), selling by weight, barcodes and labels, each size's price and margin on each channel, changing a price from a date (and at one branch), and withdrawing a scheduled price or recipe.",
+   "get_there": "Products & Recipes → a product → Sizes & prices.",
+   "who": {
+    "owner": "see everything and change the menu: products, recipes, prices, sizes, add-ons, photos, barcodes, deals, prices by the hour, sections, categories",
+    "general_manager": "see everything and change the menu: products, recipes, prices, sizes, add-ons, photos, barcodes, deals, prices by the hour, sections, categories",
+    "branch_manager": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "purchasing": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "accountant": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "auditor": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "barista": "nothing Not: open it (sent to their start screen)",
+    "cashier": "nothing Not: open it (sent to their start screen)",
+    "inventory_counter": "nothing Not: open it (sent to their start screen)"
+   },
+   "what_if": [
+    {
+     "case": "Add a Large latte",
+     "do": "+ Add a size: name the current one Regular, the new one Large, its prices, copy Regular's recipe, Add the size; then change Large's recipe."
+    },
+    {
+     "case": "Prices go up on the 1st",
+     "do": "Change a price… for each channel with From the 1st. They show under Scheduled."
+    },
+    {
+     "case": "A biscuit we buy has a barcode",
+     "do": "Scan it into 'Barcode of {size}' and Save; the till adds it when scanned."
+    },
+    {
+     "case": "Cookies sold by weight",
+     "do": "Tick the size under Sold by weight; price is per kilo; its recipe is for a kilo."
+    }
+   ],
+   "tips": [
+    "'Use {amount}' suggests a price for a 70% margin.",
+    "A retired size stays on old sales."
+   ]
+  },
+  {
+   "path": "/products",
+   "title": "Products & Recipes — Add-ons tab",
+   "summary": "The groups of add-ons a product offers (milk, extra shots, syrups…), for every size or some; each group's rule, add-ons, prices and what each uses from stock; ready-made groups made in one tap.",
+   "get_there": "Products & Recipes → a product → Add-ons.",
+   "who": {
+    "owner": "see everything and change the menu: products, recipes, prices, sizes, add-ons, photos, barcodes, deals, prices by the hour, sections, categories",
+    "general_manager": "see everything and change the menu: products, recipes, prices, sizes, add-ons, photos, barcodes, deals, prices by the hour, sections, categories",
+    "branch_manager": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "purchasing": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "accountant": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "auditor": "look at the menu, recipes, costs and margins Not: change anything (no recipe.edit): fields are greyed and change buttons hidden",
+    "barista": "nothing Not: open it (sent to their start screen)",
+    "cashier": "nothing Not: open it (sent to their start screen)",
+    "inventory_counter": "nothing Not: open it (sent to their start screen)"
+   },
+   "what_if": [
+    {
+     "case": "Oat milk costs 500 more",
+     "do": "Milk group → + Add an add-on (or Change a price…) with 500 per channel; What it uses… → the oat milk quantity."
+    },
+    {
+     "case": "Count the milk each cup really used",
+     "do": "Take milk out of the sizes' recipes; give each milk choice its own quantity under What it uses…"
+    }
+   ],
+   "tips": [
+    "A group is shared: changing it changes every product that offers it."
+   ]
+  },
+  {
+   "path": "/products",
+   "title": "Products & Recipes — Add a menu product",
+   "summary": "A new product with its names, category, recipe and prices, created in one step, costed as it is typed.",
+   "get_there": "Products & Recipes → Add menu product (a side panel). Link: /products#add-product.",
+   "who": {
+    "owner": "add products",
+    "general_manager": "add products",
+    "others": "nothing here Not: the button is not shown"
+   },
+   "what_if": [
+    {
+     "case": "A new drink for dine-in only",
+     "do": "Fill only the Dine-in price; the other channels stay empty."
+    }
+   ],
+   "tips": [
+    "Use the suggested price buttons to hit your margin."
+   ]
+  },
+  {
+   "path": "/products",
+   "title": "Products & Recipes — Meal deals, prices by the hour, menu parts and categories",
+   "summary": "The cards under the menu: meal deals (two or more things at one price), prices at set hours, the café's and bakery's parts of the menu with their hours, and the till's categories.",
+   "get_there": "Products & Recipes, below the tiles.",
+   "who": {
+    "owner": "change all of it",
+    "general_manager": "change all of it",
+    "branch_manager": "see the menu parts and categories (greyed) Not: see the deals and prices-by-the-hour cards, or change anything",
+    "purchasing": "see the menu parts and categories (greyed) Not: see the deals and prices-by-the-hour cards, or change anything",
+    "accountant": "see the menu parts and categories (greyed) Not: see the deals and prices-by-the-hour cards, or change anything",
+    "auditor": "see the menu parts and categories (greyed) Not: see the deals and prices-by-the-hour cards, or change anything"
+   },
+   "what_if": [
+    {
+     "case": "Latte + croissant for 5,000 in the morning",
+     "do": "New deal: Thing 1 the latte, Thing 2 the croissant, prices, From 08:00 Until 11:00, Save."
+    },
+    {
+     "case": "Gelato cheaper after 21:00",
+     "do": "New price by the hour: the gelato, its price, From 21:00 Until 23:59, Save."
+    },
+    {
+     "case": "A seasonal category is over",
+     "do": "Untick it on the till under Categories and Save."
+    }
+   ],
+   "tips": [
+    "What a deal gives away is kept as its discount in the reports."
+   ]
+  },
+  {
+   "path": "/products/labels",
+   "title": "Labels",
+   "summary": "Barcode labels for sizes that have a barcode: the café's name, the product, its take-away price (per kg when sold by weight) and the barcode, as many of each as wanted, printed on a label printer or a sheet.",
+   "get_there": "Products & Recipes → a product → Sizes & prices → Barcodes → Print labels (opens with that size only). Not in the menu.",
+   "who": {
+    "owner": "print labels",
+    "general_manager": "print labels",
+    "branch_manager": "print labels",
+    "barista": "print labels",
+    "others": "nothing Not: open it (sent to their start screen)"
+   },
+   "what_if": [
+    {
+     "case": "Labels for 30 cookie bags",
+     "do": "Open Print labels from the size, type 30, Print."
+    }
+   ],
+   "tips": [
+    "The price on the label is the take-away price today."
+   ]
+  }
+ ]
+}

@@ -116,7 +116,7 @@
       },
       {
         "case": "You lost the phone with the authenticator app",
-        "do": "The app has no screen to get back in. Ask whoever looks after the system to remove the second step; then turn it on again with the new phone."
+        "do": "On the sign-in step, press “Lost your phone? Use a backup code” and type one of the eight backup codes you kept when you turned it on. You are let in with the second step off: turn it on again with the new phone (it gives you new codes)."
       }
     ],
     "screens": [

@@ -4593,7 +4593,7 @@
     ],
     "skipped_messages": [],
     "open_questions": [
-      "If the owner loses the phone with the authenticator app, the app has no screen to recover; presumably the second step is removed in Supabase Auth by whoever runs the system."
+      "Answered (0095): a lost phone is got past with one of the eight backup codes, on the sign-in step."
     ]
   }
 ]

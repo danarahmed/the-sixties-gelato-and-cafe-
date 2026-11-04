@@ -10,6 +10,7 @@ import { NAV, activeHref, holdsAny, splitMenu } from "@/lib/auth/routes";
 import { BrandMark, Icon, type IconName } from "@/components/Icon";
 import { TourMenuItem, TourRunner } from "@/components/Tour";
 import { ProblemButton } from "@/components/ProblemButton";
+import { HelpButton } from "@/components/HelpButton";
 import { FindAnything, type Screen } from "@/components/FindAnything";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 
@@ -354,6 +355,7 @@ export function AppShell({
         </span>
         <span className="spacer" />
         <FindAnything screens={screens} />
+        <HelpButton />
         <Controls locale={locale} theme={theme} />
         <Link href="/account" className="badge account-badge" title={t("nav.account")}>
           <span className="account-name" dir="auto">
