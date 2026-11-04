@@ -1,5 +1,6 @@
 "use client";
 
+import { stopPracticeAction } from "@/lib/actions/practice";
 import { use, useState, useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -47,6 +48,27 @@ export interface ShellMember {
   permissions: string[];
   /** What waits for their approval (0088), counted beside Approvals. */
   approvals?: number;
+  /** Practising (0096): a banner on every screen, so practice is never taken for real. */
+  practice?: boolean;
+}
+
+/** Practice, said on every screen, with the way back. */
+function PracticeBanner() {
+  const { t } = useT();
+  return (
+    <div className="practice-banner" role="status" data-testid="practice-banner">
+      <strong>{t("PRACTICE")}</strong>
+      <span>{t("Nothing here is real: no money, no stock, nothing in the books.")}</span>
+      <Link href="/practice" className="practice-banner-go">
+        {t("Your practice tasks")}
+      </Link>
+      <form action={stopPracticeAction}>
+        <button type="submit" data-testid="practice-stop">
+          {t("Stop practising")}
+        </button>
+      </form>
+    </div>
+  );
 }
 
 /** Whether the browser is online, kept current. */
@@ -305,7 +327,9 @@ export function AppShell({
   };
 
   return (
-    <div className={`app-shell${posMode ? " pos-mode" : ""}`}>
+    <div
+      className={`app-shell${posMode ? " pos-mode" : ""}${member.practice ? " practising" : ""}`}
+    >
       {/* The first place the keyboard reaches: past the menu, to the page (AL). */}
       <a href="#content" className="skip-link">
         {t("Skip to the content")}
@@ -335,6 +359,7 @@ export function AppShell({
           </span>
         </Link>
       </header>
+      {member.practice && <PracticeBanner />}
       <OfflineBanner />
       <div className="layout">
         <nav

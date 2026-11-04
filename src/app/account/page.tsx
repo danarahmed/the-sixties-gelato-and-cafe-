@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { getT } from "@/lib/i18n/server";
@@ -100,6 +101,22 @@ export default async function AccountPage({
             chosen={s.profile.firstScreen}
             roleScreen={t(roleScreenKey)}
           />
+        </div>
+      )}
+
+      {s.profile && (
+        <div className="card grid" style={{ gap: 8 }} data-testid="account-practice">
+          <h3 style={{ margin: 0 }}>{t("Practice")}</h3>
+          <p className="muted" style={{ margin: 0 }}>
+            {t(
+              "New here? Practise your work in a practice café first: nothing you do there is real.",
+            )}
+          </p>
+          <div>
+            <Link href="/practice" className="btn-primary">
+              {t("Practise first")}
+            </Link>
+          </div>
         </div>
       )}
 

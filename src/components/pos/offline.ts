@@ -11,6 +11,7 @@
  * approve it), a customer chosen now, or dollars: each of those needs the
  * database to answer.
  */
+import { practiceScoped } from "@/lib/practice";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { Payment } from "@/lib/payments";
 import type { saveBillAction } from "@/lib/actions/pos";
@@ -68,7 +69,7 @@ const COUNTER_KEY = "sixties.pos.offline.no";
 /** What this till holds, oldest first; nothing when storage is out of reach. */
 export function loadOffline(): OfflineSale[] {
   try {
-    const raw = localStorage.getItem(OFFLINE_KEY);
+    const raw = localStorage.getItem(practiceScoped(OFFLINE_KEY));
     if (!raw) return [];
     const list = JSON.parse(raw) as unknown;
     return Array.isArray(list) ? list.filter(isOfflineSale) : [];
@@ -79,8 +80,8 @@ export function loadOffline(): OfflineSale[] {
 
 export function saveOffline(list: OfflineSale[]): boolean {
   try {
-    if (list.length === 0) localStorage.removeItem(OFFLINE_KEY);
-    else localStorage.setItem(OFFLINE_KEY, JSON.stringify(list));
+    if (list.length === 0) localStorage.removeItem(practiceScoped(OFFLINE_KEY));
+    else localStorage.setItem(practiceScoped(OFFLINE_KEY), JSON.stringify(list));
     return true;
   } catch {
     return false;
@@ -91,13 +92,13 @@ export function saveOffline(list: OfflineSale[]): boolean {
 export function nextOfflineNo(list: OfflineSale[]): number {
   let last = 0;
   try {
-    last = Number(localStorage.getItem(COUNTER_KEY) ?? 0) || 0;
+    last = Number(localStorage.getItem(practiceScoped(COUNTER_KEY)) ?? 0) || 0;
   } catch {
     /* no storage: from what is kept */
   }
   const no = Math.max(last, ...list.map((s) => s.no), 0) + 1;
   try {
-    localStorage.setItem(COUNTER_KEY, String(no));
+    localStorage.setItem(practiceScoped(COUNTER_KEY), String(no));
   } catch {
     /* kept in the list itself */
   }
@@ -176,7 +177,7 @@ export const KEPT_BILLS_KEY = "sixties.pos.keptBills.v1";
 
 export function loadKeptBills(): KeptBill[] {
   try {
-    const raw = localStorage.getItem(KEPT_BILLS_KEY);
+    const raw = localStorage.getItem(practiceScoped(KEPT_BILLS_KEY));
     if (!raw) return [];
     const list = JSON.parse(raw) as unknown;
     return Array.isArray(list)
@@ -191,8 +192,8 @@ export function loadKeptBills(): KeptBill[] {
 
 export function saveKeptBills(list: KeptBill[]): boolean {
   try {
-    if (list.length === 0) localStorage.removeItem(KEPT_BILLS_KEY);
-    else localStorage.setItem(KEPT_BILLS_KEY, JSON.stringify(list));
+    if (list.length === 0) localStorage.removeItem(practiceScoped(KEPT_BILLS_KEY));
+    else localStorage.setItem(practiceScoped(KEPT_BILLS_KEY), JSON.stringify(list));
     return true;
   } catch {
     return false;

@@ -1,5 +1,6 @@
 "use client";
 
+import { practiceScoped } from "@/lib/practice";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Decimal from "decimal.js";
@@ -182,7 +183,7 @@ const TICKET_KEY = "sixties.pos.ticket";
 
 function loadPending(): Pending | null {
   try {
-    const raw = sessionStorage.getItem(PENDING_KEY);
+    const raw = sessionStorage.getItem(practiceScoped(PENDING_KEY));
     if (!raw) return null;
     const p = JSON.parse(raw) as Partial<Pending> & {
       lines?: {
@@ -230,8 +231,8 @@ function loadPending(): Pending | null {
 }
 function savePending(p: Pending | null) {
   try {
-    if (p) sessionStorage.setItem(PENDING_KEY, JSON.stringify(p));
-    else sessionStorage.removeItem(PENDING_KEY);
+    if (p) sessionStorage.setItem(practiceScoped(PENDING_KEY), JSON.stringify(p));
+    else sessionStorage.removeItem(practiceScoped(PENDING_KEY));
   } catch {
     /* private mode: the pending payment stays in memory only */
   }

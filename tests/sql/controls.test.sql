@@ -161,7 +161,7 @@ select test.eq((
   'owner_money,pay_bill,pay_payroll,pay_salary,payment_methods,payroll_detail,payroll_runs,'
   'period_close_checklist,phone_status,phone_warnings,platform_money,pos_addons,pos_catalogue,'
   'pos_deals,pos_menu_next_change,pos_open_bills,post_control_correction,post_legacy_unposted,'
-  'post_platform_settlement,pre_orders,prepaid_expenses,preview_receipt_correction,problem_reports,'
+  'post_platform_settlement,practice_reset,practice_start,practice_tasks,practice_team,pre_orders,prepaid_expenses,preview_receipt_correction,problem_reports,'
   'production_batches,production_lots,production_plan,production_recipes,publish_journal,'
   'purchase_order,purchase_orders,purchase_orders_from_list,push_done,push_take,receipt_setup,'
   'receive_customer_payment,receive_goods,receive_stock_transfer,record_advance,record_bill,'
