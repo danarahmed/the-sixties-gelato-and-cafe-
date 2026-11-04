@@ -25,7 +25,8 @@ layers before every release.
 - `tests/rpc-contract.test.ts`: every function the app calls exists in the
   migrations, takes the parameters the app passes, and is granted to signed-in
   users.
-- `tests/app-rules.test.ts`: where each role lands, what its menu offers and
+- `tests/app-rules.test.ts`: where each role lands (everyone on Today, unless
+  they chose a first screen they may still open), what its menu offers and
   which one entry it lights (Usage, not Inventory too),
   numbers typed in Arabic-Indic digits, what a till discount comes to (the
   percentage and the amount filling each other in, a percentage rounded to the
@@ -169,6 +170,30 @@ layers before every release.
   placeholders, and read back as written; words with no count kept as they
   are; the marks they are kept with taken out of words typed in; a page
   showing them by the count.
+- `tests/today.test.ts`: Today (the sales round) — the jobs each person has
+  by what they may do, not by their role's name (the cashier the drawer; the
+  barista the drawer and what to make; the counter the count; purchasing the
+  deliveries, the transfers and what to buy; the accountant approvals, the
+  red alerts, problems, the bills due this week, the bank, the month's pay,
+  whether the books tie and what changed today; the auditor the last four of
+  those that are theirs; the owner every one but the auditor's, with the
+  watch list), in the order of the day; whoever opens the day has the start
+  of the day in the morning with the drawer, what to make, the deliveries,
+  what to buy and the red alerts as its steps, and those as jobs of their own
+  the rest of the day. Each job's state from its facts: the drawer closed (to
+  open, or a manager's to open) and open since a time; the plan's batches,
+  the most first, and no job where nothing is made in batches; a count open,
+  sent (waiting on someone else), to check (someone else's) or none (for
+  later, or done for a reviewer); deliveries due or late; transfers on their
+  way to the person's place; what to order; approvals to decide, theirs
+  waiting, and a count left to the count's job; red alerts only; problems; the
+  watch list's strong findings, without a name; bills due by a week from
+  today and late ones, the soonest first; the bank's lines on no statement;
+  last month's pay to draft, approve and pay, done for ten days once paid;
+  the books' checks; the close for later until four in the afternoon. To do
+  first, then waiting, then for later, then done; all done for now once
+  nothing is to do; a job whose facts could not be read left out; every job
+  in Arabic and Kurdish, none of it in English.
 - `tests/startofday.test.ts`: who is due in at the start of the day — in, late
   (the longest waited for first) and later, each once across places, someone
   in at one place counted in; what the plan says to make, the most first; the
@@ -1138,7 +1163,7 @@ database, behind a small local stand-in for Supabase's auth service.
   page itself with a manager's reason and a count: it agrees exactly, the step
   ticks with the answer still on the screen, the ring counts one more and the
   session keeps why; the drawer is then opened again for the cashier, as it was
-  found. A branch manager has it in the menu, a cashier is sent to the till,
+  found. A branch manager has it in the menu, a cashier is sent to Today,
   and the dashboard offers it only from four in the afternoon. The `pages` and
   `languages` suites open it too: on a phone, in Arabic and in Kurdish.
   Start of Day (round four), with the drawer closed: the ring counts the steps
@@ -1146,7 +1171,7 @@ database, behind a small local stand-in for Supabase's auth service.
   is an order still to come by today, and the drawer step is still to do; the
   drawer is opened from the page, counted, its step ticks, the ring counts one
   more and the count's answer stays; then it is closed again for the cashier.
-  The branch manager has it too, a cashier is sent to the till, and the
+  The branch manager has it too, a cashier is sent to Today, and the
   dashboard offers it only from four until noon; `pages` and `languages` open
   it as well.
 - `keys` (round five, after `close`): the cashier rings up a sale from the
@@ -1280,11 +1305,10 @@ database, behind a small local stand-in for Supabase's auth service.
   focused; a screen is found by part of its name, a product by part of its
   name in any capitals, a journal by its number, and Enter goes to the first;
   a search that finds nothing says so. The till shows no search button; the
-  cashier's box offers neither Inventory nor a journal. The barista starts
-  on Production, the counter on the count (with nothing to choose on My
-  account), the owner on the Dashboard; the owner chooses the till on My
-  account, is sent there at once and on signing in again, and goes back to
-  the Dashboard. Two photos added at once: `golden-espresso.png` goes on
+  cashier's box offers neither Inventory nor a journal. The barista, the
+  counter (who may choose Today or the count on My account) and the owner
+  start on Today; the owner chooses the till on My account, is sent there at
+  once and on signing in again, and goes back to Today. Two photos added at once: `golden-espresso.png` goes on
   Golden espresso, `IMG_2041.png` is named to place by hand. On a phone the
   owner's Dashboard shows today first and the rest behind one tap; a wide
   screen shows everything.
@@ -1295,7 +1319,7 @@ database, behind a small local stand-in for Supabase's auth service.
   says why and who; the owner approves the count (approved, as on Stock
   Count), reverses the loss only once why is given (as on Inventory) and
   cancels the order with why (as on Purchasing), and nothing waits. The
-  cashier is offered no Approvals and is taken to the till from it. A
+  cashier is offered no Approvals and is taken to Today from it. A
   product renamed on Products & Recipes is put back with Undo.
 - `deals` (`0089`, run before `setup`): the owner makes a deal of two waters
   at 1,500 at a table on Products & Recipes, and a price by the hour for the
@@ -1351,6 +1375,19 @@ database, behind a small local stand-in for Supabase's auth service.
   its drawer), renamed, not closed without a reason, closed with one (its
   drawer with it) and opened again, and Rules offers it for a daily target;
   a sale's receipt printed again from Orders says COPY, with its number.
+- `today` (the sales round, before `setup`): the cashier lands on Today, the
+  first entry of the menu, with the drawer as the one job: one button, to the
+  till, closed to open or open since a time and selling, and the button opens
+  the till. The counter's count, started, is their one job, to do (0 of 1
+  counted), and its button opens Stock Count; counted and sent, it waits on
+  someone else and nothing is left for them now. The owner lands on Today
+  with approvals, problems and the close and not the auditor's jobs, what is
+  to do first and what is done last, one button each; the counter's count is
+  theirs to check, and its button opens Stock Count, the problems' opens
+  what was reported and the close's End of Day. Approved by a manager, the
+  counter's next count is for later and the page says all done for now. The
+  cashier's Today in Arabic and Kurdish, right to left, its jobs in the
+  reader's language.
 - `setup` (round seven, run last: it clears the café): the test café is
   cleared with `supabase/remediation/start-fresh.sql`, every record and the
   setup lists gone, the logins and the chart of accounts kept, the audit

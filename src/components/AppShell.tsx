@@ -14,6 +14,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 
 /** Each screen's icon in the menu, beside its name. */
 const NAV_ICONS: Record<string, IconName> = {
+  "/today": "compass",
   "/dashboard": "dashboard",
   "/approvals": "check",
   "/sales": "sales",

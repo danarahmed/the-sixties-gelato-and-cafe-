@@ -246,9 +246,9 @@ console.log("▸ a branch manager is offered it; a cashier is not");
 {
   const { ctx, page } = await signIn(browser, "cashier");
   await open(page, "/end-of-day");
-  check(new URL(page.url()).pathname === "/pos", "a cashier is sent to the till instead");
+  check(new URL(page.url()).pathname === "/today", "a cashier is sent to Today instead");
   await open(page, "/start-of-day");
-  check(new URL(page.url()).pathname === "/pos", "from the start of the day too");
+  check(new URL(page.url()).pathname === "/today", "from the start of the day too");
   await ctx.close();
 }
 

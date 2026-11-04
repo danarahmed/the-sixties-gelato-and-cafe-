@@ -13,7 +13,7 @@ export interface NavEntry {
   key: string;
   /** Dictionary key of the heading the entry sits under (none for the first). */
   group: string | null;
-  /** The screen is offered to anyone holding at least one of these. */
+  /** The screen is offered to anyone holding at least one of these; none: to everyone. */
   anyOf: Permission[];
 }
 
@@ -23,6 +23,8 @@ const OPERATIONS = "nav.group.operations";
 const BOOKS = "nav.group.books";
 
 export const NAV: NavEntry[] = [
+  // Each person's jobs for the day, each one tap from where it is done: where everyone starts.
+  { group: null, href: "/today", key: "nav.today", anyOf: [] },
   { group: null, href: "/dashboard", key: "nav.dashboard", anyOf: ["profit.view"] },
   // Everything waiting for a manager, in one place (0088).
   {
@@ -160,9 +162,13 @@ const DAILY: Record<MenuLead, readonly string[] | null> = {
   floor: null,
 };
 
+/** Screens never folded under More: where everyone starts. */
+const ALWAYS_DAILY: readonly string[] = ["/today"];
+
 /**
- * The menu as it is shown: the daily screens, then the rest under More. More
- * is kept only when it would hold two or more; one screen alone stays out.
+ * The menu as it is shown: Today and the daily screens, then the rest under
+ * More. More is kept only when it would hold two or more; one screen alone
+ * stays out.
  */
 export function splitMenu<E extends { href: string }>(
   permissions: readonly string[],
@@ -170,13 +176,15 @@ export function splitMenu<E extends { href: string }>(
 ): { daily: E[]; more: E[] } {
   const daily = DAILY[menuLead(permissions)];
   if (!daily) return { daily: [...entries], more: [] };
-  const more = entries.filter((e) => !daily.includes(e.href));
+  const isDaily = (href: string) => daily.includes(href) || ALWAYS_DAILY.includes(href);
+  const more = entries.filter((e) => !isDaily(e.href));
   if (more.length < 2) return { daily: [...entries], more: [] };
-  return { daily: entries.filter((e) => daily.includes(e.href)), more };
+  return { daily: entries.filter((e) => isDaily(e.href)), more };
 }
 
+/** Whether they hold one of these; a screen that asks for none is everyone's. */
 export function holdsAny(permissions: readonly string[], anyOf: readonly string[]): boolean {
-  return anyOf.some((p) => permissions.includes(p));
+  return anyOf.length === 0 || anyOf.some((p) => permissions.includes(p));
 }
 
 /**
@@ -203,20 +211,12 @@ export function mayOpen(permissions: readonly string[], href: string): boolean {
 }
 
 /**
- * Where a role's work starts (E6): whoever runs the café, on the Dashboard;
- * the books' people, on Reports; the barista, on Production; the cashier, at
- * the till; the counter, on the count; purchasing, on Purchasing.
+ * Where a role's work starts (E6, then the sales round): everyone on Today,
+ * their own jobs for the day, each one tap from where it is done, whatever
+ * their role. The screens themselves are a tap away.
  */
-export function roleHome(permissions: readonly string[]): string {
-  const has = (p: string) => permissions.includes(p);
-  if (has("profit.view")) return has("sale.create") ? "/dashboard" : "/reports";
-  if (has("production.record")) return "/production";
-  if (has("sale.create")) return "/pos";
-  if (has("inventory.count")) return "/count";
-  if (has("purchase.create")) return "/purchasing";
-  if (has("waste.record")) return "/inventory";
-  if (has("cost.view")) return "/reports";
-  return "/account";
+export function roleHome(_permissions: readonly string[]): string {
+  return "/today";
 }
 
 /**
