@@ -2811,7 +2811,9 @@ a.card.stat:focus-visible {
   border-radius: 4px;
   background: #fff;
   color: #000;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), 0 8px 24px -12px rgba(60, 30, 10, 0.35);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.08),
+    0 8px 24px -12px rgba(60, 30, 10, 0.35);
   font:
     12px/1.35 "Plus Jakarta Sans",
     Arial,
@@ -3082,7 +3084,8 @@ a.card.stat:focus-visible {
   top: 76px;
   padding: 14px;
   border-radius: 14px;
-  background: repeating-linear-gradient(
+  background:
+    repeating-linear-gradient(
       135deg,
       transparent 0 10px,
       color-mix(in srgb, var(--brand) 5%, transparent) 10px 20px
@@ -5339,6 +5342,39 @@ a.card.stat:focus-visible {
     width: 52px;
     height: 52px;
   }
+}
+
+/* --------------------------------------------------------------- today */
+/* Each person's jobs for the day: what is to do marked and its button bold;
+   what waits, or is for later, quieter; what is done ticked. */
+.today-job.todo {
+  border-inline-start: 4px solid var(--warn);
+}
+.today-job.waiting {
+  border-inline-start: 4px solid var(--border);
+}
+.today-job.later .eod-say,
+.today-job.done .eod-say {
+  color: var(--text-muted);
+}
+.today-job .badge {
+  margin-inline-start: 6px;
+  vertical-align: middle;
+}
+.today-job .eod-go .btn-soft {
+  min-height: 40px;
+}
+.today-job .eod-go .today-now {
+  min-height: 44px;
+  padding: 0 18px;
+  font-size: 0.92rem;
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+.today-job .eod-go .today-now:hover,
+.today-job .eod-go .today-now:focus-visible {
+  background: var(--brand-2);
+  color: var(--brand-ink);
 }
 
 /* The dashboard's recent sales: the time first, never broken over two lines. */
@@ -7846,4 +7882,134 @@ details.page-intro > p {
 }
 .watch-finding.strong {
   border-inline-start-color: var(--err);
+}
+
+/* Practice (0096): on every screen while practising, never mistaken for real. */
+.practice-banner {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 8px 16px;
+  background: repeating-linear-gradient(-45deg, #f4b740, #f4b740 14px, #f7c862 14px, #f7c862 28px);
+  color: #3a2200;
+  font-size: 0.9rem;
+}
+.practice-banner strong {
+  letter-spacing: 0.12em;
+}
+.practice-banner .practice-banner-go {
+  color: #3a2200;
+  font-weight: 600;
+}
+.practice-banner form {
+  margin-inline-start: auto;
+}
+.practice-banner button {
+  background: #3a2200;
+  color: #fff;
+  border: 0;
+}
+.app-shell.practising {
+  box-shadow: inset 0 0 0 4px #f4b740;
+}
+@media print {
+  .practice-banner {
+    display: none;
+  }
+}
+.practice-tasks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.practice-tasks li {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 4px 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.practice-tasks li.done {
+  opacity: 0.75;
+}
+.practice-tasks li.next {
+  border-color: var(--warn);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--warn) 30%, transparent);
+}
+
+/* The ? help on every screen (G3). */
+.help-button {
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 0 10px;
+}
+.help-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(30, 18, 8, 0.35);
+  display: flex;
+  justify-content: flex-end;
+}
+.help-panel {
+  width: min(480px, 100vw);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--surface, #fff);
+  color: var(--text, inherit);
+  padding: 16px;
+  box-shadow: -8px 0 24px -12px rgba(60, 30, 10, 0.45);
+}
+.help-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.help-body section + section {
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+  padding-top: 8px;
+}
+.help-body h3 {
+  margin: 8px 0 4px;
+  font-size: 1.05rem;
+}
+.help-body h4 {
+  margin: 10px 0 2px;
+  font-size: 0.9rem;
+}
+.help-body dt {
+  font-weight: 600;
+  margin-top: 6px;
+}
+.help-body dd {
+  margin: 0 0 4px;
+}
+.help-body details {
+  margin: 6px 0;
+}
+@media print {
+  .help-button,
+  .help-scrim {
+    display: none;
+  }
+}
+.practice-video video {
+  display: block;
+  max-width: 100%;
+  margin-top: 6px;
+  border-radius: 8px;
 }

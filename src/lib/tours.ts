@@ -127,6 +127,127 @@ export const TOURS: readonly Tour[] = [
       },
     ],
   },
+  // Everyone's first screen (G1), and the rest of the roles' own (G3).
+  {
+    key: "today",
+    path: "/today",
+    steps: [
+      {
+        at: ['[data-testid="today-practice"]'],
+        title: "New here? Practise first",
+        text: "Try your work in a practice café of your own: nothing you do there is real.",
+      },
+      {
+        at: ['[data-testid="today-progress"]'],
+        title: "Your day",
+        text: "How many of today's jobs are done. When all are, it says so.",
+      },
+      {
+        at: [".today-job"],
+        title: "One job, one button",
+        text: "Each job of your role, in the order of the day. Its button goes straight to where it is done.",
+      },
+      {
+        at: ['[data-testid="help-button"]'],
+        title: "Help on every screen",
+        text: "Press ? on any screen: what it is for, what you can do there, and your tasks on it step by step.",
+      },
+      {
+        at: ["#sidenav", ".menu-toggle"],
+        title: "Everything else",
+        text: "Every other screen is in the menu: the till, the stock, the reports.",
+      },
+    ],
+  },
+  {
+    key: "count",
+    path: "/count",
+    steps: [
+      {
+        at: ['[data-testid="counts-table"]'],
+        title: "The counts",
+        text: "Each count: who counted, when, and whether it waits for review. Start a count, type what is on the shelf, and send it.",
+      },
+      {
+        at: ['[data-testid="help-button"]'],
+        title: "Help on every screen",
+        text: "Press ? on any screen: what it is for, what you can do there, and your tasks on it step by step.",
+      },
+    ],
+  },
+  {
+    key: "purchasing",
+    path: "/purchasing",
+    steps: [
+      {
+        at: ['[data-testid="buying-link"]'],
+        title: "What to buy",
+        text: "The items running low, with how much to order from whom.",
+      },
+      {
+        at: ['[data-testid="po-form"]'],
+        title: "Order",
+        text: "An order to a supplier: approve it, then send it.",
+      },
+      {
+        at: ['[data-testid="receive"]'],
+        title: "Receive",
+        text: "What the supplier brought, line by line, with its prices: the stock and the books follow.",
+      },
+      {
+        at: ['[data-testid="help-button"]'],
+        title: "Help on every screen",
+        text: "Press ? on any screen: what it is for, what you can do there, and your tasks on it step by step.",
+      },
+    ],
+  },
+  {
+    key: "reports",
+    path: "/reports",
+    steps: [
+      {
+        at: ['[data-testid="reports-learned"]', "#g-sales"],
+        title: "The reports",
+        text: "Each report in a word; the ones you open most come first.",
+      },
+      {
+        at: ["#pnl"],
+        title: "Profit and loss",
+        text: "What came in and what it cost for the dates chosen: open a figure to see what is behind it.",
+      },
+      {
+        at: ["#reconciliation"],
+        title: "Do the books tie?",
+        text: "The books checked against the till, the drawer and the stock: every line should be ticked.",
+      },
+      {
+        at: ['[data-testid="help-button"]'],
+        title: "Help on every screen",
+        text: "Press ? on any screen: what it is for, what you can do there, and your tasks on it step by step.",
+      },
+    ],
+  },
+  {
+    key: "practice",
+    path: "/practice",
+    steps: [
+      {
+        at: ['[data-testid="practice-start"]'],
+        title: "Practise",
+        text: "A practice café of your own: the same screens, pretend money and stock. Nothing there reaches the books.",
+      },
+      {
+        at: ['[data-testid="practice-tasks"]'],
+        title: "Your tasks",
+        text: "Your role's tasks, in order: each is ticked once you have done it in practice.",
+      },
+      {
+        at: ['[data-testid="practice-team"]'],
+        title: "Your team's practice",
+        text: "Who has practised, and who is ready.",
+      },
+    ],
+  },
 ];
 
 /** The tour for a page, if it has one. */

@@ -308,7 +308,7 @@ console.log("▸ Inventory's tiles open their items");
   const only = (await page.getByTestId("stock-only").textContent()) ?? "";
   check(
     (await page.getByTestId("stock-board").locator("tbody tr").count()) === low &&
-      only.includes(`Only the ${counted(low, "item")} at or below their reorder level.`),
+      only.includes(`Only the ${counted(low, "item")} below their reorder level.`),
     `"Below reorder level" opens its ${counted(low, "item")} alone`,
   );
   await page.getByTestId("stock-only").getByRole("link", { name: "Show every item" }).click();

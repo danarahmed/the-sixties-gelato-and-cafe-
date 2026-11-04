@@ -271,6 +271,14 @@ export default async function ReportsPage({
       href: "/reports/watch",
       label: t("Watch list: patterns worth a look →"),
     });
+  // Where people get stuck (0097), for the owner.
+  if (profile.roles.includes("owner"))
+    reportPages.push({
+      path: "/reports/stuck",
+      testId: "to-stuck",
+      href: "/reports/stuck",
+      label: t("Where people get stuck: the screens that stop people most →"),
+    });
   const reportsLearned = mostOpenedFirst(reportPages, visits);
   // The café's and the bakery's takings and profit (0074), once the menu has
   // parts: the sales analysis by category, each counted in its part.

@@ -90,6 +90,8 @@ Plan a short window when the café is closed.
 | Cash ahead (`0093`)                        | ✅ Applied by the owner in the SQL editor on 22 October; Reports → Cash ahead then showed the bank and the safe for the next 30 days                                                                                                                                                                                                                                                                                                             |
 | The watch list (`0094`)                    | ✅ Applied by the owner in the SQL editor on 22 October; Reports → Watch list then opened, with nothing standing out                                                                                                                                                                                                                                                                                                                             |
 | What the guide found (`0095`)              | ⏳ To be applied by the owner in the SQL editor (see After `0095` below)                                                                                                                                                                                                                                                                                                                                                                         |
+| Practice (`0096`)                          | ⏳ To be applied by the owner in the SQL editor (see After `0096` below)                                                                                                                                                                                                                                                                                                                                                                         |
+| Where people get stuck (`0097`)            | ⏳ To be applied by the owner in the SQL editor (see After `0097` below)                                                                                                                                                                                                                                                                                                                                                                         |
 
 ## 0. Before you start
 
@@ -4227,6 +4229,53 @@ every other test.
 It is applied by the owner, in Supabase's SQL editor, after `0094`:
 
 1. Open the file `supabase/migrations/0095_findings.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0096`
+
+Migration `0096` brings **Practice**: anyone can practise their work in a
+practice café of their own (My account → Practise first, or the Practice
+page). It has the same screens, a small menu (espresso, latte, croissant,
+water), stock, a supplier, two tables, two practice colleagues and a count
+waiting for a manager. Every screen shows a striped **PRACTICE** banner while
+it is on, and **Stop practising** goes back to the café. Nothing done in
+practice reaches the café's books: while practising, the database answers as
+the person's practice twin, in the practice café, and every rule that keeps
+one café's records from another's keeps them apart. Each role has its tasks
+(sell two lattes by card, close the drawer, approve a count…), ticked as they
+are done; whoever keeps the staff sees on the Practice page who is ready.
+
+Nothing recorded changes. Rehearsed with `tests/sql/practice.test.sql` and
+every other test.
+
+It is applied by the owner, in Supabase's SQL editor, after `0095`:
+
+1. Open the file `supabase/migrations/0096_practice.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0097`
+
+Migration `0097` brings **Reports → Where people get stuck**, for the owner:
+each time the database refuses something on a screen, or someone opens a
+screen's help, it is noted with the screen, what was said, who and whether it
+was practice. The report lists the screens that stop people most, by how
+many people and which roles, with what was said most, over the last 7, 30 or
+90 days. Notes are kept 180 days.
+
+Nothing recorded changes. Rehearsed with `tests/sql/stuck.test.sql` and
+every other test.
+
+It is applied by the owner, in Supabase's SQL editor, after `0096`:
+
+1. Open the file `supabase/migrations/0097_stuck.sql` on GitHub, press **Raw**,
    select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run

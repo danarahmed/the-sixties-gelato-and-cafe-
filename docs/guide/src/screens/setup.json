@@ -180,7 +180,7 @@
       {
         "role": "owner",
         "can": "everything on the page, including giving or taking the Owner and General manager roles, deactivating any person but themselves, and choosing whether the general manager reads the watch list",
-        "cannot": "deactivate themselves; change the café's details (name, currency, timezone, default language, bill numbers) — there is no screen for them"
+        "cannot": "deactivate themselves; change the café's details: only the owner changes them (The café's details on Settings)"
       },
       {
         "role": "general_manager",
@@ -521,7 +521,7 @@
       },
       {
         "name": "Places → Locations",
-        "shows": "Every place: its name, its kind (“Branch”, “Central kitchen” or “Warehouse”) and “active” or “inactive”. Places cannot be added or renamed here. When the menu has sections in use, each branch also shows what it sells: “Sells everything” (none chosen) or “Sells only:” and a button for each section.",
+        "shows": "Every place: its name, its kind (“Branch”, “Central kitchen” or “Warehouse”) and “active” or “inactive”. Under the list: add a place (its kind and its names in English, Arabic and Kurdish), and on each row Rename, Close (with a reason, once nothing is open or left there) or Open again. When the menu has sections in use, each branch also shows what it sells: “Sells everything” (none chosen) or “Sells only:” and a button for each section.",
         "controls": [
           {
             "label": "(a section's name)",
@@ -544,7 +544,7 @@
       },
       {
         "name": "The café's details (folded group)",
-        "shows": "Heading “The café's details” with the currency and timezone. Inside, “Business configuration”: “Business name”; “Currency” — “{code} — {n} decimal places”; “Timezone” — “{timezone} — every trading day and period runs midnight to midnight here”; “Default language”; “Bill numbers” — “{prefix}-{year}-0001, -0002 … for a bill entered without the supplier's number: never given twice, never typed in by hand”. Then: “These are changed in the database by the owner; there is no screen for them yet.” Read only.",
+        "shows": "Heading “The café's details” with the currency and timezone. Inside, “Business configuration”: “Business name”; “Currency” — “{code} — {n} decimal places”; “Timezone” — “{timezone} — every trading day and period runs midnight to midnight here”; “Default language”; “Bill numbers” — “{prefix}-{year}-0001, -0002 … for a bill entered without the supplier's number: never given twice, never typed in by hand”. For the owner, a form: the name and the default language change at any time; the currency, its sign, decimal places, the time zone and how bill numbers start change only until the café has sold or posted anything, then show “Fixed: the café has sold or posted with it, and every record reads by it.” Anyone else sees them shut, with “Only the owner changes the café's details.”",
         "controls": []
       }
     ],
@@ -1060,7 +1060,7 @@
             "label": "+ Set it for {what}",
             "kind": "button",
             "does": "Shown for rules that can be set for more than the whole café: “+ Set it for a role” (discounts, refunds, losses, purchase orders) or “+ Set it for a kind of item / one item” (using more stock than the books hold). Opens: “Applies to” (A kind of item / One item, when there are two), then a list “Choose…” of the roles, kinds of item (Ingredient, Packaging, Consumable, Finished good, Resale, Sub-recipe) or items. Choosing one opens the value and reason form.",
-            "rules": "Not offered for branches: a rule's branch rows cannot be added from this screen."
+            "rules": "For the daily sales target and the labour target, a branch's own row; for the transfer charge, a sending place's (since 0095)."
           }
         ]
       },
@@ -2773,5 +2773,156 @@
         "setup": "Turn the device's network off on POS."
       }
     ]
+  },
+  {
+    "path": "/today",
+    "title": "Today — your jobs for the day",
+    "area": "Setup",
+    "summary": "Where everyone starts after signing in: only today's jobs for your role, in the order of the day, each with one button to where it is done, and ticked once done. A cashier sees the drawer; a counter, the count waiting; a manager, the start of the day, approvals, deliveries and red alerts; the accountant, bills due, the bank and the books.",
+    "who": [
+      {
+        "role": "owner",
+        "can": "See and do today's jobs of their role."
+      },
+      {
+        "role": "general_manager",
+        "can": "See and do today's jobs of their role."
+      },
+      {
+        "role": "branch_manager",
+        "can": "See and do today's jobs of their role."
+      },
+      {
+        "role": "cashier",
+        "can": "See and do today's jobs of their role."
+      },
+      {
+        "role": "barista",
+        "can": "See and do today's jobs of their role."
+      },
+      {
+        "role": "inventory_counter",
+        "can": "See and do today's jobs of their role."
+      },
+      {
+        "role": "purchasing",
+        "can": "See and do today's jobs of their role."
+      },
+      {
+        "role": "accountant",
+        "can": "See and do today's jobs of their role."
+      },
+      {
+        "role": "auditor",
+        "can": "See and do today's jobs of their role."
+      }
+    ],
+    "get_there": "Sign in: you land here (unless you chose another first screen on My account). Also: Menu → Today, the first entry.",
+    "before": [],
+    "parts": [],
+    "states": [],
+    "messages": [],
+    "skipped_messages": [],
+    "what_if": [
+      {
+        "case": "A job you expected is not there",
+        "do": "Today shows only what your role does. If it should be yours, ask the owner to check your role on Settings → People and roles."
+      },
+      {
+        "case": "It says “All done for now”",
+        "do": "Nothing is waiting for you: carry on with your work, or check back later."
+      },
+      {
+        "case": "You are new",
+        "do": "Press “Start practising” on the card at the top: you practise in a café of your own first, and nothing there is real."
+      }
+    ],
+    "tips": [
+      "Each job's one button goes straight to where it is done.",
+      "To do comes first, then what waits on someone else, then later, then done."
+    ],
+    "related": [
+      "/start-of-day",
+      "/end-of-day",
+      "/practice"
+    ],
+    "shots": []
+  },
+  {
+    "path": "/practice",
+    "title": "Practice — your work, with pretend money and stock",
+    "area": "Setup",
+    "summary": "Practise your work in a practice café of your own: the same screens, a small menu (espresso, latte, croissant, water), stock, a supplier, two tables and two practice colleagues. Nothing done there reaches the café's books. Your role's tasks are listed in order, each ticked once you have done it in practice; when all are ticked you are ready. For whoever keeps the staff, the team's practice: each person's tasks done, and who is ready.",
+    "who": [
+      {
+        "role": "owner",
+        "can": "Practise their own role's tasks. See the team's practice."
+      },
+      {
+        "role": "general_manager",
+        "can": "Practise their own role's tasks. See the team's practice."
+      },
+      {
+        "role": "branch_manager",
+        "can": "Practise their own role's tasks. See the team's practice."
+      },
+      {
+        "role": "cashier",
+        "can": "Practise their own role's tasks."
+      },
+      {
+        "role": "barista",
+        "can": "Practise their own role's tasks."
+      },
+      {
+        "role": "inventory_counter",
+        "can": "Practise their own role's tasks."
+      },
+      {
+        "role": "purchasing",
+        "can": "Practise their own role's tasks."
+      },
+      {
+        "role": "accountant",
+        "can": "Practise their own role's tasks."
+      },
+      {
+        "role": "auditor",
+        "can": "Practise their own role's tasks."
+      }
+    ],
+    "get_there": "My account → Practise first; the card at the top of Today; or the PRACTICE banner's “Your practice tasks” while practising.",
+    "before": [],
+    "parts": [],
+    "states": [],
+    "messages": [],
+    "skipped_messages": [],
+    "what_if": [
+      {
+        "case": "You are not sure whether you are practising",
+        "do": "Look at the top: while practising, a striped PRACTICE banner is on every screen. With no banner, everything is real."
+      },
+      {
+        "case": "You want to start over",
+        "do": "Press “Start again from the first day”: a fresh practice café; what you ticked stays ticked."
+      },
+      {
+        "case": "It says “Practice has ended”",
+        "do": "Press “Back to the café”, then start practising again when you want."
+      },
+      {
+        "case": "A task is not ticked after you did it",
+        "do": "Open Practice again: ticks are read from what you did. Check it matches the task (for example two small lattes, by card)."
+      }
+    ],
+    "tips": [
+      "Press “Stop practising” on the banner to go back to the real café.",
+      "Try everything in practice, including mistakes: nothing there is real."
+    ],
+    "related": [
+      "/today",
+      "/account"
+    ],
+    "shots": []
   }
 ]

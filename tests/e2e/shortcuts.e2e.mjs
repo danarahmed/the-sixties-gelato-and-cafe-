@@ -1,9 +1,9 @@
 // Fewer steps to the work (SMART_PLAN step 2). Find anything: Ctrl+K opens
 // one box; a screen is found by its name, a product by part of its name, a
 // journal by its number, and Enter goes there; the cashier is shown only what
-// a cashier may read. Each role's first screen: the barista starts on
-// Production; a person may choose their own first screen on My account, kept
-// with their sign-in, and back to their role's. Photos many at once, each to
+// a cashier may read. Each role's first screen: everyone starts on Today; a
+// person may choose their own first screen on My account, kept with their
+// sign-in, and back to their role's. Photos many at once, each to
 // the product its file is named for, and what fits none named. On a phone the
 // owner's Dashboard is short: the rest one tap away.
 import { BASE, chromium, check, done, open, signIn, sql } from "./lib.mjs";
@@ -110,22 +110,26 @@ console.log("▸ find anything");
 console.log("▸ each role's first screen");
 {
   const { ctx, page } = await signIn(browser, "barista");
-  check((await landed(page)) === "/production", "the barista starts on Production");
+  check((await landed(page)) === "/today", "the barista starts on Today");
   await ctx.close();
 }
 {
   const { ctx, page } = await signIn(browser, "counter");
-  check((await landed(page)) === "/count", "the counter starts on the count");
+  check((await landed(page)) === "/today", "the counter starts on Today");
   await open(page, "/account");
+  const offered = await page
+    .getByTestId("first-screen")
+    .locator("option")
+    .evaluateAll((os) => os.map((o) => o.getAttribute("value")));
   check(
-    (await page.getByTestId("first-screen-card").count()) === 0,
-    "with one screen, there is nothing to choose",
+    JSON.stringify(offered) === JSON.stringify(["", "/today", "/count"]),
+    `and may choose Today or the count to start on (${offered.join(", ")})`,
   );
   await ctx.close();
 }
 {
   const { ctx, page } = await signIn(browser, "owner");
-  check((await landed(page)) === "/dashboard", "the owner starts on the Dashboard");
+  check((await landed(page)) === "/today", "the owner starts on Today");
   await open(page, "/account");
   await page.getByTestId("first-screen").selectOption("/pos");
   await page.getByText("Saved: you start there from now on.").waitFor({ timeout: 15000 });
@@ -138,7 +142,7 @@ console.log("▸ each role's first screen");
   await again.page.getByTestId("first-screen").selectOption("");
   await again.page.getByText("Saved: you start there from now on.").waitFor({ timeout: 15000 });
   await open(again.page, "/");
-  check(new URL(again.page.url()).pathname === "/dashboard", "back to the role's own");
+  check(new URL(again.page.url()).pathname === "/today", "back to the role's own: Today");
   await again.ctx.close();
 }
 

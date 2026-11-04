@@ -9,7 +9,18 @@
   sign in.
 - **Forgot your password?** Choose **Forgot password?**; the email you receive
   takes you to **My account**, where you set a new one.
-- As a cashier you see the **POS** and **My account**. That is by design.
+- You start on **Today**: your jobs for the day, in order, each with one
+  button that goes straight to where it is done, and a tick once it is. For a
+  cashier that is the drawer: **Open the drawer** while it is closed, then
+  **Sell** to go to the till.
+- As a cashier you see **Today**, the **POS** and **My account**. That is by
+  design.
+- **New?** Press **Practise first** on My account (or on Today): you practise
+  in a café of your own, with pretend money. A striped **PRACTICE** banner
+  shows on every screen; nothing you do there is real. Press **Stop
+  practising** to go back.
+- **Stuck?** Press **?** at the top of any screen: what it is for and your
+  tasks on it, step by step, in your language.
 
 ## The till
 

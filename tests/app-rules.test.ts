@@ -368,30 +368,29 @@ describe("where each role lands", () => {
     expect(holdsAny(perms(role), entry!.anyOf)).toBe(true);
   });
 
-  it("each role starts where its work is (E6)", () => {
-    expect(homeFor(perms("owner"))).toBe("/dashboard");
-    expect(homeFor(perms("branch_manager"))).toBe("/dashboard");
-    expect(homeFor(perms("accountant"))).toBe("/reports");
-    expect(homeFor(perms("auditor"))).toBe("/reports");
-    expect(homeFor(perms("barista"))).toBe("/production");
-    expect(homeFor(perms("inventory_counter"))).toBe("/count");
-    expect(homeFor(perms("purchasing"))).toBe("/purchasing");
+  it("everyone starts on Today, their own jobs for the day (E6, the sales round)", () => {
+    for (const role of roles) expect(homeFor(perms(role))).toBe("/today");
+    // Someone with no permission at all is offered Today too.
+    expect(homeFor([])).toBe("/today");
+    expect(NAV[0]?.href).toBe("/today");
   });
 
   it("a chosen first screen is kept only while the menu offers it", () => {
     expect(homeFor(perms("owner"), "/pos")).toBe("/pos");
     expect(homeFor(perms("barista"), "/pos")).toBe("/pos");
+    expect(homeFor(perms("owner"), "/dashboard")).toBe("/dashboard");
+    expect(homeFor(perms("inventory_counter"), "/count")).toBe("/count");
     // Not theirs, not a screen, or another site: their role's instead.
-    expect(homeFor(perms("cashier"), "/reports")).toBe("/pos");
-    expect(homeFor(perms("cashier"), "/nowhere")).toBe("/pos");
-    expect(homeFor(perms("owner"), "https://example.com")).toBe("/dashboard");
+    expect(homeFor(perms("cashier"), "/reports")).toBe("/today");
+    expect(homeFor(perms("cashier"), "/nowhere")).toBe("/today");
+    expect(homeFor(perms("owner"), "https://example.com")).toBe("/today");
     expect(homeFor(perms("owner"), null)).toBe(roleHome(perms("owner")));
   });
 
-  it("a cashier starts at the till and is not offered the books", () => {
+  it("a cashier starts on Today, is offered the till, and not the books", () => {
     const offered = NAV.filter((n) => holdsAny(perms("cashier"), n.anyOf)).map((n) => n.href);
-    expect(homeFor(perms("cashier"))).toBe("/pos");
-    expect(offered).toEqual(["/pos"]);
+    expect(homeFor(perms("cashier"))).toBe("/today");
+    expect(offered).toEqual(["/today", "/pos"]);
   });
 
   it("the menu lights one entry: the screen's, or the nearest above it", () => {
@@ -411,7 +410,7 @@ describe("where each role lands", () => {
     const offered = NAV.filter((n) => holdsAny(perms("inventory_counter"), n.anyOf)).map(
       (n) => n.href,
     );
-    expect(offered).toEqual(["/count"]);
+    expect(offered).toEqual(["/today", "/count"]);
   });
 
   it("only people who manage settings see Settings", () => {

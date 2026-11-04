@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateBusinessDetailsAction } from "@/lib/actions/details";
 import { useT } from "@/lib/i18n/I18nProvider";
@@ -48,7 +48,9 @@ export function DetailsManager({
     timezone: details.timezone,
     billPrefix: details.billPrefix,
   });
-  const zones = useMemo(allZones, []);
+  // The browser's own list of time zones, once on the page: the server's may differ.
+  const [zones, setZones] = useState<string[]>(NEAR_ZONES);
+  useEffect(() => setZones(allZones()), []);
   const can = details.owner;
   const open = can && !details.fixed;
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) =>

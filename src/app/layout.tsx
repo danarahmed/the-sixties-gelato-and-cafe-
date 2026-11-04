@@ -47,6 +47,7 @@ async function shellMember(): Promise<ShellMember | null> {
       permissions: s.profile.permissions,
       // What waits for them, counted on the menu (0088).
       approvals: approver ? await getApprovalsCount() : 0,
+      practice: s.profile.practice,
     };
   } catch {
     return null;

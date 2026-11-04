@@ -2054,6 +2054,52 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Where people get stuck (`0097`)
+
+- **`stuck_event`**: a refusal or a help opened (`kind` `refused` or `help`)
+  on a screen (`path`, ids in it made `x` by `stuck_path`, so an item's page
+  is one screen), with what was said (`message`, a refusal's words), who
+  (`app_user_id`, the person, never their practice twin), under their own
+  café, `practice` when it was in practice, and `at`. The same note from the
+  same person within a minute is one; notes older than 180 days go. Read by
+  no one but through the report.
+- `note_stuck(path, kind, message)` (anyone): the app notes each refusal of a
+  database function with the screen it came from, and each help opened.
+  `stuck_report(days)` (the owner): each screen's refusals and help opened
+  (practice apart), how many people and their roles, and the five things
+  said most.
+
+### Practice (`0096`)
+
+- **`business.practice_of`**: set on a practice café, naming the café whose
+  person practises there; null for a real café.
+- **`practice_twin`**: a person (`app_user_id`) and their twin (`twin_id`), a
+  person of their practice café with the same roles, since `started_at`.
+  `practice_reset` gives the person a fresh practice café: the old twin is
+  taken out of use and `twin_id` moves to the new one. Read by no one.
+- **`practice_task_done`**: each practice task a person has done
+  (`app_user_id`, `task`, `done_at`), kept once ticked, through every fresh
+  practice café. Read by no one.
+- Who a request is: `session_member_id()` is the person signed in
+  (`real_member_id()`), or, when the request carries the header
+  `x-sixties-practice: 1` (`practicing()`), their twin, and no one when they
+  have none. `current_member`, `current_app_user_id`, `current_business_id`,
+  `current_has_permission`, `current_has_role`, `current_work_place` and
+  `my_profile` (with `practice`) all ask it, so every rule follows. The
+  second step and its backup codes stay the person's own.
+- `practice_seed` (internal) makes a practice café: two places (a branch and a
+  kitchen) with their drawers, the twin, two colleagues (Sara, a cashier;
+  Omar, a counter, whose count of the kitchen's coffee beans waits for a
+  manager), seven items with their stock in the books, a vanilla base made
+  in batches (5 L from milk and sugar), a menu of four products with recipes
+  and prices, a supplier and two tables.
+- `practice_task_list` (internal): the tasks and the permission each needs;
+  `practice_task_met` (internal) reads from the practice café's records and
+  audit trail whether the twin did one. `practice_tasks` (anyone: their
+  tasks, ticked), `practice_start`, `practice_reset` (on the audit trail as
+  `practice.start` and `practice.reset`) and `practice_team` (staff.manage:
+  each person's tasks done of all).
+
 ### What the guide found (`0095`)
 
 - **`two_step_backup_code`**: a person's backup codes for the second step

@@ -1,5 +1,6 @@
 import "server-only";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import type { PostgrestError } from "@supabase/supabase-js";
 import type { ZodType } from "zod";
 import { v5 as uuidv5 } from "uuid";
@@ -64,12 +65,34 @@ export async function callRpc<T>(
       }
       const said = friendlyError(error);
       console.warn(rpcLogLine(fn, "refused", { code: error.code, status, message: said }));
+      await noteRefused(client, fn, said);
       return { ok: false, error: said };
     }
     return { ok: true, data: data as T };
   } catch {
     console.warn(rpcLogLine(fn, "uncertain"));
     return { ok: false, uncertain: true, error: UNCERTAIN_MESSAGE };
+  }
+}
+
+/**
+ * Where people get stuck (0097): a refusal noted with the screen it came
+ * from, so the owner sees which screens stop people. Never in the way: a
+ * failure to note it, or a database without 0097, is left unsaid.
+ */
+async function noteRefused(
+  client: Awaited<ReturnType<typeof createServerSupabase>>,
+  fn: string,
+  said: string,
+): Promise<void> {
+  if (fn === "note_stuck" || said === MISSING_UPDATE) return;
+  try {
+    const referer = (await headers()).get("referer");
+    const path = referer ? new URL(referer).pathname : null;
+    if (!path) return;
+    await client.rpc("note_stuck", { p_path: path, p_kind: "refused", p_message: said });
+  } catch {
+    // Nothing to do: the refusal itself is what the person needs to see.
   }
 }
 

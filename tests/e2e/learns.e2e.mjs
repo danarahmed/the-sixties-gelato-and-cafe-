@@ -137,11 +137,12 @@ console.log("▸ What to buy leaves what was thrown away out of use, and asks ho
   const why = await creamWhy(page);
   check(
     why.includes(
-      "About 1,000 ml a day over the last 20 days; a delivery takes 1 day, and a day more: 2,000 ml is its reorder level.",
+      "About 1,000 ml a day over the last 20 days: until it comes, and a day more, about 2,000 ml.",
     ) &&
+      why.includes("2,000 ml is its reorder level.") &&
       why.includes("600 ml thrown away unsold in the last 20 days is not counted as use.") &&
       why.includes("10 × Carton of 1 L (10,000 ml), rounded up to whole packs."),
-    "cream: a litre a day, the 600 ml spoilt left out, up to its par level: ten cartons",
+    `cream: a litre a day, the 600 ml spoilt left out, up to its par level: ten cartons (${why})`,
   );
   check(
     (await creamLine(page).getByLabel("Quantity").inputValue()) === "10",

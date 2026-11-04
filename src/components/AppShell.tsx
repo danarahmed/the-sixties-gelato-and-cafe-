@@ -1,5 +1,6 @@
 "use client";
 
+import { stopPracticeAction } from "@/lib/actions/practice";
 import { use, useState, useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -9,11 +10,13 @@ import { NAV, activeHref, holdsAny, splitMenu } from "@/lib/auth/routes";
 import { BrandMark, Icon, type IconName } from "@/components/Icon";
 import { TourMenuItem, TourRunner } from "@/components/Tour";
 import { ProblemButton } from "@/components/ProblemButton";
+import { HelpButton } from "@/components/HelpButton";
 import { FindAnything, type Screen } from "@/components/FindAnything";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 
 /** Each screen's icon in the menu, beside its name. */
 const NAV_ICONS: Record<string, IconName> = {
+  "/today": "compass",
   "/dashboard": "dashboard",
   "/approvals": "check",
   "/sales": "sales",
@@ -47,6 +50,27 @@ export interface ShellMember {
   permissions: string[];
   /** What waits for their approval (0088), counted beside Approvals. */
   approvals?: number;
+  /** Practising (0096): a banner on every screen, so practice is never taken for real. */
+  practice?: boolean;
+}
+
+/** Practice, said on every screen, with the way back. */
+function PracticeBanner() {
+  const { t } = useT();
+  return (
+    <div className="practice-banner" role="status" data-testid="practice-banner">
+      <strong>{t("PRACTICE")}</strong>
+      <span>{t("Nothing here is real: no money, no stock, nothing in the books.")}</span>
+      <Link href="/practice" className="practice-banner-go">
+        {t("Your practice tasks")}
+      </Link>
+      <form action={stopPracticeAction}>
+        <button type="submit" data-testid="practice-stop">
+          {t("Stop practising")}
+        </button>
+      </form>
+    </div>
+  );
 }
 
 /** Whether the browser is online, kept current. */
@@ -207,6 +231,7 @@ const REPORT_PAGES: [string, string][] = [
   ["/reports/sales", "Sales analysis"],
   ["/reports/statements", "Balance sheet and cash flow"],
   ["/reports/cash-ahead", "Cash ahead"],
+  ["/reports/stuck", "Where people get stuck"],
   ["/reports/week", "The week at a glance"],
   ["/reports/month", "The month at a glance"],
   ["/reports/menu", "Menu matrix"],
@@ -305,7 +330,9 @@ export function AppShell({
   };
 
   return (
-    <div className={`app-shell${posMode ? " pos-mode" : ""}`}>
+    <div
+      className={`app-shell${posMode ? " pos-mode" : ""}${member.practice ? " practising" : ""}`}
+    >
       {/* The first place the keyboard reaches: past the menu, to the page (AL). */}
       <a href="#content" className="skip-link">
         {t("Skip to the content")}
@@ -328,6 +355,7 @@ export function AppShell({
         </span>
         <span className="spacer" />
         <FindAnything screens={screens} />
+        <HelpButton />
         <Controls locale={locale} theme={theme} />
         <Link href="/account" className="badge account-badge" title={t("nav.account")}>
           <span className="account-name" dir="auto">
@@ -335,6 +363,7 @@ export function AppShell({
           </span>
         </Link>
       </header>
+      {member.practice && <PracticeBanner />}
       <OfflineBanner />
       <div className="layout">
         <nav

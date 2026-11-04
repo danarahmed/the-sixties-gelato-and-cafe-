@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SESSION_COOKIE, supabaseConfig } from "./config";
+import { PRACTICE_COOKIE, PRACTICE_HEADER } from "@/lib/practice";
 
 export class NotConfiguredError extends Error {
   constructor() {
@@ -21,8 +22,12 @@ export async function createServerSupabase(): Promise<SupabaseClient> {
   const cfg = supabaseConfig();
   if (!cfg) throw new NotConfiguredError();
   const store = await cookies();
+  // Practice (0096): every call says so, and the database answers as the
+  // person's twin in their practice café.
+  const practising = store.get(PRACTICE_COOKIE)?.value === "1";
   return createServerClient(cfg.url, cfg.anonKey, {
     cookieOptions: SESSION_COOKIE,
+    ...(practising ? { global: { headers: { [PRACTICE_HEADER]: "1" } } } : {}),
     cookies: {
       getAll: () => store.getAll(),
       setAll: (list) => {

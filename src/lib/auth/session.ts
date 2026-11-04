@@ -1,6 +1,8 @@
 import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { PRACTICE_COOKIE } from "@/lib/practice";
 import type { Permission } from "@domain/auth/permissions.js";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { supabaseConfig } from "@/lib/supabase/config";
@@ -35,6 +37,8 @@ export interface Profile {
   worksAtName: string | null;
   /** The first screen they chose on My account (E6); null for their role's. */
   firstScreen: string | null;
+  /** Practising (0096): this is their twin in their practice café, nothing of it real. */
+  practice: boolean;
 }
 
 export interface SessionState {
@@ -42,6 +46,8 @@ export interface SessionState {
   signedIn: boolean;
   email: string | null;
   profile: Profile | null;
+  /** Practice was on, but their practice café is no more (0096): they stop practising. */
+  practiceEnded?: boolean;
 }
 
 /**
@@ -62,7 +68,12 @@ export const getSession = cache(async (): Promise<SessionState> => {
 
   const { data, error } = await db.rpc("my_profile");
   if (error) throw new Error(`Could not load your profile: ${error.message}`);
-  if (!data) return { configured: true, signedIn: true, email, profile: null };
+  if (!data) {
+    // Practising with no practice café is no one: they are told, and stop.
+    const store = await cookies();
+    const practiceEnded = store.get(PRACTICE_COOKIE)?.value === "1";
+    return { configured: true, signedIn: true, email, profile: null, practiceEnded };
+  }
   const p = data as Record<string, unknown>;
   return {
     configured: true,
@@ -90,6 +101,7 @@ export const getSession = cache(async (): Promise<SessionState> => {
       worksAt: p.works_at == null ? null : String(p.works_at),
       worksAtName: p.works_at_name == null ? null : String(p.works_at_name),
       firstScreen,
+      practice: p.practice === true,
     },
   };
 });
@@ -99,6 +111,7 @@ export async function requireMember(): Promise<Profile> {
   const s = await getSession();
   if (!s.configured) redirect("/setup");
   if (!s.signedIn) redirect("/login");
+  if (!s.profile && s.practiceEnded) redirect("/practice");
   if (!s.profile) redirect("/account");
   return s.profile;
 }

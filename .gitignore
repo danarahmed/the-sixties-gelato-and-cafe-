@@ -42,3 +42,5 @@ next-env.d.ts
 # Workers' checkouts (git worktrees)
 .claude/worktrees/
 __pycache__/
+# The help's translation parts, merged into src/lib/help/{ar,ckb}.json (scripts/help/merge.mjs).
+src/lib/help/parts/

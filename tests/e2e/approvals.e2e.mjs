@@ -122,7 +122,7 @@ console.log("▸ the cashier");
   const menu = await page.$$eval("nav.sidenav a", (as) => as.map((a) => a.getAttribute("href")));
   check(!menu.includes("/approvals"), "is offered no Approvals");
   await page.goto(`${BASE}/approvals`);
-  check(new URL(page.url()).pathname === "/pos", "and is taken to the till from it");
+  check(new URL(page.url()).pathname === "/today", "and is taken to Today from it");
   await ctx.close();
 }
 

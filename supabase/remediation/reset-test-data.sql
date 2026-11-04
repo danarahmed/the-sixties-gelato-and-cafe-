@@ -89,6 +89,11 @@ select t from (values ('service_charge'), ('tip_sharer')) v(t) where to_regclass
 insert into reset_keep
 select t from (values ('receipt_setup'), ('receipt_logo'), ('report_visit')) v(t)
  where to_regclass('public.' || t) is not null;
+-- Who reads the watch list (0094) is a setting, and each login's backup codes
+-- for the second step (0095) are theirs: kept.
+insert into reset_keep
+select t from (values ('watch_state'), ('two_step_backup_code'), ('two_step_backup_try')) v(t)
+ where to_regclass('public.' || t) is not null;
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');
@@ -151,6 +156,12 @@ begin
                then ', asset_depreciation, depreciation_run, fixed_asset' else '' end
        || case when to_regclass('public.problem_report') is not null then ', problem_report' else '' end
        || case when to_regclass('public.sale_deal') is not null then ', sale_deal' else '' end
+       -- The watch list's findings (0094), each person's practice and its ticks
+       -- (0096: begun again in a new practice café), and where people got stuck (0097).
+       || case when to_regclass('public.watch_finding') is not null then ', watch_finding' else '' end
+       || case when to_regclass('public.practice_twin') is not null
+               then ', practice_task_done, practice_twin' else '' end
+       || case when to_regclass('public.stuck_event') is not null then ', stuck_event' else '' end
        || ' restart identity';
 end $$;
 

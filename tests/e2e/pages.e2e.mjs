@@ -7,6 +7,7 @@
 import { chromium, BASE, check, done, open, signIn } from "./lib.mjs";
 
 const PAGES = [
+  "/today",
   "/dashboard",
   "/sales",
   "/platforms",
@@ -90,8 +91,8 @@ for (const who of ["owner", "manager", "cashier", "counter"]) {
 
 // What each role is offered, exactly.
 const expected = {
-  cashier: ["/pos", "/account", "/devices"],
-  counter: ["/count", "/account", "/devices"],
+  cashier: ["/today", "/pos", "/account", "/devices"],
+  counter: ["/today", "/count", "/account", "/devices"],
 };
 for (const [who, want] of Object.entries(expected)) {
   const { ctx, page } = await signIn(browser, who);
