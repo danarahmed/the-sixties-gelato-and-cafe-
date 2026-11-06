@@ -268,3 +268,34 @@ phone, branches that cannot see each other, and an IT job at every café sold to
    moving the database means a new project.
 
 **Recommended:** 1 and 2 first (free), 3 with the Supabase decision, then 4.
+
+**Why the cloud, not a server in the café (recommended 6 November 2026):**
+
+| | Supabase + Vercel (paid) | A server in the café |
+|---|---|---|
+| The cashier's speed | Fast once the till works offline (step 4) | Very fast inside the café |
+| From home or a phone | The same everywhere | Slow or impossible unless opened to the internet (a risk) |
+| Power cuts | Not affected | Down with the power; needs a UPS and generator; data can be damaged |
+| Backups | Daily, by themselves (Supabase Pro) | Someone does them and tests them, every day |
+| A broken machine | Theirs, replaced in minutes | Ours: days without the system |
+| Security updates | Done for us | We patch the server, the database and the network |
+| Branches | All see the same books at once | Each still reaches the server over the internet |
+| Selling to other cafés | Set up in minutes; one update reaches all | A server to install, visit and repair at each |
+| Cost | About $45 a month ($25 Supabase Pro + $20 Vercel Pro) | About $800–2,000 at first (PC, UPS, backup disk), then time and repairs |
+
+**What staying on the cloud needs, in order:**
+1. Supabase Pro: its own computer (no spikes of seconds), no sleeping, daily
+   backups (which plan 7 needs anyway).
+2. Vercel Pro: far fewer cold first pages, and logs kept longer for finding
+   problems.
+3. Step 2 above: my slow code made fast (free).
+4. Step 4 above: the till that never waits for the internet.
+5. Monitoring: the owner told when the site is down or errors appear (with
+   plan 7, item 9).
+6. A second internet line at the café, such as a 4G router, so the books sync
+   when the main line is down (cheap; covers most outages).
+
+**When a server in the café would be chosen instead:** only where the internet
+is down for days, not hours, or a law requires the data to stay in the
+country. Nothing in the system ties it to the cloud: the database can be moved
+later if that ever happens.
