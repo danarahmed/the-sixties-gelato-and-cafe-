@@ -100,3 +100,59 @@ Plan: one Cashier scorecard for a period: sales, bills, average bill, items per
 bill, add-ons per bill, sales per hour worked (from the clock), voids, refunds and
 discounts, and drawer over or short. Ranked fairly: per hour worked and against
 the same hours of the day, since a Friday evening sells more than a Tuesday morning.
+
+## 6. The books: every gap before they are guaranteed to anyone (6 November 2026)
+
+What the books already do is strong (double entry posted by every record, nothing
+edited, months locked, the year closed, stock at average cost with the cost of
+each sale, waste, count and price differences on their own accounts, cash
+sessions, cards, platforms, the bank, prepaid expenses, equipment, payroll, tips,
+deposits, customer and supplier accounts, and "Do the books tie?"). What is
+lacking, in the order it matters:
+
+**Blockers (before the system is guaranteed to a customer):**
+1. **Never run with real money.** Every record is a test. Run the café on it for
+   2–3 real months, close each month, and have an outside accountant check the
+   trial balance and balance sheet against the bank statement, the safe and a full
+   stock count.
+2. **No backups.** The free plan keeps none, and no restore has been drilled (with
+   plan 1, the owner's call).
+3. **Supplier bills in dinars only.** Bills and payments in dollars, or both
+   (plan 5 A).
+4. **Balance-sheet accounts added only by a migration.** The owner cannot add a
+   second bank account, a loan, or another asset or debt; there is one bank
+   (1020) and no loan account. Plan: add them from Chart of Accounts, placed by
+   their kind; more than one bank, each reconciled; loans with their repayments
+   and interest.
+5. **No tax.** Out of scope by request. Plan: tax as an option per café (sales tax
+   or VAT on sales, tax on purchases where it is claimed back, the rate set by the
+   owner, a tax report for each period).
+
+**Important (a customer can start without them):**
+6. **Payroll:** no deductions the law asks for (social security and the like)
+   worked out; no payslip; no leave, holidays or sick days; overtime only by the
+   day.
+7. **Loyalty points** are a discount when taken, not a liability while held.
+   Plan: book points as owed as they are earned (optional, per café).
+8. **Cards and platforms typed by hand:** totals come from the terminal's report,
+   the bank's file or the platform's statement; nothing from the bank or the
+   platform itself (Talabat needs a partner account).
+9. **Reports:** no comparison with last month or last year, no budget against
+   actual, no cash flow by the indirect method, no notes; a year of dates at most
+   for the cash flow and the analysis.
+10. **No monitoring:** no error alerts or uptime checks, and no channel for alerts
+    or the daily brief (WhatsApp and email chosen, not set up).
+11. **Smaller gaps:**
+    - a supplier's refund in cash needs a journal by hand;
+    - no back-dated supplier credits; a bill is dated no earlier than its delivery;
+    - one dollar only, at a rate typed by a manager; dollars are not revalued at
+      month end;
+    - money moved through the till or the safe is dated the day it moves;
+    - a prepaid expense is changed only by cancelling it and recording it again;
+      a month's share is a whole month, released by a press, not by itself;
+    - a payroll is shared between places by where people work, not their hours;
+    - an approval limit on purchase orders by total only, with no second approver.
+
+**Before selling:** do not promise a "guarantee" in absolute words. Promise what is
+true (every record double-entry, balanced, locked and traceable), back it with
+support, and have a lawyer write the terms (with plan 2).
