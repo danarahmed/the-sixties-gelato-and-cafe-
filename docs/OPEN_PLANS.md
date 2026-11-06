@@ -212,3 +212,59 @@ the version Next uses), source-map-js 1.2.2.
 
 **Before selling:** an outside penetration test by a security firm, and its
 report kept for customers' IT people.
+
+## 8. Speed: as fast as possible, staying on Supabase and Vercel (6 November 2026)
+
+**Decision so far:** no physical server at the café. It would be fast inside the
+café, but brings power cuts, a disk with no backup, no access from home or the
+phone, branches that cannot see each other, and an IT job at every café sold to.
+
+**What was measured (live, read-only, 6 November):**
+- The database (Supabase, eu-central-1) and the app (Vercel, fra1) are both in
+  Frankfurt: a few milliseconds apart. Iraq to Frankfurt adds about 0.1–0.2 s a
+  request.
+- The till is quick: a sale 0.06–0.17 s in the database, the menu about 0.05 s,
+  open bills about 0.04 s.
+- The slow parts:
+  - `daily_brief` 0.6 s on average, 5.5 s at worst; `current_alerts` 0.5 s, 3.7 s
+    at worst; both run each time the dashboard opens.
+  - `report_reconciliation` 0.24 s (3.1 s at worst), `report_sales_analysis`
+    0.14 s (3.0 s at worst), `menu_costing` 0.11 s (1.7 s at worst),
+    `report_purchasing`, `report_purchases`, `period_close_checklist`,
+    `report_staff`, `report_profit_and_loss_by_place` 0.2–0.3 s each.
+  - The spikes of seconds come from the free plan's small shared computer.
+  - Free plans: Supabase sleeps after a week unused; Vercel starts cold after a
+    quiet while (0.5–2 s on the first page).
+  - The middleware checks the sign-in before every page, and for anyone without
+    a second step it asks about it again, which can be a trip to Frankfurt each
+    time.
+
+**The plan, in order:**
+1. **Measure from the café.** A small Speed page: the trip from the device to
+   the app, the app to the database, and each function's time on the page just
+   opened (Server-Timing), saved so the owner can send it. The owner says which
+   screens feel slow and how many seconds.
+2. **Make my slow code fast (free).**
+   - The daily brief and the alerts worked out every few minutes in the
+     background (pg_cron) and kept; the dashboard reads what was kept, at once.
+   - The heavy reports looked at one by one (indexes, fewer passes over the
+     sales); their figures for closed days kept, not worked out again.
+   - The sign-in check: the newer signing keys, so the token is checked on the
+     spot without a trip; the second-step question asked once a session, not on
+     every page.
+   - Every page loads its data in parallel, shows its frame at once and fills in
+     (loading states), and links fetch the next page ahead.
+3. **Paid plans (with plan 1):** Supabase Pro (about $25 a month: no sleeping,
+   its own computer, daily backups) and Vercel Pro (about $20 a month: far fewer
+   cold starts). Removes the random spikes.
+4. **A till that never waits for the internet.** Every till action (tables,
+   discounts, customers, dollars, refunds) done on the device at once and sent
+   to the cloud in the background, with the database still checking each one as
+   it arrives. Local-server speed for the cashier, and the till keeps working
+   when the internet drops. The largest piece of work; it matters most for
+   selling to other cafés.
+5. **A closer region (Vercel Dubai, and a Supabase region near it) only if the
+   measurements show it.** Iraqi traffic often goes through Europe anyway, and
+   moving the database means a new project.
+
+**Recommended:** 1 and 2 first (free), 3 with the Supabase decision, then 4.
