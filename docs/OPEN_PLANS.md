@@ -156,3 +156,59 @@ lacking, in the order it matters:
 **Before selling:** do not promise a "guarantee" in absolute words. Promise what is
 true (every record double-entry, balanced, locked and traceable), back it with
 support, and have a lawyer write the terms (with plan 2).
+
+## 7. Security: every gap found (6 November 2026)
+
+Checked: the code, and the live database read-only (its grants, row-level
+security, storage rules, users, and Supabase's security advisors). Not done:
+an attack on the live site; that needs the owner's word or an outside tester.
+
+What holds: no one signed in can write to a table; row-level security is on
+for every table; each of the 332 functions a signed-in person can call checks
+their permission first; a stranger who signs up sees nothing; a second step,
+once turned on, is enforced by the database itself; approval PINs are hashed
+and lock after five wrong tries; records are never edited or deleted; files
+are private by café; the six functions open to the public each need a key
+kept as a hash; practice only lowers what a person can do; no secret is in
+the code or its history; no service-role key is used.
+
+**Done on 6 November:** Next.js 15.5.26 → 15.5.29 (a critical hole in its
+image service and a Server Actions crash), sharp 0.35.5, PostCSS 8.5.32 (made
+the version Next uses), source-map-js 1.2.2.
+
+**Urgent (the owner's own hands):**
+1. Turn on the second step for the owner and every manager: none of the 6
+   users has one (checked 6 November).
+2. Change the owner's password and the approval PIN 4096: both have been
+   written in chats.
+
+**High:**
+3. A second step and strong passwords on the Supabase, Vercel, GitHub and email
+   accounts: each one opens everything, outside the app's controls.
+4. Backups (with plan 1): nothing can be restored today.
+5. Leaked-password protection is off (Supabase Auth; may need the paid plan).
+   Open sign-up off; passwords of 10 characters or more (Supabase settings, not
+   readable from here).
+6. Zod 3 can be made to use up memory by a huge input (fixed in 4.6.6, a major
+   version: every form's checks are retested).
+
+**Medium:**
+7. The page policy (CSP) limits framing and plug-ins but not scripts: add
+   `script-src` with a nonce for the two inline scripts, and `connect-src` to
+   the café's Supabase address.
+8. Phone clock-in can be relayed: a colleague at the shop sends the six-digit
+   code to someone at home. Add a check that the phone is on the shop's Wi-Fi
+   or near the shop (the owner chooses), and flag clock-ins far apart in time
+   from the screen's code being shown.
+9. No alerts: no error monitoring, no uptime checks, no warning of many failed
+   sign-ins or of a sign-in from a new country.
+10. Shared tills stay signed in: an idle lock that asks the cashier's PIN after
+    a few minutes, so a sale is never rung up under someone else's name.
+
+**Low (tidying):**
+11. 43 helper functions without a fixed `search_path` (none runs with raised
+    rights); `citext` in the public schema.
+12. Sales kept offline stay in that browser until sent.
+
+**Before selling:** an outside penetration test by a security firm, and its
+report kept for customers' IT people.
