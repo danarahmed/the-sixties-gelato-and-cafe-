@@ -13,7 +13,8 @@ running the café on it day to day. See docs/guides/backup-restore.md.
 ## 2. Selling the system to other cafés
 
 docs/SELLING_PLAN.md: each café's own data, a new café setting itself up,
-the brand, how to charge, support. Decide questions 1, 3 and 4 first, then
+the brand, how to charge, support, and plans for small and big cafés (one
+system, parts switched per café). Decide questions 1, 3 and 4 first, then
 one or two friendly cafés.
 
 ## 3. Use-by: two gaps (4 November 2026)
