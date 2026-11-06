@@ -71,7 +71,7 @@ console.log("▸ the owner: today's sales by product, by the hour, by payment an
   check(byProduct.length > 0 && sum(byProduct) === net, "and its products add up to it");
 
   await page.getByTestId("analysis-by").selectOption("hour");
-  await page.getByRole("button", { name: "Show" }).click();
+  await page.getByRole("button", { name: "Show", exact: true }).click();
   await page.waitForURL(/by=hour/, { timeout: 15000 });
   const byHour = await rows(page);
   check(
