@@ -264,7 +264,7 @@ console.log("▸ every report at a place (0057)");
   await choice.selectOption(second);
   await Promise.all([
     page.waitForURL(/place=/),
-    page.getByRole("button", { name: "Show" }).click(),
+    page.getByRole("button", { name: "Show", exact: true }).click(),
   ]);
   await page.waitForLoadState("networkidle");
   const secondSales = Number(
