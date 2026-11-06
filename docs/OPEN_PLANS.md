@@ -11,41 +11,53 @@ the order they should be done, the most necessary first, not in the order of
 their numbers. Weigh the order again each time (what is done, what changed);
 the order below is the one recommended on 6 November.
 
+**From now on, always: plan 11, item 7** (one change at a time on the live
+system, with a short note of what changed; no new features in the first two
+weeks of real use, only fixes).
+
 1. **Plan 7, the urgent items in the owner's hands:** the second step for the
    owner and every manager; a new password and approval PIN (4096 is known).
    Minutes of work, and the largest risk today.
 2. **Plan 1, the Supabase decision:** Supabase Pro (daily backups, no sleeping,
    its own computer) and Vercel Pro (the free plan does not allow commercial
-   use). Backups, security, speed and selling all wait on it.
+   use). Backups, security, speed, going live and selling all wait on it.
 3. **Plan 9's safety net:** a test copy of the system and database changes
    applied automatically, not pasted by hand. Every later step is safer for it.
-4. **Plan 3 and plan 5 B, use-by:** set once per item, bought goods with
+4. **Plan 11, items 1 and 5: going live at The Sixty's,** with the UPS for the
+   till and the router and the tested devices. From here plan 6's 2–3 months of
+   real use with an outside accountant run beside everything after it.
+5. **Plan 3 and plan 5 B, use-by:** set once per item, bought goods with
    use-by dates, the till warning or refusing expired stock. Food safety.
-5. **Plan 7, the rest of security:** Zod, the page policy, the idle lock on
+6. **Plan 7, the rest of security:** Zod, the page policy, the idle lock on
    shared tills, monitoring, the phone clock-in relay.
-6. **Plan 8, steps 1–2, speed:** measure from the café, then make the slow parts
+7. **Plan 8, steps 1–2, speed:** measure from the café, then make the slow parts
    fast (the daily brief, the alerts, the heavy reports, the sign-in check).
-7. **Plan 6, the books' blockers,** with **plan 5 A**: two-currency bills;
-   accounts the owner adds (banks, loans); tax as an option. The 2–3 months of
-   real use with an outside accountant start as soon as plan 1 is decided, and
-   run beside everything after it.
-8. **Plan 5, the rest:** C packing at the till, F the cashier scorecard, E sale
+8. **Plan 6, the books' blockers,** with **plan 5 A**: two-currency bills;
+   accounts the owner adds (banks, loans); tax as an option.
+9. **Plan 5, the rest:** C packing at the till, F the cashier scorecard, E sale
    days, D the target margin.
-9. **Plan 10, step 1, the foundation:** plans, switches and the type of
-   business, so every part after it plugs in (with the selling plan's section
-   on plans for small and big cafés).
-10. **Plan 9, the rest of running many cafés:** one shared system, the owner's
+10. **Plan 10, step 1, the foundation:** plans, switches and the type of
+    business, so every part after it plugs in (with the selling plan's section
+    on plans for small and big cafés).
+11. **Plan 9, the rest of running many cafés:** one shared system, the owner's
     admin console, "report a problem", support access with permission.
-11. **Plan 8, step 4:** the till that never waits for the internet.
-12. **Plan 10, the restaurant parts, then the supplier parts,** each tried by a
+12. **Plan 8, step 4:** the till that never waits for the internet.
+13. **Plan 10, the restaurant parts, then the supplier parts,** each tried by a
     friendly business while it is built.
-13. **Plan 6, the important items** (payroll deductions and payslips, points as
+14. **Plan 6, the important items** (payroll deductions and payslips, points as
     owed, report comparisons and budgets) and **its smaller gaps.**
-14. **Plan 4 and plan 10, step 5:** the videos in each language, and practice,
+15. **Plan 11, item 4: what the café's customers see** (QR menu and table
+    ordering, WhatsApp receipts and messages, the café's own online ordering, a
+    customer screen), as switched parts.
+16. **Plan 4 and plan 10, step 5:** the videos in each language, and practice,
     help and videos for each type of business.
-15. **Plan 2, selling:** the founding cafés, then selling (prices not yet
+17. **Plan 11, items 3 and 2: before selling,** an independent code review by a
+    human developer, and the legal and business basics.
+18. **Plan 11, item 6: sales materials** (the demo café, a website, The Sixty's
+    own story).
+19. **Plan 2, selling:** the founding cafés, then selling (prices not yet
     decided).
-16. **Plan 8, step 5:** a closer region, only if the measurements show it.
+20. **Plan 8, step 5:** a closer region, only if the measurements show it.
 
 ## 1. Supabase and the café's daily use
 
@@ -520,3 +532,51 @@ The books, the security and the updates are the same for all.
 real users of the new parts. The middle path: the foundation first, then each
 part tried by one friendly restaurant and one friendly supplier, for free, while
 it is built. Everything is still built before selling.
+
+## 11. What the other plans did not cover (6 November 2026)
+
+1. **Going live at The Sixty's** (the real start of everything; the other plans
+   say "run 2–3 months with real money" but not how to change over safely):
+   - a date: a quiet day at the start of a month, so the first month's books are
+     clean;
+   - the test records cleared, keeping the set-up (`supabase/remediation/
+     start-fresh.sql`);
+   - opening balances on day one: the till's and the safe's cash, the bank, a
+     full opening count of every item (or the first sales are costed at
+     nothing), what is owed to suppliers, the equipment;
+   - each person's own login, practice finished before day one, the second step
+     for managers;
+   - two weeks with the old way kept beside it, the day's sales and cash
+     compared each day;
+   - a daily checklist for the first month, and the first month's close checked
+     with the accountant.
+2. **Legal and business basics before selling:** the company registered; the
+   system's name and brand registered; terms of service (what is included, who
+   owns the data (the café), the limits of responsibility, cancelling); a
+   privacy policy (customers' phone numbers, staff details and pay: what is
+   kept, why, for how long); how long the law asks records to be kept (the
+   accountant says; the system deletes none); professional liability insurance
+   where it can be had.
+3. **An independent code review by a human developer** (a week or two), besides
+   plan 7's penetration test: someone other than Claude knows the system, finds
+   what was missed, and starts as the backup developer of plan 9.
+4. **What the café's customers see** (what often wins the sale): a QR menu and
+   ordering from the table; receipts, points, offers and birthdays by WhatsApp;
+   the café's own online ordering for pickup and delivery (no 20–30%
+   commission); a customer screen at the till. Parts behind plan 10's switches,
+   and good add-ons to charge for.
+5. **A tested hardware kit:** a short list of devices tried with the system
+   (receipt printer, cash drawer, barcode scanner, label printer for batches and
+   use-by, tablet, kitchen printer), sold as a kit with setup at a margin; a
+   small UPS for the till and the router (power cuts).
+6. **Sales materials:** the practice café as the demo; a simple website with
+   short videos in three languages; The Sixty's own story after going live, in
+   real numbers.
+7. **Discipline while building:** no new features in the first two weeks of real
+   use, only fixes; one change at a time on the live system, with a short note
+   of what changed. From now on.
+
+**Beyond the eleven plans:** `docs/LIMITATIONS.md` lists many small "what it does
+not do" points for each part (most minor; the large ones are in plans 6, 7 and
+10). They are weighed when that part is worked on, and real use after going live
+will add new ones.
