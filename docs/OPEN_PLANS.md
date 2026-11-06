@@ -299,3 +299,107 @@ phone, branches that cannot see each other, and an IT job at every café sold to
 is down for days, not hours, or a law requires the data to stay in the
 country. Nothing in the system ties it to the cloud: the database can be moved
 later if that ever happens.
+
+## 9. Running many cafés: support, maintenance and people (6 November 2026)
+
+The owner is not a software engineer. The aim: most problems never need one.
+
+**Honest answer:** with the first 3–10 cafés, the owner and Claude can run it,
+if the system is built so most problems never need an engineer. From the first
+paying café there should still be one human developer on call (freelance, a
+small retainer). Later, people are hired, mostly from cafés, not engineers.
+
+**The kinds of work, and who does each:**
+
+| Work | How often | Who |
+|---|---|---|
+| Selling and setting up a café | Each new one | The owner, with a setup wizard (details, menu imported from Excel, staff invited); practice mode, help and videos already exist |
+| Training staff | Each new one | The app (practice, ? help, videos) and the owner's one-hour visit or call |
+| "How do I…?" | Daily at first | The owner with the help pages; later a support person |
+| The café's own mistakes | Weekly | The café, in the app (every correction exists); the owner guides |
+| A real bug | Sometimes | Claude: the owner sends a screenshot and what happened; fixed, tested, sent; every café gets it at once |
+| Supabase or Vercel down | Rare | No one can fix it; wait; the offline till sells (plan 8); the owner tells the cafés |
+| Printers, tablets, drawers, internet | Often | A local hardware technician as a partner; a list of tested devices |
+| Accounting questions | Monthly | A partner accountant |
+| A security problem | Rare | Claude and the backup developer, with a written playbook |
+
+**What could go wrong, and how it is handled:**
+
+| Problem | What is done |
+|---|---|
+| A till cannot sell | It sells offline (plan 8); answered within 15 minutes; system or their internet checked |
+| An update breaks something | Every change through the full tests and a test copy first; Vercel rolls back in one click (the owner can) |
+| A café spoils its data | Nothing is truly deleted; corrections by reversal; daily backups (Pro) |
+| Someone's account hacked | Deactivated in People; two-step and the audit trail show what they did |
+| The owner's Supabase or Vercel account locked or hacked | Two-step on everything; a second trusted person with emergency access |
+| The owner sick or away | The support person and the backup developer have written steps and access |
+| Claude makes a mistake in code | Tests catch most; nothing untested is pasted; rollback undoes the rest |
+| A café disputes a figure | "Do the books tie?" and the audit trail show who did what, when |
+| A café wants its own feature | If every café gains, built for all (behind a switch); if not, no, or charged for |
+| A café stops paying | Read-only, then closed; they can export their data |
+
+**What to build before selling, so it stays manageable:**
+1. One shared system for all cafés (below).
+2. Database changes applied automatically, not pasted by hand into each.
+3. A test copy of the system: every change tried there first.
+4. The owner's admin console: every café on one page (last sale, errors, internet
+   trouble, payments, who needs help).
+5. "Report a problem" reaching the owner with the screen, the time and the error.
+6. Support access only with the café's permission, recorded.
+7. Monitoring: the owner told before the café calls (plan 7 item 9, plan 8).
+8. Backups and restoring one café (Supabase Pro).
+
+**People, step by step:** now the owner and Claude; before the first paying café
+a freelance developer on a small retainer (Next.js and Supabase), a partner
+accountant and a local hardware technician; at about 10–20 cafés a support person
+who has worked in cafés; at about 30–50 a full-time developer.
+
+**Day to day:** one WhatsApp Business number plus the in-app reports; three levels
+of urgency (cannot sell: 15 minutes; a wrong figure: the same day; a question:
+within a day); updates once a week with a short "what's new" to all cafés; a
+written agreement with each café (what is supported, response times, who owns
+the data, limits of responsibility); start small (the owner's café 2–3 months,
+then 2–3 friendly cafés at a discount for 2–3 months, then sell).
+
+**Claude's limits:** works only when a session is open (no 2 a.m. calls, no
+watching alone: hence monitoring and the backup developer); remembers only what
+is written in the project between sessions (hence these plans); can make
+mistakes (tests catch most; a human developer can check in an emergency). Every
+account in the owner's name, with two-step, and a second trusted person with
+emergency access.
+
+**The four questions answered (6 November):**
+
+1. *Separate systems per café, or one shared?*
+   - Separate: one café can differ, a problem cannot spread, data is easy to hand
+     over; but every update is done once per café, the copies drift apart, each
+     bug is fixed several times, it costs more, and someone must remember who
+     has which version.
+   - Shared: one update reaches every café, one place to watch, back up and
+     support, the cheapest, and already built so (every record carries its café;
+     the database refuses one café another's data); but a bad update reaches all
+     (hence the test copy and rollback), an outage reaches all (the offline till
+     sells), a very large café could slow others (a bigger plan, or moved out),
+     and one café's data is removed by a script.
+   - **Recommended: shared.**
+2. *In a shared system, can one café be changed and not the others?* Yes, as
+   settings, not separate code: settings per café (most differences already are);
+   feature switches per café (built for all, on only where asked); and a pilot
+   group that gets a new version a few days before the rest. Not code for one café
+   alone: make it a switch, or charge for it.
+3. *Paid once or per café?* Shared: once, growing with use, not with the number
+   of cafés. Supabase Pro about $25 a month (a small database computer, 8 GB of
+   database, 100 GB of files, daily backups), its computer raised as cafés grow
+   (Small about $15 more, Medium about $60 more); Vercel Pro about $20 a month per
+   person on the team, not per café. **Vercel's free plan does not allow
+   commercial use: Pro before any café pays.** Separate: about $10 or more per
+   café per month more for each Supabase project. About $45–60 a month up to ten
+   cafés, $60–110 for 10–30, $110–200 for 30–60 (prices to be checked on the
+   pricing pages before deciding).
+4. *Will they run out of space?* No, for years. The live database is 28 MB today,
+   mostly the system itself. A sale with everything it records is about 5–10 KB:
+   a busy café (300 bills a day) about 0.5–1 GB a year; 20 busy cafés 10–20 GB a
+   year (8 GB included, then about $0.125 a GB a month). Photos and documents are
+   10 MB at most, usually 0.2–1 MB: 100 GB is about 100 café-years. Vercel's
+   allowance (about 1 TB a month on Pro) is far beyond what tills and reports use.
+   The real limit is the database computer's speed, raised a step at a time.
