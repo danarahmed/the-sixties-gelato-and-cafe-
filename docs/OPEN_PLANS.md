@@ -4,6 +4,49 @@ Plans the owner has kept to decide later. Nothing here is started; each waits
 for the owner's word. When the owner asks for "the unfinished plans", this is
 the list.
 
+## How to give them back: by necessity, not by number
+
+The owner's rule (6 November 2026): when the plans are asked for, give them in
+the order they should be done, the most necessary first, not in the order of
+their numbers. Weigh the order again each time (what is done, what changed);
+the order below is the one recommended on 6 November.
+
+1. **Plan 7, the urgent items in the owner's hands:** the second step for the
+   owner and every manager; a new password and approval PIN (4096 is known).
+   Minutes of work, and the largest risk today.
+2. **Plan 1, the Supabase decision:** Supabase Pro (daily backups, no sleeping,
+   its own computer) and Vercel Pro (the free plan does not allow commercial
+   use). Backups, security, speed and selling all wait on it.
+3. **Plan 9's safety net:** a test copy of the system and database changes
+   applied automatically, not pasted by hand. Every later step is safer for it.
+4. **Plan 3 and plan 5 B, use-by:** set once per item, bought goods with
+   use-by dates, the till warning or refusing expired stock. Food safety.
+5. **Plan 7, the rest of security:** Zod, the page policy, the idle lock on
+   shared tills, monitoring, the phone clock-in relay.
+6. **Plan 8, steps 1–2, speed:** measure from the café, then make the slow parts
+   fast (the daily brief, the alerts, the heavy reports, the sign-in check).
+7. **Plan 6, the books' blockers,** with **plan 5 A**: two-currency bills;
+   accounts the owner adds (banks, loans); tax as an option. The 2–3 months of
+   real use with an outside accountant start as soon as plan 1 is decided, and
+   run beside everything after it.
+8. **Plan 5, the rest:** C packing at the till, F the cashier scorecard, E sale
+   days, D the target margin.
+9. **Plan 10, step 1, the foundation:** plans, switches and the type of
+   business, so every part after it plugs in (with the selling plan's section
+   on plans for small and big cafés).
+10. **Plan 9, the rest of running many cafés:** one shared system, the owner's
+    admin console, "report a problem", support access with permission.
+11. **Plan 8, step 4:** the till that never waits for the internet.
+12. **Plan 10, the restaurant parts, then the supplier parts,** each tried by a
+    friendly business while it is built.
+13. **Plan 6, the important items** (payroll deductions and payslips, points as
+    owed, report comparisons and budgets) and **its smaller gaps.**
+14. **Plan 4 and plan 10, step 5:** the videos in each language, and practice,
+    help and videos for each type of business.
+15. **Plan 2, selling:** the founding cafés, then selling (prices not yet
+    decided).
+16. **Plan 8, step 5:** a closer region, only if the measurements show it.
+
 ## 1. Supabase and the café's daily use
 
 The owner decides when to talk about it: the plan (Free has no backups; Pro
@@ -404,3 +447,76 @@ emergency access.
    10 MB at most, usually 0.2–1 MB: 100 GB is about 100 café-years. Vercel's
    allowance (about 1 TB a month on Pro) is far beyond what tills and reports use.
    The real limit is the database computer's speed, raised a step at a time.
+
+## 10. One flexible system for every business (6 November 2026)
+
+The owner's decision: build one system that works for cafés, bakeries,
+restaurants and suppliers, made complete for all of them; at selling time,
+parts are only switched on or off. Configure, never customise.
+
+**It does not spoil what is built, by these rules:**
+1. New parts are new (tables, functions, screens beside the old); nothing
+   existing is rewritten for them, as with every migration so far.
+2. Everything new starts switched off: The Sixty's keeps working as today.
+3. Every change passes all the tests before it goes live (1,020 unit tests,
+   75 browser suites, 93 database tests).
+4. The three changes that touch the core are known: selling stock items
+   directly (the sale engine), station printing (printing), price lists per
+   customer (pricing). For each, today's behaviour stays the default, with
+   extra tests.
+
+**What "no more updates" can mean:** no system goes without updates (bugs, laws
+and tax, devices, platform files, requests). The aim: about 90% of what a new
+business needs is switches and settings, no code; the other 10% is built once,
+for everyone, behind a switch; never a version for one customer.
+
+**What fits today:** cafés with a kitchen, fast food, casual restaurants and
+bakeries (tables, open and split bills, split payments, sizes and add-ons,
+deals, time prices, service charge, tips, recipes and costing, production,
+use-by, delivery platforms, pre-orders, branches and a central kitchen,
+approvals, offline sales); and much of a supplier (stock by place, transfers,
+counts, purchasing, suppliers, returns, batches, barcodes, selling by weight,
+wholesale customers on account with limits, terms, invoices and payments
+(0077), full books).
+
+**Missing for a full-service restaurant:**
+- a kitchen screen, or printers per station (grill, cold kitchen, bar): today
+  one ticket prints on the till's own printer;
+- waiters ordering on their phones at the table;
+- courses (starter, main, dessert), each sent when it is time;
+- moving and joining tables, seat numbers;
+- reservations and a waiting list;
+- a menu engineering report (what sells well and earns well) as one report.
+
+**Missing for a supplier or a business with inventory only:**
+- selling stock items directly (today all that is sold is a menu product);
+- a price list per customer (today only a percentage off the menu);
+- quotes and sales orders before the invoice;
+- delivery notes, drivers and routes;
+- customer returns and credit notes for wholesale;
+- selling by the carton or case;
+- use-by for bought goods (plan 5 B);
+- a setup with no till at all;
+- tax on invoices (plan 6).
+
+**How they fit the plans:** two choices for each business, by the same switches:
+1. The type of business, chosen at setup, deciding what is shown by default:
+   Café (as today); Bakery (café, production, wholesale on account);
+   Restaurant (café, kitchen screens, waiter phones, courses, reservations);
+   Supplier (stock, purchasing, wholesale sales, delivery notes, the books;
+   no till, tables or menu screens).
+2. The size of plan (Starter, Complete, Business: the selling plan), deciding
+   how much of that type, and how many branches or warehouses.
+The books, the security and the updates are the same for all.
+
+**The order to build it:**
+1. The foundation: plans, switches and the type of business.
+2. The base every business needs: plans 3, 5, 6, 7, 8 and 9.
+3. The restaurant parts.
+4. The supplier and wholesale parts.
+5. Practice tasks, help and videos for each type of business.
+
+**The caution:** building everything first is a long time with no income and no
+real users of the new parts. The middle path: the foundation first, then each
+part tried by one friendly restaurant and one friendly supplier, for free, while
+it is built. Everything is still built before selling.
