@@ -279,6 +279,21 @@ the version Next uses), source-map-js 1.2.2.
 **Before selling:** an outside penetration test by a security firm, and its
 report kept for customers' IT people.
 
+**The owner's decisions (7 November 2026):**
+- 1. The second step: set up when everything is finished and the system is
+  ready to sell.
+- 2. The password and PIN: the owner changes them later; keep reminding.
+- 3. The accounts' second step: at selling time.
+- 4. Backups: with the Supabase upgrade before selling.
+- 5. Leaked passwords, sign-up, password length: later, with 4.
+- 6, 7, 11, 12: explained to the owner; waiting for the owner's word.
+- 8. Phone clock-in: the phone must be **near the shop or inside it** (its
+  location, within a distance the owner sets); **not** tied to the shop's Wi-Fi.
+- 9. Alerts: **to be fixed** (error monitoring, uptime checks, many failed
+  sign-ins, a sign-in from a new country).
+- 10. The idle lock on shared tills: **optional, switched on or off** in
+  Settings (with the minutes).
+
 ## 8. Speed: as fast as possible, staying on Supabase and Vercel (6 November 2026)
 
 **Decision so far:** no physical server at the café. It would be fast inside the
