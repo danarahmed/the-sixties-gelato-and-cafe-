@@ -11,6 +11,16 @@ the order they should be done, the most necessary first, not in the order of
 their numbers. Weigh the order again each time (what is done, what changed);
 the order below is the one recommended on 6 November.
 
+**How they are given (the owner, 7 November):** one whole plan at a time, the
+most necessary first; the owner checks it and says whether it needs changing
+before the next one is given. The order of whole plans: **7** (security),
+**1** (Supabase), **11** (going live and what else was missing), **3** (use-by),
+**8** (speed), **6** (the books), **5** (the six points), **9** (many cafés),
+**10** (every business), **4** (videos in each language), **2** (selling).
+Checked so far: none.
+
+The steps across the plans, in the order they are done:
+
 **From now on, always: plan 11, item 7** (one change at a time on the live
 system, with a short note of what changed; no new features in the first two
 weeks of real use, only fixes).
