@@ -109,6 +109,12 @@ token the owner creates).
 **Day to day after that:** nothing for the owner; once a month a look that the
 backups ran (Claude can check); every three months the restore drill.
 
+**The owner's decisions (7 November 2026):** agreed; the upgrade **only before
+selling** (little technical work, kept for later). C and D explained; waiting for
+the owner's word. Noted: going live at The Sixty's (plan 11) comes before
+selling, so the real books would have no Supabase backup until then; D can run
+on the free plan too and would cover that time.
+
 ## 2. Selling the system to other cafés
 
 docs/SELLING_PLAN.md: each café's own data, a new café setting itself up,
