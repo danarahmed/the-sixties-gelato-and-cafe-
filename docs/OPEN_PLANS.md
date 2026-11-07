@@ -17,7 +17,7 @@ before the next one is given. The order of whole plans: **7** (security),
 **1** (Supabase), **11** (going live and what else was missing), **3** (use-by),
 **8** (speed), **6** (the books), **5** (the six points), **9** (many cafés),
 **10** (every business), **4** (videos in each language), **2** (selling).
-Checked so far: none.
+Checked so far: plan 7 (7 November).
 
 The steps across the plans, in the order they are done:
 
@@ -71,9 +71,43 @@ weeks of real use, only fixes).
 
 ## 1. Supabase and the café's daily use
 
-The owner decides when to talk about it: the plan (Free has no backups; Pro
-keeps a daily copy for seven days), a nightly copy kept elsewhere, and
-running the café on it day to day. See docs/guides/backup-restore.md.
+The owner decides when (the owner, 7 November: "before selling I will upgrade
+Supabase"). See docs/guides/backup-restore.md.
+
+**Today (both on free plans):**
+- Supabase Free: **no backups at all**; the project sleeps after a week without
+  use; a small shared computer (the spikes of 3–5 seconds, plan 8); 500 MB of
+  database (28 MB used).
+- Vercel Hobby: **not allowed for commercial use**; logs kept one hour; slow
+  first pages after a quiet while.
+
+**The choices:**
+- A. Stay free: fine while everything is a test; real records with no backup
+  could all be lost at once.
+- B. **Supabase Pro** (about $25 a month): a backup every day, kept 7 days; no
+  sleeping; its own small computer; 8 GB of database and 100 GB of files;
+  email support. Recommended.
+- C. On top of B, later if wanted: restore to any minute (point-in-time
+  recovery), an add-on of about $100 a month more; worth it once many cafés pay.
+- D. With B: a **nightly copy kept outside Supabase** (for example the owner's
+  Google Drive), so the books survive even a problem with the Supabase account.
+- **Vercel Pro** (about $20 a month): required before any café pays; logs kept
+  longer, fewer slow first pages.
+
+**The recommendation on timing:** upgrade Supabase **before going live at The
+Sixty's** (plan 11), not only before selling: from that day the books are real,
+and a day's sales, stock and accounts with no backup are the largest risk.
+Vercel Pro can wait until the first café pays.
+
+**After upgrading, Claude does:** checks that the daily backup runs; a restore
+drill on a copy (the guide's steps), then every three months; the nightly
+outside copy (D) if chosen; plan 7 items 4–5 (leaked passwords, sign-up off,
+passwords of 10 or more) with the owner; and plan 9's safety net (a test copy
+and database changes applied automatically, which needs a Supabase access
+token the owner creates).
+
+**Day to day after that:** nothing for the owner; once a month a look that the
+backups ran (Claude can check); every three months the restore drill.
 
 ## 2. Selling the system to other cafés
 
@@ -289,7 +323,7 @@ report kept for customers' IT people.
 - 6, 7, 11: explained; none slows the system (Zod 4 checks faster than Zod 3; the
   page policy is a header the browser reads, and the signed-in pages are made
   fresh already; a fixed search_path and moving citext change no speed);
-  waiting for the owner's word.
+  **to be fixed** (the owner, 7 November).
 - 12. Sales kept offline: **to be fixed** (the till shows how many wait to be
   sent and warns before signing out or closing; the manager is told when a till
   has kept sales too long; what is kept is encrypted on the device).
