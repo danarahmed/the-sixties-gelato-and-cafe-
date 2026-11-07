@@ -286,7 +286,13 @@ report kept for customers' IT people.
 - 3. The accounts' second step: at selling time.
 - 4. Backups: with the Supabase upgrade before selling.
 - 5. Leaked passwords, sign-up, password length: later, with 4.
-- 6, 7, 11, 12: explained to the owner; waiting for the owner's word.
+- 6, 7, 11: explained; none slows the system (Zod 4 checks faster than Zod 3; the
+  page policy is a header the browser reads, and the signed-in pages are made
+  fresh already; a fixed search_path and moving citext change no speed);
+  waiting for the owner's word.
+- 12. Sales kept offline: **to be fixed** (the till shows how many wait to be
+  sent and warns before signing out or closing; the manager is told when a till
+  has kept sales too long; what is kept is encrypted on the device).
 - 8. Phone clock-in: the phone must be **near the shop or inside it** (its
   location, within a distance the owner sets); **not** tied to the shop's Wi-Fi.
 - 9. Alerts: **to be fixed** (error monitoring, uptime checks, many failed
