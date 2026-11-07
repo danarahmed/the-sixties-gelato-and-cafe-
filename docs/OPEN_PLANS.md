@@ -17,7 +17,7 @@ before the next one is given. The order of whole plans: **7** (security),
 **1** (Supabase), **11** (going live and what else was missing), **3** (use-by),
 **8** (speed), **6** (the books), **5** (the six points), **9** (many cafés),
 **10** (every business), **4** (videos in each language), **2** (selling).
-Checked so far: plan 7 (7 November).
+Checked so far: plan 7, plan 1 (7 November).
 
 The steps across the plans, in the order they are done:
 
@@ -110,8 +110,9 @@ token the owner creates).
 backups ran (Claude can check); every three months the restore drill.
 
 **The owner's decisions (7 November 2026):** agreed; the upgrade **only before
-selling** (little technical work, kept for later). C and D explained; waiting for
-the owner's word. Noted: going live at The Sixty's (plan 11) comes before
+selling** (little technical work, kept for later). **D: the owner sees to it**
+(useful before and after the upgrade: a copy outside Supabase, kept longer than
+Pro's 7 days). **C: kept until there are many cafés; the owner says when.** Noted: going live at The Sixty's (plan 11) comes before
 selling, so the real books would have no Supabase backup until then; D can run
 on the free plan too and would cover that time.
 
