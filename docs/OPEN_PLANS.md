@@ -17,7 +17,7 @@ before the next one is given. The order of whole plans: **7** (security),
 **1** (Supabase), **11** (going live and what else was missing), **3** (use-by),
 **8** (speed), **6** (the books), **5** (the six points), **9** (many cafés),
 **10** (every business), **4** (videos in each language), **2** (selling).
-Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3 (8 November).
+Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November).
 
 The steps across the plans, in the order they are done (the owner, 8 November:
 the technical side and the system's logic first; what is not technical is kept
@@ -35,16 +35,17 @@ apart, for before selling):
    tidying, 12 the sales kept offline.
 5. **Plan 8, steps 1–2, speed:** measure from the café, then make the slow parts
    fast (the daily brief, the alerts, the heavy reports, the sign-in check).
-6. **Plan 6, the books' blockers,** with **plan 5 A**: two-currency bills;
+6. **Plan 8, step 4: the till that never waits for the internet** (really
+   important to the owner, 8 November).
+7. **Plan 6, the books' blockers,** with **plan 5 A**: two-currency bills;
    accounts the owner adds (banks, loans); tax as an option.
-7. **Plan 5, the rest:** C packing at the till, F the cashier scorecard, E sale
+8. **Plan 5, the rest:** C packing at the till, F the cashier scorecard, E sale
    days, D the target margin.
-8. **Plan 10, step 1, the foundation:** plans, switches and the type of
+9. **Plan 10, step 1, the foundation:** plans, switches and the type of
    business, so every part after it plugs in (with the selling plan's section
    on plans for small and big cafés).
-9. **Plan 9, the rest of running many cafés:** one shared system, the owner's
+10. **Plan 9, the rest of running many cafés:** one shared system, the owner's
    admin console, "report a problem", support access with permission.
-10. **Plan 8, step 4:** the till that never waits for the internet.
 11. **Plan 10, the restaurant parts, then the supplier parts,** each tried by a
     friendly business while it is built.
 12. **Plan 6, the important items** (payroll deductions and payslips, points as
@@ -445,6 +446,32 @@ phone, branches that cannot see each other, and an IT job at every café sold to
    plan 7, item 9).
 6. A second internet line at the café, such as a 4G router, so the books sync
    when the main line is down (cheap; covers most outages).
+
+**The owner's decisions (8 November 2026):** everything kept. The Speed page is
+**for the system's administrators only** (the owner and Claude, at the level of
+the whole system, plan 9's admin console), never for the cafés and shops it is
+sold to: a café owner is not an administrator. The **till that never waits for
+the internet is really important** to the owner: moved up the order. The 4G
+backup line explained (below).
+
+**The 4G backup line:** a second internet line from a mobile network, so the
+café stays online when the main line drops.
+- *How:* a router that takes two lines (the main line and a 4G SIM) and switches
+  to the 4G one by itself within seconds when the main one fails, and back when
+  it returns (a "dual-WAN" or "failover" router); or, simpler and cheaper, a
+  separate 4G router the devices are moved to by hand.
+- *Cost:* about $80–200 for a two-line router, or $40–80 for a plain 4G router;
+  a data plan of about $10–20 a month.
+- *Data:* the app uses little once loaded (a sale is a few kilobytes); about
+  1–3 GB a month for a till.
+- *Rules:* a different company from the main line (one fault takes down one, not
+  both); the router and modem on the UPS; the router near a window for signal;
+  tried once a month by unplugging the main line.
+- *With the offline till:* the offline till covers short drops for selling;
+  the 4G line keeps everything else online (the other screens, Talabat's tablet,
+  the phones' warnings). Card terminals usually have their own SIM.
+- It is hardware, not software: the café's purchase; a good part of the
+  hardware kit (plan 11, item 5) when selling.
 
 **When a server in the café would be chosen instead:** only where the internet
 is down for days, not hours, or a law requires the data to stay in the
