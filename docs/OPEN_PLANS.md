@@ -288,6 +288,24 @@ lacking, in the order it matters:
 true (every record double-entry, balanced, locked and traceable), back it with
 support, and have a lawyer write the terms (with plan 2).
 
+**The owner's decisions (8 November 2026):**
+1. **Tax:** not known yet; the system must be able to take it later: tax built
+   in, switched off, its kind and rates set by the café when the time comes.
+2. **Payroll, social insurance (optional per café, on or off):** two parts,
+   both paid to the government: **12% of the salary paid by the company** (its
+   cost: Dr a social insurance cost, Cr social insurance owed) and **5% of the
+   salary deducted from the person's pay** (Cr social insurance owed); paying
+   the government clears what is owed (Dr owed, Cr bank or safe). On the
+   payslip, the payroll and a monthly report of what is owed.
+3. **Loyalty points as money owed:** optional per café.
+4. The smaller gaps: explained; waiting for the owner's word.
+5. **Service charge:** already built (0090): a percentage set for each way of
+   selling (dine-in, takeaway, the café's own delivery; never a platform), so
+   dine-in only is the percentage on dine-in and none on the rest; shown on the
+   bill and the receipt, apart from the products; kept in 4300 Service charge.
+   For now it stays the café's own; later, as an option, it can be kept as owed
+   to the government (a debt account) instead.
+
 ## 7. Security: every gap found (6 November 2026)
 
 Checked: the code, and the live database read-only (its grants, row-level
