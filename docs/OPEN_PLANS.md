@@ -17,7 +17,7 @@ before the next one is given. The order of whole plans: **7** (security),
 **1** (Supabase), **11** (going live and what else was missing), **3** (use-by),
 **8** (speed), **6** (the books), **5** (the six points), **9** (many cafés),
 **10** (every business), **4** (videos in each language), **2** (selling).
-Checked so far: plan 7, plan 1 (7 November), plan 11 (8 November).
+Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3 (8 November).
 
 The steps across the plans, in the order they are done (the owner, 8 November:
 the technical side and the system's logic first; what is not technical is kept
@@ -135,6 +135,30 @@ markdowns suggested. Two gaps:
    optional, so a batch of it has no use-by and no warning; bought goods
    (milk, croissants) have none at all. To decide: make the shelf life
    required on recipes, and give a delivery's lines an optional use-by.
+
+**The owner's decisions (8 November 2026), with plan 5 B:**
+1. **Expired stock never reaches the cashier: it is caught before.**
+   - Warnings ahead of time, on Today for those at the counter and in the
+     kitchen, on the Dashboard and the phone: "goes off tomorrow", "goes off
+     today", with what to do (sell first, mark down, use in production, or
+     record as waste). How far ahead is set per café (a day by default).
+   - Each morning a short list on Today: "take these off the shelf", and at
+     closing: "these go off tonight".
+   - On the till, a product whose stock left is near or past its use-by is
+     marked on its tile, so the cashier sees it before choosing it.
+   - The last guard, if one is sold all the same: **warn or refuse**, a setting
+     per café (warn by default; refuse needs a manager's PIN).
+2. **Recipes:** how long it keeps is **required**, or ticked **"doesn't go
+   off"**.
+3. **Bought goods:** each item **must choose one** of three:
+   - **doesn't go off** (cups, sugar);
+   - **keeps X days from delivery**: each delivery's line takes its use-by from
+     it;
+   - **the exact date on each delivery**: the receiving person must type the
+     date printed on the pack.
+   The use-by of a delivered lot can be **edited afterwards** (the pack read
+   again, a date mistyped), by those allowed, with a reason, on the audit trail,
+   so a date is never pushed back quietly.
 
 ## 4. The practice videos in each language (4 November 2026)
 
