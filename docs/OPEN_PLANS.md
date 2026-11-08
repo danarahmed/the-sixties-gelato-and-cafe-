@@ -17,57 +17,56 @@ before the next one is given. The order of whole plans: **7** (security),
 **1** (Supabase), **11** (going live and what else was missing), **3** (use-by),
 **8** (speed), **6** (the books), **5** (the six points), **9** (many cafés),
 **10** (every business), **4** (videos in each language), **2** (selling).
-Checked so far: plan 7, plan 1 (7 November).
+Checked so far: plan 7, plan 1 (7 November), plan 11 (8 November).
 
-The steps across the plans, in the order they are done:
+The steps across the plans, in the order they are done (the owner, 8 November:
+the technical side and the system's logic first; what is not technical is kept
+apart, for before selling):
 
-**From now on, always: plan 11, item 7** (one change at a time on the live
-system, with a short note of what changed; no new features in the first two
-weeks of real use, only fixes).
-
-1. **Plan 7, the urgent items in the owner's hands:** the second step for the
-   owner and every manager; a new password and approval PIN (4096 is known).
-   Minutes of work, and the largest risk today.
-2. **Plan 1, the Supabase decision:** Supabase Pro (daily backups, no sleeping,
-   its own computer) and Vercel Pro (the free plan does not allow commercial
-   use). Backups, security, speed, going live and selling all wait on it.
-3. **Plan 9's safety net:** a test copy of the system and database changes
+1. **Plan 9's safety net:** a test copy of the system and database changes
    applied automatically, not pasted by hand. Every later step is safer for it.
-4. **Plan 11, items 1 and 5: going live at The Sixty's,** with the UPS for the
-   till and the router and the tested devices. From here plan 6's 2–3 months of
-   real use with an outside accountant run beside everything after it.
-5. **Plan 3 and plan 5 B, use-by:** set once per item, bought goods with
+2. **Plan 1, D:** a nightly copy of the database and its files kept outside
+   Supabase, encrypted, 30 nights and one a month for a year, an email if a
+   night fails.
+3. **Plan 3 and plan 5 B, use-by:** set once per item, bought goods with
    use-by dates, the till warning or refusing expired stock. Food safety.
-6. **Plan 7, the rest of security:** Zod, the page policy, the idle lock on
-   shared tills, monitoring, the phone clock-in relay.
-7. **Plan 8, steps 1–2, speed:** measure from the café, then make the slow parts
+4. **Plan 7, the fixes:** 6 Zod, 7 the page policy, 8 phone clock-in near or
+   inside the shop, 9 alerts, 10 the idle lock (on or off), 11 the database
+   tidying, 12 the sales kept offline.
+5. **Plan 8, steps 1–2, speed:** measure from the café, then make the slow parts
    fast (the daily brief, the alerts, the heavy reports, the sign-in check).
-8. **Plan 6, the books' blockers,** with **plan 5 A**: two-currency bills;
+6. **Plan 6, the books' blockers,** with **plan 5 A**: two-currency bills;
    accounts the owner adds (banks, loans); tax as an option.
-9. **Plan 5, the rest:** C packing at the till, F the cashier scorecard, E sale
+7. **Plan 5, the rest:** C packing at the till, F the cashier scorecard, E sale
    days, D the target margin.
-10. **Plan 10, step 1, the foundation:** plans, switches and the type of
-    business, so every part after it plugs in (with the selling plan's section
-    on plans for small and big cafés).
-11. **Plan 9, the rest of running many cafés:** one shared system, the owner's
-    admin console, "report a problem", support access with permission.
-12. **Plan 8, step 4:** the till that never waits for the internet.
-13. **Plan 10, the restaurant parts, then the supplier parts,** each tried by a
+8. **Plan 10, step 1, the foundation:** plans, switches and the type of
+   business, so every part after it plugs in (with the selling plan's section
+   on plans for small and big cafés).
+9. **Plan 9, the rest of running many cafés:** one shared system, the owner's
+   admin console, "report a problem", support access with permission.
+10. **Plan 8, step 4:** the till that never waits for the internet.
+11. **Plan 10, the restaurant parts, then the supplier parts,** each tried by a
     friendly business while it is built.
-14. **Plan 6, the important items** (payroll deductions and payslips, points as
+12. **Plan 6, the important items** (payroll deductions and payslips, points as
     owed, report comparisons and budgets) and **its smaller gaps.**
-15. **Plan 11, item 4: what the café's customers see** (QR menu and table
+13. **Plan 11, item 4: what the café's customers see** (QR menu and table
     ordering, WhatsApp receipts and messages, the café's own online ordering, a
     customer screen), as switched parts.
-16. **Plan 4 and plan 10, step 5:** the videos in each language, and practice,
+14. **Plan 4 and plan 10, step 5:** the videos in each language, and practice,
     help and videos for each type of business.
-17. **Plan 11, items 3 and 2: before selling,** an independent code review by a
-    human developer, and the legal and business basics.
-18. **Plan 11, item 6: sales materials** (the demo café, a website, The Sixty's
-    own story).
-19. **Plan 2, selling:** the founding cafés, then selling (prices not yet
-    decided).
-20. **Plan 8, step 5:** a closer region, only if the measurements show it.
+15. **Plan 11, item 6: the practice café as the demo** shown to customers.
+16. **Plan 8, step 5:** a closer region, only if the measurements show it.
+
+**Kept apart, for before selling (the owner's word):**
+- Plan 7, items 1–5: the second step for everyone; the password and PIN (keep
+  reminding); the accounts' second step; backups; the Supabase sign-in
+  settings; and the outside penetration test.
+- Plan 1: Supabase Pro and Vercel Pro (C, restore to any minute, when there
+  are many cafés).
+- Plan 11, items 1, 2, 3, 5 and 7: going live at The Sixty's, the legal and
+  business basics, the human code review, the hardware kit, the discipline
+  while building.
+- Plan 2: selling.
 
 ## 1. Supabase and the café's daily use
 
@@ -110,9 +109,9 @@ token the owner creates).
 backups ran (Claude can check); every three months the restore drill.
 
 **The owner's decisions (7 November 2026):** agreed; the upgrade **only before
-selling** (little technical work, kept for later). **D: the owner sees to it**
-(useful before and after the upgrade: a copy outside Supabase, kept longer than
-Pro's 7 days). **C: kept until there are many cafés; the owner says when.** Noted: going live at The Sixty's (plan 11) comes before
+selling** (little technical work, kept for later). **D: kept in the plan, to
+be done** (useful before and after the upgrade: a copy outside Supabase, kept
+longer than Pro's 7 days). **C: kept until there are many cafés; the owner says when.** Noted: going live at The Sixty's (plan 11) comes before
 selling, so the real books would have no Supabase backup until then; D can run
 on the free plan too and would cover that time.
 
@@ -647,6 +646,10 @@ it is built. Everything is still built before selling.
 7. **Discipline while building:** no new features in the first two weeks of real
    use, only fixes; one change at a time on the live system, with a short note
    of what changed. From now on.
+
+**The owner's decisions (8 November 2026):** items 1, 2, 3, 5 and 7 kept for
+later, before selling, apart from the technical plans; item 6 only its first
+point (the practice café as the demo); items 4 and 6's demo to be worked on.
 
 **Beyond the eleven plans:** `docs/LIMITATIONS.md` lists many small "what it does
 not do" points for each part (most minor; the large ones are in plans 6, 7 and
