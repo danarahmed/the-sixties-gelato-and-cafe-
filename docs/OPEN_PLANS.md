@@ -298,7 +298,30 @@ support, and have a lawyer write the terms (with plan 2).
    the government clears what is owed (Dr owed, Cr bank or safe). On the
    payslip, the payroll and a monthly report of what is owed.
 3. **Loyalty points as money owed:** optional per café.
-4. The smaller gaps: explained; waiting for the owner's word.
+4. The smaller gaps: **accepted** (a supplier's cash refund as its own button;
+   back-dated supplier credits and bills dated as the supplier dated them,
+   within open months; a prepaid expense's months released by themselves and
+   editable before the first is posted; payroll shared between places by the
+   hours clocked at each); social insurance also on or off **per person** (a
+   trial period); **not done: g** (purchase order limits by supplier or month,
+   a second approver). **Waiting:** *d* (a payment from the till recorded a day
+   late: explained below) and *c* (a live dollar rate: explained below).
+   - *d, as it is:* the drawer closed yesterday 20,000 short (posted to 6300);
+     the ice paid from it yesterday, recorded today, lowers what today's drawer
+     should hold, so today's count is 20,000 over (6300 again). The month is
+     right (6300 nets to nothing, the ice is a cost) but each day's drawer
+     shows one short and one over. *Proposed:* when the day it was paid is
+     closed with a short, the late payment explains that short: the cost is
+     dated that day, the short cleared (Dr the cost, Cr 6300), today's drawer
+     untouched; a payment larger than the short, or a day with none, is
+     recorded today as now.
+   - *c, a live rate:* public rate services give the Central Bank's official
+     rate, not the market rate cafés take dollars at; the market rate is posted
+     daily by exchange sites and channels with no steady service to read it
+     from. *Proposed:* each morning the system fetches a reference rate and
+     shows it beside the manager's; one tap takes it, or the manager types the
+     market rate; a warning when the two differ by more than a set percentage.
+     A market-rate source added later if a reliable one is found.
 5. **Service charge:** already built (0090): a percentage set for each way of
    selling (dine-in, takeaway, the café's own delivery; never a platform), so
    dine-in only is the percentage on dine-in and none on the rest; shown on the
