@@ -45,7 +45,7 @@ const SALE_PATHS = [
 
 const saleInput = z.object({
   /** Minted by the till when payment starts, reused on every retry (H-01, P0-4). */
-  key: z.string().uuid("This sale has no idempotency key"),
+  key: z.string().guid("This sale has no idempotency key"),
   channel: salesChannel,
   /** How it was paid: one way for all of it (a till loaded before 0042), or each part of it (0042). */
   tender: z
@@ -154,7 +154,7 @@ export async function recordSaleAction(
 
 const offlineSaleInput = z.object({
   /** Minted by the till when the sale was made offline, and sent with every try (0073). */
-  key: z.string().uuid("This sale has no idempotency key"),
+  key: z.string().guid("This sale has no idempotency key"),
   channel: salesChannel,
   tender: z
     .enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" })
@@ -290,7 +290,7 @@ const refundInput = correction.extend({
         }),
         amount: positive("Amount"),
         /** One of the café's ways to pay (0069): which. */
-        method: z.string().uuid("The payments to give back cannot be read").nullish(),
+        method: z.string().guid("The payments to give back cannot be read").nullish(),
       }),
     )
     .max(10, "The payments to give back cannot be read")
@@ -412,7 +412,7 @@ export async function moveCashAction(
 
 const giveAwayInput = z.object({
   /** Minted when the cashier asks to give it away, reused on every retry. */
-  key: z.string().uuid("This giveaway has no idempotency key"),
+  key: z.string().guid("This giveaway has no idempotency key"),
   kind: z.enum(["staff_consumption", "complimentary", "sampling"], {
     message: "Give it away as a staff meal, on the house or a sample",
   }),

@@ -73,7 +73,7 @@ select test.eq((select string_agg((x ->> 'key') || ' ' || (x ->> 'scope_type')
   'overtime_percent business = 150 (default); payday business = 1 (default); '
   'po_approve_up_to business = 250000 (default); po_approve_up_to role general_manager = 1000000000 (default); '
   'po_approve_up_to role owner = 1000000000 (default); '
-  'refund_approval_over business = 25000 (default); transfer_markup_percent business = 0 (default); '
+  'refund_approval_over business = 25000 (default); till_lock_minutes business = 0 (default); transfer_markup_percent business = 0 (default); '
   'usd_rate_max_age_hours business = 36 (default); '
   'usd_round_to business = 250 (default); use_by_warn_hours business = 24 (default); '
   'waste_approval_over business = 50000 (default); '

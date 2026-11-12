@@ -118,7 +118,7 @@ const receiveInput = z.object({
   rebate: nonNegative("Rebate"),
   note: optionalText(300),
   /** The purchase order it comes against (0044), if any. */
-  purchaseOrderId: z.string().uuid().nullable().default(null),
+  purchaseOrderId: z.string().guid().nullable().default(null),
   lines: z
     .array(
       z.object({
@@ -128,7 +128,7 @@ const receiveInput = z.object({
         /** The price of one of the unit received, as the invoice gives it (0027). */
         unitPrice: nonNegative("Price per unit"),
         /** Its line on the order, when it comes against one. */
-        poLineId: z.string().uuid().nullable().default(null),
+        poLineId: z.string().guid().nullable().default(null),
         /** Its use-by (0098): the pack's date; null, from the item's days. */
         useBy: z
           .string()
@@ -214,7 +214,7 @@ const poLines = z
 
 const poInput = z.object({
   /** The draft changed; none for a new order. */
-  poId: z.string().uuid().nullable().default(null),
+  poId: z.string().guid().nullable().default(null),
   supplierId: id("the supplier"),
   expectedOn: day("The day it is expected").nullable().default(null),
   note: optionalText(300),
@@ -380,7 +380,7 @@ export async function cancelPurchaseOrderAction(
 const returnInput = z.object({
   supplierId: id("the supplier"),
   /** The delivery the goods came in, if named. */
-  receiptId: z.string().uuid().nullable().default(null),
+  receiptId: z.string().guid().nullable().default(null),
   reason: text("Why they are going back", 300),
   lines: z
     .array(
@@ -446,8 +446,8 @@ const creditInput = z
     amount: positive("The amount"),
     supplierRef: text("The number on the supplier's credit note", 60),
     reason: text("What it is for", 300),
-    receiptId: z.string().uuid().nullable().default(null),
-    billId: z.string().uuid().nullable().default(null),
+    receiptId: z.string().guid().nullable().default(null),
+    billId: z.string().guid().nullable().default(null),
     accountCode: z
       .string()
       .regex(/^\d{4}$/)
@@ -615,7 +615,7 @@ const correctionLines = z
   .array(
     z.object({
       /** The delivery's own line, or none for a line added. */
-      lineId: z.string().uuid().nullable(),
+      lineId: z.string().guid().nullable(),
       itemId: id("an item"),
       qty: positive("Quantity"),
       unitCode: z.string().min(1, "Choose a unit"),
@@ -765,7 +765,7 @@ const billInput = z
     invoiceDate: day("The invoice date"),
     amount: positive("The amount"),
     termDays: z.coerce.number().int().min(0).max(365),
-    receiptId: z.string().uuid().nullable(),
+    receiptId: z.string().guid().nullable(),
     accountCode: z
       .string()
       .regex(/^\d{4}$/)

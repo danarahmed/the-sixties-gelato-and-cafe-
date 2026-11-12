@@ -112,7 +112,7 @@ const lossInput = z
     qty: positive("Quantity"),
     reason: text("What happened", 300),
     /** A manager's approval with their PIN, when the loss needs one (0040). */
-    approvalId: z.string().uuid().nullish(),
+    approvalId: z.string().guid().nullish(),
     /** Or: save it to wait for a manager's approval. */
     wait: z.boolean().optional(),
   })

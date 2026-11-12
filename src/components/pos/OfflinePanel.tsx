@@ -20,6 +20,7 @@ export function OfflineStrip({
   sending,
   onOpen,
   bills = 0,
+  oldestMinutes = null,
 }: {
   connected: boolean;
   waiting: number;
@@ -28,9 +29,12 @@ export function OfflineStrip({
   onOpen: () => void;
   /** Bills changed offline, waiting to be saved (0082). */
   bills?: number;
+  /** How long the oldest kept sale has waited, in minutes (0099): long, and the strip says so. */
+  oldestMinutes?: number | null;
 }) {
   const { t } = useT();
   if (connected && waiting === 0 && attention === 0 && bills === 0) return null;
+  const long = waiting > 0 && oldestMinutes !== null && oldestMinutes >= 30;
   const text =
     attention > 0
       ? t("{n} offline sale(s) need a manager", { n: String(attention) })
@@ -41,17 +45,20 @@ export function OfflineStrip({
         : sending
           ? t("Sending {n} sale(s) made offline…", { n: String(waiting) })
           : t("{n} sale(s) made offline waiting to send", { n: String(waiting) });
+  const said = long
+    ? `${text} · ${t("the oldest {n} min ago: keep this till open until they are sent", { n: String(oldestMinutes) })}`
+    : text;
   return (
     <button
       type="button"
-      className={`strip-chip offline-chip${attention > 0 ? " bad" : " waiting"}`}
+      className={`strip-chip offline-chip${attention > 0 || long ? " bad" : " waiting"}`}
       onClick={onOpen}
       data-testid="offline-strip"
       data-waiting={waiting}
       data-attention={attention}
       aria-live="polite"
     >
-      <Icon name={attention > 0 ? "alert" : "clock"} size={16} /> {text}
+      <Icon name={attention > 0 || long ? "alert" : "clock"} size={16} /> {said}
       {bills > 0 && attention === 0 && (
         <> · {t("{n} bill(s) kept on this till", { n: String(bills) })}</>
       )}

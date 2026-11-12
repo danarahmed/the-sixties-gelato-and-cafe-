@@ -20,7 +20,7 @@ const dealInput = z.object({
   name: z.string().trim().min(1, "Name the deal").max(60, "A deal's name is at most 60 letters"),
   nameAr: z.string().max(60).nullish(),
   nameCkb: z.string().max(60).nullish(),
-  prices: z.record(salesChannel, z.number({ invalid_type_error: NOT_A_NUMBER }).min(0)),
+  prices: z.record(salesChannel, z.number({ message: NOT_A_NUMBER }).min(0)),
   slots: z
     .array(
       z.object({
@@ -69,7 +69,7 @@ export async function saveDealAction(
 
 const timePriceInput = z.object({
   variantId: id("a product"),
-  price: z.number({ invalid_type_error: NOT_A_NUMBER }).min(0, "Enter a price"),
+  price: z.number({ message: NOT_A_NUMBER }).min(0, "Enter a price"),
   starts: hhmm,
   ends: hhmm,
   days,

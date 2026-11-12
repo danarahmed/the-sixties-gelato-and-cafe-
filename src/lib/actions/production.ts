@@ -114,7 +114,7 @@ const recordInput = z.object({
   outputUnit: z.string().nullable(),
   note: optionalText(300),
   /** A manager's approval of using more than the books hold (0040). */
-  stockApprovalId: z.string().uuid().nullish(),
+  stockApprovalId: z.string().guid().nullish(),
   /** When it was made, when that was earlier than now: a manager's, with why (0046). */
   producedAt: moment.nullish(),
   lateReason: optionalText(300),

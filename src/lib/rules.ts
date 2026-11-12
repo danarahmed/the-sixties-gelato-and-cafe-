@@ -15,6 +15,7 @@ export const RULE_ORDER = [
   "negative_stock",
   "expired_sale",
   "use_by_warn_hours",
+  "till_lock_minutes",
   "usd_rate_max_age_hours",
   "usd_round_to",
   "po_approve_up_to",
@@ -43,6 +44,7 @@ export const RULE_LABEL: Record<RuleKey, string> = {
   negative_stock: "Using more stock than the books hold",
   expired_sale: "Selling stock past its use-by",
   use_by_warn_hours: "Warn of a use-by this many hours ahead",
+  till_lock_minutes: "Lock a till nobody touches after this many minutes (0: never)",
   usd_rate_max_age_hours: "A dollar rate is used for",
   usd_round_to: "Dollars are counted in dinars to the nearest",
   po_approve_up_to: "Purchase orders a manager approves, up to",
@@ -77,6 +79,8 @@ export const RULE_HELP: Record<RuleKey, string> = {
     "When a sale, a loss, a batch or a correction would use more than the books hold. By default, what is made here is refused and everything else is allowed with a red alert. “Allowed, with no alert” is for chosen items only.",
   expired_sale:
     "The till marks what is near or past its use-by before anyone chooses it, and Today lists what to take off the shelf. If stock past its use-by is sold all the same: warned of and kept on the audit trail, or refused unless a manager approves with their PIN. Set for a branch, it is that branch's.",
+  till_lock_minutes:
+    "A till nobody touches for this long covers itself and asks the person signed in for their PIN (their clock PIN or their approval PIN); anyone else signs out and in as themselves, so no sale is rung up under another's name. 0 never locks. Set for a branch, it is that branch's.",
   use_by_warn_hours:
     "How long before its use-by a batch or a delivery is warned of: on the dashboard, the phone, Today and the till. 24 is a day ahead.",
   usd_rate_max_age_hours:

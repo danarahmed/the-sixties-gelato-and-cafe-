@@ -83,8 +83,10 @@ export function PhoneClock({
     if (!code) return;
     setError(null);
     start(async () => {
+      // Where the phone is (0099): the shop may ask that it is near it, or inside it.
+      const where = await herePosition();
       const r = await op.run(`phone-clock:${direction}`, (key) =>
-        clockByPhoneAction({ code, direction }, key),
+        clockByPhoneAction({ code, direction, where }, key),
       );
       if (!r.ok) {
         setError(r.error);
@@ -235,4 +237,30 @@ function Card({
       {children}
     </div>
   );
+}
+
+/**
+ * Where this phone is, if it will say within a few seconds; null when it
+ * will not (no permission, no fix): the database then says what to do.
+ */
+function herePosition(): Promise<{ lat: number; lng: number; accuracy: number | null } | null> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const done = setTimeout(() => resolve(null), 8000);
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        clearTimeout(done);
+        resolve({
+          lat: p.coords.latitude,
+          lng: p.coords.longitude,
+          accuracy: p.coords.accuracy ?? null,
+        });
+      },
+      () => {
+        clearTimeout(done);
+        resolve(null);
+      },
+      { enableHighAccuracy: true, timeout: 7000, maximumAge: 30000 },
+    );
+  });
 }

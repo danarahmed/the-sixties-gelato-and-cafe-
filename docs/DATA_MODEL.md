@@ -2054,6 +2054,32 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Security fixes (`0099`)
+
+- **`location.clock_lat`, `clock_lng`, `clock_radius_m`** (150 by default, 20
+  to 2,000): where a place is, for clocking from a phone; both or neither.
+  `set_place_clock_spot(place, lat, lng, radius)` (those who manage settings),
+  on the audit trail (`place.clock_spot`). `geo_metres` measures the distance.
+- **`clock_by_phone`** takes `p_lat`, `p_lng`, `p_accuracy`: at a place with a
+  spot, a phone that will not say where it is, or is farther than the
+  distance plus its own margin (up to 100 m), is refused, and that refusal is
+  not kept for the retry (`where: true`), so the same scan works from nearer.
+- The café's rule **`till_lock_minutes`** (0 to 60, 0 by default: never; for
+  the café or a branch), read by `till_lock_minutes(place)`.
+  `unlock_till(pin)` checks the person's own clock PIN or approval PIN;
+  **`till_unlock_attempt`** counts them (five wrong in fifteen minutes and it
+  answers no until they sign in again). Read by no one.
+- **`stuck_event.kind`** may be `error` too: a screen that failed, noted by
+  the app; `stuck_report` counts them (`errors`) per screen. The
+  `app_errors` alert: three or more in an hour.
+- **`member_device`**: each device a person signed in on (`device_hash` of a
+  random key the browser keeps, `agent` such as "Chrome on Windows",
+  `first_seen`, `last_seen`). `note_device(key, agent)`; the `new_device`
+  alert, for a device new to someone who may see the books, after their first.
+  Read by no one.
+- Every security-definer function, and the cold helpers, now name their
+  `search_path`.
+
 ### Use-by for everything that goes off (`0098`)
 
 - **`item.expiry_mode`**: how an item keeps, chosen once: `none` (it doesn't

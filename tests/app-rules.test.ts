@@ -5387,7 +5387,7 @@ describe("an expense paid ahead for months to come (0060, the September audit's 
       .filter((f) => f.endsWith(".sql"))
       .sort()
       .map((f) => readFileSync(join(__dirname, "../supabase/migrations", f), "utf8"))
-      .filter((sql) => /function manual_journal_blocked/.test(sql))
+      .filter((sql) => /create (or replace )?function manual_journal_blocked/.test(sql))
       .pop()!;
     const blocked = new Set(
       [

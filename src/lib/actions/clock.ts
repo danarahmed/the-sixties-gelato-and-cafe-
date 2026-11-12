@@ -191,6 +191,15 @@ export async function linkPhoneFinishAction(
 const phoneClockInput = z.object({
   code: z.string().refine((c) => readCode(c) !== null, "Type the 6 digits the shop's screen shows"),
   direction: z.enum(["in", "out"], { message: "Clock in, or out" }),
+  /** Where the phone is (0099), when it says: clocking from a phone is near the shop or inside it. */
+  where: z
+    .object({
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+      accuracy: z.number().min(0).max(100000).nullable().default(null),
+    })
+    .nullable()
+    .default(null),
 });
 
 /**
@@ -215,12 +224,25 @@ export async function clockByPhoneAction(
       }),
     };
   }
-  const r = await callRpc<unknown>("clock_by_phone", {
+  const code = readCode(v.data.code);
+  const where = v.data.where;
+  let r = await callRpc<unknown>("clock_by_phone", {
     p_phone: phone,
-    p_code: readCode(v.data.code),
+    p_code: code,
     p_direction: v.data.direction,
     p_idempotency_key: key,
+    p_lat: where?.lat ?? null,
+    p_lng: where?.lng ?? null,
+    p_accuracy: where?.accuracy ?? null,
   });
+  // Before 0099 the database takes no place: asked again without it.
+  if (!r.ok && /clock_by_phone|function/i.test(r.error) && /p_lat|find|exist/i.test(r.error))
+    r = await callRpc<unknown>("clock_by_phone", {
+      p_phone: phone,
+      p_code: code,
+      p_direction: v.data.direction,
+      p_idempotency_key: key,
+    });
   if (!r.ok) return r;
   const a = phoneClockAnswerFrom(r.data);
   if (a.ok) refresh("/clock", "/staff");

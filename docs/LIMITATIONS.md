@@ -130,6 +130,23 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - Before `0073` is applied, a kept sale is sent as an ordinary sale when it
     reaches the database: at that time, and refused where an item's rule
     refuses.
+  - Since plan 7, the till warns when it still keeps sales: leaving or
+    closing the page asks first, and the strip turns red once the oldest has
+    waited half an hour. The kept sales are not yet encrypted in the browser's
+    storage: that comes with the offline-first till (step 6).
+- **Security fixes (`0099`), what they do not do.**
+  - Clocking near the shop trusts what the phone says of where it is: a phone
+    that fakes its place could still clock from home. It stops a code sent to
+    someone at home, the common case; the shop's screen code still changes
+    every 30 seconds.
+  - A place's spot is set by standing there with a phone or tablet: a desktop
+    computer usually cannot say where it is.
+  - The till's lock is the screen's: it covers the till after the minutes set,
+    in that browser. It is not a sign-out, and another tab is not locked.
+  - A device is known by a random key its browser keeps: cleared, or a
+    private window, and the same device is new again (one alert).
+  - A failing screen is noted only when the screen itself can still send it;
+    one that fails before it loads is in Vercel's logs only.
 - **Retry keys, what they do not cover (`0035`).** A screen keeps the key of an
   unanswered submission while it stays open; reloaded, it forgets it (only the
   till keeps its unanswered payment across a reload), so after a reload look

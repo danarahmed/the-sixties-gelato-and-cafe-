@@ -43,7 +43,7 @@ function sqlFunctions(): Map<string, SqlFunction> {
   const fns = new Map<string, SqlFunction>();
   for (const file of readdirSync(MIGRATIONS).sort()) {
     const sql = readFileSync(join(MIGRATIONS, file), "utf8");
-    const re = /create or replace function\s+([a-z_]+)\s*\(/gi;
+    const re = /create (?:or replace )?function\s+(?:public\.)?([a-z_0-9]+)\s*\(/gi;
     for (let m = re.exec(sql); m; m = re.exec(sql)) {
       const inner = balanced(sql, m.index + m[0].length - 1);
       const params: { name: string; required: boolean }[] = [];

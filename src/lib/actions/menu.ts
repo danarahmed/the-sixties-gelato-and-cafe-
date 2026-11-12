@@ -125,7 +125,7 @@ const priceInput = z.object({
   price: positive("Price"),
   effectiveFrom: day("The start date"),
   /** One branch's own price (0055); none: every branch's. */
-  placeId: z.string().uuid().nullable().optional(),
+  placeId: z.string().guid().nullable().optional(),
 });
 
 export async function setPriceAction(
@@ -544,7 +544,7 @@ export async function retireSizeAction(
 
 // ------------------------------------------------------------------ add-ons (0041)
 const count = (label: string) =>
-  z.number({ invalid_type_error: label }).int(label).min(0, label).max(20, label);
+  z.number({ message: label }).int(label).min(0, label).max(20, label);
 
 const groupInput = z.object({
   groupId: id("a group of add-ons").nullable(),

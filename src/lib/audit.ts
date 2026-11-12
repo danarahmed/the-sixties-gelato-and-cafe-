@@ -151,6 +151,7 @@ const ACTION_LABEL: Record<string, string> = {
   "item.use_by": "How an item keeps, chosen",
   "stock.use_by": "A delivery's use-by changed",
   "stock.expired_sold": "Stock past its use-by sold",
+  "place.clock_spot": "Where a place is, for clocking from a phone",
   "purchase.receive": "Delivery received",
   "purchase.bill": "Supplier bill recorded",
   "purchase.pay": "Supplier bill paid",

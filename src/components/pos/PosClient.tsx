@@ -536,6 +536,20 @@ export function PosClient({
   const [autoPrint, setAutoPrint] = useState(false);
   const [ticketOn, setTicketOn] = useState(true);
   const [now, setNow] = useState(() => Date.now());
+  // The oldest sale this till keeps, in minutes (0099): long, and the strip says so.
+  const oldestKept = offline.length
+    ? Math.floor((now - Math.min(...offline.map((s) => Date.parse(s.soldAt) || now))) / 60000)
+    : null;
+  // A till holding sales that are not yet sent warns before it is closed or reloaded (0099).
+  useEffect(() => {
+    if (offline.length === 0) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [offline.length]);
   // How many pre-orders wait to be collected, for the till's button (0076).
   const [preOpen, setPreOpen] = useState(preOrders?.orders.length ?? 0);
   const panel = useRef<HTMLDivElement>(null);
@@ -2303,6 +2317,7 @@ export function PosClient({
           attention={held.attention + keptAttention}
           bills={keptWaiting}
           sending={sending}
+          oldestMinutes={oldestKept}
           onOpen={() => setDialog({ kind: "offline" })}
         />
         <button

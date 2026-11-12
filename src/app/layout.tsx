@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import { AppShell, type ShellMember } from "@/components/AppShell";
@@ -56,6 +56,8 @@ async function shellMember(): Promise<ShellMember | null> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const store = await cookies();
+  // The page's one-time nonce (plan 7): the two scripts below carry it.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   const theme = (store.get("theme")?.value === "dark" ? "dark" : "light") as "light" | "dark";
   const [locale, dir, languages, words, member] = await Promise.all([
     getLocale(),
@@ -68,7 +70,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} dir={dir} data-theme={theme}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: NOTE_SCRIPTS }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: NOTE_SCRIPTS }} />
       </head>
       <body>
         <I18nProvider locale={locale} dir={dir} languages={languages} words={words}>
@@ -77,6 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </AppShell>
         </I18nProvider>
         <script
+          nonce={nonce}
           // The service worker caches only the app's static files and an
           // offline notice — never a page with business data on it.
           dangerouslySetInnerHTML={{

@@ -76,6 +76,7 @@ export default async function StuckPage({
                 <th>{t("Screen")}</th>
                 <th className="right">{t("Refused")}</th>
                 <th className="right">{t("Help opened")}</th>
+                <th className="right">{t("Failed")}</th>
                 <th className="right">{t("In practice")}</th>
                 <th>{t("Who")}</th>
                 <th>{t("Said most")}</th>
@@ -87,6 +88,9 @@ export default async function StuckPage({
                   <td>{screenName(s.path)}</td>
                   <td className="right mono">{s.refused}</td>
                   <td className="right mono">{s.help}</td>
+                  <td className={s.errors > 0 ? "right mono red" : "right mono muted"}>
+                    {s.errors}
+                  </td>
                   <td className="right mono muted">{s.practice}</td>
                   <td className="muted">
                     {t("{n} people", { n: s.people })}

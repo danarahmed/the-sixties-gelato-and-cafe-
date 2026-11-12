@@ -25,7 +25,7 @@ const listLines = z
 
 const draftInput = z.object({
   /** The list's location: the orders are for it. */
-  locationId: z.string().uuid().nullable().default(null),
+  locationId: z.string().guid().nullable().default(null),
   lines: listLines,
 });
 
@@ -80,7 +80,7 @@ export async function draftOrdersFromListAction(
   };
 }
 
-const placeOnly = z.object({ locationId: z.string().uuid().nullable().default(null) });
+const placeOnly = z.object({ locationId: z.string().guid().nullable().default(null) });
 
 /**
  * What to buy, drafted in one press (0092): a draft order for each supplier

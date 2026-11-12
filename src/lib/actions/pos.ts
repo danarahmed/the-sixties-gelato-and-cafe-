@@ -182,7 +182,7 @@ export async function printBillAction(
 
 const payInput = tabRef.extend({
   /** Minted when the cashier starts taking payment, reused on every retry. */
-  key: z.string().uuid("This payment has no idempotency key"),
+  key: z.string().guid("This payment has no idempotency key"),
   /** One way for all of it (a till loaded before 0042), or each part of it (0042). */
   tender: z
     .enum(["cash", "card", "platform_paid"], { message: "Choose how it was paid" })
@@ -191,7 +191,7 @@ const payInput = tabRef.extend({
   /** The total the till showed; the bill is not paid at another (0025). */
   expectedNet: optionalNonNegative("The total shown"),
   /** A manager's approval of selling more than the books hold, when its rule asks (0040). */
-  stockApprovalId: z.string().uuid().nullish(),
+  stockApprovalId: z.string().guid().nullish(),
   /** A customer named as it is paid, where its delivery goes, and the rewards taken (0050). */
   customerId: id("the customer").nullish(),
   addressId: id("the address").nullish(),
@@ -228,7 +228,7 @@ export async function payBillAction(
 }
 
 const offlinePayInput = tabRef.extend({
-  key: z.string().uuid("This payment has no idempotency key"),
+  key: z.string().guid("This payment has no idempotency key"),
   tenders: payments,
   expectedNet: optionalNonNegative("The total shown"),
   /** When the till took the money, and who was signed in on it then. */

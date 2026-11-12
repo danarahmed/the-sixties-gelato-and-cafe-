@@ -32,6 +32,8 @@ import { getBusinessDetails, getPlaces } from "@/lib/db/details";
 import { getLanguageSettings } from "@/lib/db/languages";
 import { DetailsManager } from "@/components/settings/DetailsManager";
 import { PlacesManager } from "@/components/settings/PlacesManager";
+import { ClockSpots } from "@/components/settings/ClockSpots";
+import { getClockSpots } from "@/lib/db/security";
 import {
   notSetUp,
   peopleStatus,
@@ -96,6 +98,8 @@ export default async function SettingsPage() {
     getPlaces(),
     getLanguageSettings().catch(() => ({ languages: [], ownWords: {} })),
   ]);
+  // Where each place is, for clocking from a phone (0099); null before it.
+  const clockSpots = await getClockSpots();
   // The café's own ways of selling, in use: a delivery platform sets what its customers pay.
   const shopChannels = channels
     .filter((c) => c.active && !isPlatformChannel(c.code))
@@ -416,6 +420,7 @@ export default async function SettingsPage() {
               }
             />
           )}
+          {clockSpots && clockSpots.length > 0 && <ClockSpots spots={clockSpots} />}
         </section>
       </SettingsGroup>
 

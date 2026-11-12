@@ -53,7 +53,8 @@ export const nonNegative = (label: string) =>
 /** An optional decimal of zero or more: null when left empty. */
 export const optionalNonNegative = (label: string) =>
   z
-    .union([z.string(), z.number(), z.null(), z.undefined()])
+    .union([z.string(), z.number(), z.null()])
+    .optional()
     .transform((v) => (v === null || v === undefined ? "" : normaliseNumber(v)))
     .refine((v) => v === "" || DECIMAL.test(v), `${label} must be a number of zero or more`)
     .transform((v) => (v === "" ? null : v));
@@ -68,7 +69,7 @@ export const signedNonZero = (label: string) =>
       `${label} must be a number other than zero`,
     );
 
-export const id = (label: string) => z.string().uuid(`Choose ${label}`);
+export const id = (label: string) => z.string().guid(`Choose ${label}`);
 
 /** Rewards a customer takes off a sale (0050): none, or a whole number up to 20. */
 export const rewardsTaken = z
@@ -81,7 +82,8 @@ export const rewardsTaken = z
 
 /** A discount given as a percentage: more than 0 and no more than 100, or none (null). */
 export const discountPercent = z
-  .union([z.string(), z.number(), z.null(), z.undefined()])
+  .union([z.string(), z.number(), z.null()])
+  .optional()
   .transform((v) => (v === null || v === undefined ? "" : normaliseNumber(v)))
   .refine(
     (v) => v === "" || (DECIMAL.test(v) && Number(v) > 0 && Number(v) <= 100),
@@ -91,7 +93,8 @@ export const discountPercent = z
 
 /** A discount given as an amount: more than zero, or none (null). */
 export const discountAmount = z
-  .union([z.string(), z.number(), z.null(), z.undefined()])
+  .union([z.string(), z.number(), z.null()])
+  .optional()
   .transform((v) => (v === null || v === undefined ? "" : normaliseNumber(v)))
   .refine(
     (v) => v === "" || (DECIMAL.test(v) && Number(v) > 0),
@@ -111,7 +114,8 @@ export const text = (label: string, max = 500) =>
 
 export const optionalText = (max = 500) =>
   z
-    .union([z.string(), z.null(), z.undefined()])
+    .string()
+    .nullish()
     .transform((v) => (v ?? "").trim())
     .refine((v) => v.length <= max, "Too long")
     .transform((v) => (v === "" ? null : v));
@@ -142,7 +146,8 @@ export function cleanOrderNo(input: unknown): string {
     .replace(/^#+/, "");
 }
 export const platformOrderNo = z
-  .union([z.string(), z.null(), z.undefined()])
+  .union([z.string(), z.null()])
+  .optional()
   .transform((v) => cleanOrderNo(v) || null)
   .refine(
     (v) => v === null || ORDER_NO.test(v),
@@ -221,7 +226,7 @@ export const payments = z
         .positive("Dollars are taken in whole dollars")
         .nullish(),
       rate: z.number().positive("The payments cannot be read").nullish(),
-      method: z.string().uuid("Choose which way to pay it was").nullish(),
+      method: z.string().guid("Choose which way to pay it was").nullish(),
       reference: z.string().trim().max(60, "A payment's reference is at most 60 letters").nullish(),
     }),
   )
