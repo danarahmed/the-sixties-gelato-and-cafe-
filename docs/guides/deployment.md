@@ -94,6 +94,7 @@ Plan a short window when the café is closed.
 | Where people get stuck (`0097`)              | ✅ Applied by the owner in the SQL editor on 4 November; checked read-only: the report opens for the owner, empty                                                                                                                                                                                                                                                                                                                                |
 | Use-by for everything that goes off (`0098`) | ⏳ Waiting for the owner to apply it in the SQL editor                                                                                                                                                                                                                                                                                                                                                                                           |
 | Security fixes (`0099`)                      | ⏳ Waiting for the owner to apply it in the SQL editor, after `0098`                                                                                                                                                                                                                                                                                                                                                                             |
+| Speed (`0100`)                               | ⏳ Waiting for the owner to apply it in the SQL editor, after `0099`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4335,6 +4336,32 @@ It is applied by the owner, in Supabase's SQL editor, after `0098`:
 
 1. Open the file `supabase/migrations/0099_security_fixes.sql` on GitHub,
    press **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0100`
+
+Migration `0100` brings **speed (plan 8, steps 1 and 2)**:
+
+- The dashboard and the daily brief no longer work out every alert each time
+  they open: an answer from the last minute is used (an alert can show up to a
+  minute late; the phones' warnings are every five minutes as before).
+- A day's voids and refunds are found by their own index.
+- **Speed**, for the system's administrators only (you, the owner of the
+  system; never a café you sell to): Settings → "For the system's
+  administrators: Speed". It measures this device to the app, the app to the
+  database, and each slow screen's call, and keeps what you measure so you
+  can send it.
+
+Nothing recorded changes. Rehearsed with `tests/sql/speed.test.sql` and every
+other test.
+
+It is applied by the owner, in Supabase's SQL editor, after `0099`:
+
+1. Open the file `supabase/migrations/0100_speed.sql` on GitHub, press
+   **Raw**, select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run
    it anyway.

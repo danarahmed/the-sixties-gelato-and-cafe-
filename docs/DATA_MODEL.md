@@ -2054,6 +2054,24 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Speed (`0100`)
+
+- **`alert_refresh`**: when each café's alerts were last brought up to date
+  (`at`). `refresh_alerts` now uses an answer from the last
+  `alerts_fresh_seconds()` (60 by default; the connection's
+  `sixties.alerts_fresh_seconds`, 0 for every time, as the tests set it), so
+  the dashboard and the daily brief no longer work out every alert each time
+  they open; `refresh_alerts_0099` is the work itself. The phones' timer
+  (0072) keeps it fresh. Read by no one.
+- `sale_adjustment_day`: an index on a day's voids and refunds.
+- **`system_admin`**: the system's administrators (`auth_user_id`), never a
+  café's owner as such: the owner of the first café, to begin with.
+  `is_system_admin()`, `require_system_admin()`. Read by no one.
+- **`speed_sample`**: the Speed page's measurements (`device_ms`,
+  `database_ms`, each call's time in `calls`, `agent`, `note`), kept 180 days.
+  `speed_ping()`, `save_speed_sample(...)`, `speed_samples(limit)`, for the
+  system's administrators. Read by no one.
+
 ### Security fixes (`0099`)
 
 - **`location.clock_lat`, `clock_lng`, `clock_radius_m`** (150 by default, 20

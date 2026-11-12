@@ -60,6 +60,8 @@ q() { "${PSQL[@]}" -At -d "$1" -c "$2"; }
 fresh_db() {
   "${PSQL[@]}" -d postgres -c "drop database if exists $1 with (force)" >/dev/null 2>&1
   "${PSQL[@]}" -d postgres -c "create database $1 ${2:+template $2}" >/dev/null
+  # The alerts worked out every time they are asked (0100 keeps them a minute).
+  "${PSQL[@]}" -d postgres -c "alter database $1 set sixties.alerts_fresh_seconds = '0'" >/dev/null
 }
 drop_db() { "${PSQL[@]}" -d postgres -c "drop database if exists $1 with (force)" >/dev/null 2>&1; }
 

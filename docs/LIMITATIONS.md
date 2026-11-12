@@ -134,6 +134,19 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     closing the page asks first, and the strip turns red once the oldest has
     waited half an hour. The kept sales are not yet encrypted in the browser's
     storage: that comes with the offline-first till (step 6).
+- **Speed (`0100`), what it does not do.**
+  - The dashboard's alerts and the daily brief use an answer worked out in
+    the last minute: an alert raised or cleared by a sale shows up to a
+    minute late there (the alerts page, and the phones, the same).
+  - The Speed page measures from the device it is opened on, at that moment;
+    it is not a monitor running by itself. Measure from the café, at a busy
+    time and a quiet one.
+  - The sign-in's second step is still asked of Supabase Auth on each page by
+    someone who has none; making that once a session was left out (it is the
+    sign-in's own guard, kept as it is).
+  - The heavy reports are not yet kept for closed days; the free plan's small
+    shared computer still causes the spikes of seconds (plan 8, step 3:
+    Supabase Pro).
 - **Security fixes (`0099`), what they do not do.**
   - Clocking near the shop trusts what the phone says of where it is: a phone
     that fakes its place could still clock from home. It stops a code sent to

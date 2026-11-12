@@ -34,6 +34,7 @@ import { DetailsManager } from "@/components/settings/DetailsManager";
 import { PlacesManager } from "@/components/settings/PlacesManager";
 import { ClockSpots } from "@/components/settings/ClockSpots";
 import { getClockSpots } from "@/lib/db/security";
+import { isSystemAdmin } from "@/lib/db/speed";
 import {
   notSetUp,
   peopleStatus,
@@ -100,6 +101,8 @@ export default async function SettingsPage() {
   ]);
   // Where each place is, for clocking from a phone (0099); null before it.
   const clockSpots = await getClockSpots();
+  // The system's administrators only (0100): never a café's owner.
+  const systemAdmin = await isSystemAdmin();
   // The café's own ways of selling, in use: a delivery platform sets what its customers pay.
   const shopChannels = channels
     .filter((c) => c.active && !isPlatformChannel(c.code))
@@ -181,6 +184,11 @@ export default async function SettingsPage() {
       <p className="muted" style={{ margin: 0 }}>
         {t("Each heading says what is turned on inside it. Open one to change it.")}
       </p>
+      {systemAdmin && (
+        <p className="muted" style={{ margin: 0 }} data-testid="system-admin">
+          {t("For the system's administrators:")} <Link href="/admin/speed">{t("Speed")}</Link>
+        </p>
+      )}
 
       {todo.length > 0 && (
         <section className="card settings-todo" data-testid="settings-todo">
