@@ -97,7 +97,7 @@ select t from (values ('watch_state'), ('two_step_backup_code'), ('two_step_back
 -- The devices each person signed in on (0099) are theirs, and the system's
 -- administrators and their speed measurements (0100) are the system's: kept.
 insert into reset_keep
-select t from (values ('member_device'), ('system_admin'), ('speed_sample'), ('business_offline_key')) v(t)
+select t from (values ('member_device'), ('system_admin'), ('speed_sample'), ('business_offline_key'), ('tax_setup')) v(t)
  where to_regclass('public.' || t) is not null;
 
 do $$

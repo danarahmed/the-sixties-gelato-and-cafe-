@@ -294,7 +294,9 @@ function AddAccount({ accounts, onDone }: { accounts: ChartAccount[]; onDone: (m
             value={type}
             onChange={(e) => {
               const k = (
-                ["revenue", "bank", "loan", "equipment"].includes(e.target.value)
+                ["revenue", "bank", "loan", "equipment", "asset", "liability"].includes(
+                  e.target.value,
+                )
                   ? e.target.value
                   : "expense"
               ) as AddableKind;
@@ -307,6 +309,8 @@ function AddAccount({ accounts, onDone }: { accounts: ChartAccount[]; onDone: (m
             <option value="bank">{t("Another bank account")}</option>
             <option value="loan">{t("A loan")}</option>
             <option value="equipment">{t("A kind of equipment")}</option>
+            <option value="asset">{t("Another asset")}</option>
+            <option value="liability">{t("Another debt")}</option>
           </select>
         </Field>
         <Field label={t("Code")}>
@@ -360,9 +364,15 @@ function AddAccount({ accounts, onDone }: { accounts: ChartAccount[]; onDone: (m
               ? t("A loan's code is from 2400 to 2499. Money borrowed and paid back moves it.")
               : type === "equipment"
                 ? t("A kind of equipment's code is from 1501 to 1589.")
-                : t(
-                    "A cost's code is from 5000 to 6999: 5… for the cost of what was sold, 6… for the running costs.",
-                  )}
+                : type === "asset"
+                  ? t("Another asset's code is from 1700 to 1799: a deposit paid, a loan given.")
+                  : type === "liability"
+                    ? t(
+                        "Another debt's code is from 2500 to 2599: owed to a partner, a tax owed later.",
+                      )
+                    : t(
+                        "A cost's code is from 5000 to 6999: 5… for the cost of what was sold, 6… for the running costs.",
+                      )}
       </p>
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <button

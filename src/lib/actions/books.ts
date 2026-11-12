@@ -444,7 +444,7 @@ const accountInput = z.object({
     .trim()
     .regex(/^\d{4}$/, "An account's code is four digits"),
   name: text("The account's name", 60),
-  type: z.enum(["revenue", "expense", "bank", "loan", "equipment"], {
+  type: z.enum(["revenue", "expense", "bank", "loan", "equipment", "asset", "liability"], {
     message: "Choose an income or a cost",
   }),
   nameAr: optionalText(60),

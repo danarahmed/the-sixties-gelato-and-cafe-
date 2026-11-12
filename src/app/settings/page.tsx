@@ -35,6 +35,8 @@ import { PlacesManager } from "@/components/settings/PlacesManager";
 import { ClockSpots } from "@/components/settings/ClockSpots";
 import { getClockSpots } from "@/lib/db/security";
 import { isSystemAdmin } from "@/lib/db/speed";
+import { getTaxReport, getTaxSetup } from "@/lib/db/tax";
+import { TaxSettings } from "@/components/settings/TaxSettings";
 import {
   notSetUp,
   peopleStatus,
@@ -103,6 +105,10 @@ export default async function SettingsPage() {
   const clockSpots = await getClockSpots();
   // The system's administrators only (0100): never a café's owner.
   const systemAdmin = await isSystemAdmin();
+  // Tax, built in and off (0102); null before it. This month's figures under it.
+  const taxSetup = await getTaxSetup();
+  const taxToday = businessToday(profile.timezone);
+  const taxReport = taxSetup ? await getTaxReport(`${taxToday.slice(0, 8)}01`, taxToday) : null;
   // The café's own ways of selling, in use: a delivery platform sets what its customers pay.
   const shopChannels = channels
     .filter((c) => c.active && !isPlatformChannel(c.code))
@@ -431,6 +437,23 @@ export default async function SettingsPage() {
           {clockSpots && clockSpots.length > 0 && <ClockSpots spots={clockSpots} />}
         </section>
       </SettingsGroup>
+
+      {taxSetup && (
+        <SettingsGroup
+          id="tax"
+          title={t("Tax")}
+          status={[taxSetup.enabled ? `${t("Tax is on")} · ${taxSetup.rate}%` : t("Tax is off")]}
+        >
+          <section className="sg-part" data-testid="settings-tax">
+            <h3 style={{ marginTop: 0 }}>{t("Tax")}</h3>
+            <TaxSettings
+              setup={taxSetup}
+              report={taxReport}
+              isOwner={profile.roles.includes("owner")}
+            />
+          </section>
+        </SettingsGroup>
+      )}
 
       <SettingsGroup
         id="languages"

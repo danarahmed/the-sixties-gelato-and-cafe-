@@ -143,6 +143,15 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     is handed with its page: a device nobody is signed in on shows nothing of
     it. The key is in the page while the till is open, so a person signed in
     on that till could still read it.
+- **Tax (`0102`), what it does not do.**
+  - Prices are taken to include the tax: the customer pays what the menu
+    says, and the tax is the part of it owed. A tax added on top of prices is
+    not built.
+  - The tax on purchases is not claimed back: what a café pays its suppliers
+    stays their cost, tax included.
+  - One rate for everything the café sells; turned on or changed, from then
+    on only. Paying the government is a journal by hand (Dr 2600, Cr the
+    bank), which the report counts as paid.
 - **Speed (`0100`), what it does not do.**
   - The dashboard's alerts and the daily brief use an answer worked out in
     the last minute: an alert raised or cleared by a sale shows up to a

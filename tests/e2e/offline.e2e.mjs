@@ -78,6 +78,46 @@ console.log("▸ a quick sale with no connection: kept on the till, sent once it
   await ctx.close();
 }
 
+console.log(
+  "▸ with no connection, the cashier's own discount goes with the sale, kept encrypted (0101)",
+);
+{
+  const { ctx, page } = await signIn(browser, "cashier");
+  await open(page, "/pos");
+  const before = sales();
+  const golden = page.locator(".product-tile", { hasText: "Golden espresso" });
+  await golden.click();
+  await golden.click();
+  await ctx.setOffline(true);
+  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: "＋ Discount" }).click();
+  await page.getByLabel("Discount as a percentage").fill("10");
+  await page.getByLabel("Why?").selectOption("regular");
+  check(
+    !((await page.getByTestId("order-offline").textContent()) ?? "").includes("discount"),
+    "10%, within the cashier's cap: the sale can still be made",
+  );
+  await page.getByRole("button", { name: /^Card$/ }).click();
+  await page.locator(".pay-confirm").click();
+  await page.getByTestId("receipt-offline").waitFor();
+  await page.waitForTimeout(300);
+  const kept = await page.evaluate(() => localStorage.getItem("sixties.pos.offline.v1") ?? "");
+  check(
+    kept.startsWith("enc1:") && !kept.includes("Golden") && !kept.includes("regular"),
+    "kept on the till encrypted: nothing of it can be read on the device",
+  );
+  await ctx.setOffline(false);
+  await page.getByTestId("offline-strip").waitFor({ state: "detached", timeout: 20000 });
+  check(sales() === before + 1, "back online, it is sent");
+  check(
+    sql(`select discount_reason || ' ' || (discount_by = (select id from app_user where email = 'cashier@example.com'))::text
+           from sales_order where sold_offline_at is not null order by created_at desc limit 1`) ===
+      "Regular customer true",
+    "with its discount, the cashier's, and why",
+  );
+  await ctx.close();
+}
+
 // A named bill opened by the cashier, with one espresso on it (0082).
 function openBill(label) {
   sql(`select test.act_as('cashier@example.com');

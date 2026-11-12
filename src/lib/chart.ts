@@ -3,7 +3,8 @@
  * as the database checks them. The reports place an account by its kind and
  * its code: 4… is income, 5… the cost of what was sold, 6… the running costs.
  */
-export type AddableKind = "revenue" | "expense" | "bank" | "loan" | "equipment";
+export type AddableKind =
+  "revenue" | "expense" | "bank" | "loan" | "equipment" | "asset" | "liability";
 
 export const ACCOUNT_RANGE: Record<AddableKind, [number, number]> = {
   revenue: [4000, 4999],
@@ -12,6 +13,9 @@ export const ACCOUNT_RANGE: Record<AddableKind, [number, number]> = {
   bank: [1021, 1029],
   loan: [2400, 2499],
   equipment: [1501, 1589],
+  // The books' blockers (0102): any other asset or debt.
+  asset: [1700, 1799],
+  liability: [2500, 2599],
 };
 
 /**

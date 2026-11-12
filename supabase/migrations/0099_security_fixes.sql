@@ -224,7 +224,7 @@ language sql immutable set search_path = public as $$
                               "label": "Warn of a use-by this many hours ahead"},
     "till_lock_minutes":     {"kind": "minutes", "min": 0, "max": 60, "whole": true,
                               "scopes": ["business", "location"],
-                              "label": "Lock a till nobody touches after this many minutes (0: never)"}
+                              "label": "Lock a till nobody touches after this many minutes (0 is never)"}
   }'::jsonb
 $$;
 do $$

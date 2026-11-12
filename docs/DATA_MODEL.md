@@ -2054,6 +2054,24 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Tax, and other accounts (`0102`)
+
+- `create_account` takes two more kinds: `asset` (1700–1799, another asset:
+  a deposit paid, a loan given) and `liability` (2500–2599, another debt).
+- **`tax_setup`**: the café's tax, off by default (`enabled`), its `kind`
+  (`vat` or `sales_tax`) and `rate` (0 to 50%), who changed it and when.
+  `tax_setup()`, `set_tax_setup(enabled, kind, rate, reason)` (the owner, on
+  the audit trail as `tax.setup`), `tax_rate_now(business)`. Turned on, it
+  makes **2600 Tax owed on sales**.
+- `post_journal` (the old one is `post_journal_0101`): with tax on, a sale's,
+  refund's or receipt correction's journal moves the tax part of the income it
+  takes in or gives back (4000, 4100, 4200, 4300; prices include the tax;
+  never a tip) to 2600: from 4000 for a sale, 4200 for a refund. A reversal (a
+  void) copies its lines, tax included.
+- `report_tax(from, to)`: tax collected (sales, less voids), given back
+  (refunds, corrections), paid (any other journal on 2600, such as paying the
+  government) and owed at the end.
+
 ### The till that waits less for the internet (`0101`)
 
 - **`record_offline_sale`** takes `p_discount_percent`, `p_discount_amount`,

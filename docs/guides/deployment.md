@@ -96,6 +96,7 @@ Plan a short window when the café is closed.
 | Security fixes (`0099`)                            | ⏳ Waiting for the owner to apply it in the SQL editor, after `0098`                                                                                                                                                                                                                                                                                                                                                                             |
 | Speed (`0100`)                                     | ⏳ Waiting for the owner to apply it in the SQL editor, after `0099`                                                                                                                                                                                                                                                                                                                                                                             |
 | The till that waits less for the internet (`0101`) | ⏳ Waiting for the owner to apply it in the SQL editor, after `0100`                                                                                                                                                                                                                                                                                                                                                                             |
+| Tax, and other accounts (`0102`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0101`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4385,6 +4386,30 @@ and every other test.
 It is applied by the owner, in Supabase's SQL editor, after `0100`:
 
 1. Open the file `supabase/migrations/0101_offline_first.sql` on GitHub,
+   press **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0102`
+
+Migration `0102` brings **tax, built in and off, and other accounts**:
+
+- Chart of Accounts → Add an account offers **Another asset** (a deposit
+  paid, a loan given) and **Another debt** (owed to a partner), besides an
+  income, a cost, a bank, a loan and equipment.
+- Settings → **Tax**: off. When the café is asked for tax, the owner turns it
+  on with its kind and rate (prices include it). From then on, the tax part of
+  each sale is owed (2600), not income; a refund gives it back; the month's
+  tax collected, given back, paid and owed is shown under it.
+
+Nothing recorded changes. Rehearsed with `tests/sql/tax_and_accounts.test.sql`
+and every other test.
+
+It is applied by the owner, in Supabase's SQL editor, after `0101`:
+
+1. Open the file `supabase/migrations/0102_tax_and_accounts.sql` on GitHub,
    press **Raw**, select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run

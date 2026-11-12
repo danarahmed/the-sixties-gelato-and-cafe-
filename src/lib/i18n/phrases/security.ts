@@ -60,9 +60,9 @@ const phrases: PhraseBook = {
   },
 
   // The till's lock.
-  "Lock a till nobody touches after this many minutes (0: never)": {
-    ar: "اقفل شاشة البيع التي لا يلمسها أحد بعد هذا العدد من الدقائق (0: أبدًا)",
-    ckb: "کاشێرێک کە کەس دەستی لێنادات دوای ئەوەندە خولەک دابخە (٠: هەرگیز)",
+  "Lock a till nobody touches after this many minutes (0 is never)": {
+    ar: "اقفل شاشة البيع التي لا يلمسها أحد بعد هذا العدد من الدقائق (0 يعني أبدًا)",
+    ckb: "کاشێرێک کە کەس دەستی لێنادات دوای ئەوەندە خولەک دابخە (٠ واتە هەرگیز)",
   },
   "A till nobody touches for this long covers itself and asks the person signed in for their PIN (their clock PIN or their approval PIN); anyone else signs out and in as themselves, so no sale is rung up under another's name. 0 never locks. Set for a branch, it is that branch's.":
     {

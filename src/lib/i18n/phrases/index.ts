@@ -59,6 +59,7 @@ import stuck from "./stuck";
 import useBy from "./useBy";
 import security from "./security";
 import speed from "./speed";
+import tax from "./tax";
 import today from "./today";
 import help from "./help";
 
@@ -125,6 +126,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   useBy,
   security,
   speed,
+  tax,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

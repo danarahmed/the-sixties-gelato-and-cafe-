@@ -44,7 +44,7 @@ export const RULE_LABEL: Record<RuleKey, string> = {
   negative_stock: "Using more stock than the books hold",
   expired_sale: "Selling stock past its use-by",
   use_by_warn_hours: "Warn of a use-by this many hours ahead",
-  till_lock_minutes: "Lock a till nobody touches after this many minutes (0: never)",
+  till_lock_minutes: "Lock a till nobody touches after this many minutes (0 is never)",
   usd_rate_max_age_hours: "A dollar rate is used for",
   usd_round_to: "Dollars are counted in dinars to the nearest",
   po_approve_up_to: "Purchase orders a manager approves, up to",
