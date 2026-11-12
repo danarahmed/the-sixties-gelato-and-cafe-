@@ -11,6 +11,9 @@ import { getDrawerState } from "@/lib/db/cash";
 import { getFxStatus } from "@/lib/db/fx";
 import { PosClient } from "@/components/pos/PosClient";
 import { getTillMarks } from "@/lib/db/useBy";
+import { getTillLockMinutes } from "@/lib/db/security";
+import { getOfflineKey } from "@/lib/db/offline";
+import { TillLock } from "@/components/pos/TillLock";
 import { ChannelsProvider } from "@/components/ChannelsProvider";
 import { EmptyState } from "@/components/ui";
 import { BranchPicker, PlaceSwitch } from "@/components/PlaceSwitch";
@@ -61,6 +64,8 @@ export default async function PosPage() {
     service,
     receipt,
     useByMarks,
+    lockMinutes,
+    offlineKey,
   ] = await Promise.all([
     getPosCatalogue(at),
     getPosAddons(at),
@@ -83,6 +88,10 @@ export default async function PosPage() {
     getReceiptSetup(),
     // What is near or past its use-by (0098), marked on its tile; none before it.
     getTillMarks(at),
+    // How long the till may sit untouched before it locks (0099); 0, never.
+    getTillLockMinutes(at),
+    // The café's key for what the till keeps on the device (0101); null before it.
+    getOfflineKey(),
   ]);
 
   if (items.length === 0) {
@@ -101,6 +110,7 @@ export default async function PosPage() {
 
   return (
     <ChannelsProvider channels={channels}>
+      <TillLock minutes={lockMinutes} name={profile.name} />
       {branches.length > 1 && (
         <div className="till-at" data-testid="till-at">
           <PlaceSwitch places={branches} current={branch.id} kind="till" />
@@ -135,6 +145,7 @@ export default async function PosPage() {
         preOrders={preOrders}
         service={service}
         receiptSetup={receipt}
+        offlineKey={offlineKey}
       />
     </ChannelsProvider>
   );

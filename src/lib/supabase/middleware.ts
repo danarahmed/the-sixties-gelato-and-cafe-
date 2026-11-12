@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { SESSION_COOKIE, supabaseConfig } from "./config";
 import { isPublicPath } from "@/lib/auth/routes";
+import { makeNonce, pagePolicy } from "@/lib/csp";
 
 /**
  * Runs before every page: refreshes the person's session cookie and sends
@@ -10,20 +11,38 @@ import { isPublicPath } from "@/lib/auth/routes";
  */
 export async function updateSession(request: NextRequest): Promise<NextResponse> {
   const path = request.nextUrl.pathname;
+  // The page's one-time nonce (plan 7): handed to the page as a request
+  // header (Next puts it on its own scripts; the layout on its two), and the
+  // policy naming it sent to the browser.
+  const nonce = makeNonce();
+  const policy = pagePolicy(
+    nonce,
+    process.env.NODE_ENV === "development",
+    supabaseConfig()?.url ?? null,
+  );
+  const next = () => {
+    const headers = new Headers(request.headers);
+    headers.set("x-nonce", nonce);
+    headers.set("Content-Security-Policy", policy);
+    const r = NextResponse.next({ request: { headers } });
+    // A product's photo keeps its own, stricter policy (it runs nothing).
+    if (!path.startsWith("/api/product-image/")) r.headers.set("Content-Security-Policy", policy);
+    return r;
+  };
   const cfg = supabaseConfig();
   if (!cfg) {
-    if (path === "/setup") return NextResponse.next({ request });
+    if (path === "/setup") return next();
     return NextResponse.redirect(new URL("/setup", request.url));
   }
 
-  let response = NextResponse.next({ request });
+  let response = next();
   const supabase = createServerClient(cfg.url, cfg.anonKey, {
     cookieOptions: SESSION_COOKIE,
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (list, headers) => {
         for (const { name, value } of list) request.cookies.set(name, value);
-        response = NextResponse.next({ request });
+        response = next();
         for (const { name, value, options } of list) response.cookies.set(name, value, options);
         for (const [key, value] of Object.entries(headers ?? {})) response.headers.set(key, value);
       },

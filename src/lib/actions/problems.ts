@@ -12,7 +12,7 @@ const reportInput = z.object({
     .trim()
     .min(2, "Say in a word or two what went wrong")
     .max(500, "At most 500 letters"),
-  context: z.record(z.union([z.string(), z.number(), z.boolean(), z.null()])),
+  context: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
 });
 
 export async function reportProblemAction(

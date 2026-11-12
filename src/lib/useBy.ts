@@ -76,7 +76,10 @@ export function readUseByList(raw: unknown): UseByList {
       status: STATUSES.includes(l.status as UseByStatus) ? (l.status as UseByStatus) : "good",
     })),
     unsetItems: arr(r.unset_items).map((i) => ({ itemId: str(i.item_id), name: str(i.name) })),
-    unsetRecipes: arr(r.unset_recipes).map((i) => ({ recipeId: str(i.recipe_id), name: str(i.name) })),
+    unsetRecipes: arr(r.unset_recipes).map((i) => ({
+      recipeId: str(i.recipe_id),
+      name: str(i.name),
+    })),
   };
 }
 
@@ -107,7 +110,11 @@ export function tillMarksFrom(raw: unknown): Map<string, { state: TillMark; item
 }
 
 /** A delivery line's use-by, as the form offers it: the date its days give, from today. */
-export function suggestedUseBy(mode: ExpiryMode | null, keepsDays: number | null, today: string): string {
+export function suggestedUseBy(
+  mode: ExpiryMode | null,
+  keepsDays: number | null,
+  today: string,
+): string {
   if (mode !== "keeps_days" || !keepsDays || keepsDays < 1) return "";
   const d = new Date(`${today}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + keepsDays);

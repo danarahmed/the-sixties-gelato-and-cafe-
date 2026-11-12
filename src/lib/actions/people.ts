@@ -25,7 +25,7 @@ const inviteInput = z.object({
   name: text("Their name", 120),
   roles: z.array(z.enum(ROLES)).min(1, "Give the person at least one role"),
   /** Where they work (0055); none: everywhere. */
-  placeId: z.string().uuid().nullable().optional(),
+  placeId: z.string().guid().nullable().optional(),
 });
 
 export async function inviteMemberAction(
@@ -84,7 +84,7 @@ export async function setMemberActiveAction(
 const placeInput = z.object({
   memberId: id("a person"),
   /** One of the café's places, or none: everywhere. */
-  placeId: z.string().uuid().nullable(),
+  placeId: z.string().guid().nullable(),
 });
 
 /**

@@ -67,6 +67,8 @@ console.log("▸ owner sets up a base, and a flavour made from it kept in pans")
     "one batch of the base costs 6,960 IQD: 1,392 IQD a litre",
   );
   await page.getByLabel("How to make it").fill("Heat to 85°C, cool overnight");
+  // A recipe says how long what it makes keeps (0098).
+  await page.getByLabel("How long it keeps").fill("3");
   await page.getByRole("button", { name: "Add it" }).click();
   await page.getByText("Added “E2E base”.").waitFor({ timeout: 10000 });
 
@@ -83,6 +85,7 @@ console.log("▸ owner sets up a base, and a flavour made from it kept in pans")
     await page.getByText("No cost yet for E2E base: never bought or made").isVisible(),
     "a base never made yet is flagged: it has no cost",
   );
+  await page.getByLabel("How long it keeps").fill("5");
   await page.getByRole("button", { name: "Add it" }).click();
   await page.getByText("Added “E2E pistachio gelato”.").waitFor({ timeout: 10000 });
   check(
@@ -112,7 +115,7 @@ console.log("▸ a barista records two batches of the base, and is shown no cost
   );
   await page.getByRole("button", { name: "Record batch" }).click();
   await page
-    .getByText(/Recorded as batch \d+: 10 L of E2E base into stock\.$/)
+    .getByText(/Recorded as batch \d+: 10 L of E2E base into stock\.( Use it by .*)?$/)
     .waitFor({ timeout: 10000 });
   check(
     !(await page.locator("main").innerText()).includes("IQD"),
@@ -145,7 +148,7 @@ console.log("▸ owner records a batch of the flavour, weighed short");
   );
   await page.getByRole("button", { name: "Record batch" }).click();
   const recorded = page.getByText(
-    /Recorded as batch \d+: 4\.6 kg of E2E pistachio gelato into stock\. The ingredients cost 21,264 IQD\.$/,
+    /Recorded as batch \d+: 4\.6 kg of E2E pistachio gelato into stock\. The ingredients cost 21,264 IQD\.( Use it by .*)?$/,
   );
   await recorded.waitFor({ timeout: 10000 });
   // Its pans' labels, printed there and then: weighed in kilos, one to start from; two asked.

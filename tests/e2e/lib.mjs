@@ -72,6 +72,15 @@ export async function signIn(browser, who, options = {}) {
   page.on("pageerror", (e) =>
     check(false, `${who}: browser error on ${new URL(page.url()).pathname}: ${e.message}`),
   );
+  // The page's script policy (plan 7) must refuse nothing the app itself does.
+  page.on("console", (m) => {
+    // A test that slips a script in on purpose says so (page.expectsRefusal).
+    if (/Content Security Policy/i.test(m.text()) && !page.expectsRefusal)
+      check(
+        false,
+        `${who}: the script policy refused something on ${new URL(page.url()).pathname}: ${m.text()}`,
+      );
+  });
   await page.goto(`${BASE}/login`);
   await page.fill('input[name="email"]', `${who}@example.com`);
   await page.fill('input[name="password"]', PASSWORD);

@@ -6,6 +6,8 @@ export interface StuckScreen {
   path: string;
   refused: number;
   help: number;
+  /** Screens that failed (0099): 0 before it. */
+  errors: number;
   practice: number;
   people: number;
   roles: string[];
@@ -21,6 +23,7 @@ export async function getStuckReport(days: number): Promise<StuckScreen[] | null
     path: String(s.path),
     refused: Number(s.refused) || 0,
     help: Number(s.help) || 0,
+    errors: Number(s.errors) || 0,
     practice: Number(s.practice) || 0,
     people: Number(s.people) || 0,
     roles: Array.isArray(s.roles) ? s.roles.map(String) : [],

@@ -46,6 +46,9 @@ export const RULE_LABEL: Record<string, string> = {
   approvals_waiting: "Waiting for approval",
   cash_short_ahead: "Money short ahead",
   watch_strong: "Worth a look",
+  app_errors: "Screens failing",
+  new_device: "A sign-in from a new device",
+  till_kept: "Tills keeping sales",
 };
 
 export function ruleLabel(rule: string): string {

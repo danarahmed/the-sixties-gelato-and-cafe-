@@ -11,6 +11,7 @@ import { BrandMark, Icon, type IconName } from "@/components/Icon";
 import { TourMenuItem, TourRunner } from "@/components/Tour";
 import { ProblemButton } from "@/components/ProblemButton";
 import { HelpButton } from "@/components/HelpButton";
+import { DeviceNote } from "@/components/DeviceNote";
 import { FindAnything, type Screen } from "@/components/FindAnything";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 
@@ -364,6 +365,7 @@ export function AppShell({
         </Link>
       </header>
       {member.practice && <PracticeBanner />}
+      {!member.practice && <DeviceNote />}
       <OfflineBanner />
       <div className="layout">
         <nav

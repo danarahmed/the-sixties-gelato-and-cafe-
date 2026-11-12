@@ -271,6 +271,14 @@ export default async function ReportsPage({
       href: "/reports/watch",
       label: t("Watch list: patterns worth a look →"),
     });
+  // Comparing cashiers (0104), for the owner and the managers; never a cashier.
+  if (seesProfit && (has(profile, "staff.manage") || profile.roles.includes("owner")))
+    reportPages.push({
+      path: "/reports/cashiers",
+      testId: "to-cashiers",
+      href: "/reports/cashiers",
+      label: t("Cashier scorecard: each person's sales an hour, against the usual →"),
+    });
   // Where people get stuck (0097), for the owner.
   if (profile.roles.includes("owner"))
     reportPages.push({

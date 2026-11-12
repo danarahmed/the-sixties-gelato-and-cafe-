@@ -95,6 +95,20 @@ unverified until it is corrected ([`../REMEDIATION.md`](../REMEDIATION.md)).
 
 The exact matrix is under **Settings → Roles & what they may do**.
 
+**Keeping the café safe (0099):**
+
+- **Clocking from a phone only at the shop:** Settings → Places → **Where each
+  place is**: stand inside the place with your phone and press **Here**. From
+  then on a phone clocks in or out only near it (150 m by default; change
+  **Near is within**). A code sent to someone at home is refused.
+- **The till's lock:** Settings → Rules, **Lock a till nobody touches after
+  this many minutes** (off by default). The person signed in types their PIN
+  to go on; anyone else signs out and in as themselves.
+- **Alerts for you:** someone who may see the books signing in from a new
+  phone or computer (if it was not them, deactivate them and set a new
+  password), and three or more screens failing in an hour (Reports → Where
+  people get stuck shows which).
+
 ## Staff, their hours and their pay
 
 **Staff** (the owner and the managers) has **In now** at the top, then four

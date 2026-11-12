@@ -15,6 +15,7 @@ import {
   day,
   id,
   nonNegative,
+  optionalNonNegative,
   optionalText,
   paymentSource,
   positive,
@@ -118,7 +119,7 @@ const receiveInput = z.object({
   rebate: nonNegative("Rebate"),
   note: optionalText(300),
   /** The purchase order it comes against (0044), if any. */
-  purchaseOrderId: z.string().uuid().nullable().default(null),
+  purchaseOrderId: z.string().guid().nullable().default(null),
   lines: z
     .array(
       z.object({
@@ -128,7 +129,7 @@ const receiveInput = z.object({
         /** The price of one of the unit received, as the invoice gives it (0027). */
         unitPrice: nonNegative("Price per unit"),
         /** Its line on the order, when it comes against one. */
-        poLineId: z.string().uuid().nullable().default(null),
+        poLineId: z.string().guid().nullable().default(null),
         /** Its use-by (0098): the pack's date; null, from the item's days. */
         useBy: z
           .string()
@@ -214,7 +215,7 @@ const poLines = z
 
 const poInput = z.object({
   /** The draft changed; none for a new order. */
-  poId: z.string().uuid().nullable().default(null),
+  poId: z.string().guid().nullable().default(null),
   supplierId: id("the supplier"),
   expectedOn: day("The day it is expected").nullable().default(null),
   note: optionalText(300),
@@ -380,7 +381,7 @@ export async function cancelPurchaseOrderAction(
 const returnInput = z.object({
   supplierId: id("the supplier"),
   /** The delivery the goods came in, if named. */
-  receiptId: z.string().uuid().nullable().default(null),
+  receiptId: z.string().guid().nullable().default(null),
   reason: text("Why they are going back", 300),
   lines: z
     .array(
@@ -446,8 +447,8 @@ const creditInput = z
     amount: positive("The amount"),
     supplierRef: text("The number on the supplier's credit note", 60),
     reason: text("What it is for", 300),
-    receiptId: z.string().uuid().nullable().default(null),
-    billId: z.string().uuid().nullable().default(null),
+    receiptId: z.string().guid().nullable().default(null),
+    billId: z.string().guid().nullable().default(null),
     accountCode: z
       .string()
       .regex(/^\d{4}$/)
@@ -615,7 +616,7 @@ const correctionLines = z
   .array(
     z.object({
       /** The delivery's own line, or none for a line added. */
-      lineId: z.string().uuid().nullable(),
+      lineId: z.string().guid().nullable(),
       itemId: id("an item"),
       qty: positive("Quantity"),
       unitCode: z.string().min(1, "Choose a unit"),
@@ -763,9 +764,12 @@ const billInput = z
     // Empty: the bill takes the café's own number (SGC-2026-0001 …).
     invoiceNo: optionalText(60),
     invoiceDate: day("The invoice date"),
-    amount: positive("The amount"),
+    /** The dinar part: none for a bill all in dollars (0103). */
+    amount: nonNegative("The amount"),
+    usd: optionalNonNegative("The dollars").default(null),
+    rate: optionalNonNegative("The dollar's rate").default(null),
     termDays: z.coerce.number().int().min(0).max(365),
-    receiptId: z.string().uuid().nullable(),
+    receiptId: z.string().guid().nullable(),
     accountCode: z
       .string()
       .regex(/^\d{4}$/)
@@ -773,6 +777,12 @@ const billInput = z
   })
   .refine((b) => (b.receiptId === null) !== (b.accountCode === null), {
     message: "A bill is either for a goods receipt or for an expense account — choose one",
+  })
+  .refine((b) => Number(b.amount) > 0 || Number(b.usd ?? 0) > 0, {
+    message: "Enter an amount greater than zero",
+  })
+  .refine((b) => !(Number(b.usd ?? 0) > 0) || Number(b.rate ?? 0) > 0, {
+    message: "Type the dollar's rate, in dinars",
   });
 
 export async function recordBillAction(
@@ -783,16 +793,31 @@ export async function recordBillAction(
   if (bad) return bad;
   const v = parse(billInput, input);
   if (!v.ok) return v;
-  const r = await callRpc<Record<string, unknown>>("record_bill", {
-    p_supplier: v.data.supplierId,
-    p_invoice_no: v.data.invoiceNo,
-    p_invoice_date: v.data.invoiceDate,
-    p_amount: v.data.amount,
-    p_term_days: v.data.termDays,
-    p_receipt: v.data.receiptId,
-    p_account_code: v.data.accountCode,
-    p_idempotency_key: key,
-  });
+  // A bill with a dollar part (0103) has its own; the dinars alone, as before.
+  const r =
+    v.data.usd && Number(v.data.usd) > 0
+      ? await callRpc<Record<string, unknown>>("record_dollar_bill", {
+          p_supplier: v.data.supplierId,
+          p_invoice_no: v.data.invoiceNo,
+          p_invoice_date: v.data.invoiceDate,
+          p_amount: v.data.amount,
+          p_usd: v.data.usd,
+          p_rate: v.data.rate,
+          p_term_days: v.data.termDays,
+          p_receipt: v.data.receiptId,
+          p_account_code: v.data.accountCode,
+          p_idempotency_key: key,
+        })
+      : await callRpc<Record<string, unknown>>("record_bill", {
+          p_supplier: v.data.supplierId,
+          p_invoice_no: v.data.invoiceNo,
+          p_invoice_date: v.data.invoiceDate,
+          p_amount: v.data.amount,
+          p_term_days: v.data.termDays,
+          p_receipt: v.data.receiptId,
+          p_account_code: v.data.accountCode,
+          p_idempotency_key: key,
+        });
   if (!r.ok) return r;
   refresh(...BUY_PATHS, "/expenses");
   return {
@@ -805,11 +830,19 @@ export async function recordBillAction(
   };
 }
 
-const payInput = z.object({
-  billId: id("a bill"),
-  amount: positive("The amount"),
-  method: paymentSource,
-});
+const payInput = z
+  .object({
+    billId: id("a bill"),
+    /** Dinars; none when the bill's dollars are paid (0103). */
+    amount: optionalNonNegative("The amount").default(null),
+    method: paymentSource,
+    usd: optionalNonNegative("The dollars").default(null),
+    currency: z.enum(["USD", "IQD"]).nullish(),
+    rate: optionalNonNegative("The dollar's rate").default(null),
+  })
+  .refine((p) => Number(p.amount ?? 0) > 0 || Number(p.usd ?? 0) > 0, {
+    message: "Enter an amount greater than zero",
+  });
 
 export async function payBillAction(
   input: z.input<typeof payInput>,
@@ -819,13 +852,25 @@ export async function payBillAction(
   if (bad) return bad;
   const v = parse(payInput, input);
   if (!v.ok) return v;
-  const r = await callRpc<Record<string, unknown>>("pay_bill", {
-    p_bill: v.data.billId,
-    p_amount: v.data.amount,
-    p_method: v.data.method,
-    p_location: await tillForWrite(),
-    p_idempotency_key: key,
-  });
+  // The dollars owed (0103) are paid apart: in dollars, or in dinars at a rate.
+  const r =
+    v.data.usd && Number(v.data.usd) > 0
+      ? await callRpc<Record<string, unknown>>("pay_bill_dollars", {
+          p_bill: v.data.billId,
+          p_usd: v.data.usd,
+          p_currency: v.data.currency ?? "IQD",
+          p_rate: v.data.rate,
+          p_method: v.data.method,
+          p_location: await tillForWrite(),
+          p_idempotency_key: key,
+        })
+      : await callRpc<Record<string, unknown>>("pay_bill", {
+          p_bill: v.data.billId,
+          p_amount: v.data.amount,
+          p_method: v.data.method,
+          p_location: await tillForWrite(),
+          p_idempotency_key: key,
+        });
   if (!r.ok) return r;
   refresh("/sales", ...BUY_PATHS);
   return {
@@ -863,5 +908,36 @@ export async function cancelBillAction(
   return {
     ok: true,
     data: { journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no) },
+  };
+}
+
+const revalueInput = z.object({
+  rate: positive("The dollar's rate"),
+  reason: text("Why", 300),
+});
+
+/** What is still owed in dollars, valued again at a rate typed once (0103: month end, IAS 21). */
+export async function revalueDollarBillsAction(
+  input: z.input<typeof revalueInput>,
+  key: string,
+): Promise<ActionResult<{ bills: number; usd: number; difference: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(revalueInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("revalue_dollar_bills", {
+    p_rate: v.data.rate,
+    p_reason: v.data.reason,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...BUY_PATHS);
+  return {
+    ok: true,
+    data: {
+      bills: Number(r.data.bills ?? 0),
+      usd: Number(r.data.usd ?? 0),
+      difference: Number(r.data.difference ?? 0),
+    },
   };
 }

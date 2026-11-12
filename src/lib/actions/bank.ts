@@ -13,7 +13,7 @@ const BANK_PATHS = ["/accounting/bank", "/accounting", "/dashboard"];
 const statementInput = z.object({
   date: day("The statement's last day"),
   closing: signed("The balance on the statement"),
-  lines: z.array(z.string().uuid("Choose the lines on the statement")).max(2000),
+  lines: z.array(z.string().guid("Choose the lines on the statement")).max(2000),
   note: optionalText(500),
 });
 

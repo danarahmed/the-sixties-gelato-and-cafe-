@@ -1,6 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useT } from "@/lib/i18n/I18nProvider";
+import { noteScreenErrorAction } from "@/lib/actions/security";
 
 /**
  * A screen that failed to load says so. It never falls back to an empty
@@ -14,6 +17,14 @@ export default function ScreenError({
   reset: () => void;
 }) {
   const { t } = useT();
+  const path = usePathname();
+  // Noted for the owner (0099): screens failing are an alert, and on Where people get stuck.
+  useEffect(() => {
+    void noteScreenErrorAction(
+      path ?? "/",
+      error.digest ? `ref ${error.digest}` : error.message,
+    ).catch(() => undefined);
+  }, [path, error]);
   return (
     <div className="card" style={{ maxWidth: 640, borderColor: "var(--err)" }}>
       <h2 style={{ marginTop: 0 }}>{t("This screen could not be loaded")}</h2>

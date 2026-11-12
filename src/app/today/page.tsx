@@ -353,7 +353,10 @@ function UseByCard({
 }) {
   const g = groupUseBy(list.lots);
   if (
-    g.expired.length + g.today.length + g.soon.length + list.unsetItems.length +
+    g.expired.length +
+      g.today.length +
+      g.soon.length +
+      list.unsetItems.length +
       list.unsetRecipes.length ===
     0
   )
@@ -384,7 +387,9 @@ function UseByCard({
           </h3>
           {rows(g.expired)}
           <p className="muted" style={{ marginTop: 0 }}>
-            {t("Record what is left as expired on Inventory, or change its use-by if it was set wrong.")}
+            {t(
+              "Record what is left as expired on Inventory, or change its use-by if it was set wrong.",
+            )}
           </p>
         </div>
       )}

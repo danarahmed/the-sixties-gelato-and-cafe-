@@ -44,7 +44,7 @@ const requestInput = z.object({
    */
   scope: z.union([
     z.object({ percent: z.number().positive().max(100) }),
-    z.object({ order_id: z.string().uuid() }),
+    z.object({ order_id: z.string().guid() }),
     z.object({ items: z.string().max(300) }),
   ]),
 });

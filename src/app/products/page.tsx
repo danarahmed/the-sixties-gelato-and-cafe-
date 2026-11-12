@@ -41,6 +41,9 @@ import { namesMatch, SEARCH_MAX, searchText } from "@/lib/find";
 import { DealsManager } from "@/components/menu/DealsManager";
 import { TimePricesManager } from "@/components/menu/TimePricesManager";
 import { getDeals, getTimePrices } from "@/lib/db/deals";
+import { getProductTargets } from "@/lib/db/targets";
+import { TargetMargin } from "@/components/menu/TargetMargin";
+import { TARGET_MARGIN as CAFE_TARGET } from "@/components/menu/recipeCost";
 import { MenuPhotos } from "@/components/menu/MenuPhotos";
 import { PageIntro } from "@/components/PageIntro";
 
@@ -172,6 +175,7 @@ function PricesPart({
   branchPrices,
   branches,
   priceStep,
+  target,
 }: PartProps & {
   scheduled: ScheduledChange[];
   /** Each branch's own price in force today (0055). */
@@ -180,6 +184,8 @@ function PricesPart({
   branches: { id: string; name: string }[];
   /** The step a suggested price is rounded up to. */
   priceStep: number;
+  /** The margin it aims for (0105): its own, its category's, or the café's. */
+  target: number;
 }) {
   // Priced where it sells today: a platform out of use sells nothing.
   const rows = (costing?.rows ?? []).filter((m) => inUse.has(m.channel));
@@ -216,9 +222,23 @@ function PricesPart({
                     </td>
                     <td
                       className="right mono"
+                      data-under={
+                        margin !== null && m.price > 0 && (margin / m.price) * 100 < target
+                          ? "yes"
+                          : undefined
+                      }
+                      title={
+                        margin !== null && m.price > 0 && (margin / m.price) * 100 < target
+                          ? t("Under its target")
+                          : undefined
+                      }
                       style={{
                         color:
-                          margin === null ? undefined : margin < 0 ? "var(--err)" : "var(--ok)",
+                          margin === null
+                            ? undefined
+                            : margin < 0 || (m.price > 0 && (margin / m.price) * 100 < target)
+                              ? "var(--err)"
+                              : "var(--ok)",
                       }}
                     >
                       {margin === null
@@ -255,6 +275,7 @@ function PricesPart({
             branches={branches}
             costs={Object.fromEntries((costing?.rows ?? []).map((m) => [m.channel, m.unitCost]))}
             priceStep={priceStep}
+            targetMargin={target}
           />
         )}
       </div>
@@ -291,6 +312,7 @@ export default async function ProductsPage({
     barcodes,
     deals,
     timePrices,
+    targets,
   ] = await Promise.all([
     getMenuCosting(),
     getMenuRecipeLines(),
@@ -311,7 +333,10 @@ export default async function ProductsPage({
     // Meal deals and prices by the hour (0089); null before it.
     getDeals(),
     getTimePrices(),
+    // Each product's target margin (0105); none before it.
+    getProductTargets(),
   ]);
+  const targetsOn = targets.size > 0;
   // A price can be one branch's own once the café has more than one (0055).
   const branches = places.filter((p) => p.kind === "branch");
   const branchChoice = branches.length > 1 ? branches.map((b) => ({ id: b.id, name: b.name })) : [];
@@ -480,8 +505,17 @@ export default async function ProductsPage({
                       )}
                       branches={branchChoice}
                       priceStep={priceStep}
+                      target={targets.get(p.id)?.target ?? CAFE_TARGET}
                     />
                   ))}
+                  {sizes.length > 0 && targetsOn && (
+                    <TargetMargin
+                      productId={p.id}
+                      own={targets.get(p.id)?.own ?? null}
+                      target={targets.get(p.id)?.target ?? CAFE_TARGET}
+                      canEdit={canEdit}
+                    />
+                  )}
                 </div>
               ),
             },

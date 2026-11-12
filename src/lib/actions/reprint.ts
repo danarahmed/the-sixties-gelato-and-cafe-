@@ -11,7 +11,7 @@ import { requirePermission } from "@/lib/auth/session";
 import type { ActionResult } from "@/lib/db/rpc";
 import type { PrintJob } from "@/components/pos/PrintSlip";
 
-const orderId = z.string().uuid("Choose a sale");
+const orderId = z.string().guid("Choose a sale");
 
 export async function saleReceiptAction(id: string): Promise<ActionResult<PrintJob>> {
   await requirePermission("cost.view");

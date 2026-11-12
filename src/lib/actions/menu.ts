@@ -125,7 +125,7 @@ const priceInput = z.object({
   price: positive("Price"),
   effectiveFrom: day("The start date"),
   /** One branch's own price (0055); none: every branch's. */
-  placeId: z.string().uuid().nullable().optional(),
+  placeId: z.string().guid().nullable().optional(),
 });
 
 export async function setPriceAction(
@@ -544,7 +544,7 @@ export async function retireSizeAction(
 
 // ------------------------------------------------------------------ add-ons (0041)
 const count = (label: string) =>
-  z.number({ invalid_type_error: label }).int(label).min(0, label).max(20, label);
+  z.number({ message: label }).int(label).min(0, label).max(20, label);
 
 const groupInput = z.object({
   groupId: id("a group of add-ons").nullable(),
@@ -701,5 +701,32 @@ export async function setProductAddonsAction(
   });
   if (!r.ok) return r;
   refresh(...MENU_PATHS);
+  return { ok: true, data: null };
+}
+
+/** A product's target margin (0105); null takes it away (its category's, or the café's, then). */
+export async function setTargetMarginAction(
+  productId: string,
+  percent: number | null,
+): Promise<ActionResult<null>> {
+  const v = parse(
+    z.object({
+      productId: id("a product"),
+      percent: z
+        .number()
+        .min(0, "A margin target is from 0% to under 100%")
+        .max(99.99, "A margin target is from 0% to under 100%")
+        .nullable(),
+    }),
+    { productId, percent },
+  );
+  if (!v.ok) return v;
+  const r = await callRpc("set_target_margin", {
+    p_product: v.data.productId,
+    p_category: null,
+    p_percent: v.data.percent,
+  });
+  if (!r.ok) return r;
+  refresh("/products");
   return { ok: true, data: null };
 }

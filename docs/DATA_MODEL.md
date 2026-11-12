@@ -2054,6 +2054,133 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### A target margin for each product or category (`0105`)
+
+- **`product.target_margin_percent`**, **`product_category.target_margin_percent`**
+  (0 to under 100, none by default): the margin a product aims for, its own
+  or its category's, else the café's. `set_target_margin(product, category,
+percent)` (those who keep the recipes; null takes it away), on the audit
+  trail as `menu.target_margin`. `product_targets()`: each product's target,
+  its own and its category's.
+
+### Comparing cashiers (`0104`)
+
+- `report_cashier_scorecard(from, to, location)` (those who see the profit
+  and keep the staff, or the owner; never a cashier): for each person who took
+  the money or was on the clock, their bills, sales, average bill, items and
+  add-ons a bill, hours on the clock, sales an hour, voids and refunds they
+  asked for, discounts they gave, and their drawers' over or short; and
+  `against_usual`, their sales against what the café took in the same hours
+  of the same weekdays over the eight weeks before (100 is as usual; none
+  without those weeks). Nothing new is kept.
+
+### A supplier bill in dollars and dinars (`0103`)
+
+- **`purchase_invoice.usd_amount`, `usd_rate`**: a bill's dollar part and the
+  rate it was booked at (both or neither); `usd_paid`, the dollars settled
+  since; `usd_value`, what the dollars still owed are carried at in dinars,
+  and `usd_carried_rate`, that rate (the booking's, or the last
+  revaluation's). `amount_total` is the dinar part plus the dollar part's
+  value; owed in dinars alone is `amount_total - paid_amount - usd_value`
+  (`bill_owed`). The guard lets the dollars' value move with a payment, and
+  the total only when they are valued again (`sixties.fx_revalue`).
+- `record_dollar_bill(supplier, no, date, amount, usd, rate, …)`: a bill
+  with a dollar part (`amount` is the dinar part, none for one all in
+  dollars), through 0035's `record_bill__run`; `usd_rate_ok` checks a rate
+  typed (100 to 100,000 dinars a dollar). `pay_bill` pays only the dinars
+  owed.
+- **`supplier_payment.currency`, `usd`, `rate`**: `pay_bill_dollars(bill,
+usd, currency, rate, method, …)`. Dollars handed over (`USD`) leave the till or the
+  safe at what they are held at (`fx_cash_event` kind `supplier`); dinars for
+  them (`IQD`) at the rate typed. The payable takes what the dollars were
+  carried at; the difference goes to 6950 Exchange differences.
+- **`fx_revaluation`**: each time what is owed in dollars is valued again
+  (`revalue_dollar_bills(rate, reason)`): the rate, the dollars, the
+  difference (one journal, 6950 against 2000), how many bills, why.
+  `dollars_owed()`: what is owed in dollars, by supplier, and its value. Read
+  by no one but through their functions.
+
+### Tax, and other accounts (`0102`)
+
+- `create_account` takes two more kinds: `asset` (1700–1799, another asset:
+  a deposit paid, a loan given) and `liability` (2500–2599, another debt).
+- **`tax_setup`**: the café's tax, off by default (`enabled`), its `kind`
+  (`vat` or `sales_tax`) and `rate` (0 to 50%), who changed it and when.
+  `tax_setup()`, `set_tax_setup(enabled, kind, rate, reason)` (the owner, on
+  the audit trail as `tax.setup`), `tax_rate_now(business)`. Turned on, it
+  makes **2600 Tax owed on sales**.
+- `post_journal` (the old one is `post_journal_0101`): with tax on, a sale's,
+  refund's or receipt correction's journal moves the tax part of the income it
+  takes in or gives back (4000, 4100, 4200, 4300; prices include the tax;
+  never a tip) to 2600: from 4000 for a sale, 4200 for a refund. A reversal (a
+  void) copies its lines, tax included.
+- `report_tax(from, to)`: tax collected (sales, less voids), given back
+  (refunds, corrections), paid (any other journal on 2600, such as paying the
+  government) and owed at the end.
+
+### The till that waits less for the internet (`0101`)
+
+- **`record_offline_sale`** takes `p_discount_percent`, `p_discount_amount`,
+  `p_discount_reason`, `p_discount_note` and `p_customer`: a quick sale made
+  offline with the seller's own discount (the seller may give one, and it is
+  within their `discount_cap_percent`, unless they approve discounts; no
+  manager's approval offline) and the customer chosen before the connection
+  dropped (`sale_customer_check` with no reward; points earned by
+  `sale_customer_record` when it arrives). The audit line names both.
+- **`business_offline_key`**: the café's key (`secret`, 32 random bytes) for
+  what a till keeps on the device, encrypted (AES-GCM) in the browser.
+  `offline_key()` hands it to those who sell. Read by no one.
+- **`till_kept`**: what each till (`till`, its own random name) last said it
+  keeps (`waiting`, `attention`, `oldest_at`, `reported_at`, its place and
+  who was signed in). `note_till_kept(till, place, waiting, attention,
+oldest)`; nothing kept, and the row goes. The `till_kept` alert: a till
+  that has kept sales half an hour or more (red with one waiting for a
+  manager, or after four hours). Read by no one.
+
+### Speed (`0100`)
+
+- **`alert_refresh`**: when each café's alerts were last brought up to date
+  (`at`). `refresh_alerts` now uses an answer from the last
+  `alerts_fresh_seconds()` (60 by default; the connection's
+  `sixties.alerts_fresh_seconds`, 0 for every time, as the tests set it), so
+  the dashboard and the daily brief no longer work out every alert each time
+  they open; `refresh_alerts_0099` is the work itself. The phones' timer
+  (0072) keeps it fresh. Read by no one.
+- `sale_adjustment_day`: an index on a day's voids and refunds.
+- **`system_admin`**: the system's administrators (`auth_user_id`), never a
+  café's owner as such: the owner of the first café, to begin with.
+  `is_system_admin()`, `require_system_admin()`. Read by no one.
+- **`speed_sample`**: the Speed page's measurements (`device_ms`,
+  `database_ms`, each call's time in `calls`, `agent`, `note`), kept 180 days.
+  `speed_ping()`, `save_speed_sample(...)`, `speed_samples(limit)`, for the
+  system's administrators. Read by no one.
+
+### Security fixes (`0099`)
+
+- **`location.clock_lat`, `clock_lng`, `clock_radius_m`** (150 by default, 20
+  to 2,000): where a place is, for clocking from a phone; both or neither.
+  `set_place_clock_spot(place, lat, lng, radius)` (those who manage settings),
+  on the audit trail (`place.clock_spot`). `geo_metres` measures the distance.
+- **`clock_by_phone`** takes `p_lat`, `p_lng`, `p_accuracy`: at a place with a
+  spot, a phone that will not say where it is, or is farther than the
+  distance plus its own margin (up to 100 m), is refused, and that refusal is
+  not kept for the retry (`where: true`), so the same scan works from nearer.
+- The café's rule **`till_lock_minutes`** (0 to 60, 0 by default: never; for
+  the café or a branch), read by `till_lock_minutes(place)`.
+  `unlock_till(pin)` checks the person's own clock PIN or approval PIN;
+  **`till_unlock_attempt`** counts them (five wrong in fifteen minutes and it
+  answers no until they sign in again). Read by no one.
+- **`stuck_event.kind`** may be `error` too: a screen that failed, noted by
+  the app; `stuck_report` counts them (`errors`) per screen. The
+  `app_errors` alert: three or more in an hour.
+- **`member_device`**: each device a person signed in on (`device_hash` of a
+  random key the browser keeps, `agent` such as "Chrome on Windows",
+  `first_seen`, `last_seen`). `note_device(key, agent)`; the `new_device`
+  alert, for a device new to someone who may see the books, after their first.
+  Read by no one.
+- Every security-definer function, and the cold helpers, now name their
+  `search_path`.
+
 ### Use-by for everything that goes off (`0098`)
 
 - **`item.expiry_mode`**: how an item keeps, chosen once: `none` (it doesn't

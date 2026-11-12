@@ -8029,3 +8029,15 @@ details.page-intro > p {
 .tile-use-by.past {
   background: var(--err);
 }
+
+/* The till's lock (0099): the till covered until its person types their PIN. */
+.till-lock {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg, #000) 82%, transparent);
+  backdrop-filter: blur(6px);
+  padding: 16px;
+}

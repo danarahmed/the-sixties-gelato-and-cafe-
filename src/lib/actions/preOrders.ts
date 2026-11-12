@@ -45,7 +45,7 @@ const takeInput = z.object({
         .number()
         .int("The payments cannot be read")
         .positive("Each payment needs an amount more than 0"),
-      method: z.string().uuid("Choose which way to pay it was").nullish(),
+      method: z.string().guid("Choose which way to pay it was").nullish(),
     })
     .nullish(),
 });
@@ -95,7 +95,7 @@ export async function takePreOrderAction(
 
 const collectInput = z.object({
   preOrderId: id("a pre-order"),
-  key: z.string().uuid(),
+  key: z.string().guid(),
   tenders: payments.nullish(),
   expectedNet: z.number().nonnegative(),
 });

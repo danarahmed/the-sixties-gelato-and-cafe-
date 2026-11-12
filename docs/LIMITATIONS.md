@@ -107,9 +107,13 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
 - **Selling without internet (`0073`, round fifteen).** The till keeps quick
   sales while the internet is down and sends them when it is back, each once.
   What it does not cover:
-  - Only quick sales, in dinars: a bill on a table, a discount, a customer
-    (and their points), dollars and the café's own delivery wait for the
-    connection, as does every other screen.
+  - Only quick sales, in dinars, and bills on a table already saved. Since
+    `0101` a quick sale may carry the cashier's own discount (within their
+    cap, with its reason) and the customer chosen before the connection
+    dropped (their points are earned when it is sent). A discount over the
+    cap (a manager's approval needs the internet), a reward, a customer found
+    offline, dollars and the café's own delivery wait for the connection, as
+    does every other screen.
   - The till must stay open: the page is not kept for opening offline (no page
     is cached, so a shared till never shows the last person's figures). Closed
     or reloaded offline, it shows the offline notice; what it keeps is sent once
@@ -130,6 +134,57 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - Before `0073` is applied, a kept sale is sent as an ordinary sale when it
     reaches the database: at that time, and refused where an item's rule
     refuses.
+  - Since plan 7, the till warns when it still keeps sales: leaving or
+    closing the page asks first, and the strip turns red once the oldest has
+    waited half an hour. Since `0101` the till tells the database what it
+    keeps whenever it is online, and a manager is alerted ("Tills keeping
+    sales") when a till has kept sales half an hour or more; and what it keeps
+    is encrypted in the browser's storage with the café's key, which the till
+    is handed with its page: a device nobody is signed in on shows nothing of
+    it. The key is in the page while the till is open, so a person signed in
+    on that till could still read it.
+- **Supplier bills in dollars (`0103`), what they do not do.**
+  - A supplier's credit note is in dinars only; set against a bill, it counts
+    against the dinars owed.
+  - The supplier statement and ageing show the dinars, the dollars' value
+    included; the dollars themselves are on the bill and on Vendors.
+  - Valuing again at month end is pressed, with a rate typed once: it is not
+    done by itself when the month is locked.
+- **Tax (`0102`), what it does not do.**
+  - Prices are taken to include the tax: the customer pays what the menu
+    says, and the tax is the part of it owed. A tax added on top of prices is
+    not built.
+  - The tax on purchases is not claimed back: what a café pays its suppliers
+    stays their cost, tax included.
+  - One rate for everything the café sells; turned on or changed, from then
+    on only. Paying the government is a journal by hand (Dr 2600, Cr the
+    bank), which the report counts as paid.
+- **Speed (`0100`), what it does not do.**
+  - The dashboard's alerts and the daily brief use an answer worked out in
+    the last minute: an alert raised or cleared by a sale shows up to a
+    minute late there (the alerts page, and the phones, the same).
+  - The Speed page measures from the device it is opened on, at that moment;
+    it is not a monitor running by itself. Measure from the café, at a busy
+    time and a quiet one.
+  - The sign-in's second step is still asked of Supabase Auth on each page by
+    someone who has none; making that once a session was left out (it is the
+    sign-in's own guard, kept as it is).
+  - The heavy reports are not yet kept for closed days; the free plan's small
+    shared computer still causes the spikes of seconds (plan 8, step 3:
+    Supabase Pro).
+- **Security fixes (`0099`), what they do not do.**
+  - Clocking near the shop trusts what the phone says of where it is: a phone
+    that fakes its place could still clock from home. It stops a code sent to
+    someone at home, the common case; the shop's screen code still changes
+    every 30 seconds.
+  - A place's spot is set by standing there with a phone or tablet: a desktop
+    computer usually cannot say where it is.
+  - The till's lock is the screen's: it covers the till after the minutes set,
+    in that browser. It is not a sign-out, and another tab is not locked.
+  - A device is known by a random key its browser keeps: cleared, or a
+    private window, and the same device is new again (one alert).
+  - A failing screen is noted only when the screen itself can still send it;
+    one that fails before it loads is in Vercel's logs only.
 - **Retry keys, what they do not cover (`0035`).** A screen keeps the key of an
   unanswered submission while it stays open; reloaded, it forgets it (only the
   till keeps its unanswered payment across a reload), so after a reload look

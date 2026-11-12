@@ -58,6 +58,8 @@ echo "▸ database"
 scripts/test-sql.sh tests/sql/smoke.test.sql >/dev/null   # (re)builds the sixties_tpl template
 "${PSQL[@]}" -d postgres -c "drop database if exists $E2E_DB with (force)" >/dev/null 2>&1
 "${PSQL[@]}" -d postgres -c "create database $E2E_DB template sixties_tpl" >/dev/null
+# The alerts worked out every time they are asked (0100 keeps them a minute).
+"${PSQL[@]}" -d postgres -c "alter database $E2E_DB set sixties.alerts_fresh_seconds = '0'" >/dev/null
 "${PSQL[@]}" -d "$E2E_DB" >/dev/null 2>&1 <<'SQL'
 do $$ begin
   if not exists (select 1 from pg_roles where rolname = 'authenticator') then
@@ -95,7 +97,7 @@ for _ in $(seq 1 60); do curl -s -o /dev/null "$E2E_BASE/login" && break; sleep 
 
 fail=0
 suites=("$@")
-[ ${#suites[@]} -eq 0 ] && suites=(pages flows reports retry offline bills menu production alerts masterdata settlements platforms languages resend drawer refunds corrections usage rules addons payments dollars purchasing buying smartbuying losses staff customers analysis statements printing documents transfers tills chart bank find files prepaid close keys prices staffing labour waste dayslip tour paste phoneclock waystopay learns menumatrix sections weight preorders accounts barcodes markdowns twostep equipment problems devices phonewarn shortcuts approvals deals tips receipt cashahead watch findings practice today help useby setup)
+[ ${#suites[@]} -eq 0 ] && suites=(pages flows reports retry offline bills menu production alerts masterdata settlements platforms languages resend drawer refunds corrections usage rules addons payments dollars purchasing buying smartbuying losses staff customers analysis statements printing documents transfers tills chart bank find files prepaid close keys prices staffing labour waste dayslip tour paste phoneclock waystopay learns menumatrix sections weight preorders accounts barcodes markdowns twostep equipment problems devices phonewarn shortcuts approvals deals tips receipt cashahead watch findings practice today help useby security speed dollarbills setup)
 for t in "${suites[@]}"; do
   node "tests/e2e/$t.e2e.mjs" || fail=1
 done

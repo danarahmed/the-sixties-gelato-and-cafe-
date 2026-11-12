@@ -30,8 +30,10 @@ describe("the browser's safeguards", () => {
     expect(value(every, "X-Content-Type-Options")).toBe("nosniff");
     expect(value(every, "Referrer-Policy")).toBe("strict-origin-when-cross-origin");
     const allowed = value(every, "Permissions-Policy") ?? "";
-    for (const feature of ["camera", "microphone", "geolocation", "payment", "usb"])
+    for (const feature of ["camera", "microphone", "payment", "usb"])
       expect(allowed).toContain(`${feature}=()`);
+    // Where the phone is, for clocking at the shop (0099): this site's own pages only.
+    expect(allowed).toContain("geolocation=(self)");
     // The till goes full screen.
     expect(allowed).not.toContain("fullscreen");
   });
@@ -44,5 +46,28 @@ describe("the browser's safeguards", () => {
     for (const path of ["/", "/login", "/pos", "/accounting/bank", "/documents/bill/1"])
       expect(pages.test(path), path).toBe(true);
     expect(pages.test("/api/product-image/0f0e0d0c-0b0a-0908-0706-050403020100")).toBe(false);
+  });
+});
+
+describe("the page's script policy (plan 7)", () => {
+  it("runs only the page's own nonce'd scripts and talks only to the app", async () => {
+    const { pagePolicy, makeNonce } = await import("../src/lib/csp");
+    const a = makeNonce();
+    const b = makeNonce();
+    expect(a).not.toBe(b);
+    expect(a.length).toBeGreaterThanOrEqual(22);
+    const p = pagePolicy(a);
+    expect(p).toContain(`script-src 'self' 'nonce-${a}' 'strict-dynamic'`);
+    expect(p).not.toContain("unsafe-eval");
+    expect(p).toContain("connect-src 'self'");
+    expect(p).not.toMatch(/connect-src[^;]*ws:/);
+    expect(p).toContain("frame-ancestors 'none'");
+    expect(p).toContain("object-src 'none'");
+    expect(pagePolicy(a, true)).toContain("'unsafe-eval'");
+    // A document's file goes to Supabase's storage, and comes from it: that address alone.
+    const withStorage = pagePolicy(a, false, "https://abc.supabase.co/");
+    expect(withStorage).toContain("connect-src 'self' https://abc.supabase.co;");
+    expect(withStorage).toContain("img-src 'self' data: blob: https://abc.supabase.co;");
+    expect(pagePolicy(a, false, "not a url")).toContain("connect-src 'self';");
   });
 });

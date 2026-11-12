@@ -23,7 +23,7 @@ const PATHS = [
 
 const sendInput = z.object({
   /** Where it leaves from: this device's place when none is chosen. */
-  fromId: z.string().uuid().nullable().optional(),
+  fromId: z.string().guid().nullable().optional(),
   toId: id("where the stock goes"),
   lines: z
     .array(

@@ -74,6 +74,13 @@ select t from (values ('receipt_setup'), ('receipt_logo'), ('report_visit')) v(t
 insert into fresh_keep
 select t from (values ('watch_state'), ('two_step_backup_code'), ('two_step_backup_try')) v(t)
  where to_regclass('public.' || t) is not null;
+-- The devices each person signed in on (0099) are theirs; the system's
+-- administrators and their speed measurements (0100), the till's key (0101)
+-- and the tax setting (0102) are the system's or settings: kept.
+insert into fresh_keep
+select t from (values ('member_device'), ('system_admin'), ('speed_sample'), ('business_offline_key'),
+                      ('tax_setup')) v(t)
+ where to_regclass('public.' || t) is not null;
 
 do $$
 begin
@@ -143,6 +150,12 @@ begin
        || case when to_regclass('public.practice_twin') is not null
                then ', practice_task_done, practice_twin' else '' end
        || case when to_regclass('public.stuck_event') is not null then ', stuck_event' else '' end
+       -- The till's PIN tries (0099), when the alerts were last worked out
+       -- (0100), what each till keeps (0101), dollars owed valued again (0103).
+       || case when to_regclass('public.till_unlock_attempt') is not null then ', till_unlock_attempt' else '' end
+       || case when to_regclass('public.alert_refresh') is not null then ', alert_refresh' else '' end
+       || case when to_regclass('public.till_kept') is not null then ', till_kept' else '' end
+       || case when to_regclass('public.fx_revaluation') is not null then ', fx_revaluation' else '' end
        || ' restart identity';
 end $$;
 

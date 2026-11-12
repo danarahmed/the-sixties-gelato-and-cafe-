@@ -166,10 +166,11 @@ const phrases: PhraseBook = {
     ar: "راجع جرد عمر ووافق عليه",
     ckb: "ژماردنەکەی عومەر بپشکنە و پەسەندی بکە",
   },
-  "On Stock Count, at the practice kitchen, open the count Omar sent, look at what is short, and approve it.": {
-    ar: "في جرد المخزون، في مطبخ التدريب، افتح الجرد الذي أرسله عمر، وانظر إلى الناقص، ووافق عليه.",
-    ckb: "لە ژماردنی کۆگا، لە چێشتخانەی ڕاهێنان، ئەو ژماردنە بکەرەوە کە عومەر ناردی، سەیری کەمییەکان بکە، و پەسەندی بکە.",
-  },
+  "On Stock Count, at the practice kitchen, open the count Omar sent, look at what is short, and approve it.":
+    {
+      ar: "في جرد المخزون، في مطبخ التدريب، افتح الجرد الذي أرسله عمر، وانظر إلى الناقص، ووافق عليه.",
+      ckb: "لە ژماردنی کۆگا، لە چێشتخانەی ڕاهێنان، ئەو ژماردنە بکەرەوە کە عومەر ناردی، سەیری کەمییەکان بکە، و پەسەندی بکە.",
+    },
   "Order from the supplier": { ar: "اطلب من المورّد", ckb: "لە دابینکەر داوا بکە" },
   "On Purchasing, make an order to the practice supplier, approve it and send it.": {
     ar: "في المشتريات، أنشئ طلبية إلى مورّد التدريب، ووافق عليها وأرسلها.",

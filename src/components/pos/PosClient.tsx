@@ -98,6 +98,7 @@ import { NEEDS_EXPIRED_APPROVAL, type TillMark } from "@/lib/useBy";
 import { DealFlow } from "./DealFlow";
 import { CustomerDialog } from "./CustomerDialog";
 import { customerAtTillAction } from "@/lib/actions/customers";
+import { noteTillKeptAction } from "@/lib/actions/offline";
 import { reasonKey } from "@/lib/reasons";
 import { changeGiven, type Payment } from "@/lib/payments";
 import { RATE_REFUSED } from "@/lib/fx";
@@ -106,6 +107,9 @@ import {
   keptId,
   loadKeptBills,
   loadOffline,
+  openOfflineStore,
+  rereadOfflineStore,
+  tillId,
   nextOfflineNo,
   offlineBlock,
   offlineTotals,
@@ -402,6 +406,7 @@ export function PosClient({
   useByMarks: initialMarks = [],
   service = null,
   receiptSetup = null,
+  offlineKey = null,
 }: {
   items: PosItem[];
   /** The meal deals on now (0089), and when the menu next changes by itself. */
@@ -455,6 +460,8 @@ export function PosClient({
   service?: Record<string, number> | null;
   /** The café's own receipt (0091); null before it: the app's own. */
   receiptSetup?: ReceiptSetup | null;
+  /** The café's key for what this till keeps on the device (0101); null before it. */
+  offlineKey?: string | null;
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -536,6 +543,20 @@ export function PosClient({
   const [autoPrint, setAutoPrint] = useState(false);
   const [ticketOn, setTicketOn] = useState(true);
   const [now, setNow] = useState(() => Date.now());
+  // The oldest sale this till keeps, in minutes (0099): long, and the strip says so.
+  const oldestKept = offline.length
+    ? Math.floor((now - Math.min(...offline.map((s) => Date.parse(s.soldAt) || now))) / 60000)
+    : null;
+  // A till holding sales that are not yet sent warns before it is closed or reloaded (0099).
+  useEffect(() => {
+    if (offline.length === 0) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [offline.length]);
   // How many pre-orders wait to be collected, for the till's button (0076).
   const [preOpen, setPreOpen] = useState(preOrders?.orders.length ?? 0);
   const panel = useRef<HTMLDivElement>(null);
@@ -640,16 +661,56 @@ export function PosClient({
   // Selling without internet (0073): what this till keeps, read when it opens;
   // while the database does not answer, asked again every fifteen seconds; and
   // sent as soon as it does, and every half minute while any waits.
+  // What it keeps is kept encrypted with the café's key (0101), opened here.
   useEffect(() => {
     setOffline(loadOffline());
     setKept(loadKeptBills());
+    let live = true;
+    void openOfflineStore(offlineKey).then(() => {
+      if (!live) return;
+      setOffline(loadOffline());
+      setKept(loadKeptBills());
+    });
     const onStorage = (e: StorageEvent) => {
-      if (e.key === null || e.key.startsWith("sixties.pos.offline")) setOffline(loadOffline());
-      if (e.key === null || e.key.startsWith("sixties.pos.keptBills")) setKept(loadKeptBills());
+      if (
+        e.key !== null &&
+        !e.key.startsWith("sixties.pos.offline") &&
+        !e.key.startsWith("sixties.pos.keptBills")
+      )
+        return;
+      void rereadOfflineStore().then(() => {
+        if (!live) return;
+        setOffline(loadOffline());
+        setKept(loadKeptBills());
+      });
     };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
+    return () => {
+      live = false;
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [offlineKey]);
+
+  // What this till still keeps, said while it is online (0101): a manager is
+  // told when one has kept sales half an hour or more.
+  const keptSummary = useMemo(() => {
+    const mine = offline.filter((s) => !tillPlace || !s.place || s.place === tillPlace);
+    const oldest = mine.map((s) => s.soldAt).sort()[0] ?? null;
+    return {
+      waiting: mine.filter((s) => s.state === "waiting").length,
+      attention: mine.filter((s) => s.state === "attention").length,
+      oldest,
+    };
+  }, [offline, tillPlace]);
+  useEffect(() => {
+    if (!connected) return;
+    const timer = window.setTimeout(() => {
+      void noteTillKeptAction({ till: tillId(), place: tillPlace, ...keptSummary }).catch(
+        () => undefined,
+      );
+    }, 2000);
+    return () => window.clearTimeout(timer);
+  }, [connected, keptSummary, tillPlace]);
   useEffect(() => {
     if (reachable || !online) return;
     const probe = window.setInterval(async () => {
@@ -852,6 +913,10 @@ export function PosClient({
   /** The service charge's percentage on an order's way of selling (0090), if it takes one. */
   const servicePercent = (o: Order): number | null =>
     service && !isPlatform(o.channel) ? (service[o.channel] ?? null) : null;
+
+  /** Why an order cannot be sold offline (0101: the cashier's own discount may go with it). */
+  const offlineWhy = (o: Order) =>
+    offlineBlock(o, { subtotal: orderSubtotal(o, byId, money, menu), rules: discountRules });
 
   /** Subtotal, discount, the service charge and what is due, for a printed bill or receipt. */
   const printTotals = (o: Order) => {
@@ -1467,7 +1532,7 @@ export function PosClient({
     // No connection: a quick sale is kept on this till and sent when it is back (0073).
     const offlineSale = !navigator.onLine || !reachable;
     if (offlineSale) {
-      const why = offlineBlock(order);
+      const why = offlineWhy(order);
       if (why) {
         setMsg({ ok: false, text: t(why) });
         return;
@@ -1844,6 +1909,14 @@ export function PosClient({
    * next customer — and the till says it is waiting to be sent.
    */
   function keepOffline(p: Pending, bill: Order | null = null) {
+    // A reward is taken from the customer's points: only with the internet.
+    if (p.rewards) {
+      setPending(p);
+      savePending(p);
+      setDialog(null);
+      setMsg({ ok: false, text: t("A reward needs the internet: take it off to sell offline") });
+      return;
+    }
     const list = loadOffline();
     const no = nextOfflineNo(list);
     const due = pendingDue(p);
@@ -1880,6 +1953,18 @@ export function PosClient({
       })),
       expectedNet: String(p.expectedNet ?? 0),
       platformOrderNo: p.platformOrderNo,
+      // The cashier's own discount and the customer chosen before it dropped (0101).
+      ...(p.discountPercent || p.discountAmount
+        ? {
+            discount: {
+              percent: p.discountPercent,
+              amount: p.discountAmount,
+              reason: p.discountReason,
+              note: p.discountNote,
+            },
+          }
+        : {}),
+      ...(p.customerId ? { customerId: p.customerId } : {}),
       ...(p.tip ? { tip: p.tip } : {}),
       ...(p.noService ? { noService: true } : {}),
       title: p.title,
@@ -2070,6 +2155,8 @@ export function PosClient({
                 device: next.place,
                 tip: next.tip ?? null,
                 noService: next.noService ?? false,
+                discount: next.discount ?? null,
+                customerId: next.customerId ?? null,
               }).catch(() => null);
         if (!r || (!r.ok && "uncertain" in r && r.uncertain)) {
           setReachable(false);
@@ -2303,6 +2390,7 @@ export function PosClient({
           attention={held.attention + keptAttention}
           bills={keptWaiting}
           sending={sending}
+          oldestMinutes={oldestKept}
           onOpen={() => setDialog({ kind: "offline" })}
         />
         <button
@@ -2400,7 +2488,7 @@ export function PosClient({
             busy={busy}
             pending={pending !== null}
             online={connected}
-            offlineWhy={connected ? null : offlineBlock(order)}
+            offlineWhy={connected ? null : offlineWhy(order)}
             canVoid={canVoid}
             canSeeCost={canSeeCost}
             hasTables={floorTables.length > 0}
