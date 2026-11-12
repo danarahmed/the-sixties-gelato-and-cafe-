@@ -94,6 +94,7 @@ import {
   type LineDeal,
 } from "./model";
 import { dealName, type Deal } from "@/lib/deals";
+import { NEEDS_EXPIRED_APPROVAL, type TillMark } from "@/lib/useBy";
 import { DealFlow } from "./DealFlow";
 import { CustomerDialog } from "./CustomerDialog";
 import { customerAtTillAction } from "@/lib/actions/customers";
@@ -268,6 +269,7 @@ async function fetchMenu(): Promise<{
   addons: PosAddons | null;
   deals: Deal[] | null;
   nextChange: string | null;
+  marks: UseByMark[] | null;
 } | null> {
   const body = await fetchJson<{
     ok?: boolean;
@@ -275,6 +277,7 @@ async function fetchMenu(): Promise<{
     addons?: PosAddons;
     deals?: Deal[];
     nextChange?: string | null;
+    marks?: UseByMark[];
   }>("/api/pos/menu");
   return body?.ok && Array.isArray(body.items) && body.items.length > 0
     ? {
@@ -282,8 +285,16 @@ async function fetchMenu(): Promise<{
         addons: body.addons ?? null,
         deals: Array.isArray(body.deals) ? body.deals : null,
         nextChange: body.nextChange ?? null,
+        marks: Array.isArray(body.marks) ? body.marks : null,
       }
     : null;
+}
+
+/** A product size near or past its use-by (0098): marked on its tile. */
+export interface UseByMark {
+  variantId: string;
+  state: TillMark;
+  item: string;
 }
 
 /** How often a till left open fetches today's prices, besides when it comes back to the front. */
@@ -291,6 +302,8 @@ const MENU_EVERY_MS = 10 * 60 * 1000;
 
 /** The database's answer when an item's rule asks a manager to sell beyond the books (0040). */
 const NEEDS_STOCK_APPROVAL = /is in stock: a manager approves using more than that/;
+/** The database's answer when the café refuses stock past its use-by (0098): a manager approves it the same way. */
+const NEEDS_USE_BY_APPROVAL = NEEDS_EXPIRED_APPROVAL;
 
 type Dialog =
   | {
@@ -324,6 +337,8 @@ type Dialog =
   | {
       kind: "stock";
       what: string;
+      /** It is stock past its use-by the café refuses (0098), not more than the books hold. */
+      useBy?: boolean;
       payment: Pending;
       approvers: Approver[] | null;
       error: string | null;
@@ -384,6 +399,7 @@ export function PosClient({
   preOrders = null,
   deals: initialDeals = [],
   nextChange: initialNextChange = null,
+  useByMarks: initialMarks = [],
   service = null,
   receiptSetup = null,
 }: {
@@ -391,6 +407,8 @@ export function PosClient({
   /** The meal deals on now (0089), and when the menu next changes by itself. */
   deals?: Deal[];
   nextChange?: string | null;
+  /** What is near or past its use-by (0098), marked on its tile. */
+  useByMarks?: UseByMark[];
   /** The add-ons, and which products offer them (0041). */
   addons: PosAddons;
   tables: DiningTable[];
@@ -450,6 +468,7 @@ export function PosClient({
   const [addons, setAddons] = useState<PosAddons>(initialAddons);
   const [deals, setDeals] = useState<Deal[]>(initialDeals);
   const [nextChange, setNextChange] = useState<string | null>(initialNextChange);
+  const [marks, setMarks] = useState<UseByMark[]>(initialMarks);
   const [dealing, setDealing] = useState<Deal | null>(null);
   const menu = useMemo(() => addonMenu(addons), [addons]);
   // The channels in use that sell something: a platform the café added is one more tab.
@@ -579,6 +598,7 @@ export function PosClient({
         setItems(fresh.items);
         if (fresh.addons) setAddons(fresh.addons);
         if (fresh.deals) setDeals(fresh.deals);
+        if (fresh.marks) setMarks(fresh.marks);
         setNextChange(fresh.nextChange);
       }
     };
@@ -611,6 +631,7 @@ export function PosClient({
       setItems(fresh.items);
       if (fresh.addons) setAddons(fresh.addons);
       if (fresh.deals) setDeals(fresh.deals);
+      if (fresh.marks) setMarks(fresh.marks);
       setNextChange(fresh.nextChange);
     }, wait);
     return () => window.clearTimeout(timer);
@@ -932,7 +953,14 @@ export function PosClient({
 
   /** A manager approves selling more than the books hold (0040): the payment waits for it. */
   async function askStockApproval(payment: Pending, why: string) {
-    setDialog({ kind: "stock", what: say(why), payment, approvers: null, error: null });
+    setDialog({
+      kind: "stock",
+      what: say(why),
+      useBy: NEEDS_USE_BY_APPROVAL.test(why),
+      payment,
+      approvers: null,
+      error: null,
+    });
     const r = await listApproversAction("negative_stock");
     setDialog((cur) =>
       cur?.kind === "stock"
@@ -1649,7 +1677,7 @@ export function PosClient({
         savePending(null);
         // More than the books hold, under a rule that asks a manager: they
         // approve it here, and the same payment is sent again with it (0040).
-        if (NEEDS_STOCK_APPROVAL.test(r.error)) {
+        if (NEEDS_STOCK_APPROVAL.test(r.error) || NEEDS_USE_BY_APPROVAL.test(r.error)) {
           askStockApproval(p, r.error);
           return;
         }
@@ -1764,6 +1792,7 @@ export function PosClient({
         setItems(fresh.items);
         if (fresh.addons) setAddons(fresh.addons);
         if (fresh.deals) setDeals(fresh.deals);
+        if (fresh.marks) setMarks(fresh.marks);
         setNextChange(fresh.nextChange);
       }
       if (list) applyRef.current(list);
@@ -2347,6 +2376,7 @@ export function PosClient({
               decimals={money.decimals}
               deals={order.kind === "quick" ? deals : []}
               onDeal={(d) => setDealing(d)}
+              marks={marks}
             />
           )}
           {dealing && (
@@ -2610,7 +2640,11 @@ export function PosClient({
       )}
       {dialog?.kind === "stock" && (
         <ApproveDialog
-          title={t("A manager approves selling more than the books hold")}
+          title={
+            dialog.useBy
+              ? t("A manager approves selling what is past its use-by")
+              : t("A manager approves selling more than the books hold")
+          }
           what={dialog.what}
           approvers={dialog.approvers}
           busy={busy === "approve" || busy === "pay"}

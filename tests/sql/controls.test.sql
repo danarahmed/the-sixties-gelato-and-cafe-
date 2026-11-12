@@ -160,7 +160,7 @@ select test.eq((
   'my_report_visits,next_bill_number,note_report_visit,note_stuck,note_supplier_credit,open_cash_session,open_tab,'
   'owner_money,pay_bill,pay_payroll,pay_salary,payment_methods,payroll_detail,payroll_runs,'
   'period_close_checklist,phone_status,phone_warnings,platform_money,pos_addons,pos_catalogue,'
-  'pos_deals,pos_menu_next_change,pos_open_bills,post_control_correction,post_legacy_unposted,'
+  'pos_deals,pos_menu_next_change,pos_open_bills,pos_use_by,post_control_correction,post_legacy_unposted,'
   'post_platform_settlement,practice_reset,practice_start,practice_tasks,practice_team,pre_orders,prepaid_expenses,preview_receipt_correction,problem_reports,'
   'production_batches,production_lots,production_plan,production_recipes,publish_journal,'
   'purchase_order,purchase_orders,purchase_orders_from_list,push_done,push_take,receipt_setup,'
@@ -182,7 +182,7 @@ select test.eq((
   'save_push_device,save_schedule,save_section,save_tab,save_table,send_po,send_stock_transfer,'
   'send_test_warning,service_charges,set_account_in_use,set_alert_thresholds,set_batch_use_by,'
   'set_business_rule,set_category_section,set_clock_pin,set_customer_account,set_employee_left,'
-  'set_employee_pay,set_fx_rate,set_item_keeps,set_item_supplier,set_member_active,set_member_place,'
+  'set_employee_pay,set_fx_rate,set_item_keeps,set_item_supplier,set_item_use_by,set_lot_use_by,set_member_active,set_member_place,'
   'set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_place_active,set_place_sections,'
   'set_price,set_product_details,set_product_image,set_product_modifiers,set_receipt_logo,'
   'set_receipt_setup,set_section_hours,set_service_charge,set_time_price,set_tip_sharers,'
@@ -190,7 +190,7 @@ select test.eq((
   'split_tab,staff_list,staff_phones,staff_schedule,start_stock_count,stock_card,stock_places,'
   'stock_transfers,stop_markdown,stop_time_price,stuck_report,submit_stock_count,supplier_records,supplier_statement,take_pre_order,'
   'time_prices,tips_month,turn_off_phone_warnings,turn_on_phone_warnings,two_step_codes_left,undo_bank_statement,'
-  'unlink_phone,unlock_period,update_business_details,update_delivery_platform,update_item,update_supplier,update_variant,use_two_step_code,'
+  'unlink_phone,unlock_period,update_business_details,update_delivery_platform,update_item,update_supplier,update_variant,use_by_lots,use_two_step_code,'
   'void_sale,waste_coach,watch_list,watch_may_see',
   'signed-in users can call exactly the intended API');
 -- The public (the anon key is in every page) may call only the clock's four,

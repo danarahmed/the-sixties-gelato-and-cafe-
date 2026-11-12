@@ -122,7 +122,10 @@ export function ProductPicker({
   decimals = 0,
   deals = [],
   onDeal,
+  marks = [],
 }: {
+  /** What is near or past its use-by (0098): marked on its tile before anyone chooses it. */
+  marks?: { variantId: string; state: "expired" | "soon"; item: string }[];
   /** The meal deals on now (0089): a tap starts one. */
   deals?: Deal[];
   onDeal?: (d: Deal) => void;
@@ -598,6 +601,23 @@ export function ProductPicker({
                         ★
                       </span>
                     )}
+                    {(() => {
+                      const ms = marks.filter((m) =>
+                        p.variants.some((v) => v.variantId === m.variantId),
+                      );
+                      if (ms.length === 0) return null;
+                      const past = ms.some((m) => m.state === "expired");
+                      return (
+                        <span
+                          className={`tile-use-by${past ? " past" : ""}`}
+                          data-testid="tile-use-by"
+                          data-state={past ? "expired" : "soon"}
+                          title={ms.map((m) => m.item).join(", ")}
+                        >
+                          {past ? t("Past use-by") : t("Sell first")}
+                        </span>
+                      );
+                    })()}
                     {p.variants.some((v) => v.markdownPercent) && (
                       <span className="tile-markdown" data-testid="tile-markdown">
                         −{Math.max(...p.variants.map((v) => v.markdownPercent ?? 0))}%

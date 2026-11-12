@@ -64,7 +64,7 @@ select test.eq((select string_agg((x ->> 'key') || ' ' || (x ->> 'scope_type')
                   from jsonb_array_elements(list_business_rules() -> 'rows') x
                  where x ->> 'key' not in ('discount_round_to')),
   'clocked_in_alert_hours business = 16 (default); daily_sales_target business = 0 (default); '
-  'discount_cap_percent business = 10 (default); labour_target_percent business = 0 (default); '
+  'discount_cap_percent business = 10 (default); expired_sale business = warn (default); labour_target_percent business = 0 (default); '
   'late_after_minutes business = 5 (default); '
   'loyalty business = on (default); loyalty_point_per business = 1000 (default); '
   'loyalty_reward_points business = 100 (default); loyalty_reward_value business = 5000 (default); '
@@ -75,7 +75,8 @@ select test.eq((select string_agg((x ->> 'key') || ' ' || (x ->> 'scope_type')
   'po_approve_up_to role owner = 1000000000 (default); '
   'refund_approval_over business = 25000 (default); transfer_markup_percent business = 0 (default); '
   'usd_rate_max_age_hours business = 36 (default); '
-  'usd_round_to business = 250 (default); waste_approval_over business = 50000 (default); '
+  'usd_round_to business = 250 (default); use_by_warn_hours business = 24 (default); '
+  'waste_approval_over business = 50000 (default); '
   'waste_approval_window business = session (default)',
   'every rule starts at its default: the business row''s columns, and the plan''s for the rest');
 
@@ -353,7 +354,7 @@ select test.eq((select string_agg(stock_card_kind(type, reference_type, base_qua
 -- A cold brew uses 300 g of beans a batch; 190 g are left.
 select test.act_as('owner@example.com');
 insert into res select 'B0', save_batch_recipe(null, 'Golden cold brew', '{"measure":"volume"}', 1, 'L',
-  jsonb_build_array(jsonb_build_object('item_id', 'c0000000-0000-0000-0000-000000000001', 'qty', 300, 'unit_code', 'g')));
+  jsonb_build_array(jsonb_build_object('item_id', 'c0000000-0000-0000-0000-000000000001', 'qty', 300, 'unit_code', 'g')), p_shelf_life_hours => 24);
 select set_business_rule('negative_stock', 'item', 'c0000000-0000-0000-0000-000000000001', '"approve"', 'Beans are weighed');
 select test.act_as('barista@example.com');
 select test.throws($$select record_production((pg_temp.r('B0') ->> 'recipe_id')::uuid, 1)$$,

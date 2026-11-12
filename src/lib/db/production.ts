@@ -42,10 +42,21 @@ export interface BatchRecipe {
   lines: BatchRecipeLine[];
   /** How long what it makes keeps, in hours; null when it has no use-by (0046). */
   shelfLifeHours: number | null;
+  /** What it makes doesn't go off (0098). */
+  neverGoesOff: boolean;
+}
+
+/** The recipes that don't go off (0098); none before it is applied. */
+async function neverGoesOff(): Promise<Set<string>> {
+  const c = await db();
+  const r = await c.from("recipe").select("id,never_goes_off").eq("never_goes_off", true);
+  if (r.error) return new Set();
+  return new Set((r.data ?? []).map((x: Record<string, unknown>) => String(x.id)));
 }
 
 export async function getBatchRecipes(): Promise<BatchRecipe[]> {
   const c = await db();
+  const never = await neverGoesOff();
   return rows(await c.rpc("production_recipes"), "batch recipes").map(
     (r: Record<string, unknown>) => ({
       id: str(r.recipe_id),
@@ -65,6 +76,7 @@ export async function getBatchRecipes(): Promise<BatchRecipe[]> {
         baseQty: num(l.base_qty),
       })),
       shelfLifeHours: numOrNull(r.shelf_life_hours),
+      neverGoesOff: never.has(str(r.recipe_id)),
     }),
   );
 }

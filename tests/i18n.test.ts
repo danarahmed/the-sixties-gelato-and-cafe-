@@ -26,6 +26,7 @@ import {
 import { parseRich, plain } from "@/lib/i18n/Rich";
 import { LABELS } from "@/lib/format";
 import { RULE_PHRASES } from "@/lib/rules";
+import { USE_BY_PHRASES } from "@/lib/useBy";
 import { parseCsv, toCsv } from "@/lib/csv";
 import { briefCalculations, briefFacts, briefToDo, type DailyBrief } from "@/lib/alerts";
 // @ts-expect-error: a plain script, shared with the command line
@@ -106,6 +107,7 @@ describe("the phrase books", () => {
   it("have every phrase the café's rules show on Settings and on the loss form (0040)", () => {
     const shown = [
       ...RULE_PHRASES,
+      ...USE_BY_PHRASES,
       "A loss over {limit} needs a manager's approval.",
       "A loss over {limit}, or that takes your losses today or the item's over it, needs a manager's approval.",
       "A loss over {limit}, or that takes your losses this session (or today) or the item's today over it, needs a manager's approval.",

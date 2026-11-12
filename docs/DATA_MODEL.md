@@ -2054,6 +2054,39 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Use-by for everything that goes off (`0098`)
+
+- **`item.expiry_mode`**: how an item keeps, chosen once: `none` (it doesn't
+  go off; packaging and consumables from the start), `keeps_days` (each
+  delivery is used by `item.keeps_days` after it comes, the same days the
+  buying list reads), or `exact_date` (each delivery's line carries the date
+  on its pack, which must be given). Null: not chosen yet, listed on Today for
+  those who set items up. `set_item_use_by(item, mode, days)`.
+- A delivery of an item that goes off makes an **`item_lot`** of its own
+  (`lot_code` `D<receipt>-<line>`, `expiry_date` the day, `use_by` the end of
+  that day at the café), named on its `goods_receipt_line.lot_id` and its
+  movement; the item is kept lot by lot from then on, as batches are (0046).
+  A return to the supplier, or a delivery corrected down, takes from that
+  delivery's lot first. `set_lot_use_by(lot, day, reason)` (those who approve
+  stock corrections) changes it, on the audit trail (`stock.use_by`); a
+  batch's lot changes with its batch.
+- **`recipe.never_goes_off`**: a batch recipe says how long what it makes
+  keeps (`shelf_life_hours`) or that it doesn't go off; saved with neither, it
+  is refused. `save_batch_recipe`'s `p_shelf_life_hours` 0 now means "doesn't
+  go off".
+- The café's rules **`expired_sale`** (`warn`, the default, or `refuse`; for
+  the café or a branch) and **`use_by_warn_hours`** (1 to 168, 24 by default).
+  A sale that would take stock past its use-by (`expired_takes`) is kept on the
+  audit trail (`stock.expired_sold`), or refused unless a manager approves with
+  their PIN, the same `negative_stock` approval as selling beyond the books.
+- `use_by_lots(location, all)`: the lots near or past their use-by (or all
+  with one), the batches' and the deliveries', with their state (`expired`,
+  `today`, `soon`, `good`), and the items and recipes that have not said how
+  they keep. `pos_use_by(location)`: each product size whose next unit would
+  come from stock past its use-by, or within the warning time, for the till's
+  marks. The `use_by` alert reads the café's warning time, and names a
+  delivery's lot by the day it came.
+
 ### Where people get stuck (`0097`)
 
 - **`stuck_event`**: a refusal or a help opened (`kind` `refused` or `help`)

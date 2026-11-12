@@ -20,6 +20,7 @@ import { Field, Notice, inputStyle } from "@/components/ui";
 import { NewItemForm, type CreatedItem } from "@/components/NewItemForm";
 import { OperationStatus, useOperation } from "@/components/useOperation";
 import { Icon } from "@/components/Icon";
+import { suggestedUseBy, checkUseBy, type ExpiryMode } from "@/lib/useBy";
 
 interface ItemOpt {
   id: string;
@@ -31,6 +32,8 @@ interface ItemOpt {
   units: { code: string; label: string; factor: number }[];
   /** What one base unit costs now; null before its first delivery. */
   costNow: number | null;
+  /** How it keeps (0098): null before it, or when it has not said. */
+  keeping?: { mode: ExpiryMode | null; keepsDays: number | null } | null;
 }
 interface SupplierOpt {
   id: string;
@@ -44,6 +47,8 @@ interface LineDraft {
   unitPrice: string;
   /** Its line on the order it comes against (0044). */
   poLineId?: string;
+  /** Its use-by, YYYY-MM-DD (0098): the pack's date; empty, from the item's days. */
+  useBy?: string;
 }
 type Msg = { ok: boolean; text: string } | null;
 /** A line whose item is being added (release H): not yet an item to receive. */
@@ -51,6 +56,7 @@ const NEW_ITEM = "__new__";
 
 export function ReceiveStockForm({
   items,
+  today = "",
   suppliers,
   orders = [],
   canReceive,
@@ -58,6 +64,8 @@ export function ReceiveStockForm({
   canAddItem,
 }: {
   items: ItemOpt[];
+  /** The café's today, YYYY-MM-DD: a use-by is never before it. */
+  today?: string;
   suppliers: SupplierOpt[];
   /** The purchase orders open to receive against (0044). */
   orders?: PurchaseOrder[];
@@ -74,7 +82,13 @@ export function ReceiveStockForm({
     >
       {canAddSupplier && <AddSupplier />}
       {canReceive && (
-        <Receive items={items} suppliers={suppliers} orders={orders} canAddItem={canAddItem} />
+        <Receive
+          items={items}
+          today={today}
+          suppliers={suppliers}
+          orders={orders}
+          canAddItem={canAddItem}
+        />
       )}
     </div>
   );
@@ -139,11 +153,13 @@ function AddSupplier() {
 
 function Receive({
   items: listed,
+  today,
   suppliers,
   orders,
   canAddItem,
 }: {
   items: ItemOpt[];
+  today: string;
   suppliers: SupplierOpt[];
   orders: PurchaseOrder[];
   canAddItem: boolean;
@@ -232,6 +248,27 @@ function Receive({
 
   function submit(confirm: boolean) {
     setMsg(null);
+    // A use-by the pack must give, and never one already past (0098).
+    for (const l of lines) {
+      const it = itemById(l.itemId);
+      const problem = it ? checkUseBy(it.keeping?.mode ?? null, l.useBy ?? "", today) : null;
+      if (problem === "needs_date") {
+        setMsg({
+          ok: false,
+          text: t("Type the use-by printed on the pack of {name}", { name: it!.name }),
+        });
+        return;
+      }
+      if (problem === "past") {
+        setMsg({
+          ok: false,
+          text: t("{name} is already past its use-by: send it back rather than receive it", {
+            name: it!.name,
+          }),
+        });
+        return;
+      }
+    }
     start(async () => {
       const r = await op.run("receiveGoods", (key) =>
         receiveGoodsAction(
@@ -250,6 +287,7 @@ function Receive({
                 qty: l.qty,
                 unitCode: l.unit,
                 unitPrice: l.unitPrice,
+                useBy: l.useBy?.trim() ? l.useBy.trim() : null,
                 // Its order line, while it is still that line's item.
                 poLineId:
                   order &&
@@ -453,6 +491,28 @@ function Receive({
                     inputMode="decimal"
                   />
                 </label>
+                {it?.keeping?.mode === "keeps_days" || it?.keeping?.mode === "exact_date" ? (
+                  <label style={{ minWidth: 150 }}>
+                    <div className="muted" style={{ fontSize: ".78rem" }}>
+                      {it.keeping.mode === "exact_date"
+                        ? t("Use by (on the pack)")
+                        : t("Use by (from its {n} days)", { n: it.keeping.keepsDays ?? 0 })}
+                    </div>
+                    <input
+                      type="date"
+                      style={inputStyle}
+                      value={
+                        l.useBy ??
+                        suggestedUseBy(it.keeping.mode, it.keeping.keepsDays, today)
+                      }
+                      min={today || undefined}
+                      onChange={(e) => setLine(idx, { useBy: e.target.value })}
+                      required={it.keeping.mode === "exact_date"}
+                      aria-label={t("Use by")}
+                      data-testid="receive-use-by"
+                    />
+                  </label>
+                ) : null}
                 <button
                   onClick={() => {
                     setCheck(null);

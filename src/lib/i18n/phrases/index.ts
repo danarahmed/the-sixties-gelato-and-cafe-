@@ -56,6 +56,7 @@ import twoStep from "./twoStep";
 import findings from "./findings";
 import practice from "./practice";
 import stuck from "./stuck";
+import useBy from "./useBy";
 import today from "./today";
 import help from "./help";
 
@@ -119,6 +120,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   stuck,
   today,
   help,
+  useBy,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

@@ -174,7 +174,7 @@ select test.throws($$select update_item(pg_temp.id('cola'), 'Golden cola', 'resa
 -- ... nor while a batch recipe makes it.
 select test.act_as('owner@example.com');
 create temp table batch as select save_batch_recipe(null, 'Golden gelato base', '{"measure":"weight"}', 2, 'kg',
-  '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":100,"unit_code":"g"}]') r;
+  '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":100,"unit_code":"g"}]', p_shelf_life_hours => 24) r;
 insert into ids select 'base', (r ->> 'item_id')::uuid from batch;
 insert into ids select 'base_recipe', (r ->> 'recipe_id')::uuid from batch;
 select test.throws($$select update_item(pg_temp.id('base'), 'Golden gelato base', 'finished_good', p_is_active => false)$$,
@@ -200,10 +200,10 @@ select test.eq((select pg_temp.said(a) from audit_log a where action = 'item.upd
 -- A batch recipe made and changed: on the trail, with its ingredients before and after.
 select test.eq((select pg_temp.said(a) from audit_log a where action = 'recipe.batch.create'),
   '- → {"name": "Golden gelato base", "unit": "kg", "lines": [{"qty": 100, "item": "Golden beans", "unit": "g"}], '
-  '"yield": 2000, "is_active": true} by owner@example.com', 'a batch recipe made is on the trail');
+  '"yield": 2000, "is_active": true, "keeps_hours": 24} by owner@example.com', 'a batch recipe made is on the trail');
 select test.act_as('owner@example.com');
 select save_batch_recipe(pg_temp.id('base_recipe'), 'Golden gelato base', null,
-  2, 'kg', '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":150,"unit_code":"g"}]');
+  2, 'kg', '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":150,"unit_code":"g"}]', p_shelf_life_hours => 24);
 select test.as_admin();
 select test.eq((select (before_state -> 'lines' -> 0 ->> 'qty') || ' g → ' || (after_state -> 'lines' -> 0 ->> 'qty') || ' g'
                   from audit_log where action = 'recipe.batch.change'),

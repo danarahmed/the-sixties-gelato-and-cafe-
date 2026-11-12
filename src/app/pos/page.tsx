@@ -10,6 +10,7 @@ import { getReceiptSetup } from "@/lib/db/receipt";
 import { getDrawerState } from "@/lib/db/cash";
 import { getFxStatus } from "@/lib/db/fx";
 import { PosClient } from "@/components/pos/PosClient";
+import { getTillMarks } from "@/lib/db/useBy";
 import { ChannelsProvider } from "@/components/ChannelsProvider";
 import { EmptyState } from "@/components/ui";
 import { BranchPicker, PlaceSwitch } from "@/components/PlaceSwitch";
@@ -59,6 +60,7 @@ export default async function PosPage() {
     nextChange,
     service,
     receipt,
+    useByMarks,
   ] = await Promise.all([
     getPosCatalogue(at),
     getPosAddons(at),
@@ -79,6 +81,8 @@ export default async function PosPage() {
     getServiceCharges(),
     // The café's own receipt (0091); null before it: the app's own.
     getReceiptSetup(),
+    // What is near or past its use-by (0098), marked on its tile; none before it.
+    getTillMarks(at),
   ]);
 
   if (items.length === 0) {
@@ -107,6 +111,7 @@ export default async function PosPage() {
         addons={addons}
         deals={deals}
         nextChange={nextChange}
+        useByMarks={useByMarks}
         tables={tables}
         initialBills={bills}
         canSeeCost={has(profile, "cost.view")}
