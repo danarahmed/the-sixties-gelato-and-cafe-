@@ -17,7 +17,7 @@ before the next one is given. The order of whole plans: **7** (security),
 **1** (Supabase), **11** (going live and what else was missing), **3** (use-by),
 **8** (speed), **6** (the books), **5** (the six points), **9** (many cafés),
 **10** (every business), **4** (videos in each language), **2** (selling).
-Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November).
+Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November), plan 6 (12 November).
 
 The steps across the plans, in the order they are done (the owner, 8 November:
 the technical side and the system's logic first; what is not technical is kept
@@ -304,8 +304,7 @@ support, and have a lawyer write the terms (with plan 2).
    editable before the first is posted; payroll shared between places by the
    hours clocked at each); social insurance also on or off **per person** (a
    trial period); **not done: g** (purchase order limits by supplier or month,
-   a second approver). **Waiting:** *d* (a payment from the till recorded a day
-   late: explained below) and *c* (a live dollar rate: explained below).
+   a second approver). *d* and *c* decided (12 November), below.
    - *d, as it is:* the drawer closed yesterday 20,000 short (posted to 6300);
      the ice paid from it yesterday, recorded today, lowers what today's drawer
      should hold, so today's count is 20,000 over (6300 again). The month is
@@ -322,6 +321,15 @@ support, and have a lawyer write the terms (with plan 2).
      shows it beside the manager's; one tap takes it, or the manager types the
      market rate; a warning when the two differ by more than a set percentage.
      A market-rate source added later if a reliable one is found.
+   - **Decided (12 November):** *d* **to be fixed as proposed** (the late payment
+     explains that day's short, up to its amount, on the audit trail). *c*:
+     **no daily rate**: the rate changes by the minute, so **every record that
+     needs it takes its own rate, typed at the time** (a dollar payment at the
+     till, an exchange, a bill or a payment in dollars); the last rate used is
+     offered to start from; a warning when it is far from the last one; each
+     record keeps its rate. Recommended safeguard: a cashier may type a rate
+     within a small band of the last one a manager used; beyond it, a
+     manager's PIN; a report of the rates each person used.
 5. **Service charge:** already built (0090): a percentage set for each way of
    selling (dine-in, takeaway, the café's own delivery; never a platform), so
    dine-in only is the percentage on dine-in and none on the rest; shown on the
