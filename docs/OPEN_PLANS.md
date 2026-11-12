@@ -17,7 +17,7 @@ before the next one is given. The order of whole plans: **7** (security),
 **1** (Supabase), **11** (going live and what else was missing), **3** (use-by),
 **8** (speed), **6** (the books), **5** (the six points), **9** (many cafés),
 **10** (every business), **4** (videos in each language), **2** (selling).
-Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November), plan 6, plan 5, plan 9 (12 November).
+Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November), plan 6, plan 5, plan 9, plan 10 (12 November).
 
 The steps across the plans, in the order they are done (the owner, 8 November:
 the technical side and the system's logic first; what is not technical is kept
@@ -750,6 +750,10 @@ The books, the security and the updates are the same for all.
 real users of the new parts. The middle path: the foundation first, then each
 part tried by one friendly restaurant and one friendly supplier, for free, while
 it is built. Everything is still built before selling.
+
+**The owner's decisions (12 November 2026):** all agreed. Asked: an order the
+customer builds on their own phone from the menu, shown as a QR code the waiter
+scans (explained; waiting for the owner's word to add it).
 
 ## 11. What the other plans did not cover (6 November 2026)
 
