@@ -98,6 +98,7 @@ Plan a short window when the café is closed.
 | The till that waits less for the internet (`0101`) | ⏳ Waiting for the owner to apply it in the SQL editor, after `0100`                                                                                                                                                                                                                                                                                                                                                                             |
 | Tax, and other accounts (`0102`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0101`                                                                                                                                                                                                                                                                                                                                                                             |
 | A supplier bill in dollars and dinars (`0103`)     | ⏳ Waiting for the owner to apply it in the SQL editor, after `0102`                                                                                                                                                                                                                                                                                                                                                                             |
+| Comparing cashiers (`0104`)                        | ⏳ Waiting for the owner to apply it in the SQL editor, after `0103`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4441,6 +4442,20 @@ It is applied by the owner, in Supabase's SQL editor, after `0102`:
    press **Run**. If Supabase says it found possible problems, choose to run
    it anyway.
 3. **Success. No rows returned** is the answer.
+
+## After `0104`
+
+Migration `0104` brings **the cashier scorecard**: Reports → **Cashier
+scorecard**, for you and the managers (cashiers do not see it). Each person
+who took the money over the last 7, 30 or 90 days, ranked fairly: their sales
+an hour worked against what the café usually sells in the same hours of the
+same weekdays (100 is as usual), with their bills, average bill, items and
+add-ons a bill, voids, refunds, discounts and drawers' over or short.
+
+Nothing recorded changes. Rehearsed with `tests/sql/cashier_scorecard.test.sql`.
+Applied after `0103`, as each one before it: open
+`supabase/migrations/0104_cashier_scorecard.sql` on GitHub, **Raw**, copy all
+of it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
 
 ## Clearing the test records
 

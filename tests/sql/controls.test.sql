@@ -169,7 +169,7 @@ select test.eq((
   'record_opening_stock,record_prepaid_expense,record_production,record_sale,record_supplier_credit,'
   'record_waste,refund_sale,refund_sale_lines,register_clock_screen,reject_stock_count,release_prepaid,'
   'remove_clock_screen,remove_item_supplier,remove_push_device,rename_account,rename_place,reopen_payroll,'
-  'report_balance_sheet,report_cash_flow,report_customers,report_daily_sales,report_day_totals,'
+  'report_balance_sheet,report_cash_flow,report_cashier_scorecard,report_customers,report_daily_sales,report_day_totals,'
   'report_deals,report_document_problems,report_dollars,report_exceptions,report_journal_lines,'
   'report_losses,report_payment_methods,report_payments,report_problem,report_production,'
   'report_profit_and_loss,report_profit_and_loss_by_place,report_purchases,report_purchasing,'

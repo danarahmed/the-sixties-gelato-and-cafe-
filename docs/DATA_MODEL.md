@@ -2054,6 +2054,17 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Comparing cashiers (`0104`)
+
+- `report_cashier_scorecard(from, to, location)` (those who see the profit
+  and keep the staff, or the owner; never a cashier): for each person who took
+  the money or was on the clock, their bills, sales, average bill, items and
+  add-ons a bill, hours on the clock, sales an hour, voids and refunds they
+  asked for, discounts they gave, and their drawers' over or short; and
+  `against_usual`, their sales against what the café took in the same hours
+  of the same weekdays over the eight weeks before (100 is as usual; none
+  without those weeks). Nothing new is kept.
+
 ### A supplier bill in dollars and dinars (`0103`)
 
 - **`purchase_invoice.usd_amount`, `usd_rate`**: a bill's dollar part and the
