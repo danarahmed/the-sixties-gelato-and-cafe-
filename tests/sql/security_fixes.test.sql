@@ -18,6 +18,9 @@ $$;
 create function pg_temp.code(p_screen text) returns text language sql as $$
   select clock_screen_code(pg_temp.k(p_screen)) ->> 'code'
 $$;
+create function pg_temp.alert_count(p_rule text) returns int language sql security definer as $$
+  select count(*)::int from alert_conditions('00000000-0000-0000-0000-0000000000b1', now()) where rule = p_rule
+$$;
 create function pg_temp.alerts(p_rule text) returns text language sql security definer as $$
   select string_agg(title, ' | ' order by title) from alert_conditions('00000000-0000-0000-0000-0000000000b1', now())
    where rule = p_rule
@@ -96,12 +99,17 @@ select test.eq((select string_agg((x ->> 'path') || ' ' || (x ->> 'errors'), ', 
 
 -- ------------------------------------------------------------------ a new device
 select test.act_as('owner@example.com');
-select test.eq(note_device('the-owner''s-laptop-key-0001', 'Chrome on Windows') ->> 'new', 'false',
+select test.eq(note_device('the-owner''s-laptop-key-0001', 'Chrome · Windows') ->> 'new', 'false',
   'the first device someone uses is not news');
-select test.eq(note_device('the-owner''s-laptop-key-0001', 'Chrome on Windows') ->> 'new', 'false', 'nor that one again');
-select test.eq(note_device('a-phone-never-seen-before-01', 'Safari on iPhone') ->> 'new', 'true', 'another one is');
-select test.ok(pg_temp.alerts('new_device') like '% signed in from a new device: Safari on iPhone',
+select test.eq(note_device('the-owner''s-laptop-key-0001', 'Chrome · Windows') ->> 'new', 'false', 'nor that one again');
+select test.eq(note_device('a-phone-never-seen-before-01', 'Safari · iPhone') ->> 'new', 'true', 'another one is');
+select test.ok(pg_temp.alerts('new_device') like '% signed in from a new device: Safari · iPhone',
   'an alert for the owner, who may see the books');
+select note_device('a-private-window-key-000002', 'Firefox · Windows');
+select test.eq(pg_temp.alert_count('new_device'), 1,
+  'two new devices in a day: one alert for the person');
+select test.ok(pg_temp.alerts('new_device') like '% signed in from a new device: Firefox · Windows',
+  'naming the newest');
 select test.act_as('cashier@example.com');
 select note_device('cashier-till-key-000000001', 'Chrome'), note_device('cashier-phone-key-0000001', 'Safari');
 select test.ok(pg_temp.alerts('new_device') not like '%Demo Cashier%', 'a cashier''s new phone is not an alert');

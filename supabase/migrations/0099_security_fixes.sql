@@ -384,7 +384,7 @@ begin
 end $$;
 
 alter function alert_conditions(uuid, timestamptz) rename to alert_conditions_0098;
-create function alert_conditions(p_business uuid, p_now timestamptz)
+create or replace function alert_conditions(p_business uuid, p_now timestamptz)
 returns table (rule text, subject text, urgency text, title text, why text, action text, confidence text,
                link text, facts jsonb)
 language sql stable set search_path = public as $$
@@ -392,7 +392,7 @@ language sql stable set search_path = public as $$
     from alert_conditions_0098(p_business, p_now) c
   union all
   -- Screens failing for the people using them: three or more in the last hour.
-  select 'app_errors', 'app', case when count(*) >= 10 then 'red' else 'orange' end,
+  select 'app_errors'::text, 'app'::text, case when count(*) >= 10 then 'red' else 'orange' end,
          format('%s screens failed in the last hour', count(*)),
          'Something on a screen failed for the people using it: what they were doing may not have been recorded.',
          'Open Reports → Where people get stuck to see which screen, and tell whoever looks after the app.',
@@ -401,16 +401,21 @@ language sql stable set search_path = public as $$
    where x.business_id = p_business and x.kind = 'error' and not x.practice and x.at > p_now - interval '1 hour'
   having count(*) >= 3
   union all
-  -- A sign-in from a device new to someone who may see the books.
-  select 'new_device', d.id::text, 'orange',
-         format('%s signed in from a new device: %s', au.full_name, coalesce(d.agent, 'unknown')),
+  -- A sign-in from a device new to someone who may see the books: one alert a
+  -- person, naming the newest device and how many there were in the day.
+  select 'new_device'::text, au.id::text, 'orange',
+         format('%s signed in from a new device: %s', au.full_name, coalesce(n.agent, '?')),
          'If it was not them, someone else knows their password.',
          'Ask them. If it was not them, deactivate them in Settings → People, then set a new password.',
-         'high', '/settings#people', jsonb_build_object('member_id', au.id, 'first_seen', d.first_seen)
-    from member_device d
-    join app_user au on au.id = d.app_user_id
-   where d.business_id = p_business and d.first_seen > p_now - interval '1 day'
-     and exists (select 1 from member_device o where o.app_user_id = d.app_user_id and o.first_seen < d.first_seen)
+         'high', '/settings#people', jsonb_build_object('member_id', au.id, 'first_seen', n.first_seen, 'devices', n.devices)
+    from (select distinct on (d.app_user_id) d.app_user_id, d.agent, d.first_seen,
+                 count(*) over (partition by d.app_user_id) as devices
+            from member_device d
+           where d.business_id = p_business and d.first_seen > p_now - interval '1 day'
+             and exists (select 1 from member_device o where o.app_user_id = d.app_user_id and o.first_seen < d.first_seen)
+           order by d.app_user_id, d.first_seen desc) n
+    join app_user au on au.id = n.app_user_id
+   where true
      and (member_has_permission(au.id, 'profit.view') or member_has_permission(au.id, 'settings.manage'))
 $$;
 

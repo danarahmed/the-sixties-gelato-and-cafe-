@@ -6,7 +6,7 @@ import { noteDeviceAction } from "@/lib/actions/security";
 const KEY = "sixties_device_key";
 const SEEN = "sixties_device_noted";
 
-/** A short name for the browser and the system it runs on: "Chrome on Windows". */
+/** The browser and the system it runs on, by their own names: "Chrome · Windows". */
 export function deviceName(agent: string): string {
   const browser = /Edg\//.test(agent)
     ? "Edge"
@@ -18,7 +18,7 @@ export function deviceName(agent: string): string {
           ? "Chrome"
           : /Safari\//.test(agent)
             ? "Safari"
-            : "A browser";
+            : "?";
   const system = /iPhone|iPad/.test(agent)
     ? /iPad/.test(agent)
       ? "iPad"
@@ -31,8 +31,8 @@ export function deviceName(agent: string): string {
           ? "Mac"
           : /Linux/.test(agent)
             ? "Linux"
-            : "a device";
-  return `${browser} on ${system}`;
+            : "?";
+  return `${browser} · ${system}`;
 }
 
 /**

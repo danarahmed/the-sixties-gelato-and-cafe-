@@ -98,6 +98,18 @@ const SAME = new Set(
     "Instagram",
     "Facebook",
     "TikTok",
+    // A device by its browser and its system (0099), as they name themselves.
+    "Chrome",
+    "Edge",
+    "Firefox",
+    "Safari",
+    "Opera",
+    "Windows",
+    "Mac",
+    "Linux",
+    "iPhone",
+    "iPad",
+    "Android",
     // Language codes, as the Languages screen gives them for examples.
     "tr",
     "fa",
