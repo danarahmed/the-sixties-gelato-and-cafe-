@@ -17,7 +17,7 @@ before the next one is given. The order of whole plans: **7** (security),
 **1** (Supabase), **11** (going live and what else was missing), **3** (use-by),
 **8** (speed), **6** (the books), **5** (the six points), **9** (many cafés),
 **10** (every business), **4** (videos in each language), **2** (selling).
-Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November), plan 6 (12 November).
+Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November), plan 6, plan 5 (12 November).
 
 The steps across the plans, in the order they are done (the owner, 8 November:
 the technical side and the system's logic first; what is not technical is kept
@@ -233,7 +233,13 @@ discounts, and drawer over or short. Ranked fairly: per hour worked and against
 the same hours of the day, since a Friday evening sells more than a Tuesday morning.
 
 **The owner's decisions (12 November 2026):**
-- **A:** explained further (two-currency statements, below); waiting.
+- **A:** agreed: books in dinars; every dollar line keeps its dollar amount and
+  rate beside the dinars; a supplier's balance and statement in two columns
+  (USD and IQD), the dollar debt followed in dollars, a dollar debt payable in
+  dinars at a rate typed then, the difference to 6950 by itself; a "show in
+  dollars" view on reports (a view only); what is still owed in dollars valued
+  again at month close at a rate typed once (optional, on by default), the
+  difference recorded (IAS 21).
 - **C:** agreed, with:
   - free to the customer, a cost to the business: each order's packing cost is
     kept **for the order as a whole** (not split over its products), at what
