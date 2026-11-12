@@ -32,7 +32,7 @@ grant select on ids, journals_before to public;
 -- Only those who edit recipes set up what is made.
 select test.act_as('barista@example.com');
 select test.throws($$select save_batch_recipe(null, 'Golden base', '{"measure":"volume"}', 5, 'L',
-  jsonb_build_array(jsonb_build_object('item_id', (select milk from ids), 'qty', 4, 'unit_code', 'L')))$$,
+  jsonb_build_array(jsonb_build_object('item_id', (select milk from ids), 'qty', 4, 'unit_code', 'L')), p_shelf_life_hours => 24)$$,
   '%permission%', 'a barista cannot set up a batch recipe');
 
 -- A base, measured by volume: 5 L a batch, from 4 L of milk and 800 g of sugar.
@@ -40,12 +40,12 @@ select test.act_as('owner@example.com');
 create temp table base as select save_batch_recipe(null, 'Golden base', '{"measure":"volume"}', 5, 'L',
   jsonb_build_array(jsonb_build_object('item_id', (select milk from ids), 'qty', 4, 'unit_code', 'L'),
                     jsonb_build_object('item_id', (select sugar from ids), 'qty', 800, 'unit_code', 'g')),
-  'Heat to 85°C, cool overnight') r;
+  'Heat to 85°C, cool overnight', p_shelf_life_hours => 24) r;
 -- Pistachio gelato, weighed, kept in pans of 5 kg: one pan a batch, from 4.5 L of the base and 500 g of paste.
 create temp table pist as select save_batch_recipe(null, 'Golden pistachio gelato',
   '{"measure":"weight","container":"Pan","container_qty":5,"container_unit":"kg"}', 1, 'pan',
   jsonb_build_array(jsonb_build_object('item_id', (select (r->>'item_id')::uuid from base), 'qty', 4.5, 'unit_code', 'L'),
-                    jsonb_build_object('item_id', (select paste from ids), 'qty', 500, 'unit_code', 'g'))) r;
+                    jsonb_build_object('item_id', (select paste from ids), 'qty', 500, 'unit_code', 'g')), p_shelf_life_hours => 24) r;
 grant select on base, pist to public;
 select test.as_admin();
 select test.eq((select item_type::text || '/' || base_unit_code || '/' || dimension::text from item
@@ -66,18 +66,18 @@ select test.eq((select string_agg((l->>'name') || ' ' || (l->>'base_qty'), ', ' 
 
 select test.act_as('owner@example.com');
 select test.throws($$select save_batch_recipe(null, 'Golden paste', '{"measure":"weight"}', 1, 'g',
-  jsonb_build_array(jsonb_build_object('item_id', (select milk from ids), 'qty', 1)))$$,
+  jsonb_build_array(jsonb_build_object('item_id', (select milk from ids), 'qty', 1)), p_shelf_life_hours => 24)$$,
   '%already keep an item called Golden paste%', 'no second item of the same name');
 select test.throws($$select save_batch_recipe(null, 'Golden syrup', '{"measure":"volume","container":"kg","container_qty":1}',
-  1, 'L', jsonb_build_array(jsonb_build_object('item_id', (select sugar from ids), 'qty', 1)))$$,
+  1, 'L', jsonb_build_array(jsonb_build_object('item_id', (select sugar from ids), 'qty', 1)), p_shelf_life_hours => 24)$$,
   '%already a unit%', 'a container is not named like a unit');
 select test.throws($$select save_batch_recipe((select (r->>'recipe_id')::uuid from base), 'Golden base', null, 5, 'L',
-  jsonb_build_array(jsonb_build_object('item_id', (select (r->>'item_id')::uuid from base), 'qty', 1, 'unit_code', 'L')))$$,
+  jsonb_build_array(jsonb_build_object('item_id', (select (r->>'item_id')::uuid from base), 'qty', 1, 'unit_code', 'L')), p_shelf_life_hours => 24)$$,
   '%cannot use what it makes%', 'a batch cannot use what it makes');
 select test.throws($$select save_batch_recipe(null, 'Golden foam', '{"measure":"volume"}', 0, 'L',
-  jsonb_build_array(jsonb_build_object('item_id', (select milk from ids), 'qty', 1)))$$,
+  jsonb_build_array(jsonb_build_object('item_id', (select milk from ids), 'qty', 1)), p_shelf_life_hours => 24)$$,
   '%how much one batch makes%', 'a batch makes something');
-select test.throws($$select save_batch_recipe(null, 'Golden foam', '{"measure":"volume"}', 1, 'L', '[]')$$,
+select test.throws($$select save_batch_recipe(null, 'Golden foam', '{"measure":"volume"}', 1, 'L', '[]', p_shelf_life_hours => 24)$$,
   '%what goes into it%', 'and is made from something');
 
 -- ------------------------------------------------------------------ batches
@@ -148,12 +148,12 @@ select test.throws($$select record_production('d2000000-0000-0000-0000-000000000
 -- A recipe no longer made is hidden, and cannot be recorded until shown again.
 select test.act_as('owner@example.com');
 select save_batch_recipe((select (r->>'recipe_id')::uuid from base), 'Golden base', null, 5, 'L', null,
-  'Heat to 85°C, cool overnight', false);
+  'Heat to 85°C, cool overnight', false, p_shelf_life_hours => 24);
 select test.act_as('manager@example.com');
 select test.throws($$select record_production((select (r->>'recipe_id')::uuid from base), 1)$$,
   '%not made any more%', 'a hidden recipe is not recorded');
 select test.act_as('owner@example.com');
-select save_batch_recipe((select (r->>'recipe_id')::uuid from base), 'Golden base', null, 5, 'L', null, null, true);
+select save_batch_recipe((select (r->>'recipe_id')::uuid from base), 'Golden base', null, 5, 'L', null, null, true, p_shelf_life_hours => 24);
 select test.eq((select count(*) from recipe_version where recipe_id = (select (r->>'recipe_id')::uuid from base))::int, 1,
   'hiding and showing it keeps its ingredients as they were');
 

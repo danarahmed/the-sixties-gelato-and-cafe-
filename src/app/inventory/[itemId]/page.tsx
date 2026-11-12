@@ -12,6 +12,8 @@ import { businessToday, dateTimeIn, monthStart, parseDay } from "@/lib/dates";
 import { EmptyState } from "@/components/ui";
 import { EditItem, PackUnits } from "@/components/ItemEditor";
 import { ItemSuppliers } from "@/components/purchasing/ItemSuppliers";
+import { ItemKeeping } from "@/components/ItemKeeping";
+import { getItemKeeping } from "@/lib/db/useBy";
 
 export const dynamic = "force-dynamic";
 
@@ -63,11 +65,12 @@ export default async function StockCardPage({
       </div>
     );
   }
-  const [card, prices, links, suppliers] = await Promise.all([
+  const [card, prices, links, suppliers, keeping] = await Promise.all([
     getStockCard(item.id, from, to),
     getItemPriceHistory(item.id),
     getItemSuppliers(item.id),
     getSuppliers(),
+    getItemKeeping(item.id),
   ]);
   const canEdit =
     has(profile, "settings.manage") ||
@@ -286,6 +289,15 @@ export default async function StockCardPage({
         )}
       </section>
 
+      {keeping && (
+        <ItemKeeping
+          itemId={item.id}
+          mode={keeping.mode}
+          keepsDays={keeping.keepsDays}
+          canEdit={canEdit && item.isActive}
+          madeHere={item.itemType === "finished_good" || item.itemType === "sub_recipe_output"}
+        />
+      )}
       <PackUnits item={item} canAdd={canEdit} />
       <ItemSuppliers
         itemId={item.id}

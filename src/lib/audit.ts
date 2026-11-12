@@ -148,6 +148,9 @@ const ACTION_LABEL: Record<string, string> = {
   "production.record": "Batch recorded",
   "production.cancel": "Batch cancelled",
   "production.use_by": "Batch use-by changed",
+  "item.use_by": "How an item keeps, chosen",
+  "stock.use_by": "A delivery's use-by changed",
+  "stock.expired_sold": "Stock past its use-by sold",
   "purchase.receive": "Delivery received",
   "purchase.bill": "Supplier bill recorded",
   "purchase.pay": "Supplier bill paid",
@@ -406,6 +409,10 @@ const FIELD_LABEL: Record<string, string> = {
   use_by: "Use by",
   made_at: "Made",
   keeps_hours: "Keeps (hours)",
+  // How an item keeps (0098).
+  expiry_mode: "How it keeps",
+  lot: "Batch or delivery",
+  keeps_days: "Keeps (days)",
   track_lot: "Kept apart by batch",
   note: "Note",
   area: "Area",
@@ -1088,6 +1095,16 @@ export function valueIn(value: string, field: string, t: T, msg: Msg): string {
       return t(value);
     case FIELD_LABEL.title:
       return msg(value);
+    case FIELD_LABEL.expiry_mode:
+      return t(
+        value === "none"
+          ? "It doesn't go off"
+          : value === "keeps_days"
+            ? "It keeps some days from delivery"
+            : value === "exact_date"
+              ? "Each delivery has its own date"
+              : value,
+      );
     case FIELD_LABEL.place:
       return value === "everywhere" ? t("Everywhere") : value;
     case FIELD_LABEL.dir:

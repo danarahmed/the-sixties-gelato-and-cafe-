@@ -8013,3 +8013,19 @@ details.page-intro > p {
   margin-top: 6px;
   border-radius: 8px;
 }
+
+/* Use-by on the till (0098): a product to sell first, or past its use-by. */
+.tile-use-by {
+  position: absolute;
+  inset-block-end: 6px;
+  inset-inline-start: 6px;
+  background: var(--warn, #b45309);
+  color: #fff;
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.tile-use-by.past {
+  background: var(--err);
+}

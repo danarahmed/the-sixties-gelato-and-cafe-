@@ -29,6 +29,10 @@ import {
 import { Icon } from "@/components/Icon";
 import { getPracticeState } from "@/lib/db/practice";
 import { isReady } from "@/lib/practice";
+import { getUseByLots } from "@/lib/db/useBy";
+import { groupUseBy, type UseByLot } from "@/lib/useBy";
+import { fmtQty, unitName } from "@/lib/format";
+import type { T } from "@/lib/i18n/core";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +78,9 @@ export default async function TodayPage() {
     placeChoice(),
     getPlaces(),
   ]);
+
+  // What is near or past its use-by here (0098): null before it, or for those who may not read it.
+  const useBy = await orElse(getUseByLots({ locationId: at }), null);
 
   // The reads more than one job shares, each made once.
   const drawer = once(() => orElse(getDrawerState(tillAt), null));
@@ -232,6 +239,8 @@ export default async function TodayPage() {
         </section>
       )}
 
+      {useBy && <UseByCard list={useBy} t={t} />}
+
       <section
         className={`card eod-head${free ? " ready" : ""}`}
         data-testid="today-progress"
@@ -327,5 +336,100 @@ export default async function TodayPage() {
         </ol>
       )}
     </div>
+  );
+}
+
+/**
+ * What is near or past its use-by here (0098), so it never reaches the till:
+ * what to take off the shelf now, what goes off today, and what soon; and,
+ * for those who set items and recipes up, what has not said how it keeps.
+ */
+function UseByCard({
+  list,
+  t,
+}: {
+  list: NonNullable<Awaited<ReturnType<typeof getUseByLots>>>;
+  t: T;
+}) {
+  const g = groupUseBy(list.lots);
+  if (
+    g.expired.length + g.today.length + g.soon.length + list.unsetItems.length +
+      list.unsetRecipes.length ===
+    0
+  )
+    return null;
+  const rows = (lots: UseByLot[]) => (
+    <ul className="eod-items">
+      {lots.slice(0, 8).map((l) => (
+        <li key={l.lotId} dir="auto">
+          {t("{item}: {qty} {unit}, use by {day}", {
+            item: l.item,
+            qty: fmtQty(l.left),
+            unit: unitName(l.unit, t),
+            day: l.useByOn ?? "—",
+          })}
+        </li>
+      ))}
+      {lots.length > 8 && <li className="muted">{t("…and {n} more", { n: lots.length - 8 })}</li>}
+    </ul>
+  );
+  return (
+    <section className="card" data-testid="today-use-by">
+      <h2 style={{ marginTop: 0 }}>{t("Use-by")}</h2>
+      {g.expired.length > 0 && (
+        <div data-testid="today-use-by-expired">
+          <h3>
+            <span className="badge bad">{t("Past its use-by")}</span>{" "}
+            {t("Take these off the shelf: past their use-by")}
+          </h3>
+          {rows(g.expired)}
+          <p className="muted" style={{ marginTop: 0 }}>
+            {t("Record what is left as expired on Inventory, or change its use-by if it was set wrong.")}
+          </p>
+        </div>
+      )}
+      {g.today.length > 0 && (
+        <div data-testid="today-use-by-today">
+          <h3>{t("These go off tonight: sell or use them first")}</h3>
+          {rows(g.today)}
+        </div>
+      )}
+      {g.soon.length > 0 && (
+        <div data-testid="today-use-by-soon">
+          <h3>{t("Going off soon")}</h3>
+          {rows(g.soon)}
+        </div>
+      )}
+      {list.unsetItems.length > 0 && (
+        <div data-testid="today-use-by-unset">
+          <h3>{t("Say how these keep, so their deliveries carry a use-by")}</h3>
+          <ul className="eod-items">
+            {list.unsetItems.slice(0, 8).map((i) => (
+              <li key={i.itemId} dir="auto">
+                <Link href={`/inventory/${i.itemId}#keeping`}>{i.name}</Link>
+              </li>
+            ))}
+            {list.unsetItems.length > 8 && (
+              <li className="muted">{t("…and {n} more", { n: list.unsetItems.length - 8 })}</li>
+            )}
+          </ul>
+        </div>
+      )}
+      {list.unsetRecipes.length > 0 && (
+        <div data-testid="today-use-by-recipes">
+          <h3>{t("Say how long these recipes keep, or that they don't go off")}</h3>
+          <ul className="eod-items">
+            {list.unsetRecipes.slice(0, 8).map((r) => (
+              <li key={r.recipeId} dir="auto">
+                <Link href="/production#recipes">{r.name}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <Link className="btn-soft" href="/inventory#use-by">
+        {t("Open the use-by list")}
+      </Link>
+    </section>
   );
 }

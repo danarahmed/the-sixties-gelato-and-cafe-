@@ -92,6 +92,7 @@ Plan a short window when the café is closed.
 | What the guide found (`0095`)              | ✅ Applied by the owner in the SQL editor on 4 November; checked read-only: the café's details read as fixed (it has sold), every new function and table in place                                                                                                                                                                                                                                                                                |
 | Practice (`0096`)                          | ✅ Applied by the owner in the SQL editor on 4 November; checked read-only: the owner's session finds the café, a practising request with no practice café is no one, 18 practice tasks for the owner                                                                                                                                                                                                                                            |
 | Where people get stuck (`0097`)            | ✅ Applied by the owner in the SQL editor on 4 November; checked read-only: the report opens for the owner, empty                                                                                                                                                                                                                                                                                                                                |
+| Use-by for everything that goes off (`0098`) | ⏳ Waiting for the owner to apply it in the SQL editor
 
 ## 0. Before you start
 
@@ -4276,6 +4277,35 @@ every other test.
 It is applied by the owner, in Supabase's SQL editor, after `0096`:
 
 1. Open the file `supabase/migrations/0097_stuck.sql` on GitHub, press **Raw**,
+   select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0098`
+
+Migration `0098` brings **use-by for everything that goes off**:
+
+- Each item says once how it keeps, on its page under Inventory: it doesn't go
+  off, it keeps some days from delivery, or each delivery has the date on its
+  pack. Packaging and consumables start as "doesn't go off"; Today lists the
+  rest for whoever sets items up.
+- A delivery of what goes off comes in with its use-by (typed from the pack,
+  or worked out from its days), and is sold oldest first.
+- A batch recipe says how long it keeps, or ticks "It doesn't go off".
+- Today, the dashboard, the phone and the till warn ahead of time (a day by
+  default: Settings → Rules, "Warn of a use-by this many hours ahead"); the
+  till marks a product to sell first, or past its use-by.
+- Settings → Rules, "Selling stock past its use-by": sold with a warning (the
+  default), or refused unless a manager approves with their PIN.
+
+Nothing recorded changes: lots start with each item's next delivery.
+Rehearsed with `tests/sql/use_by.test.sql` and every other test.
+
+It is applied by the owner, in Supabase's SQL editor, after `0097`:
+
+1. Open the file `supabase/migrations/0098_use_by.sql` on GitHub, press **Raw**,
    select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run

@@ -15,6 +15,8 @@ import { EmptyState } from "@/components/ui";
 import { PlaceSwitch } from "@/components/PlaceSwitch";
 import { placeChoice } from "@/lib/place";
 import { PageIntro } from "@/components/PageIntro";
+import { UseByLots } from "@/components/UseByLots";
+import { getUseByLots } from "@/lib/db/useBy";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +37,7 @@ export default async function InventoryPage({
   const recordsLosses = has(profile, "waste.record");
   // Where this device does its stock work, when the café has more than one place (AB).
   const { places, place, at } = await placeChoice();
-  const [items, allBoard, movements, outOfUse, waiting, catalogue, lots] = await Promise.all([
+  const [items, allBoard, movements, outOfUse, waiting, catalogue, lots, useBy] = await Promise.all([
     getItems(),
     seesCost ? getStockBoard(at) : Promise.resolve([]),
     seesCost ? getMovements(60, at) : Promise.resolve([]),
@@ -46,6 +48,8 @@ export default async function InventoryPage({
     recordsLosses && (has(profile, "production.record") || seesCost)
       ? getProductionLots(at)
       : Promise.resolve([]),
+    // Everything here with a use-by (0098), null before it.
+    getUseByLots({ locationId: at, all: true }),
   ]);
   const sizes = new Map<string, number>();
   for (const p of catalogue) sizes.set(p.productId, (sizes.get(p.productId) ?? 0) + 1);
@@ -117,6 +121,7 @@ export default async function InventoryPage({
           </>
         }
       />
+      {useBy && <UseByLots lots={useBy.lots} canEdit={useBy.canEdit} />}
 
       {seesCost && (
         <div

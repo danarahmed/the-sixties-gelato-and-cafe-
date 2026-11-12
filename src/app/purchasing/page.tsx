@@ -4,6 +4,7 @@ import { getT } from "@/lib/i18n/server";
 import { Rich } from "@/lib/i18n/Rich";
 import { has, requirePermission } from "@/lib/auth/session";
 import { getItems, getItemsOutOfUse, getReceipts, getSuppliers } from "@/lib/db/read";
+import { getItemsKeeping } from "@/lib/db/useBy";
 import { getItemCosts } from "@/lib/db/reports";
 import { getPurchaseOrders, getSupplierReturns } from "@/lib/db/purchasing";
 import { isOpen } from "@/lib/purchasing";
@@ -33,7 +34,7 @@ export default async function PurchasingPage() {
   // A delivery with no order, a new order and a return not named against a
   // delivery are for this device's place (AB).
   const { places, place, at } = await placeChoice();
-  const [items, suppliers, receipts, costs, outOfUse, { orders, approveUpTo }, returns, records] =
+  const [items, suppliers, receipts, costs, outOfUse, { orders, approveUpTo }, returns, records, keeping] =
     await Promise.all([
       getItems(),
       getSuppliers(),
@@ -43,6 +44,7 @@ export default async function PurchasingPage() {
       getPurchaseOrders(),
       getSupplierReturns(20),
       getSupplierRecords(),
+      getItemsKeeping(),
     ]);
   // The documents kept with each delivery and return (0053).
   const [receiptDocs, returnDocs] = await Promise.all([
@@ -188,7 +190,10 @@ export default async function PurchasingPage() {
           units: i.units,
           // What a base unit costs now, to set each delivery's price against (0027).
           costNow: Number(costs.get(i.id) ?? 0) || null,
+          // How it keeps (0098): its use-by on each delivery.
+          keeping: keeping[i.id] ?? null,
         }))}
+        today={today}
         suppliers={suppliers.map((s) => ({ id: s.id, name: s.name }))}
         canReceive={canReceive}
         canAddSupplier={has(profile, "purchase.create")}

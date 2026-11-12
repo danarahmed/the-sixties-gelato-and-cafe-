@@ -47,8 +47,8 @@ const batchRecipeInput = z.object({
   instructions: optionalText(2000),
   isActive: z.boolean().default(true),
   /**
-   * How long what it makes keeps, in hours (0046): left out, as it was; null,
-   * none; else an hour to a year.
+   * How long what it makes keeps, in hours (0046): left out (or null), as it
+   * was; else an hour to a year. A new recipe needs one, or neverGoesOff (0098).
    */
   keepsHours: z
     .union([
@@ -60,6 +60,8 @@ const batchRecipeInput = z.object({
       z.null(),
     ])
     .optional(),
+  /** What it makes doesn't go off: no use-by on its batches (0098). */
+  neverGoesOff: z.boolean().default(false),
 });
 
 export async function saveBatchRecipeAction(
@@ -96,7 +98,7 @@ export async function saveBatchRecipeAction(
       d.lines?.map((l) => ({ item_id: l.itemId, qty: l.qty, unit_code: l.unitCode })) ?? null,
     p_instructions: d.instructions,
     p_is_active: d.isActive,
-    p_shelf_life_hours: d.keepsHours === undefined ? null : (d.keepsHours ?? 0),
+    p_shelf_life_hours: d.neverGoesOff ? 0 : (d.keepsHours ?? null),
     p_idempotency_key: key,
   });
   if (!r.ok) return r;

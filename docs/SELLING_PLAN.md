@@ -73,3 +73,48 @@ Whose name is on the app.
 2. Sell to one or two friendly cafés at a low price, and learn from them.
 3. Build what they show is missing (most likely the sign-up of question 2),
    then sell more widely.
+
+## Plans for small and big cafés: one system, parts switched per café (6 November 2026)
+
+Nothing is removed and no "small version" is ever built or kept apart. Every
+café runs the same app and the same database; a small café has some parts
+switched off. (Not built yet: there are no plans or feature switches today.)
+
+**How it works:**
+1. **One system, one code, for everyone.**
+2. **Each café has a plan** (for example Starter, Complete, Business), and a list
+   says which parts each plan includes:
+
+   | Part | Starter | Complete | Business |
+   |---|---|---|---|
+   | Till, menu, tables, offline sales | ✅ | ✅ | ✅ |
+   | Stock, counts, daily reports, help, practice | ✅ | ✅ | ✅ |
+   | Recipes and costing, production, use-by | – | ✅ | ✅ |
+   | Purchasing and suppliers | – | ✅ | ✅ |
+   | Staff, clock-in, payroll | – | ✅ | ✅ |
+   | Full accounting screens (journals, bank, balance sheet) | – | ✅ | ✅ |
+   | Several branches, central kitchen, transfers | – | – | ✅ |
+   | Priority support, on-site setup | – | – | ✅ |
+
+3. **Switched off in two places:** the screens do not show what the plan does
+   not include (a simpler app, easier to learn), and the database refuses those
+   functions for that café, the same way it already refuses a cashier a
+   manager's work, so nothing is unlocked without paying.
+4. **Upgrading is one click:** the owner changes the café's plan and the new
+   parts appear at once; nothing installed, nothing lost.
+
+**The books still run underneath.** A Starter café does not see the accounting
+screens, but every sale, delivery and count still posts its journals, as now.
+So an upgraded café has its whole history from day one; its simple reports stay
+right, since they read the same complete records; and a downgrade loses
+nothing (the hidden parts become hidden or read-only, and return on upgrade).
+
+**Another way to divide plans:** by size (branches, tills, how far back reports
+go). Recommended: by parts *and* by branches, as in the table, since a small
+café does not need payroll or a central kitchen, and a simpler app suits it.
+
+**What it takes to build (a moderate job, not a rebuild):**
+- a plan on each café, and the list of what each plan includes;
+- the menus and pages reading that list;
+- the database checking it, in the same place it already checks permissions;
+- a screen in the owner's admin console (plan 9) to change a café's plan.

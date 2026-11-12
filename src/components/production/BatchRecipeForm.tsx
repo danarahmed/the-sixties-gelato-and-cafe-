@@ -111,6 +111,7 @@ export function BatchRecipeForm({
   const [keepsUnit, setKeepsUnit] = useState<"hours" | "days">(
     keepsFields(recipe?.shelfLifeHours ?? null).unit,
   );
+  const [never, setNever] = useState(recipe?.neverGoesOff ?? false);
 
   // The item it makes, as far as the form knows it yet, and the units its yield may be given in.
   const outputId = recipe ? recipe.outputItemId : makes === "existing" ? existingId : null;
@@ -165,8 +166,15 @@ export function BatchRecipeForm({
   function save() {
     setMsg(null);
     const keeps = keepsHours(keepsQty, keepsUnit);
-    if (keeps === "bad") {
+    if (!never && keeps === "bad") {
       setMsg({ ok: false, text: t("What it makes keeps for an hour to a year") });
+      return;
+    }
+    if (!never && keeps === null) {
+      setMsg({
+        ok: false,
+        text: t("Say how long what it makes keeps, or tick “It doesn't go off”."),
+      });
       return;
     }
     const half = halfFilled(lines);
@@ -204,7 +212,8 @@ export function BatchRecipeForm({
             })),
             instructions,
             isActive: recipe?.isActive ?? true,
-            keepsHours: keeps,
+            keepsHours: never || keeps === "bad" ? null : keeps,
+            neverGoesOff: never,
           },
           key,
         ),
@@ -364,21 +373,32 @@ export function BatchRecipeForm({
           <input
             aria-label={t("How long it keeps")}
             style={inputStyle}
-            value={keepsQty}
+            value={never ? "" : keepsQty}
             onChange={(e) => setKeepsQty(e.target.value)}
             inputMode="numeric"
+            disabled={never}
           />
           <select
             aria-label={t("Days or hours")}
             style={inputStyle}
             value={keepsUnit}
             onChange={(e) => setKeepsUnit(e.target.value as "hours" | "days")}
+            disabled={never}
           >
             <option value="days">{t("days")}</option>
             <option value="hours">{t("hours")}</option>
           </select>
+          <label className="row" style={{ gap: 6 }}>
+            <input
+              type="checkbox"
+              checked={never}
+              onChange={(e) => setNever(e.target.checked)}
+              data-testid="never-goes-off"
+            />
+            {t("It doesn't go off")}
+          </label>
           <span className="muted">
-            {t("— optional: each batch is to be used by then, from when it is made.")}
+            {t("— each batch is to be used by then, from when it is made. One or the other.")}
           </span>
         </div>
       </section>

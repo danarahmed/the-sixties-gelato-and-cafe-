@@ -129,6 +129,12 @@ const receiveInput = z.object({
         unitPrice: nonNegative("Price per unit"),
         /** Its line on the order, when it comes against one. */
         poLineId: z.string().uuid().nullable().default(null),
+        /** Its use-by (0098): the pack's date; null, from the item's days. */
+        useBy: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/, "Give the use-by as a date")
+          .nullable()
+          .default(null),
       }),
     )
     .min(1, "Add at least one line"),
@@ -166,6 +172,7 @@ export async function receiveGoodsAction(
       unit_code: l.unitCode,
       unit_price: l.unitPrice,
       ...(l.poLineId ? { po_line_id: l.poLineId } : {}),
+      ...(l.useBy ? { use_by: l.useBy } : {}),
     })),
     p_freight: v.data.freight,
     p_other: v.data.other,

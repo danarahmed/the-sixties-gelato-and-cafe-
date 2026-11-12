@@ -13,6 +13,8 @@ export const RULE_ORDER = [
   "waste_approval_over",
   "waste_approval_window",
   "negative_stock",
+  "expired_sale",
+  "use_by_warn_hours",
   "usd_rate_max_age_hours",
   "usd_round_to",
   "po_approve_up_to",
@@ -39,6 +41,8 @@ export const RULE_LABEL: Record<RuleKey, string> = {
   waste_approval_over: "Losses a manager approves",
   waste_approval_window: "One person's losses are added up over",
   negative_stock: "Using more stock than the books hold",
+  expired_sale: "Selling stock past its use-by",
+  use_by_warn_hours: "Warn of a use-by this many hours ahead",
   usd_rate_max_age_hours: "A dollar rate is used for",
   usd_round_to: "Dollars are counted in dinars to the nearest",
   po_approve_up_to: "Purchase orders a manager approves, up to",
@@ -71,6 +75,10 @@ export const RULE_HELP: Record<RuleKey, string> = {
     "An item's losses by anyone are always added up over the day. A person's are added up as chosen here.",
   negative_stock:
     "When a sale, a loss, a batch or a correction would use more than the books hold. By default, what is made here is refused and everything else is allowed with a red alert. “Allowed, with no alert” is for chosen items only.",
+  expired_sale:
+    "The till marks what is near or past its use-by before anyone chooses it, and Today lists what to take off the shelf. If stock past its use-by is sold all the same: warned of and kept on the audit trail, or refused unless a manager approves with their PIN. Set for a branch, it is that branch's.",
+  use_by_warn_hours:
+    "How long before its use-by a batch or a delivery is warned of: on the dashboard, the phone, Today and the till. 24 is a day ahead.",
   usd_rate_max_age_hours:
     "The till takes dollars at the rate a manager set, for this many hours after it was set. Older, dollars are refused until a manager sets today's on Sales → Dollars.",
   usd_round_to:
@@ -108,6 +116,8 @@ export const CHOICE_LABEL: Record<string, string> = {
   day: "The day",
   on: "On",
   off: "Off",
+  warn: "Sold, with a warning",
+  refuse: "Refused, unless a manager approves",
 };
 
 /** What a row of a rule applies to: phrases, shown through t(). */

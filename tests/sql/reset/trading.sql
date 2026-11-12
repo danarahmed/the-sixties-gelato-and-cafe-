@@ -69,7 +69,7 @@ select approve_stock_count((select id from cnt));
 
 select test.act_as('owner@example.com');
 create temp table syrup as select save_batch_recipe(null, 'Golden syrup', '{"measure":"volume"}'::jsonb, 1, 'L',
-  '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":50,"unit_code":"g"}]'::jsonb) r;
+  '[{"item_id":"c0000000-0000-0000-0000-000000000001","qty":50,"unit_code":"g"}]'::jsonb, p_shelf_life_hours => 24) r;
 grant select on syrup to public;
 select record_production((select (r ->> 'recipe_id')::uuid from syrup), 1);
 -- Cups sent to the central kitchen and received there, and beans still on

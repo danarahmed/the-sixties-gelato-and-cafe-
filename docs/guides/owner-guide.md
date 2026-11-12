@@ -689,7 +689,19 @@ in your language, within about five minutes, without opening the app.
   it in that order, and one past its use-by last. A batch due within a day is
   an orange alert; one past it, red: record what is left as expired on
   **Inventory**, or, if the date was wrong, a manager changes it
-  (**Change the use-by…**, with why).
+  (**Change the use-by…**, with why). A recipe must say how long it keeps, or
+  tick **It doesn't go off**.
+- **Use-by on what you buy (0098):** on each item's page (Inventory → the
+  item), **How it keeps**: _It doesn't go off_, _It keeps some days from
+  delivery_, or _Each delivery has its own date_ (then whoever receives it
+  types the date printed on the pack, and the delivery is refused without
+  it). Each delivery comes in with its use-by and is sold oldest first.
+  **Inventory → Use-by** lists everything with a use-by, the nearest first; a
+  manager changes one with **Change** and why. **Today** tells the counter
+  what to take off the shelf and what goes off tonight, and the till marks a
+  product **Sell first** or **Past use-by** before anyone taps it. How far
+  ahead it warns, and whether a sale past its use-by is warned of or refused
+  unless a manager approves, are on **Settings → Rules**.
 - **A batch forgotten:** a manager records a batch made earlier today or
   yesterday (**Made earlier**), with why; not before the last approved count
   of its items.

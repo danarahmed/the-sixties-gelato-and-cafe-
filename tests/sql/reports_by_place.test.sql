@@ -61,7 +61,7 @@ select return_to_supplier((select supplier from ids),
   jsonb_build_array(jsonb_build_object('item_id', (select beans from ids), 'qty', 100, 'unit_code', 'g')),
   'Split bag', pg_temp.id('g', 'receipt_id'), (select kitchen from ids), false, gen_random_uuid());
 insert into res select 'syrup', save_batch_recipe(null, 'Coffee syrup', '{"measure":"volume"}'::jsonb, 1, 'L',
-  jsonb_build_array(jsonb_build_object('item_id', (select beans from ids), 'qty', 50, 'unit_code', 'g')));
+  jsonb_build_array(jsonb_build_object('item_id', (select beans from ids), 'qty', 50, 'unit_code', 'g')), p_shelf_life_hours => 24);
 select record_production(pg_temp.id('syrup', 'recipe_id'), 1, p_location => (select kitchen from ids));
 select record_loss('waste', (select beans from ids), null, 20, 'g', 'Spilt', null, (select kitchen from ids), null,
                    false, gen_random_uuid());
