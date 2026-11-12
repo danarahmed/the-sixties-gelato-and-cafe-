@@ -200,6 +200,8 @@ const phrases: PhraseBook = {
   },
 
   // The audit trail.
+  "Batch or delivery": { ar: "الدفعة أو التوريد", ckb: "دەستە یان بار" },
+  "Keeps (days)": { ar: "مدة الحفظ (أيام)", ckb: "ماوەی مانەوە (ڕۆژ)" },
   "How an item keeps, chosen": { ar: "اختيار طريقة حفظ صنف", ckb: "هەڵبژاردنی چۆنیەتی مانەوەی کاڵایەک" },
   "A delivery's use-by changed": {
     ar: "تغيير موعد استعمال توريد",
