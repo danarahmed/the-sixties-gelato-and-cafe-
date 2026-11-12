@@ -17,7 +17,7 @@ before the next one is given. The order of whole plans: **7** (security),
 **1** (Supabase), **11** (going live and what else was missing), **3** (use-by),
 **8** (speed), **6** (the books), **5** (the six points), **9** (many cafés),
 **10** (every business), **4** (videos in each language), **2** (selling).
-Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November), plan 6, plan 5 (12 November).
+Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November), plan 6, plan 5, plan 9 (12 November).
 
 The steps across the plans, in the order they are done (the owner, 8 November:
 the technical side and the system's logic first; what is not technical is kept
@@ -67,6 +67,9 @@ apart, for before selling):
 - Plan 11, items 1, 2, 3, 5 and 7: going live at The Sixty's, the legal and
   business basics, the human code review, the hardware kit, the discipline
   while building.
+- Plan 9, the people part: who does what, people step by step, the day to day
+  (one WhatsApp Business number, three levels of urgency, weekly updates, a
+  written agreement), what could go wrong, Claude's limits.
 - Plan 2: selling.
 
 ## 1. Supabase and the café's daily use
@@ -663,6 +666,17 @@ emergency access.
    10 MB at most, usually 0.2–1 MB: 100 GB is about 100 café-years. Vercel's
    allowance (about 1 TB a month on Pro) is far beyond what tills and reports use.
    The real limit is the database computer's speed, raised a step at a time.
+
+**The owner's decisions (12 November 2026):** all agreed. The technical part is
+built with the technical steps: one shared system; the safety net (a test copy,
+database changes applied by themselves); the owner's admin console (every café
+on one page, the Speed page for administrators only, each café's plan and
+switches); "report a problem" with the screen, the time and the error; support
+access only with the café's permission, recorded; restoring one café's data; **a
+new version to a pilot group of 1–2 cafés first** (wanted); a café that stops
+paying: **7 days' grace**, then read-only, then closed, its data exportable at
+any time. **The people part is kept for before selling** (who does what, people
+step by step, day to day, what could go wrong, Claude's limits).
 
 ## 10. One flexible system for every business (6 November 2026)
 
