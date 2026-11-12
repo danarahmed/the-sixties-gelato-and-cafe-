@@ -62,6 +62,7 @@ import speed from "./speed";
 import tax from "./tax";
 import dollarBills from "./dollarBills";
 import scorecard from "./scorecard";
+import targets from "./targets";
 import today from "./today";
 import help from "./help";
 
@@ -131,6 +132,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   tax,
   dollarBills,
   scorecard,
+  targets,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

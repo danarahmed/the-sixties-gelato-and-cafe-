@@ -99,6 +99,7 @@ Plan a short window when the café is closed.
 | Tax, and other accounts (`0102`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0101`                                                                                                                                                                                                                                                                                                                                                                             |
 | A supplier bill in dollars and dinars (`0103`)     | ⏳ Waiting for the owner to apply it in the SQL editor, after `0102`                                                                                                                                                                                                                                                                                                                                                                             |
 | Comparing cashiers (`0104`)                        | ⏳ Waiting for the owner to apply it in the SQL editor, after `0103`                                                                                                                                                                                                                                                                                                                                                                             |
+| A target margin for each product (`0105`)          | ⏳ Waiting for the owner to apply it in the SQL editor, after `0104`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4456,6 +4457,17 @@ Nothing recorded changes. Rehearsed with `tests/sql/cashier_scorecard.test.sql`.
 Applied after `0103`, as each one before it: open
 `supabase/migrations/0104_cashier_scorecard.sql` on GitHub, **Raw**, copy all
 of it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0105`
+
+Migration `0105` brings **a target margin for each product or category**: on
+Products, a product (or its category) says the margin it aims for; the price
+form suggests the price that reaches it from what the product costs now, and
+Products marks a product a cost rise has taken under its target. None set:
+the café's, as before. Nothing recorded changes. Rehearsed with
+`tests/sql/target_margin.test.sql`. Applied after `0104`, as each one before
+it: open `supabase/migrations/0105_target_margin.sql` on GitHub, **Raw**, copy
+all of it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
 
 ## Clearing the test records
 

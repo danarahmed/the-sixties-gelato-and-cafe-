@@ -2054,6 +2054,15 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### A target margin for each product or category (`0105`)
+
+- **`product.target_margin_percent`**, **`product_category.target_margin_percent`**
+  (0 to under 100, none by default): the margin a product aims for, its own
+  or its category's, else the café's. `set_target_margin(product, category,
+percent)` (those who keep the recipes; null takes it away), on the audit
+  trail as `menu.target_margin`. `product_targets()`: each product's target,
+  its own and its category's.
+
 ### Comparing cashiers (`0104`)
 
 - `report_cashier_scorecard(from, to, location)` (those who see the profit
