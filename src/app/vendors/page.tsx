@@ -1,5 +1,7 @@
 import { getT } from "@/lib/i18n/server";
 import { has, requirePermission } from "@/lib/auth/session";
+import { getDollarsOwed } from "@/lib/db/dollars";
+import { DollarsOwed } from "@/components/books/DollarsOwed";
 import {
   ageBills,
   getCashOnHand,
@@ -97,6 +99,8 @@ export default async function VendorsPage({
     ],
   );
   const ageing = ageBills(openBills);
+  // What is owed in dollars (0103); none before it, or when nothing is.
+  const dollars = await getDollarsOwed();
   // The documents kept with each bill and credit note (0053).
   const [billDocs, creditDocs] = await Promise.all([
     getDocumentCounts(
@@ -151,6 +155,15 @@ export default async function VendorsPage({
           <div className="m">{t("Relationship at risk")}</div>
         </div>
       </div>
+
+      {dollars && (dollars.usd > 0 || dollars.lastRate !== null) && (
+        <DollarsOwed
+          usd={dollars.usd}
+          value={dollars.value}
+          lastRate={dollars.lastRate}
+          canRevalue={canPay}
+        />
+      )}
 
       <VendorsClient
         vendors={vendors}

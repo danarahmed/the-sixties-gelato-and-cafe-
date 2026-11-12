@@ -143,6 +143,13 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     is handed with its page: a device nobody is signed in on shows nothing of
     it. The key is in the page while the till is open, so a person signed in
     on that till could still read it.
+- **Supplier bills in dollars (`0103`), what they do not do.**
+  - A supplier's credit note is in dinars only; set against a bill, it counts
+    against the dinars owed.
+  - The supplier statement and ageing show the dinars, the dollars' value
+    included; the dollars themselves are on the bill and on Vendors.
+  - Valuing again at month end is pressed, with a rate typed once: it is not
+    done by itself when the month is locked.
 - **Tax (`0102`), what it does not do.**
   - Prices are taken to include the tax: the customer pays what the menu
     says, and the tax is the part of it owed. A tax added on top of prices is

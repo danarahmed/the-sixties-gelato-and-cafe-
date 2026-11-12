@@ -2054,6 +2054,32 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### A supplier bill in dollars and dinars (`0103`)
+
+- **`purchase_invoice.usd_amount`, `usd_rate`**: a bill's dollar part and the
+  rate it was booked at (both or neither); `usd_paid`, the dollars settled
+  since; `usd_value`, what the dollars still owed are carried at in dinars,
+  and `usd_carried_rate`, that rate (the booking's, or the last
+  revaluation's). `amount_total` is the dinar part plus the dollar part's
+  value; owed in dinars alone is `amount_total - paid_amount - usd_value`
+  (`bill_owed`). The guard lets the dollars' value move with a payment, and
+  the total only when they are valued again (`sixties.fx_revalue`).
+- `record_dollar_bill(supplier, no, date, amount, usd, rate, …)`: a bill
+  with a dollar part (`amount` is the dinar part, none for one all in
+  dollars), through 0035's `record_bill__run`; `usd_rate_ok` checks a rate
+  typed (100 to 100,000 dinars a dollar). `pay_bill` pays only the dinars
+  owed.
+- **`supplier_payment.currency`, `usd`, `rate`**: `pay_bill_dollars(bill,
+usd, currency, rate, method, …)`. Dollars handed over (`USD`) leave the till or the
+  safe at what they are held at (`fx_cash_event` kind `supplier`); dinars for
+  them (`IQD`) at the rate typed. The payable takes what the dollars were
+  carried at; the difference goes to 6950 Exchange differences.
+- **`fx_revaluation`**: each time what is owed in dollars is valued again
+  (`revalue_dollar_bills(rate, reason)`): the rate, the dollars, the
+  difference (one journal, 6950 against 2000), how many bills, why.
+  `dollars_owed()`: what is owed in dollars, by supplier, and its value. Read
+  by no one but through their functions.
+
 ### Tax, and other accounts (`0102`)
 
 - `create_account` takes two more kinds: `asset` (1700–1799, another asset:

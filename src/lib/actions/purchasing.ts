@@ -15,6 +15,7 @@ import {
   day,
   id,
   nonNegative,
+  optionalNonNegative,
   optionalText,
   paymentSource,
   positive,
@@ -763,7 +764,10 @@ const billInput = z
     // Empty: the bill takes the café's own number (SGC-2026-0001 …).
     invoiceNo: optionalText(60),
     invoiceDate: day("The invoice date"),
-    amount: positive("The amount"),
+    /** The dinar part: none for a bill all in dollars (0103). */
+    amount: nonNegative("The amount"),
+    usd: optionalNonNegative("The dollars").default(null),
+    rate: optionalNonNegative("The dollar's rate").default(null),
     termDays: z.coerce.number().int().min(0).max(365),
     receiptId: z.string().guid().nullable(),
     accountCode: z
@@ -773,6 +777,12 @@ const billInput = z
   })
   .refine((b) => (b.receiptId === null) !== (b.accountCode === null), {
     message: "A bill is either for a goods receipt or for an expense account — choose one",
+  })
+  .refine((b) => Number(b.amount) > 0 || Number(b.usd ?? 0) > 0, {
+    message: "Enter an amount greater than zero",
+  })
+  .refine((b) => !(Number(b.usd ?? 0) > 0) || Number(b.rate ?? 0) > 0, {
+    message: "Type the dollar's rate, in dinars",
   });
 
 export async function recordBillAction(
@@ -783,16 +793,31 @@ export async function recordBillAction(
   if (bad) return bad;
   const v = parse(billInput, input);
   if (!v.ok) return v;
-  const r = await callRpc<Record<string, unknown>>("record_bill", {
-    p_supplier: v.data.supplierId,
-    p_invoice_no: v.data.invoiceNo,
-    p_invoice_date: v.data.invoiceDate,
-    p_amount: v.data.amount,
-    p_term_days: v.data.termDays,
-    p_receipt: v.data.receiptId,
-    p_account_code: v.data.accountCode,
-    p_idempotency_key: key,
-  });
+  // A bill with a dollar part (0103) has its own; the dinars alone, as before.
+  const r =
+    v.data.usd && Number(v.data.usd) > 0
+      ? await callRpc<Record<string, unknown>>("record_dollar_bill", {
+          p_supplier: v.data.supplierId,
+          p_invoice_no: v.data.invoiceNo,
+          p_invoice_date: v.data.invoiceDate,
+          p_amount: v.data.amount,
+          p_usd: v.data.usd,
+          p_rate: v.data.rate,
+          p_term_days: v.data.termDays,
+          p_receipt: v.data.receiptId,
+          p_account_code: v.data.accountCode,
+          p_idempotency_key: key,
+        })
+      : await callRpc<Record<string, unknown>>("record_bill", {
+          p_supplier: v.data.supplierId,
+          p_invoice_no: v.data.invoiceNo,
+          p_invoice_date: v.data.invoiceDate,
+          p_amount: v.data.amount,
+          p_term_days: v.data.termDays,
+          p_receipt: v.data.receiptId,
+          p_account_code: v.data.accountCode,
+          p_idempotency_key: key,
+        });
   if (!r.ok) return r;
   refresh(...BUY_PATHS, "/expenses");
   return {
@@ -805,11 +830,19 @@ export async function recordBillAction(
   };
 }
 
-const payInput = z.object({
-  billId: id("a bill"),
-  amount: positive("The amount"),
-  method: paymentSource,
-});
+const payInput = z
+  .object({
+    billId: id("a bill"),
+    /** Dinars; none when the bill's dollars are paid (0103). */
+    amount: optionalNonNegative("The amount").default(null),
+    method: paymentSource,
+    usd: optionalNonNegative("The dollars").default(null),
+    currency: z.enum(["USD", "IQD"]).nullish(),
+    rate: optionalNonNegative("The dollar's rate").default(null),
+  })
+  .refine((p) => Number(p.amount ?? 0) > 0 || Number(p.usd ?? 0) > 0, {
+    message: "Enter an amount greater than zero",
+  });
 
 export async function payBillAction(
   input: z.input<typeof payInput>,
@@ -819,13 +852,25 @@ export async function payBillAction(
   if (bad) return bad;
   const v = parse(payInput, input);
   if (!v.ok) return v;
-  const r = await callRpc<Record<string, unknown>>("pay_bill", {
-    p_bill: v.data.billId,
-    p_amount: v.data.amount,
-    p_method: v.data.method,
-    p_location: await tillForWrite(),
-    p_idempotency_key: key,
-  });
+  // The dollars owed (0103) are paid apart: in dollars, or in dinars at a rate.
+  const r =
+    v.data.usd && Number(v.data.usd) > 0
+      ? await callRpc<Record<string, unknown>>("pay_bill_dollars", {
+          p_bill: v.data.billId,
+          p_usd: v.data.usd,
+          p_currency: v.data.currency ?? "IQD",
+          p_rate: v.data.rate,
+          p_method: v.data.method,
+          p_location: await tillForWrite(),
+          p_idempotency_key: key,
+        })
+      : await callRpc<Record<string, unknown>>("pay_bill", {
+          p_bill: v.data.billId,
+          p_amount: v.data.amount,
+          p_method: v.data.method,
+          p_location: await tillForWrite(),
+          p_idempotency_key: key,
+        });
   if (!r.ok) return r;
   refresh("/sales", ...BUY_PATHS);
   return {
@@ -863,5 +908,36 @@ export async function cancelBillAction(
   return {
     ok: true,
     data: { journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no) },
+  };
+}
+
+const revalueInput = z.object({
+  rate: positive("The dollar's rate"),
+  reason: text("Why", 300),
+});
+
+/** What is still owed in dollars, valued again at a rate typed once (0103: month end, IAS 21). */
+export async function revalueDollarBillsAction(
+  input: z.input<typeof revalueInput>,
+  key: string,
+): Promise<ActionResult<{ bills: number; usd: number; difference: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(revalueInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("revalue_dollar_bills", {
+    p_rate: v.data.rate,
+    p_reason: v.data.reason,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...BUY_PATHS);
+  return {
+    ok: true,
+    data: {
+      bills: Number(r.data.bills ?? 0),
+      usd: Number(r.data.usd ?? 0),
+      difference: Number(r.data.difference ?? 0),
+    },
   };
 }

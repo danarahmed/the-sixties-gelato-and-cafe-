@@ -211,6 +211,10 @@ export interface OpenBill {
   daysOverdue: number;
   /** A bill for a service: the account it was charged to. */
   accountCode: string | null;
+  /** Its dollars still owed (0103), what they are carried at, and at what rate; 0 before 0103. */
+  usdOwed: number;
+  usdValue: number;
+  usdRate: number | null;
 }
 
 /**
@@ -223,7 +227,7 @@ export async function getVendorBook(
   today: string,
 ): Promise<{ vendors: VendorRow[]; openBills: OpenBill[] }> {
   const c = await db();
-  const [suppliers, bills, payments, credits, allocations] = await Promise.all([
+  const [suppliers, bills, payments, credits, allocations, dollars] = await Promise.all([
     // Every column: how often a supplier delivers is there once 0092 is applied.
     c.from("supplier").select("*").order("name"),
     c
@@ -241,7 +245,19 @@ export async function getVendorBook(
       .select("id,supplier_id,credit_no,kind,amount,credit_date,supplier_ref")
       .order("credit_no"),
     c.from("supplier_credit_allocation").select("purchase_invoice_id,amount"),
+    // A bill's dollars (0103): read apart, so the page works before it is applied.
+    c.from("purchase_invoice").select("id,usd_amount,usd_paid,usd_value,usd_carried_rate"),
   ]);
+  const usdByBill = new Map(
+    (dollars.error ? [] : ((dollars.data ?? []) as Record<string, unknown>[])).map((d) => [
+      str(d.id),
+      {
+        owed: num(d.usd_amount) - num(d.usd_paid),
+        value: num(d.usd_value),
+        rate: d.usd_carried_rate == null ? null : num(d.usd_carried_rate),
+      },
+    ]),
+  );
   const allBills = rows(bills, "bills");
   // A cancelled bill stays on the statement for the record, but is not owed.
   const billRows = allBills.filter((b) => !b.cancelled_at);
@@ -282,6 +298,9 @@ export async function getVendorBook(
         outstanding: total - paid - credited,
         daysOverdue: due ? Math.max(0, daysBetween(due, today)) : 0,
         accountCode: strOrNull(b.expense_account_code),
+        usdOwed: usdByBill.get(str(b.id))?.owed ?? 0,
+        usdValue: usdByBill.get(str(b.id))?.value ?? 0,
+        usdRate: usdByBill.get(str(b.id))?.rate ?? null,
       };
     })
     .filter((b) => b.outstanding > 0)

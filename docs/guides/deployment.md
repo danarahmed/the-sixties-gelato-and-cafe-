@@ -97,6 +97,7 @@ Plan a short window when the café is closed.
 | Speed (`0100`)                                     | ⏳ Waiting for the owner to apply it in the SQL editor, after `0099`                                                                                                                                                                                                                                                                                                                                                                             |
 | The till that waits less for the internet (`0101`) | ⏳ Waiting for the owner to apply it in the SQL editor, after `0100`                                                                                                                                                                                                                                                                                                                                                                             |
 | Tax, and other accounts (`0102`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0101`                                                                                                                                                                                                                                                                                                                                                                             |
+| A supplier bill in dollars and dinars (`0103`)     | ⏳ Waiting for the owner to apply it in the SQL editor, after `0102`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4410,6 +4411,31 @@ and every other test.
 It is applied by the owner, in Supabase's SQL editor, after `0101`:
 
 1. Open the file `supabase/migrations/0102_tax_and_accounts.sql` on GitHub,
+   press **Raw**, select all of it and copy it.
+2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
+   press **Run**. If Supabase says it found possible problems, choose to run
+   it anyway.
+3. **Success. No rows returned** is the answer.
+
+## After `0103`
+
+Migration `0103` brings **supplier bills in dollars and dinars**:
+
+- Vendors → Record a bill: **Of it, in dollars ($)** and **Dinars a dollar**.
+  The books stay in dinars; the bill keeps its dollars and rate beside them.
+- Paying a bill with dollars owed: **The dollars owed, in dollars** (handed
+  over from the till or the safe) or **in dinars at a rate** typed then. The
+  difference from what the dollars were carried at goes to 6950 Exchange
+  differences by itself.
+- Vendors shows what is owed in dollars and what it is carried at; at month
+  end, **Value again at month end** at a rate typed once.
+
+Nothing recorded changes. Rehearsed with `tests/sql/dollar_bills.test.sql`
+and every other test.
+
+It is applied by the owner, in Supabase's SQL editor, after `0102`:
+
+1. Open the file `supabase/migrations/0103_dollar_bills.sql` on GitHub,
    press **Raw**, select all of it and copy it.
 2. In Supabase: the project → **SQL Editor** → **New query**; paste it, and
    press **Run**. If Supabase says it found possible problems, choose to run

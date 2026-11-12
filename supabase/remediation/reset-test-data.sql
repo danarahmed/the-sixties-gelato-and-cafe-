@@ -170,6 +170,8 @@ begin
        -- The till's PIN tries (0099), and when the alerts were last worked out (0100).
        || case when to_regclass('public.till_unlock_attempt') is not null then ', till_unlock_attempt' else '' end
        || case when to_regclass('public.alert_refresh') is not null then ', alert_refresh' else '' end
+       -- Dollars owed valued again (0103), with the bills they valued.
+       || case when to_regclass('public.fx_revaluation') is not null then ', fx_revaluation' else '' end
        -- What each till last said it keeps (0101).
        || case when to_regclass('public.till_kept') is not null then ', till_kept' else '' end
        || ' restart identity';

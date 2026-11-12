@@ -372,13 +372,22 @@ function Bills({
   // Typed from the supplier's invoice, never copied from the receipt (audit P1-3):
   // a typo on the receipt would otherwise be billed and paid too.
   const [amount, setAmount] = useState("");
+  // The bill's dollar part (0103), and the rate typed with it.
+  const [usd, setUsd] = useState("");
+  const [rate, setRate] = useState("");
   const [terms, setTerms] = useState("15");
   const [payFor, setPayFor] = useState("");
   const [payAmt, setPayAmt] = useState("");
   const [method, setMethod] = useState<PaymentSource | "">("");
+  // Paying a bill's dollars (0103): in dollars handed over, or in dinars at a rate.
+  const [payWhat, setPayWhat] = useState<"dinars" | "usd" | "usd_at_rate">("dinars");
+  const [payUsd, setPayUsd] = useState("");
+  const [payRate, setPayRate] = useState("");
 
   const receipt = receipts.find((r) => r.id === receiptId);
-  const amountN = Number(amount.replace(/[^0-9.]/g, "")) || 0;
+  const usdN = Number(normaliseNumber(usd)) || 0;
+  const rateN = Number(normaliseNumber(rate)) || 0;
+  const amountN = (Number(amount.replace(/[^0-9.]/g, "")) || 0) + Math.round(usdN * rateN);
   const variance = kind === "receipt" && receipt ? amountN - receipt.value : 0;
   const typedNo = (inv ?? "").trim();
   // Left as filled (or emptied), the bill takes the café's own number.
@@ -393,7 +402,9 @@ function Bills({
             supplierId: vendor.id,
             invoiceNo: ownNo ? null : typedNo,
             invoiceDate: invDate,
-            amount,
+            amount: amount || "0",
+            usd: usdN > 0 ? usd : null,
+            rate: usdN > 0 ? rate : null,
             termDays: Number(terms) || 0,
             receiptId: kind === "receipt" ? receiptId || null : null,
             accountCode: kind === "expense" ? accountCode || null : null,
@@ -424,6 +435,8 @@ function Bills({
         });
         setInv(null);
         setAmount("");
+        setUsd("");
+        setRate("");
         onDone();
       } else setMsg({ ok: false, text: r.error });
     });
@@ -434,7 +447,19 @@ function Bills({
     start(async () => {
       if (!method) return;
       const r = await op.run("payBill", (key) =>
-        payBillAction({ billId: payFor, amount: payAmt, method }, key),
+        payBillAction(
+          payWhat === "dinars"
+            ? { billId: payFor, amount: payAmt, method }
+            : {
+                billId: payFor,
+                amount: null,
+                method,
+                usd: payUsd,
+                currency: payWhat === "usd" ? "USD" : "IQD",
+                rate: payWhat === "usd_at_rate" ? payRate : null,
+              },
+          key,
+        ),
       );
       if (r.ok) {
         setMsg({
@@ -446,6 +471,9 @@ function Bills({
         });
         setPayAmt("");
         setPayFor("");
+        setPayUsd("");
+        setPayRate("");
+        setPayWhat("dinars");
         onDone();
       } else setMsg({ ok: false, text: r.error });
     });
@@ -540,6 +568,30 @@ function Bills({
                 />
               </label>
               <label style={{ minWidth: 110 }}>
+                <div className="sc">{t("Of it, in dollars ($)")}</div>
+                <input
+                  className="amt"
+                  style={{ textAlign: "end" }}
+                  inputMode="decimal"
+                  value={usd}
+                  onChange={(e) => setUsd(e.target.value)}
+                  data-testid="bill-usd"
+                />
+              </label>
+              {usdN > 0 && (
+                <label style={{ minWidth: 110 }}>
+                  <div className="sc">{t("Dinars a dollar")}</div>
+                  <input
+                    className="amt"
+                    style={{ textAlign: "end" }}
+                    inputMode="decimal"
+                    value={rate}
+                    onChange={(e) => setRate(e.target.value)}
+                    data-testid="bill-rate"
+                  />
+                </label>
+              )}
+              <label style={{ minWidth: 110 }}>
                 <div className="sc">{t("Terms")}</div>
                 <select value={terms} onChange={(e) => setTerms(e.target.value)}>
                   <option value="0">{t("Due now")}</option>
@@ -551,7 +603,12 @@ function Bills({
               <button
                 className="btn-primary"
                 onClick={raise}
-                disabled={busy || !amount || (kind === "receipt" ? !receiptId : !accountCode)}
+                disabled={
+                  busy ||
+                  (!amount && usdN <= 0) ||
+                  (usdN > 0 && rateN <= 0) ||
+                  (kind === "receipt" ? !receiptId : !accountCode)
+                }
               >
                 {busy ? t("Saving…") : t("Record bill")}
               </button>
@@ -626,7 +683,14 @@ function Bills({
                     <td className="when">{b.invoiceDate}</td>
                     <td>{b.dueDate ?? "—"}</td>
                     <td className="right money">{fmtIQD(b.total)}</td>
-                    <td className="right money">{fmtIQD(b.outstanding)}</td>
+                    <td className="right money">
+                      {b.usdOwed > 0
+                        ? t("{dinars} + ${usd}", {
+                            dinars: fmtIQD(Math.max(0, b.outstanding - b.usdValue)),
+                            usd: b.usdOwed.toLocaleString("en-US"),
+                          })
+                        : fmtIQD(b.outstanding)}
+                    </td>
                     <td className="right">
                       <span className={`ref ${b.daysOverdue > 0 ? "due" : ""}`}>
                         {b.daysOverdue > 0 ? t("{n}d overdue", { n: b.daysOverdue }) : t("Current")}
@@ -661,7 +725,13 @@ function Bills({
                   onChange={(e) => {
                     setPayFor(e.target.value);
                     const b = bills.find((x) => x.id === e.target.value);
-                    if (b) setPayAmt(String(b.outstanding));
+                    if (b) {
+                      setPayAmt(String(Math.max(0, b.outstanding - b.usdValue)));
+                      setPayUsd(b.usdOwed > 0 ? String(b.usdOwed) : "");
+                      setPayWhat(
+                        b.usdOwed > 0 && b.outstanding - b.usdValue <= 0 ? "usd_at_rate" : "dinars",
+                      );
+                    }
                   }}
                 >
                   <option value="">{t("Choose an invoice…")}</option>
@@ -675,16 +745,61 @@ function Bills({
                   ))}
                 </select>
               </label>
-              <label style={{ minWidth: 130 }}>
-                <div className="sc">{t("Amount (IQD)")}</div>
-                <input
-                  className="amt"
-                  style={{ textAlign: "end" }}
-                  inputMode="decimal"
-                  value={payAmt}
-                  onChange={(e) => setPayAmt(e.target.value)}
-                />
-              </label>
+              {(bills.find((x) => x.id === payFor)?.usdOwed ?? 0) > 0 && (
+                <label style={{ minWidth: 170 }}>
+                  <div className="sc">{t("What is paid")}</div>
+                  <select
+                    value={payWhat}
+                    onChange={(e) => setPayWhat(e.target.value as typeof payWhat)}
+                    data-testid="pay-what"
+                  >
+                    <option value="dinars">{t("The dinars owed")}</option>
+                    <option value="usd">{t("The dollars owed, in dollars")}</option>
+                    <option value="usd_at_rate">
+                      {t("The dollars owed, in dinars at a rate")}
+                    </option>
+                  </select>
+                </label>
+              )}
+              {payWhat === "dinars" ? (
+                <label style={{ minWidth: 130 }}>
+                  <div className="sc">{t("Amount (IQD)")}</div>
+                  <input
+                    className="amt"
+                    style={{ textAlign: "end" }}
+                    inputMode="decimal"
+                    value={payAmt}
+                    onChange={(e) => setPayAmt(e.target.value)}
+                  />
+                </label>
+              ) : (
+                <>
+                  <label style={{ minWidth: 110 }}>
+                    <div className="sc">{t("Dollars ($)")}</div>
+                    <input
+                      className="amt"
+                      style={{ textAlign: "end" }}
+                      inputMode="decimal"
+                      value={payUsd}
+                      onChange={(e) => setPayUsd(e.target.value)}
+                      data-testid="pay-usd"
+                    />
+                  </label>
+                  {payWhat === "usd_at_rate" && (
+                    <label style={{ minWidth: 110 }}>
+                      <div className="sc">{t("Dinars a dollar")}</div>
+                      <input
+                        className="amt"
+                        style={{ textAlign: "end" }}
+                        inputMode="decimal"
+                        value={payRate}
+                        onChange={(e) => setPayRate(e.target.value)}
+                        data-testid="pay-rate"
+                      />
+                    </label>
+                  )}
+                </>
+              )}
               <label style={{ minWidth: 120 }}>
                 <div className="sc">{t("Paid from")}</div>
                 <select
@@ -700,7 +815,17 @@ function Bills({
                   <option value="owner">{t("The owner, personally")}</option>
                 </select>
               </label>
-              <button onClick={pay} disabled={busy || !payFor || !payAmt || !method}>
+              <button
+                onClick={pay}
+                disabled={
+                  busy ||
+                  !payFor ||
+                  !method ||
+                  (payWhat === "dinars"
+                    ? !payAmt
+                    : !payUsd || (payWhat === "usd_at_rate" && !payRate))
+                }
+              >
                 {busy ? t("Paying…") : t("Record payment")}
               </button>
             </div>
