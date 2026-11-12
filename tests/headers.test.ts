@@ -64,5 +64,10 @@ describe("the page's script policy (plan 7)", () => {
     expect(p).toContain("frame-ancestors 'none'");
     expect(p).toContain("object-src 'none'");
     expect(pagePolicy(a, true)).toContain("'unsafe-eval'");
+    // A document's file goes to Supabase's storage, and comes from it: that address alone.
+    const withStorage = pagePolicy(a, false, "https://abc.supabase.co/");
+    expect(withStorage).toContain("connect-src 'self' https://abc.supabase.co;");
+    expect(withStorage).toContain("img-src 'self' data: blob: https://abc.supabase.co;");
+    expect(pagePolicy(a, false, "not a url")).toContain("connect-src 'self';");
   });
 });

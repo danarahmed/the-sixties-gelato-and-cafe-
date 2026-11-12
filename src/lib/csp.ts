@@ -3,8 +3,9 @@
  * scripts, each carrying the page's one-time nonce, and talks only to the
  * app's own address. A script slipped into a page (a name, a note, a
  * supplier's reference) is refused by the browser even if it ever got
- * through the screens. The browser never talks to the database itself: the
- * app's server does, so nothing else is allowed.
+ * through the screens. The browser talks to the app, and to Supabase's
+ * storage alone for a document's file (a signed upload link, a signed link to
+ * show it): nothing else is allowed.
  *
  * Styles stay inline-allowed: the screens set sizes and colours inline, and a
  * style runs nothing.
@@ -17,7 +18,13 @@ export function makeNonce(): string {
   return btoa(s);
 }
 
-export function pagePolicy(nonce: string, dev = false): string {
+export function pagePolicy(nonce: string, dev = false, supabaseUrl: string | null = null): string {
+  let supabase = "";
+  try {
+    if (supabaseUrl) supabase = ` ${new URL(supabaseUrl).origin}`;
+  } catch {
+    supabase = "";
+  }
   return [
     "default-src 'self'",
     // 'strict-dynamic': a script the page's own scripts load is trusted with
@@ -25,10 +32,10 @@ export function pagePolicy(nonce: string, dev = false): string {
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
     // The receipt's logo is kept as data; a photo being made smaller, as a blob.
-    "img-src 'self' data: blob:",
+    `img-src 'self' data: blob:${supabase}`,
     "font-src 'self'",
-    `connect-src 'self'${dev ? " ws:" : ""}`,
-    "media-src 'self' blob:",
+    `connect-src 'self'${supabase}${dev ? " ws:" : ""}`,
+    `media-src 'self' blob:${supabase}`,
     "worker-src 'self'",
     "manifest-src 'self'",
     "form-action 'self'",

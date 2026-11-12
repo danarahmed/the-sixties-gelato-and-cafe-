@@ -126,8 +126,9 @@ caller's permission itself.
   with a Content-Security-Policy naming a one-time nonce: the browser runs only
   the app's own scripts carrying it (and what they load), so a script slipped
   into a name or a note would not run even if it got past the screens. Pages
-  talk only to the app's own address (the database is reached by the app's
-  server, never by the browser), and send forms only to it. Styles may be
+  talk only to the app's own address, and to Supabase's storage for a
+  document's file (a signed link to upload or show it); the database itself is
+  reached by the app's server, never by the browser. Forms go only to the app. Styles may be
   inline (they run nothing). The browser tests fail on anything the policy
   refuses.
 - **Database functions name where they look (`0099`).** Every function that

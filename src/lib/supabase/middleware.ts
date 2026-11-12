@@ -15,7 +15,11 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   // header (Next puts it on its own scripts; the layout on its two), and the
   // policy naming it sent to the browser.
   const nonce = makeNonce();
-  const policy = pagePolicy(nonce, process.env.NODE_ENV === "development");
+  const policy = pagePolicy(
+    nonce,
+    process.env.NODE_ENV === "development",
+    supabaseConfig()?.url ?? null,
+  );
   const next = () => {
     const headers = new Headers(request.headers);
     headers.set("x-nonce", nonce);
