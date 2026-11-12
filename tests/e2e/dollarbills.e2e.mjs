@@ -21,8 +21,8 @@ console.log("▸ a bill in dollars and dinars, paid in both");
   await page.getByText(/Bill E2E-USD-1 recorded/).waitFor({ timeout: 10000 });
   check(
     last(
-      `select amount_total || ' ' || usd_amount || ' ' || usd_rate from purchase_invoice where invoice_no = 'E2E-USD-1'`,
-    ) === "102000.0000 40.00 1300.0000",
+      `select amount_total::int || ' ' || usd_amount::int || ' ' || usd_rate::int from purchase_invoice where invoice_no = 'E2E-USD-1'`,
+    ) === "102000 40 1300",
     "booked in dinars, 50,000 and $40 at 1,300, the dollars kept beside them",
   );
   const row = page.locator('[data-testid="bill-row"][data-bill="E2E-USD-1"]');

@@ -115,7 +115,7 @@ console.log("▸ a barista records two batches of the base, and is shown no cost
   );
   await page.getByRole("button", { name: "Record batch" }).click();
   await page
-    .getByText(/Recorded as batch \d+: 10 L of E2E base into stock\.$/)
+    .getByText(/Recorded as batch \d+: 10 L of E2E base into stock\.( Use it by .*)?$/)
     .waitFor({ timeout: 10000 });
   check(
     !(await page.locator("main").innerText()).includes("IQD"),
@@ -148,7 +148,7 @@ console.log("▸ owner records a batch of the flavour, weighed short");
   );
   await page.getByRole("button", { name: "Record batch" }).click();
   const recorded = page.getByText(
-    /Recorded as batch \d+: 4\.6 kg of E2E pistachio gelato into stock\. The ingredients cost 21,264 IQD\.$/,
+    /Recorded as batch \d+: 4\.6 kg of E2E pistachio gelato into stock\. The ingredients cost 21,264 IQD\.( Use it by .*)?$/,
   );
   await recorded.waitFor({ timeout: 10000 });
   // Its pans' labels, printed there and then: weighed in kilos, one to start from; two asked.
