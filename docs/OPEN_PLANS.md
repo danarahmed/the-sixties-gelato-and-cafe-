@@ -232,6 +232,33 @@ bill, add-ons per bill, sales per hour worked (from the clock), voids, refunds a
 discounts, and drawer over or short. Ranked fairly: per hour worked and against
 the same hours of the day, since a Friday evening sells more than a Tuesday morning.
 
+**The owner's decisions (12 November 2026):**
+- **A:** explained further (two-currency statements, below); waiting.
+- **C:** agreed, with:
+  - free to the customer, a cost to the business: each order's packing cost is
+    kept **for the order as a whole** (not split over its products), at what
+    each packing item cost (its average cost from deliveries), in a cost
+    account of its own (Packaging), so reports show it per order, per way of
+    selling (takeaway, delivery, each platform), per cashier and per day;
+  - **cups and lids counted as packing like the rest**, not in recipes: each
+    takeaway drink adds its cup and lid to the packing row by itself, changed
+    with a tap, so no extra clicks;
+  - the + / − row, one small bag by default for takeaway and delivery, and the
+    report: agreed.
+- **D:** agreed.
+- **E:** agreed; how its books work explained (below).
+- **F:** agreed; **cashiers do not see it** (owner and managers only).
+
+**E, the books of a sale day (explained 12 November):** a 10,000 product at 20%
+off: sales 10,000 (4000), discount 2,000 (4100, taken off sales), money in
+8,000; the profit and loss shows net sales 8,000. Its cost (say 3,000) does not
+change, so its margin goes from 7,000 (70%) to 5,000 (62.5%). The service
+charge is worked on the price after the discount, points on what was paid, a
+refund gives back what was paid. Each sale day is named and its discounts kept
+under its name, with a report of what it brought: what was sold during it
+against the same days before, the discount given, and the profit gained or
+lost.
+
 ## 6. The books: every gap before they are guaranteed to anyone (6 November 2026)
 
 What the books already do is strong (double entry posted by every record, nothing
