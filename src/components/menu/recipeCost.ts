@@ -113,3 +113,6 @@ export function suggestedPrice(cost: Decimal, targetMargin: Decimal, step: numbe
   const s = step > 0 ? step : 1;
   return raw.div(s).ceil().times(s);
 }
+
+/** The café's margin target when a product and its category set none (0105: each may set its own). */
+export const TARGET_MARGIN = 70;

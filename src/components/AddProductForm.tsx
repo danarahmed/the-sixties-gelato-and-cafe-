@@ -12,7 +12,7 @@ import { Rich } from "@/lib/i18n/Rich";
 import { Field, Notice, inputStyle } from "@/components/ui";
 import { useChannels } from "@/components/ChannelsProvider";
 import { parseNumber } from "@/components/pos/model";
-import { margin, servingCost, suggestedPrice } from "@/components/menu/recipeCost";
+import { TARGET_MARGIN, margin, servingCost, suggestedPrice } from "@/components/menu/recipeCost";
 import {
   NoCostYet,
   RecipeLinesEditor,
@@ -32,7 +32,6 @@ import { Icon } from "@/components/Icon";
 type Msg = { ok: boolean; text: string } | null;
 
 /** The margin a suggested price leaves, as the new-product form starts with it. */
-const TARGET_MARGIN = 70;
 
 /** A price typed for each channel, by its code; a channel left out is not sold there. */
 type Prices = Record<SalesChannel, string>;
@@ -353,6 +352,7 @@ export function PriceChange({
   branches = [],
   costs = {},
   priceStep = 250,
+  targetMargin = TARGET_MARGIN,
 }: {
   variantId: string;
   today: string;
@@ -361,6 +361,8 @@ export function PriceChange({
   costs?: Record<string, number | null>;
   /** The step a suggested price is rounded up to (250 IQD). */
   priceStep?: number;
+  /** The margin the product aims for (0105): its own, its category's, or the café's. */
+  targetMargin?: number;
 }) {
   const op = useOperation();
   const { t } = useT();
@@ -383,7 +385,7 @@ export function PriceChange({
   const suggested =
     cost === null || cost === undefined
       ? null
-      : suggestedPrice(new Decimal(cost), new Decimal(TARGET_MARGIN), priceStep);
+      : suggestedPrice(new Decimal(cost), new Decimal(targetMargin), priceStep);
 
   if (!open) {
     return (
