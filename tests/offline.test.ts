@@ -4,13 +4,16 @@
  * today's price.
  */
 import { beforeEach, describe, expect, it } from "vitest";
+import Decimal from "decimal.js";
 import {
   OFFLINE_KEY,
   loadOffline,
   nextOfflineNo,
   offlineBlock,
   offlineTotals,
+  openOfflineStore,
   priceChanged,
+  rereadOfflineStore,
   saveOffline,
   type OfflineSale,
 } from "@/components/pos/offline";
@@ -88,7 +91,30 @@ describe("what the till takes offline", () => {
     expect(offlineBlock({ ...quick, discount: { kind: "percent", value: "10" } as never })).toMatch(
       /discount/,
     );
-    expect(offlineBlock({ ...quick, customer: { id: "c" } as never })).toMatch(/customer/);
+  });
+
+  it("takes the cashier's own discount and the customer chosen before (0101)", () => {
+    const rules = { cap: 10, canApprove: false };
+    const subtotal = new Decimal(5000);
+    const d = (value: string) =>
+      ({
+        kind: "percent",
+        value,
+        reason: "regular",
+        approval: { id: "a", by: "m", percent: 50 },
+      }) as never;
+    expect(offlineBlock({ ...quick, discount: d("10") }, { subtotal, rules })).toBeNull();
+    // A manager's approval cannot be used with no internet: over the cap, it waits.
+    expect(offlineBlock({ ...quick, discount: d("20") }, { subtotal, rules })).toMatch(
+      /over your cap/,
+    );
+    expect(
+      offlineBlock(
+        { ...quick, discount: d("20") },
+        { subtotal, rules: { cap: 10, canApprove: true } },
+      ),
+    ).toBeNull();
+    expect(offlineBlock({ ...quick, customer: { id: "c" } as never })).toBeNull();
   });
 });
 
@@ -143,5 +169,42 @@ describe("a price changed since", () => {
     ).toBe(true);
     expect(priceChanged("Open the drawer first: on the till, count the cash in it")).toBe(false);
     expect(priceChanged(null)).toBe(false);
+  });
+});
+
+describe("what the till keeps, encrypted (0101)", () => {
+  const K1 = "73000000-0000-0000-0000-000000000001";
+  const KEY = btoa(String.fromCharCode(...Array.from({ length: 32 }, (_, i) => i + 1)));
+  const OTHER = btoa(String.fromCharCode(...Array.from({ length: 32 }, (_, i) => 200 - i)));
+
+  it("seals what it keeps with the café's key, and reads it back with it alone", async () => {
+    await openOfflineStore(KEY);
+    expect(saveOffline([sale()])).toBe(true);
+    expect(loadOffline().map((s) => s.key)).toEqual([K1]);
+    await new Promise((r) => setTimeout(r, 50));
+    const raw = localStorage.getItem(OFFLINE_KEY) ?? "";
+    expect(raw.startsWith("enc1:")).toBe(true);
+    expect(raw).not.toContain(K1);
+    await rereadOfflineStore();
+    expect(loadOffline().map((s) => s.key)).toEqual([K1]);
+    // Another café's key, or none: nothing of it can be read.
+    await openOfflineStore(OTHER);
+    expect(loadOffline()).toEqual([]);
+    // …and never written over, so nothing kept is lost.
+    expect(saveOffline([sale({ key: "k2" })])).toBe(false);
+    await openOfflineStore(KEY);
+    expect(loadOffline().map((s) => s.key)).toEqual([K1]);
+    saveOffline([]);
+  });
+
+  it("seals what was kept plain before", async () => {
+    await openOfflineStore(null);
+    localStorage.setItem(OFFLINE_KEY, JSON.stringify([sale()]));
+    await openOfflineStore(KEY);
+    expect(loadOffline().map((s) => s.key)).toEqual([K1]);
+    await new Promise((r) => setTimeout(r, 50));
+    expect((localStorage.getItem(OFFLINE_KEY) ?? "").startsWith("enc1:")).toBe(true);
+    saveOffline([]);
+    await openOfflineStore(null);
   });
 });

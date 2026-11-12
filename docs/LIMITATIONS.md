@@ -107,9 +107,13 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
 - **Selling without internet (`0073`, round fifteen).** The till keeps quick
   sales while the internet is down and sends them when it is back, each once.
   What it does not cover:
-  - Only quick sales, in dinars: a bill on a table, a discount, a customer
-    (and their points), dollars and the café's own delivery wait for the
-    connection, as does every other screen.
+  - Only quick sales, in dinars, and bills on a table already saved. Since
+    `0101` a quick sale may carry the cashier's own discount (within their
+    cap, with its reason) and the customer chosen before the connection
+    dropped (their points are earned when it is sent). A discount over the
+    cap (a manager's approval needs the internet), a reward, a customer found
+    offline, dollars and the café's own delivery wait for the connection, as
+    does every other screen.
   - The till must stay open: the page is not kept for opening offline (no page
     is cached, so a shared till never shows the last person's figures). Closed
     or reloaded offline, it shows the offline notice; what it keeps is sent once
@@ -132,8 +136,13 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
     refuses.
   - Since plan 7, the till warns when it still keeps sales: leaving or
     closing the page asks first, and the strip turns red once the oldest has
-    waited half an hour. The kept sales are not yet encrypted in the browser's
-    storage: that comes with the offline-first till (step 6).
+    waited half an hour. Since `0101` the till tells the database what it
+    keeps whenever it is online, and a manager is alerted ("Tills keeping
+    sales") when a till has kept sales half an hour or more; and what it keeps
+    is encrypted in the browser's storage with the café's key, which the till
+    is handed with its page: a device nobody is signed in on shows nothing of
+    it. The key is in the page while the till is open, so a person signed in
+    on that till could still read it.
 - **Speed (`0100`), what it does not do.**
   - The dashboard's alerts and the daily brief use an answer worked out in
     the last minute: an alert raised or cleared by a sale shows up to a

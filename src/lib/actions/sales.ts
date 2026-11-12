@@ -176,6 +176,16 @@ const offlineSaleInput = z.object({
   soldAt: z.string().datetime({ offset: true, message: "Say when the sale was made" }),
   soldBy: id("a person").nullish(),
   device: optionalText(64),
+  /** The cashier's own discount, and the customer chosen before it dropped (0101). */
+  discount: z
+    .object({
+      percent: discountPercent,
+      amount: discountAmount,
+      reason: optionalText(40),
+      note: optionalText(300),
+    })
+    .nullish(),
+  customerId: id("the customer").nullish(),
   ...saleExtras,
 });
 
@@ -212,6 +222,16 @@ export async function recordOfflineSaleAction(
     p_sold_by: v.data.soldBy ?? null,
     p_device: v.data.device ?? null,
     ...extrasToDb(v.data),
+    // Sent only when there is one: a database before 0101 takes neither.
+    ...(v.data.discount && (v.data.discount.percent || v.data.discount.amount)
+      ? {
+          p_discount_percent: v.data.discount.percent,
+          p_discount_amount: v.data.discount.amount,
+          p_discount_reason: v.data.discount.reason,
+          p_discount_note: v.data.discount.note,
+        }
+      : {}),
+    ...(v.data.customerId ? { p_customer: v.data.customerId } : {}),
   });
   if (!r.ok && r.error === MISSING_UPDATE)
     r = await callRpc<Record<string, unknown>>("record_sale", {

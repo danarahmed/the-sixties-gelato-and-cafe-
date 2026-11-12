@@ -2054,6 +2054,25 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### The till that waits less for the internet (`0101`)
+
+- **`record_offline_sale`** takes `p_discount_percent`, `p_discount_amount`,
+  `p_discount_reason`, `p_discount_note` and `p_customer`: a quick sale made
+  offline with the seller's own discount (the seller may give one, and it is
+  within their `discount_cap_percent`, unless they approve discounts; no
+  manager's approval offline) and the customer chosen before the connection
+  dropped (`sale_customer_check` with no reward; points earned by
+  `sale_customer_record` when it arrives). The audit line names both.
+- **`business_offline_key`**: the café's key (`secret`, 32 random bytes) for
+  what a till keeps on the device, encrypted (AES-GCM) in the browser.
+  `offline_key()` hands it to those who sell. Read by no one.
+- **`till_kept`**: what each till (`till`, its own random name) last said it
+  keeps (`waiting`, `attention`, `oldest_at`, `reported_at`, its place and
+  who was signed in). `note_till_kept(till, place, waiting, attention,
+oldest)`; nothing kept, and the row goes. The `till_kept` alert: a till
+  that has kept sales half an hour or more (red with one waiting for a
+  manager, or after four hours). Read by no one.
+
 ### Speed (`0100`)
 
 - **`alert_refresh`**: when each café's alerts were last brought up to date

@@ -157,7 +157,7 @@ select test.eq((
   'link_phone_start,list_approvers,list_business_rules,list_members,lock_period,losses_waiting,make_two_step_codes,'
   'mark_bill_printed,mark_down,markdown_suggestions,match_platform_statement,menu_branch_prices,'
   'menu_costing,menu_recipe_lines,menu_scheduled,money_accounts,move_cash,move_money,my_profile,'
-  'my_report_visits,next_bill_number,note_device,note_report_visit,note_stuck,note_supplier_credit,open_cash_session,open_tab,'
+  'my_report_visits,next_bill_number,note_device,note_report_visit,note_stuck,note_supplier_credit,note_till_kept,offline_key,open_cash_session,open_tab,'
   'owner_money,pay_bill,pay_payroll,pay_salary,payment_methods,payroll_detail,payroll_runs,'
   'period_close_checklist,phone_status,phone_warnings,platform_money,pos_addons,pos_catalogue,'
   'pos_deals,pos_menu_next_change,pos_open_bills,pos_use_by,post_control_correction,post_legacy_unposted,'

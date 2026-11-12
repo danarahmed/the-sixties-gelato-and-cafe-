@@ -46,6 +46,31 @@ const phrases: PhraseBook = {
     ar: "توصيل المقهى الخاص يحتاج إلى الإنترنت",
     ckb: "گەیاندنی خودی کافێ ئینتەرنێتی پێویستە",
   },
+  // The till that waits less for the internet (0101).
+  "A discount over your cap needs a manager, and the internet: lower it, or take it off to sell offline":
+    {
+      ar: "الخصم فوق حدّك يحتاج مديرًا والإنترنت: قلّله، أو أزله لتبيع دون إنترنت",
+      ckb: "داشکاندنی سەرووی سنووری خۆت پێویستی بە بەڕێوەبەر و ئینتەرنێت هەیە: کەمی بکەرەوە، یان لای ببە بۆ فرۆشتن بێ ئینتەرنێت",
+    },
+  "A reward needs the internet: take it off to sell offline": {
+    ar: "المكافأة تحتاج الإنترنت: أزلها لتبيع دون إنترنت",
+    ckb: "خەڵات پێویستی بە ئینتەرنێت هەیە: لای ببە بۆ فرۆشتن بێ ئینتەرنێت",
+  },
+  "A till at {1} keeps {2} sales not yet sent": {
+    ar: "شاشة بيع في {1} تحتفظ بـ {2} مبيعات لم تُرسل بعد",
+    ckb: "کاشێرێک لە {1} {2} فرۆشتنی هەڵگرتووە کە هێشتا نەنێردراون",
+  },
+  "Sales made while the internet was down wait on that till until they are sent: if it is not opened again, on the same browser, they are lost, and its cash is over in the count.":
+    {
+      ar: "المبيعات التي تمت والإنترنت مقطوع تنتظر على شاشة البيع تلك حتى تُرسل: إن لم تُفتح مجددًا، على المتصفح نفسه، ضاعت، وزاد نقدها في العدّ.",
+      ckb: "ئەو فرۆشتنانەی کاتی بڕانی ئینتەرنێت کراون لەسەر ئەو کاشێرە دەمێننەوە تا دەنێردرێن: ئەگەر دووبارە نەکرێتەوە، لەسەر هەمان وێبگەڕ، ون دەبن، و پارەکەیان لە ژماردندا زیاد دەردەچێت.",
+    },
+  "Open the till there with the internet on, so it sends them; a sale waiting for a manager is sent by a manager on that till.":
+    {
+      ar: "افتح شاشة البيع هناك والإنترنت يعمل لترسلها؛ والبيع الذي ينتظر مديرًا يرسله مدير على تلك الشاشة.",
+      ckb: "کاشێرەکە لەوێ بکەرەوە کاتێک ئینتەرنێت هەیە، بۆ ئەوەی بیاننێرێت؛ فرۆشتنێک کە چاوەڕێی بەڕێوەبەرە بەڕێوەبەرێک لەسەر ئەو کاشێرە دەینێرێت.",
+    },
+  "Tills keeping sales": { ar: "شاشات بيع تحتفظ بمبيعات", ckb: "کاشێرەکان فرۆشتن هەڵدەگرن" },
   "A discount needs the internet: take it off to sell offline": {
     ar: "الخصم يحتاج إلى الإنترنت: أزِله للبيع دون اتصال",
     ckb: "داشکاندن ئینتەرنێتی پێویستە: لای ببە بۆ ئەوەی بێ ئینتەرنێت بفرۆشیت",
