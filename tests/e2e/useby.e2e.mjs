@@ -97,9 +97,9 @@ console.log("▸ a batch recipe says how long it keeps, or that it doesn't go of
 {
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/production");
-  // The new recipe's form is folded away under the grid.
-  const fold = page.locator("details", { has: page.getByTestId("never-goes-off") }).first();
-  if (await fold.count()) await fold.locator("summary").first().click();
+  // The new recipe's form opens from its button, in a side panel.
+  await page.getByTestId("new-recipe").click();
+  await page.getByTestId("new-recipe-panel").waitFor({ timeout: 10000 });
   check(
     (await page.getByTestId("never-goes-off").count()) > 0,
     "the recipe form offers “It doesn't go off”",
