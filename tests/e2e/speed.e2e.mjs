@@ -33,7 +33,11 @@ sql(`insert into system_admin (auth_user_id) select auth_user_id from app_user w
   );
   await page.getByLabel("Where and when, and which screens felt slow").fill("E2E: from the test");
   await page.getByTestId("speed-save").click();
-  await page.getByTestId("speed-sample").first().getByText("E2E: from the test").waitFor({ timeout: 10000 });
+  await page
+    .getByTestId("speed-sample")
+    .first()
+    .getByText("E2E: from the test")
+    .waitFor({ timeout: 10000 });
   check(true, "kept, and listed to send");
   check(sql(`select count(*) from speed_sample where note = 'E2E: from the test'`) === "1", "once");
   await ctx.close();

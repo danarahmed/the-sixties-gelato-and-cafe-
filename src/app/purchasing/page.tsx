@@ -34,18 +34,27 @@ export default async function PurchasingPage() {
   // A delivery with no order, a new order and a return not named against a
   // delivery are for this device's place (AB).
   const { places, place, at } = await placeChoice();
-  const [items, suppliers, receipts, costs, outOfUse, { orders, approveUpTo }, returns, records, keeping] =
-    await Promise.all([
-      getItems(),
-      getSuppliers(),
-      getReceipts(40),
-      getItemCosts(),
-      canCorrect ? getItemsOutOfUse() : Promise.resolve([]),
-      getPurchaseOrders(),
-      getSupplierReturns(20),
-      getSupplierRecords(),
-      getItemsKeeping(),
-    ]);
+  const [
+    items,
+    suppliers,
+    receipts,
+    costs,
+    outOfUse,
+    { orders, approveUpTo },
+    returns,
+    records,
+    keeping,
+  ] = await Promise.all([
+    getItems(),
+    getSuppliers(),
+    getReceipts(40),
+    getItemCosts(),
+    canCorrect ? getItemsOutOfUse() : Promise.resolve([]),
+    getPurchaseOrders(),
+    getSupplierReturns(20),
+    getSupplierRecords(),
+    getItemsKeeping(),
+  ]);
   // The documents kept with each delivery and return (0053).
   const [receiptDocs, returnDocs] = await Promise.all([
     getDocumentCounts(

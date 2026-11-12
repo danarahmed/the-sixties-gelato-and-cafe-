@@ -26,7 +26,10 @@ console.log("▸ the owner says how it keeps");
   await open(page, `/inventory/${ITEM}`);
   const box = page.getByTestId("item-keeping");
   await box.waitFor({ timeout: 10000 });
-  check(((await box.textContent()) ?? "").includes("Not chosen yet"), "it has not said how it keeps");
+  check(
+    ((await box.textContent()) ?? "").includes("Not chosen yet"),
+    "it has not said how it keeps",
+  );
   await box.getByTestId("keeping-exact_date").check();
   await box.getByTestId("keeping-save").click();
   await page.waitForTimeout(1500);
@@ -47,7 +50,9 @@ console.log("▸ a delivery needs the date on the pack");
   await line.getByLabel("Quantity").fill("4");
   await line.getByLabel(/^Price per/).fill("1000");
   await form.getByRole("button", { name: "Receive goods" }).click();
-  await form.getByText("Type the use-by printed on the pack of E2E yoghurt").waitFor({ timeout: 10000 });
+  await form
+    .getByText("Type the use-by printed on the pack of E2E yoghurt")
+    .waitFor({ timeout: 10000 });
   check(true, "refused without the date, before anything is sent");
   await line.getByTestId("receive-use-by").fill(day(2));
   await form.getByRole("button", { name: "Receive goods" }).click();
@@ -56,7 +61,9 @@ console.log("▸ a delivery needs the date on the pack");
   if (await ask.isVisible()) await ask.locator("button.btn-primary").click();
   await page.waitForTimeout(2000);
   check(
-    last(`select count(*) from item_lot where item_id = '${ITEM}' and expiry_date = '${day(2)}'`) === "1",
+    last(
+      `select count(*) from item_lot where item_id = '${ITEM}' and expiry_date = '${day(2)}'`,
+    ) === "1",
     "with the date, it comes in as a lot used by that day",
   );
   await ctx.close();
@@ -68,7 +75,10 @@ console.log("▸ Inventory lists it; Today and the till warn of it");
   sql(`update item_lot set use_by = now() + interval '2 hours' where item_id = '${ITEM}'`);
   const { ctx, page } = await signIn(browser, "manager");
   await open(page, "/inventory");
-  const row = page.getByTestId("use-by-lots").getByTestId("use-by-lot").filter({ hasText: "E2E yoghurt" });
+  const row = page
+    .getByTestId("use-by-lots")
+    .getByTestId("use-by-lot")
+    .filter({ hasText: "E2E yoghurt" });
   check((await row.count()) === 1, "Inventory lists the lot, with its use-by");
   await ctx.close();
 

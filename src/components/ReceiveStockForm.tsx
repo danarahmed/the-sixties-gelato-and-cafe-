@@ -502,8 +502,7 @@ function Receive({
                       type="date"
                       style={inputStyle}
                       value={
-                        l.useBy ??
-                        suggestedUseBy(it.keeping.mode, it.keeping.keepsDays, today)
+                        l.useBy ?? suggestedUseBy(it.keeping.mode, it.keeping.keepsDays, today)
                       }
                       min={today || undefined}
                       onChange={(e) => setLine(idx, { useBy: e.target.value })}
