@@ -50,8 +50,8 @@ apart, for before selling):
     friendly business while it is built.
 12. **Plan 6, the important items** (payroll deductions and payslips, points as
     owed, report comparisons and budgets) and **its smaller gaps.**
-13. **Plan 11, item 4: what the café's customers see** (QR menu and table
-    ordering, WhatsApp receipts and messages, the café's own online ordering, a
+13. **Plan 11, item 4: what the café's customers see** (QR menu and the order
+    built on the customer's phone, scanned by the waiter by default, WhatsApp receipts and messages, the café's own online ordering, a
     customer screen), as switched parts.
 14. **Plan 4 and plan 10, step 5:** the videos in each language, and practice,
     help and videos for each type of business.
@@ -753,7 +753,7 @@ it is built. Everything is still built before selling.
 
 **The owner's decisions (12 November 2026):** all agreed. Asked: an order the
 customer builds on their own phone from the menu, shown as a QR code the waiter
-scans (explained; waiting for the owner's word to add it).
+scans: **added** (with plan 11, item 4, below).
 
 ## 11. What the other plans did not cover (6 November 2026)
 
@@ -787,6 +787,22 @@ scans (explained; waiting for the owner's word to add it).
    the café's own online ordering for pickup and delivery (no 20–30%
    commission); a customer screen at the till. Parts behind plan 10's switches,
    and good add-ons to charge for.
+   **The order built on the customer's phone (the owner, 12 November):** a QR on
+   the table opens the café's menu in the phone's browser (no app; in the
+   café's languages, with photos, sizes, add-ons, notes). Two ways, a switch per
+   café:
+   - **A (the default): a QR to the waiter.** "Ready" shows a QR holding the
+     order (the exact item codes, sizes, add-ons, quantities and a check
+     number) and a short code to type if the camera fails; the waiter scans it
+     with a phone or the till; it lands on that table's bill; the waiter checks
+     it with the customer and confirms; only then does it go to the kitchen or
+     the bar.
+   - **B (optional): straight to the till**, as an order waiting for staff to
+     accept.
+   A scan reads whole or not at all, never half or wrong. Prices always come
+   from the system, never from the QR (a forged code changes no price); what
+   changed since the customer chose (sold out, a new price) is shown to the
+   waiter before confirming. Customers without a smartphone order as before.
 5. **A tested hardware kit:** a short list of devices tried with the system
    (receipt printer, cash drawer, barcode scanner, label printer for batches and
    use-by, tablet, kitchen printer), sold as a kit with setup at a margin; a
