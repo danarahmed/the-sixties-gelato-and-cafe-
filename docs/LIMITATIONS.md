@@ -64,8 +64,11 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - Stock is counted by item, not by batch: what a count finds missing comes
     off what is past its use-by first, then the stock with no lot, then the
     batch used by first; what it finds over is stock with no lot.
-  - A batch past its use-by is sold last, not refused: its alert stays until
-    what is left is recorded as expired (or counted, or its use-by changed).
+  - A batch past its use-by is sold last. Since `0098` the café's rule
+    (Settings → Rules, "Selling stock past its use-by") says what then: sold
+    with a warning, kept on the audit trail (the default), or refused unless a
+    manager approves with their PIN. Its alert stays until what is left is
+    recorded as expired (or counted, or its use-by changed).
   - What comes back to stock (a refund back on the shelf, a loss taken back)
     goes to the lots it left, the earliest use-by first, so a partial refund
     is taken to be the oldest of it; what a sale took beyond the stock is
@@ -84,6 +87,23 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
   - The plan is for the place the device works at, judged by what was sold,
     made with and, since `0055`, sent to another place there: the central
     kitchen plans by what it sends the branch.
+- **Use-by for what is bought (`0098`), what it does not do.**
+  - An item keeps one way: it doesn't go off, it keeps some days from
+    delivery, or each delivery has the date on its pack. An item with no
+    choice yet takes no use-by (Today lists it for whoever sets items up).
+  - A use-by is a day: a pack "used by 12 Nov" keeps through the 12th, at the
+    café's time. A batch's use-by keeps its hour, as before.
+  - Stock bought before `0098`, or before the item chose, has no use-by: lots
+    start with each item's next delivery. A count, or a manager on Inventory,
+    gives a delivery's lot a new use-by, with why; stock with no lot has none.
+  - What a delivery corrected up adds is stock with no lot; a return, or a
+    delivery corrected down, takes from that delivery's lot first.
+  - The guard is for sales: a batch made with an ingredient past its use-by,
+    or a transfer of one, is not stopped by it (its alert stays). A sale sent
+    from a till that sold offline is kept on the audit trail, never refused.
+  - The till's marks are read with the menu (every ten minutes, or when the
+    till comes back to the front), not the moment a lot goes off; the last
+    guard is the database's, at the sale.
 - **Selling without internet (`0073`, round fifteen).** The till keeps quick
   sales while the internet is down and sends them when it is back, each once.
   What it does not cover:
