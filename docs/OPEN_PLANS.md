@@ -17,7 +17,7 @@ before the next one is given. The order of whole plans: **7** (security),
 **1** (Supabase), **11** (going live and what else was missing), **3** (use-by),
 **8** (speed), **6** (the books), **5** (the six points), **9** (many cafés),
 **10** (every business), **4** (videos in each language), **2** (selling).
-Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November), plan 6, plan 5, plan 9, plan 10 (12 November).
+Checked so far: plan 7, plan 1 (7 November), plan 11, plan 3, plan 8 (8 November), plan 6, plan 5, plan 9, plan 10, plan 4 (12 November); plan 2 kept for before selling. **All plans checked.**
 
 The steps across the plans, in the order they are done (the owner, 8 November:
 the technical side and the system's logic first; what is not technical is kept
@@ -53,7 +53,7 @@ apart, for before selling):
 13. **Plan 11, item 4: what the café's customers see** (QR menu and the order
     built on the customer's phone, scanned by the waiter by default, WhatsApp receipts and messages, the café's own online ordering, a
     customer screen), as switched parts.
-14. **Plan 4 and plan 10, step 5:** the videos in each language, and practice,
+14. **Plan 4 and plan 10, step 5:** the videos in each language with a voice, and practice,
     help and videos for each type of business.
 15. **Plan 11, item 6: the practice café as the demo** shown to customers.
 16. **Plan 8, step 5:** a closer region, only if the measurements show it.
@@ -173,6 +173,12 @@ Arabic and Kurdish (right to left for the last two), and play the one in the
 person's language, its captions with it. About 11 MB in all instead of 4.
 tests/e2e/videos.e2e.mjs already records them; it needs the language set
 for each run, and src/lib/help/videos.ts a file per language.
+
+**The owner's decisions (12 November 2026):** all agreed: the three languages,
+and **a voice too**, reading each step in the person's language beside the
+captions. English and Arabic voices can be generated; good Sorani Kurdish voices
+are rarer, so Kurdish may be read by a person from the written steps (Claude
+gives the script), or generated if a good Sorani voice is found.
 
 ## 5. Six points from the owner (6 November 2026): what exists, what to build
 
