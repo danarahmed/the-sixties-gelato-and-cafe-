@@ -113,6 +113,9 @@ select t from (values ('kitchen_station'), ('category_station')) v(t)
 -- Each customer's own prices (0111) are the café's settings: kept.
 insert into reset_keep
 select t from (values ('customer_price')) v(t) where to_regclass('public.' || t) is not null;
+-- The menu's link on customers' phones (0118) is a setting: kept.
+insert into reset_keep
+select t from (values ('public_menu')) v(t) where to_regclass('public.' || t) is not null;
 -- The budgets (0117) are the café's plans: kept.
 insert into reset_keep
 select t from (values ('budget_line')) v(t) where to_regclass('public.' || t) is not null;

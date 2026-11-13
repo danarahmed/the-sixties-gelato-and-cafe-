@@ -112,6 +112,7 @@ Plan a short window when the café is closed.
 | The supplier's smaller gaps (`0115`)               | ⏳ Waiting for the owner to apply it in the SQL editor, after `0114`                                                                                                                                                                                                                                                                                                                                                                             |
 | The dollar's rate typed with each payment (`0116`) | ⏳ Waiting for the owner to apply it in the SQL editor, after `0115`                                                                                                                                                                                                                                                                                                                                                                             |
 | Budgets (`0117`)                                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0116`                                                                                                                                                                                                                                                                                                                                                                             |
+| The menu on customers' phones (`0118`)             | ⏳ Waiting for the owner to apply it in the SQL editor, after `0117`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4626,6 +4627,16 @@ and the budget, and the owner or the accountant sets this month's budget there
 (started from last month's figures with one press). Rehearsed with
 `tests/sql/budgets.test.sql`. Applied after `0116`, as each one before it: open
 `supabase/migrations/0117_budgets.sql` on GitHub, **Raw**, copy all of it,
+paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0118`
+
+Migration `0118` brings **the menu on customers' phones**, off until the owner
+turns it on (Settings → The menu on customers' phones): print its QR for the
+tables; customers choose on their phone and show the waiter their order as a
+QR, which the till's scanner adds to the bill. Rehearsed with
+`tests/sql/qr_menu.test.sql`. Applied after `0117`, as each one before it:
+open `supabase/migrations/0118_qr_menu.sql` on GitHub, **Raw**, copy all of it,
 paste it into Supabase's **SQL Editor** → **New query**, **Run**.
 
 ## Clearing the test records

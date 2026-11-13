@@ -162,7 +162,7 @@ select test.eq((
   'period_close_checklist,phone_status,phone_warnings,platform_money,pos_addons,pos_catalogue,'
   'pos_deals,pos_menu_next_change,pos_open_bills,pos_use_by,post_control_correction,post_legacy_unposted,'
   'post_platform_settlement,practice_reset,practice_start,practice_tasks,practice_team,pre_orders,prepaid_expenses,preview_receipt_correction,problem_reports,'
-  'product_targets,production_batches,production_lots,production_plan,production_recipes,publish_journal,'
+  'product_targets,production_batches,production_lots,production_plan,production_recipes,public_menu,public_menu_setup,publish_journal,'
   'purchase_order,purchase_orders,purchase_orders_from_list,push_done,push_take,quote_to_invoice,quotes,receipt_setup,'
   'receive_customer_payment,receive_goods,receive_stock_transfer,recent_invoices,record_advance,record_bill,'
   'record_card_settlement,record_count,record_dollar_bill,record_expense,record_loss,record_offline_sale,'
@@ -184,7 +184,7 @@ select test.eq((
   'set_budget,set_business_closed,set_business_paid_until,set_business_part,set_business_pilot,set_business_plan,set_business_rule,set_business_type,set_category_section,set_category_station,set_clock_pin,set_customer_account,set_customer_price,set_delivery_status,set_employee_left,'
   'set_employee_pay,set_employee_social_insurance,set_fx_rate,set_item_keeps,set_item_supplier,set_item_use_by,set_lot_use_by,set_loyalty_owed,set_member_active,set_member_place,'
   'set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_place_active,set_place_clock_spot,set_place_sections,'
-  'set_price,set_product_details,set_product_image,set_product_modifiers,set_quote_status,set_receipt_logo,'
+  'set_price,set_product_details,set_product_image,set_product_modifiers,set_public_menu,set_quote_status,set_receipt_logo,'
   'set_receipt_setup,set_reservation_status,set_section_hours,set_service_charge,set_social_insurance,set_target_margin,set_tax_setup,set_ticket_status,set_time_price,set_tip_sharers,set_usd_rate_band,'
   'set_variant_barcode,set_variant_packing,set_variant_weighed,set_watch_visibility,settle_problem,settle_tab,settle_tab_offline,settle_watch_finding,snooze_alert,social_insurance,social_insurance_month,'
   'speed_ping,speed_samples,split_tab,staff_list,staff_phones,staff_schedule,start_stock_count,stock_card,stock_places,'
@@ -197,12 +197,13 @@ select test.eq((
 -- each answering only to a key it gave out: a clock screen asking its code, a
 -- phone being linked, a phone asking whose it is, and a phone clocking (0068);
 -- and the phone warnings' two (0072), the app's address taking the queue and
--- saying what was sent, each answering only to the database's own secret.
+-- saying what was sent, each answering only to the database's own secret;
+-- and the café's menu (0118), read with the link the owner gave out.
 select test.eq((
   select string_agg(p.proname, ',' order by p.proname) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute')),
-  'clock_by_phone,clock_screen_code,link_phone_finish,phone_status,push_done,push_take',
-  'the public can call no function but the clock''s four and the phone warnings'' two, each needing its key');
+  'clock_by_phone,clock_screen_code,link_phone_finish,phone_status,public_menu,push_done,push_take',
+  'the public can call no function but the clock''s four, the phone warnings'' two and the menu, each needing its key');
 select test.eq((
   select string_agg(distinct p.proname, ',' order by p.proname)
     from pg_trigger t join pg_proc p on p.oid = t.tgfoid join pg_class c on c.oid = t.tgrelid

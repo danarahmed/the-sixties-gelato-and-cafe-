@@ -13,6 +13,7 @@ import { fmtIQD } from "@/lib/format";
 import { dealName, type Deal } from "@/lib/deals";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { readScan } from "@/lib/barcode";
+import { decodeQrOrder } from "@/lib/qrOrder";
 import {
   categoryName,
   fold,
@@ -325,6 +326,20 @@ export function ProductPicker({
 
   /** A scan (0078): the size with that barcode, or a scale's label, its size and weight. */
   function scan(code: string): boolean {
+    // A customer's order from their phone (0118): each line added as it is.
+    const order = decodeQrOrder(code);
+    if (order) {
+      const known = order.filter((l) => sellable.some((i) => i.variantId === l.variantId));
+      if (known.length === 0) {
+        setScanMiss(code.slice(0, 24));
+        return false;
+      }
+      setScanMiss(null);
+      setTimes("");
+      if (disabled) return true;
+      for (const l of known) onAdd(l.variantId, [], l.qty);
+      return true;
+    }
     const hit = readScan(
       code,
       sellable.map((i) => ({

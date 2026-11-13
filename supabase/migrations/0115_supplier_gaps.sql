@@ -376,8 +376,8 @@ $$;
 drop function if exists record_supplier_credit(uuid, text, numeric, text, text, uuid, uuid, text, uuid);
 create or replace function record_supplier_credit(p_supplier uuid, p_kind text, p_amount numeric, p_supplier_ref text,
                                                   p_reason text, p_receipt uuid default null, p_bill uuid default null,
-                                                  p_account_code text default null, p_idempotency_key uuid default null,
-                                                  p_date date default null)
+                                                  p_account_code text default null, p_date date default null,
+                                                  p_idempotency_key uuid default null)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare
   v_business uuid := current_business_id();
@@ -456,8 +456,8 @@ revoke execute on function record_bill__run_0114(uuid, text, date, numeric, int,
   trg_purchase_invoice_supplier_date()
   from public, anon, authenticated;
 revoke execute on function record_supplier_refund(uuid, numeric, text, text, uuid, uuid),
-  record_supplier_credit(uuid, text, numeric, text, text, uuid, uuid, text, uuid, date)
+  record_supplier_credit(uuid, text, numeric, text, text, uuid, uuid, text, date, uuid)
   from public, anon;
 grant execute on function record_supplier_refund(uuid, numeric, text, text, uuid, uuid),
-  record_supplier_credit(uuid, text, numeric, text, text, uuid, uuid, text, uuid, date)
+  record_supplier_credit(uuid, text, numeric, text, text, uuid, uuid, text, date, uuid)
   to authenticated;

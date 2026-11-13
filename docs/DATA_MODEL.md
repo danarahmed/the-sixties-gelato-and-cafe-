@@ -2054,6 +2054,18 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### The menu on customers' phones (`0118`)
+
+- **`public_menu`** (one per business): its link's `token` (random, 24
+  letters), on or off, and the place whose prices it shows.
+  `set_public_menu(enabled, location, new_link)` (the owner; a new link makes
+  the old one open nothing), `public_menu_setup()` (settings.manage).
+- `public_menu(token)`, the one function the public may call besides the
+  clock's and the phone warnings': the active, priced, not weighed sizes at
+  dine-in prices today, with names in each language, categories and photos.
+  Nothing is written from a phone: the order is a QR (`S60O1.` and each
+  size's id and quantity) that the till's scanner adds to the bill.
+
 ### Budgets (`0117`)
 
 - **`budget_line`** (business, month, account code, amount ≥ 0): a month's

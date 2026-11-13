@@ -37,6 +37,8 @@ import { getClockSpots } from "@/lib/db/security";
 import { isSystemAdmin } from "@/lib/db/speed";
 import { getTaxReport, getTaxSetup } from "@/lib/db/tax";
 import { getLoyaltyOwed } from "@/lib/db/loyaltyOwed";
+import { getPublicMenuSetup } from "@/lib/db/publicMenu";
+import { PublicMenuCard } from "@/components/settings/PublicMenuCard";
 import { LoyaltyOwed } from "@/components/settings/LoyaltyOwed";
 import { TaxSettings } from "@/components/settings/TaxSettings";
 import { getSaleDayCategories, getSaleDays } from "@/lib/db/saleDays";
@@ -124,6 +126,8 @@ export default async function SettingsPage() {
   const taxReport = taxSetup ? await getTaxReport(`${taxToday.slice(0, 8)}01`, taxToday) : null;
   // Loyalty points as money owed (0113); null before it.
   const loyaltyOwed = await getLoyaltyOwed();
+  // The menu on customers' phones (0118): null never turned on, undefined before 0118.
+  const publicMenu = await getPublicMenuSetup();
   // Sale days (0106); null before it.
   const [saleDays, saleDayCategories] = await Promise.all([getSaleDays(), getSaleDayCategories()]);
   const saleDayOn = saleDays?.find((s) => s.status === "on" || s.status === "between") ?? null;
@@ -480,6 +484,25 @@ export default async function SettingsPage() {
             <TaxSettings
               setup={taxSetup}
               report={taxReport}
+              isOwner={profile.roles.includes("owner")}
+            />
+          </section>
+        </SettingsGroup>
+      )}
+
+      {publicMenu !== undefined && (
+        <SettingsGroup
+          id="phone-menu"
+          title={t("The menu on customers' phones")}
+          status={[publicMenu?.enabled ? t("On") : t("Off")]}
+        >
+          <section className="sg-part" data-testid="settings-phone-menu">
+            <h3 style={{ marginTop: 0 }}>{t("The menu on customers' phones")}</h3>
+            <PublicMenuCard
+              setup={publicMenu}
+              places={locations
+                .filter((l) => l.kind === "branch" && l.isActive)
+                .map((l) => ({ id: l.id, name: l.name }))}
               isOwner={profile.roles.includes("owner")}
             />
           </section>

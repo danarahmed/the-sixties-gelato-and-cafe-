@@ -310,7 +310,8 @@ export function homeFor(permissions: readonly string[], chosen?: string | null):
  * or a clock screen, known by the key it keeps, not by a sign-in.
  */
 // /api/push: the database calls it with its own secret when phone warnings wait (0072).
-export const PUBLIC_PATHS = ["/login", "/auth", "/setup", "/clock", "/api/push"];
+// "/m": the café's menu on a customer's phone (0118), read with the owner's link.
+export const PUBLIC_PATHS = ["/login", "/auth", "/setup", "/clock", "/api/push", "/m"];
 
 export function isPublicPath(path: string): boolean {
   return PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`));

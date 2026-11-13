@@ -362,15 +362,16 @@ select test.eq(test.lines_of(pg_temp.id('s1c', 'credit_id')), '1200 Cr 1000 | 20
   'what went back is not counted as used: the credit comes off the 5 bottles kept');
 select test.eq(pg_temp.pos('c0000000-0000-0000-0000-0000000000a2'), '5 at 4000', 'at 800 each');
 
--- A bill is not dated before its delivery came: on the days between, it
--- would clear goods received not invoiced before they were received.
+-- A bill is not booked before its delivery came: on the days between, it
+-- would clear goods received not invoiced before they were received. Dated
+-- by the supplier the day before (0115), it keeps their date and is booked
+-- the day the goods came.
 insert into res select 's2', receive_goods(pg_temp.kci(),
   jsonb_build_array(pg_temp.line('c0000000-0000-0000-0000-0000000000a2', 4, 'each', 1000)), p_location => (select branch1 from ids));
-select test.throws(format('select record_bill(%L, %L, %L, 4000, 0, %L)', pg_temp.kci(), 'KCI-S2', test.today() - 1,
-                          pg_temp.id('s2', 'receipt_id')),
-  'Delivery % came on ' || test.today() || ': date its bill that day or later', 'a bill dated the day before its delivery is refused');
-select record_bill(pg_temp.kci(), 'KCI-S2', test.today(), 4000, 0, pg_temp.id('s2', 'receipt_id'));
+select record_bill(pg_temp.kci(), 'KCI-S2', test.today() - 1, 4000, 0, pg_temp.id('s2', 'receipt_id'));
 select test.as_admin();
+select test.eq((select supplier_date || ' ' || invoice_date from purchase_invoice where invoice_no = 'KCI-S2'),
+  (test.today() - 1) || ' ' || test.today(), 'the supplier''s date kept, booked the day the goods came');
 select test.eq((select string_agg(check_key || '=' || trim_scale(difference), ',' order by check_key)
                   from reconciliation_checks('00000000-0000-0000-0000-0000000000b1', test.today() - 1)
                  where check_key in ('grni', 'payables') and difference <> 0), null,

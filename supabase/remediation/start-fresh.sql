@@ -177,6 +177,8 @@ begin
        -- Social insurance: on or off, and what was paid to the government (0112).
        || case when to_regclass('public.social_insurance_payment') is not null
                then ', social_insurance_payment, social_insurance_setup' else '' end
+       -- The menu's link on customers' phones (0118).
+       || case when to_regclass('public.public_menu') is not null then ', public_menu' else '' end
        -- The budgets (0117).
        || case when to_regclass('public.budget_line') is not null then ', budget_line' else '' end
        -- The dollar rates used, and how far a cashier's may be (0116).
