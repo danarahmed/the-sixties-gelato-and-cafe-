@@ -24,7 +24,8 @@ console.log("▸ the owner books the points held as money owed");
     last(`select round(loyalty_points_held('${B}') * loyalty_point_value('${B}'))`),
   );
   check(
-    last(`select enabled from loyalty_owed_setup where business_id = '${B}'`) === "t" && owed2150() === worth,
+    last(`select enabled from loyalty_owed_setup where business_id = '${B}'`) === "t" &&
+      owed2150() === worth,
     `on: the points held, worth ${worth.toLocaleString("en")}, owed on 2150`,
   );
   await page.reload();
@@ -40,7 +41,8 @@ console.log("▸ the owner books the points held as money owed");
     .getByText("Saved: points are a discount when they are taken, as before.")
     .waitFor({ timeout: 15000 });
   check(
-    last(`select enabled from loyalty_owed_setup where business_id = '${B}'`) === "f" && owed2150() === 0,
+    last(`select enabled from loyalty_owed_setup where business_id = '${B}'`) === "f" &&
+      owed2150() === 0,
     "off: nothing owed",
   );
   await ctx.close();
