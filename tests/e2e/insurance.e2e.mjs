@@ -138,7 +138,9 @@ console.log("▸ the month's social insurance, paid to the government");
   await form.getByRole("button", { name: "Pay the government" }).click();
   await form.waitFor({ state: "detached", timeout: 15000 });
   check(
-    last(`select social_insurance_month('${MONTH}') ->> 'left'`) === "0",
+    last(
+      `select test.act_as('owner@example.com'); select social_insurance_month('${MONTH}') ->> 'left'`,
+    ) === "0",
     "paid from the bank: nothing left",
   );
   check(
