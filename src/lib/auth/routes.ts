@@ -94,6 +94,22 @@ export const NAV: NavEntry[] = [
     anyOf: ["cost.view", "production.record"],
     part: "recipes",
   },
+  // The kitchen's screen, a station at a time (0110).
+  {
+    group: OPERATIONS,
+    href: "/kitchen",
+    key: "nav.kitchen",
+    anyOf: ["sale.create"],
+    part: "kitchen",
+  },
+  // Bookings and the waiting list (0110).
+  {
+    group: OPERATIONS,
+    href: "/reservations",
+    key: "nav.reservations",
+    anyOf: ["sale.create"],
+    part: "reservations",
+  },
   // Who works here, the schedule and the hours (0049).
   {
     group: OPERATIONS,
@@ -233,8 +249,15 @@ export function activeHref(pathname: string | null, hrefs: readonly string[]): s
  * 0108 names none, and every part is on.
  */
 export function partOn(permissions: readonly string[], part: string | undefined): boolean {
-  return !part || !permissions.includes(`off:${part}`);
+  if (!part) return true;
+  // From 0110 the profile names each part that is on as well.
+  if (permissions.some((p) => p.startsWith("on:"))) return permissions.includes(`on:${part}`);
+  // Before it: a part added since is not there yet; the others are on unless named off.
+  return !LATER_PARTS.has(part) && !permissions.includes(`off:${part}`);
 }
+
+/** The parts added after 0108's plans (0110 and on): off until the database has them. */
+const LATER_PARTS: ReadonlySet<string> = new Set(["kitchen", "courses", "reservations"]);
 
 /** Whether the menu offers them a screen: they may open it, and its part is on. */
 export function offered(

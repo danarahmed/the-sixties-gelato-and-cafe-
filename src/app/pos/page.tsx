@@ -15,6 +15,7 @@ import { getTillLockMinutes } from "@/lib/db/security";
 import { getOfflineKey } from "@/lib/db/offline";
 import { getSaleDayNow } from "@/lib/db/saleDays";
 import { getPackingSetup } from "@/lib/db/packing";
+import { partOn } from "@/lib/auth/routes";
 import { TillLock } from "@/components/pos/TillLock";
 import { ChannelsProvider } from "@/components/ChannelsProvider";
 import { EmptyState } from "@/components/ui";
@@ -155,6 +156,10 @@ export default async function PosPage() {
         receiptSetup={receipt}
         offlineKey={offlineKey}
         packing={packing}
+        restaurant={{
+          kitchen: partOn(profile.permissions, "kitchen"),
+          courses: partOn(profile.permissions, "courses"),
+        }}
         saleDay={
           saleDay
             ? {

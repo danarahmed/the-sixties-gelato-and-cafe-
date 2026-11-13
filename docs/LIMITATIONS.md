@@ -819,3 +819,7 @@ of every audit finding is in [`PROGRESS.md`](PROGRESS.md).
 - Packing (`0107`) is free to the customer and never comes back: a void or a
   refund leaves it spent. A sale sent once the internet is back, or by an
   older till, takes the café's defaults rather than the cashier's count.
+- The restaurant parts (`0110`) put the kitchen's tickets on screens, not on
+  printers per station; a waiter takes orders on a phone with the till's own
+  screen; the menu engineering report is the Menu matrix. A bill joined to
+  another must not be printed or discounted yet.

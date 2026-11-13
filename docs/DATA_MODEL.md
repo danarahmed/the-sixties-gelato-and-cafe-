@@ -2054,6 +2054,35 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### The restaurant parts (`0110`)
+
+- Three parts, on by default for a restaurant only: `kitchen` (Kitchen screens
+  and stations), `courses` (Courses and seats on a bill), `reservations`
+  (Reservations and the waiting list). `require_part(business, part)` refuses a
+  part's own functions while it is off. From 0110 `my_profile()` also names
+  each part that is on (`on:<part>`).
+- **`kitchen_station`** (a name, put away with `is_active`) and
+  **`category_station`** (a category's station; none: the kitchen's own
+  screen). `save_kitchen_station`, `set_category_station` (settings.manage),
+  `kitchen_setup()`.
+- **`pos_tab_line.course`** (1–5) and **`seat`** (1–50), as the till sends
+  them in `save_tab`'s lines; `pos_open_bills` gives them back.
+- **`kitchen_ticket`** (a station's ticket: the bill or sale, its title and
+  turn, the course, `new` → `ready` → `done`) and **`kitchen_ticket_line`**
+  (what to make, how many, its add-ons, note and seat; a negative quantity is
+  something taken off). `send_tab_to_kitchen(tab, course)` sends what a bill
+  added or took off since the kitchen last had it, by what it makes
+  (`line_key`); a course given, only its lines and those with none.
+  `send_sale_to_kitchen(order)` sends a counter sale whole, once.
+  `kitchen_tickets(station, all)`, `set_ticket_status(ticket, status)`.
+- `join_tabs(into, into_version, from, from_version)`: the second bill's lines
+  added to the first (neither printed nor discounted), the second emptied and
+  cancelled as moved; on the audit trail as `bill.join`. Moving a bill to
+  another table is `save_tab`'s table, as before.
+- **`reservation`**: a name, phone, party size, when (none: waiting now), a
+  table when seated; `booked`, `seated`, `cancelled` or `no_show`.
+  `save_reservation`, `set_reservation_status`, `reservations(day)`.
+
 ### Running many businesses (`0109`)
 
 - **`business.pilot`**: in the pilot group; a part whose catalogue entry says

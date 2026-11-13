@@ -33,3 +33,12 @@ describe("plans and parts (0108)", () => {
     expect(menu).toContain("/inventory");
   });
 });
+
+describe("parts added after the plans (0110)", () => {
+  it("are off until the database names them on", () => {
+    expect(partOn(owner, "kitchen")).toBe(false);
+    expect(mayOpen([...owner, "on:till", "on:kitchen"], "/kitchen")).toBe(true);
+    expect(mayOpen([...owner, "on:till", "off:reservations"], "/reservations")).toBe(false);
+    expect(partOn([...owner, "on:till"], "accounting")).toBe(false);
+  });
+});

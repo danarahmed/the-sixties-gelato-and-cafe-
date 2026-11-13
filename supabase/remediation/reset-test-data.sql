@@ -106,6 +106,10 @@ select t from (values ('packing_item'), ('variant_packing')) v(t)
 -- The business's own switches for its parts (0108) are settings: kept.
 insert into reset_keep
 select t from (values ('business_part')) v(t) where to_regclass('public.' || t) is not null;
+-- The kitchen's stations and which category goes to each (0110) are the menu's: kept.
+insert into reset_keep
+select t from (values ('kitchen_station'), ('category_station')) v(t)
+ where to_regclass('public.' || t) is not null;
 -- Who gave the system's support access, and each visit (0109), are kept, as the audit trail is.
 insert into reset_keep
 select t from (values ('support_grant'), ('support_twin'), ('support_visit')) v(t)
@@ -189,6 +193,9 @@ begin
        || case when to_regclass('public.sale_day') is not null then ', sale_day' else '' end
        -- What each order went out in (0107), with the sales.
        || case when to_regclass('public.sales_order_packing') is not null then ', sales_order_packing' else '' end
+       -- The kitchen's tickets and the bookings (0110).
+       || case when to_regclass('public.kitchen_ticket') is not null
+               then ', kitchen_ticket_line, kitchen_ticket, reservation' else '' end
        || ' restart identity';
 end $$;
 

@@ -44,6 +44,9 @@ const lines = z.array(
     note: optionalText(200),
     /** Its add-ons (0041). */
     addons: lineAddons,
+    /** Its course and seat (0110). */
+    course: z.number().int().min(1).max(5).nullish(),
+    seat: z.number().int().min(1).max(50).nullish(),
   }),
 );
 const toDb = (
@@ -52,6 +55,8 @@ const toDb = (
     qty: string | number;
     note?: string | null;
     addons?: { modifierId: string; qty: number }[];
+    course?: number | null;
+    seat?: number | null;
   }[],
 ) =>
   ls.map((l) => ({
@@ -59,6 +64,9 @@ const toDb = (
     qty: l.qty,
     ...(l.note ? { note: l.note } : {}),
     modifiers: addonsToDb(l.addons),
+    // Sent only when given, so a database before 0110 takes the bill as before.
+    ...(l.course ? { course: l.course } : {}),
+    ...(l.seat ? { seat: l.seat } : {}),
   }));
 
 /** The bills open at this till's branch, as the till's page lists them (0055, 0063). */
@@ -366,4 +374,31 @@ export async function saveTableAction(
   if (!r.ok) return r;
   refresh("/pos");
   return { ok: true, data: { id: String(r.data) } };
+}
+
+/** Two bills joined into one (0110): the second's lines added to the first, the second closed as moved. */
+export async function joinBillsAction(input: {
+  intoId: string;
+  intoVersion: number;
+  fromId: string;
+  fromVersion: number;
+}): Promise<ActionResult<{ bills: OpenBill[] | null }>> {
+  const v = parse(
+    z.object({
+      intoId: id("a bill"),
+      intoVersion: version,
+      fromId: id("a bill"),
+      fromVersion: version,
+    }),
+    input,
+  );
+  if (!v.ok) return v;
+  const r = await callRpc("join_tabs", {
+    p_into: v.data.intoId,
+    p_into_version: v.data.intoVersion,
+    p_from: v.data.fromId,
+    p_from_version: v.data.fromVersion,
+  });
+  if (!r.ok) return r;
+  return withBills({});
 }

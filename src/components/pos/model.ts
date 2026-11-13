@@ -44,6 +44,9 @@ export interface Line {
   addons: LineAddon[];
   /** One of a meal deal's places (0089): the deal and which one of it. */
   deal?: LineDeal;
+  /** Its course (1 starter, 2 main…) and the seat it is for (0110); none when not given. */
+  course?: number | null;
+  seat?: number | null;
 }
 
 /** A meal deal a line is part of (0089): its prices are the deal's, by channel. */
@@ -214,7 +217,14 @@ export const isPlatform = (c: SalesChannel) => isPlatformChannel(c);
 export function signature(lines: Line[], discount: Discount | null): string {
   const d = discount ? parseNumber(discount.value) : null;
   return JSON.stringify([
-    lines.map((l) => [l.variantId, l.qty, l.note ?? "", addonsKey(l.addons)]),
+    lines.map((l) => [
+      l.variantId,
+      l.qty,
+      l.note ?? "",
+      addonsKey(l.addons),
+      // Its course and seat (0110), only when given: a bill without them reads as before.
+      ...(l.course || l.seat ? [l.course ?? 0, l.seat ?? 0] : []),
+    ]),
     discount && d ? [discount.kind, d.toString()] : null,
   ]);
 }
@@ -279,6 +289,8 @@ export function orderFromBill(b: OpenBill): Order {
         ? `${l.productName} — ${l.variantName}`
         : l.productName,
     billPrice: l.price,
+    ...(l.course ? { course: l.course } : {}),
+    ...(l.seat ? { seat: l.seat } : {}),
     addons: (l.modifiers ?? []).map((m) => ({
       modifierId: m.modifierId,
       qty: m.qty,
