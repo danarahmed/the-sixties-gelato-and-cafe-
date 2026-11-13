@@ -6,20 +6,7 @@ import { setBusinessPartAction, setBusinessTypeAction } from "@/lib/actions/part
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Field, Notice, inputStyle } from "@/components/ui";
 
-type Plan = "starter" | "complete" | "business";
-type BusinessType = "cafe" | "bakery" | "restaurant" | "supplier";
-
-export const PLAN_LABEL: Record<Plan, string> = {
-  starter: "Starter",
-  complete: "Complete",
-  business: "Business",
-};
-export const TYPE_LABEL: Record<BusinessType, string> = {
-  cafe: "Café",
-  bakery: "Bakery",
-  restaurant: "Restaurant",
-  supplier: "Supplier",
-};
+import { PLAN_LABEL, TYPE_LABEL, type BusinessType, type Plan } from "@/lib/plans";
 
 /**
  * Plans and parts (0108): the business's plan (changed by the system's
