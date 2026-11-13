@@ -48,6 +48,8 @@ async function shellMember(): Promise<ShellMember | null> {
       // What waits for them, counted on the menu (0088).
       approvals: approver ? await getApprovalsCount() : 0,
       practice: s.profile.practice,
+      subscription: s.profile.subscription,
+      support: s.profile.support,
     };
   } catch {
     return null;

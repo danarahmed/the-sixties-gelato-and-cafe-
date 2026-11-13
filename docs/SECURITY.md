@@ -167,3 +167,13 @@ customer's details.
    **Reports**.
 4. Correct with new entries ([`REMEDIATION.md`](REMEDIATION.md)); nothing needs
    to be edited or deleted.
+
+## Support access (`0109`)
+
+The system's administrators never see a business's records by being
+administrators. They look only while that business's owner allows it (1 to 72
+hours, with why, taken back at any time), as a read-only member of it ("System
+support", the auditor's role), from the administrators' page; each visit is on
+the business's own audit trail and listed for its owner. When the permission
+ends, the same requests are simply the administrator's own again. The data
+export is the owner's alone, never support's.

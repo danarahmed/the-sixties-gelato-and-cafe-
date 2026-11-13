@@ -2054,6 +2054,36 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Running many businesses (`0109`)
+
+- **`business.pilot`**: in the pilot group; a part whose catalogue entry says
+  `"stage": "pilot"` is on only for it until released. **`business.paid_until`**
+  (none: no end) and **`business.closed_at`**: `subscription_state(business)` is
+  `active`, `grace` (up to 7 days after `paid_until`), `read_only` (only the
+  permissions that read are held, `permission_reads`) or `closed` (every
+  permission refused). Practice cafés are always active.
+- **`support_grant`**: the owner's permission for the system's support, 1 to
+  72 hours, with why, taken back with `revoked_at`. **`support_twin`**: the
+  administrator's read-only member ("System support", the auditor's role) in
+  each business visited; **`support_visit`**: each visit. While a grant lasts,
+  a request with the header `x-sixties-support: <business>` from a system
+  administrator acts as that member (`session_member_id`); without one, as
+  themselves. `grant_support_access(hours, reason)`, `revoke_support_access()`
+  and `support_access()` (the owner); `support_enter(business)` (the
+  administrators), on the business's audit trail as `support.grant`,
+  `support.revoke` and `support.enter`.
+- **`problem_report.for_support`**: sent to the system's support too (the
+  reporter's tick, from `context.for_support`). `admin_problem_reports()`.
+- `admin_businesses()` adds each business's pilot, paid until, state, last
+  sale, sales today, errors in the last day, tills keeping sales, problems sent
+  to support and support's access. `set_business_paid_until`,
+  `set_business_pilot`, `set_business_closed` (the administrators, with why).
+- `my_profile()` gives `subscription` (`state`, `paid_until`, `grace_left`) and
+  `support`; while read-only or closed it lists only the permissions that
+  read. `export_business_data()` (the owner, never support): the business's
+  places, accounts, menu, prices, stock items, suppliers, customers, people,
+  sales, stock movements and books, at any time.
+
 ### Plans, parts and the type of business (`0108`)
 
 - **`business.business_type`** (`cafe`, `bakery`, `restaurant`, `supplier`;

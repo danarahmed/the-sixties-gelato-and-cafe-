@@ -207,6 +207,14 @@ const ACTION_LABEL: Record<string, string> = {
   "business.plan": "Plan changed",
   "business.part": "A part turned on or off",
   "business.type": "Type of business changed",
+  // Running many businesses (0109).
+  "business.paid_until": "Paid until changed",
+  "business.pilot": "Pilot group changed",
+  "business.close": "Business closed",
+  "business.reopen": "Business opened again",
+  "support.grant": "Support allowed",
+  "support.revoke": "Support taken back",
+  "support.enter": "Support looked",
   // Packing (0107).
   "packing.item": "Packing item set",
   "packing.variant": "A size's packing set",

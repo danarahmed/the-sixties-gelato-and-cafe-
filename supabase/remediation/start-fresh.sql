@@ -84,6 +84,10 @@ select t from (values ('member_device'), ('system_admin'), ('speed_sample'), ('b
 -- The business's own switches for its parts (0108) are settings: kept.
 insert into fresh_keep
 select t from (values ('business_part')) v(t) where to_regclass('public.' || t) is not null;
+-- Who gave the system's support access, and each visit (0109), are kept, as the audit trail is.
+insert into fresh_keep
+select t from (values ('support_grant'), ('support_twin'), ('support_visit')) v(t)
+ where to_regclass('public.' || t) is not null;
 
 do $$
 begin

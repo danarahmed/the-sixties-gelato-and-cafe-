@@ -39,6 +39,10 @@ export interface Profile {
   firstScreen: string | null;
   /** Practising (0096): this is their twin in their practice café, nothing of it real. */
   practice: boolean;
+  /** How paying stands (0109): active, grace (days left), read-only or closed. */
+  subscription: { state: "active" | "grace" | "read_only" | "closed"; graceLeft: number | null };
+  /** A system administrator looking at this business as its read-only support (0109). */
+  support: boolean;
 }
 
 export interface SessionState {
@@ -102,9 +106,20 @@ export const getSession = cache(async (): Promise<SessionState> => {
       worksAtName: p.works_at_name == null ? null : String(p.works_at_name),
       firstScreen,
       practice: p.practice === true,
+      subscription: subscriptionOf(p.subscription),
+      support: p.support === true,
     },
   };
 });
+
+/** How paying stands, as the profile says it (0109); before it, always active. */
+function subscriptionOf(v: unknown): Profile["subscription"] {
+  const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
+  const state = ["grace", "read_only", "closed"].includes(String(o.state))
+    ? (String(o.state) as Profile["subscription"]["state"])
+    : "active";
+  return { state, graceLeft: o.grace_left == null ? null : Number(o.grace_left) };
+}
 
 /** The signed-in, active member — or off to sign in / the no-access page. */
 export async function requireMember(): Promise<Profile> {

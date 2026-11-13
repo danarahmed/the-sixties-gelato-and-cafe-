@@ -43,6 +43,8 @@ import { getPackingChoices, getPackingSetup } from "@/lib/db/packing";
 import { PackingSettings } from "@/components/settings/PackingSettings";
 import { getBusinessParts } from "@/lib/db/parts";
 import { PlanAndParts, PLAN_LABEL } from "@/components/settings/PlanAndParts";
+import { getSupportAccess } from "@/lib/db/support";
+import { SupportAccess } from "@/components/settings/SupportAccess";
 import {
   notSetUp,
   peopleStatus,
@@ -120,6 +122,8 @@ export default async function SettingsPage() {
   const saleDayOn = saleDays?.find((s) => s.status === "on" || s.status === "between") ?? null;
   // Plans and parts (0108); null before it.
   const businessParts = await getBusinessParts();
+  // Support access and the business's data (0109), for the owner; null before it.
+  const supportAccess = profile.roles.includes("owner") ? await getSupportAccess() : null;
   // Packing (0107); null before it.
   const packingSetup = await getPackingSetup();
   const packingChoices = packingSetup ? await getPackingChoices() : null;
@@ -504,6 +508,26 @@ export default async function SettingsPage() {
               businessType={businessParts.businessType}
               parts={businessParts.parts}
               isOwner={profile.roles.includes("owner")}
+            />
+          </section>
+        </SettingsGroup>
+      )}
+
+      {supportAccess && (
+        <SettingsGroup
+          id="support"
+          title={t("Support and your data")}
+          status={[
+            supportAccess.openUntil ? t("Support may look now") : t("Support has no access"),
+          ]}
+        >
+          <section className="sg-part" data-testid="settings-support">
+            <h3 style={{ marginTop: 0 }}>{t("Support and your data")}</h3>
+            <SupportAccess
+              openUntil={supportAccess.openUntil}
+              grants={supportAccess.grants}
+              visits={supportAccess.visits}
+              timezone={profile.timezone}
             />
           </section>
         </SettingsGroup>

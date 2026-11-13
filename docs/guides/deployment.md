@@ -103,6 +103,7 @@ Plan a short window when the café is closed.
 | Sale days (`0106`)                                 | ⏳ Waiting for the owner to apply it in the SQL editor, after `0105`                                                                                                                                                                                                                                                                                                                                                                             |
 | Packing at the till (`0107`)                       | ⏳ Waiting for the owner to apply it in the SQL editor, after `0106`                                                                                                                                                                                                                                                                                                                                                                             |
 | Plans and parts (`0108`)                           | ⏳ Waiting for the owner to apply it in the SQL editor, after `0107`                                                                                                                                                                                                                                                                                                                                                                             |
+| Running many businesses (`0109`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0108`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4513,6 +4514,22 @@ Settings → Businesses and plans. Rehearsed with
 it: open `supabase/migrations/0108_plans_and_parts.sql` on GitHub, **Raw**,
 copy all of it, paste it into Supabase's **SQL Editor** → **New query**,
 **Run**.
+
+## After `0109`
+
+Migration `0109` brings **running many businesses**: the administrators'
+page (Settings → Businesses and plans) shows each business's last sale,
+today's sales, errors, tills keeping sales, problems sent to support, its plan,
+paying and the pilot group. "Something's wrong?" can send a problem to the
+system's support too. The owner allows support to look for 1 to 72 hours
+(Settings → Support and your data), read-only, each visit recorded, and may
+take it back. A business paid until a day has 7 days' grace, then the system
+only shows what is kept, then an administrator may close it; its owner can
+download all its data at any time. The Sixty's is paid with no end: nothing
+changes for it. Rehearsed with `tests/sql/running_many.test.sql`. Applied
+after `0108`, as each one before it: open
+`supabase/migrations/0109_running_many.sql` on GitHub, **Raw**, copy all of
+it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
 
 ## Clearing the test records
 

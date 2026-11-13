@@ -106,6 +106,10 @@ select t from (values ('packing_item'), ('variant_packing')) v(t)
 -- The business's own switches for its parts (0108) are settings: kept.
 insert into reset_keep
 select t from (values ('business_part')) v(t) where to_regclass('public.' || t) is not null;
+-- Who gave the system's support access, and each visit (0109), are kept, as the audit trail is.
+insert into reset_keep
+select t from (values ('support_grant'), ('support_twin'), ('support_visit')) v(t)
+ where to_regclass('public.' || t) is not null;
 
 do $$
 declare v_mode text := coalesce(current_setting('sixties.reset', true), '');

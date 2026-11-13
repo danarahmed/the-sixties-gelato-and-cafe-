@@ -22,6 +22,7 @@ export function ProblemButton() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [what, setWhat] = useState("");
+  const [toSupport, setToSupport] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [busy, start] = useTransition();
@@ -59,6 +60,8 @@ export function ProblemButton() {
             browser: navigator.userAgent.slice(0, 160),
             lastError,
             at: new Date().toISOString(),
+            // To the system's support too (0109), when they tick it.
+            for_support: toSupport,
           },
         },
         key.current!,
@@ -117,6 +120,17 @@ export function ProblemButton() {
                   <span className="muted" style={{ fontSize: ".8rem" }}>
                     {t("On: {page}", { page: pathname ?? "/" })}
                   </span>
+                  <label
+                    style={{ display: "flex", gap: 6, alignItems: "center", fontSize: ".9rem" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={toSupport}
+                      onChange={(e) => setToSupport(e.target.checked)}
+                      data-testid="problem-to-support"
+                    />
+                    {t("Send it to the system's support too")}
+                  </label>
                 </>
               )}
               {error && (

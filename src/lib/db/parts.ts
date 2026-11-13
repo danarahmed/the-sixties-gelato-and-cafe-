@@ -58,6 +58,16 @@ export interface AdminBusiness {
   places: number;
   people: number;
   practice: boolean;
+  /** How it is doing (0109); empty before it. */
+  pilot: boolean;
+  paidUntil: string | null;
+  state: "active" | "grace" | "read_only" | "closed";
+  lastSaleAt: string | null;
+  salesToday: number;
+  errorsToday: number;
+  tillsWaiting: number;
+  problemsOpen: number;
+  supportUntil: string | null;
 }
 
 export function toAdminBusinesses(d: unknown): AdminBusiness[] {
@@ -69,6 +79,17 @@ export function toAdminBusinesses(d: unknown): AdminBusiness[] {
     places: Number(b.places ?? 0),
     people: Number(b.people ?? 0),
     practice: b.practice === true,
+    pilot: b.pilot === true,
+    paidUntil: typeof b.paid_until === "string" ? b.paid_until : null,
+    state: (["grace", "read_only", "closed"].includes(String(b.state))
+      ? String(b.state)
+      : "active") as AdminBusiness["state"],
+    lastSaleAt: typeof b.last_sale_at === "string" ? b.last_sale_at : null,
+    salesToday: Number(b.sales_today ?? 0),
+    errorsToday: Number(b.errors_today ?? 0),
+    tillsWaiting: Number(b.tills_waiting ?? 0),
+    problemsOpen: Number(b.problems_open ?? 0),
+    supportUntil: typeof b.support_until === "string" ? b.support_until : null,
   }));
 }
 
