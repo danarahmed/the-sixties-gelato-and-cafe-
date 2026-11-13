@@ -30,7 +30,9 @@ begin
   for t in select c.relname from pg_class c join pg_namespace s on s.oid = c.relnamespace
             where s.nspname = 'public' and c.relkind in ('r', 'p')
               and c.relname not in ('business', 'location', 'gl_account', 'app_user', 'user_role', 'audit_log',
-                                    'role_permission', 'reason_code', 'delivery_platform', 'cash_drawer')
+                                    'role_permission', 'reason_code', 'delivery_platform', 'cash_drawer',
+                                    -- Every business kept each part on as plans came (0108).
+                                    'business_part')
   loop
     execute format('select count(*) from public.%I', t) into n;
     perform test.eq(n, 0::bigint, t || ' is empty');

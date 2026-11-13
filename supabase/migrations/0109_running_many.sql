@@ -266,7 +266,7 @@ end $$;
 -- -----------------------------------------------------------------------------
 alter table problem_report add column if not exists for_support boolean not null default false;
 create or replace function problem_for_support() returns trigger
-language plpgsql set search_path = public as $$
+language plpgsql security definer set search_path = public as $$
 begin
   new.for_support := coalesce((new.context ->> 'for_support')::boolean, false);
   return new;
