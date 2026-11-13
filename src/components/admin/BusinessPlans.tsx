@@ -76,6 +76,7 @@ export function BusinessPlans({
               <td>
                 <select
                   style={inputStyle}
+                  aria-label={t("Plan")}
                   value={b.plan}
                   disabled={busy}
                   onChange={(e) => change(b.id, e.target.value as Plan)}
