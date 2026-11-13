@@ -109,6 +109,7 @@ Plan a short window when the café is closed.
 | Social insurance and the payslip (`0112`)          | ⏳ Waiting for the owner to apply it in the SQL editor, after `0111`                                                                                                                                                                                                                                                                                                                                                                             |
 | Loyalty points as money owed (`0113`)              | ⏳ Waiting for the owner to apply it in the SQL editor, after `0112`                                                                                                                                                                                                                                                                                                                                                                             |
 | The books' smaller gaps (`0114`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0113`                                                                                                                                                                                                                                                                                                                                                                             |
+| The supplier's smaller gaps (`0115`)               | ⏳ Waiting for the owner to apply it in the SQL editor, after `0114`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4592,6 +4593,16 @@ cost is shared between places by the hours clocked at each. Rehearsed with
 it: open `supabase/migrations/0114_books_small_gaps.sql` on GitHub, **Raw**,
 copy all of it, paste it into Supabase's **SQL Editor** → **New query**,
 **Run**.
+
+## After `0115`
+
+Migration `0115` closes **the supplier's smaller gaps**: a supplier's refund
+of a credit in cash or to the bank is its own button on Vendors (They paid it
+back…); credit notes and bills are dated as the supplier dated them, within
+open months. Rehearsed with `tests/sql/supplier_gaps.test.sql`. Applied after
+`0114`, as each one before it: open
+`supabase/migrations/0115_supplier_gaps.sql` on GitHub, **Raw**, copy all of
+it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
 
 ## Clearing the test records
 

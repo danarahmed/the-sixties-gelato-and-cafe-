@@ -166,7 +166,7 @@ select test.eq((
   'purchase_order,purchase_orders,purchase_orders_from_list,push_done,push_take,quote_to_invoice,quotes,receipt_setup,'
   'receive_customer_payment,receive_goods,receive_stock_transfer,recent_invoices,record_advance,record_bill,'
   'record_card_settlement,record_count,record_dollar_bill,record_expense,record_loss,record_offline_sale,'
-  'record_opening_stock,record_prepaid_expense,record_production,record_sale,record_supplier_credit,'
+  'record_opening_stock,record_prepaid_expense,record_production,record_sale,record_supplier_credit,record_supplier_refund,'
   'record_waste,refund_sale,refund_sale_lines,register_clock_screen,reject_stock_count,release_prepaid,'
   'remove_clock_screen,remove_item_supplier,remove_push_device,rename_account,rename_place,reopen_payroll,'
   'report_balance_sheet,report_cash_flow,report_cashier_scorecard,report_customers,report_daily_sales,report_day_totals,'

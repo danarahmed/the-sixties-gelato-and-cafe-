@@ -2054,6 +2054,24 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### The supplier's smaller gaps (`0115`)
+
+- **`supplier_refund`**: what a supplier paid back of a credit, into the till
+  (a `cash_event` `cash_in`), the safe or the bank: Dr the money, Cr 2000.
+  `record_supplier_refund(credit, amount, method, reference, location, key)`
+  (purchase.create or accounting.post), never more than is left of the credit.
+  Each is also a `supplier_credit_allocation` row with `supplier_refund_id` and
+  no bill, so what is left of a credit counts it everywhere. The statement
+  shows it (`refund`), and `reconciliation_checks` adds it to payables and,
+  into the safe, to the safe.
+- `record_supplier_credit(…, p_date)`: dated as the supplier dated it, never
+  after today nor in a locked month nor before its bill; its journal on that
+  day (`sixties.credit_date`). A price credit that revalues stock stays today's.
+- `purchase_invoice.supplier_date`: a bill the supplier dated before its
+  delivery keeps their date there and its due date counts from it; its
+  `invoice_date` and journal are the delivery's day. No bill is dated after
+  today or in a locked month (`locked_month_of`).
+
 ### The books' smaller gaps (`0114`)
 
 - **`drawer_short_explained`**: an expense paid from the till, dated a closed

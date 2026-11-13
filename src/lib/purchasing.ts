@@ -283,7 +283,8 @@ export interface SupplierCredit {
 
 /* --------------------------------------------------------------- the statement */
 
-export type StatementKind = "bill" | "cancelled" | "payment" | "credit";
+/** A refund (0115): what the supplier paid back of a credit. */
+export type StatementKind = "bill" | "cancelled" | "payment" | "credit" | "refund";
 
 export interface StatementLine {
   date: string;
@@ -355,7 +356,9 @@ export function statementFrom(r: Record<string, unknown> | null | undefined): Su
     opening: num(d.opening),
     lines: list(d.lines).map((l) => ({
       date: str(l.date),
-      kind: (["bill", "cancelled", "payment", "credit"] as const).includes(l.kind as StatementKind)
+      kind: (["bill", "cancelled", "payment", "credit", "refund"] as const).includes(
+        l.kind as StatementKind,
+      )
         ? (l.kind as StatementKind)
         : "bill",
       id: str(l.id),

@@ -207,6 +207,8 @@ begin
                then ', kitchen_ticket_line, kitchen_ticket, reservation' else '' end
        -- Quotes and delivery notes (0111), with the invoices they went with.
        || case when to_regclass('public.sales_quote') is not null then ', delivery_note, sales_quote' else '' end
+       -- What suppliers paid back of their credits (0115), with the credits.
+       || case when to_regclass('public.supplier_refund') is not null then ', supplier_refund' else '' end
        -- Which late payment explained which day's short (0114), with the cash sessions.
        || case when to_regclass('public.drawer_short_explained') is not null then ', drawer_short_explained' else '' end
        -- What was paid to the government for social insurance (0112), with the payrolls.

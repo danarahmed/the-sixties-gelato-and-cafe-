@@ -454,6 +454,8 @@ const creditInput = z
       .regex(/^\d{4}$/)
       .nullable()
       .default(null),
+    /** The day the supplier dated it (0115); empty: today. */
+    date: day("The date").nullable().default(null),
   })
   .refine((c) => c.kind !== "price" || c.receiptId !== null, {
     message: "Choose the delivery the price was for",
@@ -482,6 +484,8 @@ export async function recordSupplierCreditAction(
     p_bill: v.data.billId,
     p_account_code: v.data.accountCode,
     p_idempotency_key: key,
+    // Sent only when given: before 0115 the database takes no date.
+    ...(v.data.date ? { p_date: v.data.date } : {}),
   });
   if (!r.ok) return r;
   refresh(...BUY_PATHS);
@@ -490,6 +494,43 @@ export async function recordSupplierCreditAction(
     data: {
       creditNo: Number(r.data.credit_no),
       setAgainstBill: Number(r.data.set_against_bill ?? 0),
+      journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
+    },
+  };
+}
+
+const refundInput = z.object({
+  creditId: id("a credit"),
+  amount: positive("The amount"),
+  method: z.enum(["till", "safe", "bank"], {
+    message: "Say where the money went: the till, the safe or the bank",
+  }),
+  reference: optionalText(60),
+});
+
+/** What is left of a supplier's credit, paid back to the till, the safe or the bank (0115). Keyed. */
+export async function recordSupplierRefundAction(
+  input: z.input<typeof refundInput>,
+  key: string,
+): Promise<ActionResult<{ left: number; journalNo: number | null }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(refundInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("record_supplier_refund", {
+    p_credit: v.data.creditId,
+    p_amount: v.data.amount,
+    p_method: v.data.method,
+    p_reference: v.data.reference ?? null,
+    p_location: v.data.method === "till" ? await tillForWrite() : null,
+    p_idempotency_key: key,
+  });
+  if (!r.ok) return r;
+  refresh(...BUY_PATHS);
+  return {
+    ok: true,
+    data: {
+      left: Number(r.data.left ?? 0),
       journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
     },
   };

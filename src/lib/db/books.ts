@@ -227,7 +227,7 @@ export async function getVendorBook(
   today: string,
 ): Promise<{ vendors: VendorRow[]; openBills: OpenBill[] }> {
   const c = await db();
-  const [suppliers, bills, payments, credits, allocations, dollars] = await Promise.all([
+  const [suppliers, bills, payments, credits, allocations, dollars, refunds] = await Promise.all([
     // Every column: how often a supplier delivers is there once 0092 is applied.
     c.from("supplier").select("*").order("name"),
     c
@@ -247,7 +247,13 @@ export async function getVendorBook(
     c.from("supplier_credit_allocation").select("purchase_invoice_id,amount"),
     // A bill's dollars (0103): read apart, so the page works before it is applied.
     c.from("purchase_invoice").select("id,usd_amount,usd_paid,usd_value,usd_carried_rate"),
+    // What they paid back of their credits (0115): read apart, so the page works before it is applied.
+    c
+      .from("supplier_refund")
+      .select("supplier_id,amount,refunded_on,method,reference")
+      .order("refunded_on"),
   ]);
+  const refundRows = refunds.error ? [] : ((refunds.data ?? []) as Record<string, unknown>[]);
   const usdByBill = new Map(
     (dollars.error ? [] : ((dollars.data ?? []) as Record<string, unknown>[])).map((d) => [
       str(d.id),
@@ -312,7 +318,18 @@ export async function getVendorBook(
     const cancelled = allBills.filter((b) => b.cancelled_at && str(b.supplier_id) === id);
     const pays = payRows.filter((p) => str(p.supplier_id) === id);
     const theirCredits = creditRows.filter((x) => str(x.supplier_id) === id);
+    const theirRefunds = refundRows.filter((x) => str(x.supplier_id) === id);
     const lines: VendorLine[] = [
+      // What they paid back of a credit (0115): owed to the café no more.
+      ...theirRefunds.map((x) => ({
+        date: str(x.refunded_on),
+        particulars: "Their refund of a credit",
+        ref: x.reference
+          ? { text: "{ref}", vars: { ref: str(x.reference) } as Record<string, string> }
+          : null,
+        charge: num(x.amount),
+        payment: 0,
+      })),
       ...mine.map((b) => ({
         date: str(b.invoice_date),
         particulars: `Bill ${str(b.invoice_no)}`.trim() + (b.legacy ? " (before controls)" : ""),
@@ -354,6 +371,7 @@ export async function getVendorBook(
     const billed = mine.reduce((t, b) => t + num(b.amount_total), 0);
     const paid = pays.reduce((t, p) => t + num(p.amount), 0);
     const credited = theirCredits.reduce((t, x) => t + num(x.amount), 0);
+    const refunded = theirRefunds.reduce((t, x) => t + num(x.amount), 0);
     const overdue = openBills
       .filter((b) => b.supplierId === id && b.daysOverdue > 0)
       .reduce((t, b) => t + b.outstanding, 0);
@@ -368,7 +386,7 @@ export async function getVendorBook(
       billed,
       paid,
       credited,
-      balance: billed - paid - credited,
+      balance: billed - paid - credited + refunded,
       overdue,
       lines,
     };

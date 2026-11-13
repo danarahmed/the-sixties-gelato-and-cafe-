@@ -69,6 +69,10 @@ export default async function SupplierStatementPage({
         return l.bill ? msg(`Payment — bill ${l.bill}`) : t("Payment");
       case "credit":
         return msg(CREDIT_FOR[l.creditKind ?? "other"]);
+      case "refund":
+        return l.creditNo !== null
+          ? t("Their refund of credit {no}", { no: l.creditNo })
+          : t("Their refund of a credit");
     }
   };
   const ref = (l: StatementLine): string => {
