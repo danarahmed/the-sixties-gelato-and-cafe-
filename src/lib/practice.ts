@@ -119,6 +119,28 @@ export const PRACTICE_TASKS: Record<string, PracticeTaskInfo> = {
     how: "On Reports, open any three, and read what each says.",
     href: "/reports",
   },
+  // For a restaurant (0120), where its parts are on.
+  kitchen_send: {
+    title: "Send a table's order to the kitchen",
+    how: "On Tables, open a table's bill, add a dish and press Send to the kitchen.",
+    href: "/pos",
+  },
+  reservation: {
+    title: "Take a reservation",
+    how: "On Reservations, add a booking: a name, the time and how many.",
+    href: "/reservations",
+  },
+  // For a supplier or a bakery (0120), where its parts are on.
+  quote: {
+    title: "Make a quote for a customer",
+    how: "On Wholesale, choose a customer on account, add what they want and save the quote.",
+    href: "/wholesale",
+  },
+  delivery_note: {
+    title: "Send a delivery note with an invoice",
+    how: "On Wholesale, make a delivery note for an invoice, with the driver, and mark it out.",
+    href: "/wholesale",
+  },
 };
 
 export interface PracticeTask {

@@ -204,6 +204,36 @@ const phrases: PhraseBook = {
     ar: "في التقارير، افتح أي ثلاثة، واقرأ ما يقوله كل منها.",
     ckb: "لە ڕاپۆرتەکان، هەر سێیەک بکەرەوە، و بیخوێنەرەوە هەر یەکەیان چی دەڵێت.",
   },
+  // For each type of business (0120).
+  "Send a table's order to the kitchen": {
+    ar: "أرسل طلب طاولة إلى المطبخ",
+    ckb: "داواکاری مێزێک بنێرە بۆ چێشتخانە",
+  },
+  "On Tables, open a table's bill, add a dish and press Send to the kitchen.": {
+    ar: "في الطاولات، افتح فاتورة طاولة، أضف طبقًا واضغط أرسل إلى المطبخ.",
+    ckb: "لە مێزەکان، پسوولەی مێزێک بکەرەوە، خواردنێک زیاد بکە و ناردن بۆ چێشتخانە دابگرە.",
+  },
+  "Take a reservation": { ar: "خذ حجزًا", ckb: "حیجزێک وەربگرە" },
+  "On Reservations, add a booking: a name, the time and how many.": {
+    ar: "في الحجوزات، أضف حجزًا: اسمًا والوقت والعدد.",
+    ckb: "لە حیجزەکان، حیجزێک زیاد بکە: ناوێک، کات و ژمارە.",
+  },
+  "Make a quote for a customer": {
+    ar: "اعمل عرض سعر لزبون",
+    ckb: "نرخنامەیەک بۆ کڕیارێک دروست بکە",
+  },
+  "On Wholesale, choose a customer on account, add what they want and save the quote.": {
+    ar: "في الجملة، اختر زبونًا بالحساب، أضف ما يريده واحفظ عرض السعر.",
+    ckb: "لە کۆفرۆشی، کڕیارێکی هەژمار هەڵبژێرە، ئەوەی دەیەوێت زیاد بکە و نرخنامەکە پاشەکەوت بکە.",
+  },
+  "Send a delivery note with an invoice": {
+    ar: "أرسل إشعار تسليم مع فاتورة",
+    ckb: "پسوولەی گەیاندن لەگەڵ فاکتورێک بنێرە",
+  },
+  "On Wholesale, make a delivery note for an invoice, with the driver, and mark it out.": {
+    ar: "في الجملة، اعمل إشعار تسليم لفاتورة مع السائق، وعلّمه كمُرسَل.",
+    ckb: "لە کۆفرۆشی، پسوولەی گەیاندن بۆ فاکتورێک دروست بکە، لەگەڵ شۆفێرەکە، و بە نێردراو نیشانی بدە.",
+  },
 };
 
 export default phrases;

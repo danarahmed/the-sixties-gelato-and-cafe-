@@ -2054,6 +2054,15 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Practice for each type of business (`0120`)
+
+- `practice_seed` makes the practice café of the real café's type and plan,
+  its parts copied (`business_part`).
+- `practice_task_list` adds `kitchen_send`, `reservation` (sale.create),
+  `quote` and `delivery_note` (credit.manage); `practice_task_part(task)` names
+  the part each needs, and `practice_tasks` and `practice_team` count a task
+  only where its part is on for the real café.
+
 ### Orders sent from phones to the till (`0119`)
 
 - `public_menu.to_till` and `online`, the owner's (`set_phone_orders`): a

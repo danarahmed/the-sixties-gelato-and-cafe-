@@ -114,6 +114,7 @@ Plan a short window when the café is closed.
 | Budgets (`0117`)                                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0116`                                                                                                                                                                                                                                                                                                                                                                             |
 | The menu on customers' phones (`0118`)             | ⏳ Waiting for the owner to apply it in the SQL editor, after `0117`                                                                                                                                                                                                                                                                                                                                                                             |
 | Orders sent from phones to the till (`0119`)       | ⏳ Waiting for the owner to apply it in the SQL editor, after `0118`                                                                                                                                                                                                                                                                                                                                                                             |
+| Practice for each type of business (`0120`)        | ⏳ Waiting for the owner to apply it in the SQL editor, after `0119`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4650,6 +4651,17 @@ the café as always. Rehearsed with `tests/sql/phone_orders.test.sql`. Applied
 after `0118`, as each one before it: open
 `supabase/migrations/0119_phone_orders.sql` on GitHub, **Raw**, copy all of it,
 paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0120`
+
+Migration `0120` brings **practice for each type of business**: a practice café
+of the real café's type, with the restaurant's tasks (send a table's order to
+the kitchen, take a reservation) and the supplier's (make a quote, send a
+delivery note) wherever those parts are on. Rehearsed with
+`tests/sql/practice_by_type.test.sql`. Applied after `0119`, as each one before
+it: open `supabase/migrations/0120_practice_by_type.sql` on GitHub, **Raw**,
+copy all of it, paste it into Supabase's **SQL Editor** → **New query**,
+**Run**.
 
 ## Clearing the test records
 
