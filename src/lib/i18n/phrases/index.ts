@@ -71,6 +71,7 @@ import restaurant from "./restaurant";
 import wholesale from "./wholesale";
 import socialInsurance from "./socialInsurance";
 import loyaltyOwed from "./loyaltyOwed";
+import smallGaps from "./smallGaps";
 import today from "./today";
 import help from "./help";
 
@@ -149,6 +150,7 @@ export const BOOKS: Record<string, PhraseBook> = {
   wholesale,
   socialInsurance,
   loyaltyOwed,
+  smallGaps,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

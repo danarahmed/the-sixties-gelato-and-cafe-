@@ -177,6 +177,8 @@ begin
        -- Social insurance: on or off, and what was paid to the government (0112).
        || case when to_regclass('public.social_insurance_payment') is not null
                then ', social_insurance_payment, social_insurance_setup' else '' end
+       -- Which late payment explained which day's short (0114).
+       || case when to_regclass('public.drawer_short_explained') is not null then ', drawer_short_explained' else '' end
        -- Whether points are booked as money owed (0113).
        || case when to_regclass('public.loyalty_owed_setup') is not null then ', loyalty_owed_setup' else '' end
        || ' restart identity';

@@ -230,11 +230,20 @@ export function ExpenseEntry({
       );
       if (r.ok)
         done(
-          t("Posted to {account} {name} (journal {no}).", {
-            account,
-            name: say(accountName),
-            no: r.data.journalNo ?? "—",
-          }),
+          [
+            t("Posted to {account} {name} (journal {no}).", {
+              account,
+              name: say(accountName),
+              no: r.data.journalNo ?? "—",
+            }),
+            r.data.explainsShort &&
+              t(
+                "It explains {amount} of the drawer's short on {day}: a cost of that day, and today's drawer is as counted.",
+                { amount: fmtIQD(r.data.explainsShort.amount), day: r.data.explainsShort.day },
+              ),
+          ]
+            .filter(Boolean)
+            .join(" "),
         );
       else refused(r, fieldsKey);
     });

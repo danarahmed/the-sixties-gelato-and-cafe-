@@ -37,10 +37,7 @@ $$;
 -- What the books say is owed for points (2150's balance), and what the points held are worth.
 create or replace function loyalty_owed_books(p_business uuid) returns numeric
 language sql stable security definer set search_path = public as $$
-  select coalesce(sum(l.credit - l.debit), 0)
-    from journal_line l join journal_entry e on e.id = l.journal_entry_id
-    join gl_account g on g.id = l.account_id
-   where e.business_id = p_business and g.business_id = p_business and g.code = '2150'
+  select -gl_balance_at(p_business, '2150', 'infinity'::timestamptz)
 $$;
 
 create or replace function loyalty_points_held(p_business uuid) returns bigint

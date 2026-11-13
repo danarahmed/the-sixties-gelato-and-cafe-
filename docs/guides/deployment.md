@@ -108,6 +108,7 @@ Plan a short window when the café is closed.
 | The supplier parts (`0111`)                        | ⏳ Waiting for the owner to apply it in the SQL editor, after `0110`                                                                                                                                                                                                                                                                                                                                                                             |
 | Social insurance and the payslip (`0112`)          | ⏳ Waiting for the owner to apply it in the SQL editor, after `0111`                                                                                                                                                                                                                                                                                                                                                                             |
 | Loyalty points as money owed (`0113`)              | ⏳ Waiting for the owner to apply it in the SQL editor, after `0112`                                                                                                                                                                                                                                                                                                                                                                             |
+| The books' smaller gaps (`0114`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0113`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4579,6 +4580,18 @@ more when they are spent. Rehearsed with `tests/sql/loyalty_owed.test.sql`.
 Applied after `0112`, as each one before it: open
 `supabase/migrations/0113_loyalty_owed.sql` on GitHub, **Raw**, copy all of it,
 paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0114`
+
+Migration `0114` closes **three of the books' smaller gaps**: a payment from
+the till recorded a day late explains that day's short (a cost of that day,
+today's drawer untouched); a prepaid expense is changed until its first share
+is posted, and each month's share is posted by itself overnight; a payroll's
+cost is shared between places by the hours clocked at each. Rehearsed with
+`tests/sql/books_small_gaps.test.sql`. Applied after `0113`, as each one before
+it: open `supabase/migrations/0114_books_small_gaps.sql` on GitHub, **Raw**,
+copy all of it, paste it into Supabase's **SQL Editor** → **New query**,
+**Run**.
 
 ## Clearing the test records
 

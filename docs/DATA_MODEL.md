@@ -2054,6 +2054,22 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### The books' smaller gaps (`0114`)
+
+- **`drawer_short_explained`**: an expense paid from the till, dated a closed
+  day whose drawer (`work_shift`, kind `day` or `session`) was short by at
+  least its amount net of what explained it already, explains it:
+  `record_expense__run` posts Dr the cost / Cr 6300 dated that day, writes no
+  `cash_event`, and keeps which session it explained. Otherwise 0064's rule
+  stands: money out of the till is recorded the day it is taken out.
+- `update_prepaid_expense(prepaid, description, account, first_month, months,
+key)` (expense.record): while no share is posted (the guard lets it through
+  under `sixties.prepaid_edit`). `prepaid_tick()`: every café's shares due,
+  posted overnight (pg_cron `sixties-prepaid`), each by whoever recorded it.
+- `payroll_gross_by_place(run)`: each line's pay less tips shared by the
+  minutes clocked at each place in the run's month (`attendance`); someone with
+  no hours, at their own place. Approvals already made keep theirs.
+
 ### Loyalty points as money owed (`0113`)
 
 - **`loyalty_owed_setup`** (one per business): on or off, the owner's

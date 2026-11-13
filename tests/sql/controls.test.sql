@@ -190,7 +190,7 @@ select test.eq((
   'speed_ping,speed_samples,split_tab,staff_list,staff_phones,staff_schedule,start_stock_count,stock_card,stock_places,'
   'stock_transfers,stop_markdown,stop_sale_day,stop_time_price,stuck_report,submit_stock_count,supplier_records,supplier_statement,support_access,support_enter,take_pre_order,tax_setup,'
   'till_lock_minutes,time_prices,tips_month,turn_off_phone_warnings,turn_on_phone_warnings,two_step_codes_left,undo_bank_statement,'
-  'unlink_phone,unlock_period,unlock_till,update_business_details,update_delivery_platform,update_item,update_supplier,update_variant,use_by_lots,use_two_step_code,'
+  'unlink_phone,unlock_period,unlock_till,update_business_details,update_delivery_platform,update_item,update_prepaid_expense,update_supplier,update_variant,use_by_lots,use_two_step_code,'
   'void_sale,waste_coach,watch_list,watch_may_see',
   'signed-in users can call exactly the intended API');
 -- The public (the anon key is in every page) may call only the clock's four,
