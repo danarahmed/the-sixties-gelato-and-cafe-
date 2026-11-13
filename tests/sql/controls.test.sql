@@ -137,7 +137,7 @@ select test.eq((
   'acknowledge_alert,add_attendance,add_delivery_platform,add_fixed_asset,add_item_unit,add_place,add_variant,'
   'adjust_payroll_line,adjust_points,adjust_stock,admin_businesses,admin_problem_reports,alert_thresholds,allocate_credit,app_words,'
   'approvals_waiting,approvals_waiting_count,approve_payroll,approve_po,approve_stock_count,'
-  'attach_document,attendance_list,bank_book,batch_reconciliation,branch_position,business_details,business_parts,buying_list,'
+  'attach_document,attendance_list,bank_book,batch_reconciliation,branch_position,budget_for,budget_month,business_details,business_parts,buying_list,'
   'cancel_advance,cancel_attendance,cancel_bill,cancel_card_settlement,cancel_money_move,'
   'cancel_platform_settlement,cancel_po,cancel_pre_order,cancel_prepaid_expense,cancel_production,'
   'cancel_salary_payment,cancel_scheduled_price,cancel_scheduled_recipe,cancel_stock_count,'
@@ -145,28 +145,28 @@ select test.eq((
   'cash_sessions,change_product_recipe,clear_product_image,clear_receipt_logo,clock_board,'
   'clock_by_phone,clock_in,clock_out,clock_screen_check,clock_screen_code,clock_screens,'
   'close_cash_session,close_po,collect_pre_order,copy_platform_setup,correct_attendance,'
-  'correct_receipt,create_account,create_item,create_product,create_supplier,current_alerts,'
+  'correct_receipt,create_account,create_item,create_product,create_supplier,credit_customer,current_alerts,'
   'current_app_user_id,current_business_id,current_can_view_costs,current_has_permission,'
-  'current_has_role,customer_account,customer_accounts,customer_at_till,customer_detail,customer_list,'
-  'daily_brief,daily_sales_target,dashboard_summary,deals_list,depreciate_to,detach_document,'
+  'current_has_role,customer_account,customer_accounts,customer_at_till,customer_detail,customer_list,customer_prices,'
+  'daily_brief,daily_sales_target,dashboard_summary,deals_list,delivery_notes,depreciate_to,detach_document,'
   'discard_journal,dispose_fixed_asset,document_counts,document_may_attach,document_may_see,'
   'document_permissions,document_record,documents_for,dollars_owed,draft_payroll,draft_purchase_orders,drawer_methods,drawer_status,'
   'employee_advances,exchange_dollars,export_business_data,find_customer,fixed_assets,force_close_session,forget_two_step_codes,fx_status,'
-  'give_away,grant_support_access,hand_over_session,inventory_valuation,invite_member,invoice_customer,is_system_admin,item_costs,'
-  'item_price_history,labour_target,language_settings,legacy_unposted,link_phone_finish,'
-  'link_phone_start,list_approvers,list_business_rules,list_members,lock_period,losses_waiting,make_two_step_codes,'
+  'give_away,grant_support_access,hand_over_session,handle_phone_order,inventory_valuation,invite_member,invoice_customer,is_system_admin,item_costs,'
+  'item_price_history,join_tabs,kitchen_setup,kitchen_tickets,labour_target,language_settings,legacy_unposted,link_phone_finish,'
+  'link_phone_start,list_approvers,list_business_rules,list_members,lock_period,losses_waiting,loyalty_owed,make_delivery_note,make_item_sellable,make_two_step_codes,'
   'mark_bill_printed,mark_down,markdown_suggestions,match_platform_statement,menu_branch_prices,'
   'menu_costing,menu_recipe_lines,menu_scheduled,money_accounts,move_cash,move_money,my_profile,'
   'my_report_visits,next_bill_number,note_device,note_report_visit,note_stuck,note_supplier_credit,note_till_kept,offline_key,open_cash_session,open_tab,'
-  'owner_money,packing_setup,pay_bill,pay_bill_dollars,pay_payroll,pay_salary,payment_methods,payroll_detail,payroll_runs,'
-  'period_close_checklist,phone_status,phone_warnings,platform_money,pos_addons,pos_catalogue,'
+  'owner_money,packing_setup,pay_bill,pay_bill_dollars,pay_payroll,pay_salary,pay_social_insurance,payment_methods,payroll_detail,payroll_runs,payslip,'
+  'period_close_checklist,phone_order_status,phone_orders,phone_status,phone_warnings,platform_money,pos_addons,pos_catalogue,'
   'pos_deals,pos_menu_next_change,pos_open_bills,pos_use_by,post_control_correction,post_legacy_unposted,'
   'post_platform_settlement,practice_reset,practice_start,practice_tasks,practice_team,pre_orders,prepaid_expenses,preview_receipt_correction,problem_reports,'
-  'product_targets,production_batches,production_lots,production_plan,production_recipes,publish_journal,'
-  'purchase_order,purchase_orders,purchase_orders_from_list,push_done,push_take,receipt_setup,'
-  'receive_customer_payment,receive_goods,receive_stock_transfer,record_advance,record_bill,'
+  'product_targets,production_batches,production_lots,production_plan,production_recipes,public_menu,public_menu_setup,publish_journal,'
+  'purchase_order,purchase_orders,purchase_orders_from_list,push_done,push_take,quote_to_invoice,quotes,receipt_setup,'
+  'receive_customer_payment,receive_goods,receive_stock_transfer,recent_invoices,record_advance,record_bill,'
   'record_card_settlement,record_count,record_dollar_bill,record_expense,record_loss,record_offline_sale,'
-  'record_opening_stock,record_prepaid_expense,record_production,record_sale,record_supplier_credit,'
+  'record_opening_stock,record_prepaid_expense,record_production,record_sale,record_supplier_credit,record_supplier_refund,'
   'record_waste,refund_sale,refund_sale_lines,register_clock_screen,reject_stock_count,release_prepaid,'
   'remove_clock_screen,remove_item_supplier,remove_push_device,rename_account,rename_place,reopen_payroll,'
   'report_balance_sheet,report_cash_flow,report_cashier_scorecard,report_customers,report_daily_sales,report_day_totals,'
@@ -175,34 +175,35 @@ select test.eq((
   'report_profit_and_loss,report_profit_and_loss_by_place,report_purchases,report_purchasing,'
   'report_reconciliation,report_sale_day,report_sales_analysis,report_sizes_and_addons,report_staff,report_tax,'
   'report_tips_and_service,report_trial_balance,report_unclosed_days,report_uncosted_sales,'
-  'report_usage_variance,request_approval,retire_variant,return_to_supplier,revalue_dollar_bills,reverse_journal,'
+  'report_usage_variance,request_approval,reservations,retire_variant,return_to_supplier,revalue_dollar_bills,reverse_journal,'
   'reverse_receipt,review_loss,review_stock_count,revoke_support_access,sale_day_now,sale_days,sales_channels,save_bank_statement,save_batch_recipe,'
-  'save_category,save_customer,save_customer_address,save_deal,save_employee,save_journal,'
+  'save_category,save_customer,save_customer_address,save_deal,save_employee,save_journal,save_kitchen_station,'
   'save_language,save_modifier,save_modifier_group,save_packing_item,save_payment_method,save_phrases,save_po,'
-  'save_push_device,save_sale_day,save_schedule,save_section,save_speed_sample,save_tab,save_table,send_po,send_stock_transfer,'
+  'save_push_device,save_quote,save_reservation,save_sale_day,save_schedule,save_section,save_speed_sample,save_tab,save_table,send_po,send_sale_to_kitchen,send_stock_transfer,send_tab_to_kitchen,'
   'send_test_warning,service_charges,set_account_in_use,set_alert_thresholds,set_batch_use_by,'
-  'set_business_closed,set_business_paid_until,set_business_part,set_business_pilot,set_business_plan,set_business_rule,set_business_type,set_category_section,set_clock_pin,set_customer_account,set_employee_left,'
-  'set_employee_pay,set_fx_rate,set_item_keeps,set_item_supplier,set_item_use_by,set_lot_use_by,set_member_active,set_member_place,'
-  'set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_place_active,set_place_clock_spot,set_place_sections,'
-  'set_price,set_product_details,set_product_image,set_product_modifiers,set_receipt_logo,'
-  'set_receipt_setup,set_section_hours,set_service_charge,set_target_margin,set_tax_setup,set_time_price,set_tip_sharers,'
-  'set_variant_barcode,set_variant_packing,set_variant_weighed,set_watch_visibility,settle_problem,settle_tab,settle_tab_offline,settle_watch_finding,snooze_alert,'
+  'set_budget,set_business_closed,set_business_paid_until,set_business_part,set_business_pilot,set_business_plan,set_business_rule,set_business_type,set_category_section,set_category_station,set_clock_pin,set_customer_account,set_customer_price,set_delivery_status,set_employee_left,'
+  'set_employee_pay,set_employee_social_insurance,set_fx_rate,set_item_keeps,set_item_supplier,set_item_use_by,set_lot_use_by,set_loyalty_owed,set_member_active,set_member_place,'
+  'set_member_roles,set_modifier_price,set_modifier_recipe,set_my_pin,set_no_stock,set_phone_orders,set_place_active,set_place_clock_spot,set_place_sections,'
+  'set_price,set_product_details,set_product_image,set_product_modifiers,set_public_menu,set_quote_status,set_receipt_logo,'
+  'set_receipt_setup,set_reservation_status,set_section_hours,set_service_charge,set_social_insurance,set_target_margin,set_tax_setup,set_ticket_status,set_time_price,set_tip_sharers,set_usd_rate_band,'
+  'set_variant_barcode,set_variant_packing,set_variant_weighed,set_watch_visibility,settle_problem,settle_tab,settle_tab_offline,settle_watch_finding,snooze_alert,social_insurance,social_insurance_month,'
   'speed_ping,speed_samples,split_tab,staff_list,staff_phones,staff_schedule,start_stock_count,stock_card,stock_places,'
-  'stock_transfers,stop_markdown,stop_sale_day,stop_time_price,stuck_report,submit_stock_count,supplier_records,supplier_statement,support_access,support_enter,take_pre_order,tax_setup,'
+  'stock_transfers,stop_markdown,stop_sale_day,stop_time_price,stuck_report,submit_phone_order,submit_stock_count,supplier_records,supplier_statement,support_access,support_enter,take_pre_order,tax_setup,'
   'till_lock_minutes,time_prices,tips_month,turn_off_phone_warnings,turn_on_phone_warnings,two_step_codes_left,undo_bank_statement,'
-  'unlink_phone,unlock_period,unlock_till,update_business_details,update_delivery_platform,update_item,update_supplier,update_variant,use_by_lots,use_two_step_code,'
+  'unlink_phone,unlock_period,unlock_till,update_business_details,update_delivery_platform,update_item,update_prepaid_expense,update_supplier,update_variant,usd_rates_used,use_by_lots,use_two_step_code,'
   'void_sale,waste_coach,watch_list,watch_may_see',
   'signed-in users can call exactly the intended API');
 -- The public (the anon key is in every page) may call only the clock's four,
 -- each answering only to a key it gave out: a clock screen asking its code, a
 -- phone being linked, a phone asking whose it is, and a phone clocking (0068);
 -- and the phone warnings' two (0072), the app's address taking the queue and
--- saying what was sent, each answering only to the database's own secret.
+-- saying what was sent, each answering only to the database's own secret;
+-- and the café's menu (0118), read with the link the owner gave out.
 select test.eq((
   select string_agg(p.proname, ',' order by p.proname) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute')),
-  'clock_by_phone,clock_screen_code,link_phone_finish,phone_status,push_done,push_take',
-  'the public can call no function but the clock''s four and the phone warnings'' two, each needing its key');
+  'clock_by_phone,clock_screen_code,link_phone_finish,phone_order_status,phone_status,public_menu,push_done,push_take,submit_phone_order',
+  'the public can call no function but the clock''s four, the phone warnings'' two and the menu''s three, each needing its key');
 select test.eq((
   select string_agg(distinct p.proname, ',' order by p.proname)
     from pg_trigger t join pg_proc p on p.oid = t.tgfoid join pg_class c on c.oid = t.tgrelid

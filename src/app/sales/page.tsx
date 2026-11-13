@@ -11,7 +11,7 @@ import { DrawerPanel } from "@/components/cash/DrawerPanel";
 import { SessionsTable } from "@/components/cash/SessionsTable";
 import { CardTakingsPanel } from "@/components/books/CardTakings";
 import { getCardTakings } from "@/lib/db/settlements";
-import { getDollarsReport, getFxStatus } from "@/lib/db/fx";
+import { getDollarsReport, getFxStatus, getRatesUsed } from "@/lib/db/fx";
 import { DollarsPanel } from "@/components/cash/DollarsPanel";
 import { EmptyState } from "@/components/ui";
 import { getMoneyAccounts } from "@/lib/db/paymentMethods";
@@ -47,6 +47,8 @@ export default async function SalesPage() {
       // The café's own ways to pay and what their accounts hold (0069); null before it.
       getMoneyAccounts(),
     ]);
+  // The rates each person typed with dollar payments this week (0116); null before it.
+  const ratesUsed = fx.typed ? await getRatesUsed(addDays(today, -6), today) : null;
   const lastCount = sessions.find((s) => s.closedAt !== null) ?? null;
   // A day is counted once a session closes after its last sale: the café
   // trades past midnight, so one night's session may cover two calendar days.
@@ -212,6 +214,8 @@ export default async function SalesPage() {
           held={dollars.held}
           canExchange={canMove}
           timezone={profile.timezone}
+          ratesUsed={ratesUsed}
+          isOwner={profile.roles.includes("owner")}
         />
       </section>
 

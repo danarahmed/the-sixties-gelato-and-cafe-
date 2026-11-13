@@ -36,6 +36,10 @@ import { ClockSpots } from "@/components/settings/ClockSpots";
 import { getClockSpots } from "@/lib/db/security";
 import { isSystemAdmin } from "@/lib/db/speed";
 import { getTaxReport, getTaxSetup } from "@/lib/db/tax";
+import { getLoyaltyOwed } from "@/lib/db/loyaltyOwed";
+import { getPublicMenuSetup } from "@/lib/db/publicMenu";
+import { PublicMenuCard } from "@/components/settings/PublicMenuCard";
+import { LoyaltyOwed } from "@/components/settings/LoyaltyOwed";
 import { TaxSettings } from "@/components/settings/TaxSettings";
 import { getSaleDayCategories, getSaleDays } from "@/lib/db/saleDays";
 import { SaleDays } from "@/components/settings/SaleDays";
@@ -46,6 +50,8 @@ import { PlanAndParts } from "@/components/settings/PlanAndParts";
 import { PLAN_LABEL } from "@/lib/plans";
 import { getSupportAccess } from "@/lib/db/support";
 import { SupportAccess } from "@/components/settings/SupportAccess";
+import { getKitchenSetup } from "@/lib/db/kitchen";
+import { KitchenStations } from "@/components/settings/KitchenStations";
 import {
   notSetUp,
   peopleStatus,
@@ -118,11 +124,19 @@ export default async function SettingsPage() {
   const taxSetup = await getTaxSetup();
   const taxToday = businessToday(profile.timezone);
   const taxReport = taxSetup ? await getTaxReport(`${taxToday.slice(0, 8)}01`, taxToday) : null;
+  // Loyalty points as money owed (0113); null before it.
+  const loyaltyOwed = await getLoyaltyOwed();
+  // The menu on customers' phones (0118): null never turned on, undefined before 0118.
+  const publicMenu = await getPublicMenuSetup();
   // Sale days (0106); null before it.
   const [saleDays, saleDayCategories] = await Promise.all([getSaleDays(), getSaleDayCategories()]);
   const saleDayOn = saleDays?.find((s) => s.status === "on" || s.status === "between") ?? null;
   // Plans and parts (0108); null before it.
   const businessParts = await getBusinessParts();
+  // The kitchen's stations (0110), while its part is on; null before it.
+  const kitchen = businessParts?.parts.some((p) => p.part === "kitchen" && p.on)
+    ? await getKitchenSetup()
+    : null;
   // Support access and the business's data (0109), for the owner; null before it.
   const supportAccess = profile.roles.includes("owner") ? await getSupportAccess() : null;
   // Packing (0107); null before it.
@@ -476,6 +490,42 @@ export default async function SettingsPage() {
         </SettingsGroup>
       )}
 
+      {publicMenu !== undefined && (
+        <SettingsGroup
+          id="phone-menu"
+          title={t("The menu on customers' phones")}
+          status={[publicMenu?.enabled ? t("On") : t("Off")]}
+        >
+          <section className="sg-part" data-testid="settings-phone-menu">
+            <h3 style={{ marginTop: 0 }}>{t("The menu on customers' phones")}</h3>
+            <PublicMenuCard
+              setup={publicMenu}
+              places={locations
+                .filter((l) => l.kind === "branch" && l.isActive)
+                .map((l) => ({ id: l.id, name: l.name }))}
+              isOwner={profile.roles.includes("owner")}
+            />
+          </section>
+        </SettingsGroup>
+      )}
+
+      {loyaltyOwed && (
+        <SettingsGroup
+          id="loyalty-owed"
+          title={t("Loyalty points as money owed")}
+          status={[
+            loyaltyOwed.enabled
+              ? `${t("On")} · ${fmtIQD(loyaltyOwed.owed)}`
+              : t("Off: a reward is a discount when it is taken"),
+          ]}
+        >
+          <section className="sg-part" data-testid="settings-loyalty-owed">
+            <h3 style={{ marginTop: 0 }}>{t("Loyalty points as money owed")}</h3>
+            <LoyaltyOwed owed={loyaltyOwed} isOwner={profile.roles.includes("owner")} />
+          </section>
+        </SettingsGroup>
+      )}
+
       {saleDays && (
         <SettingsGroup
           id="sale-days"
@@ -509,6 +559,23 @@ export default async function SettingsPage() {
               businessType={businessParts.businessType}
               parts={businessParts.parts}
               isOwner={profile.roles.includes("owner")}
+            />
+          </section>
+        </SettingsGroup>
+      )}
+
+      {kitchen && (
+        <SettingsGroup
+          id="kitchen"
+          title={t("Kitchen stations")}
+          status={[t("{n} stations", { n: kitchen.stations.filter((s) => s.active).length })]}
+        >
+          <section className="sg-part" data-testid="settings-kitchen">
+            <h3 style={{ marginTop: 0 }}>{t("Kitchen stations")}</h3>
+            <KitchenStations
+              stations={kitchen.stations}
+              categories={saleDayCategories}
+              map={kitchen.categories}
             />
           </section>
         </SettingsGroup>

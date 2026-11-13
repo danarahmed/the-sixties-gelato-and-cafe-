@@ -103,6 +103,7 @@ export default async function ExpensesPage({
           timezone={profile.timezone}
           canRelease={canRecord || has(profile, "accounting.post")}
           canCancel={has(profile, "accounting.post")}
+          canChange={canRecord}
         />
       )}
 

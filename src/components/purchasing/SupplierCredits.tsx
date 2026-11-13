@@ -6,6 +6,7 @@ import {
   allocateCreditAction,
   noteSupplierCreditAction,
   recordSupplierCreditAction,
+  recordSupplierRefundAction,
 } from "@/lib/actions/purchasing";
 import { fmtIQD } from "@/lib/format";
 import { CREDIT_KIND_LABEL, type SupplierCredit } from "@/lib/purchasing";
@@ -104,6 +105,7 @@ export function SupplierCredits({
                     {canAllocate && c.left > 0 && bills.length > 0 && (
                       <Allocate credit={c} bills={bills} />
                     )}
+                    {canAllocate && c.left > 0 && <Refund credit={c} />}
                   </td>
                 </tr>
               ))}
@@ -244,6 +246,87 @@ function Allocate({ credit, bills }: { credit: SupplierCredit; bills: CreditBill
   );
 }
 
+/** What is left of a credit, paid back by the supplier into the till, the safe or the bank (0115). */
+function Refund({ credit }: { credit: SupplierCredit }) {
+  const { t } = useT();
+  const router = useRouter();
+  const op = useOperation();
+  const [busy, start] = useTransition();
+  const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState(String(credit.left));
+  const [method, setMethod] = useState<"till" | "safe" | "bank">("safe");
+  const [ref, setRef] = useState("");
+  const [msg, setMsg] = useState<Msg>(null);
+  if (!open)
+    return (
+      <button type="button" onClick={() => setOpen(true)} data-testid="credit-refund">
+        {t("They paid it back…")}
+      </button>
+    );
+  return (
+    <form
+      className="grid"
+      style={{ gap: 6 }}
+      data-testid="credit-refund-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        setMsg(null);
+        start(async () => {
+          const r = await op.run("supplierRefund", (key) =>
+            recordSupplierRefundAction(
+              { creditId: credit.id, amount: normaliseNumber(amount), method, reference: ref },
+              key,
+            ),
+          );
+          if (!r.ok) {
+            setMsg({ ok: false, text: r.error });
+            return;
+          }
+          setMsg({
+            ok: true,
+            text: t("Their refund is recorded: {left} of the credit left.", {
+              left: fmtIQD(r.data.left),
+            }),
+          });
+          router.refresh();
+        });
+      }}
+    >
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <input
+          aria-label={t("Amount")}
+          className="amt"
+          inputMode="decimal"
+          style={{ width: 100, textAlign: "end" }}
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+        <select
+          aria-label={t("Where the money went")}
+          value={method}
+          onChange={(e) => setMethod(e.target.value as "till" | "safe" | "bank")}
+        >
+          <option value="till">{t("The till")}</option>
+          <option value="safe">{t("The safe")}</option>
+          <option value="bank">{t("The bank")}</option>
+        </select>
+        <input
+          aria-label={t("Their receipt or transfer no.")}
+          placeholder={t("Their receipt or transfer no.")}
+          style={{ width: 140 }}
+          value={ref}
+          onChange={(e) => setRef(e.target.value)}
+        />
+        <button type="submit" disabled={busy || Number(normaliseNumber(amount)) <= 0}>
+          {t("Record their refund")}
+        </button>
+      </div>
+      <OperationStatus op={op} />
+      <Notice msg={msg} />
+    </form>
+  );
+}
+
 /** The supplier's credit note: for a lower price on a delivery, or other. */
 function RecordCredit({
   supplierId,
@@ -265,6 +348,7 @@ function RecordCredit({
   const [ref, setRef] = useState("");
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
+  const [creditDay, setCreditDay] = useState("");
   const [receiptId, setReceiptId] = useState(deliveries[0]?.id ?? "");
   const [billId, setBillId] = useState("");
   const bill = bills.find((b) => b.id === billId) ?? null;
@@ -296,6 +380,7 @@ function RecordCredit({
             receiptId: kind === "price" ? receiptId : null,
             billId: kind === "other" && billId ? billId : null,
             accountCode: kind === "other" && account ? account : null,
+            date: creditDay || null,
           },
           key,
         ),
@@ -319,6 +404,7 @@ function RecordCredit({
       setRef("");
       setAmount("");
       setReason("");
+      setCreditDay("");
       router.refresh();
     });
   }
@@ -427,6 +513,16 @@ function RecordCredit({
           </>
         )}
       </div>
+      <label>
+        <div className="sc">{t("The supplier's date (empty: today)")}</div>
+        <input
+          type="date"
+          aria-label={t("The supplier's date (empty: today)")}
+          value={creditDay}
+          onChange={(e) => setCreditDay(e.target.value)}
+          data-testid="credit-date"
+        />
+      </label>
       <label>
         <div className="sc">{t("What it is for")}</div>
         <input

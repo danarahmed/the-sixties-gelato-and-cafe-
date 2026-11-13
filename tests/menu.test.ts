@@ -4,12 +4,12 @@
  * More.
  */
 import { describe, expect, it } from "vitest";
-import { NAV, holdsAny, menuLead, splitMenu } from "@/lib/auth/routes";
+import { NAV, holdsAny, offered, menuLead, splitMenu } from "@/lib/auth/routes";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions";
 
 const perms = (role: Role) => [...ROLE_PERMISSIONS[role]] as string[];
 const menuOf = (role: Role) => {
-  const nav = NAV.filter((n) => holdsAny(perms(role), n.anyOf));
+  const nav = NAV.filter((n) => offered(perms(role), n));
   return { nav, ...splitMenu(perms(role), nav) };
 };
 

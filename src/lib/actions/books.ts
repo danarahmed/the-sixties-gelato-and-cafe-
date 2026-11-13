@@ -53,7 +53,14 @@ const expenseInput = z.object({
 export async function recordExpenseAction(
   input: z.input<typeof expenseInput>,
   key: string,
-): Promise<ActionResult<{ journalNo: number | null }> | SamePaymentRefusal> {
+): Promise<
+  | ActionResult<{
+      journalNo: number | null;
+      /** Paid from the till a day late, it explained that day's short (0114). */
+      explainsShort: { day: string; amount: number } | null;
+    }>
+  | SamePaymentRefusal
+> {
   const bad = badKey(key);
   if (bad) return bad;
   const v = parse(expenseInput, input);
@@ -73,9 +80,13 @@ export async function recordExpenseAction(
   const same = sameFromServer(r.data);
   if (same) return { ok: false, error: SAME_PAYMENT, same };
   refresh("/expenses", "/sales", ...BOOK_PATHS);
+  const ex = r.data.explains_short as { day?: unknown; amount?: unknown } | null | undefined;
   return {
     ok: true,
-    data: { journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no) },
+    data: {
+      journalNo: r.data.journal_no == null ? null : Number(r.data.journal_no),
+      explainsShort: ex ? { day: String(ex.day ?? ""), amount: Number(ex.amount ?? 0) } : null,
+    },
   };
 }
 
@@ -140,6 +151,43 @@ export async function releasePrepaidAction(
   const bad = badKey(key);
   if (bad) return bad;
   const r = await callRpc<Record<string, unknown>>("release_prepaid", { p_idempotency_key: key });
+  if (!r.ok) return r;
+  refresh("/expenses", ...BOOK_PATHS);
+  return {
+    ok: true,
+    data: { released: Array.isArray(r.data.released) ? r.data.released.length : 0 },
+  };
+}
+
+const updatePrepaidInput = z.object({
+  prepaidId: id("the prepaid expense"),
+  description: text("What the expense was for", 200),
+  accountCode: z.string().regex(/^\d{4}$/, "Choose the account"),
+  firstMonth: day("The first month"),
+  months: z
+    .number()
+    .int()
+    .min(1, "A prepaid expense covers 1 to 36 months")
+    .max(36, "A prepaid expense covers 1 to 36 months"),
+});
+
+/** Changed before its first share is posted (0114): what it is, its account and its months. */
+export async function updatePrepaidExpenseAction(
+  input: z.input<typeof updatePrepaidInput>,
+  key: string,
+): Promise<ActionResult<{ released: number }>> {
+  const bad = badKey(key);
+  if (bad) return bad;
+  const v = parse(updatePrepaidInput, input);
+  if (!v.ok) return v;
+  const r = await callRpc<Record<string, unknown>>("update_prepaid_expense", {
+    p_prepaid: v.data.prepaidId,
+    p_description: v.data.description,
+    p_account_code: v.data.accountCode,
+    p_first_month: v.data.firstMonth,
+    p_months: v.data.months,
+    p_idempotency_key: key,
+  });
   if (!r.ok) return r;
   refresh("/expenses", ...BOOK_PATHS);
   return {

@@ -4,7 +4,14 @@ import "server-only";
  * Settings read it, and the dollars' report. Each is a database function run
  * as the signed-in person; the report is for those who may see costs.
  */
-import { dollarsReportFrom, fxStatusFrom, type DollarsReport, type FxStatus } from "@/lib/fx";
+import {
+  dollarsReportFrom,
+  fxStatusFrom,
+  ratesUsedFrom,
+  type DollarsReport,
+  type FxStatus,
+  type RatesUsed,
+} from "@/lib/fx";
 import { db, one } from "./client";
 
 export async function getFxStatus(): Promise<FxStatus> {
@@ -26,4 +33,12 @@ export async function getDollarsReport(
       "the dollars",
     ) as Record<string, unknown> | null,
   );
+}
+
+/** The rates each person typed with dollar payments (0116); null before it, or for someone who may not read it. */
+export async function getRatesUsed(from: string, to: string): Promise<RatesUsed | null> {
+  const c = await db();
+  const r = await c.rpc("usd_rates_used", { p_from: from, p_to: to });
+  if (r.error) return null;
+  return ratesUsedFrom(r.data);
 }

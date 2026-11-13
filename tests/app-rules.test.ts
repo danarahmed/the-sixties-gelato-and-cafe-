@@ -10,7 +10,15 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
-import { NAV, activeHref, holdsAny, homeFor, isPublicPath, roleHome } from "@/lib/auth/routes";
+import {
+  NAV,
+  activeHref,
+  holdsAny,
+  offered,
+  homeFor,
+  isPublicPath,
+  roleHome,
+} from "@/lib/auth/routes";
 import {
   addDays,
   dateIn,
@@ -388,9 +396,9 @@ describe("where each role lands", () => {
   });
 
   it("a cashier starts on Today, is offered the till, and not the books", () => {
-    const offered = NAV.filter((n) => holdsAny(perms("cashier"), n.anyOf)).map((n) => n.href);
+    const menu = NAV.filter((n) => offered(perms("cashier"), n)).map((n) => n.href);
     expect(homeFor(perms("cashier"))).toBe("/today");
-    expect(offered).toEqual(["/today", "/pos"]);
+    expect(menu).toEqual(["/today", "/pos"]);
   });
 
   it("the menu lights one entry: the screen's, or the nearest above it", () => {
@@ -407,10 +415,8 @@ describe("where each role lands", () => {
   });
 
   it("a counter is offered the count and nothing with a cost on it", () => {
-    const offered = NAV.filter((n) => holdsAny(perms("inventory_counter"), n.anyOf)).map(
-      (n) => n.href,
-    );
-    expect(offered).toEqual(["/today", "/count"]);
+    const menu = NAV.filter((n) => offered(perms("inventory_counter"), n)).map((n) => n.href);
+    expect(menu).toEqual(["/today", "/count"]);
   });
 
   it("only people who manage settings see Settings", () => {
@@ -2948,6 +2954,15 @@ describe("US dollars at the till (0043), as the database takes them", () => {
     expect(sent?.p_tenders).toEqual([
       { type: "cash", amount: 2500, received: null, currency: "USD", usd: 5, rate: 1310 },
       { type: "card", amount: 1000, received: null },
+    ]);
+    // A manager's approval of a rate far from the last one goes with it (0116).
+    const approval = "11111111-2222-4333-8444-555555555555";
+    expect(
+      howPaidUsd({
+        tenders: [{ type: "cash", amount: "2500", currency: "USD", usd: 5, rate: 1500, approval }],
+      })?.p_tenders,
+    ).toEqual([
+      { type: "cash", amount: 2500, received: null, currency: "USD", usd: 5, rate: 1500, approval },
     ]);
     expect(
       paidPartUsd({

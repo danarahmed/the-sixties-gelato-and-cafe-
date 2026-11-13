@@ -2,7 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { cancelPrepaidExpenseAction, releasePrepaidAction } from "@/lib/actions/books";
+import {
+  cancelPrepaidExpenseAction,
+  releasePrepaidAction,
+  updatePrepaidExpenseAction,
+} from "@/lib/actions/books";
 import { dateIn } from "@/lib/dates";
 import { fmtIQD } from "@/lib/format";
 import { stillAhead, type PrepaidRow } from "@/lib/prepaid";
@@ -15,18 +19,21 @@ import { OperationStatus, useOperation } from "@/components/useOperation";
  * shares posted and what is still to come. The months that have come and
  * whose share is not posted yet are posted with one press (the dashboard and
  * the month's close ask for it); one entered in error is cancelled, its
- * payment and every share posted reversed today.
+ * payment and every share posted reversed today. Before its first share is
+ * posted, one is changed (0114): what it is and its months.
  */
 export function PrepaidExpenses({
   rows,
   timezone,
   canRelease,
   canCancel,
+  canChange = false,
 }: {
   rows: PrepaidRow[];
   timezone: string;
   canRelease: boolean;
   canCancel: boolean;
+  canChange?: boolean;
 }) {
   const op = useOperation();
   const { t, msg: say } = useT();
@@ -96,7 +103,7 @@ export function PrepaidExpenses({
               <th>{t("Posted")}</th>
               <th className="right">{t("Paid")}</th>
               <th className="right">{t("Still ahead")}</th>
-              {canCancel && <th />}
+              {(canCancel || canChange) && <th />}
             </tr>
           </thead>
           <tbody>
@@ -158,9 +165,12 @@ export function PrepaidExpenses({
                 <td className="right money" data-label={t("Still ahead")}>
                   {fmtIQD(stillAhead(p))}
                 </td>
-                {canCancel && (
+                {(canCancel || canChange) && (
                   <td className="right">
-                    {!p.cancelledAt && (
+                    {canChange && !p.cancelledAt && p.released === 0 && (
+                      <ChangePrepaid row={p} onDone={() => router.refresh()} />
+                    )}
+                    {canCancel && !p.cancelledAt && (
                       <CancelPrepaid
                         prepaidId={p.id}
                         description={p.description}
@@ -175,6 +185,96 @@ export function PrepaidExpenses({
         </table>
       </div>
     </section>
+  );
+}
+
+/** Before its first share is posted: what it is, from which month, for how many (0114). */
+function ChangePrepaid({ row, onDone }: { row: PrepaidRow; onDone: () => void }) {
+  const op = useOperation();
+  const { t, msg } = useT();
+  const [busy, start] = useTransition();
+  const [open, setOpen] = useState(false);
+  const [desc, setDesc] = useState(row.description);
+  const [first, setFirst] = useState(row.firstMonth);
+  const [months, setMonths] = useState(String(row.months));
+  const [err, setErr] = useState<string | null>(null);
+  const small = { minHeight: 26, padding: "0 8px", fontSize: ".72rem" };
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        style={{ ...small, marginInlineEnd: 6 }}
+        data-testid="prepaid-change"
+        title={t("Changed while no share is posted")}
+      >
+        {t("Change…")}
+      </button>
+    );
+  }
+  return (
+    <span
+      style={{ display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}
+      data-testid="prepaid-change-form"
+    >
+      <input
+        value={desc}
+        onChange={(e) => setDesc(e.target.value)}
+        aria-label={t("Narration")}
+        style={{ minHeight: 26, width: 160, fontSize: ".78rem" }}
+        maxLength={200}
+      />
+      <input
+        type="month"
+        value={first}
+        onChange={(e) => setFirst(e.target.value)}
+        aria-label={t("The first month")}
+        style={{ minHeight: 26, fontSize: ".78rem" }}
+      />
+      <input
+        inputMode="numeric"
+        value={months}
+        onChange={(e) => setMonths(e.target.value)}
+        aria-label={t("Months")}
+        style={{ minHeight: 26, width: 50, fontSize: ".78rem" }}
+      />
+      <button
+        className="btn-primary"
+        disabled={busy || !desc.trim()}
+        style={small}
+        onClick={() =>
+          start(async () => {
+            setErr(null);
+            const r = await op.run("updatePrepaid", (key) =>
+              updatePrepaidExpenseAction(
+                {
+                  prepaidId: row.id,
+                  description: desc,
+                  accountCode: row.accountCode,
+                  firstMonth: `${first}-01`,
+                  months: Number(months),
+                },
+                key,
+              ),
+            );
+            if (r.ok) {
+              setOpen(false);
+              onDone();
+            } else setErr(r.error);
+          })
+        }
+      >
+        {busy ? "…" : t("Save")}
+      </button>
+      <button onClick={() => setOpen(false)} disabled={busy} style={small}>
+        {t("Keep")}
+      </button>
+      {err && (
+        <span className="red" style={{ fontSize: ".72rem", flexBasis: "100%" }}>
+          {msg(err)}
+        </span>
+      )}
+      <OperationStatus op={op} />
+    </span>
   );
 }
 

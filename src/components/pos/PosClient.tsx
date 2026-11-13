@@ -7,9 +7,11 @@ import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { DiningTable, OpenBill, PosAddons, PosItem } from "@/lib/db/pos";
 import { recordOfflineSaleAction, recordSaleAction } from "@/lib/actions/sales";
+import { sendSaleToKitchenAction, sendTabToKitchenAction } from "@/lib/actions/kitchen";
 import { listApproversAction, requestApprovalAction, type Approver } from "@/lib/actions/approvals";
 import {
   cancelBillAction,
+  joinBillsAction,
   payBillAction,
   payBillOfflineAction,
   printBillAction,
@@ -26,6 +28,7 @@ import { DrawerPanel } from "@/components/cash/DrawerPanel";
 import { ProductPicker } from "./ProductPicker";
 import { ChooseBill, FloorView } from "./FloorView";
 import { OrderPanel, type Receipt } from "./OrderPanel";
+import { PhoneOrders } from "./PhoneOrders";
 import { PayDialog, type SaleExtras } from "./PayDialog";
 import { GiveAwayDialog } from "./GiveAwayDialog";
 import { ClockDialog } from "./ClockDialog";
@@ -108,7 +111,8 @@ import { customerAtTillAction } from "@/lib/actions/customers";
 import { noteTillKeptAction } from "@/lib/actions/offline";
 import { reasonKey } from "@/lib/reasons";
 import { changeGiven, type Payment } from "@/lib/payments";
-import { RATE_REFUSED } from "@/lib/fx";
+import { RATE_NEEDS_APPROVAL, RATE_REFUSED } from "@/lib/fx";
+import { CUSTOMER_SCREEN_CHANNEL, type CustomerScreenMessage } from "@/lib/customerScreen";
 import { Icon } from "@/components/Icon";
 import {
   keptId,
@@ -343,6 +347,7 @@ type Dialog =
   | { kind: "named" }
   | { kind: "giveaway" }
   | { kind: "move" }
+  | { kind: "join" }
   | { kind: "cancel"; error: string | null }
   | {
       kind: "approve";
@@ -357,6 +362,8 @@ type Dialog =
       what: string;
       /** It is stock past its use-by the café refuses (0098), not more than the books hold. */
       useBy?: boolean;
+      /** It is a dollar rate typed far from the last one a manager used (0116). */
+      rate?: number;
       payment: Pending;
       approvers: Approver[] | null;
       error: string | null;
@@ -423,6 +430,7 @@ export function PosClient({
   offlineKey = null,
   saleDay: initialSaleDay = null,
   packing = null,
+  restaurant = null,
 }: {
   items: PosItem[];
   /** The meal deals on now (0089), and when the menu next changes by itself. */
@@ -449,7 +457,13 @@ export function PosClient({
   /** The drawer (0036): cash is taken only while it is open. */
   initialDrawer: DrawerState;
   /** The dollar's rate, while dollars may be taken at it (0043); read again when refused. */
-  fx?: { rate: number; roundTo: number } | null;
+  fx?: {
+    rate: number;
+    roundTo: number;
+    typed?: boolean;
+    bandPercent?: number;
+    ageHours?: number | null;
+  } | null;
   /** customer.edit: a customer, and their address, may be added at the till (0050). */
   canAddCustomer?: boolean;
   /** The rate is this many hours old, too old to take dollars at: the till says so. */
@@ -482,6 +496,8 @@ export function PosClient({
   saleDay?: TillSaleDay | null;
   /** The café's packing (0107): the pay screen's + / − row; null before it, or with none set up. */
   packing?: PackingSetup | null;
+  /** The restaurant's parts that are on (0110): the kitchen's screens, and courses and seats. */
+  restaurant?: { kitchen: boolean; courses: boolean } | null;
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -913,6 +929,40 @@ export function PosClient({
       ...(byId.get(l.variantId)?.soldByWeight ? { weighed: true } : {}),
     }));
 
+  // The customer's screen (plan 11, item 4): told what is rung up, and what was paid.
+  const screenRef = useRef<BroadcastChannel | null>(null);
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    screenRef.current = new BroadcastChannel(CUSTOMER_SCREEN_CHANNEL);
+    return () => {
+      screenRef.current?.close();
+      screenRef.current = null;
+    };
+  }, []);
+  useEffect(() => {
+    const ch = screenRef.current;
+    if (!ch) return;
+    const o = showBill ? bill : quick;
+    let m: CustomerScreenMessage;
+    if (o && o.lines.length > 0)
+      m = {
+        kind: "order",
+        business: businessName,
+        lines: printLines(o).map((l) => ({ name: l.name, qty: l.qty, amount: l.amount })),
+        total: printTotals(o).total,
+      };
+    else if (receipt)
+      m = {
+        kind: "paid",
+        business: businessName,
+        total: receipt.net + (receipt.service ?? 0) + (receipt.tip ?? 0),
+        change: receipt.change,
+      };
+    else m = { kind: "idle", business: businessName };
+    ch.postMessage(m);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bill, quick, showBill, receipt]);
+
   /** Send slips to the printer, after whatever is printing now. */
   const print = (slips: (Slip | null)[]) => {
     const job = slips.filter((x): x is Slip => x !== null);
@@ -1057,6 +1107,52 @@ export function PosClient({
       };
     });
   }
+  /** A bill's line course and seat (0110). */
+  function setCourseSeat(key: string, course: number | null, seat: number | null) {
+    patchOrder((o) => ({
+      ...o,
+      lines: o.lines.map((l) => (l.key === key ? { ...l, course, seat } : l)),
+    }));
+  }
+  /** The bill to the kitchen (0110): saved first, then what is new; a course given, only its lines. */
+  async function sendToKitchen(course: number | null) {
+    const o = await current();
+    if (!o || o.tabId === null) return;
+    const r = await sendTabToKitchenAction(o.tabId, course);
+    if (!r.ok) return setMsg({ ok: false, text: r.error });
+    setMsg({
+      ok: true,
+      text:
+        r.data.tickets > 0
+          ? t("Sent to the kitchen: {n} tickets", { n: r.data.tickets })
+          : t("Nothing new for the kitchen"),
+    });
+  }
+  /** Another open bill joined into this one (0110). */
+  async function joinBill(fromId: string) {
+    const cur = await current();
+    const from = bills.find((b) => b.tabId === fromId);
+    setDialog(null);
+    if (!cur || cur.tabId === null || cur.version === null || !from) return;
+    setBusy("join");
+    try {
+      const r = await joinBillsAction({
+        intoId: cur.tabId,
+        intoVersion: cur.version,
+        fromId: from.tabId,
+        fromVersion: from.version,
+      });
+      if (!r.ok) return setMsg({ ok: false, text: r.error });
+      if (r.data.bills) {
+        applyBills(r.data.bills);
+        const fresh = r.data.bills.find((b) => b.tabId === cur.tabId);
+        if (fresh) putBill({ ...orderFromBill(fresh), sent: cur.sent });
+      }
+      setMsg({ ok: true, text: t("The bills are one now") });
+    } finally {
+      setBusy(null);
+    }
+  }
   function setNote(key: string, note: string | null) {
     patchOrder((o) => ({ ...o, lines: o.lines.map((l) => (l.key === key ? { ...l, note } : l)) }));
   }
@@ -1100,11 +1196,44 @@ export function PosClient({
     );
   }
 
+  /** A dollar rate far from the last one a manager used (0116): a manager approves it, the payment waits. */
+  async function askRateApproval(payment: Pending, why: string) {
+    const rate = (payment.payments ?? []).find((x) => x.currency === "USD")?.rate ?? 0;
+    setDialog({ kind: "stock", what: say(why), rate, payment, approvers: null, error: null });
+    const r = await listApproversAction("usd_rate");
+    setDialog((cur) =>
+      cur?.kind === "stock"
+        ? { ...cur, approvers: r.ok ? r.data : [], error: r.ok ? null : r.error }
+        : cur,
+    );
+  }
+
   async function confirmStockApproval(approverId: string, pin: string) {
     if (dialog?.kind !== "stock") return;
-    const { payment, what } = dialog;
+    const { payment, what, rate } = dialog;
     setBusy("approve");
     try {
+      if (rate) {
+        const a = await requestApprovalAction({
+          kind: "usd_rate",
+          approverId,
+          pin,
+          scope: { rate },
+        });
+        if (!a.ok) {
+          setDialog((cur) => (cur?.kind === "stock" ? { ...cur, error: a.error } : cur));
+          return;
+        }
+        setDialog(null);
+        setBusy(null);
+        await sendPayment({
+          ...payment,
+          payments: (payment.payments ?? []).map((x) =>
+            x.currency === "USD" ? { ...x, approval: a.data.approvalId } : x,
+          ),
+        });
+        return;
+      }
       const r = await requestApprovalAction({
         kind: "negative_stock",
         approverId,
@@ -1204,6 +1333,8 @@ export function PosClient({
         qty: String(l.qty),
         note: l.note,
         addons: l.addons.map(({ modifierId, qty }) => ({ modifierId, qty })),
+        ...(l.course ? { course: l.course } : {}),
+        ...(l.seat ? { seat: l.seat } : {}),
       })),
       ...discountParams(o.discount),
       ...discountWhy(o.discount),
@@ -1261,6 +1392,10 @@ export function PosClient({
     const next = { ...saved, sent };
     putBill(next);
     if (data.bills) applyBills(data.bills);
+    // The kitchen's screens (0110): what is new goes as it is saved, unless the
+    // bill is sent a course at a time.
+    if (restaurant?.kitchen && !restaurant.courses && next.tabId)
+      void sendTabToKitchenAction(next.tabId, null).catch(() => undefined);
     return next;
   }
 
@@ -1401,6 +1536,8 @@ export function PosClient({
             qty: String(l.qty),
             note: l.note,
             addons: l.addons.map(({ modifierId, qty }) => ({ modifierId, qty })),
+            ...(l.course ? { course: l.course } : {}),
+            ...(l.seat ? { seat: l.seat } : {}),
           })),
           ...discountParams(o.discount),
           ...discountWhy(o.discount),
@@ -1828,6 +1965,14 @@ export function PosClient({
           askStockApproval(p, r.error);
           return;
         }
+        // A dollar rate far from the last one a manager used (0116): a manager approves it.
+        if (
+          RATE_NEEDS_APPROVAL.test(r.error) &&
+          (p.payments ?? []).some((x) => x.currency === "USD")
+        ) {
+          askRateApproval(p, r.error);
+          return;
+        }
         if (approvalRefused(r.error)) dropApproval();
         // The drawer was closed on another till: read it again.
         if (r.error.startsWith("Open the drawer first")) router.refresh();
@@ -1893,6 +2038,9 @@ export function PosClient({
         ticketPrinted: autoTicket,
       });
       setMsg(r.data.replayed ? { ok: true, text: t("pos.replayed") } : null);
+      // A counter sale goes to the kitchen's screens whole (0110).
+      if (restaurant?.kitchen && p.kind === "quick" && !r.data.replayed && r.data.orderId)
+        void sendSaleToKitchenAction(r.data.orderId).catch(() => undefined);
       setPending(null);
       savePending(null);
       setDialog(null);
@@ -2428,6 +2576,16 @@ export function PosClient({
             </button>
           </div>
         )}
+        {/* Orders sent from customers' phones (0119). */}
+        <PhoneOrders
+          nameOf={(id) => {
+            const item = byId.get(id);
+            return item ? itemName(item, locale) : null;
+          }}
+          onTake={(lines) => {
+            for (const l of lines) add(l.variantId, [], l.qty);
+          }}
+        />
         <div className="bill-strip" aria-label={t("pos.openBills")}>
           <button
             className={`strip-chip${!showBill ? " active" : ""}`}
@@ -2592,6 +2750,13 @@ export function PosClient({
             ticketOn={ticketOn}
             onQty={changeQty}
             onNote={setNote}
+            onCourseSeat={restaurant?.courses ? setCourseSeat : null}
+            onKitchen={restaurant?.kitchen ? (c: number | null) => void sendToKitchen(c) : null}
+            onJoin={
+              bills.filter((b) => b.tabId !== bill?.tabId && !b.billPrintedAt).length > 0
+                ? () => setDialog({ kind: "join" })
+                : null
+            }
             onWeigh={(key) => setWeighing(key)}
             onLabel={(label) => billRef.current && putBill({ ...billRef.current, label })}
             onPay={startPay}
@@ -2804,6 +2969,31 @@ export function PosClient({
           onClose={() => setDialog(null)}
         />
       )}
+      {dialog?.kind === "join" && bill && (
+        <Modal label={t("Join another bill")} busy={busy !== null} onClose={() => setDialog(null)}>
+          <div className="grid" style={{ gap: 8 }} data-testid="join-dialog">
+            <h3 style={{ margin: 0 }}>{t("Join another bill")}</h3>
+            <p className="muted" style={{ margin: 0 }}>
+              {t("Its lines come onto this bill, and it is closed as moved.")}
+            </p>
+            {bills
+              .filter((b) => b.tabId !== bill.tabId && !b.billPrintedAt)
+              .map((b) => (
+                <button
+                  key={b.tabId}
+                  type="button"
+                  onClick={() => void joinBill(b.tabId)}
+                  data-testid="join-choice"
+                >
+                  {billTitle(b, tables, b.label ?? "—")} · {fmtIQD(b.total)}
+                </button>
+              ))}
+            <button type="button" onClick={() => setDialog(null)}>
+              {t("Close")}
+            </button>
+          </div>
+        </Modal>
+      )}
       {dialog?.kind === "move" && bill && (
         <MoveDialog
           tables={floorTables}
@@ -2827,9 +3017,11 @@ export function PosClient({
       {dialog?.kind === "stock" && (
         <ApproveDialog
           title={
-            dialog.useBy
-              ? t("A manager approves selling what is past its use-by")
-              : t("A manager approves selling more than the books hold")
+            dialog.rate
+              ? t("A manager approves this dollar rate")
+              : dialog.useBy
+                ? t("A manager approves selling what is past its use-by")
+                : t("A manager approves selling more than the books hold")
           }
           what={dialog.what}
           approvers={dialog.approvers}

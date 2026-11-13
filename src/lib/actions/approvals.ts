@@ -11,7 +11,7 @@ import { z } from "zod";
 import { callRpc, parse, refresh, type ActionResult } from "@/lib/db/rpc";
 import { id } from "@/lib/validation";
 
-const kind = z.enum(["discount", "void", "refund", "waste", "negative_stock"], {
+const kind = z.enum(["discount", "void", "refund", "waste", "negative_stock", "usd_rate"], {
   message: "Unknown approval",
 });
 
@@ -40,12 +40,14 @@ const requestInput = z.object({
   pin: z.string().regex(/^\d{4,8}$/, "A PIN is 4 to 8 digits"),
   /**
    * What is approved: {percent} for a discount, {order_id} for a void or
-   * refund, {items} (as the person saw them) for a loss or stock below zero.
+   * refund, {items} (as the person saw them) for a loss or stock below zero,
+   * {rate} for a dollar rate (0116).
    */
   scope: z.union([
     z.object({ percent: z.number().positive().max(100) }),
     z.object({ order_id: z.string().guid() }),
     z.object({ items: z.string().max(300) }),
+    z.object({ rate: z.number().min(100).max(100000) }),
   ]),
 });
 

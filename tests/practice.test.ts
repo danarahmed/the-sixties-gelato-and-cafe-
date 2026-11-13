@@ -6,11 +6,19 @@ import {
   practiceStateFrom,
   practiceTeamFrom,
 } from "@/lib/practice";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 
 describe("practice", () => {
   it("knows every task the database lists, each with where it is done", () => {
-    const sql = readFileSync("supabase/migrations/0096_practice.sql", "utf8");
+    // The newest list of practice tasks (0096, then 0120 for each type of business).
+    const file = readdirSync("supabase/migrations")
+      .filter((f) => f.endsWith(".sql"))
+      .sort()
+      .filter((f) =>
+        readFileSync(`supabase/migrations/${f}`, "utf8").includes("function practice_task_list()"),
+      )
+      .pop()!;
+    const sql = readFileSync(`supabase/migrations/${file}`, "utf8");
     const listed = [...sql.matchAll(/\('([a-z_]+)', '[a-z.]+', \d+\)/g)].map((m) => m[1]);
     expect(listed.length).toBeGreaterThan(10);
     expect(listed.filter((k) => !(k! in PRACTICE_TASKS))).toEqual([]);

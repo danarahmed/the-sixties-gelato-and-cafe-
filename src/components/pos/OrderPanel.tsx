@@ -38,6 +38,7 @@ import {
   type Tender,
 } from "./model";
 import { Emblem, type BaristaTicket, type PrintJob } from "./PrintSlip";
+import { receiptText, whatsappLink, whatsappNumber } from "@/lib/whatsapp";
 import { Icon } from "@/components/Icon";
 import { TourOffer } from "@/components/Tour";
 
@@ -111,6 +112,16 @@ function DealBlock({
   );
 }
 
+/**
+ * The kitchen buttons a bill shows (0110): one for each course on it, and one
+ * for all when some line has none or none has one.
+ */
+function kitchenCourses(o: Order): (number | null)[] {
+  const courses = [...new Set(o.lines.map((l) => l.course ?? null))];
+  const numbered = courses.filter((c): c is number => c !== null).sort((a, b) => a - b);
+  return numbered.length === 0 ? [null] : courses.includes(null) ? [null, ...numbered] : numbered;
+}
+
 function OrderLine({
   line,
   order,
@@ -120,6 +131,7 @@ function OrderLine({
   onQty,
   onNote,
   onWeigh,
+  onCourseSeat,
 }: {
   line: Line;
   order: Order;
@@ -130,6 +142,8 @@ function OrderLine({
   onNote: (key: string, note: string | null) => void;
   /** A size sold by weight: weigh it again (0075). */
   onWeigh?: (key: string) => void;
+  /** A bill's line: its course and seat (0110), while that part is on. */
+  onCourseSeat?: ((key: string, course: number | null, seat: number | null) => void) | null;
 }) {
   const { t, locale } = useT();
   const [editing, setEditing] = useState(false);
@@ -159,6 +173,15 @@ function OrderLine({
                 ? t("{price} a kilo", { price: fmtIQD(price) })
                 : fmtIQD(price)}
             {line.note && <em className="ol-note"> · {line.note}</em>}
+            {line.course ? (
+              <span className="ol-note" data-testid="line-course">
+                {" "}
+                · {t("Course {n}", { n: line.course })}
+              </span>
+            ) : null}
+            {line.seat ? (
+              <span className="ol-note"> · {t("Seat {n}", { n: line.seat })}</span>
+            ) : null}
           </span>
         </div>
         {weighed ? (
@@ -228,6 +251,47 @@ function OrderLine({
             }}
           />
           <button onClick={save}>{t("pos.ok")}</button>
+          {onCourseSeat && (
+            <>
+              <select
+                aria-label={t("Course")}
+                value={line.course ?? ""}
+                onChange={(e) =>
+                  onCourseSeat(
+                    line.key,
+                    e.target.value ? Number(e.target.value) : null,
+                    line.seat ?? null,
+                  )
+                }
+                data-testid="line-course-pick"
+              >
+                <option value="">{t("Course")}</option>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>
+                    {t("Course {n}", { n })}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label={t("Seat")}
+                value={line.seat ?? ""}
+                onChange={(e) =>
+                  onCourseSeat(
+                    line.key,
+                    line.course ?? null,
+                    e.target.value ? Number(e.target.value) : null,
+                  )
+                }
+              >
+                <option value="">{t("Seat")}</option>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>
+                    {t("Seat {n}", { n })}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -440,6 +504,9 @@ export function OrderPanel({
   onAskApproval,
   onCustomer = null,
   payMethods = [],
+  onCourseSeat = null,
+  onKitchen = null,
+  onJoin = null,
 }: {
   order: Order;
   title: string;
@@ -473,6 +540,12 @@ export function OrderPanel({
   onPay: (tender: Tender, method?: string) => void;
   /** The café's ways to pay besides cash and the card, in use (0069): a button each. */
   payMethods?: { id: string; name: string }[];
+  /** A bill's line course and seat (0110), while that part is on. */
+  onCourseSeat?: ((key: string, course: number | null, seat: number | null) => void) | null;
+  /** Send the bill to the kitchen, a course or all (0110), while that part is on. */
+  onKitchen?: ((course: number | null) => void) | null;
+  /** Join another open bill into this one (0110). */
+  onJoin?: (() => void) | null;
   onSave: () => void;
   onPrintBill: () => void;
   /** The barista's ticket for a bill: what the bar has not had yet, or the whole order again. */
@@ -718,6 +791,7 @@ export function OrderPanel({
                   <Icon name="cup" /> {t("pos.baristaTicket")}
                 </button>
               )}
+              <WhatsAppReceipt job={receipt.job} />
             </div>
             <p className="rc-next muted">{t("pos.nextCustomer")}</p>
           </div>
@@ -754,6 +828,7 @@ export function OrderPanel({
                 onQty={onQty}
                 onNote={onNote}
                 onWeigh={onWeigh}
+                onCourseSeat={isBill ? onCourseSeat : null}
               />
             ),
           )
@@ -893,6 +968,27 @@ export function OrderPanel({
                         <Icon name="move" /> {t("pos.move")}
                       </button>
                     )}
+                    {onKitchen &&
+                      kitchenCourses(order).map((c) => (
+                        <button
+                          key={c ?? "all"}
+                          onClick={() => onKitchen(c)}
+                          disabled={blocked || !online}
+                          data-testid="bill-kitchen"
+                        >
+                          <Icon name="bowl" />{" "}
+                          {c ? t("Send course {n}", { n: c }) : t("Send to the kitchen")}
+                        </button>
+                      ))}
+                    {onJoin && order.tabId !== null && (
+                      <button
+                        onClick={onJoin}
+                        disabled={blocked || !online || badDiscount}
+                        data-testid="bill-join"
+                      >
+                        <Icon name="split" /> {t("Join another bill")}
+                      </button>
+                    )}
                     <button
                       onClick={onCancelBill}
                       disabled={
@@ -951,5 +1047,52 @@ export function OrderPanel({
         <Notice msg={msg} />
       </div>
     </div>
+  );
+}
+
+/** The receipt sent by WhatsApp: the customer's number, then WhatsApp opens with it written out. */
+function WhatsAppReceipt({ job }: { job: PrintJob }) {
+  const { t } = useT();
+  const [open, setOpen] = useState(false);
+  const [phone, setPhone] = useState("");
+  const number = whatsappNumber(phone);
+  if (!open)
+    return (
+      <button type="button" onClick={() => setOpen(true)} data-testid="receipt-whatsapp">
+        {t("WhatsApp…")}
+      </button>
+    );
+  return (
+    <span style={{ display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+      <input
+        inputMode="tel"
+        dir="ltr"
+        autoFocus
+        aria-label={t("Their WhatsApp number")}
+        placeholder="0750 123 4567"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        style={{ width: 150 }}
+        data-testid="receipt-whatsapp-number"
+      />
+      <a
+        className={number ? "btn-primary" : undefined}
+        aria-disabled={!number}
+        href={
+          number
+            ? whatsappLink(
+                number,
+                receiptText(job, { total: t("pos.total"), thanks: t("print.thanks") }),
+              )
+            : undefined
+        }
+        target="_blank"
+        rel="noreferrer"
+        onClick={() => number && setOpen(false)}
+        data-testid="receipt-whatsapp-send"
+      >
+        {t("Send by WhatsApp")}
+      </a>
+    </span>
   );
 }

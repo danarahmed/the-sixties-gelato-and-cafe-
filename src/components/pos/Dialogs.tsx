@@ -447,7 +447,19 @@ export function PrintingDialog({
       <p className="muted" style={{ fontSize: ".8rem" }}>
         {t("pos.printerTip")}
       </p>
+      <p className="muted" style={{ fontSize: ".8rem" }}>
+        {t(
+          "A screen turned to the customer: open their screen on it, from this till, and it shows what you ring up and the total.",
+        )}
+      </p>
       <div className="pay-actions">
+        <button
+          type="button"
+          onClick={() => window.open("/pos/customer", "sixties-customer-screen", "popup")}
+          data-testid="open-customer-screen"
+        >
+          {t("The customer's screen")}
+        </button>
         <button onClick={onTest}>{t("pos.testPrint")}</button>
         <button className="btn-primary" onClick={onClose}>
           {t("pos.ok")}

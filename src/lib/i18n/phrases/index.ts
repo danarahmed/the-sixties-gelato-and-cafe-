@@ -67,6 +67,15 @@ import saleDays from "./saleDays";
 import packing from "./packing";
 import plans from "./plans";
 import support from "./support";
+import restaurant from "./restaurant";
+import wholesale from "./wholesale";
+import socialInsurance from "./socialInsurance";
+import loyaltyOwed from "./loyaltyOwed";
+import smallGaps from "./smallGaps";
+import supplierGaps from "./supplierGaps";
+import dollarRate from "./dollarRate";
+import budgets from "./budgets";
+import phoneMenu from "./phoneMenu";
 import today from "./today";
 import help from "./help";
 
@@ -141,6 +150,15 @@ export const BOOKS: Record<string, PhraseBook> = {
   packing,
   plans,
   support,
+  restaurant,
+  wholesale,
+  socialInsurance,
+  loyaltyOwed,
+  smallGaps,
+  supplierGaps,
+  dollarRate,
+  budgets,
+  phoneMenu,
 };
 
 const byLocale = new Map<string, Record<string, string>>();

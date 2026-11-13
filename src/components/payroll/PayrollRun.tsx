@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   adjustPayrollLineAction,
@@ -290,6 +291,11 @@ function LineRow({
               {l.deductionsNote}
             </div>
           )}
+          {l.siEmployee > 0 && (
+            <div data-testid="payroll-si" style={{ fontSize: ".85rem" }}>
+              {t("Social insurance")} −{fmtIQD(l.siEmployee)}
+            </div>
+          )}
         </td>
         <td className="right money">
           {l.advanceRecovered ? fmtIQD(l.advanceRecovered) : "—"}
@@ -304,6 +310,15 @@ function LineRow({
         </td>
         <td className="right money">{l.paid ? fmtIQD(l.paid) : "—"}</td>
         <td>
+          {run.status !== "draft" && (
+            <Link
+              href={`/payroll/payslip/${l.id}`}
+              data-testid="payslip-link"
+              style={{ marginInlineEnd: 6 }}
+            >
+              {t("Payslip")}
+            </Link>
+          )}
           {canRun && run.status === "draft" && (
             <button
               type="button"

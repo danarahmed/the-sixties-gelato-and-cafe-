@@ -287,6 +287,14 @@ export default async function ReportsPage({
       href: "/reports/sale-days",
       label: t("Sale days: what each one sold and earned, against the weeks before →"),
     });
+  // Against last year and the budget (0117), for whoever sees the profit.
+  if (seesProfit)
+    reportPages.push({
+      path: "/reports/compare",
+      testId: "to-compare",
+      href: `/reports/compare?from=${from}&to=${upTo}`,
+      label: t("Against last year and the budget: each account, and the month's budget →"),
+    });
   // Packing (0107), for whoever sees costs.
   if (has(profile, "cost.view"))
     reportPages.push({

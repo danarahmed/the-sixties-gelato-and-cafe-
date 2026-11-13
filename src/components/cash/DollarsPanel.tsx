@@ -2,9 +2,16 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { exchangeDollarsAction, setFxRateAction } from "@/lib/actions/fx";
+import { exchangeDollarsAction, setFxRateAction, setUsdRateBandAction } from "@/lib/actions/fx";
 import { fmtIQD } from "@/lib/format";
-import { fmtRate, fmtUSD, wholeNumber, type DollarsReport, type FxStatus } from "@/lib/fx";
+import {
+  fmtRate,
+  fmtUSD,
+  wholeNumber,
+  type DollarsReport,
+  type FxStatus,
+  type RatesUsed,
+} from "@/lib/fx";
 import { dateTimeIn } from "@/lib/dates";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { Notice } from "@/components/ui";
@@ -28,8 +35,13 @@ export function DollarsPanel({
   held,
   canExchange,
   timezone,
+  ratesUsed = null,
+  isOwner = false,
 }: {
   fx: FxStatus;
+  /** The rates each person typed this week (0116); null before it. */
+  ratesUsed?: RatesUsed | null;
+  isOwner?: boolean;
   /** What the tills and the safe hold now (report_dollars), for those who may see costs. */
   held: DollarsReport["held"] | null;
   /** day.close or accounting.post */
@@ -59,14 +71,51 @@ export function DollarsPanel({
           </>
         )}
         <div className="muted" style={{ fontSize: ".78rem" }}>
-          {t(
-            "A rate is used for {hours} hours; dollars are counted in dinars to the nearest {step}, and change is given in dinars.",
-            { hours: fx.maxAgeHours, step: fmtIQD(fx.roundTo) },
-          )}
+          {fx.typed
+            ? t(
+                "Each dollar payment takes the rate typed for it, this one offered to start from; a cashier's within {n}% of it is taken, beyond it a manager approves it with their PIN. Dollars are counted in dinars to the nearest {step}, and change is given in dinars.",
+                { n: String(fx.bandPercent), step: fmtIQD(fx.roundTo) },
+              )
+            : t(
+                "A rate is used for {hours} hours; dollars are counted in dinars to the nearest {step}, and change is given in dinars.",
+                { hours: fx.maxAgeHours, step: fmtIQD(fx.roundTo) },
+              )}
         </div>
       </div>
 
       {fx.maySet && <SetRate current={fx.rate} />}
+      {fx.typed && isOwner && <SetBand current={fx.bandPercent} />}
+      {ratesUsed && ratesUsed.rates.length > 0 && (
+        <div data-testid="fx-rates-used">
+          <div className="sc">{t("The rates used this week")}</div>
+          <div className="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>{t("Who")}</th>
+                  <th className="right">{t("Times")}</th>
+                  <th className="right">{t("Lowest")}</th>
+                  <th className="right">{t("Highest")}</th>
+                  <th className="right">{t("Beyond the band")}</th>
+                  <th className="right">{t("Approved by a manager")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ratesUsed.people.map((p) => (
+                  <tr key={p.name} data-testid="fx-rate-person" data-name={p.name}>
+                    <td>{p.name}</td>
+                    <td className="right mono">{p.times}</td>
+                    <td className="right mono">{fmtRate(p.lowest)}</td>
+                    <td className="right mono">{fmtRate(p.highest)}</td>
+                    <td className="right mono">{p.beyondBand || "—"}</td>
+                    <td className="right mono">{p.approved || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {held && (
         <div data-testid="fx-held">
@@ -123,6 +172,52 @@ export function DollarsPanel({
 }
 
 /** A manager sets today's rate, saying where it comes from. */
+/** (the owner) How far from the last manager's rate a cashier's may be (0116). */
+function SetBand({ current }: { current: number }) {
+  const { t } = useT();
+  const router = useRouter();
+  const [busy, start] = useTransition();
+  const [band, setBand] = useState(String(current));
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  return (
+    <form
+      style={{ display: "flex", gap: 8, alignItems: "end", flexWrap: "wrap" }}
+      data-testid="fx-band"
+      onSubmit={(e) => {
+        e.preventDefault();
+        setMsg(null);
+        start(async () => {
+          const r = await setUsdRateBandAction({ percent: Number(band) });
+          if (!r.ok) setMsg({ ok: false, text: r.error });
+          else {
+            setMsg({
+              ok: true,
+              text: t("Saved: a cashier's rate within {n}% is taken.", {
+                n: String(r.data.bandPercent),
+              }),
+            });
+            router.refresh();
+          }
+        });
+      }}
+    >
+      <label>
+        <div className="sc">{t("A cashier's rate within, %")}</div>
+        <input
+          inputMode="decimal"
+          style={{ width: 80 }}
+          value={band}
+          onChange={(e) => setBand(e.target.value)}
+        />
+      </label>
+      <button type="submit" disabled={busy || Number(band) === current}>
+        {t("Save")}
+      </button>
+      <Notice msg={msg} />
+    </form>
+  );
+}
+
 function SetRate({ current }: { current: number | null }) {
   const { t } = useT();
   const router = useRouter();

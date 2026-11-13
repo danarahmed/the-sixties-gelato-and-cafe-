@@ -168,6 +168,29 @@ begin
        -- The packing (0107): which items, what each size goes out in, and each order's.
        || case when to_regclass('public.sales_order_packing') is not null
                then ', packing_item, variant_packing, sales_order_packing' else '' end
+       -- The kitchen (its stations, tickets) and the bookings (0110).
+       || case when to_regclass('public.kitchen_ticket') is not null
+               then ', category_station, kitchen_station, kitchen_ticket_line, kitchen_ticket, reservation' else '' end
+       -- The customers' prices, quotes and delivery notes (0111).
+       || case when to_regclass('public.sales_quote') is not null
+               then ', customer_price, delivery_note, sales_quote' else '' end
+       -- Social insurance: on or off, and what was paid to the government (0112).
+       || case when to_regclass('public.social_insurance_payment') is not null
+               then ', social_insurance_payment, social_insurance_setup' else '' end
+       -- The orders phones sent to the till (0119).
+       || case when to_regclass('public.phone_order') is not null then ', phone_order' else '' end
+       -- The menu's link on customers' phones (0118).
+       || case when to_regclass('public.public_menu') is not null then ', public_menu' else '' end
+       -- The budgets (0117).
+       || case when to_regclass('public.budget_line') is not null then ', budget_line' else '' end
+       -- The dollar rates used, and how far a cashier's may be (0116).
+       || case when to_regclass('public.usd_rate_used') is not null then ', usd_rate_used, usd_rate_setup' else '' end
+       -- What suppliers paid back of their credits (0115).
+       || case when to_regclass('public.supplier_refund') is not null then ', supplier_refund' else '' end
+       -- Which late payment explained which day's short (0114).
+       || case when to_regclass('public.drawer_short_explained') is not null then ', drawer_short_explained' else '' end
+       -- Whether points are booked as money owed (0113).
+       || case when to_regclass('public.loyalty_owed_setup') is not null then ', loyalty_owed_setup' else '' end
        || ' restart identity';
 end $$;
 

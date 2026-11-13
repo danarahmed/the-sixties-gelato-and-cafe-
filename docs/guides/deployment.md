@@ -104,6 +104,17 @@ Plan a short window when the café is closed.
 | Packing at the till (`0107`)                       | ⏳ Waiting for the owner to apply it in the SQL editor, after `0106`                                                                                                                                                                                                                                                                                                                                                                             |
 | Plans and parts (`0108`)                           | ⏳ Waiting for the owner to apply it in the SQL editor, after `0107`                                                                                                                                                                                                                                                                                                                                                                             |
 | Running many businesses (`0109`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0108`                                                                                                                                                                                                                                                                                                                                                                             |
+| The restaurant parts (`0110`)                      | ⏳ Waiting for the owner to apply it in the SQL editor, after `0109`                                                                                                                                                                                                                                                                                                                                                                             |
+| The supplier parts (`0111`)                        | ⏳ Waiting for the owner to apply it in the SQL editor, after `0110`                                                                                                                                                                                                                                                                                                                                                                             |
+| Social insurance and the payslip (`0112`)          | ⏳ Waiting for the owner to apply it in the SQL editor, after `0111`                                                                                                                                                                                                                                                                                                                                                                             |
+| Loyalty points as money owed (`0113`)              | ⏳ Waiting for the owner to apply it in the SQL editor, after `0112`                                                                                                                                                                                                                                                                                                                                                                             |
+| The books' smaller gaps (`0114`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0113`                                                                                                                                                                                                                                                                                                                                                                             |
+| The supplier's smaller gaps (`0115`)               | ⏳ Waiting for the owner to apply it in the SQL editor, after `0114`                                                                                                                                                                                                                                                                                                                                                                             |
+| The dollar's rate typed with each payment (`0116`) | ⏳ Waiting for the owner to apply it in the SQL editor, after `0115`                                                                                                                                                                                                                                                                                                                                                                             |
+| Budgets (`0117`)                                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0116`                                                                                                                                                                                                                                                                                                                                                                             |
+| The menu on customers' phones (`0118`)             | ⏳ Waiting for the owner to apply it in the SQL editor, after `0117`                                                                                                                                                                                                                                                                                                                                                                             |
+| Orders sent from phones to the till (`0119`)       | ⏳ Waiting for the owner to apply it in the SQL editor, after `0118`                                                                                                                                                                                                                                                                                                                                                                             |
+| Practice for each type of business (`0120`)        | ⏳ Waiting for the owner to apply it in the SQL editor, after `0119`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4530,6 +4541,127 @@ changes for it. Rehearsed with `tests/sql/running_many.test.sql`. Applied
 after `0108`, as each one before it: open
 `supabase/migrations/0109_running_many.sql` on GitHub, **Raw**, copy all of
 it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0110`
+
+Migration `0110` brings **the restaurant parts**, each off for a café until
+the owner turns it on (Settings → Plan and parts): kitchen screens and
+stations (Menu → Kitchen; Settings → Kitchen stations), courses and seats on a
+bill's lines, sent to the kitchen course by course, two bills joined into one,
+and reservations with the waiting list (Menu → Reservations). Nothing changes
+for The Sixty's until a part is turned on. Rehearsed with
+`tests/sql/restaurant.test.sql`. Applied after `0109`, as each one before it:
+open `supabase/migrations/0110_restaurant.sql` on GitHub, **Raw**, copy all
+of it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0111`
+
+Migration `0111` brings **the supplier parts**, off for a café until the
+owner turns them on (Settings → Plan and parts): Menu → Wholesale, with
+quotes invoiced at their own prices, delivery notes out with the driver and
+signed for, credit notes, each customer's own prices, and a stock item put on
+the menu as it is or by the carton. Rehearsed with
+`tests/sql/supplier.test.sql`. Applied after `0110`, as each one before it:
+open `supabase/migrations/0111_supplier.sql` on GitHub, **Raw**, copy all of
+it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0112`
+
+Migration `0112` brings **social insurance and the payslip**, off until the
+owner turns it on (Payroll → Social insurance): the café's part (12%) and the
+person's (5%) of each salary, taken when a payroll is approved, each person
+left out while on a trial period; what each month owes the government, paid
+from the bank or the safe; and each person's payslip, printed from the
+payroll. Rehearsed with `tests/sql/social_insurance.test.sql`. Applied after
+`0111`, as each one before it: open
+`supabase/migrations/0112_social_insurance.sql` on GitHub, **Raw**, copy all of
+it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0113`
+
+Migration `0113` brings **loyalty points as money owed**, off until the owner
+turns it on (Settings → Loyalty points as money owed): the points customers
+hold are owed at the reward's value, a cost as they are earned, and owed no
+more when they are spent. Rehearsed with `tests/sql/loyalty_owed.test.sql`.
+Applied after `0112`, as each one before it: open
+`supabase/migrations/0113_loyalty_owed.sql` on GitHub, **Raw**, copy all of it,
+paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0114`
+
+Migration `0114` closes **three of the books' smaller gaps**: a payment from
+the till recorded a day late explains that day's short (a cost of that day,
+today's drawer untouched); a prepaid expense is changed until its first share
+is posted, and each month's share is posted by itself overnight; a payroll's
+cost is shared between places by the hours clocked at each. Rehearsed with
+`tests/sql/books_small_gaps.test.sql`. Applied after `0113`, as each one before
+it: open `supabase/migrations/0114_books_small_gaps.sql` on GitHub, **Raw**,
+copy all of it, paste it into Supabase's **SQL Editor** → **New query**,
+**Run**.
+
+## After `0115`
+
+Migration `0115` closes **the supplier's smaller gaps**: a supplier's refund
+of a credit in cash or to the bank is its own button on Vendors (They paid it
+back…); credit notes and bills are dated as the supplier dated them, within
+open months. Rehearsed with `tests/sql/supplier_gaps.test.sql`. Applied after
+`0114`, as each one before it: open
+`supabase/migrations/0115_supplier_gaps.sql` on GitHub, **Raw**, copy all of
+it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0116`
+
+Migration `0116` brings **the dollar's rate typed with each payment**: the
+till offers the last rate a manager used and the cashier types today's; within
+2% of it (the owner may set another band on Sales → Dollars) it is taken, and
+beyond it a manager approves it with their PIN. How old the last rate is no
+longer stops dollars being taken. Sales → Dollars shows the rates each person
+used this week. Rehearsed with `tests/sql/dollar_rate_typed.test.sql`. Applied
+after `0115`, as each one before it: open
+`supabase/migrations/0116_dollar_rate_typed.sql` on GitHub, **Raw**, copy all
+of it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0117`
+
+Migration `0117` brings **budgets**: Reports → Against last year and the
+budget shows each revenue and cost account beside the same days a year before
+and the budget, and the owner or the accountant sets this month's budget there
+(started from last month's figures with one press). Rehearsed with
+`tests/sql/budgets.test.sql`. Applied after `0116`, as each one before it: open
+`supabase/migrations/0117_budgets.sql` on GitHub, **Raw**, copy all of it,
+paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0118`
+
+Migration `0118` brings **the menu on customers' phones**, off until the owner
+turns it on (Settings → The menu on customers' phones): print its QR for the
+tables; customers choose on their phone and show the waiter their order as a
+QR, which the till's scanner adds to the bill. Rehearsed with
+`tests/sql/qr_menu.test.sql`. Applied after `0117`, as each one before it:
+open `supabase/migrations/0118_qr_menu.sql` on GitHub, **Raw**, copy all of it,
+paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0119`
+
+Migration `0119` brings **orders sent from phones to the till**, off until
+the owner turns each on (Settings → The menu on customers' phones): a table's
+order straight to the till, and orders to take away or deliver. Each waits at
+the till (From phones) to be added to the order or turned down; it is paid at
+the café as always. Rehearsed with `tests/sql/phone_orders.test.sql`. Applied
+after `0118`, as each one before it: open
+`supabase/migrations/0119_phone_orders.sql` on GitHub, **Raw**, copy all of it,
+paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0120`
+
+Migration `0120` brings **practice for each type of business**: a practice café
+of the real café's type, with the restaurant's tasks (send a table's order to
+the kitchen, take a reservation) and the supplier's (make a quote, send a
+delivery note) wherever those parts are on. Rehearsed with
+`tests/sql/practice_by_type.test.sql`. Applied after `0119`, as each one before
+it: open `supabase/migrations/0120_practice_by_type.sql` on GitHub, **Raw**,
+copy all of it, paste it into Supabase's **SQL Editor** → **New query**,
+**Run**.
 
 ## Clearing the test records
 

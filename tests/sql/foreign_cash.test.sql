@@ -87,19 +87,22 @@ select test.eq((select (s ->> 'rate') is null and not (s ->> 'usable')::boolean 
                   from fx_status() s), true, 'no rate yet: dollars cannot be taken, and a cashier does not set one');
 select test.throws($$select record_sale(gen_random_uuid(), 'dine_in', null, pg_temp.lines('{"E": 1}'),
   p_tenders => jsonb_build_array(pg_temp.usd(5, 2500)))$$,
-  'No dollar rate is set: a manager sets today''s on Sales → Dollars', 'no dollars without a rate');
+  'No manager has used a dollar rate yet: a manager approves 1310 with their PIN',
+  'no dollars from a cashier before a manager has used a rate (0116)');
 select test.throws($$select set_fx_rate('USD', 1310, 'Market')$$, '%permission%', 'a cashier does not set the rate');
 select test.as_admin();
 insert into fx_rate (business_id, currency, rate, effective_from, set_by, reason)
 select '00000000-0000-0000-0000-0000000000b1', 'USD', 1300, now() - interval '40 hours', id, 'Market two days ago'
   from app_user where email = 'manager@example.com';
 select test.act_as('cashier@example.com');
+-- 0116: no daily rate. However old the last one a manager used, it is
+-- offered to start from, with how old it is; a rate far from it needs a PIN.
 select test.throws($$select record_sale(gen_random_uuid(), 'dine_in', null, pg_temp.lines('{"E": 1}'),
-  p_tenders => jsonb_build_array(pg_temp.usd(5, 2500, 1300)))$$,
-  'The dollar rate was set 40 hours ago: a manager sets today''s before dollars are taken',
-  'a rate older than 36 hours is not used');
+  p_tenders => jsonb_build_array(pg_temp.usd(5, 2500, 1400)))$$,
+  '1400 is more than 2% from 1300, the last rate a manager used: a manager approves it with their PIN',
+  'a rate far from the last one a manager used needs a manager');
 select test.eq((select (s ->> 'rate') || ' ' || (s ->> 'usable') || ' ' || (s ->> 'age_hours') from fx_status() s),
-  '1300 false 40', 'the till is told the rate is too old');
+  '1300 true 40', 'the till is told the last rate and how old it is');
 
 -- ------------------------------------------------------------ the manager sets today's
 select test.act_as('manager@example.com');
@@ -150,8 +153,9 @@ select test.eq(pg_temp.drawer(pg_temp.sale('U1')) || ' | ' || pg_temp.fx(pg_temp
 create temp table n_before as select pg_temp.orders() as n;
 grant select on n_before to public;
 select test.throws($$select record_sale(gen_random_uuid(), 'dine_in', null, pg_temp.lines('{"E": 1}'),
-  p_tenders => jsonb_build_array(pg_temp.usd(5, 2500, 1300)))$$,
-  'The dollar rate is now 1310, not the 1300 shown: take the payment again', 'a rate that changed while paying');
+  p_tenders => jsonb_build_array(pg_temp.usd(5, 2500, 1200)))$$,
+  '1200 is more than 2% from 1310, the last rate a manager used: a manager approves it with their PIN',
+  'a rate far from the last one a manager used (0116: no longer the one rate shown)');
 select test.throws($$select record_sale(gen_random_uuid(), 'dine_in', null, pg_temp.lines('{"E": 1}'),
   p_tenders => jsonb_build_array(pg_temp.usd(1, 2500)))$$,
   '$1 come to 1250, less than the 2500 they pay', 'dollars worth less than their part');
@@ -447,8 +451,9 @@ insert into res select 'U1 later', record_sale('53000000-0000-0000-0000-00000000
 select test.eq((pg_temp.r('U1 later') ->> 'replayed') || ' at ' || (pg_temp.r('U1 later') -> 'payments' -> 0 ->> 'rate'),
   'true at 1310', 'a sale sent again after the rate changed is the sale as recorded, at its rate');
 select test.throws($$select record_sale(gen_random_uuid(), 'dine_in', null, pg_temp.lines('{"E": 1}'),
-  p_tenders => jsonb_build_array(pg_temp.usd(5, 2500)))$$,
-  'The dollar rate is now 1320, not the 1310 shown: take the payment again', 'a new sale takes the new rate');
+  p_tenders => jsonb_build_array(pg_temp.usd(5, 2500, 1000)))$$,
+  '1000 is more than 2% from 1320, the last rate a manager used: a manager approves it with their PIN',
+  'a new sale is checked against the new rate');
 
 -- ------------------------------------------------------------ the rounding is the café's
 select test.act_as('owner@example.com');

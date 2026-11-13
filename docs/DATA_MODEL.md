@@ -2054,6 +2054,187 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Practice for each type of business (`0120`)
+
+- `practice_seed` makes the practice café of the real café's type and plan,
+  its parts copied (`business_part`).
+- `practice_task_list` adds `kitchen_send`, `reservation` (sale.create),
+  `quote` and `delivery_note` (credit.manage); `practice_task_part(task)` names
+  the part each needs, and `practice_tasks` and `practice_team` count a task
+  only where its part is on for the real café.
+
+### Orders sent from phones to the till (`0119`)
+
+- `public_menu.to_till` and `online`, the owner's (`set_phone_orders`): a
+  table's order sent straight to the till; an order to take away or deliver
+  with a name and phone (and an address).
+- **`phone_order`**: numbered, its kind, table or name, phone and address,
+  its lines `[{variant_id, qty}]`, `new` → `accepted` or `declined` (with
+  why). `submit_phone_order(token, kind, lines, …)` and
+  `phone_order_status(token, id)` are open to the public with the link: at most
+  30 lines of at most 20, only what the menu sells now, 5 an hour from a phone,
+  200 an hour for a café. `phone_orders()` and `handle_phone_order(id,
+accept, reason)` (sale.create) at the till. Nothing is paid from a phone.
+
+### The menu on customers' phones (`0118`)
+
+- **`public_menu`** (one per business): its link's `token` (random, 24
+  letters), on or off, and the place whose prices it shows.
+  `set_public_menu(enabled, location, new_link)` (the owner; a new link makes
+  the old one open nothing), `public_menu_setup()` (settings.manage).
+- `public_menu(token)`, the one function the public may call besides the
+  clock's and the phone warnings': the active, priced, not weighed sizes at
+  dine-in prices today, with names in each language, categories and photos.
+  Nothing is written from a phone: the order is a QR (`S60O1.` and each
+  size's id and quantity) that the till's scanner adds to the bill.
+
+### Budgets (`0117`)
+
+- **`budget_line`** (business, month, account code, amount ≥ 0): a month's
+  budget for a revenue or cost account. `set_budget(month, {code: amount})`
+  (the owner, or accounting.post; 0 takes an account off; each change on the
+  audit trail), `budget_month(month)` and `budget_for(from, to)` (profit.view:
+  each month's budget shared by the days of it the dates cover).
+- Reports → Compare reads `report_profit_and_loss` for the dates and the same
+  days a year before, beside `budget_for`.
+
+### The dollar's rate typed with each payment (`0116`)
+
+- No daily rate: `sale_dollars` takes each payment's own rate through
+  `usd_rate_take(business, rate, approval)`. A manager's (fx.rate) is taken
+  and becomes the last one (`fx_rate`, "Typed with a payment"); a cashier's
+  within the band of the last one a manager used is taken; beyond it, an
+  approval of kind `usd_rate` (a manager's PIN, scope `{rate}`) is used once.
+  `sale_payments` keeps a dollar payment's `approval`.
+- **`usd_rate_setup`**: the band, 0–20% (default 2), `set_usd_rate_band`
+  (the owner). **`usd_rate_used`**: every rate used, the last manager's rate
+  then, within the band or not, who used it and who approved it;
+  `usd_rates_used(from, to)` (fx.rate or cost.view).
+- `fx_status()` is `usable` whenever a rate was ever used (its age is shown,
+  no longer a stop), with `typed` and `band_percent`.
+
+### The supplier's smaller gaps (`0115`)
+
+- **`supplier_refund`**: what a supplier paid back of a credit, into the till
+  (a `cash_event` `cash_in`), the safe or the bank: Dr the money, Cr 2000.
+  `record_supplier_refund(credit, amount, method, reference, location, key)`
+  (purchase.create or accounting.post), never more than is left of the credit.
+  Each is also a `supplier_credit_allocation` row with `supplier_refund_id` and
+  no bill, so what is left of a credit counts it everywhere. The statement
+  shows it (`refund`), and `reconciliation_checks` adds it to payables and,
+  into the safe, to the safe.
+- `record_supplier_credit(…, p_date)`: dated as the supplier dated it, never
+  after today nor in a locked month nor before its bill; its journal on that
+  day (`sixties.credit_date`). A price credit that revalues stock stays today's.
+- `purchase_invoice.supplier_date`: a bill the supplier dated before its
+  delivery keeps their date there and its due date counts from it; its
+  `invoice_date` and journal are the delivery's day. No bill is dated after
+  today or in a locked month (`locked_month_of`).
+
+### The books' smaller gaps (`0114`)
+
+- **`drawer_short_explained`**: an expense paid from the till, dated a closed
+  day whose drawer (`work_shift`, kind `day` or `session`) was short by at
+  least its amount net of what explained it already, explains it:
+  `record_expense__run` posts Dr the cost / Cr 6300 dated that day, writes no
+  `cash_event`, and keeps which session it explained. Otherwise 0064's rule
+  stands: money out of the till is recorded the day it is taken out.
+- `update_prepaid_expense(prepaid, description, account, first_month, months,
+key)` (expense.record): while no share is posted (the guard lets it through
+  under `sixties.prepaid_edit`). `prepaid_tick()`: every café's shares due,
+  posted overnight (pg_cron `sixties-prepaid`), each by whoever recorded it.
+- `payroll_gross_by_place(run)`: each line's pay less tips shared by the
+  minutes clocked at each place in the run's month (`attendance`); someone with
+  no hours, at their own place. Approvals already made keep theirs.
+
+### Loyalty points as money owed (`0113`)
+
+- **`loyalty_owed_setup`** (one per business): on or off, the owner's
+  (`set_loyalty_owed`; turning it on adds 6150 Loyalty points and 2150
+  Loyalty points owed). `loyalty_owed()` (loyalty.adjust or profit.view): a
+  point's value (the reward's dinars over its points), the points held, what
+  they are worth and what 2150 owes.
+- While it is on, each `loyalty_ledger` row posts its value (ref
+  `loyalty_points`): points earned or given, Dr 6150 / Cr 2150; spent or
+  taken back, Dr 2150 / Cr 6150. The reward's discount stays on 4100.
+- Turning it on books the points held (ref `loyalty_owed`); on again brings
+  2150 to the points held at the value now; off clears 2150.
+
+### Social insurance and the payslip (`0112`)
+
+- **`social_insurance_setup`** (one per business): on or off, the café's
+  part (default 12%) and the person's (default 5%) of the salary, each 0 to
+  50%. `set_social_insurance(enabled, employer, employee)` (the owner only;
+  turning it on adds 6120 Social insurance and 2110 Social insurance owed),
+  `social_insurance()` (payroll.view).
+- `employee.social_insurance` (default on): off for someone on a trial
+  period, with `set_employee_social_insurance` (payroll.run).
+- `payroll_line.si_employee` and `si_employer`: set when the payroll is
+  approved, on the salary (the pay less the tips); the line's `net` is then
+  `gross − advance_recovered − si_employee`. The approval's journal adds
+  Dr 6120 (the café's part) and Cr 2110 (both parts) (`post_journal` reads
+  `sixties.payroll_si`); reopening the payroll puts the nets back.
+- **`social_insurance_payment`**: what was paid to the government for a
+  month, from the bank (1020) or the safe (1005), never more than is left:
+  Dr 2110, Cr the money. `pay_social_insurance(month, amount, from, ref, key)`
+  (payroll.run), `social_insurance_month(month)` (payroll.view).
+- `payslip(line)`: one person's month line by line, for payroll.view or the
+  person themselves.
+
+### The supplier parts (`0111`)
+
+- Two parts, on by default for a bakery and a supplier: `price_lists` (Price
+  lists for each customer) and `quotes` (Quotes, sales orders and delivery
+  notes). Credit notes go with `wholesale`.
+- `make_item_sellable(item, name, prices, pack, category)` (recipe.edit): a
+  stock item on the menu, its one size's recipe the item itself (`pack` of
+  it: 1, or a carton's 24), through `create_product`.
+- **`customer_price`**: a customer's own price for a size.
+  `set_customer_price`, `customer_prices` (credit.manage).
+  `customer_line_price`: a quote's price (`sixties.quote_prices`), else theirs
+  (while `price_lists` is on), else the menu's less their wholesale
+  percentage; `invoice_customer` prices each line with it.
+- **`sales_quote`**: numbered, for a customer on account, `draft` → `sent` →
+  `accepted` (the sales order) → `invoiced`, or `cancelled`; its lines kept
+  with their prices. `save_quote`, `set_quote_status`, `quote_to_invoice`
+  (invoiced at its own prices), `quotes`.
+- **`delivery_note`**: numbered, for an invoice, its driver and route,
+  `prepared` → `out` → `delivered` (and who signed for it).
+  `make_delivery_note`, `set_delivery_status`, `delivery_notes`,
+  `recent_invoices`.
+- `credit_customer(customer, amount, reason, key)`: a credit note, kept as a
+  `customer_payment` on account 4200 (Dr 4200, Cr 1110), so it settles their
+  invoices oldest first as a payment does.
+
+### The restaurant parts (`0110`)
+
+- Three parts, on by default for a restaurant only: `kitchen` (Kitchen screens
+  and stations), `courses` (Courses and seats on a bill), `reservations`
+  (Reservations and the waiting list). `require_part(business, part)` refuses a
+  part's own functions while it is off. From 0110 `my_profile()` also names
+  each part that is on (`on:<part>`).
+- **`kitchen_station`** (a name, put away with `is_active`) and
+  **`category_station`** (a category's station; none: the kitchen's own
+  screen). `save_kitchen_station`, `set_category_station` (settings.manage),
+  `kitchen_setup()`.
+- **`pos_tab_line.course`** (1–5) and **`seat`** (1–50), as the till sends
+  them in `save_tab`'s lines; `pos_open_bills` gives them back.
+- **`kitchen_ticket`** (a station's ticket: the bill or sale, its title and
+  turn, the course, `new` → `ready` → `done`) and **`kitchen_ticket_line`**
+  (what to make, how many, its add-ons, note and seat; a negative quantity is
+  something taken off). `send_tab_to_kitchen(tab, course)` sends what a bill
+  added or took off since the kitchen last had it, by what it makes
+  (`line_key`); a course given, only its lines and those with none.
+  `send_sale_to_kitchen(order)` sends a counter sale whole, once.
+  `kitchen_tickets(station, all)`, `set_ticket_status(ticket, status)`.
+- `join_tabs(into, into_version, from, from_version)`: the second bill's lines
+  added to the first (neither printed nor discounted), the second emptied and
+  cancelled as moved; on the audit trail as `bill.join`. Moving a bill to
+  another table is `save_tab`'s table, as before.
+- **`reservation`**: a name, phone, party size, when (none: waiting now), a
+  table when seated; `booked`, `seated`, `cancelled` or `no_show`.
+  `save_reservation`, `set_reservation_status`, `reservations(day)`.
+
 ### Running many businesses (`0109`)
 
 - **`business.pilot`**: in the pilot group; a part whose catalogue entry says
