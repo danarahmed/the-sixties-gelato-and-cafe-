@@ -36,6 +36,8 @@ import { ClockSpots } from "@/components/settings/ClockSpots";
 import { getClockSpots } from "@/lib/db/security";
 import { isSystemAdmin } from "@/lib/db/speed";
 import { getTaxReport, getTaxSetup } from "@/lib/db/tax";
+import { getLoyaltyOwed } from "@/lib/db/loyaltyOwed";
+import { LoyaltyOwed } from "@/components/settings/LoyaltyOwed";
 import { TaxSettings } from "@/components/settings/TaxSettings";
 import { getSaleDayCategories, getSaleDays } from "@/lib/db/saleDays";
 import { SaleDays } from "@/components/settings/SaleDays";
@@ -120,6 +122,8 @@ export default async function SettingsPage() {
   const taxSetup = await getTaxSetup();
   const taxToday = businessToday(profile.timezone);
   const taxReport = taxSetup ? await getTaxReport(`${taxToday.slice(0, 8)}01`, taxToday) : null;
+  // Loyalty points as money owed (0113); null before it.
+  const loyaltyOwed = await getLoyaltyOwed();
   // Sale days (0106); null before it.
   const [saleDays, saleDayCategories] = await Promise.all([getSaleDays(), getSaleDayCategories()]);
   const saleDayOn = saleDays?.find((s) => s.status === "on" || s.status === "between") ?? null;
@@ -478,6 +482,23 @@ export default async function SettingsPage() {
               report={taxReport}
               isOwner={profile.roles.includes("owner")}
             />
+          </section>
+        </SettingsGroup>
+      )}
+
+      {loyaltyOwed && (
+        <SettingsGroup
+          id="loyalty-owed"
+          title={t("Loyalty points as money owed")}
+          status={[
+            loyaltyOwed.enabled
+              ? `${t("On")} · ${fmtIQD(loyaltyOwed.owed)}`
+              : t("Off: a reward is a discount when it is taken"),
+          ]}
+        >
+          <section className="sg-part" data-testid="settings-loyalty-owed">
+            <h3 style={{ marginTop: 0 }}>{t("Loyalty points as money owed")}</h3>
+            <LoyaltyOwed owed={loyaltyOwed} isOwner={profile.roles.includes("owner")} />
           </section>
         </SettingsGroup>
       )}

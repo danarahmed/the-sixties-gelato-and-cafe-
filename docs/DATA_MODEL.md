@@ -2054,6 +2054,19 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Loyalty points as money owed (`0113`)
+
+- **`loyalty_owed_setup`** (one per business): on or off, the owner's
+  (`set_loyalty_owed`; turning it on adds 6150 Loyalty points and 2150
+  Loyalty points owed). `loyalty_owed()` (loyalty.adjust or profit.view): a
+  point's value (the reward's dinars over its points), the points held, what
+  they are worth and what 2150 owes.
+- While it is on, each `loyalty_ledger` row posts its value (ref
+  `loyalty_points`): points earned or given, Dr 6150 / Cr 2150; spent or
+  taken back, Dr 2150 / Cr 6150. The reward's discount stays on 4100.
+- Turning it on books the points held (ref `loyalty_owed`); on again brings
+  2150 to the points held at the value now; off clears 2150.
+
 ### Social insurance and the payslip (`0112`)
 
 - **`social_insurance_setup`** (one per business): on or off, the café's

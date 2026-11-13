@@ -107,6 +107,7 @@ Plan a short window when the café is closed.
 | The restaurant parts (`0110`)                      | ⏳ Waiting for the owner to apply it in the SQL editor, after `0109`                                                                                                                                                                                                                                                                                                                                                                             |
 | The supplier parts (`0111`)                        | ⏳ Waiting for the owner to apply it in the SQL editor, after `0110`                                                                                                                                                                                                                                                                                                                                                                             |
 | Social insurance and the payslip (`0112`)          | ⏳ Waiting for the owner to apply it in the SQL editor, after `0111`                                                                                                                                                                                                                                                                                                                                                                             |
+| Loyalty points as money owed (`0113`)              | ⏳ Waiting for the owner to apply it in the SQL editor, after `0112`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4568,6 +4569,16 @@ payroll. Rehearsed with `tests/sql/social_insurance.test.sql`. Applied after
 `0111`, as each one before it: open
 `supabase/migrations/0112_social_insurance.sql` on GitHub, **Raw**, copy all of
 it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0113`
+
+Migration `0113` brings **loyalty points as money owed**, off until the owner
+turns it on (Settings → Loyalty points as money owed): the points customers
+hold are owed at the reward's value, a cost as they are earned, and owed no
+more when they are spent. Rehearsed with `tests/sql/loyalty_owed.test.sql`.
+Applied after `0112`, as each one before it: open
+`supabase/migrations/0113_loyalty_owed.sql` on GitHub, **Raw**, copy all of it,
+paste it into Supabase's **SQL Editor** → **New query**, **Run**.
 
 ## Clearing the test records
 
