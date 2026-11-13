@@ -174,6 +174,8 @@ begin
        || case when to_regclass('public.fx_revaluation') is not null then ', fx_revaluation' else '' end
        -- What each till last said it keeps (0101).
        || case when to_regclass('public.till_kept') is not null then ', till_kept' else '' end
+       -- The sale days set up while testing (0106), with the sales they counted.
+       || case when to_regclass('public.sale_day') is not null then ', sale_day' else '' end
        || ' restart identity';
 end $$;
 

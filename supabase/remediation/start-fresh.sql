@@ -156,6 +156,8 @@ begin
        || case when to_regclass('public.alert_refresh') is not null then ', alert_refresh' else '' end
        || case when to_regclass('public.till_kept') is not null then ', till_kept' else '' end
        || case when to_regclass('public.fx_revaluation') is not null then ', fx_revaluation' else '' end
+       -- The sale days (0106).
+       || case when to_regclass('public.sale_day') is not null then ', sale_day' else '' end
        || ' restart identity';
 end $$;
 

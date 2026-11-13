@@ -37,6 +37,8 @@ import { getClockSpots } from "@/lib/db/security";
 import { isSystemAdmin } from "@/lib/db/speed";
 import { getTaxReport, getTaxSetup } from "@/lib/db/tax";
 import { TaxSettings } from "@/components/settings/TaxSettings";
+import { getSaleDayCategories, getSaleDays } from "@/lib/db/saleDays";
+import { SaleDays } from "@/components/settings/SaleDays";
 import {
   notSetUp,
   peopleStatus,
@@ -109,6 +111,9 @@ export default async function SettingsPage() {
   const taxSetup = await getTaxSetup();
   const taxToday = businessToday(profile.timezone);
   const taxReport = taxSetup ? await getTaxReport(`${taxToday.slice(0, 8)}01`, taxToday) : null;
+  // Sale days (0106); null before it.
+  const [saleDays, saleDayCategories] = await Promise.all([getSaleDays(), getSaleDayCategories()]);
+  const saleDayOn = saleDays?.find((s) => s.status === "on" || s.status === "between") ?? null;
   // The café's own ways of selling, in use: a delivery platform sets what its customers pay.
   const shopChannels = channels
     .filter((c) => c.active && !isPlatformChannel(c.code))
@@ -451,6 +456,23 @@ export default async function SettingsPage() {
               report={taxReport}
               isOwner={profile.roles.includes("owner")}
             />
+          </section>
+        </SettingsGroup>
+      )}
+
+      {saleDays && (
+        <SettingsGroup
+          id="sale-days"
+          title={t("Sale days")}
+          status={[
+            saleDayOn
+              ? `${t("On now")} · ${saleDayOn.name} · ${saleDayOn.percent}%`
+              : t("None on now"),
+          ]}
+        >
+          <section className="sg-part" data-testid="settings-sale-days">
+            <h3 style={{ marginTop: 0 }}>{t("Sale days")}</h3>
+            <SaleDays saleDays={saleDays} categories={saleDayCategories} today={today} />
           </section>
         </SettingsGroup>
       )}

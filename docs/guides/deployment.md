@@ -100,6 +100,7 @@ Plan a short window when the café is closed.
 | A supplier bill in dollars and dinars (`0103`)     | ⏳ Waiting for the owner to apply it in the SQL editor, after `0102`                                                                                                                                                                                                                                                                                                                                                                             |
 | Comparing cashiers (`0104`)                        | ⏳ Waiting for the owner to apply it in the SQL editor, after `0103`                                                                                                                                                                                                                                                                                                                                                                             |
 | A target margin for each product (`0105`)          | ⏳ Waiting for the owner to apply it in the SQL editor, after `0104`                                                                                                                                                                                                                                                                                                                                                                             |
+| Sale days (`0106`)                                 | ⏳ Waiting for the owner to apply it in the SQL editor, after `0105`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4468,6 +4469,19 @@ the café's, as before. Nothing recorded changes. Rehearsed with
 `tests/sql/target_margin.test.sql`. Applied after `0104`, as each one before
 it: open `supabase/migrations/0105_target_margin.sql` on GitHub, **Raw**, copy
 all of it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0106`
+
+Migration `0106` brings **sale days**: Settings → Sale days, "N% off, from
+this day to that day", hours optional, on everything or with some categories
+left out. Each till shows it at the top and gives it as the bill's discount by
+itself (add-ons, meal deals and marked-down products at their own price); a
+discount a cashier gives is never added to it: the bigger one wins. It ends by
+itself, or is stopped. Reports → Sale days shows each one's result against the
+weeks before. Rehearsed with `tests/sql/sale_days.test.sql`. Applied after
+`0105`, as each one before it: open `supabase/migrations/0106_sale_days.sql`
+on GitHub, **Raw**, copy all of it, paste it into Supabase's **SQL Editor** →
+**New query**, **Run**.
 
 ## Clearing the test records
 

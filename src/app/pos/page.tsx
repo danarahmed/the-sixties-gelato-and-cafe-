@@ -13,6 +13,7 @@ import { PosClient } from "@/components/pos/PosClient";
 import { getTillMarks } from "@/lib/db/useBy";
 import { getTillLockMinutes } from "@/lib/db/security";
 import { getOfflineKey } from "@/lib/db/offline";
+import { getSaleDayNow } from "@/lib/db/saleDays";
 import { TillLock } from "@/components/pos/TillLock";
 import { ChannelsProvider } from "@/components/ChannelsProvider";
 import { EmptyState } from "@/components/ui";
@@ -66,6 +67,7 @@ export default async function PosPage() {
     useByMarks,
     lockMinutes,
     offlineKey,
+    saleDay,
   ] = await Promise.all([
     getPosCatalogue(at),
     getPosAddons(at),
@@ -92,6 +94,8 @@ export default async function PosPage() {
     getTillLockMinutes(at),
     // The café's key for what the till keeps on the device (0101); null before it.
     getOfflineKey(),
+    // The sale day on now (0106); none before it.
+    getSaleDayNow(),
   ]);
 
   if (items.length === 0) {
@@ -146,6 +150,17 @@ export default async function PosPage() {
         service={service}
         receiptSetup={receipt}
         offlineKey={offlineKey}
+        saleDay={
+          saleDay
+            ? {
+                id: saleDay.id,
+                name: saleDay.name,
+                percent: saleDay.percent,
+                excludedCategories: saleDay.excludedCategories,
+                endsAt: saleDay.endsAt,
+              }
+            : null
+        }
       />
     </ChannelsProvider>
   );

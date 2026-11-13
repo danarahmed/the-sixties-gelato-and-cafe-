@@ -2054,6 +2054,26 @@ enough to apply in one call). No table changes, and nothing recorded changes.
   hour of it: an hourly rate as it is, a day's over its hours, a month's over
   30 days of them).
 
+### Sale days (`0106`)
+
+- **`sale_day`**: a named percentage off (above 0, at most 90), from one day
+  to another (two months at most), with the hours of each day if given
+  (`from_time`, `to_time`, both or neither, on the same day), and the
+  categories it leaves out (`excluded_categories`). `stopped_at`/`stopped_by`
+  when it was stopped early. Two are never on at once; one that has begun is
+  not changed. Read only through its functions.
+- `save_sale_day(id, name, percent, starts_on, ends_on, from_time, to_time,
+excluded)` and `stop_sale_day(id)` (settings.manage), on the audit trail as
+  `sale_day.save` and `sale_day.stop`. `sale_days()` (settings or profit);
+  `sale_day_now()` (sale.create), for the till.
+- The till gives it as the bill's discount with the reason `sale_day`
+  (kept as "Sale day: name"). While one is on, `member_rule_number`'s
+  `discount_cap_percent` is at least its percentage, so it needs nobody's
+  approval.
+- `report_sale_day(id)` (profit.view): bills, full price, discounts (the sale
+  day's apart), sales, cost and profit while it was on, against the same days
+  and hours of the weeks just before it.
+
 ### A target margin for each product or category (`0105`)
 
 - **`product.target_margin_percent`**, **`product_category.target_margin_percent`**

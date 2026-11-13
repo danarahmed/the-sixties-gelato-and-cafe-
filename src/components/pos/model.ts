@@ -790,6 +790,85 @@ export function discountWhy(d: Discount | null): {
   };
 }
 
+/** A sale day on now (0106), as the till takes it. */
+export interface TillSaleDay {
+  id: string;
+  name: string;
+  percent: number;
+  excludedCategories: string[];
+  endsAt: string | null;
+}
+
+/** The reason a sale day's discount carries, as reason_code keeps it. */
+export const SALE_DAY_REASON = "sale_day";
+
+/**
+ * What a sale day takes off an order (0106): its percentage of each line's own
+ * price, outside the categories it leaves out. Add-ons are at their full
+ * price, and a meal deal or a marked-down product is never discounted again.
+ * To the business's step when that stays within the percentage of the bill,
+ * else down to it, else as it comes. Null when it takes nothing off, and on a
+ * delivery platform's order (the platform sets its own).
+ */
+export function saleDayDiscount(
+  o: Order,
+  byId: Map<string, PosItem>,
+  money: MoneyRules,
+  menu: AddonMenu,
+  sd: TillSaleDay | null,
+): Discount | null {
+  if (!sd || sd.percent <= 0 || isPlatformChannel(o.channel)) return null;
+  const excluded = new Set(sd.excludedCategories);
+  const base = o.lines.reduce((sum, l) => {
+    if (l.deal) return sum;
+    const item = byId.get(l.variantId);
+    if (!item || (item.categoryId && excluded.has(item.categoryId))) return sum;
+    if (item.markdownPercent) return sum;
+    const p = l.billPrice !== null ? l.billPrice : item.prices[o.channel];
+    if (p === undefined || p === null) return sum;
+    return sum.plus(new Decimal(p).times(l.qty));
+  }, new Decimal(0));
+  const exact = base.times(sd.percent).div(100);
+  if (exact.lte(0)) return null;
+  const ceiling = orderSubtotal(o, byId, money, menu).times(sd.percent).div(100);
+  const step = money.discountStep;
+  let amount = roundToStep(exact, step);
+  if (amount.gt(ceiling)) amount = step > 0 ? exact.div(step).floor().times(step) : exact;
+  if (amount.lte(0)) amount = exact;
+  amount = Decimal.min(amount, ceiling).toDecimalPlaces(money.decimals, Decimal.ROUND_DOWN);
+  if (amount.lte(0)) return null;
+  return { kind: "amount", value: amount.toString(), reason: SALE_DAY_REASON, note: sd.name };
+}
+
+/** True for a discount the till gave for a sale day. */
+export const isSaleDayDiscount = (d: Discount | null): boolean => d?.reason === SALE_DAY_REASON;
+
+/**
+ * The order with the sale day's discount brought up to date, when it has no
+ * other discount: given as the lines change, taken off when it comes to
+ * nothing or the sale day is over. A discount the cashier gave is left as it
+ * is (the bigger one wins when the money is taken: biggerDiscount).
+ */
+export function keepSaleDay(o: Order, sd: Discount | null): Order {
+  if (o.discount && !isSaleDayDiscount(o.discount)) return o;
+  if (!sd) return o.discount ? { ...o, discount: null } : o;
+  if (o.discount && o.discount.value === sd.value && o.discount.note === sd.note) return o;
+  return { ...o, discount: sd };
+}
+
+/** Never on top of each other: the sale day's discount when it is bigger than the one the cashier gave. */
+export function biggerDiscount(
+  o: Order,
+  sd: Discount | null,
+  subtotal: Decimal,
+  money: MoneyRules,
+): Order {
+  if (!sd || !o.discount || isSaleDayDiscount(o.discount)) return keepSaleDay(o, sd);
+  return discountAmount(sd, subtotal, money).gt(discountAmount(o.discount, subtotal, money))
+    ? { ...o, discount: sd }
+    : o;
+}
+
 export function itemCount(o: Order, byId?: Map<string, PosItem>): number {
   // A weighing counts as one item, whatever it weighs (0075).
   return o.lines.reduce((n, l) => n + (byId?.get(l.variantId)?.soldByWeight ? 1 : l.qty), 0);
