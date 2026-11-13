@@ -305,6 +305,7 @@ export function howPaid(d: {
         currency?: "IQD" | "USD" | null;
         usd?: number | null;
         rate?: number | null;
+        approval?: string | null;
         method?: string | null;
         reference?: string | null;
       }[]
@@ -322,7 +323,13 @@ export function howPaid(d: {
             : Number(x.received),
         // Dollars (0043): what was handed over and the rate shown; the database values them.
         ...(x.currency === "USD"
-          ? { currency: "USD" as const, usd: Number(x.usd), rate: Number(x.rate) }
+          ? {
+              currency: "USD" as const,
+              usd: Number(x.usd),
+              rate: Number(x.rate),
+              // A manager's approval of a rate far from the last one (0116).
+              ...(x.approval ? { approval: x.approval } : {}),
+            }
           : {}),
         // One of the café's ways to pay (0069), and the reference shown.
         ...(x.type === "other" && x.method ? { method: x.method } : {}),

@@ -10,7 +10,15 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
-import { NAV, activeHref, holdsAny, offered, homeFor, isPublicPath, roleHome } from "@/lib/auth/routes";
+import {
+  NAV,
+  activeHref,
+  holdsAny,
+  offered,
+  homeFor,
+  isPublicPath,
+  roleHome,
+} from "@/lib/auth/routes";
 import {
   addDays,
   dateIn,
@@ -2946,6 +2954,15 @@ describe("US dollars at the till (0043), as the database takes them", () => {
     expect(sent?.p_tenders).toEqual([
       { type: "cash", amount: 2500, received: null, currency: "USD", usd: 5, rate: 1310 },
       { type: "card", amount: 1000, received: null },
+    ]);
+    // A manager's approval of a rate far from the last one goes with it (0116).
+    const approval = "11111111-2222-4333-8444-555555555555";
+    expect(
+      howPaidUsd({
+        tenders: [{ type: "cash", amount: "2500", currency: "USD", usd: 5, rate: 1500, approval }],
+      })?.p_tenders,
+    ).toEqual([
+      { type: "cash", amount: 2500, received: null, currency: "USD", usd: 5, rate: 1500, approval },
     ]);
     expect(
       paidPartUsd({

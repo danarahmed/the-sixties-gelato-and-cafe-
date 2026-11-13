@@ -118,7 +118,11 @@ console.log("▸ the payroll and her payslip");
 
 console.log("▸ the month's social insurance, paid to the government");
 {
-  const owed = Number(last(`select social_insurance_month('${MONTH}') ->> 'left'`));
+  const owed = Number(
+    last(
+      `select test.act_as('owner@example.com'); select social_insurance_month('${MONTH}') ->> 'left'`,
+    ),
+  );
   check(owed >= 102000, `the month owes ${owed.toLocaleString("en")}, Sara's 102,000 among it`);
   const { ctx, page } = await signIn(browser, "owner");
   await open(page, "/payroll#social-insurance");
