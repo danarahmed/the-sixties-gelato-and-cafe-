@@ -10,7 +10,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROLE_PERMISSIONS, type Role } from "@domain/auth/permissions.js";
-import { NAV, activeHref, holdsAny, homeFor, isPublicPath, roleHome } from "@/lib/auth/routes";
+import { NAV, activeHref, holdsAny, offered, homeFor, isPublicPath, roleHome } from "@/lib/auth/routes";
 import {
   addDays,
   dateIn,
@@ -388,9 +388,9 @@ describe("where each role lands", () => {
   });
 
   it("a cashier starts on Today, is offered the till, and not the books", () => {
-    const offered = NAV.filter((n) => holdsAny(perms("cashier"), n.anyOf)).map((n) => n.href);
+    const menu = NAV.filter((n) => offered(perms("cashier"), n)).map((n) => n.href);
     expect(homeFor(perms("cashier"))).toBe("/today");
-    expect(offered).toEqual(["/today", "/pos"]);
+    expect(menu).toEqual(["/today", "/pos"]);
   });
 
   it("the menu lights one entry: the screen's, or the nearest above it", () => {
@@ -407,10 +407,8 @@ describe("where each role lands", () => {
   });
 
   it("a counter is offered the count and nothing with a cost on it", () => {
-    const offered = NAV.filter((n) => holdsAny(perms("inventory_counter"), n.anyOf)).map(
-      (n) => n.href,
-    );
-    expect(offered).toEqual(["/today", "/count"]);
+    const menu = NAV.filter((n) => offered(perms("inventory_counter"), n)).map((n) => n.href);
+    expect(menu).toEqual(["/today", "/count"]);
   });
 
   it("only people who manage settings see Settings", () => {

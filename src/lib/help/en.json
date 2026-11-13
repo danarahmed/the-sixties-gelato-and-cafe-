@@ -2118,6 +2118,75 @@
       "tips": ["Payments pay the oldest invoices first."]
     },
     {
+      "path": "/kitchen",
+      "title": "Kitchen",
+      "summary": "Each station's tickets (grill, cold kitchen, bar), the oldest first, as the till sends them: what a bill adds when it is saved, or a course when it is sent, and what a counter sale holds once it is paid. Something taken off a bill comes as a line taken off. Tap Ready when it is made, and Done when it has gone out. Asked again every few seconds. Only when the business has the Kitchen screens part on (Settings → Plan and parts).",
+      "get_there": "Menu → Kitchen, on the screen in the kitchen; a station at a time from the chips at the top.",
+      "who": {
+        "owner": "see the tickets; mark them ready and done",
+        "general_manager": "see the tickets; mark them ready and done",
+        "branch_manager": "see the tickets; mark them ready and done",
+        "cashier": "see the tickets; mark them ready and done",
+        "barista": "see the tickets; mark them ready and done"
+      },
+      "what_if": [
+        {
+          "case": "A ticket has waited 15 minutes",
+          "do": "Its minutes turn red: make it next, or tell the floor."
+        },
+        {
+          "case": "Something is on the wrong station",
+          "do": "On Settings → Kitchen stations, choose its category's station."
+        }
+      ],
+      "tips": ["Leave the screen open on a tablet in the kitchen: it keeps itself current."]
+    },
+    {
+      "path": "/reservations",
+      "title": "Reservations",
+      "summary": "The day's bookings and the parties waiting now. A booking has a name, a phone, how many and when; a party waiting has no time. Seat one at a table when they come, or mark it cancelled or not come. Only when the business has the Reservations part on (Settings → Plan and parts).",
+      "get_there": "Menu → Reservations; the arrows move a day at a time.",
+      "who": {
+        "owner": "add bookings and parties waiting; seat them, cancel them, or mark them not come",
+        "general_manager": "add bookings and parties waiting; seat them, cancel them, or mark them not come",
+        "branch_manager": "add bookings and parties waiting; seat them, cancel them, or mark them not come",
+        "cashier": "add bookings and parties waiting; seat them, cancel them, or mark them not come",
+        "barista": "add bookings and parties waiting; seat them, cancel them, or mark them not come"
+      },
+      "what_if": [
+        {
+          "case": "A party comes without booking and there is no table",
+          "do": "Press Waiting now with their name: they are listed first, and seated when a table frees."
+        }
+      ],
+      "tips": ["A phone number lets you call a party that is late."]
+    },
+    {
+      "path": "/wholesale",
+      "title": "Wholesale",
+      "summary": "For a bakery or a supplier selling to shops and hotels on account: quotes, invoiced at the prices they gave; delivery notes out with the driver, then signed for; credit notes for what came back, taken off what the customer owes; each customer's own price for a product; and a stock item put on the menu as it is, or by the carton. Only when the business has the Quotes part on (Settings → Plan and parts).",
+      "get_there": "Menu → Wholesale.",
+      "who": {
+        "owner": "make quotes and invoice them; make delivery notes; give credit notes; set customers' prices; put a stock item on the menu",
+        "general_manager": "make quotes and invoice them; make delivery notes; give credit notes; set customers' prices; put a stock item on the menu",
+        "branch_manager": "make quotes and invoice them; make delivery notes; give credit notes; set customers' prices; put a stock item on the menu",
+        "accountant": "make quotes and invoice them; make delivery notes; give credit notes; set customers' prices; put a stock item on the menu"
+      },
+      "what_if": [
+        {
+          "case": "The price changed after the quote",
+          "do": "The quote keeps its own prices when it is invoiced; make a new quote for the new prices."
+        },
+        {
+          "case": "A carton came back broken",
+          "do": "Give a credit note with why: it is taken off what they owe."
+        }
+      ],
+      "tips": [
+        "A carton is a product whose one size takes the carton's count of the item from stock."
+      ]
+    },
+    {
       "path": "/",
       "title": "(no screen of its own: the app's home address)",
       "summary": "Opening the app's plain address never shows a page: it sends each person straight to where their work starts, or to the first screen they chose on My account.",

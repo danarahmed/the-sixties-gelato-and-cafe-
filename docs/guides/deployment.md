@@ -104,6 +104,9 @@ Plan a short window when the café is closed.
 | Packing at the till (`0107`)                       | ⏳ Waiting for the owner to apply it in the SQL editor, after `0106`                                                                                                                                                                                                                                                                                                                                                                             |
 | Plans and parts (`0108`)                           | ⏳ Waiting for the owner to apply it in the SQL editor, after `0107`                                                                                                                                                                                                                                                                                                                                                                             |
 | Running many businesses (`0109`)                   | ⏳ Waiting for the owner to apply it in the SQL editor, after `0108`                                                                                                                                                                                                                                                                                                                                                                             |
+| The restaurant parts (`0110`)                      | ⏳ Waiting for the owner to apply it in the SQL editor, after `0109`                                                                                                                                                                                                                                                                                                                                                                             |
+| The supplier parts (`0111`)                        | ⏳ Waiting for the owner to apply it in the SQL editor, after `0110`                                                                                                                                                                                                                                                                                                                                                                             |
+| Social insurance and the payslip (`0112`)          | ⏳ Waiting for the owner to apply it in the SQL editor, after `0111`                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## 0. Before you start
 
@@ -4529,6 +4532,41 @@ download all its data at any time. The Sixty's is paid with no end: nothing
 changes for it. Rehearsed with `tests/sql/running_many.test.sql`. Applied
 after `0108`, as each one before it: open
 `supabase/migrations/0109_running_many.sql` on GitHub, **Raw**, copy all of
+it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0110`
+
+Migration `0110` brings **the restaurant parts**, each off for a café until
+the owner turns it on (Settings → Plan and parts): kitchen screens and
+stations (Menu → Kitchen; Settings → Kitchen stations), courses and seats on a
+bill's lines, sent to the kitchen course by course, two bills joined into one,
+and reservations with the waiting list (Menu → Reservations). Nothing changes
+for The Sixty's until a part is turned on. Rehearsed with
+`tests/sql/restaurant.test.sql`. Applied after `0109`, as each one before it:
+open `supabase/migrations/0110_restaurant.sql` on GitHub, **Raw**, copy all
+of it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0111`
+
+Migration `0111` brings **the supplier parts**, off for a café until the
+owner turns them on (Settings → Plan and parts): Menu → Wholesale, with
+quotes invoiced at their own prices, delivery notes out with the driver and
+signed for, credit notes, each customer's own prices, and a stock item put on
+the menu as it is or by the carton. Rehearsed with
+`tests/sql/supplier.test.sql`. Applied after `0110`, as each one before it:
+open `supabase/migrations/0111_supplier.sql` on GitHub, **Raw**, copy all of
+it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
+
+## After `0112`
+
+Migration `0112` brings **social insurance and the payslip**, off until the
+owner turns it on (Payroll → Social insurance): the café's part (12%) and the
+person's (5%) of each salary, taken when a payroll is approved, each person
+left out while on a trial period; what each month owes the government, paid
+from the bank or the safe; and each person's payslip, printed from the
+payroll. Rehearsed with `tests/sql/social_insurance.test.sql`. Applied after
+`0111`, as each one before it: open
+`supabase/migrations/0112_social_insurance.sql` on GitHub, **Raw**, copy all of
 it, paste it into Supabase's **SQL Editor** → **New query**, **Run**.
 
 ## Clearing the test records

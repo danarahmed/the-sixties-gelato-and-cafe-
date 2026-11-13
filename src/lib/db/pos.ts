@@ -176,6 +176,9 @@ export interface OpenBillLine {
   price: number | null;
   /** Its add-ons (0041), each at the bill's price for it (frozen once printed). */
   modifiers: OpenBillAddon[];
+  /** Its course and seat (0110); none before it, or not given. */
+  course?: number | null;
+  seat?: number | null;
 }
 
 /** An add-on on a bill's line: how many for each one of the line, at what price. */
@@ -253,6 +256,8 @@ export function parseOpenBills(data: unknown): OpenBill[] {
       productName: str(l.product_name),
       variantName: str(l.variant_name),
       price: numOrNull(l.price),
+      course: numOrNull(l.course),
+      seat: numOrNull(l.seat),
       modifiers: (Array.isArray(l.modifiers) ? (l.modifiers as Row[]) : []).map((m) => ({
         modifierId: str(m.modifier_id),
         name: str(m.name),

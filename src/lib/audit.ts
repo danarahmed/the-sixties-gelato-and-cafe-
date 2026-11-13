@@ -215,6 +215,15 @@ const ACTION_LABEL: Record<string, string> = {
   "support.grant": "Support allowed",
   "support.revoke": "Support taken back",
   "support.enter": "Support looked",
+  // The supplier's parts (0111).
+  "customer.price": "Customer price set",
+  "quote.save": "Quote saved",
+  "customer.credit": "Credit note given",
+  "delivery.note": "Delivery note made",
+  // The restaurant (0110).
+  "bill.join": "Bills joined",
+  "kitchen.station": "Kitchen station set",
+  "kitchen.category": "A category's station set",
   // Packing (0107).
   "packing.item": "Packing item set",
   "packing.variant": "A size's packing set",

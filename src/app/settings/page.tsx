@@ -46,6 +46,8 @@ import { PlanAndParts } from "@/components/settings/PlanAndParts";
 import { PLAN_LABEL } from "@/lib/plans";
 import { getSupportAccess } from "@/lib/db/support";
 import { SupportAccess } from "@/components/settings/SupportAccess";
+import { getKitchenSetup } from "@/lib/db/kitchen";
+import { KitchenStations } from "@/components/settings/KitchenStations";
 import {
   notSetUp,
   peopleStatus,
@@ -123,6 +125,10 @@ export default async function SettingsPage() {
   const saleDayOn = saleDays?.find((s) => s.status === "on" || s.status === "between") ?? null;
   // Plans and parts (0108); null before it.
   const businessParts = await getBusinessParts();
+  // The kitchen's stations (0110), while its part is on; null before it.
+  const kitchen = businessParts?.parts.some((p) => p.part === "kitchen" && p.on)
+    ? await getKitchenSetup()
+    : null;
   // Support access and the business's data (0109), for the owner; null before it.
   const supportAccess = profile.roles.includes("owner") ? await getSupportAccess() : null;
   // Packing (0107); null before it.
@@ -509,6 +515,23 @@ export default async function SettingsPage() {
               businessType={businessParts.businessType}
               parts={businessParts.parts}
               isOwner={profile.roles.includes("owner")}
+            />
+          </section>
+        </SettingsGroup>
+      )}
+
+      {kitchen && (
+        <SettingsGroup
+          id="kitchen"
+          title={t("Kitchen stations")}
+          status={[t("{n} stations", { n: kitchen.stations.filter((s) => s.active).length })]}
+        >
+          <section className="sg-part" data-testid="settings-kitchen">
+            <h3 style={{ marginTop: 0 }}>{t("Kitchen stations")}</h3>
+            <KitchenStations
+              stations={kitchen.stations}
+              categories={saleDayCategories}
+              map={kitchen.categories}
             />
           </section>
         </SettingsGroup>

@@ -168,6 +168,15 @@ begin
        -- The packing (0107): which items, what each size goes out in, and each order's.
        || case when to_regclass('public.sales_order_packing') is not null
                then ', packing_item, variant_packing, sales_order_packing' else '' end
+       -- The kitchen (its stations, tickets) and the bookings (0110).
+       || case when to_regclass('public.kitchen_ticket') is not null
+               then ', category_station, kitchen_station, kitchen_ticket_line, kitchen_ticket, reservation' else '' end
+       -- The customers' prices, quotes and delivery notes (0111).
+       || case when to_regclass('public.sales_quote') is not null
+               then ', customer_price, delivery_note, sales_quote' else '' end
+       -- Social insurance: on or off, and what was paid to the government (0112).
+       || case when to_regclass('public.social_insurance_payment') is not null
+               then ', social_insurance_payment, social_insurance_setup' else '' end
        || ' restart identity';
 end $$;
 

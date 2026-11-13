@@ -7,9 +7,11 @@ import Decimal from "decimal.js";
 import type { SalesChannel } from "@domain/sales/recipe.js";
 import type { DiningTable, OpenBill, PosAddons, PosItem } from "@/lib/db/pos";
 import { recordOfflineSaleAction, recordSaleAction } from "@/lib/actions/sales";
+import { sendSaleToKitchenAction, sendTabToKitchenAction } from "@/lib/actions/kitchen";
 import { listApproversAction, requestApprovalAction, type Approver } from "@/lib/actions/approvals";
 import {
   cancelBillAction,
+  joinBillsAction,
   payBillAction,
   payBillOfflineAction,
   printBillAction,
@@ -343,6 +345,7 @@ type Dialog =
   | { kind: "named" }
   | { kind: "giveaway" }
   | { kind: "move" }
+  | { kind: "join" }
   | { kind: "cancel"; error: string | null }
   | {
       kind: "approve";
@@ -423,6 +426,7 @@ export function PosClient({
   offlineKey = null,
   saleDay: initialSaleDay = null,
   packing = null,
+  restaurant = null,
 }: {
   items: PosItem[];
   /** The meal deals on now (0089), and when the menu next changes by itself. */
@@ -482,6 +486,8 @@ export function PosClient({
   saleDay?: TillSaleDay | null;
   /** The café's packing (0107): the pay screen's + / − row; null before it, or with none set up. */
   packing?: PackingSetup | null;
+  /** The restaurant's parts that are on (0110): the kitchen's screens, and courses and seats. */
+  restaurant?: { kitchen: boolean; courses: boolean } | null;
 }) {
   const { t, msg: say, locale } = useT();
   const router = useRouter();
@@ -1057,6 +1063,52 @@ export function PosClient({
       };
     });
   }
+  /** A bill's line course and seat (0110). */
+  function setCourseSeat(key: string, course: number | null, seat: number | null) {
+    patchOrder((o) => ({
+      ...o,
+      lines: o.lines.map((l) => (l.key === key ? { ...l, course, seat } : l)),
+    }));
+  }
+  /** The bill to the kitchen (0110): saved first, then what is new; a course given, only its lines. */
+  async function sendToKitchen(course: number | null) {
+    const o = await current();
+    if (!o || o.tabId === null) return;
+    const r = await sendTabToKitchenAction(o.tabId, course);
+    if (!r.ok) return setMsg({ ok: false, text: r.error });
+    setMsg({
+      ok: true,
+      text:
+        r.data.tickets > 0
+          ? t("Sent to the kitchen: {n} tickets", { n: r.data.tickets })
+          : t("Nothing new for the kitchen"),
+    });
+  }
+  /** Another open bill joined into this one (0110). */
+  async function joinBill(fromId: string) {
+    const cur = await current();
+    const from = bills.find((b) => b.tabId === fromId);
+    setDialog(null);
+    if (!cur || cur.tabId === null || cur.version === null || !from) return;
+    setBusy("join");
+    try {
+      const r = await joinBillsAction({
+        intoId: cur.tabId,
+        intoVersion: cur.version,
+        fromId: from.tabId,
+        fromVersion: from.version,
+      });
+      if (!r.ok) return setMsg({ ok: false, text: r.error });
+      if (r.data.bills) {
+        applyBills(r.data.bills);
+        const fresh = r.data.bills.find((b) => b.tabId === cur.tabId);
+        if (fresh) putBill({ ...orderFromBill(fresh), sent: cur.sent });
+      }
+      setMsg({ ok: true, text: t("The bills are one now") });
+    } finally {
+      setBusy(null);
+    }
+  }
   function setNote(key: string, note: string | null) {
     patchOrder((o) => ({ ...o, lines: o.lines.map((l) => (l.key === key ? { ...l, note } : l)) }));
   }
@@ -1204,6 +1256,8 @@ export function PosClient({
         qty: String(l.qty),
         note: l.note,
         addons: l.addons.map(({ modifierId, qty }) => ({ modifierId, qty })),
+        ...(l.course ? { course: l.course } : {}),
+        ...(l.seat ? { seat: l.seat } : {}),
       })),
       ...discountParams(o.discount),
       ...discountWhy(o.discount),
@@ -1261,6 +1315,10 @@ export function PosClient({
     const next = { ...saved, sent };
     putBill(next);
     if (data.bills) applyBills(data.bills);
+    // The kitchen's screens (0110): what is new goes as it is saved, unless the
+    // bill is sent a course at a time.
+    if (restaurant?.kitchen && !restaurant.courses && next.tabId)
+      void sendTabToKitchenAction(next.tabId, null).catch(() => undefined);
     return next;
   }
 
@@ -1401,6 +1459,8 @@ export function PosClient({
             qty: String(l.qty),
             note: l.note,
             addons: l.addons.map(({ modifierId, qty }) => ({ modifierId, qty })),
+            ...(l.course ? { course: l.course } : {}),
+            ...(l.seat ? { seat: l.seat } : {}),
           })),
           ...discountParams(o.discount),
           ...discountWhy(o.discount),
@@ -1893,6 +1953,9 @@ export function PosClient({
         ticketPrinted: autoTicket,
       });
       setMsg(r.data.replayed ? { ok: true, text: t("pos.replayed") } : null);
+      // A counter sale goes to the kitchen's screens whole (0110).
+      if (restaurant?.kitchen && p.kind === "quick" && !r.data.replayed && r.data.orderId)
+        void sendSaleToKitchenAction(r.data.orderId).catch(() => undefined);
       setPending(null);
       savePending(null);
       setDialog(null);
@@ -2592,6 +2655,13 @@ export function PosClient({
             ticketOn={ticketOn}
             onQty={changeQty}
             onNote={setNote}
+            onCourseSeat={restaurant?.courses ? setCourseSeat : null}
+            onKitchen={restaurant?.kitchen ? (c: number | null) => void sendToKitchen(c) : null}
+            onJoin={
+              bills.filter((b) => b.tabId !== bill?.tabId && !b.billPrintedAt).length > 0
+                ? () => setDialog({ kind: "join" })
+                : null
+            }
             onWeigh={(key) => setWeighing(key)}
             onLabel={(label) => billRef.current && putBill({ ...billRef.current, label })}
             onPay={startPay}
@@ -2803,6 +2873,31 @@ export function PosClient({
           onConfirm={startNamed}
           onClose={() => setDialog(null)}
         />
+      )}
+      {dialog?.kind === "join" && bill && (
+        <Modal label={t("Join another bill")} busy={busy !== null} onClose={() => setDialog(null)}>
+          <div className="grid" style={{ gap: 8 }} data-testid="join-dialog">
+            <h3 style={{ margin: 0 }}>{t("Join another bill")}</h3>
+            <p className="muted" style={{ margin: 0 }}>
+              {t("Its lines come onto this bill, and it is closed as moved.")}
+            </p>
+            {bills
+              .filter((b) => b.tabId !== bill.tabId && !b.billPrintedAt)
+              .map((b) => (
+                <button
+                  key={b.tabId}
+                  type="button"
+                  onClick={() => void joinBill(b.tabId)}
+                  data-testid="join-choice"
+                >
+                  {billTitle(b, tables, b.label ?? "—")} · {fmtIQD(b.total)}
+                </button>
+              ))}
+            <button type="button" onClick={() => setDialog(null)}>
+              {t("Close")}
+            </button>
+          </div>
+        </Modal>
       )}
       {dialog?.kind === "move" && bill && (
         <MoveDialog

@@ -11,6 +11,8 @@ import { Advances, DraftPayroll } from "@/components/payroll/PayrollHome";
 import { PageIntro } from "@/components/PageIntro";
 import { TipsCard } from "@/components/payroll/TipsCard";
 import { getTipsMonth } from "@/lib/db/tips";
+import { getSocialInsurance, getSocialInsuranceMonth } from "@/lib/db/socialInsurance";
+import { SocialInsuranceCard } from "@/components/payroll/SocialInsuranceCard";
 
 export const dynamic = "force-dynamic";
 
@@ -31,14 +33,30 @@ export default async function PayrollPage() {
   // cost.view or day.close).
   const seesCash = canRun && (has(profile, "cost.view") || has(profile, "day.close"));
   const thisMonth = monthStart(today);
-  const [runs, { advances, owed }, people, cash, tips] = await Promise.all([
+  const [runs, { advances, owed }, people, cash, tips, si] = await Promise.all([
     getPayrollRuns(),
     getAdvances(),
     getStaff(),
     seesCash ? tillForWrite().then(getCashOnHand) : Promise.resolve(null),
     // This month's tips, and who shares them (0090); null before it is applied.
     getTipsMonth(thisMonth),
+    // Social insurance (0112); null before it is applied.
+    getSocialInsurance(),
   ]);
+  // The approved months, the last six, each with what it owes the government.
+  const siMonths = si
+    ? (
+        await Promise.all(
+          [...new Set(runs.filter((r) => r.status !== "draft").map((r) => r.month))]
+            .sort()
+            .reverse()
+            .slice(0, 6)
+            .map(getSocialInsuranceMonth),
+        )
+      )
+        .filter((m): m is NonNullable<typeof m> => m !== null && m.owed > 0)
+        .map((m) => ({ ...m, label: monthText(m.month) }))
+    : [];
   const lastMonth = monthStart(addDays(thisMonth, -1));
   // Last month only when someone worked here in it: a café that opened this
   // month has nothing to draft for the one before.
@@ -133,6 +151,19 @@ export default async function PayrollPage() {
             )}
           </p>
           <TipsCard tips={tips} people={working} canRun={canRun} />
+        </section>
+      )}
+
+      {si && (
+        <section className="card grid" style={{ gap: 8 }} id="social-insurance">
+          <h2 style={{ margin: 0 }}>{t("Social insurance")}</h2>
+          <SocialInsuranceCard
+            si={si}
+            months={siMonths}
+            people={working}
+            canRun={canRun}
+            isOwner={profile.roles.includes("owner")}
+          />
         </section>
       )}
 
